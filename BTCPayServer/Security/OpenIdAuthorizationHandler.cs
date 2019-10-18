@@ -11,8 +11,9 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Authentication;
 using BTCPayServer.Authentication;
 using Microsoft.Extensions.Primitives;
-using static BTCPayServer.Authentication.RestAPIPolicies;
+using static BTCPayServer.Security.OpenId.RestAPIPolicies;
 using OpenIddict.Abstractions;
+using BTCPayServer.Security.OpenId;
 
 namespace BTCPayServer.Security
 {
@@ -38,33 +39,6 @@ namespace BTCPayServer.Security
             bool success = false;
             switch (requirement.Policy)
             {
-                case RestAPIPolicies.CanViewStores:
-                    success = context.HasScopes(BTCPayScopes.StoreManagement) || context.HasScopes(BTCPayScopes.ViewStores);
-                    break;
-                case RestAPIPolicies.CanManageStores:
-                    success = context.HasScopes(BTCPayScopes.StoreManagement);
-                    break;
-                case RestAPIPolicies.CanViewInvoices:
-                    success = context.HasScopes(BTCPayScopes.ViewInvoices) || context.HasScopes(BTCPayScopes.InvoiceManagement);
-                    break;
-                case RestAPIPolicies.CanCreateInvoices:
-                    success = context.HasScopes(BTCPayScopes.CreateInvoices) || context.HasScopes(BTCPayScopes.InvoiceManagement);
-                    break;
-                case RestAPIPolicies.CanViewApps:
-                    success = context.HasScopes(BTCPayScopes.AppManagement) || context.HasScopes(BTCPayScopes.ViewApps);
-                    break;
-                case RestAPIPolicies.CanManageInvoices:
-                    success = context.HasScopes(BTCPayScopes.InvoiceManagement);
-                    break;
-                case RestAPIPolicies.CanManageApps:
-                    success = context.HasScopes(BTCPayScopes.AppManagement);
-                    break;
-                case RestAPIPolicies.CanManageWallet:
-                    success = context.HasScopes(BTCPayScopes.WalletManagement);
-                    break;
-                case RestAPIPolicies.CanViewProfile:
-                    success = context.HasScopes(OpenIddictConstants.Scopes.Profile);
-                    break;
                 case Policies.CanModifyStoreSettings.Key:
                     if (!context.HasScopes(BTCPayScopes.StoreManagement))
                         break;
@@ -73,15 +47,20 @@ namespace BTCPayServer.Security
                     // to the access_token
                     string storeId = _HttpContext.GetImplicitStoreId();
                     if (storeId == null)
-                        break;
-                    var userid = _userManager.GetUserId(context.User);
-                    if (string.IsNullOrEmpty(userid))
-                        break;
-                    var store = await _storeRepository.FindStore((string)storeId, userid);
-                    if (store == null)
-                        break;
-                    success = true;
-                    _HttpContext.SetStoreData(store);
+                    {
+                        success = true;
+                    }
+                    else
+                    {
+                        var userid = _userManager.GetUserId(context.User);
+                        if (string.IsNullOrEmpty(userid))
+                            break;
+                        var store = await _storeRepository.FindStore((string)storeId, userid);
+                        if (store == null)
+                            break;
+                        success = true;
+                        _HttpContext.SetStoreData(store);
+                    }
                     break;
                 case Policies.CanModifyServerSettings.Key:
                     if (!context.HasScopes(BTCPayScopes.ServerManagement))

@@ -133,50 +133,51 @@ namespace BTCPayServer.Tests
                 results = url.Split("#").Last().Split("&").ToDictionary(s1 => s1.Split("=")[0], s1 => s1.Split("=")[1]);
                 await TestApiAgainstAccessToken(results["access_token"], tester, user);
 
-                LogoutFlow(tester, id, s);
+                var stores = await TestApiAgainstAccessToken<StoreData[]>(results["access_token"],
+                    $"api/test/me/stores",
+                    tester.PayTester.HttpClient);
+                Assert.NotEmpty(stores);
+
+                Assert.True(await TestApiAgainstAccessToken<bool>(results["access_token"],
+                $"api/test/me/stores/{stores[0].Id}/can-edit",
+                tester.PayTester.HttpClient));
+
                 //we dont ask for consent after acquiring it the first time for the same scopes.
+                LogoutFlow(tester, id, s);
                 s.Driver.Navigate().GoToUrl(implicitAuthorizeUrl);
                 s.Login(user.RegisterDetails.Email, user.RegisterDetails.Password);
-                
-                Assert.Throws<NoSuchElementException>(() => s.Driver.FindElement(By.Id("consent-yes")));
-                results = url.Split("#").Last().Split("&")
-                    .ToDictionary(s1 => s1.Split("=")[0], s1 => s1.Split("=")[1]);
-                await TestApiAgainstAccessToken(results["access_token"], tester, user);
-                
-                //let's test out scopes!
+                s.Driver.AssertElementNotFound(By.Id("consent-yes"));
+
+                // Let's asks without scopes
+                LogoutFlow(tester, id, s);
+                id = Guid.NewGuid().ToString();
+                openIdClient = await user.RegisterOpenIdClient(
+                    new OpenIddictApplicationDescriptor()
+                    {
+                        ClientId = id,
+                        DisplayName = id,
+                        Permissions = { OpenIddictConstants.Permissions.GrantTypes.Implicit },
+                        RedirectUris = { redirecturi },
+                    });
                 implicitAuthorizeUrl = new Uri(tester.PayTester.ServerUri,
-                    $"connect/authorize?response_type=token&client_id={id}&redirect_uri={redirecturi.AbsoluteUri}&scope=openid {RestAPIPolicies.BTCPayScopes.AppManagement} {RestAPIPolicies.BTCPayScopes.ViewStores} &nonce={Guid.NewGuid().ToString()}");
-
+                    $"connect/authorize?response_type=token&client_id={id}&redirect_uri={redirecturi.AbsoluteUri}&scope=openid&nonce={Guid.NewGuid().ToString()}");
                 s.Driver.Navigate().GoToUrl(implicitAuthorizeUrl);
-                //authorize form should show now that we have asked for more scopes
+                s.Login(user.RegisterDetails.Email, user.RegisterDetails.Password);
                 s.Driver.FindElement(By.Id("consent-yes")).Click();
-                url = s.Driver.Url;
-                results = url.Split("#").Last().Split("&")
+                results = s.Driver.Url.Split("#").Last().Split("&")
                     .ToDictionary(s1 => s1.Split("=")[0], s1 => s1.Split("=")[1]);
 
-
-                Assert.True(await TestApiAgainstAccessToken<bool>(results["access_token"],
-                    $"api/test/ScopeCanViewApps",
-                    tester.PayTester.HttpClient));
-                
-                Assert.True(await TestApiAgainstAccessToken<bool>(results["access_token"],
-                    $"api/test/ScopeCanManageApps",
-                    tester.PayTester.HttpClient));
-
-                Assert.True(await TestApiAgainstAccessToken<bool>(results["access_token"],
-                    $"api/test/ScopeCanViewStores",
-                    tester.PayTester.HttpClient));
                 await Assert.ThrowsAnyAsync<HttpRequestException>(async () =>
                 {
-                    await TestApiAgainstAccessToken<bool>(results["access_token"],
-                        $"api/test/ScopeCanManageStores",
-                        tester.PayTester.HttpClient);
+                    await TestApiAgainstAccessToken<StoreData[]>(results["access_token"],
+                    $"api/test/me/stores",
+                    tester.PayTester.HttpClient);
                 });
                 await Assert.ThrowsAnyAsync<HttpRequestException>(async () =>
                 {
                     await TestApiAgainstAccessToken<bool>(results["access_token"],
-                        $"api/test/ScopeCanViewProfile",
-                        tester.PayTester.HttpClient);
+                    $"api/test/me/stores/{stores[0].Id}/can-edit",
+                    tester.PayTester.HttpClient);
                 });
             }
         }

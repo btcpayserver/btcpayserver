@@ -11,7 +11,6 @@ using Microsoft.AspNetCore.Identity;
 using OpenIddict.Abstractions;
 using OpenIddict.Core;
 using OpenIddict.Server;
-using static BTCPayServer.Authentication.RestAPIPolicies;
 
 namespace BTCPayServer.Security.OpenId
 {
@@ -93,7 +92,7 @@ namespace BTCPayServer.Security.OpenId
                 await Task.WhenAll(scopeTasks.Select((tuple) => tuple.Item1));
 
                 var authorizationsWithSufficientScopes = scopeTasks
-                    .Select((tuple) => (tuple.Id, Scopes: tuple.Item1.Result))
+                    .Select((tuple) => (Id: tuple.Id, Scopes: tuple.Item1.Result))
                     .Where((tuple) => !request.GetScopes().Except(tuple.Scopes).Any());
 
                 if (authorizationsWithSufficientScopes.Any())

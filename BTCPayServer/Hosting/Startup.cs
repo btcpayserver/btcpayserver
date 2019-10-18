@@ -184,13 +184,9 @@ namespace BTCPayServer.Hosting
 
                     options.RegisterScopes(
                         OpenIddictConstants.Scopes.OpenId,
-                        RestAPIPolicies.BTCPayScopes.ViewStores,
-                        RestAPIPolicies.BTCPayScopes.CreateInvoices,
-                        RestAPIPolicies.BTCPayScopes.StoreManagement,
-                        RestAPIPolicies.BTCPayScopes.ViewApps,
-                        RestAPIPolicies.BTCPayScopes.ServerManagement,
-                        RestAPIPolicies.BTCPayScopes.AppManagement
-                        );
+                        BTCPayScopes.StoreManagement,
+                        BTCPayScopes.ServerManagement
+                    );
                     options.AddEventHandler(PasswordGrantTypeEventHandler.Descriptor);
                     options.AddEventHandler(OpenIdGrantHandlerCheckCanSignIn.Descriptor);
                     options.AddEventHandler(ClientCredentialsGrantTypeEventHandler.Descriptor);

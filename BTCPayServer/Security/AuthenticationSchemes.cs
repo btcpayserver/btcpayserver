@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using OpenIddict.Validation;
+using OpenIddict.Validation.AspNetCore;
 
 namespace BTCPayServer.Security
 {
@@ -10,6 +11,6 @@ namespace BTCPayServer.Security
     {
         public const string Cookie = "Identity.Application";
         public const string Bitpay = "Bitpay";
-        public const string OpenId = OpenIddictValidationDefaults.AuthenticationScheme;
+        public const string OpenId = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
     }
 }

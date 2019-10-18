@@ -1,5 +1,6 @@
 FROM mcr.microsoft.com/dotnet/core/sdk:2.1.505-alpine3.7 AS builder
 WORKDIR /source
+COPY nuget.config nuget.config
 COPY Build/Common.csproj Build/Common.csproj
 COPY BTCPayServer/BTCPayServer.csproj BTCPayServer/BTCPayServer.csproj
 COPY BTCPayServer.Common/BTCPayServer.Common.csproj BTCPayServer.Common/BTCPayServer.Common.csproj

@@ -16,7 +16,7 @@ namespace BTCPayServer.Security
     {
         public static bool HasScopes(this AuthorizationHandlerContext context, params string[] scopes)
         {
-            return scopes.All(s => context.User.HasClaim(OpenIddictConstants.Claims.Scope, s));
+            return scopes.All(s => context.User.HasClaim(c => c.Type == OpenIddictConstants.Claims.Scope && c.Value.Split(' ').Contains(s)));
         }
         public static string GetImplicitStoreId(this HttpContext httpContext)
         {

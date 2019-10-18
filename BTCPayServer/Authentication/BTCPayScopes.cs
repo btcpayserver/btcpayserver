@@ -30,6 +30,7 @@ namespace BTCPayServer.Authentication
             //create and manage apps
             public const string AppManagement = "app_management";
             public const string WalletManagement = "wallet_management";
+            public const string ServerManagement = "server_management";
         }
 
         public const string CanViewStores = nameof(CanViewStores);

@@ -7,10 +7,7 @@ using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using OpenIddict.Validation;
-#if !NETCOREAPP21
-using OpenIddictValidationDefaults = Microsoft.AspNetCore.Authentication.OpenIdConnect.OpenIdConnectDefaults;
-#endif
+using OpenIddict.Validation.AspNetCore;
 
 namespace BTCPayServer.Controllers.RestApi
 {
@@ -111,7 +108,6 @@ namespace BTCPayServer.Controllers.RestApi
 
         [Authorize(Policy = RestAPIPolicies.CanViewProfile,
             AuthenticationSchemes = AuthenticationSchemes.OpenId)]
-        
         [HttpGet(nameof(ScopeCanViewProfile))]
         public bool ScopeCanViewProfile() { return true; }
 

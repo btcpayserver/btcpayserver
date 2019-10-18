@@ -34,7 +34,7 @@ using static BTCPayServer.Controllers.StoresController;
 namespace BTCPayServer.Controllers
 {
     [Route("wallets")]
-    [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
+    [Authorize(Policy = Policies.CanModifyStoreSettings.Key, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [AutoValidateAntiforgeryToken]
     public partial class WalletsController : Controller
     {
@@ -46,7 +46,7 @@ namespace BTCPayServer.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly JsonSerializerSettings _serializerSettings;
         private readonly NBXplorerDashboard _dashboard;
-
+        private readonly IAuthorizationService _authorizationService;
         private readonly IFeeProviderFactory _feeRateProvider;
         private readonly BTCPayWalletProvider _walletProvider;
         public RateFetcher RateFetcher { get; }
@@ -62,6 +62,7 @@ namespace BTCPayServer.Controllers
                                  MvcNewtonsoftJsonOptions mvcJsonOptions,
                                  NBXplorerDashboard dashboard,
                                  RateFetcher rateProvider,
+                                 IAuthorizationService authorizationService,
                                  ExplorerClientProvider explorerProvider,
                                  IFeeProviderFactory feeRateProvider,
                                  BTCPayWalletProvider walletProvider)
@@ -70,6 +71,7 @@ namespace BTCPayServer.Controllers
             Repository = repo;
             WalletRepository = walletRepository;
             RateFetcher = rateProvider;
+            _authorizationService = authorizationService;
             NetworkProvider = networkProvider;
             _userManager = userManager;
             _serializerSettings = mvcJsonOptions.SerializerSettings;
@@ -119,7 +121,7 @@ namespace BTCPayServer.Controllers
             catch { }
             /////////
             
-            DerivationSchemeSettings paymentMethod = await GetDerivationSchemeSettings(walletId);
+            DerivationSchemeSettings paymentMethod = GetDerivationSchemeSettings(walletId);
             if (paymentMethod == null)
                 return NotFound();
 
@@ -185,8 +187,14 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
         }
 
+        [HttpGet]
+        [AllowAnonymous]
         public async Task<IActionResult> ListWallets()
         {
+            if (GetUserId() == null)
+            {
+                return Challenge(AuthenticationSchemes.Cookie);
+            }
             var wallets = new ListWalletsViewModel();
             var stores = await Repository.GetStoresByUserId(GetUserId());
 
@@ -209,7 +217,8 @@ namespace BTCPayServer.Controllers
                 ListWalletsViewModel.WalletViewModel walletVm = new ListWalletsViewModel.WalletViewModel();
                 wallets.Wallets.Add(walletVm);
                 walletVm.Balance = await wallet.Balance + " " + wallet.Wallet.Network.CryptoCode;
-                if (!wallet.Store.HasClaim(Policies.CanModifyStoreSettings.Key))
+                walletVm.IsOwner = wallet.Store.Role == StoreRoles.Owner;
+                if (!walletVm.IsOwner)
                 {
                     walletVm.Balance = "";
                 }
@@ -217,7 +226,6 @@ namespace BTCPayServer.Controllers
                 walletVm.StoreId = wallet.Store.Id;
                 walletVm.Id = new WalletId(wallet.Store.Id, wallet.Network.CryptoCode);
                 walletVm.StoreName = wallet.Store.StoreName;
-                walletVm.IsOwner = wallet.Store.HasClaim(Policies.CanModifyStoreSettings.Key);
             }
 
             return View(wallets);
@@ -229,7 +237,7 @@ namespace BTCPayServer.Controllers
             [ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, string labelFilter = null)
         {
-            DerivationSchemeSettings paymentMethod = await GetDerivationSchemeSettings(walletId);
+            DerivationSchemeSettings paymentMethod = GetDerivationSchemeSettings(walletId);
             if (paymentMethod == null)
                 return NotFound();
 
@@ -279,7 +287,7 @@ namespace BTCPayServer.Controllers
             if (walletId?.StoreId == null)
                 return NotFound();
             var store = await Repository.FindStore(walletId.StoreId, GetUserId());
-            DerivationSchemeSettings paymentMethod = GetDerivationSchemeSettings(walletId, store);
+            DerivationSchemeSettings paymentMethod = GetDerivationSchemeSettings(walletId);
             if (paymentMethod == null)
                 return NotFound();
             var network = this.NetworkProvider.GetNetwork<BTCPayNetwork>(walletId?.CryptoCode);
@@ -422,7 +430,7 @@ namespace BTCPayServer.Controllers
             if (!ModelState.IsValid)
                 return View(vm);
 
-            DerivationSchemeSettings derivationScheme = await GetDerivationSchemeSettings(walletId);
+            DerivationSchemeSettings derivationScheme = GetDerivationSchemeSettings(walletId);
 
             CreatePSBTResponse psbt = null;
             try
@@ -511,7 +519,7 @@ namespace BTCPayServer.Controllers
             }
 
             ExtKey signingKey = null;
-            var settings = (await GetDerivationSchemeSettings(walletId));
+            var settings = GetDerivationSchemeSettings(walletId);
             var signingKeySettings = settings.GetSigningAccountKeySettings();
             if (signingKeySettings.RootFingerprint is null)
                 signingKeySettings.RootFingerprint = extKey.GetPublicKey().GetHDFingerPrint();
@@ -557,13 +565,13 @@ namespace BTCPayServer.Controllers
             }
         }
 
-        private async Task<IActionResult> RedirectToWalletTransaction(WalletId walletId, Transaction transaction)
+        private IActionResult RedirectToWalletTransaction(WalletId walletId, Transaction transaction)
         {
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             if (transaction != null)
             {
                 var wallet = _walletProvider.GetWallet(network);
-                var derivationSettings = await GetDerivationSchemeSettings(walletId);
+                var derivationSettings = GetDerivationSchemeSettings(walletId);
                 wallet.InvalidateCache(derivationSettings.AccountDerivation);
                 StatusMessage = $"Transaction broadcasted successfully ({transaction.GetHash().ToString()})";
             }
@@ -578,13 +586,13 @@ namespace BTCPayServer.Controllers
         {
             if (walletId?.StoreId == null)
                 return NotFound();
-            DerivationSchemeSettings paymentMethod = await GetDerivationSchemeSettings(walletId);
+            DerivationSchemeSettings paymentMethod = GetDerivationSchemeSettings(walletId);
             if (paymentMethod == null)
                 return NotFound();
 
             var vm = new RescanWalletModel();
             vm.IsFullySync = _dashboard.IsFullySynched(walletId.CryptoCode, out var unused);
-            vm.IsServerAdmin = User.Claims.Any(c => c.Type == Policies.CanModifyServerSettings.Key && c.Value == "true");
+            vm.IsServerAdmin = (await _authorizationService.AuthorizeAsync(User, Policies.CanModifyServerSettings.Key)).Succeeded;
             vm.IsSupportedByCurrency = _dashboard.Get(walletId.CryptoCode)?.Status?.BitcoinStatus?.Capabilities?.CanScanTxoutSet == true;
             var explorer = ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode);
             var scanProgress = await explorer.GetScanUTXOSetInformationAsync(paymentMethod.AccountDerivation);
@@ -614,14 +622,14 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("{walletId}/rescan")]
-        [Authorize(Policy = Policies.CanModifyServerSettings.Key, AuthenticationSchemes = Policies.CookieAuthentication)]
+        [Authorize(Policy = Policies.CanModifyServerSettings.Key, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> WalletRescan(
             [ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, RescanWalletModel vm)
         {
             if (walletId?.StoreId == null)
                 return NotFound();
-            DerivationSchemeSettings paymentMethod = await GetDerivationSchemeSettings(walletId);
+            DerivationSchemeSettings paymentMethod = GetDerivationSchemeSettings(walletId);
             if (paymentMethod == null)
                 return NotFound();
             var explorer = ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode);
@@ -649,22 +657,21 @@ namespace BTCPayServer.Controllers
             return null;
         }
 
-        private DerivationSchemeSettings GetDerivationSchemeSettings(WalletId walletId, StoreData store)
+        public StoreData CurrentStore
         {
-            if (store == null || !store.HasClaim(Policies.CanModifyStoreSettings.Key))
-                return null;
+            get
+            {
+                return HttpContext.GetStoreData();
+            }
+        }
 
-            var paymentMethod = store
+        private DerivationSchemeSettings GetDerivationSchemeSettings(WalletId walletId)
+        {
+            var paymentMethod = CurrentStore
                             .GetSupportedPaymentMethods(NetworkProvider)
                             .OfType<DerivationSchemeSettings>()
                             .FirstOrDefault(p => p.PaymentId.PaymentType == Payments.PaymentTypes.BTCLike && p.PaymentId.CryptoCode == walletId.CryptoCode);
             return paymentMethod;
-        }
-
-        private async Task<DerivationSchemeSettings> GetDerivationSchemeSettings(WalletId walletId)
-        {
-            var store = (await Repository.FindStore(walletId.StoreId, GetUserId()));
-            return GetDerivationSchemeSettings(walletId, store);
         }
 
         private static async Task<string> GetBalanceString(BTCPayWallet wallet, DerivationStrategyBase derivationStrategy)
@@ -703,12 +710,11 @@ namespace BTCPayServer.Controllers
         {
             if (!HttpContext.WebSockets.IsWebSocketRequest)
                 return NotFound();
-
+            var storeData = CurrentStore;
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             if (network == null)
                 throw new FormatException("Invalid value for crypto code");
-            var storeData = (await Repository.FindStore(walletId.StoreId, GetUserId()));
-            var derivationSettings = GetDerivationSchemeSettings(walletId, storeData);
+            var derivationSettings = GetDerivationSchemeSettings(walletId);
 
             var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
 
@@ -813,7 +819,7 @@ namespace BTCPayServer.Controllers
              [ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId)
         {
-            var derivationSchemeSettings = await GetDerivationSchemeSettings(walletId);
+            var derivationSchemeSettings = GetDerivationSchemeSettings(walletId);
             if (derivationSchemeSettings == null)
                 return NotFound();
             var store = (await Repository.FindStore(walletId.StoreId, GetUserId()));
@@ -842,7 +848,7 @@ namespace BTCPayServer.Controllers
         {
             if (!ModelState.IsValid)
                 return View(vm);
-            var derivationScheme = await GetDerivationSchemeSettings(walletId);
+            var derivationScheme = GetDerivationSchemeSettings(walletId);
             if (derivationScheme == null)
                 return NotFound();
             derivationScheme.Label = vm.Label;

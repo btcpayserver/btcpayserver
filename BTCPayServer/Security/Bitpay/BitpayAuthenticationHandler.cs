@@ -41,63 +41,39 @@ namespace BTCPayServer.Security.Bitpay
 
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
         {
-            List<Claim> claims = new List<Claim>();
             if (!Context.Request.HttpContext.TryGetBitpayAuth(out var bitpayAuth))
                 return AuthenticateResult.NoResult();
-            string storeId = null;
-            bool anonymous = true;
-            bool? success = null;
             if (!string.IsNullOrEmpty(bitpayAuth.Signature) && !string.IsNullOrEmpty(bitpayAuth.Id))
             {
-                var result = await CheckBitId(Context.Request.HttpContext, bitpayAuth.Signature, bitpayAuth.Id, claims);
-                storeId = result.StoreId;
-                success = result.SuccessAuth;
-                anonymous = false;
+                var sin = await CheckBitId(Context.Request.HttpContext, bitpayAuth.Signature, bitpayAuth.Id);
+                if (sin == null)
+                    return AuthenticateResult.Fail("BitId authentication failed");
+                return Success(BitpayClaims.SIN, sin, BitpayAuthenticationTypes.SinAuthentication);
             }
             else if (!string.IsNullOrEmpty(bitpayAuth.Authorization))
             {
-                storeId = await CheckLegacyAPIKey(Context.Request.HttpContext, bitpayAuth.Authorization);
-                success = storeId != null;
-                anonymous = false;
+                var storeId = await GetStoreIdFromAuth(Context.Request.HttpContext, bitpayAuth.Authorization);
+                if (storeId == null)
+                    return AuthenticateResult.Fail("ApiKey authentication failed");
+                return Success(BitpayClaims.ApiKeyStoreId, storeId, BitpayAuthenticationTypes.ApiKeyAuthentication);
             }
             else
             {
-                if (Context.Request.HttpContext.Request.Query.TryGetValue("storeId", out var storeIdStringValues))
-                {
-                    storeId = storeIdStringValues.FirstOrDefault() ?? string.Empty;
-                    success = true;
-                    anonymous = true;
-                }
+                return Success(null, null, BitpayAuthenticationTypes.Anonymous);
             }
-
-            if (success is true)
-            {
-                if (storeId != null)
-                {
-                    claims.Add(new Claim(Policies.CanCreateInvoice.Key, storeId));
-                    var store = await _StoreRepository.FindStore(storeId);
-                    if (store == null ||
-                       (anonymous && !store.GetStoreBlob().AnyoneCanInvoice))
-                    {
-                        return AuthenticateResult.Fail("Invalid credentials");
-                    }
-                    store.AdditionalClaims.AddRange(claims);
-                    Context.Request.HttpContext.SetStoreData(store);
-                }
-                return AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(new ClaimsIdentity(claims, Policies.BitpayAuthentication)), Policies.BitpayAuthentication));
-            }
-            else if (success is false)
-            {
-                return AuthenticateResult.Fail("Invalid credentials");
-            }
-            return AuthenticateResult.NoResult();
         }
 
-        private async Task<(string StoreId, bool SuccessAuth)> CheckBitId(HttpContext httpContext, string sig, string id, List<Claim> claims)
+        private AuthenticateResult Success(string claimType, string claimValue, string authenticationType)
+        {
+            List<Claim> claims = new List<Claim>();
+            if (claimType != null)
+                claims.Add(new Claim(claimType, claimValue));
+            return AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(new ClaimsIdentity(claims, authenticationType)), authenticationType));
+        }
+
+        private async Task<string> CheckBitId(HttpContext httpContext, string sig, string id)
         {
             httpContext.Request.EnableBuffering();
-
-            string storeId = null;
             string body = string.Empty;
             if (httpContext.Request.ContentLength != 0 && httpContext.Request.Body != null)
             {
@@ -114,44 +90,14 @@ namespace BTCPayServer.Security.Bitpay
                 var key = new PubKey(id);
                 if (BitIdExtensions.CheckBitIDSignature(key, sig, url, body))
                 {
-                    var sin = key.GetBitIDSIN();
-                    claims.Add(new Claim(Claims.SIN, sin));
-
-                    string token = null;
-                    if (httpContext.Request.Query.TryGetValue("token", out var tokenValues))
-                    {
-                        token = tokenValues[0];
-                    }
-
-                    if (token == null && !String.IsNullOrEmpty(body) && httpContext.Request.Method == "POST")
-                    {
-                        try
-                        {
-                            token = JObject.Parse(body)?.Property("token", StringComparison.OrdinalIgnoreCase)?.Value?.Value<string>();
-                        }
-                        catch { }
-                    }
-
-                    if (token != null)
-                    {
-                        var bitToken = (await _TokenRepository.GetTokens(sin)).FirstOrDefault();
-                        if (bitToken == null)
-                        {
-                            return (null, false);
-                        }
-                        storeId = bitToken.StoreId;
-                    }
-                }
-                else
-                {
-                    return (storeId, false);
+                    return key.GetBitIDSIN();
                 }
             }
-            catch (FormatException) { }
-            return (storeId, true);
+            catch { }
+            return null;
         }
 
-        private async Task<string> CheckLegacyAPIKey(HttpContext httpContext, string auth)
+        private async Task<string> GetStoreIdFromAuth(HttpContext httpContext, string auth)
         {
             var splitted = auth.Split(' ', StringSplitOptions.RemoveEmptyEntries);
             if (splitted.Length != 2 || !splitted[0].Equals("Basic", StringComparison.OrdinalIgnoreCase))

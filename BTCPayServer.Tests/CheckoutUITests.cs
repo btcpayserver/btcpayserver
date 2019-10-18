@@ -24,30 +24,8 @@ namespace BTCPayServer.Tests
             Logs.Tester = new XUnitLog(helper) {Name = "Tests"};
             Logs.LogProvider = new XUnitLogProvider(helper);
         }
-       
-        
+
         [Fact(Timeout = TestTimeout)]
-        public async Task CanCreateInvoice()
-        {
-            using (var s = SeleniumTester.Create())
-            {
-                await s.StartAsync();
-                s.RegisterNewUser();
-                var store = s.CreateNewStore().storeName;
-                s.AddDerivationScheme();
-
-                s.CreateInvoice(store);
-
-                s.Driver.FindElement(By.ClassName("invoice-details-link")).Click();
-                s.Driver.AssertNoError();
-                s.Driver.Navigate().Back();
-                s.Driver.FindElement(By.ClassName("invoice-checkout-link")).Click();
-                Assert.NotEmpty(s.Driver.FindElements(By.Id("checkoutCtrl")));
-                s.Driver.Quit();
-            }
-        }
-        
-        [Fact]
         public async Task CanHandleRefundEmailForm()
         {
 
@@ -63,7 +41,12 @@ namespace BTCPayServer.Tests
                 s.Driver.AssertElementNotFound(By.Id("emailAddressFormInput"));
                 s.GoToHome();
                 var invoiceId = s.CreateInvoice(store.storeName);
-                s.GoToInvoiceCheckout(invoiceId);
+                s.Driver.FindElement(By.ClassName("invoice-details-link")).Click();
+                s.Driver.AssertNoError();
+                s.Driver.Navigate().Back();
+                s.Driver.FindElement(By.ClassName("invoice-checkout-link")).Click();
+                Assert.NotEmpty(s.Driver.FindElements(By.Id("checkoutCtrl")));
+
                 Assert.True(s.Driver.FindElement(By.Id("emailAddressFormInput")).Displayed);
                 s.Driver.FindElement(By.Id("emailAddressFormInput")).SendKeys("xxx");
                 s.Driver.FindElement(By.Id("emailAddressForm")).FindElement(By.CssSelector("button.action-button"))
@@ -74,14 +57,11 @@ namespace BTCPayServer.Tests
                 Assert.Contains("form-input-invalid", formInput.GetAttribute("class"));
                 formInput = s.Driver.FindElement(By.Id("emailAddressFormInput"));
                 formInput.SendKeys("@g.com");
-                
-                s.Driver.FindElement(By.Id("emailAddressForm")).FindElement(By.CssSelector("button.action-button"))
-                    .Click();
-                await Task.Delay(1000);
-                s.Driver.AssertElementNotFound(By.Id("emailAddressFormInput"));
-                
-                s.Driver.Navigate().Refresh();
+                var actionButton = s.Driver.FindElement(By.Id("emailAddressForm")).FindElement(By.CssSelector("button.action-button"));
+                actionButton.Click();
 
+                s.Driver.AssertElementNotFound(By.Id("emailAddressFormInput"));                
+                s.Driver.Navigate().Refresh();
                 s.Driver.AssertElementNotFound(By.Id("emailAddressFormInput"));
             }
         }

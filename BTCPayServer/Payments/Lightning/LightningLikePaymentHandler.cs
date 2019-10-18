@@ -176,7 +176,7 @@ namespace BTCPayServer.Payments.Lightning
             model.IsLightning = true;
             model.PaymentMethodName = GetPaymentMethodName(network);
             model.InvoiceBitcoinUrl = cryptoInfo.PaymentUrls.BOLT11;
-            model.InvoiceBitcoinUrlQR = cryptoInfo.PaymentUrls.BOLT11.ToUpperInvariant();
+            model.InvoiceBitcoinUrlQR = $"lightning:{cryptoInfo.PaymentUrls.BOLT11.ToUpperInvariant().Substring("LIGHTNING:".Length)}";
             model.LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi;
             if (storeBlob.LightningAmountInSatoshi && model.CryptoCode == "BTC" )
             {

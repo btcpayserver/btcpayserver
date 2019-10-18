@@ -165,7 +165,6 @@ namespace BTCPayServer.Controllers
                 }
             }
             var store = await _AppService.GetStore(app);
-            store.AdditionalClaims.Add(new Claim(Policies.CanCreateInvoice.Key, store.Id));
             var invoice = await _InvoiceController.CreateInvoiceCore(new CreateInvoiceRequest()
             {
                 ItemCode = choice?.Id,
@@ -283,7 +282,6 @@ namespace BTCPayServer.Controllers
                 return NotFound("Contribution Amount is more than is currently allowed.");
             }
 
-            store.AdditionalClaims.Add(new Claim(Policies.CanCreateInvoice.Key, store.Id));
             try
             {
                 var invoice = await _InvoiceController.CreateInvoiceCore(new CreateInvoiceRequest()

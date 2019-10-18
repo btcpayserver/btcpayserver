@@ -89,7 +89,7 @@ namespace BTCPayServer.Controllers
                 case "ledger":
                     return ViewWalletSendLedger(psbt);
                 case "update":
-                    var derivationSchemeSettings = await GetDerivationSchemeSettings(walletId);
+                    var derivationSchemeSettings = GetDerivationSchemeSettings(walletId);
                     psbt = await UpdatePSBT(derivationSchemeSettings, psbt, network);
                     if (psbt == null)
                     {
@@ -140,7 +140,7 @@ namespace BTCPayServer.Controllers
             vm.SigningKey = signingKey;
             vm.SigningKeyPath = signingKeyPath;
 
-            var derivationSchemeSettings = await GetDerivationSchemeSettings(walletId);
+            var derivationSchemeSettings = GetDerivationSchemeSettings(walletId);
             if (derivationSchemeSettings == null)
                 return NotFound();
             try
@@ -263,7 +263,7 @@ namespace BTCPayServer.Controllers
             try
             {
                 psbt = PSBT.Parse(vm.PSBT, network.NBitcoinNetwork);
-                var derivationSchemeSettings = await GetDerivationSchemeSettings(walletId);
+                var derivationSchemeSettings = GetDerivationSchemeSettings(walletId);
                 if (derivationSchemeSettings == null)
                     return NotFound();
                 await FetchTransactionDetails(derivationSchemeSettings, vm, network);
@@ -295,7 +295,7 @@ namespace BTCPayServer.Controllers
                     vm.GlobalError = "Error while broadcasting: " + ex.Message;
                     return View(vm);
                 }
-                return await RedirectToWalletTransaction(walletId, transaction);
+                return RedirectToWalletTransaction(walletId, transaction);
             }
             else if (command == "analyze-psbt")
             {

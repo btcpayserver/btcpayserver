@@ -49,7 +49,7 @@ namespace BTCPayServer.Tests
                     Assert.Equal("paid", invoice.Status);
                 });
 
-                var walletController = tester.PayTester.GetController<WalletsController>(user.UserId);
+                var walletController = user.GetController<WalletsController>();
                 var walletId = new WalletId(user.StoreId, "BTC");
                 var sendDestination = new Key().PubKey.Hash.GetAddress(user.SupportedNetwork.NBitcoinNetwork).ToString();
                 var sendModel = new WalletSendModel()

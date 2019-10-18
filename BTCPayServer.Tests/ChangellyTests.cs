@@ -39,7 +39,7 @@ namespace BTCPayServer.Tests
                 var controller = tester.PayTester.GetController<StoresController>(user.UserId, user.StoreId);
 
 
-                var storeBlob = controller.StoreData.GetStoreBlob();
+                var storeBlob = controller.CurrentStore.GetStoreBlob();
                 Assert.Null(storeBlob.ChangellySettings);
 
                 var updateModel = new UpdateChangellySettingsViewModel()
@@ -54,7 +54,7 @@ namespace BTCPayServer.Tests
                     await controller.UpdateChangellySettings(user.StoreId, updateModel, "save")).ActionName);
 
                 var store = await tester.PayTester.StoreRepository.FindStore(user.StoreId);
-                storeBlob = controller.StoreData.GetStoreBlob();
+                storeBlob = controller.CurrentStore.GetStoreBlob();
                 Assert.NotNull(storeBlob.ChangellySettings);
                 Assert.NotNull(storeBlob.ChangellySettings);
                 Assert.IsType<ChangellySettings>(storeBlob.ChangellySettings);
@@ -226,6 +226,7 @@ namespace BTCPayServer.Tests
             }
         }
 
+        [Fact]
         [Trait("Fast", "Fast")]
         public void CanComputeBaseAmount()
         {

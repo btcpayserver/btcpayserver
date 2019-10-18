@@ -25,18 +25,20 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OpenIddict.Abstractions;
 using OpenQA.Selenium;
+using Microsoft.AspNetCore.Identity;
 
 namespace BTCPayServer.Tests
 {
     public class AuthenticationTests
     {
+        public const int TestTimeout = 60_000;
         public AuthenticationTests(ITestOutputHelper helper)
         {
             Logs.Tester = new XUnitLog(helper) {Name = "Tests"};
             Logs.LogProvider = new XUnitLogProvider(helper);
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task GetRedirectedToLoginPathOnChallenge()
         {
@@ -58,7 +60,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanGetOpenIdConfiguration()
         {
@@ -79,7 +81,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanUseNonInteractiveFlows()
         {
@@ -89,6 +91,7 @@ namespace BTCPayServer.Tests
 
                 var user = tester.NewAccount();
                 user.GrantAccess();
+                await user.MakeAdmin();
                 var token = await RegisterPasswordClientAndGetAccessToken(user, null, tester);
                 await TestApiAgainstAccessToken(token, tester, user);
                 token = await RegisterPasswordClientAndGetAccessToken(user, "secret", tester);
@@ -98,8 +101,8 @@ namespace BTCPayServer.Tests
             }
         }
 
+        [Fact(Timeout = TestTimeout)]
         [Trait("Selenium", "Selenium")]
-        [Fact]
         public async Task CanUseImplicitFlow()
         {
             using (var s = SeleniumTester.Create())
@@ -194,8 +197,8 @@ namespace BTCPayServer.Tests
             
         }
 
+        [Fact(Timeout = TestTimeout)]
         [Trait("Selenium", "Selenium")]
-        [Fact]
         public async Task CanUseCodeFlow()
         {
             using (var s = SeleniumTester.Create())
@@ -205,6 +208,7 @@ namespace BTCPayServer.Tests
 
                 var user = tester.NewAccount();
                 user.GrantAccess();
+                await user.MakeAdmin();
                 var id = Guid.NewGuid().ToString();
                 var redirecturi = new Uri("http://127.0.0.1/oidc-callback");
                 var secret = "secret";
@@ -399,7 +403,7 @@ namespace BTCPayServer.Tests
                 $"api/test/me/stores/{testAccount.StoreId}/can-edit",
                 tester.PayTester.HttpClient));
 
-            Assert.Equal(testAccount.RegisterDetails.IsAdmin, await TestApiAgainstAccessToken<bool>(accessToken,
+            Assert.True(await TestApiAgainstAccessToken<bool>(accessToken,
                 $"api/test/me/is-admin",
                 tester.PayTester.HttpClient));
 

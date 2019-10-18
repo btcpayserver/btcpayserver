@@ -16,29 +16,6 @@ namespace BTCPayServer.Data
 {
     public static class StoreDataExtensions
     {
-        public static bool HasClaim(this StoreData storeData, string claim)
-        {
-            return storeData.GetClaims().Any(c => c.Type == claim && c.Value == storeData.Id);
-        }
-        public static Claim[] GetClaims(this StoreData storeData)
-        {
-            List<Claim> claims = new List<Claim>();
-            claims.AddRange(storeData.AdditionalClaims);
-#pragma warning disable CS0612 // Type or member is obsolete
-            var role = storeData.Role;
-#pragma warning restore CS0612 // Type or member is obsolete
-            if (role == StoreRoles.Owner)
-            {
-                claims.Add(new Claim(Policies.CanModifyStoreSettings.Key, storeData.Id));
-            }
-
-            if (role == StoreRoles.Owner || role == StoreRoles.Guest || storeData.GetStoreBlob().AnyoneCanInvoice)
-            {
-                claims.Add(new Claim(Policies.CanCreateInvoice.Key, storeData.Id));
-            }
-            return claims.ToArray();
-        }
-
 #pragma warning disable CS0618
         public static PaymentMethodId GetDefaultPaymentId(this StoreData storeData, BTCPayNetworkProvider networks)
         {

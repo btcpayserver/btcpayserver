@@ -40,8 +40,10 @@
                 <select asp-for="DefaultLang" asp-items="Model.Languages" class="form-control"></select>
             </div>
             <div class="form-group">
-                <label asp-for="RequiresRefundEmail"></label>
-                <input asp-for="RequiresRefundEmail" type="checkbox" class="form-check" />
+                <div class="form-check">
+                    <input asp-for="RequiresRefundEmail" type="checkbox" class="form-check-input" />
+                    <label asp-for="RequiresRefundEmail" class="form-check-label"></label>
+                </div>
             </div>
             <div class="form-group">
                 <label asp-for="OnChainMinValue"></label>
@@ -56,16 +58,22 @@
                 <p class="form-text text-muted">Example: 5.50 USD</p>
             </div>
             <div class="form-group">
-                <label asp-for="LightningAmountInSatoshi"></label>
-                <input asp-for="LightningAmountInSatoshi" type="checkbox" class="form-check" />
-                <span asp-validation-for="LightningAmountInSatoshi" class="text-danger"></span>
+                <div class="form-check">
+                    <input asp-for="LightningAmountInSatoshi" type="checkbox" class="form-check-input" />
+                    <label asp-for="LightningAmountInSatoshi" class="form-check-label"></label>
+                    <span asp-validation-for="LightningAmountInSatoshi" class="text-danger"></span>
+                </div>
+                <div class="form-check">
+                    <input asp-for="RedirectAutomatically" type="checkbox" class="form-check-input" />
+                    <label asp-for="RedirectAutomatically" class="form-check-label"></label>
+                    <span asp-validation-for="RedirectAutomatically" class="text-danger"></span>
+                </div>
+                <div class="form-check">
+                    <input asp-for="ShowRecommendedFee" type="checkbox" class="form-check-input" />
+                    <label asp-for="ShowRecommendedFee" class="form-check-label"></label>
+                    <p class="form-text text-muted">Fee will be shown for BTC and LTC onchain payments only.</p>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="RedirectAutomatically"></label>
-                <input asp-for="RedirectAutomatically" type="checkbox" class="form-check" />
-                <span asp-validation-for="RedirectAutomatically" class="text-danger"></span>
-            </div>
-            <br />
             <button name="command" type="submit" class="btn btn-primary" value="Save">Save</button>
         </form>
     </div>

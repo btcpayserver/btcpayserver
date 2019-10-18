@@ -8,7 +8,7 @@ namespace BTCPayServer.Security
     {
         public static AuthenticationBuilder AddBitpayAuthentication(this AuthenticationBuilder builder)
         {
-            builder.AddScheme<BitpayAuthenticationOptions, BitpayAuthenticationHandler>(Policies.BitpayAuthentication, o => { });
+            builder.AddScheme<BitpayAuthenticationOptions, BitpayAuthenticationHandler>(AuthenticationSchemes.Bitpay, o => { });
             return builder;
         }
     }

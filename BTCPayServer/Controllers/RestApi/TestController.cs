@@ -19,7 +19,7 @@ namespace BTCPayServer.Controllers.RestApi
     /// </summary>
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(AuthenticationSchemes = OpenIddictValidationDefaults.AuthenticationScheme)]
+    [Authorize(AuthenticationSchemes = AuthenticationSchemes.OpenId)]
     public class TestController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
@@ -44,9 +44,10 @@ namespace BTCPayServer.Controllers.RestApi
         }
 
         [HttpGet("me/is-admin")]
+        [Authorize(Policy = Policies.CanModifyServerSettings.Key, AuthenticationSchemes = AuthenticationSchemes.OpenId)]
         public bool AmIAnAdmin()
         {
-            return User.IsInRole(Roles.ServerAdmin);
+            return true;
         }
 
         [HttpGet("me/stores")]
@@ -57,8 +58,8 @@ namespace BTCPayServer.Controllers.RestApi
 
 
         [HttpGet("me/stores/{storeId}/can-edit")]
-        [Authorize(Policy = RestAPIPolicies.CanEditStore,
-            AuthenticationSchemes = OpenIddictValidationDefaults.AuthenticationScheme)]
+        [Authorize(Policy = Policies.CanModifyStoreSettings.Key,
+            AuthenticationSchemes = AuthenticationSchemes.OpenId)]
         public bool CanEdit(string storeId)
         {
             return true;
@@ -68,48 +69,48 @@ namespace BTCPayServer.Controllers.RestApi
 #region scopes tests
 
         [Authorize(Policy = RestAPIPolicies.CanViewStores,
-            AuthenticationSchemes = OpenIddictValidationDefaults.AuthenticationScheme)]
+            AuthenticationSchemes = AuthenticationSchemes.OpenId)]
         [HttpGet(nameof(ScopeCanViewStores))]
         public bool ScopeCanViewStores() { return true; }
 
         [Authorize(Policy = RestAPIPolicies.CanManageStores,
-            AuthenticationSchemes = OpenIddictValidationDefaults.AuthenticationScheme)]
+            AuthenticationSchemes = AuthenticationSchemes.OpenId)]
         [HttpGet(nameof(ScopeCanManageStores))]
         public bool ScopeCanManageStores() { return true; }
 
         [Authorize(Policy = RestAPIPolicies.CanViewInvoices,
-            AuthenticationSchemes = OpenIddictValidationDefaults.AuthenticationScheme)]
+            AuthenticationSchemes = AuthenticationSchemes.OpenId)]
         [HttpGet(nameof(ScopeCanViewInvoices))]
         public bool ScopeCanViewInvoices() { return true; }
 
         [Authorize(Policy = RestAPIPolicies.CanCreateInvoices,
-            AuthenticationSchemes = OpenIddictValidationDefaults.AuthenticationScheme)]
+            AuthenticationSchemes = AuthenticationSchemes.OpenId)]
         [HttpGet(nameof(ScopeCanCreateInvoices))]
         public bool ScopeCanCreateInvoices() { return true; }
 
         [Authorize(Policy = RestAPIPolicies.CanManageInvoices,
-            AuthenticationSchemes = OpenIddictValidationDefaults.AuthenticationScheme)]
+            AuthenticationSchemes = AuthenticationSchemes.OpenId)]
         [HttpGet(nameof(ScopeCanManageInvoices))]
         public bool ScopeCanManageInvoices() { return true; }
 
         [Authorize(Policy = RestAPIPolicies.CanManageApps,
-            AuthenticationSchemes = OpenIddictValidationDefaults.AuthenticationScheme)]
+            AuthenticationSchemes = AuthenticationSchemes.OpenId)]
         [HttpGet(nameof(ScopeCanManageApps))]
         public bool ScopeCanManageApps() { return true; }
 
         [Authorize(Policy = RestAPIPolicies.CanViewApps,
-            AuthenticationSchemes = OpenIddictValidationDefaults.AuthenticationScheme)]
+            AuthenticationSchemes = AuthenticationSchemes.OpenId)]
         
         [HttpGet(nameof(ScopeCanViewApps))]
         public bool ScopeCanViewApps() { return true; }
 
         [Authorize(Policy = RestAPIPolicies.CanManageWallet,
-            AuthenticationSchemes = OpenIddictValidationDefaults.AuthenticationScheme)]
+            AuthenticationSchemes = AuthenticationSchemes.OpenId)]
         [HttpGet(nameof(ScopeCanManageWallet))]
         public bool ScopeCanManageWallet() { return true; }
 
         [Authorize(Policy = RestAPIPolicies.CanViewProfile,
-            AuthenticationSchemes = OpenIddictValidationDefaults.AuthenticationScheme)]
+            AuthenticationSchemes = AuthenticationSchemes.OpenId)]
         
         [HttpGet(nameof(ScopeCanViewProfile))]
         public bool ScopeCanViewProfile() { return true; }

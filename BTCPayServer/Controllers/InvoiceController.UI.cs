@@ -225,7 +225,6 @@ namespace BTCPayServer.Controllers
                    (1m + (changelly.AmountMarkupPercentage / 100m)))
                 : (decimal?)null;
 
-            
             var paymentMethodHandler = _paymentMethodHandlerDictionary[paymentMethodId];
             var model = new PaymentModel()
             {
@@ -244,6 +243,8 @@ namespace BTCPayServer.Controllers
                 OrderAmountFiat = OrderAmountFromInvoice(network.CryptoCode, invoice.ProductInformation),
                 CustomerEmail = invoice.RefundMail,
                 RequiresRefundEmail = storeBlob.RequiresRefundEmail,
+                ShowRecommendedFee = storeBlob.ShowRecommendedFee,
+                FeeRate = paymentMethodDetails.GetFeeRate(),
                 ExpirationSeconds = Math.Max(0, (int)(invoice.ExpirationTime - DateTimeOffset.UtcNow).TotalSeconds),
                 MaxTimeSeconds = (int)(invoice.ExpirationTime - invoice.InvoiceTime).TotalSeconds,
                 MaxTimeMinutes = (int)(invoice.ExpirationTime - invoice.InvoiceTime).TotalMinutes,

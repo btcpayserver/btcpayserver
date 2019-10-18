@@ -38,6 +38,8 @@ namespace BTCPayServer.Models.InvoicingModels
         public string BtcDue { get; set; }
         public string CustomerEmail { get; set; }
         public bool RequiresRefundEmail { get; set; }
+        public bool ShowRecommendedFee { get; set; }
+        public decimal FeeRate { get; set; }
         public int ExpirationSeconds { get; set; }
         public string Status { get; set; }
         public string MerchantRefLink { get; set; }

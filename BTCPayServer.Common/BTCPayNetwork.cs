@@ -104,7 +104,6 @@ namespace BTCPayServer
 
     public abstract class BTCPayNetworkBase
     {
-        
         public string CryptoCode { get; internal set; }
         public string BlockExplorerLink { get; internal set; }
         public string DisplayName { get; set; }

@@ -26,6 +26,11 @@ namespace BTCPayServer.Payments.Lightning
         {
             return 0.0m;
         }
+
+        public decimal GetFeeRate() {
+            return 0.0m;
+        }
+
         public void SetPaymentDestination(string newPaymentDestination)
         {
             BOLT11 = newPaymentDestination;

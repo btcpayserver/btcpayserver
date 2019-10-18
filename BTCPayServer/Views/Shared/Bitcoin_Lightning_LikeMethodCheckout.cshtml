@@ -167,7 +167,13 @@
                     </center>
                 </nav>
             </div>
-         }   
+        }
+
+        @if (Model.ShowRecommendedFee) {
+            <div id="recommended-fee" class="recommended-fee" v-bind:class="{ hide: !srvModel.feeRate }">
+                <span>{{$t("Recommended_Fee", srvModel)}}</span>
+            </div>
+        }
     </div>          
 </script>
 

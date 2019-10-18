@@ -122,6 +122,12 @@ namespace BTCPayServer.Configuration
                 }
 
                 ExternalServices.Load(net.CryptoCode, conf);
+
+                var val = conf.GetOrDefault<string>($"{net.CryptoCode}.lndseedpath", string.Empty);
+                if (!String.IsNullOrEmpty(val))
+                {
+                    LndSeedPath.Add(net.CryptoCode, val);
+                }
             }
 
             Logs.Configuration.LogInformation("Supported chains: " + String.Join(',', supportedChains.ToArray()));
@@ -252,6 +258,7 @@ namespace BTCPayServer.Configuration
 
         public string RootPath { get; set; }
         public Dictionary<string, LightningConnectionString> InternalLightningByCryptoCode { get; set; } = new Dictionary<string, LightningConnectionString>();
+        public Dictionary<string, string> LndSeedPath { get; set; } = new Dictionary<string, string>();
 
         public Dictionary<string, Uri> OtherExternalServices { get; set; } = new Dictionary<string, Uri>();
         public ExternalServices ExternalServices { get; set; } = new ExternalServices();

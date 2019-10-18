@@ -37,8 +37,12 @@ namespace BTCPayServer.Controllers
                 (vm.ConnectionString.Contains("lnd-rest", StringComparison.OrdinalIgnoreCase) ||
                 vm.ConnectionString.Contains("lnd-grpc", StringComparison.OrdinalIgnoreCase)))
             {
-                await _lndMigrationHelper.PerformDetection();
-                vm.IsSeedlessLnd = _lndMigrationHelper.IsSeedlessLnd;
+                if (_serverOptions.LndSeedPath.ContainsKey(cryptoCode))
+                {
+                    var lndSeedFilePath = _serverOptions.LndSeedPath[cryptoCode];
+                    await _lndMigrationHelper.PerformDetection(lndSeedFilePath);
+                    vm.IsSeedlessLnd = _lndMigrationHelper.IsSeedlessLnd;
+                }
             }
 
             return View(vm);

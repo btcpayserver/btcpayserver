@@ -65,7 +65,8 @@ namespace BTCPayServer.Controllers
             IWebHostEnvironment env, IHttpClientFactory httpClientFactory,
             PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
             CssThemeManager cssThemeManager,
-            LndMigrationHelper lndMigrationHelper)
+            LndMigrationHelper lndMigrationHelper,
+            BTCPayServerOptions serverOptions)
         {
             _RateFactory = rateFactory;
             _Repo = repo;
@@ -80,6 +81,7 @@ namespace BTCPayServer.Controllers
             _paymentMethodHandlerDictionary = paymentMethodHandlerDictionary;
             _CssThemeManager = cssThemeManager;
             _lndMigrationHelper = lndMigrationHelper;
+            _serverOptions = serverOptions;
             _NetworkProvider = networkProvider;
             _ExplorerProvider = explorerProvider;
             _FeeRateProvider = feeRateProvider;
@@ -105,6 +107,7 @@ namespace BTCPayServer.Controllers
         private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
         private readonly CssThemeManager _CssThemeManager;
         private readonly LndMigrationHelper _lndMigrationHelper;
+        private readonly BTCPayServerOptions _serverOptions;
 
         [TempData]
         public string StatusMessage

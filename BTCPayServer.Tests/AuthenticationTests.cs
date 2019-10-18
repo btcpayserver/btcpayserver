@@ -12,7 +12,6 @@ using Xunit;
 using Xunit.Abstractions;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using BTCPayServer.Authentication;
 using BTCPayServer.Data;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;

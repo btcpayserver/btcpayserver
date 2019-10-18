@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-using BTCPayServer.Authentication;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Security;

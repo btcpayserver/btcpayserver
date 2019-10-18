@@ -6,10 +6,10 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
-using BTCPayServer.Authentication;
 using NBitcoin.DataEncoders;
 using Microsoft.AspNetCore.Http;
 using System.IO;
+using BTCPayServer.Security.Bitpay;
 
 namespace BTCPayServer.Models
 {

@@ -24,7 +24,6 @@ using BTCPayServer.Security;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using OpenIddict.EntityFrameworkCore.Models;
 using System.Net;
-using BTCPayServer.Authentication;
 using BTCPayServer.Security.OpenId;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Services.Apps;

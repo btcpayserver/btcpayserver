@@ -7,7 +7,6 @@ using System.Text;
 using System.Linq;
 using System.Threading.Tasks;
 using System.IO;
-using BTCPayServer.Authentication;
 using BTCPayServer.Logging;
 using Newtonsoft.Json;
 using BTCPayServer.Models;

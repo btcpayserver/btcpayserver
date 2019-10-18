@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using BTCPayServer.Authentication;
 using Microsoft.AspNetCore.Authorization;
 
 namespace BTCPayServer.Security

@@ -25,7 +25,6 @@ using BTCPayServer.Controllers;
 using BTCPayServer.Services.Mails;
 using System.Threading;
 using BTCPayServer.Services.Wallets;
-using BTCPayServer.Authentication;
 using BTCPayServer.Logging;
 using BTCPayServer.HostedServices;
 using BTCPayServer.PaymentRequest;

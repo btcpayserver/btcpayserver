@@ -1,5 +1,4 @@
-﻿using BTCPayServer.Authentication;
-using BTCPayServer.Configuration;
+﻿using BTCPayServer.Configuration;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

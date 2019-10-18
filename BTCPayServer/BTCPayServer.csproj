@@ -64,7 +64,7 @@
     <PackageReference Include="TwentyTwenty.Storage" Version="2.11.2" />
     <PackageReference Include="TwentyTwenty.Storage.Amazon" Version="2.11.2" />
     <PackageReference Include="TwentyTwenty.Storage.Azure" Version="2.11.2" />
-    <PackageReference Include="TwentyTwenty.Storage.Google" Version="2.11.2"  Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
+    <PackageReference Include="TwentyTwenty.Storage.Google" Version="2.11.2" Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
     <PackageReference Include="TwentyTwenty.Storage.Local" Version="2.11.2" />
     <PackageReference Include="U2F.Core" Version="1.0.4" />
 		<PackageReference Include="YamlDotNet" Version="5.2.1" />
@@ -129,6 +129,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Folder Include="Authentication\" />
 	  <Folder Include="wwwroot\vendor\clipboard.js\" />
 	  <Folder Include="wwwroot\vendor\highlightjs\" />
 	  <Folder Include="wwwroot\vendor\summernote" />

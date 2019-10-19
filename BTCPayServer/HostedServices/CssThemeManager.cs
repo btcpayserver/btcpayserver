@@ -52,7 +52,7 @@ namespace BTCPayServer.HostedServices
         public AppType? RootAppType { get; set; }
         public string RootAppId { get; set; }
 
-        public List<PoliciesSettings.DomainToAppMappingItem> DomainToAppMapping { get; set; }
+        public List<PoliciesSettings.DomainToAppMappingItem> DomainToAppMapping { get; set; } = new List<PoliciesSettings.DomainToAppMappingItem>();
 
         internal void Update(PoliciesSettings data)
         {
@@ -117,7 +117,6 @@ namespace BTCPayServer.HostedServices
 
         async Task ListenForPoliciesChanges()
         {
-            await new SynchronizationContextRemover();
             var data = (await _SettingsRepository.GetSettingAsync<PoliciesSettings>()) ?? new PoliciesSettings();
             _CssThemeManager.Update(data);
             await _SettingsRepository.WaitSettingsChanged<PoliciesSettings>(Cancellation);
@@ -125,7 +124,6 @@ namespace BTCPayServer.HostedServices
 
         async Task ListenForThemeChanges()
         {
-            await new SynchronizationContextRemover();
             var data = (await _SettingsRepository.GetSettingAsync<ThemeSettings>()) ?? new ThemeSettings();
             _CssThemeManager.Update(data);
 

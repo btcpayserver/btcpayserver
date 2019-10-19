@@ -166,12 +166,14 @@ namespace BTCPayServer.Tests
 
         public void Dispose()
         {
+            Logs.Tester.LogInformation("Disposing the BTCPayTester...");
             foreach (var store in Stores)
             {
                 Xunit.Assert.True(PayTester.StoreRepository.DeleteStore(store).GetAwaiter().GetResult());
             }
             if (PayTester != null)
                 PayTester.Dispose();
+            Logs.Tester.LogInformation("BTCPayTester disposed");
         }
     }
 }

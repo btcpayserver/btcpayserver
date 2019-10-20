@@ -115,7 +115,7 @@ namespace BTCPayServer.Services.Rates
             Providers.Add("bylls", new ByllsRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_BYLLS")));
             Providers.Add("bitbank", new BitbankRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_BITBANK")));
             Providers.Add("bitpay", new BitpayRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_BITPAY")));
-            // Providers.Add("ndax", new NdaxRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_NDAX"))); Buggy exchange
+            Providers.Add("ndax", new NdaxRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_NDAX")));
 
             // Those exchanges make multiple requests when calling GetTickers so we remove them
             //DirectProviders.Add("gemini", new ExchangeSharpRateProvider("gemini", new ExchangeGeminiAPI()));

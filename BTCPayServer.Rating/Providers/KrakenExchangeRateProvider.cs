@@ -167,7 +167,7 @@ namespace BTCPayServer.Services.Rates
             }
         }
 
-        private async Task<T> MakeJsonRequestAsync<T>(string url, string baseUrl = null, Dictionary<string, object> payload = null, string requestMethod = null, CancellationToken cancellationToken)
+        private async Task<T> MakeJsonRequestAsync<T>(string url, string baseUrl = null, Dictionary<string, object> payload = null, string requestMethod = null, CancellationToken cancellationToken = default)
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("https://api.kraken.com");

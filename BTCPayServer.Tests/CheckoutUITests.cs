@@ -35,6 +35,9 @@ namespace BTCPayServer.Tests
                 s.RegisterNewUser();
                 var store = s.CreateNewStore();
                 s.AddDerivationScheme("BTC");
+                s.GoToStore(store.storeId, StoreNavPages.Checkout);
+                s.Driver.FindElement(By.Id("RequiresRefundEmail")).Click();
+                s.Driver.FindElement(By.Name("command")).ForceClick();
 
                 var emailAlreadyThereInvoiceId =s.CreateInvoice(store.storeName, 100, "USD", "a@g.com");
                 s.GoToInvoiceCheckout(emailAlreadyThereInvoiceId);

@@ -45,7 +45,7 @@ namespace BTCPayServer.HostedServices
                 {
                     using (var connection = await _options.SSHSettings.ConnectAsync(_cancellationTokenSource.Token))
                     {
-                        await connection.DisconnectAsync();
+                        await connection.DisconnectAsync(_cancellationTokenSource.Token);
                         Logs.Configuration.LogInformation($"SSH connection succeeded");
                         canUseSSH = true;
                     }

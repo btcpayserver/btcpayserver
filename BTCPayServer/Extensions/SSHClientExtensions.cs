@@ -102,7 +102,7 @@ namespace BTCPayServer
             };
         }
 
-        public static Task DisconnectAsync(this SshClient sshClient)
+        public static async Task DisconnectAsync(this SshClient sshClient, CancellationToken cancellationToken = default)
         {
             if (sshClient == null)
                 throw new ArgumentNullException(nameof(sshClient));
@@ -121,7 +121,10 @@ namespace BTCPayServer
                 }
             })
             { IsBackground = true }.Start();
-            return tcs.Task;
+            using (cancellationToken.Register(() => tcs.TrySetCanceled()))
+            {
+                await tcs.Task;
+            }
         }
     }
 }

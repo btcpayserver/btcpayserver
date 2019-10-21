@@ -43,7 +43,7 @@ namespace BTCPayServer.HostedServices
                 Logs.Configuration.LogInformation($"SSH settings detected, testing connection to {_options.SSHSettings.Username}@{_options.SSHSettings.Server} on port {_options.SSHSettings.Port} ...");
                 try
                 {
-                    using (var connection = await _options.SSHSettings.ConnectAsync())
+                    using (var connection = await _options.SSHSettings.ConnectAsync(_cancellationTokenSource.Token))
                     {
                         await connection.DisconnectAsync();
                         Logs.Configuration.LogInformation($"SSH connection succeeded");
@@ -84,6 +84,7 @@ namespace BTCPayServer.HostedServices
                 await _testingConnection;
             }
             catch { }
+            Logs.PayServer.LogInformation($"{this.GetType().Name} successfully exited...");
         }
     }
 }

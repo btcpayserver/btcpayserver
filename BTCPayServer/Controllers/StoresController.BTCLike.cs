@@ -272,12 +272,14 @@ namespace BTCPayServer.Controllers
                 }
 
                 await _Repo.UpdateStore(store);
-                if (oldConfig != vm.Config)
-                    StatusMessage = $"Derivation settings for {network.CryptoCode} has been modified.";
                 if (willBeExcluded != wasExcluded)
                 {
                     var label = willBeExcluded ? "disabled" : "enabled";
                     StatusMessage = $"On-Chain payments for {network.CryptoCode} has been {label}.";
+                }
+                else
+                {
+                    StatusMessage = $"Derivation settings for {network.CryptoCode} has been modified.";
                 }
                 return RedirectToAction(nameof(UpdateStore), new {storeId = storeId});
             }

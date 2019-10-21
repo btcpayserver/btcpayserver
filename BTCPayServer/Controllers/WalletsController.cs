@@ -575,7 +575,7 @@ namespace BTCPayServer.Controllers
                 wallet.InvalidateCache(derivationSettings.AccountDerivation);
                 StatusMessage = $"Transaction broadcasted successfully ({transaction.GetHash().ToString()})";
             }
-            return RedirectToAction(nameof(WalletTransactions));
+            return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
         }
 
         [HttpGet]

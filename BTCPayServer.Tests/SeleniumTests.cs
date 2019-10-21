@@ -15,7 +15,7 @@ namespace BTCPayServer.Tests
     [Trait("Selenium", "Selenium")]
     public class ChromeTests
     {
-        public const int TestTimeout = 60_000;
+        public const int TestTimeout = TestUtils.TestTimeout;
         public ChromeTests(ITestOutputHelper helper)
         {
             Logs.Tester = new XUnitLog(helper) { Name = "Tests" };

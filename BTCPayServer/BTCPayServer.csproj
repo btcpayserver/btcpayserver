@@ -129,7 +129,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Authentication\" />
 	  <Folder Include="wwwroot\vendor\clipboard.js\" />
 	  <Folder Include="wwwroot\vendor\highlightjs\" />
 	  <Folder Include="wwwroot\vendor\summernote" />

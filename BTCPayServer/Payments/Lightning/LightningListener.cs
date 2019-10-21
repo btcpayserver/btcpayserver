@@ -195,7 +195,7 @@ namespace BTCPayServer.Payments.Lightning
             {
 
             }
-            Logs.PayServer.LogInformation("Lightning listened stopped");
+            Logs.PayServer.LogInformation($"{this.GetType().Name} successfully exited...");
         }
     }
 

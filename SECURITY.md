@@ -1,4 +1,4 @@
-Security issues and bugs should be reported privately, via email. To report security a security issue, please send an email to **security@btcpayserver.org** (not for support).
+Security issues and bugs should be reported privately, via email. To report a security issue, please send an email to **security@btcpayserver.org** (not for support).
 
 You will receive a reply indicating the next steps in handling your report. If for some reason you do not receive a reply within 24 hours, please follow up via email to ensure the original message was received.
 

@@ -76,7 +76,7 @@ services:
       - customer_lnd
       - merchant_lnd
   nbxplorer:
-    image: nicolasdorier/nbxplorer:2.0.0.57
+    image: nicolasdorier/nbxplorer:2.0.0.62
     restart: unless-stopped
     ports:
       - "32838:32838"

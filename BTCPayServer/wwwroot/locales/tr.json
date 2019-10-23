@@ -47,5 +47,6 @@
   "Pay with CoinSwitch": "CoinSwitch ile Öde",
   "Pay with Changelly": "Changelly ile Öde",
   "Close": "Kapat",
-  "NotPaid_ExtraTransaction": "The invoice hasn't been paid in full. Please send another transaction to cover amount Due."
+  "NotPaid_ExtraTransaction": "The invoice hasn't been paid in full. Please send another transaction to cover amount Due.",
+  "Recommended_Fee": "Recommended fee: {{feeRate}} sat/byte"
 }

@@ -47,5 +47,6 @@
   "Pay with CoinSwitch": "Bayar dengan CoinSwitch",
   "Pay with Changelly": "Bayar dengan Changelly",
   "Close": "Tutup",
-  "NotPaid_ExtraTransaction": "Tagihan ini belum dibayarkan sepenuhnya. Dimohon untuk membayarkan sisa pembayaran anda."
+  "NotPaid_ExtraTransaction": "Tagihan ini belum dibayarkan sepenuhnya. Dimohon untuk membayarkan sisa pembayaran anda.",
+  "Recommended_Fee": "Recommended fee: {{feeRate}} sat/byte"
 }

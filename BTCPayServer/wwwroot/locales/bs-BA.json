@@ -47,5 +47,6 @@
   "Pay with CoinSwitch": "Plati sa CoinSwitch",
   "Pay with Changelly": "Plati sa Changelly",
   "Close": "Zatvori",
-  "NotPaid_ExtraTransaction": "The invoice hasn't been paid in full. Please send another transaction to cover amount Due."
+  "NotPaid_ExtraTransaction": "The invoice hasn't been paid in full. Please send another transaction to cover amount Due.",
+  "Recommended_Fee": "Recommended fee: {{feeRate}} sat/byte"
 }

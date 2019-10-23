@@ -47,5 +47,6 @@
   "Pay with CoinSwitch": "Payer avec CoinSwitch",
   "Pay with Changelly": "Payer avec Changelly",
   "Close": "Fermer",
-  "NotPaid_ExtraTransaction": "La facture n'as pas été réglée dans sa totalité. Veuillez envoyer une autre transaction pour la compléter."
+  "NotPaid_ExtraTransaction": "La facture n'as pas été réglée dans sa totalité. Veuillez envoyer une autre transaction pour la compléter.",
+  "Recommended_Fee": "Recommended fee: {{feeRate}} sat/byte"
 }

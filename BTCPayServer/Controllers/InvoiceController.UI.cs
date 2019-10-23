@@ -358,6 +358,7 @@ namespace BTCPayServer.Controllers
                         break;
                 }
             }
+            catch(WebSocketException) { }
             finally
             {
                 leases.Dispose();

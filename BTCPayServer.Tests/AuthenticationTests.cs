@@ -4,22 +4,14 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-#if NETCOREAPP21
-using OpenIddictRequest = AspNet.Security.OpenIdConnect.Primitives.OpenIdConnectRequest;
-using OpenIddictResponse = AspNet.Security.OpenIdConnect.Primitives.OpenIdConnectResponse;
-using OpenIdConnectDefaults = OpenIddict.Server.OpenIddictServerDefaults;
-using AspNet.Security.OpenIdConnect.Primitives;
-#else
 using System.Security.Claims;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-#endif
 using BTCPayServer.Tests.Logging;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Xunit;
 using Xunit.Abstractions;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using BTCPayServer.Authentication;
 using BTCPayServer.Data;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -31,7 +23,7 @@ namespace BTCPayServer.Tests
 {
     public class AuthenticationTests
     {
-        public const int TestTimeout = 60_000;
+        public const int TestTimeout = TestUtils.TestTimeout;
         public AuthenticationTests(ITestOutputHelper helper)
         {
             Logs.Tester = new XUnitLog(helper) {Name = "Tests"};
@@ -112,6 +104,7 @@ namespace BTCPayServer.Tests
 
                 var user = tester.NewAccount();
                 user.GrantAccess();
+                await user.MakeAdmin();
                 var id = Guid.NewGuid().ToString();
                 var redirecturi = new Uri("http://127.0.0.1/oidc-callback");
                 var openIdClient = await user.RegisterOpenIdClient(
@@ -124,7 +117,7 @@ namespace BTCPayServer.Tests
                         
                     });
                 var implicitAuthorizeUrl = new Uri(tester.PayTester.ServerUri,
-                    $"connect/authorize?response_type=token&client_id={id}&redirect_uri={redirecturi.AbsoluteUri}&scope=openid&nonce={Guid.NewGuid().ToString()}");
+                    $"connect/authorize?response_type=token&client_id={id}&redirect_uri={redirecturi.AbsoluteUri}&scope=openid server_management store_management&nonce={Guid.NewGuid().ToString()}");
                 s.Driver.Navigate().GoToUrl(implicitAuthorizeUrl);
                 s.Login(user.RegisterDetails.Email, user.RegisterDetails.Password);
                 s.Driver.FindElement(By.Id("consent-yes")).Click();
@@ -139,50 +132,51 @@ namespace BTCPayServer.Tests
                 results = url.Split("#").Last().Split("&").ToDictionary(s1 => s1.Split("=")[0], s1 => s1.Split("=")[1]);
                 await TestApiAgainstAccessToken(results["access_token"], tester, user);
 
-                LogoutFlow(tester, id, s);
+                var stores = await TestApiAgainstAccessToken<StoreData[]>(results["access_token"],
+                    $"api/test/me/stores",
+                    tester.PayTester.HttpClient);
+                Assert.NotEmpty(stores);
+
+                Assert.True(await TestApiAgainstAccessToken<bool>(results["access_token"],
+                $"api/test/me/stores/{stores[0].Id}/can-edit",
+                tester.PayTester.HttpClient));
+
                 //we dont ask for consent after acquiring it the first time for the same scopes.
+                LogoutFlow(tester, id, s);
                 s.Driver.Navigate().GoToUrl(implicitAuthorizeUrl);
                 s.Login(user.RegisterDetails.Email, user.RegisterDetails.Password);
-                
-                Assert.Throws<NoSuchElementException>(() => s.Driver.FindElement(By.Id("consent-yes")));
-                results = url.Split("#").Last().Split("&")
-                    .ToDictionary(s1 => s1.Split("=")[0], s1 => s1.Split("=")[1]);
-                await TestApiAgainstAccessToken(results["access_token"], tester, user);
-                
-                //let's test out scopes!
+                s.Driver.AssertElementNotFound(By.Id("consent-yes"));
+
+                // Let's asks without scopes
+                LogoutFlow(tester, id, s);
+                id = Guid.NewGuid().ToString();
+                openIdClient = await user.RegisterOpenIdClient(
+                    new OpenIddictApplicationDescriptor()
+                    {
+                        ClientId = id,
+                        DisplayName = id,
+                        Permissions = { OpenIddictConstants.Permissions.GrantTypes.Implicit },
+                        RedirectUris = { redirecturi },
+                    });
                 implicitAuthorizeUrl = new Uri(tester.PayTester.ServerUri,
-                    $"connect/authorize?response_type=token&client_id={id}&redirect_uri={redirecturi.AbsoluteUri}&scope=openid {RestAPIPolicies.BTCPayScopes.AppManagement} {RestAPIPolicies.BTCPayScopes.ViewStores} &nonce={Guid.NewGuid().ToString()}");
-
+                    $"connect/authorize?response_type=token&client_id={id}&redirect_uri={redirecturi.AbsoluteUri}&scope=openid&nonce={Guid.NewGuid().ToString()}");
                 s.Driver.Navigate().GoToUrl(implicitAuthorizeUrl);
-                //authorize form should show now that we have asked for more scopes
+                s.Login(user.RegisterDetails.Email, user.RegisterDetails.Password);
                 s.Driver.FindElement(By.Id("consent-yes")).Click();
-                url = s.Driver.Url;
-                results = url.Split("#").Last().Split("&")
+                results = s.Driver.Url.Split("#").Last().Split("&")
                     .ToDictionary(s1 => s1.Split("=")[0], s1 => s1.Split("=")[1]);
 
-
-                Assert.True(await TestApiAgainstAccessToken<bool>(results["access_token"],
-                    $"api/test/ScopeCanViewApps",
-                    tester.PayTester.HttpClient));
-                
-                Assert.True(await TestApiAgainstAccessToken<bool>(results["access_token"],
-                    $"api/test/ScopeCanManageApps",
-                    tester.PayTester.HttpClient));
-
-                Assert.True(await TestApiAgainstAccessToken<bool>(results["access_token"],
-                    $"api/test/ScopeCanViewStores",
-                    tester.PayTester.HttpClient));
                 await Assert.ThrowsAnyAsync<HttpRequestException>(async () =>
                 {
-                    await TestApiAgainstAccessToken<bool>(results["access_token"],
-                        $"api/test/ScopeCanManageStores",
-                        tester.PayTester.HttpClient);
+                    await TestApiAgainstAccessToken<StoreData[]>(results["access_token"],
+                    $"api/test/me/stores",
+                    tester.PayTester.HttpClient);
                 });
                 await Assert.ThrowsAnyAsync<HttpRequestException>(async () =>
                 {
                     await TestApiAgainstAccessToken<bool>(results["access_token"],
-                        $"api/test/ScopeCanViewProfile",
-                        tester.PayTester.HttpClient);
+                    $"api/test/me/stores/{stores[0].Id}/can-edit",
+                    tester.PayTester.HttpClient);
                 });
             }
         }
@@ -225,7 +219,7 @@ namespace BTCPayServer.Tests
                         RedirectUris = {redirecturi}
                     }, secret);
                 var authorizeUrl = new Uri(tester.PayTester.ServerUri,
-                    $"connect/authorize?response_type=code&client_id={id}&redirect_uri={redirecturi.AbsoluteUri}&scope=openid offline_access&state={Guid.NewGuid().ToString()}");
+                    $"connect/authorize?response_type=code&client_id={id}&redirect_uri={redirecturi.AbsoluteUri}&scope=openid offline_access server_management store_management&state={Guid.NewGuid().ToString()}");
                 s.Driver.Navigate().GoToUrl(authorizeUrl);
                 s.Login(user.RegisterDetails.Email, user.RegisterDetails.Password);
                 s.Driver.FindElement(By.Id("consent-yes")).Click();
@@ -325,7 +319,8 @@ namespace BTCPayServer.Tests
                     new KeyValuePair<string, string>("grant_type",
                         OpenIddictConstants.GrantTypes.ClientCredentials),
                     new KeyValuePair<string, string>("client_id", openIdClient.ClientId),
-                    new KeyValuePair<string, string>("client_secret", secret)
+                    new KeyValuePair<string, string>("client_secret", secret),
+                    new KeyValuePair<string, string>("scope", "server_management store_management")
                 })
             };
 
@@ -365,7 +360,8 @@ namespace BTCPayServer.Tests
                     new KeyValuePair<string, string>("username", user.RegisterDetails.Email),
                     new KeyValuePair<string, string>("password", user.RegisterDetails.Password),
                     new KeyValuePair<string, string>("client_id", openIdClient.ClientId),
-                    new KeyValuePair<string, string>("client_secret", secret)
+                    new KeyValuePair<string, string>("client_secret", secret),
+                    new KeyValuePair<string, string>("scope", "server_management store_management")
                 })
             };
 

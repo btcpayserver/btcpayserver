@@ -57,12 +57,14 @@ namespace BTCPayServer.HostedServices
             }
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        public async Task StopAsync(CancellationToken cancellationToken)
         {
-            if (_Cts == null)
-                return Task.CompletedTask;
-            _Cts.Cancel();
-            return Task.WhenAll(_Tasks);
+            if (_Cts != null)
+            {
+                _Cts.Cancel();
+                await Task.WhenAll(_Tasks);
+            }
+            Logs.PayServer.LogInformation($"{this.GetType().Name} successfully exited...");
         }
     }
 }

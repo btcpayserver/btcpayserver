@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using BTCPayServer.Authentication;
 using Microsoft.AspNetCore.Authorization;
 
 namespace BTCPayServer.Security
@@ -15,16 +14,6 @@ namespace BTCPayServer.Security
             options.AddPolicy(CanCreateInvoice.Key);
             options.AddPolicy(CanGetRates.Key);
             options.AddPolicy(CanModifyServerSettings.Key);
-
-            options.AddPolicy(RestAPIPolicies.CanCreateInvoices);
-            options.AddPolicy(RestAPIPolicies.CanManageApps);
-            options.AddPolicy(RestAPIPolicies.CanManageInvoices);
-            options.AddPolicy(RestAPIPolicies.CanManageStores);
-            options.AddPolicy(RestAPIPolicies.CanManageWallet);
-            options.AddPolicy(RestAPIPolicies.CanViewApps);
-            options.AddPolicy(RestAPIPolicies.CanViewInvoices);
-            options.AddPolicy(RestAPIPolicies.CanViewProfile);
-            options.AddPolicy(RestAPIPolicies.CanViewStores);
             return options;
         }
 

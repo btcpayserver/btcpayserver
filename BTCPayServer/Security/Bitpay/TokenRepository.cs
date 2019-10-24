@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using System.Linq;
 
-namespace BTCPayServer.Authentication
+namespace BTCPayServer.Security.Bitpay
 {
     public enum PairingResult
     {

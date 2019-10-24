@@ -90,10 +90,10 @@ namespace BTCPayServer.Services.Rates
         public async Task<ExchangeRates> GetRatesAsync(CancellationToken cancellationToken)
         {
             var result = new ExchangeRates();
-            var symbols = await GetSymbolsAsync();
+            var symbols = await GetSymbolsAsync(cancellationToken);
             var normalizedPairsList = symbols.Where(s => !notFoundSymbols.ContainsKey(s)).Select(s => _Helper.NormalizeSymbol(s)).ToList();
             var csvPairsList = string.Join(",", normalizedPairsList);
-            JToken apiTickers = await MakeJsonRequestAsync<JToken>("/0/public/Ticker", null, new Dictionary<string, object> { { "pair", csvPairsList } });
+            JToken apiTickers = await MakeJsonRequestAsync<JToken>("/0/public/Ticker", null, new Dictionary<string, object> { { "pair", csvPairsList } }, cancellationToken: cancellationToken);
             var tickers = new List<KeyValuePair<string, ExchangeTicker>>();
             foreach (string symbol in symbols)
             {
@@ -151,7 +151,7 @@ namespace BTCPayServer.Services.Rates
             };
         }
 
-        private async Task<string[]> GetSymbolsAsync()
+        private async Task<string[]> GetSymbolsAsync(CancellationToken cancellationToken)
         {
             if (_LastSymbolUpdate != null && DateTimeOffset.UtcNow - _LastSymbolUpdate.Value < TimeSpan.FromDays(0.5))
             {
@@ -159,7 +159,7 @@ namespace BTCPayServer.Services.Rates
             }
             else
             {
-                JToken json = await MakeJsonRequestAsync<JToken>("/0/public/AssetPairs");
+                JToken json = await MakeJsonRequestAsync<JToken>("/0/public/AssetPairs", cancellationToken: cancellationToken);
                 var symbols = (from prop in json.Children<JProperty>() where !prop.Name.Contains(".d", StringComparison.OrdinalIgnoreCase) select prop.Name).ToArray();
                 _Symbols = symbols;
                 _LastSymbolUpdate = DateTimeOffset.UtcNow;

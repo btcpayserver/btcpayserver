@@ -15,6 +15,11 @@ namespace BTCPayServer.Tests
 {
     public static class TestUtils
     {
+#if DEBUG
+        public const int TestTimeout = 600_000;
+#else
+        public const int TestTimeout = 60_000;
+#endif
         public static DirectoryInfo TryGetSolutionDirectoryInfo(string currentPath = null)
         {
             var directory = new DirectoryInfo(

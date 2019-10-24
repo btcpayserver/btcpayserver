@@ -1,5 +1,5 @@
+using System;
 using System.Threading.Tasks;
-using AspNet.Security.OpenIdConnect.Primitives;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.U2F;
@@ -8,12 +8,14 @@ using Microsoft.Extensions.Options;
 using OpenIddict.Abstractions;
 using OpenIddict.Core;
 using OpenIddict.Server;
+using Microsoft.AspNetCore;
 
-namespace BTCPayServer.Authentication.OpenId
+namespace BTCPayServer.Security.OpenId
 {
-    public class PasswordGrantTypeEventHandler : BaseOpenIdGrantHandler<OpenIddictServerEvents.HandleTokenRequest>
+    public class PasswordGrantTypeEventHandler : BaseOpenIdGrantHandler<OpenIddictServerEvents.HandleTokenRequestContext>
     {
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly NicolasDorier.RateLimits.RateLimitService _rateLimitService;
         private readonly U2FService _u2FService;
 
         public PasswordGrantTypeEventHandler(
@@ -21,43 +23,44 @@ namespace BTCPayServer.Authentication.OpenId
             OpenIddictAuthorizationManager<BTCPayOpenIdAuthorization> authorizationManager,
             SignInManager<ApplicationUser> signInManager,
             UserManager<ApplicationUser> userManager,
+            NicolasDorier.RateLimits.RateLimitService rateLimitService,
             IOptions<IdentityOptions> identityOptions, U2FService u2FService) : base(applicationManager,
             authorizationManager, signInManager, identityOptions)
         {
             _userManager = userManager;
+            _rateLimitService = rateLimitService;
             _u2FService = u2FService;
         }
 
-        public override async Task<OpenIddictServerEventState> HandleAsync(
-            OpenIddictServerEvents.HandleTokenRequest notification)
+        public static OpenIddictServerHandlerDescriptor Descriptor { get; } = 
+            OpenIddictServerHandlerDescriptor.CreateBuilder<OpenIddictServerEvents.HandleTokenRequestContext>()
+                        .UseScopedHandler<PasswordGrantTypeEventHandler>()
+                        .Build();
+
+        public override async ValueTask HandleAsync(
+            OpenIddictServerEvents.HandleTokenRequestContext notification)
         {
-            var request = notification.Context.Request;
+            var request = notification.Request;
             if (!request.IsPasswordGrantType())
             {
-                // Allow other handlers to process the event.
-                return OpenIddictServerEventState.Unhandled;
+                return;
             }
 
-            // Validate the user credentials.
-            // Note: to mitigate brute force attacks, you SHOULD strongly consider
-            // applying a key derivation function like PBKDF2 to slow down
-            // the password validation process. You SHOULD also consider
-            // using a time-constant comparer to prevent timing attacks.
+            var httpContext = notification.Transaction.GetHttpRequest().HttpContext;
+            await _rateLimitService.Throttle(ZoneLimits.Login, httpContext.Connection.RemoteIpAddress.ToString(), httpContext.RequestAborted);
             var user = await _userManager.FindByNameAsync(request.Username);
             if (user == null || await _u2FService.HasDevices(user.Id) ||
                 !(await _signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: true))
                     .Succeeded)
             {
-                notification.Context.Reject(
+                notification.Reject(
                     error: OpenIddictConstants.Errors.InvalidGrant,
                     description: "The specified credentials are invalid.");
-                // Don't allow other handlers to process the event.
-                return OpenIddictServerEventState.Handled;
+                return;
             }
 
-            notification.Context.Validate(await CreateTicketAsync(request, user));
-            // Don't allow other handlers to process the event.
-            return OpenIddictServerEventState.Handled;
+            notification.Principal = await CreateClaimsPrincipalAsync(request, user);
+            notification.HandleAuthentication();
         }
     }
 }

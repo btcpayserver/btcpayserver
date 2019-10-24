@@ -121,7 +121,7 @@
         }
         <div class="row">
             <div class="col-lg-12 text-center">
-                <form method="post" asp-action="WalletPSBTReady">
+                <form method="post" asp-action="WalletPSBTReady" asp-route-walletId="@this.Context.GetRouteValue("walletId")">
                     <input type="hidden" asp-for="PSBT" />
                     <input type="hidden" asp-for="SigningKey" />
                     <input type="hidden" asp-for="SigningKeyPath" />

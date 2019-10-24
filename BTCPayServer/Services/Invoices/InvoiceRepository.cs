@@ -555,7 +555,7 @@ retry:
 
             if (queryObject.ExceptionStatus != null && queryObject.ExceptionStatus.Length > 0)
             {
-                var exceptionStatusSet = queryObject.ExceptionStatus.Select(s => NormalizeExceptionStatus(s)).ToHashSet();
+                var exceptionStatusSet = queryObject.ExceptionStatus.Select(s => NormalizeExceptionStatus(s)).ToHashSet().ToArray();
                 query = query.Where(i => exceptionStatusSet.Contains(i.ExceptionStatus));
             }
 

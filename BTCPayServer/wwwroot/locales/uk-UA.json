@@ -47,5 +47,6 @@
   "Pay with CoinSwitch": "Оплатити за допомогою CoinSwitch",
   "Pay with Changelly": "Оплатити за допомогою Changelly",
   "Close": "Закрити",
-  "NotPaid_ExtraTransaction": "Рахунок не був оплачений повністю. Будь ласка, надішліть ще одну транзакцію для покриття суми заборгованості."
+  "NotPaid_ExtraTransaction": "Рахунок не був оплачений повністю. Будь ласка, надішліть ще одну транзакцію для покриття суми заборгованості.",
+  "Recommended_Fee": "Recommended fee: {{feeRate}} sat/byte"
 }

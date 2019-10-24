@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using NBitpayClient;
 
-namespace BTCPayServer.Authentication
+namespace BTCPayServer.Security.Bitpay
 {
     public class BitTokenEntity
     {

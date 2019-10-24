@@ -47,5 +47,6 @@
   "Pay with CoinSwitch": "Betala med CoinSwitch",
   "Pay with Changelly": "Betala med Changelly",
   "Close": "Stäng",
-  "NotPaid_ExtraTransaction": "Fakturabetalningen är ofullständig. Vänligen betala kvarstående belopp."
+  "NotPaid_ExtraTransaction": "Fakturabetalningen är ofullständig. Vänligen betala kvarstående belopp.",
+  "Recommended_Fee": "Recommended fee: {{feeRate}} sat/byte"
 }

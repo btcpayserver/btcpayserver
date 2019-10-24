@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 #if NETCOREAPP21
 using IWebHostEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
-using AspNet.Security.OpenIdConnect.Primitives;
 #else
 using Microsoft.Extensions.Hosting;
-using OpenIdConnectConstants = OpenIddict.Abstractions.OpenIddictConstants;
 #endif
+using OpenIddict.Validation.AspNetCore;
+using OpenIddict.Abstractions;
 using Microsoft.AspNetCore.Builder;
 using System;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,11 +22,9 @@ using System.IO;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using BTCPayServer.Security;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
-using OpenIddict.Abstractions;
 using OpenIddict.EntityFrameworkCore.Models;
 using System.Net;
-using BTCPayServer.Authentication;
-using BTCPayServer.Authentication.OpenId;
+using BTCPayServer.Security.OpenId;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Storage;
@@ -57,8 +55,8 @@ namespace BTCPayServer.Hosting
             services.AddMemoryCache();
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
-                .AddDefaultTokenProviders();      
-            
+                .AddDefaultTokenProviders();
+
             ConfigureOpenIddict(services);
 
             services.AddBTCPayServer(Configuration);
@@ -95,13 +93,13 @@ namespace BTCPayServer.Hosting
                 options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
                 options.Lockout.MaxFailedAccessAttempts = 5;
                 options.Lockout.AllowedForNewUsers = true;
-                options.Password.RequireUppercase = false;            
+                options.Password.RequireUppercase = false;
                 // Configure Identity to use the same JWT claims as OpenIddict instead
                 // of the legacy WS-Federation claims it uses by default (ClaimTypes),
                 // which saves you from doing the mapping in your authorization controller.
-                options.ClaimsIdentity.UserNameClaimType = OpenIdConnectConstants.Claims.Name;
-                options.ClaimsIdentity.UserIdClaimType = OpenIdConnectConstants.Claims.Subject;
-                options.ClaimsIdentity.RoleClaimType = OpenIdConnectConstants.Claims.Role;
+                options.ClaimsIdentity.UserNameClaimType = OpenIddictConstants.Claims.Name;
+                options.ClaimsIdentity.UserIdClaimType = OpenIddictConstants.Claims.Subject;
+                options.ClaimsIdentity.RoleClaimType = OpenIddictConstants.Claims.Role;
             });
             // If the HTTPS certificate path is not set this logic will NOT be used and the default Kestrel binding logic will be.
             string httpsCertificateFilePath = Configuration.GetOrDefault<string>("HttpsCertificateFilePath", null);
@@ -123,7 +121,7 @@ namespace BTCPayServer.Hosting
                         // Note that by design this is a fatal error condition that will cause the process to exit.
                         throw new ConfigException($"The https certificate file could not be found at {httpsCertificateFilePath}.");
                     }
-                    if(hasCertPath && useDefaultCertificate)
+                    if (hasCertPath && useDefaultCertificate)
                     {
                         throw new ConfigException($"Conflicting settings: if HttpsUseDefaultCertificate is true, HttpsCertificateFilePath should not be used");
                     }
@@ -147,7 +145,7 @@ namespace BTCPayServer.Hosting
 
         private void ConfigureOpenIddict(IServiceCollection services)
         {
-// Register the OpenIddict services.
+            // Register the OpenIddict services.
             services.AddOpenIddict()
                 .AddCore(options =>
                 {
@@ -159,15 +157,6 @@ namespace BTCPayServer.Hosting
                 })
                 .AddServer(options =>
                 {
-#if NETCOREAPP21
-                    options.EnableRequestCaching();
-                    //Disabled so that Tor works with OpenIddict too
-                    options.DisableHttpsRequirement();
-                    // Register the ASP.NET Core MVC binder used by OpenIddict.
-                    // Note: if you don't call this method, you won't be able to
-                    // bind OpenIdConnectRequest or OpenIdConnectResponse parameters.
-                    options.UseMvc();
-#else
                     options.UseAspNetCore()
                         .EnableStatusCodePagesIntegration()
                         .EnableAuthorizationEndpointPassthrough()
@@ -175,18 +164,11 @@ namespace BTCPayServer.Hosting
                         .EnableTokenEndpointPassthrough()
                         .EnableRequestCaching()
                         .DisableTransportSecurityRequirement();
-#endif
 
                     // Enable the token endpoint (required to use the password flow).
-#if NETCOREAPP21
-                    options.EnableTokenEndpoint("/connect/token");
-                    options.EnableAuthorizationEndpoint("/connect/authorize");
-                    options.EnableLogoutEndpoint("/connect/logout");
-#else
                     options.SetTokenEndpointUris("/connect/token");
                     options.SetAuthorizationEndpointUris("/connect/authorize");
                     options.SetLogoutEndpointUris("/connect/logout");
-#endif
 
                     //we do not care about these granular controls for now
                     options.IgnoreScopePermissions();
@@ -198,36 +180,22 @@ namespace BTCPayServer.Hosting
                     options.AllowPasswordFlow();
                     options.AllowAuthorizationCodeFlow();
                     options.UseRollingTokens();
-#if NETCOREAPP21
-                    options.UseJsonWebTokens();
-#endif
 
                     options.RegisterScopes(
-                        OpenIdConnectConstants.Scopes.OpenId,
-                        OpenIdConnectConstants.Scopes.OfflineAccess,
-                        OpenIdConnectConstants.Scopes.Email,
-                        OpenIdConnectConstants.Scopes.Profile,
-                        OpenIddictConstants.Scopes.Roles,
-                        RestAPIPolicies.BTCPayScopes.ViewStores,
-                        RestAPIPolicies.BTCPayScopes.CreateInvoices,
-                        RestAPIPolicies.BTCPayScopes.StoreManagement,
-                        RestAPIPolicies.BTCPayScopes.ViewApps,
-                        RestAPIPolicies.BTCPayScopes.AppManagement
-                        );
-#if NETCOREAPP21
-                    options.AddEventHandler<PasswordGrantTypeEventHandler>();
-                    options.AddEventHandler<AuthorizationCodeGrantTypeEventHandler>();
-                    options.AddEventHandler<RefreshTokenGrantTypeEventHandler>();
-                    options.AddEventHandler<ClientCredentialsGrantTypeEventHandler>();
-                    options.AddEventHandler<LogoutEventHandler>();
-#else
+                        OpenIddictConstants.Scopes.OpenId,
+                        BTCPayScopes.StoreManagement,
+                        BTCPayScopes.ServerManagement
+                    );
                     options.AddEventHandler(PasswordGrantTypeEventHandler.Descriptor);
-                    options.AddEventHandler(AuthorizationCodeGrantTypeEventHandler.Descriptor);
-                    options.AddEventHandler(RefreshTokenGrantTypeEventHandler.Descriptor);
+                    options.AddEventHandler(OpenIdGrantHandlerCheckCanSignIn.Descriptor);
                     options.AddEventHandler(ClientCredentialsGrantTypeEventHandler.Descriptor);
                     options.AddEventHandler(LogoutEventHandler.Descriptor);
-#endif
                     options.ConfigureSigningKey(Configuration);
+                })
+                .AddValidation(options =>
+                {
+                    options.UseLocalServer();
+                    options.UseAspNetCore();
                 });
         }
 

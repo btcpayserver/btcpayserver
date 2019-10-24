@@ -15,7 +15,6 @@ using System.IO;
 using Newtonsoft.Json.Linq;
 using BTCPayServer.Controllers;
 using Microsoft.AspNetCore.Mvc;
-using BTCPayServer.Authentication;
 using System.Diagnostics;
 using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore;
@@ -60,6 +59,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using NBXplorer.DerivationStrategy;
 using BTCPayServer.U2F.Models;
+using BTCPayServer.Security.Bitpay;
 
 namespace BTCPayServer.Tests
 {
@@ -2993,6 +2993,7 @@ noninventoryitem:
                {
                    var newDevice = new U2FDevice()
                    {
+                       Id = Guid.NewGuid().ToString(),
                        Name = "fake",
                        Counter = 0,
                        KeyHandle = UTF8Encoding.UTF8.GetBytes("fake"),

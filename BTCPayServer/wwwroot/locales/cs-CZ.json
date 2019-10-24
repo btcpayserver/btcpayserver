@@ -47,5 +47,6 @@
   "Pay with CoinSwitch": "Zaplatit přes CoinSwitch",
   "Pay with Changelly": "Zaplatit přes Changelly",
   "Close": "Zavřít",
-  "NotPaid_ExtraTransaction": "Faktura nebyla uhrazena v plné výši. Zašlete prosím další transakci na úhradu dlužné částky."
+  "NotPaid_ExtraTransaction": "Faktura nebyla uhrazena v plné výši. Zašlete prosím další transakci na úhradu dlužné částky.",
+  "Recommended_Fee": "Recommended fee: {{feeRate}} sat/byte"
 }

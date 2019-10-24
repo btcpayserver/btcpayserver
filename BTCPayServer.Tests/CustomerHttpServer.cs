@@ -26,11 +26,10 @@ namespace BTCPayServer.Tests
             _Host = new WebHostBuilder()
                 .Configure(app =>
                 {
-                    app.Run(req =>
+                    app.Run(async req =>
                     {
-                        _Requests.Writer.WriteAsync(JsonConvert.DeserializeObject<JObject>(new StreamReader(req.Request.Body).ReadToEnd()), _Closed.Token);
+                        await _Requests.Writer.WriteAsync(JsonConvert.DeserializeObject<JObject>(await new StreamReader(req.Request.Body).ReadToEndAsync()), _Closed.Token);
                         req.Response.StatusCode = 200;
-                        return Task.CompletedTask;
                     });
                 })
                 .UseKestrel()

@@ -1,7 +1,5 @@
 using System.Security.Claims;
 using System.Threading.Tasks;
-using AspNet.Security.OpenIdConnect.Extensions;
-using AspNet.Security.OpenIdConnect.Primitives;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
 using Microsoft.AspNetCore.Authentication;
@@ -12,11 +10,15 @@ using OpenIddict.Core;
 using OpenIddict.EntityFrameworkCore.Models;
 using OpenIddict.Server;
 
-namespace BTCPayServer.Authentication.OpenId
+namespace BTCPayServer.Security.OpenId
 {
-    public class
-        ClientCredentialsGrantTypeEventHandler : BaseOpenIdGrantHandler<OpenIddictServerEvents.HandleTokenRequest>
+    public class ClientCredentialsGrantTypeEventHandler :
+        BaseOpenIdGrantHandler<OpenIddictServerEvents.HandleTokenRequestContext>
     {
+        public static OpenIddictServerHandlerDescriptor Descriptor { get; } =
+   OpenIddictServerHandlerDescriptor.CreateBuilder<OpenIddictServerEvents.HandleTokenRequestContext>()
+               .UseScopedHandler<ClientCredentialsGrantTypeEventHandler>()
+               .Build();
         private readonly OpenIddictApplicationManager<BTCPayOpenIdClient> _applicationManager;
 
         private readonly UserManager<ApplicationUser> _userManager;
@@ -33,32 +35,28 @@ namespace BTCPayServer.Authentication.OpenId
             _userManager = userManager;
         }
 
-        public override async Task<OpenIddictServerEventState> HandleAsync(
-            OpenIddictServerEvents.HandleTokenRequest notification)
+        public override async ValueTask HandleAsync(
+            OpenIddictServerEvents.HandleTokenRequestContext notification)
         {
-            var request = notification.Context.Request;
+            var request = notification.Request;
+            var context = notification;
             if (!request.IsClientCredentialsGrantType())
             {
-                // Allow other handlers to process the event.
-                return OpenIddictServerEventState.Unhandled;
+                return;
             }
 
-            var application = await _applicationManager.FindByClientIdAsync(request.ClientId,
-                notification.Context.HttpContext.RequestAborted);
+            var application = await _applicationManager.FindByClientIdAsync(request.ClientId);
             if (application == null)
             {
-                notification.Context.Reject(
+                context.Reject(
                     error: OpenIddictConstants.Errors.InvalidClient,
                     description: "The client application was not found in the database.");
-                // Don't allow other handlers to process the event.
-                return OpenIddictServerEventState.Handled;
+                return;
             }
 
             var user = await _userManager.FindByIdAsync(application.ApplicationUserId);
-
-            notification.Context.Validate(await CreateTicketAsync(request, user));
-            // Don't allow other handlers to process the event.
-            return OpenIddictServerEventState.Handled;
+            context.Principal = await CreateClaimsPrincipalAsync(request, user);
+            notification.HandleAuthentication();
         }
     }
 }

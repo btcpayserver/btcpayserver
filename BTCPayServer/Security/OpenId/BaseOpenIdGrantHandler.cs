@@ -1,5 +1,5 @@
 using System.Threading.Tasks;
-using AspNet.Security.OpenIdConnect.Primitives;
+using OpenIdConnectRequest = OpenIddict.Abstractions.OpenIddictRequest;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
 using Microsoft.AspNetCore.Authentication;
@@ -7,11 +7,13 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using OpenIddict.Core;
 using OpenIddict.Server;
+using System.Security.Claims;
 
-namespace BTCPayServer.Authentication.OpenId
+namespace BTCPayServer.Security.OpenId
 {
-    public abstract class BaseOpenIdGrantHandler<T> : IOpenIddictServerEventHandler<T>
-        where T : class, IOpenIddictServerEvent
+    public abstract class BaseOpenIdGrantHandler<T> : 
+        IOpenIddictServerHandler<T>
+        where T : OpenIddictServerEvents.BaseContext
     {
         private readonly OpenIddictApplicationManager<BTCPayOpenIdClient> _applicationManager;
         private readonly OpenIddictAuthorizationManager<BTCPayOpenIdAuthorization> _authorizationManager;
@@ -31,14 +33,11 @@ namespace BTCPayServer.Authentication.OpenId
         }
 
 
-        protected async Task<AuthenticationTicket> CreateTicketAsync(
-            OpenIdConnectRequest request, ApplicationUser user,
-            AuthenticationProperties properties = null)
+        protected Task<ClaimsPrincipal> CreateClaimsPrincipalAsync(OpenIdConnectRequest request, ApplicationUser user)
         {
-            return await OpenIdExtensions.CreateAuthenticationTicket(_applicationManager, _authorizationManager,
-                _identityOptions.Value, _signInManager, request, user, properties);
+            return OpenIdExtensions.CreateClaimsPrincipalAsync(_applicationManager, _authorizationManager,
+                _identityOptions.Value, _signInManager, request, user);
         }
-
-        public abstract Task<OpenIddictServerEventState> HandleAsync(T notification);
+        public abstract ValueTask HandleAsync(T notification);
     }
 }

@@ -11,11 +11,11 @@ using BTCPayServer.Services.Stores;
 using BTCPayServer.Rating;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.Authorization;
-using BTCPayServer.Authentication;
 using Microsoft.AspNetCore.Cors;
 using System.Threading;
 using BTCPayServer.Data;
 using BTCPayServer.Security;
+using BTCPayServer.Security.Bitpay;
 
 namespace BTCPayServer.Controllers
 {

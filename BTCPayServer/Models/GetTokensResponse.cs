@@ -6,10 +6,10 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
-using BTCPayServer.Authentication;
 using NBitcoin.DataEncoders;
 using Microsoft.AspNetCore.Http;
 using System.IO;
+using BTCPayServer.Security.Bitpay;
 
 namespace BTCPayServer.Models
 {
@@ -47,7 +47,11 @@ namespace BTCPayServer.Models
             }
             context.HttpContext.Response.Headers.Add("Content-Type", new Microsoft.Extensions.Primitives.StringValues("application/json"));
             var str = JsonConvert.SerializeObject(jobj);
+#if NETCOREAPP21
             using (var writer = new StreamWriter(context.HttpContext.Response.Body, new UTF8Encoding(false), 1024 * 10, true))
+#else
+            await using (var writer = new StreamWriter(context.HttpContext.Response.Body, new UTF8Encoding(false), 1024 * 10, true))
+#endif
             {
                 await writer.WriteAsync(str);
             }

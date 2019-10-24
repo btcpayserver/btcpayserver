@@ -1,22 +1,29 @@
 using System.Threading.Tasks;
-using AspNet.Security.OpenIdConnect.Primitives;
+using OpenIddict.Abstractions;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
-using OpenIddict.Abstractions;
 using OpenIddict.Core;
 using OpenIddict.Server;
+using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using OpenIddict.Server.AspNetCore;
 
-namespace BTCPayServer.Authentication.OpenId
+namespace BTCPayServer.Security.OpenId
 {
-    public abstract class
-        OpenIdGrantHandlerCheckCanSignIn : BaseOpenIdGrantHandler<OpenIddictServerEvents.HandleTokenRequest>
+    public class OpenIdGrantHandlerCheckCanSignIn :
+        BaseOpenIdGrantHandler<OpenIddictServerEvents.HandleTokenRequestContext>
     {
+        public static OpenIddictServerHandlerDescriptor Descriptor { get; } =
+   OpenIddictServerHandlerDescriptor.CreateBuilder<OpenIddictServerEvents.HandleTokenRequestContext>()
+               .UseScopedHandler<OpenIdGrantHandlerCheckCanSignIn>()
+               .Build();
+
         private readonly UserManager<ApplicationUser> _userManager;
 
-        protected OpenIdGrantHandlerCheckCanSignIn(
+        public OpenIdGrantHandlerCheckCanSignIn(
             OpenIddictApplicationManager<BTCPayOpenIdClient> applicationManager,
             OpenIddictAuthorizationManager<BTCPayOpenIdAuthorization> authorizationManager,
             SignInManager<ApplicationUser> signInManager,
@@ -27,44 +34,39 @@ namespace BTCPayServer.Authentication.OpenId
             _userManager = userManager;
         }
 
-        protected abstract bool IsValid(OpenIdConnectRequest request);
-
-        public override async Task<OpenIddictServerEventState> HandleAsync(
-            OpenIddictServerEvents.HandleTokenRequest notification)
+        public override async ValueTask HandleAsync(
+            OpenIddictServerEvents.HandleTokenRequestContext notification)
         {
-            var request = notification.Context.Request;
-            if (!IsValid(request))
+            var request = notification.Request;
+            if (!request.IsRefreshTokenGrantType() && !request.IsAuthorizationCodeGrantType())
             {
                 // Allow other handlers to process the event.
-                return OpenIddictServerEventState.Unhandled;
+                return;
             }
 
-            var scheme = notification.Context.Scheme.Name;
-            var authenticateResult = (await notification.Context.HttpContext.AuthenticateAsync(scheme));
+            var httpContext = notification.Transaction.GetHttpRequest().HttpContext;
+            var authenticateResult = (await httpContext.AuthenticateAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme));
 
             var user = await _userManager.GetUserAsync(authenticateResult.Principal);
             if (user == null)
             {
-                notification.Context.Reject(
+                notification.Reject(
                     error: OpenIddictConstants.Errors.InvalidGrant,
                     description: "The token is no longer valid.");
-                // Don't allow other handlers to process the event.
-                return OpenIddictServerEventState.Handled;
+                return;
             }
 
             // Ensure the user is still allowed to sign in.
             if (!await _signInManager.CanSignInAsync(user))
             {
-                notification.Context.Reject(
+                notification.Reject(
                     error: OpenIddictConstants.Errors.InvalidGrant,
                     description: "The user is no longer allowed to sign in.");
-                // Don't allow other handlers to process the event.
-                return OpenIddictServerEventState.Handled;
+                return;
             }
 
-            notification.Context.Validate(await CreateTicketAsync(request, user));
-            // Don't allow other handlers to process the event.
-            return OpenIddictServerEventState.Handled;
+            notification.Principal = await this.CreateClaimsPrincipalAsync(request, user);
+            notification.HandleAuthentication();
         }
     }
 }

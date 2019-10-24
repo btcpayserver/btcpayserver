@@ -11,7 +11,6 @@ using Microsoft.Extensions.Logging;
 using BTCPayServer.Models;
 using BTCPayServer.Models.ManageViewModels;
 using BTCPayServer.Services;
-using BTCPayServer.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
@@ -35,7 +34,6 @@ namespace BTCPayServer.Controllers
         private readonly EmailSenderFactory _EmailSenderFactory;
         private readonly ILogger _logger;
         private readonly UrlEncoder _urlEncoder;
-        TokenRepository _TokenRepository;
         IWebHostEnvironment _Env;
         private readonly U2FService _u2FService;
         private readonly BTCPayServerEnvironment _btcPayServerEnvironment;
@@ -49,7 +47,6 @@ namespace BTCPayServer.Controllers
           EmailSenderFactory emailSenderFactory,
           ILogger<ManageController> logger,
           UrlEncoder urlEncoder,
-          TokenRepository tokenRepository,
           BTCPayWalletProvider walletProvider,
           StoreRepository storeRepository,
           IWebHostEnvironment env, 
@@ -61,7 +58,6 @@ namespace BTCPayServer.Controllers
             _EmailSenderFactory = emailSenderFactory;
             _logger = logger;
             _urlEncoder = urlEncoder;
-            _TokenRepository = tokenRepository;
             _Env = env;
             _u2FService = u2FService;
             _btcPayServerEnvironment = btcPayServerEnvironment;

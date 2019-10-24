@@ -36,7 +36,7 @@ namespace BTCPayServer.U2F
             using (var context = _contextFactory.CreateContext())
             {
                 return await context.U2FDevices
-                    .Where(device => device.ApplicationUserId.Equals(userId, StringComparison.InvariantCulture))
+                    .Where(device => device.ApplicationUserId == userId)
                     .ToListAsync();
             }
         }
@@ -60,10 +60,9 @@ namespace BTCPayServer.U2F
         {
             using (var context = _contextFactory.CreateContext())
             {
-                return await context.U2FDevices.AsQueryable().AnyAsync(fDevice => fDevice.ApplicationUserId.Equals(userId, StringComparison.InvariantCulture));
+                return await context.U2FDevices.Where(fDevice => fDevice.ApplicationUserId == userId).AnyAsync();
             }
         }
-        
 
         public ServerRegisterResponse StartDeviceRegistration(string userId, string appId)
         {
@@ -180,8 +179,7 @@ namespace BTCPayServer.U2F
         {
             using (var context = _contextFactory.CreateContext())
             {
-                var devices = await context.U2FDevices.Where(fDevice =>
-                    fDevice.ApplicationUserId.Equals(userId, StringComparison.InvariantCulture)).ToListAsync();
+                var devices = await context.U2FDevices.Where(fDevice => fDevice.ApplicationUserId == userId).ToListAsync();
 
                 if (devices.Count == 0)
                     return null;

@@ -25,7 +25,6 @@ using BTCPayServer.Controllers;
 using BTCPayServer.Services.Mails;
 using System.Threading;
 using BTCPayServer.Services.Wallets;
-using BTCPayServer.Authentication;
 using BTCPayServer.Logging;
 using BTCPayServer.HostedServices;
 using BTCPayServer.PaymentRequest;
@@ -276,21 +275,7 @@ namespace BTCPayServer.Hosting
         private static void AddBtcPayServerAuthenticationSchemes(this IServiceCollection services,
             IConfiguration configuration)
         {
-            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
-            JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
-
             services.AddAuthentication()
-                .AddJwtBearer(options =>
-                {
-                    //Disabled so that Tor works witt JWT auth
-                    options.RequireHttpsMetadata = false;
-                    options.TokenValidationParameters.ValidateAudience = false;
-                    //we do not validate the issuer directly because btcpay can be accessed through multiple urls that we cannot predetermine
-                    options.TokenValidationParameters.ValidateIssuer = false;
-                    options.TokenValidationParameters.IssuerSigningKey =
-                        OpenIddictExtensions.GetSigningKey(configuration);
-                    options.IncludeErrorDetails = true;
-                })
                 .AddCookie()
                 .AddBitpayAuthentication();
         }

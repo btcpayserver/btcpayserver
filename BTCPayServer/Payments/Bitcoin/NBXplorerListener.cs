@@ -383,11 +383,12 @@ namespace BTCPayServer.Payments.Bitcoin
             _Aggregator.Publish(new InvoiceEvent(invoice, 1002, InvoiceEvent.ReceivedPayment){Payment = payment});
             return invoice;
         }
-        public Task StopAsync(CancellationToken cancellationToken)
+        public async Task StopAsync(CancellationToken cancellationToken)
         {
             leases.Dispose();
             _Cts.Cancel();
-            return Task.WhenAny(_RunningTask.Task, Task.Delay(-1, cancellationToken));
+            await Task.WhenAny(_RunningTask.Task, Task.Delay(-1, cancellationToken));
+            Logs.PayServer.LogInformation($"{this.GetType().Name} successfully exited...");
         }
     }
 }

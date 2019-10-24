@@ -9,7 +9,6 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Authentication;
-using BTCPayServer.Authentication;
 using BTCPayServer.Services;
 using BTCPayServer.Security.Bitpay;
 

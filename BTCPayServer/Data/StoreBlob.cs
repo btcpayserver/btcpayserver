@@ -20,7 +20,6 @@ namespace BTCPayServer.Data
             InvoiceExpiration = 15;
             MonitoringExpiration = 1440;
             PaymentTolerance = 0;
-            RequiresRefundEmail = true;
             ShowRecommendedFee = true;
         }
 

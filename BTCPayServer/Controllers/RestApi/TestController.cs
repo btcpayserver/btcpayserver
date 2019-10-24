@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-using BTCPayServer.Authentication;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Security;
@@ -7,10 +6,7 @@ using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using OpenIddict.Validation;
-#if !NETCOREAPP21
-using OpenIddictValidationDefaults = Microsoft.AspNetCore.Authentication.OpenIdConnect.OpenIdConnectDefaults;
-#endif
+using OpenIddict.Validation.AspNetCore;
 
 namespace BTCPayServer.Controllers.RestApi
 {
@@ -51,6 +47,8 @@ namespace BTCPayServer.Controllers.RestApi
         }
 
         [HttpGet("me/stores")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings.Key,
+            AuthenticationSchemes = AuthenticationSchemes.OpenId)]
         public async Task<StoreData[]> GetCurrentUserStores()
         {
             return await _storeRepository.GetStoresByUserId(_userManager.GetUserId(User));
@@ -64,57 +62,5 @@ namespace BTCPayServer.Controllers.RestApi
         {
             return true;
         }
-
-
-#region scopes tests
-
-        [Authorize(Policy = RestAPIPolicies.CanViewStores,
-            AuthenticationSchemes = AuthenticationSchemes.OpenId)]
-        [HttpGet(nameof(ScopeCanViewStores))]
-        public bool ScopeCanViewStores() { return true; }
-
-        [Authorize(Policy = RestAPIPolicies.CanManageStores,
-            AuthenticationSchemes = AuthenticationSchemes.OpenId)]
-        [HttpGet(nameof(ScopeCanManageStores))]
-        public bool ScopeCanManageStores() { return true; }
-
-        [Authorize(Policy = RestAPIPolicies.CanViewInvoices,
-            AuthenticationSchemes = AuthenticationSchemes.OpenId)]
-        [HttpGet(nameof(ScopeCanViewInvoices))]
-        public bool ScopeCanViewInvoices() { return true; }
-
-        [Authorize(Policy = RestAPIPolicies.CanCreateInvoices,
-            AuthenticationSchemes = AuthenticationSchemes.OpenId)]
-        [HttpGet(nameof(ScopeCanCreateInvoices))]
-        public bool ScopeCanCreateInvoices() { return true; }
-
-        [Authorize(Policy = RestAPIPolicies.CanManageInvoices,
-            AuthenticationSchemes = AuthenticationSchemes.OpenId)]
-        [HttpGet(nameof(ScopeCanManageInvoices))]
-        public bool ScopeCanManageInvoices() { return true; }
-
-        [Authorize(Policy = RestAPIPolicies.CanManageApps,
-            AuthenticationSchemes = AuthenticationSchemes.OpenId)]
-        [HttpGet(nameof(ScopeCanManageApps))]
-        public bool ScopeCanManageApps() { return true; }
-
-        [Authorize(Policy = RestAPIPolicies.CanViewApps,
-            AuthenticationSchemes = AuthenticationSchemes.OpenId)]
-        
-        [HttpGet(nameof(ScopeCanViewApps))]
-        public bool ScopeCanViewApps() { return true; }
-
-        [Authorize(Policy = RestAPIPolicies.CanManageWallet,
-            AuthenticationSchemes = AuthenticationSchemes.OpenId)]
-        [HttpGet(nameof(ScopeCanManageWallet))]
-        public bool ScopeCanManageWallet() { return true; }
-
-        [Authorize(Policy = RestAPIPolicies.CanViewProfile,
-            AuthenticationSchemes = AuthenticationSchemes.OpenId)]
-        
-        [HttpGet(nameof(ScopeCanViewProfile))]
-        public bool ScopeCanViewProfile() { return true; }
-
-#endregion
     }
 }

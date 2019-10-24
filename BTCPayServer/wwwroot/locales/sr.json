@@ -47,5 +47,6 @@
   "Pay with CoinSwitch": "Plati putem CoinSwitch-a",
   "Pay with Changelly": "Plati putem Changelly-ja",
   "Close": "Zatvori",
-  "NotPaid_ExtraTransaction": "Račun nije plaćen u potpunosti. Pošalji još jednu transakciju da izmiriš Dug."
+  "NotPaid_ExtraTransaction": "Račun nije plaćen u potpunosti. Pošalji još jednu transakciju da izmiriš Dug.",
+  "Recommended_Fee": "Recommended fee: {{feeRate}} sat/byte"
 }

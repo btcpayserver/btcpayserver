@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace BTCPayServer.Authentication
+namespace BTCPayServer.Security.Bitpay
 {
     public class PairingCodeEntity
     {

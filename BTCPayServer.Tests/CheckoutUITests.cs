@@ -21,7 +21,7 @@ namespace BTCPayServer.Tests
         public const int TestTimeout = 60_000;
         public CheckoutUITests(ITestOutputHelper helper)
         {
-            Logs.Tester = new XUnitLog(helper) {Name = "Tests"};
+            Logs.Tester = new XUnitLog(helper) { Name = "Tests" };
             Logs.LogProvider = new XUnitLogProvider(helper);
         }
 
@@ -35,8 +35,11 @@ namespace BTCPayServer.Tests
                 s.RegisterNewUser();
                 var store = s.CreateNewStore();
                 s.AddDerivationScheme("BTC");
+                s.GoToStore(store.storeId, StoreNavPages.Checkout);
+                s.Driver.FindElement(By.Id("RequiresRefundEmail")).Click();
+                s.Driver.FindElement(By.Name("command")).ForceClick();
 
-                var emailAlreadyThereInvoiceId =s.CreateInvoice(store.storeName, 100, "USD", "a@g.com");
+                var emailAlreadyThereInvoiceId = s.CreateInvoice(store.storeName, 100, "USD", "a@g.com");
                 s.GoToInvoiceCheckout(emailAlreadyThereInvoiceId);
                 s.Driver.AssertElementNotFound(By.Id("emailAddressFormInput"));
                 s.GoToHome();
@@ -52,13 +55,18 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("emailAddressForm")).FindElement(By.CssSelector("button.action-button"))
                     .Click();
                 var formInput = s.Driver.FindElement(By.Id("emailAddressFormInput"));
-                
+
                 Assert.True(formInput.Displayed);
                 Assert.Contains("form-input-invalid", formInput.GetAttribute("class"));
                 formInput = s.Driver.FindElement(By.Id("emailAddressFormInput"));
                 formInput.SendKeys("@g.com");
                 var actionButton = s.Driver.FindElement(By.Id("emailAddressForm")).FindElement(By.CssSelector("button.action-button"));
                 actionButton.Click();
+                try // Sometimes the click only take the focus, without actually really clicking on it...
+                {
+                    actionButton.Click();
+                }
+                catch { }
 
                 s.Driver.AssertElementNotFound(By.Id("emailAddressFormInput"));                
                 s.Driver.Navigate().Refresh();

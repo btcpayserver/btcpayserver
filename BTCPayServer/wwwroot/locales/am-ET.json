@@ -1,7 +1,7 @@
 {
   "NOTICE_WARN": "THIS CODE HAS BEEN AUTOMATICALLY GENERATED FROM TRANSIFEX, IF YOU WISH TO HELP TRANSLATION COME ON THE SLACK http://slack.btcpayserver.org TO REQUEST PERMISSION TO https://www.transifex.com/btcpayserver/btcpayserver/",
   "code": "am-ET",
-  "currentLanguage": "እንግሊዝኛ",
+  "currentLanguage": "አማርኛ",
   "lang": "ቋንቋ",
   "Awaiting Payment...": "በመጠባበቅ ላይ ያለ ክፍያ ",
   "Pay with": "ይክፈሉ",
@@ -47,5 +47,6 @@
   "Pay with CoinSwitch": "በ CoinSwitch ይክፈሉ",
   "Pay with Changelly": "በ Changelly ይክፈሉ",
   "Close": "ዝጋ",
-  "NotPaid_ExtraTransaction": "ደረሰኙ ሙሉ በሙሉ አልተከፈለውም. እባክዎ የገንዘብ መጠን ለመሸፈን ሌላ ግብይት ይላኩ"
+  "NotPaid_ExtraTransaction": "ደረሰኙ ሙሉ በሙሉ አልተከፈለውም. እባክዎ የገንዘብ መጠን ለመሸፈን ሌላ ግብይት ይላኩ",
+  "Recommended_Fee": "Recommended fee: {{feeRate}} sat/byte"
 }

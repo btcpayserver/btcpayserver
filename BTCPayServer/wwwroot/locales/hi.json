@@ -47,5 +47,6 @@
   "Pay with CoinSwitch": "CoinSwitch द्वारा भुगतान करें",
   "Pay with Changelly": "Changelly द्वारा भुगतान करें",
   "Close": "बंद करे",
-  "NotPaid_ExtraTransaction": "चालान का पूरा भुगतान नहीं किया गया है। कृपया चालान राशि पूरी करें।"
+  "NotPaid_ExtraTransaction": "चालान का पूरा भुगतान नहीं किया गया है। कृपया चालान राशि पूरी करें।",
+  "Recommended_Fee": "Recommended fee: {{feeRate}} sat/byte"
 }

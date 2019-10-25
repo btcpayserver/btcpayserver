@@ -544,7 +544,7 @@ namespace BTCPayServer.Tests
                 user.GrantAccess();
                 var storeController = user.GetController<StoresController>();
                 Assert.IsType<ViewResult>(storeController.UpdateStore());
-                Assert.IsType<ViewResult>(storeController.AddLightningNode(user.StoreId, "BTC"));
+                Assert.IsType<ViewResult>(await storeController.AddLightningNode(user.StoreId, "BTC"));
 
                 var testResult = storeController.AddLightningNode(user.StoreId, new LightningNodeViewModel()
                 {
@@ -1702,11 +1702,11 @@ namespace BTCPayServer.Tests
                 Assert.Equal(3, invoice.CryptoInfo.Length);
 
                 var controller = user.GetController<StoresController>();
-                var lightningVM = (LightningNodeViewModel)Assert.IsType<ViewResult>(controller.AddLightningNode(user.StoreId, "BTC")).Model;
+                var lightningVM = (LightningNodeViewModel)Assert.IsType<ViewResult>(await controller.AddLightningNode(user.StoreId, "BTC")).Model;
                 Assert.True(lightningVM.Enabled);
                 lightningVM.Enabled = false;
                 controller.AddLightningNode(user.StoreId, lightningVM, "save", "BTC").GetAwaiter().GetResult();
-                lightningVM = (LightningNodeViewModel)Assert.IsType<ViewResult>(controller.AddLightningNode(user.StoreId, "BTC")).Model;
+                lightningVM = (LightningNodeViewModel)Assert.IsType<ViewResult>(await controller.AddLightningNode(user.StoreId, "BTC")).Model;
                 Assert.False(lightningVM.Enabled);
 
                 // Only Enabling/Disabling the payment method must redirect to store page

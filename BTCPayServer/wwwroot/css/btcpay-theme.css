@@ -1,0 +1,76 @@
+/*
+ * BTCPay variables as CSS custom properties.
+ * -> These get used in the _variables.scss
+ */
+:root {
+  --btcpay-accent-light: #CEDC21;
+  --btcpay-accent-medium: #51B13E;
+  --btcpay-accent-dark: #137547;
+  --btcpay-accent-darkest: #0F3B21;
+  --btcpay-neutral-100: #FBFAF8;
+  --btcpay-neutral-200: #F5F5F3;
+  --btcpay-neutral-300: #E5E5E5;
+  --btcpay-neutral-600: #536E8D;
+  --btcpay-neutral-700: #465C76;
+  --btcpay-neutral-900: #202C39;
+  --btcpay-color-white:    #fff;
+  --btcpay-color-gray-100: #f8f9fa;
+  --btcpay-color-gray-200: #e9ecef;
+  --btcpay-color-gray-300: #dee2e6;
+  --btcpay-color-gray-400: #ced4da;
+  --btcpay-color-gray-500: #adb5bd;
+  --btcpay-color-gray-600: #6c757d;
+  --btcpay-color-gray-700: #495057;
+  --btcpay-color-gray-800: #343a40;
+  --btcpay-color-gray-900: #212529;
+  --btcpay-color-black:    #000;
+  --btcpay-color-blue:    #0069d9;
+  --btcpay-color-indigo:  #6610f2;
+  --btcpay-color-purple:  #6f42c1;
+  --btcpay-color-pink:    #e83e8c;
+  --btcpay-color-red:     #dc3545;
+  --btcpay-color-orange:  #ff6f27;
+  --btcpay-color-yellow:  #ffc107;
+  --btcpay-color-green:   #329f80;
+  --btcpay-color-teal:    #20c997;
+  --btcpay-color-cyan:    #17a2b8;
+  --btcpay-color-primary:       var(--btcpay-color-green);
+  --btcpay-color-primary-dark:  #267861;
+  --btcpay-color-primary-alpha: rgba(81, 173, 147, 0.25);
+  --btcpay-color-secondary:       var(--btcpay-color-gray-600);
+  --btcpay-color-secondary-dark:  var(--btcpay-color-gray-800);
+  --btcpay-color-secondary-alpha: rgba(130, 138, 145, 0.25);
+  --btcpay-color-success:       var(--btcpay-color-green);
+  --btcpay-color-success-dark:  #1e7e34;
+  --btcpay-color-success-alpha: rgba(72, 180, 97, 0.25);
+  --btcpay-color-info:          var(--btcpay-color-cyan);
+  --btcpay-color-info-dark:     #117a8b;
+  --btcpay-color-info-alpha:    rgba(58, 176, 195, 0.25);
+  --btcpay-color-warning:       var(--btcpay-color-yellow);
+  --btcpay-color-warning-dark:  #d39e00;
+  --btcpay-color-warning-alpha: rgba(2  22, 170, 12, 0.25);
+  --btcpay-color-danger:        var(--btcpay-color-red);
+  --btcpay-color-danger-dark:   #bd2130;
+  --btcpay-color-danger-alpha:  rgba(225, 83, 97, 0.25);
+  --btcpay-color-light:         var(--btcpay-color-gray-100);
+  --btcpay-color-light-dark:    #dae0e5;
+  --btcpay-color-light-alpha:   rgba(216, 217, 219, 0.25);
+  --btcpay-color-dark:          var(--btcpay-neutral-900);
+  --btcpay-color-dark-dark:     #1d2124;
+  --btcpay-color-dark-alpha:    rgba(82, 88, 93, 0.25);
+  --btcpay-bg-body: var(--btcpay-color-gray-100);
+  --btcpay-bg-dark: var(--btcpay-accent-darkest);
+  --btcpay-color-body: var(--btcpay-color-gray-900);
+  --btcpay-color-link: var(--btcpay-color-primary);
+  --btcpay-color-link-hover: var(--btcpay-color-primary-dark);
+  --btcpay-font-size-base: 14px;
+  --btcpay-font-family-head: 'Open Sans', 'Helvetica Neue', Arial, sans-serif;
+  --btcpay-font-family-base: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --btcpay-font-family-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+
+/* Bootstrap modifications */
+html {
+  font-size: var(--btcpay-font-size-base); }
+
+.bg-dark {
+  background-color: var(--btcpay-bg-dark) !important; }

@@ -21,17 +21,27 @@ namespace BTCPayServer.HostedServices
     {
         public void Update(ThemeSettings data)
         {
+            if (String.IsNullOrWhiteSpace(data.ThemeCssUri))
+                _themeUri = "/css/btcpay-theme.css";
+            else
+                _themeUri = data.ThemeCssUri;
+
             if (String.IsNullOrWhiteSpace(data.BootstrapCssUri))
-                _bootstrapUri = "/vendor/bootstrap4/css/bootstrap.css?v=" + DateTime.Now.Ticks;
+                _bootstrapUri = "/vendor/bootstrap/bootstrap.css";
             else
                 _bootstrapUri = data.BootstrapCssUri;
-
 
             if (String.IsNullOrWhiteSpace(data.CreativeStartCssUri))
                 _creativeStartUri = "/vendor/bootstrap4-creativestart/creative.css?v=" + DateTime.Now.Ticks;
             else
                 _creativeStartUri = data.CreativeStartCssUri;
             FirstRun = data.FirstRun;
+        }
+
+        private string _themeUri;
+        public string ThemeUri
+        {
+            get { return _themeUri; }
         }
 
         private string _bootstrapUri;
@@ -77,7 +87,7 @@ namespace BTCPayServer.HostedServices
 
         public void OnActionExecuted(ActionExecutedContext context)
         {
-            
+
         }
 
         public void OnActionExecuting(ActionExecutingContext context)
@@ -91,6 +101,10 @@ namespace BTCPayServer.HostedServices
                     policies.Clear();
                 }
                 if (manager.BootstrapUri != null && Uri.TryCreate(manager.BootstrapUri, UriKind.Absolute, out uri))
+                {
+                    policies.Clear();
+                }
+                if (manager.ThemeUri != null && Uri.TryCreate(manager.ThemeUri, UriKind.Absolute, out uri))
                 {
                     policies.Clear();
                 }

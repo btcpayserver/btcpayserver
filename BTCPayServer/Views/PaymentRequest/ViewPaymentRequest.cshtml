@@ -15,6 +15,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.BootstrapUri)" rel="stylesheet" />
+    <link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.ThemeUri)" rel="stylesheet" />
     @if (Model.CustomCSSLink != null)
     {
         <link href="@Model.CustomCSSLink" rel="stylesheet" />
@@ -31,7 +32,7 @@
     }
 
     <bundle name="wwwroot/bundles/payment-request-bundle.min.css"></bundle>
-    
+
     @Safe.Raw(Model.EmbeddedCSS)
 </head>
 <body>
@@ -185,8 +186,8 @@ else
 
                                                         Pay now
                                                     </button>
-                                                    <button class="btn btn-secondary btn-lg mt-1" 
-                                                            v-if="srvModel.anyPendingInvoice && !srvModel.pendingInvoiceHasPayments" 
+                                                    <button class="btn btn-secondary btn-lg mt-1"
+                                                            v-if="srvModel.anyPendingInvoice && !srvModel.pendingInvoiceHasPayments"
                                                             v-on:click="cancelPayment()"
                                                             :disabled="loading">
                                                         <div v-if="loading" class="spinner-grow spinner-grow-sm" role="status">
@@ -195,7 +196,6 @@ else
 
                                                             Cancel current invoice</button>
                                                 </template>
-                                               
                                             </td>
                                         </tr>
                                         </tbody>
@@ -206,12 +206,11 @@ else
 
                     </div>
                     <div class="card-footer text-muted d-flex justify-content-between">
-
-                        <div >
+                        <div>
                             <span v-on:click="print" class="btn-link d-print-none" style="cursor: pointer"> <span class="fa fa-print"></span> Print</span>
                             <span>Updated {{lastUpdated}}</span>
                         </div>
-                        <div >
+                        <div>
                             <span class="text-muted">Powered by </span><a href="https://btcpayserver.org" target="_blank">BTCPay Server</a>
                         </div>
                     </div>

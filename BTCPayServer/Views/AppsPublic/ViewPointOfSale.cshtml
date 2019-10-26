@@ -22,6 +22,7 @@
     <link rel="manifest" href="~/manifest.json">
 
     <link href="@this.Context.Request.GetRelativePathOrAbsolute(themeManager.BootstrapUri)" rel="stylesheet" />
+    <link href="@this.Context.Request.GetRelativePathOrAbsolute(themeManager.ThemeUri)" rel="stylesheet" />
     @if (Model.CustomCSSLink != null)
     {
         <link href="@Model.CustomCSSLink" rel="stylesheet" />
@@ -47,15 +48,15 @@
                 max-width: 320px;
                 margin: auto;
             }
-            
-            .js-cart-item-count::-webkit-inner-spin-button, 
-            .js-cart-item-count::-webkit-outer-spin-button { 
+
+            .js-cart-item-count::-webkit-inner-spin-button,
+            .js-cart-item-count::-webkit-outer-spin-button {
                 -webkit-appearance: none;
                 -moz-appearance: none;
                 appearance: none;
-                margin: 0; 
+                margin: 0;
             }
-            
+
     </style>
     @if (!string.IsNullOrEmpty(Model.EmbeddedCSS))
     {
@@ -318,7 +319,7 @@
                                     <span class="text-muted small">@String.Format(Model.ButtonText, @item.Price.Formatted)</span>
                                      @if (item.Inventory.HasValue)
                                      {
-                                    
+
                                          <div class="w-100 pt-2 text-center text-muted">
                                              @if (item.Inventory > 0)
                                              {
@@ -453,7 +454,7 @@
                                     </div>
                                 }else if (anyInventoryItems)
                                 {
-                                    <div class="w-100 pt-2">&nbsp</div> 
+                                    <div class="w-100 pt-2">&nbsp</div>
                                 }
                             </div>
                         </div>

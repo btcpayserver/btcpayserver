@@ -20,35 +20,59 @@ namespace BTCPayServer.Services.Lightning
 
         public LndSeedFile UnlockFile { get; set; }
 
-        public bool IsSeedlessLnd { get; set; }
-        public async Task PerformDetection(string seedFilePath)
+        public bool IsSeedlessLndNotice { get; set; }
+        public bool PerformDetection(BTCPayServerOptions _BtcpayServerOptions, string connStr, string cryptoCode)
         {
-            // if seed file path is empty, show no warning
-            if (String.IsNullOrEmpty(seedFilePath))
-                IsSeedlessLnd = false;
+            // by default we don't show seedless LND notice
+            IsSeedlessLndNotice = false;
 
-            // by default all LND instalations were started as seedless
-            IsSeedlessLnd = true;
+            var isLndConnString = !String.IsNullOrEmpty(connStr) &&
+                (connStr.Contains("lnd-rest", StringComparison.OrdinalIgnoreCase) ||
+                connStr.Contains("lnd-grpc", StringComparison.OrdinalIgnoreCase));
+            if (!isLndConnString)
+            {
+                // if lightning connection string is not LND, return
+                return false;
+            }
+
+            if (!_BtcpayServerOptions.LndSeedPath.ContainsKey(cryptoCode))
+            {
+                // if LNDSEEDPATH is not set for crypto, don't run check
+                return false;
+            }
+                       
+            var lndSeedFilePath = _BtcpayServerOptions.LndSeedPath[cryptoCode];
+            if (String.IsNullOrEmpty(lndSeedFilePath))
+            {
+                // if LNDSEEDPATH is empty, don't run check
+                return false;
+            }
+
             
+            // if we got this far, it means we have all settings and it's LND connection string
+            // legacy settings initalized LND as seedless, so to get IsSeedlessLnd = false, we need to do check
+            IsSeedlessLndNotice = true;
             try
             {
                 // with new setting we'll try to check if unlock file existits and is in right format
                 // if that's true and parsing passes, we know this is not seedless LND
-                if (!String.IsNullOrEmpty(seedFilePath) && File.Exists(seedFilePath))
+                if (!String.IsNullOrEmpty(lndSeedFilePath) && File.Exists(lndSeedFilePath))
                 {
-                    var unlockFile = File.ReadAllText(seedFilePath);
+                    var unlockFile = File.ReadAllText(lndSeedFilePath);
                     UnlockFile = JsonConvert.DeserializeObject<LndSeedFile>(unlockFile);
 
                     if (!String.IsNullOrEmpty(UnlockFile.wallet_password))
                     {
-                        IsSeedlessLnd = false;
-                        return;
+                        IsSeedlessLndNotice = false;
+                        return true;
                     }
                 }
             }
             catch
             {
             }
+
+            return true;
         }
 
         public class LndSeedFile

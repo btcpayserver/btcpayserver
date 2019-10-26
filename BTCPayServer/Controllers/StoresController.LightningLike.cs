@@ -32,17 +32,10 @@ namespace BTCPayServer.Controllers
             };
             SetExistingValues(store, vm);
 
-            // lazy check of if LND needs migration... if needed we can move this on server start / lightning node connectionString change
-            if (!String.IsNullOrEmpty(vm.ConnectionString) &&
-                (vm.ConnectionString.Contains("lnd-rest", StringComparison.OrdinalIgnoreCase) ||
-                vm.ConnectionString.Contains("lnd-grpc", StringComparison.OrdinalIgnoreCase)))
+            // lazy check of if LND needs migration... only set value if PerformDetection signals returns true (checking applicable)
+            if (_lndMigrationHelper.PerformDetection(_BtcpayServerOptions, vm.ConnectionString, cryptoCode))
             {
-                if (_serverOptions.LndSeedPath.ContainsKey(cryptoCode))
-                {
-                    var lndSeedFilePath = _serverOptions.LndSeedPath[cryptoCode];
-                    await _lndMigrationHelper.PerformDetection(lndSeedFilePath);
-                    vm.IsSeedlessLnd = _lndMigrationHelper.IsSeedlessLnd;
-                }
+                vm.IsSeedlessLnd = _lndMigrationHelper.IsSeedlessLndNotice;
             }
 
             return View(vm);
@@ -76,7 +69,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> AddLightningNode(string storeId, LightningNodeViewModel vm, string command, string cryptoCode)
         {
             vm.CryptoCode = cryptoCode;
-            vm.IsSeedlessLnd = _lndMigrationHelper.IsSeedlessLnd;
+            vm.IsSeedlessLnd = _lndMigrationHelper.IsSeedlessLndNotice;
             var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();

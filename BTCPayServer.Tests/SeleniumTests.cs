@@ -231,6 +231,16 @@ namespace BTCPayServer.Tests
                 Assert.Contains("ReturnUrl", s.Driver.Url);
                 s.Driver.Navigate().GoToUrl(invoiceUrl);
                 s.Driver.AssertNoError();
+
+                // Alice should be able to delete the store
+                s.Logout();
+                LogIn(s, alice);
+                s.Driver.FindElement(By.Id("Stores")).Click();
+                s.Driver.FindElement(By.LinkText("Remove")).Click();
+                s.Driver.FindElement(By.Id("continue")).Click();
+                s.Driver.FindElement(By.Id("Stores")).Click();
+                s.Driver.Navigate().GoToUrl(storeUrl);
+                Assert.Contains("ReturnUrl", s.Driver.Url);
             }
         }
 

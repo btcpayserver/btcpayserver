@@ -11,7 +11,7 @@ namespace BTCPayServer.Services
     {
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         [MaxLength(500)]
-        [Display(Name = "Custom theme CSS file")]
+        [Display(Name = "Select Theme")]
         public string ThemeCssUri { get; set; }
 
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]

@@ -306,13 +306,12 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("{walletId}/receive")]
-        public async Task<IActionResult> WalletReceive([ModelBinder(typeof(WalletIdModelBinder))]
+        public IActionResult WalletReceive([ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, string statusMessage = null)
         {
             if (walletId?.StoreId == null)
                 return NotFound();
-            var store = await Repository.FindStore(walletId.StoreId, GetUserId());
-            DerivationSchemeSettings paymentMethod = GetDerivationSchemeSettings(walletId, store);
+            DerivationSchemeSettings paymentMethod = GetDerivationSchemeSettings(walletId);
             if (paymentMethod == null)
                 return NotFound();
             var network = this.NetworkProvider.GetNetwork<BTCPayNetwork>(walletId?.CryptoCode);
@@ -332,8 +331,7 @@ namespace BTCPayServer.Controllers
         {
             if (walletId?.StoreId == null)
                 return NotFound();
-            var store = await Repository.FindStore(walletId.StoreId, GetUserId());
-            DerivationSchemeSettings paymentMethod = GetDerivationSchemeSettings(walletId, store);
+            DerivationSchemeSettings paymentMethod = GetDerivationSchemeSettings(walletId);
             if (paymentMethod == null)
                 return NotFound();
             var network = this.NetworkProvider.GetNetwork<BTCPayNetwork>(walletId?.CryptoCode);

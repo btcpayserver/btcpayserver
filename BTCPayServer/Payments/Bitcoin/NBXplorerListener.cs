@@ -217,7 +217,7 @@ namespace BTCPayServer.Payments.Bitcoin
                     .Select(p => p.Outpoint.Hash)
                     .ToArray());
             var conflicts = GetConflicts(transactions.Select(t => t.Value));
-            foreach (var payment in invoice.GetPayments(wallet.Network.CryptoCode))
+            foreach (var payment in invoice.GetPayments(wallet.Network))
             {
                 if (payment.GetPaymentMethodId().PaymentType != PaymentTypes.BTCLike)
                     continue;
@@ -380,7 +380,7 @@ namespace BTCPayServer.Payments.Bitcoin
             invoice = (await UpdatePaymentStates(wallet, invoice.Id));
             if (invoice == null)
                 return null;
-            var paymentMethod = invoice.GetPaymentMethod(wallet.Network.CryptoCode, PaymentTypes.BTCLike);
+            var paymentMethod = invoice.GetPaymentMethod(wallet.Network, PaymentTypes.BTCLike);
             if (paymentMethod != null &&
                 paymentMethod.GetPaymentMethodDetails() is BitcoinLikeOnChainPaymentMethod btc &&
                 btc.GetDepositAddress(wallet.Network.NBitcoinNetwork).ScriptPubKey == paymentData.ScriptPubKey &&

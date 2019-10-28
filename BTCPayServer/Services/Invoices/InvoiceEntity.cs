@@ -275,6 +275,7 @@ namespace BTCPayServer.Services.Invoices
         {
             return Payments?.ToList() ?? new List<PaymentEntity>();
         }
+        
         public List<PaymentEntity> GetPayments(string cryptoCode)
         {
             return Payments.Where(p => p.CryptoCode == cryptoCode).ToList();
@@ -538,6 +539,11 @@ namespace BTCPayServer.Services.Invoices
         {
             return GetPaymentMethod(new PaymentMethodId(cryptoCode, paymentType));
         }
+        
+        public PaymentMethod GetPaymentMethod(BTCPayNetwork paymentMethodId, BitcoinPaymentType paymentType)
+        {
+            return GetPaymentMethod(new PaymentMethodId(paymentMethodId.CryptoCode, paymentType));
+        }
 
         public PaymentMethodDictionary GetPaymentMethods()
         {
@@ -591,6 +597,11 @@ namespace BTCPayServer.Services.Invoices
         public InvoiceState GetInvoiceState()
         {
             return new InvoiceState(Status, ExceptionStatus);
+        }
+
+        public IEnumerable<PaymentEntity> GetPayments(BTCPayNetwork walletNetwork)
+        {
+            return GetPayments(walletNetwork.CryptoCode);
         }
     }
 

@@ -53,21 +53,20 @@
             },
             "applicationUrl": "https://localhost:14142/"
         },
-        "Docker-Mainnet-LBTC-https": {
+        "Docker-Regtest-LBTC-https": {
             "commandName": "Project",
             "launchBrowser": true,
             "environmentVariables": {
-                "BTCPAY_NETWORK": "mainnet",
+                "BTCPAY_NETWORK": "regtest",
                 "BTCPAY_LAUNCHSETTINGS": "false",
                 "BTCPAY_PORT": "14142",
                 "BTCPAY_HttpsUseDefaultCertificate": "true",
                 "BTCPAY_BUNDLEJSCSS": "false",
-                "BTCPAY_BTCEXPLORERURL": "http://127.0.0.1:4774/",
                 "BTCPAY_LBTCEXPLORERURL": "http://127.0.0.1:4774/",
                 "BTCPAY_ALLOW-ADMIN-REGISTRATION": "true",
                 "BTCPAY_DISABLE-REGISTRATION": "false",
                 "ASPNETCORE_ENVIRONMENT": "Development",
-                "BTCPAY_CHAINS": "btc,lbtc",
+                "BTCPAY_CHAINS": "lbtc",
                 "BTCPAY_POSTGRES": "User ID=postgres;Host=127.0.0.1;Port=39372;Database=btcpayserver"
             },
             "applicationUrl": "https://localhost:14142/"

@@ -81,7 +81,8 @@ namespace BTCPayServer.HostedServices
             _cancellationTokenSource.Cancel();
             try
             {
-                await _testingConnection;
+                // Renci SSH sometimes is deadlocking, so we just wait at most 5 seconds
+                await Task.WhenAny(_testingConnection, Task.Delay(5000, _cancellationTokenSource.Token));
             }
             catch { }
             Logs.PayServer.LogInformation($"{this.GetType().Name} successfully exited...");

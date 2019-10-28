@@ -48,7 +48,7 @@
                                 {
                                     <a asp-action="UpdateStore" asp-controller="Stores" asp-route-storeId="@store.Id" id="update-store-@store.Id">Settings</a><span> - </span>
                                 }
-                                <a asp-action="DeleteStore" asp-route-storeId="@store.Id">Remove</a>
+                                <a asp-action="DeleteStore" asp-controller="Stores" asp-route-storeId="@store.Id">Remove</a>
                             </td>
                         </tr>
                     }

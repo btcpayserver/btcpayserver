@@ -48,6 +48,7 @@ namespace BTCPayServer
             NetworkType = networkType;
             InitBitcoin();
             InitLiquid();
+            InitLiquidAssets();
             InitLitecoin();
             InitBitcore();
             InitDogecoin();

@@ -66,7 +66,7 @@
                 "BTCPAY_ALLOW-ADMIN-REGISTRATION": "true",
                 "BTCPAY_DISABLE-REGISTRATION": "false",
                 "ASPNETCORE_ENVIRONMENT": "Development",
-                "BTCPAY_CHAINS": "lbtc",
+                "BTCPAY_CHAINS": "lbtc,usdt",
                 "BTCPAY_POSTGRES": "User ID=postgres;Host=127.0.0.1;Port=39372;Database=btcpayserver"
             },
             "applicationUrl": "https://localhost:14142/"

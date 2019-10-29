@@ -1,7 +1,10 @@
+using NBitcoin;
+
 namespace BTCPayServer
 {
-    public class ElementsLikeBtcPayNetwork:BTCPayNetwork
+    public class ElementsAssetBTCPayNetwork:BTCPayNetwork
     {
-        
+        public string NetworkCryptoCode { get; set; }
+        public uint256 AssetId { get; set; }
     }
 }

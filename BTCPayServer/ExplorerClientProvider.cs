@@ -44,12 +44,12 @@ namespace BTCPayServer
             explorer.SetClient(httpClient);
             if (cookieFile == null)
             {
-                Logs.Configuration.LogWarning($"{n.CryptoCode}: Not using cookie authentication");
+                Logs.Configuration.LogWarning($"{explorer.CryptoCode}: Not using cookie authentication");
                 explorer.SetNoAuth();
             }
             if(!explorer.SetCookieAuth(cookieFile))
             {
-                Logs.Configuration.LogWarning($"{n.CryptoCode}: Using cookie auth against NBXplorer, but {cookieFile} is not found");
+                Logs.Configuration.LogWarning($"{explorer.CryptoCode}: Using cookie auth against NBXplorer, but {cookieFile} is not found");
             }
             return explorer;
         }
@@ -61,7 +61,7 @@ namespace BTCPayServer
             var network = _NetworkProviders.GetNetwork<BTCPayNetwork>(cryptoCode);
             if (network == null)
                 return null;
-            _Clients.TryGetValue(network.CryptoCode, out ExplorerClient client);
+            _Clients.TryGetValue(network.NBXplorerNetwork.CryptoCode, out ExplorerClient client);
             return client;
         }
 
@@ -87,7 +87,7 @@ namespace BTCPayServer
             var network = _NetworkProviders.GetNetwork<BTCPayNetwork>(cryptoCode);
             if (network == null)
                 return null;
-            if (_Clients.ContainsKey(network.CryptoCode))
+            if (_Clients.ContainsKey(network.NBXplorerNetwork.CryptoCode))
                 return network;
             return null;
         }
@@ -96,7 +96,7 @@ namespace BTCPayServer
         {
             foreach (var net in _NetworkProviders.GetAll().OfType<BTCPayNetwork>())
             {
-                if (_Clients.TryGetValue(net.CryptoCode, out ExplorerClient explorer))
+                if (_Clients.TryGetValue(net.NBXplorerNetwork.CryptoCode, out ExplorerClient explorer))
                 {
                     yield return (net, explorer);
                 }

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using NBitcoin;
+using NBitcoin.BitcoinCore;
 using NBXplorer;
 using Newtonsoft.Json;
 
@@ -99,6 +100,11 @@ namespace BTCPayServer
         public override string ToString<T>(T obj)
         {
             return NBXplorerNetwork.Serializer.ToString(obj);
+        }
+
+        public virtual IEnumerable<Coin> GetValidCoinsForNetwork(IEnumerable<Coin> coins, Script scriptPubKey)
+        {
+            return coins.Where(o => o.ScriptPubKey == scriptPubKey);
         }
     }
 

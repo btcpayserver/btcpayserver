@@ -12,10 +12,16 @@ namespace BTCPayServer
         public void InitLiquidAssets()
         {
             var nbxplorerNetwork = NBXplorerNetworkProvider.GetFromCryptoCode("LBTC");
-            Add(new ElementsAssetBTCPayNetwork()
+            Add(new ElementsBTCPayNetwork()
             {
                 CryptoCode = "USDt",
                 NetworkCryptoCode = "LBTC",
+                DefaultRateRules = new[]
+                {
+                    "USDT_UST = 1",
+                    "USDT_X = USDT_BTC * BTC_X",
+                    "USDT_BTC = bitfinex(UST_BTC)",
+                },
                 AssetId = new uint256("ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2"),
                 DisplayName = "Tether USD",
                 BlockExplorerLink = NetworkType == NetworkType.Mainnet ? "https://blockstream.info/liquid/tx/{0}" : "https://blockstream.info/testnet/liquid/tx/{0}",

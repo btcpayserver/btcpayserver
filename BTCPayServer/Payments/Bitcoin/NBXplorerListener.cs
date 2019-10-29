@@ -18,6 +18,7 @@ using NBitcoin;
 using NBXplorer.Models;
 using BTCPayServer.Payments;
 using BTCPayServer.HostedServices;
+using NBitcoin.Altcoins.Elements;
 
 #if NETCOREAPP21
 using IHostApplicationLifetime = Microsoft.AspNetCore.Hosting.IApplicationLifetime;
@@ -147,14 +148,12 @@ namespace BTCPayServer.Payments.Bitcoin
                                 _Aggregator.Publish(new Events.NewBlockEvent() { CryptoCode = evt.CryptoCode });
                                 break;
                             case NBXplorer.Models.NewTransactionEvent evt:
-                                
-                                //TODO: move this logic to the Network. For elements, 
                                 wallet.InvalidateCache(evt.DerivationStrategy);
                                 foreach (var output in evt.Outputs)
                                 {
-                                    foreach (var txCoin in evt.TransactionData.Transaction.Outputs.AsCoins()
-                                                                                .Where(o => o.ScriptPubKey == output.ScriptPubKey))
+                                    foreach (var txCoin in  network.GetValidCoinsForNetwork(evt.TransactionData.Transaction.Outputs.AsCoins(), output.ScriptPubKey))                  
                                     {
+
                                         var key = output.ScriptPubKey.Hash + "#" + network.CryptoCode;
                                         var invoice = (await _InvoiceRepository.GetInvoicesFromAddresses(new [] {key})).FirstOrDefault();
                                         if (invoice != null)

@@ -12,10 +12,16 @@ namespace BTCPayServer
         public void InitLiquid()
         {
             var nbxplorerNetwork = NBXplorerNetworkProvider.GetFromCryptoCode("LBTC");
-            Add(new BTCPayNetwork()
+            Add(new ElementsBTCPayNetwork()
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
+                NetworkCryptoCode = nbxplorerNetwork.CryptoCode,
                 DisplayName = "Liquid Bitcoin",
+                DefaultRateRules = new[]
+                {
+                    "LBTC_X = LBTC_BTC * BTC_X",
+                    "LBTC_BTC = 1",
+                },
                 BlockExplorerLink = NetworkType == NetworkType.Mainnet ? "https://blockstream.info/liquid/tx/{0}" : "https://blockstream.info/testnet/liquid/tx/{0}",
                 NBitcoinNetwork = nbxplorerNetwork.NBitcoinNetwork,
                 NBXplorerNetwork = nbxplorerNetwork,
@@ -37,7 +43,7 @@ namespace BTCPayServer
                         {0x043587cfU, DerivationType.Legacy},
                         {0x044a5262U, DerivationType.SegwitP2SH},
                         {0x045f1cf6U, DerivationType.Segwit}
-                    }
+                    },
             });
         }
     }

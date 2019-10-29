@@ -127,7 +127,7 @@ services:
       - "bitcoin_datadir:/data"
 
   customer_lightningd:
-    image: btcpayserver/lightning:v0.7.2-1-dev
+    image: btcpayserver/lightning:v0.7.3-dev
     stop_signal: SIGKILL
     restart: unless-stopped
     environment: 
@@ -140,7 +140,7 @@ services:
         announce-addr=customer_lightningd
         log-level=debug
         funding-confirms=1
-        dev-broadcast-interval=1000
+        dev-fast-gossip
         dev-bitcoind-poll=1
     ports:
       - "30992:9835" # api port
@@ -174,7 +174,7 @@ services:
       - merchant_lightningd
 
   merchant_lightningd:
-    image: btcpayserver/lightning:v0.7.2-1-dev
+    image: btcpayserver/lightning:v0.7.3-dev
     stop_signal: SIGKILL
     environment: 
       EXPOSE_TCP: "true"
@@ -186,7 +186,8 @@ services:
         announce-addr=merchant_lightningd
         funding-confirms=1
         log-level=debug
-        dev-broadcast-interval=1000
+        dev-fast-gossip
+        dev-bitcoind-poll=1
     ports:
       - "30993:9835" # api port
     expose:

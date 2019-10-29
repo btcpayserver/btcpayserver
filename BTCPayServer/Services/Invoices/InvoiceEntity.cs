@@ -562,7 +562,7 @@ namespace BTCPayServer.Services.Invoices
             return paymentMethods;
         }
 
-        Network Dummy = Network.Main;
+        static NBXplorerNetwork Dummy = new NBXplorerNetwork(Network.Main.NetworkSet, Network.Main.NetworkType, new DerivationStrategyFactory(Network.Main));
 
         public void SetPaymentMethod(PaymentMethod paymentMethod)
         {

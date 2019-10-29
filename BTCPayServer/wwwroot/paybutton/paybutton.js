@@ -18,7 +18,7 @@ function esc(input) {
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         /*
-        You may add other replacements here for HTML only 
+        You may add other replacements here for HTML only
         (but it's not necessary).
         Or for XML, only if the named entities are defined in its DTD.
         */
@@ -44,79 +44,71 @@ function inputChanges(event, buttonSize) {
 
     var width = "209px";
     var widthInput = "3em";
-    var formwidth = null;
     if (srvModel.buttonSize === 0) {
         width = "146px";
         widthInput = "2em";
-        if(srvModel.fitButtoninline){
-            formwidth = "292px";
-        }
     } else if (srvModel.buttonSize === 1 ) {
         width = "168px";
-        if(srvModel.fitButtoninline){
-            formwidth = "336px";
-        }
     } else if (srvModel.buttonSize === 2) {
         width = "209px";
-        if(srvModel.fitButtoninline){
-            formwidth = "418px";
-        }
     }
-    var html = '<form method="POST" action="' + esc(srvModel.urlRoot) + 'api/v1/invoices" '+(formwidth? 'style="width:'+formwidth+'"' : '')+'>';
-    html += addinput("storeId", srvModel.storeId);
+    var html =
+        '<style>\n' +
+        '  .btcpay-form { display: inline-flex; align-items: center; justify-content: center; }\n' +
+        '  .btcpay-form--inline { flex-direction: row; }\n' +
+        '  .btcpay-form--block { flex-direction: column; }\n' +
+        '  .btcpay-form--inline .submit { margin-left: 15px; }\n' +
+        '  .btcpay-form--block select { margin-bottom: 10px; }\n' +
+        '  .btcpay-form .btcpay-custom { display: flex; align-items: center; justify-content: center; }\n' +
+        '  .btcpay-form .plus-minus { cursor:pointer; font-size:25px; line-height: 25px; background: rgba(0,0,0,.1); height: 30px; width: 45px; border:none; border-radius: 60px; margin: auto; }\n' +
+        '  .btcpay-form select { -moz-appearance: none; -webkit-appearance: none; appearance: none; background: transparent; border:1px solid transparent; display: block; padding: 1px; margin-left: auto; margin-right: auto; font-size: 11px; cursor: pointer; }\n' +
+        '  .btcpay-form select:hover { border-color: #ccc; }\n' +
+        '  #btcpay-input-price { border: none; box-shadow: none; -mox-appearance: none; -webkit-appearance: none; text-align: center; font-size: 25px; margin: auto; border-radius: 5px; line-height: 35px; background: #fff; }\n' +
+        '</style>\n' +
+        '<form method="POST" action="' + esc(srvModel.urlRoot) + 'api/v1/invoices" class="btcpay-form btcpay-form--' + (srvModel.fitButtonInline ? 'inline' : 'block') +'">\n' +
+            addInput("storeId", srvModel.storeId);
 
-    // Add price as hidden only if it's a fixed amount (srvModel.buttonType = 0)
+    if (srvModel.checkoutDesc) html += addInput("checkoutDesc", srvModel.checkoutDesc);
+
+    if (srvModel.orderId) html += addInput("orderId", srvModel.orderId);
+
+    if (srvModel.serverIpn) html += addInput("serverIpn", srvModel.serverIpn);
+
+    if (srvModel.browserRedirect) html += addInput("browserRedirect", srvModel.browserRedirect);
+
+    if (srvModel.notifyEmail) html += addInput("notifyEmail", srvModel.notifyEmail);
+
+    if (srvModel.checkoutQueryString) html += addInput("checkoutQueryString", srvModel.checkoutQueryString);
+
+    // Fixed amount: Add price and currency as hidden inputs
     if (srvModel.buttonType == 0) {
-        html += addinput("price", srvModel.price);
+        html += addInput("price", srvModel.price);
+        html += addInput("currency", srvModel.currency);
     }
+    // Custom amount
     else if (srvModel.buttonType == 1) {
-        html += '\n    <div style="text-align:center;display:inline;'+ (srvModel.fitButtoninline? 'float:left':'width:'+ width) +';">';
-        html += '<div>';
-        if(!srvModel.simpleInput) {
-            html += addPlusMinusButton("-");
-        }
-        html += addInputPrice(srvModel.price, widthInput, "", srvModel.simpleInput? "number": null, srvModel.min, srvModel.max, srvModel.step);
+        html += '  <div>\n    <div class="btcpay-custom">\n';
 
-        if(!srvModel.simpleInput) {
-            html += addPlusMinusButton("+");
-        }
-        html += '</div>';
-        html += addSelectCurrency();
-        html += '</div>';
+        if (!srvModel.simpleInput) html += addPlusMinusButton("-");
+
+        html += '  ' + addInputPrice(srvModel.price, widthInput, "", srvModel.simpleInput? "number": null, srvModel.min, srvModel.max, srvModel.step);
+
+        if (!srvModel.simpleInput) html += addPlusMinusButton("+");
+
+        html += '    </div>\n';
+        html += addSelectCurrency(srvModel.currency);
+        html += '  </div>\n';
     }
+    // Slider
     else if (srvModel.buttonType == 2) {
-        html += '\n    <div style="text-align:center;display:inline;width:' + width + '">';
+        html += '  <div>\n';
         html += addInputPrice(srvModel.price, width, 'onchange="document.querySelector(\'#btcpay-input-range\').value = document.querySelector(\'#btcpay-input-price\').value"');
-        html += addSelectCurrency();
+        html += addSelectCurrency(srvModel.currency);
         html += addSlider(srvModel.price, srvModel.min, srvModel.max, srvModel.step, width);
-        html += '</div>';
+        html += '  </div>\n';
     }
 
-    if (srvModel.currency) {
-        html += addinput("currency", srvModel.currency);
-    }
-    if (srvModel.checkoutDesc) {
-        html += addinput("checkoutDesc", srvModel.checkoutDesc);
-    }
-    if (srvModel.orderId) {
-        html += addinput("orderId", srvModel.orderId);
-    }
-
-    if (srvModel.serverIpn) {
-        html += addinput("serverIpn", srvModel.serverIpn);
-    }
-    if (srvModel.browserRedirect) {
-        html += addinput("browserRedirect", srvModel.browserRedirect);
-    }
-    if (srvModel.notifyEmail) {
-        html += addinput("notifyEmail", srvModel.notifyEmail);
-    }   
-    if (srvModel.checkoutQueryString) {
-        html += addinput("checkoutQueryString", srvModel.checkoutQueryString);
-    }
-
-    html += '\n    <input type="image" src="' + esc(srvModel.payButtonImageUrl) + '" name="submit" style="width:' + width +
-        '" alt="Pay with BtcPay, Self-Hosted Bitcoin Payment Processor">';
+    html += '  <input type="image" class="submit" name="submit" src="' + esc(srvModel.payButtonImageUrl) + '" style="width:' + width + '" alt="Pay with BtcPay, Self-Hosted Bitcoin Payment Processor">';
 
     html += '\n</form>';
 
@@ -130,37 +122,22 @@ function inputChanges(event, buttonSize) {
     return html;
 }
 
-function addinput(name, value) {
-    var html = '\n    <input type="hidden" name="' + esc(name) + '" value="' + esc(value) + '" />';
-    return html;
+function addInput(name, value) {
+    return '  <input type="hidden" name="' + esc(name) + '" value="' + esc(value) + '" />\n';
 }
 
 function addPlusMinusButton(type) {
-    var button = document.getElementById('template-button-plus-minus').innerHTML.trim();
-    if (type === "+") {
-        return button.replace(/TYPE/g, '+');
-    } else {
-        return button.replace(/TYPE/g, '-');
-    }
+    return '      <button class="plus-minus" onclick="event.preventDefault(); var price = parseInt(document.querySelector(\'#btcpay-input-price\').value); if (\'' + type + '\' == \'-\' && (price - 1) < 1) { return; } document.querySelector(\'#btcpay-input-price\').value = parseInt(document.querySelector(\'#btcpay-input-price\').value) ' + type + ' 1;">' + type + '</button>\n';
 }
 
 function addInputPrice(price, widthInput, customFn, type, min, max, step) {
-    var input = document.getElementById('template-input-price').innerHTML.trim();
-
-    input = input.replace(/PRICEVALUE/g, price);
-    input = input.replace("WIDTHINPUT", widthInput);
-    input = input.replace("TYPEVALUE", type || "text");
-    input = input.replace("MIN", min || 0);
-    input = input.replace("MAX", max|| "none");
-    input = input.replace("STEP", step || "any");
-    if (customFn) {
-        return input.replace("CUSTOM", customFn);
-    }
-    return input.replace("CUSTOM", "");
+    return '    <input id="btcpay-input-price" name="price" type="' + (type || "text") + '" min="' + (min || 0) + '" max="' + (max || "none") + '" step="' + (step || "any") + '" value="' + price + '" style="width: ' + widthInput + ';" oninput="event.preventDefault();isNaN(event.target.value) || event.target.value <= 0 ? document.querySelector(\'#btcpay-input-price\').value = ' + price + ' : event.target.value" ' + (customFn || '') + ' />\n';
 }
 
-function addSelectCurrency() {
-    return document.getElementById('template-select-currency').innerHTML.trim();
+function addSelectCurrency(currency) {
+    return '    <select name="currency">\n' +
+        ['USD', 'GBP', 'EUR', 'BTC'].map(c => '      <option value="' + c + '"' + (c === currency ? ' selected' : '') + '>' + c + '</option>').join('\n') + '\n' +
+    '    </select>\n'
 }
 
 function addSlider(price, min, max, step, width) {
@@ -170,5 +147,5 @@ function addSlider(price, min, max, step, width) {
     input = input.replace("MAX", max);
     input = input.replace("STEP", step);
     input = input.replace("WIDTH", width);
-    return input;
+    return '    ' + input + '\n';
 }

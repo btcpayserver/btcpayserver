@@ -28,7 +28,7 @@ namespace BTCPayServer.Controllers
         [HttpGet("server/files/{fileId?}")]
         public async Task<IActionResult> Files(string fileId = null, string statusMessage = null)
         {
-            TempData["StatusMessage"] = statusMessage;
+            TempData[WellKnownTempData.SuccessMessage] = statusMessage;
             var fileUrl = string.IsNullOrEmpty(fileId) ? null : await _FileService.GetFileUrl(Request.GetAbsoluteRootUri(), fileId);
 
             return View(new ViewFilesViewModel()
@@ -167,7 +167,7 @@ namespace BTCPayServer.Controllers
         [HttpGet("server/storage")]
         public async Task<IActionResult> Storage(bool forceChoice = false, string statusMessage = null)
         {
-            TempData["StatusMessage"] = statusMessage;
+            TempData[WellKnownTempData.SuccessMessage] = statusMessage;
             var savedSettings = await _SettingsRepository.GetSettingAsync<StorageSettings>();
             if (forceChoice || savedSettings == null)
             {
@@ -288,11 +288,11 @@ namespace BTCPayServer.Controllers
             data.Provider = storageProvider;
             data.Configuration = JObject.FromObject(viewModel);
             await _SettingsRepository.UpdateSetting(data);
-            TempData["StatusMessage"] = new StatusMessageModel()
+            TempData[WellKnownTempData.StatusMessageModel] = new StatusMessageModel()
             {
                 Severity = StatusMessageModel.StatusSeverity.Success,
                 Message = "Storage settings updated successfully"
-            }.ToString();
+            };
             return View(viewModel);
         }
     }

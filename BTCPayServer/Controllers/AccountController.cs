@@ -420,7 +420,7 @@ namespace BTCPayServer.Controllers
                     }
                     else
                     {
-                        TempData["StatusMessage"] = "Account created, please confirm your email";
+                        TempData[WellKnownTempData.SuccessMessage] = "Account created, please confirm your email";
                         return View();
                     }
                 }

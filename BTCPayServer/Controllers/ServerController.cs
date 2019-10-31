@@ -190,6 +190,8 @@ namespace BTCPayServer.Controllers
         {
             MaintenanceViewModel vm = new MaintenanceViewModel();
             vm.CanUseSSH = _sshState.CanUseSSH;
+            if (!vm.CanUseSSH)
+                TempData[WellKnownTempData.ErrorMessage] = "Maintenance feature requires access to SSH properly configured in BTCPayServer configuration";
             vm.DNSDomain = this.Request.Host.Host;
             if (IPAddress.TryParse(vm.DNSDomain, out var unused))
                 vm.DNSDomain = null;
@@ -480,7 +482,7 @@ namespace BTCPayServer.Controllers
             }
 
             await _SettingsRepository.UpdateSetting(settings);
-            TempData["StatusMessage"] = "Policies updated successfully";
+            TempData[WellKnownTempData.SuccessMessage] = "Policies updated successfully";
             return RedirectToAction(nameof(Policies));
         }
 
@@ -1005,7 +1007,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> Theme(ThemeSettings settings)
         {
             await _SettingsRepository.UpdateSetting(settings);
-            TempData["StatusMessage"] = "Theme settings updated successfully";
+            TempData[WellKnownTempData.SuccessMessage] = "Theme settings updated successfully";
             return View(settings);
         }
 

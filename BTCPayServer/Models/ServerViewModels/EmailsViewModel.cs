@@ -10,10 +10,6 @@ namespace BTCPayServer.Models.ServerViewModels
 {
     public class EmailsViewModel
     {
-        public string StatusMessage
-        {
-            get; set;
-        }
         public EmailSettings Settings
         {
             get; set;

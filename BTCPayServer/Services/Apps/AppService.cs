@@ -139,7 +139,6 @@ namespace BTCPayServer.Services.Apps
                 TargetAmount = settings.TargetAmount,
                 TargetCurrency = settings.TargetCurrency,
                 EnforceTargetAmount = settings.EnforceTargetAmount,
-                StatusMessage = statusMessage,
                 Perks = perks,
                 Enabled = settings.Enabled,
                 DisqusEnabled = settings.DisqusEnabled,

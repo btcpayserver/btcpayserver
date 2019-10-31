@@ -15,7 +15,6 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
 
         public List<ViewPaymentRequestViewModel> Items { get; set; }
 
-        public string StatusMessage { get; set; }
         public int Total { get; set; }
     }
 
@@ -61,7 +60,6 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
         public DateTime? ExpiryDate { get; set; }
         [Required] public string Title { get; set; }
         public string Description { get; set; }
-        public string StatusMessage { get; set; }
 
         public SelectList Stores { get; set; }
         [EmailAddress]
@@ -142,7 +140,6 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
         public bool AnyPendingInvoice { get; set; }
         public bool PendingInvoiceHasPayments { get; set; }
         public string HubPath { get; set; }
-        public string StatusMessage { get; set; }
 
         public class PaymentRequestInvoice
         {

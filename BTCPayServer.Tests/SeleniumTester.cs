@@ -142,6 +142,7 @@ namespace BTCPayServer.Tests
             Assert.NotEmpty(links);
             foreach (var l in links)
             {
+                Logs.Tester.LogInformation($"Checking no error on {l}");
                 Driver.Navigate().GoToUrl(l);
                 Driver.AssertNoError();
             }

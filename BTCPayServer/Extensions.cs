@@ -34,6 +34,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using NBXplorer.DerivationStrategy;
 using System.Net;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 
 namespace BTCPayServer
 {
@@ -108,6 +109,13 @@ namespace BTCPayServer
                 }
             }
             return value;
+        }
+
+        public static bool HasStatusMessage(this ITempDataDictionary tempData)
+        {
+            return (tempData.Peek(WellKnownTempData.SuccessMessage) ??
+                   tempData.Peek(WellKnownTempData.ErrorMessage) ??
+                   tempData.Peek(WellKnownTempData.StatusMessageModel)) != null;
         }
         public static PaymentMethodId GetpaymentMethodId(this InvoiceCryptoInfo info)
         {

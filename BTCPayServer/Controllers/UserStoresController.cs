@@ -71,12 +71,9 @@ namespace BTCPayServer.Controllers
             if (store == null)
                 return NotFound();
             await _Repo.RemoveStore(storeId, userId);
-            StatusMessage = "Store removed successfully";
+            TempData[WellKnownTempData.SuccessMessage] = "Store removed successfully";
             return RedirectToAction(nameof(ListStores));
         }
-
-        [TempData]
-        public string StatusMessage { get; set; }
 
         [HttpGet]
         public async Task<IActionResult> ListStores()
@@ -107,7 +104,7 @@ namespace BTCPayServer.Controllers
             }
             var store = await _Repo.CreateStore(GetUserId(), vm.Name);
             CreatedStoreId = store.Id;
-            StatusMessage = "Store successfully created";
+            TempData[WellKnownTempData.SuccessMessage] = "Store successfully created";
             return RedirectToAction(nameof(StoresController.UpdateStore), "Stores", new
             {
                 storeId = store.Id

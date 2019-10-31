@@ -4,7 +4,7 @@
     ViewData.SetActivePageAndTitle(StoreNavPages.Tokens, "Access Tokens");
 }
 
-<partial name="_StatusMessage" for="StatusMessage" />
+<partial name="_StatusMessage" />
 @if (Model.StoreNotConfigured)
 {
     <div class="alert alert-warning alert-dismissible" role="alert">

@@ -24,7 +24,5 @@ namespace BTCPayServer.Models.StoreViewModels
             new SelectListItem { Value = "popup", Text = "Open in a popup" },
             new SelectListItem { Value = "inline", Text = "Embed inside Checkout UI " },
         };
-        
-        public string StatusMessage { get; set; }
     }
 }

@@ -118,6 +118,7 @@ namespace BTCPayServer.Tests
             config.AppendLine($"ltc.explorer.url={LTCNBXplorerUri.AbsoluteUri}");
             config.AppendLine($"ltc.explorer.cookiefile=0");
             config.AppendLine($"btc.lightning={IntegratedLightning.AbsoluteUri}");
+            config.AppendLine($"debuglog=debug.log");
             if (!string.IsNullOrEmpty(SSHPassword) && string.IsNullOrEmpty(SSHKeyFile))
                 config.AppendLine($"sshpassword={SSHPassword}");
             if (!string.IsNullOrEmpty(SSHKeyFile))

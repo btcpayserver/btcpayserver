@@ -17,7 +17,6 @@ namespace BTCPayServer.Models.ServerViewModels
         public int Skip { get; set; }
         public int Count { get; set; }
         public int Total { get; set; }
-        public string StatusMessage { get; set; }
 
         public List<UserViewModel> Users { get; set; } = new List<UserViewModel>();
     }

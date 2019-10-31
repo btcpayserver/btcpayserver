@@ -28,6 +28,8 @@ namespace BTCPayServer.Tests
             try
             {
                 Assert.NotEmpty(driver.FindElements(By.ClassName("navbar-brand")));
+                foreach (var dangerAlert in driver.FindElements(By.ClassName("alert-danger")))
+                    Assert.False(dangerAlert.Displayed, "No alert should be displayed");
             }
             catch
             {

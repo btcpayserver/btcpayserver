@@ -50,8 +50,6 @@ namespace BTCPayServer.Controllers
         private readonly IFeeProviderFactory _feeRateProvider;
         private readonly BTCPayWalletProvider _walletProvider;
         public RateFetcher RateFetcher { get; }
-        [TempData]
-        public string StatusMessage { get; set; }
 
         CurrencyNameTable _currencyTable;
         public WalletsController(StoreRepository repo,
@@ -573,7 +571,7 @@ namespace BTCPayServer.Controllers
                 var wallet = _walletProvider.GetWallet(network);
                 var derivationSettings = GetDerivationSchemeSettings(walletId);
                 wallet.InvalidateCache(derivationSettings.AccountDerivation);
-                StatusMessage = $"Transaction broadcasted successfully ({transaction.GetHash().ToString()})";
+                TempData[WellKnownTempData.SuccessMessage] = $"Transaction broadcasted successfully ({transaction.GetHash().ToString()})";
             }
             return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
         }
@@ -863,7 +861,7 @@ namespace BTCPayServer.Controllers
             var store = (await Repository.FindStore(walletId.StoreId, GetUserId()));
             store.SetSupportedPaymentMethod(derivationScheme);
             await Repository.UpdateStore(store);
-            StatusMessage = "Wallet settings updated";
+            TempData[WellKnownTempData.SuccessMessage] = "Wallet settings updated";
             return RedirectToAction(nameof(WalletSettings));
         }
     }

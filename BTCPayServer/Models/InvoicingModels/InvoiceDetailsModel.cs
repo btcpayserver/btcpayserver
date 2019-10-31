@@ -49,11 +49,6 @@ namespace BTCPayServer.Models.InvoicingModels
             public string Destination { get; set; }
             public bool Current { get; set; }
         }
-       
-        public string StatusMessage
-        {
-            get; set;
-        }
         public String Id
         {
             get; set;

@@ -551,7 +551,8 @@ namespace BTCPayServer.Tests
                     ConnectionString = "type=charge;server=" + tester.MerchantCharge.Client.Uri.AbsoluteUri,
                     SkipPortTest = true // We can't test this as the IP can't be resolved by the test host :(
                 }, "test", "BTC").GetAwaiter().GetResult();
-                Assert.DoesNotContain("Error", ((LightningNodeViewModel)Assert.IsType<ViewResult>(testResult).Model).StatusMessage, StringComparison.OrdinalIgnoreCase);
+                Assert.False(storeController.TempData.ContainsKey(WellKnownTempData.ErrorMessage));
+                storeController.TempData.Clear();
                 Assert.True(storeController.ModelState.IsValid);
 
                 Assert.IsType<RedirectToActionResult>(storeController.AddLightningNode(user.StoreId, new LightningNodeViewModel()
@@ -746,7 +747,7 @@ namespace BTCPayServer.Tests
                 acc.CreateStore();
                 var store2 = acc.GetController<StoresController>();
                 await store2.Pair(pairingCode.ToString(), store2.CurrentStore.Id);
-                Assert.Contains(nameof(PairingResult.ReusedKey), store2.StatusMessage, StringComparison.CurrentCultureIgnoreCase);
+                Assert.Contains(nameof(PairingResult.ReusedKey), (string)store2.TempData[WellKnownTempData.ErrorMessage], StringComparison.CurrentCultureIgnoreCase);
             }
         }
 

@@ -27,10 +27,5 @@ namespace BTCPayServer.Models.ManageViewModels
         [MaxLength(50)]
         public string PhoneNumber { get; set; }
 
-        public string StatusMessage
-        {
-            get; set;
-        }
-
     }
 }

@@ -72,10 +72,10 @@ namespace BTCPayServer.Controllers
             {
                 UserId = GetUserId(), Skip = skip, Count = count
             });
+            TempData[WellKnownTempData.SuccessMessage] = statusMessage;
             return View(new ListPaymentRequestsViewModel()
             {
                 Skip = skip,
-                StatusMessage = statusMessage,
                 Count = count,
                 Total = result.Total,
                 Items = result.Items.Select(data => new ViewPaymentRequestViewModel(data)).ToList()
@@ -111,8 +111,7 @@ namespace BTCPayServer.Controllers
 
             return View(new UpdatePaymentRequestViewModel(data)
             {
-                Stores = stores,
-                StatusMessage = statusMessage
+                Stores = stores
             });
         }
 
@@ -225,8 +224,6 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
             result.HubPath = PaymentRequestHub.GetHubPath(this.Request);
-            result.StatusMessage = statusMessage;
-            
             return View(result);
         }
 

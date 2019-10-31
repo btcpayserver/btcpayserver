@@ -62,7 +62,7 @@ namespace BTCPayServer.Controllers
                     storeBlob.CoinSwitchSettings = coinSwitchSettings;
                     store.SetStoreBlob(storeBlob);
                     await _Repo.UpdateStore(store);
-                    StatusMessage = "CoinSwitch settings modified";
+                    TempData[WellKnownTempData.SuccessMessage] = "CoinSwitch settings modified";
                     return RedirectToAction(nameof(UpdateStore), new {
                         storeId});
 

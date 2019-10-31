@@ -201,7 +201,7 @@ namespace BTCPayServer.Controllers
                 
             });
             await _AppService.UpdateOrCreateApp(app);
-            StatusMessage = "App updated";
+            TempData[WellKnownTempData.SuccessMessage] = "App updated";
             return RedirectToAction(nameof(UpdatePointOfSale), new { appId });
         }
 

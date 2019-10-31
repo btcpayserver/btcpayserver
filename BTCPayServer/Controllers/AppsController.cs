@@ -50,8 +50,6 @@ namespace BTCPayServer.Controllers
         private readonly EmailSenderFactory _emailSenderFactory;
         private AppService _AppService;
 
-        [TempData]
-        public string StatusMessage { get; set; }
         public string CreatedAppId { get; set; }
 
         public async Task<IActionResult> ListApps()
@@ -71,7 +69,7 @@ namespace BTCPayServer.Controllers
             if (appData == null)
                 return NotFound();
             if (await _AppService.DeleteApp(appData))
-                StatusMessage = "App removed successfully";
+                TempData[WellKnownTempData.SuccessMessage] = "App removed successfully";
             return RedirectToAction(nameof(ListApps));
         }
 
@@ -82,12 +80,12 @@ namespace BTCPayServer.Controllers
             var stores = await _AppService.GetOwnedStores(GetUserId());
             if (stores.Length == 0)
             {
-                StatusMessage = new StatusMessageModel()
+                TempData[WellKnownTempData.StatusMessageModel] = new StatusMessageModel()
                 {
                     Html =
                         $"Error: You need to create at least one store. <a href='{(Url.Action("CreateStore", "UserStores"))}'>Create store</a>",
                     Severity = StatusMessageModel.StatusSeverity.Error
-                }.ToString();
+                };
                 return RedirectToAction(nameof(ListApps));
             }
             var vm = new CreateAppViewModel();
@@ -102,12 +100,12 @@ namespace BTCPayServer.Controllers
             var stores = await _AppService.GetOwnedStores(GetUserId());
             if (stores.Length == 0)
             {
-                StatusMessage = new StatusMessageModel()
+                TempData[WellKnownTempData.StatusMessageModel] = new StatusMessageModel()
                 {
                     Html =
                         $"Error: You need to create at least one store. <a href='{(Url.Action("CreateStore", "UserStores"))}'>Create store</a>",
                     Severity = StatusMessageModel.StatusSeverity.Error
-                }.ToString();
+                };
                 return RedirectToAction(nameof(ListApps));
             }
             var selectedStore = vm.SelectedStore;
@@ -124,7 +122,7 @@ namespace BTCPayServer.Controllers
 
             if (!stores.Any(s => s.Id == selectedStore))
             {
-                StatusMessage = "Error: You are not owner of this store";
+                TempData[WellKnownTempData.ErrorMessage] = "You are not owner of this store";
                 return RedirectToAction(nameof(ListApps));
             }
             var appData = new AppData
@@ -134,7 +132,7 @@ namespace BTCPayServer.Controllers
                 AppType = appType.ToString()
             };
             await _AppService.UpdateOrCreateApp(appData);
-            StatusMessage = "App successfully created";
+            TempData[WellKnownTempData.SuccessMessage] = "App successfully created";
             CreatedAppId = appData.Id;
 
             switch (appType)

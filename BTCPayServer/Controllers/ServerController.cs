@@ -136,7 +136,7 @@ namespace BTCPayServer.Controllers
                 return View(vm);
             }
             await _SettingsRepository.UpdateSetting(rates);
-            StatusMessage = "Rate settings successfully updated";
+            TempData[WellKnownTempData.SuccessMessage] = "Rate settings successfully updated";
             return RedirectToAction(nameof(Rates));
         }
 
@@ -158,7 +158,6 @@ namespace BTCPayServer.Controllers
         public IActionResult ListUsers(int skip = 0, int count = 50)
         {
             var users = new UsersViewModel();
-            users.StatusMessage = StatusMessage;
             users.Users = _UserManager.Users.Skip(skip).Take(count)
                 .Select(u => new UsersViewModel.UserViewModel
                 {
@@ -263,21 +262,21 @@ namespace BTCPayServer.Controllers
 
                 builder.Path = null;
                 builder.Query = null;
-                StatusMessage = $"Domain name changing... the server will restart, please use \"{builder.Uri.AbsoluteUri}\"";
+                TempData[WellKnownTempData.SuccessMessage] = $"Domain name changing... the server will restart, please use \"{builder.Uri.AbsoluteUri}\"";
             }
             else if (command == "update")
             {
                 var error = await RunSSH(vm, $"btcpay-update.sh");
                 if (error != null)
                     return error;
-                StatusMessage = $"The server might restart soon if an update is available...";
+                TempData[WellKnownTempData.SuccessMessage] = $"The server might restart soon if an update is available...";
             }
             else if (command == "clean")
             {
                 var error = await RunSSH(vm, $"btcpay-clean.sh");
                 if (error != null)
                     return error;
-                StatusMessage = $"The old docker images will be cleaned soon...";
+                TempData[WellKnownTempData.SuccessMessage] = $"The old docker images will be cleaned soon...";
             }
             else
             {
@@ -357,12 +356,10 @@ namespace BTCPayServer.Controllers
             if (user == null)
                 return NotFound();
 
-            viewModel.StatusMessage = "";
-
             var admins = await _UserManager.GetUsersInRoleAsync(Roles.ServerAdmin);
             if (!viewModel.IsAdmin && admins.Count == 1)
             {
-                viewModel.StatusMessage = "This is the only Admin, so their role can't be removed until another Admin is added.";
+                TempData[WellKnownTempData.ErrorMessage] = "This is the only Admin, so their role can't be removed until another Admin is added.";
                 return View(viewModel); // return
             }
 
@@ -374,10 +371,10 @@ namespace BTCPayServer.Controllers
                 else
                     await _UserManager.RemoveFromRoleAsync(user, Roles.ServerAdmin);
 
-                viewModel.StatusMessage = "User successfully updated";
+                TempData[WellKnownTempData.SuccessMessage] = "User successfully updated";
             }
 
-            return View(viewModel);
+            return RedirectToAction(nameof(User), new { userId = userId });
         }
 
 
@@ -420,14 +417,8 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             await _UserManager.DeleteAsync(user);
             await _StoreRepository.CleanUnreachableStores();
-            StatusMessage = "User deleted";
+            TempData[WellKnownTempData.SuccessMessage] = "User deleted";
             return RedirectToAction(nameof(ListUsers));
-        }
-
-        [TempData]
-        public string StatusMessage
-        {
-            get; set;
         }
         public IHttpClientFactory HttpClientFactory { get; }
 
@@ -591,7 +582,7 @@ namespace BTCPayServer.Controllers
         {
             if (!_dashBoard.IsFullySynched(cryptoCode, out var unusud))
             {
-                StatusMessage = $"Error: {cryptoCode} is not fully synched";
+                TempData[WellKnownTempData.ErrorMessage] = $"{cryptoCode} is not fully synched";
                 return RedirectToAction(nameof(Services));
             }
             var service = GetService(serviceName, cryptoCode);
@@ -618,7 +609,7 @@ namespace BTCPayServer.Controllers
                     case ExternalServiceTypes.Spark:
                         if (connectionString.AccessKey == null)
                         {
-                            StatusMessage = $"Error: The access key of the service is not set";
+                            TempData[WellKnownTempData.ErrorMessage] = $"The access key of the service is not set";
                             return RedirectToAction(nameof(Services));
                         }
                         LightningWalletServices vm = new LightningWalletServices();
@@ -635,7 +626,7 @@ namespace BTCPayServer.Controllers
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Error: {ex.Message}";
+                TempData[WellKnownTempData.ErrorMessage] = ex.Message;
                 return RedirectToAction(nameof(Services));
             }
         }
@@ -715,7 +706,7 @@ namespace BTCPayServer.Controllers
         {
             if (!_dashBoard.IsFullySynched(cryptoCode, out var unusud))
             {
-                StatusMessage = $"Error: {cryptoCode} is not fully synched";
+                TempData[WellKnownTempData.ErrorMessage] = $"{cryptoCode} is not fully synched";
                 return RedirectToAction(nameof(Services));
             }
             var service = GetService(serviceName, cryptoCode);
@@ -729,7 +720,7 @@ namespace BTCPayServer.Controllers
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Error: {ex.Message}";
+                TempData[WellKnownTempData.ErrorMessage] = ex.Message;
                 return RedirectToAction(nameof(Services));
             }
 
@@ -811,7 +802,7 @@ namespace BTCPayServer.Controllers
                 string errorMessage = await viewModel.Settings.SendUpdateRequest(HttpClientFactory.CreateClient());
                 if (errorMessage == null)
                 {
-                    StatusMessage = $"The Dynamic DNS has been successfully queried, your configuration is saved";
+                    TempData[WellKnownTempData.SuccessMessage] = $"The Dynamic DNS has been successfully queried, your configuration is saved";
                     viewModel.Settings.LastUpdated = DateTimeOffset.UtcNow;
                     settings.Services.Add(viewModel.Settings);
                     await _SettingsRepository.UpdateSetting(settings);
@@ -847,7 +838,7 @@ namespace BTCPayServer.Controllers
                 viewModel.Settings.Hostname = viewModel.Settings.Hostname.Trim().ToLowerInvariant();
             if (!viewModel.Settings.Enabled)
             {
-                StatusMessage = $"The Dynamic DNS service has been disabled";
+                TempData[WellKnownTempData.SuccessMessage] = $"The Dynamic DNS service has been disabled";
                 viewModel.Settings.LastUpdated = null;
             }
             else
@@ -855,7 +846,7 @@ namespace BTCPayServer.Controllers
                 string errorMessage = await viewModel.Settings.SendUpdateRequest(HttpClientFactory.CreateClient());
                 if (errorMessage == null)
                 {
-                    StatusMessage = $"The Dynamic DNS has been successfully queried, your configuration is saved";
+                    TempData[WellKnownTempData.SuccessMessage] = $"The Dynamic DNS has been successfully queried, your configuration is saved";
                     viewModel.Settings.LastUpdated = DateTimeOffset.UtcNow;
                 }
                 else
@@ -894,7 +885,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             settings.Services.RemoveAt(i);
             await _SettingsRepository.UpdateSetting(settings);
-            StatusMessage = "Dynamic DNS service successfully removed";
+            TempData[WellKnownTempData.SuccessMessage] = "Dynamic DNS service successfully removed";
             this.RouteData.Values.Remove(nameof(hostname));
             return RedirectToAction(nameof(DynamicDnsServices));
         }
@@ -965,7 +956,7 @@ namespace BTCPayServer.Controllers
                 try
                 {
                     await System.IO.File.WriteAllTextAsync(_Options.SSHSettings.AuthorizedKeysFile, newContent);
-                    StatusMessage = "authorized_keys has been updated";
+                    TempData[WellKnownTempData.SuccessMessage] = "authorized_keys has been updated";
                     updated = true;
                 }
                 catch (Exception ex)
@@ -994,11 +985,11 @@ namespace BTCPayServer.Controllers
 
             if (exception is null)
             {
-                StatusMessage = "authorized_keys has been updated";
+                TempData[WellKnownTempData.SuccessMessage] = "authorized_keys has been updated";
             }
             else
             {
-                StatusMessage = $"Error: {exception.Message}";
+                TempData[WellKnownTempData.ErrorMessage] = exception.Message;
             }
             return RedirectToAction(nameof(SSHService));
         }
@@ -1032,7 +1023,7 @@ namespace BTCPayServer.Controllers
         {
             if (!model.Settings.IsComplete())
             {
-                model.StatusMessage = "Error: Required fields missing";
+                TempData[WellKnownTempData.ErrorMessage] = "Required fields missing";
                 return View(model);
             }
 
@@ -1043,18 +1034,18 @@ namespace BTCPayServer.Controllers
                     var client = model.Settings.CreateSmtpClient();
                     var message = model.Settings.CreateMailMessage(new MailAddress(model.TestEmail), "BTCPay test", "BTCPay test");
                     await client.SendMailAsync(message);
-                    model.StatusMessage = "Email sent to " + model.TestEmail + ", please, verify you received it";
+                    TempData[WellKnownTempData.SuccessMessage] = "Email sent to " + model.TestEmail + ", please, verify you received it";
                 }
                 catch (Exception ex)
                 {
-                    model.StatusMessage = "Error: " + ex.Message;
+                    TempData[WellKnownTempData.ErrorMessage] = ex.Message;
                 }
                 return View(model);
             }
             else // if(command == "Save")
             {
                 await _SettingsRepository.UpdateSetting(model.Settings);
-                model.StatusMessage = "Email settings saved";
+                TempData[WellKnownTempData.SuccessMessage] = "Email settings saved";
                 return View(model);
             }
         }
@@ -1071,7 +1062,7 @@ namespace BTCPayServer.Controllers
 
             if (string.IsNullOrEmpty(_Options.LogFile))
             {
-                vm.StatusMessage = "Error: File Logging Option not specified. " +
+                TempData[WellKnownTempData.ErrorMessage] = "File Logging Option not specified. " +
                                    "You need to set debuglog and optionally " +
                                    "debugloglevel in the configuration or through runtime arguments";
             }
@@ -1080,7 +1071,7 @@ namespace BTCPayServer.Controllers
                 var di = Directory.GetParent(_Options.LogFile);
                 if (di == null)
                 {
-                    vm.StatusMessage = "Error: Could not load log files";
+                    TempData[WellKnownTempData.ErrorMessage] = "Could not load log files";
                 }
 
                 var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(_Options.LogFile);

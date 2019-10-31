@@ -164,7 +164,7 @@ namespace BTCPayServer.Controllers
                 StoreId = app.StoreDataId,
                 Settings = newSettings
             });
-            StatusMessage = "App updated";
+            TempData[WellKnownTempData.SuccessMessage] = "App updated";
             return RedirectToAction(nameof(UpdateCrowdfund), new {appId});
         }
     }

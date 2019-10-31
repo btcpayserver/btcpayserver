@@ -11,9 +11,9 @@ namespace BTCPayServer.Controllers
         [HttpGet]
         public async Task<IActionResult> U2FAuthentication(string statusMessage = null)
         {
+            TempData[WellKnownTempData.SuccessMessage] = statusMessage;
             return View(new U2FAuthenticationViewModel()
             {
-                StatusMessage = statusMessage,
                 Devices = await _u2FService.GetDevices(_userManager.GetUserId(User))
             });
         }

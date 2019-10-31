@@ -71,7 +71,7 @@ namespace BTCPayServer.Controllers
                     storeBlob.ChangellySettings = changellySettings;
                     store.SetStoreBlob(storeBlob);
                     await _Repo.UpdateStore(store);
-                    StatusMessage = "Changelly settings modified";
+                    TempData[WellKnownTempData.SuccessMessage] = "Changelly settings modified";
                     _changellyClientProvider.InvalidateClient(storeId);
                     return RedirectToAction(nameof(UpdateStore), new {
                         storeId});
@@ -81,12 +81,12 @@ namespace BTCPayServer.Controllers
                         var client = new Changelly(_httpClientFactory.CreateClient(), changellySettings.ApiKey, changellySettings.ApiSecret,
                             changellySettings.ApiUrl);
                         var result = await client.GetCurrenciesFull();
-                        vm.StatusMessage = "Test Successful";
+                        TempData[WellKnownTempData.SuccessMessage] = "Test Successful";
                         return View(vm);
                     }
                     catch (Exception ex)
                     {
-                        vm.StatusMessage = $"Error: {ex.Message}";
+                        TempData[WellKnownTempData.ErrorMessage] = ex.Message;
                         return View(vm);
                     }
                 default:

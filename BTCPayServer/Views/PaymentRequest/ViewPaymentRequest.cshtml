@@ -36,7 +36,7 @@
 </head>
 <body>
 
-<partial name="_StatusMessage" for="StatusMessage" />
+<partial name="_StatusMessage" />
 @if (Context.Request.Query.ContainsKey("simple"))
 {
     @await Html.PartialAsync("MinimalPaymentRequest", Model)

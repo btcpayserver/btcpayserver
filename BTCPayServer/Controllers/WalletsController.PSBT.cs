@@ -96,7 +96,7 @@ namespace BTCPayServer.Controllers
                         ModelState.AddModelError(nameof(vm.PSBT), "You need to update your version of NBXplorer");
                         return View(vm);
                     }
-                    StatusMessage = "PSBT updated!";
+                    TempData[WellKnownTempData.SuccessMessage] = "PSBT updated!";
                     return RedirectToAction(nameof(WalletPSBT), new { walletId = walletId, psbt = psbt.ToBase64(), FileName = vm.FileName });
                 case "seed":
                     return SignWithSeed(walletId, psbt.ToBase64());
@@ -353,7 +353,7 @@ namespace BTCPayServer.Controllers
                 return View(vm);
             }
             sourcePSBT = sourcePSBT.Combine(psbt);
-            StatusMessage = "PSBT Successfully combined!";
+            TempData[WellKnownTempData.SuccessMessage] = "PSBT Successfully combined!";
             return ViewPSBT(sourcePSBT);
         }
     }

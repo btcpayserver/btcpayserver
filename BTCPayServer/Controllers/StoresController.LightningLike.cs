@@ -146,7 +146,7 @@ namespace BTCPayServer.Controllers
                     store.SetStoreBlob(storeBlob);
                     store.SetSupportedPaymentMethod(paymentMethodId, paymentMethod);
                     await _Repo.UpdateStore(store);
-                    StatusMessage = $"Lightning node modified ({network.CryptoCode})";
+                    TempData[WellKnownTempData.SuccessMessage] = $"Lightning node modified ({network.CryptoCode})";
                     return RedirectToAction(nameof(UpdateStore), new { storeId = storeId });
                 case "test" when paymentMethod == null:
                     ModelState.AddModelError(nameof(vm.ConnectionString), "Missing url parameter");
@@ -163,11 +163,11 @@ namespace BTCPayServer.Controllers
                                 await handler.TestConnection(info, cts.Token);
                             }
                         }
-                        vm.StatusMessage = $"Connection to the lightning node succeeded ({info})";
+                        TempData[WellKnownTempData.SuccessMessage] = $"Connection to the lightning node succeeded ({info})";
                     }
                     catch (Exception ex)
                     {
-                        vm.StatusMessage = $"Error: {ex.Message}";
+                        TempData[WellKnownTempData.ErrorMessage] = ex.Message;
                         return View(vm);
                     }
                     return View(vm);

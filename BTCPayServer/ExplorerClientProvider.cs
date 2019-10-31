@@ -40,7 +40,8 @@ namespace BTCPayServer
 
         private static ExplorerClient CreateExplorerClient(HttpClient httpClient, BTCPayNetwork n, Uri uri, string cookieFile)
         {
-            var explorer = new ExplorerClient(n.NBXplorerNetwork, uri);
+
+            var explorer = n.NBXplorerNetwork.CreateExplorerClient(uri);
             explorer.SetClient(httpClient);
             if (cookieFile == null)
             {

@@ -35,11 +35,10 @@
             <div class="form-group">
                 <label asp-for="ThemeCssUri"></label>
                 <select id=themes asp-for="ThemeCssUri" class="form-control">
-                    <option value="/css/btcpay-theme.css">btcpay</option>
-                    <option value="/css/modern-theme.css">modern</option>
+                    <option value="/css/themes/classic.css">Classic</option>
+                    <option value="/css/themes/modern.css">Modern</option>
                 </select>
                 <span asp-validation-for="ThemeCssUri" class="text-danger"></span>
-
             </div>
             <button type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
         </form>

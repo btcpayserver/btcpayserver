@@ -152,7 +152,7 @@ table {
 caption {
   padding-top: 0.75rem;
   padding-bottom: 0.75rem;
-  color: var(--btcpay-color-gray-600);
+  color: var(--btcpay-color-neutral-600);
   text-align: left;
   caption-side: bottom; }
 
@@ -361,7 +361,7 @@ mark,
 .blockquote-footer {
   display: block;
   font-size: 80%;
-  color: var(--btcpay-color-gray-600); }
+  color: var(--btcpay-color-neutral-600); }
   .blockquote-footer::before {
     content: "\2014\00A0"; }
 
@@ -372,7 +372,7 @@ mark,
 .img-thumbnail {
   padding: 0.25rem;
   background-color: var(--btcpay-bg-body);
-  border: 1px solid var(--btcpay-color-gray-300);
+  border: 1px solid var(--btcpay-color-neutral-300);
   border-radius: 0.25rem;
   max-width: 100%;
   height: auto; }
@@ -386,7 +386,7 @@ mark,
 
 .figure-caption {
   font-size: 90%;
-  color: var(--btcpay-color-gray-600); }
+  color: var(--btcpay-color-neutral-600); }
 
 code {
   font-size: 87.5%;
@@ -399,7 +399,7 @@ kbd {
   padding: 0.2rem 0.4rem;
   font-size: 87.5%;
   color: var(--btcpay-color-white);
-  background-color: var(--btcpay-color-gray-900);
+  background-color: var(--btcpay-color-neutral-900);
   border-radius: 0.2rem; }
   kbd kbd {
     padding: 0;
@@ -409,7 +409,7 @@ kbd {
 pre {
   display: block;
   font-size: 87.5%;
-  color: var(--btcpay-color-gray-900); }
+  color: var(--btcpay-color-neutral-900); }
   pre code {
     font-size: inherit;
     color: inherit;
@@ -1014,22 +1014,22 @@ pre {
   .table td {
     padding: 0.75rem;
     vertical-align: top;
-    border-top: 1px solid var(--btcpay-color-gray-300); }
+    border-top: 1px solid var(--btcpay-color-neutral-300); }
   .table thead th {
     vertical-align: bottom;
-    border-bottom: 2px solid var(--btcpay-color-gray-300); }
+    border-bottom: 2px solid var(--btcpay-color-neutral-300); }
   .table tbody + tbody {
-    border-top: 2px solid var(--btcpay-color-gray-300); }
+    border-top: 2px solid var(--btcpay-color-neutral-300); }
 
 .table-sm th,
 .table-sm td {
   padding: 0.3rem; }
 
 .table-bordered {
-  border: 1px solid var(--btcpay-color-gray-300); }
+  border: 1px solid var(--btcpay-color-neutral-300); }
   .table-bordered th,
   .table-bordered td {
-    border: 1px solid var(--btcpay-color-gray-300); }
+    border: 1px solid var(--btcpay-color-neutral-300); }
   .table-bordered thead th,
   .table-bordered thead td {
     border-bottom-width: 2px; }
@@ -1196,21 +1196,21 @@ pre {
 
 .table .thead-dark th {
   color: var(--btcpay-color-white);
-  background-color: var(--btcpay-color-gray-800);
-  border-color: var(--btcpay-color-gray-700); }
+  background-color: var(--btcpay-color-neutral-800);
+  border-color: var(--btcpay-color-neutral-700); }
 
 .table .thead-light th {
-  color: var(--btcpay-color-gray-700);
-  background-color: var(--btcpay-color-gray-200);
-  border-color: var(--btcpay-color-gray-300); }
+  color: var(--btcpay-color-neutral-700);
+  background-color: var(--btcpay-color-neutral-200);
+  border-color: var(--btcpay-color-neutral-300); }
 
 .table-dark {
   color: var(--btcpay-color-white);
-  background-color: var(--btcpay-color-gray-800); }
+  background-color: var(--btcpay-color-neutral-800); }
   .table-dark th,
   .table-dark td,
   .table-dark thead th {
-    border-color: var(--btcpay-color-gray-700); }
+    border-color: var(--btcpay-color-neutral-700); }
   .table-dark.table-bordered {
     border: 0; }
   .table-dark.table-striped tbody tr:nth-of-type(odd) {
@@ -1271,10 +1271,10 @@ pre {
   font-size: 1rem;
   font-weight: 400;
   line-height: 1.5;
-  color: var(--btcpay-color-gray-700);
+  color: var(--btcpay-color-neutral-700);
   background-color: var(--btcpay-color-white);
   background-clip: padding-box;
-  border: 1px solid var(--btcpay-color-gray-400);
+  border: 1px solid var(--btcpay-color-neutral-400);
   border-radius: 0.25rem;
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out; }
   @media (prefers-reduced-motion: reduce) {
@@ -1284,20 +1284,20 @@ pre {
     background-color: transparent;
     border: 0; }
   .form-control:focus {
-    color: var(--btcpay-color-gray-700);
+    color: var(--btcpay-color-neutral-700);
     background-color: var(--btcpay-color-white);
     border-color: var(--btcpay-color-primary-alpha);
     outline: 0;
     box-shadow: 0 0 0 0.2rem var(--btcpay-color-primary-alpha); }
   .form-control::placeholder {
-    color: var(--btcpay-color-gray-600);
+    color: var(--btcpay-color-neutral-600);
     opacity: 1; }
   .form-control:disabled, .form-control[readonly] {
-    background-color: var(--btcpay-color-gray-200);
+    background-color: var(--btcpay-color-neutral-200);
     opacity: 1; }
 
 select.form-control:focus::-ms-value {
-  color: var(--btcpay-color-gray-700);
+  color: var(--btcpay-color-neutral-700);
   background-color: var(--btcpay-color-white); }
 
 .form-control-file,
@@ -1386,7 +1386,7 @@ textarea.form-control {
   margin-top: 0.3rem;
   margin-left: -1.25rem; }
   .form-check-input:disabled ~ .form-check-label {
-    color: var(--btcpay-color-gray-600); }
+    color: var(--btcpay-color-neutral-600); }
 
 .form-check-label {
   margin-bottom: 0; }
@@ -1445,7 +1445,7 @@ textarea.form-control {
 .was-validated .custom-select:valid, .custom-select.is-valid {
   border-color: var(--btcpay-color-success);
   padding-right: calc((1em + 0.75rem) * 3 / 4 + 1.75rem);
-  background: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3e%3cpath fill='var(--btcpay-color-gray-800)' d='M2 0L0 2h4zm0 5L0 3h4z'/%3e%3c/svg%3e") no-repeat right 0.75rem center/8px 10px, url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%2328a745' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e") #fff no-repeat center right 1.75rem/calc(0.75em + 0.375rem) calc(0.75em + 0.375rem); }
+  background: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3e%3cpath fill='var(--btcpay-color-neutral-800)' d='M2 0L0 2h4zm0 5L0 3h4z'/%3e%3c/svg%3e") no-repeat right 0.75rem center/8px 10px, url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%2328a745' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e") #fff no-repeat center right 1.75rem/calc(0.75em + 0.375rem) calc(0.75em + 0.375rem); }
   .was-validated .custom-select:valid:focus, .custom-select.is-valid:focus {
     border-color: var(--btcpay-color-success);
     box-shadow: 0 0 0 0.2rem var(--btcpay-color-success-alpha); }
@@ -1542,7 +1542,7 @@ textarea.form-control {
 .was-validated .custom-select:invalid, .custom-select.is-invalid {
   border-color: var(--btcpay-color-danger);
   padding-right: calc((1em + 0.75rem) * 3 / 4 + 1.75rem);
-  background: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3e%3cpath fill='var(--btcpay-color-gray-800)' d='M2 0L0 2h4zm0 5L0 3h4z'/%3e%3c/svg%3e") no-repeat right 0.75rem center/8px 10px, url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='%23dc3545' viewBox='-2 -2 7 7'%3e%3cpath stroke='%23dc3545' d='M0 0l3 3m0-3L0 3'/%3e%3ccircle r='.5'/%3e%3ccircle cx='3' r='.5'/%3e%3ccircle cy='3' r='.5'/%3e%3ccircle cx='3' cy='3' r='.5'/%3e%3c/svg%3E") #fff no-repeat center right 1.75rem/calc(0.75em + 0.375rem) calc(0.75em + 0.375rem); }
+  background: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3e%3cpath fill='var(--btcpay-color-neutral-800)' d='M2 0L0 2h4zm0 5L0 3h4z'/%3e%3c/svg%3e") no-repeat right 0.75rem center/8px 10px, url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='%23dc3545' viewBox='-2 -2 7 7'%3e%3cpath stroke='%23dc3545' d='M0 0l3 3m0-3L0 3'/%3e%3ccircle r='.5'/%3e%3ccircle cx='3' r='.5'/%3e%3ccircle cy='3' r='.5'/%3e%3ccircle cx='3' cy='3' r='.5'/%3e%3c/svg%3E") #fff no-repeat center right 1.75rem/calc(0.75em + 0.375rem) calc(0.75em + 0.375rem); }
   .was-validated .custom-select:invalid:focus, .custom-select.is-invalid:focus {
     border-color: var(--btcpay-color-danger);
     box-shadow: 0 0 0 0.2rem var(--btcpay-color-danger-alpha); }
@@ -1764,22 +1764,22 @@ fieldset:disabled a.btn {
       box-shadow: 0 0 0 0.2rem var(--btcpay-color-info-alpha); }
 
 .btn-warning {
-  color: var(--btcpay-color-gray-900);
+  color: var(--btcpay-color-neutral-900);
   background-color: var(--btcpay-color-warning);
   border-color: var(--btcpay-color-warning); }
   .btn-warning:hover {
-    color: var(--btcpay-color-gray-900);
+    color: var(--btcpay-color-neutral-900);
     background-color: var(--btcpay-color-warning-dark);
     border-color: var(--btcpay-color-warning-dark); }
   .btn-warning:focus, .btn-warning.focus {
     box-shadow: 0 0 0 0.2rem var(--btcpay-color-warning-alpha); }
   .btn-warning.disabled, .btn-warning:disabled {
-    color: var(--btcpay-color-gray-900);
+    color: var(--btcpay-color-neutral-900);
     background-color: var(--btcpay-color-warning);
     border-color: var(--btcpay-color-warning); }
   .btn-warning:not(:disabled):not(.disabled):active, .btn-warning:not(:disabled):not(.disabled).active,
   .show > .btn-warning.dropdown-toggle {
-    color: var(--btcpay-color-gray-900);
+    color: var(--btcpay-color-neutral-900);
     background-color: var(--btcpay-color-warning-dark);
     border-color: var(--btcpay-color-warning-dark); }
     .btn-warning:not(:disabled):not(.disabled):active:focus, .btn-warning:not(:disabled):not(.disabled).active:focus,
@@ -1810,22 +1810,22 @@ fieldset:disabled a.btn {
       box-shadow: 0 0 0 0.2rem var(--btcpay-color-danger-alpha); }
 
 .btn-light {
-  color: var(--btcpay-color-gray-900);
+  color: var(--btcpay-color-neutral-900);
   background-color: var(--btcpay-color-light);
   border-color: var(--btcpay-color-light); }
   .btn-light:hover {
-    color: var(--btcpay-color-gray-900);
+    color: var(--btcpay-color-neutral-900);
     background-color: var(--btcpay-color-light-dark);
     border-color: var(--btcpay-color-light-dark); }
   .btn-light:focus, .btn-light.focus {
     box-shadow: 0 0 0 0.2rem var(--btcpay-color-light-alpha); }
   .btn-light.disabled, .btn-light:disabled {
-    color: var(--btcpay-color-gray-900);
+    color: var(--btcpay-color-neutral-900);
     background-color: var(--btcpay-color-light);
     border-color: var(--btcpay-color-light); }
   .btn-light:not(:disabled):not(.disabled):active, .btn-light:not(:disabled):not(.disabled).active,
   .show > .btn-light.dropdown-toggle {
-    color: var(--btcpay-color-gray-900);
+    color: var(--btcpay-color-neutral-900);
     background-color: var(--btcpay-color-light-dark);
     border-color: var(--btcpay-color-light-dark); }
     .btn-light:not(:disabled):not(.disabled):active:focus, .btn-light:not(:disabled):not(.disabled).active:focus,
@@ -1943,7 +1943,7 @@ fieldset:disabled a.btn {
   color: var(--btcpay-color-warning);
   border-color: var(--btcpay-color-warning); }
   .btn-outline-warning:hover {
-    color: var(--btcpay-color-gray-900);
+    color: var(--btcpay-color-neutral-900);
     background-color: var(--btcpay-color-warning);
     border-color: var(--btcpay-color-warning); }
   .btn-outline-warning:focus, .btn-outline-warning.focus {
@@ -1953,7 +1953,7 @@ fieldset:disabled a.btn {
     background-color: transparent; }
   .btn-outline-warning:not(:disabled):not(.disabled):active, .btn-outline-warning:not(:disabled):not(.disabled).active,
   .show > .btn-outline-warning.dropdown-toggle {
-    color: var(--btcpay-color-gray-900);
+    color: var(--btcpay-color-neutral-900);
     background-color: var(--btcpay-color-warning);
     border-color: var(--btcpay-color-warning); }
     .btn-outline-warning:not(:disabled):not(.disabled):active:focus, .btn-outline-warning:not(:disabled):not(.disabled).active:focus,
@@ -1985,7 +1985,7 @@ fieldset:disabled a.btn {
   color: var(--btcpay-color-light);
   border-color: var(--btcpay-color-light); }
   .btn-outline-light:hover {
-    color: var(--btcpay-color-gray-900);
+    color: var(--btcpay-color-neutral-900);
     background-color: var(--btcpay-color-light);
     border-color: var(--btcpay-color-light); }
   .btn-outline-light:focus, .btn-outline-light.focus {
@@ -1995,7 +1995,7 @@ fieldset:disabled a.btn {
     background-color: transparent; }
   .btn-outline-light:not(:disabled):not(.disabled):active, .btn-outline-light:not(:disabled):not(.disabled).active,
   .show > .btn-outline-light.dropdown-toggle {
-    color: var(--btcpay-color-gray-900);
+    color: var(--btcpay-color-neutral-900);
     background-color: var(--btcpay-color-light);
     border-color: var(--btcpay-color-light); }
     .btn-outline-light:not(:disabled):not(.disabled):active:focus, .btn-outline-light:not(:disabled):not(.disabled).active:focus,
@@ -2034,7 +2034,7 @@ fieldset:disabled a.btn {
     text-decoration: underline;
     box-shadow: none; }
   .btn-link:disabled, .btn-link.disabled {
-    color: var(--btcpay-color-gray-600);
+    color: var(--btcpay-color-neutral-600);
     pointer-events: none; }
 
 .btn-lg, .btn-group-lg > .btn {
@@ -2240,7 +2240,7 @@ input[type="button"].btn-block {
   height: 0;
   margin: 0.5rem 0;
   overflow: hidden;
-  border-top: 1px solid var(--btcpay-color-gray-200); }
+  border-top: 1px solid var(--btcpay-color-neutral-200); }
 
 .dropdown-item {
   display: block;
@@ -2248,7 +2248,7 @@ input[type="button"].btn-block {
   padding: 0.25rem 1.5rem;
   clear: both;
   font-weight: 400;
-  color: var(--btcpay-color-gray-900);
+  color: var(--btcpay-color-neutral-900);
   text-align: inherit;
   white-space: nowrap;
   background-color: transparent;
@@ -2256,13 +2256,13 @@ input[type="button"].btn-block {
   .dropdown-item:hover, .dropdown-item:focus {
     color: #16181b;
     text-decoration: none;
-    background-color: var(--btcpay-color-gray-100); }
+    background-color: var(--btcpay-color-neutral-100); }
   .dropdown-item.active, .dropdown-item:active {
     color: var(--btcpay-color-white);
     text-decoration: none;
     background-color: var(--btcpay-color-primary); }
   .dropdown-item.disabled, .dropdown-item:disabled {
-    color: var(--btcpay-color-gray-600);
+    color: var(--btcpay-color-neutral-600);
     pointer-events: none;
     background-color: transparent; }
 
@@ -2274,13 +2274,13 @@ input[type="button"].btn-block {
   padding: 0.5rem 1.5rem;
   margin-bottom: 0;
   font-size: 0.875rem;
-  color: var(--btcpay-color-gray-600);
+  color: var(--btcpay-color-neutral-600);
   white-space: nowrap; }
 
 .dropdown-item-text {
   display: block;
   padding: 0.25rem 1.5rem;
-  color: var(--btcpay-color-gray-900); }
+  color: var(--btcpay-color-neutral-900); }
 
 .btn-group,
 .btn-group-vertical {
@@ -2455,11 +2455,11 @@ input[type="button"].btn-block {
   font-size: 1rem;
   font-weight: 400;
   line-height: 1.5;
-  color: var(--btcpay-color-gray-700);
+  color: var(--btcpay-color-neutral-700);
   text-align: center;
   white-space: nowrap;
-  background-color: var(--btcpay-color-gray-200);
-  border: 1px solid var(--btcpay-color-gray-400);
+  background-color: var(--btcpay-color-neutral-200);
+  border: 1px solid var(--btcpay-color-neutral-400);
   border-radius: 0.25rem; }
   .input-group-text input[type="radio"],
   .input-group-text input[type="checkbox"] {
@@ -2544,9 +2544,9 @@ input[type="button"].btn-block {
     background-color: var(--btcpay-color-primary-alpha);
     border-color: var(--btcpay-color-primary-alpha); }
   .custom-control-input:disabled ~ .custom-control-label {
-    color: var(--btcpay-color-gray-600); }
+    color: var(--btcpay-color-neutral-600); }
     .custom-control-input:disabled ~ .custom-control-label::before {
-      background-color: var(--btcpay-color-gray-200); }
+      background-color: var(--btcpay-color-neutral-200); }
 
 .custom-control-label {
   position: relative;
@@ -2562,7 +2562,7 @@ input[type="button"].btn-block {
     pointer-events: none;
     content: "";
     background-color: var(--btcpay-color-white);
-    border: var(--btcpay-color-gray-500) solid 1px; }
+    border: var(--btcpay-color-neutral-500) solid 1px; }
   .custom-control-label::after {
     position: absolute;
     top: 0.25rem;
@@ -2613,7 +2613,7 @@ input[type="button"].btn-block {
     left: calc(-2.25rem + 2px);
     width: calc(1rem - 4px);
     height: calc(1rem - 4px);
-    background-color: var(--btcpay-color-gray-500);
+    background-color: var(--btcpay-color-neutral-500);
     border-radius: 0.5rem;
     transition: transform 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out; }
     @media (prefers-reduced-motion: reduce) {
@@ -2633,11 +2633,11 @@ input[type="button"].btn-block {
   font-size: 1rem;
   font-weight: 400;
   line-height: 1.5;
-  color: var(--btcpay-color-gray-700);
+  color: var(--btcpay-color-neutral-700);
   vertical-align: middle;
-  background: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3e%3cpath fill='var(--btcpay-color-gray-800)' d='M2 0L0 2h4zm0 5L0 3h4z'/%3e%3c/svg%3e") no-repeat right 0.75rem center/8px 10px;
+  background: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3e%3cpath fill='var(--btcpay-color-neutral-800)' d='M2 0L0 2h4zm0 5L0 3h4z'/%3e%3c/svg%3e") no-repeat right 0.75rem center/8px 10px;
   background-color: var(--btcpay-color-white);
-  border: 1px solid var(--btcpay-color-gray-400);
+  border: 1px solid var(--btcpay-color-neutral-400);
   border-radius: 0.25rem;
   appearance: none; }
   .custom-select:focus {
@@ -2645,15 +2645,15 @@ input[type="button"].btn-block {
     outline: 0;
     box-shadow: 0 0 0 0.2rem var(--btcpay-color-primary-alpha); }
     .custom-select:focus::-ms-value {
-      color: var(--btcpay-color-gray-700);
+      color: var(--btcpay-color-neutral-700);
       background-color: var(--btcpay-color-white); }
   .custom-select[multiple], .custom-select[size]:not([size="1"]) {
     height: auto;
     padding-right: 0.75rem;
     background-image: none; }
   .custom-select:disabled {
-    color: var(--btcpay-color-gray-600);
-    background-color: var(--btcpay-color-gray-200); }
+    color: var(--btcpay-color-neutral-600);
+    background-color: var(--btcpay-color-neutral-200); }
   .custom-select::-ms-expand {
     display: none; }
 
@@ -2689,7 +2689,7 @@ input[type="button"].btn-block {
     border-color: var(--btcpay-color-primary-alpha);
     box-shadow: 0 0 0 0.2rem var(--btcpay-color-primary-alpha); }
   .custom-file-input:disabled ~ .custom-file-label {
-    background-color: var(--btcpay-color-gray-200); }
+    background-color: var(--btcpay-color-neutral-200); }
   .custom-file-input:lang(en) ~ .custom-file-label::after {
     content: "Browse"; }
   .custom-file-input ~ .custom-file-label[data-browse]::after {
@@ -2705,9 +2705,9 @@ input[type="button"].btn-block {
   padding: 0.375rem 0.75rem;
   font-weight: 400;
   line-height: 1.5;
-  color: var(--btcpay-color-gray-700);
+  color: var(--btcpay-color-neutral-700);
   background-color: var(--btcpay-color-white);
-  border: 1px solid var(--btcpay-color-gray-400);
+  border: 1px solid var(--btcpay-color-neutral-400);
   border-radius: 0.25rem; }
   .custom-file-label::after {
     position: absolute;
@@ -2719,9 +2719,9 @@ input[type="button"].btn-block {
     height: calc(1.5em + 0.75rem);
     padding: 0.375rem 0.75rem;
     line-height: 1.5;
-    color: var(--btcpay-color-gray-700);
+    color: var(--btcpay-color-neutral-700);
     content: "Browse";
-    background-color: var(--btcpay-color-gray-200);
+    background-color: var(--btcpay-color-neutral-200);
     border-left: inherit;
     border-radius: 0 0.25rem 0.25rem 0; }
 
@@ -2760,7 +2760,7 @@ input[type="button"].btn-block {
     height: 0.5rem;
     color: transparent;
     cursor: pointer;
-    background-color: var(--btcpay-color-gray-300);
+    background-color: var(--btcpay-color-neutral-300);
     border-color: transparent;
     border-radius: 1rem; }
   .custom-range::-moz-range-thumb {
@@ -2781,7 +2781,7 @@ input[type="button"].btn-block {
     height: 0.5rem;
     color: transparent;
     cursor: pointer;
-    background-color: var(--btcpay-color-gray-300);
+    background-color: var(--btcpay-color-neutral-300);
     border-color: transparent;
     border-radius: 1rem; }
   .custom-range::-ms-thumb {
@@ -2809,22 +2809,22 @@ input[type="button"].btn-block {
     border-color: transparent;
     border-width: 0.5rem; }
   .custom-range::-ms-fill-lower {
-    background-color: var(--btcpay-color-gray-300);
+    background-color: var(--btcpay-color-neutral-300);
     border-radius: 1rem; }
   .custom-range::-ms-fill-upper {
     margin-right: 15px;
-    background-color: var(--btcpay-color-gray-300);
+    background-color: var(--btcpay-color-neutral-300);
     border-radius: 1rem; }
   .custom-range:disabled::-webkit-slider-thumb {
-    background-color: var(--btcpay-color-gray-500); }
+    background-color: var(--btcpay-color-neutral-500); }
   .custom-range:disabled::-webkit-slider-runnable-track {
     cursor: default; }
   .custom-range:disabled::-moz-range-thumb {
-    background-color: var(--btcpay-color-gray-500); }
+    background-color: var(--btcpay-color-neutral-500); }
   .custom-range:disabled::-moz-range-track {
     cursor: default; }
   .custom-range:disabled::-ms-thumb {
-    background-color: var(--btcpay-color-gray-500); }
+    background-color: var(--btcpay-color-neutral-500); }
 
 .custom-control-label::before,
 .custom-file-label,
@@ -2849,12 +2849,12 @@ input[type="button"].btn-block {
   .nav-link:hover, .nav-link:focus {
     text-decoration: none; }
   .nav-link.disabled {
-    color: var(--btcpay-color-gray-600);
+    color: var(--btcpay-color-neutral-600);
     pointer-events: none;
     cursor: default; }
 
 .nav-tabs {
-  border-bottom: 1px solid var(--btcpay-color-gray-300); }
+  border-bottom: 1px solid var(--btcpay-color-neutral-300); }
   .nav-tabs .nav-item {
     margin-bottom: -1px; }
   .nav-tabs .nav-link {
@@ -2862,16 +2862,16 @@ input[type="button"].btn-block {
     border-top-left-radius: 0.25rem;
     border-top-right-radius: 0.25rem; }
     .nav-tabs .nav-link:hover, .nav-tabs .nav-link:focus {
-      border-color: var(--btcpay-color-gray-200) var(--btcpay-color-gray-200) var(--btcpay-color-gray-300); }
+      border-color: var(--btcpay-color-neutral-200) var(--btcpay-color-neutral-200) var(--btcpay-color-neutral-300); }
     .nav-tabs .nav-link.disabled {
-      color: var(--btcpay-color-gray-600);
+      color: var(--btcpay-color-neutral-600);
       background-color: transparent;
       border-color: transparent; }
   .nav-tabs .nav-link.active,
   .nav-tabs .nav-item.show .nav-link {
-    color: var(--btcpay-color-gray-700);
+    color: var(--btcpay-color-neutral-700);
     background-color: var(--btcpay-bg-body);
-    border-color: var(--btcpay-color-gray-300) var(--btcpay-color-gray-300) var(--btcpay-bg-body); }
+    border-color: var(--btcpay-color-neutral-300) var(--btcpay-color-neutral-300) var(--btcpay-bg-body); }
   .nav-tabs .dropdown-menu {
     margin-top: -1px;
     border-top-left-radius: 0;
@@ -3334,7 +3334,7 @@ input[type="button"].btn-block {
   padding: 0.75rem 1rem;
   margin-bottom: 1rem;
   list-style: none;
-  background-color: var(--btcpay-color-gray-200);
+  background-color: var(--btcpay-color-neutral-200);
   border-radius: 0.25rem; }
 
 .breadcrumb-item + .breadcrumb-item {
@@ -3342,7 +3342,7 @@ input[type="button"].btn-block {
   .breadcrumb-item + .breadcrumb-item::before {
     display: inline-block;
     padding-right: 0.5rem;
-    color: var(--btcpay-color-gray-600);
+    color: var(--btcpay-color-neutral-600);
     content: "/"; }
 
 .breadcrumb-item + .breadcrumb-item:hover::before {
@@ -3352,7 +3352,7 @@ input[type="button"].btn-block {
   text-decoration: none; }
 
 .breadcrumb-item.active {
-  color: var(--btcpay-color-gray-600); }
+  color: var(--btcpay-color-neutral-600); }
 
 .pagination {
   display: flex;
@@ -3368,13 +3368,13 @@ input[type="button"].btn-block {
   line-height: 1.25;
   color: var(--btcpay-color-link);
   background-color: var(--btcpay-color-white);
-  border: 1px solid var(--btcpay-color-gray-300); }
+  border: 1px solid var(--btcpay-color-neutral-300); }
   .page-link:hover {
     z-index: 2;
     color: var(--btcpay-color-link-hover);
     text-decoration: none;
-    background-color: var(--btcpay-color-gray-200);
-    border-color: var(--btcpay-color-gray-300); }
+    background-color: var(--btcpay-color-neutral-200);
+    border-color: var(--btcpay-color-neutral-300); }
   .page-link:focus {
     z-index: 2;
     outline: 0;
@@ -3396,11 +3396,11 @@ input[type="button"].btn-block {
   border-color: var(--btcpay-color-primary); }
 
 .page-item.disabled .page-link {
-  color: var(--btcpay-color-gray-600);
+  color: var(--btcpay-color-neutral-600);
   pointer-events: none;
   cursor: auto;
   background-color: var(--btcpay-color-white);
-  border-color: var(--btcpay-color-gray-300); }
+  border-color: var(--btcpay-color-neutral-300); }
 
 .pagination-lg .page-link {
   padding: 0.75rem 1.5rem;
@@ -3497,10 +3497,10 @@ input[type="button"].btn-block {
     box-shadow: 0 0 0 0.2rem var(--btcpay-color-info-alpha); }
 
 .badge-warning {
-  color: var(--btcpay-color-gray-900);
+  color: var(--btcpay-color-neutral-900);
   background-color: var(--btcpay-color-warning); }
   a.badge-warning:hover, a.badge-warning:focus {
-    color: var(--btcpay-color-gray-900);
+    color: var(--btcpay-color-neutral-900);
     background-color: var(--btcpay-color-warning-dark); }
   a.badge-warning:focus, a.badge-warning.focus {
     outline: 0;
@@ -3517,10 +3517,10 @@ input[type="button"].btn-block {
     box-shadow: 0 0 0 0.2rem var(--btcpay-color-danger-alpha); }
 
 .badge-light {
-  color: var(--btcpay-color-gray-900);
+  color: var(--btcpay-color-neutral-900);
   background-color: var(--btcpay-color-light); }
   a.badge-light:hover, a.badge-light:focus {
-    color: var(--btcpay-color-gray-900);
+    color: var(--btcpay-color-neutral-900);
     background-color: var(--btcpay-color-light-dark); }
   a.badge-light:focus, a.badge-light.focus {
     outline: 0;
@@ -3539,7 +3539,7 @@ input[type="button"].btn-block {
 .jumbotron {
   padding: 2rem 1rem;
   margin-bottom: 2rem;
-  background-color: var(--btcpay-color-gray-200);
+  background-color: var(--btcpay-color-neutral-200);
   border-radius: 0.3rem; }
   @media (min-width: 576px) {
     .jumbotron {
@@ -3655,7 +3655,7 @@ input[type="button"].btn-block {
   height: 1rem;
   overflow: hidden;
   font-size: 0.75rem;
-  background-color: var(--btcpay-color-gray-200);
+  background-color: var(--btcpay-color-neutral-200);
   border-radius: 0.25rem; }
 
 .progress-bar {
@@ -3696,16 +3696,16 @@ input[type="button"].btn-block {
 
 .list-group-item-action {
   width: 100%;
-  color: var(--btcpay-color-gray-700);
+  color: var(--btcpay-color-neutral-700);
   text-align: inherit; }
   .list-group-item-action:hover, .list-group-item-action:focus {
     z-index: 1;
-    color: var(--btcpay-color-gray-700);
+    color: var(--btcpay-color-neutral-700);
     text-decoration: none;
-    background-color: var(--btcpay-color-gray-100); }
+    background-color: var(--btcpay-color-neutral-100); }
   .list-group-item-action:active {
     color: var(--btcpay-color-body);
-    background-color: var(--btcpay-color-gray-200); }
+    background-color: var(--btcpay-color-neutral-200); }
 
 .list-group-item {
   position: relative;
@@ -3722,7 +3722,7 @@ input[type="button"].btn-block {
     border-bottom-right-radius: 0.25rem;
     border-bottom-left-radius: 0.25rem; }
   .list-group-item.disabled, .list-group-item:disabled {
-    color: var(--btcpay-color-gray-600);
+    color: var(--btcpay-color-neutral-600);
     pointer-events: none;
     background-color: var(--btcpay-color-white); }
   .list-group-item.active {
@@ -3960,7 +3960,7 @@ a.close.disabled {
   display: flex;
   align-items: center;
   padding: 0.25rem 0.75rem;
-  color: var(--btcpay-color-gray-600);
+  color: var(--btcpay-color-neutral-600);
   background-color: rgba(255, 255, 255, 0.85);
   background-clip: padding-box;
   border-bottom: 1px solid rgba(0, 0, 0, 0.05); }
@@ -4058,7 +4058,7 @@ a.close.disabled {
   align-items: flex-start;
   justify-content: space-between;
   padding: 1rem 1rem;
-  border-bottom: 1px solid var(--btcpay-color-gray-300);
+  border-bottom: 1px solid var(--btcpay-color-neutral-300);
   border-top-left-radius: 0.3rem;
   border-top-right-radius: 0.3rem; }
   .modal-header .close {
@@ -4079,7 +4079,7 @@ a.close.disabled {
   align-items: center;
   justify-content: flex-end;
   padding: 1rem;
-  border-top: 1px solid var(--btcpay-color-gray-300);
+  border-top: 1px solid var(--btcpay-color-neutral-300);
   border-bottom-right-radius: 0.3rem;
   border-bottom-left-radius: 0.3rem; }
   .modal-footer > :not(:first-child) {
@@ -4601,19 +4601,19 @@ button.bg-dark:focus {
   background-color: transparent !important; }
 
 .border {
-  border: 1px solid var(--btcpay-color-gray-300) !important; }
+  border: 1px solid var(--btcpay-color-neutral-300) !important; }
 
 .border-top {
-  border-top: 1px solid var(--btcpay-color-gray-300) !important; }
+  border-top: 1px solid var(--btcpay-color-neutral-300) !important; }
 
 .border-right {
-  border-right: 1px solid var(--btcpay-color-gray-300) !important; }
+  border-right: 1px solid var(--btcpay-color-neutral-300) !important; }
 
 .border-bottom {
-  border-bottom: 1px solid var(--btcpay-color-gray-300) !important; }
+  border-bottom: 1px solid var(--btcpay-color-neutral-300) !important; }
 
 .border-left {
-  border-left: 1px solid var(--btcpay-color-gray-300) !important; }
+  border-left: 1px solid var(--btcpay-color-neutral-300) !important; }
 
 .border-0 {
   border: 0 !important; }
@@ -6908,7 +6908,7 @@ a.text-dark:hover, a.text-dark:focus {
   color: var(--btcpay-color-body) !important; }
 
 .text-muted {
-  color: var(--btcpay-color-gray-600) !important; }
+  color: var(--btcpay-color-neutral-600) !important; }
 
 .text-black-50 {
   color: rgba(0, 0, 0, 0.5) !important; }
@@ -6953,7 +6953,7 @@ a.text-dark:hover, a.text-dark:focus {
     white-space: pre-wrap !important; }
   pre,
   blockquote {
-    border: 1px solid var(--btcpay-color-gray-500);
+    border: 1px solid var(--btcpay-color-neutral-500);
     page-break-inside: avoid; }
   thead {
     display: table-header-group; }
@@ -6985,14 +6985,14 @@ a.text-dark:hover, a.text-dark:focus {
       background-color: var(--btcpay-color-white); }
   .table-bordered th,
   .table-bordered td {
-    border: 1px solid var(--btcpay-color-gray-300) !important; }
+    border: 1px solid var(--btcpay-color-neutral-300) !important; }
   .table-dark {
     color: inherit; }
     .table-dark th,
     .table-dark td,
     .table-dark thead th,
     .table-dark tbody + tbody {
-      border-color: var(--btcpay-color-gray-300); }
+      border-color: var(--btcpay-color-neutral-300); }
   .table .thead-dark th {
     color: inherit;
-    border-color: var(--btcpay-color-gray-300); } }
+    border-color: var(--btcpay-color-neutral-300); } }

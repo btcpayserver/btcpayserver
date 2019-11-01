@@ -22,17 +22,17 @@ namespace BTCPayServer.HostedServices
         public void Update(ThemeSettings data)
         {
             if (String.IsNullOrWhiteSpace(data.ThemeCssUri))
-                _themeUri = "/css/modern-theme.css";
+                _themeUri = "/css/themes/classic.css";
             else
                 _themeUri = data.ThemeCssUri;
 
             if (String.IsNullOrWhiteSpace(data.BootstrapCssUri))
-                _bootstrapUri = "/vendor/bootstrap/bootstrap.css";
+                _bootstrapUri = "/css/bootstrap.css";
             else
                 _bootstrapUri = data.BootstrapCssUri;
 
             if (String.IsNullOrWhiteSpace(data.CreativeStartCssUri))
-                _creativeStartUri = "/vendor/bootstrap4-creativestart/creative.css?v=" + DateTime.Now.Ticks;
+                _creativeStartUri = "/css/creative.css";
             else
                 _creativeStartUri = data.CreativeStartCssUri;
             FirstRun = data.FirstRun;

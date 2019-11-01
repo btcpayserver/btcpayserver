@@ -2,12 +2,12 @@
     {
         "outputFileName": "wwwroot/bundles/main-bundle.min.css",
         "inputFiles": [
-            "wwwroot/css/fonts.css",
             "wwwroot/vendor/magnific-popup/magnific-popup.css",
             "wwwroot/vendor/font-awesome/css/font-awesome.css",
-            "wwwroot/main/**/*.css",
             "wwwroot/vendor/animatecss/animate.css",
-            "wwwroot/vendor/flatpickr/flatpickr.css"
+            "wwwroot/vendor/flatpickr/flatpickr.css",
+            "wwwroot/css/fonts.css",
+            "wwwroot/css/site.css"
         ]
     },
     {
@@ -22,7 +22,7 @@
             "wwwroot/vendor/bootstrap4-creativestart/*.js",
             "wwwroot/vendor/moment/moment.min.js",
             "wwwroot/vendor/flatpickr/flatpickr.js",
-            "wwwroot/main/**/*.js"
+            "wwwroot/main/site.js"
         ]
     },
     {

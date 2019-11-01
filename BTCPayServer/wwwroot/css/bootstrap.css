@@ -390,7 +390,7 @@ mark,
 
 code {
   font-size: 87.5%;
-  color: var(--btcpay-color-pink);
+  color: var(--btcpay-color-info);
   word-break: break-word; }
   a > code {
     color: inherit; }

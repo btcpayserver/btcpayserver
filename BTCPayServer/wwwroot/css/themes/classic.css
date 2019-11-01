@@ -21,33 +21,22 @@
   --btcpay-color-neutral-800: #343a40;
   --btcpay-color-neutral-900: #212529;
 
-  --btcpay-color-blue:    #0069d9;
-  --btcpay-color-indigo:  #6610f2;
-  --btcpay-color-purple:  #6f42c1;
-  --btcpay-color-pink:    #e83e8c;
-  --btcpay-color-red:     #dc3545;
-  --btcpay-color-orange:  #ff6f27;
-  --btcpay-color-yellow:  #ffc107;
-  --btcpay-color-green:   #329f80;
-  --btcpay-color-teal:    #20c997;
-  --btcpay-color-cyan:    #17a2b8;
-
-  --btcpay-color-primary:         var(--btcpay-color-green);
+  --btcpay-color-primary:         #329f80;
   --btcpay-color-primary-dark:    #267861;
   --btcpay-color-primary-alpha:   rgba(81, 173, 147, 0.25);
   --btcpay-color-secondary:       var(--btcpay-color-gray-600);
   --btcpay-color-secondary-dark:  var(--btcpay-color-gray-800);
   --btcpay-color-secondary-alpha: rgba(130, 138, 145, 0.25);
-  --btcpay-color-success:         var(--btcpay-color-green);
+  --btcpay-color-success:         #329f80;
   --btcpay-color-success-dark:    #1e7e34;
   --btcpay-color-success-alpha:   rgba(72, 180, 97, 0.25);
-  --btcpay-color-info:            var(--btcpay-color-cyan);
+  --btcpay-color-info:            #17a2b8;
   --btcpay-color-info-dark:       #117a8b;
   --btcpay-color-info-alpha:      rgba(58, 176, 195, 0.25);
-  --btcpay-color-warning:         var(--btcpay-color-yellow);
+  --btcpay-color-warning:         #ffc107;
   --btcpay-color-warning-dark:    #d39e00;
   --btcpay-color-warning-alpha:   rgba(2  22, 170, 12, 0.25);
-  --btcpay-color-danger:          var(--btcpay-color-red);
+  --btcpay-color-danger:          #dc3545;
   --btcpay-color-danger-dark:     #bd2130;
   --btcpay-color-danger-alpha:    rgba(225, 83, 97, 0.25);
   --btcpay-color-light:           var(--btcpay-color-gray-100);
@@ -71,7 +60,52 @@
 
 /* Bootstrap modifications */
 html {
-  font-size: var(--btcpay-font-size-base); }
+  font-size: var(--btcpay-font-size-base);
+}
 
 .bg-dark {
-  background-color: var(--btcpay-bg-dark) !important; }
+  background-color: var(--btcpay-bg-dark) !important;
+}
+
+.table {
+  margin: 16px 0;
+  border: 1px solid var(--btcpay-color-neutral-300);
+  border-radius: 4px;
+  border-collapse: separate !important;
+  border-spacing: 0px !important;
+}
+
+.table thead > tr {
+  height: 36px;
+}
+
+.table thead th {
+  border-bottom: none;
+  border-top: none;
+}
+
+.table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+.table tr {
+  height: 36px;
+}
+
+.table th,
+.table td {
+  display: table-cell;
+  padding: 4px 12px;
+  vertical-align: middle;
+}
+
+.table td {
+  text-align: left;
+  font-size: 0.8125rem;
+  font-weight: 400;
+}
+
+.removetopborder tr:first-child th,
+.removetopborder tr:first-child td {
+  border-top: none;
+}

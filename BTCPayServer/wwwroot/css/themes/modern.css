@@ -53,6 +53,8 @@
   --btcpay-color-link: var(--btcpay-color-primary);
   --btcpay-color-link-hover: var(--btcpay-color-primary-dark);
 
+  --btcpay-section-heading-text-align: left;
+
   --btcpay-font-size-base: 16px;
   --btcpay-font-family-head: 'Open Sans', 'Helvetica Neue', Arial, sans-serif;
   --btcpay-font-family-base: -apple-system, 'Open Sans', BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
@@ -72,7 +74,7 @@ header.masthead::before,
   filter: hue-rotate(410deg) saturate(33%); }
 
 .table {
-  margin: 24px 0 48px;
+  margin: 1.5rem 0 3rem;
 }
 
 .table th {

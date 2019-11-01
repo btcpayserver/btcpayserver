@@ -68,7 +68,7 @@ html {
 }
 
 .table {
-  margin: 16px 0;
+  margin: 1rem 0;
   border: 1px solid var(--btcpay-color-neutral-300);
   border-radius: 4px;
   border-collapse: separate !important;

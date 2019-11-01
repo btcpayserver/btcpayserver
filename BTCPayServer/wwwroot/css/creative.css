@@ -22,17 +22,18 @@ p {
 }
 
 hr {
-  max-width: 50px;
-  border-width: 3px;
-  border-color: var(--btcpay-color-primary);
+  width: 50px;
+  height: 3px;
+  background: var(--btcpay-color-primary);
+  display: inline-block;
 }
 
 hr.light {
-  border-color: var(--btcpay-color-white);
+  background: var(--btcpay-color-white);
 }
 
 #mainNav {
-  background-color: var(--btcpay-bg-dark);
+  background: var(--btcpay-bg-dark);
   font-family: var(--btcpay-font-family-head);
   transition: all 0.2s;
 }

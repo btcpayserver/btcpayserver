@@ -45,6 +45,10 @@ html {
     }
 }
 
+.section-heading {
+    text-align: var(--btcpay-section-heading-text-align, center);
+}
+
 a.nav-link {
     color: var(--btcpay-color-nav-link, var(--btcpay-color-neutral-600));
     background: var(--btcpay-bg-nav-link, transparent);

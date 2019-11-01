@@ -23,36 +23,38 @@
         </div>
 
         <div class="row">
-            <table class="table table-sm table-responsive-md">
-                <thead>
-                    <tr>
-                        <th>Store Name</th>
-                        <th>Crypto Code</th>
-                        <th>Balance</th>
-                        <th style="text-align:right">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var wallet in Model.Wallets)
-                    {
+            <div class="col-lg-12">
+                <table class="table table-sm table-responsive-md">
+                    <thead>
                         <tr>
-                            @if (wallet.IsOwner)
-                            {
-                                <td><a asp-action="UpdateStore" asp-controller="Stores" asp-route-storeId="@wallet.StoreId">@wallet.StoreName</a></td>
-                            }
-                            else
-                            {
-                                <td>@wallet.StoreName</td>
-                            }
-                            <td>@wallet.CryptoCode</td>
-                            <td>@wallet.Balance</td>
-                            <td style="text-align:right">
-                                <a asp-action="WalletTransactions" asp-route-walletId="@wallet.Id">Manage</a>
-                            </td>
+                            <th>Store Name</th>
+                            <th>Crypto Code</th>
+                            <th>Balance</th>
+                            <th style="text-align:right">Actions</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach (var wallet in Model.Wallets)
+                        {
+                            <tr>
+                                @if (wallet.IsOwner)
+                                {
+                                    <td><a asp-action="UpdateStore" asp-controller="Stores" asp-route-storeId="@wallet.StoreId">@wallet.StoreName</a></td>
+                                }
+                                else
+                                {
+                                    <td>@wallet.StoreName</td>
+                                }
+                                <td>@wallet.CryptoCode</td>
+                                <td>@wallet.Balance</td>
+                                <td style="text-align:right">
+                                    <a asp-action="WalletTransactions" asp-route-walletId="@wallet.Id">Manage</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </section>

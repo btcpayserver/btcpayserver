@@ -6,7 +6,7 @@
     ViewData.SetActivePageAndTitle(WalletsNavPages.Send);
 }
 
-<div class="row no-gutters">
+<div class="row">
     <div class="@(Model.Outputs.Count==1? "col-lg-6 transaction-output-form": "col-lg-8")">
         <form method="post">
             <input type="hidden" asp-for="Divisibility" />

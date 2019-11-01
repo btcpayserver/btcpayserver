@@ -198,8 +198,8 @@ retry:
                     {
                         InvoiceDataId = invoice.Id,
                         Assigned = DateTimeOffset.UtcNow
-                    }.SetAddress(paymentDestination, paymentMethod.GetId().ToString()));
-                    textSearch.Add(paymentDestination);
+                    }.SetAddress(address, paymentMethod.GetId().ToString()));
+                    textSearch.Add(address);
                     textSearch.Add(paymentMethod.Calculate().TotalDue.ToString());
                 }
                 context.PendingInvoices.Add(new PendingInvoiceData() { Id = invoice.Id });

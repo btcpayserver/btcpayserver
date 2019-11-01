@@ -17,8 +17,8 @@ namespace BTCPayServer
                 {
                     if (coin.TxOut is ElementsTxOut elementsTxOut)
                     {
-                        return (AssetId == uint256.Zero && elementsTxOut.IsPeggedAsset.GetValueOrDefault(false)) ||
-                               (AssetId != uint256.Zero && elementsTxOut.Asset.AssetId == AssetId);
+                        return (AssetId == null && elementsTxOut.IsPeggedAsset.GetValueOrDefault(false)) ||
+                               (AssetId != null && elementsTxOut.Asset.AssetId == AssetId);
                     }
                     return false;
                 });

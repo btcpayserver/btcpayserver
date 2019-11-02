@@ -33,43 +33,39 @@ hr.light {
 }
 
 #mainNav {
-  background: var(--btcpay-bg-dark);
+  color: var(--btcpay-header-color, var(--btcpay-color-neutral-100));
+  background: var(--btcpay-header-bg, var(--btcpay-bg-dark));
   font-family: var(--btcpay-font-family-head);
-  transition: all 0.2s;
-}
-
-#mainNav .navbar-nav > li.nav-item > a.nav-link:focus,
-#mainNav .navbar-nav > li.nav-item > a.nav-link {
-  font-size: 13px;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--btcpay-color-white);
-}
-
-#mainNav .navbar-nav > li.nav-item > a.nav-link:focus:hover,
-#mainNav .navbar-nav > li.nav-item > a.nav-link:hover {
-  color: var(--btcpay-color-white);
-}
-
-#mainNav .navbar-nav > li.nav-item > a.nav-link:focus.active,
-#mainNav .navbar-nav > li.nav-item > a.nav-link.active {
-  color: var(--btcpay-color-white) !important;
-  background-color: transparent;
-}
-
-#mainNav .navbar-nav > li.nav-item > a.nav-link:focus.active:hover,
-#mainNav .navbar-nav > li.nav-item > a.nav-link.active:hover {
-  background-color: transparent;
+  transition-property: background, color;
+  transition-duration: 0.2s;
 }
 
 @media (min-width: 992px) {
   #mainNav {
-    background-color: transparent;
+    background: transparent;
   }
 
   #mainNav.navbar-shrink {
-    background-color: var(--btcpay-bg-dark);
+    background: var(--btcpay-header-bg, var(--btcpay-bg-dark));
   }
+}
+
+#mainNav .navbar-nav > li.nav-item > a.nav-link {
+  font-size: 13px;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: var(--btcpay-header-color-link, var(--btcpay-color-neutral-100));
+}
+
+#mainNav .navbar-nav > li.nav-item > a.nav-link:focus,
+#mainNav .navbar-nav > li.nav-item > a.nav-link:hover {
+  color: var(--btcpay-header-color-link-accent, var(--btcpay-color-white));
+}
+
+#mainNav .navbar-nav > li.nav-item > a.nav-link.active,
+#mainNav .navbar-nav > li.nav-item > a.nav-link.active:focus,
+#mainNav .navbar-nav > li.nav-item > a.nav-link.active:hover {
+  color: var(--btcpay-header-color-link-active, var(--btcpay-color-white));
 }
 
 header.masthead {

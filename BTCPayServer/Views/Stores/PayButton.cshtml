@@ -33,6 +33,20 @@
                 <input name="orderId" type="text" class="form-control" id="inputAddress" placeholder="(optional)"
                        v-model="srvModel.orderId" v-on:change="inputChanges">
             </div>
+        </div>
+        <div class="col-lg-5">
+            <br />
+            Define parameters that define the purchase: price, currency and then optional description of purchase.
+            <br /><br />
+            Generated HTML will be displayed at the bottom of this page and all you need is to paste that HTML into your final page.
+            Clicking on the button will redirect customer to checkout.
+        </div>
+    </div>
+    <hr />
+    <h3>Pay button display options</h3>
+    <br />
+    <div class="row">
+        <div class="col-lg-7">
             <div class="form-group">
                 <label>Pay Button Image Url</label>
                 <input name="payButtonImageUrl" type="text" class="form-control" id="inputAddress"
@@ -95,29 +109,34 @@
                     <small class="text-danger">{{ errors.first('step') }}</small>
                 </div>
             </div>
-            <div class="form-row" v-if="srvModel.buttonType == 1">
-                <div class="form-group  col-md-6">
-                    <label>Use a simple input style</label>
-                    <input name="simpleInput" type="checkbox" class="form-check"
-                           v-model="srvModel.simpleInput" v-on:change="inputChanges"
+            <div class="form-group" v-if="srvModel.buttonType == 1">
+                <div class="form-check">
+                    <input name="simpleInput"
+                           id="simpleInput"
+                           type="checkbox"
+                           class="form-check-input"
+                           v-model="srvModel.simpleInput"
+                           v-on:change="inputChanges"
                            :class="{'is-invalid': errors.has('simpleInput') }">
+                    <label class="form-check-label" for="simpleInput">Use a simple input style</label>
                     <small class="text-danger">{{ errors.first('simpleInput') }}</small>
                 </div>
-                <div class="form-group col-md-6">
-                   <label>Fit button inline</label>
-                   <input name="fitButtonInline" type="checkbox" class="form-check"
-                   v-model="srvModel.fitButtonInline" v-on:change="inputChanges"
-                   :class="{'is-invalid': errors.has('fitButtonInline') }">
+                <div class="form-check">
+                   <input name="fitButtonInline"
+                          id="fitButtonInline"
+                          type="checkbox"
+                          class="form-check-input"
+                          v-model="srvModel.fitButtonInline"
+                          v-on:change="inputChanges"
+                          :class="{'is-invalid': errors.has('fitButtonInline') }">
+                   <label class="form-check-label" for="fitButtonInline">Fit button inline</label>
                    <small class="text-danger">{{ errors.first('fitButtonInline') }}</small>
                 </div>
             </div>
         </div>
         <div class="col-lg-5">
-            <br />
-            Define parameters that define the purchase: price, currency and then optional description of purchase.
-            <br /><br />
-            Generated HTML will be displayed at the bottom of this page and all you need is to paste that HTML into your final page.
-            Clicking on the button will redirect customer to checkout.
+            <h4>Preview</h4>
+            <div id="preview"></div>
         </div>
     </div>
     <hr />
@@ -175,14 +194,6 @@
             </div>
         </div>
     <hr />
-
-    <h3>Preview</h3>
-    <div class="row" v-show="!errors.any()">
-        <div class="col-lg-12">
-            <div id="preview"></div>
-        </div>
-    </div>
-
     <br />
 
     <h3>Generated code</h3>

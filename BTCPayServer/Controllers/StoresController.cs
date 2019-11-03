@@ -574,7 +574,7 @@ namespace BTCPayServer.Controllers
         {
             return View("Confirm", new ConfirmModel()
             {
-                Action = "Delete this store",
+                Action = "Delete",
                 Title = "Delete this store",
                 Description = "This action is irreversible and will remove all information related to this store. (Invoices, Apps etc...)",
                 ButtonClass = "btn-danger"
@@ -637,7 +637,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             return View("Confirm", new ConfirmModel()
             {
-                Action = "Revoke the token",
+                Action = "Revoke",
                 Title = "Revoke the token",
                 Description = $"The access token with the label \"{token.Label}\" will be revoked, do you wish to continue?",
                 ButtonClass = "btn-danger"

@@ -1,26 +1,56 @@
 ﻿@model ConfirmModel
+
+@inject BTCPayServer.HostedServices.NBXplorerDashboard dashboard
+@inject BTCPayServer.HostedServices.CssThemeManager themeManager
+@addTagHelper *, BundlerMinifier.TagHelpers
 @{
-    Layout = "_Layout.cshtml";
+    Layout = null;
 }
 
-<section>
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-12 text-center">
-                <h2 class="section-heading">@Model.Title</h2>
-                <hr class="primary">
-                <p>@Model.Description</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="">
+    <meta name="author" content="">
+    @if (themeManager.DiscourageSearchEngines)
+    {
+        <META NAME="robots" CONTENT="noindex">
+    }
+    <title>BTCPay Server</title>
+    @* CSS *@
+    <link href="@this.Context.Request.GetRelativePathOrAbsolute(themeManager.BootstrapUri)" rel="stylesheet" />
+    <link href="@this.Context.Request.GetRelativePathOrAbsolute(themeManager.CreativeStartUri)" rel="stylesheet" />
+    <bundle name="wwwroot/bundles/main-bundle.min.css" />
+    @* JS *@
+    <bundle name="wwwroot/bundles/main-bundle.min.js" />
+</head>
+<body class="bg-light">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title w-100 text-center">@Model.Title</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-lg-12 text-center">
+                        <p>@Model.Description</p>
+                    </div>
+                </div>
+                @if (!String.IsNullOrEmpty(Model.Action))
+                {
+                    <div class="row">
+                        <div class="col-lg-12 text-center">
+                            <form method="post">
+                                <button id="continue" type="submit" class="btn btn-secondary @Model.ButtonClass w-25">@Model.Action</button>
+                                <button type="submit" class="btn btn-secondary w-25" onclick="history.back(); return false;">Go back</button>
+                            </form>
+                        </div>
+                    </div>
+                }
             </div>
         </div>
-        @if (!String.IsNullOrEmpty(Model.Action))
-        {
-        <div class="row">
-            <div class="col-lg-12 text-center">
-                <form method="post">
-                    <button id="continue" type="submit" class="btn btn-secondary @Model.ButtonClass" title="Continue">@Model.Action</button>
-                </form>
-            </div>
-        </div>
-        }
     </div>
-</section>
+</body>
+</html>

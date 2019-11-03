@@ -15,7 +15,7 @@ namespace BTCPayServer.Tests
 {
     public static class TestUtils
     {
-#if DEBUG
+#if DEBUG && !SHORT_TIMEOUT
         public const int TestTimeout = 600_000;
 #else
         public const int TestTimeout = 60_000;

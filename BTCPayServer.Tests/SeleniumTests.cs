@@ -261,9 +261,7 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("CreateNewToken")).Click();
                 s.Driver.FindElement(By.Id("RequestPairing")).Click();
 
-                var regex = Regex.Match(new Uri(s.Driver.Url, UriKind.Absolute).Query, "pairingCode=([^&]*)");
-                Assert.True(regex.Success, $"{s.Driver.Url} does not match expected regex");
-                var pairingCode = regex.Groups[1].Value;
+                string pairingCode = AssertUrlHasPairingCode(s);
 
                 s.Driver.FindElement(By.Id("ApprovePairing")).Click();
                 Assert.Contains(pairingCode, s.Driver.PageSource);
@@ -289,9 +287,21 @@ namespace BTCPayServer.Tests
                     Currency = "USD",
                     FullNotifications = true
                 }, NBitpayClient.Facade.Merchant);
+
+                s.Driver.Navigate().GoToUrl(s.Link("/api-tokens"));
+                s.Driver.FindElement(By.Id("RequestPairing")).Click();
+                s.Driver.FindElement(By.Id("ApprovePairing")).Click();
+                AssertUrlHasPairingCode(s);
             }
         }
 
+        private static string AssertUrlHasPairingCode(SeleniumTester s)
+        {
+            var regex = Regex.Match(new Uri(s.Driver.Url, UriKind.Absolute).Query, "pairingCode=([^&]*)");
+            Assert.True(regex.Success, $"{s.Driver.Url} does not match expected regex");
+            var pairingCode = regex.Groups[1].Value;
+            return pairingCode;
+        }
 
 
         [Fact(Timeout = TestTimeout)]

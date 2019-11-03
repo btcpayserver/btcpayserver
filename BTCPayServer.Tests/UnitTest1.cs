@@ -648,11 +648,12 @@ namespace BTCPayServer.Tests
                 acc.CreateStore();
 
                 var controller = acc.GetController<StoresController>();
-                var token = (RedirectToActionResult)controller.CreateToken(new Models.StoreViewModels.CreateTokenViewModel()
+                var token = (RedirectToActionResult)await controller.CreateToken2(new Models.StoreViewModels.CreateTokenViewModel()
                 {
                     Label = "bla",
-                    PublicKey = null
-                }).GetAwaiter().GetResult();
+                    PublicKey = null,
+                    StoreId = acc.StoreId
+                });
 
                 var pairingCode = (string)token.RouteValues["pairingCode"];
 
@@ -1141,7 +1142,7 @@ namespace BTCPayServer.Tests
 
                 // Test request pairing code client side
                 var storeController = user.GetController<StoresController>();
-                storeController.CreateToken(new CreateTokenViewModel()
+                storeController.CreateToken(user.StoreId, new CreateTokenViewModel()
                 {
                     Label = "test2",
                     StoreId = user.StoreId

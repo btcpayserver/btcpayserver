@@ -48,5 +48,5 @@
   "Pay with Changelly": "Changellyでのお支払い",
   "Close": "閉じる",
   "NotPaid_ExtraTransaction": "請求金額の全額が支払われていません。未払い分の別のトランザクションをお送りください。",
-  "Recommended_Fee": "Recommended fee: {{feeRate}} sat/byte"
+  "Recommended_Fee": "推奨手数料: {{feeRate}} sat/byte"
 }

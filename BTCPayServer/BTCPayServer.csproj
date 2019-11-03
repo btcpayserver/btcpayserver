@@ -31,7 +31,7 @@
     <EmbeddedResource Include="Currencies.txt" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="BTCPayServer.Lightning.All" Version="1.1.1" />
+    <PackageReference Include="BTCPayServer.Lightning.All" Version="1.1.3" />
     <PackageReference Include="BuildBundlerMinifier" Version="3.1.430" />
     <PackageReference Include="BundlerMinifier.Core" Version="3.1.430" />
     <PackageReference Include="BundlerMinifier.TagHelpers" Version="3.1.430" />

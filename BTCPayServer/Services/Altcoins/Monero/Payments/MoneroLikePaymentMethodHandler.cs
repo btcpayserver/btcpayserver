@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
@@ -84,7 +85,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
             model.InvoiceBitcoinUrl = client.SendCommandAsync<MakeUriRequest, MakeUriResponse>("make_uri", new MakeUriRequest()
                 {
                     Address = cryptoInfo.Address,
-                    Amount = LightMoney.Parse(cryptoInfo.Due).MilliSatoshi
+                    Amount = MoneroMoney.Convert(decimal.Parse(cryptoInfo.Due, CultureInfo.InvariantCulture))
                 }).GetAwaiter()
                 .GetResult().Uri;
             model.InvoiceBitcoinUrlQR = model.InvoiceBitcoinUrl;

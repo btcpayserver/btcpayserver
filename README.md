@@ -135,18 +135,4 @@ For more information, see the documentation: [How to deploy a BTCPay server inst
 
 ## Supported altcoins
 
-Bitcoin is the only focus of the project and its core developers. However, opt in integrations are present for several altcoins:
-
-* Bitcore (BTX)
-* Dash (DASH)
-* Dogecoin (DOGE)
-* Feathercoin (FTC)
-* Groestlcoin (GRS)
-* Litecoin (LTC)
-* Monacoin (MONA)
-* Polis (POLIS)
-* Viacoin (VIA)
-* BGold (BTG) (also known as Bitcoin Gold)
-* BPlus (XBC) (also known as Bitcoin Plus)
-
-Altcoins are maintained by their respective communities.
+Bitcoin is the only focus of the project and its core developers. However, opt in integrations are present for [several altcoins](Altcoins.md). Altcoins are maintained by their respective communities.

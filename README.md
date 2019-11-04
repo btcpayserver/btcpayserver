@@ -137,7 +137,6 @@ For more information, see the documentation: [How to deploy a BTCPay server inst
 
 Bitcoin is the only focus of the project and its core developers. However, opt in integrations are present for [several altcoins](Altcoins.md). Altcoins are maintained by their respective communities.
 
-
 ## Supporters
 
 The BTCPay Server Project is proudly supported by these entities through the [BTCPay Server Foundation](https://foundation.btcpayserver.org/). 

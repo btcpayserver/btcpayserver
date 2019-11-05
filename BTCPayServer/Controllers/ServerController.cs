@@ -491,6 +491,8 @@ namespace BTCPayServer.Controllers
         {
             var result = new ServicesViewModel();
             result.ExternalServices = _Options.ExternalServices.ToList();
+
+            // other services
             foreach (var externalService in _Options.OtherExternalServices)
             {
                 result.OtherExternalServices.Add(new ServicesViewModel.OtherExternalService()
@@ -536,6 +538,7 @@ namespace BTCPayServer.Controllers
                 }
             }
 
+            // external storage services
             var storageSettings = await _SettingsRepository.GetSettingAsync<StorageSettings>();
             result.ExternalStorageServices.Add(new ServicesViewModel.OtherExternalService()
             {
@@ -647,7 +650,7 @@ namespace BTCPayServer.Controllers
 
         private IActionResult LndServices(ExternalService service, ExternalConnectionString connectionString, uint? nonce)
         {
-            var model = new LndGrpcServicesViewModel();
+            var model = new LndServicesViewModel();
             if (service.Type == ExternalServiceTypes.LNDGRPC)
             {
                 model.Host = $"{connectionString.Server.DnsSafeHost}:{connectionString.Server.Port}";

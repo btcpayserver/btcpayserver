@@ -623,7 +623,7 @@ namespace BTCPayServer.Controllers
                 }
                 if (service.Type == ExternalServiceTypes.LNDSeedBackup)
                 {
-                    var model = new LndSeedBackupViewModel();
+                    var model = LndSeedBackupViewModel.Parse(service.ConnectionString.CookieFilePath);
                     return View("LndSeedBackup", model);
                 }
                 if (service.Type == ExternalServiceTypes.RPC)

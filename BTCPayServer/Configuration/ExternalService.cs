@@ -49,11 +49,17 @@ namespace BTCPayServer.Configuration
             var connStr = configuration.GetOrDefault<string>(setting, string.Empty);
             if (connStr.Length != 0)
             {
-                if (!ExternalConnectionString.TryParse(connStr, out var connectionString, out var error))
+                ExternalConnectionString serviceConnection;
+                if (type == ExternalServiceTypes.LNDSeedBackup)
+                {
+                    // just using CookieFilePath to hold variable instead of refactoring whole holder class to better conform
+                    serviceConnection = new ExternalConnectionString { CookieFilePath = connStr };
+                }
+                else if (!ExternalConnectionString.TryParse(connStr, out serviceConnection, out var error))
                 {
                     throw new ConfigException(string.Format(CultureInfo.InvariantCulture, errorMessage, setting, error));
                 }
-                this.Add(new ExternalService() { Type = type, ConnectionString = connectionString, CryptoCode = cryptoCode, DisplayName = displayName, ServiceName = serviceName });
+                this.Add(new ExternalService() { Type = type, ConnectionString = serviceConnection, CryptoCode = cryptoCode, DisplayName = displayName, ServiceName = serviceName });
             }
         }
 

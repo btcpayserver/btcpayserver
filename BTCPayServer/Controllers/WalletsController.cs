@@ -339,11 +339,14 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             var statusMessage = string.Empty;
             var wallet = _walletProvider.GetWallet(network);
-            KeyPathInformation cachedAddress;
             switch (command)
             {
                 case "unreserve-current-address":
-                    cachedAddress = _WalletReceiveStateService.Get(walletId);
+                    KeyPathInformation cachedAddress = _WalletReceiveStateService.Get(walletId);
+                    if (cachedAddress == null)
+                    {
+                        break;
+                    }
                     var address = cachedAddress.ScriptPubKey.GetDestinationAddress(network.NBitcoinNetwork);
                     ExplorerClientProvider.GetExplorerClient(network)
                         .CancelReservation(cachedAddress.DerivationStrategy, new[] {cachedAddress.KeyPath});

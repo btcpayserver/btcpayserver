@@ -140,5 +140,19 @@ Bitcoin is the only focus of the project and its core developers. However, opt i
 ## Supporters
 
 The BTCPay Server Project is proudly supported by these entities through the [BTCPay Server Foundation](https://foundation.btcpayserver.org/). 
-<a target="blank" href="https://twitter.com/sqcrypto"><img src="BTCPayServer/wwwroot/img/sqcrypto.png" width="200"></a>
+
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://twitter.com/sqcrypto" target="_blank">
+          <img  src="BTCPayServer/wwwroot/img/sqcrypto.png" alt="Sponsor Square Crypto" height=200>
+          <br/>
+          <span>Square Crypto</span>
+        </a>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
 If you'd like to support the project, please visit the [donation page](https://btcpayserver.org/donate/).

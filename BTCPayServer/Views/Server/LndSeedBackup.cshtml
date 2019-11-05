@@ -18,16 +18,27 @@
         <div class="form-group">
             @if (Model.IsWalletUnlockPresent)
             {
-                <p>Unlock file is present... here are details</p>
-                <p>Wallet Password: @Model.WalletPassword</p>
-                <p>Seed: @String.Join(',', Model.Seed)</p>
+                <p>Wallet Password: <b>@Model.WalletPassword</b></p>
+                @if (Model.Seed.Count > 1)
+                {
+                    <p>
+                        <div><a href="#details" data-toggle="collapse">Reveal Seed Information</a></div>
+                        <div id="details" class="collapse">
+                            @String.Join(", ", Model.Seed)
+                        </div>
+                    </p>
+                }
+                else
+                {
+                    <p>Seed information was deleted on <b>@Model.Seed.First()</b></p>
+                }
             }
             else
             {
-                <p>
-                    You don't have LND unlock file, which means you need to migrate to new version of LND docker container.
-                    <a href="https://github.com/btcpayserver/lnd/pull/4" target="_blank">More information</a>
-                </p>
+                <p class="text-danger">Unlock file is NOT present</p>
+                <p>You have old version of LND deployment that was auto-initialized using `noseedbackup=1`.</p>
+                <p>Please migrate to new version of LND deployment that is auto-initialized through script which creates seed backup file as part of the startup process.</p>
+                <p><a href="https://github.com/btcpayserver/lnd/pull/4" target="_blank">Visit this link for more information</a></p>
             }
         </div>
     </div>
@@ -35,4 +46,15 @@
 </div>
 
 @section Scripts {
+    <script type="text/javascript">
+        function confirmSeedDelete() {
+            var conf = confirm('This operation is not undoable. Are you sure you want to proceed with deleting seed from LND container?');
+            if (conf) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+    </script>
 }

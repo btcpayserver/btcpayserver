@@ -1,0 +1,24 @@
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="500px" height="500px" viewBox="0 0 500 500" enable-background="new 0 0 500 500" xml:space="preserve">
+                    <g>
+                      <g>
+                        <defs>
+                          <path id="SVGID_1_" d="M38.001,423.401C38.001,444.72,55.283,462,76.599,462c21.319,0,38.604-17.28,38.604-38.599
+				c0-21.315-17.285-38.599-38.604-38.599C55.283,384.803,38.001,402.086,38.001,423.401 M192.399,384.803v77.194H418.65
+				c23.939,0,43.348-19.408,43.348-43.347v-33.848H192.399z M38.001,288.603h269.6v-77.198h-269.6V288.603z M384.801,250.002
+				c0,21.318,17.281,38.601,38.6,38.601s38.598-17.282,38.598-38.601c0-21.319-17.279-38.602-38.598-38.602
+				S384.801,228.683,384.801,250.002 M38.001,76.604c0,21.314,17.281,38.598,38.597,38.598c21.319,0,38.604-17.283,38.604-38.598
+				C115.203,55.286,97.917,38,76.599,38C55.283,38,38.001,55.286,38.001,76.604 M192.399,38v77.202h269.599V81.349
+				C461.998,57.411,442.59,38,418.65,38H192.399z"></path>
+                        </defs>
+                        <clipPath id="SVGID_2_">
+                          <use xlink:href="#SVGID_1_" overflow="visible"></use>
+                        </clipPath>
+
+                        <linearGradient id="SVGID_3_" gradientUnits="userSpaceOnUse" x1="-0.9131" y1="500" x2="1.9136" y2="500" gradientTransform="matrix(150 0 0 -150 175 75250)">
+                          <stop offset="0" style="stop-color:#FF00FF"></stop>
+                          <stop offset="1" style="stop-color:#0000FF"></stop>
+                        </linearGradient>
+                        <rect x="38.001" y="38" clip-path="url(#SVGID_2_)" fill="url(#SVGID_3_)" width="423.997" height="424"></rect>
+                      </g>
+                    </g>
+                  </svg>

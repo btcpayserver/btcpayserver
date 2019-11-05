@@ -208,7 +208,7 @@ namespace BTCPayServer.Tests
                 Assert.Contains("ReturnUrl", s.Driver.Url);
                 s.Driver.Navigate().GoToUrl(invoiceUrl);
                 Assert.Contains("ReturnUrl", s.Driver.Url);
-
+                s.Driver.Navigate().GoToUrl(s.Link("/"));
                 // When logged we should not be able to access store and invoice details
                 var bob = s.RegisterNewUser();
                 s.Driver.Navigate().GoToUrl(storeUrl);
@@ -252,7 +252,7 @@ namespace BTCPayServer.Tests
                 await s.StartAsync();
                 s.Driver.Navigate().GoToUrl(s.Link("/api-access-request"));
                 Assert.Contains("ReturnUrl", s.Driver.Url);
-
+                s.Driver.Navigate().GoToUrl(s.Link("/"));
                 var alice = s.RegisterNewUser();
                 var store = s.CreateNewStore().storeName;
                 s.AddDerivationScheme();

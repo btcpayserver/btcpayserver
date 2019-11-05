@@ -154,6 +154,9 @@
     <Content Update="Views\Server\LightningWalletServices.cshtml">
       <Pack>$(IncludeRazorContentInPack)</Pack>
     </Content>
+    <Content Update="Views\Server\LndSeedBackup.cshtml">
+      <Pack>$(IncludeRazorContentInPack)</Pack>
+    </Content>
     <Content Update="Views\Server\RPCService.cshtml">
       <Pack>$(IncludeRazorContentInPack)</Pack>
     </Content>

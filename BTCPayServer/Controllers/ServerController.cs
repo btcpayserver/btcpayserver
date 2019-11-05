@@ -621,6 +621,11 @@ namespace BTCPayServer.Controllers
                         ServiceLink = service.ConnectionString.Server.AbsoluteUri.WithoutEndingSlash()
                     });
                 }
+                if (service.Type == ExternalServiceTypes.LNDSeedBackup)
+                {
+                    var model = new LndSeedBackupViewModel();
+                    return View("LndSeedBackup", model);
+                }
                 if (service.Type == ExternalServiceTypes.RPC)
                 {
                     return View("RPCService", new LightningWalletServices()

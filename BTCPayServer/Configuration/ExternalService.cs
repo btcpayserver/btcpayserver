@@ -24,6 +24,10 @@ namespace BTCPayServer.Configuration
                                 "lnd server: 'server=https://lnd.example.com;macaroondirectorypath=/root/.lnd;certthumbprint=2abdf302...'" + Environment.NewLine +
                                 "Error: {1}",
                                 "LND (REST server)");
+            Load(configuration, cryptoCode, "lndseedbackup", ExternalServiceTypes.LNDSeedBackup, "Invalid setting {0}, " + Environment.NewLine +
+                                "lnd seed backup: /etc/merchant_lnd/data/chain/bitcoin/regtest/walletunlock.json'" + Environment.NewLine +
+                                "Error: {1}",
+                                "LND Seed Backup");
             Load(configuration, cryptoCode, "spark", ExternalServiceTypes.Spark, "Invalid setting {0}, " + Environment.NewLine +
                                 $"Valid example: 'server=https://btcpay.example.com/spark/btc/;cookiefile=/etc/clightning_bitcoin_spark/.cookie'" + Environment.NewLine +
                                 "Error: {1}",
@@ -73,6 +77,7 @@ namespace BTCPayServer.Configuration
     {
         LNDRest,
         LNDGRPC,
+        LNDSeedBackup,
         Spark,
         RTL,
         Charge,

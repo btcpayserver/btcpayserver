@@ -1,0 +1,38 @@
+﻿@model LndSeedBackupViewModel
+@{
+    ViewData.SetActivePageAndTitle(ServerNavPages.Services);
+}
+
+
+<h4>LND Seed Backup</h4>
+<partial name="_StatusMessage" />
+<div class="row">
+    <div class="col-md-6">
+        <div asp-validation-summary="All" class="text-danger"></div>
+    </div>
+</div>
+
+<div class="row">
+
+    <div class="col-md-8">
+        <div class="form-group">
+            @if (Model.IsWalletUnlockPresent)
+            {
+                <p>Unlock file is present... here are details</p>
+                <p>Wallet Password: @Model.WalletPassword</p>
+                <p>Seed: @String.Join(',', Model.Seed)</p>
+            }
+            else
+            {
+                <p>
+                    You don't have LND unlock file, which means you need to migrate to new version of LND docker container.
+                    <a href="https://github.com/btcpayserver/lnd/pull/4" target="_blank">More information</a>
+                </p>
+            }
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+}

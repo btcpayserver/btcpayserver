@@ -31,6 +31,7 @@ namespace BTCPayServer.HostedServices
                 _creativeStartUri = "/vendor/bootstrap4-creativestart/creative.css?v=" + DateTime.Now.Ticks;
             else
                 _creativeStartUri = data.CreativeStartCssUri;
+            FirstRun = data.FirstRun;
         }
 
         private string _bootstrapUri;
@@ -51,6 +52,8 @@ namespace BTCPayServer.HostedServices
 
         public AppType? RootAppType { get; set; }
         public string RootAppId { get; set; }
+
+        public bool FirstRun { get; set; }
 
         public List<PoliciesSettings.DomainToAppMappingItem> DomainToAppMapping { get; set; } = new List<PoliciesSettings.DomainToAppMappingItem>();
 

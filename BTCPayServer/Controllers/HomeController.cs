@@ -12,6 +12,8 @@ using Newtonsoft.Json;
 using BTCPayServer.Services;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Services.Apps;
+using Microsoft.AspNetCore.Identity;
+using BTCPayServer.Data;
 
 namespace BTCPayServer.Controllers
 {
@@ -20,11 +22,15 @@ namespace BTCPayServer.Controllers
         private readonly CssThemeManager _cachedServerSettings;
 
         public IHttpClientFactory HttpClientFactory { get; }
+        SignInManager<ApplicationUser> SignInManager { get;  }
 
-        public HomeController(IHttpClientFactory httpClientFactory, CssThemeManager cachedServerSettings)
+        public HomeController(IHttpClientFactory httpClientFactory, 
+                              CssThemeManager cachedServerSettings,
+                              SignInManager<ApplicationUser> signInManager)
         {
             HttpClientFactory = httpClientFactory;
             _cachedServerSettings = cachedServerSettings;
+            SignInManager = signInManager;
         }
 
         private async Task<ViewResult> GoToApp(string appId, AppType? appType)
@@ -71,14 +77,26 @@ namespace BTCPayServer.Controllers
 
         public async Task<IActionResult> Index()
         {
+            if (_cachedServerSettings.FirstRun)
+            {
+                return RedirectToAction(nameof(AccountController.Register), "Account");
+            }
             var matchedDomainMapping = _cachedServerSettings.DomainToAppMapping.FirstOrDefault(item =>
                 item.Domain.Equals(Request.Host.Host, StringComparison.InvariantCultureIgnoreCase));
             if (matchedDomainMapping != null)
             {
-                return await GoToApp(matchedDomainMapping.AppId, matchedDomainMapping.AppType) ?? View("Home"); 
+                return await GoToApp(matchedDomainMapping.AppId, matchedDomainMapping.AppType) ?? GoToHome(); 
             }
 
-            return await GoToApp(_cachedServerSettings.RootAppId, _cachedServerSettings.RootAppType) ?? View("Home"); 
+            return await GoToApp(_cachedServerSettings.RootAppId, _cachedServerSettings.RootAppType) ?? GoToHome(); 
+        }
+
+        private IActionResult GoToHome()
+        {
+            if (SignInManager.IsSignedIn(User))
+                return View("Home");
+            else
+                return RedirectToAction(nameof(AccountController.Login), "Account");
         }
 
         [Route("translate")]

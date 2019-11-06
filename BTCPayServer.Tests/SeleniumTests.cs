@@ -46,8 +46,7 @@ namespace BTCPayServer.Tests
                 var email = s.RegisterNewUser();
                 s.Driver.FindElement(By.Id("Logout")).Click();
                 s.Driver.AssertNoError();
-                s.Driver.FindElement(By.Id("Login")).Click();
-                s.Driver.AssertNoError();
+                Assert.Contains("Account/Login", s.Driver.Url);
 
                 s.Driver.Navigate().GoToUrl(s.Link("/invoices"));
                 Assert.Contains("ReturnUrl=%2Finvoices", s.Driver.Url);
@@ -76,7 +75,6 @@ namespace BTCPayServer.Tests
                 s.Driver.AssertNoError();
 
                 //Log In With New Password
-                s.Driver.FindElement(By.Id("Login")).Click();
                 s.Driver.FindElement(By.Id("Email")).SendKeys(email);
                 s.Driver.FindElement(By.Id("Password")).SendKeys("abc???");
                 s.Driver.FindElement(By.Id("LoginButton")).Click();
@@ -91,7 +89,6 @@ namespace BTCPayServer.Tests
 
         static void LogIn(SeleniumTester s, string email)
         {
-            s.Driver.FindElement(By.Id("Login")).Click();
             s.Driver.FindElement(By.Id("Email")).SendKeys(email);
             s.Driver.FindElement(By.Id("Password")).SendKeys("123456");
             s.Driver.FindElement(By.Id("LoginButton")).Click();
@@ -208,7 +205,7 @@ namespace BTCPayServer.Tests
                 Assert.Contains("ReturnUrl", s.Driver.Url);
                 s.Driver.Navigate().GoToUrl(invoiceUrl);
                 Assert.Contains("ReturnUrl", s.Driver.Url);
-
+                s.GoToRegister();
                 // When logged we should not be able to access store and invoice details
                 var bob = s.RegisterNewUser();
                 s.Driver.Navigate().GoToUrl(storeUrl);
@@ -252,7 +249,7 @@ namespace BTCPayServer.Tests
                 await s.StartAsync();
                 s.Driver.Navigate().GoToUrl(s.Link("/api-access-request"));
                 Assert.Contains("ReturnUrl", s.Driver.Url);
-
+                s.GoToRegister();
                 var alice = s.RegisterNewUser();
                 var store = s.CreateNewStore().storeName;
                 s.AddDerivationScheme();

@@ -16,5 +16,11 @@ namespace BTCPayServer.Services
 
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public string CreativeStartCssUri { get; set; }
+        public bool FirstRun { get; set; }
+        public override string ToString()
+        {
+            // no logs
+            return string.Empty;
+        }
     }
 }

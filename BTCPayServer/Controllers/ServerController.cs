@@ -264,14 +264,14 @@ namespace BTCPayServer.Controllers
 
                 builder.Path = null;
                 builder.Query = null;
-                TempData[WellKnownTempData.SuccessMessage] = $"Domain name changing... the server will restart, please use \"{builder.Uri.AbsoluteUri}\"";
+                TempData[WellKnownTempData.SuccessMessage] = $"Domain name changing... the server will restart, please use \"{builder.Uri.AbsoluteUri}\" (this page won't reload automatically)";
             }
             else if (command == "update")
             {
                 var error = await RunSSH(vm, $"btcpay-update.sh");
                 if (error != null)
                     return error;
-                TempData[WellKnownTempData.SuccessMessage] = $"The server might restart soon if an update is available...";
+                TempData[WellKnownTempData.SuccessMessage] = $"The server might restart soon if an update is available...  (this page won't reload automatically)";
             }
             else if (command == "clean")
             {

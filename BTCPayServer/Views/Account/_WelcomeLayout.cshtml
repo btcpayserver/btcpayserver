@@ -8,12 +8,21 @@
 <head>
     <partial name="Header" />
     <style>
+        .col-head {
+            display: flex;
+            align-items: center;
+        }
+        .head-logo {
+            height: 100px;
+            margin-right: 50px;
+        }
+
         .lead-title {
             font-family: Montserrat;
             font-style: normal;
-            font-weight: 600;
+            font-weight: bold;
             font-size: 40px;
-            line-height: 60px;
+            line-height: 1.2;
             /* or 150% */
             letter-spacing: 0.1em;
             color: #000000;
@@ -50,10 +59,14 @@
         <div class="navbar-brand" style="display:none;"></div>
         <div class="container">
             <div class="row">
-                <div class="col-md-7">
-                    <a asp-controller="Home" asp-action="Index"><img src="~/img/btcpay-logo.svg" alt="BTCPay Server" height="100" style="margin-bottom:30px;" /></a>
+                <div class="col-12 col-head">
+                    <a asp-controller="Home" asp-action="Index"><img src="~/img/btcpay-logo.svg" alt="BTCPay Server" class="head-logo" /></a>
                     <h1 class="lead-title text-uppercase">Welcome to your BTCPay Server</h1>
-                    <hr class="primary ml-0" style="margin-bottom:30px; margin-top:30px;">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-7 order-md-1 order-2">
+                    <hr class="primary ml-0" style="margin:30px auto;">
                     <p class="lead-login" style="margin-bottom:69px;">BTCPay Server lets you process Bitcoin transactions seemlessly, enabling global and near-instant peer-to-peer payments</p>
                     <h3 class="lead-h">Our supporters</h3>
                     <div class="figure">
@@ -65,12 +78,12 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-5" style="margin-top:50px;">
+                <div class="col-md-5 order-md-2 order-1">
                     @RenderBody()
                 </div>
             </div>
         </div>
-    </section>
+</section>
     @await Html.PartialAsync("_ValidationScriptsPartial")
 </body>
 </html>

@@ -2,7 +2,7 @@
 @{
     Layout = null;
 }
-
+@inject BTCPayServer.Services.BTCPayServerEnvironment env
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -84,10 +84,20 @@
                 </div>
                 <div class="col-md-5 order-md-2 order-1">
                     @RenderBody()
+
+                    @if (env.OnionUrl != null)
+                    {
+                        <div class="input-group form-group">
+                            <div class="input-group-prepend">
+                                <a href="@env.OnionUrl" class="input-group-text"><span class="input-group-addon"></span><img style="display:inline" src="~/img/icons/Onion_Color.svg" height="20" /></a>
+                            </div>
+                            <input class="form-control" type="text" style="font-size:0.75em;" value="@env.OnionUrl" readonly>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
-</section>
+    </section>
     @await Html.PartialAsync("_ValidationScriptsPartial")
 </body>
 </html>

@@ -10,6 +10,7 @@ using BTCPayServer.Services.Stores;
 using BTCPayServer.Logging;
 using System.Threading;
 using Npgsql;
+using Microsoft.AspNetCore.Identity;
 
 namespace BTCPayServer
 {
@@ -19,16 +20,19 @@ namespace BTCPayServer
         private StoreRepository _StoreRepository;
         private BTCPayNetworkProvider _NetworkProvider;
         private SettingsRepository _Settings;
+        private readonly UserManager<ApplicationUser> _userManager;
         public MigrationStartupTask(
             BTCPayNetworkProvider networkProvider,
             StoreRepository storeRepository,
             ApplicationDbContextFactory dbContextFactory,
+            UserManager<ApplicationUser> userManager,
             SettingsRepository settingsRepository)
         {
             _DBContextFactory = dbContextFactory;
             _StoreRepository = storeRepository;
             _NetworkProvider = networkProvider;
             _Settings = settingsRepository;
+            _userManager = userManager;
         }
         public async Task ExecuteAsync(CancellationToken cancellationToken = default)
         {
@@ -70,6 +74,15 @@ namespace BTCPayServer
                 {
                     await ConvertConvertWalletKeyPathRoots();
                     settings.ConvertWalletKeyPathRoots = true;
+                    await _Settings.UpdateSetting(settings);
+                }
+                if (!settings.CheckedFirstRun)
+                {
+                    var themeSettings = await _Settings.GetSettingAsync<ThemeSettings>() ?? new ThemeSettings();
+                    var admin = await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin);
+                    themeSettings.FirstRun = admin.Count == 0;
+                    await _Settings.UpdateSetting(themeSettings);
+                    settings.CheckedFirstRun = true;
                     await _Settings.UpdateSetting(settings);
                 }
             }

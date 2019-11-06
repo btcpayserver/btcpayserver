@@ -398,7 +398,9 @@ namespace BTCPayServer.Controllers
                     {
                         await _RoleManager.CreateAsync(new IdentityRole(Roles.ServerAdmin));
                         await _userManager.AddToRoleAsync(user, Roles.ServerAdmin);
-
+                        var settings = await _SettingsRepository.GetSettingAsync<ThemeSettings>();
+                        settings.FirstRun = false;
+                        await _SettingsRepository.UpdateSetting<ThemeSettings>(settings);
                         if(_Options.DisableRegistration)
                         {
                             // Once the admin user has been created lock subsequent user registrations (needs to be disabled for unit tests that require multiple users).

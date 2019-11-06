@@ -18,7 +18,7 @@ namespace BTCPayServer.Tests
     [Trait("Selenium", "Selenium")]
     public class CheckoutUITests
     {
-        public const int TestTimeout = 60_000;
+        public const int TestTimeout = TestUtils.TestTimeout;
         public CheckoutUITests(ITestOutputHelper helper)
         {
             Logs.Tester = new XUnitLog(helper) { Name = "Tests" };
@@ -32,6 +32,7 @@ namespace BTCPayServer.Tests
             using (var s = SeleniumTester.Create())
             {
                 await s.StartAsync();
+                s.GoToRegister();
                 s.RegisterNewUser();
                 var store = s.CreateNewStore();
                 s.AddDerivationScheme("BTC");
@@ -80,6 +81,7 @@ namespace BTCPayServer.Tests
             using (var s = SeleniumTester.Create())
             {
                 await s.StartAsync();
+                s.GoToRegister();
                 s.RegisterNewUser();
                 var store = s.CreateNewStore();
                 s.AddDerivationScheme("BTC");
@@ -109,6 +111,7 @@ namespace BTCPayServer.Tests
             using (var s = SeleniumTester.Create())
             {
                 await s.StartAsync();
+                s.GoToRegister();
                 s.RegisterNewUser();
                 var store = s.CreateNewStore();
                 s.AddDerivationScheme("BTC");
@@ -152,6 +155,7 @@ namespace BTCPayServer.Tests
             using (var s = SeleniumTester.Create())
             {
                 await s.StartAsync();
+                s.GoToRegister();
                 s.RegisterNewUser();
                 var store = s.CreateNewStore();
                 s.AddInternalLightningNode("BTC");

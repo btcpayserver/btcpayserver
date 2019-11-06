@@ -1,11 +1,11 @@
-﻿@model LndGrpcServicesViewModel
+﻿@model LndServicesViewModel
 @{
     ViewData.SetActivePageAndTitle(ServerNavPages.Services);
 }
 
 
 <h4>LND @Model.ConnectionType</h4>
-<partial name="_StatusMessage" for="@TempData["StatusMessage"]" />
+<partial name="_StatusMessage" />
 <div class="row">
     <div class="col-md-6">
         <div asp-validation-summary="All" class="text-danger"></div>

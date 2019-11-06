@@ -174,11 +174,11 @@ namespace BTCPayServer.Controllers
             {
                 if (!DerivationSchemeSettings.TryParseFromJson(vm.Config, network, out strategy))
                 {
-                    vm.StatusMessage = new StatusMessageModel()
+                    TempData[WellKnownTempData.StatusMessageModel] = new StatusMessageModel()
                     {
                         Severity = StatusMessageModel.StatusSeverity.Error,
                         Message = "Config file was not in the correct format"
-                    }.ToString();
+                    };
                     vm.Confirmation = false;
                     return View(vm);
                 }
@@ -188,11 +188,11 @@ namespace BTCPayServer.Controllers
             {
                 if (!DerivationSchemeSettings.TryParseFromColdcard(await ReadAllText(vm.ColdcardPublicFile), network, out strategy))
                 {
-                    vm.StatusMessage = new StatusMessageModel()
+                    TempData[WellKnownTempData.StatusMessageModel] = new StatusMessageModel()
                     {
                         Severity = StatusMessageModel.StatusSeverity.Error,
                         Message = "Coldcard public file was not in the correct format"
-                    }.ToString();
+                    };
                     vm.Confirmation = false;
                     return View(vm);
                 }
@@ -275,11 +275,11 @@ namespace BTCPayServer.Controllers
                 if (willBeExcluded != wasExcluded)
                 {
                     var label = willBeExcluded ? "disabled" : "enabled";
-                    StatusMessage = $"On-Chain payments for {network.CryptoCode} has been {label}.";
+                    TempData[WellKnownTempData.SuccessMessage] = $"On-Chain payments for {network.CryptoCode} has been {label}.";
                 }
                 else
                 {
-                    StatusMessage = $"Derivation settings for {network.CryptoCode} has been modified.";
+                    TempData[WellKnownTempData.SuccessMessage] = $"Derivation settings for {network.CryptoCode} has been modified.";
                 }
                 return RedirectToAction(nameof(UpdateStore), new {storeId = storeId});
             }
@@ -312,7 +312,7 @@ namespace BTCPayServer.Controllers
                 }
 
                 vm.HintAddress = "";
-                vm.StatusMessage =
+                TempData[WellKnownTempData.SuccessMessage] =
                     "Address successfully found, please verify that the rest is correct and click on \"Confirm\"";
                 ModelState.Remove(nameof(vm.HintAddress));
                 ModelState.Remove(nameof(vm.DerivationScheme));

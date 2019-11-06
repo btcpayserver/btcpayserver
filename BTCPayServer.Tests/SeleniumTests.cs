@@ -46,8 +46,7 @@ namespace BTCPayServer.Tests
                 var email = s.RegisterNewUser();
                 s.Driver.FindElement(By.Id("Logout")).Click();
                 s.Driver.AssertNoError();
-                s.Driver.FindElement(By.Id("Login")).Click();
-                s.Driver.AssertNoError();
+                Assert.Contains("Account/Login", s.Driver.Url);
 
                 s.Driver.Navigate().GoToUrl(s.Link("/invoices"));
                 Assert.Contains("ReturnUrl=%2Finvoices", s.Driver.Url);
@@ -76,7 +75,6 @@ namespace BTCPayServer.Tests
                 s.Driver.AssertNoError();
 
                 //Log In With New Password
-                s.Driver.FindElement(By.Id("Login")).Click();
                 s.Driver.FindElement(By.Id("Email")).SendKeys(email);
                 s.Driver.FindElement(By.Id("Password")).SendKeys("abc???");
                 s.Driver.FindElement(By.Id("LoginButton")).Click();
@@ -91,7 +89,6 @@ namespace BTCPayServer.Tests
 
         static void LogIn(SeleniumTester s, string email)
         {
-            s.Driver.FindElement(By.Id("Login")).Click();
             s.Driver.FindElement(By.Id("Email")).SendKeys(email);
             s.Driver.FindElement(By.Id("Password")).SendKeys("123456");
             s.Driver.FindElement(By.Id("LoginButton")).Click();
@@ -208,7 +205,7 @@ namespace BTCPayServer.Tests
                 Assert.Contains("ReturnUrl", s.Driver.Url);
                 s.Driver.Navigate().GoToUrl(invoiceUrl);
                 Assert.Contains("ReturnUrl", s.Driver.Url);
-
+                s.GoToRegister();
                 // When logged we should not be able to access store and invoice details
                 var bob = s.RegisterNewUser();
                 s.Driver.Navigate().GoToUrl(storeUrl);
@@ -252,7 +249,7 @@ namespace BTCPayServer.Tests
                 await s.StartAsync();
                 s.Driver.Navigate().GoToUrl(s.Link("/api-access-request"));
                 Assert.Contains("ReturnUrl", s.Driver.Url);
-
+                s.GoToRegister();
                 var alice = s.RegisterNewUser();
                 var store = s.CreateNewStore().storeName;
                 s.AddDerivationScheme();
@@ -261,9 +258,7 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("CreateNewToken")).Click();
                 s.Driver.FindElement(By.Id("RequestPairing")).Click();
 
-                var regex = Regex.Match(new Uri(s.Driver.Url, UriKind.Absolute).Query, "pairingCode=([^&]*)");
-                Assert.True(regex.Success, $"{s.Driver.Url} does not match expected regex");
-                var pairingCode = regex.Groups[1].Value;
+                string pairingCode = AssertUrlHasPairingCode(s);
 
                 s.Driver.FindElement(By.Id("ApprovePairing")).Click();
                 Assert.Contains(pairingCode, s.Driver.PageSource);
@@ -289,9 +284,21 @@ namespace BTCPayServer.Tests
                     Currency = "USD",
                     FullNotifications = true
                 }, NBitpayClient.Facade.Merchant);
+
+                s.Driver.Navigate().GoToUrl(s.Link("/api-tokens"));
+                s.Driver.FindElement(By.Id("RequestPairing")).Click();
+                s.Driver.FindElement(By.Id("ApprovePairing")).Click();
+                AssertUrlHasPairingCode(s);
             }
         }
 
+        private static string AssertUrlHasPairingCode(SeleniumTester s)
+        {
+            var regex = Regex.Match(new Uri(s.Driver.Url, UriKind.Absolute).Query, "pairingCode=([^&]*)");
+            Assert.True(regex.Success, $"{s.Driver.Url} does not match expected regex");
+            var pairingCode = regex.Groups[1].Value;
+            return pairingCode;
+        }
 
 
         [Fact(Timeout = TestTimeout)]

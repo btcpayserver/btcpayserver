@@ -31,7 +31,11 @@ jobs:
       - checkout
       - run:
           command: |
-            cd .circleci && ./run-tests.sh "ExternalIntegration=ExternalIntegration"
+            if [ "$CIRCLE_PROJECT_USERNAME" == "btcpayserver" ] && [ "$CIRCLE_PROJECT_REPONAME" == "btcpayserver" ]; then
+                cd .circleci && ./run-tests.sh "ExternalIntegration=ExternalIntegration"
+            else
+              echo "Skipping running ExternalIntegration tests outside of context of main user and repository that have access to secrets"
+            fi
 
 
   # publish jobs require $DOCKERHUB_REPO, $DOCKERHUB_USER, $DOCKERHUB_PASS defined

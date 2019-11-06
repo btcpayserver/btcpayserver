@@ -47,11 +47,11 @@
         border: 0;
     }
 </style>
-@if (TempData.ContainsKey("TempDataProperty-StatusMessage"))
+@if (TempData.HasStatusMessage())
 {
     <div class="row">
         <div class="col-md-10 text-center">
-            <partial name="_StatusMessage" for="@TempData["TempDataProperty-StatusMessage"]" />
+            <partial name="_StatusMessage" />
         </div>
     </div>
 }

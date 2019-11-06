@@ -59,10 +59,9 @@ namespace BTCPayServer.Services.Altcoins.Monero.UI
                 pair => GetAccounts(pair.Key));
 
             await Task.WhenAll(accountsList.Values);
-
+            TempData[WellKnownTempData.SuccessMessage] = statusMessage;
             return View(new MoneroLikePaymentMethodListViewModel()
             {
-                StatusMessage = statusMessage,
                 Items = _MoneroLikeConfiguration.MoneroLikeConfigurationItems.Select(pair =>
                     GetMoneroLikePaymentMethodViewModel(monero, pair.Key, excludeFilters,
                         accountsList[pair.Key].Result))
@@ -121,7 +120,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.UI
             var vm = GetMoneroLikePaymentMethodViewModel(StoreData.GetSupportedPaymentMethods(_BtcPayNetworkProvider)
                     .OfType<MoneroSupportedPaymentMethod>(), cryptoCode,
                 StoreData.GetStoreBlob().GetExcludedPaymentMethods(), await GetAccounts(cryptoCode));
-            vm.StatusMessage = statusMessage;
+            TempData[WellKnownTempData.SuccessMessage] = statusMessage;
             return View(nameof(GetStoreMoneroLikePaymentMethod), vm);
         }
 
@@ -279,13 +278,11 @@ namespace BTCPayServer.Services.Altcoins.Monero.UI
 
         public class MoneroLikePaymentMethodListViewModel
         {
-            public string StatusMessage { get; set; }
             public IEnumerable<MoneroLikePaymentMethodViewModel> Items { get; set; }
         }
 
         public class MoneroLikePaymentMethodViewModel
         {
-            public string StatusMessage { get; set; }
             public MoneroRPCProvider.MoneroLikeSummary Summary { get; set; }
             public string CryptoCode { get; set; }
             public string NewAccountLabel { get; set; }

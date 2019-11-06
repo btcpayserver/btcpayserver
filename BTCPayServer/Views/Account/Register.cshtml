@@ -1,62 +1,56 @@
 ﻿@model RegisterViewModel
 @{
     ViewData["Title"] = "Register";
+    Layout = "_WelcomeLayout.cshtml";
 }
 
-<section>
-    <div>
-        <div class="modal-dialog modal-login">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h4 class="modal-title">Create account</h4>
+<div class="modal-dialog modal-login">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h4 class="modal-title">Create account</h4>
+        </div>
+        <div class="modal-body">
+            <form asp-route-returnUrl="@ViewData["ReturnUrl"]" asp-route-logon="@ViewData["Logon"]" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="form-group">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <label for="Email" class="input-group-text"><span class="input-group-addon fa fa-user"></span></label>
+                        </div>
+                        <input asp-for="Email" class="form-control" placeholder="Email" required="required" />
+                    </div>
+                    <span asp-validation-for="Email" class="text-danger"></span>
                 </div>
-                <div class="modal-body">
-                    <form asp-route-returnUrl="@ViewData["ReturnUrl"]" asp-route-logon="@ViewData["Logon"]" method="post">
-                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                        <div class="form-group">
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <label for="Email" class="input-group-text"><span class="input-group-addon fa fa-user"></span></label>
-                                </div>
-                                <input asp-for="Email" class="form-control" placeholder="Email" required="required"/>
-                            </div>
-                            <span asp-validation-for="Email" class="text-danger"></span>
+                <div class="form-group">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <label for="Password" class="input-group-text"><span class="input-group-addon fa fa-lock"></span></label>
                         </div>
-                        <div class="form-group">
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <label for="Password" class="input-group-text"><span class="input-group-addon fa fa-lock"></span></label>
-                                </div>
-                                <input asp-for="Password" class="form-control" placeholder="Password" required="required"/>
-                            </div>
-                            <span asp-validation-for="Password" class="text-danger"></span>
-                        </div>
-                        <div class="form-group">
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <label for="ConfirmPassword" class="input-group-text"><span class="input-group-addon fa fa-lock"></span></label>
-                                </div>
-                                <input asp-for="ConfirmPassword" class="form-control" placeholder="Repeat password" required="required"/>
-                            </div>
-                            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
-                        </div>
-                        @if (ViewData["AllowIsAdmin"] is true)
-                        {
-                            <div class="form-group">
-                                <label asp-for="IsAdmin"></label>
-                                <input asp-for="IsAdmin" type="checkbox" class="form-check-inline"/>
-                                <span asp-validation-for="IsAdmin" class="text-danger"></span>
-                            </div>
-                        }
-                        <div class="form-group">
-                            <button type="submit" class="btn btn-primary btn-block btn-lg" id="RegisterButton">Create account</button>
-                        </div>
-                    </form>
+                        <input asp-for="Password" class="form-control" placeholder="Password" required="required" />
+                    </div>
+                    <span asp-validation-for="Password" class="text-danger"></span>
                 </div>
-            </div>
+                <div class="form-group">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <label for="ConfirmPassword" class="input-group-text"><span class="input-group-addon fa fa-lock"></span></label>
+                        </div>
+                        <input asp-for="ConfirmPassword" class="form-control" placeholder="Repeat password" required="required" />
+                    </div>
+                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                </div>
+                @if (ViewData["AllowIsAdmin"] is true)
+                {
+                    <div class="form-group">
+                        <label asp-for="IsAdmin"></label>
+                        <input asp-for="IsAdmin" type="checkbox" class="form-check-inline" />
+                        <span asp-validation-for="IsAdmin" class="text-danger"></span>
+                    </div>
+                }
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary btn-block btn-lg" id="RegisterButton">Create account</button>
+                </div>
+            </form>
         </div>
     </div>
-</section>
-@section Scripts {
-    @await Html.PartialAsync("_ValidationScriptsPartial")
-}
+</div>

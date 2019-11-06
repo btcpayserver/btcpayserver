@@ -66,7 +66,7 @@ namespace BTCPayServer.Tests
             Logs.Tester.LogInformation("Selenium: Browsing to " + Server.PayTester.ServerUri);
             Logs.Tester.LogInformation($"Selenium: Resolution {Driver.Manage().Window.Size}");
             Driver.Manage().Timeouts().ImplicitWait = ImplicitWait;
-            Driver.Navigate().GoToUrl(Server.PayTester.ServerUri);
+            GoToRegister();
             Driver.AssertNoError();
         }
 
@@ -76,10 +76,13 @@ namespace BTCPayServer.Tests
             return Server.PayTester.ServerUri.AbsoluteUri.WithoutEndingSlash() + relativeLink.WithStartingSlash();
         }
 
+        public void GoToRegister()
+        {
+            Driver.Navigate().GoToUrl(this.Link("/Account/Register"));
+        }
         public string RegisterNewUser(bool isAdmin = false)
         {
             var usr = RandomUtils.GetUInt256().ToString().Substring(64 - 20) + "@a.com";
-            Driver.FindElement(By.Id("Register")).Click();
             Driver.FindElement(By.Id("Email")).SendKeys(usr);
             Driver.FindElement(By.Id("Password")).SendKeys("123456");
             Driver.FindElement(By.Id("ConfirmPassword")).SendKeys("123456");
@@ -142,6 +145,7 @@ namespace BTCPayServer.Tests
             Assert.NotEmpty(links);
             foreach (var l in links)
             {
+                Logs.Tester.LogInformation($"Checking no error on {l}");
                 Driver.Navigate().GoToUrl(l);
                 Driver.AssertNoError();
             }

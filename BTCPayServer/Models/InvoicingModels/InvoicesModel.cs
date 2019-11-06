@@ -15,7 +15,6 @@ namespace BTCPayServer.Models.InvoicingModels
         public int? TimezoneOffset { get; set; }
 
         public List<InvoiceModel> Invoices { get; set; } = new List<InvoiceModel>();
-        public string StatusMessage { get; set; }
     }
 
     public class InvoiceModel
@@ -34,7 +33,6 @@ namespace BTCPayServer.Models.InvoicingModels
         public bool ShowCheckout { get; set; }
         public string ExceptionStatus { get; set; }
         public string AmountCurrency { get; set; }
-        public string StatusMessage { get; set; }
 
         public InvoiceDetailsModel Details { get; set; }
     }

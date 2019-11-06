@@ -5,40 +5,11 @@
 @inject BTCPayServer.HostedServices.NBXplorerDashboard dashboard
 @inject BTCPayServer.HostedServices.CssThemeManager themeManager
 
-@addTagHelper *, BundlerMinifier.TagHelpers
-
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-    <link rel="canonical" href="https://btcpayjungle.com">
-    <meta name="name" content="BTCPayJungle - Hosting The Future Today">
-    <meta name="url" content="https://btcpayjungle.com/">
-    <meta content="~/btcpaylogo2junglelab.png" property="og:image">
-    <meta name="logo" content="~/btcpaylogo2junglelab.png">
-    <meta name="logo" content="~/btcpaylogo2junglelab.png">
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="BTCPay Jungle Server, Accept Bitcoin Lightning Network & Alt Coins Payments From Your Customers, Trust Is Minimized, No Waiting Days For A Payment To Clear, No Service Fee Charge, Blockchain Payments, Get Started Today">
-    <meta name="author" content="junglelab.io">
-    <meta name="name" content="BTCPayJungle">
-    <meta name="url" content="https://btcpayjungle.com">
-    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
-    @if (themeManager.DiscourageSearchEngines)
-    {
-        <META NAME="robots" CONTENT="noindex">
-    }
-
-    <title>BTCPayJungle - Hosting The Future Today</title>
-
-    @* CSS *@
-    <link href="@this.Context.Request.GetRelativePathOrAbsolute(themeManager.BootstrapUri)" rel="stylesheet" />
-    <link href="@this.Context.Request.GetRelativePathOrAbsolute(themeManager.CreativeStartUri)" rel="stylesheet" />
-
-    <bundle name="wwwroot/bundles/main-bundle.min.css" />
-
-    @* JS *@
-    <bundle name="wwwroot/bundles/main-bundle.min.js" />
+    <partial name="Header" />
 
     @RenderSection("HeadScripts", required: false)
     @RenderSection("HeaderContent", false)
@@ -113,7 +84,7 @@
             {
                 <div class="alert alert-danger alert-dismissible" style="position:absolute; top:75px;" role="alert">
                     <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <span>Your access to BTCPay Server is over an unsecured network. If you are using the docker deployment method with NGINX and HTTPS is not available, you probably did not configure your DNS settings correctly. <br /> 
+                    <span>Your access to BTCPay Server is over an unsecured network. If you are using the docker deployment method with NGINX and HTTPS is not available, you probably did not configure your DNS settings correctly. <br />
                           We disabled the register and login link so you don't leak your credentials.</span>
                 </div>
             }

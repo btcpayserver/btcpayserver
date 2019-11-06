@@ -36,17 +36,17 @@ namespace BTCPayServer.Controllers
                 {
                     if (!model.Settings.IsComplete())
                     {
-                        model.StatusMessage = "Error: Required fields missing";
+                        TempData[WellKnownTempData.ErrorMessage] = "Required fields missing";
                         return View(model);
                     }
                     var client = model.Settings.CreateSmtpClient();
                     var message = model.Settings.CreateMailMessage(new MailAddress(model.TestEmail), "BTCPay test", "BTCPay test");
                     await client.SendMailAsync(message);
-                    model.StatusMessage = "Email sent to " + model.TestEmail + ", please, verify you received it";
+                    TempData[WellKnownTempData.SuccessMessage] = "Email sent to " + model.TestEmail + ", please, verify you received it";
                 }
                 catch (Exception ex)
                 {
-                    model.StatusMessage = "Error: " + ex.Message;
+                    TempData[WellKnownTempData.ErrorMessage] = "Error: " + ex.Message;
                 }
                 return View(model);
             }
@@ -57,7 +57,7 @@ namespace BTCPayServer.Controllers
                 storeBlob.EmailSettings = model.Settings;
                 store.SetStoreBlob(storeBlob);
                 await _Repo.UpdateStore(store);
-                StatusMessage = "Email settings modified";
+                TempData[WellKnownTempData.SuccessMessage] = "Email settings modified";
                 return RedirectToAction(nameof(UpdateStore), new {
                     storeId});
 

@@ -3,7 +3,7 @@
 <div class="top-header">
     <div class="header">
         <div class="header__icon">
-            @if (Model.CustomLogoLink != null)
+            @if (!string.IsNullOrEmpty(Model.CustomLogoLink))
             {
                 <img class="header__icon__img" src="@Model.CustomLogoLink" height="40">
             }

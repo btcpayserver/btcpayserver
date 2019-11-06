@@ -36,7 +36,7 @@
 </head>
 <body>
 
-<partial name="_StatusMessage" for="StatusMessage" />
+<partial name="_StatusMessage" />
 @if (Context.Request.Query.ContainsKey("simple"))
 {
     @await Html.PartialAsync("MinimalPaymentRequest", Model)
@@ -186,7 +186,7 @@ else
                                                         Pay now
                                                     </button>
                                                     <button class="btn btn-secondary btn-lg mt-1" 
-                                                            v-if="!srvModel.pendingInvoiceHasPayments" 
+                                                            v-if="srvModel.anyPendingInvoice && !srvModel.pendingInvoiceHasPayments" 
                                                             v-on:click="cancelPayment()"
                                                             :disabled="loading">
                                                         <div v-if="loading" class="spinner-grow spinner-grow-sm" role="status">

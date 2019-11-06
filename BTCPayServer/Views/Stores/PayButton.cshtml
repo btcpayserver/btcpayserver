@@ -33,6 +33,20 @@
                 <input name="orderId" type="text" class="form-control" id="inputAddress" placeholder="(optional)"
                        v-model="srvModel.orderId" v-on:change="inputChanges">
             </div>
+        </div>
+        <div class="col-lg-5">
+            <br />
+            Define parameters that define the purchase: price, currency and then optional description of purchase.
+            <br /><br />
+            Generated HTML will be displayed at the bottom of this page and all you need is to paste that HTML into your final page.
+            Clicking on the button will redirect customer to checkout.
+        </div>
+    </div>
+    <hr />
+    <h3>Pay button display options</h3>
+    <br />
+    <div class="row">
+        <div class="col-lg-7">
             <div class="form-group">
                 <label>Pay Button Image Url</label>
                 <input name="payButtonImageUrl" type="text" class="form-control" id="inputAddress"
@@ -95,29 +109,34 @@
                     <small class="text-danger">{{ errors.first('step') }}</small>
                 </div>
             </div>
-            <div class="form-row" v-if="srvModel.buttonType == 1">
-                <div class="form-group  col-md-6">
-                    <label>Use a simple input style</label>
-                    <input name="simpleInput" type="checkbox" class="form-check"
-                           v-model="srvModel.simpleInput" v-on:change="inputChanges"
+            <div class="form-group" v-if="srvModel.buttonType == 1">
+                <div class="form-check">
+                    <input name="simpleInput"
+                           id="simpleInput"
+                           type="checkbox"
+                           class="form-check-input"
+                           v-model="srvModel.simpleInput"
+                           v-on:change="inputChanges"
                            :class="{'is-invalid': errors.has('simpleInput') }">
+                    <label class="form-check-label" for="simpleInput">Use a simple input style</label>
                     <small class="text-danger">{{ errors.first('simpleInput') }}</small>
                 </div>
-                <div class="form-group col-md-6">
-                   <label>Fit button inline</label>
-                   <input name="fitButtoninline" type="checkbox" class="form-check"
-                   v-model="srvModel.fitButtoninline" v-on:change="inputChanges"
-                   :class="{'is-invalid': errors.has('fitButtoninline') }">
-                   <small class="text-danger">{{ errors.first('fitButtoninline') }}</small>
+                <div class="form-check">
+                   <input name="fitButtonInline"
+                          id="fitButtonInline"
+                          type="checkbox"
+                          class="form-check-input"
+                          v-model="srvModel.fitButtonInline"
+                          v-on:change="inputChanges"
+                          :class="{'is-invalid': errors.has('fitButtonInline') }">
+                   <label class="form-check-label" for="fitButtonInline">Fit button inline</label>
+                   <small class="text-danger">{{ errors.first('fitButtonInline') }}</small>
                 </div>
             </div>
         </div>
         <div class="col-lg-5">
-            <br />
-            Define parameters that define the purchase: price, currency and then optional description of purchase.
-            <br /><br />
-            Generated HTML will be displayed at the bottom of this page and all you need is to paste that HTML into your final page.
-            Clicking on the button will redirect customer to checkout.
+            <h4>Preview</h4>
+            <div id="preview"></div>
         </div>
     </div>
     <hr />
@@ -171,21 +190,20 @@
             <div class="col-lg-5">
                 <br />
                 This parameter allows you to specify additional query string paramters that should be appended to the checkout page once the invoice is created. For example, <kbd>lang=da-DK</kbd> would load the checkout page in Danish by default.
-                
+
             </div>
         </div>
     <hr />
+    <br />
+
     <h3>Generated code</h3>
     <div class="row" v-show="!errors.any()">
-        <div class="col-lg-9">
+        <div class="col-lg-12">
             <pre><code id="mainCode" class="html"></code></pre>
             <button class="btn btn-primary" id="copyCode">
                 <i class="fa fa-copy"></i> Copy Code
             </button>
             <span class="copyLabelPopup" style="display:none;">Copied</span>
-        </div>
-        <div class="col-lg-3">
-            <div id="preview"></div>
         </div>
     </div>
     <div class="row" v-show="errors.any()">
@@ -224,19 +242,158 @@
         });
     </script>
 }
-<script id="template-select-currency" type="text/template">
-    <select  onmouseover="this.style.border='solid #ccc 1px'; this.style.padding='0px'"  onmouseout="this.style.border='0'; this.style.padding='1px'" onchange="document.querySelector('input[type = hidden][name = currency]').value = event.target.value" style="border: 0; display: block; padding: 1px; margin: auto auto 5px auto; font-size: 11px; background: 0 0; cursor: pointer;"><option value="USD">USD</option><option value="GBP">GBP</option><option value="EUR">EUR</option><option value="BTC">BTC</option></select>
+
+<script id="template-paybutton-styles" type="text/template">
+    <style type="text/css">
+        .btcpay-form {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btcpay-form--inline {
+            flex-direction: row;
+        }
+        .btcpay-form--block {
+            flex-direction: column;
+        }
+        .btcpay-form--inline .submit {
+            margin-left: 15px;
+        }
+        .btcpay-form--block select {
+            margin-bottom: 10px;
+        }
+        .btcpay-form .btcpay-custom {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btcpay-form .plus-minus {
+            cursor:pointer;
+            font-size:25px;
+            line-height: 25px;
+            background: rgba(0,0,0,.1);
+            height: 30px;
+            width: 45px;
+            border:none;
+            border-radius: 60px;
+            margin: auto;
+        }
+        .btcpay-form select {
+            -moz-appearance: none;
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            border:1px solid transparent;
+            display: block;
+            padding: 1px;
+            margin-left: auto;
+            margin-right: auto;
+            font-size: 11px;
+            cursor: pointer;
+        }
+        .btcpay-form select:hover {
+            border-color: #ccc;
+        }
+        #btcpay-input-price {
+            -moz-appearance: none;
+            -webkit-appearance: none;
+            border: none;
+            box-shadow: none;
+            text-align: center;
+            font-size: 25px;
+            margin: auto;
+            border-radius: 5px;
+            line-height: 35px;
+            background: #fff;
+        }
+    </style>
 </script>
 
-<script id="template-button-plus-minus" type="text/template">
-    <button style="cursor:pointer; font-size:25px; line-height: 25px; background: rgba(0,0,0,.1); height: 30px; width: 45px; border:none; border-radius: 60px; margin: auto;" onclick="event.preventDefault(); var price = parseInt(document.querySelector('#btcpay-input-price').value); if ('TYPE' == '-' && (price - 1) < 1) { return; } document.querySelector('#btcpay-input-price').value = parseInt(document.querySelector('#btcpay-input-price').value) TYPE 1;">TYPE</button>
-</script>
-
-<script id="template-input-price" type="text/template">
-    <input type="TYPEVALUE" id="btcpay-input-price" name="price"  min="MIN" max="MAX" step="STEP"  value="PRICEVALUE" style="border: none; background-image: none; background-color: transparent; -webkit-box-shadow: none ; -moz-box-shadow: none ; -webkit-appearance: none ; width: WIDTHINPUT; text-align: center; font-size: 25px; margin: auto; border-radius: 5px; line-height: 35px; background: #fff;" oninput="event.preventDefault();isNaN(event.target.value) || event.target.value <= 0 ? document.querySelector('#btcpay-input-price').value = PRICEVALUE : event.target.value" CUSTOM />
-</script>
-
-<script id="template-input-slider" type="text/template">
-    <input class="btcpay-input-range" id="btcpay-input-range" value="PRICE" type="range" min="MIN" max="MAX" step="STEP" style="width:WIDTH ;margin-bottom:15px;" oninput="document.querySelector('#btcpay-input-price').value = document.querySelector('#btcpay-input-range').value" />
-    <style type="text/css">input[type=range].btcpay-input-range{-webkit-appearance:none;width:100%;margin:9.45px 0}input[type=range].btcpay-input-range:focus{outline:0}input[type=range].btcpay-input-range::-webkit-slider-runnable-track{width:100%;height:3.1px;cursor:pointer;box-shadow:0 0 1.7px #020,0 0 0 #003c00;background:#f3f3f3;border-radius:1px;border:0 solid rgba(24,213,1,0)}input[type=range].btcpay-input-range::-webkit-slider-thumb{box-shadow:0 0 3.7px rgba(0,170,0,0),0 0 0 rgba(0,195,0,0);border:2.5px solid #cedc21;height:22px;width:23px;border-radius:12px;background:#0f3723;cursor:pointer;-webkit-appearance:none;margin-top:-9.45px}input[type=range].btcpay-input-range:focus::-webkit-slider-runnable-track{background:#fff}input[type=range].btcpay-input-range::-moz-range-track{width:100%;height:3.1px;cursor:pointer;box-shadow:0 0 1.7px #020,0 0 0 #003c00;background:#f3f3f3;border-radius:1px;border:0 solid rgba(24,213,1,0)}input[type=range].btcpay-input-range::-moz-range-thumb{box-shadow:0 0 3.7px rgba(0,170,0,0),0 0 0 rgba(0,195,0,0);border:2.5px solid #cedc21;height:22px;width:23px;border-radius:12px;background:#0f3723;cursor:pointer}input[type=range].btcpay-input-range::-ms-track{width:100%;height:3.1px;cursor:pointer;background:0 0;border-color:transparent;color:transparent}input[type=range].btcpay-input-range::-ms-fill-lower{background:#e6e6e6;border:0 solid rgba(24,213,1,0);border-radius:2px;box-shadow:0 0 1.7px #020,0 0 0 #003c00}input[type=range].btcpay-input-range::-ms-fill-upper{background:#f3f3f3;border:0 solid rgba(24,213,1,0);border-radius:2px;box-shadow:0 0 1.7px #020,0 0 0 #003c00}input[type=range].btcpay-input-range::-ms-thumb{box-shadow:0 0 3.7px rgba(0,170,0,0),0 0 0 rgba(0,195,0,0);border:2.5px solid #cedc21;height:22px;width:23px;border-radius:12px;background:#0f3723;cursor:pointer;height:3.1px}input[type=range].btcpay-input-range:focus::-ms-fill-lower{background:#f3f3f3}input[type=range].btcpay-input-range:focus::-ms-fill-upper{background:#fff}</style>
+<script id="template-slider-styles" type="text/template">
+    <style type="text/css">
+        input[type=range].btcpay-input-range {
+            -webkit-appearance:none;
+            width:100%;
+        }
+        input[type=range].btcpay-input-range:focus {
+            outline:0;
+        }
+        input[type=range].btcpay-input-range::-webkit-slider-runnable-track {
+            width:100%;
+            height:3.1px;
+            cursor:pointer;
+            box-shadow:0 0 1.7px #020,0 0 0 #003c00;
+            background:#f3f3f3;
+            border-radius:1px;
+            border:0 solid rgba(24,213,1,0)
+        }
+        input[type=range].btcpay-input-range::-webkit-slider-thumb {
+            box-shadow:0 0 3.7px rgba(0,170,0,0),0 0 0 rgba(0,195,0,0);
+            border:2.5px solid #cedc21;
+            height:22px;
+            width:22px;
+            border-radius:50%;
+            background:#0f3723;
+            cursor:pointer;
+            -webkit-appearance:none;
+            margin-top:-9.45px
+        }
+        input[type=range].btcpay-input-range:focus::-webkit-slider-runnable-track {
+            background:#fff;
+        }
+        input[type=range].btcpay-input-range::-moz-range-track {
+            width:100%;
+            height:3.1px;
+            cursor:pointer;
+            box-shadow:0 0 1.7px #020,0 0 0 #003c00;
+            background:#f3f3f3;
+            border-radius:1px;
+            border:0 solid rgba(24,213,1,0);
+        }
+        input[type=range].btcpay-input-range::-moz-range-thumb {
+            box-shadow:0 0 3.7px rgba(0,170,0,0),0 0 0 rgba(0,195,0,0);
+            border:2.5px solid #cedc21;
+            height:22px;
+            width:22px;
+            border-radius:50%;
+            background:#0f3723;
+            cursor:pointer;
+        }
+        input[type=range].btcpay-input-range::-ms-track {
+            width:100%;
+            height:3.1px;
+            cursor:pointer;
+            background:0 0;
+            border-color:transparent;
+            color:transparent;
+        }
+        input[type=range].btcpay-input-range::-ms-fill-lower {
+            background:#e6e6e6;
+            border:0 solid rgba(24,213,1,0);
+            border-radius:2px;
+            box-shadow:0 0 1.7px #020,0 0 0 #003c00;
+        }
+        input[type=range].btcpay-input-range::-ms-fill-upper {
+            background:#f3f3f3;
+            border:0 solid rgba(24,213,1,0);
+            border-radius:2px;
+            box-shadow:0 0 1.7px #020,0 0 0 #003c00;
+        }
+        input[type=range].btcpay-input-range::-ms-thumb {
+            box-shadow:0 0 3.7px rgba(0,170,0,0),0 0 0 rgba(0,195,0,0);
+            border:2.5px solid #cedc21;
+            height:22px;
+            width:22px;
+            border-radius:50%;
+            background:#0f3723;
+            cursor:pointer;
+            height:3.1px;
+        }
+        input[type=range].btcpay-input-range:focus::-ms-fill-lower {
+            background:#f3f3f3;
+        }
+        input[type=range].btcpay-input-range:focus::-ms-fill-upper {
+            background:#fff;
+        }
+    </style>
 </script>

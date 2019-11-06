@@ -53,11 +53,6 @@ namespace BTCPayServer.Models.StoreViewModels
         {
             get; set;
         }
-        public string StatusMessage
-        {
-            get;
-            set;
-        }
 
         [Display(Name = "API Key")]
         public string ApiKey { get; set; }

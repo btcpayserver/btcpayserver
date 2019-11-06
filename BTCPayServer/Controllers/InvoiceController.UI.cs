@@ -71,9 +71,7 @@ namespace BTCPayServer.Controllers
                 ProductInformation = invoice.ProductInformation,
                 StatusException = invoice.ExceptionStatus,
                 Events = invoice.Events,
-                PosData = PosDataParser.ParsePosData(invoice.PosData),
-                StatusMessage = StatusMessage,
-                
+                PosData = PosDataParser.ParsePosData(invoice.PosData)
             };
 
             model.Addresses = invoice.HistoricalAddresses.Select(h =>
@@ -234,8 +232,8 @@ namespace BTCPayServer.Controllers
                 InvoiceId = invoice.Id,
                 DefaultLang = storeBlob.DefaultLang ?? "en",
                 HtmlTitle = storeBlob.HtmlTitle ?? "BTCPay Invoice",
-                CustomCSSLink = storeBlob.CustomCSS?.AbsoluteUri,
-                CustomLogoLink = storeBlob.CustomLogo?.AbsoluteUri,
+                CustomCSSLink = storeBlob.CustomCSS,
+                CustomLogoLink = storeBlob.CustomLogo,
                 CryptoImage = Request.GetRelativePathOrAbsolute(paymentMethodHandler.GetCryptoImage(paymentMethodId)),
                 BtcAddress = paymentMethodDetails.GetPaymentDestination(),
                 BtcDue = accounting.Due.ToString(),
@@ -405,7 +403,6 @@ namespace BTCPayServer.Controllers
                 SearchTerm = searchTerm,
                 Skip = skip,
                 Count = count,
-                StatusMessage = StatusMessage,
                 TimezoneOffset = timezoneOffset
             };
             InvoiceQuery invoiceQuery = GetInvoiceQuery(searchTerm, timezoneOffset);
@@ -497,7 +494,7 @@ namespace BTCPayServer.Controllers
             var stores = new SelectList(await _StoreRepository.GetStoresByUserId(GetUserId()), nameof(StoreData.Id), nameof(StoreData.StoreName), null);
             if (stores.Count() == 0)
             {
-                StatusMessage = "Error: You need to create at least one store before creating a transaction";
+                TempData[WellKnownTempData.ErrorMessage] = "You need to create at least one store before creating a transaction";
                 return RedirectToAction(nameof(UserStoresController.ListStores), "UserStores");
             }
 
@@ -518,20 +515,11 @@ namespace BTCPayServer.Controllers
             {
                 return View(model);
             }
-            StatusMessage = null;
+
             if (store.GetSupportedPaymentMethods(_NetworkProvider).Count() == 0)
             {
                 ModelState.AddModelError(nameof(model.StoreId), "You need to configure the derivation scheme in order to create an invoice");
                 return View(model);
-            }
-
-
-            if (StatusMessage != null)
-            {
-                return RedirectToAction(nameof(StoresController.UpdateStore), "Stores", new
-                {
-                    storeId = store.Id
-                });
             }
 
             try
@@ -554,7 +542,7 @@ namespace BTCPayServer.Controllers
                     })
                 }, store, HttpContext.Request.GetAbsoluteRoot(), cancellationToken: cancellationToken);
 
-                StatusMessage = $"Invoice {result.Data.Id} just created!";
+                TempData[WellKnownTempData.SuccessMessage] = $"Invoice {result.Data.Id} just created!";
                 return RedirectToAction(nameof(ListInvoices));
             }
             catch (BitpayHttpException ex)
@@ -601,13 +589,6 @@ namespace BTCPayServer.Controllers
         {
             public bool NotFound { get; set; }
             public string StatusString { get; set; }
-        }
-
-        [TempData]
-        public string StatusMessage
-        {
-            get;
-            set;
         }
 
         private string GetUserId()

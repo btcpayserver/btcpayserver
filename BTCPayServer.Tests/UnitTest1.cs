@@ -551,7 +551,8 @@ namespace BTCPayServer.Tests
                     ConnectionString = "type=charge;server=" + tester.MerchantCharge.Client.Uri.AbsoluteUri,
                     SkipPortTest = true // We can't test this as the IP can't be resolved by the test host :(
                 }, "test", "BTC").GetAwaiter().GetResult();
-                Assert.DoesNotContain("Error", ((LightningNodeViewModel)Assert.IsType<ViewResult>(testResult).Model).StatusMessage, StringComparison.OrdinalIgnoreCase);
+                Assert.False(storeController.TempData.ContainsKey(WellKnownTempData.ErrorMessage));
+                storeController.TempData.Clear();
                 Assert.True(storeController.ModelState.IsValid);
 
                 Assert.IsType<RedirectToActionResult>(storeController.AddLightningNode(user.StoreId, new LightningNodeViewModel()
@@ -647,11 +648,12 @@ namespace BTCPayServer.Tests
                 acc.CreateStore();
 
                 var controller = acc.GetController<StoresController>();
-                var token = (RedirectToActionResult)controller.CreateToken(new Models.StoreViewModels.CreateTokenViewModel()
+                var token = (RedirectToActionResult)await controller.CreateToken2(new Models.StoreViewModels.CreateTokenViewModel()
                 {
                     Label = "bla",
-                    PublicKey = null
-                }).GetAwaiter().GetResult();
+                    PublicKey = null,
+                    StoreId = acc.StoreId
+                });
 
                 var pairingCode = (string)token.RouteValues["pairingCode"];
 
@@ -746,7 +748,7 @@ namespace BTCPayServer.Tests
                 acc.CreateStore();
                 var store2 = acc.GetController<StoresController>();
                 await store2.Pair(pairingCode.ToString(), store2.CurrentStore.Id);
-                Assert.Contains(nameof(PairingResult.ReusedKey), store2.StatusMessage, StringComparison.CurrentCultureIgnoreCase);
+                Assert.Contains(nameof(PairingResult.ReusedKey), (string)store2.TempData[WellKnownTempData.ErrorMessage], StringComparison.CurrentCultureIgnoreCase);
             }
         }
 
@@ -1140,7 +1142,7 @@ namespace BTCPayServer.Tests
 
                 // Test request pairing code client side
                 var storeController = user.GetController<StoresController>();
-                storeController.CreateToken(new CreateTokenViewModel()
+                storeController.CreateToken(user.StoreId, new CreateTokenViewModel()
                 {
                     Label = "test2",
                     StoreId = user.StoreId

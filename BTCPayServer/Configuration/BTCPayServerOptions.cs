@@ -208,6 +208,11 @@ namespace BTCPayServer.Configuration
             LogFile = GetDebugLog(conf);
             if (!string.IsNullOrEmpty(LogFile))
             {
+                if (!Path.IsPathRooted(LogFile))
+                    LogFile = Path.Combine(DataDir, LogFile);
+            }
+            if (!string.IsNullOrEmpty(LogFile))
+            {
                 Logs.Configuration.LogInformation("LogFile: " + LogFile);
                 Logs.Configuration.LogInformation("Log Level: " + GetDebugLogLevel(conf));
             }

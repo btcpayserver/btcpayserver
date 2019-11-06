@@ -26,7 +26,7 @@
   --btcpay-color-secondary-alpha:  rgba(130, 138, 145, 0.25);
   --btcpay-color-success:          #60C8CE;
   --btcpay-color-success-accent:   #147073;
-  --btcpay-color-success-alpha:    rgba(47, 203, 208, 0.25);
+  --btcpay-color-success-alpha:    #8EF7FF;
   --btcpay-color-info:             #17a2b8;
   --btcpay-color-info-accent:      #117a8b;
   --btcpay-color-info-alpha:       rgba(58, 176, 195, 0.25);
@@ -35,7 +35,7 @@
   --btcpay-color-warning-alpha:    rgba(222, 170, 12, 0.25);
   --btcpay-color-danger:           #dc3545;
   --btcpay-color-danger-accent:    #bd2130;
-  --btcpay-color-danger-alpha:     rgba(225, 83, 97, 0.25);
+  --btcpay-color-danger-alpha:     #EDA1B0;
   --btcpay-color-light:            var(--btcpay-color-neutral-100);
   --btcpay-color-light-accent:     #dae0e5;
   --btcpay-color-light-alpha:      rgba(216, 217, 219, 0.25);
@@ -77,6 +77,7 @@ body {
 }
 
 .logo,
+.head-logo,
 .social-logo {
   filter: contrast(0) brightness(200%);
 }

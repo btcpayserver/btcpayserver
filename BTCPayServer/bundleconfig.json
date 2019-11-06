@@ -22,7 +22,7 @@
             "wwwroot/vendor/bootstrap4-creativestart/*.js",
             "wwwroot/vendor/moment/moment.min.js",
             "wwwroot/vendor/flatpickr/flatpickr.js",
-            "wwwroot/main/site.js"
+            "wwwroot/js/site.js"
         ]
     },
     {

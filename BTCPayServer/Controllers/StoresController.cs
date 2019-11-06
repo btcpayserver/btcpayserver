@@ -353,8 +353,8 @@ namespace BTCPayServer.Controllers
             var storeBlob = CurrentStore.GetStoreBlob();
             var vm = new CheckoutExperienceViewModel();
             SetCryptoCurrencies(vm, CurrentStore);
-            vm.CustomCSS = storeBlob.CustomCSS?.AbsoluteUri;
-            vm.CustomLogo = storeBlob.CustomLogo?.AbsoluteUri;
+            vm.CustomCSS = storeBlob.CustomCSS;
+            vm.CustomLogo = storeBlob.CustomLogo;
             vm.HtmlTitle = storeBlob.HtmlTitle;
             vm.SetLanguages(_LangService, storeBlob.DefaultLang);
             vm.RequiresRefundEmail = storeBlob.RequiresRefundEmail;
@@ -412,8 +412,8 @@ namespace BTCPayServer.Controllers
             {
                 return View(model);
             }
-            blob.CustomLogo = string.IsNullOrWhiteSpace(model.CustomLogo) ? null : new Uri(model.CustomLogo, UriKind.Absolute);
-            blob.CustomCSS = string.IsNullOrWhiteSpace(model.CustomCSS) ? null : new Uri(model.CustomCSS, UriKind.Absolute);
+            blob.CustomLogo = model.CustomLogo;
+            blob.CustomCSS = model.CustomCSS;
             blob.HtmlTitle = string.IsNullOrWhiteSpace(model.HtmlTitle) ? null : model.HtmlTitle;
             blob.DefaultLang = model.DefaultLang;
             blob.RequiresRefundEmail = model.RequiresRefundEmail;

@@ -27,10 +27,8 @@ namespace BTCPayServer.Models.StoreViewModels
         public string DefaultLang { get; set; }
 
         [Display(Name = "Link to a custom CSS stylesheet")]
-        [Uri]
         public string CustomCSS { get; set; }
         [Display(Name = "Link to a custom logo")]
-        [Uri]
         public string CustomLogo { get; set; }
 
         [Display(Name = "Custom HTML title to display on Checkout page")]

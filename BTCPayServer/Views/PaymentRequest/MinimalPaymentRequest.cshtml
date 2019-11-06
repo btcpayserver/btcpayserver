@@ -1,5 +1,7 @@
 @model BTCPayServer.Models.PaymentRequestViewModels.ViewPaymentRequestViewModel
-
+@{
+    Context.Request.Query.TryGetValue("password", out var password);
+}
 <div class="container">
     <div class="row w-100 p-0 m-0" style="height: 100vh">
         <div class="mx-auto my-auto w-100">
@@ -111,7 +113,7 @@
                                                 @if (Model.AllowCustomPaymentAmounts && !Model.AnyPendingInvoice)
                                                 {
                                                     <form method="get" asp-action="PayPaymentRequest">
-
+                                                        <input type="hidden" name="password" value="@Safe.Raw(password)"/>
                                                         <div class="input-group m-auto" style="max-width: 250px">
                                                             <input
                                                                 class="form-control"
@@ -136,12 +138,13 @@
                                                 }
                                                 else
                                                 {
-                                                    <a class="btn btn-primary btn-lg d-print-none mt-1" asp-action="PayPaymentRequest">
+                                                    <a class="btn btn-primary btn-lg d-print-none mt-1" asp-action="PayPaymentRequest" asp-route-password="@Safe.Raw(password)">
                                                         Pay now
                                                     </a>
                                                     if (Model.AnyPendingInvoice && !Model.PendingInvoiceHasPayments)
                                                     {
                                                         <form method="get" asp-action="CancelUnpaidPendingInvoice">
+                                                            <input type="hidden" name="password" value="@Safe.Raw(password)"/>
                                                             <button class="btn btn-secondary btn-lg mt-1" type="submit">
                                                                 Cancel current invoice</button>   
                                                         </form>

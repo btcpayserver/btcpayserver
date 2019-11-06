@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Data;
 using BTCPayServer.Services.PaymentRequests;
 using BTCPayServer.Services.Rates;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BTCPayServer.Models.PaymentRequestViewModels
@@ -44,6 +45,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             CustomCSSLink = blob.CustomCSSLink;
             EmbeddedCSS = blob.EmbeddedCSS;
             AllowCustomPaymentAmounts = blob.AllowCustomPaymentAmounts;
+            Password = blob.PasswordHash;
         }
 
         public string Id { get; set; }
@@ -73,6 +75,9 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
         public string EmbeddedCSS { get; set; }        
         [Display(Name = "Allow payee to create invoices in their own denomination")]
         public bool AllowCustomPaymentAmounts { get; set; }
+        
+        [Display(Name = "Password")]
+        public string Password { get; set; }
     }
 
     public class ViewPaymentRequestViewModel
@@ -81,6 +86,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
         {
             Id = data.Id;
             var blob = data.GetBlob();
+            PasswordHash = blob.PasswordHash;
             Title = blob.Title;
             Amount = blob.Amount;
             Currency = blob.Currency;
@@ -108,6 +114,8 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
                     throw new ArgumentOutOfRangeException();
             }
         }
+
+        public string PasswordHash { get; set; }
 
         public bool AllowCustomPaymentAmounts { get; set; }
 

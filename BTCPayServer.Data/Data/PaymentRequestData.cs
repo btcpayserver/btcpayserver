@@ -33,6 +33,8 @@ namespace BTCPayServer.Data
             public string EmbeddedCSS { get; set; }
             public string CustomCSSLink { get; set; }
             public bool AllowCustomPaymentAmounts { get; set; }
+
+            public string PasswordHash { get; set; }
         }
 
         public enum PaymentRequestStatus

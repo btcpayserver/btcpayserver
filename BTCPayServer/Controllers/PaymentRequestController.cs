@@ -42,6 +42,7 @@ namespace BTCPayServer.Controllers
         private readonly EventAggregator _EventAggregator;
         private readonly CurrencyNameTable _Currencies;
         private readonly InvoiceRepository _InvoiceRepository;
+        private readonly IPasswordHasher<PaymentRequestData.PaymentRequestBlob> _PasswordHasher;
 
         public PaymentRequestController(
             InvoiceController invoiceController,
@@ -51,7 +52,8 @@ namespace BTCPayServer.Controllers
             PaymentRequestService paymentRequestService,
             EventAggregator eventAggregator,
             CurrencyNameTable currencies,
-            InvoiceRepository invoiceRepository)
+            InvoiceRepository invoiceRepository,
+            IPasswordHasher<PaymentRequestData.PaymentRequestBlob> passwordHasher)
         {
             _InvoiceController = invoiceController;
             _UserManager = userManager;
@@ -61,6 +63,7 @@ namespace BTCPayServer.Controllers
             _EventAggregator = eventAggregator;
             _Currencies = currencies;
             _InvoiceRepository = invoiceRepository;
+            _PasswordHasher = passwordHasher;
         }
 
         [HttpGet]
@@ -155,7 +158,11 @@ namespace BTCPayServer.Controllers
             blob.EmbeddedCSS = viewModel.EmbeddedCSS;
             blob.CustomCSSLink = viewModel.CustomCSSLink;
             blob.AllowCustomPaymentAmounts = viewModel.AllowCustomPaymentAmounts;
-
+            if (!string.IsNullOrEmpty(viewModel.Password) && viewModel.Password!= blob.PasswordHash)
+            {
+                blob.PasswordHash = _PasswordHasher.HashPassword(blob, viewModel.Password);
+            }
+            
             data.SetBlob(blob);
             if (string.IsNullOrEmpty(id))
             {
@@ -216,9 +223,9 @@ namespace BTCPayServer.Controllers
         [HttpGet]
         [Route("{id}")]
         [AllowAnonymous]
-        public async Task<IActionResult> ViewPaymentRequest(string id, string statusMessage = null)
+        public async Task<IActionResult> ViewPaymentRequest(string id, string password= "", string statusMessage = null)
         {
-            var result = await _PaymentRequestService.GetPaymentRequest(id, GetUserId());
+            var result = await _PaymentRequestService.GetPaymentRequest(id, password);
             if (result == null)
             {
                 return NotFound();
@@ -231,9 +238,9 @@ namespace BTCPayServer.Controllers
         [Route("{id}/pay")]
         [AllowAnonymous]
         public async Task<IActionResult> PayPaymentRequest(string id, bool redirectToInvoice = true,
-            decimal? amount = null, CancellationToken cancellationToken = default)
+            decimal? amount = null, string password = "", CancellationToken cancellationToken = default)
         {
-            var result = await _PaymentRequestService.GetPaymentRequest(id, GetUserId());
+            var result = await _PaymentRequestService.GetPaymentRequest(id, password);
             if (result == null)
             {
                 return NotFound();
@@ -283,7 +290,7 @@ namespace BTCPayServer.Controllers
                 amount = result.AmountDue;
 
 
-            var pr = await _PaymentRequestRepository.FindPaymentRequest(id, null);
+            var pr = await _PaymentRequestRepository.FindPaymentRequest(id, null, cancellationToken);
             var blob = pr.GetBlob();
             var store = pr.StoreData;
             try
@@ -318,9 +325,9 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("{id}/cancel")]
-        public async Task<IActionResult> CancelUnpaidPendingInvoice(string id, bool redirect = true)
+        public async Task<IActionResult> CancelUnpaidPendingInvoice(string id, bool redirect = true, string password = "")
         {
-            var result = await _PaymentRequestService.GetPaymentRequest(id, GetUserId());
+            var result = await _PaymentRequestService.GetPaymentRequest(id, password);
             if (result == null )
             {
                 return NotFound();

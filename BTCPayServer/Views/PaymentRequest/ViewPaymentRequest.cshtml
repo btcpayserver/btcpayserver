@@ -5,6 +5,7 @@
 @{
     ViewData["Title"] = Model.Title;
     Layout = null;
+    Context.Request.Query.TryGetValue("password", out var password);
 }
 
 <!DOCTYPE html>
@@ -23,6 +24,7 @@
     {
         <script type="text/javascript">
             var srvModel = @Safe.Json(Model);
+            var password = "@Safe.Raw(password.ToString())";
         </script>
         <bundle name="wwwroot/bundles/payment-request-bundle-1.min.js"></bundle>
         <bundle name="wwwroot/bundles/payment-request-bundle-2.min.js"></bundle>
@@ -46,7 +48,6 @@ else
     <noscript>
         @await Html.PartialAsync("MinimalPaymentRequest", Model)
     </noscript>
-
     <div class="container" id="app" v-cloak>
         <div class="row w-100 p-0 m-0" style="height: 100vh">
             <div class="mx-auto my-auto w-100">

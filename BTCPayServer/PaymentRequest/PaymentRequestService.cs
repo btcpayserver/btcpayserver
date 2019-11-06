@@ -11,6 +11,7 @@ using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.PaymentRequests;
 using BTCPayServer.Services.Rates;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 
 namespace BTCPayServer.PaymentRequest
@@ -21,18 +22,21 @@ namespace BTCPayServer.PaymentRequest
         private readonly BTCPayNetworkProvider _BtcPayNetworkProvider;
         private readonly AppService _AppService;
         private readonly CurrencyNameTable _currencies;
+        private readonly IPasswordHasher<PaymentRequestData.PaymentRequestBlob> _PasswordHasher;
 
         public PaymentRequestService(
             IHubContext<PaymentRequestHub> hubContext,
             PaymentRequestRepository paymentRequestRepository,
             BTCPayNetworkProvider btcPayNetworkProvider,
             AppService appService,
-            CurrencyNameTable currencies)
+            CurrencyNameTable currencies,
+            IPasswordHasher<PaymentRequestData.PaymentRequestBlob> passwordHasher)
         {
             _PaymentRequestRepository = paymentRequestRepository;
             _BtcPayNetworkProvider = btcPayNetworkProvider;
             _AppService = appService;
             _currencies = currencies;
+            _PasswordHasher = passwordHasher;
         }
 
         public async Task UpdatePaymentRequestStateIfNeeded(string id)
@@ -68,7 +72,7 @@ namespace BTCPayServer.PaymentRequest
             }
         }
 
-        public async Task<ViewPaymentRequestViewModel> GetPaymentRequest(string id, string userId = null)
+        public async Task<ViewPaymentRequestViewModel> GetPaymentRequest(string id, string password = "", bool skipPasswordValidation = false)
         {
             var pr = await _PaymentRequestRepository.FindPaymentRequest(id, null);
             if (pr == null)
@@ -77,6 +81,12 @@ namespace BTCPayServer.PaymentRequest
             }
 
             var blob = pr.GetBlob();
+            if (skipPasswordValidation || !string.IsNullOrEmpty(blob.PasswordHash) &&
+                _PasswordHasher.VerifyHashedPassword(blob, blob.PasswordHash, password) ==
+                PasswordVerificationResult.Failed)
+            {
+                return null;
+            }
             var rateRules = pr.StoreData.GetStoreBlob().GetRateRules(_BtcPayNetworkProvider);
 
             var invoices = await _PaymentRequestRepository.GetInvoicesForPaymentRequest(id);

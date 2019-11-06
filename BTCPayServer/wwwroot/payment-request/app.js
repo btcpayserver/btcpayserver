@@ -32,7 +32,8 @@ addLoadEvent(function (ev) {
                 lastUpdated: "",
                 loading: false,
                 timeoutState: "",
-                customAmount: null
+                customAmount: null,
+                password: window.password
             }
         },
         computed: {
@@ -132,6 +133,18 @@ addLoadEvent(function (ev) {
                     duration: 10000
                 });
             });
+            eventAggregator.$on("info-error", function (error) {
+                self.setLoading(false);
+                Vue.toasted.show("Error retrieving updated payment request. Did the password change or the request deleted?", {
+                    iconPack: "fontawesome",
+                    icon: "exclamation-triangle",
+                    fullWidth: false,
+                    theme: "bubble",
+                    type: "error",
+                    position: "top-center",
+                    duration: 10000
+                });
+            });
             eventAggregator.$on("cancel-invoice-error", function (error) {
                 self.setLoading(false);
                 Vue.toasted.show("Error cancelling payment", {
@@ -186,6 +199,9 @@ addLoadEvent(function (ev) {
             });
             eventAggregator.$on("info-updated", function (model) {
                 console.warn("UPDATED", self.srvModel, arguments);
+                if(!model){
+                    eventAggregator.$emit("get-info", self.password);
+                }
                 self.srvModel = model;
             });
             eventAggregator.$on("connection-pending", function () {

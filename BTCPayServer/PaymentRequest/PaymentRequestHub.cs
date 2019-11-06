@@ -13,6 +13,7 @@ using BTCPayServer.Services.PaymentRequests;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using BTCPayServer.Data;
+using BTCPayServer.Models.PaymentRequestViewModels;
 using Microsoft.AspNetCore.Http;
 #if !NETCOREAPP21
 using Microsoft.AspNetCore.Routing;
@@ -24,36 +25,57 @@ namespace BTCPayServer.PaymentRequest
     public class PaymentRequestHub : Hub
     {
         private readonly PaymentRequestController _PaymentRequestController;
+        private readonly PaymentRequestService _PaymentRequestService;
         public const string InvoiceCreated = "InvoiceCreated";
         public const string PaymentReceived = "PaymentReceived";
         public const string InfoUpdated = "InfoUpdated";
+        public const string InfoError = "InfoError";
         public const string InvoiceError = "InvoiceError";
         public const string CancelInvoiceError = "CancelInvoiceError";
         public const string InvoiceCancelled = "InvoiceCancelled";
 
-        public PaymentRequestHub(PaymentRequestController paymentRequestController)
+        public PaymentRequestHub(PaymentRequestController paymentRequestController, PaymentRequestService paymentRequestService)
         {
             _PaymentRequestController = paymentRequestController;
+            _PaymentRequestService = paymentRequestService;
         }
 
-        public async Task ListenToPaymentRequest(string paymentRequestId)
+        public async Task ListenToPaymentRequest(string paymentRequestId, string password)
         {
             if (Context.Items.ContainsKey("pr-id"))
             {
                 await Groups.RemoveFromGroupAsync(Context.ConnectionId, Context.Items["pr-id"].ToString());
                 Context.Items.Remove("pr-id");
+                Context.Items.Remove("pr-password");
             }
 
             Context.Items.Add("pr-id", paymentRequestId);
+            Context.Items.Add("pr-password", password);
             await Groups.AddToGroupAsync(Context.ConnectionId, paymentRequestId);
         }
+        
+        public async Task GetInfo()
+        {
+            var prid = Context.Items["pr-id"].ToString();
+            var prpassword = Context.Items["pr-password"].ToString();
 
+            var req = await _PaymentRequestService.GetPaymentRequest(prid, prpassword);
+            if (req == null)
+            {
+                await Clients.Caller.SendCoreAsync(InfoError, System.Array.Empty<object>());
+            }
+            await Clients.Caller.SendCoreAsync(InfoUpdated, new object[] {req});
+        }
+
+        
 
         public async Task Pay(decimal? amount = null)
         {
             _PaymentRequestController.ControllerContext.HttpContext = Context.GetHttpContext();
             var result =
-                await _PaymentRequestController.PayPaymentRequest(Context.Items["pr-id"].ToString(), false, amount);
+                await _PaymentRequestController.PayPaymentRequest( Context.Items["pr-id"].ToString(), 
+                    false, 
+                    amount, Context.Items["pr-password"].ToString());
             switch (result)
             {
                 case OkObjectResult okObjectResult:
@@ -72,7 +94,7 @@ namespace BTCPayServer.PaymentRequest
         {
             _PaymentRequestController.ControllerContext.HttpContext = Context.GetHttpContext();
             var result =
-                await _PaymentRequestController.CancelUnpaidPendingInvoice(Context.Items["pr-id"].ToString(), false);
+                await _PaymentRequestController.CancelUnpaidPendingInvoice(Context.Items["pr-id"].ToString(), false, Context.Items["pr-password"].ToString());
             switch (result)
             {
                 case OkObjectResult okObjectResult:
@@ -202,9 +224,15 @@ namespace BTCPayServer.PaymentRequest
 
         private async Task InfoUpdated(string paymentRequestId)
         {
-            var req = await _PaymentRequestService.GetPaymentRequest(paymentRequestId);
+            var req = await _PaymentRequestService.GetPaymentRequest(paymentRequestId, null, true);
             if (req != null)
             {
+                if (!string.IsNullOrEmpty(req.PasswordHash))
+                {
+                    await _HubContext.Clients.Group(paymentRequestId)
+                        .SendCoreAsync(PaymentRequestHub.InfoUpdated, Array.Empty<object>());
+                }
+               
                 await _HubContext.Clients.Group(paymentRequestId)
                     .SendCoreAsync(PaymentRequestHub.InfoUpdated, new object[] {req});
             }

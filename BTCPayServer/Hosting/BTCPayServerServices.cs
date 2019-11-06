@@ -100,6 +100,8 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<TokenRepository>();
             services.TryAddSingleton<WalletRepository>();
             services.TryAddSingleton<EventAggregator>();
+            services.TryAddSingleton<IPasswordHasher<PaymentRequestData.PaymentRequestBlob>, 
+                PasswordHasher<PaymentRequestData.PaymentRequestBlob>>();
             services.TryAddSingleton<PaymentRequestService>();
             services.TryAddSingleton<U2FService>();
             services.TryAddSingleton<CoinAverageSettings>();

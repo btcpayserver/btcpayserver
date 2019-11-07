@@ -222,7 +222,23 @@ namespace BTCPayServer
 
         public static StatusMessageModel GetStatusMessageModel(this ITempDataDictionary tempData)
         {
-            if (tempData.TryGetValue("StatusMessageModel", out var o) && o is string str)
+            tempData.TryGetValue(WellKnownTempData.SuccessMessage, out var successMessage);
+            tempData.TryGetValue(WellKnownTempData.ErrorMessage, out var errorMessage);
+            tempData.TryGetValue("StatusMessageModel", out var model);
+            if (successMessage != null || errorMessage != null)
+            {
+                var parsedModel = new StatusMessageModel();
+                parsedModel.Message = (string)successMessage ?? (string)errorMessage;
+                if (successMessage != null)
+                {
+                    parsedModel.Severity = StatusMessageModel.StatusSeverity.Success;
+                }
+                else
+                {
+                    parsedModel.Severity = StatusMessageModel.StatusSeverity.Error;
+                }
+            }
+            else if (model != null && model is string str)
             {
                 return JObject.Parse(str).ToObject<StatusMessageModel>();
             }

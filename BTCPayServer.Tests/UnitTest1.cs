@@ -2980,13 +2980,11 @@ noninventoryitem:
                var addRequest = Assert.IsType<AddU2FDeviceViewModel>(Assert.IsType<ViewResult>(manageController.AddU2FDevice("label")).Model);
                //name should match the one provided in beginning
                Assert.Equal("label",addRequest.Name);
-               
-               //sending an invalid response model back to server, should error out
-               var statusMessage = Assert
-                   .IsType<RedirectToActionResult>(await manageController.AddU2FDevice(addRequest))
-                   .RouteValues["StatusMessage"].ToString();
-               Assert.NotNull(statusMessage);
-               Assert.Equal(StatusMessageModel.StatusSeverity.Error, new StatusMessageModel(statusMessage).Severity);
+
+                //sending an invalid response model back to server, should error out
+                Assert.IsType<RedirectToActionResult>(await manageController.AddU2FDevice(addRequest));
+                var statusModel = manageController.TempData.GetStatusMessageModel();
+               Assert.Equal(StatusMessageModel.StatusSeverity.Error, statusModel.Severity);
 
                var contextFactory = tester.PayTester.GetService<ApplicationDbContextFactory>();
 

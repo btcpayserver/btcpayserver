@@ -36,7 +36,7 @@ var hubListener = function () {
         connection
             .start()
             .then(function () {
-                connection.invoke("ListenToPaymentRequest", srvModel.id);
+                connection.invoke("ListenToPaymentRequest", srvModel.id, password);
 
             })
             .catch(function (err) {

@@ -359,6 +359,7 @@ namespace BTCPayServer.Controllers
             vm.SetLanguages(_LangService, storeBlob.DefaultLang);
             vm.RequiresRefundEmail = storeBlob.RequiresRefundEmail;
             vm.ShowRecommendedFee = storeBlob.ShowRecommendedFee;
+            vm.RecommendedFeeBlockTarget = storeBlob.RecommendedFeeBlockTarget;
             vm.OnChainMinValue = storeBlob.OnChainMinValue?.ToString() ?? "";
             vm.LightningMaxValue = storeBlob.LightningMaxValue?.ToString() ?? "";
             vm.LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi;
@@ -418,6 +419,7 @@ namespace BTCPayServer.Controllers
             blob.DefaultLang = model.DefaultLang;
             blob.RequiresRefundEmail = model.RequiresRefundEmail;
             blob.ShowRecommendedFee = model.ShowRecommendedFee;
+            blob.RecommendedFeeBlockTarget = model.RecommendedFeeBlockTarget;
             blob.OnChainMinValue = onchainMinValue;
             blob.LightningMaxValue = lightningMaxValue;
             blob.LightningAmountInSatoshi = model.LightningAmountInSatoshi;

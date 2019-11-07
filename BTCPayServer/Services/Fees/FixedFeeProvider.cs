@@ -18,7 +18,7 @@ namespace BTCPayServer.Services.Fees
             get; set;
         }
 
-        public Task<FeeRate> GetFeeRateAsync()
+        public Task<FeeRate> GetFeeRateAsync(int blockTarget)
         {
             return Task.FromResult(FeeRate);
         }

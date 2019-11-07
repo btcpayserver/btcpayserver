@@ -10,6 +10,6 @@ namespace BTCPayServer.Services
 {
     public interface IFeeProvider
     {
-        Task<FeeRate> GetFeeRateAsync();
+        Task<FeeRate> GetFeeRateAsync(int blockTarget = 20);
     }
 }

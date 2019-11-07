@@ -74,6 +74,11 @@
                     <p class="form-text text-muted">Fee will be shown for BTC and LTC onchain payments only.</p>
                 </div>
             </div>
+            <div class="form-group">
+                <label asp-for="RecommendedFeeBlockTarget"></label>
+                <input asp-for="RecommendedFeeBlockTarget" class="form-control" />
+                <span asp-validation-for="RecommendedFeeBlockTarget" class="text-danger"></span>
+            </div>
             <button name="command" type="submit" class="btn btn-primary" value="Save">Save</button>
         </form>
     </div>

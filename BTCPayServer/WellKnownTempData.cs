@@ -9,6 +9,5 @@ namespace BTCPayServer
     {
         public const string SuccessMessage = nameof(SuccessMessage);
         public const string ErrorMessage = nameof(ErrorMessage);
-        public const string StatusMessageModel = nameof(StatusMessageModel);
     }
 }

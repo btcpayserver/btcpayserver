@@ -80,12 +80,12 @@ namespace BTCPayServer.Controllers
             var stores = await _AppService.GetOwnedStores(GetUserId());
             if (stores.Length == 0)
             {
-                TempData[WellKnownTempData.StatusMessageModel] = new StatusMessageModel()
+                TempData.SetStatusMessageModel(new StatusMessageModel()
                 {
                     Html =
                         $"Error: You need to create at least one store. <a href='{(Url.Action("CreateStore", "UserStores"))}'>Create store</a>",
                     Severity = StatusMessageModel.StatusSeverity.Error
-                };
+                });
                 return RedirectToAction(nameof(ListApps));
             }
             var vm = new CreateAppViewModel();
@@ -100,12 +100,12 @@ namespace BTCPayServer.Controllers
             var stores = await _AppService.GetOwnedStores(GetUserId());
             if (stores.Length == 0)
             {
-                TempData[WellKnownTempData.StatusMessageModel] = new StatusMessageModel()
+                TempData.SetStatusMessageModel(new StatusMessageModel()
                 {
                     Html =
                         $"Error: You need to create at least one store. <a href='{(Url.Action("CreateStore", "UserStores"))}'>Create store</a>",
                     Severity = StatusMessageModel.StatusSeverity.Error
-                };
+                });
                 return RedirectToAction(nameof(ListApps));
             }
             var selectedStore = vm.SelectedStore;

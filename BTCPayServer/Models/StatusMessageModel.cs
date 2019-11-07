@@ -60,11 +60,6 @@ namespace BTCPayServer.Models
                 }
             }
         }
-
-        public override string ToString()
-        {
-            return JObject.FromObject(this).ToString(Formatting.None);
-        }
         
         private void ParseNonJsonStatus(string s)
         {

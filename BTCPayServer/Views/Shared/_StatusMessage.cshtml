@@ -2,7 +2,7 @@
     StatusMessageModel parsedModel = null;
     TempData.TryGetValue(WellKnownTempData.SuccessMessage, out var successMessage);
     TempData.TryGetValue(WellKnownTempData.ErrorMessage, out var errorMessage);
-    TempData.TryGetValue(WellKnownTempData.StatusMessageModel, out var model);
+    var model = TempData.GetStatusMessageModel();
     if (successMessage != null || errorMessage != null)
     {
         parsedModel = new StatusMessageModel();

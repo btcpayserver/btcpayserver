@@ -288,11 +288,11 @@ namespace BTCPayServer.Controllers
             data.Provider = storageProvider;
             data.Configuration = JObject.FromObject(viewModel);
             await _SettingsRepository.UpdateSetting(data);
-            TempData[WellKnownTempData.StatusMessageModel] = new StatusMessageModel()
+            TempData.SetStatusMessageModel(new StatusMessageModel()
             {
                 Severity = StatusMessageModel.StatusSeverity.Success,
                 Message = "Storage settings updated successfully"
-            };
+            });
             return View(viewModel);
         }
     }

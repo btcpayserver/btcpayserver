@@ -96,11 +96,11 @@ namespace BTCPayServer.Controllers
                 nameof(StoreData.StoreName), data?.StoreDataId);
             if (!stores.Any())
             {
-                TempData[WellKnownTempData.StatusMessageModel] = new StatusMessageModel()
+                TempData.SetStatusMessageModel(new StatusMessageModel()
                 {
                     Html = $"Error: You need to create at least one store. <a href='{Url.Action("CreateStore", "UserStores")}'>Create store</a>",
                     Severity = StatusMessageModel.StatusSeverity.Error
-                };
+                });
                 return RedirectToAction("GetPaymentRequests");
             }
 

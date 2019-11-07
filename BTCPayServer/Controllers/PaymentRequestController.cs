@@ -96,16 +96,12 @@ namespace BTCPayServer.Controllers
                 nameof(StoreData.StoreName), data?.StoreDataId);
             if (!stores.Any())
             {
-                return RedirectToAction("GetPaymentRequests",
-                    new
-                    {
-                        StatusMessage = new StatusMessageModel()
-                        {
-                            Html =
-                                $"Error: You need to create at least one store. <a href='{Url.Action("CreateStore", "UserStores")}'>Create store</a>",
-                            Severity = StatusMessageModel.StatusSeverity.Error
-                        }
-                    });
+                TempData[WellKnownTempData.StatusMessageModel] = new StatusMessageModel()
+                {
+                    Html = $"Error: You need to create at least one store. <a href='{Url.Action("CreateStore", "UserStores")}'>Create store</a>",
+                    Severity = StatusMessageModel.StatusSeverity.Error
+                };
+                return RedirectToAction("GetPaymentRequests");
             }
 
             return View(new UpdatePaymentRequestViewModel(data)
@@ -212,7 +208,7 @@ namespace BTCPayServer.Controllers
         [HttpGet]
         [Route("{id}")]
         [AllowAnonymous]
-        public async Task<IActionResult> ViewPaymentRequest(string id, string statusMessage = null)
+        public async Task<IActionResult> ViewPaymentRequest(string id)
         {
             var result = await _PaymentRequestService.GetPaymentRequest(id, GetUserId());
             if (result == null)
@@ -335,10 +331,10 @@ namespace BTCPayServer.Controllers
 
             if (redirect)
             {
+                TempData[WellKnownTempData.SuccessMessage] = "Payment cancelled";
                 return RedirectToAction(nameof(ViewPaymentRequest), new
                 {
-                    Id = id,
-                    StatusMessage = "Payment cancelled"
+                    Id = id
                 });
             }
 

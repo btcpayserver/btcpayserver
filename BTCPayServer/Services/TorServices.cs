@@ -85,11 +85,11 @@ namespace BTCPayServer.Services
             network = null;
             serviceType = TorServiceType.Other;
             var splitted = name.Trim().Split('-');
-            if (splitted.Length == 2 && splitted[1] != "P2P")
+            if (splitted.Length == 2 && splitted[1] == "P2P")
             {
                 serviceType = TorServiceType.P2P;
             }
-            else if (splitted.Length == 2 && splitted[1] != "RPC")
+            else if (splitted.Length == 2 && splitted[1] == "RPC")
             {
                 serviceType = TorServiceType.RPC;
             }

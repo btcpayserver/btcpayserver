@@ -570,6 +570,17 @@ namespace BTCPayServer.Controllers
                     ServiceName = torService.Name,
                 };
             }
+            if (torService.ServiceType == TorServiceType.RPC)
+            {
+                externalService = new ExternalService()
+                {
+                    CryptoCode = torService.Network.CryptoCode,
+                    DisplayName = "Full node RPC",
+                    Type = ExternalServiceTypes.RPC,
+                    ConnectionString = new ExternalConnectionString(new Uri($"btcrpc://btcrpc:btcpayserver4ever@{torService.OnionHost}:{torService.VirtualPort}", UriKind.Absolute)),
+                    ServiceName = torService.Name
+                };
+            }
             return externalService != null;
         }
 
@@ -599,6 +610,15 @@ namespace BTCPayServer.Controllers
                 if (service.Type == ExternalServiceTypes.P2P)
                 {
                     return View("P2PService", new LightningWalletServices()
+                    {
+                        ShowQR = showQR,
+                        WalletName = service.ServiceName,
+                        ServiceLink = service.ConnectionString.Server.AbsoluteUri.WithoutEndingSlash()
+                    });
+                }
+                if (service.Type == ExternalServiceTypes.RPC)
+                {
+                    return View("RPCService", new LightningWalletServices()
                     {
                         ShowQR = showQR,
                         WalletName = service.ServiceName,

@@ -76,6 +76,7 @@ namespace BTCPayServer.Configuration
         Spark,
         RTL,
         Charge,
-        P2P
+        P2P,
+        RPC
     }
 }

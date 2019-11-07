@@ -33,7 +33,15 @@
                 {
                     <tr>
                         <td>@s.CryptoCode</td>
-                        <td>@s.DisplayName</td>
+                        <td>
+                            <span>@s.DisplayName</span>
+                            @if ((s.ConnectionString.IsOnion() is true) ||
+                                (s.ConnectionString.IsOnion() is false &&
+                                this.Context.Request.IsOnion()))
+                            {
+                            <span><img style="display:inline; margin-top:-8px;" src="~/img/icons/Onion_Color.svg" height="20" /></span>
+                            }
+                        </td>
                         <td style="text-align: right">
                             <a asp-action="Service" asp-route-serviceName="@s.ServiceName" asp-route-cryptoCode="@s.CryptoCode">See information</a>
                         </td>

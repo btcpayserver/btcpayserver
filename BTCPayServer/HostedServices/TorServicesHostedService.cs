@@ -21,9 +21,6 @@ namespace BTCPayServer.HostedServices
 
         internal override Task[] InitializeTasks()
         {
-            // TODO: We should report auto configured services (like bitcoind, lnd or clightning)
-            if (string.IsNullOrEmpty(_options.TorrcFile))
-                return Array.Empty<Task>();
             return new Task[] { CreateLoopTask(RefreshTorServices) };
         }
 

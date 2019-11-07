@@ -101,9 +101,10 @@ namespace BTCPayServer.Payments.Bitcoin
         public override object PreparePayment(DerivationSchemeSettings supportedPaymentMethod, StoreData store,
             BTCPayNetworkBase network)
         {
+            var storeBlob = store.GetStoreBlob();
             return new Prepare()
             {
-                GetFeeRate = _FeeRateProviderFactory.CreateFeeProvider(network).GetFeeRateAsync(),
+                GetFeeRate = _FeeRateProviderFactory.CreateFeeProvider(network).GetFeeRateAsync(storeBlob.RecommendedFeeBlockTarget),
                 ReserveAddress = _WalletProvider.GetWallet(network)
                     .ReserveAddressAsync(supportedPaymentMethod.AccountDerivation)
             };

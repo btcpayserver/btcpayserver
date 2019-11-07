@@ -21,6 +21,7 @@ namespace BTCPayServer.Data
             MonitoringExpiration = 1440;
             PaymentTolerance = 0;
             ShowRecommendedFee = true;
+            RecommendedFeeBlockTarget = 1;
         }
 
         [Obsolete("Use NetworkFeeMode instead")]
@@ -40,6 +41,8 @@ namespace BTCPayServer.Data
         public bool RequiresRefundEmail { get; set; }
 
         public bool ShowRecommendedFee { get; set; }
+
+        public int RecommendedFeeBlockTarget { get; set; }
 
         CurrencyPair[] _DefaultCurrencyPairs;
         [JsonProperty("defaultCurrencyPairs", ItemConverterType = typeof(CurrencyPairJsonConverter))]

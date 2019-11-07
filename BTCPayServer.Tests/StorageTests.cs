@@ -210,8 +210,9 @@ namespace BTCPayServer.Tests
                     TimeAmount = 1,
                     TimeType = ServerController.CreateTemporaryFileUrlViewModel.TmpFileTimeType.Minutes
                 }));
+            var statusMessageModel = controller.TempData.GetStatusMessageModel();
+            Assert.NotNull(statusMessageModel);
             Assert.True(tmpLinkGenerate.RouteValues.ContainsKey("StatusMessage"));
-            var statusMessageModel = new StatusMessageModel(tmpLinkGenerate.RouteValues["StatusMessage"].ToString());
             Assert.Equal(StatusMessageModel.StatusSeverity.Success, statusMessageModel.Severity);
             var index = statusMessageModel.Html.IndexOf("target='_blank'>");
             var url = statusMessageModel.Html.Substring(index).ReplaceMultiple(new Dictionary<string, string>()
@@ -221,12 +222,14 @@ namespace BTCPayServer.Tests
             //verify tmpfile is available and the same
             data = await net.DownloadStringTaskAsync(new Uri(url));
             Assert.Equal(fileContent, data);
-            
-            
+
+
             //delete file
-            Assert.Equal(StatusMessageModel.StatusSeverity.Success, new StatusMessageModel(Assert
-                .IsType<RedirectToActionResult>(await controller.DeleteFile(fileId))
-                .RouteValues["statusMessage"].ToString()).Severity);
+            Assert.IsType<RedirectToActionResult>(await controller.DeleteFile(fileId));
+            controller.TempData.GetStatusMessageModel();
+            Assert.NotNull(statusMessageModel);
+
+            Assert.Equal(StatusMessageModel.StatusSeverity.Success, statusMessageModel.Severity);
             
             //attempt to fetch deleted file
             viewFilesViewModel =

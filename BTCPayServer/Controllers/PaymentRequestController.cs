@@ -66,13 +66,12 @@ namespace BTCPayServer.Controllers
         [HttpGet]
         [Route("")]
         [BitpayAPIConstraint(false)]
-        public async Task<IActionResult> GetPaymentRequests(int skip = 0, int count = 50, string statusMessage = null)
+        public async Task<IActionResult> GetPaymentRequests(int skip = 0, int count = 50)
         {
             var result = await _PaymentRequestRepository.FindPaymentRequests(new PaymentRequestQuery()
             {
                 UserId = GetUserId(), Skip = skip, Count = count
             });
-            TempData[WellKnownTempData.SuccessMessage] = statusMessage;
             return View(new ListPaymentRequestsViewModel()
             {
                 Skip = skip,
@@ -84,7 +83,7 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("edit/{id?}")]
-        public async Task<IActionResult> EditPaymentRequest(string id, string statusMessage = null)
+        public async Task<IActionResult> EditPaymentRequest(string id)
         {
             SelectList stores = null;
             var data = await _PaymentRequestRepository.FindPaymentRequest(id, GetUserId());
@@ -168,7 +167,8 @@ namespace BTCPayServer.Controllers
                 PaymentRequestId = data.Id,
             });
 
-            return RedirectToAction("EditPaymentRequest", new {id = data.Id, StatusMessage = "Saved"});
+            TempData[WellKnownTempData.SuccessMessage] = "Saved";
+            return RedirectToAction("EditPaymentRequest", new {id = data.Id});
         }
 
         [HttpGet]
@@ -199,17 +199,13 @@ namespace BTCPayServer.Controllers
             var result = await _PaymentRequestRepository.RemovePaymentRequest(id, GetUserId());
             if (result)
             {
-                return RedirectToAction("GetPaymentRequests",
-                    new {StatusMessage = "Payment request successfully removed"});
+                TempData[WellKnownTempData.SuccessMessage] = "Payment request successfully removed";
+                return RedirectToAction("GetPaymentRequests");
             }
             else
             {
-                return RedirectToAction("GetPaymentRequests",
-                    new
-                    {
-                        StatusMessage =
-                            "Error: Payment request could not be removed. Any request that has generated invoices cannot be removed."
-                    });
+                TempData[WellKnownTempData.ErrorMessage] = "Payment request could not be removed. Any request that has generated invoices cannot be removed.";
+                return RedirectToAction("GetPaymentRequests");
             }
         }
 

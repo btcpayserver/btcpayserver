@@ -129,11 +129,16 @@ namespace BTCPayServer.Payments.Bitcoin
             switch (onchainMethod.NetworkFeeMode)
             {
                 case NetworkFeeMode.Always:
-                    onchainMethod.NextNetworkFee = (await prepare.GetNetworkFeeRate).GetFee(100); // assume price for 100 bytes
+                    onchainMethod.NetworkFeeRate = (await prepare.GetNetworkFeeRate);
+                    onchainMethod.NextNetworkFee = onchainMethod.NetworkFeeRate.GetFee(100); // assume price for 100 bytes
                     break;
                 case NetworkFeeMode.Never:
-                case NetworkFeeMode.MultiplePaymentsOnly:
+                    onchainMethod.NetworkFeeRate = FeeRate.Zero;
                     onchainMethod.NextNetworkFee = Money.Zero;
+                    break;
+                case NetworkFeeMode.MultiplePaymentsOnly:
+                    onchainMethod.NetworkFeeRate = (await prepare.GetNetworkFeeRate);
+                    onchainMethod.NextNetworkFee = Money.Zero;                    
                     break;
             }
             onchainMethod.DepositAddress = (await prepare.ReserveAddress).ToString();

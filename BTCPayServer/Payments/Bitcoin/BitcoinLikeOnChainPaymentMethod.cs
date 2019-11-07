@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Services.Invoices;
 using NBitcoin;
+using NBXplorer.JsonConverters;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.Payments.Bitcoin
@@ -22,7 +23,8 @@ namespace BTCPayServer.Payments.Bitcoin
             return NextNetworkFee.ToDecimal(MoneyUnit.BTC);
         }
 
-        public decimal GetFeeRate() {
+        public decimal GetFeeRate()
+        {
             return FeeRate.SatoshiPerByte;
         }
 
@@ -31,6 +33,21 @@ namespace BTCPayServer.Payments.Bitcoin
             DepositAddress = newPaymentDestination;
         }
         public Data.NetworkFeeMode NetworkFeeMode { get; set; }
+
+        FeeRate _NetworkFeeRate;
+        [JsonConverter(typeof(FeeRateJsonConverter))]
+        public FeeRate NetworkFeeRate
+        {
+            get
+            {
+                // Some old invoices don't have this field set, so we fallback on FeeRate
+                return _NetworkFeeRate ?? FeeRate;
+            }
+            set
+            {
+                _NetworkFeeRate = value;
+            }
+        }
 
         // Those properties are JsonIgnore because their data is inside CryptoData class for legacy reason
         [JsonIgnore]

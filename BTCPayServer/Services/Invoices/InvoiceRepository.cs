@@ -680,7 +680,7 @@ retry:
                     bitcoinPaymentMethod.NetworkFeeMode == NetworkFeeMode.MultiplePaymentsOnly &&
                     bitcoinPaymentMethod.NextNetworkFee == Money.Zero)
                 {
-                    bitcoinPaymentMethod.NextNetworkFee = bitcoinPaymentMethod.FeeRate.GetFee(100); // assume price for 100 bytes
+                    bitcoinPaymentMethod.NextNetworkFee = bitcoinPaymentMethod.NetworkFeeRate.GetFee(100); // assume price for 100 bytes
                     paymentMethod.SetPaymentMethodDetails(bitcoinPaymentMethod);
                     invoiceEntity.SetPaymentMethod(paymentMethod);
                     invoice.Blob = ToBytes(invoiceEntity, network);

@@ -160,3 +160,6 @@ The BTCPay Server Project is proudly supported by these entities through the [BT
       </td>
     </tr>
   </tbody>
+</table>
+
+If you'd like to support the project, please visit the [donation page](https://btcpayserver.org/donate/).

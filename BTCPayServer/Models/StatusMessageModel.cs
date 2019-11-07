@@ -10,32 +10,6 @@ namespace BTCPayServer.Models
         {
         }
 
-        public StatusMessageModel(string s)
-        {
-            if (string.IsNullOrEmpty(s))
-                return;
-            try
-            {
-                if (s.StartsWith("{", StringComparison.InvariantCultureIgnoreCase) &&
-                    s.EndsWith("}", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    var model = JObject.Parse(s).ToObject<StatusMessageModel>();
-                    Html = model.Html;
-                    Message = model.Message;
-                    Severity = model.Severity;
-                    AllowDismiss = model.AllowDismiss;
-                }
-                else
-                {
-                    ParseNonJsonStatus(s);
-                }
-            }
-            catch (Exception)
-            {
-                ParseNonJsonStatus(s);
-            }
-        }
-
         public string Message { get; set; }
         public string Html { get; set; }
         public StatusSeverity Severity { get; set; }

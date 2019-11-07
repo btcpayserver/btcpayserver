@@ -9,9 +9,8 @@ namespace BTCPayServer.Controllers
     public partial class ManageController
     {
         [HttpGet]
-        public async Task<IActionResult> U2FAuthentication(string statusMessage = null)
+        public async Task<IActionResult> U2FAuthentication()
         {
-            TempData[WellKnownTempData.SuccessMessage] = statusMessage;
             return View(new U2FAuthenticationViewModel()
             {
                 Devices = await _u2FService.GetDevices(_userManager.GetUserId(User))
@@ -33,14 +32,12 @@ namespace BTCPayServer.Controllers
         {
             if (!_btcPayServerEnvironment.IsSecure)
             {
-                return RedirectToAction("U2FAuthentication", new
+                TempData.SetStatusMessageModel(new StatusMessageModel()
                 {
-                    StatusMessage = new StatusMessageModel()
-                    {
-                        Severity = StatusMessageModel.StatusSeverity.Error,
-                        Message = "Cannot register U2F device while not on https or tor"
-                    }
+                    Severity = StatusMessageModel.StatusSeverity.Error,
+                    Message = "Cannot register U2F device while not on https or tor"
                 });
+                return RedirectToAction("U2FAuthentication");
             }
 
             var serverRegisterResponse = _u2FService.StartDeviceRegistration(_userManager.GetUserId(User),
@@ -64,11 +61,8 @@ namespace BTCPayServer.Controllers
                 if (await _u2FService.CompleteRegistration(_userManager.GetUserId(User), viewModel.DeviceResponse,
                     string.IsNullOrEmpty(viewModel.Name) ? "Unlabelled U2F Device" : viewModel.Name))
                 {
-                    return RedirectToAction("U2FAuthentication", new
-                        
-                    {
-                        StatusMessage = "Device added!"
-                    });
+                    TempData[WellKnownTempData.SuccessMessage] = "Device added!";
+                    return RedirectToAction("U2FAuthentication");
                 }
             }
             catch (Exception e)
@@ -76,14 +70,12 @@ namespace BTCPayServer.Controllers
                 errorMessage = e.Message;
             }
 
-            return RedirectToAction("U2FAuthentication", new
+            TempData.SetStatusMessageModel(new StatusMessageModel()
             {
-                StatusMessage = new StatusMessageModel()
-                {
-                    Severity = StatusMessageModel.StatusSeverity.Error,
-                    Message = string.IsNullOrEmpty(errorMessage) ? "Could not add device." : errorMessage
-                }
+                Severity = StatusMessageModel.StatusSeverity.Error,
+                Message = string.IsNullOrEmpty(errorMessage) ? "Could not add device." : errorMessage
             });
+            return RedirectToAction("U2FAuthentication");
         }
     }
 }

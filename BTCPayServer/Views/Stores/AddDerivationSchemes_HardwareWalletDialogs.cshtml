@@ -77,13 +77,6 @@
                 </button>
             </div>
             <div class="modal-body">
-                @await Html.PartialAsync("_StatusMessage",
-                    new StatusMessageModel()
-                    {
-                        AllowDismiss = false,
-                        Severity = StatusMessageModel.StatusSeverity.Warning,
-                        Message = "The Trezor wallet import feature is still experimental and may not work as expected. Please double-check that the details were imported correctly before using in production."
-                    }.ToString())
                 <p id="trezor-loading" style="display: none;">
                     <span class="fa fa-question-circle" style="color: orange"></span> <span>Detecting Trezor hardware wallet...</span>
                 </p>

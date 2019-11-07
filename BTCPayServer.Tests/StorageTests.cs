@@ -212,7 +212,6 @@ namespace BTCPayServer.Tests
                 }));
             var statusMessageModel = controller.TempData.GetStatusMessageModel();
             Assert.NotNull(statusMessageModel);
-            Assert.True(tmpLinkGenerate.RouteValues.ContainsKey("StatusMessage"));
             Assert.Equal(StatusMessageModel.StatusSeverity.Success, statusMessageModel.Severity);
             var index = statusMessageModel.Html.IndexOf("target='_blank'>");
             var url = statusMessageModel.Html.Substring(index).ReplaceMultiple(new Dictionary<string, string>()

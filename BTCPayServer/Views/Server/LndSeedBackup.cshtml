@@ -24,13 +24,20 @@
                     <p>
                         <div><a href="#details" data-toggle="collapse">Reveal Seed Information</a></div>
                         <div id="details" class="collapse">
-                            @String.Join(", ", Model.Seed)
+                            @foreach (var item in Model.Seed)
+                            {
+                                <span>@item</span>
+                            }
+                            <br /><br />
+                            <form method="post" action="@Context.Request.Path/removelndseed">
+                                <button class="btn btn-primary" type="submit" onclick="return confirmSeedDelete();">Remove Seed from server</button>
+                            </form>
                         </div>
                     </p>
                 }
                 else
                 {
-                    <p>Seed information was deleted on <b>@Model.Seed.First()</b></p>
+                    <p><b>@Model.Seed.First()</b></p>
                 }
             }
             else

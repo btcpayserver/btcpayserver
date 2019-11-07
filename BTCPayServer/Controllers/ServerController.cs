@@ -592,7 +592,7 @@ namespace BTCPayServer.Controllers
             foreach (var torService in _torServices.Services)
             {
                 if (TryParseAsExternalService(torService, out var torExternalService) &&
-                    result.ServiceName == serviceName)
+                    torExternalService.ServiceName == serviceName)
                     return torExternalService;
             }
             return null;

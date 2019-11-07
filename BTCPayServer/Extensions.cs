@@ -237,6 +237,7 @@ namespace BTCPayServer
                 {
                     parsedModel.Severity = StatusMessageModel.StatusSeverity.Error;
                 }
+                return parsedModel;
             }
             else if (model != null && model is string str)
             {

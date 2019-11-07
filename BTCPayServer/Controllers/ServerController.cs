@@ -666,6 +666,38 @@ namespace BTCPayServer.Controllers
             }
         }
 
+        [HttpPost]
+        [Route("server/services/{serviceName}/{cryptoCode}/removelndseed")]
+        public async Task<IActionResult> RemoveLndSeed(string serviceName, string cryptoCode)
+        {
+            var service = GetService(serviceName, cryptoCode);
+            if (service == null)
+                return NotFound();
+
+            var model = LndSeedBackupViewModel.Parse(service.ConnectionString.CookieFilePath);
+            if (!model.IsWalletUnlockPresent)
+            {
+                TempData[WellKnownTempData.ErrorMessage] = $"File with wallet password and seed info not present";
+                return RedirectToAction(nameof(Services));
+            }
+
+            if (model.Seed == null || model.Seed.Count <= 1)
+            {
+                TempData[WellKnownTempData.ErrorMessage] = $"Seed information was already removed";
+                return RedirectToAction(nameof(Services));
+            }
+
+            if (await model.RemoveSeedAndWrite(service.ConnectionString.CookieFilePath))
+            {
+                return RedirectToAction(nameof(Service), new { serviceName, cryptoCode });
+            }
+            else
+            {
+                TempData[WellKnownTempData.ErrorMessage] = $"Seed removal failed";
+                return RedirectToAction(nameof(Services));
+            }
+        }
+
         private IActionResult LightningChargeServices(ExternalService service, ExternalConnectionString connectionString, bool showQR = false)
         {
             ChargeServiceViewModel vm = new ChargeServiceViewModel();

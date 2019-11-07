@@ -577,7 +577,7 @@ namespace BTCPayServer.Controllers
                     CryptoCode = torService.Network.CryptoCode,
                     DisplayName = "Full node RPC",
                     Type = ExternalServiceTypes.RPC,
-                    ConnectionString = new ExternalConnectionString(new Uri($"btcrpc://btcrpc:btcpayserver4ever@{torService.OnionHost}:{torService.VirtualPort}", UriKind.Absolute)),
+                    ConnectionString = new ExternalConnectionString(new Uri($"btcrpc://btcrpc:btcpayserver4ever@{torService.OnionHost}:{torService.VirtualPort}?label=BTCPayNode", UriKind.Absolute)),
                     ServiceName = torService.Name
                 };
             }

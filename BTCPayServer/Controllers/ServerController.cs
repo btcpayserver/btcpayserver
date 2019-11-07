@@ -589,14 +589,19 @@ namespace BTCPayServer.Controllers
             var result = _Options.ExternalServices.GetService(serviceName, cryptoCode);
             if (result != null)
                 return result;
-            _torServices.Services.FirstOrDefault(s => TryParseAsExternalService(s, out result));
-            return result;
+            foreach (var torService in _torServices.Services)
+            {
+                if (TryParseAsExternalService(torService, out var torExternalService) &&
+                    result.ServiceName == serviceName)
+                    return torExternalService;
+            }
+            return null;
         }
 
         [Route("server/services/{serviceName}/{cryptoCode}")]
         public async Task<IActionResult> Service(string serviceName, string cryptoCode, bool showQR = false, uint? nonce = null)
         {
-            if (!_dashBoard.IsFullySynched(cryptoCode, out var unusud))
+            if (!_dashBoard.IsFullySynched(cryptoCode, out _))
             {
                 TempData[WellKnownTempData.ErrorMessage] = $"{cryptoCode} is not fully synched";
                 return RedirectToAction(nameof(Services));

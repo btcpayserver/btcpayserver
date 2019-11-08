@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace BTCPayServer.Models
 {
-    public class PostRedictViewModel
+    public class PostRedirectViewModel
     {
         public string AspAction { get; set; }
         public string AspController { get; set; }

@@ -465,7 +465,7 @@ namespace BTCPayServer.Controllers
 
         private IActionResult RedirectToWalletPSBT(WalletId walletId, PSBT psbt, string fileName = null)
         {
-            var vm = new PostRedictViewModel()
+            var vm = new PostRedirectViewModel()
             {
                 AspController = "Wallets",
                 AspAction = nameof(WalletPSBT),

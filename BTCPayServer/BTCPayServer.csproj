@@ -80,10 +80,6 @@
   </ItemGroup>
 
 	<ItemGroup>
-		<DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.0" />
-	</ItemGroup>
-
-	<ItemGroup>
 	  <None Include="wwwroot\vendor\bootstrap4-creativestart\creative.js" />
 	  <None Include="wwwroot\vendor\font-awesome\fonts\fontawesome-webfont.svg" />
 	  <None Include="wwwroot\vendor\font-awesome\fonts\fontawesome-webfont.woff2" />

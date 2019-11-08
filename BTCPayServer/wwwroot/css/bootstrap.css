@@ -1218,7 +1218,7 @@ pre {
     opacity: 1; }
   .form-control:disabled, .form-control[readonly] {
     background-color: var(--btcpay-color-neutral-200);
-    opacity: 1; }
+    opacity: .75; }
 
 select.form-control:focus::-ms-value {
   color: var(--btcpay-color-neutral-700);

@@ -68,7 +68,6 @@ namespace BTCPayServer.Tests
                 var vmLedger = await walletController.WalletSend(walletId, sendModel, command: "ledger").AssertViewModelAsync<WalletSendLedgerModel>();
                 PSBT.Parse(vmLedger.PSBT, user.SupportedNetwork.NBitcoinNetwork);
                 BitcoinAddress.Create(vmLedger.HintChange, user.SupportedNetwork.NBitcoinNetwork);
-                Assert.NotNull(vmLedger.SuccessPath);
                 Assert.NotNull(vmLedger.WebsocketPath);
 
                 var redirectedPSBT = (string)Assert.IsType<RedirectToActionResult>(await walletController.WalletSend(walletId, sendModel, command: "analyze-psbt")).RouteValues["psbt"];

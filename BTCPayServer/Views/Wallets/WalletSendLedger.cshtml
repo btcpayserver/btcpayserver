@@ -12,10 +12,11 @@
 </div>
 <div class="row">
     <div class="col-md-10">
-        <input type="hidden" asp-for="PSBT" />
-        <input type="hidden" asp-for="HintChange" />
-        <input type="hidden" asp-for="SuccessPath" />
-        <input type="hidden" asp-for="WebsocketPath" />
+        <form id="broadcastForm" asp-action="WalletPSBTReady" method="post" style="display:none;">
+            <input type="hidden" id="PSBT" asp-for="PSBT" />
+            <input type="hidden" asp-for="HintChange" />
+            <input type="hidden" asp-for="WebsocketPath" />
+        </form>
         <p>
             You can send money received by this store to an address with the help of your Ledger Wallet. <br />
             If you don't have a Ledger Wallet, use Electrum with your favorite hardware wallet to transfer crypto. <br />

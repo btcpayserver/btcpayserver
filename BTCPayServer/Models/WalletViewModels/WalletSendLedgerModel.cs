@@ -10,6 +10,5 @@ namespace BTCPayServer.Models.WalletViewModels
         public string WebsocketPath { get; set; }
         public string PSBT { get; set; }
         public string HintChange { get; set; }
-        public string SuccessPath { get; set; }
     }
 }

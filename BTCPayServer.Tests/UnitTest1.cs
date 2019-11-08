@@ -2882,42 +2882,6 @@ noninventoryitem:
             Assert.True(DerivationSchemeSettings.TryParseFromColdcard("{\"keystore\": {\"ckcc_xpub\": \"tpubD6NzVbkrYhZ4YHNiuTdTmHRmbcPRLfqgyneZFCL1mkzkUBjXriQShxTh9HL34FK2mhieasJVk9EzJrUfkFqRNQBjiXgx3n5BhPkxKBoFmaS\", \"xpub\": \"vpub5YjYxTemJ39tFRnuAhwduyxG2tKGjoEpmvqVQRPqdYrqa6YGoeSzBtHXaJUYB19zDbXs3JjbEcVWERjQBPf9bEfUUMZNMv1QnMyHV8JPqyf\", \"label\": \"Coldcard Import 0x60d1af8b\", \"ckcc_xfp\": 1624354699, \"type\": \"hardware\", \"hw_type\": \"coldcard\", \"derivation\": \"m/84'/1'/0'\"}, \"wallet_type\": \"standard\", \"use_encryption\": false, \"seed_version\": 17}", testnet, out settings));
             Assert.True(settings.AccountDerivation is DirectDerivationStrategy s3 && s3.Segwit);
         }
-
-        [Fact(Timeout = TestTimeout)]
-        [Trait("Fast", "Fast")]
-        public void CheckParseStatusMessageModel()
-        {
-            var legacyStatus = "Error: some bad shit happened";
-            var parsed = new StatusMessageModel(legacyStatus);
-            Assert.Equal(legacyStatus, parsed.Message);
-            Assert.Equal(StatusMessageModel.StatusSeverity.Error, parsed.Severity);
-
-            var legacyStatus2 = "Some normal shit happened";
-            parsed = new StatusMessageModel(legacyStatus2);
-            Assert.Equal(legacyStatus2, parsed.Message);
-            Assert.Equal(StatusMessageModel.StatusSeverity.Success, parsed.Severity);
-
-            var newStatus = new StatusMessageModel()
-            {
-                Html = "<a href='xxx'>something new</a>",
-                Severity = StatusMessageModel.StatusSeverity.Info
-            };
-            parsed = new StatusMessageModel(newStatus.ToString());
-            Assert.Null(parsed.Message);
-            Assert.Equal(newStatus.Html, parsed.Html);
-            Assert.Equal(StatusMessageModel.StatusSeverity.Info, parsed.Severity);
-
-            var newStatus2 = new StatusMessageModel()
-            {
-                Message = "something new",
-                Severity = StatusMessageModel.StatusSeverity.Success
-            };
-            parsed = new StatusMessageModel(newStatus2.ToString());
-            Assert.Null(parsed.Html);
-            Assert.Equal(newStatus2.Message, parsed.Message);
-            Assert.Equal(StatusMessageModel.StatusSeverity.Success, parsed.Severity);
-
-        }
         
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
@@ -2980,13 +2944,11 @@ noninventoryitem:
                var addRequest = Assert.IsType<AddU2FDeviceViewModel>(Assert.IsType<ViewResult>(manageController.AddU2FDevice("label")).Model);
                //name should match the one provided in beginning
                Assert.Equal("label",addRequest.Name);
-               
-               //sending an invalid response model back to server, should error out
-               var statusMessage = Assert
-                   .IsType<RedirectToActionResult>(await manageController.AddU2FDevice(addRequest))
-                   .RouteValues["StatusMessage"].ToString();
-               Assert.NotNull(statusMessage);
-               Assert.Equal(StatusMessageModel.StatusSeverity.Error, new StatusMessageModel(statusMessage).Severity);
+
+                //sending an invalid response model back to server, should error out
+                Assert.IsType<RedirectToActionResult>(await manageController.AddU2FDevice(addRequest));
+                var statusModel = manageController.TempData.GetStatusMessageModel();
+               Assert.Equal(StatusMessageModel.StatusSeverity.Error, statusModel.Severity);
 
                var contextFactory = tester.PayTester.GetService<ApplicationDbContextFactory>();
 

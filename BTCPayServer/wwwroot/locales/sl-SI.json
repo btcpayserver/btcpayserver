@@ -48,5 +48,5 @@
   "Pay with Changelly": "Plačilo z Changelly",
   "Close": "Zapri",
   "NotPaid_ExtraTransaction": "Račun ni bil plačan v celoti. Potrebna je nova transakcija za doplačilo.",
-  "Recommended_Fee": "Recommended fee: {{feeRate}} sat/byte"
+  "Recommended_Fee": "Priporočena provizija: {{feeRate}} sat/byte"
 }

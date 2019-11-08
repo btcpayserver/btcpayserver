@@ -26,9 +26,8 @@ namespace BTCPayServer.Controllers
     public partial class ServerController
     {
         [HttpGet("server/files/{fileId?}")]
-        public async Task<IActionResult> Files(string fileId = null, string statusMessage = null)
+        public async Task<IActionResult> Files(string fileId = null)
         {
-            TempData[WellKnownTempData.SuccessMessage] = statusMessage;
             var fileUrl = string.IsNullOrEmpty(fileId) ? null : await _FileService.GetFileUrl(Request.GetAbsoluteRootUri(), fileId);
 
             return View(new ViewFilesViewModel()
@@ -54,14 +53,12 @@ namespace BTCPayServer.Controllers
             }
             catch (Exception e)
             {
-                return RedirectToAction(nameof(Files), new
+                TempData.SetStatusMessageModel(new StatusMessageModel()
                 {
-                    statusMessage = new StatusMessageModel()
-                    {
-                        Severity = StatusMessageModel.StatusSeverity.Error,
-                        Message = e.Message
-                    }
+                    Severity = StatusMessageModel.StatusSeverity.Error,
+                    Message = e.Message
                 });
+                return RedirectToAction(nameof(Files));
             }
         }
 
@@ -119,16 +116,14 @@ namespace BTCPayServer.Controllers
             }
 
             var url = await _FileService.GetTemporaryFileUrl(Request.GetAbsoluteRootUri(), fileId, expiry, viewModel.IsDownload);
-
+            TempData.SetStatusMessageModel(new StatusMessageModel()
+            {
+                Severity = StatusMessageModel.StatusSeverity.Success,
+                Html = $"Generated Temporary Url for file {file.FileName} which expires at {expiry.ToBrowserDate()}. <a href='{url}' target='_blank'>{url}</a>"
+            });
             return RedirectToAction(nameof(Files), new
             {
-                StatusMessage = new StatusMessageModel()
-                {
-                    Severity = StatusMessageModel.StatusSeverity.Success,
-                    Html =
-                        $"Generated Temporary Url for file {file.FileName} which expires at {expiry.ToBrowserDate()}. <a href='{url}' target='_blank'>{url}</a>"
-                }.ToString(),
-                fileId,
+                fileId
             });
 
         }
@@ -165,9 +160,8 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("server/storage")]
-        public async Task<IActionResult> Storage(bool forceChoice = false, string statusMessage = null)
+        public async Task<IActionResult> Storage(bool forceChoice = false)
         {
-            TempData[WellKnownTempData.SuccessMessage] = statusMessage;
             var savedSettings = await _SettingsRepository.GetSettingAsync<StorageSettings>();
             if (forceChoice || savedSettings == null)
             {
@@ -198,14 +192,12 @@ namespace BTCPayServer.Controllers
         {
             if (!Enum.TryParse(typeof(StorageProvider), provider, out var storageProvider))
             {
-                return RedirectToAction(nameof(Storage), new
+                TempData.SetStatusMessageModel(new StatusMessageModel()
                 {
-                    StatusMessage = new StatusMessageModel()
-                    {
-                        Severity = StatusMessageModel.StatusSeverity.Error,
-                        Message = $"{provider} provider is not supported"
-                    }.ToString()
+                    Severity = StatusMessageModel.StatusSeverity.Error,
+                    Message = $"{provider} provider is not supported"
                 });
+                return RedirectToAction(nameof(Storage));
             }
 
             var data = (await _SettingsRepository.GetSettingAsync<StorageSettings>()) ?? new StorageSettings();
@@ -216,14 +208,12 @@ namespace BTCPayServer.Controllers
             switch (storageProviderService)
             {
                 case null:
-                    return RedirectToAction(nameof(Storage), new
+                    TempData.SetStatusMessageModel(new StatusMessageModel()
                     {
-                        StatusMessage = new StatusMessageModel()
-                        {
-                            Severity = StatusMessageModel.StatusSeverity.Error,
-                            Message = $"{storageProvider} is not supported"
-                        }.ToString()
+                        Severity = StatusMessageModel.StatusSeverity.Error,
+                        Message = $"{storageProvider} is not supported"
                     });
+                    return RedirectToAction(nameof(Storage));
                 case AzureBlobStorageFileProviderService fileProviderService:
                     return View(nameof(EditAzureBlobStorageStorageProvider),
                         fileProviderService.GetProviderConfiguration(data));
@@ -288,11 +278,11 @@ namespace BTCPayServer.Controllers
             data.Provider = storageProvider;
             data.Configuration = JObject.FromObject(viewModel);
             await _SettingsRepository.UpdateSetting(data);
-            TempData[WellKnownTempData.StatusMessageModel] = new StatusMessageModel()
+            TempData.SetStatusMessageModel(new StatusMessageModel()
             {
                 Severity = StatusMessageModel.StatusSeverity.Success,
                 Message = "Storage settings updated successfully"
-            };
+            });
             return View(viewModel);
         }
     }

@@ -60,9 +60,9 @@ namespace BTCPayServer.Services
                         };
                         if (service.ServiceName.Equals("BTCPayServer", StringComparison.OrdinalIgnoreCase))
                             torService.ServiceType = TorServiceType.BTCPayServer;
-                        else if (TryParseP2PService(service.ServiceName, out var network))
+                        else if (TryParseP2PService(service.ServiceName, out var network, out var serviceType))
                         {
-                            torService.ServiceType = TorServiceType.P2P;
+                            torService.ServiceType = serviceType;
                             torService.Network = network;
                         }
                         result.Add(torService);
@@ -80,12 +80,23 @@ namespace BTCPayServer.Services
             Services = result.ToArray();
         }
 
-        private bool TryParseP2PService(string name, out BTCPayNetworkBase network)
+        private bool TryParseP2PService(string name, out BTCPayNetworkBase network, out TorServiceType serviceType)
         {
             network = null;
+            serviceType = TorServiceType.Other;
             var splitted = name.Trim().Split('-');
-            if (splitted.Length != 2 || splitted[1] != "P2P")
+            if (splitted.Length == 2 && splitted[1] == "P2P")
+            {
+                serviceType = TorServiceType.P2P;
+            }
+            else if (splitted.Length == 2 && splitted[1] == "RPC")
+            {
+                serviceType = TorServiceType.RPC;
+            }
+            else
+            {
                 return false;
+            }
             network = _networks.GetNetwork<BTCPayNetworkBase>(splitted[0]);
             return network != null;
         }
@@ -104,6 +115,7 @@ namespace BTCPayServer.Services
     {
         BTCPayServer,
         P2P,
+        RPC,
         Other
     }
 }

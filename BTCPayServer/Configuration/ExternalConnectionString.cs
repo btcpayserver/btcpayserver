@@ -142,6 +142,12 @@ namespace BTCPayServer.Configuration
                 Macaroons = Macaroons?.Clone()
             };
         }
+        public bool? IsOnion()
+        {
+            if (!this.Server.IsAbsoluteUri)
+                return null;
+            return this.Server.DnsSafeHost.EndsWith(".onion", StringComparison.OrdinalIgnoreCase);
+        }
         public static bool TryParse(string str, out ExternalConnectionString result, out string error)
         {
             if (str == null)

@@ -1,25 +1,5 @@
 ﻿@{
-    StatusMessageModel parsedModel = null;
-    TempData.TryGetValue(WellKnownTempData.SuccessMessage, out var successMessage);
-    TempData.TryGetValue(WellKnownTempData.ErrorMessage, out var errorMessage);
-    TempData.TryGetValue(WellKnownTempData.StatusMessageModel, out var model);
-    if (successMessage != null || errorMessage != null)
-    {
-        parsedModel = new StatusMessageModel();
-        parsedModel.Message = (string)successMessage ?? (string)errorMessage;
-        if (successMessage != null)
-        {
-            parsedModel.Severity = StatusMessageModel.StatusSeverity.Success;
-        }
-        else
-        {
-            parsedModel.Severity = StatusMessageModel.StatusSeverity.Error;
-        }
-    }
-    else if (model != null)
-    {
-        parsedModel = model as StatusMessageModel;
-    }
+    var parsedModel = TempData.GetStatusMessageModel();
 }
 
 @if (parsedModel != null)

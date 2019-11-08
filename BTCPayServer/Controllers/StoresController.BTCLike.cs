@@ -174,11 +174,11 @@ namespace BTCPayServer.Controllers
             {
                 if (!DerivationSchemeSettings.TryParseFromJson(vm.Config, network, out strategy))
                 {
-                    TempData[WellKnownTempData.StatusMessageModel] = new StatusMessageModel()
+                    TempData.SetStatusMessageModel(new StatusMessageModel()
                     {
                         Severity = StatusMessageModel.StatusSeverity.Error,
                         Message = "Config file was not in the correct format"
-                    };
+                    });
                     vm.Confirmation = false;
                     return View(vm);
                 }
@@ -188,11 +188,11 @@ namespace BTCPayServer.Controllers
             {
                 if (!DerivationSchemeSettings.TryParseFromColdcard(await ReadAllText(vm.ColdcardPublicFile), network, out strategy))
                 {
-                    TempData[WellKnownTempData.StatusMessageModel] = new StatusMessageModel()
+                    TempData.SetStatusMessageModel(new StatusMessageModel()
                     {
                         Severity = StatusMessageModel.StatusSeverity.Error,
                         Message = "Coldcard public file was not in the correct format"
-                    };
+                    });
                     vm.Confirmation = false;
                     return View(vm);
                 }

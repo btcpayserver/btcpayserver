@@ -264,14 +264,14 @@ namespace BTCPayServer.Controllers
 
                 builder.Path = null;
                 builder.Query = null;
-                TempData[WellKnownTempData.SuccessMessage] = $"Domain name changing... the server will restart, please use \"{builder.Uri.AbsoluteUri}\"";
+                TempData[WellKnownTempData.SuccessMessage] = $"Domain name changing... the server will restart, please use \"{builder.Uri.AbsoluteUri}\" (this page won't reload automatically)";
             }
             else if (command == "update")
             {
                 var error = await RunSSH(vm, $"btcpay-update.sh");
                 if (error != null)
                     return error;
-                TempData[WellKnownTempData.SuccessMessage] = $"The server might restart soon if an update is available...";
+                TempData[WellKnownTempData.SuccessMessage] = $"The server might restart soon if an update is available...  (this page won't reload automatically)";
             }
             else if (command == "clean")
             {
@@ -570,6 +570,17 @@ namespace BTCPayServer.Controllers
                     ServiceName = torService.Name,
                 };
             }
+            if (torService.ServiceType == TorServiceType.RPC)
+            {
+                externalService = new ExternalService()
+                {
+                    CryptoCode = torService.Network.CryptoCode,
+                    DisplayName = "Full node RPC",
+                    Type = ExternalServiceTypes.RPC,
+                    ConnectionString = new ExternalConnectionString(new Uri($"btcrpc://btcrpc:btcpayserver4ever@{torService.OnionHost}:{torService.VirtualPort}?label=BTCPayNode", UriKind.Absolute)),
+                    ServiceName = torService.Name
+                };
+            }
             return externalService != null;
         }
 
@@ -578,14 +589,19 @@ namespace BTCPayServer.Controllers
             var result = _Options.ExternalServices.GetService(serviceName, cryptoCode);
             if (result != null)
                 return result;
-            _torServices.Services.FirstOrDefault(s => TryParseAsExternalService(s, out result));
-            return result;
+            foreach (var torService in _torServices.Services)
+            {
+                if (TryParseAsExternalService(torService, out var torExternalService) &&
+                    torExternalService.ServiceName == serviceName)
+                    return torExternalService;
+            }
+            return null;
         }
 
         [Route("server/services/{serviceName}/{cryptoCode}")]
         public async Task<IActionResult> Service(string serviceName, string cryptoCode, bool showQR = false, uint? nonce = null)
         {
-            if (!_dashBoard.IsFullySynched(cryptoCode, out var unusud))
+            if (!_dashBoard.IsFullySynched(cryptoCode, out _))
             {
                 TempData[WellKnownTempData.ErrorMessage] = $"{cryptoCode} is not fully synched";
                 return RedirectToAction(nameof(Services));
@@ -599,6 +615,15 @@ namespace BTCPayServer.Controllers
                 if (service.Type == ExternalServiceTypes.P2P)
                 {
                     return View("P2PService", new LightningWalletServices()
+                    {
+                        ShowQR = showQR,
+                        WalletName = service.ServiceName,
+                        ServiceLink = service.ConnectionString.Server.AbsoluteUri.WithoutEndingSlash()
+                    });
+                }
+                if (service.Type == ExternalServiceTypes.RPC)
+                {
+                    return View("RPCService", new LightningWalletServices()
                     {
                         ShowQR = showQR,
                         WalletName = service.ServiceName,

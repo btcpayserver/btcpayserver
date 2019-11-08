@@ -34,6 +34,7 @@ namespace BTCPayServer.Payments.Bitcoin
         class Prepare
         {
             public Task<FeeRate> GetFeeRate;
+            public Task<FeeRate> GetNetworkFeeRate;
             public Task<BitcoinAddress> ReserveAddress;
         }
 
@@ -101,9 +102,12 @@ namespace BTCPayServer.Payments.Bitcoin
         public override object PreparePayment(DerivationSchemeSettings supportedPaymentMethod, StoreData store,
             BTCPayNetworkBase network)
         {
+            var storeBlob = store.GetStoreBlob();
             return new Prepare()
             {
-                GetFeeRate = _FeeRateProviderFactory.CreateFeeProvider(network).GetFeeRateAsync(),
+                GetFeeRate = _FeeRateProviderFactory.CreateFeeProvider(network).GetFeeRateAsync(storeBlob.RecommendedFeeBlockTarget),
+                GetNetworkFeeRate = storeBlob.NetworkFeeMode == NetworkFeeMode.Never ? null 
+                                    : _FeeRateProviderFactory.CreateFeeProvider(network).GetFeeRateAsync(),
                 ReserveAddress = _WalletProvider.GetWallet(network)
                     .ReserveAddressAsync(supportedPaymentMethod.AccountDerivation)
             };
@@ -125,11 +129,16 @@ namespace BTCPayServer.Payments.Bitcoin
             switch (onchainMethod.NetworkFeeMode)
             {
                 case NetworkFeeMode.Always:
-                    onchainMethod.NextNetworkFee = onchainMethod.FeeRate.GetFee(100); // assume price for 100 bytes
+                    onchainMethod.NetworkFeeRate = (await prepare.GetNetworkFeeRate);
+                    onchainMethod.NextNetworkFee = onchainMethod.NetworkFeeRate.GetFee(100); // assume price for 100 bytes
                     break;
                 case NetworkFeeMode.Never:
-                case NetworkFeeMode.MultiplePaymentsOnly:
+                    onchainMethod.NetworkFeeRate = FeeRate.Zero;
                     onchainMethod.NextNetworkFee = Money.Zero;
+                    break;
+                case NetworkFeeMode.MultiplePaymentsOnly:
+                    onchainMethod.NetworkFeeRate = (await prepare.GetNetworkFeeRate);
+                    onchainMethod.NextNetworkFee = Money.Zero;                    
                     break;
             }
             onchainMethod.DepositAddress = (await prepare.ReserveAddress).ToString();

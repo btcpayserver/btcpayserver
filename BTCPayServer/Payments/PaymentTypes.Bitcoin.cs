@@ -54,6 +54,7 @@ namespace BTCPayServer.Payments
                 throw new ArgumentNullException(nameof(txId));
             if (network?.BlockExplorerLink == null)
                 return null;
+            txId = txId.Split('-').First();
             return string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink, txId);
         }
         public override string InvoiceViewPaymentPartialName { get; } = "ViewBitcoinLikePaymentData";

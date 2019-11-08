@@ -66,13 +66,12 @@ namespace BTCPayServer.Controllers
         [HttpGet]
         [Route("")]
         [BitpayAPIConstraint(false)]
-        public async Task<IActionResult> GetPaymentRequests(int skip = 0, int count = 50, string statusMessage = null)
+        public async Task<IActionResult> GetPaymentRequests(int skip = 0, int count = 50)
         {
             var result = await _PaymentRequestRepository.FindPaymentRequests(new PaymentRequestQuery()
             {
                 UserId = GetUserId(), Skip = skip, Count = count
             });
-            TempData[WellKnownTempData.SuccessMessage] = statusMessage;
             return View(new ListPaymentRequestsViewModel()
             {
                 Skip = skip,
@@ -84,7 +83,7 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("edit/{id?}")]
-        public async Task<IActionResult> EditPaymentRequest(string id, string statusMessage = null)
+        public async Task<IActionResult> EditPaymentRequest(string id)
         {
             SelectList stores = null;
             var data = await _PaymentRequestRepository.FindPaymentRequest(id, GetUserId());
@@ -97,16 +96,12 @@ namespace BTCPayServer.Controllers
                 nameof(StoreData.StoreName), data?.StoreDataId);
             if (!stores.Any())
             {
-                return RedirectToAction("GetPaymentRequests",
-                    new
-                    {
-                        StatusMessage = new StatusMessageModel()
-                        {
-                            Html =
-                                $"Error: You need to create at least one store. <a href='{Url.Action("CreateStore", "UserStores")}'>Create store</a>",
-                            Severity = StatusMessageModel.StatusSeverity.Error
-                        }
-                    });
+                TempData.SetStatusMessageModel(new StatusMessageModel()
+                {
+                    Html = $"Error: You need to create at least one store. <a href='{Url.Action("CreateStore", "UserStores")}'>Create store</a>",
+                    Severity = StatusMessageModel.StatusSeverity.Error
+                });
+                return RedirectToAction("GetPaymentRequests");
             }
 
             return View(new UpdatePaymentRequestViewModel(data)
@@ -168,7 +163,8 @@ namespace BTCPayServer.Controllers
                 PaymentRequestId = data.Id,
             });
 
-            return RedirectToAction("EditPaymentRequest", new {id = data.Id, StatusMessage = "Saved"});
+            TempData[WellKnownTempData.SuccessMessage] = "Saved";
+            return RedirectToAction("EditPaymentRequest", new {id = data.Id});
         }
 
         [HttpGet]
@@ -199,24 +195,20 @@ namespace BTCPayServer.Controllers
             var result = await _PaymentRequestRepository.RemovePaymentRequest(id, GetUserId());
             if (result)
             {
-                return RedirectToAction("GetPaymentRequests",
-                    new {StatusMessage = "Payment request successfully removed"});
+                TempData[WellKnownTempData.SuccessMessage] = "Payment request successfully removed";
+                return RedirectToAction("GetPaymentRequests");
             }
             else
             {
-                return RedirectToAction("GetPaymentRequests",
-                    new
-                    {
-                        StatusMessage =
-                            "Error: Payment request could not be removed. Any request that has generated invoices cannot be removed."
-                    });
+                TempData[WellKnownTempData.ErrorMessage] = "Payment request could not be removed. Any request that has generated invoices cannot be removed.";
+                return RedirectToAction("GetPaymentRequests");
             }
         }
 
         [HttpGet]
         [Route("{id}")]
         [AllowAnonymous]
-        public async Task<IActionResult> ViewPaymentRequest(string id, string statusMessage = null)
+        public async Task<IActionResult> ViewPaymentRequest(string id)
         {
             var result = await _PaymentRequestService.GetPaymentRequest(id, GetUserId());
             if (result == null)
@@ -339,10 +331,10 @@ namespace BTCPayServer.Controllers
 
             if (redirect)
             {
+                TempData[WellKnownTempData.SuccessMessage] = "Payment cancelled";
                 return RedirectToAction(nameof(ViewPaymentRequest), new
                 {
-                    Id = id,
-                    StatusMessage = "Payment cancelled"
+                    Id = id
                 });
             }
 

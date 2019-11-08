@@ -1,0 +1,24 @@
+# For the hidden service BTC-P2P
+HiddenServiceDir hidden_services/BTC-P2P
+# Redirecting to btcpayserver_bitcoind
+HiddenServicePort 8333 172.19.0.2:39388
+# For the hidden service BTC-RPC
+HiddenServiceDir hidden_services/BTC-RPC
+# Redirecting to btcpayserver_bitcoind
+HiddenServicePort 8332 172.19.0.2:43782
+# For the hidden service BTCPayServer
+HiddenServiceDir hidden_services/BTCPayServer
+# Redirecting to nginx
+HiddenServicePort 80 172.19.0.13:80
+# For the hidden service BTCTransmuter
+HiddenServiceDir hidden_services/BTCTransmuter
+# Redirecting to nginx
+HiddenServicePort 80 172.19.0.13:80
+# For the hidden service WooCommerce
+HiddenServiceDir hidden_services/WooCommerce
+# Redirecting to generated_woocommerce_1
+HiddenServicePort 80 172.19.0.15:80
+# For the hidden service c-lightning
+HiddenServiceDir hidden_services/c-lightning
+# Redirecting to btcpayserver_clightning_bitcoin
+HiddenServicePort 9735 172.19.0.10:9735

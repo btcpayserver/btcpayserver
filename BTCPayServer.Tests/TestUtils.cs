@@ -30,6 +30,18 @@ namespace BTCPayServer.Tests
             }
             return directory;
         }
+
+
+        public static string GetTestDataFullPath(string relativeFilePath)
+        {
+            var directory = new DirectoryInfo(Directory.GetCurrentDirectory());
+            while (directory != null && !directory.GetFiles("*.csproj").Any())
+            {
+                directory = directory.Parent;
+            }
+            return Path.Combine(directory.FullName, "TestData", relativeFilePath);
+        }
+
         public static FormFile GetFormFile(string filename, string content)
         {
             File.WriteAllText(filename, content);

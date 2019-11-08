@@ -16,7 +16,9 @@ using System.Collections;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using System.Threading;
 using Serilog;
+using System.Runtime.CompilerServices;
 
+[assembly:InternalsVisibleTo("BTCPayServer.Tests")]
 namespace BTCPayServer
 {
     class Program

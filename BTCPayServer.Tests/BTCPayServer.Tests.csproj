@@ -45,4 +45,8 @@
     <ProjectReference Include="..\BTCPayServer\BTCPayServer.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="TestData\Tor\" />
+  </ItemGroup>
+
 </Project>

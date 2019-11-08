@@ -532,6 +532,22 @@ namespace BTCPayServer.Tests
             }
         }
 
+        [Fact]
+        [Trait("Fast", "Fast")]
+        public async Task CanEnumerateTorServices()
+        {
+            var tor = new TorServices(new BTCPayNetworkProvider(NetworkType.Regtest), new BTCPayServerOptions()
+            {
+                TorrcFile = TestUtils.GetTestDataFullPath("Tor/torrc")
+            });
+            await tor.Refresh();
+
+            Assert.Single(tor.Services.Where(t => t.ServiceType == TorServiceType.BTCPayServer));
+            Assert.Single(tor.Services.Where(t => t.ServiceType == TorServiceType.P2P));
+            Assert.Single(tor.Services.Where(t => t.ServiceType == TorServiceType.RPC));
+            Assert.True(tor.Services.Where(t => t.ServiceType == TorServiceType.Other).Count() > 1);
+        }
+
         [Fact(Timeout = 60 * 2 * 1000)]
         [Trait("Integration", "Integration")]
         public async Task CanSetLightningServer()

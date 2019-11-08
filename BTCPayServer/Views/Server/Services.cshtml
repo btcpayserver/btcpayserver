@@ -35,9 +35,8 @@
                         <td>@s.CryptoCode</td>
                         <td>
                             <span>@s.DisplayName</span>
-                            @if ((s.ConnectionString.IsOnion() is true) ||
-                                (s.ConnectionString.IsOnion() is false &&
-                                this.Context.Request.IsOnion()))
+                            @if (s.ConnectionString.IsOnion() == true || 
+                                (s.ConnectionString.IsOnion() == false && this.Context.Request.IsOnion()))
                             {
                             <span><img style="display:inline; margin-top:-8px;" src="~/img/icons/Onion_Color.svg" height="20" /></span>
                             }

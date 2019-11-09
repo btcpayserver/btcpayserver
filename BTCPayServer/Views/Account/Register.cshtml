@@ -1,10 +1,12 @@
 ﻿@model RegisterViewModel
 @{
     ViewData["Title"] = "Register";
-    Layout = "_WelcomeLayout.cshtml";
+    var useBasicLayout = ViewData["UseBasicLayout"] is true;
+    Layout = useBasicLayout ? "../Shared/_Layout.cshtml" : "_WelcomeLayout.cshtml";
 }
 
-<div class="modal-dialog modal-login">
+<!-- We want to center the dialog box in case we are not using the Welcome layout -->
+<div class="modal-dialog @(useBasicLayout ? "modal-dialog-centered" : "")">
     <div class="modal-content">
         <div class="modal-header">
             <h4 class="modal-title">Create account</h4>

@@ -364,7 +364,7 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [AllowAnonymous]
-        public async Task<IActionResult> Register(string returnUrl = null, bool logon = true)
+        public async Task<IActionResult> Register(string returnUrl = null, bool logon = true, bool useBasicLayout = false)
         {
             var policies = await _SettingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
             if (policies.LockSubscription && !User.IsInRole(Roles.ServerAdmin))
@@ -372,6 +372,7 @@ namespace BTCPayServer.Controllers
             ViewData["ReturnUrl"] = returnUrl;
             ViewData["Logon"] = logon.ToString(CultureInfo.InvariantCulture).ToLowerInvariant();
             ViewData["AllowIsAdmin"] = _Options.AllowAdminRegistration;
+            ViewData["UseBasicLayout"] = useBasicLayout;
             return View();
         }
 

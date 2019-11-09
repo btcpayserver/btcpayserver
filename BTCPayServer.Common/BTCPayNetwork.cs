@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using NBitcoin;
-using NBitcoin.BitcoinCore;
 using NBXplorer;
 using Newtonsoft.Json;
 

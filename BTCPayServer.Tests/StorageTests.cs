@@ -28,7 +28,7 @@ namespace BTCPayServer.Tests
             Logs.LogProvider = new XUnitLogProvider(helper);
         }
 
-        [Fact]
+        [Fact(Timeout = TestUtils.TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanConfigureStorage()
         {
@@ -139,7 +139,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TestUtils.TestTimeout)]
         [Trait("ExternalIntegration", "ExternalIntegration")]
         public async Task CanUseAzureBlobStorage()
         {

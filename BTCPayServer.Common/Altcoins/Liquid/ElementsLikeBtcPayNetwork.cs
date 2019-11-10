@@ -11,6 +11,7 @@ namespace BTCPayServer
         public uint256 AssetId { get; set; }
         public int Divisibility { get; set; } = 8;
         
+        public override bool WalletSupported { get; set; } = false;
         public override IEnumerable<Coin> GetValidCoinsForNetwork(IEnumerable<Coin> coins, Script scriptPubKey)
         {
             return base.GetValidCoinsForNetwork(coins, scriptPubKey)

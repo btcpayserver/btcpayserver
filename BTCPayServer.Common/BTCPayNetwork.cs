@@ -54,6 +54,8 @@ namespace BTCPayServer
         
         public Dictionary<uint, DerivationType> ElectrumMapping = new Dictionary<uint, DerivationType>();
 
+        public virtual bool WalletSupported { get; set; } = true;
+        
         public int MaxTrackedConfirmation { get; internal set; } = 6;
         public string UriScheme { get; internal set; }
         public KeyPath GetRootKeyPath(DerivationType type)

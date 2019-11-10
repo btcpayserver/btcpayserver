@@ -202,7 +202,7 @@ namespace BTCPayServer.Controllers
                                               .Select(d => ((Wallet: _walletProvider.GetWallet(d.Network),
                                                             DerivationStrategy: d.AccountDerivation,
                                                             Network: d.Network)))
-                                              .Where(_ => _.Wallet != null)
+                                              .Where(_ => _.Wallet != null && _.Network.WalletSupported)
                                               .Select(_ => (Wallet: _.Wallet,
                                                             Store: s,
                                                             Balance: GetBalanceString(_.Wallet, _.DerivationStrategy),

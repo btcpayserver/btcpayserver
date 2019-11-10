@@ -55,13 +55,7 @@
 @section Scripts {
     <script type="text/javascript">
         function confirmSeedDelete() {
-            var conf = confirm('This operation is not undoable. Are you sure you want to proceed with deleting seed from LND container?');
-            if (conf) {
-                return true;
-            }
-            else {
-                return false;
-            }
+            return confirm('This operation is not undoable. Are you sure you want to proceed with deleting seed from LND container?');
         }
     </script>
 }

@@ -9,6 +9,7 @@ namespace BTCPayServer
     {
         public string NetworkCryptoCode { get; set; }
         public uint256 AssetId { get; set; }
+        public int Divisibility { get; set; } = 8;
         
         public override IEnumerable<Coin> GetValidCoinsForNetwork(IEnumerable<Coin> coins, Script scriptPubKey)
         {

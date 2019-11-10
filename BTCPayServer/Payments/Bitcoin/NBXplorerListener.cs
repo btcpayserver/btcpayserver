@@ -339,9 +339,11 @@ namespace BTCPayServer.Payments.Bitcoin
                 foreach (var coin in coins.Where(c => !alreadyAccounted.Contains(c.Coin.Outpoint)))
                 {
                     var transaction = await wallet.GetTransactionAsync(coin.Coin.Outpoint.Hash);
-                    var paymentData = new BitcoinLikePaymentData(coin.Coin.TxOut, coin.Coin.Outpoint, transaction.Transaction.RBF);
+                    //we recreate the Coin using the transaction as the UTXO model loses extra data in case of alts that has a modified txout structure 
+                    var safeCoin = new Coin(transaction.Transaction, coin.Coin.Outpoint.N);
+                    var paymentData = new BitcoinLikePaymentData(safeCoin.TxOut, safeCoin.Outpoint, transaction.Transaction.RBF);
                     var payment = await _InvoiceRepository.AddPayment(invoice.Id, coin.Timestamp, paymentData, network).ConfigureAwait(false);
-                    alreadyAccounted.Add(coin.Coin.Outpoint);
+                    alreadyAccounted.Add(safeCoin.Outpoint);
                     if (payment != null)
                     {
                         invoice = await ReceivedPayment(wallet, invoice, payment, strategy);

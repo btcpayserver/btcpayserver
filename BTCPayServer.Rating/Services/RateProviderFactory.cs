@@ -104,8 +104,8 @@ namespace BTCPayServer.Services.Rates
             Providers.Add("binance", new ExchangeSharpRateProvider("binance", new ExchangeBinanceAPI(), true));
             Providers.Add("bittrex", new ExchangeSharpRateProvider("bittrex", new ExchangeBittrexAPI(), true));
             Providers.Add("poloniex", new ExchangeSharpRateProvider("poloniex", new ExchangePoloniexAPI(), true));
-            Providers.Add("hitbtc", new ExchangeSharpRateProvider("hitbtc", new ExchangeHitBTCAPI(), false));
-            Providers.Add("ndax", new ExchangeSharpRateProvider("ndax", new ExchangeNDAXAPI(), false));
+            Providers.Add("hitbtc", new ExchangeSharpRateProvider("hitbtc", new ExchangeHitBTCAPI(), true));
+            Providers.Add("ndax", new ExchangeSharpRateProvider("ndax", new ExchangeNDAXAPI(), true));
 
             // Cryptopia is often not available
             // Disabled because of https://twitter.com/Cryptopia_NZ/status/1085084168852291586

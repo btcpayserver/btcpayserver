@@ -449,6 +449,8 @@ namespace BTCPayServer.Controllers
             
             switch (command)
             {
+                case "vault":
+                    return ViewVault(walletId, psbt.PSBT);
                 case "ledger":
                     return ViewWalletSendLedger(psbt.PSBT, psbt.ChangeAddress);
                 case "seed":
@@ -461,6 +463,16 @@ namespace BTCPayServer.Controllers
                     return View(vm);
             }
             
+        }
+
+        private IActionResult ViewVault(WalletId walletId, PSBT psbt)
+        {
+            return View("WalletSendVault", new WalletSendVaultModel()
+            {
+                WalletId = walletId.ToString(),
+                PSBT = psbt.ToBase64(),
+                WebsocketPath = this.Url.Action(nameof(VaultController.VaultBridgeConnection), "Vault", new { walletId = walletId.ToString() })
+            });
         }
 
         private IActionResult RedirectToWalletPSBT(WalletId walletId, PSBT psbt, string fileName = null)

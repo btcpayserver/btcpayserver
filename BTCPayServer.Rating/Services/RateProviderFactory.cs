@@ -116,6 +116,7 @@ namespace BTCPayServer.Services.Rates
             Providers.Add("bitbank", new BitbankRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_BITBANK")));
             Providers.Add("bitpay", new BitpayRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_BITPAY")));
             Providers.Add("ndax", new NdaxRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_NDAX")));
+            Providers.Add("polispay", new PolisRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_POLIS")));
 
             // Those exchanges make multiple requests when calling GetTickers so we remove them
             //DirectProviders.Add("gemini", new ExchangeSharpRateProvider("gemini", new ExchangeGeminiAPI()));
@@ -174,6 +175,7 @@ namespace BTCPayServer.Services.Rates
             exchanges.Add(new CoinAverageExchange("bylls", "Bylls", "https://bylls.com/api/price?from_currency=BTC&to_currency=CAD"));
             //exchanges.Add(new CoinAverageExchange("ndax", "NDAX", "https://ndax.io/api/returnTicker")); Buggy
             exchanges.Add(new CoinAverageExchange("bitbank", "Bitbank", "https://public.bitbank.cc/prices"));
+            exchanges.Add(new CoinAverageExchange("polispay", "PolisPay", "https://obol.polispay.com/complex/btc/polis"));
 
             return exchanges;
         }

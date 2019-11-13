@@ -146,9 +146,16 @@ The BTCPay Server Project is proudly supported by these entities through the [BT
     <tr>
       <td align="center" valign="middle">
         <a href="https://twitter.com/sqcrypto" target="_blank">
-          <img  src="BTCPayServer/wwwroot/img/squarecrypto.svg" alt="Sponsor Square Crypto" height=100>
+          <img  src="BTCPayServer/wwwroot/img/squarecrypto.svg" alt="Square Crypto" height=100>
           <br/>
           <span>Square Crypto</span>
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a href="https://www.dglab.com/en/" target="_blank">
+          <img  src="BTCPayServer/wwwroot/img/dglab.svg" alt="DG Lab" height=100>
+          <br/>
+          <span>DG Lab</span>
         </a>
       </td>
        <td align="center" valign="middle">

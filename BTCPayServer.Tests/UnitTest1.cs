@@ -2021,7 +2021,7 @@ noninventoryitem:
                 //verify invoices where created
                 invoices = user.BitPay.GetInvoices();
                 Assert.Equal(2, invoices.Count(invoice => invoice.ItemCode.Equals("noninventoryitem")));
-                var inventoryItemInvoice = invoices.SingleOrDefault(invoice => invoice.ItemCode.Equals("inventoryitem"));
+                var inventoryItemInvoice = Assert.Single(invoices.Where(invoice => invoice.ItemCode.Equals("inventoryitem")));
                 Assert.NotNull(inventoryItemInvoice);
                 
                 //let's mark the inventoryitem invoice as invalid, thsi should return the item to back in stock

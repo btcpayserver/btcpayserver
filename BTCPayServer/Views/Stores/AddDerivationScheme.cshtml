@@ -50,7 +50,6 @@
                             <div class="dropdown-menu  dropdown-menu-right w-100" aria-labelledby="hardwarewlletimportdropdown">
                                 <button class="dropdown-item" type="button" data-toggle="modal" data-target="#coldcardimport">Coldcard</button>
                                 <button class="dropdown-item check-for-ledger" data-toggle="modal" data-target="#ledgerimport" type="button">Ledger Wallet</button>
-                                @* <button class="dropdown-item check-for-trezor" type="button" data-toggle="modal" data-target="#trezorimport">Trezor</button> *@
                             </div>
                         </div>
                     </div>
@@ -163,9 +162,6 @@
     @await Html.PartialAsync("_ValidationScriptsPartial")
     <script src="~/js/ledgerwebsocket.js" type="text/javascript" defer="defer"></script>
     <script src="~/js/StoreAddDerivationScheme.js" type="text/javascript" defer="defer"></script>
-    <script src="~/vendor/trezor/trezor.js-umd.min.js" defer="defer"></script>
-    <script src="~/js/trezor/trezor-client.js" type="text/javascript" defer="defer"></script>
-    <script src="~/js/trezor/trezor-add-derivation-scheme.js" type="text/javascript" defer="defer"></script>
     <script>
         window.coinName = "@Model.Network.DisplayName.ToLowerInvariant()";
     </script>

@@ -702,7 +702,7 @@ namespace BTCPayServer.Tests
                         FullNotifications = true,
                         ExtendedNotifications = true
                     });
-                    BitcoinUrlBuilder url = new BitcoinUrlBuilder(invoice.PaymentUrls.BIP21);
+                    BitcoinUrlBuilder url = new BitcoinUrlBuilder(invoice.PaymentUrls.BIP21, tester.NetworkProvider.BTC.NBitcoinNetwork);
                     bool receivedPayment = false;
                     bool paid = false;
                     bool confirmed = false;

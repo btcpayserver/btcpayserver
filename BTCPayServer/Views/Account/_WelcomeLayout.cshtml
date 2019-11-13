@@ -2,6 +2,8 @@
     Layout = null;
 }
 @inject BTCPayServer.Services.BTCPayServerEnvironment env
+@inject BTCPayServer.HostedServices.NBXplorerDashboard dashboard
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -106,5 +108,10 @@
         </div>
     </section>
     @await Html.PartialAsync("_ValidationScriptsPartial")
+
+    @if (!dashboard.IsFullySynched())
+    {
+        <partial name="SyncModal" />
+    }
 </body>
 </html>

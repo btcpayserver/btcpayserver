@@ -9,26 +9,60 @@
 
     <link href="~/main/css/Montserrat.css" rel="stylesheet">
     <style>
+        .content-wrapper {
+            padding: 70px 0;
+        }
+
+        @@media screen and (min-width: 768px) {
+            .content-wrapper {
+                padding: 100px 0;
+            }
+        }
 
         .col-head {
             display: flex;
             align-items: center;
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
+        }
+
+        @@media screen and (min-width: 768px) {
+            .col-head {
+                text-align: left;
+                flex-direction: row;
+                justify-content: start;
+            }
         }
 
         .head-logo {
-            height: 100px;
-            margin-right: 50px;
+            height: 70px;
+            margin-bottom: 1rem;
+        }
+
+        @@media screen and (min-width: 768px) {
+            .head-logo {
+                height: 100px;
+                margin-bottom: 0;
+                margin-right: 50px;
+            }
         }
 
         .lead-title {
             font-family: Montserrat;
             font-style: normal;
             font-weight: bold;
-            font-size: 40px;
+            font-size: 24px;
             line-height: 1.2;
             /* or 150% */
             letter-spacing: 0.1em;
             color: #000000;
+        }
+
+        @@media screen and (min-width: 768px) {
+            .lead-title {
+                font-size: 40px;
+            }
         }
 
         .lead-login {
@@ -57,7 +91,7 @@
     </style>
 </head>
 <body class="bg-light">
-    <section>
+    <section class="content-wrapper">
         <!-- Dummy navbar-brand, hackish way to keep test AssertNoError passing -->
         <div class="navbar-brand" style="display:none;"></div>
         <div class="container">

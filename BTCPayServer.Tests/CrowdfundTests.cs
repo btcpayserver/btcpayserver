@@ -35,7 +35,7 @@ namespace BTCPayServer.Tests
             Logs.LogProvider = new XUnitLogProvider(helper);
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanCreateAndDeleteCrowdfundApp()
         {
@@ -75,7 +75,7 @@ namespace BTCPayServer.Tests
         
         
         
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanContributeOnlyWhenAllowed()
         {
@@ -167,7 +167,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanComputeCrowdfundModel()
         {

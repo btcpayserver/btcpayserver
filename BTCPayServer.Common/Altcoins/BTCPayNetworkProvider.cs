@@ -111,7 +111,7 @@ namespace BTCPayServer
         }
         public BTCPayNetworkBase GetNetwork(string cryptoCode)
         {
-            return GetNetwork<BTCPayNetworkBase>(cryptoCode);
+            return GetNetwork<BTCPayNetworkBase>(cryptoCode.ToUpperInvariant());
         }
         public T GetNetwork<T>(string cryptoCode) where T: BTCPayNetworkBase
         {

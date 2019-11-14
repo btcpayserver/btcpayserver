@@ -72,8 +72,7 @@ namespace BTCPayServer.Services.Wallets
                 pathInfo = await _Client.GetUnusedAsync(derivationStrategy, DerivationFeature.Deposit, 0, true).ConfigureAwait(false);
             }
 
-            pathInfo.AddAddress(Network.NBitcoinNetwork, out var address);
-            return address;
+            return pathInfo.Address;
         }
 
         public async Task<(BitcoinAddress, KeyPath)> GetChangeAddressAsync(DerivationStrategyBase derivationStrategy)

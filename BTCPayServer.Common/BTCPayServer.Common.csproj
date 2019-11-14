@@ -1,4 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\NBXplorer\NBXplorer.Client\NBXplorer.Client.csproj" />
+  </ItemGroup>﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="../Build/Version.csproj" Condition="Exists('../Build/Version.csproj')" />
   <Import Project="../Build/Common.csproj" />
 
@@ -6,5 +8,8 @@
     <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.14" Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
     <FrameworkReference Include="Microsoft.AspNetCore.App" Condition="'$(TargetFramework)' != 'netcoreapp2.1'" />
     <PackageReference Include="NBXplorer.Client" Version="3.0.1" />
+  </ItemGroup>
+    <ItemGroup>
+    <ProjectReference Include="..\..\NBXplorer\NBXplorer.Client\NBXplorer.Client.csproj" />
   </ItemGroup>
 </Project>

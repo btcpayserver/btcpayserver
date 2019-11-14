@@ -3497,7 +3497,7 @@ input[type="button"].btn-block {
 .alert-primary {
   color: var(--btcpay-color-primary-accent);
   background-color: var(--btcpay-color-primary-backdrop);
-  border-color: var(--btcpay-color-primary-accent); }
+  border-color: var(--btcpay-color-primary-backdrop); }
   .alert-primary hr {
     border-top-color: var(--btcpay-color-primary-accent); }
   .alert-primary .alert-link {
@@ -3506,7 +3506,7 @@ input[type="button"].btn-block {
 .alert-secondary {
   color: var(--btcpay-color-secondary-accent);
   background-color: var(--btcpay-color-secondary-backdrop);
-  border-color: var(--btcpay-color-secondary-accent); }
+  border-color: var(--btcpay-color-secondary-backdrop); }
   .alert-secondary hr {
     border-top-color: var(--btcpay-color-secondary-accent); }
   .alert-secondary .alert-link {
@@ -3515,7 +3515,7 @@ input[type="button"].btn-block {
 .alert-success {
   color: var(--btcpay-color-success-accent);
   background-color: var(--btcpay-color-success-backdrop);
-  border-color: var(--btcpay-color-success-accent); }
+  border-color: var(--btcpay-color-success-backdrop); }
   .alert-success hr {
     border-top-color: var(--btcpay-color-success-accent); }
   .alert-success .alert-link {
@@ -3524,7 +3524,7 @@ input[type="button"].btn-block {
 .alert-info {
   color: var(--btcpay-color-info-accent);
   background-color: var(--btcpay-color-info-backdrop);
-  border-color: var(--btcpay-color-info-accent); }
+  border-color: var(--btcpay-color-info-backdrop); }
   .alert-info hr {
     border-top-color: var(--btcpay-color-info-accent); }
   .alert-info .alert-link {
@@ -3533,7 +3533,7 @@ input[type="button"].btn-block {
 .alert-warning {
   color: var(--btcpay-color-warning-accent);
   background-color: var(--btcpay-color-warning-backdrop);
-  border-color: var(--btcpay-color-warning-accent); }
+  border-color: var(--btcpay-color-warning-backdrop); }
   .alert-warning hr {
     border-top-color: var(--btcpay-color-warning-accent); }
   .alert-warning .alert-link {
@@ -3542,7 +3542,7 @@ input[type="button"].btn-block {
 .alert-danger {
   color: var(--btcpay-color-danger-accent);
   background-color: var(--btcpay-color-danger-backdrop);
-  border-color: var(--btcpay-color-danger-accent); }
+  border-color: var(--btcpay-color-danger-backdrop); }
   .alert-danger hr {
     border-top-color: var(--btcpay-color-danger-accent); }
   .alert-danger .alert-link {
@@ -3551,7 +3551,7 @@ input[type="button"].btn-block {
 .alert-light {
   color: var(--btcpay-color-light-accent);
   background-color: var(--btcpay-color-light-backdrop);
-  border-color: var(--btcpay-color-light-accent); }
+  border-color: var(--btcpay-color-light-backdrop); }
   .alert-light hr {
     border-top-color: var(--btcpay-color-light-accent); }
   .alert-light .alert-link {
@@ -3560,7 +3560,7 @@ input[type="button"].btn-block {
 .alert-dark {
   color: var(--btcpay-color-dark-accent);
   background-color: var(--btcpay-color-dark-backdrop);
-  border-color: var(--btcpay-color-dark-accent); }
+  border-color: var(--btcpay-color-dark-backdrop); }
   .alert-dark hr {
     border-top-color: var(--btcpay-color-dark-accent); }
   .alert-dark .alert-link {

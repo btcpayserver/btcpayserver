@@ -185,6 +185,10 @@
             </td>
         </tr>
     </script>
+    @if (this.TempData.HasStatusMessage())
+    {
+        <partial name="_StatusMessage" />
+    }
 
     @if (Model.EnableShoppingCart)
     {

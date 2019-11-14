@@ -165,26 +165,39 @@ namespace BTCPayServer.Controllers
                 }
             }
             var store = await _AppService.GetStore(app);
-            var invoice = await _InvoiceController.CreateInvoiceCore(new CreateInvoiceRequest()
+            try
             {
-                ItemCode = choice?.Id,
-                ItemDesc = title,
-                Currency = settings.Currency,
-                Price = price,
-                BuyerEmail = email,
-                OrderId = orderId,
-                NotificationURL =
-                        string.IsNullOrEmpty(notificationUrl) ? settings.NotificationUrl : notificationUrl,
-                NotificationEmail = settings.NotificationEmail,
-                RedirectURL = redirectUrl ?? Request.GetDisplayUrl(),
-                FullNotifications = true,
-                ExtendedNotifications = true,
-                PosData = string.IsNullOrEmpty(posData) ? null : posData,
-                RedirectAutomatically = settings.RedirectAutomatically,
-            }, store, HttpContext.Request.GetAbsoluteRoot(),
-                new List<string>() { AppService.GetAppInternalTag(appId) },
-                cancellationToken);
-            return RedirectToAction(nameof(InvoiceController.Checkout), "Invoice", new { invoiceId = invoice.Data.Id });
+                var invoice = await _InvoiceController.CreateInvoiceCore(new CreateInvoiceRequest()
+                {
+                    ItemCode = choice?.Id,
+                    ItemDesc = title,
+                    Currency = settings.Currency,
+                    Price = price,
+                    BuyerEmail = email,
+                    OrderId = orderId,
+                    NotificationURL =
+                            string.IsNullOrEmpty(notificationUrl) ? settings.NotificationUrl : notificationUrl,
+                    NotificationEmail = settings.NotificationEmail,
+                    RedirectURL = redirectUrl ?? Request.GetDisplayUrl(),
+                    FullNotifications = true,
+                    ExtendedNotifications = true,
+                    PosData = string.IsNullOrEmpty(posData) ? null : posData,
+                    RedirectAutomatically = settings.RedirectAutomatically,
+                }, store, HttpContext.Request.GetAbsoluteRoot(),
+                    new List<string>() { AppService.GetAppInternalTag(appId) },
+                    cancellationToken);
+                return RedirectToAction(nameof(InvoiceController.Checkout), "Invoice", new { invoiceId = invoice.Data.Id });
+            }
+            catch (BitpayHttpException e)
+            {
+                TempData.SetStatusMessageModel(new StatusMessageModel() 
+                { 
+                    Html = e.Message.Replace("\n", "<br />", StringComparison.OrdinalIgnoreCase),
+                    Severity = StatusMessageModel.StatusSeverity.Error,
+                    AllowDismiss = true
+                });
+                return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
+            }
         }
 
         [HttpGet]

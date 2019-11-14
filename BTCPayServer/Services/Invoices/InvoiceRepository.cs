@@ -709,7 +709,7 @@ retry:
                 PaymentData data = new PaymentData
                 {
                     Id = paymentData.GetPaymentId(),
-                    Blob = ToBytes(entity, null),
+                    Blob = ToBytes(entity, entity.Network),
                     InvoiceDataId = invoiceId,
                     Accounted = accounted
                 };

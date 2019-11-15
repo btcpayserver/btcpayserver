@@ -456,21 +456,59 @@ namespace BTCPayServer.Controllers
                 case "analyze-psbt":
                     var name =
                         $"Send-{string.Join('_', vm.Outputs.Select(output => $"{output.Amount}->{output.DestinationAddress}{(output.SubtractFeesFromOutput ? "-Fees" : string.Empty)}"))}.psbt";
-                    return RedirectToAction(nameof(WalletPSBT), new { walletId = walletId, psbt = psbt.PSBT.ToBase64(), FileName = name });
+                    return RedirectToWalletPSBT(walletId, psbt.PSBT, name);
                 default:
                     return View(vm);
             }
             
         }
 
+        private IActionResult RedirectToWalletPSBT(WalletId walletId, PSBT psbt, string fileName = null)
+        {
+            var vm = new PostRedirectViewModel()
+            {
+                AspController = "Wallets",
+                AspAction = nameof(WalletPSBT),
+                Parameters =
+                {
+                    new KeyValuePair<string, string>("psbt", psbt.ToBase64())
+                }
+            };
+            if (!string.IsNullOrEmpty(fileName))
+                vm.Parameters.Add(new KeyValuePair<string, string>("fileName", fileName));
+            return View("PostRedirect", vm);
+        }
+
+        void SetAmbientPSBT(PSBT psbt)
+        {
+            if (psbt != null)
+                TempData["AmbientPSBT"] = psbt.ToBase64();
+            else
+                TempData.Remove("AmbientPSBT");
+        }
+        PSBT GetAmbientPSBT(Network network, bool peek)
+        {
+            if (network == null)
+                throw new ArgumentNullException(nameof(network));
+            if ((peek ? TempData.Peek("AmbientPSBT") : TempData["AmbientPSBT"]) is string str)
+            {
+                try
+                {
+                    return PSBT.Parse(str, network);
+                }
+                catch { }
+            }
+            return null;
+        }
+
         private ViewResult ViewWalletSendLedger(PSBT psbt, BitcoinAddress hintChange = null)
         {
+            SetAmbientPSBT(psbt);
             return View("WalletSendLedger", new WalletSendLedgerModel()
             {
                 PSBT = psbt.ToBase64(),
                 HintChange = hintChange?.ToString(),
-                WebsocketPath = this.Url.Action(nameof(LedgerConnection)),
-                SuccessPath = this.Url.Action(nameof(WalletPSBTReady))
+                WebsocketPath = this.Url.Action(nameof(LedgerConnection))
             });
         }
       
@@ -702,7 +740,6 @@ namespace BTCPayServer.Controllers
             // getxpub
             int account = 0,
             // sendtoaddress
-            string psbt = null,
             string hintChange = null
             )
         {
@@ -712,6 +749,7 @@ namespace BTCPayServer.Controllers
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             if (network == null)
                 throw new FormatException("Invalid value for crypto code");
+            PSBT psbt = GetAmbientPSBT(network.NBitcoinNetwork, true);
             var derivationSettings = GetDerivationSchemeSettings(walletId);
 
             var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
@@ -721,7 +759,6 @@ namespace BTCPayServer.Controllers
             {
                 normalOperationTimeout.CancelAfter(TimeSpan.FromMinutes(30));
                 var hw = new LedgerHardwareWalletService(webSocket);
-                var model = new WalletSendLedgerModel();
                 object result = null;
                 try
                 {
@@ -775,18 +812,12 @@ namespace BTCPayServer.Controllers
                             await Repository.UpdateStore(storeData);
                         }
 
-                        var psbtResponse = new CreatePSBTResponse()
-                        {
-                            PSBT = PSBT.Parse(psbt, network.NBitcoinNetwork),
-                            ChangeAddress = string.IsNullOrEmpty(hintChange) ? null : BitcoinAddress.Create(hintChange, network.NBitcoinNetwork)
-                        };
-
-
-                        derivationSettings.RebaseKeyPaths(psbtResponse.PSBT);
-
+                        derivationSettings.RebaseKeyPaths(psbt);
+                        var changeAddress = string.IsNullOrEmpty(hintChange) ? null : BitcoinAddress.Create(hintChange, network.NBitcoinNetwork);
                         signTimeout.CancelAfter(TimeSpan.FromMinutes(5));
-                        psbtResponse.PSBT = await hw.SignTransactionAsync(psbtResponse.PSBT, accountKey.GetRootedKeyPath(), accountKey.AccountKey, psbtResponse.ChangeAddress?.ScriptPubKey, signTimeout.Token);
-                        result = new SendToAddressResult() { PSBT = psbtResponse.PSBT.ToBase64() };
+                        psbt = await hw.SignTransactionAsync(psbt, accountKey.GetRootedKeyPath(), accountKey.AccountKey, changeAddress?.ScriptPubKey, signTimeout.Token);
+                        SetAmbientPSBT(null);
+                        result = new SendToAddressResult() { PSBT = psbt.ToBase64() };
                     }
                 }
                 catch (OperationCanceledException)

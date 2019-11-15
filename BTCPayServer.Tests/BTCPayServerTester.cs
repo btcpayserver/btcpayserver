@@ -103,6 +103,7 @@ namespace BTCPayServer.Tests
             config.AppendLine($"ltc.explorer.url={LTCNBXplorerUri.AbsoluteUri}");
             config.AppendLine($"ltc.explorer.cookiefile=0");
             config.AppendLine($"btc.lightning={IntegratedLightning.AbsoluteUri}");
+            config.AppendLine($"torrcfile={TestUtils.GetTestDataFullPath("Tor/torrc")}");
             config.AppendLine($"debuglog=debug.log");
             if (!string.IsNullOrEmpty(SSHPassword) && string.IsNullOrEmpty(SSHKeyFile))
                 config.AppendLine($"sshpassword={SSHPassword}");
@@ -213,8 +214,9 @@ namespace BTCPayServer.Tests
             }
 
 
-
+            Logs.Tester.LogInformation("Waiting site is operational...");
             await WaitSiteIsOperational();
+            Logs.Tester.LogInformation("Site is now operational");
         }
 
         private async Task WaitSiteIsOperational()

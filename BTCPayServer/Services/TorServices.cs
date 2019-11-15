@@ -41,8 +41,8 @@ namespace BTCPayServer.Services
                     Services = Array.Empty<TorService>();
                     return;
                 }
-
-                var services = torrc.ServiceDirectories.SelectMany(d => d.ServicePorts.Select(p => (Directory: new DirectoryInfo(d.DirectoryPath), VirtualPort: p.VirtualPort)))
+                var torrcDir = Path.GetDirectoryName(_Options.TorrcFile);
+                var services = torrc.ServiceDirectories.SelectMany(d => d.ServicePorts.Select(p => (Directory: GetDirectory(d, torrcDir), VirtualPort: p.VirtualPort)))
                 .Select(d => (ServiceName: d.Directory.Name,
                               ReadingLines: System.IO.File.ReadAllLinesAsync(Path.Combine(d.Directory.FullName, "hostname")),
                               VirtualPort: d.VirtualPort))
@@ -78,6 +78,13 @@ namespace BTCPayServer.Services
                 Logs.PayServer.LogWarning(ex, $"Error while reading torrc file");
             }
             Services = result.ToArray();
+        }
+
+        private static DirectoryInfo GetDirectory(HiddenServiceDir hs, string relativeTo)
+        {
+            if (Path.IsPathRooted(hs.DirectoryPath))
+                return new DirectoryInfo(hs.DirectoryPath);
+            return new DirectoryInfo(Path.Combine(relativeTo, hs.DirectoryPath));
         }
 
         private bool TryParseP2PService(string name, out BTCPayNetworkBase network, out TorServiceType serviceType)

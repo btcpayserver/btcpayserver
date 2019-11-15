@@ -1,0 +1,18 @@
+﻿@model PostRedirectViewModel
+@{ 
+    Layout = null;
+}
+
+<html>
+<head></head>
+<body>
+    <form method="post" id="postform" asp-action="@Model.AspAction" asp-controller="@Model.AspController">
+        @foreach(var o in Model.Parameters) {
+            <input type="hidden" name="@o.Key" value="@o.Value" />
+        }
+    </form>
+    <script type="text/javascript">
+        document.forms.item(0).submit();
+    </script>
+</body>
+</html>

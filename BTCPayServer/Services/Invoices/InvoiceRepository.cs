@@ -21,6 +21,7 @@ using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Logging;
 using BTCPayServer.Payments;
 using System.Data.Common;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services.Invoices
 {
@@ -448,8 +449,19 @@ retry:
 #pragma warning disable CS0618
             entity.Payments = invoice.Payments.Select(p =>
             {
-                var paymentEntity = ToObject<PaymentEntity>(p.Blob, null);
-                paymentEntity.Network = _Networks.GetNetwork<BTCPayNetworkBase>(paymentEntity.CryptoCode);
+                var unziped = ZipUtils.Unzip(p.Blob);
+                var cryptoCode = GetCryptoCode(unziped);
+                var network = _Networks.GetNetwork<BTCPayNetworkBase>(cryptoCode);
+                PaymentEntity paymentEntity = null;
+                if (network == null)
+                {
+                    paymentEntity = NBitcoin.JsonConverters.Serializer.ToObject<PaymentEntity>(unziped, null);
+                }
+                else
+                {
+                    paymentEntity = network.ToObject<PaymentEntity>(unziped);
+                }
+                paymentEntity.Network = network;
                 paymentEntity.Accounted = p.Accounted;
                 // PaymentEntity on version 0 does not have their own fee, because it was assumed that the payment method have fixed fee.
                 // We want to hide this legacy detail in InvoiceRepository, so we fetch the fee from the PaymentMethod and assign it to the PaymentEntity.
@@ -489,6 +501,13 @@ retry:
                 entity.BuyerInformation.BuyerEmail = entity.RefundMail;
             }
             return entity;
+        }
+
+        private string GetCryptoCode(string json)
+        {
+            if (JObject.Parse(json).TryGetValue("cryptoCode", out var v) && v.Type == JTokenType.String)
+                return v.Value<string>();
+            return "BTC";
         }
 
         private IQueryable<Data.InvoiceData> GetInvoiceQuery(ApplicationDbContext context, InvoiceQuery queryObject)
@@ -688,7 +707,7 @@ retry:
                 PaymentData data = new PaymentData
                 {
                     Id = paymentData.GetPaymentId(),
-                    Blob = ToBytes(entity, null),
+                    Blob = ToBytes(entity, network),
                     InvoiceDataId = invoiceId,
                     Accounted = accounted
                 };
@@ -717,7 +736,7 @@ retry:
                     var data = new PaymentData();
                     data.Id = paymentData.GetPaymentId();
                     data.Accounted = payment.Accounted;
-                    data.Blob = ToBytes(payment, null);
+                    data.Blob = ToBytes(payment, payment.Network);
                     context.Attach(data);
                     context.Entry(data).Property(o => o.Accounted).IsModified = true;
                     context.Entry(data).Property(o => o.Blob).IsModified = true;
@@ -731,14 +750,6 @@ retry:
             var entity = NBitcoin.JsonConverters.Serializer.ToObject<InvoiceEntity>(ZipUtils.Unzip(value), null);
             entity.Networks = _Networks;
             return entity;
-        }
-        private T ToObject<T>(byte[] value, BTCPayNetworkBase network)
-        {
-            if (network == null)
-            {
-                return NBitcoin.JsonConverters.Serializer.ToObject<T>(ZipUtils.Unzip(value), null);
-            }
-            return network.ToObject<T>(ZipUtils.Unzip(value));
         }
 
         private byte[] ToBytes<T>(T obj, BTCPayNetworkBase network = null)

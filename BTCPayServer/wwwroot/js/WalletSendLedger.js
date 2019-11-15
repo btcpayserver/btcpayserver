@@ -1,7 +1,6 @@
 ﻿$(function () {
     var psbt = $("#PSBT").val();
     var hintChange = $("#HintChange").val();
-    var successPath = $("#SuccessPath").val();
     var websocketPath = $("#WebsocketPath").val();
     
     var loc = window.location, ws_uri;
@@ -62,7 +61,8 @@
                 if (result.error) {
                     WriteAlert("danger", result.error);
                 } else {
-                    window.location.replace(loc.protocol + "//" + loc.host + successPath + "?psbt=" + encodeURIComponent(result.psbt));
+                    $("#PSBT").val(result.psbt);
+                    $("#broadcastForm").submit();
                 }
             });
     };

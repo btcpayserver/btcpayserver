@@ -11,6 +11,7 @@ using NBitcoin;
 using NBitpayClient;
 using Xunit;
 using Xunit.Abstractions;
+using BTCPayServer.Models;
 
 namespace BTCPayServer.Tests
 {
@@ -68,10 +69,9 @@ namespace BTCPayServer.Tests
                 var vmLedger = await walletController.WalletSend(walletId, sendModel, command: "ledger").AssertViewModelAsync<WalletSendLedgerModel>();
                 PSBT.Parse(vmLedger.PSBT, user.SupportedNetwork.NBitcoinNetwork);
                 BitcoinAddress.Create(vmLedger.HintChange, user.SupportedNetwork.NBitcoinNetwork);
-                Assert.NotNull(vmLedger.SuccessPath);
                 Assert.NotNull(vmLedger.WebsocketPath);
 
-                var redirectedPSBT = (string)Assert.IsType<RedirectToActionResult>(await walletController.WalletSend(walletId, sendModel, command: "analyze-psbt")).RouteValues["psbt"];
+                string redirectedPSBT = AssertRedirectedPSBT(await walletController.WalletSend(walletId, sendModel, command: "analyze-psbt"));
                 var vmPSBT = await walletController.WalletPSBT(walletId, new WalletPSBTViewModel() { PSBT = redirectedPSBT }).AssertViewModelAsync<WalletPSBTViewModel>();
                 var unsignedPSBT = PSBT.Parse(vmPSBT.PSBT, user.SupportedNetwork.NBitcoinNetwork);
                 Assert.NotNull(vmPSBT.Decoded);
@@ -98,9 +98,9 @@ namespace BTCPayServer.Tests
                 var combineVM = await walletController.WalletPSBT(walletId, vmPSBT, "combine").AssertViewModelAsync<WalletPSBTCombineViewModel>();
                 Assert.Equal(vmPSBT.PSBT, combineVM.OtherPSBT);
                 combineVM.PSBT = signedPSBT.ToBase64();
-                vmPSBT = await walletController.WalletPSBTCombine(walletId, combineVM).AssertViewModelAsync<WalletPSBTViewModel>();
+                var psbt = AssertRedirectedPSBT(await walletController.WalletPSBTCombine(walletId, combineVM));
 
-                var signedPSBT2 = PSBT.Parse(vmPSBT.PSBT, user.SupportedNetwork.NBitcoinNetwork);
+                var signedPSBT2 = PSBT.Parse(psbt, user.SupportedNetwork.NBitcoinNetwork);
                 Assert.True(signedPSBT.TryFinalize(out _));
                 Assert.True(signedPSBT2.TryFinalize(out _));
                 Assert.Equal(signedPSBT, signedPSBT2);
@@ -108,19 +108,27 @@ namespace BTCPayServer.Tests
                 // Can use uploaded file?
                 combineVM.PSBT = null;
                 combineVM.UploadedPSBTFile = TestUtils.GetFormFile("signedPSBT", signedPSBT.ToBytes());
-                vmPSBT = await walletController.WalletPSBTCombine(walletId, combineVM).AssertViewModelAsync<WalletPSBTViewModel>();
-                signedPSBT2 = PSBT.Parse(vmPSBT.PSBT, user.SupportedNetwork.NBitcoinNetwork);
+                psbt = AssertRedirectedPSBT(await walletController.WalletPSBTCombine(walletId, combineVM));
+                signedPSBT2 = PSBT.Parse(psbt, user.SupportedNetwork.NBitcoinNetwork);
                 Assert.True(signedPSBT.TryFinalize(out _));
                 Assert.True(signedPSBT2.TryFinalize(out _));
                 Assert.Equal(signedPSBT, signedPSBT2);
 
                 var ready = (await walletController.WalletPSBTReady(walletId, signedPSBT.ToBase64())).AssertViewModel<WalletPSBTReadyViewModel>();
                 Assert.Equal(signedPSBT.ToBase64(), ready.PSBT);
-                redirect = Assert.IsType<RedirectToActionResult>(await walletController.WalletPSBTReady(walletId, ready, command: "analyze-psbt"));
-                Assert.Equal(signedPSBT.ToBase64(), (string)redirect.RouteValues["psbt"]);
+                psbt = AssertRedirectedPSBT(await walletController.WalletPSBTReady(walletId, ready, command: "analyze-psbt"));
+                Assert.Equal(signedPSBT.ToBase64(), psbt);
                 redirect = Assert.IsType<RedirectToActionResult>(await walletController.WalletPSBTReady(walletId, ready, command: "broadcast"));
                 Assert.Equal(nameof(walletController.WalletTransactions), redirect.ActionName);
             }
+        }
+
+        private static string AssertRedirectedPSBT(IActionResult view)
+        {
+            var postRedirectView = Assert.IsType<ViewResult>(view);
+            var postRedirectViewModel = Assert.IsType<PostRedirectViewModel>(postRedirectView.Model);
+            var redirectedPSBT = postRedirectViewModel.Parameters.Single(p => p.Key == "psbt").Value;
+            return redirectedPSBT;
         }
     }
 }

@@ -60,6 +60,7 @@ using Microsoft.Extensions.DependencyInjection;
 using NBXplorer.DerivationStrategy;
 using BTCPayServer.U2F.Models;
 using BTCPayServer.Security.Bitpay;
+using MemoryCache = Microsoft.Extensions.Caching.Memory.MemoryCache;
 
 namespace BTCPayServer.Tests
 {
@@ -532,6 +533,22 @@ namespace BTCPayServer.Tests
             }
         }
 
+        [Fact]
+        [Trait("Fast", "Fast")]
+        public async Task CanEnumerateTorServices()
+        {
+            var tor = new TorServices(new BTCPayNetworkProvider(NetworkType.Regtest), new BTCPayServerOptions()
+            {
+                TorrcFile = TestUtils.GetTestDataFullPath("Tor/torrc")
+            });
+            await tor.Refresh();
+
+            Assert.Single(tor.Services.Where(t => t.ServiceType == TorServiceType.BTCPayServer));
+            Assert.Single(tor.Services.Where(t => t.ServiceType == TorServiceType.P2P));
+            Assert.Single(tor.Services.Where(t => t.ServiceType == TorServiceType.RPC));
+            Assert.True(tor.Services.Where(t => t.ServiceType == TorServiceType.Other).Count() > 1);
+        }
+
         [Fact(Timeout = 60 * 2 * 1000)]
         [Trait("Integration", "Integration")]
         public async Task CanSetLightningServer()
@@ -686,7 +703,7 @@ namespace BTCPayServer.Tests
                         FullNotifications = true,
                         ExtendedNotifications = true
                     });
-                    BitcoinUrlBuilder url = new BitcoinUrlBuilder(invoice.PaymentUrls.BIP21);
+                    BitcoinUrlBuilder url = new BitcoinUrlBuilder(invoice.PaymentUrls.BIP21, tester.NetworkProvider.BTC.NBitcoinNetwork);
                     bool receivedPayment = false;
                     bool paid = false;
                     bool confirmed = false;
@@ -2004,7 +2021,7 @@ noninventoryitem:
                 //verify invoices where created
                 invoices = user.BitPay.GetInvoices();
                 Assert.Equal(2, invoices.Count(invoice => invoice.ItemCode.Equals("noninventoryitem")));
-                var inventoryItemInvoice = invoices.SingleOrDefault(invoice => invoice.ItemCode.Equals("inventoryitem"));
+                var inventoryItemInvoice = Assert.Single(invoices.Where(invoice => invoice.ItemCode.Equals("inventoryitem")));
                 Assert.NotNull(inventoryItemInvoice);
                 
                 //let's mark the inventoryitem invoice as invalid, thsi should return the item to back in stock

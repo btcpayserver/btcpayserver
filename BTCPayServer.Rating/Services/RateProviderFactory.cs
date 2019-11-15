@@ -9,6 +9,7 @@ using ExchangeSharp;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using MemoryCache = Microsoft.Extensions.Caching.Memory.MemoryCache;
 
 namespace BTCPayServer.Services.Rates
 {
@@ -103,7 +104,8 @@ namespace BTCPayServer.Services.Rates
             Providers.Add("binance", new ExchangeSharpRateProvider("binance", new ExchangeBinanceAPI(), true));
             Providers.Add("bittrex", new ExchangeSharpRateProvider("bittrex", new ExchangeBittrexAPI(), true));
             Providers.Add("poloniex", new ExchangeSharpRateProvider("poloniex", new ExchangePoloniexAPI(), true));
-            Providers.Add("hitbtc", new ExchangeSharpRateProvider("hitbtc", new ExchangeHitbtcAPI(), false));
+            Providers.Add("hitbtc", new ExchangeSharpRateProvider("hitbtc", new ExchangeHitBTCAPI(), true));
+            Providers.Add("ndax", new ExchangeSharpRateProvider("ndax", new ExchangeNDAXAPI(), true));
 
             // Cryptopia is often not available
             // Disabled because of https://twitter.com/Cryptopia_NZ/status/1085084168852291586
@@ -115,7 +117,6 @@ namespace BTCPayServer.Services.Rates
             Providers.Add("bylls", new ByllsRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_BYLLS")));
             Providers.Add("bitbank", new BitbankRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_BITBANK")));
             Providers.Add("bitpay", new BitpayRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_BITPAY")));
-            Providers.Add("ndax", new NdaxRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_NDAX")));
 
             // Those exchanges make multiple requests when calling GetTickers so we remove them
             //DirectProviders.Add("gemini", new ExchangeSharpRateProvider("gemini", new ExchangeGeminiAPI()));
@@ -172,7 +173,7 @@ namespace BTCPayServer.Services.Rates
             // Add other exchanges supported here
             exchanges.Add(new CoinAverageExchange(CoinAverageRateProvider.CoinAverageName, "Coin Average", $"https://apiv2.bitcoinaverage.com/indices/global/ticker/short"));
             exchanges.Add(new CoinAverageExchange("bylls", "Bylls", "https://bylls.com/api/price?from_currency=BTC&to_currency=CAD"));
-            //exchanges.Add(new CoinAverageExchange("ndax", "NDAX", "https://ndax.io/api/returnTicker")); Buggy
+            exchanges.Add(new CoinAverageExchange("ndax", "NDAX", "https://ndax.io/api/returnTicker"));
             exchanges.Add(new CoinAverageExchange("bitbank", "Bitbank", "https://public.bitbank.cc/prices"));
 
             return exchanges;

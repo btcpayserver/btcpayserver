@@ -47,6 +47,8 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("Logout")).Click();
                 s.Driver.AssertNoError();
                 Assert.Contains("Account/Login", s.Driver.Url);
+                // Should show the Tor address
+                Assert.Contains("wsaxew3qa5ljfuenfebmaf3m5ykgatct3p6zjrqwoouj3foererde3id.onion", s.Driver.PageSource);
 
                 s.Driver.Navigate().GoToUrl(s.Link("/invoices"));
                 Assert.Contains("ReturnUrl=%2Finvoices", s.Driver.Url);

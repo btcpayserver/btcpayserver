@@ -72,7 +72,7 @@ html {
   background-color: var(--btcpay-bg-dark) !important;
 }
 
-.table {
+.table-sm {
   margin: 1.5rem 0;
   background: var(--btcpay-color-white);
   border: 1px solid var(--btcpay-color-neutral-300);
@@ -81,25 +81,24 @@ html {
   border-spacing: 0px !important;
 }
 
-.table thead > tr {
+.table-sm thead > tr {
   height: 40px;
 }
 
-.table thead th {
+.table-sm thead th {
   border-bottom: none;
   border-top: none;
   font-size: 1.0rem;
 }
 
-.table th,
-.table td {
-  display: table-cell;
+.table-sm th,
+.table-sm td {
   padding: 8px 12px;
   vertical-align: middle;
   font-size: 0.92rem;
 }
 
-.table tbody tr:hover {
+.table-sm tbody tr:hover {
     background-color: var(--btcpay-color-neutral-100);
 }
 

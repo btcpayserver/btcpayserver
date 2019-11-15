@@ -82,10 +82,6 @@
     border-radius: 0;
 }
 
-#sidebar #js-cart-extra .h4 {
-    font-size: 1.5rem;
-}
-
 #sidebar.active {
     margin-right: -400px;
 }

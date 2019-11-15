@@ -72,10 +72,19 @@
     transition: all 0.3s;
     -webkit-overflow-scrolling: touch;
 }
+
 #sidebar .js-cart {
     display: none;
 }
 
+#sidebar #js-cart-list,
+#sidebar #js-cart-extra {
+    border-radius: 0;
+}
+
+#sidebar #js-cart-extra .h4 {
+    font-size: 1.5rem;
+}
 
 #sidebar.active {
     margin-right: -400px;

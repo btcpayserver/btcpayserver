@@ -29,7 +29,8 @@
     <nav class='navbar navbar-expand-lg navbar-dark fixed-top @additionalStyle' id="mainNav">
         <div class="container">
             <a class="navbar-brand js-scroll-trigger" href="~/">
-                <img src="~/img/btcpay-logo-white-txt.svg" height="45">
+                <img src="~/img/logo.svg" class="logo" />
+
                 @if (env.NetworkType != NBitcoin.NetworkType.Mainnet)
                 {
                     <span class="badge badge-warning" style="font-size:10px;">@env.NetworkType.ToString()</span>
@@ -84,7 +85,7 @@
             {
                 <div class="alert alert-danger alert-dismissible" style="position:absolute; top:75px;" role="alert">
                     <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <span>Your access to BTCPay Server is over an unsecured network. If you are using the docker deployment method with NGINX and HTTPS is not available, you probably did not configure your DNS settings correctly. <br /> 
+                    <span>Your access to BTCPay Server is over an unsecured network. If you are using the docker deployment method with NGINX and HTTPS is not available, you probably did not configure your DNS settings correctly. <br />
                           We disabled the register and login link so you don't leak your credentials.</span>
                 </div>
             }
@@ -96,7 +97,7 @@
 
     @if (User.Identity.IsAuthenticated)
     {
-        <footer class="siteFooter bg-dark text-white">
+        <footer class="footer">
             <div class="container text-right">@env.ToString()</div>
         </footer>
     }

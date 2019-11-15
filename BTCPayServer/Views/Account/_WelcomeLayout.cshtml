@@ -56,7 +56,6 @@
             line-height: 1.2;
             /* or 150% */
             letter-spacing: 0.1em;
-            color: #000000;
         }
 
         @@media screen and (min-width: 768px) {
@@ -73,7 +72,6 @@
             line-height: 33px;
             /* or 183% */
             letter-spacing: 0.1em;
-            color: #000000;
         }
 
         .lead-h {
@@ -86,11 +84,10 @@
             /* identical to box height, or 129% */
             letter-spacing: 0.1em;
             text-transform: uppercase;
-            color: #000000;
         }
     </style>
 </head>
-<body class="bg-light">
+<body>
     <section class="content-wrapper">
         <!-- Dummy navbar-brand, hackish way to keep test AssertNoError passing -->
         <div class="navbar-brand" style="display:none;"></div>
@@ -138,7 +135,10 @@
                     {
                         <div class="input-group form-group">
                             <div class="input-group-prepend">
-                                <a href="@env.OnionUrl" class="input-group-text"><span class="input-group-addon"></span><img style="display:inline" src="~/img/icons/Onion_Color.svg" height="20" /></a>
+                                <a href="@env.OnionUrl" class="input-group-text">
+                                    <span class="input-group-addon"></span>
+                                    <img src="~/img/icons/Onion_Color.svg" height="16" />
+                                </a>
                             </div>
                             <input class="form-control" onClick="this.select();" type="text" style="font-size:0.75em;" value="@env.OnionUrl" readonly>
                         </div>

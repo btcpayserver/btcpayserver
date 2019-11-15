@@ -14,6 +14,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.BootstrapUri)" rel="stylesheet" />
+    <link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.ThemeUri)" rel="stylesheet" />
     @if (Model.CustomCSSLink != null)
     {
         <link href="@Model.CustomCSSLink" rel="stylesheet" />
@@ -32,7 +33,7 @@
     <bundle name="wwwroot/bundles/crowdfund-bundle.min.css"></bundle>
     @if (!string.IsNullOrEmpty(Model.EmbeddedCSS))
     {
-            @Safe.Raw($"<style>{Model.EmbeddedCSS}</style>");   
+            @Safe.Raw($"<style>{Model.EmbeddedCSS}</style>");
     }
 
 </head>

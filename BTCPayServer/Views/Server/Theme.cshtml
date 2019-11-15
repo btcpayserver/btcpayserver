@@ -14,6 +14,14 @@
     <div class="col-lg-6">
         <form method="post">
             <div class="form-group">
+                <label asp-for="ThemeCssUri"></label>
+                <select id=themes asp-for="ThemeCssUri" class="form-control">
+                    <option value="/css/themes/classic.css">Classic</option>
+                    <option value="/css/themes/casa.css">Casa</option>
+                </select>
+                <span asp-validation-for="ThemeCssUri" class="text-danger"></span>
+            </div>
+            <div class="form-group">
                 <label asp-for="BootstrapCssUri"></label>
                 <a href="https://docs.btcpayserver.org/development/theme#bootstrap-themes" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
                 <input asp-for="BootstrapCssUri" class="form-control" />
@@ -32,7 +40,6 @@
                     is used on top of Bootstrap
                 </p>
             </div>
-
             <button type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
         </form>
     </div>

@@ -88,8 +88,7 @@ namespace BTCPayServer.Controllers
                         var segwit = network.NBitcoinNetwork.Consensus.SupportSegwit;
                         var derivation = new DerivationStrategyFactory(network.NBitcoinNetwork).CreateDirectDerivationStrategy(getxpubResult.ExtPubKey, new DerivationStrategyOptions()
                         {
-                            P2SH = segwit,
-                            Legacy = !segwit
+                            ScriptPubKeyType = segwit ? ScriptPubKeyType.SegwitP2SH : ScriptPubKeyType.Legacy
                         });
                         getxpubResult.DerivationScheme = derivation;
                         getxpubResult.RootFingerprint = (await hw.GetExtPubKey(network, new KeyPath(), normalOperationTimeout.Token)).ExtPubKey.PubKey.GetHDFingerPrint();

@@ -45,11 +45,10 @@ namespace BTCPayServer.Data
         }
 #pragma warning restore CS0618
 
-        static Network Dummy = Network.Main;
-
+        
         public static StoreBlob GetStoreBlob(this StoreData storeData)
         {
-            var result = storeData.StoreBlob == null ? new StoreBlob() : new Serializer(Dummy).ToObject<StoreBlob>(Encoding.UTF8.GetString(storeData.StoreBlob));
+            var result = storeData.StoreBlob == null ? new StoreBlob() : new Serializer(null).ToObject<StoreBlob>(Encoding.UTF8.GetString(storeData.StoreBlob));
             if (result.PreferredExchange == null)
                 result.PreferredExchange = CoinAverageRateProvider.CoinAverageName;
             return result;
@@ -57,8 +56,8 @@ namespace BTCPayServer.Data
 
         public static bool SetStoreBlob(this StoreData storeData, StoreBlob storeBlob)
         {
-            var original = new Serializer(Dummy).ToString(storeData.GetStoreBlob());
-            var newBlob = new Serializer(Dummy).ToString(storeBlob);
+            var original = new Serializer(null).ToString(storeData.GetStoreBlob());
+            var newBlob = new Serializer(null).ToString(storeBlob);
             if (original == newBlob)
                 return false;
             storeData.StoreBlob = Encoding.UTF8.GetBytes(newBlob);

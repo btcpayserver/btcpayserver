@@ -543,7 +543,7 @@ namespace BTCPayServer.Services.Invoices
         public PaymentMethodDictionary GetPaymentMethods()
         {
             PaymentMethodDictionary paymentMethods = new PaymentMethodDictionary();
-            var serializer = new Serializer(Dummy);
+            var serializer = new Serializer(null);
 #pragma warning disable CS0618
             if (PaymentMethod != null)
             {
@@ -574,7 +574,7 @@ namespace BTCPayServer.Services.Invoices
         public void SetPaymentMethods(PaymentMethodDictionary paymentMethods)
         {
             var obj = new JObject();
-            var serializer = new Serializer(Dummy);
+            var serializer = new Serializer(null);
 #pragma warning disable CS0618
             foreach (var v in paymentMethods)
             {

@@ -85,9 +85,9 @@ namespace BTCPayServer.Controllers
         [Route("rates")]
         [HttpGet]
         [BitpayAPIConstraint]
-        public async Task<IActionResult> GetRates(string currencyPairs, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetRates(string currencyPairs, string storeId = null, CancellationToken cancellationToken = default)
         {
-            var result = await GetRates2(currencyPairs, null, cancellationToken);
+            var result = await GetRates2(currencyPairs, storeId, cancellationToken);
             var rates = (result as JsonResult)?.Value as Rate[];
             if (rates == null)
                 return result;

@@ -1,0 +1,118 @@
+﻿/* General and site-wide Bootstrap modifications */
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+.logo {
+    height: 45px;
+}
+
+.only-for-js,
+.input-group-clear {
+    display: none;
+}
+
+.wraptextAuto {
+    max-width: 300px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    display: block;
+    white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+    .wraptextAuto {
+        max-width: 600px;
+    }
+}
+
+.smMaxWidth {
+    max-width: 150px;
+}
+
+@media (min-width: 768px) {
+    .smMaxWidth {
+        max-width: 300px;
+    }
+}
+
+a {
+    transition-duration: 0.2s;
+    transition-property: background, color;
+}
+
+/* Admin Sections */
+.section-heading {
+    text-align: var(--btcpay-section-heading-text-align, center);
+}
+
+/* Admin Sidebar Navigation */
+a.nav-link {
+    color: var(--btcpay-nav-color-link, var(--btcpay-color-neutral-600));
+    background: var(--btcpay-bg-nav-link, transparent);
+}
+
+a.nav-link:focus,
+a.nav-link:hover {
+    color: var(--btcpay-nav-color-link-accent, var(--btcpay-color-neutral-700));
+    background: var(--btcpay-bg-nav-link-hover, transparent);
+}
+
+.col-md-3 .nav-pills {
+    margin-left: -1rem;
+}
+
+.nav-pills .nav-link.active,
+.nav-pills .show > .nav-link {
+    color: var(--btcpay-nav-color-link-active, var(--btcpay-color-neutral-900));
+    background: var(--btcpay-bg-nav-link-active, var(--btcpay-color-primary-backdrop));
+    font-weight: 500;
+    border-left: 5px solid var(--btcpay-color-primary);
+}
+
+.display-when-ledger-connected {
+    display: none;
+}
+
+/* Homepage */
+#services img {
+    margin-bottom: 1rem;
+}
+
+.social-row {
+    margin: 2rem 0;
+}
+
+.social-row > div {
+    margin-bottom: 3rem;
+}
+
+.social-row img {
+    height: 50px;
+}
+
+.social-row span {
+    display: block;
+    margin-top: 1rem;
+}
+
+/* Footer */
+.footer {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 18px;
+    line-height: 18px;
+    vertical-align: middle;
+    font-size: 8px;
+    width: 100%;
+    overflow: hidden;
+    color: var(--btcpay-color-footer, var(--btcpay-color-neutral-100));
+    background: var(--btcpay-footer-bg, var(--btcpay-bg-dark));
+}
+
+/* Prevent layout from breaking on hyperlinks with very long URLs as the visible text */
+.invoice-details a {
+    word-break: break-word;
+}

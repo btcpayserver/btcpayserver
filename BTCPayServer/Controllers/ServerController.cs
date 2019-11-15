@@ -621,6 +621,21 @@ namespace BTCPayServer.Controllers
                         ServiceLink = service.ConnectionString.Server.AbsoluteUri.WithoutEndingSlash()
                     });
                 }
+                if (service.Type == ExternalServiceTypes.LNDSeedBackup)
+                {
+                    var model = LndSeedBackupViewModel.Parse(service.ConnectionString.CookieFilePath);
+                    if (!model.IsWalletUnlockPresent)
+                    {
+                        TempData.SetStatusMessageModel(new StatusMessageModel()
+                        {
+                            Severity = StatusMessageModel.StatusSeverity.Warning,
+                            Html = "Your LND does not seem to allow seed backup.<br />" +
+                            "It's recommended, but not required, that you migrate as instructed by <a href=\"https://blog.btcpayserver.org/btcpay-lnd-migration\">our migration blog post</a>.<br />" +
+                            "You will need to close all of your channels, and migrate your funds as <a href=\"https://blog.btcpayserver.org/btcpay-lnd-migration\">we documented</a>."
+                        });
+                    }
+                    return View("LndSeedBackup", model);
+                }
                 if (service.Type == ExternalServiceTypes.RPC)
                 {
                     return View("RPCService", new LightningWalletServices()
@@ -657,6 +672,39 @@ namespace BTCPayServer.Controllers
             catch (Exception ex)
             {
                 TempData[WellKnownTempData.ErrorMessage] = ex.Message;
+                return RedirectToAction(nameof(Services));
+            }
+        }
+
+        [HttpPost]
+        [Route("server/services/{serviceName}/{cryptoCode}/removelndseed")]
+        public async Task<IActionResult> RemoveLndSeed(string serviceName, string cryptoCode)
+        {
+            var service = GetService(serviceName, cryptoCode);
+            if (service == null)
+                return NotFound();
+
+            var model = LndSeedBackupViewModel.Parse(service.ConnectionString.CookieFilePath);
+            if (!model.IsWalletUnlockPresent)
+            {
+                TempData[WellKnownTempData.ErrorMessage] = $"File with wallet password and seed info not present";
+                return RedirectToAction(nameof(Services));
+            }
+
+            if (string.IsNullOrEmpty(model.Seed))
+            {
+                TempData[WellKnownTempData.ErrorMessage] = $"Seed information was already removed";
+                return RedirectToAction(nameof(Services));
+            }
+
+            if (await model.RemoveSeedAndWrite(service.ConnectionString.CookieFilePath))
+            {
+                TempData[WellKnownTempData.ErrorMessage] = $"Seed successfully removed";
+                return RedirectToAction(nameof(Service), new { serviceName, cryptoCode });
+            }
+            else
+            {
+                TempData[WellKnownTempData.ErrorMessage] = $"Seed removal failed";
                 return RedirectToAction(nameof(Services));
             }
         }

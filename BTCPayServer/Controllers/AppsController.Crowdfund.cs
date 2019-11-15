@@ -68,7 +68,7 @@ namespace BTCPayServer.Controllers
         }
         [HttpPost]
         [Route("{appId}/settings/crowdfund")]
-        public async Task<IActionResult> UpdateCrowdfund(string appId, UpdateCrowdfundViewModel vm, string command = null)
+        public async Task<IActionResult> UpdateCrowdfund(string appId, UpdateCrowdfundViewModel vm, string command)
         {
             if (!string.IsNullOrEmpty( vm.TargetCurrency) && _currencies.GetCurrencyData(vm.TargetCurrency, false) == null)
                 ModelState.AddModelError(nameof(vm.TargetCurrency), "Invalid currency");

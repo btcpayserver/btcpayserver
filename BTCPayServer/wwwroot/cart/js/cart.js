@@ -18,7 +18,7 @@ function Cart() {
 
     this.listItems();
     this.bindEmptyCart();
-    
+
     this.updateItemsCount();
     this.updateAmount();
     this.updatePosData();
@@ -108,8 +108,8 @@ Cart.prototype.getTotalProducts = function() {
     // Always calculate the total amount based on the cart content
     for (var key in this.content) {
         if (
-            this.content.hasOwnProperty(key) && 
-            typeof this.content[key] != 'undefined' && 
+            this.content.hasOwnProperty(key) &&
+            typeof this.content[key] != 'undefined' &&
             !this.content[key].disabled
         ) {
             var price = this.toCents(this.content[key].price.value);
@@ -180,7 +180,7 @@ Cart.prototype.incrementItem = function(id) {
     if(!result){
         this.items = oldItemsCount;
     }
-    
+
     this.updateAll();
     return result;
 }
@@ -239,13 +239,13 @@ Cart.prototype.decrementItem = function(id) {
 Cart.prototype.removeItemAll = function(id) {
     var self = this;
     this.items = 0;
-    
+
     // Remove by item
     if (typeof id != 'undefined') {
         this.content.filter(function(obj, index, arr){
             if (obj.id === id) {
                 self.removeItem(id, index, arr);
-    
+
                 for (var i = 0; i < obj.count; i++) {
                     self.items--;
                 }
@@ -264,7 +264,7 @@ Cart.prototype.removeItemAll = function(id) {
 
 Cart.prototype.removeItem = function(id, index, arr) {
     // Remove from the array
-    arr.splice(index, 1); 
+    arr.splice(index, 1);
     // Remove from the DOM
     this.$list.find('tr').eq(index+1).remove();
 }
@@ -386,7 +386,7 @@ Cart.prototype.template = function($template, obj) {
 
 // Build the cart skeleton
 Cart.prototype.buildUI = function() {
-    var $table = $('#js-cart-extra').find('tbody'),
+    var $table = $('#js-cart-extra').find('thead'),
         list = [];
 
     tableTemplate = this.template($('#template-cart-extra'), {
@@ -420,7 +420,7 @@ Cart.prototype.listItems = function() {
         self = this,
         list = [],
         tableTemplate = '';
-    
+
     if (this.content.length > 0) {
         // Prepare the list of items in the cart
         for (var key in this.content) {
@@ -453,7 +453,7 @@ Cart.prototype.listItems = function() {
                 prevQty = parseInt($(this).data('prev')),
                 qtyDiff = Math.abs(qty - prevQty),
                 qtyIncreased = qty > prevQty;
-            
+
             if (isQty) {
                 $(this).data('prev', qty);
             } else {
@@ -509,10 +509,10 @@ Cart.prototype.listItems = function() {
         // Increment item
         $('.js-cart-item-plus').off().on('click', function(event){
             event.preventDefault();
-            if(self.incrementItem($(this).closest('tr').data('id'))){              
+            if(self.incrementItem($(this).closest('tr').data('id'))){
                 var $val = $(this).parents('.input-group').find('.js-cart-item-count'),
                     val = parseInt($val.val() || $val.data('prev')) + 1;
-                
+
                 $val.val(val);
                 $val.data('prev', val);
                 self.resetTip();
@@ -625,8 +625,8 @@ Cart.prototype.percentage = function(amount, percentage) {
 /*
 * Storage
 */
-Cart.prototype.getStorageKey = function (name) { 
-    return (name + srvModel.appId + srvModel.currencyCode); 
+Cart.prototype.getStorageKey = function (name) {
+    return (name + srvModel.appId + srvModel.currencyCode);
 }
 
 Cart.prototype.saveLocalStorage = function() {
@@ -644,7 +644,7 @@ Cart.prototype.loadLocalStorage = function() {
             continue;
         }
 
-        //check if the pos items still has the cached cart items 
+        //check if the pos items still has the cached cart items
         var matchedItem = srvModel.items.find(function(item){
             return item.id === self.content[i].id;
         });
@@ -653,7 +653,7 @@ Cart.prototype.loadLocalStorage = function() {
             this.content.splice(i,1);
             continue;
         }else{
-            
+
             if(matchedItem.inventory != null && matchedItem.inventory <= 0){
                 //item is out of stock
                 this.content.splice(i,1);
@@ -663,7 +663,7 @@ Cart.prototype.loadLocalStorage = function() {
             }
             //update its stock
             this.content[i].inventory = matchedItem.inventory;
-            
+
         }
         this.items += this.content[i].count;
             // Delete the disabled flag if any
@@ -730,7 +730,7 @@ $.fn.inputAmount = function(obj, type) {
 $.fn.removeAmount = function(obj, type) {
     $(this).off().on('click', function(event){
         event.preventDefault();
-    
+
         switch (type) {
             case 'customAmount':
                 obj.resetCustomAmount();
@@ -745,6 +745,6 @@ $.fn.removeAmount = function(obj, type) {
         obj.resetTip();
         obj.updateTotal();
         obj.updateSummaryTotal();
-        obj.emptyCartToggle();  
+        obj.emptyCartToggle();
     });
 }

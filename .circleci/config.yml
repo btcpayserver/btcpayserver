@@ -104,15 +104,16 @@ workflows:
             # ignore any commit on any branch by default
             branches:
               ignore: /.*/
-            # only act on version tags
+            # only act on version tags v1.0.0.88
+            # OR feature tags like vlndseedbackup
             tags:
-              only: /v[1-9]+(\.[0-9]+)*/
+              only: /(v[1-9]+(\.[0-9]+)*)|(v[a-z]+)/
       - arm32v7:
           filters:
             branches:
               ignore: /.*/
             tags:
-              only: /v[1-9]+(\.[0-9]+)*/
+              only: /(v[1-9]+(\.[0-9]+)*)|(v[a-z]+)/
       - multiarch:
           requires:
             - amd64
@@ -121,4 +122,4 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /v[1-9]+(\.[0-9]+)*/
+              only: /(v[1-9]+(\.[0-9]+)*)|(v[a-z]+)/

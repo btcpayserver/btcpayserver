@@ -116,3 +116,9 @@ a.nav-link:hover {
 .invoice-details a {
     word-break: break-word;
 }
+
+#qrCode {
+    padding: 10px;
+    background: white;
+    display: inline-block;
+}

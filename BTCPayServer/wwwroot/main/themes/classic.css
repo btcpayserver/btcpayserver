@@ -57,7 +57,7 @@
 
   --btcpay-bg-nav-link-active: #d9f7ef;
 
-  --btcpay-font-size-base: 14px;
+  --btcpay-font-size-base: 16px;
   --btcpay-font-family-head: 'Open Sans', 'Helvetica Neue', Arial, sans-serif;
   --btcpay-font-family-base: 'Helvetica Neue', Arial, sans-serif;
   --btcpay-font-family-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -82,12 +82,13 @@ html {
 }
 
 .table thead > tr {
-  height: 36px;
+  height: 40px;
 }
 
 .table thead th {
   border-bottom: none;
   border-top: none;
+  font-size: 0.95rem;
 }
 
 .table th,
@@ -95,6 +96,11 @@ html {
   display: table-cell;
   padding: 8px 12px;
   vertical-align: middle;
+  font-size: 0.85rem;
+}
+
+.table tbody tr:hover {
+    background-color: var(--btcpay-color-neutral-100);
 }
 
 .removetopborder tr:first-child th,

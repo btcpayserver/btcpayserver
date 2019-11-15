@@ -68,6 +68,7 @@ a.nav-link:hover {
     color: var(--btcpay-nav-color-link-active, var(--btcpay-color-neutral-900));
     background: var(--btcpay-bg-nav-link-active, var(--btcpay-color-primary-backdrop));
     font-weight: 500;
+    border-left: 5px solid var(--btcpay-color-primary);
 }
 
 .display-when-ledger-connected {

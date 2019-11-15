@@ -6,7 +6,7 @@
     ViewData.SetActivePageAndTitle(WalletsNavPages.Send);
 }
 
-<div class="row no-gutters">
+<div class="row">
     <div class="@(Model.Outputs.Count==1? "col-lg-6 transaction-output-form": "col-lg-8")">
         <form method="post">
             <input type="hidden" asp-for="Divisibility" />
@@ -37,7 +37,7 @@
                     <div class="input-group">
                         <input asp-for="Outputs[0].Amount" type="number" step="any" asp-format="{0}" class="form-control output-amount" />
                         <div class="input-group-prepend">
-                            <span class="input-group-text text-muted fiat-value" style="display:none;"></span>
+                            <span class="input-group-text fiat-value" style="display:none;"></span>
                         </div>
                     </div>
                     <span asp-validation-for="Outputs[0].Amount" class="text-danger"></span>
@@ -68,7 +68,7 @@
                                         <div class="input-group">
                                             <input asp-for="Outputs[index].Amount" type="number" step="any" asp-format="{0}" class="form-control output-amount" />
                                             <div class="input-group-prepend">
-                                                <span class="input-group-text text-muted fiat-value" style="display:none;"></span>
+                                                <span class="input-group-text fiat-value" style="display:none;"></span>
                                             </div>
                                         </div>
                                         <p class="form-text text-muted crypto-info">
@@ -118,13 +118,9 @@
                 </div>
             }
             <div class="card">
-                <div class="card-header" id="accordian-dev-info-notification-header">
-                    <h2 class="mb-0">
-                        <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#accordian-advanced" aria-expanded="false" aria-controls="accordian-advanced">
-                            Advanced settings
-                        </button>
-                    </h2>
-                </div>
+                <button class="btn btn-light collapsed" type="button" data-toggle="collapse" data-target="#accordian-advanced" aria-expanded="false" aria-controls="accordian-advanced">
+                    Advanced settings
+                </button>
                 <div id="accordian-advanced" class="collapse" aria-labelledby="accordian-advanced-header" data-parent="#accordian-advanced">
                     <div class="card-body">
                         <div class="form-check">

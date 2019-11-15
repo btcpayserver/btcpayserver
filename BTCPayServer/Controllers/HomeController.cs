@@ -121,7 +121,7 @@ namespace BTCPayServer.Controllers
 
             try
             {
-                BitcoinUrlBuilder urlBuilder = new BitcoinUrlBuilder(vm.BitpayLink);
+                BitcoinUrlBuilder urlBuilder = new BitcoinUrlBuilder(vm.BitpayLink, Network.Main);
 #pragma warning disable CS0618 // Type or member is obsolete
                 if (!urlBuilder.PaymentRequestUrl.DnsSafeHost.EndsWith("bitpay.com", StringComparison.OrdinalIgnoreCase))
                 {

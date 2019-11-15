@@ -18,8 +18,8 @@
         }
 
         <div class="row">
-            <div class="col-lg-12 text-center">
-                <h2 class="section-heading">@ViewData["Title"]</h2>
+            <div class="col-lg-12 section-heading">
+                <h2>@ViewData["Title"]</h2>
                 <hr class="primary">
                 <p>Create, search or pay an invoice. (<a href="#help" data-toggle="collapse">Help</a>)</p>
                 <div id="help" class="collapse text-left">
@@ -45,7 +45,7 @@
             </div>
         </div>
 
-        <div class="row no-gutter" style="margin-bottom: 5px;">
+        <div class="row button-row">
             <div class="col-lg-6">
                 <a asp-action="CreateInvoice" class="btn btn-primary" role="button" id="CreateNewInvoice"><span class="fa fa-plus"></span> Create a new invoice</a>
                 <a class="btn btn-primary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -73,17 +73,25 @@
                                 <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                     <span class="sr-only">Toggle Dropdown</span>
                                 </button>
+
+                                @{
+                                    var storeIds = String.Join(
+                                        "",
+                                        Model.StoreIds.Select(storeId => string.Format(",storeid:{0}", storeId))
+                                    );
+                                }
+
                                 <div class="dropdown-menu dropdown-menu-right">
-                                    <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=status%3Ainvalid">Invalid Invoices</a>
-                                    <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=status%3Apaid%2Cstatus%3Aconfirmed%2Cstatus%3Acomplete">Paid Invoices</a>
-                                    <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=exceptionstatus%3ApaidLate">Paid Late Invoices</a>
-                                    <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=exceptionstatus%3ApaidPartial">Paid Partial Invoices</a>
-                                    <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=exceptionstatus%3ApaidOver">Paid Over Invoices</a>
-                                    <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=unusual%3Atrue">Unusual Invoices</a>
+                                    <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=status%3Ainvalid@{@storeIds}">Invalid Invoices</a>
+                                    <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=status%3Apaid%2Cstatus%3Aconfirmed%2Cstatus%3Acomplete@{@storeIds}">Paid Invoices</a>
+                                    <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=exceptionstatus%3ApaidLate@{@storeIds}s">Paid Late Invoices</a>
+                                    <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=exceptionstatus%3ApaidPartial@{@storeIds}">Paid Partial Invoices</a>
+                                    <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=exceptionstatus%3ApaidOver@{@storeIds}">Paid Over Invoices</a>
+                                    <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=unusual%3Atrue@{@storeIds}">Unusual Invoices</a>
                                     <div role="separator" class="dropdown-divider"></div>
-                                    <a class="dropdown-item last24" href="/invoices?Count=@Model.Count&timezoneoffset=0&SearchTerm=startDate%3Alast24">Last 24 hours</a>
-                                    <a class="dropdown-item last72" href="/invoices?Count=@Model.Count&timezoneoffset=0&SearchTerm=startDate%3Alast72">Last 3 days</a>
-                                    <a class="dropdown-item last168" href="/invoices?Count=@Model.Count&timezoneoffset=0&SearchTerm=startDate%3Alast168">Last 7 days</a>
+                                    <a class="dropdown-item last24" href="/invoices?Count=@Model.Count&timezoneoffset=0&SearchTerm=startDate%3Alast24@{@storeIds}">Last 24 hours</a>
+                                    <a class="dropdown-item last72" href="/invoices?Count=@Model.Count&timezoneoffset=0&SearchTerm=startDate%3Alast72@{@storeIds}">Last 3 days</a>
+                                    <a class="dropdown-item last168" href="/invoices?Count=@Model.Count&timezoneoffset=0&SearchTerm=startDate%3Alast168@{@storeIds}">Last 7 days</a>
                                     <button type="button" class="dropdown-item" data-toggle="modal" data-target="#customRangeModal" data-backdrop="static">Custom Range</button>
                                     <div role="separator" class="dropdown-divider"></div>
                                     <a class="dropdown-item" href="/invoices">Unfiltered</a>
@@ -175,152 +183,154 @@
         @* Custom Range Modal *@
 
         <div class="row">
-            <table class="table table-sm table-responsive-md">
-                <thead>
-                    <tr>
-                        <th style="min-width: 90px;" class="col-md-auto">
-                            Date
-                            <a href="javascript:switchTimeFormat()">
-                                <span class="fa fa-clock-o" title="Switch date format"></span>
-                            </a>
-                        </th>
-                        <th style="max-width: 180px;">OrderId</th>
-                        <th>InvoiceId</th>
-                        <th style="min-width: 150px;">Status</th>
-                        <th style="text-align:right">Amount</th>
-                        <th style="text-align:right">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var invoice in Model.Invoices)
-                    {
+            <div class="col-lg-12">
+                <table class="table table-sm table-responsive-md">
+                    <thead>
                         <tr>
-                            <td>
-                                <span class="switchTimeFormat" data-switch="@invoice.Date.ToTimeAgo()">
-                                    @invoice.Date.ToBrowserDate()
-                                </span>
-                            </td>
-                            <td style="max-width: 180px;">
-                                @if (invoice.RedirectUrl != string.Empty)
-                                {
-                                    <a href="@invoice.RedirectUrl" class="wraptext200">@invoice.OrderId</a>
-                                }
-                                else
-                                {
-                                    <span>@invoice.OrderId</span>
-                                }
-                            </td>
-                            <td>@invoice.InvoiceId</td>
-                            <td>
-                                @if (invoice.CanMarkStatus)
-                                {
-                                    <div id="pavpill_@invoice.InvoiceId">
-                                        <span class="dropdown-toggle dropdown-toggle-split pavpill pavpil-@invoice.Status.ToString().ToLower()"
-                                              data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                            @invoice.StatusString
-                                        </span>
-                                        <div class="dropdown-menu pull-right">
-                                            @if (invoice.CanMarkInvalid)
-                                            {
-                                                <button class="dropdown-item small cursorPointer" onclick="changeInvoiceState(this, '@invoice.InvoiceId', 'invalid')">
-                                                    Mark as invalid <span class="fa fa-times"></span>
-                                                </button>
-                                            }
-                                            @if (invoice.CanMarkComplete)
-                                            {
-                                                <button class="dropdown-item small cursorPointer" onclick="changeInvoiceState(this, '@invoice.InvoiceId', 'complete')">
-                                                    Mark as complete <span class="fa fa-check-circle"></span>
-                                                </button>
-                                            }
-                                        </div>
-                                    </div>
-                                }
-                                else
-                                {
-                                    <span class="pavpill pavpil-@invoice.Status.ToString().ToLower()">@invoice.StatusString</span>
-                                }
-                            </td>
-                            <td style="text-align:right">@invoice.AmountCurrency</td>
-                            <td style="text-align:right">
-                                @if (invoice.ShowCheckout)
-                                {
-                                    <span>
-                                        <a asp-action="Checkout" class="invoice-checkout-link" id="invoice-checkout-@invoice.InvoiceId" asp-route-invoiceId="@invoice.InvoiceId">Checkout</a>
-                                        <a href="javascript:btcpay.showInvoice('@invoice.InvoiceId')">[^]</a>
-                                        @if (!invoice.CanMarkStatus)
-                                        {
-                                            <span>-</span>
-                                        }
-                                    </span>
-                                }
-                                &nbsp;
-                                <a asp-action="Invoice" class="invoice-details-link" asp-route-invoiceId="@invoice.InvoiceId">Details</a>
-                                @*<span title="Details" class="fa fa-list"></span>*@
-                                &nbsp;
-                                <a href="javascript:void(0);" onclick="detailsToggle(this, '@invoice.InvoiceId')">
-                                    <span title="Invoice Details Toggle" class="fa fa-1x fa-angle-double-down"></span>
+                            <th style="min-width: 90px;" class="col-md-auto">
+                                Date
+                                <a href="javascript:switchTimeFormat()">
+                                    <span class="fa fa-clock-o" title="Switch date format"></span>
                                 </a>
-                            </td>
+                            </th>
+                            <th style="max-width: 180px;">OrderId</th>
+                            <th>InvoiceId</th>
+                            <th style="min-width: 150px;">Status</th>
+                            <th style="text-align:right">Amount</th>
+                            <th style="text-align:right">Actions</th>
                         </tr>
-                        <tr id="invoice_@invoice.InvoiceId" style="display:none;">
-                            <td colspan="99">
-                                <div style="margin-left: 15px; margin-bottom: 0px;">
-                                    <partial name="InvoicePaymentsPartial" model="invoice.Details" />
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-            <nav aria-label="..." class="w-100">
-                <ul class="pagination float-left">
-                    <li class="page-item @(Model.Skip == 0 ? "disabled" : null)">
-                        <a class="page-link" tabindex="-1" href="@listInvoices(-1, Model.Count)">&laquo;</a>
-                    </li>
-                    <li class="page-item disabled">
-                        <span class="page-link">@(Model.Skip + 1) to @(Model.Skip + Model.Invoices.Count) of @Model.Total</span>
-                    </li>
-                    <li class="page-item @(Model.Total > (Model.Skip + Model.Invoices.Count) ? null : "disabled")">
-                        <a class="page-link" href="@listInvoices(1, Model.Count)">&raquo;</a>
-                    </li>
-                </ul>
-                <ul class="pagination float-right">
-                    <li class="page-item disabled">
-                        <span class="page-link">Page Size:</span>
-                    </li>
-                    <li class="page-item @(Model.Count == 50 ? "active" : null)">
-                        <a class="page-link" href="@listInvoices(0, 50)">50</a>
-                    </li>
-                    <li class="page-item @(Model.Count == 100 ? "active" : null)">
-                        <a class="page-link" href="@listInvoices(0, 100)">100</a>
-                    </li>
-                    <li class="page-item @(Model.Count == 250 ? "active" : null)">
-                        <a class="page-link" href="@listInvoices(0, 250)">250</a>
-                    </li>
-                    <li class="page-item @(Model.Count == 500 ? "active" : null)">
-                        <a class="page-link" href="@listInvoices(0, 500)">500</a>
-                    </li>
-                </ul>
-            </nav>
-            @{
-                string listInvoices(int prevNext, int count)
-                {
-                    var skip = Model.Skip;
-                    if (prevNext == -1)
-                        skip = Math.Max(0, Model.Skip - Model.Count);
-                    else if (prevNext == 1)
-                        skip = Model.Skip + count;
-
-                    var act = Url.Action("ListInvoices", new
+                    </thead>
+                    <tbody>
+                        @foreach (var invoice in Model.Invoices)
+                        {
+                            <tr>
+                                <td>
+                                    <span class="switchTimeFormat" data-switch="@invoice.Date.ToTimeAgo()">
+                                        @invoice.Date.ToBrowserDate()
+                                    </span>
+                                </td>
+                                <td style="max-width: 180px;">
+                                    @if (invoice.RedirectUrl != string.Empty)
+                                    {
+                                        <a href="@invoice.RedirectUrl" class="wraptext200">@invoice.OrderId</a>
+                                    }
+                                    else
+                                    {
+                                        <span>@invoice.OrderId</span>
+                                    }
+                                </td>
+                                <td>@invoice.InvoiceId</td>
+                                <td>
+                                    @if (invoice.CanMarkStatus)
+                                    {
+                                        <div id="pavpill_@invoice.InvoiceId">
+                                            <span class="dropdown-toggle dropdown-toggle-split pavpill pavpil-@invoice.Status.ToString().ToLower()"
+                                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                @invoice.StatusString
+                                            </span>
+                                            <div class="dropdown-menu pull-right">
+                                                @if (invoice.CanMarkInvalid)
+                                                {
+                                                    <button class="dropdown-item small cursorPointer" onclick="changeInvoiceState(this, '@invoice.InvoiceId', 'invalid')">
+                                                        Mark as invalid <span class="fa fa-times"></span>
+                                                    </button>
+                                                }
+                                                @if (invoice.CanMarkComplete)
+                                                {
+                                                    <button class="dropdown-item small cursorPointer" onclick="changeInvoiceState(this, '@invoice.InvoiceId', 'complete')">
+                                                        Mark as complete <span class="fa fa-check-circle"></span>
+                                                    </button>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="pavpill pavpil-@invoice.Status.ToString().ToLower()">@invoice.StatusString</span>
+                                    }
+                                </td>
+                                <td style="text-align:right">@invoice.AmountCurrency</td>
+                                <td style="text-align:right">
+                                    @if (invoice.ShowCheckout)
+                                    {
+                                        <span>
+                                            <a asp-action="Checkout" class="invoice-checkout-link" id="invoice-checkout-@invoice.InvoiceId" asp-route-invoiceId="@invoice.InvoiceId">Checkout</a>
+                                            <a href="javascript:btcpay.showInvoice('@invoice.InvoiceId')">[^]</a>
+                                            @if (!invoice.CanMarkStatus)
+                                            {
+                                                <span>-</span>
+                                            }
+                                        </span>
+                                    }
+                                    &nbsp;
+                                    <a asp-action="Invoice" class="invoice-details-link" asp-route-invoiceId="@invoice.InvoiceId">Details</a>
+                                    @*<span title="Details" class="fa fa-list"></span>*@
+                                    &nbsp;
+                                    <a href="javascript:void(0);" onclick="detailsToggle(this, '@invoice.InvoiceId')">
+                                        <span title="Invoice Details Toggle" class="fa fa-1x fa-angle-double-down"></span>
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr id="invoice_@invoice.InvoiceId" style="display:none;">
+                                <td colspan="99">
+                                    <div style="margin-left: 15px; margin-bottom: 0px;">
+                                        <partial name="InvoicePaymentsPartial" model="invoice.Details" />
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                <nav aria-label="..." class="w-100">
+                    <ul class="pagination float-left">
+                        <li class="page-item @(Model.Skip == 0 ? "disabled" : null)">
+                            <a class="page-link" tabindex="-1" href="@listInvoices(-1, Model.Count)">&laquo;</a>
+                        </li>
+                        <li class="page-item disabled">
+                            <span class="page-link">@(Model.Skip + 1) to @(Model.Skip + Model.Invoices.Count) of @Model.Total</span>
+                        </li>
+                        <li class="page-item @(Model.Total > (Model.Skip + Model.Invoices.Count) ? null : "disabled")">
+                            <a class="page-link" href="@listInvoices(1, Model.Count)">&raquo;</a>
+                        </li>
+                    </ul>
+                    <ul class="pagination float-right">
+                        <li class="page-item disabled">
+                            <span class="page-link">Page Size:</span>
+                        </li>
+                        <li class="page-item @(Model.Count == 50 ? "active" : null)">
+                            <a class="page-link" href="@listInvoices(0, 50)">50</a>
+                        </li>
+                        <li class="page-item @(Model.Count == 100 ? "active" : null)">
+                            <a class="page-link" href="@listInvoices(0, 100)">100</a>
+                        </li>
+                        <li class="page-item @(Model.Count == 250 ? "active" : null)">
+                            <a class="page-link" href="@listInvoices(0, 250)">250</a>
+                        </li>
+                        <li class="page-item @(Model.Count == 500 ? "active" : null)">
+                            <a class="page-link" href="@listInvoices(0, 500)">500</a>
+                        </li>
+                    </ul>
+                </nav>
+                @{
+                    string listInvoices(int prevNext, int count)
                     {
-                        searchTerm = Model.SearchTerm,
-                        skip = skip,
-                        count = count,
-                    });
+                        var skip = Model.Skip;
+                        if (prevNext == -1)
+                            skip = Math.Max(0, Model.Skip - Model.Count);
+                        else if (prevNext == 1)
+                            skip = Model.Skip + count;
 
-                    return act;
+                        var act = Url.Action("ListInvoices", new
+                        {
+                            searchTerm = Model.SearchTerm,
+                            skip = skip,
+                            count = count,
+                        });
+
+                        return act;
+                    }
                 }
-            }
+            </div>
         </div>
 
     </div>

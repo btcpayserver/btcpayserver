@@ -230,9 +230,10 @@ namespace BTCPayServer.Tests
                 rateProvider.Providers.Add("bittrex", bittrex);
             }
 
-            
 
+            Logs.Tester.LogInformation("Waiting site is operational...");
             await WaitSiteIsOperational();
+            Logs.Tester.LogInformation("Site is now operational");
         }
 
         private async Task WaitSiteIsOperational()

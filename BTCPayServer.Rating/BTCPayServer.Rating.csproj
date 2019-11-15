@@ -8,11 +8,11 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.9" Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
-    <FrameworkReference Include="Microsoft.AspNetCore.App"  Condition="'$(TargetFramework)' != 'netcoreapp2.1'" />
+    <FrameworkReference Include="Microsoft.AspNetCore.App" Condition="'$(TargetFramework)' != 'netcoreapp2.1'" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.3.1" Condition="'$(TargetFramework)' != 'netcoreapp2.1'" />
     <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.7" Condition="'$(TargetFramework)' != 'netcoreapp2.1'" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
-    <PackageReference Include="DigitalRuby.ExchangeSharp" Version="0.5.3" />
+    <PackageReference Include="DigitalRuby.ExchangeSharp" Version="0.6.3" />
   </ItemGroup>
 
   <ItemGroup>

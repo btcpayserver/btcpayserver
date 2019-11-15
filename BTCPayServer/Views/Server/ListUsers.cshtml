@@ -5,13 +5,14 @@
 
 <partial name="_StatusMessage" />
 
-<div class="row">
+<div class="row button-row">
     <div class="col align-self-center">Total Users: @Model.Total</div>
     <div class="col text-right">
         <a asp-controller="Account"
            asp-action="Register"
            asp-route-returnUrl="@Context.Request.GetCurrentPath()"
            asp-route-logon="false"
+           asp-route-useBasicLayout="true"
            class="btn btn-primary"
            role="button">
             <span class="fa fa-plus"></span> Add User

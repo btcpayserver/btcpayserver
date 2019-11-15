@@ -7,28 +7,61 @@
 <head>
     <partial name="Header" />
 
-    <link href="~/main/css/Montserrat.css" rel="stylesheet">
+    <link href="~/main/fonts/Montserrat.css" rel="stylesheet">
     <style>
+        .content-wrapper {
+            padding: 70px 0;
+        }
+
+        @@media screen and (min-width: 768px) {
+            .content-wrapper {
+                padding: 100px 0;
+            }
+        }
 
         .col-head {
             display: flex;
             align-items: center;
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
+        }
+
+        @@media screen and (min-width: 768px) {
+            .col-head {
+                text-align: left;
+                flex-direction: row;
+                justify-content: start;
+            }
         }
 
         .head-logo {
-            height: 100px;
-            margin-right: 50px;
+            height: 70px;
+            margin-bottom: 1rem;
+        }
+
+        @@media screen and (min-width: 768px) {
+            .head-logo {
+                height: 100px;
+                margin-bottom: 0;
+                margin-right: 50px;
+            }
         }
 
         .lead-title {
             font-family: Montserrat;
             font-style: normal;
             font-weight: bold;
-            font-size: 40px;
+            font-size: 24px;
             line-height: 1.2;
             /* or 150% */
             letter-spacing: 0.1em;
-            color: #000000;
+        }
+
+        @@media screen and (min-width: 768px) {
+            .lead-title {
+                font-size: 40px;
+            }
         }
 
         .lead-login {
@@ -39,7 +72,6 @@
             line-height: 33px;
             /* or 183% */
             letter-spacing: 0.1em;
-            color: #000000;
         }
 
         .lead-h {
@@ -52,12 +84,11 @@
             /* identical to box height, or 129% */
             letter-spacing: 0.1em;
             text-transform: uppercase;
-            color: #000000;
         }
     </style>
 </head>
-<body class="bg-light">
-    <section>
+<body>
+    <section class="content-wrapper">
         <!-- Dummy navbar-brand, hackish way to keep test AssertNoError passing -->
         <div class="navbar-brand" style="display:none;"></div>
         <div class="container">
@@ -71,7 +102,7 @@
                 <div class="col-md-7 order-md-1 order-2">
                     <hr class="primary ml-0" style="margin:30px auto;">
                     <p class="lead-login" style="margin-bottom:69px;">BTCPay Server lets you process Bitcoin transactions seemlessly, enabling global and near-instant peer-to-peer payments</p>
-                    <h3 class="lead-h">Our supporters</h3>
+                    <h3 class="lead-h">Our supporters <a href="https://foundation.btcpayserver.org/" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a></h3>
                     <div class="figure">
                         <a href="https://twitter.com/sqcrypto" target="_blank">
                             <img src="~/img/squarecrypto.svg" alt="Sponsor Square Crypto" height="75" />
@@ -80,7 +111,15 @@
                             <a href="https://twitter.com/sqcrypto" class="text-muted small" target="_blank">Square Crypto</a>
                         </div>
                     </div>
-                    <div class="figure ml-2">
+                    <div class="figure ml-4">
+                        <a href="https://www.dglab.com/en/" target="_blank">
+                            <img src="~/img/dglab.svg" alt="Sponsor DG lab" height="75" />
+                        </a>
+                        <div class="figure-caption text-center">
+                            <a href="https://www.dglab.com/en/" class="text-muted small" target="_blank">DG Lab</a>
+                        </div>
+                    </div>
+                    <div class="figure ml-4">
                         <a href="https://acinq.co/" target="_blank">
                             <img src="~/img/acinq-logo.svg" alt="Sponsor ACINQ" height="75" />
                         </a>
@@ -96,7 +135,10 @@
                     {
                         <div class="input-group form-group">
                             <div class="input-group-prepend">
-                                <a href="@env.OnionUrl" class="input-group-text"><span class="input-group-addon"></span><img style="display:inline" src="~/img/icons/Onion_Color.svg" height="20" /></a>
+                                <a href="@env.OnionUrl" class="input-group-text">
+                                    <span class="input-group-addon"></span>
+                                    <img src="~/img/icons/Onion_Color.svg" height="16" />
+                                </a>
                             </div>
                             <input class="form-control" onClick="this.select();" type="text" style="font-size:0.75em;" value="@env.OnionUrl" readonly>
                         </div>

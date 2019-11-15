@@ -91,7 +91,7 @@ namespace BTCPayServer.Services.Rates
         {
             var result = new ExchangeRates();
             var symbols = await GetSymbolsAsync(cancellationToken);
-            var normalizedPairsList = symbols.Where(s => !notFoundSymbols.ContainsKey(s)).Select(s => _Helper.NormalizeSymbol(s)).ToList();
+            var normalizedPairsList = symbols.Where(s => !notFoundSymbols.ContainsKey(s)).Select(s => _Helper.NormalizeMarketSymbol(s)).ToList();
             var csvPairsList = string.Join(",", normalizedPairsList);
             JToken apiTickers = await MakeJsonRequestAsync<JToken>("/0/public/Ticker", null, new Dictionary<string, object> { { "pair", csvPairsList } }, cancellationToken: cancellationToken);
             var tickers = new List<KeyValuePair<string, ExchangeTicker>>();
@@ -114,7 +114,7 @@ namespace BTCPayServer.Services.Rates
                         }
                         else
                         {
-                            global = _Helper.ExchangeSymbolToGlobalSymbol(symbol);
+                            global = await _Helper.ExchangeMarketSymbolToGlobalMarketSymbolAsync(symbol);
                         }
                         if (CurrencyPair.TryParse(global, out var pair))
                             result.Add(new ExchangeRate("kraken", pair.Inverse(), new BidAsk(ticker.Bid, ticker.Ask)));
@@ -142,10 +142,10 @@ namespace BTCPayServer.Services.Rates
                 Last = last,
                 Volume = new ExchangeVolume
                 {
-                    BaseVolume = ticker["v"][1].ConvertInvariant<decimal>(),
-                    BaseSymbol = symbol,
-                    ConvertedVolume = ticker["v"][1].ConvertInvariant<decimal>() * last,
-                    ConvertedSymbol = symbol,
+                    BaseCurrencyVolume = ticker["v"][1].ConvertInvariant<decimal>(),
+                    BaseCurrency = symbol,
+                    QuoteCurrencyVolume = ticker["v"][1].ConvertInvariant<decimal>() * last,
+                    QuoteCurrency = symbol,
                     Timestamp = DateTime.UtcNow
                 }
             };

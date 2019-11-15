@@ -1,0 +1,106 @@
+:root {
+  /* General color definitions */
+  --btcpay-brand-light:   #B498FF;
+  --btcpay-brand-medium:  #8064ef;
+  --btcpay-brand-dark:    #321a6e;
+  --btcpay-brand-darker:  #19154B;
+  --btcpay-brand-darkest: #02000C;
+
+  --btcpay-color-white:    #fff;
+  --btcpay-color-black:    #000;
+
+  --btcpay-color-neutral-100: #F3F1FF;
+  --btcpay-color-neutral-200: #DCD7FC;
+  --btcpay-color-neutral-300: #CDC6F3;
+  --btcpay-color-neutral-400: #AEA7D7;
+  --btcpay-color-neutral-500: #7a72a0;
+  --btcpay-color-neutral-600: #8880ad;
+  --btcpay-color-neutral-700: #49308b;
+  --btcpay-color-neutral-800: #181334;
+  --btcpay-color-neutral-900: #100d20;
+
+  /* Color definitions for specific purposes - map the general colors or define additional ones */
+  --btcpay-color-primary:            var(--btcpay-brand-medium); /* Usage: Text color */
+  --btcpay-color-primary-backdrop:   #baa4fd;                    /* Usage: Backgrounds, borders, shadows */
+  --btcpay-color-primary-accent:     #4b3bc0;                    /* Usage: Background on Focus/Hover */
+  --btcpay-color-secondary:          var(--btcpay-color-neutral-600);
+  --btcpay-color-secondary-backdrop: var(--btcpay-color-neutral-100);
+  --btcpay-color-secondary-accent:   var(--btcpay-color-neutral-500);
+  --btcpay-color-success:            #25933d;
+  --btcpay-color-success-backdrop:   #c3e6cb;
+  --btcpay-color-success-accent:     #137929;
+  --btcpay-color-info:               #0698c9;
+  --btcpay-color-info-backdrop:      #c0eefe;
+  --btcpay-color-info-accent:        #0698c9;
+  --btcpay-color-warning:            #e5ac00;
+  --btcpay-color-warning-backdrop:   #ffeeba;
+  --btcpay-color-warning-accent:     #e5ac00;
+  --btcpay-color-danger:             #bd2130;
+  --btcpay-color-danger-backdrop:    #EDA1B0;
+  --btcpay-color-danger-accent:      #bd2130;
+  --btcpay-color-light:              var(--btcpay-color-neutral-600);
+  --btcpay-color-light-backdrop:     var(--btcpay-color-neutral-100);
+  --btcpay-color-light-accent:       var(--btcpay-color-neutral-500);
+  --btcpay-color-dark:               var(--btcpay-color-neutral-400);
+  --btcpay-color-dark-backdrop:      var(--btcpay-brand-darker);
+  --btcpay-color-dark-accent:        var(--btcpay-color-neutral-400);
+
+  /* Color definitions for specific sections - try to reuse colors defined above */
+  --btcpay-bg-body: var(--btcpay-brand-darkest);
+  --btcpay-bg-dark: var(--btcpay-brand-darker);
+  --btcpay-bg-tile: var(--btcpay-brand-dark);
+  --btcpay-bg-cta:  var(--btcpay-brand-dark);
+
+  --btcpay-body-color: var(--btcpay-color-neutral-100);
+  --btcpay-body-color-link: var(--btcpay-color-primary);
+  --btcpay-body-color-link-accent: var(--btcpay-color-primary-accent);
+
+  --btcpay-section-heading-text-align: left;
+
+  --btcpay-nav-color-link-accent: var(--btcpay-color-neutral-100);
+
+  --btcpay-header-bg: var(--btcpay-brand-darker);
+  --btcpay-footer-bg: var(--btcpay-brand-darkest);
+
+  --btcpay-font-size-base: 16px;
+  --btcpay-font-family-head: 'Open Sans', 'Helvetica Neue', Arial, sans-serif;
+  --btcpay-font-family-base: -apple-system, 'Open Sans', BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --btcpay-font-family-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+/* Bootstrap modifications */
+html {
+  font-size: var(--btcpay-font-size-base);
+}
+
+body {
+  background: linear-gradient(var(--btcpay-header-bg), var(--btcpay-footer-bg));
+  background-attachment: fixed;
+}
+
+.logo,
+.head-logo,
+.social-logo {
+  filter: contrast(0) brightness(200%);
+}
+
+.bg-dark {
+  background-color: var(--btcpay-bg-dark) !important;
+}
+
+#mainNav {
+  background: var(--btcpay-header-bg) !important;
+}
+
+header.masthead::before,
+.service-box img {
+  filter: hue-rotate(100deg) opacity(60%) contrast(125%);
+}
+
+.table {
+  margin: 1.5rem 0 3rem;
+}
+
+.table th {
+  border-top: 0;
+}

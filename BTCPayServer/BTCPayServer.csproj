@@ -8,19 +8,15 @@
     <Compile Remove="Build\**" />
     <Compile Remove="Storage\Services\Providers\GoogleCloudStorage\**" Condition="'$(TargetFramework)' != 'netcoreapp2.1'" />
     <Compile Remove="wwwroot\bundles\jqueryvalidate\**" />
-    <Compile Remove="wwwroot\css\**" />
     <Compile Remove="wwwroot\vendor\jquery-nice-select\**" />
     <Content Remove="Build\**" />
     <Content Remove="wwwroot\bundles\jqueryvalidate\**" />
-    <Content Remove="wwwroot\css\**" />
     <Content Remove="wwwroot\vendor\jquery-nice-select\**" />
     <EmbeddedResource Remove="Build\**" />
     <EmbeddedResource Remove="wwwroot\bundles\jqueryvalidate\**" />
-    <EmbeddedResource Remove="wwwroot\css\**" />
     <EmbeddedResource Remove="wwwroot\vendor\jquery-nice-select\**" />
     <None Remove="Build\**" />
     <None Remove="wwwroot\bundles\jqueryvalidate\**" />
-    <None Remove="wwwroot\css\**" />
     <None Remove="wwwroot\vendor\jquery-nice-select\**" />
   </ItemGroup>
   <ItemGroup>
@@ -80,7 +76,7 @@
   </ItemGroup>
 
 	<ItemGroup>
-	  <None Include="wwwroot\vendor\bootstrap4-creativestart\creative.js" />
+	  <None Include="wwwroot\main\bootstrap4-creativestart\creative.js" />
 	  <None Include="wwwroot\vendor\font-awesome\fonts\fontawesome-webfont.svg" />
 	  <None Include="wwwroot\vendor\font-awesome\fonts\fontawesome-webfont.woff2" />
 	  <None Include="wwwroot\vendor\font-awesome\less\animated.less" />

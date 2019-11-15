@@ -25,8 +25,8 @@
     </div>
     <div class="container">
         <div class="row">
-            <div class="col-lg-12 text-center">
-                <h2 class="section-heading">@ViewData["Title"]</h2>
+            <div class="col-lg-12 section-heading">
+                <h2>@ViewData["Title"]</h2>
                 <hr class="primary">
             </div>
         </div>
@@ -215,9 +215,9 @@
                     </div>
                     <input type="hidden" asp-for="NotificationEmailWarning" />
                     <div class="form-group">
-                        <input type="submit" class="btn btn-primary" value="Save Settings" id="SaveSettings" />
+                        <button name="command" type="submit" class="btn btn-primary" value="save" id="SaveSettings">Save settings</button>
                         <a class="btn btn-secondary" target="_blank" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
-                        <a class="btn btn-secondary" target="_blank" asp-action="ViewCrowdfund" asp-controller="AppsPublic" asp-route-appId="@Model.AppId" id="ViewApp">View App</a>
+                        <button name="command" type="submit" value="viewapp" class="btn btn-secondary" id="ViewApp">View App</button>
                         <a class="btn btn-secondary" target="_blank" asp-action="ListApps">Back to the app list</a>
                     </div>
                 </form>

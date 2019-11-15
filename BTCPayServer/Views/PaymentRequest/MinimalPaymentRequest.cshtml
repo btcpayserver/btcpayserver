@@ -12,19 +12,19 @@
                     <div class="row mb-4">
                         <div class="col-sm-12 col-md-12 col-lg-6 ">
                             <ul class="w-100 list-group list-group-flush">
-                                <li class="list-group-item">
+                                <li class="list-group-item list-group-item-light">
                                     <div class="d-flex justify-content-between">
                                         <span class="h2 text-muted">Request amount:</span>
                                         <span class="h2">@Model.AmountFormatted</span>
                                     </div>
                                 </li>
-                                <li class="list-group-item">
+                                <li class="list-group-item list-group-item-light">
                                     <div class="d-flex justify-content-between">
                                         <span class="h2 text-muted">Paid so far:</span>
                                         <span class="h2">@Model.AmountCollectedFormatted</span>
                                     </div>
                                 </li>
-                                <li class="list-group-item">
+                                <li class="list-group-item list-group-item-light">
                                     <div class="d-flex justify-content-between">
                                         <span class="h2 text-muted">Amount due:</span>
                                         <span class="h2">@Model.AmountDueFormatted</span>
@@ -143,7 +143,7 @@
                                                     {
                                                         <form method="get" asp-action="CancelUnpaidPendingInvoice">
                                                             <button class="btn btn-secondary btn-lg mt-1" type="submit">
-                                                                Cancel current invoice</button>   
+                                                                Cancel current invoice</button>
                                                         </form>
                                                     }
                                                 }

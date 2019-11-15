@@ -5,7 +5,10 @@
     <input type="hidden" asp-for="Challenge" />
     <input type="hidden" asp-for="AppId" />
     <input type="hidden" asp-for="DeviceResponse" />
-    <input type="hidden" asp-for="Challenges" />
+    @for (int i = 0; i < Model.Challenges.Count; i++)
+    {
+        @Html.HiddenFor(m => m.Challenges[i])
+    }
     <input type="hidden" asp-for="UserId" />
     <input type="hidden" asp-for="RememberMe" />
 </form>
@@ -13,10 +16,10 @@
 <section>
     <div class="container-fluid">
         <div class="row">
-            <div class="col-lg-12 text-center">
-                <h2 class="section-heading"><span class="fa fa-spinner fa-spin"></span>U2F Authentication</h2>
+            <div class="col-lg-12 section-heading">
+                <h2><span class="fa fa-spinner fa-spin"></span>U2F Authentication</h2>
                 <hr class="primary">
-                
+
                 <p>Insert your U2F device or a hardware wallet into your computer's USB port. If it has a button, tap on it.</p>
             </div>
         </div>
@@ -32,7 +35,7 @@
         1: 'Unknown error, try again',
         2: "Bad request error, try again",
         3: "This key isn't supported, please try another one",
-        4: 'The device is already registered, please login',
+        4: 'The device is not registered, please try another one',
         5: 'Authentication timed out. Please reload to try again.'
     };
     setTimeout(function() {

@@ -68,7 +68,7 @@ namespace BTCPayServer.Controllers
         }
         [HttpPost]
         [Route("{appId}/settings/crowdfund")]
-        public async Task<IActionResult> UpdateCrowdfund(string appId, UpdateCrowdfundViewModel vm)
+        public async Task<IActionResult> UpdateCrowdfund(string appId, UpdateCrowdfundViewModel vm, string command)
         {
             if (!string.IsNullOrEmpty( vm.TargetCurrency) && _currencies.GetCurrencyData(vm.TargetCurrency, false) == null)
                 ModelState.AddModelError(nameof(vm.TargetCurrency), "Invalid currency");
@@ -156,16 +156,25 @@ namespace BTCPayServer.Controllers
 
             app.TagAllInvoices = vm.UseAllStoreInvoices;
             app.SetSettings(newSettings);
-            await _AppService.UpdateOrCreateApp(app);
 
-            _EventAggregator.Publish(new AppUpdated()
+            if (command == "save")
             {
-                AppId = appId,
-                StoreId = app.StoreDataId,
-                Settings = newSettings
-            });
-            TempData[WellKnownTempData.SuccessMessage] = "App updated";
-            return RedirectToAction(nameof(UpdateCrowdfund), new {appId});
+                await _AppService.UpdateOrCreateApp(app);
+
+                _EventAggregator.Publish(new AppUpdated()
+                {
+                    AppId = appId,
+                    StoreId = app.StoreDataId,
+                    Settings = newSettings
+                });
+                TempData[WellKnownTempData.SuccessMessage] = "App updated";
+                return RedirectToAction(nameof(UpdateCrowdfund), new { appId });
+            }
+            else if (command == "viewapp")
+            {
+                return RedirectToAction(nameof(AppsPublicController.ViewCrowdfund), "AppsPublic", new { appId });
+            }
+            return NotFound();
         }
     }
 }

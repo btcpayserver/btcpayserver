@@ -2,12 +2,12 @@
     {
         "outputFileName": "wwwroot/bundles/main-bundle.min.css",
         "inputFiles": [
-            "wwwroot/vendor/bootstrap4-creativestart/Open-Sans.css",
             "wwwroot/vendor/magnific-popup/magnific-popup.css",
             "wwwroot/vendor/font-awesome/css/font-awesome.css",
-            "wwwroot/main/**/*.css",
             "wwwroot/vendor/animatecss/animate.css",
-            "wwwroot/vendor/flatpickr/flatpickr.css"
+            "wwwroot/vendor/flatpickr/flatpickr.css",
+            "wwwroot/main/fonts/OpenSans.css",
+            "wwwroot/main/site.css"
         ]
     },
     {
@@ -15,14 +15,14 @@
         "inputFiles": [
             "wwwroot/vendor/jquery/jquery.js",
             "wwwroot/vendor/popper/popper.js",
-            "wwwroot/vendor/bootstrap4/js/bootstrap.js",
+            "wwwroot/main/bootstrap/bootstrap.js",
+            "wwwroot/main/bootstrap4-creativestart/creative.js",
             "wwwroot/vendor/jquery-easing/jquery.easing.js",
             "wwwroot/vendor/scrollreveal/scrollreveal.min.js",
             "wwwroot/vendor/magnific-popup/jquery.magnific-popup.js",
-            "wwwroot/vendor/bootstrap4-creativestart/*.js",
             "wwwroot/vendor/moment/moment.min.js",
             "wwwroot/vendor/flatpickr/flatpickr.js",
-            "wwwroot/main/**/*.js"
+            "wwwroot/main/site.js"
         ]
     },
     {
@@ -56,7 +56,6 @@
             "wwwroot/checkout/**/*.js"
         ]
     },
-    
     {
         "outputFileName": "wwwroot/bundles/lightning-node-info-bundle.min.js",
         "inputFiles": [
@@ -71,12 +70,11 @@
         "outputFileName": "wwwroot/bundles/cart-bundle.min.js",
         "inputFiles": [
             "wwwroot/vendor/jquery/jquery.js",
-            "wwwroot/vendor/bootstrap4/js/bootstrap.js",
+            "wwwroot/vendor/bootstrap/bootstrap.js",
             "wwwroot/cart/js/cart.js",
             "wwwroot/cart/js/cart.jquery.js"
         ]
     },
-
     {
         "outputFileName": "wwwroot/bundles/crowdfund-bundle-1.min.js",
         "inputFiles": [
@@ -89,7 +87,6 @@
             "wwwroot/crowdfund/**/*.js"
         ]
     },
-    
     {
         "outputFileName": "wwwroot/bundles/crowdfund-bundle-2.min.js",
         "inputFiles": [
@@ -133,7 +130,6 @@
             "wwwroot/vendor/summernote/summernote-bs4.css"
         ]
     },
-    
     {
         "outputFileName": "wwwroot/bundles/crowdfund-bundle.min.css",
         "inputFiles": [
@@ -142,7 +138,6 @@
             "wwwroot/crowdfund/**/*.css"
         ]
     },
-
     {
         "outputFileName": "wwwroot/bundles/payment-request-admin-bundle.min.js",
         "inputFiles": [
@@ -150,14 +145,12 @@
             "wwwroot/payment-request-admin/**/*.js"
         ]
     },
-
     {
         "outputFileName": "wwwroot/bundles/payment-request-admin-bundle.min.css",
         "inputFiles": [
             "wwwroot/vendor/summernote/summernote-bs4.css"
         ]
     },
-
     {
         "outputFileName": "wwwroot/bundles/payment-request-bundle-1.min.js",
         "inputFiles": [
@@ -170,7 +163,6 @@
             "wwwroot/payment-request/**/*.js"
         ]
     },
-
     {
         "outputFileName": "wwwroot/bundles/payment-request-bundle-2.min.js",
         "inputFiles": [

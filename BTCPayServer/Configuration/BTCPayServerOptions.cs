@@ -58,7 +58,16 @@ namespace BTCPayServer.Configuration
 
         public static string GetDebugLog(IConfiguration configuration)
         {
-            return configuration.GetValue<string>("debuglog", null);
+            var logfile = configuration.GetValue<string>("debuglog", null);
+            if (!string.IsNullOrEmpty(logfile))
+            {
+                if (!Path.IsPathRooted(logfile))
+                {
+                    var networkType = DefaultConfiguration.GetNetworkType(configuration);
+                    logfile = Path.Combine(configuration.GetDataDir(networkType), logfile);
+                }
+            }
+            return logfile;
         }
         public static LogEventLevel GetDebugLogLevel(IConfiguration configuration)
         {
@@ -206,11 +215,6 @@ namespace BTCPayServer.Configuration
                 throw new ConfigException($"internallightningnode is deprecated and should not be used anymore, use btclightning instead");
 
             LogFile = GetDebugLog(conf);
-            if (!string.IsNullOrEmpty(LogFile))
-            {
-                if (!Path.IsPathRooted(LogFile))
-                    LogFile = Path.Combine(DataDir, LogFile);
-            }
             if (!string.IsNullOrEmpty(LogFile))
             {
                 Logs.Configuration.LogInformation("LogFile: " + LogFile);

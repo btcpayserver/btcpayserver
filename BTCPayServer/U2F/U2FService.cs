@@ -157,14 +157,22 @@ namespace BTCPayServer.U2F
                 var authenticationRequest =
                     UserAuthenticationRequests[userId].First(f =>
                         f.KeyHandle.Equals(authenticateResponse.KeyHandle, StringComparison.InvariantCulture));
+                
                 var registration = new DeviceRegistration(device.KeyHandle, device.PublicKey,
                     device.AttestationCert, Convert.ToUInt32(device.Counter));
 
                 var authentication = new StartedAuthentication(authenticationRequest.Challenge,
                     authenticationRequest.AppId, authenticationRequest.KeyHandle);
 
-                global::U2F.Core.Crypto.U2F.FinishAuthentication(authentication, authenticateResponse, registration);
+                
+                var challengeAuthenticationRequestMatch = UserAuthenticationRequests[userId].First(f =>
+                    f.Challenge.Equals( authenticateResponse.GetClientData().Challenge, StringComparison.InvariantCulture));
 
+                if (authentication.Challenge != challengeAuthenticationRequestMatch.Challenge)
+                {
+                    authentication = new StartedAuthentication(challengeAuthenticationRequestMatch.Challenge, authenticationRequest.AppId, authenticationRequest.KeyHandle);
+                }
+                global::U2F.Core.Crypto.U2F.FinishAuthentication(authentication, authenticateResponse, registration);
 
                 UserAuthenticationRequests.AddOrReplace(userId, new List<U2FDeviceAuthenticationRequest>());
 

@@ -36,27 +36,27 @@ namespace BTCPayServer.Services.Rates
         {
             await new SynchronizationContextRemover();
             var rates = await _ExchangeAPI.GetTickersAsync();
-            lock (notFoundSymbols)
-            {
-                var exchangeRates =
-                    rates
+
+                var exchangeRateTasks = rates
                     .Where(t => t.Value.Ask != 0m && t.Value.Bid != 0m)
-                    .Select(t => CreateExchangeRate(t))
-                    .Where(t => t != null)
-                    .ToArray();
-                return new ExchangeRates(exchangeRates);
-            }
+                    .Select(t => CreateExchangeRate(t));
+
+                var exchangeRates = await Task.WhenAll(exchangeRateTasks);
+                
+            return new ExchangeRates(exchangeRates
+                .Where(t => t != null)
+                .ToArray());
         }
 
         // ExchangeSymbolToGlobalSymbol throws exception which would kill perf
         ConcurrentDictionary<string, string> notFoundSymbols = new ConcurrentDictionary<string, string>();
-        private ExchangeRate CreateExchangeRate(KeyValuePair<string, ExchangeTicker> ticker)
+        private async Task<ExchangeRate> CreateExchangeRate(KeyValuePair<string, ExchangeTicker> ticker)
         {
-            if (notFoundSymbols.ContainsKey(ticker.Key))
+            if (notFoundSymbols.TryGetValue(ticker.Key, out _))
                 return null;
             try
             {
-                var tickerName = _ExchangeAPI.ExchangeSymbolToGlobalSymbol(ticker.Key);
+                var tickerName = await _ExchangeAPI.ExchangeMarketSymbolToGlobalMarketSymbolAsync(ticker.Key);
                 if (!CurrencyPair.TryParse(tickerName, out var pair))
                 {
                     notFoundSymbols.TryAdd(ticker.Key, ticker.Key);

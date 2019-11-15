@@ -1,4 +1,4 @@
-/*
+/* MODIFIED BOOTSTRAP 4
  * This file overrides the bootstrap variables with CSS custom properties
  * that get defined in the root.scss file. Every variable we want to edit
  * we need to set to a `--btcpay-` custom property and set it in the root.

@@ -6,8 +6,8 @@
             "wwwroot/vendor/font-awesome/css/font-awesome.css",
             "wwwroot/vendor/animatecss/animate.css",
             "wwwroot/vendor/flatpickr/flatpickr.css",
-            "wwwroot/css/fonts.css",
-            "wwwroot/css/site.css"
+            "wwwroot/main/fonts/OpenSans.css",
+            "wwwroot/main/site.css"
         ]
     },
     {
@@ -15,14 +15,14 @@
         "inputFiles": [
             "wwwroot/vendor/jquery/jquery.js",
             "wwwroot/vendor/popper/popper.js",
-            "wwwroot/vendor/bootstrap/bootstrap.js",
+            "wwwroot/main/bootstrap/bootstrap.js",
+            "wwwroot/main/bootstrap4-creativestart/creative.js",
             "wwwroot/vendor/jquery-easing/jquery.easing.js",
             "wwwroot/vendor/scrollreveal/scrollreveal.min.js",
             "wwwroot/vendor/magnific-popup/jquery.magnific-popup.js",
-            "wwwroot/vendor/bootstrap4-creativestart/*.js",
             "wwwroot/vendor/moment/moment.min.js",
             "wwwroot/vendor/flatpickr/flatpickr.js",
-            "wwwroot/js/site.js"
+            "wwwroot/main/site.js"
         ]
     },
     {

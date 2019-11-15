@@ -217,7 +217,10 @@
                     <div class="form-group">
                         <button name="command" type="submit" class="btn btn-primary" value="save" id="SaveSettings">Save settings</button>
                         <a class="btn btn-secondary" target="_blank" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
+                        @if ((Model.Description != null) && (Model.Title != null) && (Model.TargetCurrency != null))
+                        {
                         <button name="command" type="submit" value="viewapp" class="btn btn-secondary" id="ViewApp">View App</button>
+                        }
                         <a class="btn btn-secondary" target="_blank" asp-action="ListApps">Back to the app list</a>
                     </div>
                 </form>

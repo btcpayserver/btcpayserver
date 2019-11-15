@@ -70,7 +70,7 @@
         "outputFileName": "wwwroot/bundles/cart-bundle.min.js",
         "inputFiles": [
             "wwwroot/vendor/jquery/jquery.js",
-            "wwwroot/vendor/bootstrap/bootstrap.js",
+            "wwwroot/main/bootstrap/bootstrap.js",
             "wwwroot/cart/js/cart.js",
             "wwwroot/cart/js/cart.jquery.js"
         ]

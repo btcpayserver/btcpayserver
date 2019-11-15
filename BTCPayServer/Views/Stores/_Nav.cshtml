@@ -4,7 +4,7 @@
     <a id="@(nameof(StoreNavPages.Checkout))"class="nav-link @ViewData.IsActivePage(StoreNavPages.Checkout)" asp-controller="Stores" asp-action="CheckoutExperience" asp-route-storeId="@this.Context.GetRouteValue("storeId")">Checkout experience</a>
     <a id="@(nameof(StoreNavPages.Tokens))"class="nav-link @ViewData.IsActivePage(StoreNavPages.Tokens)" asp-controller="Stores" asp-action="ListTokens" asp-route-storeId="@this.Context.GetRouteValue("storeId")">Access Tokens</a>
     <a id="@(nameof(StoreNavPages.Users))"class="nav-link @ViewData.IsActivePage(StoreNavPages.Users)" asp-controller="Stores" asp-action="StoreUsers" asp-route-storeId="@this.Context.GetRouteValue("storeId")">Users</a>
-    <a id="@(nameof(StoreNavPages.PayButton))"class="nav-link @ViewData.IsActivePage(StoreNavPages.PayButton)"asp-controller="Stores" asp-action="PayButton" asp-route-storeId="@this.Context.GetRouteValue("storeId")">Pay Button</a>
+    <a id="@(nameof(StoreNavPages.PayButton))"class="nav-link @ViewData.IsActivePage(StoreNavPages.PayButton)" asp-controller="Stores" asp-action="PayButton" asp-route-storeId="@this.Context.GetRouteValue("storeId")">Pay Button</a>
     @inject IEnumerable<BTCPayServer.Contracts.IStoreNavExtension> Extensions;
     @foreach (var extension in Extensions)
     {

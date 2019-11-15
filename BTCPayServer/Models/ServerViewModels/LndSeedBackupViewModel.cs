@@ -14,9 +14,9 @@ namespace BTCPayServer.Models.ServerViewModels
 
         public string WalletPassword { get; set; }
 
-        public List<string> Seed { get; set; }
+        public string Seed { get; set; }
 
-
+        public bool Removed { get; set; }
         public async Task<bool> RemoveSeedAndWrite(string lndSeedFilePath)
         {
             var removedDate = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ssZ", CultureInfo.InvariantCulture);
@@ -53,8 +53,9 @@ namespace BTCPayServer.Models.ServerViewModels
                         return new LndSeedBackupViewModel
                         {
                             WalletPassword = unlockFile.wallet_password,
-                            Seed = unlockFile.cipher_seed_mnemonic,
+                            Seed = string.Join(' ', unlockFile.cipher_seed_mnemonic),
                             IsWalletUnlockPresent = true,
+                            Removed = unlockFile.cipher_seed_mnemonic.Count == 1
                         };
                     }
                 }

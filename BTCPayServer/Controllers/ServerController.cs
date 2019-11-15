@@ -624,6 +624,16 @@ namespace BTCPayServer.Controllers
                 if (service.Type == ExternalServiceTypes.LNDSeedBackup)
                 {
                     var model = LndSeedBackupViewModel.Parse(service.ConnectionString.CookieFilePath);
+                    if (!model.IsWalletUnlockPresent)
+                    {
+                        TempData.SetStatusMessageModel(new StatusMessageModel()
+                        {
+                            Severity = StatusMessageModel.StatusSeverity.Warning,
+                            Html = "Your LND does not seem to allow seed backup.<br />" +
+                            "It's recommended, but not required, that you migrate as instructed by <a href=\"https://blog.btcpayserver.org/btcpay-lnd-migration\">our migration blog post</a>.<br />" +
+                            "You will need to close all of your channels, and migrate your funds as <a href=\"https://blog.btcpayserver.org/btcpay-lnd-migration\">we documented</a>."
+                        });
+                    }
                     return View("LndSeedBackup", model);
                 }
                 if (service.Type == ExternalServiceTypes.RPC)
@@ -681,7 +691,7 @@ namespace BTCPayServer.Controllers
                 return RedirectToAction(nameof(Services));
             }
 
-            if (model.Seed == null || model.Seed.Count <= 1)
+            if (string.IsNullOrEmpty(model.Seed))
             {
                 TempData[WellKnownTempData.ErrorMessage] = $"Seed information was already removed";
                 return RedirectToAction(nameof(Services));
@@ -689,6 +699,7 @@ namespace BTCPayServer.Controllers
 
             if (await model.RemoveSeedAndWrite(service.ConnectionString.CookieFilePath))
             {
+                TempData[WellKnownTempData.ErrorMessage] = $"Seed successfully removed";
                 return RedirectToAction(nameof(Service), new { serviceName, cryptoCode });
             }
             else

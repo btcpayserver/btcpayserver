@@ -88,7 +88,7 @@ html {
 .table thead th {
   border-bottom: none;
   border-top: none;
-  font-size: 0.95rem;
+  font-size: 1.0rem;
 }
 
 .table th,
@@ -96,7 +96,7 @@ html {
   display: table-cell;
   padding: 8px 12px;
   vertical-align: middle;
-  font-size: 0.85rem;
+  font-size: 0.92rem;
 }
 
 .table tbody tr:hover {

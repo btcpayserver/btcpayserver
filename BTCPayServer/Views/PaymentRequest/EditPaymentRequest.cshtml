@@ -2,11 +2,14 @@
 @using System.Globalization
 @model BTCPayServer.Models.PaymentRequestViewModels.UpdatePaymentRequestViewModel
 @addTagHelper *, BundlerMinifier.TagHelpers
+@{
+    ViewData["Title"] = (string.IsNullOrEmpty(Model.Id) ? "Create" : "Edit") + " Payment Request";
+}
 <section>
     <div class="container">
         <div class="row">
             <div class="col-lg-12 section-heading">
-                <h2>@(string.IsNullOrEmpty(Model.Id) ? "Create" : "Edit") Payment Request</h2>
+                <h2>@ViewData["Title"]</h2>
                 <hr class="primary">
             </div>
         </div>

@@ -22,7 +22,7 @@ namespace BTCPayServer.Models.ServerViewModels
             var removedDate = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ssZ", CultureInfo.InvariantCulture);
             var seedFile = new LndSeedFile
             {
-                wallet_password = WalletPassword,
+                wallet_password = "",
                 cipher_seed_mnemonic = new List<string> { $"Seed removed on {removedDate}" }
             };
             var json = JsonConvert.SerializeObject(seedFile);

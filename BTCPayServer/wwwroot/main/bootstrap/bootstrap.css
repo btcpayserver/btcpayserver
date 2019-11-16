@@ -1122,26 +1122,14 @@ pre {
 .table-light,
 .table-light > th,
 .table-light > td {
-  color: var(--btcpay-color-light);
+  color: var(--btcpay-color-dark);
   background-color: var(--btcpay-color-light-backdrop); }
-
-.table-light th,
-.table-light td,
-.table-light thead th,
-.table-light tbody + tbody {
-  border-color: var(--btcpay-color-light); }
 
 .table-dark,
 .table-dark > th,
 .table-dark > td {
-  color: var(--btcpay-color-dark);
+  color: var(--btcpay-color-light);
   background-color: var(--btcpay-color-dark-backdrop); }
-
-.table-dark th,
-.table-dark td,
-.table-dark thead th,
-.table-dark tbody + tbody {
-  border-color: var(--btcpay-color-dark); }
 
 @media (max-width: 575.98px) {
   .table-responsive-sm {
@@ -1734,11 +1722,11 @@ fieldset:disabled a.btn {
       box-shadow: 0 0 0 0.2rem var(--btcpay-color-danger-backdrop); }
 
 .btn-light {
-  color: var(--btcpay-color-light);
-  background-color: var(--btcpay-color-light-backdrop);
-  border-color: var(--btcpay-color-light-backdrop); }
+  color: var(--btcpay-color-dark);
+  background-color: var(--btcpay-color-light);
+  border-color: var(--btcpay-color-light); }
   .btn-light:hover {
-    color: var(--btcpay-color-neutral-900);
+    color: var(--btcpay-color-dark);
     background-color: var(--btcpay-color-light-accent);
     border-color: var(--btcpay-color-light-accent); }
   .btn-light:focus, .btn-light.focus {
@@ -1749,7 +1737,7 @@ fieldset:disabled a.btn {
     border-color: var(--btcpay-color-light-backdrop); }
   .btn-light:not(:disabled):not(.disabled):active, .btn-light:not(:disabled):not(.disabled).active,
   .show > .btn-light.dropdown-toggle {
-    color: var(--btcpay-color-neutral-900);
+    color: var(--btcpay-color-dark);
     background-color: var(--btcpay-color-light-accent);
     border-color: var(--btcpay-color-light-accent); }
     .btn-light:not(:disabled):not(.disabled):active:focus, .btn-light:not(:disabled):not(.disabled).active:focus,
@@ -1757,11 +1745,11 @@ fieldset:disabled a.btn {
       box-shadow: 0 0 0 0.2rem var(--btcpay-color-light-backdrop); }
 
 .btn-dark {
-  color: var(--btcpay-color-dark);
-  background-color: var(--btcpay-color-dark-backdrop);
-  border-color: var(--btcpay-color-dark-backdrop); }
+  color: var(--btcpay-color-light);
+  background-color: var(--btcpay-color-dark);
+  border-color: var(--btcpay-color-dark); }
   .btn-dark:hover {
-    color: var(--btcpay-color-white);
+    color: var(--btcpay-color-light);
     background-color: var(--btcpay-color-dark-accent);
     border-color: var(--btcpay-color-dark-accent); }
   .btn-dark:focus, .btn-dark.focus {
@@ -1772,7 +1760,7 @@ fieldset:disabled a.btn {
     border-color: var(--btcpay-color-dark-backdrop); }
   .btn-dark:not(:disabled):not(.disabled):active, .btn-dark:not(:disabled):not(.disabled).active,
   .show > .btn-dark.dropdown-toggle {
-    color: var(--btcpay-color-white);
+    color: var(--btcpay-color-light);
     background-color: var(--btcpay-color-dark-accent);
     border-color: var(--btcpay-color-dark-accent); }
     .btn-dark:not(:disabled):not(.disabled):active:focus, .btn-dark:not(:disabled):not(.disabled).active:focus,
@@ -3441,7 +3429,7 @@ input[type="button"].btn-block {
     box-shadow: 0 0 0 0.2rem var(--btcpay-color-danger-backdrop); }
 
 .badge-light {
-  color: var(--btcpay-color-light);
+  color: var(--btcpay-color-dark);
   background-color: var(--btcpay-color-light-backdrop); }
   a.badge-light:hover, a.badge-light:focus {
     color: var(--btcpay-color-light-accent); }
@@ -3450,7 +3438,7 @@ input[type="button"].btn-block {
     box-shadow: 0 0 0 0.2rem var(--btcpay-color-light-backdrop); }
 
 .badge-dark {
-  color: var(--btcpay-color-dark);
+  color: var(--btcpay-color-light);
   background-color: var(--btcpay-color-dark-backdrop); }
   a.badge-dark:hover, a.badge-dark:focus {
     color: var(--btcpay-color-dark-accent); }
@@ -3812,24 +3800,24 @@ input[type="button"].btn-block {
     border-color: var(--btcpay-color-danger-accent); }
 
 .list-group-item-light {
-  color: var(--btcpay-color-light-accent);
+  color: var(--btcpay-color-dark);
   background-color: var(--btcpay-color-light-backdrop); }
   .list-group-item-light.list-group-item-action:hover, .list-group-item-light.list-group-item-action:focus {
-    color: var(--btcpay-color-light-accent);
+    color: var(--btcpay-color-dark);
     background-color: var(--btcpay-color-light-backdrop); }
   .list-group-item-light.list-group-item-action.active {
-    color: var(--btcpay-color-white);
+    color: var(--btcpay-color-dark);
     background-color: var(--btcpay-color-light-accent);
     border-color: var(--btcpay-color-light-accent); }
 
 .list-group-item-dark {
-  color: var(--btcpay-color-dark-accent);
+  color: var(--btcpay-color-light);
   background-color: var(--btcpay-color-dark-backdrop); }
   .list-group-item-dark.list-group-item-action:hover, .list-group-item-dark.list-group-item-action:focus {
-    color: var(--btcpay-color-dark-accent);
+    color: var(--btcpay-color-light);
     background-color: var(--btcpay-color-dark-backdrop); }
   .list-group-item-dark.list-group-item-action.active {
-    color: var(--btcpay-color-white);
+    color: var(--btcpay-color-light);
     background-color: var(--btcpay-color-dark-accent);
     border-color: var(--btcpay-color-dark-accent); }
 
@@ -4500,7 +4488,7 @@ button.bg-danger:focus {
   background-color: var(--btcpay-color-danger-accent) !important; }
 
 .bg-light {
-  background-color: var(--btcpay-color-light) !important; }
+  background-color: var(--btcpay-color-light-backdrop) !important; }
 
 a.bg-light:hover, a.bg-light:focus,
 button.bg-light:hover,
@@ -4508,7 +4496,7 @@ button.bg-light:focus {
   background-color: var(--btcpay-color-light-accent) !important; }
 
 .bg-dark {
-  background-color: var(--btcpay-color-dark) !important; }
+  background-color: var(--btcpay-color-dark-backdrop) !important; }
 
 a.bg-dark:hover, a.bg-dark:focus,
 button.bg-dark:hover,

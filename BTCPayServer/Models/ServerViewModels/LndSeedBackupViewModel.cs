@@ -22,7 +22,7 @@ namespace BTCPayServer.Models.ServerViewModels
             var removedDate = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ssZ", CultureInfo.InvariantCulture);
             var seedFile = new LndSeedFile
             {
-                wallet_password = WalletPassword,
+                wallet_password = "",
                 cipher_seed_mnemonic = new List<string> { $"Seed removed on {removedDate}" }
             };
             var json = JsonConvert.SerializeObject(seedFile);
@@ -48,7 +48,7 @@ namespace BTCPayServer.Models.ServerViewModels
                     var unlockFileContents = File.ReadAllText(lndSeedFilePath);
                     var unlockFile = JsonConvert.DeserializeObject<LndSeedFile>(unlockFileContents);
 
-                    if (!String.IsNullOrEmpty(unlockFile.wallet_password))
+                    if (unlockFile.wallet_password != null)
                     {
                         return new LndSeedBackupViewModel
                         {

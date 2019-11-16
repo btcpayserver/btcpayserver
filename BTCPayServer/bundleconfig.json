@@ -15,13 +15,13 @@
         "inputFiles": [
             "wwwroot/vendor/jquery/jquery.js",
             "wwwroot/vendor/popper/popper.js",
-            "wwwroot/main/bootstrap/bootstrap.js",
-            "wwwroot/main/bootstrap4-creativestart/creative.js",
             "wwwroot/vendor/jquery-easing/jquery.easing.js",
             "wwwroot/vendor/scrollreveal/scrollreveal.min.js",
             "wwwroot/vendor/magnific-popup/jquery.magnific-popup.js",
             "wwwroot/vendor/moment/moment.min.js",
             "wwwroot/vendor/flatpickr/flatpickr.js",
+            "wwwroot/main/bootstrap/bootstrap.js",
+            "wwwroot/main/bootstrap4-creativestart/creative.js",
             "wwwroot/main/site.js"
         ]
     },
@@ -70,7 +70,7 @@
         "outputFileName": "wwwroot/bundles/cart-bundle.min.js",
         "inputFiles": [
             "wwwroot/vendor/jquery/jquery.js",
-            "wwwroot/vendor/bootstrap/bootstrap.js",
+            "wwwroot/main/bootstrap/bootstrap.js",
             "wwwroot/cart/js/cart.js",
             "wwwroot/cart/js/cart.jquery.js"
         ]

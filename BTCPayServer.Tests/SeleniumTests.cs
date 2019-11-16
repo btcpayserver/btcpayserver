@@ -32,6 +32,28 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("ServerSettings")).Click();
                 s.Driver.AssertNoError();
                 s.ClickOnAllSideMenus();
+                s.Driver.FindElement(By.LinkText("Services")).Click();
+
+                Logs.Tester.LogInformation("Let's if we can access LND's seed");
+                Assert.Contains("server/services/lndseedbackup/BTC", s.Driver.PageSource);
+                s.Driver.Navigate().GoToUrl(s.Link("/server/services/lndseedbackup/BTC"));
+                s.Driver.FindElement(By.Id("details")).Click();
+                var seedEl = s.Driver.FindElement(By.Id("SeedTextArea"));
+                Assert.True(seedEl.Displayed);
+                Assert.Contains("about over million", seedEl.Text, StringComparison.OrdinalIgnoreCase);
+                var passEl = s.Driver.FindElement(By.Id("PasswordInput"));
+                Assert.True(passEl.Displayed);
+                Assert.Contains(passEl.Text, "hellorockstar", StringComparison.OrdinalIgnoreCase);
+                s.Driver.FindElement(By.Id("delete")).Click();
+                s.Driver.FindElement(By.Id("continue")).Click();
+                s.AssertHappyMessage();
+                seedEl = s.Driver.FindElement(By.Id("SeedTextArea"));
+                Assert.Contains("Seed removed", seedEl.Text, StringComparison.OrdinalIgnoreCase);
+
+                Logs.Tester.LogInformation("Let's check if we can access the logs");
+                s.Driver.FindElement(By.LinkText("Logs")).Click();
+                s.Driver.FindElement(By.PartialLinkText(".log")).Click();
+                Assert.Contains("Starting listening NBXplorer", s.Driver.PageSource);
                 s.Driver.Quit();
             }
         }
@@ -198,6 +220,7 @@ namespace BTCPayServer.Tests
                 s.ClickOnAllSideMenus();
                 s.GoToInvoices();
                 s.CreateInvoice(store);
+                s.AssertHappyMessage();
                 s.Driver.FindElement(By.ClassName("invoice-details-link")).Click();
                 var invoiceUrl = s.Driver.Url;
 
@@ -259,10 +282,10 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("Tokens")).Click();
                 s.Driver.FindElement(By.Id("CreateNewToken")).Click();
                 s.Driver.FindElement(By.Id("RequestPairing")).Click();
-
                 string pairingCode = AssertUrlHasPairingCode(s);
 
                 s.Driver.FindElement(By.Id("ApprovePairing")).Click();
+                s.AssertHappyMessage();
                 Assert.Contains(pairingCode, s.Driver.PageSource);
 
                 var client = new NBitpayClient.Bitpay(new Key(), s.Server.PayTester.ServerUri);

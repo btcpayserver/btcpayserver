@@ -70,6 +70,11 @@ namespace BTCPayServer.Tests
             Driver.AssertNoError();
         }
 
+        internal void AssertHappyMessage()
+        {
+            Assert.Single(Driver.FindElements(By.ClassName("alert-success")).Where(el => el.Displayed));
+        }
+
         public static readonly TimeSpan ImplicitWait = TimeSpan.FromSeconds(10);
         public string Link(string relativeLink)
         {
@@ -110,8 +115,7 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.ClassName("store-derivation-scheme")).SendKeys(derivationScheme);
             Driver.FindElement(By.Id("Continue")).ForceClick();
             Driver.FindElement(By.Id("Confirm")).ForceClick();
-            Driver.FindElement(By.Id("Save")).ForceClick();
-            return;
+            AssertHappyMessage();
         }
         
         public void AddLightningNode(string cryptoCode, LightningConnectionType connectionType)

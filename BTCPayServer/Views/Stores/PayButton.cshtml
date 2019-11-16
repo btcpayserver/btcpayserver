@@ -2,7 +2,7 @@
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePageAndTitle(StoreNavPages.PayButton);
-    ViewBag.MainTitle = "Pay Button";
+    ViewData["Title"] = "Pay Button";
 }
 
 <div class="container" id="payButtonCtrl">
@@ -57,15 +57,15 @@
             <div class="form-group">
                 <label>Button Size</label>
                 <div style="vertical-align:top; font-size:12px; display:flex;">
-                    <button class="btn" style="width:146px;height:40px;margin-right:40px;"
+                    <button class="btn text-nowrap" style="width:146px;height:40px;margin-right:40px;"
                             v-on:click="inputChanges($event, 0)" v-bind:class="{'btn-primary': (srvModel.buttonSize == 0) }">
                         146 x 40 px
                     </button>
-                    <button class="btn btn-default" style="width:168px;height:46px;margin-right:40px;"
+                    <button class="btn text-nowrap btn-default" style="width:168px;height:46px;margin-right:40px;"
                             v-on:click="inputChanges($event, 1)" v-bind:class="{'btn-primary': (srvModel.buttonSize == 1) }">
                         168 x 46 px
                     </button>
-                    <button class="btn btn-default" style="width:209px;height:57px;"
+                    <button class="btn text-nowrap btn-default" style="width:209px;height:57px;"
                             v-on:click="inputChanges($event, 2)" v-bind:class="{'btn-primary': (srvModel.buttonSize == 2) }">
                         209 x 57 px
                     </button>
@@ -271,17 +271,20 @@
             cursor:pointer;
             font-size:25px;
             line-height: 25px;
-            background: rgba(0,0,0,.1);
+            background: #DFE0E1;
             height: 30px;
             width: 45px;
             border:none;
             border-radius: 60px;
-            margin: auto;
+            margin: auto 5px;
+            display: inline-flex;
+            justify-content: center;
         }
         .btcpay-form select {
             -moz-appearance: none;
             -webkit-appearance: none;
             appearance: none;
+            color: currentColor;
             background: transparent;
             border:1px solid transparent;
             display: block;
@@ -314,6 +317,7 @@
         input[type=range].btcpay-input-range {
             -webkit-appearance:none;
             width:100%;
+            background: transparent;
         }
         input[type=range].btcpay-input-range:focus {
             outline:0;
@@ -325,10 +329,10 @@
             box-shadow:0 0 1.7px #020,0 0 0 #003c00;
             background:#f3f3f3;
             border-radius:1px;
-            border:0 solid rgba(24,213,1,0)
+            border:0;
         }
         input[type=range].btcpay-input-range::-webkit-slider-thumb {
-            box-shadow:0 0 3.7px rgba(0,170,0,0),0 0 0 rgba(0,195,0,0);
+            box-shadow:none;
             border:2.5px solid #cedc21;
             height:22px;
             width:22px;
@@ -348,10 +352,10 @@
             box-shadow:0 0 1.7px #020,0 0 0 #003c00;
             background:#f3f3f3;
             border-radius:1px;
-            border:0 solid rgba(24,213,1,0);
+            border:0;
         }
         input[type=range].btcpay-input-range::-moz-range-thumb {
-            box-shadow:0 0 3.7px rgba(0,170,0,0),0 0 0 rgba(0,195,0,0);
+            box-shadow:none;
             border:2.5px solid #cedc21;
             height:22px;
             width:22px;
@@ -369,18 +373,18 @@
         }
         input[type=range].btcpay-input-range::-ms-fill-lower {
             background:#e6e6e6;
-            border:0 solid rgba(24,213,1,0);
+            border:0;
             border-radius:2px;
             box-shadow:0 0 1.7px #020,0 0 0 #003c00;
         }
         input[type=range].btcpay-input-range::-ms-fill-upper {
             background:#f3f3f3;
-            border:0 solid rgba(24,213,1,0);
+            border:0;
             border-radius:2px;
             box-shadow:0 0 1.7px #020,0 0 0 #003c00;
         }
         input[type=range].btcpay-input-range::-ms-thumb {
-            box-shadow:0 0 3.7px rgba(0,170,0,0),0 0 0 rgba(0,195,0,0);
+            box-shadow:none;
             border:2.5px solid #cedc21;
             height:22px;
             width:22px;

@@ -55,6 +55,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using BTCPayServer.Security.Bitpay;
+using Serilog;
 
 namespace BTCPayServer.Hosting
 {
@@ -268,9 +269,24 @@ namespace BTCPayServer.Hosting
             var rateLimits = new RateLimitService();
             rateLimits.SetZone($"zone={ZoneLimits.Login} rate=5r/min burst=3 nodelay");
             services.AddSingleton(rateLimits);
+
+
+            services.AddLogging(logBuilder =>
+            {
+                var debugLogFile = BTCPayServerOptions.GetDebugLog(configuration);
+                if (!string.IsNullOrEmpty(debugLogFile))
+                {
+                    Serilog.Log.Logger = new LoggerConfiguration()
+                        .Enrich.FromLogContext()
+                        .MinimumLevel.Is(BTCPayServerOptions.GetDebugLogLevel(configuration))
+                        .WriteTo.File(debugLogFile, rollingInterval: RollingInterval.Day, fileSizeLimitBytes: MAX_DEBUG_LOG_FILE_SIZE, rollOnFileSizeLimit: true, retainedFileCountLimit: 1)
+                        .CreateLogger();
+                    logBuilder.AddSerilog(Serilog.Log.Logger);
+                }
+            });
             return services;
         }
-
+        private const long MAX_DEBUG_LOG_FILE_SIZE = 2000000; // If debug log is in use roll it every N MB.
         private static void AddBtcPayServerAuthenticationSchemes(this IServiceCollection services,
             IConfiguration configuration)
         {

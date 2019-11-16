@@ -213,13 +213,12 @@ namespace BTCPayServer
         {
             foreach (var accountKey in AccountKeySettings)
             {
-                if (accountKey.AccountKeyPath != null && accountKey.RootFingerprint is HDFingerprint fp)
+                if (accountKey.GetRootedKeyPath() is RootedKeyPath rootedKeyPath)
                 {
                     yield return new NBXplorer.Models.PSBTRebaseKeyRules()
                     {
                         AccountKey = accountKey.AccountKey,
-                        AccountKeyPath = accountKey.AccountKeyPath,
-                        MasterFingerprint = fp
+                        AccountKeyPath = rootedKeyPath
                     };
                 }
             }
@@ -250,7 +249,7 @@ namespace BTCPayServer
         {
             foreach (var rebase in GetPSBTRebaseKeyRules())
             {
-                psbt.RebaseKeyPaths(rebase.AccountKey, rebase.GetRootedKeyPath());
+                psbt.RebaseKeyPaths(rebase.AccountKey, rebase.AccountKeyPath);
             }
         }
     }

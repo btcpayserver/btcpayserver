@@ -28,7 +28,7 @@
                     <div class="input-group-prepend">
                         <label for="Seed" class="input-group-text"><span class="input-group-addon fa fa-eye"></span><span class="ml-2">Seed</span></label>
                     </div>
-                    <textarea asp-for="Seed" onClick="this.select();" class="form-control" readonly rows="@(Model.Removed ? "1" : "3")"></textarea>
+                    <textarea id="SeedTextArea" asp-for="Seed" onClick="this.select();" class="form-control" readonly rows="@(Model.Removed ? "1" : "3")"></textarea>
                 </div>
             </div>
             @if (!Model.Removed)
@@ -38,12 +38,12 @@
                         <div class="input-group-prepend">
                             <label for="WalletPassword" class="input-group-text"><span class="input-group-addon fa fa-lock"></span><span class="ml-2">Password</span></label>
                         </div>
-                        <input asp-for="WalletPassword" onClick="this.select();" class="form-control" readonly />
+                        <input id="PasswordInput" asp-for="WalletPassword" onClick="this.select();" class="form-control" readonly />
                     </div>
                 </div>
                 <div class="form-group collapse">
-                    <form method="post" asp-action="RemoveLndSeed" asp-route-serviceName="@this.Context.GetRouteValue("serviceName")" asp-route-cryptoCode="@this.Context.GetRouteValue("cryptoCode")">
-                        <button class="btn btn-primary" type="submit" onclick="return confirmSeedDelete();">Remove Seed from server</button>
+                    <form method="get" asp-action="RemoveLndSeed" asp-route-serviceName="@this.Context.GetRouteValue("serviceName")" asp-route-cryptoCode="@this.Context.GetRouteValue("cryptoCode")">
+                        <button id="delete" class="btn btn-primary" type="submit">Remove Seed from server</button>
                     </form>
                 </div>
             }
@@ -53,9 +53,6 @@
 
 @section Scripts {
     <script type="text/javascript">
-        function confirmSeedDelete() {
-            return confirm('This operation is not undoable. Are you sure you want to proceed with deleting seed from LND container?');
-        }
         $(function () {
             $("#details").click(function () {
                 $(".collapse").removeClass("collapse");

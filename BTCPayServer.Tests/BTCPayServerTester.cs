@@ -102,7 +102,6 @@ namespace BTCPayServer.Tests
             if (!Directory.Exists(chainDirectory))
                 Directory.CreateDirectory(chainDirectory);
 
-
             StringBuilder config = new StringBuilder();
             config.AppendLine($"{chain.ToLowerInvariant()}=1");
             if (InContainer)
@@ -120,6 +119,10 @@ namespace BTCPayServer.Tests
             config.AppendLine($"btc.lightning={IntegratedLightning.AbsoluteUri}");
             config.AppendLine($"torrcfile={TestUtils.GetTestDataFullPath("Tor/torrc")}");
             config.AppendLine($"debuglog=debug.log");
+
+            var localLndBackupFile = Path.Combine(_Directory, "walletunlock.json");
+            File.Copy(TestUtils.GetTestDataFullPath("LndSeedBackup/walletunlock.json"), localLndBackupFile, true);
+            config.AppendLine($"btc.external.lndseedbackup={localLndBackupFile}");
             if (!string.IsNullOrEmpty(SSHPassword) && string.IsNullOrEmpty(SSHKeyFile))
                 config.AppendLine($"sshpassword={SSHPassword}");
             if (!string.IsNullOrEmpty(SSHKeyFile))

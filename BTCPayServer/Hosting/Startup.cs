@@ -222,6 +222,7 @@ namespace BTCPayServer.Hosting
 
         private static void ConfigureCore(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider prov, ILoggerFactory loggerFactory, BTCPayServerOptions options)
         {
+            Logs.Configure(loggerFactory);
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

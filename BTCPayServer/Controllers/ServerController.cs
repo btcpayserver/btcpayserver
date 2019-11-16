@@ -676,9 +676,21 @@ namespace BTCPayServer.Controllers
             }
         }
 
+        [HttpGet]
+        [Route("server/services/{serviceName}/{cryptoCode}/removelndseed")]
+        public IActionResult RemoveLndSeed(string serviceName, string cryptoCode)
+        {
+            return View("Confirm", new ConfirmModel()
+            {
+                Title = "Delete LND Seed",
+                Description = "Please make sure you made a backup of the seed and password before deleting the LND backup seed from the server, are you sure to continue?",
+                Action = "Delete"
+            });
+        }
+
         [HttpPost]
         [Route("server/services/{serviceName}/{cryptoCode}/removelndseed")]
-        public async Task<IActionResult> RemoveLndSeed(string serviceName, string cryptoCode)
+        public async Task<IActionResult> RemoveLndSeedPost(string serviceName, string cryptoCode)
         {
             var service = GetService(serviceName, cryptoCode);
             if (service == null)

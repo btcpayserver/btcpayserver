@@ -46,6 +46,7 @@ namespace BTCPayServer.Tests
                 Assert.Contains(passEl.Text, "hellorockstar", StringComparison.OrdinalIgnoreCase);
                 s.Driver.FindElement(By.Id("delete")).Click();
                 s.Driver.FindElement(By.Id("continue")).Click();
+                s.AssertHappyMessage();
                 seedEl = s.Driver.FindElement(By.Id("SeedTextArea"));
                 Assert.Contains("Seed removed", seedEl.Text, StringComparison.OrdinalIgnoreCase);
 
@@ -219,6 +220,7 @@ namespace BTCPayServer.Tests
                 s.ClickOnAllSideMenus();
                 s.GoToInvoices();
                 s.CreateInvoice(store);
+                s.AssertHappyMessage();
                 s.Driver.FindElement(By.ClassName("invoice-details-link")).Click();
                 var invoiceUrl = s.Driver.Url;
 
@@ -280,10 +282,10 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("Tokens")).Click();
                 s.Driver.FindElement(By.Id("CreateNewToken")).Click();
                 s.Driver.FindElement(By.Id("RequestPairing")).Click();
-
                 string pairingCode = AssertUrlHasPairingCode(s);
 
                 s.Driver.FindElement(By.Id("ApprovePairing")).Click();
+                s.AssertHappyMessage();
                 Assert.Contains(pairingCode, s.Driver.PageSource);
 
                 var client = new NBitpayClient.Bitpay(new Key(), s.Server.PayTester.ServerUri);

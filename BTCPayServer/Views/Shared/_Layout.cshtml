@@ -79,7 +79,7 @@
             </div>
             <div id="badUrl" class="alert alert-danger alert-dismissible" style="display:none; position:absolute; top:75px;" role="alert">
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <span>BTCPay is expecting you to access this website from <b>@(env.ExpectedProtocol)://@(env.ExpectedHost)/</b>. If you use a reverse proxy, please set the <b>X-Forwarded-Proto</b> header to <b id="browserScheme">@(env.ExpectedProtocol)</b> (<a href="https://docs.btcpayserver.org/faq-and-common-issues/faq-deployment#btcpay-is-expecting-you-to-access-this-website-from" target="_blank">More information</a>)</span>
+                <span>BTCPay is expecting you to access this website from <b>@(env.ExpectedProtocol)://@(env.ExpectedHost)/</b>. If you use a reverse proxy, please set the <b>X-Forwarded-Proto</b> header to <b id="browserScheme">@(env.ExpectedProtocol)</b> (<a href="https://docs.btcpayserver.org/faq-and-common-issues/faq-deployment#btcpay-is-expecting-you-to-access-this-website-from" target="_blank" class="alert-link">More information</a>)</span>
             </div>
             @if (!env.IsSecure)
             {

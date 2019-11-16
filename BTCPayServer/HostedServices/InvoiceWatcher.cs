@@ -11,6 +11,7 @@ using Microsoft.Extensions.Hosting;
 using System.Collections.Concurrent;
 using BTCPayServer.Events;
 using BTCPayServer.Services.Invoices;
+using System.Threading.Channels;
 
 namespace BTCPayServer.HostedServices
 {
@@ -179,7 +180,7 @@ namespace BTCPayServer.HostedServices
         {
             if (invoiceId == null)
                 throw new ArgumentNullException(nameof(invoiceId));
-            _WatchRequests.Add(invoiceId);
+            _WatchRequests.Writer.TryWrite(invoiceId);
         }
 
         private async Task Wait(string invoiceId)
@@ -205,7 +206,7 @@ namespace BTCPayServer.HostedServices
 
         }
 
-        BlockingCollection<string> _WatchRequests = new BlockingCollection<string>(new ConcurrentQueue<string>());
+        Channel<string> _WatchRequests = Channel.CreateUnbounded<string>();
 
         Task _Loop;
         CancellationTokenSource _Cts;
@@ -245,9 +246,7 @@ namespace BTCPayServer.HostedServices
         async Task StartLoop(CancellationToken cancellation)
         {
             Logs.PayServer.LogInformation("Start watching invoices");
-            await Task.Delay(1).ConfigureAwait(false); // Small hack so that the caller does not block on GetConsumingEnumerable
-
-            foreach (var invoiceId in _WatchRequests.GetConsumingEnumerable(cancellation))
+            while (await _WatchRequests.Reader.WaitToReadAsync(cancellation) && _WatchRequests.Reader.TryRead(out var invoiceId))
             {
                 int maxLoop = 5;
                 int loopCount = -1;

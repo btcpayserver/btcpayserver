@@ -711,7 +711,7 @@ namespace BTCPayServer.Controllers
 
             if (await model.RemoveSeedAndWrite(service.ConnectionString.CookieFilePath))
             {
-                TempData[WellKnownTempData.ErrorMessage] = $"Seed successfully removed";
+                TempData[WellKnownTempData.SuccessMessage] = $"Seed successfully removed";
                 return RedirectToAction(nameof(Service), new { serviceName, cryptoCode });
             }
             else

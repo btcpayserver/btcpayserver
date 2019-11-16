@@ -48,7 +48,7 @@ namespace BTCPayServer.Models.ServerViewModels
                     var unlockFileContents = File.ReadAllText(lndSeedFilePath);
                     var unlockFile = JsonConvert.DeserializeObject<LndSeedFile>(unlockFileContents);
 
-                    if (!String.IsNullOrEmpty(unlockFile.wallet_password))
+                    if (unlockFile.wallet_password != null)
                     {
                         return new LndSeedBackupViewModel
                         {

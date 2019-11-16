@@ -1,0 +1,83 @@
+version: '3'
+services:
+  app:
+    build: .
+    container_name: btcpayserver-app
+    entrypoint: ./docker-entrypoint.sh
+    depends_on:
+      - db
+      - nbxplorer
+    environment:
+      BTCPAY_POSTGRES: User ID=btcpayserver;Host=db;Port=5432;Database=btcpayserver_db;Password=abcd1234
+      BTCPAY_NETWORK: regtest
+      BTCPAY_BIND: 0.0.0.0:80
+      BTCPAY_ROOTPATH: /
+      BTCPAY_LTCEXPLORERURL: http://nbxplorer:32838/
+      BTCPAY_CHAINS: "btc"
+      BTCPAY_BTCEXPLORERURL: http://nbxplorer:32838/
+    ports:
+      - "9090:80"
+    links:
+      - nbxplorer
+      - db:db
+    volumes:
+      - "nbxplorer_datadir:/root/.nbxplorer"
+  db:
+    image: "postgres:11.5-alpine"
+    container_name: btcpayserver-db
+    environment:
+      - POSTGRES_PASSWORD=abcd1234
+      - POSTGRES_USER=btcpayserver
+      - POSTGRES_DB=btcpayserver_db
+    ports:
+      - "5434:5432"
+
+  nbxplorer:
+    restart: unless-stopped
+    image: nicolasdorier/nbxplorer:1.0.2.31
+    container_name: btcpayserver-nbxplorer
+    expose:
+    - "32838"
+    environment:
+      NBXPLORER_NETWORK: regtest
+      NBXPLORER_BIND: 0.0.0.0:32838
+      NBXPLORER_CHAINS: "btc"
+      NBXPLORER_BTCRPCURL: http://bitcoind:43782/
+      NBXPLORER_BTCNODEENDPOINT: bitcoind:39388
+    depends_on:
+      - bitcoind
+    links:
+      - bitcoind
+    volumes:
+      - "nbxplorer_datadir:/datadir"
+      - "bitcoin_datadir:/root/.bitcoin"
+
+  bitcoind:
+    restart: unless-stopped
+    container_name: btcpayserver-bitcoind
+    image: btcpayserver/bitcoin:0.18.0-1
+    environment:
+      BITCOIN_EXTRA_ARGS: |
+        rpcport=43782
+        rpcbind=0.0.0.0:43782
+        port=39388
+        whitelist=0.0.0.0/0
+    expose:
+    - "43782"
+    - "39388"
+    volumes:
+    - "bitcoin_datadir:/data"
+    
+  adminer:
+      image: adminer
+      container_name: btcpayserver-sqlmanager
+      ports:
+        - 8070:8080
+      depends_on:
+        - db
+      links:
+        - "db:db"
+
+volumes:
+  nbxplorer_datadir:
+  bitcoin_datadir: 

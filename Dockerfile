@@ -17,7 +17,7 @@ RUN cd BTCPayServer && dotnet publish --output /app/ --configuration Release
 FROM mcr.microsoft.com/dotnet/core/aspnet:2.1.9-alpine3.7
 
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT false
-RUN apk add --no-cache icu-libs openssh-keygen
+RUN apk add --no-cache icu-libs openssh-keygen bash
 
 ENV LC_ALL en_US.UTF-8
 ENV LANG en_US.UTF-8

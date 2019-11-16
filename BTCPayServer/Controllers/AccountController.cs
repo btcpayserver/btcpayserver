@@ -80,7 +80,10 @@ namespace BTCPayServer.Controllers
             // Clear the existing external cookie to ensure a clean login process
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
 
-            CanLoginOrRegister();
+            if (!CanLoginOrRegister())
+            {
+                SetInsecureFlags();
+            }
             
             ViewData["ReturnUrl"] = returnUrl;
             return View();
@@ -95,7 +98,7 @@ namespace BTCPayServer.Controllers
         {
             if (!CanLoginOrRegister())
             {
-                return View(model);
+                return RedirectToAction("Login");
             }
             ViewData["ReturnUrl"] = returnUrl;
             if (ModelState.IsValid)
@@ -399,8 +402,11 @@ namespace BTCPayServer.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Register(string returnUrl = null, bool logon = true, bool useBasicLayout = false)
         {
-            CanLoginOrRegister();
-                var policies = await _SettingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
+            if (!CanLoginOrRegister())
+            {
+                SetInsecureFlags();
+            }
+            var policies = await _SettingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
             if (policies.LockSubscription && !User.IsInRole(Roles.ServerAdmin))
                 return RedirectToAction(nameof(HomeController.Index), "Home");
             ViewData["ReturnUrl"] = returnUrl;
@@ -623,7 +629,11 @@ namespace BTCPayServer.Controllers
         
         private bool CanLoginOrRegister()
         {
-            if (_btcPayServerEnvironment.IsDevelopping || _btcPayServerEnvironment.IsSecure) return true;
+            return _btcPayServerEnvironment.IsDevelopping || _btcPayServerEnvironment.IsSecure;
+        }
+
+        private void SetInsecureFlags()
+        {
             TempData.SetStatusMessageModel(new StatusMessageModel()
             {
                 Severity = StatusMessageModel.StatusSeverity.Error,
@@ -631,8 +641,6 @@ namespace BTCPayServer.Controllers
             });
             
             ViewData["disabled"] = true;
-            return false;
-
         }
 
         #endregion

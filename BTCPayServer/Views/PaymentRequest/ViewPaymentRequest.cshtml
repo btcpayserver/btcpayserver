@@ -64,10 +64,10 @@ else
                             </template>
                         </span>
                     </h1>
-                    <div class="card-body px-0 pt-0">
-                        <div class="row mb-4">
+                    <div class="card-body px-0 pt-0 pb-0">
+                        <div class="row">
                             <div class="col-sm-12 col-md-12 col-lg-6">
-                                <table class="table table-light">
+                                <table class="table table-light mb-0">
                                     <tbody>
                                         <tr>
                                             <td class="px-3 h2 text-muted">Request amount:</td>
@@ -83,9 +83,13 @@ else
                                         </tr>
                                     </tbody>
                                 </table>
-                                <div v-html="srvModel.description" class="w-100 p-2"></div>
+                                <div
+                                    v-if="srvModel.description && srvModel.description !== '' && srvModel.description !== '<br>'"
+                                    v-html="srvModel.description"
+                                    class="w-100 px-3 pt-4 pb-3"
+                                ></div>
                             </div>
-                            <div class="col-sm-12 col-md-12  col-lg-6">
+                            <div class="col-sm-12 col-md-12 col-lg-6 pt-2">
                                 <div class="table-responsive">
                                     <table class="table border-top-0 ">
                                         <thead>

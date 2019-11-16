@@ -74,14 +74,21 @@ namespace BTCPayServer.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Login(string returnUrl = null)
         {
+            
             if (User.Identity.IsAuthenticated && string.IsNullOrEmpty(returnUrl))
                 return RedirectToLocal();
             // Clear the existing external cookie to ensure a clean login process
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
 
+            if (!CanLoginOrRegister())
+            {
+                SetInsecureFlags();
+            }
+            
             ViewData["ReturnUrl"] = returnUrl;
             return View();
         }
+
 
         [HttpPost]
         [AllowAnonymous]
@@ -89,6 +96,10 @@ namespace BTCPayServer.Controllers
         [RateLimitsFilter(ZoneLimits.Login, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> Login(LoginViewModel model, string returnUrl = null)
         {
+            if (!CanLoginOrRegister())
+            {
+                return RedirectToAction("Login");
+            }
             ViewData["ReturnUrl"] = returnUrl;
             if (ModelState.IsValid)
             {
@@ -199,6 +210,11 @@ namespace BTCPayServer.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> LoginWithU2F(LoginWithU2FViewModel viewModel, string returnUrl = null)
         {
+            if (!CanLoginOrRegister())
+            {
+                return RedirectToAction("Login");
+            }
+            
             ViewData["ReturnUrl"] = returnUrl;
             var user = await _userManager.FindByIdAsync(viewModel.UserId);
 
@@ -242,6 +258,11 @@ namespace BTCPayServer.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> LoginWith2fa(bool rememberMe, string returnUrl = null)
         {
+            if (!CanLoginOrRegister())
+            {
+                return RedirectToAction("Login");
+            }
+
             // Ensure the user has gone through the username & password screen first
             var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
 
@@ -264,6 +285,11 @@ namespace BTCPayServer.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> LoginWith2fa(LoginWith2faViewModel model, bool rememberMe, string returnUrl = null)
         {
+            if (!CanLoginOrRegister())
+            {
+                return RedirectToAction("Login");
+            }
+
             if (!ModelState.IsValid)
             {
                 return View(model);
@@ -305,6 +331,11 @@ namespace BTCPayServer.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> LoginWithRecoveryCode(string returnUrl = null)
         {
+            if (!CanLoginOrRegister())
+            {
+                return RedirectToAction("Login");
+            }
+
             // Ensure the user has gone through the username & password screen first
             var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
             if (user == null)
@@ -322,6 +353,11 @@ namespace BTCPayServer.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> LoginWithRecoveryCode(LoginWithRecoveryCodeViewModel model, string returnUrl = null)
         {
+            if (!CanLoginOrRegister())
+            {
+                return RedirectToAction("Login");
+            }
+
             if (!ModelState.IsValid)
             {
                 return View(model);
@@ -366,6 +402,10 @@ namespace BTCPayServer.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Register(string returnUrl = null, bool logon = true, bool useBasicLayout = false)
         {
+            if (!CanLoginOrRegister())
+            {
+                SetInsecureFlags();
+            }
             var policies = await _SettingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
             if (policies.LockSubscription && !User.IsInRole(Roles.ServerAdmin))
                 return RedirectToAction(nameof(HomeController.Index), "Home");
@@ -381,6 +421,11 @@ namespace BTCPayServer.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel model, string returnUrl = null, bool logon = true)
         {
+            if (!CanLoginOrRegister())
+            {
+                return RedirectToAction("Register");
+            }
+
             ViewData["ReturnUrl"] = returnUrl;
             ViewData["Logon"] = logon.ToString(CultureInfo.InvariantCulture).ToLowerInvariant();
             ViewData["AllowIsAdmin"] = _Options.AllowAdminRegistration;
@@ -579,6 +624,23 @@ namespace BTCPayServer.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), "Home");
             }
+        }
+        
+        
+        private bool CanLoginOrRegister()
+        {
+            return _btcPayServerEnvironment.IsDevelopping || _btcPayServerEnvironment.IsSecure;
+        }
+
+        private void SetInsecureFlags()
+        {
+            TempData.SetStatusMessageModel(new StatusMessageModel()
+            {
+                Severity = StatusMessageModel.StatusSeverity.Error,
+                Message = "You cannot login over an insecure connection. Please use HTTPS or Tor."
+            });
+            
+            ViewData["disabled"] = true;
         }
 
         #endregion

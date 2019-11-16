@@ -4,7 +4,14 @@
     ViewData["Title"] = "Log in";
     Layout = "_WelcomeLayout.cshtml";
 }
-
+@if (TempData.HasStatusMessage())
+{
+    <div class="row">
+        <div class="col-lg-12 text-center">
+            <partial name="_StatusMessage"/>
+        </div>
+    </div>
+}
 <div class="modal-dialog modal-login">
     <div class="modal-content">
         <div class="modal-header">
@@ -12,30 +19,32 @@
         </div>
         <div class="modal-body">
             <form asp-route-returnurl="@ViewData["ReturnUrl"]" method="post">
-                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                <div class="form-group">
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <label for="Email" class="input-group-text"><span class="input-group-addon fa fa-user"></span></label>
-                        </div>
+                <fieldset disabled="@(ViewData.ContainsKey("disabled") ? "disabled" : null)" >
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <div class="form-group">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <label for="Email" class="input-group-text"><span class="input-group-addon fa fa-user"></span></label>
+                            </div>
 
-                        <input asp-for="Email" class="form-control" placeholder="Email" required="required" />
-                    </div>
-                    <span asp-validation-for="Email" class="text-danger"></span>
-                </div>
-                <div class="form-group">
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <label for="Password" class="input-group-text"><span class="input-group-addon fa fa-lock"></span></label>
+                            <input asp-for="Email" class="form-control" placeholder="Email" required="required" />
                         </div>
-                        <input asp-for="Password" class="form-control" placeholder="Password" required="required" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
                     </div>
-                    <span asp-validation-for="Password" class="text-danger"></span>
-                </div>
-                <div class="form-group">
-                    <button type="submit" class="btn btn-primary btn-block btn-lg" id="LoginButton">Sign in</button>
-                </div>
-                <p class="hint-text"><a asp-action="ForgotPassword">Forgot your password?</a></p>
+                    <div class="form-group">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <label for="Password" class="input-group-text"><span class="input-group-addon fa fa-lock"></span></label>
+                            </div>
+                            <input asp-for="Password" class="form-control" placeholder="Password" required="required" />
+                        </div>
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary btn-block btn-lg" id="LoginButton">Sign in</button>
+                    </div>
+                    <p class="hint-text"><a asp-action="ForgotPassword">Forgot your password?</a></p>
+                </fieldset>
             </form>
         </div>
         @if (themeManager.ShowRegister)

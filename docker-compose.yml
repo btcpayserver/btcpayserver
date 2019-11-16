@@ -41,6 +41,7 @@ services:
     environment:
       NBXPLORER_NETWORK: regtest
       NBXPLORER_BIND: 0.0.0.0:32838
+      NBXPLORER_NOAUTH: 1
       NBXPLORER_CHAINS: "btc"
       NBXPLORER_BTCRPCURL: http://bitcoind:43782/
       NBXPLORER_BTCNODEENDPOINT: bitcoind:39388
@@ -67,7 +68,7 @@ services:
     - "39388"
     volumes:
     - "bitcoin_datadir:/data"
-    
+
   adminer:
       image: adminer
       container_name: btcpayserver-sqlmanager

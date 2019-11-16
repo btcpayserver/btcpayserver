@@ -212,6 +212,7 @@ namespace BTCPayServer.HostedServices
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
+            Logs.PayServer.LogInformation($"Starting {this.GetType().Name}");
             _Cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             _Loop = StartLoop(_Cts.Token);
             _ = WaitPendingInvoices();
@@ -233,6 +234,7 @@ namespace BTCPayServer.HostedServices
                     Watch(b.Invoice.Id);
                 }
             }));
+            Logs.PayServer.LogInformation($"Started {this.GetType().Name}");
             return Task.CompletedTask;
         }
 

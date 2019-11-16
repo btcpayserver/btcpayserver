@@ -19,6 +19,7 @@ using BTCPayServer.Services.Invoices;
 using BTCPayServer.Payments;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services;
+using BTCPayServer.Logging;
 
 namespace BTCPayServer.HostedServices
 {
@@ -302,6 +303,7 @@ namespace BTCPayServer.HostedServices
         CompositeDisposable leases = new CompositeDisposable();
         public Task StartAsync(CancellationToken cancellationToken)
         {
+            Logs.PayServer.LogInformation($"Starting {this.GetType().Name}");
             leases.Add(_EventAggregator.Subscribe<InvoiceEvent>(async e =>
             {
                 var invoice = await _InvoiceRepository.GetInvoice(e.Invoice.Id);
@@ -354,7 +356,7 @@ namespace BTCPayServer.HostedServices
             {
                 await SaveEvent(e.InvoiceId, e);
             }));
-
+            Logs.PayServer.LogInformation($"Started {this.GetType().Name}");
             return Task.CompletedTask;
         }
 

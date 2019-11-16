@@ -68,9 +68,11 @@ namespace BTCPayServer.HostedServices
                 _Waiters.Add(new NBXplorerWaiter(dashboard, explorer.Item1, explorer.Item2, eventAggregator));
             }
         }
-        public Task StartAsync(CancellationToken cancellationToken)
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
-            return Task.WhenAll(_Waiters.Select(w => w.StartAsync(cancellationToken)).ToArray());
+            Logs.PayServer.LogInformation($"Starting {this.GetType().Name}");
+            await Task.WhenAll(_Waiters.Select(w => w.StartAsync(cancellationToken)).ToArray());
+            Logs.PayServer.LogInformation($"Started {this.GetType().Name}");
         }
 
         public Task StopAsync(CancellationToken cancellationToken)

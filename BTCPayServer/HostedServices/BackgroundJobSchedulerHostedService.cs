@@ -26,8 +26,10 @@ namespace BTCPayServer.HostedServices
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
+            Logs.PayServer.LogInformation($"Starting {this.GetType().Name}");
             _Stop = new CancellationTokenSource();
             _Loop = BackgroundJobClient.ProcessJobs(_Stop.Token);
+            Logs.PayServer.LogInformation($"Started {this.GetType().Name}");
             return Task.CompletedTask;
         }
 

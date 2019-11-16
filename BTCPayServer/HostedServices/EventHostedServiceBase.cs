@@ -62,10 +62,12 @@ namespace BTCPayServer.HostedServices
 
         public virtual Task StartAsync(CancellationToken cancellationToken)
         {
+            Logs.PayServer.LogInformation($"Starting {this.GetType().Name}");
             _Subscriptions = new List<IEventAggregatorSubscription>();
             SubscibeToEvents();
             _Cts = new CancellationTokenSource();
             _ProcessingEvents = ProcessEvents(_Cts.Token);
+            Logs.PayServer.LogInformation($"Started {this.GetType().Name}");
             return Task.CompletedTask;
         }
         Task _ProcessingEvents = Task.CompletedTask;

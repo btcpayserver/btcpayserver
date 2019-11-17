@@ -68,8 +68,16 @@
                     </div>
                 }
             }
-            <div class="form-group">
-                <button name="command" type="submit" class="btn btn-primary">Save</button>
+            <div class="form-group d-flex mt-2">
+                <button name="command" type="submit" class="btn btn-primary" value="save">Save</button>
+                <div class="dropdown">
+                    <button class="ml-1 btn btn-secondary dropdown-toggle" type="button" id="SendMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Other actions...
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="SendMenu">
+                        <button name="command" type="submit" class="dropdown-item" value="prune">Prune old transactions from history</button>
+                    </div>
+                </div>
             </div>
         </form>
     </div>

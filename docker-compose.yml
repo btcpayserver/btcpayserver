@@ -4,26 +4,26 @@ services:
     build: .
     container_name: btcpayserver-app
     entrypoint: ./docker-entrypoint.sh
+    environment:
+      BTCPAY_POSTGRES: User ID=btcpayserver;Host=db;Port=5432;Database=btcpayserver_db;Password=abcd1234
+      BTCPAY_NETWORK: mainnet
+      BTCPAY_BIND: 0.0.0.0:80
+      BTCPAY_ROOTPATH: /
+      BTCPAY_CHAINS: "btc"
+      BTCPAY_BTCEXPLORERURL: http://nbxplorer:32838/
+      
+    ports:
+      - "9090:80"
     depends_on:
       - db
       - nbxplorer
-    environment:
-      BTCPAY_POSTGRES: User ID=btcpayserver;Host=db;Port=5432;Database=btcpayserver_db;Password=abcd1234
-      BTCPAY_NETWORK: regtest
-      BTCPAY_BIND: 0.0.0.0:80
-      BTCPAY_ROOTPATH: /
-      BTCPAY_LTCEXPLORERURL: http://nbxplorer:32838/
-      BTCPAY_CHAINS: "btc"
-      BTCPAY_BTCEXPLORERURL: http://nbxplorer:32838/
-    ports:
-      - "9090:80"
     links:
       - nbxplorer
       - db:db
     volumes:
       - "nbxplorer_datadir:/root/.nbxplorer"
   db:
-    image: "postgres:11.5-alpine"
+    image: "postgres:12.1-alpine"
     container_name: btcpayserver-db
     environment:
       - POSTGRES_PASSWORD=abcd1234

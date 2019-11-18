@@ -71,22 +71,26 @@ namespace BTCPayServer
             var tcs = new TaskCompletionSource<SSHCommandResult>(TaskCreationOptions.RunContinuationsAsynchronously);
             new Thread(() =>
             {
-                sshCommand.BeginExecute(ar =>
+                try
                 {
-                    try
+                    sshCommand.BeginExecute(ar =>
                     {
-                        sshCommand.EndExecute(ar);
-                        tcs.TrySetResult(CreateSSHCommandResult(sshCommand));
-                    }
-                    catch (Exception ex)
-                    {
-                        tcs.TrySetException(ex);
-                    }
-                    finally
-                    {
-                        sshCommand.Dispose();
-                    }
-                });
+                        try
+                        {
+                            sshCommand.EndExecute(ar);
+                            tcs.TrySetResult(CreateSSHCommandResult(sshCommand));
+                        }
+                        catch (Exception ex)
+                        {
+                            tcs.TrySetException(ex);
+                        }
+                        finally
+                        {
+                            sshCommand.Dispose();
+                        }
+                    });
+                }
+                catch(Exception ex) { tcs.TrySetException(ex); }
             })
             { IsBackground = true }.Start();
             return tcs.Task;

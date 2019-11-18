@@ -56,7 +56,7 @@
   </ItemGroup>
 
 	<ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.9" Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
+    <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.9" AllowExplicitVersion="true" Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
     <PackageReference Include="TwentyTwenty.Storage" Version="2.11.2" />
     <PackageReference Include="TwentyTwenty.Storage.Amazon" Version="2.11.2" />
     <PackageReference Include="TwentyTwenty.Storage.Azure" Version="2.11.2" />

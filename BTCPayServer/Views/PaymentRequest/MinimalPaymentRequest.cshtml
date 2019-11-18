@@ -4,45 +4,43 @@
     <div class="row w-100 p-0 m-0" style="height: 100vh">
         <div class="mx-auto my-auto w-100">
             <div class="card">
-                <h1 class="card-header">
+                <h1 class="card-header px-3">
                     @Model.Title
                     <span class="text-muted float-right text-center">@Model.Status</span>
                 </h1>
-                <div class="card-body px-0 pt-0">
-                    <div class="row mb-4">
-                        <div class="col-sm-12 col-md-12 col-lg-6 ">
-                            <ul class="w-100 list-group list-group-flush">
-                                <li class="list-group-item list-group-item-light">
-                                    <div class="d-flex justify-content-between">
-                                        <span class="h2 text-muted">Request amount:</span>
-                                        <span class="h2">@Model.AmountFormatted</span>
-                                    </div>
-                                </li>
-                                <li class="list-group-item list-group-item-light">
-                                    <div class="d-flex justify-content-between">
-                                        <span class="h2 text-muted">Paid so far:</span>
-                                        <span class="h2">@Model.AmountCollectedFormatted</span>
-                                    </div>
-                                </li>
-                                <li class="list-group-item list-group-item-light">
-                                    <div class="d-flex justify-content-between">
-                                        <span class="h2 text-muted">Amount due:</span>
-                                        <span class="h2">@Model.AmountDueFormatted</span>
-                                    </div>
-                                </li>
-                            </ul>
-                            <div class="w-100 p-2">@Safe.Raw(Model.Description)</div>
-
+                <div class="card-body px-0 pt-0 pb-0">
+                    <div class="row">
+                        <div class="col-sm-12 col-md-12 col-lg-6">
+                            <table class="table table-light mb-0">
+                                <tbody>
+                                    <tr>
+                                        <td class="px-3 h2 text-muted">Request amount:</td>
+                                        <td class="px-3 h2 text-nowrap text-right">@Model.AmountFormatted</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-3 h2 text-muted">Paid so far:</td>
+                                        <td class="px-3 h2 text-nowrap text-right">@Model.AmountCollectedFormatted</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-3 h2 text-muted">Amount due:</td>
+                                        <td class="px-3 h2 text-nowrap text-right">@Model.AmountDueFormatted</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            @if (Model.Description != null && Model.Description != "" && Model.Description != "<br>")
+                            {
+                                <div class="w-100 px-3 pt-4 pb-3">@Safe.Raw(Model.Description)</div>
+                            }
                         </div>
-                        <div class="col-sm-12 col-md-12  col-lg-6">
+                        <div class="col-sm-12 col-md-12 col-lg-6 pt-2">
                             <div class="table-responsive">
-                                <table class="table border-top-0 ">
+                                <table class="table border-top-0">
                                     <thead>
                                     <tr>
-                                        <th class=" border-top-0" scope="col">Invoice #</th>
-                                        <th class=" border-top-0">Price</th>
-                                        <th class=" border-top-0">Expiry</th>
-                                        <th class=" border-top-0">Status</th>
+                                        <th class="border-top-0" scope="col">Invoice #</th>
+                                        <th class="border-top-0">Price</th>
+                                        <th class="border-top-0">Expiry</th>
+                                        <th class="border-top-0">Status</th>
                                     </tr>
                                     </thead>
                                     <tbody>

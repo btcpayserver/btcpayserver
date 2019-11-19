@@ -169,7 +169,15 @@ The BTCPay Server Project is proudly supported by these entities through the [BT
         <a href="https://lunanode.com" target="_blank">
           <img  src="BTCPayServer/wwwroot/img/lunanode.svg" alt="LunaNode" height=100>
           <br/>
-          <span>Luna Node</span>
+          <span>LunaNode</span>
+        </a>
+      </td>
+      </td>
+      <td align="center" valign="middle">
+        <a href="https://walletofsatoshi.com/" target="_blank">
+          <img  src="BTCPayServer/wwwroot/img/walletofsatoshi.svg" alt="Wallet of Satoshi" height=100>
+          <br/>
+          <span>Wallet of Satoshi</span>
         </a>
       </td>
     </tr>

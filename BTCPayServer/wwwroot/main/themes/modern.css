@@ -48,6 +48,8 @@
 
   --btcpay-section-heading-text-align: left;
 
+  --btcpay-preformatted-text-color: var(--btcpay-color-neutral-900);
+
   --btcpay-font-size-base: 16px;
   --btcpay-font-family-head: 'Open Sans', 'Helvetica Neue', Arial, sans-serif;
   --btcpay-font-family-base: -apple-system, 'Open Sans', BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";

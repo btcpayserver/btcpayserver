@@ -23,7 +23,7 @@
   "Address": "Indirizzo",
   "Copied": "Copiato",
   "ConversionTab_BodyTop": "Puoi pagare {{btcDue}} {{cryptoCode}} usando altcoin diverse da quelle che il commerciante supporta direttamente.",
-  "ConversionTab_BodyDesc": "Questo servizio è fornito da terze parti. Ricorda che non abbiamo alcun controllo su come tali parti inoltreranno i fondi. La fattura verrà contrassegnata come pagata solo dopo aver ricevuto i fondi su {{cryptoCode}} Blockchain.",
+  "ConversionTab_BodyDesc": "Questo servizio è fornito da 3° parti. Ricorda che non abbiamo alcun controllo su come tali parti inoltreranno i tuoi fondi. La fattura verrà contrassegnata come pagata solo dopo aver ricevuto i fondi sulla {{cryptoCode}} Blockchain.",
   "ConversionTab_CalculateAmount_Error": "Riprova",
   "ConversionTab_LoadCurrencies_Error": "Riprova",
   "ConversionTab_Lightning": "Nessun fornitore di conversione disponibile per i pagamenti Lightning Network.",

@@ -29,6 +29,7 @@
             <h3>Decoded PSBT</h3>
             <div class="form-group">
                 <form method="post" asp-action="WalletPSBT">
+                    <input type="hidden" asp-for="CryptoCode" />
                     <input type="hidden" asp-for="PSBT" />
                     <input type="hidden" asp-for="FileName" />
                     <div class="dropdown d-inline-block" style="margin-top:16px;">
@@ -39,6 +40,9 @@
                             <button name="command" type="submit" class="dropdown-item" value="ledger">... your Ledger Wallet device</button>
                             <button name="command" type="submit" class="dropdown-item" value="seed">... an HD private key or mnemonic seed</button>
                             <button name="command" type="submit" class="dropdown-item" value="save-psbt">... a wallet supporting PSBT (save as file)</button>
+                            @if (Model.CryptoCode == "BTC") {
+                                <button name="command" type="submit" class="dropdown-item" value="vault">... the vault (preview)</button>
+                            }
                         </div>
                     </div>
                     <div class="dropdown d-inline-block">

@@ -152,6 +152,9 @@
                         <button name="command" type="submit" class="dropdown-item" value="ledger">... your Ledger Wallet device</button>
                         <button name="command" type="submit" class="dropdown-item" value="seed">... an HD private key or mnemonic seed</button>
                         <button name="command" type="submit" class="dropdown-item" value="analyze-psbt">... a wallet supporting PSBT</button>
+                        @if (Model.CryptoCode == "BTC") {
+                            <button name="command" type="submit" class="dropdown-item" value="vault">... the vault (preview)</button>
+                        }
                     </div>
                 </div>
                 <button type="submit" name="command" value="add-output" class="ml-1 btn btn-secondary">Add another destination </button>

@@ -385,10 +385,13 @@ namespace BTCPayServer.Payments.Bitcoin
         }
         public async Task StopAsync(CancellationToken cancellationToken)
         {
-            leases.Dispose();
-            _Cts.Cancel();
-            await Task.WhenAny(_RunningTask.Task, Task.Delay(-1, cancellationToken));
-            Logs.PayServer.LogInformation($"{this.GetType().Name} successfully exited...");
+            if (_Cts != null)
+            {
+                leases.Dispose();
+                _Cts.Cancel();
+                await Task.WhenAny(_RunningTask.Task, Task.Delay(-1, cancellationToken));
+                Logs.PayServer.LogInformation($"{this.GetType().Name} successfully exited...");
+            }
         }
     }
 }

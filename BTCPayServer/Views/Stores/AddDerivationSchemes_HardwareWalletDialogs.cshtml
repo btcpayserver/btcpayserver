@@ -28,10 +28,9 @@
 
                     <p>
                         <a href="https://docs.btcpayserver.org/getting-started/connectwallet/ledgerwallet#manual-setup"
-                            title="Open Ledger wallet manual setup docs"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                        >
+                           title="Open Ledger wallet manual setup docs"
+                           target="_blank"
+                           rel="noopener noreferrer">
                             Can't find your account in the select?
                         </a>
                     </p>
@@ -80,3 +79,39 @@
         </form>
     </div>
 </div>
+
+<div id="WebsocketPath" style="display:none;">@Url.Action("VaultBridgeConnection", "Vault", new { cryptoCode = Model.CryptoCode })</div>
+<div class="modal fade" id="btcpayservervault" tabindex="-1" role="dialog" aria-labelledby="btcpayservervault" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <form class="modal-content" form method="post" enctype="multipart/form-data">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Import from BTCPayServer Vault</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>You may import from BTCPayServer Vault.</p>
+                <div id="vaultPlaceholder"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+
+                <div id="vault-dropdown" style="display:none;" class="dropdown">
+                    <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Select the type of address you want
+                    </button>
+                    <div class="dropdown-menu overflow-auto" style="max-height: 200px;">
+                        <a class="dropdown-item" href="#" id="vault-segwit">Segwit (Recommended, cheapest transaction fee)</a>
+                        <a class="dropdown-item" href="#" id="vault-segwitWrapped">Segwit wrapped (less cheap but compatible with old wallets)</a>
+                        <a class="dropdown-item" href="#" id="vault-legacy">Legacy (Not recommended)</a>
+                    </div>
+                </div>
+
+                <button id="vault-confirm" class="btn btn-primary" style="display:none;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<partial name="VaultElements" />

@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBXplorer.DerivationStrategy;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Controllers
 {
@@ -119,8 +120,8 @@ namespace BTCPayServer.Controllers
             return new EmptyResult();
         }
 
-        
-        
+
+
         private void SetExistingValues(StoreData store, DerivationSchemeViewModel vm)
         {
             var derivation = GetExistingDerivationStrategy(vm.CryptoCode, store);
@@ -140,8 +141,6 @@ namespace BTCPayServer.Controllers
                 .FirstOrDefault(d => d.PaymentId == id);
             return existing;
         }
-        
-        
 
         [HttpPost]
         [Route("{storeId}/derivations/{cryptoCode}")]
@@ -162,7 +161,7 @@ namespace BTCPayServer.Controllers
             vm.Network = network;
             vm.RootKeyPath = network.GetRootKeyPath();
             DerivationSchemeSettings strategy = null;
-            
+
             var wallet = _WalletProvider.GetWallet(network);
             if (wallet == null)
             {
@@ -246,7 +245,7 @@ namespace BTCPayServer.Controllers
             var willBeExcluded = !vm.Enabled;
 
             var showAddress = // Show addresses if:
-                // - If the user is testing the hint address in confirmation screen
+                              // - If the user is testing the hint address in confirmation screen
                 (vm.Confirmation && !string.IsNullOrWhiteSpace(vm.HintAddress)) ||
                 // - The user is clicking on continue after changing the config
                 (!vm.Confirmation && oldConfig != vm.Config) ||
@@ -280,7 +279,7 @@ namespace BTCPayServer.Controllers
                 {
                     TempData[WellKnownTempData.SuccessMessage] = $"Derivation settings for {network.CryptoCode} has been modified.";
                 }
-                return RedirectToAction(nameof(UpdateStore), new {storeId = storeId});
+                return RedirectToAction(nameof(UpdateStore), new { storeId = storeId });
             }
             else if (!string.IsNullOrEmpty(vm.HintAddress))
             {

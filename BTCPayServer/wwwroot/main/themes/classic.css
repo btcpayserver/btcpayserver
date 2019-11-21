@@ -57,6 +57,8 @@
 
   --btcpay-bg-nav-link-active: #d9f7ef;
 
+  --btcpay-preformatted-text-color: var(--btcpay-color-neutral-900);
+
   --btcpay-font-size-base: 14px;
   --btcpay-font-family-head: 'Open Sans', 'Helvetica Neue', Arial, sans-serif;
   --btcpay-font-family-base: 'Helvetica Neue', Arial, sans-serif;

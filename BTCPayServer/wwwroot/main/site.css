@@ -136,3 +136,14 @@ pre {
 .feedback-icon-failed {
     color: red;
 }
+.pin-button {
+    height: 135px;
+    margin-top: 20px;
+    background-color: white;
+    border: solid lightgray 4px;
+    cursor: pointer;
+}
+
+    .pin-button:hover {
+        background-color: lightgray;
+    }

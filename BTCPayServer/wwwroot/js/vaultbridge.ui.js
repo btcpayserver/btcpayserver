@@ -184,6 +184,7 @@ var vaultui = (function () {
             show(VaultFeedbacks.needPin);
             $("#pin-input").css("display", "block");
             $("#vault-confirm").css("display", "block");
+            $("#vault-confirm").text("Confirm the pin code");
             return new Promise(function (resolve, reject) {
                 var pinCode = "";
                 $("#vault-confirm").click(async function () {
@@ -213,11 +214,12 @@ var vaultui = (function () {
             show(VaultFeedbacks.needPassphrase);
             $("#passphrase-input").css("display", "block");
             $("#vault-confirm").css("display", "block");
+            $("#vault-confirm").text("Confirm the passphrase");
             return new Promise(function (resolve, reject) {
                 $("#vault-confirm").click(async function () {
                     var passphrase = $("#Password").val();
                     if (passphrase !== $("#PasswordConfirmation").val()) {
-                        show("invalid-password-confirm");
+                        show(VaultFeedbacks.invalidPasswordConfirmation);
                         return;
                     }
                     $("#passphrase-input").css("display", "none");

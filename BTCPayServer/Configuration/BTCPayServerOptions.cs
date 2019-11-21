@@ -141,6 +141,7 @@ namespace BTCPayServer.Configuration
                 ExternalServices.Load(net.CryptoCode, conf);
             }
 
+            ExternalServices.LoadNonCryptoServices(conf);
             Logs.Configuration.LogInformation("Supported chains: " + String.Join(',', supportedChains.ToArray()));
 
             var services = conf.GetOrDefault<string>("externalservices", null);

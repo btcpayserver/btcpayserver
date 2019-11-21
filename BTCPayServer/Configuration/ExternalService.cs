@@ -41,11 +41,20 @@ namespace BTCPayServer.Configuration
                                 $"lightning charge server: 'type=charge;server=https://charge.example.com;cookiefilepath=/root/.charge/.cookie'" + Environment.NewLine +
                                 "Error: {1}",
                                 "C-Lightning (Charge server)");
+            
+        }
+
+        public void LoadNonCryptoServices(IConfiguration configuration)
+        {
+            Load(configuration, null, "configurator", ExternalServiceTypes.Configurator, "Invalid setting {0}, " + Environment.NewLine +
+                                                                                   $"configurator: 'passwordfile=/etc/configurator/password'" + Environment.NewLine +
+                                                                                   "Error: {1}",
+                "Configurator");
         }
 
         void Load(IConfiguration configuration, string cryptoCode, string serviceName, ExternalServiceTypes type, string errorMessage, string displayName)
         {
-            var setting = $"{cryptoCode}.external.{serviceName}";
+            var setting = $"{(string.IsNullOrEmpty(cryptoCode)? $"{cryptoCode}.": string.Empty)}external.{serviceName}";
             var connStr = configuration.GetOrDefault<string>(setting, string.Empty);
             if (connStr.Length != 0)
             {
@@ -65,8 +74,11 @@ namespace BTCPayServer.Configuration
 
         public ExternalService GetService(string serviceName, string cryptoCode)
         {
-            return this.FirstOrDefault(o => o.CryptoCode.Equals(cryptoCode, StringComparison.OrdinalIgnoreCase) &&
-                                                                                    o.ServiceName.Equals(serviceName, StringComparison.OrdinalIgnoreCase));
+            return this.FirstOrDefault(o =>
+                (cryptoCode == null && o.CryptoCode == null) ||
+                (o.CryptoCode != null && o.CryptoCode.Equals(cryptoCode, StringComparison.OrdinalIgnoreCase))
+                &&
+                o.ServiceName.Equals(serviceName, StringComparison.OrdinalIgnoreCase));
         }
     }
 
@@ -88,6 +100,7 @@ namespace BTCPayServer.Configuration
         RTL,
         Charge,
         P2P,
-        RPC
+        RPC,
+        Configurator
     }
 }

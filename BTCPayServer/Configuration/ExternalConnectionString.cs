@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Controllers;
@@ -25,6 +26,7 @@ namespace BTCPayServer.Configuration
         public string MacaroonDirectoryPath { get; set; }
         public string APIToken { get; set; }
         public string CookieFilePath { get; set; }
+        public string PasswordFile { get; set; }
         public string AccessKey { get; set; }
 
         /// <summary>
@@ -77,6 +79,20 @@ namespace BTCPayServer.Configuration
                 }
             }
 
+            if (serviceType == ExternalServiceTypes.Configurator)
+            {
+                //generate a password and write to the path
+                if (connectionString.PasswordFile != null)
+                {
+                    if (string.IsNullOrEmpty(connectionString.Password))
+                    {
+                        connectionString.Password = Guid.NewGuid().ToString();
+                    }
+
+                    await File.WriteAllTextAsync(connectionString.PasswordFile, connectionString.Password);
+                }
+            }
+
             if (serviceType == ExternalServiceTypes.Charge || serviceType == ExternalServiceTypes.RTL || serviceType == ExternalServiceTypes.Spark)
             {
                 // Read access key from cookie file
@@ -120,6 +136,8 @@ namespace BTCPayServer.Configuration
             return connectionString;
         }
 
+        public string Password { get; set; }
+
         private Uri ToRelative(Uri absoluteUrlBase, string path)
         {
             if (path.StartsWith('/'))
@@ -139,7 +157,9 @@ namespace BTCPayServer.Configuration
                 APIToken = APIToken,
                 CookieFilePath = CookieFilePath,
                 AccessKey = AccessKey,
-                Macaroons = Macaroons?.Clone()
+                Macaroons = Macaroons?.Clone(),
+                Password = Password,
+                PasswordFile = PasswordFile
             };
         }
         public bool? IsOnion()
@@ -200,6 +220,9 @@ namespace BTCPayServer.Configuration
                         break;
                     case "access-key":
                         resultTemp.AccessKey = kv[1];
+                        break;
+                    case "passwordfile":
+                        resultTemp.PasswordFile = kv[1];
                         break;
                 }
             }

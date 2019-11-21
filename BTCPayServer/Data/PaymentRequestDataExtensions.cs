@@ -15,7 +15,6 @@ namespace BTCPayServer.Data
                 : JObject.Parse(ZipUtils.Unzip(paymentRequestData.Blob)).ToObject<PaymentRequestBlob>();
             return result;
         }
-        static NBXplorerNetwork Dummy = new NBXplorerNetwork(Network.Main.NetworkSet, Network.Main.NetworkType, new DerivationStrategyFactory(Network.Main));
 
         public static bool SetBlob(this PaymentRequestData paymentRequestData, PaymentRequestBlob blob)
         {

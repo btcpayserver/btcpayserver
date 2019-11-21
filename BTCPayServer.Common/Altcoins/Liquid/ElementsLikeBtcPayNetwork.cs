@@ -17,7 +17,7 @@ namespace BTCPayServer
             return base.GetValidCoinsForNetwork(coins, scriptPubKey)
                 .Where(coin =>
                 {
-                    if (coin.TxOut is ElementsTxOut elementsTxOut)
+                    if (coin.TxOut is ElementsTxOut elementsTxOut && elementsTxOut.Value != null)
                     {
                         return (AssetId == null && elementsTxOut.IsPeggedAsset.GetValueOrDefault(false)) ||
                                (AssetId != null && elementsTxOut.Asset.AssetId == AssetId);

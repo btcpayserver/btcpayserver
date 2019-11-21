@@ -27,12 +27,13 @@
     <EmbeddedResource Include="Currencies.txt" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="BTCPayServer.Hwi" Version="1.1.2" />
     <PackageReference Include="BTCPayServer.Lightning.All" Version="1.1.5" />
     <PackageReference Include="BuildBundlerMinifier" Version="3.1.430" />
     <PackageReference Include="BundlerMinifier.Core" Version="3.1.430" />
     <PackageReference Include="BundlerMinifier.TagHelpers" Version="3.1.430" />
     <PackageReference Include="HtmlSanitizer" Version="4.0.217" />
-    <PackageReference Include="LedgerWallet" Version="2.0.0.3" />
+    <PackageReference Include="LedgerWallet" Version="2.0.0.5" />
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.2" />
     <PackageReference Include="Microsoft.NetCore.Analyzers" Version="2.6.2">
       <PrivateAssets>all</PrivateAssets>
@@ -199,6 +200,9 @@
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
 	  <Content Update="Views\Wallets\WalletRescan.cshtml">
+	    <Pack>$(IncludeRazorContentInPack)</Pack>
+	  </Content>
+	  <Content Update="Views\Wallets\WalletSendVault.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
 	  <Content Update="Views\Wallets\WalletSendLedger.cshtml">

@@ -124,5 +124,15 @@ a.nav-link:hover {
 }
 
 pre {
-    color: var(--btcpay-preformatted-text-color); 
+    color: var(--btcpay-preformatted-text-color);
+}
+
+.feedback-icon-loading {
+    color: orange;
+}
+.feedback-icon-success {
+    color: green;
+}
+.feedback-icon-failed {
+    color: red;
 }

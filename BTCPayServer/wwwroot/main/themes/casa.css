@@ -6,6 +6,7 @@
   --btcpay-brand-darker:  #19154B;
   --btcpay-brand-darkest: #02000C;
 
+  /* Color definitions for specific purposes - map the general colors or define additional ones */
   --btcpay-color-white:    #fff;
   --btcpay-color-black:    #000;
 
@@ -19,7 +20,6 @@
   --btcpay-color-neutral-800: #181334;
   --btcpay-color-neutral-900: #100d20;
 
-  /* Color definitions for specific purposes - map the general colors or define additional ones */
   --btcpay-color-primary:            var(--btcpay-brand-medium); /* Usage: Text color */
   --btcpay-color-primary-backdrop:   #baa4fd;                    /* Usage: Backgrounds, borders, shadows */
   --btcpay-color-primary-accent:     #4b3bc0;                    /* Usage: Background on Focus/Hover */

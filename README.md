@@ -7,7 +7,7 @@
 
 # BTCPay Server
 
-## Introduction 
+## Introduction
 
 BTCPay Server is a free and open-source cryptocurrency payment processor which allows you to receive payments in Bitcoin and altcoins directly, with no fees, transaction cost or a middleman.
 
@@ -58,13 +58,13 @@ Thanks to the [apps](https://github.com/btcpayserver/btcpayserver-doc/blob/maste
 
 ## Getting Started
 
-Firstly, decide if you want to host an instance yourself or use a [third-party host](https://docs.btcpayserver.org/deployment/thirdpartyhosting). If you've chosen to self-host, we documented plenty [ways to deploy BTCPay Server](https://docs.btcpayserver.org/deployment/deployment). 
+Firstly, decide if you want to host an instance yourself or use a [third-party host](https://docs.btcpayserver.org/deployment/thirdpartyhosting). If you've chosen to self-host, we documented plenty [ways to deploy BTCPay Server](https://docs.btcpayserver.org/deployment/deployment).
 
 After successful deployment, make sure to check our [getting started](https://docs.btcpayserver.org/getting-started/registeraccount) and [walkthrough](https://docs.btcpayserver.org/btcpay-basics/walkthrough) guides. In case you would like to use Lightning Network, see [Lightning guide](https://docs.btcpayserver.org/features/lightningnetwork).
 
 ## Documentation
 
-Please check out our [official website](https://btcpayserver.org/), our [complete documentation](https://github.com/btcpayserver/btcpayserver-doc) and [FAQ](https://github.com/btcpayserver/btcpayserver-doc/tree/master/FAQ#btcpay-frequently-asked-questions-and-common-issues) for more details. 
+Please check out our [official website](https://btcpayserver.org/), our [complete documentation](https://github.com/btcpayserver/btcpayserver-doc) and [FAQ](https://github.com/btcpayserver/btcpayserver-doc/tree/master/FAQ#btcpay-frequently-asked-questions-and-common-issues) for more details.
 
 If you have trouble using BTCPay, consider joining [communities listed on official website](https://btcpayserver.org/#communityCTA) to get help from BTCPay community members. Only file [Github issue](https://github.com/btcpayserver/btcpayserver/issues) for technical issues you can't resolve through other channels or feature requests you've validated with other members of community.
 
@@ -81,6 +81,8 @@ Contributors looking to do something a bit more challenging, before opening a pu
 - [Setting up development environment Linux (Ubuntu)](https://www.youtube.com/watch?v=j486T_Rk-yw&t)
 
 You also have an awesome video of our contributors which explains how to get started.[![Rockstar Dev and Britt Kelly - Btc Pay Server Code Along](https://img.youtube.com/vi/ZePbMPSIvHM/sddefault.jpg)](https://www.youtube.com/embed/VNMnd-dX9Q8)
+
+Here is some info about [how to extend the themes](Docs/Themes.md)
 
 ## How to build
 

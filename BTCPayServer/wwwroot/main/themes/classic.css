@@ -6,6 +6,7 @@
   --btcpay-brand-darker:  #0F3B21;
   --btcpay-brand-darkest: #05120a;
 
+  /* Color definitions for specific purposes - map the general colors or define additional ones */
   --btcpay-color-white: #fff;
   --btcpay-color-black: #000;
 
@@ -19,10 +20,9 @@
   --btcpay-color-neutral-800: #343a40;
   --btcpay-color-neutral-900: #212529;
 
-  /* Color definitions for specific purposes - map the general colors or define additional ones */
-  --btcpay-color-primary:            #329f80;
-  --btcpay-color-primary-backdrop:   rgba(81, 173, 147, 0.25);
-  --btcpay-color-primary-accent:     #267861;
+  --btcpay-color-primary:            #329f80;                    /* Usage: Text color */
+  --btcpay-color-primary-backdrop:   rgba(81, 173, 147, 0.25);   /* Usage: Backgrounds, borders, shadows */
+  --btcpay-color-primary-accent:     #267861;                    /* Usage: Background on Focus/Hover */
   --btcpay-color-secondary:          var(--btcpay-color-neutral-600);
   --btcpay-color-secondary-backdrop: rgba(130, 138, 145, 0.25);
   --btcpay-color-secondary-accent:   var(--btcpay-color-neutral-800);

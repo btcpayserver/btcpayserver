@@ -111,20 +111,7 @@ namespace BTCPayServer.Controllers
                                 }
                                 if (fingerprint is null)
                                 {
-                                    try
-                                    {
-                                        fingerprint = (await device.GetXPubAsync(new KeyPath("44'"), cancellationToken)).ExtPubKey.ParentFingerprint;
-                                    }
-                                    catch (Hwi.HwiException ex) when (ex.ErrorCode == Hwi.HwiErrorCode.DeviceNotReady)
-                                    {
-                                        await websocketHelper.Send("{ \"error\": \"need-pin\"}", cancellationToken);
-                                        continue;
-                                    }
-                                    catch (Hwi.HwiException ex) when (ex.ErrorCode == Hwi.HwiErrorCode.NoPassword)
-                                    {
-                                        await websocketHelper.Send("{ \"error\": \"need-passphrase\"}", cancellationToken);
-                                        continue;
-                                    }
+                                    fingerprint = (await device.GetXPubAsync(new KeyPath("44'"), cancellationToken)).ExtPubKey.ParentFingerprint;
                                 }
                                 await websocketHelper.Send("{ \"info\": \"ready\"}", cancellationToken);
                                 o = JObject.Parse(await websocketHelper.NextMessageAsync(cancellationToken));
@@ -146,16 +133,6 @@ namespace BTCPayServer.Controllers
                                 try
                                 {
                                     psbt = await device.SignPSBTAsync(psbt, cancellationToken);
-                                }
-                                catch (Hwi.HwiException ex) when (ex.ErrorCode == Hwi.HwiErrorCode.DeviceNotReady)
-                                {
-                                    await websocketHelper.Send("{ \"error\": \"need-pin\"}", cancellationToken);
-                                    continue;
-                                }
-                                catch (Hwi.HwiException ex) when (ex.ErrorCode == Hwi.HwiErrorCode.NoPassword)
-                                {
-                                    await websocketHelper.Send("{ \"error\": \"need-passphrase\"}", cancellationToken);
-                                    continue;
                                 }
                                 catch (Hwi.HwiException)
                                 {
@@ -198,21 +175,7 @@ namespace BTCPayServer.Controllers
                                 JObject result = new JObject();
                                 var factory = network.NBXplorerNetwork.DerivationStrategyFactory;
                                 var keyPath = new KeyPath("84'").Derive(network.CoinType).Derive(0, true);
-                                BitcoinExtPubKey xpub = null;
-                                try
-                                {
-                                    xpub = await device.GetXPubAsync(keyPath);
-                                }
-                                catch (Hwi.HwiException ex) when (ex.ErrorCode == Hwi.HwiErrorCode.DeviceNotReady)
-                                {
-                                    await websocketHelper.Send("{ \"error\": \"need-pin\"}", cancellationToken);
-                                    continue;
-                                }
-                                catch (Hwi.HwiException ex) when (ex.ErrorCode == Hwi.HwiErrorCode.NoPassword)
-                                {
-                                    await websocketHelper.Send("{ \"error\": \"need-passphrase\"}", cancellationToken);
-                                    continue;
-                                }
+                                BitcoinExtPubKey xpub = await device.GetXPubAsync(keyPath);
                                 if (fingerprint is null)
                                 {
                                     fingerprint = (await device.GetXPubAsync(new KeyPath("44'"), cancellationToken)).ExtPubKey.ParentFingerprint;

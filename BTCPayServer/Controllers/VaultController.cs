@@ -67,8 +67,13 @@ namespace BTCPayServer.Controllers
                 int? pin = null;
                 var websocketHelper = new WebSocketHelper(websocket);
 
-                async Task<bool> RequireMoreInformation()
+                async Task<bool> RequireDeviceUnlocking()
                 {
+                    if (deviceEntry == null)
+                    {
+                        await websocketHelper.Send("{ \"error\": \"need-device\"}", cancellationToken);
+                        return true;
+                    }
                     if (deviceEntry.NeedsPinSent is true && pin is null)
                     {
                         await websocketHelper.Send("{ \"error\": \"need-pin\"}", cancellationToken);
@@ -95,12 +100,7 @@ namespace BTCPayServer.Controllers
                                 password = device.Password;
                                 break;
                             case "ask-sign":
-                                if (device == null)
-                                {
-                                    await websocketHelper.Send("{ \"error\": \"need-device\"}", cancellationToken);
-                                    continue;
-                                }
-                                if (await RequireMoreInformation())
+                                if (await RequireDeviceUnlocking())
                                 {
                                     continue;
                                 }
@@ -163,12 +163,7 @@ namespace BTCPayServer.Controllers
                                 }
                                 break;
                             case "ask-xpubs":
-                                if (device == null)
-                                {
-                                    await websocketHelper.Send("{ \"error\": \"need-device\"}", cancellationToken);
-                                    continue;
-                                }
-                                if (await RequireMoreInformation())
+                                if (await RequireDeviceUnlocking())
                                 {
                                     continue;
                                 }

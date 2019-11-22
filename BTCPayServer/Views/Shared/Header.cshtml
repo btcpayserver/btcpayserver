@@ -7,13 +7,17 @@
 <meta name="author" content="">
 @if (themeManager.DiscourageSearchEngines)
 {
-    <META NAME="robots" CONTENT="noindex">
+<meta name="robots" content="noindex">
 }
 <title>@ViewData["Title"]</title>
 @* CSS *@
 <link href="@this.Context.Request.GetRelativePathOrAbsolute(themeManager.BootstrapUri)" rel="stylesheet" />
 <link href="@this.Context.Request.GetRelativePathOrAbsolute(themeManager.CreativeStartUri)" rel="stylesheet" />
 <link href="@this.Context.Request.GetRelativePathOrAbsolute(themeManager.ThemeUri)" rel="stylesheet" />
+@if (!String.IsNullOrWhiteSpace(themeManager.CustomThemeUri))
+{
+<link href="@this.Context.Request.GetRelativePathOrAbsolute(themeManager.CustomThemeUri)" rel="stylesheet" />
+}
 <bundle name="wwwroot/bundles/main-bundle.min.css" />
 @* JS *@
 <bundle name="wwwroot/bundles/main-bundle.min.js" />

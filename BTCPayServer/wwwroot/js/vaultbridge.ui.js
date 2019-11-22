@@ -114,6 +114,11 @@ var vaultui = (function () {
                     if (await self.askForPin())
                         return true;
                 }
+                if (json.error === "need-passphrase") {
+                    handled = true;
+                    if (await self.askForPassphrase())
+                        return true;
+                }
                 if (!handled) {
                     showError(json);
                 }
@@ -230,6 +235,15 @@ var vaultui = (function () {
             });
         };
 
+        this.askForPassphrase = async function () {
+            if (!await self.ensureConnectedToBackend())
+                return false;
+            var passphrase = await self.getUserPassphrase();
+            self.bridge.socket.send("set-passphrase");
+            self.bridge.socket.send(passphrase);
+            return true;
+        }
+
         /**
          * @returns {Promise}
          */
@@ -246,8 +260,7 @@ var vaultui = (function () {
             }
 
             var pinCode = await self.getUserEnterPin();
-            var passphrase = await self.getUserPassphrase();
-            self.bridge.socket.send(JSON.stringify({ pinCode: pinCode, passphrase: passphrase }));
+            self.bridge.socket.send(pinCode);
             var json = await self.bridge.waitBackendMessage();
             if (json.hasOwnProperty("error")) {
                 showError(json);

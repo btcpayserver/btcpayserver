@@ -33,6 +33,7 @@ var vaultui = (function () {
         errorWebsockets: new VaultFeedback("failed", "Error of the websocket while connecting to the backend.", "vault-feedback1", "error-websocket"),
         bridgeConnected: new VaultFeedback("ok", "BTCPayServer successfully connected to the vault.", "vault-feedback1", "bridge-connected"),
         noDevice: new VaultFeedback("failed", "No device connected.", "vault-feedback2", "no-device"),
+        needInitialized: new VaultFeedback("failed", "The device has not been initialized.", "vault-feedback2", "need-initialized"),
         fetchingDevice: new VaultFeedback("?", "Fetching device...", "vault-feedback2", "fetching-device"),
         deviceFound: new VaultFeedback("ok", "Device found: {{0}}", "vault-feedback2", "device-selected"),
         fetchingXpubs: new VaultFeedback("?", "Fetching public keys...", "vault-feedback3", "fetching-xpubs"),

@@ -34,6 +34,7 @@
                             self.onerror(vault.errors.denied);
                         }
                     };
+                    request.overrideMimeType("text/plain");
                     request.open('POST', 'http://localhost:65092/hwi-bridge/v1');
                     request.send(JSON.stringify(jsonObject));
                 }
@@ -85,6 +86,7 @@
                     reject(vault.errors.denied);
                 }
             };
+            request.overrideMimeType("text/plain");
             request.open('GET', 'http://localhost:65092/hwi-bridge/v1/request-permission');
             request.send();
         });

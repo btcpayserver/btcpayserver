@@ -74,12 +74,20 @@ namespace BTCPayServer.Controllers
                         await websocketHelper.Send("{ \"error\": \"need-device\"}", cancellationToken);
                         return true;
                     }
-                    if (deviceEntry.NeedsPinSent is true && pin is null)
+                    if (deviceEntry.Code is HwiErrorCode.DeviceNotInitialized)
+                    {
+                        await websocketHelper.Send("{ \"error\": \"need-initialized\"}", cancellationToken);
+                        return true;
+                    }
+                    if ((deviceEntry.Code is HwiErrorCode.DeviceNotReady || deviceEntry.NeedsPinSent is true)
+                        && pin is null
+                        // Trezor T always show the pin on screen
+                        && (deviceEntry.Model != HardwareWalletModels.Trezor_T || deviceEntry.Model != HardwareWalletModels.Trezor_T_Simulator))
                     {
                         await websocketHelper.Send("{ \"error\": \"need-pin\"}", cancellationToken);
                         return true;
                     }
-                    if (deviceEntry.NeedsPassphraseSent is true && password == null)
+                    if ((deviceEntry.Code is HwiErrorCode.DeviceNotReady || deviceEntry.NeedsPassphraseSent is true) && password == null)
                     {
                         await websocketHelper.Send("{ \"error\": \"need-passphrase\"}", cancellationToken);
                         return true;

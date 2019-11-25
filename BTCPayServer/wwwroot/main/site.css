@@ -42,11 +42,6 @@ a {
     transition-property: background, color;
 }
 
-/* Admin Sections */
-.section-heading {
-    text-align: var(--btcpay-section-heading-text-align, center);
-}
-
 /* Admin Sidebar Navigation */
 a.nav-link {
     color: var(--btcpay-nav-color-link, var(--btcpay-color-neutral-600));

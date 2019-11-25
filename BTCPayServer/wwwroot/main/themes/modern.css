@@ -46,8 +46,6 @@
   --btcpay-body-color-link: var(--btcpay-color-primary);
   --btcpay-body-color-link-accent: var(--btcpay-color-primary-accent);
 
-  --btcpay-section-heading-text-align: left;
-
   --btcpay-preformatted-text-color: var(--btcpay-color-neutral-900);
 
   --btcpay-font-size-base: 16px;

@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBXplorer.DerivationStrategy;
+using NBXplorer.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -317,6 +318,31 @@ namespace BTCPayServer.Controllers
             }
 
             return ShowAddresses(vm, strategy);
+        }
+
+        [HttpPost]
+        [Route("{storeId}/derivations/{cryptoCode}/generatenbxwallet")]
+        public async Task<IActionResult> GenerateNBXWallet(string storeId, string cryptoCode, GenerateWalletRequest request)
+        {
+            var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
+          var client =   _ExplorerProvider.GetExplorerClient(cryptoCode);
+          var response = await client.GenerateWalletAsync(request);
+          var result = await AddDerivationScheme(storeId, new DerivationSchemeViewModel()
+          {
+              Confirmation = false,
+              Network = network,
+              RootFingerprint = response.AccountKeyPath.MasterFingerprint.ToString(),
+              RootKeyPath = response.AccountKeyPath.KeyPath,
+              CryptoCode = cryptoCode,
+              DerivationScheme = response.DerivationScheme.ToString(),
+              Source = "NBXplorer",
+              AccountKey = response.AccountHDKey.ToWif(),
+              DerivationSchemeFormat = "BTCPay",
+              KeyPath = response.AccountKeyPath.KeyPath.ToString(),
+              Enabled = true
+          }, cryptoCode);
+          ((ViewResult)result).ViewName = nameof(AddDerivationScheme);
+          return result;
         }
 
         private async Task<string> ReadAllText(IFormFile file)

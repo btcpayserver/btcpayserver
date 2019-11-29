@@ -1,0 +1,34 @@
+@using NBitcoin
+@model NBXplorer.Models.GenerateWalletRequest
+<div class="modal fade" id="nbxplorergeneratewallet" tabindex="-1" role="dialog" aria-labelledby="nbxplorergeneratewallet" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <form class="modal-content" form method="post"  asp-action="GenerateNBXWallet"  enctype="multipart/form-data">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Generate a wallet with a seed</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>You may generate a wallet with a seed and import the xpub it into BTCPay. You can optionally also tell NBX to import the keys to the node wallet to be able to spend received funds from it.</p>
+                
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+
+                <div id="vault-dropdown" style="display:none;" class="dropdown">
+                    <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Select the type of address you want
+                    </button>
+                    <div class="dropdown-menu overflow-auto" style="max-height: 200px;">
+                        <button type="submit" class="dropdown-item" asp-for="ScriptPubKeyType" value="@ScriptPubKeyType.Segwit">Segwit (Recommended, cheapest transaction fee)</button>
+                        <a class="dropdown-item" href="#" asp-for="ScriptPubKeyType" value="@ScriptPubKeyType.SegwitP2SH">Segwit wrapped (less cheap but compatible with old wallets)</a>
+                        <a class="dropdown-item" href="#" asp-for="ScriptPubKeyType" value="@ScriptPubKeyType.Legacy">Legacy (Not recommended)</a>
+                    </div>
+                </div>
+
+               </div>
+        </form>
+    </div>
+</div>
+

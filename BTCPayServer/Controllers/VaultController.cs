@@ -227,6 +227,17 @@ namespace BTCPayServer.Controllers
                         }
                     }
                 }
+                catch (FormatException ex)
+                {
+                    JObject obj = new JObject();
+                    obj.Add("error", "invalid-network");
+                    obj.Add("details", ex.ToString());
+                    try
+                    {
+                        await websocketHelper.Send(obj.ToString(), cancellationToken);
+                    }
+                    catch { }
+                }
                 catch (Exception ex)
                 {
                     JObject obj = new JObject();

@@ -39,6 +39,7 @@ var vaultui = (function () {
         fetchingXpubs: new VaultFeedback("?", "Fetching public keys...", "vault-feedback3", "fetching-xpubs"),
         fetchedXpubs: new VaultFeedback("ok", "Public keys successfully fetched.", "vault-feedback3", "xpubs-fetched"),
         unexpectedError: new VaultFeedback("failed", "An unexpected error happened.", "vault-feedback3", "unknown-error"),
+        invalidNetwork: new VaultFeedback("failed", "The device is targetting a different chain.", "vault-feedback3", "invalid-network"),
         needPin: new VaultFeedback("?", "Enter the pin.", "vault-feedback3", "need-pin"),
         incorrectPin: new VaultFeedback("failed", "Incorrect pin code.", "vault-feedback3", "incorrect-pin"),
         invalidPasswordConfirmation: new VaultFeedback("failed", "Invalid password confirmation.", "vault-feedback3", "invalid-password-confirm"),

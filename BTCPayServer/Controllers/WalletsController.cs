@@ -252,7 +252,7 @@ namespace BTCPayServer.Controllers
                 vm.Id = tx.TransactionId.ToString();
                 vm.Link = string.Format(CultureInfo.InvariantCulture, paymentMethod.Network.BlockExplorerLink, vm.Id);
                 vm.Timestamp = tx.Timestamp;
-                vm.Positive = tx.BalanceChange >= Money.Zero;
+                vm.Positive = tx.BalanceChange.GetValue(wallet.Network) >= Money.Zero;
                 vm.Balance = tx.BalanceChange.ToString();
                 vm.IsConfirmed = tx.Confirmations != 0;
 
@@ -912,7 +912,7 @@ namespace BTCPayServer.Controllers
             }
             else if (command == "prune")
             {
-                var result = await ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode).PruneAsync(derivationScheme.AccountDerivation, cancellationToken);
+                var result = await ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode).PruneAsync(derivationScheme.AccountDerivation, new PruneRequest(),  cancellationToken);
                 if (result.TotalPruned == 0)
                 {
                     TempData[WellKnownTempData.SuccessMessage] = $"The wallet is already pruned";

@@ -181,7 +181,7 @@ namespace BTCPayServer.Services.Wallets
         public async Task<Money> GetBalance(DerivationStrategyBase derivationStrategy, CancellationToken cancellation = default(CancellationToken))
         {
             UTXOChanges changes = await GetUTXOChanges(derivationStrategy, cancellation);
-            return changes.GetUnspentUTXOs().Select(c => c.Value).Sum();
+            return changes.GetUnspentUTXOs().Select(c => c.Value.GetValue(_Network)).Sum();
         }
     }
 }

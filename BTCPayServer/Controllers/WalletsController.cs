@@ -252,7 +252,7 @@ namespace BTCPayServer.Controllers
                 vm.Id = tx.TransactionId.ToString();
                 vm.Link = string.Format(CultureInfo.InvariantCulture, paymentMethod.Network.BlockExplorerLink, vm.Id);
                 vm.Timestamp = tx.Timestamp;
-                vm.Positive = tx.BalanceChange.GetValue(wallet.Network) >= Money.Zero;
+                vm.Positive = tx.BalanceChange.GetValue(wallet.Network) >= 0;
                 vm.Balance = tx.BalanceChange.ToString();
                 vm.IsConfirmed = tx.Confirmations != 0;
 
@@ -313,7 +313,7 @@ namespace BTCPayServer.Controllers
             var feeProvider = _feeRateProvider.CreateFeeProvider(network);
             var recommendedFees = feeProvider.GetFeeRateAsync();
             var balance = _walletProvider.GetWallet(network).GetBalance(paymentMethod.AccountDerivation);
-            model.CurrentBalance = (await balance).ToDecimal(MoneyUnit.BTC);
+            model.CurrentBalance = await balance;
             model.RecommendedSatoshiPerByte = (int)(await recommendedFees).GetFee(1).Satoshi;
             model.FeeSatoshiPerByte = model.RecommendedSatoshiPerByte;
             model.SupportRBF = network.SupportRBF;

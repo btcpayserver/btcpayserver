@@ -178,10 +178,10 @@ namespace BTCPayServer.Services.Wallets
                           }).ToArray();
         }
 
-        public async Task<Money> GetBalance(DerivationStrategyBase derivationStrategy, CancellationToken cancellation = default(CancellationToken))
+        public async Task<decimal> GetBalance(DerivationStrategyBase derivationStrategy, CancellationToken cancellation = default(CancellationToken))
         {
-            UTXOChanges changes = await GetUTXOChanges(derivationStrategy, cancellation);
-            return changes.GetUnspentUTXOs().Select(c => c.Value).Sum();
+            var result = await _Client.GetBalanceAsync(derivationStrategy, cancellation);
+            return result.Total.GetValue(_Network);
         }
     }
 }

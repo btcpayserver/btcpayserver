@@ -157,7 +157,7 @@ namespace BTCPayServer.Payments.Bitcoin
                                         var invoice = (await _InvoiceRepository.GetInvoicesFromAddresses(new [] {key})).FirstOrDefault();
                                         if (invoice != null)
                                         {
-                                            var paymentData = new BitcoinLikePaymentData(txCoin, evt.TransactionData.Transaction.RBF);
+                                            var paymentData = new BitcoinLikePaymentData(txCoin.TxOut, txCoin.Outpoint, evt.TransactionData.Transaction.RBF);
                                             var alreadyExist = GetAllBitcoinPaymentData(invoice).Where(c => c.GetPaymentId() == paymentData.GetPaymentId()).Any();
                                             if (!alreadyExist)
                                             {
@@ -338,7 +338,7 @@ namespace BTCPayServer.Payments.Bitcoin
                 foreach (var coin in coins.Where(c => !alreadyAccounted.Contains(c.Coin.Outpoint)))
                 {
                     var transaction = await wallet.GetTransactionAsync(coin.Coin.Outpoint.Hash);
-                    var paymentData = new BitcoinLikePaymentData(coin.Coin, transaction.Transaction.RBF);
+                    var paymentData = new BitcoinLikePaymentData(coin.Coin.TxOut, coin.Coin.Outpoint, transaction.Transaction.RBF);
                     var payment = await _InvoiceRepository.AddPayment(invoice.Id, coin.Timestamp, paymentData, network).ConfigureAwait(false);
                     alreadyAccounted.Add(coin.Coin.Outpoint);
                     if (payment != null)

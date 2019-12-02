@@ -5,6 +5,6 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.9" Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
     <FrameworkReference Include="Microsoft.AspNetCore.App" Condition="'$(TargetFramework)' != 'netcoreapp2.1'" />
-    <PackageReference Include="NBXplorer.Client" Version="2.0.0.26" />
+    <PackageReference Include="NBXplorer.Client" Version="3.0.1" />
   </ItemGroup>
 </Project>

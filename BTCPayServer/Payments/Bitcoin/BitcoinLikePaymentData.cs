@@ -20,10 +20,10 @@ namespace BTCPayServer.Payments.Bitcoin
         {
 
         }
-        public BitcoinLikePaymentData(Coin coin, bool rbf)
+        public BitcoinLikePaymentData(TxOut txout, OutPoint outpoint, bool rbf)
         {
-            Outpoint = coin.Outpoint;
-            Output = coin.TxOut;
+            Outpoint = outpoint;
+            Output = txout;
             ConfirmationCount = 0;
             RBF = rbf;
         }

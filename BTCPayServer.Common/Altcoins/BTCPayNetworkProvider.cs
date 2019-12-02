@@ -95,6 +95,12 @@ namespace BTCPayServer
         [Obsolete("To use only for legacy stuff")]
         public BTCPayNetwork BTC => GetNetwork<BTCPayNetwork>("BTC");
 
+        public void Add(BTCPayNetwork network)
+        {
+            if (network.NBitcoinNetwork == null)
+                return;
+            Add(network as BTCPayNetworkBase);
+        }
         public void Add(BTCPayNetworkBase network)
         {
             _Networks.Add(network.CryptoCode.ToUpperInvariant(), network);

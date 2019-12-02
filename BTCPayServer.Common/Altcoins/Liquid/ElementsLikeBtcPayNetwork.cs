@@ -1,7 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using NBitcoin;
-using NBitcoin.Altcoins.Elements;
+using NBXplorer;
+using NBXplorer.Models;
 
 namespace BTCPayServer
 {
@@ -9,21 +10,15 @@ namespace BTCPayServer
     {
         public string NetworkCryptoCode { get; set; }
         public uint256 AssetId { get; set; }
-        public int Divisibility { get; set; } = 8;
-        
         public override bool WalletSupported { get; set; } = false;
-        public override IEnumerable<Coin> GetValidCoinsForNetwork(IEnumerable<Coin> coins, Script scriptPubKey)
+        public int Divisibility { get; set; } = 8;
+
+        public override IEnumerable<(MatchedOutput matchedOutput, OutPoint outPoint)> GetValidOutputs(NewTransactionEvent evtOutputs)
         {
-            return base.GetValidCoinsForNetwork(coins, scriptPubKey)
-                .Where(coin =>
-                {
-                    if (coin.TxOut is ElementsTxOut elementsTxOut && elementsTxOut.Value != null)
-                    {
-                        return (AssetId == null && elementsTxOut.IsPeggedAsset.GetValueOrDefault(false)) ||
-                               (AssetId != null && elementsTxOut.Asset.AssetId == AssetId);
-                    }
-                    return false;
-                });
+            evtOutputs.Outputs = evtOutputs.Outputs.Where(output =>
+                output.Value is AssetMoney assetMoney && assetMoney.AssetId == AssetId).ToList();
+            return base.GetValidOutputs(evtOutputs);
+
         }
     }
 }

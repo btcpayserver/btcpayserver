@@ -18,9 +18,12 @@ namespace BTCPayServer.Services.Wallets
 {
     public class ReceivedCoin
     {
-        public Coin Coin { get; set; }
+        public Script ScriptPubKey { get; set; }
+        public OutPoint OutPoint { get; set; }
         public DateTimeOffset Timestamp { get; set; }
         public KeyPath KeyPath { get; set; }
+        public IMoney Value { get; set; }
+        
     }
     public class NetworkCoins
     {
@@ -174,9 +177,11 @@ namespace BTCPayServer.Services.Wallets
                           .GetUnspentUTXOs()
                           .Select(c => new ReceivedCoin()
                           {
-                              Coin = c.AsCoin(derivationStrategy),
                               KeyPath = c.KeyPath,
-                              Timestamp = c.Timestamp
+                              Value = c.Value,
+                              Timestamp = c.Timestamp,
+                              OutPoint = c.Outpoint,
+                              ScriptPubKey = c.ScriptPubKey
                           }).ToArray();
         }
 

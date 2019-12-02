@@ -967,7 +967,7 @@ namespace BTCPayServer.Services.Invoices
             }
             else
             {
-                paymentData = GetPaymentMethodId().PaymentType.DeserializePaymentData(CryptoPaymentData);
+                paymentData = GetPaymentMethodId().PaymentType.DeserializePaymentData(Network,CryptoPaymentData);
                 paymentData.Network = Network;
                 if (paymentData is BitcoinLikePaymentData bitcoin)
                 {
@@ -989,7 +989,7 @@ namespace BTCPayServer.Services.Invoices
                 ///
             }
             CryptoPaymentDataType = cryptoPaymentData.GetPaymentType().ToString();
-            CryptoPaymentData = JsonConvert.SerializeObject(cryptoPaymentData);
+            CryptoPaymentData = GetPaymentMethodId().PaymentType.SerializePaymentData(Network,cryptoPaymentData);
 #pragma warning restore CS0618
             return this;
         }

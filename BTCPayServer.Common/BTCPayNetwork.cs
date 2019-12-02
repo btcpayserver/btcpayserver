@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using NBitcoin;
 using NBXplorer;
+using NBXplorer.Models;
 using Newtonsoft.Json;
 
 namespace BTCPayServer
@@ -101,10 +103,13 @@ namespace BTCPayServer
         {
             return NBXplorerNetwork.Serializer.ToString(obj);
         }
-
-        public virtual IEnumerable<Coin> GetValidCoinsForNetwork(IEnumerable<Coin> coins, Script scriptPubKey)
+        public virtual IEnumerable<(MatchedOutput matchedOutput, OutPoint outPoint)> GetValidOutputs(NewTransactionEvent evtOutputs)
         {
-            return coins.Where(o => o.ScriptPubKey == scriptPubKey);
+            return evtOutputs.Outputs.Select(output =>
+            {
+                var outpoint = new OutPoint(evtOutputs.TransactionData.TransactionHash, output.Index);
+                return (output, outpoint);
+            });
         }
     }
 

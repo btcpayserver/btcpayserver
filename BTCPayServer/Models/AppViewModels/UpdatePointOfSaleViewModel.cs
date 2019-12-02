@@ -32,7 +32,7 @@ namespace BTCPayServer.Models.AppViewModels
         [Display(Name = "Callback Notification Url")] 
         [Uri]
         public string NotificationUrl { get; set; }
-        [Display(Name = "Invoice Email Notification")]
+        [Display(Name = "Invoice IPN Notification")]
         [EmailAddress]
         public string NotificationEmail { get; set; }
 

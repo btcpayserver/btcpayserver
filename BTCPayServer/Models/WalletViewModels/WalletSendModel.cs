@@ -17,8 +17,10 @@ namespace BTCPayServer.Models.WalletViewModels
             [Required]
             public string DestinationAddress { get; set; }
 
-            [Display(Name = "Amount")] [Required]  [Range(0.0, double.MaxValue)]public decimal? Amount { get; set; }
-
+            [Display(Name = "Amount")]
+            [Required]
+            [Range(1E-08, 21E6)]
+            public decimal? Amount { get; set; }
 
             [Display(Name = "Subtract fees from amount")]
             public bool SubtractFeesFromOutput { get; set; }

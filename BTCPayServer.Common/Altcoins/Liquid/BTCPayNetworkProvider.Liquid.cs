@@ -17,7 +17,7 @@ namespace BTCPayServer
             Add(new ElementsBTCPayNetwork()
             {
                 AssetId = NetworkType == NetworkType.Mainnet ? ElementsParams<Liquid>.PeggedAssetId: ElementsParams<Liquid.LiquidRegtest>.PeggedAssetId,
-                CryptoCode = "USDt",
+                CryptoCode = "LBTC",
                 NetworkCryptoCode = "LBTC",
                 DisplayName = "Liquid Bitcoin",
                 DefaultRateRules = new[]

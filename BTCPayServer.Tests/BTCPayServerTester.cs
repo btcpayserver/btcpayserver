@@ -63,6 +63,7 @@ namespace BTCPayServer.Tests
         }
 
         public Uri LTCNBXplorerUri { get; set; }
+        public Uri LBTCNBXplorerUri { get; set; }
 
         public Uri ServerUri
         {
@@ -109,13 +110,15 @@ namespace BTCPayServer.Tests
                 config.AppendLine($"bind=0.0.0.0");
             }
             config.AppendLine($"port={Port}");
-            config.AppendLine($"chains=btc,ltc");
+            config.AppendLine($"chains=btc,ltc,lbtc,usdt");
 
             config.AppendLine($"btc.explorer.url={NBXplorerUri.AbsoluteUri}");
             config.AppendLine($"btc.explorer.cookiefile=0");
             config.AppendLine("allow-admin-registration=1");
             config.AppendLine($"ltc.explorer.url={LTCNBXplorerUri.AbsoluteUri}");
-            config.AppendLine($"ltc.explorer.cookiefile=0");
+            config.AppendLine($"ltc.explorer.cookiefile=0");           
+            config.AppendLine($"lbtc.explorer.url={LBTCNBXplorerUri.AbsoluteUri}");
+            config.AppendLine($"lbtc.explorer.cookiefile=0");
             config.AppendLine($"btc.lightning={IntegratedLightning.AbsoluteUri}");
             config.AppendLine($"torrcfile={TestUtils.GetTestDataFullPath("Tor/torrc")}");
             config.AppendLine($"debuglog=debug.log");

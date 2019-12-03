@@ -60,7 +60,7 @@ namespace BTCPayServer.Tests
                 
                 Assert.Equal(tether.AssetId,  tester.NetworkProvider.GetNetwork<ElementsBTCPayNetwork>("USDT").AssetId);
                 //test: register 2 assets on the same elements network and make sure paying an invoice on one does not affect the other in any way
-                var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice(100, "BTC"));
+                var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice(0.1m, "BTC"));
                 Assert.Equal(2, invoice.SupportedTransactionCurrencies.Count);
                 var ci = invoice.CryptoInfo.Single(info => info.CryptoCode.Equals("LBTC"));
                 //1 lbtc = 1 btc

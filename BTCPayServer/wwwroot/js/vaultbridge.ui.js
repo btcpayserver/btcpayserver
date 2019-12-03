@@ -256,6 +256,8 @@ var vaultui = (function () {
             self.bridge.socket.send("ask-pin");
             var json = await self.bridge.waitBackendMessage();
             if (json.hasOwnProperty("error")) {
+                if (json.error == "device-already-unlocked")
+                    return true;
                 if (await needRetry(json))
                     return await self.askForPin();
                 return false;

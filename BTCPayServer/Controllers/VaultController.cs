@@ -64,7 +64,7 @@ namespace BTCPayServer.Controllers
                 HwiEnumerateEntry deviceEntry = null;
                 HDFingerprint? fingerprint = null;
                 string password = null;
-                int? pin = null;
+                bool pinProvided = false;
                 var websocketHelper = new WebSocketHelper(websocket);
 
                 async Task<bool> RequireDeviceUnlocking()
@@ -80,7 +80,7 @@ namespace BTCPayServer.Controllers
                         return true;
                     }
                     if ((deviceEntry.Code is HwiErrorCode.DeviceNotReady || deviceEntry.NeedsPinSent is true)
-                        && pin is null
+                        && !pinProvided
                         // Trezor T always show the pin on screen
                         && (deviceEntry.Model != HardwareWalletModels.Trezor_T || deviceEntry.Model != HardwareWalletModels.Trezor_T_Simulator))
                     {
@@ -157,11 +157,21 @@ namespace BTCPayServer.Controllers
                                     await websocketHelper.Send("{ \"error\": \"need-device\"}", cancellationToken);
                                     continue;
                                 }
-                                await device.PromptPinAsync(cancellationToken);
-                                await websocketHelper.Send("{ \"info\": \"prompted, please input the pin\"}", cancellationToken);
-                                pin = int.Parse(await websocketHelper.NextMessageAsync(cancellationToken), CultureInfo.InvariantCulture);
-                                if (await device.SendPinAsync(pin.Value, cancellationToken))
+                                try
                                 {
+                                    await device.PromptPinAsync(cancellationToken);
+                                }
+                                catch (HwiException ex) when (ex.ErrorCode == HwiErrorCode.DeviceAlreadyUnlocked)
+                                {
+                                    pinProvided = true;
+                                    await websocketHelper.Send("{ \"error\": \"device-already-unlocked\"}", cancellationToken);
+                                    continue;
+                                }
+                                await websocketHelper.Send("{ \"info\": \"prompted, please input the pin\"}", cancellationToken);
+                                var pin = int.Parse(await websocketHelper.NextMessageAsync(cancellationToken), CultureInfo.InvariantCulture);
+                                if (await device.SendPinAsync(pin, cancellationToken))
+                                {
+                                    pinProvided = true;
                                     await websocketHelper.Send("{ \"info\": \"the pin is correct\"}", cancellationToken);
                                 }
                                 else
@@ -207,7 +217,7 @@ namespace BTCPayServer.Controllers
                                 break;
                             case "ask-device":
                                 password = null;
-                                pin = null;
+                                pinProvided = false;
                                 deviceEntry = null;
                                 device = null;
                                 var entries = (await hwi.EnumerateEntriesAsync(cancellationToken)).ToList();

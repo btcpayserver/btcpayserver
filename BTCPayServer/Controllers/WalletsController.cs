@@ -728,7 +728,7 @@ namespace BTCPayServer.Controllers
             {
                 try
                 {
-                    return (await wallet.GetBalance(derivationStrategy, cts.Token)).ToString();
+                    return (await wallet.GetBalance(derivationStrategy, cts.Token)).ToString(CultureInfo.InvariantCulture);
                 }
                 catch
                 {

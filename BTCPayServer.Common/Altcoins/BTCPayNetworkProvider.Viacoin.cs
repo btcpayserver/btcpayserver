@@ -17,7 +17,6 @@ namespace BTCPayServer
                 CryptoCode = nbxplorerNetwork.CryptoCode,
                 DisplayName = "Viacoin",
                 BlockExplorerLink = NetworkType == NetworkType.Mainnet ? "https://explorer.viacoin.org/tx/{0}" : "https://explorer.viacoin.org/tx/{0}",
-                NBitcoinNetwork = nbxplorerNetwork.NBitcoinNetwork,
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "viacoin",
                 DefaultRateRules = new[]

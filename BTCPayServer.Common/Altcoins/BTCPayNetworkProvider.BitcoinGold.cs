@@ -12,7 +12,6 @@ namespace BTCPayServer
                 CryptoCode = nbxplorerNetwork.CryptoCode,
                 DisplayName = "BGold",
                 BlockExplorerLink = NetworkType == NetworkType.Mainnet ? "https://explorer.bitcoingold.org/insight/tx/{0}/" : "https://test-explorer.bitcoingold.org/insight/tx/{0}",
-                NBitcoinNetwork = nbxplorerNetwork.NBitcoinNetwork,
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "bitcoingold",
                 DefaultRateRules = new[]

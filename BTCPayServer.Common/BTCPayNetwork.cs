@@ -47,7 +47,7 @@ namespace BTCPayServer
 
     public class BTCPayNetwork:BTCPayNetworkBase
     {
-        public Network NBitcoinNetwork { get; set; }
+        public Network NBitcoinNetwork { get { return  NBXplorerNetwork?.NBitcoinNetwork; } }
         public NBXplorer.NBXplorerNetwork NBXplorerNetwork { get; set; }
         public bool SupportRBF { get; internal set; }
         public string LightningImagePath { get; set; }

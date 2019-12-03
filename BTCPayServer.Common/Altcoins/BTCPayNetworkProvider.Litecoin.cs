@@ -19,7 +19,6 @@ namespace BTCPayServer
                 BlockExplorerLink = NetworkType == NetworkType.Mainnet
                     ? "https://live.blockcypher.com/ltc/tx/{0}/"
                     : "http://explorer.litecointools.com/tx/{0}",
-                NBitcoinNetwork = nbxplorerNetwork.NBitcoinNetwork,
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "litecoin",
                 CryptoImagePath = "imlegacy/litecoin.svg",

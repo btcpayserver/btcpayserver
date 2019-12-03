@@ -55,6 +55,7 @@ namespace BTCPayServer.Controllers
             WalletId walletId, WalletPSBTViewModel vm)
         {
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
+            vm.CryptoCode = network.CryptoCode;
             if (await vm.GetPSBT(network.NBitcoinNetwork) is PSBT psbt)
             {
                 vm.Decoded = psbt.ToString();
@@ -72,6 +73,7 @@ namespace BTCPayServer.Controllers
             if (command == null)
                 return await WalletPSBT(walletId, vm);
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
+            vm.CryptoCode = network.CryptoCode;
             var psbt = await vm.GetPSBT(network.NBitcoinNetwork);
             if (psbt == null)
             {

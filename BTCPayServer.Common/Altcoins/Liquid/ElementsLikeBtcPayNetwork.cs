@@ -15,10 +15,12 @@ namespace BTCPayServer
 
         public override IEnumerable<(MatchedOutput matchedOutput, OutPoint outPoint)> GetValidOutputs(NewTransactionEvent evtOutputs)
         {
-            evtOutputs.Outputs = evtOutputs.Outputs.Where(output =>
-                output.Value is AssetMoney assetMoney && assetMoney.AssetId == AssetId).ToList();
-            return base.GetValidOutputs(evtOutputs);
-
+            return  evtOutputs.Outputs.Where(output =>
+                output.Value is AssetMoney assetMoney && assetMoney.AssetId == AssetId).Select(output =>
+            {
+                var outpoint = new OutPoint(evtOutputs.TransactionData.TransactionHash, output.Index);
+                return (output, outpoint);
+            });
         }
     }
 }

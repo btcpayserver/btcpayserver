@@ -234,6 +234,16 @@ namespace BTCPayServer.Tests
                     BidAsk = new BidAsk(0.004m)
                 });
                 rateProvider.Providers.Add("bittrex", bittrex);
+                
+                
+                var bitfinex = new MockRateProvider();
+                bitfinex.ExchangeRates.Add(new Rating.ExchangeRate()
+                {
+                    Exchange = "bitfinex",
+                    CurrencyPair = CurrencyPair.Parse("UST_BTC"),
+                    BidAsk = new BidAsk(0.000136m)
+                });
+                rateProvider.Providers.Add("bitfinex", bitfinex);
             }
 
 

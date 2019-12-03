@@ -40,7 +40,15 @@ namespace BTCPayServer.Payments.Bitcoin
         public decimal NetworkFee { get; set; }
         public BitcoinAddress Address { get; set; }
         public IMoney Value { get; set; }
-        
+
+        [JsonIgnore]
+        public Script ScriptPubKey
+        {
+            get
+            {
+                return Address?.ScriptPubKey ?? Output.ScriptPubKey;
+            }
+        }
         
         /// <summary>
         /// This is set to true if the payment was created before CryptoPaymentData existed in BTCPayServer

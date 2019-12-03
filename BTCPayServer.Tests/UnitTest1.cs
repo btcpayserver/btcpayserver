@@ -176,10 +176,12 @@ namespace BTCPayServer.Tests
                         
                         Accounted = true,
                         CryptoCode = "BTC",
-                        NetworkFee = 0.00000100m
+                        NetworkFee = 0.00000100m,
+                        Network = networkProvider.GetNetwork("BTC"),
                     }
                     .SetCryptoPaymentData(new BitcoinLikePaymentData()
                     {
+                        Network = networkProvider.GetNetwork("BTC"),
                         Output = new TxOut() {Value = Money.Coins(0.00151263m)}
                     }));
             accounting = btc.Calculate();
@@ -188,10 +190,12 @@ namespace BTCPayServer.Tests
                     {
                         Accounted = true,
                         CryptoCode = "BTC",
-                        NetworkFee = 0.00000100m
+                        NetworkFee = 0.00000100m,
+                        Network = networkProvider.GetNetwork("BTC")
                     }
                     .SetCryptoPaymentData(new BitcoinLikePaymentData()
                     {
+                        Network = networkProvider.GetNetwork("BTC"),
                         Output = new TxOut() {Value = accounting.Due}
                     }));
             accounting = btc.Calculate();

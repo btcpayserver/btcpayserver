@@ -138,6 +138,19 @@ namespace BTCPayServer.Controllers
                                     await websocketHelper.Send("{ \"error\": \"wrong-wallet\"}", cancellationToken);
                                     continue;
                                 }
+                                var signableInputs = psbt.Inputs
+                                                .SelectMany(i => i.HDKeyPaths)
+                                                .Where(i => i.Value.MasterFingerprint == fingerprint)
+                                                .ToArray();
+                                if (signableInputs.Length > 0)
+                                {
+                                    var actualPubKey = (await device.GetXPubAsync(signableInputs[0].Value.KeyPath)).GetPublicKey();
+                                    if (actualPubKey != signableInputs[0].Key)
+                                    {
+                                        await websocketHelper.Send("{ \"error\": \"wrong-keypath\"}", cancellationToken);
+                                        continue;
+                                    }
+                                }
                                 try
                                 {
                                     psbt = await device.SignPSBTAsync(psbt, cancellationToken);

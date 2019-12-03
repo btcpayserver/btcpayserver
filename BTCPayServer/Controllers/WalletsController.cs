@@ -387,9 +387,16 @@ namespace BTCPayServer.Controllers
                 {
                     subtractFeesOutputsCount.Add(i);
                 }
-                var destination = ParseDestination(transactionOutput.DestinationAddress, network.NBitcoinNetwork);
-                if (destination == null)
+                transactionOutput.DestinationAddress = transactionOutput.DestinationAddress.Trim();
+
+                try
+                {
+                    BitcoinAddress.Create(transactionOutput.DestinationAddress, network.NBitcoinNetwork);    
+                }
+                catch
+                {
                     ModelState.AddModelError(nameof(transactionOutput.DestinationAddress), "Invalid address");
+                }
 
                 if (transactionOutput.Amount.HasValue)
                 {
@@ -598,19 +605,6 @@ namespace BTCPayServer.Controllers
         private string ValueToString(Money v, BTCPayNetworkBase network)
         {
             return v.ToString() + " " + network.CryptoCode;
-        }
-
-        private IDestination[] ParseDestination(string destination, Network network)
-        {
-            try
-            {
-                destination = destination?.Trim();
-                return new IDestination[] { BitcoinAddress.Create(destination, network) };
-            }
-            catch
-            {
-                return null;
-            }
         }
 
         private IActionResult RedirectToWalletTransaction(WalletId walletId, Transaction transaction)

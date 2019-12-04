@@ -92,22 +92,31 @@
             </div>
             <div class="modal-body">
                 <p>You may import from BTCPayServer Vault.</p>
-                <div id="vaultPlaceholder"></div>
+                <div class="form-group">
+                    <div id="vaultPlaceholder"></div>
+                </div>
+                <div id="vault-xpub" style="display:none;">
+                    <div class="form-group">
+                        <label for="addressType">Address type</label>
+                        <select name="addressType" class="form-control">
+                            <option value="segwit">Segwit (Recommended, cheapest transaction fee)</option>
+                            <option value="segwitWrapped">Segwit wrapped (less cheap but compatible with old wallets)</option>
+                            <option value="legacy">Legacy (Not recommended)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="accountNumber">Account</label>
+                        <select name="accountNumber" class="form-control">
+                            @for (int i = 0; i < 20; i++)
+                            {
+                                <option value="@i">@i</option>
+                            }
+                        </select>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-
-                <div id="vault-dropdown" style="display:none;" class="dropdown">
-                    <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        Select the type of address you want
-                    </button>
-                    <div class="dropdown-menu overflow-auto" style="max-height: 200px;">
-                        <a class="dropdown-item" href="#" id="vault-segwit">Segwit (Recommended, cheapest transaction fee)</a>
-                        <a class="dropdown-item" href="#" id="vault-segwitWrapped">Segwit wrapped (less cheap but compatible with old wallets)</a>
-                        <a class="dropdown-item" href="#" id="vault-legacy">Legacy (Not recommended)</a>
-                    </div>
-                </div>
-
                 <button id="vault-confirm" class="btn btn-primary" style="display:none;"></button>
             </div>
         </form>

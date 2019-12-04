@@ -37,6 +37,7 @@ var vaultui = (function () {
         fetchingDevice: new VaultFeedback("?", "Fetching device...", "vault-feedback2", "fetching-device"),
         deviceFound: new VaultFeedback("ok", "Device found: {{0}}", "vault-feedback2", "device-selected"),
         fetchingXpubs: new VaultFeedback("?", "Fetching public keys...", "vault-feedback3", "fetching-xpubs"),
+        askXpubs: new VaultFeedback("?", "Select your address type and account", "vault-feedback3", "fetching-xpubs"),
         fetchedXpubs: new VaultFeedback("ok", "Public keys successfully fetched.", "vault-feedback3", "xpubs-fetched"),
         unexpectedError: new VaultFeedback("failed", "An unexpected error happened.", "vault-feedback3", "unknown-error"),
         invalidNetwork: new VaultFeedback("failed", "The device is targetting a different chain.", "vault-feedback3", "invalid-network"),
@@ -69,7 +70,7 @@ var vaultui = (function () {
         */
         this.psbt = null;
 
-        this.xpubs = null;
+        this.xpub = null;
         /**
         * @param {VaultFeedback} feedback
         */
@@ -172,8 +173,10 @@ var vaultui = (function () {
         this.askForXPubs = async function () {
             if (!await self.ensureConnectedToBackend())
                 return false;
+            self.bridge.socket.send("ask-xpub");
+            var selectedXPubs = await self.getXpubSettings();
+            self.bridge.socket.send(JSON.stringify(selectedXPubs));
             show(VaultFeedbacks.fetchingXpubs);
-            self.bridge.socket.send("ask-xpubs");
             var json = await self.bridge.waitBackendMessage();
             if (json.hasOwnProperty("error")) {
                 if (await needRetry(json))
@@ -181,8 +184,31 @@ var vaultui = (function () {
                 return false;
             }
             show(VaultFeedbacks.fetchedXpubs);
-            self.xpubs = json;
+            self.xpub = json;
             return true;
+        };
+
+        /**
+        * @returns {Promise<{addressType:string, accountNumber:number}>}
+        */
+        this.getXpubSettings = function () {
+            show(VaultFeedbacks.askXpubs);
+            $("#vault-xpub").css("display", "block");
+            $("#vault-confirm").css("display", "block");
+            $("#vault-confirm").text("Confirm");
+            return new Promise(function (resolve, reject) {
+                var pinCode = "";
+                $("#vault-confirm").click(async function (e) {
+                    e.preventDefault();
+                    $("#vault-xpub").css("display", "none");
+                    $("#vault-confirm").css("display", "none");
+                    $(this).unbind();
+                    resolve({
+                        addressType: $("select[name=\"addressType\"]").val(),
+                        accountNumber: parseInt($("select[name=\"accountNumber\"]").val())
+                        });
+                });
+            });
         };
 
         /**
@@ -195,7 +221,8 @@ var vaultui = (function () {
             $("#vault-confirm").text("Confirm the pin code");
             return new Promise(function (resolve, reject) {
                 var pinCode = "";
-                $("#vault-confirm").click(async function () {
+                $("#vault-confirm").click(async function (e) {
+                    e.preventDefault();
                     $("#pin-input").css("display", "none");
                     $("#vault-confirm").css("display", "none");
                     $(this).unbind();

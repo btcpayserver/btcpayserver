@@ -193,39 +193,63 @@ namespace BTCPayServer.Controllers
                                     continue;
                                 }
                                 break;
-                            case "ask-xpubs":
+                            case "ask-xpub":
                                 if (await RequireDeviceUnlocking())
                                 {
                                     continue;
                                 }
+
+                                var askedXpub = JObject.Parse(await websocketHelper.NextMessageAsync(cancellationToken));
+                                var addressType = askedXpub["addressType"].Value<string>();
+                                var accountNumber = askedXpub["accountNumber"].Value<int>();
                                 JObject result = new JObject();
                                 var factory = network.NBXplorerNetwork.DerivationStrategyFactory;
-                                var keyPath = new KeyPath("84'").Derive(network.CoinType).Derive(0, true);
-                                BitcoinExtPubKey xpub = await device.GetXPubAsync(keyPath);
                                 if (fingerprint is null)
                                 {
                                     fingerprint = (await device.GetXPubAsync(new KeyPath("44'"), cancellationToken)).ExtPubKey.ParentFingerprint;
                                 }
                                 result["fingerprint"] = fingerprint.Value.ToString();
-                                var strategy = factory.CreateDirectDerivationStrategy(xpub, new DerivationStrategyOptions()
+
+                                DerivationStrategyBase strategy = null;
+                                KeyPath keyPath = null;
+                                BitcoinExtPubKey xpub = null;
+
+                                if (!network.NBitcoinNetwork.Consensus.SupportSegwit && addressType != "legacy")
                                 {
-                                    ScriptPubKeyType = ScriptPubKeyType.Segwit
-                                });
-                                AddDerivationSchemeToJson("segwit", result, keyPath, xpub, strategy);
-                                keyPath = new KeyPath("49'").Derive(network.CoinType).Derive(0, true);
-                                xpub = await device.GetXPubAsync(keyPath);
-                                strategy = factory.CreateDirectDerivationStrategy(xpub, new DerivationStrategyOptions()
+                                    await websocketHelper.Send("{ \"error\": \"segwit-notsupported\"}", cancellationToken);
+                                    continue;
+                                }
+
+                                if (addressType == "segwit")
                                 {
-                                    ScriptPubKeyType = ScriptPubKeyType.SegwitP2SH
-                                });
-                                AddDerivationSchemeToJson("segwitWrapped", result, keyPath, xpub, strategy);
-                                keyPath = new KeyPath("44'").Derive(network.CoinType).Derive(0, true);
-                                xpub = await device.GetXPubAsync(keyPath);
-                                strategy = factory.CreateDirectDerivationStrategy(xpub, new DerivationStrategyOptions()
+                                    keyPath = new KeyPath("84'").Derive(network.CoinType).Derive(accountNumber, true);
+                                    xpub = await device.GetXPubAsync(keyPath);
+                                    strategy = factory.CreateDirectDerivationStrategy(xpub, new DerivationStrategyOptions()
+                                    {
+                                        ScriptPubKeyType = ScriptPubKeyType.Segwit
+                                    });
+                                }
+                                if (addressType == "segwitWrapped")
                                 {
-                                    ScriptPubKeyType = ScriptPubKeyType.Legacy
-                                });
-                                AddDerivationSchemeToJson("legacy", result, keyPath, xpub, strategy);
+                                    keyPath = new KeyPath("49'").Derive(network.CoinType).Derive(accountNumber, true);
+                                    xpub = await device.GetXPubAsync(keyPath);
+                                    strategy = factory.CreateDirectDerivationStrategy(xpub, new DerivationStrategyOptions()
+                                    {
+                                        ScriptPubKeyType = ScriptPubKeyType.SegwitP2SH
+                                    });
+                                }
+                                else if (addressType == "legacy")
+                                {
+                                    keyPath = new KeyPath("44'").Derive(network.CoinType).Derive(accountNumber, true);
+                                    xpub = await device.GetXPubAsync(keyPath);
+                                    strategy = factory.CreateDirectDerivationStrategy(xpub, new DerivationStrategyOptions()
+                                    {
+                                        ScriptPubKeyType = ScriptPubKeyType.Legacy
+                                    });
+                                }
+                                result.Add(new JProperty("strategy", strategy.ToString()));
+                                result.Add(new JProperty("accountKey", xpub.ToString()));
+                                result.Add(new JProperty("keyPath", keyPath.ToString()));
                                 await websocketHelper.Send(result.ToString(), cancellationToken);
                                 break;
                             case "ask-device":
@@ -295,16 +319,6 @@ namespace BTCPayServer.Controllers
                             .OfType<DerivationSchemeSettings>()
                             .FirstOrDefault(p => p.PaymentId.PaymentType == Payments.PaymentTypes.BTCLike && p.PaymentId.CryptoCode == walletId.CryptoCode);
             return paymentMethod;
-        }
-
-        private void AddDerivationSchemeToJson(string propertyName, JObject result, KeyPath keyPath, BitcoinExtPubKey xpub, DerivationStrategyBase strategy)
-        {
-            result.Add(new JProperty(propertyName, new JObject()
-            {
-                new JProperty("strategy", strategy.ToString()),
-                new JProperty("accountKey", xpub.ToString()),
-                new JProperty("keyPath", keyPath.ToString()),
-            }));
         }
     }
 }

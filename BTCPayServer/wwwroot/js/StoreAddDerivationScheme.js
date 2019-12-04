@@ -112,20 +112,15 @@ $(document).ready(function () {
     ws_uri += "//" + loc.host;
     ws_uri += websocketPath;
 
-    function displayXPubs(xpubs) {
-        $("#vault-dropdown").css("display", "block");
-        $("#vault-dropdown .dropdown-item").click(function () {
-            var id = $(this).attr('id').replace("vault-", "");
-            var xpub = xpubs[id];
-            $("#DerivationScheme").val(xpub.strategy);
-            $("#RootFingerprint").val(xpubs.fingerprint);
-            $("#AccountKey").val(xpub.accountKey);
-            $("#Source").val("Vault");
-            $("#DerivationSchemeFormat").val("BTCPay");
-            $("#KeyPath").val(xpub.keyPath);
-            $(".modal").modal('hide');
-            $(".hw-fields").show();
-        });
+    function displayXPubs(xpub) {
+        $("#DerivationScheme").val(xpub.strategy);
+        $("#RootFingerprint").val(xpub.fingerprint);
+        $("#AccountKey").val(xpub.accountKey);
+        $("#Source").val("Vault");
+        $("#DerivationSchemeFormat").val("BTCPay");
+        $("#KeyPath").val(xpub.keyPath);
+        $(".modal").modal('hide');
+        $(".hw-fields").show();
     }
 
     var vaultInit = false;
@@ -138,8 +133,8 @@ $(document).ready(function () {
         $("#vaultPlaceholder").html(html);
 
         var vaultUI = new vaultui.VaultBridgeUI(ws_uri);
-        if (await vaultUI.askForXPubs()) {
-            displayXPubs(vaultUI.xpubs);
+        if (await vaultUI.askForDevice() && await vaultUI.askForXPubs()) {
+            displayXPubs(vaultUI.xpub);
         }
     });
 });

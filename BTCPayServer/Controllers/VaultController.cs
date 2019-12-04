@@ -82,15 +82,25 @@ namespace BTCPayServer.Controllers
                     if ((deviceEntry.Code is HwiErrorCode.DeviceNotReady || deviceEntry.NeedsPinSent is true)
                         && !pinProvided)
                     {
-                        if (IsTrezorT(deviceEntry))
+                        if (!IsTrezorT(deviceEntry))
                         {
-                            await websocketHelper.Send("{ \"error\": \"need-pin-on-device\"}", cancellationToken);
+                            await websocketHelper.Send("{ \"error\": \"need-pin\"}", cancellationToken);
+                            return true;
                         }
                         else
                         {
-                            await websocketHelper.Send("{ \"error\": \"need-pin\"}", cancellationToken);
+                            try
+                            {
+                                // On trezor T this will prompt the password!
+                                await device.PromptPinAsync(cancellationToken);
+                            }
+                            catch (HwiException ex) when (ex.ErrorCode == HwiErrorCode.DeviceAlreadyUnlocked)
+                            {
+                                pinProvided = true;
+                            }
+                            await websocketHelper.Send("{ \"error\": \"need-passphrase-on-device\"}", cancellationToken);
+                            return true;
                         }
-                        return true;
                     }
                     if ((deviceEntry.Code is HwiErrorCode.DeviceNotReady || deviceEntry.NeedsPassphraseSent is true) && password == null)
                     {

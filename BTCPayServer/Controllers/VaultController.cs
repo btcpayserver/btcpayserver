@@ -241,7 +241,7 @@ namespace BTCPayServer.Controllers
                                         ScriptPubKeyType = ScriptPubKeyType.Segwit
                                     });
                                 }
-                                if (addressType == "segwitWrapped")
+                                else if (addressType == "segwitWrapped")
                                 {
                                     keyPath = new KeyPath("49'").Derive(network.CoinType).Derive(accountNumber, true);
                                     xpub = await device.GetXPubAsync(keyPath);

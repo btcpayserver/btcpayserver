@@ -128,9 +128,9 @@ var vaultui = (function () {
                 if (json.error === "need-pin-on-device" || json.error === "need-passphrase-on-device") {
                     handled = true;
                     if (json.error === "need-pin-on-device") {
-                        showError(VaultFeedbacks.needPinOnDevice);
+                        show(VaultFeedbacks.needPinOnDevice);
                     } else {
-                        showError(VaultFeedbacks.needPassphraseOnDevice);
+                        show(VaultFeedbacks.needPassphraseOnDevice);
                     }
                     await self.waitClickContinue();
                     self.bridge.socket.send("refresh-device");

@@ -42,11 +42,13 @@ var vaultui = (function () {
         unexpectedError: new VaultFeedback("failed", "An unexpected error happened.", "vault-feedback3", "unknown-error"),
         invalidNetwork: new VaultFeedback("failed", "The device is targetting a different chain.", "vault-feedback3", "invalid-network"),
         needPin: new VaultFeedback("?", "Enter the pin.", "vault-feedback3", "need-pin"),
+        needPinOnDevice: new VaultFeedback("?", "Please, enter the pin on the device.", "vault-feedback3", "need-pin-on-device"),
         incorrectPin: new VaultFeedback("failed", "Incorrect pin code.", "vault-feedback3", "incorrect-pin"),
         invalidPasswordConfirmation: new VaultFeedback("failed", "Invalid password confirmation.", "vault-feedback3", "invalid-password-confirm"),
         wrongWallet: new VaultFeedback("failed", "This device can't sign the transaction. (Wrong device, wrong passphrase or wrong device fingerprint in your wallet settings)", "vault-feedback3", "wrong-wallet"),
         wrongKeyPath: new VaultFeedback("failed", "This device can't sign the transaction. (The wallet keypath in your wallet settings seems incorrect)", "vault-feedback3", "wrong-keypath"),
         needPassphrase: new VaultFeedback("?", "Enter the passphrase.", "vault-feedback3", "need-passphrase"),
+        needPassphraseOnDevice: new VaultFeedback("?", "Please, enter the passphrase on the device.", "vault-feedback3", "need-passphrase-on-device"),
         signingTransaction: new VaultFeedback("?", "Signing the transaction...", "vault-feedback3", "ask-signing"),
         signingRejected: new VaultFeedback("failed", "The user refused to sign the transaction", "vault-feedback3", "user-reject"),
     };
@@ -123,6 +125,23 @@ var vaultui = (function () {
                     if (await self.askForPassphrase())
                         return true;
                 }
+                if (json.error === "need-pin-on-device" || json.error === "need-passphrase-on-device") {
+                    handled = true;
+                    if (json.error === "need-pin-on-device") {
+                        showError(VaultFeedbacks.needPinOnDevice);
+                    } else {
+                        showError(VaultFeedbacks.needPassphraseOnDevice);
+                    }
+                    await waitClickContinue();
+                    self.bridge.socket.send("refresh-device");
+                    var json = await self.bridge.waitBackendMessage();
+                    if (json.hasOwnProperty("error")) {
+                        showError(json);
+                        return false;
+                    }
+                    return true;
+                }
+
                 if (!handled) {
                     showError(json);
                 }
@@ -203,7 +222,6 @@ var vaultui = (function () {
             $("#vault-confirm").css("display", "block");
             $("#vault-confirm").text("Confirm");
             return new Promise(function (resolve, reject) {
-                var pinCode = "";
                 $("#vault-confirm").click(async function (e) {
                     e.preventDefault();
                     $("#vault-xpub").css("display", "none");
@@ -212,7 +230,24 @@ var vaultui = (function () {
                     resolve({
                         addressType: $("select[name=\"addressType\"]").val(),
                         accountNumber: parseInt($("select[name=\"accountNumber\"]").val())
-                        });
+                    });
+                });
+            });
+        };
+
+
+        /**
+         * @returns {Promise}
+         */
+        this.waitClickContinue = function () {
+            $("#vault-confirm").css("display", "block");
+            $("#vault-confirm").text("Continue");
+            return new Promise(function (resolve, reject) {
+                $("#vault-confirm").click(async function (e) {
+                    e.preventDefault();
+                    $("#vault-confirm").css("display", "none");
+                    $(this).unbind();
+                    resolve("");
                 });
             });
         };
@@ -287,7 +322,7 @@ var vaultui = (function () {
         this.askForPin = async function () {
             if (!await self.ensureConnectedToBackend())
                 return false;
-            
+
             self.bridge.socket.send("ask-pin");
             var json = await self.bridge.waitBackendMessage();
             if (json.hasOwnProperty("error")) {

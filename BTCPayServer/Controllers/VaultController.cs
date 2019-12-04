@@ -80,16 +80,28 @@ namespace BTCPayServer.Controllers
                         return true;
                     }
                     if ((deviceEntry.Code is HwiErrorCode.DeviceNotReady || deviceEntry.NeedsPinSent is true)
-                        && !pinProvided
-                        // Trezor T always show the pin on screen
-                        && (deviceEntry.Model != HardwareWalletModels.Trezor_T || deviceEntry.Model != HardwareWalletModels.Trezor_T_Simulator))
+                        && !pinProvided)
                     {
-                        await websocketHelper.Send("{ \"error\": \"need-pin\"}", cancellationToken);
+                        if (IsTrezorT(deviceEntry))
+                        {
+                            await websocketHelper.Send("{ \"error\": \"need-pin-on-device\"}", cancellationToken);
+                        }
+                        else
+                        {
+                            await websocketHelper.Send("{ \"error\": \"need-pin\"}", cancellationToken);
+                        }
                         return true;
                     }
                     if ((deviceEntry.Code is HwiErrorCode.DeviceNotReady || deviceEntry.NeedsPassphraseSent is true) && password == null)
                     {
-                        await websocketHelper.Send("{ \"error\": \"need-passphrase\"}", cancellationToken);
+                        if (IsTrezorT(deviceEntry))
+                        {
+                            await websocketHelper.Send("{ \"error\": \"need-passphrase-on-device\"}", cancellationToken);
+                        }
+                        else
+                        {
+                            await websocketHelper.Send("{ \"error\": \"need-passphrase\"}", cancellationToken);
+                        }
                         return true;
                     }
                     return false;
@@ -247,18 +259,25 @@ namespace BTCPayServer.Controllers
                                         ScriptPubKeyType = ScriptPubKeyType.Legacy
                                     });
                                 }
+                                else
+                                {
+                                    await websocketHelper.Send("{ \"error\": \"invalid-addresstype\"}", cancellationToken);
+                                    continue;
+                                }
                                 result.Add(new JProperty("strategy", strategy.ToString()));
                                 result.Add(new JProperty("accountKey", xpub.ToString()));
                                 result.Add(new JProperty("keyPath", keyPath.ToString()));
                                 await websocketHelper.Send(result.ToString(), cancellationToken);
                                 break;
+                            case "refresh-device":
                             case "ask-device":
+                                DeviceSelector deviceSelector = (command == "refresh-device" && deviceEntry != null ? deviceEntry.DeviceSelector : null);
                                 password = null;
                                 pinProvided = false;
                                 deviceEntry = null;
                                 device = null;
                                 var entries = (await hwi.EnumerateEntriesAsync(cancellationToken)).ToList();
-                                deviceEntry = entries.FirstOrDefault();
+                                deviceEntry = entries.Where(h => deviceSelector == null || SameSelector(deviceSelector, h.DeviceSelector)).FirstOrDefault();
                                 if (deviceEntry == null)
                                 {
                                     await websocketHelper.Send("{ \"error\": \"no-device\"}", cancellationToken);
@@ -302,6 +321,27 @@ namespace BTCPayServer.Controllers
                 }
             }
             return new EmptyResult();
+        }
+
+        private bool SameSelector(DeviceSelector a, DeviceSelector b)
+        {
+            var aargs = new List<string>();
+            a.AddArgs(aargs);
+            var bargs = new List<string>();
+            b.AddArgs(bargs);
+            if (aargs.Count != bargs.Count)
+                return false;
+            for (int i = 0; i < aargs.Count; i++)
+            {
+                if (aargs[i] != bargs[i])
+                    return false;
+            }
+            return true;
+        }
+
+        private static bool IsTrezorT(HwiEnumerateEntry deviceEntry)
+        {
+            return (deviceEntry.Model != HardwareWalletModels.Trezor_T || deviceEntry.Model != HardwareWalletModels.Trezor_T_Simulator);
         }
 
         public StoreData CurrentStore

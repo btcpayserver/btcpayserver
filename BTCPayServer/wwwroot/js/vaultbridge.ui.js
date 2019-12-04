@@ -325,6 +325,12 @@ var vaultui = (function () {
             self.psbt = json.psbt;
             return true;
         };
+
+        this.closeBridge = function () {
+            if (self.bridge) {
+                self.bridge.close();
+            }
+        };
     }
     return {
         VaultFeedback: VaultFeedback,

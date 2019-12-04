@@ -9,7 +9,7 @@
         this.socket = websocket;
         this.onerror = function (error) { };
         this.onbackendmessage = function (json) { };
-
+        this.close = function () { if (websocket) websocket.close(); };
         /**
         * @returns {Promise}
         */

@@ -123,16 +123,16 @@ $(document).ready(function () {
         $(".hw-fields").show();
     }
 
-    var vaultInit = false;
     $(".check-for-vault").on("click", async function () {
-        if (vaultInit)
-            return;
-        vaultInit = true;
-
-        var html = $("#VaultConnection").html();
+        var html = $("#btcpayservervault_template").html();
+        $("#btcpayservervault").html(html);
+        html = $("#VaultConnection").html();
         $("#vaultPlaceholder").html(html);
-
+        $('#btcpayservervault').modal();
         var vaultUI = new vaultui.VaultBridgeUI(ws_uri);
+        $('#btcpayservervault').on('hidden.bs.modal', function () {
+            vaultUI.closeBridge();
+        });
         if (await vaultUI.askForDevice() && await vaultUI.askForXPubs()) {
             displayXPubs(vaultUI.xpub);
         }

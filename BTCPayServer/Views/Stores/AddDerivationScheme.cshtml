@@ -44,14 +44,14 @@
 
                     <div class="dropdown mt-2 text-right">
                         <div class="btn-group">
-                            <button class="btn btn-link dropdown-toggle" type="button" id="hardwarewlletimportdropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <button class="btn btn-link dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 Import from...
                             </button>
-                            <div class="dropdown-menu  dropdown-menu-right" aria-labelledby="hardwarewlletimportdropdown">
-                                <button class="dropdown-item" type="button" data-toggle="modal" data-target="#coldcardimport">... Coldcard (air gap)</button>
-                                <button class="dropdown-item check-for-ledger" data-toggle="modal" data-target="#ledgerimport" type="button">... Ledger Wallet</button>
+                            <div class="dropdown-menu  dropdown-menu-right">
+                                <button class="dropdown-item" type="button">... Coldcard (air gap)</button>
+                                <button class="dropdown-item check-for-ledger" type="button">... Ledger Wallet</button>
                                 @if (Model.CryptoCode == "BTC") {
-                                <button class="dropdown-item check-for-vault" data-toggle="modal" data-target="#btcpayservervault" type="button">... the vault (preview)</button>
+                                <button class="dropdown-item check-for-vault" type="button">... the vault (preview)</button>
                                 }
                             </div>
                         </div>

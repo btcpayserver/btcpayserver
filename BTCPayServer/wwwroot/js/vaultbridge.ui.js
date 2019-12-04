@@ -174,10 +174,16 @@ var vaultui = (function () {
             if (!await self.ensureConnectedToBackend())
                 return false;
             self.bridge.socket.send("ask-xpub");
+            var json = await self.bridge.waitBackendMessage();
+            if (json.hasOwnProperty("error")) {
+                if (await needRetry(json))
+                    return await self.askForXPubs();
+                return false;
+            }
             var selectedXPubs = await self.getXpubSettings();
             self.bridge.socket.send(JSON.stringify(selectedXPubs));
             show(VaultFeedbacks.fetchingXpubs);
-            var json = await self.bridge.waitBackendMessage();
+            json = await self.bridge.waitBackendMessage();
             if (json.hasOwnProperty("error")) {
                 if (await needRetry(json))
                     return await self.askForXPubs();
@@ -251,7 +257,8 @@ var vaultui = (function () {
             $("#vault-confirm").css("display", "block");
             $("#vault-confirm").text("Confirm the passphrase");
             return new Promise(function (resolve, reject) {
-                $("#vault-confirm").click(async function () {
+                $("#vault-confirm").click(async function (e) {
+                    e.preventDefault();
                     var passphrase = $("#Password").val();
                     if (passphrase !== $("#PasswordConfirmation").val()) {
                         show(VaultFeedbacks.invalidPasswordConfirmation);

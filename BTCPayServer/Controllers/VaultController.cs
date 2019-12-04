@@ -198,7 +198,7 @@ namespace BTCPayServer.Controllers
                                 {
                                     continue;
                                 }
-
+                                await websocketHelper.Send("{ \"info\": \"ok\"}", cancellationToken);
                                 var askedXpub = JObject.Parse(await websocketHelper.NextMessageAsync(cancellationToken));
                                 var addressType = askedXpub["addressType"].Value<string>();
                                 var accountNumber = askedXpub["accountNumber"].Value<int>();

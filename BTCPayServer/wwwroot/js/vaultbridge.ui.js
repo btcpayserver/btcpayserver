@@ -132,7 +132,7 @@ var vaultui = (function () {
                     } else {
                         showError(VaultFeedbacks.needPassphraseOnDevice);
                     }
-                    await waitClickContinue();
+                    await self.waitClickContinue();
                     self.bridge.socket.send("refresh-device");
                     var json = await self.bridge.waitBackendMessage();
                     if (json.hasOwnProperty("error")) {

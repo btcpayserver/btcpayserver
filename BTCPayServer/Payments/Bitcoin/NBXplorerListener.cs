@@ -151,7 +151,7 @@ namespace BTCPayServer.Payments.Bitcoin
                                 wallet.InvalidateCache(evt.DerivationStrategy);
                                 foreach (var output in network.GetValidOutputs(evt)) 
                                 {
-                                        var key = output.Item1.ScriptPubKey.Hash + "#" + network.CryptoCode;
+                                        var key = output.Item1.ScriptPubKey.Hash + "#" + network.CryptoCode.ToUpperInvariant();
                                         var invoice = (await _InvoiceRepository.GetInvoicesFromAddresses(new [] {key})).FirstOrDefault();
                                         if (invoice != null)
                                         {

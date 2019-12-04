@@ -1,7 +1,9 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Controllers;
 using BTCPayServer.Models.WalletViewModels;
+using BTCPayServer.Services.Wallets;
 using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
@@ -55,10 +57,11 @@ namespace BTCPayServer.Tests
                 var lbtc = tester.NetworkProvider.GetNetwork<ElementsBTCPayNetwork>("LBTC");
                 var issueAssetResult = await tester.LBTCExplorerNode.SendCommandAsync("issueasset", 100000, 0);
                 tether.AssetId = uint256.Parse(issueAssetResult.Result["asset"].ToString());
-//               
-//                await tester.LBTCExplorerNode.GenerateAsync(10 );
-                
+                ((ElementsBTCPayNetwork)tester.PayTester.GetService<BTCPayWalletProvider>().GetWallet("USDT").Network)
+                    .AssetId = tether.AssetId;
+                Logs.Tester.LogInformation($"Asset is {tether.AssetId}");
                 Assert.Equal(tether.AssetId,  tester.NetworkProvider.GetNetwork<ElementsBTCPayNetwork>("USDT").AssetId);
+                Assert.Equal(tether.AssetId,  ((ElementsBTCPayNetwork)tester.PayTester.GetService<BTCPayWalletProvider>().GetWallet("USDT").Network).AssetId);
                 //test: register 2 assets on the same elements network and make sure paying an invoice on one does not affect the other in any way
                 var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice(0.1m, "BTC"));
                 Assert.Equal(2, invoice.SupportedTransactionCurrencies.Count);
@@ -86,7 +89,7 @@ namespace BTCPayServer.Tests
                 {
                     var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
                     Assert.Equal("paid", localInvoice.Status);
-                    Assert.Single(localInvoice.CryptoInfo.Single(info => info.CryptoCode.Equals("LBTC")).Payments);
+                    Assert.Single(localInvoice.CryptoInfo.Single(info => info.CryptoCode.Equals("USDT", StringComparison.InvariantCultureIgnoreCase)).Payments);
                 });
 
             }

@@ -327,6 +327,8 @@ namespace BTCPayServer.Controllers
             var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
           var client =   _ExplorerProvider.GetExplorerClient(cryptoCode);
           var response = await client.GenerateWalletAsync(request);
+          
+          var store = HttpContext.GetStoreData();
           var result = await AddDerivationScheme(storeId, new DerivationSchemeViewModel()
           {
               Confirmation = false,
@@ -336,11 +338,16 @@ namespace BTCPayServer.Controllers
               CryptoCode = cryptoCode,
               DerivationScheme = response.DerivationScheme.ToString(),
               Source = "NBXplorer",
-              AccountKey = response.AccountHDKey.ToWif(),
+              AccountKey = response.AccountHDKey.Neuter().ToWif(),
               DerivationSchemeFormat = "BTCPay",
               KeyPath = response.AccountKeyPath.KeyPath.ToString(),
-              Enabled = true
+              Enabled = !store.GetStoreBlob().IsExcluded(new PaymentMethodId(cryptoCode, PaymentTypes.BTCLike))
           }, cryptoCode);
+          TempData.SetStatusMessageModel(new StatusMessageModel()
+          {
+              Severity = StatusMessageModel.StatusSeverity.Success,
+              Html = !string.IsNullOrEmpty(request.ExistingMnemonic)? "Your wallet has been imported.": $"Your wallet has been generated. Please store your seed securely! <br/><code>{response.Mnemonic}</code>"
+          });
           ((ViewResult)result).ViewName = nameof(AddDerivationScheme);
           return result;
         }

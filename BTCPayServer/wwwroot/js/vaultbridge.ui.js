@@ -39,7 +39,7 @@ var vaultui = (function () {
         fetchingXpubs: new VaultFeedback("?", "Fetching public keys...", "vault-feedback3", "fetching-xpubs"),
         askXpubs: new VaultFeedback("?", "Select your address type and account", "vault-feedback3", "fetching-xpubs"),
         fetchedXpubs: new VaultFeedback("ok", "Public keys successfully fetched.", "vault-feedback3", "xpubs-fetched"),
-        unexpectedError: new VaultFeedback("failed", "An unexpected error happened.", "vault-feedback3", "unknown-error"),
+        unexpectedError: new VaultFeedback("failed", "An unexpected error happened. ({{0}})", "vault-feedback3", "unknown-error"),
         invalidNetwork: new VaultFeedback("failed", "The device is targetting a different chain.", "vault-feedback3", "invalid-network"),
         needPin: new VaultFeedback("?", "Enter the pin.", "vault-feedback3", "need-pin"),
         needPinOnDevice: new VaultFeedback("?", "Please, enter the pin on the device.", "vault-feedback3", "need-pin-on-device"),
@@ -96,13 +96,18 @@ var vaultui = (function () {
             if (json.hasOwnProperty("error")) {
                 for (var key in VaultFeedbacks) {
                     if (VaultFeedbacks.hasOwnProperty(key) && VaultFeedbacks[key].id == json.error) {
-                        show(VaultFeedbacks[key]);
+                        if (VaultFeedbacks.unexpectedError === VaultFeedbacks[key]) {
+                            show(VaultFeedbacks.unexpectedError.replace("{{0}}", json.message));
+                        }
+                        else {
+                            show(VaultFeedbacks[key]);
+                        }
                         if (json.hasOwnProperty("details"))
                             console.warn(json.details);
                         return;
                     }
                 }
-                show(VaultFeedbacks.unexpectedError);
+                show(VaultFeedbacks.unexpectedError.replace("{{0}}", json.message));
                 if (json.hasOwnProperty("details"))
                     console.warn(json.details);
             }

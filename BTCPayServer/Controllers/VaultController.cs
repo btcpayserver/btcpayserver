@@ -318,6 +318,7 @@ namespace BTCPayServer.Controllers
                 {
                     JObject obj = new JObject();
                     obj.Add("error", "unknown-error");
+                    obj.Add("message", ex.Message);
                     obj.Add("details", ex.ToString());
                     try
                     {

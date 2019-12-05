@@ -49,7 +49,7 @@ var vaultui = (function () {
         wrongKeyPath: new VaultFeedback("failed", "This device can't sign the transaction. (The wallet keypath in your wallet settings seems incorrect)", "vault-feedback3", "wrong-keypath"),
         needPassphrase: new VaultFeedback("?", "Enter the passphrase.", "vault-feedback3", "need-passphrase"),
         needPassphraseOnDevice: new VaultFeedback("?", "Please, enter the passphrase on the device.", "vault-feedback3", "need-passphrase-on-device"),
-        signingTransaction: new VaultFeedback("?", "Signing the transaction...", "vault-feedback3", "ask-signing"),
+        signingTransaction: new VaultFeedback("?", "Please review and confirm the transaction on your device...", "vault-feedback3", "ask-signing"),
         signingRejected: new VaultFeedback("failed", "The user refused to sign the transaction", "vault-feedback3", "user-reject"),
     };
 

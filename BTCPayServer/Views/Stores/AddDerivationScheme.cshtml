@@ -34,7 +34,7 @@
         {
             <template id="btcpayservervault_template">
                 <div class="modal-dialog" role="document">
-                    <form class="modal-content" form method="post" enctype="multipart/form-data">
+                    <form class="modal-content" form method="post" asp-action="AddDerivationScheme" asp-route-cryptoCode="@Model.CryptoCode" enctype="multipart/form-data">
                         <div class="modal-header">
                             <h5 class="modal-title" id="exampleModalLabel">Address verification</h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -75,7 +75,7 @@
 
                     <div class="dropdown mt-2 text-right">
                         <div class="btn-group">
-                            <button class="btn btn-link dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <button class="btn btn-link dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="import-from-btn">
                                 Import from...
                             </button>
                             <div class="dropdown-menu  dropdown-menu-right">
@@ -85,7 +85,7 @@
                                 {
                                     <button class="dropdown-item check-for-vault" type="button">... the vault (preview)</button>
                                 }
-                                <button class="dropdown-item" data-toggle="modal" data-target="#nbxplorergeneratewallet" type="button">... a new/existing seed.</button>
+                                <button class="dropdown-item" data-toggle="modal" data-target="#nbxplorergeneratewallet" type="button" id="nbxplorergeneratewalletbtn">... a new/existing seed.</button>
                                                                  
                             </div>
                         </div>

@@ -109,6 +109,23 @@ namespace BTCPayServer.Tests
             return (usr, Driver.FindElement(By.Id("Id")).GetAttribute("value"));
         }
 
+        public string GenerateWallet(string cryptoCode = "BTC", string seed = "")
+        {
+            Driver.FindElement(By.Id($"Modify{cryptoCode}")).ForceClick();
+            Driver.FindElement(By.Id("import-from-btn")).ForceClick();
+            Driver.FindElement(By.Id("nbxplorergeneratewalletbtn")).ForceClick();
+            Driver.FindElement(By.Id("ExistingMnemonic")).SendKeys(seed);
+            Driver.FindElement(By.Id("btn-generate")).ForceClick();
+            AssertHappyMessage();
+            if (string.IsNullOrEmpty(seed))
+            {
+                seed = Driver.FindElements(By.ClassName("alert-success")).First().FindElement(By.TagName("code")).Text;
+            }
+            Driver.FindElement(By.Id("Confirm")).ForceClick();
+            AssertHappyMessage();
+            return seed;
+        }
+        
         public void AddDerivationScheme(string cryptoCode = "BTC", string derivationScheme = "xpub661MyMwAqRbcGABgHMUXDzPzH1tU7eZaAaJQXhDXsSxsqyQzQeU6kznNfSuAyqAK9UaWSaZaMFdNiY5BCF4zBPAzSnwfUAwUhwttuAKwfRX-[legacy]")
         {
             Driver.FindElement(By.Id($"Modify{cryptoCode}")).ForceClick();

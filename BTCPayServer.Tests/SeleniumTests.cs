@@ -408,14 +408,18 @@ namespace BTCPayServer.Tests
             {
                 await s.StartAsync();
                 s.RegisterNewUser(true);
-                s.CreateNewStore();
+               var storeId =  s.CreateNewStore();
 
                 // In this test, we try to spend from a manual seed. We import the xpub 49'/0'/0', then try to use the seed 
                 // to sign the transaction
-                var mnemonic = "usage fever hen zero slide mammal silent heavy donate budget pulse say brain thank sausage brand craft about save attract muffin advance illegal cabbage";
+                var mnemonic = s.GenerateWallet("BTC", "");
+                
                 var root = new Mnemonic(mnemonic).DeriveExtKey();
-                s.AddDerivationScheme("BTC", "ypub6WWc2gWwHbdnAAyJDnR4SPL1phRh7REqrPBfZeizaQ1EmTshieRXJC3Z5YoU4wkcdKHEjQGkh6AYEzCQC1Kz3DNaWSwdc1pc8416hAjzqyD");
-                var tx = s.Server.ExplorerNode.SendToAddress(BitcoinAddress.Create("bcrt1qmxg8fgnmkp354vhe78j6sr4ut64tyz2xyejel4", Network.RegTest), Money.Coins(3.0m));
+                var invoiceId = s.CreateInvoice(storeId.storeId);
+                var invoice = await s.Server.PayTester.InvoiceRepository.GetInvoice( invoiceId);
+                var address = invoice.EntityToDTO().Addresses["BTC"];
+                
+                var tx = s.Server.ExplorerNode.SendToAddress(BitcoinAddress.Create(address, Network.RegTest), Money.Coins(3.0m));
                 s.Server.ExplorerNode.Generate(1);
 
                 s.Driver.FindElement(By.Id("Wallets")).Click();
@@ -429,8 +433,8 @@ namespace BTCPayServer.Tests
 
                 // We setup the fingerprint and the account key path
                 s.Driver.FindElement(By.Id("WalletSettings")).ForceClick();
-                s.Driver.FindElement(By.Id("AccountKeys_0__MasterFingerprint")).SendKeys("8bafd160");
-                s.Driver.FindElement(By.Id("AccountKeys_0__AccountKeyPath")).SendKeys("m/49'/0'/0'" + Keys.Enter);
+//                s.Driver.FindElement(By.Id("AccountKeys_0__MasterFingerprint")).SendKeys("8bafd160");
+//                s.Driver.FindElement(By.Id("AccountKeys_0__AccountKeyPath")).SendKeys("m/49'/0'/0'" + Keys.Enter);
 
                 // Check the tx sent earlier arrived
                 s.Driver.FindElement(By.Id("WalletTransactions")).ForceClick();
@@ -471,7 +475,7 @@ namespace BTCPayServer.Tests
                     }
                 }
                 SignWith(mnemonic);
-                var accountKey = root.Derive(new KeyPath("m/49'/0'/0'")).GetWif(Network.RegTest).ToString();
+                var accountKey = root.Derive(new KeyPath("m/84'/1'/0'")).GetWif(Network.RegTest).ToString();
                 SignWith(accountKey);
             }
         }

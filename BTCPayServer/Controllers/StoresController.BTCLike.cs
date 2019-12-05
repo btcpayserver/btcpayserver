@@ -334,7 +334,7 @@ namespace BTCPayServer.Controllers
               Confirmation = false,
               Network = network,
               RootFingerprint = response.AccountKeyPath.MasterFingerprint.ToString(),
-              RootKeyPath = response.AccountKeyPath.KeyPath,
+              RootKeyPath = network.GetRootKeyPath(),
               CryptoCode = cryptoCode,
               DerivationScheme = response.DerivationScheme.ToString(),
               Source = "NBXplorer",

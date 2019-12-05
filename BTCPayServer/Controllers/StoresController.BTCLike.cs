@@ -322,34 +322,39 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("{storeId}/derivations/{cryptoCode}/generatenbxwallet")]
-        public async Task<IActionResult> GenerateNBXWallet(string storeId, string cryptoCode, GenerateWalletRequest request)
+        public async Task<IActionResult> GenerateNBXWallet(string storeId, string cryptoCode,
+            GenerateWalletRequest request)
         {
             var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-          var client =   _ExplorerProvider.GetExplorerClient(cryptoCode);
-          var response = await client.GenerateWalletAsync(request);
-          
-          var store = HttpContext.GetStoreData();
-          var result = await AddDerivationScheme(storeId, new DerivationSchemeViewModel()
-          {
-              Confirmation = false,
-              Network = network,
-              RootFingerprint = response.AccountKeyPath.MasterFingerprint.ToString(),
-              RootKeyPath = network.GetRootKeyPath(),
-              CryptoCode = cryptoCode,
-              DerivationScheme = response.DerivationScheme.ToString(),
-              Source = "NBXplorer",
-              AccountKey = response.AccountHDKey.Neuter().ToWif(),
-              DerivationSchemeFormat = "BTCPay",
-              KeyPath = response.AccountKeyPath.KeyPath.ToString(),
-              Enabled = !store.GetStoreBlob().IsExcluded(new PaymentMethodId(cryptoCode, PaymentTypes.BTCLike))
-          }, cryptoCode);
-          TempData.SetStatusMessageModel(new StatusMessageModel()
-          {
-              Severity = StatusMessageModel.StatusSeverity.Success,
-              Html = !string.IsNullOrEmpty(request.ExistingMnemonic)? "Your wallet has been imported.": $"Your wallet has been generated. Please store your seed securely! <br/><code>{response.Mnemonic}</code>"
-          });
-          ((ViewResult)result).ViewName = nameof(AddDerivationScheme);
-          return result;
+            var client = _ExplorerProvider.GetExplorerClient(cryptoCode);
+            var response = await client.GenerateWalletAsync(request);
+
+            var store = HttpContext.GetStoreData();
+            var result = await AddDerivationScheme(storeId,
+                new DerivationSchemeViewModel()
+                {
+                    Confirmation = false,
+                    Network = network,
+                    RootFingerprint = response.AccountKeyPath.MasterFingerprint.ToString(),
+                    RootKeyPath = network.GetRootKeyPath(),
+                    CryptoCode = cryptoCode,
+                    DerivationScheme = response.DerivationScheme.ToString(),
+                    Source = "NBXplorer",
+                    AccountKey = response.AccountHDKey.Neuter().ToWif(),
+                    DerivationSchemeFormat = "BTCPay",
+                    KeyPath = response.AccountKeyPath.KeyPath.ToString(),
+                    Enabled = !store.GetStoreBlob()
+                        .IsExcluded(new PaymentMethodId(cryptoCode, PaymentTypes.BTCLike))
+                }, cryptoCode);
+            TempData.SetStatusMessageModel(new StatusMessageModel()
+            {
+                Severity = StatusMessageModel.StatusSeverity.Success,
+                Html = !string.IsNullOrEmpty(request.ExistingMnemonic)
+                    ? "Your wallet has been imported."
+                    : $"Your wallet has been generated. Please store your seed securely! <br/><code>{response.Mnemonic}</code>"
+            });
+            ((ViewResult)result).ViewName = nameof(AddDerivationScheme);
+            return result;
         }
 
         private async Task<string> ReadAllText(IFormFile file)

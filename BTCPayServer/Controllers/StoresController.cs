@@ -492,10 +492,11 @@ namespace BTCPayServer.Controllers
                 {
                     case BitcoinPaymentType _:
                         var strategy = derivationByCryptoCode.TryGet(paymentMethodId.CryptoCode);
+                        var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
                         vm.DerivationSchemes.Add(new StoreViewModel.DerivationScheme()
                         {
                             Crypto = paymentMethodId.CryptoCode,
-                            WalletSupported = strategy.Network.WalletSupported,
+                            WalletSupported = network.WalletSupported,
                             Value = strategy?.ToPrettyString() ?? string.Empty,
                             WalletId = new WalletId(store.Id, paymentMethodId.CryptoCode),
                             Enabled = !excludeFilters.Match(paymentMethodId) && strategy != null

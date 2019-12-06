@@ -29,6 +29,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBitcoin.DataEncoders;
+using NBXplorer;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json;
@@ -405,6 +406,9 @@ namespace BTCPayServer.Controllers
             var feeProvider = _feeRateProvider.CreateFeeProvider(network);
             var recommendedFees = feeProvider.GetFeeRateAsync();
             var balance = _walletProvider.GetWallet(network).GetBalance(paymentMethod.AccountDerivation);
+            model.NBXSeedAvailable = !string.IsNullOrEmpty(await ExplorerClientProvider.GetExplorerClient(network)
+                .GetMetadataAsync<string>(GetDerivationSchemeSettings(walletId).AccountDerivation,
+                    WellknownMetadataKeys.Mnemonic));
             model.CurrentBalance = await balance;
             model.RecommendedSatoshiPerByte = (int)(await recommendedFees).GetFee(1).Satoshi;
             model.FeeSatoshiPerByte = model.RecommendedSatoshiPerByte;
@@ -554,6 +558,19 @@ namespace BTCPayServer.Controllers
             {
                 case "vault":
                     return ViewVault(walletId, psbt.PSBT);
+                case "nbx-seed":
+                  var seed = ExplorerClientProvider.GetExplorerClient(network)
+                        .GetMetadataAsync<string>(derivationScheme.AccountDerivation, WellknownMetadataKeys.Mnemonic, cancellation);
+                  var passphrase = ExplorerClientProvider.GetExplorerClient(network)
+                      .GetMetadataAsync<string>(derivationScheme.AccountDerivation,"Passphrase", cancellation);
+
+                  var metadata = await Task.WhenAll(seed, passphrase);
+                  return await SignWithSeed(walletId, new SignWithSeedViewModel()
+                  {
+                      SeedOrKey = metadata[0],
+                      Passphrase = metadata[1],
+                      PSBT = psbt.PSBT.ToBase64()
+                  });
                 case "ledger":
                     return ViewWalletSendLedger(psbt.PSBT, psbt.ChangeAddress);
                 case "seed":
@@ -643,7 +660,7 @@ namespace BTCPayServer.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return View(viewModel);
+                return View("SignWithSeed", viewModel);
             }
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             if (network == null)
@@ -666,7 +683,7 @@ namespace BTCPayServer.Controllers
 
             if (!ModelState.IsValid)
             {
-                return View(viewModel);
+                return View("SignWithSeed", viewModel);
             }
 
             ExtKey signingKey = null;
@@ -679,7 +696,7 @@ namespace BTCPayServer.Controllers
             if (rootedKeyPath == null)
             {
                 ModelState.AddModelError(nameof(viewModel.SeedOrKey), "The master fingerprint and/or account key path of your seed are not set in the wallet settings.");
-                return View(viewModel);
+                return View("SignWithSeed", viewModel);
             }
             // The user gave the root key, let's try to rebase the PSBT, and derive the account private key
             if (rootedKeyPath.MasterFingerprint == extKey.GetPublicKey().GetHDFingerPrint())

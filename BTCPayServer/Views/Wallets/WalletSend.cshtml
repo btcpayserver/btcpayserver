@@ -10,6 +10,7 @@
     <div class="@(Model.Outputs.Count==1? "col-lg-6 transaction-output-form": "col-lg-8")">
         <form method="post">
             <input type="hidden" asp-for="Divisibility" />
+            <input type="hidden" asp-for="NBXSeedAvailable" />
             <input type="hidden" asp-for="Fiat" />
             <input type="hidden" asp-for="Rate" />
             <input type="hidden" asp-for="CurrentBalance" />
@@ -154,6 +155,10 @@
                         <button name="command" type="submit" class="dropdown-item" value="analyze-psbt">... a wallet supporting PSBT</button>
                         @if (Model.CryptoCode == "BTC") {
                             <button name="command" type="submit" class="dropdown-item" value="vault">... the vault (preview)</button>
+                        }
+                        @if (Model.NBXSeedAvailable)
+                        {
+                            <button name="command" type="submit" class="dropdown-item" value="nbx-seed">... the seed saved in NBXplorer</button>
                         }
                     </div>
                 </div>

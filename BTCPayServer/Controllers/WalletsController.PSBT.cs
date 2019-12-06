@@ -7,6 +7,7 @@ using BTCPayServer.ModelBinders;
 using BTCPayServer.Models.WalletViewModels;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
+using NBXplorer;
 using NBXplorer.Models;
 
 namespace BTCPayServer.Controllers
@@ -56,6 +57,9 @@ namespace BTCPayServer.Controllers
         {
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             vm.CryptoCode = network.CryptoCode;
+            vm.NBXSeedAvailable = !string.IsNullOrEmpty(await ExplorerClientProvider.GetExplorerClient(network)
+                .GetMetadataAsync<string>(GetDerivationSchemeSettings(walletId).AccountDerivation,
+                    WellknownMetadataKeys.Mnemonic));
             if (await vm.GetPSBT(network.NBitcoinNetwork) is PSBT psbt)
             {
                 vm.Decoded = psbt.ToString();
@@ -106,6 +110,20 @@ namespace BTCPayServer.Controllers
                     return RedirectToWalletPSBT(walletId, psbt, vm.FileName);
                 case "seed":
                     return SignWithSeed(walletId, psbt.ToBase64());
+                case "nbx-seed":
+                    var derivationScheme = GetDerivationSchemeSettings(walletId);
+                    var seed = ExplorerClientProvider.GetExplorerClient(network)
+                        .GetMetadataAsync<string>(derivationScheme.AccountDerivation, WellknownMetadataKeys.Mnemonic);
+                    var passphrase = ExplorerClientProvider.GetExplorerClient(network)
+                        .GetMetadataAsync<string>(derivationScheme.AccountDerivation,"Passphrase");
+
+                    var metadata = await Task.WhenAll(seed, passphrase);
+                    return await SignWithSeed(walletId, new SignWithSeedViewModel()
+                    {
+                        SeedOrKey = metadata[0],
+                        Passphrase = metadata[1],
+                        PSBT = psbt.ToBase64()
+                    });
                 case "broadcast":
                 {
                     return await WalletPSBTReady(walletId, psbt.ToBase64());

@@ -109,12 +109,14 @@ namespace BTCPayServer.Tests
             return (usr, Driver.FindElement(By.Id("Id")).GetAttribute("value"));
         }
 
-        public string GenerateWallet(string cryptoCode = "BTC", string seed = "")
+        public string GenerateWallet(string cryptoCode = "BTC", string seed = "", bool importkeys = false, bool privkeys = false)
         {
             Driver.FindElement(By.Id($"Modify{cryptoCode}")).ForceClick();
             Driver.FindElement(By.Id("import-from-btn")).ForceClick();
             Driver.FindElement(By.Id("nbxplorergeneratewalletbtn")).ForceClick();
             Driver.FindElement(By.Id("ExistingMnemonic")).SendKeys(seed);
+            SetCheckbox(Driver.FindElement(By.Id("SavePrivateKeys")), privkeys);
+            SetCheckbox(Driver.FindElement(By.Id("ImportKeysToRPC")), importkeys);
             Driver.FindElement(By.Id("btn-generate")).ForceClick();
             AssertHappyMessage();
             if (string.IsNullOrEmpty(seed))

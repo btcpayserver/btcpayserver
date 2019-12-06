@@ -412,13 +412,23 @@ namespace BTCPayServer.Tests
 
                 // In this test, we try to spend from a manual seed. We import the xpub 49'/0'/0', then try to use the seed 
                 // to sign the transaction
-                var mnemonic = s.GenerateWallet("BTC", "");
-                
-                var root = new Mnemonic(mnemonic).DeriveExtKey();
+                var mnemonic = s.GenerateWallet("BTC", "", true, false);
+               
                 var invoiceId = s.CreateInvoice(storeId.storeId);
                 var invoice = await s.Server.PayTester.InvoiceRepository.GetInvoice( invoiceId);
                 var address = invoice.EntityToDTO().Addresses["BTC"];
+
+                var result = await s.Server.ExplorerNode.GetAddressInfoAsync(BitcoinAddress.Create(address, Network.RegTest));
+                Assert.True(result.IsWatchOnly);
+                s.GoToStore(storeId.storeId);
+                mnemonic = s.GenerateWallet("BTC", "", true, true);
                 
+                var root = new Mnemonic(mnemonic).DeriveExtKey();
+                 invoiceId = s.CreateInvoice(storeId.storeId);
+                 invoice = await s.Server.PayTester.InvoiceRepository.GetInvoice( invoiceId);
+                 address = invoice.EntityToDTO().Addresses["BTC"];
+                 result = await s.Server.ExplorerNode.GetAddressInfoAsync(BitcoinAddress.Create(address, Network.RegTest));
+                 Assert.False(result.IsWatchOnly);
                 var tx = s.Server.ExplorerNode.SendToAddress(BitcoinAddress.Create(address, Network.RegTest), Money.Coins(3.0m));
                 s.Server.ExplorerNode.Generate(1);
 

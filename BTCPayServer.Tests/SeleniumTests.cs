@@ -565,7 +565,7 @@ namespace BTCPayServer.Tests
                 
                 s.Driver.FindElement(By.CssSelector("button[value=nbx-seed]")).Click();
                 Assert.Contains(jack.ToString(), s.Driver.PageSource);
-                Assert.Contains("1.00000000", s.Driver.PageSource);
+                Assert.Contains("0.01000000", s.Driver.PageSource);
                 s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).ForceClick();
                 Assert.Equal(walletTransactionLink, s.Driver.Url);
                 

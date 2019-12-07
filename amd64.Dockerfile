@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/core/sdk:2.1.505-alpine3.7 AS builder
+FROM mcr.microsoft.com/dotnet/core/sdk:2.1.607-alpine3.7 AS builder
 WORKDIR /source
 COPY nuget.config nuget.config
 COPY Build/Common.csproj Build/Common.csproj
@@ -14,7 +14,7 @@ COPY BTCPayServer/. BTCPayServer/.
 COPY Build/Version.csproj Build/Version.csproj
 RUN cd BTCPayServer && dotnet publish --output /app/ --configuration Release
 
-FROM mcr.microsoft.com/dotnet/core/aspnet:2.1.9-alpine3.7
+FROM mcr.microsoft.com/dotnet/core/aspnet:2.1.14-alpine3.7
 
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT false
 RUN apk add --no-cache icu-libs openssh-keygen

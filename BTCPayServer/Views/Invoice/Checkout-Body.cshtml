@@ -100,7 +100,8 @@
                 <span>{{ srvModel.btcDue }} {{ srvModel.cryptoCode }}</span>
             </div>
             <div class="single-item-order__right__ex-rate" v-if="srvModel.orderAmountFiat && srvModel.cryptoCode">
-                {{srvModel.rateBaseAmount}} {{ srvModel.cryptoCodeSrv }} = {{ srvModel.rate }}
+                <span v-if="srvModel.cryptoCodeSrv === 'Sats'">1 Sat = {{ srvModel.rate }}</span>
+                <span v-else>1 {{ srvModel.cryptoCodeSrv }} = {{ srvModel.rate }}</span>
             </div>
         </div>
         <span class="fa fa-angle-double-down"></span>

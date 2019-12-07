@@ -52,7 +52,7 @@
     </div>
 </div>
 
-@if (Model.OtherExternalServices.Count != 0)
+@if (Model.OtherExternalServices.Count != 0 || Model.ExternalServices.Any(service => string.IsNullOrEmpty(service.CryptoCode)))
 {
     <div class="row">
         <div class="col-md-8">

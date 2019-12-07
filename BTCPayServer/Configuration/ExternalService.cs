@@ -54,7 +54,7 @@ namespace BTCPayServer.Configuration
 
         void Load(IConfiguration configuration, string cryptoCode, string serviceName, ExternalServiceTypes type, string errorMessage, string displayName)
         {
-            var setting = $"{(string.IsNullOrEmpty(cryptoCode)? $"{cryptoCode}.": string.Empty)}external.{serviceName}";
+            var setting = $"{(!string.IsNullOrEmpty(cryptoCode)? $"{cryptoCode}.": string.Empty)}external.{serviceName}";
             var connStr = configuration.GetOrDefault<string>(setting, string.Empty);
             if (connStr.Length != 0)
             {

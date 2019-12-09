@@ -1,11 +1,15 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Configuration;
 using BTCPayServer.Controllers;
 using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration.Memory;
 using NBitcoin;
 using NBitcoin.RPC;
 using NBitpayClient;
@@ -39,6 +43,26 @@ namespace BTCPayServer.Tests
                 
                 Assert.Single(Assert.IsType<ListWalletsViewModel>(Assert.IsType<ViewResult>(await user.GetController<WalletsController>().ListWallets()).Model).Wallets);
             }
+        }
+
+        [Fact]
+        [Trait("Fast", "Fast")]
+        public void LoadSubChainsAlways()
+        {
+            var options = new BTCPayServerOptions();
+            options.LoadArgs(new ConfigurationRoot(new List<IConfigurationProvider>()
+            {
+                new MemoryConfigurationProvider(new MemoryConfigurationSource()
+                {
+                    InitialData = new[]
+                    {
+                        new KeyValuePair<string, string>("chains", "usdt"), 
+                    }
+                })
+            }));
+            
+            Assert.NotNull(options.NetworkProvider.GetNetwork("LBTC"));
+            Assert.NotNull(options.NetworkProvider.GetNetwork("USDT"));
         }
 
         [Fact]

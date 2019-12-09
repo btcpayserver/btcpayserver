@@ -559,16 +559,12 @@ namespace BTCPayServer.Controllers
                 case "vault":
                     return ViewVault(walletId, psbt.PSBT);
                 case "nbx-seed":
-                  var seed = ExplorerClientProvider.GetExplorerClient(network)
-                        .GetMetadataAsync<string>(derivationScheme.AccountDerivation, WellknownMetadataKeys.Mnemonic, cancellation);
-                  var passphrase = ExplorerClientProvider.GetExplorerClient(network)
-                      .GetMetadataAsync<string>(derivationScheme.AccountDerivation,"Passphrase", cancellation);
+                  var extKey = await ExplorerClientProvider.GetExplorerClient(network)
+                        .GetMetadataAsync<string>(derivationScheme.AccountDerivation, WellknownMetadataKeys.MasterHDKey, cancellation);
 
-                  var metadata = await Task.WhenAll(seed, passphrase);
                   return await SignWithSeed(walletId, new SignWithSeedViewModel()
                   {
-                      SeedOrKey = metadata[0],
-                      Passphrase = metadata[1],
+                      SeedOrKey = extKey,
                       PSBT = psbt.PSBT.ToBase64()
                   });
                 case "ledger":

@@ -281,12 +281,11 @@ namespace BTCPayServer.Controllers
                                 goto askdevice;
                             case "ask-device":
 askdevice:
-                                var selector = deviceEntry?.DeviceSelector;
                                 password = null;
                                 deviceEntry = null;
                                 device = null;
                                 var entries = (await hwi.EnumerateEntriesAsync(cancellationToken)).ToList();
-                                deviceEntry = entries.Where(e => selector == null || SameSelector(selector, e.DeviceSelector)).FirstOrDefault();
+                                deviceEntry = entries.FirstOrDefault();
                                 if (deviceEntry == null)
                                 {
                                     await websocketHelper.Send("{ \"error\": \"no-device\"}", cancellationToken);

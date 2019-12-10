@@ -80,8 +80,6 @@
     </div>
 </div>
 
-<div id="WebsocketPath" style="display:none;">@Url.Action("VaultBridgeConnection", "Vault", new { cryptoCode = Model.CryptoCode })</div>
-
 <template id="btcpayservervault_template">
     <div class="modal-dialog" role="document">
         <form class="modal-content" form method="post" enctype="multipart/form-data">
@@ -123,7 +121,3 @@
         </form>
     </div>
 </template>
-<div class="modal fade" id="btcpayservervault" tabindex="-1" role="dialog" aria-labelledby="btcpayservervault" aria-hidden="true">
-
-</div>
-<partial name="VaultElements" />

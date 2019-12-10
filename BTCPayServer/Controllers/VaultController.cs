@@ -168,6 +168,15 @@ namespace BTCPayServer.Controllers
                                 o.Add("psbt", psbt.ToBase64());
                                 await websocketHelper.Send(o.ToString(), cancellationToken);
                                 break;
+                            case "display-address":
+                                if (await RequireDeviceUnlocking())
+                                {
+                                    continue;
+                                }
+                                var k = RootedKeyPath.Parse(await websocketHelper.NextMessageAsync(cancellationToken));
+                                await device.DisplayAddressAsync(GetScriptPubKeyType(k), k.KeyPath, cancellationToken);
+                                await websocketHelper.Send("{ \"info\": \"ok\"}", cancellationToken);
+                                break;
                             case "ask-pin":
                                 if (device == null)
                                 {
@@ -322,6 +331,18 @@ askdevice:
                 }
             }
             return new EmptyResult();
+        }
+
+        private ScriptPubKeyType GetScriptPubKeyType(RootedKeyPath keyPath)
+        {
+            var path = keyPath.KeyPath.ToString();
+            if (path.StartsWith("84'", StringComparison.OrdinalIgnoreCase))
+                return ScriptPubKeyType.Segwit;
+            if (path.StartsWith("49'", StringComparison.OrdinalIgnoreCase))
+                return ScriptPubKeyType.SegwitP2SH;
+            if (path.StartsWith("44'", StringComparison.OrdinalIgnoreCase))
+                return ScriptPubKeyType.Legacy;
+            throw new NotSupportedException("Unsupported keypath");
         }
 
         private bool SameSelector(DeviceSelector a, DeviceSelector b)

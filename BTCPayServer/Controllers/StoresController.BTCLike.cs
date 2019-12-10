@@ -337,8 +337,10 @@ namespace BTCPayServer.Controllers
 
                 for (int i = 0; i < 10; i++)
                 {
+                    var keyPath = deposit.GetKeyPath((uint)i);
+                    var rootedKeyPath = vm.GetAccountKeypath()?.Derive(keyPath);
                     var address = line.Derive((uint)i);
-                    vm.AddressSamples.Add((deposit.GetKeyPath((uint)i).ToString(), address.ScriptPubKey.GetDestinationAddress(strategy.Network.NBitcoinNetwork).ToString()));
+                    vm.AddressSamples.Add((keyPath.ToString(), address.ScriptPubKey.GetDestinationAddress(strategy.Network.NBitcoinNetwork).ToString(), rootedKeyPath));
                 }
             }
             vm.Confirmation = true;

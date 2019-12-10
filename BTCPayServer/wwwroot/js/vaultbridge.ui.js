@@ -49,6 +49,7 @@ var vaultui = (function () {
         needPassphrase: new VaultFeedback("?", "Enter the passphrase.", "vault-feedback3", "need-passphrase"),
         needPassphraseOnDevice: new VaultFeedback("?", "Please, enter the passphrase on the device.", "vault-feedback3", "need-passphrase-on-device"),
         signingTransaction: new VaultFeedback("?", "Please review and confirm the transaction on your device...", "vault-feedback3", "ask-signing"),
+        reviewAddress: new VaultFeedback("?", "Please review the address on your device...", "vault-feedback3", "ask-signing"),
         signingRejected: new VaultFeedback("failed", "The user refused to sign the transaction", "vault-feedback3", "user-reject"),
     };
 
@@ -175,6 +176,20 @@ var vaultui = (function () {
             }
             return true;
         };
+        this.askForDisplayAddress = async function (rootedKeyPath) {
+            if (!await self.ensureConnectedToBackend())
+                return false;
+            show(VaultFeedbacks.reviewAddress);
+            self.bridge.socket.send("display-address");
+            self.bridge.socket.send(rootedKeyPath);
+            var json = await self.bridge.waitBackendMessage();
+            if (json.hasOwnProperty("error")) {
+                if (await needRetry(json))
+                    return await self.askForDisplayAddress(rootedKeyPath);
+                return false;
+            }
+            return true;
+        }
         this.askForDevice = async function () {
             if (!await self.ensureConnectedToBackend())
                 return false;

@@ -104,6 +104,7 @@ namespace BTCPayServer.Services.Wallets
         public void InvalidateCache(DerivationStrategyBase strategy)
         {
             _MemoryCache.Remove("CACHEDCOINS_" + strategy.ToString());
+            _MemoryCache.Remove("CACHEDBALANCE_" + strategy.ToString());
             _FetchingUTXOs.TryRemove(strategy.ToString(), out var unused);
         }
         ConcurrentDictionary<string, TaskCompletionSource<UTXOChanges>> _FetchingUTXOs = new ConcurrentDictionary<string, TaskCompletionSource<UTXOChanges>>();
@@ -178,10 +179,14 @@ namespace BTCPayServer.Services.Wallets
                           }).ToArray();
         }
 
-        public async Task<decimal> GetBalance(DerivationStrategyBase derivationStrategy, CancellationToken cancellation = default(CancellationToken))
+        public Task<decimal> GetBalance(DerivationStrategyBase derivationStrategy, CancellationToken cancellation = default(CancellationToken))
         {
-            var result = await _Client.GetBalanceAsync(derivationStrategy, cancellation);
-            return result.Total.GetValue(_Network);
+            return _MemoryCache.GetOrCreateAsync("CACHEDBALANCE_" + derivationStrategy.ToString(), async (entry) =>
+            {
+                var result = await _Client.GetBalanceAsync(derivationStrategy, cancellation);
+                entry.AbsoluteExpiration = DateTimeOffset.UtcNow + CacheSpan;
+                return result.Total.GetValue(_Network);
+            });
         }
     }
 }

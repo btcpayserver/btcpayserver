@@ -78,20 +78,23 @@ namespace BTCPayServer.Controllers
                         await websocketHelper.Send("{ \"error\": \"need-initialized\"}", cancellationToken);
                         return true;
                     }
-                    if (deviceEntry.Code is HwiErrorCode.DeviceNotReady && IsTrezorT(deviceEntry))
+                    if (deviceEntry.Code is HwiErrorCode.DeviceNotReady)
                     {
-                        await websocketHelper.Send("{ \"error\": \"need-passphrase-on-device\"}", cancellationToken);
-                        return true;
-                    }
-                    if (deviceEntry.Code is HwiErrorCode.DeviceNotReady || deviceEntry.NeedsPinSent is true)
-                    {
-                        await websocketHelper.Send("{ \"error\": \"need-pin\"}", cancellationToken);
-                        return true;
-                    }
-                    if ((deviceEntry.Code is HwiErrorCode.DeviceNotReady || deviceEntry.NeedsPassphraseSent is true) && password == null)
-                    {
-                        await websocketHelper.Send("{ \"error\": \"need-passphrase\"}", cancellationToken);
-                        return true;
+                        if (IsTrezorT(deviceEntry))
+                        {
+                            await websocketHelper.Send("{ \"error\": \"need-passphrase-on-device\"}", cancellationToken);
+                            return true;
+                        }
+                        else if (deviceEntry.NeedsPinSent is true)
+                        {
+                            await websocketHelper.Send("{ \"error\": \"need-pin\"}", cancellationToken);
+                            return true;
+                        }
+                        else if (deviceEntry.NeedsPassphraseSent is true && password is null)
+                        {
+                            await websocketHelper.Send("{ \"error\": \"need-passphrase\"}", cancellationToken);
+                            return true;
+                        }
                     }
                     return false;
                 }
@@ -184,14 +187,13 @@ namespace BTCPayServer.Controllers
                                 var pin = int.Parse(await websocketHelper.NextMessageAsync(cancellationToken), CultureInfo.InvariantCulture);
                                 if (await device.SendPinAsync(pin, cancellationToken))
                                 {
-                                    await websocketHelper.Send("{ \"info\": \"the pin is correct\"}", cancellationToken);
+                                    goto askdevice;
                                 }
                                 else
                                 {
                                     await websocketHelper.Send("{ \"error\": \"incorrect-pin\"}", cancellationToken);
                                     continue;
                                 }
-                                break;
                             case "ask-xpub":
                                 if (await RequireDeviceUnlocking())
                                 {
@@ -257,7 +259,6 @@ namespace BTCPayServer.Controllers
                                 await websocketHelper.Send(result.ToString(), cancellationToken);
                                 break;
                             case "ask-passphrase":
-                            case "ask-device":
                                 if (command == "ask-passphrase")
                                 {
                                     if (deviceEntry == null)
@@ -268,11 +269,15 @@ namespace BTCPayServer.Controllers
                                     // The make the trezor T ask for password
                                     await device.GetXPubAsync(new KeyPath("44'"), cancellationToken);
                                 }
+                                goto askdevice;
+                            case "ask-device":
+askdevice:
+                                var selector = deviceEntry?.DeviceSelector;
                                 password = null;
                                 deviceEntry = null;
                                 device = null;
                                 var entries = (await hwi.EnumerateEntriesAsync(cancellationToken)).ToList();
-                                deviceEntry = entries.FirstOrDefault();
+                                deviceEntry = entries.Where(e => selector == null || SameSelector(selector, e.DeviceSelector)).FirstOrDefault();
                                 if (deviceEntry == null)
                                 {
                                     await websocketHelper.Send("{ \"error\": \"no-device\"}", cancellationToken);

@@ -395,7 +395,11 @@ namespace BTCPayServer.Controllers
                 }
                 catch
                 {
-                    ModelState.AddModelError(nameof(transactionOutput.DestinationAddress), "Invalid address");
+                    var inputName = 
+                        string.Format(CultureInfo.InvariantCulture, "Outputs[{0}].", i.ToString(CultureInfo.InvariantCulture)) + 
+                        nameof(transactionOutput.DestinationAddress);
+
+                    ModelState.AddModelError(inputName, "Invalid address");
                 }
 
                 if (transactionOutput.Amount.HasValue)
@@ -432,7 +436,7 @@ namespace BTCPayServer.Controllers
                 }
             }
 
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid) 
                 return View(vm);
 
             DerivationSchemeSettings derivationScheme = GetDerivationSchemeSettings(walletId);

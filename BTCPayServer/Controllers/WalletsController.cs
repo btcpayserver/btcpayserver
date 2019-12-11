@@ -387,7 +387,7 @@ namespace BTCPayServer.Controllers
                 {
                     subtractFeesOutputsCount.Add(i);
                 }
-                transactionOutput.DestinationAddress = transactionOutput.DestinationAddress.Trim();
+                transactionOutput.DestinationAddress = transactionOutput.DestinationAddress?.Trim() ?? string.Empty;
 
                 try
                 {

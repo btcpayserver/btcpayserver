@@ -132,6 +132,7 @@ namespace BTCPayServer.Controllers
                 vm.Config = derivation.ToJson();
             }
             vm.Enabled = !store.GetStoreBlob().IsExcluded(new PaymentMethodId(vm.CryptoCode, PaymentTypes.BTCLike));
+            vm.CanUseGenerateWallet = CanUseGenerateWallet();
         }
 
         private DerivationSchemeSettings GetExistingDerivationStrategy(string cryptoCode, StoreData store)
@@ -179,7 +180,7 @@ namespace BTCPayServer.Controllers
                         Message = "Config file was not in the correct format"
                     });
                     vm.Confirmation = false;
-                    return View(vm);
+                    return View("AddDerivationScheme",vm);
                 }
             }
 
@@ -325,6 +326,11 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> GenerateNBXWallet(string storeId, string cryptoCode,
             GenerateWalletRequest request)
         {
+            if (!CanUseGenerateWallet())
+            {
+                return NotFound();
+            }
+            
             var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
             var client = _ExplorerProvider.GetExplorerClient(cryptoCode);
             var response = await client.GenerateWalletAsync(request);
@@ -346,6 +352,7 @@ namespace BTCPayServer.Controllers
                     Enabled = !store.GetStoreBlob()
                         .IsExcluded(new PaymentMethodId(cryptoCode, PaymentTypes.BTCLike))
                 }, cryptoCode);
+            
             TempData.SetStatusMessageModel(new StatusMessageModel()
             {
                 Severity = StatusMessageModel.StatusSeverity.Success,
@@ -353,7 +360,6 @@ namespace BTCPayServer.Controllers
                     ? "Your wallet has been imported."
                     : $"Your wallet has been generated. Please store your seed securely! <br/><code>{response.Mnemonic}</code>"
             });
-            ((ViewResult)result).ViewName = nameof(AddDerivationScheme);
             return result;
         }
 
@@ -384,6 +390,11 @@ namespace BTCPayServer.Controllers
             vm.Confirmation = true;
             ModelState.Remove(nameof(vm.Config)); // Remove the cached value
             return View(vm);
+        }
+        
+        private bool CanUseGenerateWallet()
+        {
+            return (_BTCPayEnv.IsDevelopping || User.IsInRole(Roles.ServerAdmin) || _CssThemeManager.AllowGenerateWalletForAll);
         }
     }
 }

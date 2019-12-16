@@ -23,7 +23,9 @@ namespace BTCPayServer.Services
         public bool DiscourageSearchEngines { get; set; }
         [Display(Name = "Allow non-admins to use the internal lightning node in their stores")]
         public bool AllowLightningInternalNodeForAll { get; set; }
-
+        [Display(Name = "Allow non-admins to use the NBXplorer wallet generator in their stores")]
+        public bool AllowGenerateWalletForAll { get; set; }
+        
         [Display(Name = "Display app on website root")]
         public string RootAppId { get; set; }
         public AppType? RootAppType { get; set; }

@@ -389,7 +389,7 @@ namespace BTCPayServer.Controllers
             }
             vm.Confirmation = true;
             ModelState.Remove(nameof(vm.Config)); // Remove the cached value
-            return View(vm);
+            return View(nameof(AddDerivationScheme),vm);
         }
         
         private bool CanUseGenerateWallet()

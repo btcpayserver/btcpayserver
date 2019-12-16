@@ -238,6 +238,11 @@ namespace BTCPayServer.Tests
             {
                 element.Click();
             }
+
+            if (value != element.Selected)
+            {
+                SetCheckbox(element, value);
+            }
         }
 
         public void SetCheckbox(SeleniumTester s, string inputName, bool value)

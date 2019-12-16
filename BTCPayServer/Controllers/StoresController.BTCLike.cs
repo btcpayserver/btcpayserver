@@ -180,7 +180,7 @@ namespace BTCPayServer.Controllers
                         Message = "Config file was not in the correct format"
                     });
                     vm.Confirmation = false;
-                    return View("AddDerivationScheme",vm);
+                    return View(nameof(AddDerivationScheme),vm);
                 }
             }
 
@@ -194,7 +194,7 @@ namespace BTCPayServer.Controllers
                         Message = "Coldcard public file was not in the correct format"
                     });
                     vm.Confirmation = false;
-                    return View(vm);
+                    return View(nameof(AddDerivationScheme),vm);
                 }
             }
             else
@@ -230,7 +230,7 @@ namespace BTCPayServer.Controllers
                 {
                     ModelState.AddModelError(nameof(vm.DerivationScheme), "Invalid Derivation Scheme");
                     vm.Confirmation = false;
-                    return View(vm);
+                    return View(nameof(AddDerivationScheme),vm);
                 }
             }
 

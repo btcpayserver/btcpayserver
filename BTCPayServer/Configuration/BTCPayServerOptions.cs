@@ -93,7 +93,7 @@ namespace BTCPayServer.Configuration
             var elementsBased = filtered.GetAll().OfType<ElementsBTCPayNetwork>();
             var parentChains = elementsBased.Select(network => network.NetworkCryptoCode.ToUpperInvariant()).Distinct();
             var allSubChains = networkProvider.GetAll().OfType<ElementsBTCPayNetwork>()
-                .Where(network => parentChains.Contains(network.CryptoCode)).Select(network => network.CryptoCode);
+                .Where(network => parentChains.Contains(network.NetworkCryptoCode)).Select(network => network.CryptoCode);
             supportedChains.AddRange(allSubChains);
             NetworkProvider = networkProvider.Filter(supportedChains.ToArray());
             foreach (var chain in supportedChains)

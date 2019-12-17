@@ -26,7 +26,7 @@ namespace BTCPayServer
                 DisplayName = "Tether USD",
                 BlockExplorerLink = NetworkType == NetworkType.Mainnet ? "https://blockstream.info/liquid/tx/{0}" : "https://blockstream.info/testnet/liquid/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
-                UriScheme = "liquid",
+                UriScheme = "bitcoin",
                 CryptoImagePath = "imlegacy/liquid-tether.svg",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),
                 CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("1776'") : new KeyPath("1'"),

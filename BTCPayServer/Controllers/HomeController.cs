@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -22,9 +22,9 @@ namespace BTCPayServer.Controllers
         private readonly CssThemeManager _cachedServerSettings;
 
         public IHttpClientFactory HttpClientFactory { get; }
-        SignInManager<ApplicationUser> SignInManager { get;  }
+        SignInManager<ApplicationUser> SignInManager { get; }
 
-        public HomeController(IHttpClientFactory httpClientFactory, 
+        public HomeController(IHttpClientFactory httpClientFactory,
                               CssThemeManager cachedServerSettings,
                               SignInManager<ApplicationUser> signInManager)
         {
@@ -40,36 +40,36 @@ namespace BTCPayServer.Controllers
                 switch (appType.Value)
                 {
                     case AppType.Crowdfund:
-                    {
-                        var serviceProvider = HttpContext.RequestServices;
-                        var controller = (AppsPublicController)serviceProvider.GetService(typeof(AppsPublicController));
-                        controller.Url = Url;
-                        controller.ControllerContext = ControllerContext;
-                        var res = await controller.ViewCrowdfund(appId, null) as ViewResult;
-                        if (res != null)
                         {
-                            res.ViewName = "/Views/AppsPublic/ViewCrowdfund.cshtml";
-                            return res; // return 
-                        }
+                            var serviceProvider = HttpContext.RequestServices;
+                            var controller = (AppsPublicController)serviceProvider.GetService(typeof(AppsPublicController));
+                            controller.Url = Url;
+                            controller.ControllerContext = ControllerContext;
+                            var res = await controller.ViewCrowdfund(appId, null) as ViewResult;
+                            if (res != null)
+                            {
+                                res.ViewName = "/Views/AppsPublic/ViewCrowdfund.cshtml";
+                                return res; // return 
+                            }
 
-                        break;
-                    }
+                            break;
+                        }
 
                     case AppType.PointOfSale:
-                    {
-                        var serviceProvider = HttpContext.RequestServices;
-                        var controller = (AppsPublicController)serviceProvider.GetService(typeof(AppsPublicController));
-                        controller.Url = Url;
-                        controller.ControllerContext = ControllerContext;
-                        var res = await controller.ViewPointOfSale(appId) as ViewResult;
-                        if (res != null)
                         {
-                            res.ViewName = "/Views/AppsPublic/ViewPointOfSale.cshtml";
-                            return res; // return 
-                        }
+                            var serviceProvider = HttpContext.RequestServices;
+                            var controller = (AppsPublicController)serviceProvider.GetService(typeof(AppsPublicController));
+                            controller.Url = Url;
+                            controller.ControllerContext = ControllerContext;
+                            var res = await controller.ViewPointOfSale(appId) as ViewResult;
+                            if (res != null)
+                            {
+                                res.ViewName = "/Views/AppsPublic/ViewPointOfSale.cshtml";
+                                return res; // return 
+                            }
 
-                        break;
-                    }
+                            break;
+                        }
                 }
             }
             return null;
@@ -85,10 +85,10 @@ namespace BTCPayServer.Controllers
                 item.Domain.Equals(Request.Host.Host, StringComparison.InvariantCultureIgnoreCase));
             if (matchedDomainMapping != null)
             {
-                return await GoToApp(matchedDomainMapping.AppId, matchedDomainMapping.AppType) ?? GoToHome(); 
+                return await GoToApp(matchedDomainMapping.AppId, matchedDomainMapping.AppType) ?? GoToHome();
             }
 
-            return await GoToApp(_cachedServerSettings.RootAppId, _cachedServerSettings.RootAppType) ?? GoToHome(); 
+            return await GoToApp(_cachedServerSettings.RootAppId, _cachedServerSettings.RootAppType) ?? GoToHome();
         }
 
         private IActionResult GoToHome()

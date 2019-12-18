@@ -415,7 +415,7 @@ namespace BTCPayServer.Tests
                 var mnemonic = s.GenerateWallet("BTC", "", true, false);
                
                 var invoiceId = s.CreateInvoice(storeId.storeId);
-                var invoice = await s.Server.PayTester.InvoiceRepository.GetInvoice( invoiceId);
+                var invoice = await s.Server.PayTester.InvoiceRepository.GetInvoice(invoiceId);
                 var address = invoice.EntityToDTO().Addresses["BTC"];
 
                 var result = await s.Server.ExplorerNode.GetAddressInfoAsync(BitcoinAddress.Create(address, Network.RegTest));

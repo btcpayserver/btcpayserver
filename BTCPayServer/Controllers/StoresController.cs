@@ -63,6 +63,8 @@ namespace BTCPayServer.Controllers
             ChangellyClientProvider changellyClientProvider,
             IWebHostEnvironment env, IHttpClientFactory httpClientFactory,
             PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
+            SettingsRepository settingsRepository,
+            IAuthorizationService authorizationService,
             CssThemeManager cssThemeManager)
         {
             _RateFactory = rateFactory;
@@ -76,6 +78,8 @@ namespace BTCPayServer.Controllers
             _Env = env;
             _httpClientFactory = httpClientFactory;
             _paymentMethodHandlerDictionary = paymentMethodHandlerDictionary;
+            _settingsRepository = settingsRepository;
+            _authorizationService = authorizationService;
             _CssThemeManager = cssThemeManager;
             _NetworkProvider = networkProvider;
             _ExplorerProvider = explorerProvider;
@@ -100,6 +104,8 @@ namespace BTCPayServer.Controllers
         IWebHostEnvironment _Env;
         private IHttpClientFactory _httpClientFactory;
         private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
+        private readonly SettingsRepository _settingsRepository;
+        private readonly IAuthorizationService _authorizationService;
         private readonly CssThemeManager _CssThemeManager;
 
         [TempData]

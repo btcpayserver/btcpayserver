@@ -1,6 +1,6 @@
 @using NBXplorer.Models
 @model DerivationSchemeViewModel
-@if (Model.CanUseGenerateWallet)
+@if (Model.CanUseHotWallet)
 {
     <partial name="AddDerivationSchemes_NBXWalletGenerate" model="@(new GenerateWalletRequest())"/>
 }

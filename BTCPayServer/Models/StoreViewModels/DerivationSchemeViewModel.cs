@@ -41,7 +41,7 @@ namespace BTCPayServer.Models.StoreViewModels
         public string DerivationSchemeFormat { get; set; }
         public string AccountKey { get; set; }
         public BTCPayNetwork Network { get; set; }
-        public bool CanUseGenerateWallet { get; set; }
+        public bool CanUseHotWallet { get; set; }
 
         public RootedKeyPath GetAccountKeypath()
         {

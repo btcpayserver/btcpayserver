@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.AspNetCore.Authorization;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -27,7 +28,7 @@ namespace BTCPayServer.Controllers
     {
         [HttpGet]
         [Route("{storeId}/derivations/{cryptoCode}")]
-        public IActionResult AddDerivationScheme(string storeId, string cryptoCode)
+        public async Task<IActionResult> AddDerivationScheme(string storeId, string cryptoCode)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
@@ -42,7 +43,14 @@ namespace BTCPayServer.Controllers
             vm.CryptoCode = cryptoCode;
             vm.RootKeyPath = network.GetRootKeyPath();
             vm.Network = network;
-            SetExistingValues(store, vm);
+            var derivation = GetExistingDerivationStrategy(vm.CryptoCode, store);
+            if (derivation != null)
+            {
+                vm.DerivationScheme = derivation.AccountDerivation.ToString();
+                vm.Config = derivation.ToJson();
+            }
+            vm.Enabled = !store.GetStoreBlob().IsExcluded(new PaymentMethodId(vm.CryptoCode, PaymentTypes.BTCLike));
+            vm.CanUseHotWallet = await CanUseHotWallet();
             return View(vm);
         }
 
@@ -119,20 +127,6 @@ namespace BTCPayServer.Controllers
                 }
             }
             return new EmptyResult();
-        }
-
-
-
-        private void SetExistingValues(StoreData store, DerivationSchemeViewModel vm)
-        {
-            var derivation = GetExistingDerivationStrategy(vm.CryptoCode, store);
-            if (derivation != null)
-            {
-                vm.DerivationScheme = derivation.AccountDerivation.ToString();
-                vm.Config = derivation.ToJson();
-            }
-            vm.Enabled = !store.GetStoreBlob().IsExcluded(new PaymentMethodId(vm.CryptoCode, PaymentTypes.BTCLike));
-            vm.CanUseGenerateWallet = CanUseGenerateWallet();
         }
 
         private DerivationSchemeSettings GetExistingDerivationStrategy(string cryptoCode, StoreData store)
@@ -326,7 +320,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> GenerateNBXWallet(string storeId, string cryptoCode,
             GenerateWalletRequest request)
         {
-            if (!CanUseGenerateWallet())
+            if (!await CanUseHotWallet())
             {
                 return NotFound();
             }
@@ -363,6 +357,15 @@ namespace BTCPayServer.Controllers
             return result;
         }
 
+        private async Task<bool> CanUseHotWallet()
+        {
+            var isAdmin = (await _authorizationService.AuthorizeAsync(User, BTCPayServer.Security.Policies.CanModifyServerSettings.Key)).Succeeded;
+            if (isAdmin)
+                return true;
+            var policies = await _settingsRepository.GetSettingAsync<PoliciesSettings>();
+            return policies?.AllowHotWalletForAll is true;
+        }
+
         private async Task<string> ReadAllText(IFormFile file)
         {
             using (var stream = new StreamReader(file.OpenReadStream()))
@@ -390,11 +393,6 @@ namespace BTCPayServer.Controllers
             vm.Confirmation = true;
             ModelState.Remove(nameof(vm.Config)); // Remove the cached value
             return View(nameof(AddDerivationScheme),vm);
-        }
-        
-        private bool CanUseGenerateWallet()
-        {
-            return (_BTCPayEnv.IsDevelopping || User.IsInRole(Roles.ServerAdmin) || _CssThemeManager.AllowGenerateWalletForAll);
         }
     }
 }

@@ -88,10 +88,7 @@ namespace BTCPayServer.HostedServices
             RootAppId = data.RootAppId;
             DomainToAppMapping = data.DomainToAppMapping;
             AllowLightningInternalNodeForAll = data.AllowLightningInternalNodeForAll;
-            AllowGenerateWalletForAll = data.AllowGenerateWalletForAll;
         }
-
-        public bool AllowGenerateWalletForAll { get; set; }
 
         public bool AllowLightningInternalNodeForAll { get; set; }
     }

@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBXplorer.DerivationStrategy;
+using NBXplorer.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -131,6 +132,7 @@ namespace BTCPayServer.Controllers
                 vm.Config = derivation.ToJson();
             }
             vm.Enabled = !store.GetStoreBlob().IsExcluded(new PaymentMethodId(vm.CryptoCode, PaymentTypes.BTCLike));
+            vm.CanUseGenerateWallet = CanUseGenerateWallet();
         }
 
         private DerivationSchemeSettings GetExistingDerivationStrategy(string cryptoCode, StoreData store)
@@ -178,7 +180,7 @@ namespace BTCPayServer.Controllers
                         Message = "Config file was not in the correct format"
                     });
                     vm.Confirmation = false;
-                    return View(vm);
+                    return View(nameof(AddDerivationScheme),vm);
                 }
             }
 
@@ -192,7 +194,7 @@ namespace BTCPayServer.Controllers
                         Message = "Coldcard public file was not in the correct format"
                     });
                     vm.Confirmation = false;
-                    return View(vm);
+                    return View(nameof(AddDerivationScheme),vm);
                 }
             }
             else
@@ -228,7 +230,7 @@ namespace BTCPayServer.Controllers
                 {
                     ModelState.AddModelError(nameof(vm.DerivationScheme), "Invalid Derivation Scheme");
                     vm.Confirmation = false;
-                    return View(vm);
+                    return View(nameof(AddDerivationScheme),vm);
                 }
             }
 
@@ -319,6 +321,48 @@ namespace BTCPayServer.Controllers
             return ShowAddresses(vm, strategy);
         }
 
+        [HttpPost]
+        [Route("{storeId}/derivations/{cryptoCode}/generatenbxwallet")]
+        public async Task<IActionResult> GenerateNBXWallet(string storeId, string cryptoCode,
+            GenerateWalletRequest request)
+        {
+            if (!CanUseGenerateWallet())
+            {
+                return NotFound();
+            }
+            
+            var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
+            var client = _ExplorerProvider.GetExplorerClient(cryptoCode);
+            var response = await client.GenerateWalletAsync(request);
+
+            var store = HttpContext.GetStoreData();
+            var result = await AddDerivationScheme(storeId,
+                new DerivationSchemeViewModel()
+                {
+                    Confirmation = false,
+                    Network = network,
+                    RootFingerprint = response.AccountKeyPath.MasterFingerprint.ToString(),
+                    RootKeyPath = network.GetRootKeyPath(),
+                    CryptoCode = cryptoCode,
+                    DerivationScheme = response.DerivationScheme.ToString(),
+                    Source = "NBXplorer",
+                    AccountKey = response.AccountHDKey.Neuter().ToWif(),
+                    DerivationSchemeFormat = "BTCPay",
+                    KeyPath = response.AccountKeyPath.KeyPath.ToString(),
+                    Enabled = !store.GetStoreBlob()
+                        .IsExcluded(new PaymentMethodId(cryptoCode, PaymentTypes.BTCLike))
+                }, cryptoCode);
+            
+            TempData.SetStatusMessageModel(new StatusMessageModel()
+            {
+                Severity = StatusMessageModel.StatusSeverity.Success,
+                Html = !string.IsNullOrEmpty(request.ExistingMnemonic)
+                    ? "Your wallet has been imported."
+                    : $"Your wallet has been generated. Please store your seed securely! <br/><code>{response.Mnemonic}</code>"
+            });
+            return result;
+        }
+
         private async Task<string> ReadAllText(IFormFile file)
         {
             using (var stream = new StreamReader(file.OpenReadStream()))
@@ -345,7 +389,12 @@ namespace BTCPayServer.Controllers
             }
             vm.Confirmation = true;
             ModelState.Remove(nameof(vm.Config)); // Remove the cached value
-            return View(vm);
+            return View(nameof(AddDerivationScheme),vm);
+        }
+        
+        private bool CanUseGenerateWallet()
+        {
+            return (_BTCPayEnv.IsDevelopping || User.IsInRole(Roles.ServerAdmin) || _CssThemeManager.AllowGenerateWalletForAll);
         }
     }
 }

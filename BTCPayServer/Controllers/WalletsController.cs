@@ -314,13 +314,22 @@ namespace BTCPayServer.Controllers
             DerivationSchemeSettings paymentMethod = GetDerivationSchemeSettings(walletId);
             if (paymentMethod == null)
                 return NotFound();
-            var network = this.NetworkProvider.GetNetwork<BTCPayNetwork>(walletId?.CryptoCode);
+            var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId?.CryptoCode);
             if (network == null)
                 return NotFound();
 
             var address = _WalletReceiveStateService.Get(walletId)?.Address;
-            
-            return View(new WalletReceiveViewModel(){StatusMessage = statusMessage,CryptoCode = walletId.CryptoCode, Address = address?.ToString(), CryptoImage = GetImage(paymentMethod.PaymentId, network)});
+            if (!string.IsNullOrEmpty(statusMessage))
+            {
+                TempData[WellKnownTempData.SuccessMessage] = statusMessage;
+            }
+
+            return View(new WalletReceiveViewModel()
+            {
+                CryptoCode = walletId.CryptoCode,
+                Address = address?.ToString(),
+                CryptoImage = GetImage(paymentMethod.PaymentId, network)
+            });
         }
 
         [HttpPost]
@@ -1042,7 +1051,6 @@ namespace BTCPayServer.Controllers
 
     public class WalletReceiveViewModel
     {
-        public string StatusMessage { get; set; }
         public string CryptoImage { get; set; }
         public string CryptoCode { get; set; }
         public string Address { get; set; }

@@ -270,7 +270,7 @@ namespace BTCPayServer.Controllers
                 await _Repo.UpdateStore(store);
                 if (oldConfig != vm.Config)
                 {
-                    StatusMessage = $"Derivation settings for {network.CryptoCode} has been modified.";
+                    TempData[WellKnownTempData.SuccessMessage] = $"Derivation settings for {network.CryptoCode} has been modified.";
                     _EventAggregator.Publish(new WalletChangedEvent()
                     {
                         WalletId = new WalletId(storeId, cryptoCode)

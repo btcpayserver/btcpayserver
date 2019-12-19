@@ -229,10 +229,7 @@ namespace BTCPayServer.Controllers
                     return View(nameof(AddDerivationScheme),vm);
                 }
             }
-
-            var oldConfig = vm.Config;
-            vm.Config = strategy == null ? null : strategy.ToJson();
-
+            var newConfig = strategy?.ToJson();
             PaymentMethodId paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
             var exisingStrategy = store.GetSupportedPaymentMethods(_NetworkProvider)
                 .Where(c => c.PaymentId == paymentMethodId)
@@ -246,9 +243,9 @@ namespace BTCPayServer.Controllers
                               // - If the user is testing the hint address in confirmation screen
                 (vm.Confirmation && !string.IsNullOrWhiteSpace(vm.HintAddress)) ||
                 // - The user is clicking on continue after changing the config
-                (!vm.Confirmation && oldConfig != vm.Config) ||
+                (!vm.Confirmation && newConfig != vm.Config) ||
                 // - The user is clickingon continue without changing config nor enabling/disabling
-                (!vm.Confirmation && oldConfig == vm.Config && willBeExcluded == wasExcluded);
+                (!vm.Confirmation && newConfig == vm.Config && willBeExcluded == wasExcluded);
 
             showAddress = showAddress && strategy != null;
             if (!showAddress)
@@ -268,7 +265,7 @@ namespace BTCPayServer.Controllers
                 }
 
                 await _Repo.UpdateStore(store);
-                if (oldConfig != vm.Config)
+                if (newConfig != vm.Config)
                 {
                     TempData[WellKnownTempData.SuccessMessage] = $"Derivation settings for {network.CryptoCode} has been modified.";
                     _EventAggregator.Publish(new WalletChangedEvent()

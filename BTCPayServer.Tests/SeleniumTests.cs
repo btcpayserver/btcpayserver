@@ -452,6 +452,7 @@ namespace BTCPayServer.Tests
                 s.Server.ExplorerNode.SendToAddress(BitcoinAddress.Create(receiveAddr, Network.RegTest),
                     Money.Parse("0.1"));
                 await nextEvent;
+                await Task.Delay(200);
                 s.Driver.Navigate().Refresh();
                 s.Driver.FindElement(By.CssSelector("button[value=generate-new-address]")).Click();
                 Assert.NotEqual( receiveAddr, s.Driver.FindElement(By.Id("vue-address")).GetAttribute("value"));

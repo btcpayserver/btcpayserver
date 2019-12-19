@@ -62,6 +62,7 @@ namespace BTCPayServer.Controllers
             PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
             SettingsRepository settingsRepository,
             IAuthorizationService authorizationService,
+            EventAggregator eventAggregator,
             CssThemeManager cssThemeManager)
         {
             _RateFactory = rateFactory;

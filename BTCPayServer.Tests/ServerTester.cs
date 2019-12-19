@@ -87,9 +87,9 @@ namespace BTCPayServer.Tests
             get; set;
         }
 
-        public Task StartAsync()
+        public Task StartAsync(bool addLiquid = false)
         {
-            return PayTester.StartAsync();
+            return PayTester.StartAsync(addLiquid);
         }
 
         /// <summary>

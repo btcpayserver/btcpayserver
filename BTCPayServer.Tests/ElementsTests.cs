@@ -33,7 +33,7 @@ namespace BTCPayServer.Tests
         {
             using (var tester = ServerTester.Create())
             {
-                await tester.StartAsync();
+                await tester.StartAsync(true);
                 await tester.EnsureChannelsSetup();
                 var user = tester.NewAccount();
                 user.GrantAccess();
@@ -70,7 +70,7 @@ namespace BTCPayServer.Tests
         {
             using (var tester = ServerTester.Create())
             {
-                await tester.StartAsync();
+                await tester.StartAsync(true);
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("LBTC");

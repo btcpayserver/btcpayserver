@@ -94,7 +94,7 @@ namespace BTCPayServer.Tests
 
         public bool MockRates { get; set; } = true;
 
-        public async Task StartAsync()
+        public async Task StartAsync(bool addLiquid = false)
         {
             if (!Directory.Exists(_Directory))
                 Directory.CreateDirectory(_Directory);
@@ -110,16 +110,18 @@ namespace BTCPayServer.Tests
                 config.AppendLine($"bind=0.0.0.0");
             }
             config.AppendLine($"port={Port}");
-            config.AppendLine($"chains=btc,ltc,lbtc,usdt");
-
+            config.AppendLine($"chains=btc,ltc,{(addLiquid ? "lbtc" : "")}");
             config.AppendLine($"btc.explorer.url={NBXplorerUri.AbsoluteUri}");
             config.AppendLine($"btc.explorer.cookiefile=0");
             config.AppendLine("allow-admin-registration=1");
-            config.AppendLine($"ltc.explorer.url={LTCNBXplorerUri.AbsoluteUri}");
-            config.AppendLine($"ltc.explorer.cookiefile=0");           
-            config.AppendLine($"lbtc.explorer.url={LBTCNBXplorerUri.AbsoluteUri}");
-            config.AppendLine($"lbtc.explorer.cookiefile=0");
             config.AppendLine($"btc.lightning={IntegratedLightning.AbsoluteUri}");
+            config.AppendLine($"ltc.explorer.url={LTCNBXplorerUri.AbsoluteUri}");
+            config.AppendLine($"ltc.explorer.cookiefile=0");
+            if (addLiquid)
+            {
+                config.AppendLine($"lbtc.explorer.url={LBTCNBXplorerUri.AbsoluteUri}");
+                config.AppendLine($"lbtc.explorer.cookiefile=0");
+            }
             config.AppendLine($"torrcfile={TestUtils.GetTestDataFullPath("Tor/torrc")}");
             config.AppendLine($"debuglog=debug.log");
 

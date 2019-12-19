@@ -368,7 +368,7 @@ namespace BTCPayServer.Controllers
                     break;
                 case "generate-new-address":
                     var reserve = (await wallet.ReserveAddressAsync(paymentMethod.AccountDerivation));
-                    _WalletReceiveStateService.Set(walletId, reserve.Item2);
+                    _WalletReceiveStateService.Set(walletId, reserve);
                     break;
             }
             return RedirectToAction(nameof(WalletReceive), new {walletId, statusMessage});

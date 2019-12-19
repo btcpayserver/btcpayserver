@@ -415,7 +415,7 @@ namespace BTCPayServer.Tests
                 s.Driver.Quit();
             }
         }
-
+        
         [Fact(Timeout = TestTimeout)]
         public async Task CanManageWallet()
         {
@@ -427,16 +427,54 @@ namespace BTCPayServer.Tests
 
                 // In this test, we try to spend from a manual seed. We import the xpub 49'/0'/0', then try to use the seed 
                 // to sign the transaction
-                var mnemonic = s.GenerateWallet("BTC", "", true, false);
+                s.GenerateWallet("BTC", "", true, false);
                
+                //let's test quickly the receive wallet page
+                s.Driver.FindElement(By.Id("Wallets")).Click();
+                s.Driver.FindElement(By.LinkText("Manage")).Click();
+                s.Driver.FindElement(By.Id("WalletReceive")).Click();
+                //generate a receiving address
+                s.Driver.FindElement(By.CssSelector("button[value=generate-new-address]")).Click();
+                Assert.True(s.Driver.FindElement(By.ClassName("qr-container")).Displayed);
+                var receiveAddr = s.Driver.FindElement(By.Id("vue-address")).GetAttribute("value");
+                //unreserve
+                s.Driver.FindElement(By.CssSelector("button[value=unreserve-current-address]")).Click();
+                //generate it again, should be the same one as before as nothign got used in the meantime
+                s.Driver.FindElement(By.CssSelector("button[value=generate-new-address]")).Click();
+                Assert.True(s.Driver.FindElement(By.ClassName("qr-container")).Displayed);
+                Assert.Equal( receiveAddr, s.Driver.FindElement(By.Id("vue-address")).GetAttribute("value"));
+                
+                //send money to addr and ensure it changed
+                
+                var sess = await s.Server.ExplorerClient.CreateWebsocketNotificationSessionAsync();
+                sess.ListenAllTrackedSource();
+                var nextEvent = sess.NextEventAsync();
+                s.Server.ExplorerNode.SendToAddress(BitcoinAddress.Create(receiveAddr, Network.RegTest),
+                    Money.Parse("0.1"));
+                await nextEvent;
+                s.Driver.Navigate().Refresh();
+                s.Driver.FindElement(By.CssSelector("button[value=generate-new-address]")).Click();
+                Assert.NotEqual( receiveAddr, s.Driver.FindElement(By.Id("vue-address")).GetAttribute("value"));
+                receiveAddr = s.Driver.FindElement(By.Id("vue-address")).GetAttribute("value");
+                //change the wallet and ensure old address is not there and generating a new one does not result in the prev one
+                s.GoToStore(storeId.storeId);
+                s.GenerateWallet("BTC", "", true, false);
+                s.Driver.FindElement(By.Id("Wallets")).Click();
+                s.Driver.FindElement(By.LinkText("Manage")).Click();
+                s.Driver.FindElement(By.Id("WalletReceive")).Click();
+                s.Driver.FindElement(By.CssSelector("button[value=generate-new-address]")).Click();
+                Assert.NotEqual( receiveAddr, s.Driver.FindElement(By.Id("vue-address")).GetAttribute("value"));
+                
+                
                 var invoiceId = s.CreateInvoice(storeId.storeId);
                 var invoice = await s.Server.PayTester.InvoiceRepository.GetInvoice(invoiceId);
                 var address = invoice.EntityToDTO().Addresses["BTC"];
+                
 
                 var result = await s.Server.ExplorerNode.GetAddressInfoAsync(BitcoinAddress.Create(address, Network.RegTest));
                 Assert.True(result.IsWatchOnly);
                 s.GoToStore(storeId.storeId);
-                mnemonic = s.GenerateWallet("BTC", "", true, true);
+                var mnemonic = s.GenerateWallet("BTC", "", true, true);
                 
                 var root = new Mnemonic(mnemonic).DeriveExtKey();
                  invoiceId = s.CreateInvoice(storeId.storeId);

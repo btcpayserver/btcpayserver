@@ -36,7 +36,7 @@ namespace BTCPayServer.Payments.Bitcoin
         {
             public Task<FeeRate> GetFeeRate;
             public Task<FeeRate> GetNetworkFeeRate;
-            public Task<(BitcoinAddress, KeyPathInformation)> ReserveAddress;
+            public Task<KeyPathInformation> ReserveAddress;
         }
 
         public override void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse,
@@ -142,7 +142,7 @@ namespace BTCPayServer.Payments.Bitcoin
                     onchainMethod.NextNetworkFee = Money.Zero;                    
                     break;
             }
-            onchainMethod.DepositAddress = (await prepare.ReserveAddress).ToString();
+            onchainMethod.DepositAddress = (await prepare.ReserveAddress).Address.ToString();
             return onchainMethod;
         }
     }

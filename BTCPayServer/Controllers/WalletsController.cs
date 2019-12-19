@@ -318,8 +318,7 @@ namespace BTCPayServer.Controllers
             if (network == null)
                 return NotFound();
 
-            var address = _WalletReceiveStateService.Get(walletId)?.ScriptPubKey
-                .GetDestinationAddress(network.NBitcoinNetwork);
+            var address = _WalletReceiveStateService.Get(walletId)?.Address;
             
             return View(new WalletReceiveViewModel(){StatusMessage = statusMessage,CryptoCode = walletId.CryptoCode, Address = address?.ToString(), CryptoImage = GetImage(paymentMethod.PaymentId, network)});
         }

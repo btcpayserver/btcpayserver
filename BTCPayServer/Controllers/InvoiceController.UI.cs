@@ -273,7 +273,7 @@ namespace BTCPayServer.Controllers
                                           .ToList()
             };
 
-            paymentMethodHandler.PreparePaymentModel(model, dto, storeBlob, accounting);
+            paymentMethodHandler.PreparePaymentModel(model, dto, store, storeBlob, accounting);
             if (model.IsLightning && storeBlob.LightningAmountInSatoshi && model.CryptoCode == "Sats")
             {
                 model.Rate = _CurrencyNameTable.DisplayFormatCurrency(paymentMethod.Rate / 100_000_000, paymentMethod.ParentEntity.ProductInformation.Currency);

@@ -18,8 +18,6 @@ using BTCPayServer.Tests.Logging;
 using BTCPayServer.Lightning;
 using BTCPayServer.Lightning.CLightning;
 using BTCPayServer.Data;
-using OpenIddict.Abstractions;
-using OpenIddict.Core;
 using Microsoft.AspNetCore.Identity;
 
 namespace BTCPayServer.Tests
@@ -177,15 +175,6 @@ namespace BTCPayServer.Tests
             }, "save", "BTC");
             if (storeController.ModelState.ErrorCount != 0)
                 Assert.False(true, storeController.ModelState.FirstOrDefault().Value.Errors[0].ErrorMessage);
-        }
-
-        public async Task<BTCPayOpenIdClient> RegisterOpenIdClient(OpenIddictApplicationDescriptor descriptor, string secret = null)
-        {
-          var openIddictApplicationManager = parent.PayTester.GetService<OpenIddictApplicationManager<BTCPayOpenIdClient>>();
-          var client = new BTCPayOpenIdClient { Id = Guid.NewGuid().ToString(), ApplicationUserId = UserId};
-          await openIddictApplicationManager.PopulateAsync(client, descriptor);
-          await openIddictApplicationManager.CreateAsync(client, secret);
-          return client;
         }
     }
 }

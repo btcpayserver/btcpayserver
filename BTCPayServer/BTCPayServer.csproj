@@ -220,4 +220,8 @@
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
 	</ItemGroup>
+
+	<ItemGroup>
+	  <_ContentIncludedByDefault Remove="Views\Authorization\Authorize.cshtml" />
+	</ItemGroup>
 </Project>

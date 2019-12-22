@@ -19,14 +19,10 @@ using System.IO;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using BTCPayServer.Security;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
-using OpenIddict.EntityFrameworkCore.Models;
 using System.Net;
-using BTCPayServer.Security.OpenId;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Storage;
-using Microsoft.Extensions.Options;
-using OpenIddict.Core;
 
 namespace BTCPayServer.Hosting
 {
@@ -56,8 +52,6 @@ namespace BTCPayServer.Hosting
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
-
-            ConfigureOpenIddict(services);
 
             services.AddBTCPayServer(Configuration);
             services.AddProviderStorage();
@@ -95,12 +89,6 @@ namespace BTCPayServer.Hosting
                 options.Lockout.MaxFailedAccessAttempts = 5;
                 options.Lockout.AllowedForNewUsers = true;
                 options.Password.RequireUppercase = false;
-                // Configure Identity to use the same JWT claims as OpenIddict instead
-                // of the legacy WS-Federation claims it uses by default (ClaimTypes),
-                // which saves you from doing the mapping in your authorization controller.
-                options.ClaimsIdentity.UserNameClaimType = OpenIddictConstants.Claims.Name;
-                options.ClaimsIdentity.UserIdClaimType = OpenIddictConstants.Claims.Subject;
-                options.ClaimsIdentity.RoleClaimType = OpenIddictConstants.Claims.Role;
             });
             // If the HTTPS certificate path is not set this logic will NOT be used and the default Kestrel binding logic will be.
             string httpsCertificateFilePath = Configuration.GetOrDefault<string>("HttpsCertificateFilePath", null);

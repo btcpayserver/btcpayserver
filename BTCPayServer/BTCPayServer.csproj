@@ -66,9 +66,6 @@
     <PackageReference Include="TwentyTwenty.Storage.Local" Version="2.12.1" />
     <PackageReference Include="U2F.Core" Version="1.0.4" />
 		<PackageReference Include="YamlDotNet" Version="8.0.0" />
-    <PackageReference Include="OpenIddict" Version="3.0.0-alpha1.20058.15" />
-    <PackageReference Include="OpenIddict.Server.AspNetCore" Version="3.0.0-alpha1.20058.15"></PackageReference>
-    <PackageReference Include="OpenIddict.Validation.AspNetCore" Version="3.0.0-alpha1.20058.15"></PackageReference>
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="3.1.1" Condition="'$(Configuration)' == 'Debug'" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.1" />
   </ItemGroup>
@@ -219,5 +216,9 @@
 	  <Content Update="Views\Wallets\_ViewStart.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <_ContentIncludedByDefault Remove="Views\Authorization\Authorize.cshtml" />
 	</ItemGroup>
 </Project>

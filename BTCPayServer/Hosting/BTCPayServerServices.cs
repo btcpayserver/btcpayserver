@@ -41,18 +41,6 @@ using Npgsql;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.U2F;
 using BundlerMinifier.TagHelpers;
-using OpenIddict.EntityFrameworkCore.Models;
-
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using BTCPayServer.Models;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using BTCPayServer.Security.Bitpay;
 using Serilog;
@@ -72,7 +60,6 @@ namespace BTCPayServer.Hosting
             {
                 var factory = provider.GetRequiredService<ApplicationDbContextFactory>();
                 factory.ConfigureBuilder(o);
-                o.UseOpenIddict<BTCPayOpenIdClient, BTCPayOpenIdAuthorization, OpenIddictScope<string>, BTCPayOpenIdToken, string>();
             });
             services.AddHttpClient();
             services.AddHttpClient(nameof(ExplorerClientProvider), httpClient =>
@@ -225,7 +212,6 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IHostedService, PaymentRequestStreamer>();
             services.AddSingleton<IBackgroundJobClient, BackgroundJobClient>();
             services.AddScoped<IAuthorizationHandler, CookieAuthorizationHandler>();
-            services.AddScoped<IAuthorizationHandler, OpenIdAuthorizationHandler>();
             services.AddScoped<IAuthorizationHandler, BitpayAuthorizationHandler>();
 
             services.TryAddSingleton<ExplorerClientProvider>();

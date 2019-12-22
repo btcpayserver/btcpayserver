@@ -65,15 +65,10 @@
     <PackageReference Include="TwentyTwenty.Storage.Local" Version="2.11.2" />
     <PackageReference Include="U2F.Core" Version="1.0.4" />
 		<PackageReference Include="YamlDotNet" Version="5.2.1" />
-    <PackageReference Include="OpenIddict" Version="3.0.0-alpha1.19515.63" />
-    <PackageReference Include="OpenIddict.Server.AspNetCore" Version="3.0.0-alpha1.19515.63"></PackageReference>
-    <PackageReference Include="OpenIddict.Validation.AspNetCore" Version="3.0.0-alpha1.19515.63"></PackageReference>
 	</ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' != 'netcoreapp2.1'">
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.0.0"></PackageReference>
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="3.0.0" />
   </ItemGroup>
 
 	<ItemGroup>
@@ -222,5 +217,9 @@
 	  <Content Update="Views\Wallets\_ViewStart.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <_ContentIncludedByDefault Remove="Views\Authorization\Authorize.cshtml" />
 	</ItemGroup>
 </Project>

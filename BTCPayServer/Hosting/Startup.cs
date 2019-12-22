@@ -4,8 +4,6 @@ using IWebHostEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
 #else
 using Microsoft.Extensions.Hosting;
 #endif
-using OpenIddict.Validation.AspNetCore;
-using OpenIddict.Abstractions;
 using Microsoft.AspNetCore.Builder;
 using System;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,14 +20,10 @@ using System.IO;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using BTCPayServer.Security;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
-using OpenIddict.EntityFrameworkCore.Models;
 using System.Net;
-using BTCPayServer.Security.OpenId;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Storage;
-using Microsoft.Extensions.Options;
-using OpenIddict.Core;
 
 namespace BTCPayServer.Hosting
 {
@@ -56,8 +50,6 @@ namespace BTCPayServer.Hosting
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
-
-            ConfigureOpenIddict(services);
 
             services.AddBTCPayServer(Configuration);
             services.AddProviderStorage();
@@ -94,12 +86,6 @@ namespace BTCPayServer.Hosting
                 options.Lockout.MaxFailedAccessAttempts = 5;
                 options.Lockout.AllowedForNewUsers = true;
                 options.Password.RequireUppercase = false;
-                // Configure Identity to use the same JWT claims as OpenIddict instead
-                // of the legacy WS-Federation claims it uses by default (ClaimTypes),
-                // which saves you from doing the mapping in your authorization controller.
-                options.ClaimsIdentity.UserNameClaimType = OpenIddictConstants.Claims.Name;
-                options.ClaimsIdentity.UserIdClaimType = OpenIddictConstants.Claims.Subject;
-                options.ClaimsIdentity.RoleClaimType = OpenIddictConstants.Claims.Role;
             });
             // If the HTTPS certificate path is not set this logic will NOT be used and the default Kestrel binding logic will be.
             string httpsCertificateFilePath = Configuration.GetOrDefault<string>("HttpsCertificateFilePath", null);
@@ -142,63 +128,6 @@ namespace BTCPayServer.Hosting
                 });
             }
         }
-
-        private void ConfigureOpenIddict(IServiceCollection services)
-        {
-            // Register the OpenIddict services.
-            services.AddOpenIddict()
-                .AddCore(options =>
-                {
-                    // Configure OpenIddict to use the Entity Framework Core stores and entities.
-                    options.UseEntityFrameworkCore()
-                        .UseDbContext<ApplicationDbContext>()
-                        .ReplaceDefaultEntities<BTCPayOpenIdClient, BTCPayOpenIdAuthorization, OpenIddictScope<string>,
-                            BTCPayOpenIdToken, string>();
-                })
-                .AddServer(options =>
-                {
-                    options.UseAspNetCore()
-                        .EnableStatusCodePagesIntegration()
-                        .EnableAuthorizationEndpointPassthrough()
-                        .EnableLogoutEndpointPassthrough()
-                        .EnableTokenEndpointPassthrough()
-                        .EnableRequestCaching()
-                        .DisableTransportSecurityRequirement();
-
-                    // Enable the token endpoint (required to use the password flow).
-                    options.SetTokenEndpointUris("/connect/token");
-                    options.SetAuthorizationEndpointUris("/connect/authorize");
-                    options.SetLogoutEndpointUris("/connect/logout");
-
-                    //we do not care about these granular controls for now
-                    options.IgnoreScopePermissions();
-                    options.IgnoreEndpointPermissions();
-                    // Allow client applications various flows
-                    options.AllowImplicitFlow();
-                    options.AllowClientCredentialsFlow();
-                    options.AllowRefreshTokenFlow();
-                    options.AllowPasswordFlow();
-                    options.AllowAuthorizationCodeFlow();
-                    options.UseRollingTokens();
-
-                    options.RegisterScopes(
-                        OpenIddictConstants.Scopes.OpenId,
-                        BTCPayScopes.StoreManagement,
-                        BTCPayScopes.ServerManagement
-                    );
-                    options.AddEventHandler(PasswordGrantTypeEventHandler.Descriptor);
-                    options.AddEventHandler(OpenIdGrantHandlerCheckCanSignIn.Descriptor);
-                    options.AddEventHandler(ClientCredentialsGrantTypeEventHandler.Descriptor);
-                    options.AddEventHandler(LogoutEventHandler.Descriptor);
-                    options.ConfigureSigningKey(Configuration);
-                })
-                .AddValidation(options =>
-                {
-                    options.UseLocalServer();
-                    options.UseAspNetCore();
-                });
-        }
-
         public void Configure(
             IApplicationBuilder app,
             IWebHostEnvironment env,

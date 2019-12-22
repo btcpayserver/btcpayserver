@@ -3,7 +3,6 @@ using System.Linq;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using OpenIddict.EntityFrameworkCore.Models;
 
 namespace BTCPayServer.Data
 {
@@ -241,8 +240,6 @@ namespace BTCPayServer.Data
             builder.Entity<WalletTransactionData>()
                 .HasOne(o => o.WalletData)
                 .WithMany(w => w.WalletTransactions).OnDelete(DeleteBehavior.Cascade);
-
-            builder.UseOpenIddict<BTCPayOpenIdClient, BTCPayOpenIdAuthorization, OpenIddictScope<string>, BTCPayOpenIdToken, string>();
 
         }
     }

@@ -13,6 +13,7 @@ namespace BTCPayServer.Models.WalletViewModels
         public string SeedOrKey { get; set; }
 
         [Display(Name = "Optional seed passphrase")]
+        [DataType(DataType.Password)]
         public string Passphrase { get; set; }
 
         public ExtKey GetExtKey(Network network)

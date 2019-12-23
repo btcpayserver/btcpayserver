@@ -584,26 +584,39 @@ namespace BTCPayServer.Controllers
                 signingKeySettings.RootFingerprint = extKey.GetPublicKey().GetHDFingerPrint();
 
             RootedKeyPath rootedKeyPath = signingKeySettings.GetRootedKeyPath();
+            if (rootedKeyPath == null)
+            {
+                ModelState.AddModelError(nameof(viewModel.SeedOrKey), "The master fingerprint and/or account key path of your seed are not set in the wallet settings.");
+                return View(viewModel);
+            }
             // The user gave the root key, let's try to rebase the PSBT, and derive the account private key
-            if (rootedKeyPath?.MasterFingerprint == extKey.GetPublicKey().GetHDFingerPrint())
+            if (rootedKeyPath.MasterFingerprint == extKey.GetPublicKey().GetHDFingerPrint())
             {
                 psbt.RebaseKeyPaths(signingKeySettings.AccountKey, rootedKeyPath);
                 signingKey = extKey.Derive(rootedKeyPath.KeyPath);
             }
-            // The user maybe gave the account key, let's try to sign with it
             else
             {
-                signingKey = extKey;
-            }
-            var balanceChange = psbt.GetBalance(settings.AccountDerivation, signingKey, rootedKeyPath);
-            if (balanceChange == Money.Zero)
-            {
-                ModelState.AddModelError(nameof(viewModel.SeedOrKey), "This seed is unable to sign this transaction. Either the seed is incorrect, or the account path has not been properly configured in the Wallet Settings.");
+                ModelState.AddModelError(nameof(viewModel.SeedOrKey), "The master fingerprint does not match the one set in your wallet settings. Probable cause are: wrong seed, wrong passphrase or wrong fingerprint in your wallet settings.");
                 return View(viewModel);
             }
-            psbt.SignAll(settings.AccountDerivation, signingKey, rootedKeyPath);
+
+            var changed = PSBTChanged(psbt, () => psbt.SignAll(settings.AccountDerivation, signingKey, rootedKeyPath));
+            if (!changed)
+            {
+                ModelState.AddModelError(nameof(viewModel.SeedOrKey), "Impossible to sign the transaction. Probable cause: Incorrect account key path in wallet settings, PSBT already signed.");
+                return View(viewModel);
+            }
             ModelState.Remove(nameof(viewModel.PSBT));
             return await WalletPSBTReady(walletId, psbt.ToBase64(), signingKey.GetWif(network.NBitcoinNetwork).ToString(), rootedKeyPath?.ToString());
+        }
+
+        private bool PSBTChanged(PSBT psbt, Action act)
+        {
+            var before = psbt.ToBase64();
+            act();
+            var after = psbt.ToBase64();
+            return before != after;
         }
 
         private string ValueToString(Money v, BTCPayNetworkBase network)

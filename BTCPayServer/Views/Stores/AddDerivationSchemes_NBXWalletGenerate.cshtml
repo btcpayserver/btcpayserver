@@ -2,7 +2,7 @@
 @model NBXplorer.Models.GenerateWalletRequest
 <div class="modal fade" id="nbxplorergeneratewallet" tabindex="-1" role="dialog" aria-labelledby="nbxplorergeneratewallet" aria-hidden="true">
     <div class="modal-dialog" role="document">
-        <form class="modal-content" form method="post" asp-action="GenerateNBXWallet" enctype="multipart/form-data">
+        <form id="generate-wallet-form" class="modal-content" form method="post" onsubmit="return validatePassphraseConf();" asp-action="GenerateNBXWallet" enctype="multipart/form-data">
             <div class="modal-header">
                 <h5 class="modal-title" id="exampleModalLabel">Generate a wallet with a seed</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -14,9 +14,19 @@
 
                 <div class="form-group">
                     <label asp-for="ExistingMnemonic">Existing Seed</label>
-                    <input type="text" asp-for="ExistingMnemonic" class="form-control"/>
+                    <input type="text" asp-for="ExistingMnemonic" class="form-control" />
                     <span asp-validation-for="ExistingMnemonic" class="text-danger"></span>
                     <p class="text-black-50">You can choose to import an existing mnemonic seed phrase. If you leave blank, we will generate one for you.</p>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Passphrase">Passphrase (optional)</label>
+                    <input type="password" asp-for="Passphrase" class="form-control" />
+                    <span asp-validation-for="Passphrase" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label for="passphrase_conf">Passphrase confirmation</label>
+                    <input type="password" name="passphrase_conf" class="form-control" />
+                    <span class="text-danger field-validation-valid" id="passphrase_conf_validation"></span>
                 </div>
                 <div class="form-group">
                     <label asp-for="ScriptPubKeyType">Address type</label>
@@ -39,14 +49,14 @@
                 </div>
 
                 <div class="form-group">
-                    <input type="checkbox" class="form-check-inline" asp-for="SavePrivateKeys"/>
+                    <input type="checkbox" class="form-check-inline" asp-for="SavePrivateKeys" />
                     <label asp-for="SavePrivateKeys">Is hot wallet</label>
                     <span asp-validation-for="SavePrivateKeys" class="text-danger"></span>
                     <p class="text-danger">If checked, each private key associated with an address generated will be stored as metadata in NBXplorer. While convenient, this means that anyone with access to your server will have access to your private keys and will be able to steal your funds.</p>
-                                   
+
                 </div>
                 <div class="form-group">
-                    <input type="checkbox" class="form-check-inline" asp-for="ImportKeysToRPC"/>
+                    <input type="checkbox" class="form-check-inline" asp-for="ImportKeysToRPC" />
                     <label asp-for="ImportKeysToRPC">Import keys to RPC</label>
                     <span asp-validation-for="ImportKeysToRPC" class="text-danger"></span>
                     <p class="text-black-50">If checked, each address generated will be imported into the node wallet so that you can view your balance through your node. When this is enabled alongside <code>Is hot wallet</code>, you're also able to use the node wallet to spend (this works pretty well in conjunction with apps such as FullyNoded).</p>
@@ -59,3 +69,14 @@
         </form>
     </div>
 </div>
+<script type="text/javascript">
+    function validatePassphraseConf() {
+        if (document.forms["generate-wallet-form"].elements["passphrase_conf"].value !==
+            document.forms["generate-wallet-form"].elements["Passphrase"].value) {
+            $("#passphrase_conf_validation").removeClass("field-validation-valid");
+            $("#passphrase_conf_validation").text("Invalid passphrase confirmation");
+            return false;
+        }
+        return true;
+    }
+</script>

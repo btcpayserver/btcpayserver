@@ -20,5 +20,9 @@ namespace BTCPayServer.Migrations
         {
             return facade.ProviderName != "Microsoft.EntityFrameworkCore.Sqlite";
         }
+        public static bool IsMySql(this Microsoft.EntityFrameworkCore.Migrations.Migration migration, string activeProvider)
+        {
+            return activeProvider == "Pomelo.EntityFrameworkCore.MySql";
+        }
     }
 }

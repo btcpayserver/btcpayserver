@@ -34,6 +34,27 @@ namespace BTCPayServer.Tests
                 s.ClickOnAllSideMenus();
                 s.Driver.FindElement(By.LinkText("Services")).Click();
 
+                Logs.Tester.LogInformation("Let's check if we can access the logs");
+                s.Driver.FindElement(By.LinkText("Logs")).Click();
+                s.Driver.FindElement(By.PartialLinkText(".log")).Click();
+                Assert.Contains("Starting listening NBXplorer", s.Driver.PageSource);
+                s.Driver.Quit();
+            }
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Lightning", "Lightning")]
+        public async Task CanUseLndSeedBackup()
+        {
+            using (var s = SeleniumTester.Create())
+            {
+                s.Server.ActivateLightning();
+                await s.StartAsync();
+                s.RegisterNewUser(true);
+                s.Driver.FindElement(By.Id("ServerSettings")).Click();
+                s.Driver.AssertNoError();
+                s.Driver.FindElement(By.LinkText("Services")).Click();
+
                 Logs.Tester.LogInformation("Let's if we can access LND's seed");
                 Assert.Contains("server/services/lndseedbackup/BTC", s.Driver.PageSource);
                 s.Driver.Navigate().GoToUrl(s.Link("/server/services/lndseedbackup/BTC"));
@@ -49,12 +70,6 @@ namespace BTCPayServer.Tests
                 s.AssertHappyMessage();
                 seedEl = s.Driver.FindElement(By.Id("SeedTextArea"));
                 Assert.Contains("Seed removed", seedEl.Text, StringComparison.OrdinalIgnoreCase);
-
-                Logs.Tester.LogInformation("Let's check if we can access the logs");
-                s.Driver.FindElement(By.LinkText("Logs")).Click();
-                s.Driver.FindElement(By.PartialLinkText(".log")).Click();
-                Assert.Contains("Starting listening NBXplorer", s.Driver.PageSource);
-                s.Driver.Quit();
             }
         }
 

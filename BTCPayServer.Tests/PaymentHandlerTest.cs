@@ -13,6 +13,7 @@ using BTCPayServer.Rating;
 
 namespace BTCPayServer.Tests
 {
+    [Trait("Fast", "Fast")]
     public class PaymentHandlerTest
     {
         private BitcoinLikePaymentHandler handlerBTC;

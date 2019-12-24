@@ -106,10 +106,14 @@ namespace BTCPayServer.Tests
         }
         
         [Fact(Timeout = TestTimeout)]
+        [Trait("Altcoins", "Altcoins")]
+        [Trait("Lightning", "Lightning")]
         public async Task CanUsePaymentMethodDropdown()
         {
             using (var s = SeleniumTester.Create())
             {
+                s.Server.ActivateLTC();
+                s.Server.ActivateLightning();
                 await s.StartAsync();
                 s.GoToRegister();
                 s.RegisterNewUser();
@@ -150,10 +154,12 @@ namespace BTCPayServer.Tests
         }
         
         [Fact(Timeout = TestTimeout)]
+        [Trait("Lightning", "Lightning")]
         public async Task CanUseLightningSatsFeature()
         {
             using (var s = SeleniumTester.Create())
             {
+                s.Server.ActivateLightning();
                 await s.StartAsync();
                 s.GoToRegister();
                 s.RegisterNewUser();

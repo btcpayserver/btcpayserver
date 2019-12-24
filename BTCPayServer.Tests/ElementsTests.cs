@@ -29,11 +29,12 @@ namespace BTCPayServer.Tests
         }
         
         [Fact]
+        [Trait("Altcoins", "Altcoins")]
         public async Task OnlyShowSupportedWallets()
         {
             using (var tester = ServerTester.Create())
             {
-                tester.PayTester.Chains.Add("LBTC");
+                tester.ActivateLBTC();
                 await tester.StartAsync();
                 await tester.EnsureChannelsSetup();
                 var user = tester.NewAccount();
@@ -67,11 +68,12 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Altcoins", "Altcoins")]
         public async Task ElementsAssetsAreHandledCorrectly()
         {
             using (var tester = ServerTester.Create())
             {
-                tester.PayTester.Chains.Add("LBTC");
+                tester.ActivateLBTC();
                 await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();

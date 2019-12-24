@@ -94,7 +94,9 @@ namespace BTCPayServer.Tests
 
         public bool MockRates { get; set; } = true;
 
-        public List<string> Chains { get; set; } = new List<string>(){"BTC", "LTC"};
+        public HashSet<string> Chains { get; set; } = new HashSet<string>(){"BTC"};
+        public bool UseLightning { get; set; }
+
         public async Task StartAsync()
         {
             if (!Directory.Exists(_Directory))
@@ -116,6 +118,10 @@ namespace BTCPayServer.Tests
             {
                 config.AppendLine($"btc.explorer.url={NBXplorerUri.AbsoluteUri}");
                 config.AppendLine($"btc.explorer.cookiefile=0");
+            }
+
+            if (UseLightning)
+            {
                 config.AppendLine($"btc.lightning={IntegratedLightning.AbsoluteUri}");
                 var localLndBackupFile = Path.Combine(_Directory, "walletunlock.json");
                 File.Copy(TestUtils.GetTestDataFullPath("LndSeedBackup/walletunlock.json"), localLndBackupFile, true);

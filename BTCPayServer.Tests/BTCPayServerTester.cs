@@ -63,6 +63,7 @@ namespace BTCPayServer.Tests
         }
 
         public Uri LTCNBXplorerUri { get; set; }
+        public Uri LBTCNBXplorerUri { get; set; }
 
         public Uri ServerUri
         {
@@ -93,6 +94,7 @@ namespace BTCPayServer.Tests
 
         public bool MockRates { get; set; } = true;
 
+        public List<string> Chains { get; set; } = new List<string>(){"BTC", "LTC"};
         public async Task StartAsync()
         {
             if (!Directory.Exists(_Directory))
@@ -109,20 +111,33 @@ namespace BTCPayServer.Tests
                 config.AppendLine($"bind=0.0.0.0");
             }
             config.AppendLine($"port={Port}");
-            config.AppendLine($"chains=btc,ltc");
+            config.AppendLine($"chains={string.Join(',', Chains)}");
+            if (Chains.Contains("BTC", StringComparer.OrdinalIgnoreCase))
+            {
+                config.AppendLine($"btc.explorer.url={NBXplorerUri.AbsoluteUri}");
+                config.AppendLine($"btc.explorer.cookiefile=0");
+                config.AppendLine($"btc.lightning={IntegratedLightning.AbsoluteUri}");
+                var localLndBackupFile = Path.Combine(_Directory, "walletunlock.json");
+                File.Copy(TestUtils.GetTestDataFullPath("LndSeedBackup/walletunlock.json"), localLndBackupFile, true);
+                config.AppendLine($"btc.external.lndseedbackup={localLndBackupFile}");
+            }
 
-            config.AppendLine($"btc.explorer.url={NBXplorerUri.AbsoluteUri}");
-            config.AppendLine($"btc.explorer.cookiefile=0");
+            if (Chains.Contains("LTC", StringComparer.OrdinalIgnoreCase))
+            {
+                config.AppendLine($"ltc.explorer.url={LTCNBXplorerUri.AbsoluteUri}");
+                config.AppendLine($"ltc.explorer.cookiefile=0");
+            }
+            if (Chains.Contains("LBTC", StringComparer.OrdinalIgnoreCase))
+            {
+                config.AppendLine($"lbtc.explorer.url={LBTCNBXplorerUri.AbsoluteUri}");
+                config.AppendLine($"lbtc.explorer.cookiefile=0");
+            }
             config.AppendLine("allow-admin-registration=1");
-            config.AppendLine($"ltc.explorer.url={LTCNBXplorerUri.AbsoluteUri}");
-            config.AppendLine($"ltc.explorer.cookiefile=0");
-            config.AppendLine($"btc.lightning={IntegratedLightning.AbsoluteUri}");
+           
             config.AppendLine($"torrcfile={TestUtils.GetTestDataFullPath("Tor/torrc")}");
             config.AppendLine($"debuglog=debug.log");
 
-            var localLndBackupFile = Path.Combine(_Directory, "walletunlock.json");
-            File.Copy(TestUtils.GetTestDataFullPath("LndSeedBackup/walletunlock.json"), localLndBackupFile, true);
-            config.AppendLine($"btc.external.lndseedbackup={localLndBackupFile}");
+
             if (!string.IsNullOrEmpty(SSHPassword) && string.IsNullOrEmpty(SSHKeyFile))
                 config.AppendLine($"sshpassword={SSHPassword}");
             if (!string.IsNullOrEmpty(SSHKeyFile))
@@ -231,6 +246,16 @@ namespace BTCPayServer.Tests
                     BidAsk = new BidAsk(0.004m)
                 });
                 rateProvider.Providers.Add("bittrex", bittrex);
+                
+                
+                var bitfinex = new MockRateProvider();
+                bitfinex.ExchangeRates.Add(new Rating.ExchangeRate()
+                {
+                    Exchange = "bitfinex",
+                    CurrencyPair = CurrencyPair.Parse("UST_BTC"),
+                    BidAsk = new BidAsk(0.000136m)
+                });
+                rateProvider.Providers.Add("bitfinex", bitfinex);
             }
 
 

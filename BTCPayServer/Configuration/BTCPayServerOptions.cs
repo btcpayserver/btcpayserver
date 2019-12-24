@@ -85,9 +85,17 @@ namespace BTCPayServer.Configuration
                 throw new ConfigException($"You need to run BTCPayServer with the run.sh or run.ps1 script");
 
             var supportedChains = conf.GetOrDefault<string>("chains", "btc")
-                                      .Split(',', StringSplitOptions.RemoveEmptyEntries)
-                                      .Select(t => t.ToUpperInvariant());
-            NetworkProvider = new BTCPayNetworkProvider(NetworkType).Filter(supportedChains.ToArray());
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(t => t.ToUpperInvariant()).ToList();
+
+            var networkProvider = new BTCPayNetworkProvider(NetworkType);
+            var filtered = networkProvider.Filter(supportedChains.ToArray());
+            var elementsBased = filtered.GetAll().OfType<ElementsBTCPayNetwork>();
+            var parentChains = elementsBased.Select(network => network.NetworkCryptoCode.ToUpperInvariant()).Distinct();
+            var allSubChains = networkProvider.GetAll().OfType<ElementsBTCPayNetwork>()
+                .Where(network => parentChains.Contains(network.NetworkCryptoCode)).Select(network => network.CryptoCode);
+            supportedChains.AddRange(allSubChains);
+            NetworkProvider = networkProvider.Filter(supportedChains.ToArray());
             foreach (var chain in supportedChains)
             {
                 if (NetworkProvider.GetNetwork<BTCPayNetworkBase>(chain) == null)

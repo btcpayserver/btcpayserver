@@ -47,6 +47,8 @@ namespace BTCPayServer
             _NBXplorerNetworkProvider = new NBXplorerNetworkProvider(networkType);
             NetworkType = networkType;
             InitBitcoin();
+            InitLiquid();
+            InitLiquidAssets();
             InitLitecoin();
             InitBitcore();
             InitDogecoin();
@@ -93,6 +95,12 @@ namespace BTCPayServer
         [Obsolete("To use only for legacy stuff")]
         public BTCPayNetwork BTC => GetNetwork<BTCPayNetwork>("BTC");
 
+        public void Add(BTCPayNetwork network)
+        {
+            if (network.NBitcoinNetwork == null)
+                return;
+            Add(network as BTCPayNetworkBase);
+        }
         public void Add(BTCPayNetworkBase network)
         {
             _Networks.Add(network.CryptoCode.ToUpperInvariant(), network);
@@ -109,7 +117,7 @@ namespace BTCPayServer
         }
         public BTCPayNetworkBase GetNetwork(string cryptoCode)
         {
-            return GetNetwork<BTCPayNetworkBase>(cryptoCode);
+            return GetNetwork<BTCPayNetworkBase>(cryptoCode.ToUpperInvariant());
         }
         public T GetNetwork<T>(string cryptoCode) where T: BTCPayNetworkBase
         {

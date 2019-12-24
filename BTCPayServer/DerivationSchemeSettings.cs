@@ -18,7 +18,7 @@ namespace BTCPayServer
                 throw new ArgumentNullException(nameof(network));
             if (derivationStrategy == null)
                 throw new ArgumentNullException(nameof(derivationStrategy));
-            var result = new NBXplorer.DerivationStrategy.DerivationStrategyFactory(network.NBitcoinNetwork).Parse(derivationStrategy);
+            var result = network.NBXplorerNetwork.DerivationStrategyFactory.Parse(derivationStrategy);
             return new DerivationSchemeSettings(result, network) { AccountOriginal = derivationStrategy.Trim() };
         }
 

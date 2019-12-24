@@ -96,7 +96,7 @@ namespace BTCPayServer.Controllers
                         var getxpubResult = new GetXPubs();
                         getxpubResult.ExtPubKey = await hw.GetExtPubKey(network, k, normalOperationTimeout.Token);
                         var segwit = network.NBitcoinNetwork.Consensus.SupportSegwit;
-                        var derivation = new DerivationStrategyFactory(network.NBitcoinNetwork).CreateDirectDerivationStrategy(getxpubResult.ExtPubKey, new DerivationStrategyOptions()
+                        var derivation = network.NBXplorerNetwork.DerivationStrategyFactory.CreateDirectDerivationStrategy(getxpubResult.ExtPubKey, new DerivationStrategyOptions()
                         {
                             ScriptPubKeyType = segwit ? ScriptPubKeyType.SegwitP2SH : ScriptPubKeyType.Legacy
                         });
@@ -374,7 +374,8 @@ namespace BTCPayServer.Controllers
             }
         }
 
-        private IActionResult ShowAddresses(DerivationSchemeViewModel vm, DerivationSchemeSettings strategy)
+        private IActionResult 
+            ShowAddresses(DerivationSchemeViewModel vm, DerivationSchemeSettings strategy)
         {
             vm.DerivationScheme = strategy.AccountDerivation.ToString();
             var deposit = new NBXplorer.KeyPathTemplates(null).GetKeyPathTemplate(DerivationFeature.Deposit);
@@ -386,8 +387,11 @@ namespace BTCPayServer.Controllers
                 {
                     var keyPath = deposit.GetKeyPath((uint)i);
                     var rootedKeyPath = vm.GetAccountKeypath()?.Derive(keyPath);
-                    var address = line.Derive((uint)i);
-                    vm.AddressSamples.Add((keyPath.ToString(), address.ScriptPubKey.GetDestinationAddress(strategy.Network.NBitcoinNetwork).ToString(), rootedKeyPath));
+                    var derivation = line.Derive((uint)i);
+                    var address = strategy.Network.NBXplorerNetwork.CreateAddress(strategy.AccountDerivation,
+                        line.KeyPathTemplate.GetKeyPath((uint)i),
+                        derivation.ScriptPubKey).ToString();
+                    vm.AddressSamples.Add((keyPath.ToString(), address, rootedKeyPath));
                 }
             }
             vm.Confirmation = true;

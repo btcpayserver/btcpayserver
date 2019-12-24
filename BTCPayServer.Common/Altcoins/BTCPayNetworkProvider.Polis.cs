@@ -17,7 +17,6 @@ namespace BTCPayServer
                 CryptoCode = nbxplorerNetwork.CryptoCode,
                 DisplayName = "Polis",
                 BlockExplorerLink = NetworkType == NetworkType.Mainnet ? "https://insight.polispay.org/tx/{0}" : "https://insight.polispay.org/tx/{0}",
-                NBitcoinNetwork = nbxplorerNetwork.NBitcoinNetwork,
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "polis",
                 DefaultRateRules = new[]

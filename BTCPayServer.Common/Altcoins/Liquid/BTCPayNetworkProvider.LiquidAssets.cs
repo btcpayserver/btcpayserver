@@ -9,20 +9,27 @@ namespace BTCPayServer
 {
     public partial class BTCPayNetworkProvider
     {
-        public void InitBitcoin()
+        public void InitLiquidAssets()
         {
-            var nbxplorerNetwork = NBXplorerNetworkProvider.GetFromCryptoCode("BTC");
-            Add(new BTCPayNetwork()
+            var nbxplorerNetwork = NBXplorerNetworkProvider.GetFromCryptoCode("LBTC");
+            Add(new ElementsBTCPayNetwork()
             {
-                CryptoCode = nbxplorerNetwork.CryptoCode,
-                DisplayName = "Bitcoin",
-                BlockExplorerLink = NetworkType == NetworkType.Mainnet ? "https://blockstream.info/tx/{0}" : "https://blockstream.info/testnet/tx/{0}",
+                CryptoCode = "USDt",
+                NetworkCryptoCode = "LBTC",
+                DefaultRateRules = new[]
+                {
+                    "USDT_UST = 1",
+                    "USDT_X = USDT_BTC * BTC_X",
+                    "USDT_BTC = bitfinex(UST_BTC)",
+                },
+                AssetId = new uint256("ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2"),
+                DisplayName = "Tether USD",
+                BlockExplorerLink = NetworkType == NetworkType.Mainnet ? "https://blockstream.info/liquid/tx/{0}" : "https://blockstream.info/testnet/liquid/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
-                UriScheme = "bitcoin",
-                CryptoImagePath = "imlegacy/bitcoin.svg",
-                LightningImagePath = "imlegacy/bitcoin-lightning.svg",
+                UriScheme = "liquidnetwork",
+                CryptoImagePath = "imlegacy/liquid-tether.svg",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),
-                CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("0'") : new KeyPath("1'"),
+                CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("1776'") : new KeyPath("1'"),
                 SupportRBF = true,
                 //https://github.com/spesmilo/electrum/blob/11733d6bc271646a00b69ff07657119598874da4/electrum/constants.py
                 ElectrumMapping = NetworkType == NetworkType.Mainnet
@@ -41,4 +48,6 @@ namespace BTCPayServer
             });
         }
     }
+
+
 }

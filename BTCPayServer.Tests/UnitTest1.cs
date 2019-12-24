@@ -151,6 +151,7 @@ namespace BTCPayServer.Tests
                 new LightningLikePaymentHandler(null, null, networkProvider, null),
             });
             InvoiceEntity invoiceEntity = new InvoiceEntity();
+            invoiceEntity.Networks = networkProvider;
             invoiceEntity.Payments = new System.Collections.Generic.List<PaymentEntity>();
             invoiceEntity.ProductInformation = new ProductInformation() {Price = 100};
             PaymentMethodDictionary paymentMethods = new PaymentMethodDictionary();
@@ -172,12 +173,15 @@ namespace BTCPayServer.Tests
             invoiceEntity.Payments.Add(
                 new PaymentEntity()
                     {
+                        
                         Accounted = true,
                         CryptoCode = "BTC",
-                        NetworkFee = 0.00000100m
+                        NetworkFee = 0.00000100m,
+                        Network = networkProvider.GetNetwork("BTC"),
                     }
                     .SetCryptoPaymentData(new BitcoinLikePaymentData()
                     {
+                        Network = networkProvider.GetNetwork("BTC"),
                         Output = new TxOut() {Value = Money.Coins(0.00151263m)}
                     }));
             accounting = btc.Calculate();
@@ -186,10 +190,12 @@ namespace BTCPayServer.Tests
                     {
                         Accounted = true,
                         CryptoCode = "BTC",
-                        NetworkFee = 0.00000100m
+                        NetworkFee = 0.00000100m,
+                        Network = networkProvider.GetNetwork("BTC")
                     }
                     .SetCryptoPaymentData(new BitcoinLikePaymentData()
                     {
+                        Network = networkProvider.GetNetwork("BTC"),
                         Output = new TxOut() {Value = accounting.Due}
                     }));
             accounting = btc.Calculate();
@@ -258,6 +264,7 @@ namespace BTCPayServer.Tests
                 new LightningLikePaymentHandler(null, null, networkProvider, null),
             });
             var entity = new InvoiceEntity();
+            entity.Networks = networkProvider;
 #pragma warning disable CS0618
             entity.Payments = new System.Collections.Generic.List<PaymentEntity>();
             entity.SetPaymentMethod(new PaymentMethod()
@@ -317,6 +324,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(Money.Coins(1.3m), accounting.TotalDue);
 
             entity = new InvoiceEntity();
+            entity.Networks = networkProvider;
             entity.ProductInformation = new ProductInformation() {Price = 5000};
             PaymentMethodDictionary paymentMethods = new PaymentMethodDictionary();
             paymentMethods.Add(
@@ -445,6 +453,7 @@ namespace BTCPayServer.Tests
                 new LightningLikePaymentHandler(null, null, networkProvider, null),
             });
             var entity = new InvoiceEntity();
+            entity.Networks = networkProvider;
 #pragma warning disable CS0618
             entity.Payments = new List<PaymentEntity>();
             entity.SetPaymentMethod(new PaymentMethod()

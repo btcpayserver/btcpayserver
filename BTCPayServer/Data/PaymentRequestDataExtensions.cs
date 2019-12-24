@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using NBitcoin;
+﻿using NBitcoin;
 using NBXplorer;
+using NBXplorer.DerivationStrategy;
 using Newtonsoft.Json.Linq;
 using static BTCPayServer.Data.PaymentRequestData;
 

@@ -9,6 +9,7 @@ using BTCPayServer.Security;
 using BTCPayServer.Services.Rates;
 using NBitcoin;
 using NBXplorer;
+using NBXplorer.DerivationStrategy;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Data

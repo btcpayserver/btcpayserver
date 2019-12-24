@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using NBitcoin;
 using NBXplorer;
+using NBXplorer.Models;
 using Newtonsoft.Json;
 
 namespace BTCPayServer
@@ -46,7 +47,7 @@ namespace BTCPayServer
 
     public class BTCPayNetwork:BTCPayNetworkBase
     {
-        public Network NBitcoinNetwork { get; set; }
+        public Network NBitcoinNetwork { get { return  NBXplorerNetwork?.NBitcoinNetwork; } }
         public NBXplorer.NBXplorerNetwork NBXplorerNetwork { get; set; }
         public bool SupportRBF { get; internal set; }
         public string LightningImagePath { get; set; }
@@ -55,6 +56,8 @@ namespace BTCPayServer
         
         public Dictionary<uint, DerivationType> ElectrumMapping = new Dictionary<uint, DerivationType>();
 
+        public virtual bool WalletSupported { get; set; } = true;
+        
         public int MaxTrackedConfirmation { get; internal set; } = 6;
         public string UriScheme { get; internal set; }
         public KeyPath GetRootKeyPath(DerivationType type)
@@ -99,6 +102,14 @@ namespace BTCPayServer
         public override string ToString<T>(T obj)
         {
             return NBXplorerNetwork.Serializer.ToString(obj);
+        }
+        public virtual IEnumerable<(MatchedOutput matchedOutput, OutPoint outPoint)> GetValidOutputs(NewTransactionEvent evtOutputs)
+        {
+            return evtOutputs.Outputs.Select(output =>
+            {
+                var outpoint = new OutPoint(evtOutputs.TransactionData.TransactionHash, output.Index);
+                return (output, outpoint);
+            });
         }
     }
 

@@ -27,7 +27,7 @@ namespace BTCPayServer.Services.Wallets
                 var explorerClient = _Client.GetExplorerClient(network.CryptoCode);
                 if (explorerClient == null)
                     continue;
-                _Wallets.Add(network.CryptoCode, new BTCPayWallet(explorerClient, new MemoryCache(_Options), network));
+                _Wallets.Add(network.CryptoCode.ToUpperInvariant(), new BTCPayWallet(explorerClient, new MemoryCache(_Options), network));
             }
         }
 
@@ -43,7 +43,7 @@ namespace BTCPayServer.Services.Wallets
         {
             if (cryptoCode == null)
                 throw new ArgumentNullException(nameof(cryptoCode));
-            _Wallets.TryGetValue(cryptoCode, out var result);
+            _Wallets.TryGetValue(cryptoCode.ToUpperInvariant(), out var result);
             return result;
         }
 

@@ -113,7 +113,7 @@
                                     }
                                 </td>
                                 <td style="text-align:right">
-                                    @if(!string.IsNullOrWhiteSpace(scheme.Value))
+                                    @if(!string.IsNullOrWhiteSpace(scheme.Value) && scheme.WalletSupported)
                                     {
                                         <a asp-action="WalletTransactions" asp-controller="Wallets" asp-route-walletId="@scheme.WalletId">Wallet</a><span> - </span>
                                     }

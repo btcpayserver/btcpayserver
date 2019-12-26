@@ -284,13 +284,13 @@
                 <nav aria-label="..." class="w-100">
                     <ul class="pagination float-left">
                         <li class="page-item @(Model.Skip == 0 ? "disabled" : null)">
-                            <a class="page-link" tabindex="-1" href="@ListInvoices(-1, Model.Count)">&laquo;</a>
+                            <a class="page-link" tabindex="-1" href="@ListInvoicesPage(-1, Model.Count)">&laquo;</a>
                         </li>
                         <li class="page-item disabled">
                             <span class="page-link">@Model.Skip to @(Model.Skip + Model.Invoices.Count) of @Model.Total</span>
                         </li>
                         <li class="page-item @(Model.Total > (Model.Skip + Model.Invoices.Count) ? null : "disabled")">
-                            <a class="page-link" href="@ListInvoices(1, Model.Count)">&raquo;</a>
+                            <a class="page-link" href="@ListInvoicesPage(1, Model.Count)">&raquo;</a>
                         </li>
                     </ul>
                     <ul class="pagination float-right">
@@ -298,21 +298,21 @@
                             <span class="page-link">Page Size:</span>
                         </li>
                         <li class="page-item @(Model.Count == 50 ? "active" : null)">
-                            <a class="page-link" href="@ListInvoices(0, 50)">50</a>
+                            <a class="page-link" href="@ListInvoicesPage(0, 50)">50</a>
                         </li>
                         <li class="page-item @(Model.Count == 100 ? "active" : null)">
-                            <a class="page-link" href="@ListInvoices(0, 100)">100</a>
+                            <a class="page-link" href="@ListInvoicesPage(0, 100)">100</a>
                         </li>
                         <li class="page-item @(Model.Count == 250 ? "active" : null)">
-                            <a class="page-link" href="@ListInvoices(0, 250)">250</a>
+                            <a class="page-link" href="@ListInvoicesPage(0, 250)">250</a>
                         </li>
                         <li class="page-item @(Model.Count == 500 ? "active" : null)">
-                            <a class="page-link" href="@ListInvoices(0, 500)">500</a>
+                            <a class="page-link" href="@ListInvoicesPage(0, 500)">500</a>
                         </li>
                     </ul>
                 </nav>
                 @{
-                    string ListInvoices(int prevNext, int count)
+                    string ListInvoicesPage(int prevNext, int count)
                     {
                         var skip = Model.Skip;
                         if (prevNext == -1)

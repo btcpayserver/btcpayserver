@@ -2704,7 +2704,11 @@ noninventoryitem:
             await provider.GetRatesAsync(default);
             var state = provider.GetState();
             Assert.Single(state.Rates, r => r.Pair == new CurrencyPair("BTC", "EUR"));
-            var provider2 = new BackgroundFetcherRateProvider("kraken", provider.Inner);
+            var provider2 = new BackgroundFetcherRateProvider("kraken", provider.Inner)
+            {
+                RefreshRate = provider.RefreshRate,
+                ValidatyTime = provider.ValidatyTime
+            };
             using (var cts = new CancellationTokenSource())
             {
                 cts.Cancel();
@@ -2722,7 +2726,7 @@ noninventoryitem:
             Assert.Equal(provider.ExchangeName, provider2.ExchangeName);
             Assert.Equal(provider.NextUpdate, provider2.NextUpdate);
             Assert.NotEqual(provider.LastRequested, provider2.LastRequested);
-            Assert.NotEqual(provider.Expiration, provider2.Expiration);
+            Assert.Equal(provider.Expiration, provider2.Expiration);
 
             var str = JsonConvert.SerializeObject(state);
             var state2 = JsonConvert.DeserializeObject<BackgroundFetcherState>(str);

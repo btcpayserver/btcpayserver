@@ -20,7 +20,7 @@ namespace BTCPayServer.Services.Rates
         [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
         public DateTimeOffset? LastRequested { get; set; }
         [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
-        public DateTimeOffset? NextUpdate { get; set; }
+        public DateTimeOffset? LastUpdated { get; set; }
         [JsonProperty(ItemConverterType = typeof(BackgroundFetcherRateJsonConverter))]
         public List<BackgroundFetcherRate> Rates { get; set; }
     }
@@ -63,6 +63,7 @@ namespace BTCPayServer.Services.Rates
             public ExchangeRates Latest;
             public DateTimeOffset NextRefresh;
             public TimeSpan Backoff = TimeSpan.FromSeconds(5.0);
+            public DateTimeOffset Updated;
             public DateTimeOffset Expiration;
             public Exception Exception;
             public string ExchangeName;
@@ -105,7 +106,7 @@ namespace BTCPayServer.Services.Rates
             };
             if (_Latest is LatestFetch fetch)
             {
-                state.NextUpdate = fetch.NextRefresh;
+                state.LastUpdated = fetch.Updated;
                 state.Rates = fetch.Latest
                             .Where(e => e.Exchange == ExchangeName)
                             .Select(r => new BackgroundFetcherRate()
@@ -123,14 +124,15 @@ namespace BTCPayServer.Services.Rates
                 throw new InvalidOperationException("The state does not belong to this fetcher");
             if (state.LastRequested is DateTimeOffset lastRequested)
                 this.LastRequested = state.LastRequested;
-            if (state.NextUpdate is DateTimeOffset nextUpdate && state.Rates is List<BackgroundFetcherRate> rates)
+            if (state.LastUpdated is DateTimeOffset updated && state.Rates is List<BackgroundFetcherRate> rates)
             {
                 var fetch = new LatestFetch()
                 {
                     ExchangeName = state.ExchangeName,
                     Latest = new ExchangeRates(rates.Select(r => new ExchangeRate(state.ExchangeName, r.Pair, r.BidAsk))),
-                    NextRefresh = nextUpdate,
-                    Expiration = nextUpdate - RefreshRate + ValidatyTime
+                    Updated = updated,
+                    NextRefresh = updated + RefreshRate,
+                    Expiration = updated + ValidatyTime
                 };
                 _Latest = fetch;
             }
@@ -201,12 +203,12 @@ namespace BTCPayServer.Services.Rates
         LatestFetch _Latest;
         public async Task<ExchangeRates> GetRatesAsync(CancellationToken cancellationToken)
         {
+            LastRequested = DateTimeOffset.UtcNow;
             var latest = _Latest;
             if (!DoNotAutoFetchIfExpired && latest != null && latest.Expiration <= DateTimeOffset.UtcNow + TimeSpan.FromSeconds(1.0))
             {
                 latest = null;
             }
-            LastRequested = DateTimeOffset.UtcNow;
             return (latest ?? (await Fetch(cancellationToken))).GetResult();
         }
 
@@ -238,8 +240,9 @@ namespace BTCPayServer.Services.Rates
             {
                 var rates = await _Inner.GetRatesAsync(cancellationToken);
                 fetch.Latest = rates;
-                fetch.Expiration = DateTimeOffset.UtcNow + ValidatyTime;
-                fetch.NextRefresh = DateTimeOffset.UtcNow + RefreshRate;
+                fetch.Updated = DateTimeOffset.UtcNow;
+                fetch.Expiration = fetch.Updated + ValidatyTime;
+                fetch.NextRefresh = fetch.Updated + RefreshRate;
             }
             catch (Exception ex)
             {

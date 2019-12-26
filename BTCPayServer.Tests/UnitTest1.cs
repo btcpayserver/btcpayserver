@@ -1844,7 +1844,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact(Timeout = 60 * 2 * 1000)]
+        [Fact]
         [Trait("Integration", "Integration")]
         public async Task CanSetPaymentMethodLimits()
         {
@@ -2694,6 +2694,43 @@ noninventoryitem:
             factory.Providers["kraken"].GetRatesAsync(default).GetAwaiter().GetResult();
         }
 
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CanExportBackgroundFetcherState()
+        {
+            var factory = CreateBTCPayRateFactory();
+            var provider = (BackgroundFetcherRateProvider)factory.Providers["kraken"];
+            await provider.GetRatesAsync(default);
+            var state = provider.GetState();
+            Assert.Single(state.Rates, r => r.Pair == new CurrencyPair("BTC", "EUR"));
+            var provider2 = new BackgroundFetcherRateProvider("kraken", provider.Inner);
+            using (var cts = new CancellationTokenSource())
+            {
+                cts.Cancel();
+                // Should throw
+                await Assert.ThrowsAsync<OperationCanceledException>(async () => await provider2.GetRatesAsync(cts.Token));
+            }
+            provider2.LoadState(state);
+            Assert.Equal(provider.LastRequested, provider2.LastRequested);
+            using (var cts = new CancellationTokenSource())
+            {
+                cts.Cancel();
+                // Should not throw, as things should be cached
+                await provider2.GetRatesAsync(cts.Token);
+            }
+            Assert.Equal(provider.ExchangeName, provider2.ExchangeName);
+            Assert.Equal(provider.NextUpdate, provider2.NextUpdate);
+            Assert.NotEqual(provider.LastRequested, provider2.LastRequested);
+            Assert.NotEqual(provider.Expiration, provider2.Expiration);
+
+            var str = JsonConvert.SerializeObject(state);
+            var state2 = JsonConvert.DeserializeObject<BackgroundFetcherState>(str);
+            var str2 = JsonConvert.SerializeObject(state2);
+            Assert.Equal(str, str2);
+        }
+
+
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public void CanGetRateCryptoCurrenciesByDefault()
@@ -2859,7 +2896,7 @@ noninventoryitem:
             spy.AssertHit();
 
             factory.Providers.Clear();
-            var fetch = new BackgroundFetcherRateProvider(spy);
+            var fetch = new BackgroundFetcherRateProvider("spy", spy);
             fetch.DoNotAutoFetchIfExpired = true;
             factory.Providers.Add("bittrex", fetch);
             fetchedRate = fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules, default).GetAwaiter().GetResult();

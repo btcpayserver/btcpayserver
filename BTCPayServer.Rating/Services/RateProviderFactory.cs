@@ -128,7 +128,7 @@ namespace BTCPayServer.Services.Rates
             {
                 if (provider.Key == "cryptopia") // Shitty exchange, rate often unavailable, it spams the logs
                     continue;
-                var prov = new BackgroundFetcherRateProvider(Providers[provider.Key]);
+                var prov = new BackgroundFetcherRateProvider(provider.Key, Providers[provider.Key]);
                 if(provider.Key == CoinAverageRateProvider.CoinAverageName)
                 {
                     prov.RefreshRate = CacheSpan;

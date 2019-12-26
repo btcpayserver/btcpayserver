@@ -17,8 +17,8 @@
         <div class="form-group">
             <h5>Bitcoin Average</h5>
             <p>BTCPay relies on Bitcoin Average for getting crypto-currency to fiat rates</p>
-            <p>If you want BTCPay rate cache to be smaller than 15min, you should register to BitcoinAverage and get a paid API Key.</p>
-            <p>If your BTCPay server instance supports lot's of merchant or is used a lot, BitcoinAverage will rate limit your server, and invoice will be created using less accurate rates. (From Bitpay)<br /></p>
+            <p>If you want BTCPay's rate cache to be smaller than 15min, you should register to BitcoinAverage and get a paid API Key.</p>
+            <p>If your BTCPay server instance supports many merchants or is used a lot, BitcoinAverage will rate limit your server and invoices will be created using less accurate rates. (From Bitpay)<br /></p>
         </div>
         <form method="post">
             <label asp-for="PublicKey"></label>
@@ -26,7 +26,7 @@
                 <input asp-for="PublicKey" style="width:50%;" class="form-control" placeholder="Public key" />
                 <label class="sr-only" asp-for="PrivateKey"></label>
                 <input asp-for="PrivateKey" style="width:50%;" class="form-control" placeholder="Private key" />
-                <p class="form-text text-muted">You can find the information on <a target="_blank" href="https://bitcoinaverage.com/en/apikeys">bitcoinaverage api key page</a></p>
+                <p class="form-text text-muted">You can find the information on the <a target="_blank" href="https://bitcoinaverage.com/en/apikeys">bitcoinaverage api key page</a></p>
             </div>
             <div class="form-group">
                 <label asp-for="CacheMinutes"></label>

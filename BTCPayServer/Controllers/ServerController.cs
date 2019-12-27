@@ -3,12 +3,10 @@ using Microsoft.Extensions.Logging;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Models;
 using BTCPayServer.Models.ServerViewModels;
-using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
-using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -16,7 +14,6 @@ using NBitcoin;
 using NBitcoin.DataEncoders;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -26,34 +23,31 @@ using System.Net.Mail;
 using System.Threading.Tasks;
 using Renci.SshNet;
 using BTCPayServer.Logging;
-using BTCPayServer.Lightning;
-using System.Runtime.CompilerServices;
 using BTCPayServer.Storage.Models;
 using BTCPayServer.Storage.Services;
 using BTCPayServer.Storage.Services.Providers;
 using BTCPayServer.Services.Apps;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using BTCPayServer.Data;
-using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Controllers
 {
-    [Authorize(Policy = BTCPayServer.Security.Policies.CanModifyServerSettings.Key,
-               AuthenticationSchemes = BTCPayServer.Security.AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Security.Policies.CanModifyServerSettings.Key,
+               AuthenticationSchemes = Security.AuthenticationSchemes.Cookie)]
     public partial class ServerController : Controller
     {
-        private UserManager<ApplicationUser> _UserManager;
-        SettingsRepository _SettingsRepository;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SettingsRepository _settingsRepository;
         private readonly NBXplorerDashboard _dashBoard;
-        private StoreRepository _StoreRepository;
-        LightningConfigurationProvider _LnConfigProvider;
+        private readonly StoreRepository _storeRepository;
+        private readonly LightningConfigurationProvider _lnConfigProvider;
         private readonly TorServices _torServices;
-        private BTCPayServerOptions _Options;
-        private readonly AppService _AppService;
+        private readonly BTCPayServerOptions _options;
+        private readonly AppService _appService;
         private readonly CheckConfigurationHostedService _sshState;
-        private readonly StoredFileRepository _StoredFileRepository;
-        private readonly FileService _FileService;
-        private readonly IEnumerable<IStorageProviderService> _StorageProviderServices;
+        private readonly StoredFileRepository _storedFileRepository;
+        private readonly FileService _fileService;
+        private readonly IEnumerable<IStorageProviderService> _storageProviderServices;
 
         public ServerController(UserManager<ApplicationUser> userManager,
             StoredFileRepository storedFileRepository,
@@ -69,25 +63,25 @@ namespace BTCPayServer.Controllers
             AppService appService,
             CheckConfigurationHostedService sshState)
         {
-            _Options = options;
-            _StoredFileRepository = storedFileRepository;
-            _FileService = fileService;
-            _StorageProviderServices = storageProviderServices;
-            _UserManager = userManager;
-            _SettingsRepository = settingsRepository;
+            _options = options;
+            _storedFileRepository = storedFileRepository;
+            _fileService = fileService;
+            _storageProviderServices = storageProviderServices;
+            _userManager = userManager;
+            _settingsRepository = settingsRepository;
             _dashBoard = dashBoard;
             HttpClientFactory = httpClientFactory;
-            _StoreRepository = storeRepository;
-            _LnConfigProvider = lnConfigProvider;
+            _storeRepository = storeRepository;
+            _lnConfigProvider = lnConfigProvider;
             _torServices = torServices;
-            _AppService = appService;
+            _appService = appService;
             _sshState = sshState;
         }
 
         [Route("server/rates")]
         public async Task<IActionResult> Rates()
         {
-            var rates = (await _SettingsRepository.GetSettingAsync<RatesSetting>()) ?? new RatesSetting();
+            var rates = (await _settingsRepository.GetSettingAsync<RatesSetting>()) ?? new RatesSetting();
 
             var vm = new RatesViewModel()
             {
@@ -116,7 +110,7 @@ namespace BTCPayServer.Controllers
         [HttpPost]
         public async Task<IActionResult> Rates(RatesViewModel vm)
         {
-            var rates = (await _SettingsRepository.GetSettingAsync<RatesSetting>()) ?? new RatesSetting();
+            var rates = (await _settingsRepository.GetSettingAsync<RatesSetting>()) ?? new RatesSetting();
             rates.PrivateKey = vm.PrivateKey;
             rates.PublicKey = vm.PublicKey;
             rates.CacheInMinutes = vm.CacheMinutes;
@@ -135,7 +129,7 @@ namespace BTCPayServer.Controllers
                 await FetchRateLimits(vm);
                 return View(vm);
             }
-            await _SettingsRepository.UpdateSetting(rates);
+            await _settingsRepository.UpdateSetting(rates);
             TempData[WellKnownTempData.SuccessMessage] = "Rate settings successfully updated";
             return RedirectToAction(nameof(Rates));
         }
@@ -158,7 +152,7 @@ namespace BTCPayServer.Controllers
         public IActionResult ListUsers(int skip = 0, int count = 50)
         {
             var users = new UsersViewModel();
-            users.Users = _UserManager.Users.Skip(skip).Take(count)
+            users.Users = _userManager.Users.Skip(skip).Take(count)
                 .Select(u => new UsersViewModel.UserViewModel
                 {
                     Name = u.UserName,
@@ -167,22 +161,19 @@ namespace BTCPayServer.Controllers
                 }).ToList();
             users.Skip = skip;
             users.Count = count;
-            users.Total = _UserManager.Users.Count();
+            users.Total = _userManager.Users.Count();
             return View(users);
         }
 
         [Route("server/users/{userId}")]
         public new async Task<IActionResult> User(string userId)
         {
-            var user = await _UserManager.FindByIdAsync(userId);
+            var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
                 return NotFound();
-            var roles = await _UserManager.GetRolesAsync(user);
-            var userVM = new UserViewModel();
-            userVM.Id = user.Id;
-            userVM.Email = user.Email;
-            userVM.IsAdmin = IsAdmin(roles);
-            return View(userVM);
+            var roles = await _userManager.GetRolesAsync(user);
+            var userVm = new UserViewModel {Id = user.Id, Email = user.Email, IsAdmin = IsAdmin(roles)};
+            return View(userVm);
         }
 
         [Route("server/maintenance")]
@@ -226,14 +217,14 @@ namespace BTCPayServer.Controllers
                     return View(vm);
                 }
                 var builder = new UriBuilder();
-                using (var client = new HttpClient(new HttpClientHandler()
+                using (new HttpClient(new HttpClientHandler()
                 {
                     ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
                 }))
                 {
                     try
                     {
-                        builder.Scheme = this.Request.Scheme;
+                        builder.Scheme = Request.Scheme;
                         builder.Host = vm.DNSDomain;
                         var addresses1 = GetAddressAsync(this.Request.Host.Host);
                         var addresses2 = GetAddressAsync(vm.DNSDomain);
@@ -294,7 +285,7 @@ namespace BTCPayServer.Controllers
             return Dns.GetHostAddressesAsync(domainOrIP);
         }
 
-        public static string RunId = Encoders.Hex.EncodeData(NBitcoin.RandomUtils.GetBytes(32));
+        public static string RunId = Encoders.Hex.EncodeData(RandomUtils.GetBytes(32));
         [HttpGet]
         [Route("runid")]
         [AllowAnonymous]
@@ -311,7 +302,7 @@ namespace BTCPayServer.Controllers
 
             try
             {
-                sshClient = await _Options.SSHSettings.ConnectAsync();
+                sshClient = await _options.SSHSettings.ConnectAsync();
             }
             catch (Exception ex)
             {
@@ -354,43 +345,43 @@ namespace BTCPayServer.Controllers
         [HttpPost]
         public new async Task<IActionResult> User(string userId, UserViewModel viewModel)
         {
-            var user = await _UserManager.FindByIdAsync(userId);
+            var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
                 return NotFound();
 
-            var admins = await _UserManager.GetUsersInRoleAsync(Roles.ServerAdmin);
+            var admins = await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin);
             if (!viewModel.IsAdmin && admins.Count == 1)
             {
                 TempData[WellKnownTempData.ErrorMessage] = "This is the only Admin, so their role can't be removed until another Admin is added.";
                 return View(viewModel); // return
             }
 
-            var roles = await _UserManager.GetRolesAsync(user);
+            var roles = await _userManager.GetRolesAsync(user);
             if (viewModel.IsAdmin != IsAdmin(roles))
             {
                 if (viewModel.IsAdmin)
-                    await _UserManager.AddToRoleAsync(user, Roles.ServerAdmin);
+                    await _userManager.AddToRoleAsync(user, Roles.ServerAdmin);
                 else
-                    await _UserManager.RemoveFromRoleAsync(user, Roles.ServerAdmin);
+                    await _userManager.RemoveFromRoleAsync(user, Roles.ServerAdmin);
 
                 TempData[WellKnownTempData.SuccessMessage] = "User successfully updated";
             }
 
-            return RedirectToAction(nameof(User), new { userId = userId });
+            return RedirectToAction(nameof(User), new { userId });
         }
 
 
         [Route("server/users/{userId}/delete")]
         public async Task<IActionResult> DeleteUser(string userId)
         {
-            var user = userId == null ? null : await _UserManager.FindByIdAsync(userId);
+            var user = userId == null ? null : await _userManager.FindByIdAsync(userId);
             if (user == null)
                 return NotFound();
 
-            var roles = await _UserManager.GetRolesAsync(user);
+            var roles = await _userManager.GetRolesAsync(user);
             if (IsAdmin(roles))
             {
-                var admins = await _UserManager.GetUsersInRoleAsync(Roles.ServerAdmin);
+                var admins = await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin);
                 if (admins.Count == 1)
                 {
                     // return
@@ -414,11 +405,11 @@ namespace BTCPayServer.Controllers
         [HttpPost]
         public async Task<IActionResult> DeleteUserPost(string userId)
         {
-            var user = userId == null ? null : await _UserManager.FindByIdAsync(userId);
+            var user = userId == null ? null : await _userManager.FindByIdAsync(userId);
             if (user == null)
                 return NotFound();
-            await _UserManager.DeleteAsync(user);
-            await _StoreRepository.CleanUnreachableStores();
+            await _userManager.DeleteAsync(user);
+            await _storeRepository.CleanUnreachableStores();
             TempData[WellKnownTempData.SuccessMessage] = "User deleted";
             return RedirectToAction(nameof(ListUsers));
         }
@@ -427,7 +418,7 @@ namespace BTCPayServer.Controllers
         [Route("server/policies")]
         public async Task<IActionResult> Policies()
         {
-            var data = (await _SettingsRepository.GetSettingAsync<PoliciesSettings>()) ?? new PoliciesSettings();
+            var data = (await _settingsRepository.GetSettingAsync<PoliciesSettings>()) ?? new PoliciesSettings();
             ViewBag.AppsList = await GetAppSelectList();
             return View(data);
         }
@@ -467,9 +458,8 @@ namespace BTCPayServer.Controllers
 
             if (appIdsToFetch.Any())
             {
-                var apps = (await _AppService.GetApps(appIdsToFetch.ToArray()))
+                var apps = (await _appService.GetApps(appIdsToFetch.ToArray()))
                     .ToDictionary(data => data.Id, data => Enum.Parse<AppType>(data.AppType));
-                ;
                 if (!string.IsNullOrEmpty(settings.RootAppId))
                 {
                     settings.RootAppType = apps[settings.RootAppId];
@@ -481,7 +471,7 @@ namespace BTCPayServer.Controllers
                 }
             }
 
-            await _SettingsRepository.UpdateSetting(settings);
+            await _settingsRepository.UpdateSetting(settings);
             TempData[WellKnownTempData.SuccessMessage] = "Policies updated successfully";
             return RedirectToAction(nameof(Policies));
         }
@@ -490,10 +480,10 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> Services()
         {
             var result = new ServicesViewModel();
-            result.ExternalServices = _Options.ExternalServices.ToList();
+            result.ExternalServices = _options.ExternalServices.ToList();
 
             // other services
-            foreach (var externalService in _Options.OtherExternalServices)
+            foreach (var externalService in _options.OtherExternalServices)
             {
                 result.OtherExternalServices.Add(new ServicesViewModel.OtherExternalService()
                 {
@@ -539,7 +529,7 @@ namespace BTCPayServer.Controllers
             }
 
             // external storage services
-            var storageSettings = await _SettingsRepository.GetSettingAsync<StorageSettings>();
+            var storageSettings = await _settingsRepository.GetSettingAsync<StorageSettings>();
             result.ExternalStorageServices.Add(new ServicesViewModel.OtherExternalService()
             {
                 Name = storageSettings == null ? "Not set" : storageSettings.Provider.ToString(),
@@ -550,7 +540,7 @@ namespace BTCPayServer.Controllers
 
         private async Task<List<SelectListItem>> GetAppSelectList()
         {
-            var apps = (await _AppService.GetAllApps(null, true))
+            var apps = (await _appService.GetAllApps(null, true))
                 .Select(a => new SelectListItem($"{a.AppType} - {a.AppName} - {a.StoreName}", a.Id)).ToList();
             apps.Insert(0, new SelectListItem("(None)", null));
             return apps;
@@ -586,7 +576,7 @@ namespace BTCPayServer.Controllers
 
         private ExternalService GetService(string serviceName, string cryptoCode)
         {
-            var result = _Options.ExternalServices.GetService(serviceName, cryptoCode);
+            var result = _options.ExternalServices.GetService(serviceName, cryptoCode);
             if (result != null)
                 return result;
             foreach (var torService in _torServices.Services)
@@ -645,11 +635,11 @@ namespace BTCPayServer.Controllers
                         ServiceLink = service.ConnectionString.Server.AbsoluteUri.WithoutEndingSlash()
                     });
                 }
-                var connectionString = await service.ConnectionString.Expand(this.Request.GetAbsoluteUriNoPathBase(), service.Type, _Options.NetworkType);
+                var connectionString = await service.ConnectionString.Expand(this.Request.GetAbsoluteUriNoPathBase(), service.Type, _options.NetworkType);
                 switch (service.Type)
                 {
                     case ExternalServiceTypes.Charge:
-                        return LightningChargeServices(service, connectionString, showQR);
+                        return LightningChargeServices(connectionString);
                     case ExternalServiceTypes.RTL:
                     case ExternalServiceTypes.Spark:
                         if (connectionString.AccessKey == null)
@@ -721,14 +711,13 @@ namespace BTCPayServer.Controllers
             }
         }
 
-        private IActionResult LightningChargeServices(ExternalService service, ExternalConnectionString connectionString, bool showQR = false)
+        private IActionResult LightningChargeServices(ExternalConnectionString connectionString)
         {
-            ChargeServiceViewModel vm = new ChargeServiceViewModel();
-            vm.Uri = connectionString.Server.AbsoluteUri;
-            vm.APIToken = connectionString.APIToken;
-            var builder = new UriBuilder(connectionString.Server);
-            builder.UserName = "api-token";
-            builder.Password = vm.APIToken;
+            ChargeServiceViewModel vm = new ChargeServiceViewModel
+            {
+                Uri = connectionString.Server.AbsoluteUri, APIToken = connectionString.APIToken
+            };
+            var builder = new UriBuilder(connectionString.Server) {UserName = "api-token", Password = vm.APIToken};
             vm.AuthenticatedUri = builder.ToString();
             return View(nameof(LightningChargeServices), vm);
         }
@@ -736,17 +725,18 @@ namespace BTCPayServer.Controllers
         private IActionResult LndServices(ExternalService service, ExternalConnectionString connectionString, uint? nonce)
         {
             var model = new LndServicesViewModel();
-            if (service.Type == ExternalServiceTypes.LNDGRPC)
+            switch (service.Type)
             {
-                model.Host = $"{connectionString.Server.DnsSafeHost}:{connectionString.Server.Port}";
-                model.SSL = connectionString.Server.Scheme == "https";
-                model.ConnectionType = "GRPC";
-                model.GRPCSSLCipherSuites = "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA256";
-            }
-            else if (service.Type == ExternalServiceTypes.LNDRest)
-            {
-                model.Uri = connectionString.Server.AbsoluteUri;
-                model.ConnectionType = "REST";
+                case ExternalServiceTypes.LNDGRPC:
+                    model.Host = $"{connectionString.Server.DnsSafeHost}:{connectionString.Server.Port}";
+                    model.SSL = connectionString.Server.Scheme == "https";
+                    model.ConnectionType = "GRPC";
+                    model.GRPCSSLCipherSuites = "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA256";
+                    break;
+                case ExternalServiceTypes.LNDRest:
+                    model.Uri = connectionString.Server.AbsoluteUri;
+                    model.ConnectionType = "REST";
+                    break;
             }
 
             if (connectionString.CertificateThumbprint != null)
@@ -761,16 +751,15 @@ namespace BTCPayServer.Controllers
             model.InvoiceMacaroon = connectionString.Macaroons?.InvoiceMacaroon?.Hex;
             model.ReadonlyMacaroon = connectionString.Macaroons?.ReadonlyMacaroon?.Hex;
 
-            if (nonce != null)
-            {
-                var configKey = GetConfigKey("lnd", service.ServiceName, service.CryptoCode, nonce.Value);
-                var lnConfig = _LnConfigProvider.GetConfig(configKey);
-                if (lnConfig != null)
-                {
-                    model.QRCodeLink = Request.GetAbsoluteUri(Url.Action(nameof(GetLNDConfig), new { configKey = configKey }));
-                    model.QRCode = $"config={model.QRCodeLink}";
-                }
-            }
+            if (nonce == null) return View(nameof(LndServices), model);
+            
+            var configKey = GetConfigKey("lnd", service.ServiceName, service.CryptoCode, nonce.Value);
+            var lnConfig = _lnConfigProvider.GetConfig(configKey);
+            
+            if (lnConfig == null) return View(nameof(LndServices), model);
+            
+            model.QRCodeLink = Request.GetAbsoluteUri(Url.Action(nameof(GetLNDConfig), new { configKey }));
+            model.QRCode = $"config={model.QRCodeLink}";
 
             return View(nameof(LndServices), model);
         }
@@ -784,7 +773,7 @@ namespace BTCPayServer.Controllers
         [AllowAnonymous]
         public IActionResult GetLNDConfig(uint configKey)
         {
-            var conf = _LnConfigProvider.GetConfig(configKey);
+            var conf = _lnConfigProvider.GetConfig(configKey);
             if (conf == null)
                 return NotFound();
             return Json(conf);
@@ -794,7 +783,7 @@ namespace BTCPayServer.Controllers
         [HttpPost]
         public async Task<IActionResult> ServicePost(string serviceName, string cryptoCode)
         {
-            if (!_dashBoard.IsFullySynched(cryptoCode, out var unusud))
+            if (!_dashBoard.IsFullySynched(cryptoCode, out NBXplorerDashboard.NBXplorerSummary _))
             {
                 TempData[WellKnownTempData.ErrorMessage] = $"{cryptoCode} is not fully synched";
                 return RedirectToAction(nameof(Services));
@@ -806,7 +795,7 @@ namespace BTCPayServer.Controllers
             ExternalConnectionString connectionString = null;
             try
             {
-                connectionString = await service.ConnectionString.Expand(this.Request.GetAbsoluteUriNoPathBase(), service.Type, _Options.NetworkType);
+                connectionString = await service.ConnectionString.Expand(this.Request.GetAbsoluteUriNoPathBase(), service.Type, _options.NetworkType);
             }
             catch (Exception ex)
             {
@@ -834,7 +823,7 @@ namespace BTCPayServer.Controllers
             else
                 throw new NotSupportedException(service.Type.ToString());
             var commonConf = (LNDConfiguration)confs.Configurations[confs.Configurations.Count - 1];
-            commonConf.ChainType = _Options.NetworkType.ToString();
+            commonConf.ChainType = _options.NetworkType.ToString();
             commonConf.CryptoCode = cryptoCode;
             commonConf.Macaroon = connectionString.Macaroon == null ? null : Encoders.Hex.EncodeData(connectionString.Macaroon);
             commonConf.CertificateThumbprint = connectionString.CertificateThumbprint == null ? null : connectionString.CertificateThumbprint;
@@ -844,15 +833,15 @@ namespace BTCPayServer.Controllers
 
             var nonce = RandomUtils.GetUInt32();
             var configKey = GetConfigKey("lnd", serviceName, cryptoCode, nonce);
-            _LnConfigProvider.KeepConfig(configKey, confs);
-            return RedirectToAction(nameof(Service), new { cryptoCode = cryptoCode, serviceName = serviceName, nonce = nonce });
+            _lnConfigProvider.KeepConfig(configKey, confs);
+            return RedirectToAction(nameof(Service), new { cryptoCode, serviceName, nonce });
         }
 
 
         [Route("server/services/dynamic-dns")]
         public async Task<IActionResult> DynamicDnsServices()
         {
-            var settings = (await _SettingsRepository.GetSettingAsync<DynamicDnsSettings>()) ?? new DynamicDnsSettings();
+            var settings = (await _settingsRepository.GetSettingAsync<DynamicDnsSettings>()) ?? new DynamicDnsSettings();
             return View(settings.Services.Select(s => new DynamicDnsViewModel()
             {
                 Settings = s
@@ -861,7 +850,7 @@ namespace BTCPayServer.Controllers
         [Route("server/services/dynamic-dns/{hostname}")]
         public async Task<IActionResult> DynamicDnsServices(string hostname)
         {
-            var settings = (await _SettingsRepository.GetSettingAsync<DynamicDnsSettings>()) ?? new DynamicDnsSettings();
+            var settings = (await _settingsRepository.GetSettingAsync<DynamicDnsSettings>()) ?? new DynamicDnsSettings();
             var service = settings.Services.FirstOrDefault(s => s.Hostname.Equals(hostname, StringComparison.OrdinalIgnoreCase));
             if (service == null)
                 return NotFound();
@@ -880,7 +869,7 @@ namespace BTCPayServer.Controllers
             }
             if (command == "Save")
             {
-                var settings = (await _SettingsRepository.GetSettingAsync<DynamicDnsSettings>()) ?? new DynamicDnsSettings();
+                var settings = (await _settingsRepository.GetSettingAsync<DynamicDnsSettings>()) ?? new DynamicDnsSettings();
                 var i = settings.Services.FindIndex(d => d.Hostname.Equals(viewModel.Settings.Hostname, StringComparison.OrdinalIgnoreCase));
                 if (i != -1)
                 {
@@ -895,7 +884,7 @@ namespace BTCPayServer.Controllers
                     TempData[WellKnownTempData.SuccessMessage] = $"The Dynamic DNS has been successfully queried, your configuration is saved";
                     viewModel.Settings.LastUpdated = DateTimeOffset.UtcNow;
                     settings.Services.Add(viewModel.Settings);
-                    await _SettingsRepository.UpdateSetting(settings);
+                    await _settingsRepository.UpdateSetting(settings);
                     return RedirectToAction(nameof(DynamicDnsServices));
                 }
                 else
@@ -909,6 +898,7 @@ namespace BTCPayServer.Controllers
                 return View(new DynamicDnsViewModel() { Settings = new DynamicDnsService() });
             }
         }
+        
         [Route("server/services/dynamic-dns/{hostname}")]
         [HttpPost]
         public async Task<IActionResult> DynamicDnsService(DynamicDnsViewModel viewModel, string hostname, string command = null)
@@ -917,7 +907,7 @@ namespace BTCPayServer.Controllers
             {
                 return View(viewModel);
             }
-            var settings = (await _SettingsRepository.GetSettingAsync<DynamicDnsSettings>()) ?? new DynamicDnsSettings();
+            var settings = (await _settingsRepository.GetSettingAsync<DynamicDnsSettings>()) ?? new DynamicDnsSettings();
 
             var i = settings.Services.FindIndex(d => d.Hostname.Equals(hostname, StringComparison.OrdinalIgnoreCase));
             if (i == -1)
@@ -946,15 +936,16 @@ namespace BTCPayServer.Controllers
                 }
             }
             settings.Services[i] = viewModel.Settings;
-            await _SettingsRepository.UpdateSetting(settings);
+            await _settingsRepository.UpdateSetting(settings);
             this.RouteData.Values.Remove(nameof(hostname));
             return RedirectToAction(nameof(DynamicDnsServices));
         }
+        
         [HttpGet]
         [Route("server/services/dynamic-dns/{hostname}/delete")]
         public async Task<IActionResult> DeleteDynamicDnsService(string hostname)
         {
-            var settings = (await _SettingsRepository.GetSettingAsync<DynamicDnsSettings>()) ?? new DynamicDnsSettings();
+            var settings = (await _settingsRepository.GetSettingAsync<DynamicDnsSettings>()) ?? new DynamicDnsSettings();
             var i = settings.Services.FindIndex(d => d.Hostname.Equals(hostname, StringComparison.OrdinalIgnoreCase));
             if (i == -1)
                 return NotFound();
@@ -969,12 +960,12 @@ namespace BTCPayServer.Controllers
         [Route("server/services/dynamic-dns/{hostname}/delete")]
         public async Task<IActionResult> DeleteDynamicDnsServicePost(string hostname)
         {
-            var settings = (await _SettingsRepository.GetSettingAsync<DynamicDnsSettings>()) ?? new DynamicDnsSettings();
+            var settings = (await _settingsRepository.GetSettingAsync<DynamicDnsSettings>()) ?? new DynamicDnsSettings();
             var i = settings.Services.FindIndex(d => d.Hostname.Equals(hostname, StringComparison.OrdinalIgnoreCase));
             if (i == -1)
                 return NotFound();
             settings.Services.RemoveAt(i);
-            await _SettingsRepository.UpdateSetting(settings);
+            await _settingsRepository.UpdateSetting(settings);
             TempData[WellKnownTempData.SuccessMessage] = "Dynamic DNS service successfully removed";
             this.RouteData.Values.Remove(nameof(hostname));
             return RedirectToAction(nameof(DynamicDnsServices));
@@ -986,7 +977,7 @@ namespace BTCPayServer.Controllers
             if (!CanShowSSHService())
                 return NotFound();
 
-            var settings = _Options.SSHSettings;
+            var settings = _options.SSHSettings;
             var server = Extensions.IsLocalNetwork(settings.Server) ? this.Request.Host.Host : settings.Server;
             SSHServiceViewModel vm = new SSHServiceViewModel();
             string port = settings.Port == 22 ? "" : $" -p {settings.Port}";
@@ -1010,7 +1001,7 @@ namespace BTCPayServer.Controllers
             {
                 try
                 {
-                    using (var sshClient = await _Options.SSHSettings.ConnectAsync())
+                    using (var sshClient = await _options.SSHSettings.ConnectAsync())
                     {
                         var result = await sshClient.RunBash("cat ~/.ssh/authorized_keys", TimeSpan.FromSeconds(10));
                         vm.SSHKeyFileContent = result.Output;
@@ -1023,12 +1014,12 @@ namespace BTCPayServer.Controllers
 
         bool CanShowSSHService()
         {
-            return _Options.SSHSettings != null && (_sshState.CanUseSSH || CanAccessAuthorizedKeyFile());
+            return _options.SSHSettings != null && (_sshState.CanUseSSH || CanAccessAuthorizedKeyFile());
         }
 
         private bool CanAccessAuthorizedKeyFile()
         {
-            return _Options.SSHSettings?.AuthorizedKeysFile != null && System.IO.File.Exists(_Options.SSHSettings.AuthorizedKeysFile);
+            return _options.SSHSettings?.AuthorizedKeysFile != null && System.IO.File.Exists(_options.SSHSettings.AuthorizedKeysFile);
         }
 
         [HttpPost]
@@ -1045,7 +1036,7 @@ namespace BTCPayServer.Controllers
             {
                 try
                 {
-                    await System.IO.File.WriteAllTextAsync(_Options.SSHSettings.AuthorizedKeysFile, newContent);
+                    await System.IO.File.WriteAllTextAsync(_options.SSHSettings.AuthorizedKeysFile, newContent);
                     TempData[WellKnownTempData.SuccessMessage] = "authorized_keys has been updated";
                     updated = true;
                 }
@@ -1060,7 +1051,7 @@ namespace BTCPayServer.Controllers
             {
                 try
                 {
-                    using (var sshClient = await _Options.SSHSettings.ConnectAsync())
+                    using (var sshClient = await _options.SSHSettings.ConnectAsync())
                     {
                         await sshClient.RunBash($"mkdir -p ~/.ssh && echo '{newContent.EscapeSingleQuotes()}' > ~/.ssh/authorized_keys", TimeSpan.FromSeconds(10));
                     }
@@ -1087,23 +1078,23 @@ namespace BTCPayServer.Controllers
         [Route("server/theme")]
         public async Task<IActionResult> Theme()
         {
-            var data = (await _SettingsRepository.GetSettingAsync<ThemeSettings>()) ?? new ThemeSettings();
+            var data = (await _settingsRepository.GetSettingAsync<ThemeSettings>()) ?? new ThemeSettings();
             return View(data);
         }
+        
         [Route("server/theme")]
         [HttpPost]
         public async Task<IActionResult> Theme(ThemeSettings settings)
         {
-            await _SettingsRepository.UpdateSetting(settings);
+            await _settingsRepository.UpdateSetting(settings);
             TempData[WellKnownTempData.SuccessMessage] = "Theme settings updated successfully";
             return View(settings);
         }
 
-
         [Route("server/emails")]
         public async Task<IActionResult> Emails()
         {
-            var data = (await _SettingsRepository.GetSettingAsync<EmailSettings>()) ?? new EmailSettings();
+            var data = (await _settingsRepository.GetSettingAsync<EmailSettings>()) ?? new EmailSettings();
             return View(new EmailsViewModel() { Settings = data });
         }
 
@@ -1134,7 +1125,7 @@ namespace BTCPayServer.Controllers
             }
             else // if(command == "Save")
             {
-                await _SettingsRepository.UpdateSetting(model.Settings);
+                await _settingsRepository.UpdateSetting(model.Settings);
                 TempData[WellKnownTempData.SuccessMessage] = "Email settings saved";
                 return View(model);
             }
@@ -1150,7 +1141,7 @@ namespace BTCPayServer.Controllers
 
             var vm = new LogsViewModel();
 
-            if (string.IsNullOrEmpty(_Options.LogFile))
+            if (string.IsNullOrEmpty(_options.LogFile))
             {
                 TempData[WellKnownTempData.ErrorMessage] = "File Logging Option not specified. " +
                                    "You need to set debuglog and optionally " +
@@ -1158,14 +1149,16 @@ namespace BTCPayServer.Controllers
             }
             else
             {
-                var di = Directory.GetParent(_Options.LogFile);
+                var di = Directory.GetParent(_options.LogFile);
                 if (di == null)
                 {
                     TempData[WellKnownTempData.ErrorMessage] = "Could not load log files";
+                    
+                    return View("Logs", vm);
                 }
 
-                var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(_Options.LogFile);
-                var fileExtension = Path.GetExtension(_Options.LogFile) ?? string.Empty;
+                var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(_options.LogFile);
+                var fileExtension = Path.GetExtension(_options.LogFile) ?? string.Empty;
                 var logFiles = di.GetFiles($"{fileNameWithoutExtension}*{fileExtension}");
                 vm.LogFileCount = logFiles.Length;
                 vm.LogFiles = logFiles

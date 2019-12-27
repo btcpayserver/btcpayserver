@@ -28,14 +28,14 @@ namespace BTCPayServer.Controllers
         [HttpGet("server/files/{fileId?}")]
         public async Task<IActionResult> Files(string fileId = null)
         {
-            var fileUrl = string.IsNullOrEmpty(fileId) ? null : await _FileService.GetFileUrl(Request.GetAbsoluteRootUri(), fileId);
+            var fileUrl = string.IsNullOrEmpty(fileId) ? null : await _fileService.GetFileUrl(Request.GetAbsoluteRootUri(), fileId);
 
             return View(new ViewFilesViewModel()
             {
-                Files = await _StoredFileRepository.GetFiles(),
+                Files = await _storedFileRepository.GetFiles(),
                 SelectedFileId = string.IsNullOrEmpty(fileUrl) ? null : fileId,
                 DirectFileUrl = fileUrl,
-                StorageConfigured = (await _SettingsRepository.GetSettingAsync<StorageSettings>()) != null
+                StorageConfigured = (await _settingsRepository.GetSettingAsync<StorageSettings>()) != null
             });
         }
 
@@ -44,7 +44,7 @@ namespace BTCPayServer.Controllers
         {
             try
             {
-                await _FileService.RemoveFile(fileId, null);
+                await _fileService.RemoveFile(fileId, null);
                 return RedirectToAction(nameof(Files), new
                 {
                     fileId = "",
@@ -65,7 +65,7 @@ namespace BTCPayServer.Controllers
         [HttpGet("server/files/{fileId}/tmp")]
         public async Task<IActionResult> CreateTemporaryFileUrl(string fileId)
         {
-            var file = await _StoredFileRepository.GetFile(fileId);
+            var file = await _storedFileRepository.GetFile(fileId);
 
             if (file == null)
             {
@@ -89,7 +89,7 @@ namespace BTCPayServer.Controllers
                 return View(viewModel);
             }
 
-            var file = await _StoredFileRepository.GetFile(fileId);
+            var file = await _storedFileRepository.GetFile(fileId);
 
             if (file == null)
             {
@@ -115,7 +115,7 @@ namespace BTCPayServer.Controllers
                     throw new ArgumentOutOfRangeException();
             }
 
-            var url = await _FileService.GetTemporaryFileUrl(Request.GetAbsoluteRootUri(), fileId, expiry, viewModel.IsDownload);
+            var url = await _fileService.GetTemporaryFileUrl(Request.GetAbsoluteRootUri(), fileId, expiry, viewModel.IsDownload);
             TempData.SetStatusMessageModel(new StatusMessageModel()
             {
                 Severity = StatusMessageModel.StatusSeverity.Success,
@@ -146,7 +146,7 @@ namespace BTCPayServer.Controllers
         [HttpPost("server/files/upload")]
         public async Task<IActionResult> CreateFile(IFormFile file)
         {
-            var newFile = await _FileService.AddFile(file, GetUserId());
+            var newFile = await _fileService.AddFile(file, GetUserId());
             return RedirectToAction(nameof(Files), new
             {
                 statusMessage = "File added!",
@@ -156,13 +156,13 @@ namespace BTCPayServer.Controllers
 
         private string GetUserId()
         {
-            return _UserManager.GetUserId(ControllerContext.HttpContext.User);
+            return _userManager.GetUserId(ControllerContext.HttpContext.User);
         }
 
         [HttpGet("server/storage")]
         public async Task<IActionResult> Storage(bool forceChoice = false)
         {
-            var savedSettings = await _SettingsRepository.GetSettingAsync<StorageSettings>();
+            var savedSettings = await _settingsRepository.GetSettingAsync<StorageSettings>();
             if (forceChoice || savedSettings == null)
             {
                 return View(new ChooseStorageViewModel()
@@ -200,10 +200,10 @@ namespace BTCPayServer.Controllers
                 return RedirectToAction(nameof(Storage));
             }
 
-            var data = (await _SettingsRepository.GetSettingAsync<StorageSettings>()) ?? new StorageSettings();
+            var data = (await _settingsRepository.GetSettingAsync<StorageSettings>()) ?? new StorageSettings();
 
             var storageProviderService =
-                _StorageProviderServices.SingleOrDefault(service => service.StorageProvider().Equals(storageProvider));
+                _storageProviderServices.SingleOrDefault(service => service.StorageProvider().Equals(storageProvider));
 
             switch (storageProviderService)
             {
@@ -274,10 +274,10 @@ namespace BTCPayServer.Controllers
                 return View(viewModel);
             }
 
-            var data = (await _SettingsRepository.GetSettingAsync<StorageSettings>()) ?? new StorageSettings();
+            var data = (await _settingsRepository.GetSettingAsync<StorageSettings>()) ?? new StorageSettings();
             data.Provider = storageProvider;
             data.Configuration = JObject.FromObject(viewModel);
-            await _SettingsRepository.UpdateSetting(data);
+            await _settingsRepository.UpdateSetting(data);
             TempData.SetStatusMessageModel(new StatusMessageModel()
             {
                 Severity = StatusMessageModel.StatusSeverity.Success,

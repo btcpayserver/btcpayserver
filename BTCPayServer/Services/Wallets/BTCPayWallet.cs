@@ -25,17 +25,7 @@ namespace BTCPayServer.Services.Wallets
         public IMoney Value { get; set; }
         
     }
-    public class NetworkCoins
-    {
-        public class TimestampedCoin
-        {
-            public DateTimeOffset DateTime { get; set; }
-            public Coin Coin { get; set; }
-        }
-        public TimestampedCoin[] TimestampedCoins { get; set; }
-        public DerivationStrategyBase Strategy { get; set; }
-        public BTCPayWallet Wallet { get; set; }
-    }
+
     public class BTCPayWallet
     {
         private ExplorerClient _Client;

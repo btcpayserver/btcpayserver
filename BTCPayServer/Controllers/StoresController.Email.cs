@@ -3,8 +3,6 @@ using System.Net.Mail;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Models.ServerViewModels;
-using BTCPayServer.Models.StoreViewModels;
-using BTCPayServer.Payments.Changelly;
 using BTCPayServer.Services.Mails;
 using Microsoft.AspNetCore.Mvc;
 
@@ -20,7 +18,7 @@ namespace BTCPayServer.Controllers
             if (store == null)
                 return NotFound();
             var data = store.GetStoreBlob().EmailSettings ?? new EmailSettings();
-            return View(new EmailsViewModel() { Settings = data });
+            return View(new EmailsViewModel { Settings = data });
         }
         
         [Route("{storeId}/emails")]
@@ -50,18 +48,14 @@ namespace BTCPayServer.Controllers
                 }
                 return View(model);
             }
-            else // if(command == "Save")
-            {
-                
-                var storeBlob = store.GetStoreBlob();
-                storeBlob.EmailSettings = model.Settings;
-                store.SetStoreBlob(storeBlob);
-                await _Repo.UpdateStore(store);
-                TempData[WellKnownTempData.SuccessMessage] = "Email settings modified";
-                return RedirectToAction(nameof(UpdateStore), new {
-                    storeId});
-
-            }
+            
+            var storeBlob = store.GetStoreBlob();
+            storeBlob.EmailSettings = model.Settings;
+            store.SetStoreBlob(storeBlob);
+            await _repo.UpdateStore(store);
+            TempData[WellKnownTempData.SuccessMessage] = "Email settings modified";
+            
+            return RedirectToAction(nameof(UpdateStore), new { storeId });
         }
     }
 }

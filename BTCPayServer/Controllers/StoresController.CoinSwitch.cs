@@ -20,7 +20,7 @@ namespace BTCPayServer.Controllers
             return View(vm);
         }
 
-        private void SetExistingValues(StoreData store, UpdateCoinSwitchSettingsViewModel vm)
+        private static void SetExistingValues(StoreData store, UpdateCoinSwitchSettingsViewModel vm)
         {
 
             var existing = store.GetStoreBlob().CoinSwitchSettings;
@@ -47,7 +47,7 @@ namespace BTCPayServer.Controllers
                 }
             }
 
-            var coinSwitchSettings = new CoinSwitchSettings()
+            var coinSwitchSettings = new CoinSwitchSettings
             {
                 MerchantId =  vm.MerchantId,
                 Enabled = vm.Enabled,
@@ -61,7 +61,7 @@ namespace BTCPayServer.Controllers
                     var storeBlob = store.GetStoreBlob();
                     storeBlob.CoinSwitchSettings = coinSwitchSettings;
                     store.SetStoreBlob(storeBlob);
-                    await _Repo.UpdateStore(store);
+                    await _repo.UpdateStore(store);
                     TempData[WellKnownTempData.SuccessMessage] = "CoinSwitch settings modified";
                     return RedirectToAction(nameof(UpdateStore), new {
                         storeId});

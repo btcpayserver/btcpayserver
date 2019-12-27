@@ -1,13 +1,11 @@
 ﻿using System;
 using Microsoft.Extensions.DependencyInjection;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
 using Microsoft.AspNetCore.Mvc;
 using BTCPayServer.Payments.Lightning;
-using System.Net;
 using BTCPayServer.Data;
 using System.Threading;
 using BTCPayServer.Lightning;
@@ -16,7 +14,6 @@ namespace BTCPayServer.Controllers
 {
     public partial class StoresController
     {
-
         [HttpGet]
         [Route("{storeId}/lightning/{cryptoCode}")]
         public IActionResult AddLightningNode(string storeId, string cryptoCode)
@@ -42,7 +39,7 @@ namespace BTCPayServer.Controllers
         private LightningSupportedPaymentMethod GetExistingLightningSupportedPaymentMethod(string cryptoCode, StoreData store)
         {
             var id = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
-            var existing = store.GetSupportedPaymentMethods(_NetworkProvider)
+            var existing = store.GetSupportedPaymentMethods(_networkProvider)
                 .OfType<LightningSupportedPaymentMethod>()
                 .FirstOrDefault(d => d.PaymentId == id);
             return existing;
@@ -50,7 +47,7 @@ namespace BTCPayServer.Controllers
 
         private LightningConnectionString GetInternalLighningNode(string cryptoCode)
         {
-            if (_BtcpayServerOptions.InternalLightningByCryptoCode.TryGetValue(cryptoCode, out var connectionString))
+            if (_btcpayServerOptions.InternalLightningByCryptoCode.TryGetValue(cryptoCode, out var connectionString))
             {
                 return CanUseInternalLightning() ? connectionString : null;
             }
@@ -65,18 +62,18 @@ namespace BTCPayServer.Controllers
             var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
-            var network = vm.CryptoCode == null ? null : _ExplorerProvider.GetNetwork(vm.CryptoCode);
-
-            var internalLightning = GetInternalLighningNode(network.CryptoCode);
-            vm.InternalLightningNode = internalLightning?.ToString();
+            var network = vm.CryptoCode == null ? null : _explorerProvider.GetNetwork(vm.CryptoCode);
             if (network == null)
             {
                 ModelState.AddModelError(nameof(vm.CryptoCode), "Invalid network");
                 return View(vm);
             }
 
+            var internalLightning = GetInternalLighningNode(network.CryptoCode);
+            vm.InternalLightningNode = internalLightning?.ToString();
+
             PaymentMethodId paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.LightningLike);
-            Payments.Lightning.LightningSupportedPaymentMethod paymentMethod = null;
+            LightningSupportedPaymentMethod paymentMethod = null;
             if (!string.IsNullOrEmpty(vm.ConnectionString))
             {
                 if (!LightningConnectionString.TryParse(vm.ConnectionString, false, out var connectionString, out var error))
@@ -87,7 +84,7 @@ namespace BTCPayServer.Controllers
 
                 if(connectionString.ConnectionType == LightningConnectionType.LndGRPC)
                 {
-                    ModelState.AddModelError(nameof(vm.ConnectionString), $"BTCPay does not support gRPC connections");
+                    ModelState.AddModelError(nameof(vm.ConnectionString), "BTCPay does not support gRPC connections");
                     return View(vm);
                 }
 
@@ -131,7 +128,7 @@ namespace BTCPayServer.Controllers
                     return View(vm);
                 }
 
-                paymentMethod = new Payments.Lightning.LightningSupportedPaymentMethod()
+                paymentMethod = new LightningSupportedPaymentMethod
                 {
                     CryptoCode = paymentMethodId.CryptoCode
                 };
@@ -145,17 +142,17 @@ namespace BTCPayServer.Controllers
                     storeBlob.SetExcluded(paymentMethodId, !vm.Enabled);
                     store.SetStoreBlob(storeBlob);
                     store.SetSupportedPaymentMethod(paymentMethodId, paymentMethod);
-                    await _Repo.UpdateStore(store);
+                    await _repo.UpdateStore(store);
                     TempData[WellKnownTempData.SuccessMessage] = $"Lightning node modified ({network.CryptoCode})";
-                    return RedirectToAction(nameof(UpdateStore), new { storeId = storeId });
+                    return RedirectToAction(nameof(UpdateStore), new { storeId });
                 case "test" when paymentMethod == null:
                     ModelState.AddModelError(nameof(vm.ConnectionString), "Missing url parameter");
                     return View(vm);
                 case "test":
-                    var handler = _ServiceProvider.GetRequiredService<LightningLikePaymentHandler>();
+                    var handler = _serviceProvider.GetRequiredService<LightningLikePaymentHandler>();
                     try
                     {
-                        var info = await handler.GetNodeInfo(this.Request.IsOnion(), paymentMethod, network);
+                        var info = await handler.GetNodeInfo(Request.IsOnion(), paymentMethod, network);
                         if (!vm.SkipPortTest)
                         {
                             using (CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
@@ -178,7 +175,7 @@ namespace BTCPayServer.Controllers
 
         private bool CanUseInternalLightning()
         {
-            return (_BTCPayEnv.IsDevelopping || User.IsInRole(Roles.ServerAdmin) || _CssThemeManager.AllowLightningInternalNodeForAll);
+            return _btcPayEnv.IsDevelopping || User.IsInRole(Roles.ServerAdmin) || _cssThemeManager.AllowLightningInternalNodeForAll;
         }
     }
 }

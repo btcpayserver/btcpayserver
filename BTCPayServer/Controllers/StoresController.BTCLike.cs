@@ -1,7 +1,5 @@
 ﻿using System;
 using Microsoft.AspNetCore.Authorization;
-using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.WebSockets;
@@ -13,14 +11,12 @@ using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
-using LedgerWallet;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Controllers
 {
@@ -33,16 +29,19 @@ namespace BTCPayServer.Controllers
             var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
-            var network = cryptoCode == null ? null : _ExplorerProvider.GetNetwork(cryptoCode);
+            var network = cryptoCode == null ? null : _explorerProvider.GetNetwork(cryptoCode);
             if (network == null)
             {
                 return NotFound();
             }
 
-            DerivationSchemeViewModel vm = new DerivationSchemeViewModel();
-            vm.CryptoCode = cryptoCode;
-            vm.RootKeyPath = network.GetRootKeyPath();
-            vm.Network = network;
+            DerivationSchemeViewModel vm =
+                new DerivationSchemeViewModel
+                {
+                    CryptoCode = cryptoCode,
+                    RootKeyPath = network.GetRootKeyPath(),
+                    Network = network
+                };
             var derivation = GetExistingDerivationStrategy(vm.CryptoCode, store);
             if (derivation != null)
             {
@@ -54,7 +53,7 @@ namespace BTCPayServer.Controllers
             return View(vm);
         }
 
-        class GetXPubs
+        private class GetXPubs
         {
             public BitcoinExtPubKey ExtPubKey { get; set; }
             public DerivationStrategyBase DerivationScheme { get; set; }
@@ -76,40 +75,47 @@ namespace BTCPayServer.Controllers
             var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
             var hw = new LedgerHardwareWalletService(webSocket);
             object result = null;
-            var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
+            var network = _networkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
 
             using (var normalOperationTimeout = new CancellationTokenSource())
             {
                 normalOperationTimeout.CancelAfter(TimeSpan.FromMinutes(30));
                 try
                 {
-                    if (command == "test")
+                    switch (command)
                     {
-                        result = await hw.Test(normalOperationTimeout.Token);
-                    }
-                    if (command == "getxpub")
-                    {
-                        var k = KeyPath.Parse(keyPath);
-                        if (k.Indexes.Length == 0)
-                            throw new FormatException("Invalid key path");
-
-                        var getxpubResult = new GetXPubs();
-                        getxpubResult.ExtPubKey = await hw.GetExtPubKey(network, k, normalOperationTimeout.Token);
-                        var segwit = network.NBitcoinNetwork.Consensus.SupportSegwit;
-                        var derivation = network.NBXplorerNetwork.DerivationStrategyFactory.CreateDirectDerivationStrategy(getxpubResult.ExtPubKey, new DerivationStrategyOptions()
+                        case "test":
+                            result = await hw.Test(normalOperationTimeout.Token);
+                            break;
+                        case "getxpub":
                         {
-                            ScriptPubKeyType = segwit ? ScriptPubKeyType.SegwitP2SH : ScriptPubKeyType.Legacy
-                        });
-                        getxpubResult.DerivationScheme = derivation;
-                        getxpubResult.RootFingerprint = (await hw.GetExtPubKey(network, new KeyPath(), normalOperationTimeout.Token)).ExtPubKey.PubKey.GetHDFingerPrint();
-                        getxpubResult.Source = hw.Device;
-                        result = getxpubResult;
+                            var k = KeyPath.Parse(keyPath);
+                            if (k.Indexes.Length == 0)
+                                throw new FormatException("Invalid key path");
+
+                            var getxpubResult = new GetXPubs
+                            {
+                                ExtPubKey = await hw.GetExtPubKey(network, k, normalOperationTimeout.Token)
+                            };
+                            var segwit = network.NBitcoinNetwork.Consensus.SupportSegwit;
+                            var derivation = network.NBXplorerNetwork.DerivationStrategyFactory.CreateDirectDerivationStrategy(
+                                getxpubResult.ExtPubKey, 
+                                new DerivationStrategyOptions
+                                {
+                                    ScriptPubKeyType = segwit ? ScriptPubKeyType.SegwitP2SH : ScriptPubKeyType.Legacy
+                                });
+                            getxpubResult.DerivationScheme = derivation;
+                            getxpubResult.RootFingerprint = (await hw.GetExtPubKey(network, new KeyPath(), normalOperationTimeout.Token)).ExtPubKey.PubKey.GetHDFingerPrint();
+                            getxpubResult.Source = hw.Device;
+                            result = getxpubResult;
+                            break;
+                        }
                     }
                 }
                 catch (OperationCanceledException)
-                { result = new LedgerTestResult() { Success = false, Error = "Timeout" }; }
+                { result = new LedgerTestResult { Success = false, Error = "Timeout" }; }
                 catch (Exception ex)
-                { result = new LedgerTestResult() { Success = false, Error = ex.Message }; }
+                { result = new LedgerTestResult { Success = false, Error = ex.Message }; }
                 finally { hw.Dispose(); }
                 try
                 {
@@ -132,7 +138,7 @@ namespace BTCPayServer.Controllers
         private DerivationSchemeSettings GetExistingDerivationStrategy(string cryptoCode, StoreData store)
         {
             var id = new PaymentMethodId(cryptoCode, PaymentTypes.BTCLike);
-            var existing = store.GetSupportedPaymentMethods(_NetworkProvider)
+            var existing = store.GetSupportedPaymentMethods(_networkProvider)
                 .OfType<DerivationSchemeSettings>()
                 .FirstOrDefault(d => d.PaymentId == id);
             return existing;
@@ -148,7 +154,7 @@ namespace BTCPayServer.Controllers
             if (store == null)
                 return NotFound();
 
-            var network = cryptoCode == null ? null : _ExplorerProvider.GetNetwork(cryptoCode);
+            var network = cryptoCode == null ? null : _explorerProvider.GetNetwork(cryptoCode);
             if (network == null)
             {
                 return NotFound();
@@ -158,7 +164,7 @@ namespace BTCPayServer.Controllers
             vm.RootKeyPath = network.GetRootKeyPath();
             DerivationSchemeSettings strategy = null;
 
-            var wallet = _WalletProvider.GetWallet(network);
+            var wallet = _walletProvider.GetWallet(network);
             if (wallet == null)
             {
                 return NotFound();
@@ -229,13 +235,10 @@ namespace BTCPayServer.Controllers
             }
 
             var oldConfig = vm.Config;
-            vm.Config = strategy == null ? null : strategy.ToJson();
+            vm.Config = strategy?.ToJson();
 
             PaymentMethodId paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
-            var exisingStrategy = store.GetSupportedPaymentMethods(_NetworkProvider)
-                .Where(c => c.PaymentId == paymentMethodId)
-                .OfType<DerivationSchemeSettings>()
-                .FirstOrDefault();
+            
             var storeBlob = store.GetStoreBlob();
             var wasExcluded = storeBlob.GetExcludedPaymentMethods().Match(paymentMethodId);
             var willBeExcluded = !vm.Enabled;
@@ -265,21 +268,19 @@ namespace BTCPayServer.Controllers
                     return View(vm);
                 }
 
-                await _Repo.UpdateStore(store);
+                await _repo.UpdateStore(store);
                 if (willBeExcluded != wasExcluded)
                 {
                     var label = willBeExcluded ? "disabled" : "enabled";
                     TempData[WellKnownTempData.SuccessMessage] = $"On-Chain payments for {network.CryptoCode} has been {label}.";
                 }
-                else
-                {
-                    TempData[WellKnownTempData.SuccessMessage] = $"Derivation settings for {network.CryptoCode} has been modified.";
-                }
-                return RedirectToAction(nameof(UpdateStore), new { storeId = storeId });
+                
+                TempData[WellKnownTempData.SuccessMessage] = $"Derivation settings for {network.CryptoCode} has been modified.";
+                return RedirectToAction(nameof(UpdateStore), new { storeId });
             }
             else if (!string.IsNullOrEmpty(vm.HintAddress))
             {
-                BitcoinAddress address = null;
+                BitcoinAddress address;
                 try
                 {
                     address = BitcoinAddress.Create(vm.HintAddress, network.NBitcoinNetwork);
@@ -325,8 +326,8 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
             
-            var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-            var client = _ExplorerProvider.GetExplorerClient(cryptoCode);
+            var network = _networkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
+            var client = _explorerProvider.GetExplorerClient(cryptoCode);
             var response = await client.GenerateWalletAsync(request);
 
             var store = HttpContext.GetStoreData();
@@ -359,14 +360,14 @@ namespace BTCPayServer.Controllers
 
         private async Task<bool> CanUseHotWallet()
         {
-            var isAdmin = (await _authorizationService.AuthorizeAsync(User, BTCPayServer.Security.Policies.CanModifyServerSettings.Key)).Succeeded;
+            var isAdmin = (await _authorizationService.AuthorizeAsync(User, Security.Policies.CanModifyServerSettings.Key)).Succeeded;
             if (isAdmin)
                 return true;
             var policies = await _settingsRepository.GetSettingAsync<PoliciesSettings>();
             return policies?.AllowHotWalletForAll is true;
         }
 
-        private async Task<string> ReadAllText(IFormFile file)
+        private static async Task<string> ReadAllText(IFormFile file)
         {
             using (var stream = new StreamReader(file.OpenReadStream()))
             {

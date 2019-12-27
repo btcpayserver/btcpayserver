@@ -1,7 +1,5 @@
 ﻿using System;
 using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;

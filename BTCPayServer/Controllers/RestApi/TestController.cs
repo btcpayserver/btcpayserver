@@ -1,12 +1,10 @@
 using System.Threading.Tasks;
 using BTCPayServer.Data;
-using BTCPayServer.Models;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using OpenIddict.Validation.AspNetCore;
 
 namespace BTCPayServer.Controllers.RestApi
 {

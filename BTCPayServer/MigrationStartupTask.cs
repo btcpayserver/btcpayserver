@@ -1,7 +1,6 @@
 ﻿using System;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
@@ -9,7 +8,6 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Logging;
 using System.Threading;
-using Npgsql;
 using Microsoft.AspNetCore.Identity;
 
 namespace BTCPayServer

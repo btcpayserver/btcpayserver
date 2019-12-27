@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
-using NBitcoin;
 using System.Reflection;
 using System;
 using System.Threading.Tasks;

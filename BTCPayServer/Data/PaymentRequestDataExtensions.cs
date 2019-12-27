@@ -1,6 +1,4 @@
-﻿using NBitcoin;
-using NBXplorer;
-using NBXplorer.DerivationStrategy;
+﻿using NBXplorer;
 using Newtonsoft.Json.Linq;
 using static BTCPayServer.Data.PaymentRequestData;
 

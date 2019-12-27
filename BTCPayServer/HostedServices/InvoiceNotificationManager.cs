@@ -2,16 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Reflection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
 using NBitpayClient;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
-using System.Collections.Concurrent;
 using Microsoft.Extensions.Hosting;
 using BTCPayServer.Events;
 using NBXplorer;

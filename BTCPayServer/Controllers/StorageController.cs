@@ -1,4 +1,3 @@
-using System;
 using System.Threading.Tasks;
 using BTCPayServer.Configuration;
 using BTCPayServer.Storage.Services;

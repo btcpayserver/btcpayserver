@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using System;
-using System.Collections.Generic;
 using System.Text;
 using System.Linq;
 using System.Threading.Tasks;
@@ -12,7 +11,6 @@ using Newtonsoft.Json;
 using BTCPayServer.Models;
 using BTCPayServer.Configuration;
 using System.Net.WebSockets;
-using BTCPayServer.Services.Stores;
 
 namespace BTCPayServer.Hosting
 {

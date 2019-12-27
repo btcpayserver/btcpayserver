@@ -4,13 +4,11 @@ using IWebHostEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
 #else
 using Microsoft.Extensions.Hosting;
 #endif
-using OpenIddict.Validation.AspNetCore;
 using OpenIddict.Abstractions;
 using Microsoft.AspNetCore.Builder;
 using System;
 using Microsoft.Extensions.DependencyInjection;
 using BTCPayServer.Filters;
-using BTCPayServer.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.HttpOverrides;
 using BTCPayServer.Data;
@@ -28,8 +26,6 @@ using BTCPayServer.Security.OpenId;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Storage;
-using Microsoft.Extensions.Options;
-using OpenIddict.Core;
 
 namespace BTCPayServer.Hosting
 {

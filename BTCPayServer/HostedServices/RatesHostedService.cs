@@ -7,11 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Rates;
-using Microsoft.Extensions.Hosting;
 using BTCPayServer.Logging;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Text;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.HostedServices

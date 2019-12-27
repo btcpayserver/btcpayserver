@@ -8,7 +8,6 @@ using NBitcoin;
 using BTCPayServer.Logging;
 using System.Threading;
 using Microsoft.Extensions.Hosting;
-using System.Collections.Concurrent;
 using BTCPayServer.Events;
 using BTCPayServer.Services.Invoices;
 using System.Threading.Channels;

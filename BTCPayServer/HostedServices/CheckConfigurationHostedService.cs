@@ -1,16 +1,10 @@
 ﻿using System;
 using Microsoft.Extensions.Logging;
-using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using BTCPayServer.Data;
-using BTCPayServer.Services;
 using Microsoft.Extensions.Hosting;
 using System.Threading;
 using BTCPayServer.Configuration;
 using BTCPayServer.Logging;
-using NBitcoin.DataEncoders;
 
 namespace BTCPayServer.HostedServices
 {

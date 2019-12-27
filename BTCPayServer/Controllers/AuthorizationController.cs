@@ -4,9 +4,7 @@
  * the license and the contributors participating to this project.
  */
 
-using System;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Security.OpenId;
 using BTCPayServer.Data;
@@ -20,9 +18,6 @@ using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore;
 using OpenIddict.Abstractions;
 using OpenIddict.Core;
-using OpenIddict.Server;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using OpenIddict.Server.AspNetCore;
 
 namespace BTCPayServer.Controllers

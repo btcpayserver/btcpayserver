@@ -9,7 +9,6 @@ using System.Net.Http;
 using Newtonsoft.Json.Linq;
 using NBitcoin;
 using Newtonsoft.Json;
-using BTCPayServer.Services;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Services.Apps;
 using Microsoft.AspNetCore.Identity;

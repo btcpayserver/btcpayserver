@@ -1,15 +1,6 @@
 ﻿using System;
-using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Logging;
-using Microsoft.Extensions.Hosting;
-using NBXplorer;
-using NBXplorer.Models;
-using System.Collections.Concurrent;
-using BTCPayServer.Events;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Mvc.Filters;
 using BTCPayServer.Security;

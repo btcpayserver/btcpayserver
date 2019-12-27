@@ -944,11 +944,6 @@ namespace BTCPayServer.Controllers
         }
     }
 
-
-    public class GetInfoResult
-    {
-    }
-
     public class SendToAddressResult
     {
         [JsonProperty("psbt")]

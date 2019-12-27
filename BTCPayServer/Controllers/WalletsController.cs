@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Linq;
 using System.Net.WebSockets;
@@ -17,19 +16,14 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
-using LedgerWallet;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json;
-using static BTCPayServer.Controllers.StoresController;
 
 namespace BTCPayServer.Controllers
 {
@@ -125,7 +119,6 @@ namespace BTCPayServer.Controllers
 
             var walletBlobInfoAsync = WalletRepository.GetWalletInfo(walletId);
             var walletTransactionsInfoAsync = WalletRepository.GetWalletTransactionsInfo(walletId);
-            var wallet = _walletProvider.GetWallet(paymentMethod.Network);
             var walletBlobInfo = await walletBlobInfoAsync;
             var walletTransactionsInfo = await walletTransactionsInfoAsync;
             if (addlabel != null)
@@ -201,13 +194,13 @@ namespace BTCPayServer.Controllers
                                               .OfType<DerivationSchemeSettings>()
                                               .Select(d => ((Wallet: _walletProvider.GetWallet(d.Network),
                                                             DerivationStrategy: d.AccountDerivation,
-                                                            Network: d.Network)))
+                                                            d.Network)))
                                               .Where(_ => _.Wallet != null && _.Network.WalletSupported)
-                                              .Select(_ => (Wallet: _.Wallet,
+                                              .Select(_ => (_.Wallet,
                                                             Store: s,
                                                             Balance: GetBalanceString(_.Wallet, _.DerivationStrategy),
-                                                            DerivationStrategy: _.DerivationStrategy,
-                                                            Network: _.Network)))
+                                                            _.DerivationStrategy,
+                                                            _.Network)))
                                               .ToList();
 
             foreach (var wallet in onChainWallets)
@@ -269,11 +262,6 @@ namespace BTCPayServer.Controllers
             }
             model.Transactions = model.Transactions.OrderByDescending(t => t.Timestamp).ToList();
             return View(model);
-        }
-
-        private static string GetLabelTarget(WalletId walletId, uint256 txId)
-        {
-            return $"{walletId}:{txId}";
         }
 
         [HttpGet]
@@ -469,7 +457,7 @@ namespace BTCPayServer.Controllers
                 case "analyze-psbt":
                     var name =
                         $"Send-{string.Join('_', vm.Outputs.Select(output => $"{output.Amount}->{output.DestinationAddress}{(output.SubtractFeesFromOutput ? "-Fees" : string.Empty)}"))}.psbt";
-                    return RedirectToWalletPSBT(walletId, psbt.PSBT, name);
+                    return RedirectToWalletPSBT(psbt.PSBT, name);
                 default:
                     return View(vm);
             }
@@ -486,7 +474,7 @@ namespace BTCPayServer.Controllers
             });
         }
 
-        private IActionResult RedirectToWalletPSBT(WalletId walletId, PSBT psbt, string fileName = null)
+        private IActionResult RedirectToWalletPSBT(PSBT psbt, string fileName = null)
         {
             var vm = new PostRedirectViewModel()
             {
@@ -527,7 +515,7 @@ namespace BTCPayServer.Controllers
         private ViewResult ViewWalletSendLedger(PSBT psbt, BitcoinAddress hintChange = null)
         {
             SetAmbientPSBT(psbt);
-            return View("WalletSendLedger", new WalletSendLedgerModel()
+            return View("WalletSendLedger", new WalletSendLedgerModel
             {
                 PSBT = psbt.ToBase64(),
                 HintChange = hintChange?.ToString(),
@@ -626,14 +614,14 @@ namespace BTCPayServer.Controllers
 
         private IActionResult RedirectToWalletTransaction(WalletId walletId, Transaction transaction)
         {
+            if (transaction == null)
+                return RedirectToAction(nameof(WalletTransactions), new {walletId = walletId.ToString()});
+            
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
-            if (transaction != null)
-            {
-                var wallet = _walletProvider.GetWallet(network);
-                var derivationSettings = GetDerivationSchemeSettings(walletId);
-                wallet.InvalidateCache(derivationSettings.AccountDerivation);
-                TempData[WellKnownTempData.SuccessMessage] = $"Transaction broadcasted successfully ({transaction.GetHash().ToString()})";
-            }
+            var wallet = _walletProvider.GetWallet(network);
+            var derivationSettings = GetDerivationSchemeSettings(walletId);
+            wallet.InvalidateCache(derivationSettings.AccountDerivation);
+            TempData[WellKnownTempData.SuccessMessage] = $"Transaction broadcasted successfully ({transaction.GetHash()})";
             return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
         }
 
@@ -649,16 +637,24 @@ namespace BTCPayServer.Controllers
             if (paymentMethod == null)
                 return NotFound();
 
-            var vm = new RescanWalletModel();
-            vm.IsFullySync = _dashboard.IsFullySynched(walletId.CryptoCode, out var unused);
-            vm.IsServerAdmin = (await _authorizationService.AuthorizeAsync(User, Policies.CanModifyServerSettings.Key)).Succeeded;
-            vm.IsSupportedByCurrency = _dashboard.Get(walletId.CryptoCode)?.Status?.BitcoinStatus?.Capabilities?.CanScanTxoutSet == true;
+            var vm = new RescanWalletModel
+            {
+                IsFullySync = _dashboard.IsFullySynched(walletId.CryptoCode, out var unused),
+                IsServerAdmin =
+                    (await _authorizationService.AuthorizeAsync(User, Policies.CanModifyServerSettings.Key))
+                    .Succeeded,
+                IsSupportedByCurrency =
+                    _dashboard.Get(walletId.CryptoCode)?.Status?.BitcoinStatus?.Capabilities?.CanScanTxoutSet == true
+            };
             var explorer = ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode);
             var scanProgress = await explorer.GetScanUTXOSetInformationAsync(paymentMethod.AccountDerivation);
-            if (scanProgress != null)
+            if (scanProgress == null) return View(vm);
+            
+            vm.PreviousError = scanProgress.Error;
+            switch (scanProgress.Status)
             {
-                vm.PreviousError = scanProgress.Error;
-                if (scanProgress.Status == ScanUTXOStatus.Queued || scanProgress.Status == ScanUTXOStatus.Pending)
+                case ScanUTXOStatus.Queued:
+                case ScanUTXOStatus.Pending:
                 {
                     if (scanProgress.Progress == null)
                     {
@@ -669,13 +665,21 @@ namespace BTCPayServer.Controllers
                         vm.Progress = scanProgress.Progress.OverallProgress;
                         vm.RemainingTime = TimeSpan.FromSeconds(scanProgress.Progress.RemainingSeconds).PrettyPrint();
                     }
+
+                    break;
                 }
-                if (scanProgress.Status == ScanUTXOStatus.Complete)
-                {
+                case ScanUTXOStatus.Complete:
                     vm.LastSuccess = scanProgress.Progress;
-                    vm.TimeOfScan = (scanProgress.Progress.CompletedAt.Value - scanProgress.Progress.StartedAt).PrettyPrint();
-                }
+                    if (scanProgress.Progress.CompletedAt != null)
+                        vm.TimeOfScan = (scanProgress.Progress.CompletedAt.Value - scanProgress.Progress.StartedAt)
+                            .PrettyPrint();
+                    break;
+                case ScanUTXOStatus.Error:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
+
             return View(vm);
         }
 
@@ -791,7 +795,7 @@ namespace BTCPayServer.Controllers
                     }
                     if (command == "sendtoaddress")
                     {
-                        if (!_dashboard.IsFullySynched(network.CryptoCode, out var summary))
+                        if (!_dashboard.IsFullySynched(network.CryptoCode, out NBXplorerDashboard.NBXplorerSummary _))
                             throw new Exception($"{network.CryptoCode}: not started or fully synched");
 
                         var accountKey = derivationSettings.GetSigningAccountKeySettings();
@@ -867,28 +871,27 @@ namespace BTCPayServer.Controllers
         }
 
         [Route("{walletId}/settings")]
-        public async Task<IActionResult> WalletSettings(
-             [ModelBinder(typeof(WalletIdModelBinder))]
+        public IActionResult WalletSettings(
+            [ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId)
         {
             var derivationSchemeSettings = GetDerivationSchemeSettings(walletId);
             if (derivationSchemeSettings == null)
                 return NotFound();
-            var store = (await Repository.FindStore(walletId.StoreId, GetUserId()));
-            var vm = new WalletSettingsViewModel()
+            var vm = new WalletSettingsViewModel
             {
                 Label = derivationSchemeSettings.Label,
                 DerivationScheme = derivationSchemeSettings.AccountDerivation.ToString(),
                 DerivationSchemeInput = derivationSchemeSettings.AccountOriginal,
-                SelectedSigningKey = derivationSchemeSettings.SigningKey.ToString()
+                SelectedSigningKey = derivationSchemeSettings.SigningKey.ToString(),
+                AccountKeys = derivationSchemeSettings.AccountKeySettings
+                    .Select(e => new WalletSettingsAccountKeyViewModel()
+                    {
+                        AccountKey = e.AccountKey.ToString(),
+                        MasterFingerprint = e.RootFingerprint is HDFingerprint fp ? fp.ToString() : null,
+                        AccountKeyPath = e.AccountKeyPath == null ? "" : $"m/{e.AccountKeyPath}"
+                    }).ToList()
             };
-            vm.AccountKeys = derivationSchemeSettings.AccountKeySettings
-                            .Select(e => new WalletSettingsAccountKeyViewModel()
-                            {
-                                AccountKey = e.AccountKey.ToString(),
-                                MasterFingerprint = e.RootFingerprint is HDFingerprint fp ? fp.ToString() : null,
-                                AccountKeyPath = e.AccountKeyPath == null ? "" : $"m/{e.AccountKeyPath}"
-                            }).ToList();
             return View(vm);
         }
 

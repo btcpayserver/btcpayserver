@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -41,7 +40,7 @@ namespace BTCPayServer.Controllers
                 psbtRequest.ExplicitChangeAddress = psbtRequest.Destinations.First().Destination;
             }
            
-            var psbt = (await nbx.CreatePSBTAsync(derivationSettings.AccountDerivation, psbtRequest, cancellationToken));
+            var psbt = await nbx.CreatePSBTAsync(derivationSettings.AccountDerivation, psbtRequest, cancellationToken);
             if (psbt == null)
                 throw new NotSupportedException("You need to update your version of NBXplorer");
             // Not supported by coldcard, remove when they do support it
@@ -61,7 +60,7 @@ namespace BTCPayServer.Controllers
                 vm.Decoded = psbt.ToString();
                 vm.PSBT = psbt.ToBase64();
             }
-            return View(vm ?? new WalletPSBTViewModel() { CryptoCode = walletId.CryptoCode });
+            return View(vm);
         }
         [HttpPost]
         [Route("{walletId}/psbt")]
@@ -103,7 +102,7 @@ namespace BTCPayServer.Controllers
                         return View(vm);
                     }
                     TempData[WellKnownTempData.SuccessMessage] = "PSBT updated!";
-                    return RedirectToWalletPSBT(walletId, psbt, vm.FileName);
+                    return RedirectToWalletPSBT(psbt, vm.FileName);
                 case "seed":
                     return SignWithSeed(walletId, psbt.ToBase64());
                 case "broadcast":
@@ -282,38 +281,36 @@ namespace BTCPayServer.Controllers
                 vm.GlobalError = "Invalid PSBT";
                 return View(vm);
             }
-            if (command == "broadcast")
+            
+            switch (command)
             {
-                if (!psbt.IsAllFinalized() && !psbt.TryFinalize(out var errors))
-                {
+                case "broadcast" when !psbt.IsAllFinalized() && !psbt.TryFinalize(out var errors):
                     vm.SetErrors(errors);
                     return View(vm);
-                }
-                var transaction = psbt.ExtractTransaction();
-                try
+                case "broadcast":
                 {
-                    var broadcastResult = await ExplorerClientProvider.GetExplorerClient(network).BroadcastAsync(transaction);
-                    if (!broadcastResult.Success)
+                    var transaction = psbt.ExtractTransaction();
+                    try
                     {
-                        vm.GlobalError = $"RPC Error while broadcasting: {broadcastResult.RPCCode} {broadcastResult.RPCCodeMessage} {broadcastResult.RPCMessage}";
+                        var broadcastResult = await ExplorerClientProvider.GetExplorerClient(network).BroadcastAsync(transaction);
+                        if (!broadcastResult.Success)
+                        {
+                            vm.GlobalError = $"RPC Error while broadcasting: {broadcastResult.RPCCode} {broadcastResult.RPCCodeMessage} {broadcastResult.RPCMessage}";
+                            return View(vm);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        vm.GlobalError = "Error while broadcasting: " + ex.Message;
                         return View(vm);
                     }
+                    return RedirectToWalletTransaction(walletId, transaction);
                 }
-                catch (Exception ex)
-                {
-                    vm.GlobalError = "Error while broadcasting: " + ex.Message;
+                case "analyze-psbt":
+                    return RedirectToWalletPSBT(psbt);
+                default:
+                    vm.GlobalError = "Unknown command";
                     return View(vm);
-                }
-                return RedirectToWalletTransaction(walletId, transaction);
-            }
-            else if (command == "analyze-psbt")
-            {
-                return RedirectToWalletPSBT(walletId, psbt);
-            }
-            else
-            {
-                vm.GlobalError = "Unknown command";
-                return View(vm);
             }
         }
 
@@ -342,7 +339,7 @@ namespace BTCPayServer.Controllers
             }
             sourcePSBT = sourcePSBT.Combine(psbt);
             TempData[WellKnownTempData.SuccessMessage] = "PSBT Successfully combined!";
-            return RedirectToWalletPSBT(walletId, sourcePSBT);
+            return RedirectToWalletPSBT(sourcePSBT);
         }
     }
 }

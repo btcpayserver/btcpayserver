@@ -50,7 +50,7 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Allow anyone to create invoice")]
         public bool AnyoneCanCreateInvoice { get; set; }
 
-        public List<StoreViewModel.DerivationScheme> DerivationSchemes { get; set; } = new List<StoreViewModel.DerivationScheme>();
+        public List<DerivationScheme> DerivationSchemes { get; set; } = new List<DerivationScheme>();
 
         public List<AdditionalPaymentMethod> ThirdPartyPaymentMethods { get; set; } =
             new List<AdditionalPaymentMethod>();
@@ -78,7 +78,7 @@ namespace BTCPayServer.Models.StoreViewModels
         }
 
         [Display(Name = "Add additional fee (network fee) to invoice...")]
-        public Data.NetworkFeeMode NetworkFeeMode
+        public NetworkFeeMode NetworkFeeMode
         {
             get; set;
         }

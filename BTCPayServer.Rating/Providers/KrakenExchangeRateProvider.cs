@@ -170,7 +170,6 @@ namespace BTCPayServer.Services.Rates
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("https://api.kraken.com");
-            ;
             sb.Append(url);
             if (payload != null)
             {

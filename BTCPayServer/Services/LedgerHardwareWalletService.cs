@@ -15,7 +15,7 @@ namespace BTCPayServer.Services
         {
             private readonly WebSocket webSocket;
 
-            public WebSocketTransport(System.Net.WebSockets.WebSocket webSocket)
+            public WebSocketTransport(WebSocket webSocket)
             {
                 if (webSocket == null)
                     throw new ArgumentNullException(nameof(webSocket));
@@ -66,7 +66,7 @@ namespace BTCPayServer.Services
         public override string Device => "Ledger wallet";
 
         WebSocketTransport _Transport = null;
-        public LedgerHardwareWalletService(System.Net.WebSockets.WebSocket ledgerWallet)
+        public LedgerHardwareWalletService(WebSocket ledgerWallet)
         {
             if (ledgerWallet == null)
                 throw new ArgumentNullException(nameof(ledgerWallet));

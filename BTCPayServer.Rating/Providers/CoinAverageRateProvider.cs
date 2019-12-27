@@ -87,7 +87,7 @@ namespace BTCPayServer.Services.Rates
             if (Exchange == CoinAverageName)
             {
                 JToken last = p.Value["last"];
-                if (!decimal.TryParse(last.Value<string>(), System.Globalization.NumberStyles.AllowExponent | System.Globalization.NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var v) ||
+                if (!decimal.TryParse(last.Value<string>(), NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var v) ||
                     v <= 0)
                     return false;
                 bidAsk = new BidAsk(v);
@@ -98,8 +98,8 @@ namespace BTCPayServer.Services.Rates
                 JToken bid = p.Value["bid"];
                 JToken ask = p.Value["ask"];
                 if (bid == null || ask == null ||
-                    !decimal.TryParse(bid.Value<string>(), System.Globalization.NumberStyles.AllowExponent | System.Globalization.NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var v1) ||
-                    !decimal.TryParse(ask.Value<string>(), System.Globalization.NumberStyles.AllowExponent | System.Globalization.NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var v2) ||
+                    !decimal.TryParse(bid.Value<string>(), NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var v1) ||
+                    !decimal.TryParse(ask.Value<string>(), NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var v2) ||
                     v1 > v2 ||
                     v1 <= 0 || v2 <= 0)
                     return false;

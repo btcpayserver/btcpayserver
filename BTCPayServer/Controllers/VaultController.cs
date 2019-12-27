@@ -46,11 +46,11 @@ namespace BTCPayServer.Controllers
                 if (network == null)
                     return NotFound();
                 var websocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
-                var hwi = new Hwi.HwiClient(network.NBitcoinNetwork)
+                var hwi = new HwiClient(network.NBitcoinNetwork)
                 {
                     Transport = new HwiWebSocketTransport(websocket)
                 };
-                Hwi.HwiDeviceClient device = null;
+                HwiDeviceClient device = null;
                 HwiEnumerateEntry deviceEntry = null;
                 HDFingerprint? fingerprint = null;
                 string password = null;
@@ -149,7 +149,7 @@ namespace BTCPayServer.Controllers
                                 {
                                     psbt = await device.SignPSBTAsync(psbt, cancellationToken);
                                 }
-                                catch (Hwi.HwiException)
+                                catch (HwiException)
                                 {
                                     await websocketHelper.Send("{ \"error\": \"user-reject\"}", cancellationToken);
                                     continue;

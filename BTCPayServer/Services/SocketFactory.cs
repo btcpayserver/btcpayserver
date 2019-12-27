@@ -38,7 +38,7 @@ namespace BTCPayServer.Services
             return socket;
         }
 
-        internal static void SafeCloseSocket(System.Net.Sockets.Socket socket)
+        internal static void SafeCloseSocket(Socket socket)
         {
             try
             {

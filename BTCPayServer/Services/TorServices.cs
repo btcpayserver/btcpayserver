@@ -13,7 +13,7 @@ namespace BTCPayServer.Services
     {
         private readonly BTCPayNetworkProvider _networks;
         BTCPayServerOptions _Options;
-        public TorServices(BTCPayServer.BTCPayNetworkProvider networks, BTCPayServerOptions options)
+        public TorServices(BTCPayNetworkProvider networks, BTCPayServerOptions options)
         {
             _networks = networks;
             _Options = options;
@@ -44,7 +44,7 @@ namespace BTCPayServer.Services
                 var torrcDir = Path.GetDirectoryName(_Options.TorrcFile);
                 var services = torrc.ServiceDirectories.SelectMany(d => d.ServicePorts.Select(p => (Directory: GetDirectory(d, torrcDir), VirtualPort: p.VirtualPort)))
                 .Select(d => (ServiceName: d.Directory.Name,
-                              ReadingLines: System.IO.File.ReadAllLinesAsync(Path.Combine(d.Directory.FullName, "hostname")),
+                              ReadingLines: File.ReadAllLinesAsync(Path.Combine(d.Directory.FullName, "hostname")),
                               VirtualPort: d.VirtualPort))
                 .ToArray();
                 foreach (var service in services)

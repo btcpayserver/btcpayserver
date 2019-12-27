@@ -139,7 +139,7 @@ namespace BTCPayServer.Services.Apps
                 Sounds = settings.Sounds,
                 AnimationColors = settings.AnimationColors,
                 CurrencyData = _Currencies.GetCurrencyData(settings.TargetCurrency, true),
-                Info = new ViewCrowdfundViewModel.CrowdfundInfo()
+                Info = new CrowdfundInfo()
                 {
                     TotalContributors = paidInvoices.Length,
                     ProgressPercentage = (currentPayments.TotalCurrency / settings.TargetAmount) * 100,

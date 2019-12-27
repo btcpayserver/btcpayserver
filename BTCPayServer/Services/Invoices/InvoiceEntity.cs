@@ -217,7 +217,7 @@ namespace BTCPayServer.Services.Invoices
             {
                 if (Networks.BTC != null)
                 {
-                    yield return BTCPayServer.DerivationSchemeSettings.Parse(DerivationStrategy, Networks.BTC);
+                    yield return DerivationSchemeSettings.Parse(DerivationStrategy, Networks.BTC);
                 }
             }
 #pragma warning restore CS0618
@@ -399,12 +399,12 @@ namespace BTCPayServer.Services.Invoices
             };
 
             dto.Url = ServerUrl.WithTrailingSlash() + $"invoice?id=" + Id;
-            dto.CryptoInfo = new List<NBitpayClient.InvoiceCryptoInfo>();
+            dto.CryptoInfo = new List<InvoiceCryptoInfo>();
             dto.MinerFees = new Dictionary<string, MinerFeeInfo>();
             foreach (var info in this.GetPaymentMethods())
             {
                 var accounting = info.Calculate();
-                var cryptoInfo = new NBitpayClient.InvoiceCryptoInfo();
+                var cryptoInfo = new InvoiceCryptoInfo();
                 var subtotalPrice = accounting.TotalDue - accounting.NetworkFee;
                 var cryptoCode = info.GetId().CryptoCode;
                 var address = info.GetPaymentMethodDetails()?.GetPaymentDestination();
@@ -464,7 +464,7 @@ namespace BTCPayServer.Services.Invoices
                     minerInfo.SatoshiPerBytes = ((BitcoinLikeOnChainPaymentMethod)info.GetPaymentMethodDetails()).FeeRate
                         .GetFee(1).Satoshi;
                     dto.MinerFees.TryAdd(cryptoInfo.CryptoCode, minerInfo);
-                    cryptoInfo.PaymentUrls = new NBitpayClient.InvoicePaymentUrls()
+                    cryptoInfo.PaymentUrls = new InvoicePaymentUrls()
                     {
                         BIP21 = $"{scheme}:{cryptoInfo.Address}?amount={cryptoInfo.Due}",
                     };
@@ -781,7 +781,7 @@ namespace BTCPayServer.Services.Invoices
             // Legacy, old code does not have PaymentMethods
             if (string.IsNullOrEmpty(PaymentType) || PaymentMethodDetails == null)
             {
-                return new Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod()
+                return new BitcoinLikeOnChainPaymentMethod()
                 {
                     FeeRate = FeeRate,
                     DepositAddress = string.IsNullOrEmpty(DepositAddress) ? null : DepositAddress,
@@ -791,7 +791,7 @@ namespace BTCPayServer.Services.Invoices
             else
             {
                 IPaymentMethodDetails details = GetId().PaymentType.DeserializePaymentMethodDetails(PaymentMethodDetails.ToString());
-                if (details is Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod btcLike)
+                if (details is BitcoinLikeOnChainPaymentMethod btcLike)
                 {
                     btcLike.NextNetworkFee = NextNetworkFee;
                     btcLike.DepositAddress = string.IsNullOrEmpty(DepositAddress) ? null : DepositAddress;
@@ -813,7 +813,7 @@ namespace BTCPayServer.Services.Invoices
             else if (PaymentType != paymentMethod.GetPaymentType().ToString())
                 throw new InvalidOperationException("Invalid payment method affected");
 
-            if (paymentMethod is Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod bitcoinPaymentMethod)
+            if (paymentMethod is BitcoinLikeOnChainPaymentMethod bitcoinPaymentMethod)
             {
                 NextNetworkFee = bitcoinPaymentMethod.NextNetworkFee;
                 FeeRate = bitcoinPaymentMethod.FeeRate;
@@ -977,7 +977,7 @@ namespace BTCPayServer.Services.Invoices
         public PaymentEntity SetCryptoPaymentData(CryptoPaymentData cryptoPaymentData)
         {
 #pragma warning disable CS0618
-            if (cryptoPaymentData is Payments.Bitcoin.BitcoinLikePaymentData paymentData)
+            if (cryptoPaymentData is BitcoinLikePaymentData paymentData)
             {
                 // Legacy
                 Outpoint = paymentData.Outpoint;

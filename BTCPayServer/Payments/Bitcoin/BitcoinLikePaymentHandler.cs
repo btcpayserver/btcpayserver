@@ -121,8 +121,8 @@ namespace BTCPayServer.Payments.Bitcoin
             if (!_ExplorerProvider.IsAvailable(network))
                 throw new PaymentMethodUnavailableException($"Full node not available");
             var prepare = (Prepare)preparePaymentObject;
-            Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod onchainMethod =
-                new Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod();
+            BitcoinLikeOnChainPaymentMethod onchainMethod =
+                new BitcoinLikeOnChainPaymentMethod();
             onchainMethod.NetworkFeeMode = store.GetStoreBlob().NetworkFeeMode;
             onchainMethod.FeeRate = await prepare.GetFeeRate;
             switch (onchainMethod.NetworkFeeMode)

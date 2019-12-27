@@ -129,7 +129,7 @@ namespace BTCPayServer.Payments.Lightning
         CompositeDisposable leases = new CompositeDisposable();
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            leases.Add(_Aggregator.Subscribe<Events.InvoiceEvent>(inv =>
+            leases.Add(_Aggregator.Subscribe<InvoiceEvent>(inv =>
             {
                 if (inv.Name == InvoiceEvent.Created)
                 {

@@ -124,7 +124,7 @@ namespace BTCPayServer.Data
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public double PaymentTolerance { get; set; }
 
-        public BTCPayServer.Rating.RateRules GetRateRules(BTCPayNetworkProvider networkProvider)
+        public RateRules GetRateRules(BTCPayNetworkProvider networkProvider)
         {
             if (!RateScripting ||
                 string.IsNullOrEmpty(RateScript) ||

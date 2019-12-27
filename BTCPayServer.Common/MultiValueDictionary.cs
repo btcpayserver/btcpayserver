@@ -917,7 +917,6 @@ namespace BTCPayServer
                 this.current = default(KeyValuePair<TKey, IReadOnlyCollection<TValue>>);
                 this.enumerator = multiValueDictionary.dictionary.GetEnumerator();
                 this.state = EnumerationState.BeforeFirst;
-                ;
             }
 
             public KeyValuePair<TKey, IReadOnlyCollection<TValue>> Current

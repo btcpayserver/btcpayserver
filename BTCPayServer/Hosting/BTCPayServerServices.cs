@@ -185,8 +185,8 @@ namespace BTCPayServer.Hosting
             });
             services.AddSingleton<IHostedService, CssThemeManagerHostedService>();
 
-            services.AddSingleton<HostedServices.CheckConfigurationHostedService>();
-            services.AddSingleton<IHostedService, HostedServices.CheckConfigurationHostedService>(o => o.GetRequiredService<CheckConfigurationHostedService>());
+            services.AddSingleton<CheckConfigurationHostedService>();
+            services.AddSingleton<IHostedService, CheckConfigurationHostedService>(o => o.GetRequiredService<CheckConfigurationHostedService>());
             
             services.AddSingleton<BitcoinLikePaymentHandler>();
             services.AddSingleton<IPaymentMethodHandler>(provider => provider.GetService<BitcoinLikePaymentHandler>());
@@ -263,12 +263,12 @@ namespace BTCPayServer.Hosting
                 var debugLogFile = BTCPayServerOptions.GetDebugLog(configuration);
                 if (!string.IsNullOrEmpty(debugLogFile))
                 {
-                    Serilog.Log.Logger = new LoggerConfiguration()
+                    Log.Logger = new LoggerConfiguration()
                         .Enrich.FromLogContext()
                         .MinimumLevel.Is(BTCPayServerOptions.GetDebugLogLevel(configuration))
                         .WriteTo.File(debugLogFile, rollingInterval: RollingInterval.Day, fileSizeLimitBytes: MAX_DEBUG_LOG_FILE_SIZE, rollOnFileSizeLimit: true, retainedFileCountLimit: 1)
                         .CreateLogger();
-                    logBuilder.AddSerilog(Serilog.Log.Logger);
+                    logBuilder.AddSerilog(Log.Logger);
                 }
             });
             return services;

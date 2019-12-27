@@ -71,7 +71,7 @@ namespace BTCPayServer.HostedServices
                     PosData = dto.PosData,
                     Price = dto.Price,
                     Status = dto.Status,
-                    BuyerFields = invoice.RefundMail == null ? null : new Newtonsoft.Json.Linq.JObject() { new JProperty("buyerEmail", invoice.RefundMail) },
+                    BuyerFields = invoice.RefundMail == null ? null : new JObject() { new JProperty("buyerEmail", invoice.RefundMail) },
                     PaymentSubtotals = dto.PaymentSubtotals,
                     PaymentTotals = dto.PaymentTotals,
                     AmountPaid = dto.AmountPaid,
@@ -102,7 +102,7 @@ namespace BTCPayServer.HostedServices
 
             // We keep backward compatibility with bitpay by passing BTC info to the notification
             // we don't pass other info, as it is a bad idea to use IPN data for logic processing (can be faked)
-            var btcCryptoInfo = dto.CryptoInfo.FirstOrDefault(c => c.GetpaymentMethodId() == new PaymentMethodId("BTC", Payments.PaymentTypes.BTCLike));
+            var btcCryptoInfo = dto.CryptoInfo.FirstOrDefault(c => c.GetpaymentMethodId() == new PaymentMethodId("BTC", PaymentTypes.BTCLike));
             if (btcCryptoInfo != null)
             {
 #pragma warning disable CS0618

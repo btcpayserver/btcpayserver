@@ -222,7 +222,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
             {
                 if (valueTuples.Any())
                 {
-                    _eventAggregator.Publish(new Events.InvoiceNeedUpdateEvent(valueTuples.Key.Id));
+                    _eventAggregator.Publish(new InvoiceNeedUpdateEvent(valueTuples.Key.Id));
                 }
             }
         }
@@ -283,7 +283,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
                 {
                     if (valueTuples.Any())
                     {
-                        _eventAggregator.Publish(new Events.InvoiceNeedUpdateEvent(valueTuples.Key.Id));
+                        _eventAggregator.Publish(new InvoiceNeedUpdateEvent(valueTuples.Key.Id));
                     }
                 }
             }

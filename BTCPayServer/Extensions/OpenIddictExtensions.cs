@@ -24,7 +24,7 @@ namespace BTCPayServer
                 var contents = rsa.ToXmlString2(true);
                 File.WriteAllText(file, contents);
             }
-            return new RsaSecurityKey(rsa.ExportParameters(true));;
+            return new RsaSecurityKey(rsa.ExportParameters(true));
         }
         public static OpenIddictServerBuilder ConfigureSigningKey(this OpenIddictServerBuilder builder,
             IConfiguration configuration)

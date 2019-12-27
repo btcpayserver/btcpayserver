@@ -61,7 +61,7 @@ namespace BTCPayServer.PaymentRequest
                     await Clients.Caller.SendCoreAsync(InvoiceError, new[] {objectResult.Value});
                     break;
                 default:
-                    await Clients.Caller.SendCoreAsync(InvoiceError, System.Array.Empty<object>());
+                    await Clients.Caller.SendCoreAsync(InvoiceError, Array.Empty<object>());
                     break;
             }
         }

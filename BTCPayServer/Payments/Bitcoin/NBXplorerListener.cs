@@ -74,7 +74,7 @@ namespace BTCPayServer.Payments.Bitcoin
         {
             _RunningTask = new TaskCompletionSource<bool>();
             _Cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            leases.Add(_Aggregator.Subscribe<Events.NBXplorerStateChangedEvent>(async nbxplorerEvent =>
+            leases.Add(_Aggregator.Subscribe<NBXplorerStateChangedEvent>(async nbxplorerEvent =>
             {
                 if (nbxplorerEvent.NewState == NBXplorerState.Ready)
                 {
@@ -143,7 +143,7 @@ namespace BTCPayServer.Payments.Bitcoin
                                     .ToArray());
                                 _Aggregator.Publish(new Events.NewBlockEvent() { CryptoCode = evt.CryptoCode });
                                 break;
-                            case NBXplorer.Models.NewTransactionEvent evt:
+                            case NewTransactionEvent evt:
                                 wallet.InvalidateCache(evt.DerivationStrategy);
                                 foreach (var output in network.GetValidOutputs(evt)) 
                                 {
@@ -249,7 +249,7 @@ namespace BTCPayServer.Payments.Bitcoin
             }
             await _InvoiceRepository.UpdatePayments(updatedPaymentEntities);
             if (updatedPaymentEntities.Count != 0)
-                _Aggregator.Publish(new Events.InvoiceNeedUpdateEvent(invoice.Id));
+                _Aggregator.Publish(new InvoiceNeedUpdateEvent(invoice.Id));
             return invoice;
         }
 

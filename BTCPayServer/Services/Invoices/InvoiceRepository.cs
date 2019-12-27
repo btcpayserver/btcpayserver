@@ -158,7 +158,7 @@ retry:
             invoice.StoreId = storeId;
             using (var context = _ContextFactory.CreateContext())
             {
-                context.Invoices.Add(new Data.InvoiceData()
+                context.Invoices.Add(new InvoiceData()
                 {
                     StoreDataId = storeId,
                     Id = invoice.Id,
@@ -230,7 +230,7 @@ retry:
         private string GetDestination(PaymentMethod paymentMethod)
         {
             // For legacy reason, BitcoinLikeOnChain is putting the hashes of addresses in database
-            if (paymentMethod.GetId().PaymentType == Payments.PaymentTypes.BTCLike)
+            if (paymentMethod.GetId().PaymentType == PaymentTypes.BTCLike)
             {
                 var network = (BTCPayNetwork)paymentMethod.Network;
                 return ((Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod)paymentMethod.GetPaymentMethodDetails()).GetDepositAddress(network.NBitcoinNetwork).ScriptPubKey.Hash.ToString();
@@ -337,7 +337,7 @@ retry:
         {
             using (var context = _ContextFactory.CreateContext())
             {
-                var invoiceData = await context.FindAsync<Data.InvoiceData>(invoiceId).ConfigureAwait(false);
+                var invoiceData = await context.FindAsync<InvoiceData>(invoiceId).ConfigureAwait(false);
                 if (invoiceData == null)
                     return;
                 var invoiceEntity = ToObject(invoiceData.Blob);
@@ -379,7 +379,7 @@ retry:
         {
             using (var context = _ContextFactory.CreateContext())
             {
-                var invoiceData = await context.FindAsync<Data.InvoiceData>(invoiceId).ConfigureAwait(false);
+                var invoiceData = await context.FindAsync<InvoiceData>(invoiceId).ConfigureAwait(false);
                 if (invoiceData == null)
                     return;
                 invoiceData.Status = InvoiceState.ToString(invoiceState.Status);
@@ -392,7 +392,7 @@ retry:
         {
             using (var context = _ContextFactory.CreateContext())
             {
-                var invoiceData = await context.FindAsync<Data.InvoiceData>(invoiceId).ConfigureAwait(false);
+                var invoiceData = await context.FindAsync<InvoiceData>(invoiceId).ConfigureAwait(false);
                 if (invoiceData == null || !invoiceData.GetInvoiceState().CanMarkInvalid())
                     return;
                 invoiceData.Status = "invalid";
@@ -404,7 +404,7 @@ retry:
         {
             using (var context = _ContextFactory.CreateContext())
             {
-                var invoiceData = await context.FindAsync<Data.InvoiceData>(invoiceId).ConfigureAwait(false);
+                var invoiceData = await context.FindAsync<InvoiceData>(invoiceId).ConfigureAwait(false);
                 if (invoiceData == null || !invoiceData.GetInvoiceState().CanMarkComplete())
                     return;
                 invoiceData.Status = "complete";
@@ -416,7 +416,7 @@ retry:
         {
             using (var context = _ContextFactory.CreateContext())
             {
-                IQueryable<Data.InvoiceData> query =
+                IQueryable<InvoiceData> query =
                     context
                     .Invoices
                     .Include(o => o.Payments)
@@ -433,7 +433,7 @@ retry:
             }
         }
 
-        private InvoiceEntity ToEntity(Data.InvoiceData invoice)
+        private InvoiceEntity ToEntity(InvoiceData invoice)
         {
             var entity = ToObject(invoice.Blob);
             PaymentMethodDictionary paymentMethods = null;
@@ -501,9 +501,9 @@ retry:
             return "BTC";
         }
 
-        private IQueryable<Data.InvoiceData> GetInvoiceQuery(ApplicationDbContext context, InvoiceQuery queryObject)
+        private IQueryable<InvoiceData> GetInvoiceQuery(ApplicationDbContext context, InvoiceQuery queryObject)
         {
-            IQueryable<Data.InvoiceData> query = context.Invoices;
+            IQueryable<InvoiceData> query = context.Invoices;
 
             if (queryObject.InvoiceId != null && queryObject.InvoiceId.Length > 0)
             {

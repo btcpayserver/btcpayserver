@@ -102,7 +102,7 @@ namespace BTCPayServer.Services.Stores
                     await ctx.SaveChangesAsync();
                     return true;
                 }
-                catch (Microsoft.EntityFrameworkCore.DbUpdateException)
+                catch (DbUpdateException)
                 {
                     return false;
                 }
@@ -129,7 +129,7 @@ namespace BTCPayServer.Services.Stores
             {
                 var userStore = new UserStore() { StoreDataId = storeId, ApplicationUserId = userId };
                 ctx.UserStore.Add(userStore);
-                ctx.Entry<UserStore>(userStore).State = Microsoft.EntityFrameworkCore.EntityState.Deleted;
+                ctx.Entry<UserStore>(userStore).State = EntityState.Deleted;
                 await ctx.SaveChangesAsync();
 
             }

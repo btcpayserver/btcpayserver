@@ -20,7 +20,7 @@ using BTCPayServer.Security.Bitpay;
 namespace BTCPayServer.Controllers
 {
     [EnableCors(CorsPolicies.All)]
-    [Authorize(Policy = Policies.CanGetRates.Key, AuthenticationSchemes = Security.AuthenticationSchemes.Bitpay)]
+    [Authorize(Policy = Policies.CanGetRates.Key, AuthenticationSchemes = AuthenticationSchemes.Bitpay)]
     public class RateController : Controller
     {
         public StoreData CurrentStore

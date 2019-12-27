@@ -42,12 +42,12 @@ namespace BTCPayServer.Storage.Services.Providers.FileSystemStorage
 
         public IDirectoryContents GetDirectoryContents(string subpath)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public IChangeToken Watch(string filter)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
     }
 }

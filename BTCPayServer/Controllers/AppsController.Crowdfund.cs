@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Linq;
-using System.Text;
-using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Services.Apps;
-using BTCPayServer.Services.Mails;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Controllers
@@ -157,24 +154,24 @@ namespace BTCPayServer.Controllers
             app.TagAllInvoices = vm.UseAllStoreInvoices;
             app.SetSettings(newSettings);
 
-            if (command == "save")
+            switch (command)
             {
-                await _AppService.UpdateOrCreateApp(app);
+                case "save":
+                    await _AppService.UpdateOrCreateApp(app);
 
-                _EventAggregator.Publish(new AppUpdated()
-                {
-                    AppId = appId,
-                    StoreId = app.StoreDataId,
-                    Settings = newSettings
-                });
-                TempData[WellKnownTempData.SuccessMessage] = "App updated";
-                return RedirectToAction(nameof(UpdateCrowdfund), new { appId });
+                    _EventAggregator.Publish(new AppUpdated()
+                    {
+                        AppId = appId,
+                        StoreId = app.StoreDataId,
+                        Settings = newSettings
+                    });
+                    TempData[WellKnownTempData.SuccessMessage] = "App updated";
+                    return RedirectToAction(nameof(UpdateCrowdfund), new { appId });
+                case "viewapp":
+                    return RedirectToAction(nameof(AppsPublicController.ViewCrowdfund), "AppsPublic", new { appId });
+                default:
+                    return NotFound();
             }
-            else if (command == "viewapp")
-            {
-                return RedirectToAction(nameof(AppsPublicController.ViewCrowdfund), "AppsPublic", new { appId });
-            }
-            return NotFound();
         }
     }
 }

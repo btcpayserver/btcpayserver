@@ -1,26 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using BTCPayServer.Models;
 using BTCPayServer.Models.AccountViewModels;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Mails;
-using BTCPayServer.Services.Stores;
 using BTCPayServer.Logging;
 using BTCPayServer.Security;
 using System.Globalization;
 using BTCPayServer.U2F;
 using BTCPayServer.U2F.Models;
-using Newtonsoft.Json;
 using NicolasDorier.RateLimits;
 using BTCPayServer.Data;
 
@@ -33,7 +26,6 @@ namespace BTCPayServer.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly EmailSenderFactory _EmailSenderFactory;
-        StoreRepository storeRepository;
         RoleManager<IdentityRole> _RoleManager;
         SettingsRepository _SettingsRepository;
         Configuration.BTCPayServerOptions _Options;
@@ -44,7 +36,6 @@ namespace BTCPayServer.Controllers
         public AccountController(
             UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager,
-            StoreRepository storeRepository,
             SignInManager<ApplicationUser> signInManager,
             EmailSenderFactory emailSenderFactory,
             SettingsRepository settingsRepository,
@@ -52,7 +43,6 @@ namespace BTCPayServer.Controllers
             BTCPayServerEnvironment btcPayServerEnvironment,
             U2FService u2FService)
         {
-            this.storeRepository = storeRepository;
             _userManager = userManager;
             _signInManager = signInManager;
             _EmailSenderFactory = emailSenderFactory;
@@ -144,10 +134,9 @@ namespace BTCPayServer.Controllers
                     }
                     else
                     {
-                      var incrementAccessFailedResult = await  _userManager.AccessFailedAsync(user);
                       ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+
                       return View(model);
-                      
                     }
                 }
                 
@@ -223,7 +212,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
-            var errorMessage = string.Empty;
+            var errorMessage = "Invalid login attempt.";
             try
             {
                 if (await _u2FService.AuthenticateUser(viewModel.UserId, viewModel.DeviceResponse))
@@ -232,8 +221,6 @@ namespace BTCPayServer.Controllers
                     _logger.LogInformation("User logged in.");
                     return RedirectToLocal(returnUrl);
                 }
-
-                errorMessage = "Invalid login attempt.";
             }
             catch (Exception e)
             {
@@ -446,7 +433,7 @@ namespace BTCPayServer.Controllers
                         await _userManager.AddToRoleAsync(user, Roles.ServerAdmin);
                         var settings = await _SettingsRepository.GetSettingAsync<ThemeSettings>();
                         settings.FirstRun = false;
-                        await _SettingsRepository.UpdateSetting<ThemeSettings>(settings);
+                        await _SettingsRepository.UpdateSetting(settings);
                         if(_Options.DisableRegistration)
                         {
                             // Once the admin user has been created lock subsequent user registrations (needs to be disabled for unit tests that require multiple users).

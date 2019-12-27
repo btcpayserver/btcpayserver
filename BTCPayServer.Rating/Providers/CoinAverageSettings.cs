@@ -25,10 +25,6 @@ namespace BTCPayServer.Services.Rates
     }
     public class CoinAverageExchanges : Dictionary<string, CoinAverageExchange>
     {
-        public CoinAverageExchanges()
-        {
-        }
-
         public void Add(CoinAverageExchange exchange)
         {
             if (!TryAdd(exchange.Name, exchange))

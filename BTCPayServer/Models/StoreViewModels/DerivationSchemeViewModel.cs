@@ -7,9 +7,6 @@ namespace BTCPayServer.Models.StoreViewModels
 {
     public class DerivationSchemeViewModel
     {
-        public DerivationSchemeViewModel()
-        {
-        }
         public string DerivationScheme
         {
             get; set;

@@ -22,10 +22,6 @@ namespace BTCPayServer.Models.StoreViewModels
             public bool Enabled { get; set; }
             public string Action { get; set; }
         }
-        public StoreViewModel()
-        {
-
-        }
 
         public bool CanDelete { get; set; }
         public string Id { get; set; }

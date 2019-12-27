@@ -8,10 +8,6 @@ namespace BTCPayServer.Services.Invoices
     public class PaymentMethodDictionary : IEnumerable<PaymentMethod>
     {
         Dictionary<PaymentMethodId, PaymentMethod> _Inner = new Dictionary<PaymentMethodId, PaymentMethod>();
-        public PaymentMethodDictionary()
-        {
-
-        }
 
         public PaymentMethod this[PaymentMethodId index]
         {

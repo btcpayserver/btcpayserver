@@ -61,10 +61,6 @@ namespace BTCPayServer.Security
     }
     public class ContentSecurityPolicies
     {
-        public ContentSecurityPolicies()
-        {
-
-        }
         HashSet<ConsentSecurityPolicy> _Policies = new HashSet<ConsentSecurityPolicy>();
         public void Add(ConsentSecurityPolicy policy)
         {

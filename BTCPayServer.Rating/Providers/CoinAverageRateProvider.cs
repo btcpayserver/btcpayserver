@@ -49,10 +49,6 @@ namespace BTCPayServer.Services.Rates
     public class CoinAverageRateProvider : IRateProvider, IHasExchangeName
     {
         public const string CoinAverageName = "coinaverage";
-        public CoinAverageRateProvider()
-        {
-
-        }
 
         public HttpClient HttpClient
         {

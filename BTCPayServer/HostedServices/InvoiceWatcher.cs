@@ -64,7 +64,6 @@ namespace BTCPayServer.HostedServices
                     context.Events.Add(new InvoiceEvent(invoice, 2000, InvoiceEvent.ExpiredPaidPartial));
             }
 
-            var payments = invoice.GetPayments().Where(p => p.Accounted).ToArray();
             var allPaymentMethods = invoice.GetPaymentMethods();
             var paymentMethod = GetNearestClearedPayment(allPaymentMethods, out var accounting);
             if (paymentMethod == null)

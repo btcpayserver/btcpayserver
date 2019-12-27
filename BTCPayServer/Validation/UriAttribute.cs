@@ -10,8 +10,7 @@ namespace BTCPayServer.Validation
         protected override ValidationResult IsValid(object value, ValidationContext validationContext)
         {
             var str = value == null ? null : Convert.ToString(value, CultureInfo.InvariantCulture);
-            Uri uri;
-            bool valid = string.IsNullOrWhiteSpace(str) || Uri.TryCreate(str, UriKind.Absolute, out uri);
+            bool valid = string.IsNullOrWhiteSpace(str) || Uri.TryCreate(str, UriKind.Absolute, out Uri _);
 
             if (!valid)
             {

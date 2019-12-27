@@ -96,7 +96,7 @@ namespace BTCPayServer
         public async Task Send(string evt, CancellationToken cancellation = default)
         {
             var bytes = UTF8.GetBytes(evt);
-            using (var cts = new CancellationTokenSource(5000))
+            using (new CancellationTokenSource(5000))
             {
                 using (var cts2 = CancellationTokenSource.CreateLinkedTokenSource(cancellation))
                 {

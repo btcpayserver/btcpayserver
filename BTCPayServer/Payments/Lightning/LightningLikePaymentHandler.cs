@@ -127,7 +127,7 @@ namespace BTCPayServer.Payments.Lightning
                 if (!Utils.TryParseEndpoint(nodeInfo.Host, nodeInfo.Port, out var endpoint))
                     throw new PaymentMethodUnavailableException($"Could not parse the endpoint {nodeInfo.Host}");
 
-                using (var tcp = await _socketFactory.ConnectAsync(endpoint, cancellation))
+                using (await _socketFactory.ConnectAsync(endpoint, cancellation))
                 {
                 }
             }

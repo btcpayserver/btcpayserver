@@ -26,10 +26,9 @@ namespace BTCPayServer.Payments.Changelly
         {
             if (_clientCache.ContainsKey(storeId))
             {
-                _clientCache.Remove(storeId, out var value);
+                _clientCache.Remove(storeId, out Changelly _);
             }
         }
-
 
         public virtual async Task<Changelly> TryGetChangellyClient(string storeId, StoreData storeData = null)
         {

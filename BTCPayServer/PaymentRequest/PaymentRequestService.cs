@@ -52,7 +52,6 @@ namespace BTCPayServer.PaymentRequest
             }
             else if (pr.Status == PaymentRequestData.PaymentRequestStatus.Pending)
             {
-                var rateRules = pr.StoreData.GetStoreBlob().GetRateRules(_BtcPayNetworkProvider);
                 var invoices = await _PaymentRequestRepository.GetInvoicesForPaymentRequest(pr.Id);
                 var contributions = _AppService.GetContributionsByPaymentMethodId(blob.Currency, invoices, true);
                 if (contributions.TotalCurrency >= blob.Amount)
@@ -77,7 +76,6 @@ namespace BTCPayServer.PaymentRequest
             }
 
             var blob = pr.GetBlob();
-            var rateRules = pr.StoreData.GetStoreBlob().GetRateRules(_BtcPayNetworkProvider);
 
             var invoices = await _PaymentRequestRepository.GetInvoicesForPaymentRequest(id);
 

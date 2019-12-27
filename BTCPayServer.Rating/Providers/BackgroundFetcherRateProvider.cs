@@ -119,7 +119,7 @@ namespace BTCPayServer.Services.Rates
         {
             if (ExchangeName != state.ExchangeName)
                 throw new InvalidOperationException("The state does not belong to this fetcher");
-            if (state.LastRequested is DateTimeOffset lastRequested)
+            if (state.LastRequested is DateTimeOffset)
                 this.LastRequested = state.LastRequested;
             if (state.LastUpdated is DateTimeOffset updated && state.Rates is List<BackgroundFetcherRate> rates)
             {

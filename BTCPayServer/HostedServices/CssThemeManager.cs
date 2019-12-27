@@ -99,19 +99,19 @@ namespace BTCPayServer.HostedServices
             var policies = context.HttpContext.RequestServices.GetService(typeof(ContentSecurityPolicies)) as ContentSecurityPolicies;
             if (manager != null && policies != null)
             {
-                if(manager.CreativeStartUri != null && Uri.TryCreate(manager.CreativeStartUri, UriKind.Absolute, out var uri))
+                if(manager.CreativeStartUri != null && Uri.TryCreate(manager.CreativeStartUri, UriKind.Absolute, out Uri _))
                 {
                     policies.Clear();
                 }
-                if (manager.BootstrapUri != null && Uri.TryCreate(manager.BootstrapUri, UriKind.Absolute, out uri))
+                if (manager.BootstrapUri != null && Uri.TryCreate(manager.BootstrapUri, UriKind.Absolute, out Uri _))
                 {
                     policies.Clear();
                 }
-                if (manager.ThemeUri != null && Uri.TryCreate(manager.ThemeUri, UriKind.Absolute, out uri))
+                if (manager.ThemeUri != null && Uri.TryCreate(manager.ThemeUri, UriKind.Absolute, out Uri _))
                 {
                     policies.Clear();
                 }
-                if (manager.CustomThemeUri != null && Uri.TryCreate(manager.CustomThemeUri, UriKind.Absolute, out uri))
+                if (manager.CustomThemeUri != null && Uri.TryCreate(manager.CustomThemeUri, UriKind.Absolute, out Uri _))
                 {
                     policies.Clear();
                 }

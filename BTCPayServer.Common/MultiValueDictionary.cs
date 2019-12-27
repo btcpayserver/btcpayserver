@@ -668,8 +668,7 @@ namespace BTCPayServer
             if (key == null)
                 throw new ArgumentNullException("key");
 
-            InnerCollectionView collection;
-            if (dictionary.TryGetValue(key, out collection) && dictionary.Remove(key))
+            if (dictionary.TryGetValue(key, out InnerCollectionView _) && dictionary.Remove(key))
             {
                 version++;
                 return true;

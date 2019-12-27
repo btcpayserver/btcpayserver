@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
@@ -9,13 +8,9 @@ using BTCPayServer.Security;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Rates;
-using Ganss.XSS;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using NBitcoin;
-using NBitcoin.DataEncoders;
 
 namespace BTCPayServer.Controllers
 {
@@ -26,35 +21,29 @@ namespace BTCPayServer.Controllers
     {
         public AppsController(
             UserManager<ApplicationUser> userManager,
-            ApplicationDbContextFactory contextFactory,
             EventAggregator eventAggregator,
-            BTCPayNetworkProvider networkProvider,
             CurrencyNameTable currencies,
             EmailSenderFactory emailSenderFactory,
-            AppService AppService)
+            AppService appService)
         {
-            _UserManager = userManager;
-            _ContextFactory = contextFactory;
-            _EventAggregator = eventAggregator;
-            _NetworkProvider = networkProvider;
+            _userManager = userManager;
+            _eventAggregator = eventAggregator;
             _currencies = currencies;
             _emailSenderFactory = emailSenderFactory;
-            _AppService = AppService;
+            _appService = appService;
         }
 
-        private UserManager<ApplicationUser> _UserManager;
-        private ApplicationDbContextFactory _ContextFactory;
-        private readonly EventAggregator _EventAggregator;
-        private BTCPayNetworkProvider _NetworkProvider;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly EventAggregator _eventAggregator;
         private readonly CurrencyNameTable _currencies;
         private readonly EmailSenderFactory _emailSenderFactory;
-        private AppService _AppService;
+        private readonly AppService _appService;
 
-        public string CreatedAppId { get; set; }
+        public string CreatedAppId { get; private set; }
 
         public async Task<IActionResult> ListApps()
         {
-            var apps = await _AppService.GetAllApps(GetUserId());
+            var apps = await _appService.GetAllApps(GetUserId());
             return View(new ListAppsViewModel()
             {
                 Apps = apps
@@ -68,7 +57,7 @@ namespace BTCPayServer.Controllers
             var appData = await GetOwnedApp(appId);
             if (appData == null)
                 return NotFound();
-            if (await _AppService.DeleteApp(appData))
+            if (await _appService.DeleteApp(appData))
                 TempData[WellKnownTempData.SuccessMessage] = "App removed successfully";
             return RedirectToAction(nameof(ListApps));
         }
@@ -77,7 +66,7 @@ namespace BTCPayServer.Controllers
         [Route("create")]
         public async Task<IActionResult> CreateApp()
         {
-            var stores = await _AppService.GetOwnedStores(GetUserId());
+            var stores = await _appService.GetOwnedStores(GetUserId());
             if (stores.Length == 0)
             {
                 TempData.SetStatusMessageModel(new StatusMessageModel()
@@ -97,7 +86,7 @@ namespace BTCPayServer.Controllers
         [Route("create")]
         public async Task<IActionResult> CreateApp(CreateAppViewModel vm)
         {
-            var stores = await _AppService.GetOwnedStores(GetUserId());
+            var stores = await _appService.GetOwnedStores(GetUserId());
             if (stores.Length == 0)
             {
                 TempData.SetStatusMessageModel(new StatusMessageModel()
@@ -112,7 +101,7 @@ namespace BTCPayServer.Controllers
             vm.SetStores(stores);
             vm.SelectedStore = selectedStore;
 
-            if (!Enum.TryParse<AppType>(vm.SelectedAppType, out AppType appType))
+            if (!Enum.TryParse(vm.SelectedAppType, out AppType appType))
                 ModelState.AddModelError(nameof(vm.SelectedAppType), "Invalid App Type");
 
             if (!ModelState.IsValid)
@@ -120,7 +109,7 @@ namespace BTCPayServer.Controllers
                 return View(vm);
             }
 
-            if (!stores.Any(s => s.Id == selectedStore))
+            if (stores.All(s => s.Id != selectedStore))
             {
                 TempData[WellKnownTempData.ErrorMessage] = "You are not owner of this store";
                 return RedirectToAction(nameof(ListApps));
@@ -131,7 +120,7 @@ namespace BTCPayServer.Controllers
                 Name = vm.Name, 
                 AppType = appType.ToString()
             };
-            await _AppService.UpdateOrCreateApp(appData);
+            await _appService.UpdateOrCreateApp(appData);
             TempData[WellKnownTempData.SuccessMessage] = "App successfully created";
             CreatedAppId = appData.Id;
 
@@ -163,18 +152,29 @@ namespace BTCPayServer.Controllers
 
         private Task<AppData> GetOwnedApp(string appId, AppType? type = null)
         {
-            return _AppService.GetAppDataIfOwner(GetUserId(), appId, type);
+            return _appService.GetAppDataIfOwner(GetUserId(), appId, type);
         }
 
         
         private string GetUserId()
         {
-            return _UserManager.GetUserId(User);
+            return _userManager.GetUserId(User);
         }
 
         private async Task<bool> IsEmailConfigured(string storeId)
         {
-            return (await (_emailSenderFactory.GetEmailSender(storeId) as EmailSender)?.GetEmailSettings())?.IsComplete() is true;
+            if (!(_emailSenderFactory.GetEmailSender(storeId) is EmailSender emailSender))
+            {
+                return false;
+            }
+
+            var emailSettings = await emailSender.GetEmailSettings();
+            if (emailSettings == null)
+            {
+                return false;
+            }
+
+            return emailSettings.IsComplete() is true;
         }
     }
 }

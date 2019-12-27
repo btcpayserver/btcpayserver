@@ -16,7 +16,7 @@ namespace BTCPayServer.Controllers
             public string StoreId { get; set; }
             public override string ToString()
             {
-                return String.Empty;
+                return string.Empty;
             }
         }
         
@@ -72,7 +72,7 @@ namespace BTCPayServer.Controllers
           
             try
             {
-                _AppService.Parse(vm.PerksTemplate, vm.TargetCurrency).ToString();
+                string _ = _appService.Parse(vm.PerksTemplate, vm.TargetCurrency).ToString();
             }
             catch
             {
@@ -157,9 +157,9 @@ namespace BTCPayServer.Controllers
             switch (command)
             {
                 case "save":
-                    await _AppService.UpdateOrCreateApp(app);
+                    await _appService.UpdateOrCreateApp(app);
 
-                    _EventAggregator.Publish(new AppUpdated()
+                    _eventAggregator.Publish(new AppUpdated()
                     {
                         AppId = appId,
                         StoreId = app.StoreDataId,

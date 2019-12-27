@@ -4,12 +4,9 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using BTCPayServer.Data;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Services.Apps;
-using BTCPayServer.Services.Mails;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Controllers
 {
@@ -67,21 +64,16 @@ namespace BTCPayServer.Controllers
             public bool ShowCustomAmount { get; set; }
             public bool ShowDiscount { get; set; }
             public bool EnableTips { get; set; }
-
-            public const string BUTTON_TEXT_DEF = "Buy for {0}";
-            public string ButtonText { get; set; } = BUTTON_TEXT_DEF;
-            public const string CUSTOM_BUTTON_TEXT_DEF = "Pay";
-            public string CustomButtonText { get; set; } = CUSTOM_BUTTON_TEXT_DEF;
-            public const string CUSTOM_TIP_TEXT_DEF = "Do you want to leave a tip?";
-            public string CustomTipText { get; set; } = CUSTOM_TIP_TEXT_DEF;
-            public static readonly int[] CUSTOM_TIP_PERCENTAGES_DEF = new int[] { 15, 18, 20 };
+            public const string ButtonTextDef = "Buy for {0}";
+            public string ButtonText { get; set; } = ButtonTextDef;
+            public const string CustomButtonTextDef = "Pay";
+            public string CustomButtonText { get; set; } = CustomButtonTextDef;
+            public const string CustomTipTextDef = "Do you want to leave a tip?";
+            public string CustomTipText { get; set; } = CustomTipTextDef;
+            public static readonly int[] CUSTOM_TIP_PERCENTAGES_DEF = { 15, 18, 20 };
             public int[] CustomTipPercentages { get; set; } = CUSTOM_TIP_PERCENTAGES_DEF;
-
-
             public string CustomCSSLink { get; set; }
-            
             public string EmbeddedCSS { get; set; }
-            
             public string Description { get; set; }
             public string NotificationEmail { get; set; }
             public string NotificationUrl { get; set; }
@@ -109,9 +101,9 @@ namespace BTCPayServer.Controllers
                 EnableTips = settings.EnableTips,
                 Currency = settings.Currency,
                 Template = settings.Template,
-                ButtonText = settings.ButtonText ?? PointOfSaleSettings.BUTTON_TEXT_DEF,
-                CustomButtonText = settings.CustomButtonText ?? PointOfSaleSettings.CUSTOM_BUTTON_TEXT_DEF,
-                CustomTipText = settings.CustomTipText ?? PointOfSaleSettings.CUSTOM_TIP_TEXT_DEF,
+                ButtonText = settings.ButtonText ?? PointOfSaleSettings.ButtonTextDef,
+                CustomButtonText = settings.CustomButtonText ?? PointOfSaleSettings.CustomButtonTextDef,
+                CustomTipText = settings.CustomTipText ?? PointOfSaleSettings.CustomTipTextDef,
                 CustomTipPercentages = settings.CustomTipPercentages != null ? string.Join(",", settings.CustomTipPercentages) : string.Join(",", PointOfSaleSettings.CUSTOM_TIP_PERCENTAGES_DEF),
                 CustomCSSLink = settings.CustomCSSLink,
                 EmbeddedCSS = settings.EmbeddedCSS,
@@ -140,7 +132,7 @@ namespace BTCPayServer.Controllers
                 }
                 try
                 {
-                    var items = _AppService.Parse(settings.Template, settings.Currency);
+                    var items = _appService.Parse(settings.Template, settings.Currency);
                     var builder = new StringBuilder();
                     builder.AppendLine($"<form method=\"POST\" action=\"{encoder.Encode(appUrl)}\">");
                     builder.AppendLine($"  <input type=\"hidden\" name=\"email\" value=\"customer@example.com\" />");
@@ -166,7 +158,7 @@ namespace BTCPayServer.Controllers
                 ModelState.AddModelError(nameof(vm.Currency), "Invalid currency");
             try
             {
-                _AppService.Parse(vm.Template, vm.Currency);
+                _appService.Parse(vm.Template, vm.Currency);
             }
             catch
             {
@@ -200,7 +192,7 @@ namespace BTCPayServer.Controllers
                 RedirectAutomatically = string.IsNullOrEmpty(vm.RedirectAutomatically)? (bool?) null: bool.Parse(vm.RedirectAutomatically)
                 
             });
-            await _AppService.UpdateOrCreateApp(app);
+            await _appService.UpdateOrCreateApp(app);
             TempData[WellKnownTempData.SuccessMessage] = "App updated";
             return RedirectToAction(nameof(UpdatePointOfSale), new { appId });
         }
@@ -211,15 +203,13 @@ namespace BTCPayServer.Controllers
             if (string.IsNullOrEmpty(list))
             {
                 return Array.Empty<int>();
-            } 
-            else 
-            {
-                // Remove all characters except numeric and comma
-                Regex charsToDestroy = new Regex(@"[^\d|\" + separator + "]");
-                list = charsToDestroy.Replace(list, "");
-
-                return list.Split(separator, System.StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToArray();
             }
+
+            // Remove all characters except numeric and comma
+            Regex charsToDestroy = new Regex(@"[^\d|\" + separator + "]");
+            list = charsToDestroy.Replace(list, "");
+
+            return list.Split(separator, StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToArray();
         }
     }
 }

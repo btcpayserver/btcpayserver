@@ -98,14 +98,14 @@ namespace BTCPayServer.Controllers
             var app = await _AppService.GetApp(appId, AppType.PointOfSale);
             if (string.IsNullOrEmpty(choiceKey) && amount <= 0)
             {
-                return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
+                return RedirectToAction(nameof(ViewPointOfSale), new { appId });
             }
             if (app == null)
                 return NotFound();
             var settings = app.GetSettings<PointOfSaleSettings>();
             if (string.IsNullOrEmpty(choiceKey) && !settings.ShowCustomAmount && !settings.EnableShoppingCart)
             {
-                return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
+                return RedirectToAction(nameof(ViewPointOfSale), new { appId });
             }
             string title = null;
             var price = 0.0m;
@@ -125,7 +125,7 @@ namespace BTCPayServer.Controllers
                 {
                     if (choice.Inventory <= 0)
                     {
-                        return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
+                        return RedirectToAction(nameof(ViewPointOfSale), new { appId });
                     }
                 }
             }
@@ -194,7 +194,7 @@ namespace BTCPayServer.Controllers
                     Severity = StatusMessageModel.StatusSeverity.Error,
                     AllowDismiss = true
                 });
-                return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
+                return RedirectToAction(nameof(ViewPointOfSale), new { appId });
             }
         }
 

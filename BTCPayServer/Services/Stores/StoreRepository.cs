@@ -40,8 +40,7 @@ namespace BTCPayServer.Services.Stores
                     .Where(us => us.ApplicationUserId == userId && us.StoreDataId == storeId)
                     .Select(us => new
                     {
-                        Store = us.StoreData,
-                        Role = us.Role
+                        Store = us.StoreData, us.Role
                     }).ToArrayAsync())
                     .Select(us =>
                     {

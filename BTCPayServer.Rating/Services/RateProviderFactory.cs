@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using BTCPayServer.Rating;
 using ExchangeSharp;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MemoryCache = Microsoft.Extensions.Caching.Memory.MemoryCache;
 

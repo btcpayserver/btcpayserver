@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using BTCPayServer.Services.Invoices;
-
-namespace BTCPayServer.Payments
+﻿namespace BTCPayServer.Payments
 {
     /// <summary>
     /// A class for configuration of a type of payment method stored on a store level.

@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using BTCPayServer.Data;
-using BTCPayServer.Storage.Models;
 
 namespace BTCPayServer.Models.ServerViewModels
 {

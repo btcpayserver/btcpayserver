@@ -1,11 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Migrations;
-using JetBrains.Annotations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Migrations.Operations;
 using Microsoft.EntityFrameworkCore.Metadata;
 

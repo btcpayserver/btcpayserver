@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using NBitcoin;
-
-namespace BTCPayServer.Payments.Lightning
+﻿namespace BTCPayServer.Payments.Lightning
 {
     public class LightningLikePaymentMethodDetails : IPaymentMethodDetails
     {

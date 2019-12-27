@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using Microsoft.AspNetCore.Routing;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using OpenIddict.Abstractions;
-using BTCPayServer.Data;
-using BTCPayServer.Services.Stores;
-using Microsoft.AspNetCore.Identity;
 
 namespace BTCPayServer.Security
 {

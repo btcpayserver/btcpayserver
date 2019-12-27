@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace BTCPayServer.Models.WalletViewModels
+﻿namespace BTCPayServer.Models.WalletViewModels
 {
     public class WalletSendLedgerModel
     {

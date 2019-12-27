@@ -1,4 +1,3 @@
-using System;
 using BTCPayServer.Security.Bitpay;
 using Microsoft.AspNetCore.Authentication;
 

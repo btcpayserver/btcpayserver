@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using BTCPayServer.Data;
-using BTCPayServer.JsonConverters;
+﻿using BTCPayServer.Data;
 using BTCPayServer.Lightning;
 using BTCPayServer.Lightning.JsonConverters;
-using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services.Invoices;
 using NBitcoin;
 using Newtonsoft.Json;

@@ -1,27 +1,16 @@
 using DBriize;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Text;
-using NBitpayClient;
-using Newtonsoft.Json;
 using System.Linq;
 using NBitcoin;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query;
-using Microsoft.EntityFrameworkCore.Infrastructure.Internal;
-using BTCPayServer.Models;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using System.Globalization;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Logging;
 using BTCPayServer.Payments;
-using System.Data.Common;
-using NBitcoin.Altcoins;
-using NBitcoin.Altcoins.Elements;
 using Newtonsoft.Json.Linq;
 using Encoders = NBitcoin.DataEncoders.Encoders;
 

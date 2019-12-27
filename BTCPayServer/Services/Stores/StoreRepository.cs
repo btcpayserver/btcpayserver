@@ -1,12 +1,9 @@
 ﻿using BTCPayServer.Data;
-using BTCPayServer.Models;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using BTCPayServer.Services.Invoices;
 using BTCPayServer.Migrations;
 using Microsoft.EntityFrameworkCore;
 

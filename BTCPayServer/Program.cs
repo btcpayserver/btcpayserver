@@ -2,20 +2,10 @@
 using BTCPayServer.Logging;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
-using System;
 using BTCPayServer.Hosting;
-using NBitcoin;
-using Microsoft.Extensions.DependencyInjection;
-using System.Runtime.InteropServices;
-using System.Linq;
-using System.Diagnostics;
 using System.IO;
 using System.Net;
-using System.Collections.Generic;
-using System.Collections;
 using Microsoft.AspNetCore.Hosting.Server.Features;
-using System.Threading;
-using Serilog;
 using System.Runtime.CompilerServices;
 
 [assembly:InternalsVisibleTo("BTCPayServer.Tests")]

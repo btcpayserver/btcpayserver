@@ -4,14 +4,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
-using BTCPayServer.Models;
 using BTCPayServer.U2F.Models;
-using Microsoft.AspNetCore.Identity;
 using NBitcoin;
 using U2F.Core.Models;
 using U2F.Core.Utils;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query;
 
 namespace BTCPayServer.U2F
 {

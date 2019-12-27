@@ -1,14 +1,9 @@
 ﻿using BTCPayServer.Data;
-using DBriize;
 using NBitcoin;
 using NBitcoin.DataEncoders;
-using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query;
 using System.Linq;
 
 namespace BTCPayServer.Security.Bitpay

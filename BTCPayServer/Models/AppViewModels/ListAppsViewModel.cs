@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace BTCPayServer.Models.AppViewModels
+﻿namespace BTCPayServer.Models.AppViewModels
 {
     public class ListAppsViewModel
     {

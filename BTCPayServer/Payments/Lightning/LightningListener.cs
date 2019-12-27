@@ -13,7 +13,6 @@ using BTCPayServer.Lightning;
 using System.Collections.Concurrent;
 using System.Threading.Channels;
 using Microsoft.Extensions.Caching.Memory;
-using System.Net.Http;
 using BTCPayServer.Services;
 
 namespace BTCPayServer.Payments.Lightning

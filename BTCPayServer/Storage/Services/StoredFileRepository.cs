@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
-using BTCPayServer.Storage.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Storage.Services

@@ -1,16 +1,7 @@
-using System;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
-using BTCPayServer.Models;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Options;
-using OpenIddict.Core;
 using OpenIddict.Server;
-using Microsoft.AspNetCore;
-using OpenIddict.Server.AspNetCore;
 
 namespace BTCPayServer.Security.OpenId
 {

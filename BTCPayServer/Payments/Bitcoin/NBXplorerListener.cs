@@ -6,19 +6,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Logging;
 using BTCPayServer.Services.Invoices;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using NBXplorer;
 using System.Collections.Concurrent;
 using NBXplorer.DerivationStrategy;
 using BTCPayServer.Events;
-using BTCPayServer.Services;
 using BTCPayServer.Services.Wallets;
 using NBitcoin;
 using NBXplorer.Models;
-using BTCPayServer.Payments;
 using BTCPayServer.HostedServices;
-using NBitcoin.Altcoins.Elements;
 
 #if NETCOREAPP21
 using IHostApplicationLifetime = Microsoft.AspNetCore.Hosting.IApplicationLifetime;

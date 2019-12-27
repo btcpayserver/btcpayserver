@@ -3,11 +3,8 @@ using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
-using NBitcoin.DataEncoders;
-using Microsoft.AspNetCore.Http;
 using System.IO;
 using BTCPayServer.Security.Bitpay;
 

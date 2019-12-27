@@ -1,7 +1,4 @@
-﻿using NBitcoin;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System;
 using NBitpayClient;
 
 namespace BTCPayServer.Security.Bitpay

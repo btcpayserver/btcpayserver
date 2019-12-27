@@ -3,25 +3,17 @@ using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Http.Extensions;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
-using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBitcoin.DataEncoders;
-using NBitpayClient;
 using NBitpayClient.Extensions;
-using Newtonsoft.Json.Linq;
-using BTCPayServer.Logging;
-
 using Microsoft.AspNetCore.Authentication;
 using System.Text.Encodings.Web;
-using BTCPayServer.Data;
-
 
 namespace BTCPayServer.Security.Bitpay
 {

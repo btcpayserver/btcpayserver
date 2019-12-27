@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using NBitcoin;
-
-namespace BTCPayServer.Payments
+﻿namespace BTCPayServer.Payments
 {
     /// <summary>
     /// Represent information necessary to track a payment

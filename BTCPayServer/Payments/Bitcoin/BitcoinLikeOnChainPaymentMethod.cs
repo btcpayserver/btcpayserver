@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using BTCPayServer.Services.Invoices;
 using NBitcoin;
 using NBXplorer.JsonConverters;
 using Newtonsoft.Json;

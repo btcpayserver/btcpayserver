@@ -26,11 +26,6 @@ namespace BTCPayServer.Configuration
         {
             get; set;
         }
-        public string ConfigurationFile
-        {
-            get;
-            private set;
-        }
 
         public string LogFile
         {
@@ -81,10 +76,10 @@ namespace BTCPayServer.Configuration
             DataDir = conf.GetDataDir(NetworkType);
             Logs.Configuration.LogInformation("Network: " + NetworkType.ToString());
 
-            if (conf.GetOrDefault<bool>("launchsettings", false) && NetworkType != NetworkType.Regtest)
+            if (conf.GetOrDefault("launchsettings", false) && NetworkType != NetworkType.Regtest)
                 throw new ConfigException($"You need to run BTCPayServer with the run.sh or run.ps1 script");
 
-            var supportedChains = conf.GetOrDefault<string>("chains", "btc")
+            var supportedChains = conf.GetOrDefault("chains", "btc")
                 .Split(',', StringSplitOptions.RemoveEmptyEntries)
                 .Select(t => t.ToUpperInvariant()).ToList();
 
@@ -102,17 +97,16 @@ namespace BTCPayServer.Configuration
                     throw new ConfigException($"Invalid chains \"{chain}\"");
             }
 
-            var validChains = new List<string>();
             foreach (var net in NetworkProvider.GetAll().OfType<BTCPayNetwork>())
             {
                 NBXplorerConnectionSetting setting = new NBXplorerConnectionSetting();
                 setting.CryptoCode = net.CryptoCode;
-                setting.ExplorerUri = conf.GetOrDefault<Uri>($"{net.CryptoCode}.explorer.url", net.NBXplorerNetwork.DefaultSettings.DefaultUrl);
-                setting.CookieFile = conf.GetOrDefault<string>($"{net.CryptoCode}.explorer.cookiefile", net.NBXplorerNetwork.DefaultSettings.DefaultCookieFile);
+                setting.ExplorerUri = conf.GetOrDefault($"{net.CryptoCode}.explorer.url", net.NBXplorerNetwork.DefaultSettings.DefaultUrl);
+                setting.CookieFile = conf.GetOrDefault($"{net.CryptoCode}.explorer.cookiefile", net.NBXplorerNetwork.DefaultSettings.DefaultCookieFile);
                 NBXplorerConnectionSettings.Add(setting);
 
                 {
-                    var lightning = conf.GetOrDefault<string>($"{net.CryptoCode}.lightning", string.Empty);
+                    var lightning = conf.GetOrDefault($"{net.CryptoCode}.lightning", string.Empty);
                     if (lightning.Length != 0)
                     {
                         if (!LightningConnectionString.TryParse(lightning, true, out var connectionString, out var error))
@@ -131,7 +125,7 @@ namespace BTCPayServer.Configuration
                         {
                             if (connectionString.IsLegacy)
                             {
-                                Logs.Configuration.LogWarning($"Setting {net.CryptoCode}.lightning is a deprecated format, it will work now, but please replace it for future versions with '{connectionString.ToString()}'");
+                                Logs.Configuration.LogWarning($"Setting {net.CryptoCode}.lightning is a deprecated format, it will work now, but please replace it for future versions with '{connectionString}'");
                             }
                             InternalLightningByCryptoCode.Add(net.CryptoCode, connectionString);
                         }
@@ -159,8 +153,8 @@ namespace BTCPayServer.Configuration
 
             PostgresConnectionString = conf.GetOrDefault<string>("postgres", null);
             MySQLConnectionString = conf.GetOrDefault<string>("mysql", null);
-            BundleJsCss = conf.GetOrDefault<bool>("bundlejscss", true);
-            AllowAdminRegistration = conf.GetOrDefault<bool>("allow-admin-registration", false);
+            BundleJsCss = conf.GetOrDefault("bundlejscss", true);
+            AllowAdminRegistration = conf.GetOrDefault("allow-admin-registration", false);
             TorrcFile = conf.GetOrDefault<string>("torrcfile", null);
 
             var socksEndpointString = conf.GetOrDefault<string>("socksendpoint", null);
@@ -204,7 +198,7 @@ namespace BTCPayServer.Configuration
                 }
             }
 
-            var fingerPrints = conf.GetOrDefault<string>("sshtrustedfingerprints", "");
+            var fingerPrints = conf.GetOrDefault("sshtrustedfingerprints", "");
             if (!string.IsNullOrEmpty(fingerPrints))
             {
                 foreach (var fingerprint in fingerPrints.Split(';', StringSplitOptions.RemoveEmptyEntries))
@@ -215,7 +209,7 @@ namespace BTCPayServer.Configuration
                 }
             }
 
-            RootPath = conf.GetOrDefault<string>("rootpath", "/");
+            RootPath = conf.GetOrDefault("rootpath", "/");
             if (!RootPath.StartsWith("/", StringComparison.InvariantCultureIgnoreCase))
                 RootPath = "/" + RootPath;
             var old = conf.GetOrDefault<Uri>("internallightningnode", null);
@@ -229,7 +223,7 @@ namespace BTCPayServer.Configuration
                 Logs.Configuration.LogInformation("Log Level: " + GetDebugLogLevel(conf));
             }
 
-            DisableRegistration = conf.GetOrDefault<bool>("disable-registration", true);
+            DisableRegistration = conf.GetOrDefault("disable-registration", true);
         }
 
         private SSHSettings ParseSSHConfiguration(IConfiguration conf)
@@ -260,10 +254,10 @@ namespace BTCPayServer.Configuration
                     settings.Username = "root";
                 }
             }
-            settings.Password = conf.GetOrDefault<string>("sshpassword", "");
-            settings.KeyFile = conf.GetOrDefault<string>("sshkeyfile", "");
-            settings.AuthorizedKeysFile = conf.GetOrDefault<string>("sshauthorizedkeys", "");
-            settings.KeyFilePassword = conf.GetOrDefault<string>("sshkeyfilepassword", "");
+            settings.Password = conf.GetOrDefault("sshpassword", "");
+            settings.KeyFile = conf.GetOrDefault("sshkeyfile", "");
+            settings.AuthorizedKeysFile = conf.GetOrDefault("sshauthorizedkeys", "");
+            settings.KeyFilePassword = conf.GetOrDefault("sshkeyfilepassword", "");
             return settings;
         }
 

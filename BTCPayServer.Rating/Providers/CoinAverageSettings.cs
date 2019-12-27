@@ -8,19 +8,6 @@ using System.Threading.Tasks;
 
 namespace BTCPayServer.Services.Rates
 {
-    public class CoinAverageSettingsAuthenticator : ICoinAverageAuthenticator
-    {
-        CoinAverageSettings _Settings;
-        public CoinAverageSettingsAuthenticator(CoinAverageSettings settings)
-        {
-            _Settings = settings;
-        }
-        public Task AddHeader(HttpRequestMessage message)
-        {
-            return _Settings.AddHeader(message);
-        }
-    }
-
     public class CoinAverageExchange
     {
         public CoinAverageExchange(string name, string display, string url)

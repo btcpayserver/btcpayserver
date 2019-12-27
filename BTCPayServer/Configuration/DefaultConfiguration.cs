@@ -1,16 +1,10 @@
-﻿using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
+﻿using Microsoft.Extensions.Configuration;
 using System.IO;
 using System.Linq;
-using Microsoft.Extensions.Logging;
 using System.Net;
-using System.Threading.Tasks;
 using NBitcoin;
 using System.Text;
 using CommandLine;
-using NBXplorer;
 
 namespace BTCPayServer.Configuration
 {
@@ -20,7 +14,7 @@ namespace BTCPayServer.Configuration
         {
             var provider = new BTCPayNetworkProvider(NetworkType.Mainnet);
             var chains = string.Join(",", provider.GetAll().Select(n => n.CryptoCode.ToLowerInvariant()).ToArray());
-            CommandLineApplication app = new CommandLineApplication(true)
+            CommandLineApplication app = new CommandLineApplication()
             {
                 FullName = "BTCPay\r\nOpen source, self-hosted payment processor.",
                 Name = "BTCPay"
@@ -100,8 +94,8 @@ namespace BTCPayServer.Configuration
                 }
                 return n.NetworkType;
             }
-            var net = conf.GetOrDefault<bool>("regtest", false) ? NetworkType.Regtest :
-                        conf.GetOrDefault<bool>("testnet", false) ? NetworkType.Testnet : NetworkType.Mainnet;
+            var net = conf.GetOrDefault("regtest", false) ? NetworkType.Regtest :
+                        conf.GetOrDefault("testnet", false) ? NetworkType.Testnet : NetworkType.Mainnet;
 
             return net;
         }

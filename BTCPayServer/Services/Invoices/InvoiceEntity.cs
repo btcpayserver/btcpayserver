@@ -401,7 +401,7 @@ namespace BTCPayServer.Services.Invoices
             dto.Url = ServerUrl.WithTrailingSlash() + $"invoice?id=" + Id;
             dto.CryptoInfo = new List<InvoiceCryptoInfo>();
             dto.MinerFees = new Dictionary<string, MinerFeeInfo>();
-            foreach (var info in this.GetPaymentMethods())
+            foreach (var info in GetPaymentMethods())
             {
                 var accounting = info.Calculate();
                 var cryptoInfo = new InvoiceCryptoInfo();
@@ -992,9 +992,9 @@ namespace BTCPayServer.Services.Invoices
         internal decimal GetValue(PaymentMethodDictionary paymentMethods, PaymentMethodId paymentMethodId, decimal? value = null)
         {
             
-            value = value ?? this.GetCryptoPaymentData().GetValue();
+            value = value ?? GetCryptoPaymentData().GetValue();
             var to = paymentMethodId;
-            var from = this.GetPaymentMethodId();
+            var from = GetPaymentMethodId();
             if (to == from)
                 return decimal.Round(value.Value, 8);
             var fromRate = paymentMethods[from].Rate;

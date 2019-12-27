@@ -4,7 +4,7 @@
     {
         public InvoiceStopWatchedEvent(string invoiceId)
         {
-            this.InvoiceId = invoiceId;
+            InvoiceId = invoiceId;
         }
         public string InvoiceId { get; set; }
         public override string ToString()

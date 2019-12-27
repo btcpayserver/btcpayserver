@@ -99,7 +99,7 @@ namespace BTCPayServer.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> GetRates2(string currencyPairs, string storeId, CancellationToken cancellationToken)
         {
-            var store = this.CurrentStore ?? await this._StoreRepo.FindStore(storeId);
+            var store = CurrentStore ?? await _StoreRepo.FindStore(storeId);
             if (store == null)
             {
                 var err = Json(new BitpayErrorsModel() { Error = "Store not found" });

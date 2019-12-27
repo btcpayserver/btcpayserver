@@ -253,7 +253,7 @@ namespace Microsoft.AspNetCore.Mvc
 		{
 			this.jsonOptions = jsonOptions;
 		}
-		public JsonSerializerSettings SerializerSettings => this.jsonOptions.Value.SerializerSettings;
+		public JsonSerializerSettings SerializerSettings => jsonOptions.Value.SerializerSettings;
 	}
 }
 #endif

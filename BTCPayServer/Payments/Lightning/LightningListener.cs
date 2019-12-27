@@ -194,7 +194,7 @@ namespace BTCPayServer.Payments.Lightning
             {
 
             }
-            Logs.PayServer.LogInformation($"{this.GetType().Name} successfully exited...");
+            Logs.PayServer.LogInformation($"{GetType().Name} successfully exited...");
         }
     }
 

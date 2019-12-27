@@ -39,7 +39,7 @@ namespace BTCPayServer.Rating
                 if (node.Expression is IdentifierNameSyntax id)
                 {
                     IsInvocation = true;
-                    var arglist = (ArgumentListSyntax)this.Visit(node.ArgumentList);
+                    var arglist = (ArgumentListSyntax)Visit(node.ArgumentList);
                     IsInvocation = false;
                     return SyntaxFactory.InvocationExpression(SyntaxFactory.IdentifierName(id.Identifier.ValueText.ToLowerInvariant()), arglist)
                                         .WithTriviaFrom(id);
@@ -494,7 +494,7 @@ namespace BTCPayServer.Rating
         {
             _CurrencyPair = currencyPair;
             flatten = new FlattenExpressionRewriter(parent, currencyPair);
-            this.expression = flatten.Visit(candidate);
+            expression = flatten.Visit(candidate);
         }
 
 
@@ -525,7 +525,7 @@ namespace BTCPayServer.Rating
 
             var rewriter = new ReplaceExchangeRateRewriter();
             rewriter.Rates = ExchangeRates;
-            var result = rewriter.Visit(this.expression);
+            var result = rewriter.Visit(expression);
             Errors.AddRange(rewriter.Errors);
             _Evaluated = result.NormalizeWhitespace("", "\n").ToString();
             if (HasError)

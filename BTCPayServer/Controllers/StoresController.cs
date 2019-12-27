@@ -130,7 +130,7 @@ namespace BTCPayServer.Controllers
         {
             get
             {
-                return this.HttpContext.GetStoreData();
+                return HttpContext.GetStoreData();
             }
         }
 

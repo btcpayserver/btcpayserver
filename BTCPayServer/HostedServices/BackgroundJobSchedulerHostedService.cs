@@ -65,9 +65,9 @@ namespace BTCPayServer.HostedServices
             public IDelay DelayImplementation;
             public BackgroundJob(Func<CancellationToken, Task> action, TimeSpan delay, IDelay delayImplementation)
             {
-                this.Action = action;
-                this.Delay = delay;
-                this.DelayImplementation = delayImplementation;
+                Action = action;
+                Delay = delay;
+                DelayImplementation = delayImplementation;
             }
 
             public async Task Run(CancellationToken cancellationToken)

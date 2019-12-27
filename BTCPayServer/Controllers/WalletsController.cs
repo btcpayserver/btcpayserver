@@ -276,7 +276,7 @@ namespace BTCPayServer.Controllers
             DerivationSchemeSettings paymentMethod = GetDerivationSchemeSettings(walletId);
             if (paymentMethod == null)
                 return NotFound();
-            var network = this.NetworkProvider.GetNetwork<BTCPayNetwork>(walletId?.CryptoCode);
+            var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId?.CryptoCode);
             if (network == null)
                 return NotFound();
             var storeData = store.GetStoreBlob();
@@ -338,7 +338,7 @@ namespace BTCPayServer.Controllers
             var store = await Repository.FindStore(walletId.StoreId, GetUserId());
             if (store == null)
                 return NotFound();
-            var network = this.NetworkProvider.GetNetwork<BTCPayNetwork>(walletId?.CryptoCode);
+            var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId?.CryptoCode);
             if (network == null)
                 return NotFound();
             vm.SupportRBF = network.SupportRBF;
@@ -470,7 +470,7 @@ namespace BTCPayServer.Controllers
             {
                 WalletId = walletId.ToString(),
                 PSBT = psbt.ToBase64(),
-                WebsocketPath = this.Url.Action(nameof(VaultController.VaultBridgeConnection), "Vault", new { walletId = walletId.ToString() })
+                WebsocketPath = Url.Action(nameof(VaultController.VaultBridgeConnection), "Vault", new { walletId = walletId.ToString() })
             });
         }
 
@@ -519,7 +519,7 @@ namespace BTCPayServer.Controllers
             {
                 PSBT = psbt.ToBase64(),
                 HintChange = hintChange?.ToString(),
-                WebsocketPath = this.Url.Action(nameof(LedgerConnection))
+                WebsocketPath = Url.Action(nameof(LedgerConnection))
             });
         }
       

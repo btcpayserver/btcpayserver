@@ -913,10 +913,10 @@ namespace BTCPayServer
             internal Enumerator(MultiValueDictionary<TKey, TValue> multiValueDictionary)
             {
                 this.multiValueDictionary = multiValueDictionary;
-                this.version = multiValueDictionary.version;
-                this.current = default(KeyValuePair<TKey, IReadOnlyCollection<TValue>>);
-                this.enumerator = multiValueDictionary.dictionary.GetEnumerator();
-                this.state = EnumerationState.BeforeFirst;
+                version = multiValueDictionary.version;
+                current = default(KeyValuePair<TKey, IReadOnlyCollection<TValue>>);
+                enumerator = multiValueDictionary.dictionary.GetEnumerator();
+                state = EnumerationState.BeforeFirst;
             }
 
             public KeyValuePair<TKey, IReadOnlyCollection<TValue>> Current
@@ -1073,7 +1073,7 @@ namespace BTCPayServer
 
             IEnumerator IEnumerable.GetEnumerator()
             {
-                return this.GetEnumerator();
+                return GetEnumerator();
             }
 
             public TKey Key

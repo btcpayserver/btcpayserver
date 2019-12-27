@@ -225,7 +225,7 @@ namespace BTCPayServer.Controllers
             var model = new PaymentModel()
             {
                 CryptoCode = network.CryptoCode,
-                RootPath = this.Request.PathBase.Value.WithTrailingSlash(),
+                RootPath = Request.PathBase.Value.WithTrailingSlash(),
                 OrderId = invoice.OrderId,
                 InvoiceId = invoice.Id,
                 DefaultLang = storeBlob.DefaultLang ?? "en",

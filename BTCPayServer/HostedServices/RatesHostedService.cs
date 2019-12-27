@@ -31,7 +31,7 @@ namespace BTCPayServer.HostedServices
                                   RateProviderFactory rateProviderFactory,
                                   CoinAverageSettings coinAverageSettings)
         {
-            this._SettingsRepository = repo;
+            _SettingsRepository = repo;
             _coinAverageSettings = coinAverageSettings;
             _RateProviderFactory = rateProviderFactory;
         }

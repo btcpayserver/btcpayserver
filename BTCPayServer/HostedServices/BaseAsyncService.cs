@@ -58,7 +58,7 @@ namespace BTCPayServer.HostedServices
                 _Cts.Cancel();
                 await Task.WhenAll(_Tasks);
             }
-            Logs.PayServer.LogInformation($"{this.GetType().Name} successfully exited...");
+            Logs.PayServer.LogInformation($"{GetType().Name} successfully exited...");
         }
     }
 }

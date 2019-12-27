@@ -38,7 +38,7 @@ namespace BTCPayServer.Services
         public string ExpectedDomain => httpContext.HttpContext.Request.Host.Host;
         public string ExpectedHost => httpContext.HttpContext.Request.Host.Value;
         public string ExpectedProtocol => httpContext.HttpContext.Request.Scheme;
-        public string OnionUrl => this.torServices.Services.Where(s => s.ServiceType == TorServiceType.BTCPayServer)
+        public string OnionUrl => torServices.Services.Where(s => s.ServiceType == TorServiceType.BTCPayServer)
                                                            .Select(s => $"http://{s.OnionHost}").FirstOrDefault();
 
         public NetworkType NetworkType { get; set; }

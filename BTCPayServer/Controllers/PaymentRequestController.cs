@@ -207,7 +207,7 @@ namespace BTCPayServer.Controllers
             {
                 return NotFound();
             }
-            result.HubPath = PaymentRequestHub.GetHubPath(this.Request);
+            result.HubPath = PaymentRequestHub.GetHubPath(Request);
             return View(result);
         }
 
@@ -222,7 +222,7 @@ namespace BTCPayServer.Controllers
             {
                 return NotFound();
             }
-            result.HubPath = PaymentRequestHub.GetHubPath(this.Request);
+            result.HubPath = PaymentRequestHub.GetHubPath(Request);
             if (result.AmountDue <= 0)
             {
                 if (redirectToInvoice)

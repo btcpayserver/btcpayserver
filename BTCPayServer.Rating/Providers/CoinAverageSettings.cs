@@ -29,8 +29,8 @@ namespace BTCPayServer.Services.Rates
         {
             if (!TryAdd(exchange.Name, exchange))
             {
-                this.Remove(exchange.Name);
-                this.Add(exchange.Name, exchange);
+                Remove(exchange.Name);
+                Add(exchange.Name, exchange);
             }
         }
     }

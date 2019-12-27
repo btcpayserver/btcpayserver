@@ -31,12 +31,12 @@ namespace BTCPayServer.Services
                 {
                     foreach (var apdu in apdus)
                     {
-                        await this.webSocket.SendAsync(new ArraySegment<byte>(apdu), WebSocketMessageType.Binary, true, cancellationToken);
+                        await webSocket.SendAsync(new ArraySegment<byte>(apdu), WebSocketMessageType.Binary, true, cancellationToken);
                     }
                     foreach (var apdu in apdus)
                     {
                         byte[] response = new byte[300];
-                        var result = await this.webSocket.ReceiveAsync(new ArraySegment<byte>(response), cancellationToken);
+                        var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(response), cancellationToken);
                         Array.Resize(ref response, result.Count);
                         responses.Add(response);
                     }

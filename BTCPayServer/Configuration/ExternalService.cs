@@ -57,7 +57,7 @@ namespace BTCPayServer.Configuration
                 {
                     throw new ConfigException(string.Format(CultureInfo.InvariantCulture, errorMessage, setting, error));
                 }
-                this.Add(new ExternalService() { Type = type, ConnectionString = serviceConnection, CryptoCode = cryptoCode, DisplayName = displayName, ServiceName = serviceName });
+                Add(new ExternalService() { Type = type, ConnectionString = serviceConnection, CryptoCode = cryptoCode, DisplayName = displayName, ServiceName = serviceName });
             }
         }
 

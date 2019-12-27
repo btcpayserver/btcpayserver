@@ -220,7 +220,7 @@ namespace BTCPayServer.Controllers
                 return NotFound("A Target Currency must be set for this app in order to be loadable.");
             }
             var appInfo = (ViewCrowdfundViewModel)(await _AppService.GetAppInfo(appId));
-            appInfo.HubPath = AppHub.GetHubPath(this.Request);
+            appInfo.HubPath = AppHub.GetHubPath(Request);
             if (settings.Enabled)
                 return View(appInfo);
             if (!isAdmin)
@@ -251,7 +251,7 @@ namespace BTCPayServer.Controllers
             }
 
             var info = (ViewCrowdfundViewModel)await _AppService.GetAppInfo(appId);
-            info.HubPath = AppHub.GetHubPath(this.Request);
+            info.HubPath = AppHub.GetHubPath(Request);
             if (!isAdmin &&
                 ((settings.StartDate.HasValue && DateTime.Now < settings.StartDate) ||
                  (settings.EndDate.HasValue && DateTime.Now > settings.EndDate) ||

@@ -17,9 +17,9 @@ namespace BTCPayServer.Services.Rates
                 throw new ArgumentNullException(nameof(inner));
             if (memoryCache == null)
                 throw new ArgumentNullException(nameof(memoryCache));
-            this._Inner = inner;
-            this.MemoryCache = memoryCache;
-            this.ExchangeName = exchangeName;
+            _Inner = inner;
+            MemoryCache = memoryCache;
+            ExchangeName = exchangeName;
         }
 
         public IRateProvider Inner

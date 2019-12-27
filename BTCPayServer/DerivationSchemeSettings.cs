@@ -186,11 +186,11 @@ namespace BTCPayServer
                 // Legacy
                 if (_AccountKeySettings == null)
                 {
-                    if (this.Network == null)
+                    if (Network == null)
                         return null;
                     _AccountKeySettings = AccountDerivation.GetExtPubKeys().Select(e => new AccountKeySettings()
                     {
-                        AccountKey = e.GetWif(this.Network.NBitcoinNetwork),
+                        AccountKey = e.GetWif(Network.NBitcoinNetwork),
                     }).ToArray();
 #pragma warning disable CS0618 // Type or member is obsolete
                     _AccountKeySettings[0].AccountKeyPath = AccountKeyPath;

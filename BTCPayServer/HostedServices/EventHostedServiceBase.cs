@@ -38,7 +38,7 @@ namespace BTCPayServer.HostedServices
                     }
                     catch (Exception ex)
                     {
-                        Logs.PayServer.LogWarning(ex, $"Unhandled exception in {this.GetType().Name}");
+                        Logs.PayServer.LogWarning(ex, $"Unhandled exception in {GetType().Name}");
                     }
                 }
             }
@@ -48,7 +48,6 @@ namespace BTCPayServer.HostedServices
         {
             return Task.CompletedTask;
         }
-
 
         protected virtual void SubscibeToEvents()
         {

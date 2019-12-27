@@ -226,9 +226,9 @@ namespace BTCPayServer.Rating
         }
         public ExchangeRate(string exchange, CurrencyPair currencyPair, BidAsk bidAsk)
         {
-            this.Exchange = exchange;
-            this.CurrencyPair = currencyPair;
-            this.BidAsk = bidAsk;
+            Exchange = exchange;
+            CurrencyPair = currencyPair;
+            BidAsk = bidAsk;
         }
         public string Exchange { get; set; }
         public CurrencyPair CurrencyPair { get; set; }

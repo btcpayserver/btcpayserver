@@ -18,7 +18,7 @@ namespace BTCPayServer.Models
         {
             if (tokens == null)
                 throw new ArgumentNullException(nameof(tokens));
-            this._Tokens = tokens;
+            _Tokens = tokens;
         }
 
         [JsonProperty(PropertyName = "data")]

@@ -32,7 +32,7 @@ namespace BTCPayServer.Configuration
         /// <returns></returns>
         public async Task<ExternalConnectionString> Expand(Uri absoluteUrlBase, ExternalServiceTypes serviceType, NetworkType network)
         {
-            var connectionString = this.Clone();
+            var connectionString = Clone();
             // Transform relative URI into absolute URI
             var serviceUri = connectionString.Server.IsAbsoluteUri ? connectionString.Server : ToRelative(absoluteUrlBase, connectionString.Server.ToString());
             var isSecure = network != NetworkType.Mainnet ||
@@ -143,9 +143,9 @@ namespace BTCPayServer.Configuration
         }
         public bool? IsOnion()
         {
-            if (this.Server == null || !this.Server.IsAbsoluteUri)
+            if (Server == null || !Server.IsAbsoluteUri)
                 return null;
-            return this.Server.DnsSafeHost.EndsWith(".onion", StringComparison.OrdinalIgnoreCase);
+            return Server.DnsSafeHost.EndsWith(".onion", StringComparison.OrdinalIgnoreCase);
         }
         public static bool TryParse(string str, out ExternalConnectionString result, out string error)
         {

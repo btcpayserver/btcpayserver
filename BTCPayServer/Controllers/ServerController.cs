@@ -183,7 +183,7 @@ namespace BTCPayServer.Controllers
             vm.CanUseSSH = _sshState.CanUseSSH;
             if (!vm.CanUseSSH)
                 TempData[WellKnownTempData.ErrorMessage] = "Maintenance feature requires access to SSH properly configured in BTCPayServer configuration";
-            vm.DNSDomain = this.Request.Host.Host;
+            vm.DNSDomain = Request.Host.Host;
             if (IPAddress.TryParse(vm.DNSDomain, out var unused))
                 vm.DNSDomain = null;
             return View(vm);
@@ -204,14 +204,14 @@ namespace BTCPayServer.Controllers
                     return View(vm);
                 }
                 vm.DNSDomain = vm.DNSDomain.Trim().ToLowerInvariant();
-                if (vm.DNSDomain.Equals(this.Request.Host.Host, StringComparison.OrdinalIgnoreCase))
+                if (vm.DNSDomain.Equals(Request.Host.Host, StringComparison.OrdinalIgnoreCase))
                     return View(vm);
                 if (IPAddress.TryParse(vm.DNSDomain, out var unused))
                 {
                     ModelState.AddModelError(nameof(vm.DNSDomain), $"This should be a domain name");
                     return View(vm);
                 }
-                if (vm.DNSDomain.Equals(this.Request.Host.Host, StringComparison.InvariantCultureIgnoreCase))
+                if (vm.DNSDomain.Equals(Request.Host.Host, StringComparison.InvariantCultureIgnoreCase))
                 {
                     ModelState.AddModelError(nameof(vm.DNSDomain), $"The server is already set to use this domain");
                     return View(vm);
@@ -226,7 +226,7 @@ namespace BTCPayServer.Controllers
                     {
                         builder.Scheme = Request.Scheme;
                         builder.Host = vm.DNSDomain;
-                        var addresses1 = GetAddressAsync(this.Request.Host.Host);
+                        var addresses1 = GetAddressAsync(Request.Host.Host);
                         var addresses2 = GetAddressAsync(vm.DNSDomain);
                         await Task.WhenAll(addresses1, addresses2);
 
@@ -488,7 +488,7 @@ namespace BTCPayServer.Controllers
                 result.OtherExternalServices.Add(new ServicesViewModel.OtherExternalService()
                 {
                     Name = externalService.Key,
-                    Link = this.Request.GetAbsoluteUriNoPathBase(externalService.Value).AbsoluteUri
+                    Link = Request.GetAbsoluteUriNoPathBase(externalService.Value).AbsoluteUri
                 });
             }
             if (CanShowSSHService())
@@ -496,13 +496,13 @@ namespace BTCPayServer.Controllers
                 result.OtherExternalServices.Add(new ServicesViewModel.OtherExternalService()
                 {
                     Name = "SSH",
-                    Link = this.Url.Action(nameof(SSHService))
+                    Link = Url.Action(nameof(SSHService))
                 });
             }
             result.OtherExternalServices.Add(new ServicesViewModel.OtherExternalService()
             {
                 Name = "Dynamic DNS",
-                Link = this.Url.Action(nameof(DynamicDnsServices))
+                Link = Url.Action(nameof(DynamicDnsServices))
             });
             foreach (var torService in _torServices.Services)
             {
@@ -635,7 +635,7 @@ namespace BTCPayServer.Controllers
                         ServiceLink = service.ConnectionString.Server.AbsoluteUri.WithoutEndingSlash()
                     });
                 }
-                var connectionString = await service.ConnectionString.Expand(this.Request.GetAbsoluteUriNoPathBase(), service.Type, _options.NetworkType);
+                var connectionString = await service.ConnectionString.Expand(Request.GetAbsoluteUriNoPathBase(), service.Type, _options.NetworkType);
                 switch (service.Type)
                 {
                     case ExternalServiceTypes.Charge:
@@ -795,7 +795,7 @@ namespace BTCPayServer.Controllers
             ExternalConnectionString connectionString = null;
             try
             {
-                connectionString = await service.ConnectionString.Expand(this.Request.GetAbsoluteUriNoPathBase(), service.Type, _options.NetworkType);
+                connectionString = await service.ConnectionString.Expand(Request.GetAbsoluteUriNoPathBase(), service.Type, _options.NetworkType);
             }
             catch (Exception ex)
             {
@@ -937,7 +937,7 @@ namespace BTCPayServer.Controllers
             }
             settings.Services[i] = viewModel.Settings;
             await _settingsRepository.UpdateSetting(settings);
-            this.RouteData.Values.Remove(nameof(hostname));
+            RouteData.Values.Remove(nameof(hostname));
             return RedirectToAction(nameof(DynamicDnsServices));
         }
         
@@ -967,7 +967,7 @@ namespace BTCPayServer.Controllers
             settings.Services.RemoveAt(i);
             await _settingsRepository.UpdateSetting(settings);
             TempData[WellKnownTempData.SuccessMessage] = "Dynamic DNS service successfully removed";
-            this.RouteData.Values.Remove(nameof(hostname));
+            RouteData.Values.Remove(nameof(hostname));
             return RedirectToAction(nameof(DynamicDnsServices));
         }
 
@@ -978,7 +978,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
 
             var settings = _options.SSHSettings;
-            var server = Extensions.IsLocalNetwork(settings.Server) ? this.Request.Host.Host : settings.Server;
+            var server = Extensions.IsLocalNetwork(settings.Server) ? Request.Host.Host : settings.Server;
             SSHServiceViewModel vm = new SSHServiceViewModel();
             string port = settings.Port == 22 ? "" : $" -p {settings.Port}";
             vm.CommandLine = $"ssh {settings.Username}@{server}{port}";

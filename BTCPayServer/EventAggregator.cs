@@ -33,14 +33,14 @@ namespace BTCPayServer
                 if (_Disposed)
                     return;
                 _Disposed = true;
-                lock (this.aggregator._Subscriptions)
+                lock (aggregator._Subscriptions)
                 {
-                    if (this.aggregator._Subscriptions.TryGetValue(t, out Dictionary<Subscription, Action<object>> actions))
+                    if (aggregator._Subscriptions.TryGetValue(t, out Dictionary<Subscription, Action<object>> actions))
                     {
                         if (actions.Remove(this))
                         {
                             if (actions.Count == 0)
-                                this.aggregator._Subscriptions.Remove(t);
+                                aggregator._Subscriptions.Remove(t);
                         }
                     }
                 }

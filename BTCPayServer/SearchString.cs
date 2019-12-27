@@ -58,7 +58,7 @@ namespace BTCPayServer
                 return null;
 
             var val = Filters[key].First();
-            var success = DateTimeOffset.TryParse(val, null as IFormatProvider, DateTimeStyles.AssumeUniversal, out var r);
+            var success = DateTimeOffset.TryParse(val, null, DateTimeStyles.AssumeUniversal, out var r);
             if (success)
             {
                 r = r.AddMinutes(timezoneOffset);

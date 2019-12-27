@@ -44,7 +44,7 @@ namespace BTCPayServer.Security
                 return;
 
 
-            var store = await _storeRepository.FindStore((string)storeId, userid);
+            var store = await _storeRepository.FindStore(storeId, userid);
             if (store == null)
                 return;
             bool success = false;

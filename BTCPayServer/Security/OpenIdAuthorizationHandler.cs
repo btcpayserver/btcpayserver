@@ -46,7 +46,7 @@ namespace BTCPayServer.Security
                         var userid = _userManager.GetUserId(context.User);
                         if (string.IsNullOrEmpty(userid))
                             break;
-                        var store = await _storeRepository.FindStore((string)storeId, userid);
+                        var store = await _storeRepository.FindStore(storeId, userid);
                         if (store == null)
                             break;
                         success = true;

@@ -16,7 +16,7 @@ namespace BTCPayServer.Models
         {
             var v = (long)reader.Value;
             Check(v);
-            return unixRef + TimeSpan.FromMilliseconds((long)v);
+            return unixRef + TimeSpan.FromMilliseconds(v);
         }
 
         static DateTimeOffset unixRef = new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero);

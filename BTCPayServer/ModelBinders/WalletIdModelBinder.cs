@@ -20,7 +20,7 @@ namespace BTCPayServer.ModelBinders
                 return Task.CompletedTask;
             }
 
-            string key = val.FirstValue as string;
+            string key = val.FirstValue;
             if (key == null)
             {
                 return Task.CompletedTask;

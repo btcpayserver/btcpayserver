@@ -41,7 +41,7 @@ namespace BTCPayServer.Services.Rates
         
         public Task<ExchangeRates> GetRatesAsync(CancellationToken cancellationToken)
         {
-            return MemoryCache.GetOrCreateAsync("EXCHANGE_RATES_" + ExchangeName, (ICacheEntry entry) =>
+            return MemoryCache.GetOrCreateAsync("EXCHANGE_RATES_" + ExchangeName, entry =>
             {
                 entry.AbsoluteExpiration = DateTimeOffset.UtcNow + CacheSpan;
                 return _Inner.GetRatesAsync(cancellationToken);

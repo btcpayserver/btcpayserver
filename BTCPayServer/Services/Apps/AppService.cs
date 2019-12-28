@@ -193,7 +193,7 @@ namespace BTCPayServer.Services.Apps
             using (var ctx = _ContextFactory.CreateContext())
             {
                 ctx.Apps.Add(appData);
-                ctx.Entry<AppData>(appData).State = EntityState.Deleted;
+                ctx.Entry(appData).State = EntityState.Deleted;
                 return await ctx.SaveChangesAsync() == 1;
             }
         }

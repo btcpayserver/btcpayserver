@@ -18,7 +18,7 @@ namespace BTCPayServer.Filters
 
         public void OnActionExecuting(ActionExecutingContext context)
         {
-            if (context.IsEffectivePolicy<ReferrerPolicyAttribute>(this))
+            if (context.IsEffectivePolicy(this))
             {
                 context.HttpContext.Response.SetHeaderOnStarting("Referrer-Policy", Value);
             }

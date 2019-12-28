@@ -33,7 +33,7 @@ namespace BTCPayServer.Services.Altcoins.Monero
             var btcPayNetworkProvider = serviceProvider.GetService<BTCPayNetworkProvider>();
             var result = new MoneroLikeConfiguration();
 
-            var supportedChains = configuration.GetOrDefault<string>("chains", string.Empty)
+            var supportedChains = configuration.GetOrDefault("chains", string.Empty)
                 .Split(',', StringSplitOptions.RemoveEmptyEntries)
                 .Select(t => t.ToUpperInvariant());
 

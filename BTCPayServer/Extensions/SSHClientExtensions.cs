@@ -19,7 +19,7 @@ namespace BTCPayServer
                 try
                 {
                     sshClient = new SshClient(sshSettings.CreateConnectionInfo());
-                    sshClient.HostKeyReceived += (object sender, Renci.SshNet.Common.HostKeyEventArgs e) =>
+                    sshClient.HostKeyReceived += (sender, e) =>
                     {
                         if (sshSettings.TrustedFingerprints.Count == 0)
                         {
@@ -96,7 +96,7 @@ namespace BTCPayServer
 
         private static SSHCommandResult CreateSSHCommandResult(SshCommand sshCommand)
         {
-            return new SSHCommandResult()
+            return new SSHCommandResult
             {
                 Output = sshCommand.Result,
                 Error = sshCommand.Error,

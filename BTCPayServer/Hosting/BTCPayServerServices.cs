@@ -72,10 +72,10 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<SocketFactory>();
             services.TryAddSingleton<LightningClientFactoryService>();
             services.TryAddSingleton<InvoicePaymentNotification>();
-            services.TryAddSingleton<BTCPayServerOptions>(o =>
+            services.TryAddSingleton(o =>
                 o.GetRequiredService<IOptions<BTCPayServerOptions>>().Value);
             services.AddStartupTask<MigrationStartupTask>();
-            services.TryAddSingleton<InvoiceRepository>(o =>
+            services.TryAddSingleton(o =>
             {
                 var opts = o.GetRequiredService<BTCPayServerOptions>();
                 var dbContext = o.GetRequiredService<ApplicationDbContextFactory>();
@@ -91,7 +91,7 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<PaymentRequestService>();
             services.TryAddSingleton<U2FService>();
             services.TryAddSingleton<CoinAverageSettings>();
-            services.TryAddSingleton<ApplicationDbContextFactory>(o => 
+            services.TryAddSingleton(o => 
             {
                 var opts = o.GetRequiredService<BTCPayServerOptions>();
                 ApplicationDbContextFactory dbContext = null;
@@ -117,7 +117,7 @@ namespace BTCPayServer.Hosting
                 return dbContext;
             });
 
-            services.TryAddSingleton<BTCPayNetworkProvider>(o => 
+            services.TryAddSingleton(o => 
             {
                 var opts = o.GetRequiredService<BTCPayServerOptions>();
                 return opts.NetworkProvider;
@@ -125,7 +125,7 @@ namespace BTCPayServer.Hosting
 
             services.TryAddSingleton<AppService>();
             services.TryAddTransient<Safe>();
-            services.TryAddSingleton<Ganss.XSS.HtmlSanitizer>(o =>
+            services.TryAddSingleton(o =>
             {
 
                 var htmlSanitizer = new Ganss.XSS.HtmlSanitizer();
@@ -216,7 +216,7 @@ namespace BTCPayServer.Hosting
             services.AddScoped<IAuthorizationHandler, BitpayAuthorizationHandler>();
 
             services.TryAddSingleton<ExplorerClientProvider>();
-            services.TryAddSingleton<Bitpay>(o =>
+            services.TryAddSingleton(o =>
             {
                 if (o.GetRequiredService<BTCPayServerOptions>().NetworkType == NetworkType.Mainnet)
                     return new Bitpay(new Key(), new Uri("https://bitpay.com/"));
@@ -239,7 +239,7 @@ namespace BTCPayServer.Hosting
             services.AddAuthorization(o => o.AddBTCPayPolicies());
 
             services.AddSingleton<IBundleProvider, ResourceBundleProvider>();
-            services.AddTransient<BundleOptions>(provider =>
+            services.AddTransient(provider =>
             {
                 var opts = provider.GetRequiredService<BTCPayServerOptions>();
                 var bundle = new BundleOptions();

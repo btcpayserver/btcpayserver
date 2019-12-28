@@ -140,7 +140,7 @@ namespace BTCPayServer.HostedServices
                 HttpResponseMessage response = await SendNotification(job.Notification, cancellationToken);
                 reschedule = !response.IsSuccessStatusCode;
                 aggregatorEvent.Error = reschedule ? $"Unexpected return code: {(int)response.StatusCode}" : null;
-                _EventAggregator.Publish<InvoiceIPNEvent>(aggregatorEvent);
+                _EventAggregator.Publish(aggregatorEvent);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
@@ -152,7 +152,7 @@ namespace BTCPayServer.HostedServices
             catch (OperationCanceledException)
             {
                 aggregatorEvent.Error = "Timeout";
-                _EventAggregator.Publish<InvoiceIPNEvent>(aggregatorEvent);
+                _EventAggregator.Publish(aggregatorEvent);
                 reschedule = true;
             }
             catch (Exception ex)
@@ -168,7 +168,7 @@ namespace BTCPayServer.HostedServices
                 string message = String.Join(',', messages.ToArray());
 
                 aggregatorEvent.Error = $"Unexpected error: {message}";
-                _EventAggregator.Publish<InvoiceIPNEvent>(aggregatorEvent);
+                _EventAggregator.Publish(aggregatorEvent);
             }
 
             job.TryCount++;

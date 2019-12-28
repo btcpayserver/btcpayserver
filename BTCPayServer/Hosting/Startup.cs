@@ -98,7 +98,7 @@ namespace BTCPayServer.Hosting
             });
             // If the HTTPS certificate path is not set this logic will NOT be used and the default Kestrel binding logic will be.
             string httpsCertificateFilePath = Configuration.GetOrDefault<string>("HttpsCertificateFilePath", null);
-            bool useDefaultCertificate = Configuration.GetOrDefault<bool>("HttpsUseDefaultCertificate", false);
+            bool useDefaultCertificate = Configuration.GetOrDefault("HttpsUseDefaultCertificate", false);
             bool hasCertPath = !String.IsNullOrEmpty(httpsCertificateFilePath);
             services.Configure<KestrelServerOptions>(kestrel =>
             {
@@ -106,8 +106,8 @@ namespace BTCPayServer.Hosting
             });
             if (hasCertPath || useDefaultCertificate)
             {
-                var bindAddress = Configuration.GetOrDefault<IPAddress>("bind", IPAddress.Any);
-                int bindPort = Configuration.GetOrDefault<int>("port", 443);
+                var bindAddress = Configuration.GetOrDefault("bind", IPAddress.Any);
+                int bindPort = Configuration.GetOrDefault("port", 443);
 
                 services.Configure<KestrelServerOptions>(kestrel =>
                 {

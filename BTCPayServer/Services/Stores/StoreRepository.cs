@@ -128,9 +128,8 @@ namespace BTCPayServer.Services.Stores
             {
                 var userStore = new UserStore() { StoreDataId = storeId, ApplicationUserId = userId };
                 ctx.UserStore.Add(userStore);
-                ctx.Entry<UserStore>(userStore).State = EntityState.Deleted;
+                ctx.Entry(userStore).State = EntityState.Deleted;
                 await ctx.SaveChangesAsync();
-
             }
             await DeleteStoreIfOrphan(storeId);
         }

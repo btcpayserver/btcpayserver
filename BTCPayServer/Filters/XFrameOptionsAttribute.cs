@@ -39,7 +39,7 @@ namespace BTCPayServer.Filters
 
         public void OnActionExecuting(ActionExecutingContext context)
         {
-            if (context.IsEffectivePolicy<XFrameOptionsAttribute>(this))
+            if (context.IsEffectivePolicy(this))
             {
                 context.HttpContext.Response.SetHeaderOnStarting("X-Frame-Options", Value);
             }

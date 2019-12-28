@@ -307,7 +307,7 @@ namespace BTCPayServer.HostedServices
             bool extendInvoiceMonitoring = false;
             var updateConfirmationCountIfNeeded = invoice
                 .GetPayments()
-                .Select<PaymentEntity, Task<PaymentEntity>>(async payment =>
+                .Select(async payment =>
                 {
                     var paymentData = payment.GetCryptoPaymentData();
                     if (paymentData is Payments.Bitcoin.BitcoinLikePaymentData onChainPaymentData)

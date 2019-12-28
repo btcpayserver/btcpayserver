@@ -1,8 +1,6 @@
 using System.Threading.Tasks;
 using OpenIdConnectRequest = OpenIddict.Abstractions.OpenIddictRequest;
 using BTCPayServer.Data;
-using BTCPayServer.Models;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using OpenIddict.Core;

@@ -1,7 +1,5 @@
-using System;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
-using BTCPayServer.Models;
 using BTCPayServer.U2F;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;

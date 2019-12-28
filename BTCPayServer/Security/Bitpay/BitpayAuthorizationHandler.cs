@@ -48,7 +48,7 @@ namespace BTCPayServer.Security.Bitpay
             switch (requirement.Policy)
             {
                 case Policies.CanCreateInvoice.Key:
-                    if (!isAnonymous || (isAnonymous && anyoneCanInvoice))
+                    if (!isAnonymous || anyoneCanInvoice)
                     {
                         context.Succeed(requirement);
                         _HttpContext.SetStoreData(store);

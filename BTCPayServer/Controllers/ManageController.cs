@@ -76,8 +76,6 @@ namespace BTCPayServer.Controllers
                 return View(model);
             }
 
-            bool needUpdate = false;
-
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
@@ -102,15 +100,6 @@ namespace BTCPayServer.Controllers
                 if (!setPhoneResult.Succeeded)
                 {
                     throw new ApplicationException($"Unexpected error occurred setting phone number for user with ID '{user.Id}'.");
-                }
-            }
-
-            if (needUpdate)
-            {
-                var result = await _userManager.UpdateAsync(user);
-                if (!result.Succeeded)
-                {
-                    throw new ApplicationException($"Unexpected error occurred updating user with ID '{user.Id}'.");
                 }
             }
 

@@ -184,7 +184,7 @@ namespace BTCPayServer.Controllers
                 network = _networkProvider.GetAll().OfType<BTCPayNetwork>().FirstOrDefault();
                 paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
             }
-            if (invoice == null || network == null)
+            if (network == null)
                 return null;
             if (!invoice.Support(paymentMethodId))
             {

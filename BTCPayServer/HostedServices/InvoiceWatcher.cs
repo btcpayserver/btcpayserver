@@ -215,11 +215,11 @@ namespace BTCPayServer.HostedServices
             _Loop = StartLoop(_Cts.Token);
             _ = WaitPendingInvoices();
 
-            leases.Add(_EventAggregator.Subscribe<Events.InvoiceNeedUpdateEvent>(b =>
+            leases.Add(_EventAggregator.Subscribe<InvoiceNeedUpdateEvent>(b =>
             {
                 Watch(b.InvoiceId);
             }));
-            leases.Add(_EventAggregator.Subscribe<Events.InvoiceEvent>(b =>
+            leases.Add(_EventAggregator.Subscribe<InvoiceEvent>(b =>
             {
                 if (b.Name == InvoiceEvent.Created)
                 {

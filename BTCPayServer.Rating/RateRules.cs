@@ -519,7 +519,6 @@ namespace BTCPayServer.Rating
         public bool Reevaluate()
         {
             _BidAsk = null;
-            _EvaluatedNode = null;
             _Evaluated = null;
             Errors.Clear();
 
@@ -539,7 +538,6 @@ namespace BTCPayServer.Rating
                 return false;
             }
             _BidAsk = calculate.Values.Pop();
-            _EvaluatedNode = result;
             return true;
         }
 
@@ -553,7 +551,6 @@ namespace BTCPayServer.Rating
             }
         }
 
-        SyntaxNode _EvaluatedNode;
         string _Evaluated;
         public bool HasError
         {

@@ -11,7 +11,6 @@ using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using ExchangeSharp;
-using Ganss.XSS;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitcoin.DataEncoders;
@@ -28,19 +27,16 @@ namespace BTCPayServer.Services.Apps
         private readonly InvoiceRepository _InvoiceRepository;
         CurrencyNameTable _Currencies;
         private readonly StoreRepository _storeRepository;
-        private readonly HtmlSanitizer _HtmlSanitizer;
         public CurrencyNameTable Currencies => _Currencies;
         public AppService(ApplicationDbContextFactory contextFactory,
                           InvoiceRepository invoiceRepository,
                           CurrencyNameTable currencies,
-                          StoreRepository storeRepository,
-                          HtmlSanitizer htmlSanitizer)
+                          StoreRepository storeRepository)
         {
             _ContextFactory = contextFactory;
             _InvoiceRepository = invoiceRepository;
             _Currencies = currencies;
             _storeRepository = storeRepository;
-            _HtmlSanitizer = htmlSanitizer;
         }
 
         public async Task<object> GetAppInfo(string appId)

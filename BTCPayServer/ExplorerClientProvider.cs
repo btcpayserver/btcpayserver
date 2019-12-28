@@ -13,15 +13,12 @@ namespace BTCPayServer
     public class ExplorerClientProvider
     {
         BTCPayNetworkProvider _NetworkProviders;
-        BTCPayServerOptions _Options;
 
-        public BTCPayNetworkProvider NetworkProviders => _NetworkProviders;
         NBXplorerDashboard _Dashboard;
         public ExplorerClientProvider(IHttpClientFactory httpClientFactory, BTCPayNetworkProvider networkProviders, BTCPayServerOptions options, NBXplorerDashboard dashboard)
         {
             _Dashboard = dashboard;
             _NetworkProviders = networkProviders;
-            _Options = options;
 
             foreach (var setting in options.NBXplorerConnectionSettings)
             {

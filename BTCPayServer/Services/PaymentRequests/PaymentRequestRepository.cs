@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Invoices;
-using BTCPayServer.Services.Stores;
 using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Services.PaymentRequests
@@ -13,16 +12,14 @@ namespace BTCPayServer.Services.PaymentRequests
     {
         private readonly ApplicationDbContextFactory _ContextFactory;
         private readonly InvoiceRepository _InvoiceRepository;
-        private readonly StoreRepository _storeRepository;
 
-        public PaymentRequestRepository(ApplicationDbContextFactory contextFactory, InvoiceRepository invoiceRepository,
-            StoreRepository storeRepository)
+        public PaymentRequestRepository(
+            ApplicationDbContextFactory contextFactory, 
+            InvoiceRepository invoiceRepository)
         {
             _ContextFactory = contextFactory;
             _InvoiceRepository = invoiceRepository;
-            _storeRepository = storeRepository;
         }
-
 
         public async Task<PaymentRequestData> CreateOrUpdatePaymentRequest(PaymentRequestData entity)
         {

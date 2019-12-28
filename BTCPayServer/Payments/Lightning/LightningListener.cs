@@ -170,8 +170,7 @@ namespace BTCPayServer.Payments.Lightning
         }
 
         CancellationTokenSource _Cts = new CancellationTokenSource();
-        
-        HashSet<string> _InvoiceIds = new HashSet<string>();
+
         private Timer _ListenPoller;
 
         public async Task StopAsync(CancellationToken cancellationToken)

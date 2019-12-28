@@ -17,7 +17,7 @@ using NBXplorer.Models;
 using BTCPayServer.HostedServices;
 
 #if NETCOREAPP21
-using IHostApplicationLifetime = Microsoft.AspNetCore.Hosting.IApplicationLifetime;
+
 #endif
 
 namespace BTCPayServer.Payments.Bitcoin
@@ -29,7 +29,6 @@ namespace BTCPayServer.Payments.Bitcoin
     {
         EventAggregator _Aggregator;
         ExplorerClientProvider _ExplorerClients;
-        IHostApplicationLifetime _Lifetime;
         InvoiceRepository _InvoiceRepository;
         private TaskCompletionSource<bool> _RunningTask;
         private CancellationTokenSource _Cts;
@@ -38,15 +37,13 @@ namespace BTCPayServer.Payments.Bitcoin
         public NBXplorerListener(ExplorerClientProvider explorerClients,
                                 BTCPayWalletProvider wallets,
                                 InvoiceRepository invoiceRepository,
-                                EventAggregator aggregator, 
-                                IHostApplicationLifetime lifetime)
+                                EventAggregator aggregator)
         {
             PollInterval = TimeSpan.FromMinutes(1.0);
             _Wallets = wallets;
             _InvoiceRepository = invoiceRepository;
             _ExplorerClients = explorerClients;
             _Aggregator = aggregator;
-            _Lifetime = lifetime;
         }
 
         CompositeDisposable leases = new CompositeDisposable();

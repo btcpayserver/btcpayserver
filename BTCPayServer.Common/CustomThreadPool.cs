@@ -12,7 +12,6 @@ namespace BTCPayServer
         TaskCompletionSource<bool> _Exited;
         int _ExitedCount = 0;
         Thread[] _Threads;
-        Exception _UnhandledException;
         BlockingCollection<(Action, TaskCompletionSource<object>)> _Actions = new BlockingCollection<(Action, TaskCompletionSource<object>)>(new ConcurrentQueue<(Action, TaskCompletionSource<object>)>());
 
         public CustomThreadPool(int threadCount, string threadName)
@@ -72,7 +71,6 @@ namespace BTCPayServer
             catch (Exception ex)
             {
                 _Cancel.Cancel();
-                _UnhandledException = ex;
             }
             if (Interlocked.Increment(ref _ExitedCount) == _Threads.Length)
             {

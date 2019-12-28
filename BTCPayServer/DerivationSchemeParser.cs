@@ -14,8 +14,6 @@ namespace BTCPayServer
 
         public Script HintScriptPubKey { get; set; }
 
-        Dictionary<uint, string[]> ElectrumMapping = new Dictionary<uint, string[]>();
-        
         public DerivationSchemeParser(BTCPayNetwork expectedNetwork)
         {
             if (expectedNetwork == null)

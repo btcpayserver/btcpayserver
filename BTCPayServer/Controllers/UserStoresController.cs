@@ -16,16 +16,13 @@ namespace BTCPayServer.Controllers
     public partial class UserStoresController : Controller
     {
         private StoreRepository _Repo;
-        private BTCPayNetworkProvider _NetworkProvider;
         private UserManager<ApplicationUser> _UserManager;
 
         public UserStoresController(
             UserManager<ApplicationUser> userManager,
-            BTCPayNetworkProvider networkProvider,
             StoreRepository storeRepository)
         {
             _Repo = storeRepository;
-            _NetworkProvider = networkProvider;
             _UserManager = userManager;
         }        
 

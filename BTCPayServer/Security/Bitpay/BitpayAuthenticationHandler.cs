@@ -6,7 +6,6 @@ using System.IO;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
-using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using NBitcoin;
@@ -19,15 +18,12 @@ namespace BTCPayServer.Security.Bitpay
 {
     public class BitpayAuthenticationHandler : AuthenticationHandler<BitpayAuthenticationOptions>
     {
-        StoreRepository _StoreRepository;
         TokenRepository _TokenRepository;
         public BitpayAuthenticationHandler(
             TokenRepository tokenRepository,
-            StoreRepository storeRepository,
             IOptionsMonitor<BitpayAuthenticationOptions> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock) : base(options, logger, encoder, clock)
         {
             _TokenRepository = tokenRepository;
-            _StoreRepository = storeRepository;
         }
 
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()

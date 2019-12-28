@@ -34,10 +34,9 @@ namespace BTCPayServer.Hosting
         public Startup(IConfiguration conf, IWebHostEnvironment env, ILoggerFactory loggerFactory)
         {
             Configuration = conf;
-            _Env = env;
             LoggerFactory = loggerFactory;
         }
-        IWebHostEnvironment _Env;
+
         public IConfiguration Configuration
         {
             get; set;

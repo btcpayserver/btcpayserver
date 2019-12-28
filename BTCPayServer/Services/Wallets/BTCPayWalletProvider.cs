@@ -9,7 +9,6 @@ namespace BTCPayServer.Services.Wallets
     public class BTCPayWalletProvider
     {
         private ExplorerClientProvider _Client;
-        BTCPayNetworkProvider _NetworkProvider;
         IOptions<MemoryCacheOptions> _Options;
         public BTCPayWalletProvider(ExplorerClientProvider client,
                                     IOptions<MemoryCacheOptions> memoryCacheOption,
@@ -18,7 +17,6 @@ namespace BTCPayServer.Services.Wallets
             if (client == null)
                 throw new ArgumentNullException(nameof(client));
             _Client = client;
-            _NetworkProvider = networkProvider;
             _Options = memoryCacheOption;
 
             foreach(var network in networkProvider.GetAll().OfType<BTCPayNetwork>())

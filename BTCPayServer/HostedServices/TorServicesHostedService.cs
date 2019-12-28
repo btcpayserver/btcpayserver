@@ -7,12 +7,10 @@ namespace BTCPayServer.HostedServices
 {
     public class TorServicesHostedService : BaseAsyncService
     {
-        private readonly BTCPayServerOptions _options;
         private readonly TorServices _torServices;
 
         public TorServicesHostedService(BTCPayServerOptions options, TorServices torServices)
         {
-            _options = options;
             _torServices = torServices;
         }
 

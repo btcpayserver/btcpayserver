@@ -77,7 +77,7 @@ namespace BTCPayServer.Services
 
         public override async Task<LedgerTestResult> Test(CancellationToken cancellation)
         {
-            var version = await Ledger.GetFirmwareVersionAsync(cancellation);
+            await Ledger.GetFirmwareVersionAsync(cancellation);
             return new LedgerTestResult() { Success = true };
         }
 

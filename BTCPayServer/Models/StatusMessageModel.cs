@@ -28,14 +28,6 @@ namespace BTCPayServer.Models
                 }
             }
         }
-        
-        private void ParseNonJsonStatus(string s)
-        {
-            Message = s;
-            Severity = s.StartsWith("Error", StringComparison.InvariantCultureIgnoreCase)
-                ? StatusSeverity.Error
-                : StatusSeverity.Success;
-        }
 
         public enum StatusSeverity
         {

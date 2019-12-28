@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
@@ -332,22 +331,6 @@ askdevice:
             if (path.StartsWith("44'", StringComparison.OrdinalIgnoreCase))
                 return ScriptPubKeyType.Legacy;
             throw new NotSupportedException("Unsupported keypath");
-        }
-
-        private bool SameSelector(DeviceSelector a, DeviceSelector b)
-        {
-            var aargs = new List<string>();
-            a.AddArgs(aargs);
-            var bargs = new List<string>();
-            b.AddArgs(bargs);
-            if (aargs.Count != bargs.Count)
-                return false;
-            for (int i = 0; i < aargs.Count; i++)
-            {
-                if (aargs[i] != bargs[i])
-                    return false;
-            }
-            return true;
         }
 
         private static bool IsTrezorT(HwiEnumerateEntry deviceEntry)

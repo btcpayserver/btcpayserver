@@ -11,7 +11,6 @@ using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.PaymentRequests;
 using BTCPayServer.Services.Rates;
-using Microsoft.AspNetCore.SignalR;
 
 namespace BTCPayServer.PaymentRequest
 {
@@ -23,7 +22,6 @@ namespace BTCPayServer.PaymentRequest
         private readonly CurrencyNameTable _currencies;
 
         public PaymentRequestService(
-            IHubContext<PaymentRequestHub> hubContext,
             PaymentRequestRepository paymentRequestRepository,
             BTCPayNetworkProvider btcPayNetworkProvider,
             AppService appService,

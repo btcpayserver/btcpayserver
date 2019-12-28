@@ -204,18 +204,22 @@ namespace BTCPayServer.Hosting
             Logs.Configuration.LogInformation($"Root Path: {options.RootPath}");
             if (options.RootPath.Equals("/", StringComparison.OrdinalIgnoreCase))
             {
-                ConfigureCore(app, env, prov, loggerFactory, options);
+                ConfigureCore(app, env, loggerFactory, options);
             }
             else
             {
                 app.Map(options.RootPath, appChild =>
                 {
-                    ConfigureCore(appChild, env, prov, loggerFactory, options);
+                    ConfigureCore(appChild, env, loggerFactory, options);
                 });
             }
         }
 
-        private static void ConfigureCore(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider prov, ILoggerFactory loggerFactory, BTCPayServerOptions options)
+        private static void ConfigureCore(
+            IApplicationBuilder app, 
+            IWebHostEnvironment env, 
+            ILoggerFactory loggerFactory, 
+            BTCPayServerOptions options)
         {
             Logs.Configure(loggerFactory);
             if (env.IsDevelopment())

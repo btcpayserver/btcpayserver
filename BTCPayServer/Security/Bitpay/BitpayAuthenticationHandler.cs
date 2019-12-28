@@ -39,7 +39,7 @@ namespace BTCPayServer.Security.Bitpay
             }
             else if (!string.IsNullOrEmpty(bitpayAuth.Authorization))
             {
-                var storeId = await GetStoreIdFromAuth(Context.Request.HttpContext, bitpayAuth.Authorization);
+                var storeId = await GetStoreIdFromAuth(bitpayAuth.Authorization);
                 if (storeId == null)
                     return AuthenticateResult.Fail("ApiKey authentication failed");
                 return Success(BitpayClaims.ApiKeyStoreId, storeId, BitpayAuthenticationTypes.ApiKeyAuthentication);
@@ -84,7 +84,7 @@ namespace BTCPayServer.Security.Bitpay
             return null;
         }
 
-        private async Task<string> GetStoreIdFromAuth(HttpContext httpContext, string auth)
+        private async Task<string> GetStoreIdFromAuth(string auth)
         {
             var splitted = auth.Split(' ', StringSplitOptions.RemoveEmptyEntries);
             if (splitted.Length != 2 || !splitted[0].Equals("Basic", StringComparison.OrdinalIgnoreCase))

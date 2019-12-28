@@ -235,7 +235,7 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<EmailSenderFactory>();
             // bundling
 
-            services.AddBtcPayServerAuthenticationSchemes(configuration);
+            services.AddBtcPayServerAuthenticationSchemes();
             services.AddAuthorization(o => o.AddBTCPayPolicies());
 
             services.AddSingleton<IBundleProvider, ResourceBundleProvider>();
@@ -274,8 +274,7 @@ namespace BTCPayServer.Hosting
             return services;
         }
         private const long MAX_DEBUG_LOG_FILE_SIZE = 2000000; // If debug log is in use roll it every N MB.
-        private static void AddBtcPayServerAuthenticationSchemes(this IServiceCollection services,
-            IConfiguration configuration)
+        private static void AddBtcPayServerAuthenticationSchemes(this IServiceCollection services)
         {
             services.AddAuthentication()
                 .AddCookie()

@@ -45,7 +45,6 @@ namespace BTCPayServer.HostedServices
             IBackgroundJobClient jobClient,
             EventAggregator eventAggregator,
             InvoiceRepository invoiceRepository,
-            BTCPayNetworkProvider networkProvider,
             EmailSenderFactory emailSenderFactory)
         {
             _Client = httpClientFactory.CreateClient();

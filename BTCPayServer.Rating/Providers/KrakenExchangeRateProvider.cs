@@ -93,7 +93,7 @@ namespace BTCPayServer.Services.Rates
             var symbols = await GetSymbolsAsync(cancellationToken);
             var normalizedPairsList = symbols.Where(s => !notFoundSymbols.ContainsKey(s)).Select(s => _Helper.NormalizeMarketSymbol(s)).ToList();
             var csvPairsList = string.Join(",", normalizedPairsList);
-            JToken apiTickers = await MakeJsonRequestAsync<JToken>("/0/public/Ticker", null, new Dictionary<string, object> { { "pair", csvPairsList } }, cancellationToken: cancellationToken);
+            JToken apiTickers = await MakeJsonRequestAsync<JToken>("/0/public/Ticker", new Dictionary<string, object> { { "pair", csvPairsList } }, cancellationToken: cancellationToken);
             foreach (string symbol in symbols)
             {
                 var ticker = ConvertToExchangeTicker(symbol, apiTickers[symbol]);
@@ -166,7 +166,10 @@ namespace BTCPayServer.Services.Rates
             }
         }
 
-        private async Task<T> MakeJsonRequestAsync<T>(string url, string baseUrl = null, Dictionary<string, object> payload = null, string requestMethod = null, CancellationToken cancellationToken = default)
+        private async Task<T> MakeJsonRequestAsync<T>(
+            string url, 
+            Dictionary<string, object> payload = null, 
+            CancellationToken cancellationToken = default)
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("https://api.kraken.com");

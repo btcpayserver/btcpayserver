@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using BTCPayServer.Configuration;
 using BTCPayServer.Services;
 
 namespace BTCPayServer.HostedServices
@@ -9,7 +8,7 @@ namespace BTCPayServer.HostedServices
     {
         private readonly TorServices _torServices;
 
-        public TorServicesHostedService(BTCPayServerOptions options, TorServices torServices)
+        public TorServicesHostedService(TorServices torServices)
         {
             _torServices = torServices;
         }

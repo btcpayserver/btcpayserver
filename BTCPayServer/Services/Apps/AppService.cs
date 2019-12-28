@@ -48,7 +48,7 @@ namespace BTCPayServer.Services.Apps
             }
             return null;
         }
-        private async Task<ViewCrowdfundViewModel> GetInfo(AppData appData, string statusMessage = null)
+        private async Task<ViewCrowdfundViewModel> GetInfo(AppData appData)
         {
             var settings = appData.GetSettings<CrowdfundSettings>();
             var resetEvery = settings.StartDate.HasValue ? settings.ResetEvery : CrowdfundResetEvery.Never;

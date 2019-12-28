@@ -55,12 +55,11 @@ namespace BTCPayServer.Security.OpenId
         {
             foreach (var claim in principal.Claims)
             {
-                claim.SetDestinations(GetDestinations(identityOptions, claim, principal));
+                claim.SetDestinations(GetDestinations(claim));
             }
         }
 
-        private static IEnumerable<string> GetDestinations(IdentityOptions identityOptions, Claim claim,
-            ClaimsPrincipal principal)
+        private static IEnumerable<string> GetDestinations(Claim claim)
         {
             switch (claim.Type)
             {

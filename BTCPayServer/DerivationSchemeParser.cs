@@ -126,7 +126,8 @@ namespace BTCPayServer
                     }
                     parts[i] = derivationScheme;
                 }
-                catch { continue; }
+                catch {
+                }
             }
 
             if (hintDestination != null)

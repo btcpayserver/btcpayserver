@@ -31,7 +31,6 @@ namespace BTCPayServer.Services.Altcoins.Monero.RPC.Models
 
             var value = (long)untypedValue;
             serializer.Serialize(writer, value.ToString(CultureInfo.InvariantCulture));
-            return;
         }
 
         public static readonly ParseStringConverter Singleton = new ParseStringConverter();

@@ -68,7 +68,7 @@ namespace BTCPayServer
                 }
             }
             catch (OperationCanceledException) when (_Cancel.IsCancellationRequested) { }
-            catch (Exception ex)
+            catch (Exception)
             {
                 _Cancel.Cancel();
             }

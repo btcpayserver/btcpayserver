@@ -52,7 +52,6 @@ namespace BTCPayServer.Security.Bitpay
                     {
                         context.Succeed(requirement);
                         _HttpContext.SetStoreData(store);
-                        return;
                     }
                     break;
                 case Policies.CanGetRates.Key:

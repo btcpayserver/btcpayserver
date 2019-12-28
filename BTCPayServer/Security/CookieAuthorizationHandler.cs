@@ -67,7 +67,6 @@ namespace BTCPayServer.Security
             {
                 context.Succeed(requirement);
                 _HttpContext.SetStoreData(store);
-                return;
             }
         }
     }

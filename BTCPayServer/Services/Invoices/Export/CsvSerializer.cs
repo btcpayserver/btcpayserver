@@ -54,7 +54,6 @@ namespace BTCPayServer.Services.Invoices.Export
 		/// <summary>
 		/// Serialize
 		/// </summary>
-		/// <param name="stream">stream</param>
 		/// <param name="data">data</param>
 		public string Serialize(IList<T> data)
 		{

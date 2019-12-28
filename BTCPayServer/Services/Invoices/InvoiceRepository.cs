@@ -660,10 +660,15 @@ retry:
         /// <param name="invoiceId"></param>
         /// <param name="date"></param>
         /// <param name="paymentData"></param>
-        /// <param name="cryptoCode"></param>
+        /// <param name="network"></param>
         /// <param name="accounted"></param>
         /// <returns>The PaymentEntity or null if already added</returns>
-        public async Task<PaymentEntity> AddPayment(string invoiceId, DateTimeOffset date, CryptoPaymentData paymentData, BTCPayNetworkBase network, bool accounted = false)
+        public async Task<PaymentEntity> AddPayment(
+            string invoiceId, 
+            DateTimeOffset date, 
+            CryptoPaymentData paymentData, 
+            BTCPayNetworkBase network, 
+            bool accounted = false)
         {
             using (var context = _ContextFactory.CreateContext())
             {

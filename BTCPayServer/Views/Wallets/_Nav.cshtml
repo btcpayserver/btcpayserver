@@ -1,10 +1,19 @@
 ﻿@inject SignInManager<ApplicationUser> SignInManager
-
+@inject BTCPayNetworkProvider BtcPayNetworkProvider
+@{
+    var wallet = WalletId.Parse( this.Context.GetRouteValue("walletId").ToString());
+    var network = BtcPayNetworkProvider.GetNetwork<BTCPayNetwork>(wallet.CryptoCode);
+}
 <div class="nav flex-column nav-pills">
     <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.Transactions)" asp-action="WalletTransactions" asp-route-walletId="@this.Context.GetRouteValue("walletId")" id="WalletTransactions">Transactions</a>
-    <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.Send)" asp-action="WalletSend" asp-route-walletId="@this.Context.GetRouteValue("walletId")" id="WalletSend">Send</a>
+    @if (!network.ReadonlyWallet)
+    {
+        <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.Send)" asp-action="WalletSend" asp-route-walletId="@this.Context.GetRouteValue("walletId")" id="WalletSend">Send</a>
+    }
     <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.Rescan)" asp-action="WalletRescan" asp-route-walletId="@this.Context.GetRouteValue("walletId")" id="WalletRescan">Rescan</a>
-    <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.PSBT)" asp-action="WalletPSBT" asp-route-walletId="@this.Context.GetRouteValue("walletId")">PSBT</a>
-    <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.Settings)" asp-action="WalletSettings" asp-route-walletId="@this.Context.GetRouteValue("walletId")" id="WalletSettings">Settings</a>
+    @if (!network.ReadonlyWallet)
+    {
+        <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.PSBT)" asp-action="WalletPSBT" asp-route-walletId="@this.Context.GetRouteValue("walletId")">PSBT</a>
+        <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.Settings)" asp-action="WalletSettings" asp-route-walletId="@this.Context.GetRouteValue("walletId")" id="WalletSettings">Settings</a>
+    }
 </div>
-

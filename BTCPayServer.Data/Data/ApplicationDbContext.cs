@@ -159,6 +159,12 @@ namespace BTCPayServer.Data
                    .HasOne(o => o.StoreData)
                    .WithMany(i => i.APIKeys)
                    .HasForeignKey(i => i.StoreId).OnDelete(DeleteBehavior.Cascade);
+            
+            builder.Entity<APIKeyData>()
+                .HasOne(o => o.User)
+                .WithMany(i => i.APIKeys)
+                .HasForeignKey(i => i.UserId).OnDelete(DeleteBehavior.Cascade);
+            
             builder.Entity<APIKeyData>()
                 .HasIndex(o => o.StoreId);
 

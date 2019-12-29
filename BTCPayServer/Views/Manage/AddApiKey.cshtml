@@ -1,0 +1,110 @@
+@using BTCPayServer.Controllers
+@using BTCPayServer.Security.APIKeys
+@model BTCPayServer.Controllers.ManageController.AddApiKeyViewModel
+
+@{
+    ViewData.SetActivePageAndTitle(ManageNavPages.APIKeys, "Add API Key");
+}
+
+<h4>@ViewData["Title"]</h4>
+<partial name="_StatusMessage"/>
+<p >
+    Generate a new api key to use BTCPay through its API.
+</p>
+<div class="row">
+    <div class="col-md-6">
+        <form method="post" asp-action="AddApiKey" class="list-group">
+
+            <input type="hidden" asp-for="StoreMode" value="@Model.StoreMode"/>
+            <div asp-validation-summary="All" class="text-danger"></div>
+            @if (Model.IsServerAdmin)
+            {
+                <div class="list-group-item form-group">
+                    <input asp-for="ServerManagementPermission" class="form-check-inline"/>
+                    <label asp-for="ServerManagementPermission" class="h5">@APIKeyConstants.Permissions.PermissionDescriptions[APIKeyConstants.Permissions.ServerManagement].Title</label>
+                    <span asp-validation-for="ServerManagementPermission" class="text-danger"></span>
+                    <p>@APIKeyConstants.Permissions.PermissionDescriptions[APIKeyConstants.Permissions.ServerManagement].Description.</p>
+                </div>
+            }
+            @if (Model.StoreMode == ManageController.AddApiKeyViewModel.ApiKeyStoreMode.AllStores)
+            {
+                <div class="list-group-item form-group">
+                    @Html.CheckBoxFor(model => model.StoreManagementPermission, new Dictionary<string,string>(){ {"class", "form-check-inline"}} )
+                 
+                    <label asp-for="StoreManagementPermission" class="h5">@APIKeyConstants.Permissions.PermissionDescriptions[APIKeyConstants.Permissions.StoreManagement].Title</label>
+                    <span asp-validation-for="StoreManagementPermission" class="text-danger"></span>
+                    <p class="mb-0">@APIKeyConstants.Permissions.PermissionDescriptions[APIKeyConstants.Permissions.StoreManagement].Description.</p>
+                    <button type="submit" class="btn btn-link" name="command" value="change-store-mode">Give permission to specific stores instead</button>
+                </div>
+            }
+            else if (Model.StoreMode == ManageController.AddApiKeyViewModel.ApiKeyStoreMode.Specific)
+            {
+                <div class="list-group-item p-0 border-0 mb-2">
+                    <li class="list-group-item ">
+                        <h5 class="mb-1">@APIKeyConstants.Permissions.PermissionDescriptions[APIKeyConstants.Permissions.StoreManagement + ":"].Title</h5>
+                        <p class="mb-0">@APIKeyConstants.Permissions.PermissionDescriptions[APIKeyConstants.Permissions.StoreManagement + ":"].Description.</p>
+                        <button type="submit" class="btn btn-link" name="command" value="change-store-mode">Give permission to all stores instead</button>
+                    </li>
+                    @if (!Model.Stores.Any())
+                    {
+                        <li class="list-group-item alert-warning">
+                            You currently have no stores configured.
+                        </li>
+                    }
+                    @for (var index = 0; index < Model.SpecificStores.Count; index++)
+                    {
+                        <div class="list-group-item transaction-output-form p-0 pl-lg-2">
+                            <div class="row">
+                                <div class="col-sm-12 col-md-12 col-lg-10  py-2 ">
+                                    <div class="form-group my-0">
+                                        @if (Model.SpecificStores[index] == null)
+                                        {
+                                            <select asp-for="SpecificStores[index]" class="form-control" asp-items="@(new SelectList(Model.Stores.Where(data => !Model.SpecificStores.Contains(data.Id)), nameof(StoreData.Id), nameof(StoreData.StoreName)))"></select>
+                                        }
+                                        else
+                                        {
+                                            var store = Model.Stores.SingleOrDefault(data => data.Id == Model.SpecificStores[index]);
+                                            <select asp-for="SpecificStores[index]" class="form-control" asp-items="@(new SelectList(new[] {store}, nameof(StoreData.Id), nameof(StoreData.StoreName), store.Id))"></select>
+                                        }
+
+                                        <span asp-validation-for="SpecificStores[index]" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="col-sm-12 col-md-12 col-lg-2 pull-right">
+                                    <button type="submit" title="Remove Store Permission" name="command" value="@($"remove-store:{index}")"
+                                            class="d-block d-lg-none d-xl-none btn btn-danger mb-2 ml-2">
+                                        Remove
+                                    </button>
+                                    <button type="submit" title="Remove Store Permission" name="command" value="@($"remove-store:{index}")"
+                                            class="d-none d-lg-block remove-btn text-decoration-none h-100 align-middle btn text-danger btn-link fa fa-times rounded-0 pull-right">
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    @if (Model.SpecificStores.Count < Model.Stores.Length)
+                    {
+                        <div class="list-group-item">
+                            <button type="submit" name="command" value="add-store" class="ml-1 btn btn-secondary">Add another store </button>
+                        </div>
+                    }
+                </div>
+            }
+            <button type="submit" class="btn btn-primary" id="Generate">Generate API Key</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+
+    <style>
+        .remove-btn{
+            font-size: 1.5rem;
+            border-radius: 0;
+        }
+         .remove-btn:hover{
+                   background-color: #CCCCCC;
+         }
+    </style>
+}

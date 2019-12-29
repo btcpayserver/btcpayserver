@@ -19,6 +19,8 @@ using System.Globalization;
 using BTCPayServer.Security;
 using BTCPayServer.U2F;
 using BTCPayServer.Data;
+using BTCPayServer.Security.APIKeys;
+
 
 namespace BTCPayServer.Controllers
 {
@@ -34,6 +36,7 @@ namespace BTCPayServer.Controllers
         IWebHostEnvironment _Env;
         public U2FService _u2FService;
         private readonly BTCPayServerEnvironment _btcPayServerEnvironment;
+        private readonly APIKeyRepository _apiKeyRepository;
         StoreRepository _StoreRepository;
 
 
@@ -48,7 +51,9 @@ namespace BTCPayServer.Controllers
           StoreRepository storeRepository,
           IWebHostEnvironment env, 
           U2FService  u2FService,
-          BTCPayServerEnvironment btcPayServerEnvironment)
+          BTCPayServerEnvironment btcPayServerEnvironment,
+          APIKeyRepository apiKeyRepository
+          )
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -58,6 +63,7 @@ namespace BTCPayServer.Controllers
             _Env = env;
             _u2FService = u2FService;
             _btcPayServerEnvironment = btcPayServerEnvironment;
+            _apiKeyRepository = apiKeyRepository;
             _StoreRepository = storeRepository;
         }
 

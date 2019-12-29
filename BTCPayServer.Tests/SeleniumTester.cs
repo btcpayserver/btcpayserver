@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Lightning;
 using BTCPayServer.Lightning.CLightning;
 using BTCPayServer.Models;
+using BTCPayServer.Views.Manage;
 using BTCPayServer.Views.Stores;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -270,6 +271,20 @@ namespace BTCPayServer.Tests
         public void GoToInvoices()
         {
             Driver.FindElement(By.Id("Invoices")).Click();
+        }
+        
+        public void GoToProfile(ManageNavPages navPages =  ManageNavPages.Index)
+        {
+            Driver.FindElement(By.Id("MySettings")).Click();
+            if (navPages != ManageNavPages.Index)
+            {
+                Driver.FindElement(By.Id(navPages.ToString())).Click();
+            }
+        }
+
+        public void GoToLogin()
+        {
+            Driver.Navigate().GoToUrl(new Uri(Server.PayTester.ServerUri, "Account/Login"));
         }
 
         public void GoToCreateInvoicePage()

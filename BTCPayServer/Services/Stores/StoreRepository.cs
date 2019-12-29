@@ -78,12 +78,12 @@ namespace BTCPayServer.Services.Stores
             }
         }
 
-        public async Task<StoreData[]> GetStoresByUserId(string userId)
+        public async Task<StoreData[]> GetStoresByUserId(string userId, IEnumerable<string> storeIds = null)
         {
             using (var ctx = _ContextFactory.CreateContext())
             {
                 return (await ctx.UserStore
-                    .Where(u => u.ApplicationUserId == userId)
+                    .Where(u => u.ApplicationUserId == userId && (storeIds == null || storeIds.Contains(u.StoreDataId)))
                     .Select(u => new { u.StoreData, u.Role })
                     .ToArrayAsync())
                     .Select(u =>

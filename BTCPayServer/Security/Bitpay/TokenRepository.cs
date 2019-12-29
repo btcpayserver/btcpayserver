@@ -66,10 +66,10 @@ namespace BTCPayServer.Security.Bitpay
 
             using (var ctx = _Factory.CreateContext())
             {
-                var existing = await ctx.ApiKeys.Where(o => o.StoreId == storeId).FirstOrDefaultAsync();
-                if (existing != null)
+                var existing = await ctx.ApiKeys.Where(o => o.StoreId == storeId && o.Type == APIKeyType.Legacy).ToListAsync();
+                if (existing.Any())
                 {
-                    ctx.ApiKeys.Remove(existing);
+                    ctx.ApiKeys.RemoveRange(existing);
                 }
                 ctx.ApiKeys.Add(new APIKeyData() { Id = new string(generated), StoreId = storeId });
                 await ctx.SaveChangesAsync().ConfigureAwait(false);
@@ -80,7 +80,7 @@ namespace BTCPayServer.Security.Bitpay
         {
             using (var ctx = _Factory.CreateContext())
             {
-                return await ctx.ApiKeys.Where(o => o.StoreId == storeId).Select(c => c.Id).ToArrayAsync();
+                return await ctx.ApiKeys.Where(o => o.StoreId == storeId && o.Type== APIKeyType.Legacy).Select(c => c.Id).ToArrayAsync();
             }
         }
 

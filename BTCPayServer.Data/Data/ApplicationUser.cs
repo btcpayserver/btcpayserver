@@ -28,5 +28,6 @@ namespace BTCPayServer.Data
         }
         
         public List<U2FDevice> U2FDevices { get; set; }
+        public List<APIKeyData> APIKeys { get; set; }
     }
 }

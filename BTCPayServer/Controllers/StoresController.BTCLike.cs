@@ -328,7 +328,15 @@ namespace BTCPayServer.Controllers
             var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
             var client = _ExplorerProvider.GetExplorerClient(cryptoCode);
             var response = await client.GenerateWalletAsync(request);
-
+            if (response == null)
+            {
+                TempData.SetStatusMessageModel(new StatusMessageModel()
+                {
+                    Severity = StatusMessageModel.StatusSeverity.Error,
+                    Html = "There was an error generating your wallet. Is your node available?"
+                });
+                return RedirectToAction("AddDerivationScheme", new {storeId, cryptoCode});
+            }
             var store = HttpContext.GetStoreData();
             var result = await AddDerivationScheme(storeId,
                 new DerivationSchemeViewModel()

@@ -26,7 +26,6 @@ namespace BTCPayServer.Configuration
         public string MacaroonDirectoryPath { get; set; }
         public string APIToken { get; set; }
         public string CookieFilePath { get; set; }
-        public string PasswordFile { get; set; }
         public string AccessKey { get; set; }
 
         /// <summary>
@@ -79,21 +78,7 @@ namespace BTCPayServer.Configuration
                 }
             }
 
-            if (serviceType == ExternalServiceTypes.Configurator)
-            {
-                //generate a password and write to the path
-                if (connectionString.PasswordFile != null)
-                {
-                    if (string.IsNullOrEmpty(connectionString.Password))
-                    {
-                        connectionString.Password = Guid.NewGuid().ToString();
-                    }
-
-                    await File.WriteAllTextAsync(connectionString.PasswordFile, connectionString.Password);
-                }
-            }
-
-            if (serviceType == ExternalServiceTypes.Charge || serviceType == ExternalServiceTypes.RTL || serviceType == ExternalServiceTypes.Spark)
+            if (new []{ExternalServiceTypes.Charge, ExternalServiceTypes.RTL,  ExternalServiceTypes.Spark, ExternalServiceTypes.Configurator}.Contains(serviceType))
             {
                 // Read access key from cookie file
                 if (connectionString.CookieFilePath != null)
@@ -136,8 +121,6 @@ namespace BTCPayServer.Configuration
             return connectionString;
         }
 
-        public string Password { get; set; }
-
         private Uri ToRelative(Uri absoluteUrlBase, string path)
         {
             if (path.StartsWith('/'))
@@ -157,9 +140,7 @@ namespace BTCPayServer.Configuration
                 APIToken = APIToken,
                 CookieFilePath = CookieFilePath,
                 AccessKey = AccessKey,
-                Macaroons = Macaroons?.Clone(),
-                Password = Password,
-                PasswordFile = PasswordFile
+                Macaroons = Macaroons?.Clone()
             };
         }
         public bool? IsOnion()
@@ -220,9 +201,6 @@ namespace BTCPayServer.Configuration
                         break;
                     case "access-key":
                         resultTemp.AccessKey = kv[1];
-                        break;
-                    case "passwordfile":
-                        resultTemp.PasswordFile = kv[1];
                         break;
                 }
             }

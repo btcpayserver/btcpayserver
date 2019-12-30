@@ -599,14 +599,13 @@ namespace BTCPayServer.Controllers
                     case ExternalServiceTypes.LNDRest:
                         return LndServices(service, connectionString, nonce);
                     case ExternalServiceTypes.Configurator:
-                        
-                            return View("ConfiguratorService", new LightningWalletServices()
+                        return View("ConfiguratorService",
+                            new LightningWalletServices()
                             {
                                 ShowQR = showQR,
                                 WalletName = service.ServiceName,
-                                ServiceLink = $"{connectionString.Server}?password={connectionString.Password}"
+                                ServiceLink = $"{connectionString.Server}?password={connectionString.AccessKey}"
                             });
-                        
                     default:
                         throw new NotSupportedException(service.Type.ToString());
                 }

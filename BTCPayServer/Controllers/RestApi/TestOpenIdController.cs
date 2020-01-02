@@ -1,26 +1,27 @@
 using System.Threading.Tasks;
 using BTCPayServer.Data;
+using BTCPayServer.Models;
 using BTCPayServer.Security;
-using BTCPayServer.Security.APIKeys;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using OpenIddict.Validation.AspNetCore;
 
 namespace BTCPayServer.Controllers.RestApi
 {
     /// <summary>
-    /// this controller serves as a testing endpoint for our api key unit tests
+    /// this controller serves as a testing endpoint for our OpenId unit tests
     /// </summary>
-    [Route("api/[controller]")]
+    [Route("api/test/openid")]
     [ApiController]
-    [Authorize(AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
-    public class TestController : ControllerBase
+    [Authorize(AuthenticationSchemes = AuthenticationSchemes.OpenId)]
+    public class TestOpenIdController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly StoreRepository _storeRepository;
 
-        public TestController(UserManager<ApplicationUser> userManager, StoreRepository storeRepository)
+        public TestOpenIdController(UserManager<ApplicationUser> userManager, StoreRepository storeRepository)
         {
             _userManager = userManager;
             _storeRepository = storeRepository;
@@ -39,32 +40,32 @@ namespace BTCPayServer.Controllers.RestApi
         }
 
         [HttpGet("me/is-admin")]
-        [Authorize(Policy = Policies.CanModifyServerSettings.Key, AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
+        [Authorize(Policy = Policies.CanModifyServerSettings.Key, AuthenticationSchemes = AuthenticationSchemes.OpenId)]
         public bool AmIAnAdmin()
         {
             return true;
         }
 
         [HttpGet("me/stores")]
-        [Authorize(Policy = Policies.CanListStoreSettings.Key,
-            AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
+        [Authorize(Policy = Policies.CanModifyStoreSettings.Key,
+            AuthenticationSchemes = AuthenticationSchemes.OpenId)]
         public async Task<StoreData[]> GetCurrentUserStores()
         {
-            return await  User.GetStores(_userManager, _storeRepository);
-        }
-        
-        [HttpGet("me/stores/actions")]
-        [Authorize(Policy = Policies.CanModifyStoreSettings.Key,
-            AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
-        public bool CanDoNonImplicitStoreActions()
-        {
-            return true;
+            return await _storeRepository.GetStoresByUserId(_userManager.GetUserId(User));
+
+
+
+
+
+
+
+
         }
 
 
         [HttpGet("me/stores/{storeId}/can-edit")]
         [Authorize(Policy = Policies.CanModifyStoreSettings.Key,
-            AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
+            AuthenticationSchemes = AuthenticationSchemes.OpenId)]
         public bool CanEdit(string storeId)
         {
             return true;

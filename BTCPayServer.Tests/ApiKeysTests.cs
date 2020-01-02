@@ -19,6 +19,7 @@ namespace BTCPayServer.Tests
     {
         public const int TestTimeout = TestUtils.TestTimeout;
 
+        public const string TestApiPath = "{TestApiPath}/apikey";
         public ApiKeysTests(ITestOutputHelper helper)
         {
             Logs.Tester = new XUnitLog(helper) {Name = "Tests"};
@@ -103,7 +104,7 @@ namespace BTCPayServer.Tests
 
                 await Assert.ThrowsAnyAsync<HttpRequestException>(async () =>
                 {
-                    await TestApiAgainstAccessToken<bool>("incorrect key", $"api/test/me/id",
+                    await TestApiAgainstAccessToken<bool>("incorrect key", $"{TestApiPath}/me/id",
                         tester.PayTester.HttpClient);
                 });
 
@@ -249,7 +250,7 @@ namespace BTCPayServer.Tests
             params string[] permissions)
         {
             var resultUser =
-                await TestApiAgainstAccessToken<string>(accessToken, "api/test/me/id",
+                await TestApiAgainstAccessToken<string>(accessToken, "{TestApiPath}/me/id",
                     tester.PayTester.HttpClient);
             Assert.Equal(testAccount.UserId, resultUser);
 
@@ -261,13 +262,13 @@ namespace BTCPayServer.Tests
             if (permissions.Contains(APIKeyConstants.Permissions.StoreManagement) || selectiveStorePermissions.Any())
             {
                 var resultStores =
-                    await TestApiAgainstAccessToken<StoreData[]>(accessToken, "api/test/me/stores",
+                    await TestApiAgainstAccessToken<StoreData[]>(accessToken, "{TestApiPath}/me/stores",
                         tester.PayTester.HttpClient);
 
                 foreach (string selectiveStorePermission in selectiveStorePermissions)
                 {
                     Assert.True(await TestApiAgainstAccessToken<bool>(accessToken,
-                        $"api/test/me/stores/{selectiveStorePermission}/can-edit",
+                        $"{TestApiPath}/me/stores/{selectiveStorePermission}/can-edit",
                         tester.PayTester.HttpClient));
 
                     Assert.Contains(resultStores,
@@ -277,11 +278,11 @@ namespace BTCPayServer.Tests
                 if (permissions.Contains(APIKeyConstants.Permissions.StoreManagement))
                 {
                     Assert.True(await TestApiAgainstAccessToken<bool>(accessToken,
-                        $"api/test/me/stores/actions",
+                        $"{TestApiPath}/me/stores/actions",
                         tester.PayTester.HttpClient));
 
                     Assert.True(await TestApiAgainstAccessToken<bool>(accessToken,
-                        $"api/test/me/stores/{testAccount.StoreId}/can-edit",
+                        $"{TestApiPath}/me/stores/{testAccount.StoreId}/can-edit",
                         tester.PayTester.HttpClient));
                     Assert.Contains(resultStores,
                         data => data.Id.Equals(testAccount.StoreId, StringComparison.InvariantCultureIgnoreCase));
@@ -291,7 +292,7 @@ namespace BTCPayServer.Tests
                     await Assert.ThrowsAnyAsync<HttpRequestException>(async () =>
                     {
                         await TestApiAgainstAccessToken<bool>(accessToken,
-                            $"api/test/me/stores/actions",
+                            $"{TestApiPath}/me/stores/actions",
                             tester.PayTester.HttpClient);
                     });
                 }
@@ -304,21 +305,21 @@ namespace BTCPayServer.Tests
                 await Assert.ThrowsAnyAsync<HttpRequestException>(async () =>
                 {
                     await TestApiAgainstAccessToken<bool>(accessToken,
-                        $"api/test/me/stores/{testAccount.StoreId}/can-edit",
+                        $"{TestApiPath}/me/stores/{testAccount.StoreId}/can-edit",
                         tester.PayTester.HttpClient);
                 });
             }
 
             await Assert.ThrowsAnyAsync<HttpRequestException>(async () =>
             {
-                await TestApiAgainstAccessToken<bool>(accessToken, $"api/test/me/stores/{secondUser.StoreId}/can-edit",
+                await TestApiAgainstAccessToken<bool>(accessToken, $"{TestApiPath}/me/stores/{secondUser.StoreId}/can-edit",
                     tester.PayTester.HttpClient);
             });
 
             if (permissions.Contains(APIKeyConstants.Permissions.ServerManagement))
             {
                 Assert.True(await TestApiAgainstAccessToken<bool>(accessToken,
-                    $"api/test/me/is-admin",
+                    $"{TestApiPath}/me/is-admin",
                     tester.PayTester.HttpClient));
             }
         }

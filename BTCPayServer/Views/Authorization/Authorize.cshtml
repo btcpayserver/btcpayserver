@@ -1,0 +1,57 @@
+﻿@using BTCPayServer.Security.OpenId
+@using OpenIddict.Abstractions
+@model BTCPayServer.Models.Authorization.AuthorizeViewModel
+@{
+
+    var scopeMappings = new Dictionary<string, (string Title, string Description)>()
+    {
+        {BTCPayScopes.StoreManagement, ("Manage your stores", "The app will be able to create, modify and delete all your stores.")},
+        {BTCPayScopes.ServerManagement, ("Manage your server", "The app will have total control on your server")},
+    };
+}
+<form method="post">
+    <input type="hidden" name="request_id" value="@Model.RequestId"/>
+    <section>
+        <div class="card container">
+            <div class="row">
+                <div class="col-lg-12 section-heading">
+                    <h2>Authorization Request</h2>
+                    <hr class="primary">
+                    <p>@Model.ApplicationName is requesting access to your account.</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="list-group list-group-flush">
+                        @foreach (var scope in Model.Scope)
+                        {
+                            @if (scopeMappings.TryGetValue(scope, out var text))
+                             {
+                                 <li class="list-group-item">
+                                     <h5 class="mb-1">@text.Title</h5>
+                                     <p class="mb-1">@text.Description.</p>
+                                 </li>
+                             }
+                        }
+                    </div>
+
+                </div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-lg-12 text-center">
+                    <div class="btn-group">
+                        <button class="btn btn-primary" name="consent" id="consent-yes" type="submit" value="Yes">Authorize app</button>
+                        <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <span class="sr-only">Toggle Dropdown</span>
+                        </button>
+                        <div class="dropdown-menu">
+                            <button class="dropdown-item" name="consent" id="consent-yes-temporary" type="submit" value="YesTemporary">Authorize app until session ends</button>
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary" id="consent-no" name="consent" type="submit" value="No">Cancel</button>
+
+                </div>
+            </div>
+        </div>
+    </section>
+</form>

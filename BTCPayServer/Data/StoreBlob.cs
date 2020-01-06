@@ -173,6 +173,7 @@ namespace BTCPayServer.Data
 
         public EmailSettings EmailSettings { get; set; }
         public bool RedirectAutomatically { get; set; }
+        public bool PayJoinEnabled { get; set; }
 
         public IPaymentFilter GetExcludedPaymentMethods()
         {

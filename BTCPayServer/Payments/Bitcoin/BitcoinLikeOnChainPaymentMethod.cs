@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Wallets;
 using NBitcoin;
 using NBXplorer.JsonConverters;
 using Newtonsoft.Json;
@@ -56,10 +57,25 @@ namespace BTCPayServer.Payments.Bitcoin
         public Money NextNetworkFee { get; set; }
         [JsonIgnore]
         public String DepositAddress { get; set; }
+
+        public PayJoinPaymentState PayJoin { get; set; } = new PayJoinPaymentState();
+        
+        
+
         public BitcoinAddress GetDepositAddress(Network network)
         {
             return string.IsNullOrEmpty(DepositAddress) ? null : BitcoinAddress.Create(DepositAddress, network);
         }
         ///////////////////////////////////////////////////////////////////////////////////////
+    }
+
+    public class PayJoinPaymentState
+    {
+        public bool Enabled { get; set; } = false;
+        public uint256 ProposedTransactionHash { get; set; }
+        public List<ReceivedCoin> CoinsExposed { get; set; }
+        public decimal TotalOutputAmount { get; set; }
+        public decimal ContributedAmount { get; set; }
+        public uint256 OriginalTransactionHash { get; set; }
     }
 }

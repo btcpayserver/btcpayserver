@@ -33,9 +33,9 @@ namespace BTCPayServer.Tests
             BitPay = new Bitpay(new Key(), parent.PayTester.ServerUri);
         }
 
-        public void GrantAccess()
+        public void GrantAccess(bool isAdmin = false)
         {
-            GrantAccessAsync().GetAwaiter().GetResult();
+            GrantAccessAsync(isAdmin).GetAwaiter().GetResult();
         }
 
         public async Task MakeAdmin(bool isAdmin = true)
@@ -74,13 +74,13 @@ namespace BTCPayServer.Tests
             return new BTCPayServerClient(parent.PayTester.ServerUri, apiKey);
         }
 
-        public void Register()
+        public void Register(bool isAdmin = false)
         {
-            RegisterAsync().GetAwaiter().GetResult();
+            RegisterAsync(isAdmin).GetAwaiter().GetResult();
         }
-        public async Task GrantAccessAsync()
+        public async Task GrantAccessAsync(bool isAdmin = false)
         {
-            await RegisterAsync();
+            await RegisterAsync(isAdmin);
             await CreateStoreAsync();
             var store = this.GetController<StoresController>();
             var pairingCode = BitPay.RequestClientAuthorization("test", Facade.Merchant);
@@ -160,6 +160,20 @@ namespace BTCPayServer.Tests
             return new WalletId(StoreId, cryptoCode);
         }
 
+        public async Task EnablePayJoin()
+        {
+            var storeController = parent.PayTester.GetController<StoresController>(UserId, StoreId);
+            var checkoutExperienceVM =
+                Assert.IsType<CheckoutExperienceViewModel>(Assert
+                    .IsType<ViewResult>(storeController.CheckoutExperience()).Model);
+
+            checkoutExperienceVM.PayJoinEnabled = true;
+
+            Assert.Equal(nameof(storeController.CheckoutExperience),
+                Assert.IsType<RedirectToActionResult>(
+                    await storeController.CheckoutExperience(checkoutExperienceVM)).ActionName);
+        }
+
         public GenerateWalletResponse GenerateWalletResponseV { get; set; }
 
         public DerivationStrategyBase DerivationScheme
@@ -170,7 +184,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        private async Task RegisterAsync()
+        private async Task RegisterAsync(bool isAdmin = false)
         {
             var account = parent.PayTester.GetController<AccountController>();
             RegisterDetails = new RegisterViewModel()
@@ -178,6 +192,7 @@ namespace BTCPayServer.Tests
                 Email = Guid.NewGuid() + "@toto.com",
                 ConfirmPassword = "Kitten0@",
                 Password = "Kitten0@",
+                IsAdmin = isAdmin
             };
             await account.Register(RegisterDetails);
             UserId = account.RegisteredUserId;

@@ -21,13 +21,14 @@ namespace BTCPayServer.Payments.Bitcoin
 
         }
         
-        public BitcoinLikePaymentData(BitcoinAddress address, IMoney value, OutPoint outpoint, bool rbf)
+        public BitcoinLikePaymentData(BitcoinAddress address, IMoney value, OutPoint outpoint, bool rbf, decimal payJoinSelfContributedAmount)
         {
             Address = address;
             Value = value;
             Outpoint = outpoint;
             ConfirmationCount = 0;
             RBF = rbf;
+            PayJoinSelfContributedAmount = payJoinSelfContributedAmount;
         }
         [JsonIgnore]
         public BTCPayNetworkBase Network { get; set; }
@@ -40,7 +41,8 @@ namespace BTCPayServer.Payments.Bitcoin
         public decimal NetworkFee { get; set; }
         public BitcoinAddress Address { get; set; }
         public IMoney Value { get; set; }
-
+        public decimal PayJoinSelfContributedAmount { get; set; } = 0;
+        
         [JsonIgnore]
         public Script ScriptPubKey
         {
@@ -67,7 +69,8 @@ namespace BTCPayServer.Payments.Bitcoin
 
         public decimal GetValue()
         {
-            return Value?.GetValue(Network as BTCPayNetwork)??Output.Value.ToDecimal(MoneyUnit.BTC);
+            return (Value?.GetValue(Network as BTCPayNetwork) ?? Output.Value.ToDecimal(MoneyUnit.BTC)) -
+                   PayJoinSelfContributedAmount;
         }
 
         public bool PaymentCompleted(PaymentEntity entity)

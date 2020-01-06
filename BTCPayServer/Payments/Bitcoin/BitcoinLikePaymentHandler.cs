@@ -125,7 +125,8 @@ namespace BTCPayServer.Payments.Bitcoin
             var prepare = (Prepare)preparePaymentObject;
             Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod onchainMethod =
                 new Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod();
-            onchainMethod.NetworkFeeMode = store.GetStoreBlob().NetworkFeeMode;
+            var blob = store.GetStoreBlob();
+            onchainMethod.NetworkFeeMode = blob.NetworkFeeMode;
             onchainMethod.FeeRate = await prepare.GetFeeRate;
             switch (onchainMethod.NetworkFeeMode)
             {
@@ -142,7 +143,14 @@ namespace BTCPayServer.Payments.Bitcoin
                     onchainMethod.NextNetworkFee = Money.Zero;                    
                     break;
             }
+
             onchainMethod.DepositAddress = (await prepare.ReserveAddress).Address.ToString();
+            onchainMethod.PayJoin = new PayJoinPaymentState()
+            {
+                Enabled = blob.PayJoinEnabled &&
+                          supportedPaymentMethod.AccountDerivation.ScriptPubKeyType() !=
+                          ScriptPubKeyType.Legacy
+            };
             return onchainMethod;
         }
     }

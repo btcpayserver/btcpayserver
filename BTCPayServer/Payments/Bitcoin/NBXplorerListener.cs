@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using NBXplorer;
 using System.Collections.Concurrent;
+using BTCPayServer.Controllers;
 using NBXplorer.DerivationStrategy;
 using BTCPayServer.Events;
 using BTCPayServer.Services;
@@ -18,6 +19,7 @@ using NBitcoin;
 using NBXplorer.Models;
 using BTCPayServer.Payments;
 using BTCPayServer.HostedServices;
+using BTCPayServer.Payments.PayJoin;
 using NBitcoin.Altcoins.Elements;
 using NBitcoin.RPC;
 
@@ -29,6 +31,7 @@ namespace BTCPayServer.Payments.Bitcoin
     public class NBXplorerListener : IHostedService
     {
         EventAggregator _Aggregator;
+        private readonly PayJoinStateProvider _payJoinStateProvider;
         ExplorerClientProvider _ExplorerClients;
         IHostApplicationLifetime _Lifetime;
         InvoiceRepository _InvoiceRepository;
@@ -39,7 +42,8 @@ namespace BTCPayServer.Payments.Bitcoin
         public NBXplorerListener(ExplorerClientProvider explorerClients,
                                 BTCPayWalletProvider wallets,
                                 InvoiceRepository invoiceRepository,
-                                EventAggregator aggregator,
+                                EventAggregator aggregator, 
+                                PayJoinStateProvider payJoinStateProvider,
                                 IHostApplicationLifetime lifetime)
         {
             PollInterval = TimeSpan.FromMinutes(1.0);
@@ -47,6 +51,7 @@ namespace BTCPayServer.Payments.Bitcoin
             _InvoiceRepository = invoiceRepository;
             _ExplorerClients = explorerClients;
             _Aggregator = aggregator;
+            _payJoinStateProvider = payJoinStateProvider;
             _Lifetime = lifetime;
         }
 
@@ -138,7 +143,6 @@ namespace BTCPayServer.Payments.Bitcoin
                         switch (newEvent)
                         {
                             case NBXplorer.Models.NewBlockEvent evt:
-
                                 await Task.WhenAll((await _InvoiceRepository.GetPendingInvoices())
                                     .Select(invoiceId => UpdatePaymentStates(wallet, invoiceId))
                                     .ToArray());
@@ -146,11 +150,7 @@ namespace BTCPayServer.Payments.Bitcoin
                                 break;
                             case NBXplorer.Models.NewTransactionEvent evt:
                                 wallet.InvalidateCache(evt.DerivationStrategy);
-                                _Aggregator.Publish(new NewOnChainTransactionEvent()
-                                {
-                                    CryptoCode = wallet.Network.CryptoCode,
-                                    NewTransactionEvent = evt
-                                });
+
                                 foreach (var output in network.GetValidOutputs(evt))
                                 {
                                     var key = output.Item1.ScriptPubKey.Hash + "#" + network.CryptoCode.ToUpperInvariant();
@@ -159,7 +159,16 @@ namespace BTCPayServer.Payments.Bitcoin
                                     {
                                         var address = network.NBXplorerNetwork.CreateAddress(evt.DerivationStrategy,
                                             output.Item1.KeyPath, output.Item1.ScriptPubKey);
-                                        var paymentData = new BitcoinLikePaymentData(address, output.matchedOutput.Value, output.outPoint, evt.TransactionData.Transaction.RBF);
+
+                                        var payJoinSelfContributedAmount = GetPayJoinContributedAmount(
+                                            new WalletId(invoice.StoreId, network.CryptoCode),
+                                            output.matchedOutput.Value.GetValue(network),
+                                            evt.TransactionData.TransactionHash);
+
+                                        var paymentData = new BitcoinLikePaymentData(address,
+                                            output.matchedOutput.Value, output.outPoint,
+                                            evt.TransactionData.Transaction.RBF, payJoinSelfContributedAmount);
+
                                         var alreadyExist = GetAllBitcoinPaymentData(invoice).Where(c => c.GetPaymentId() == paymentData.GetPaymentId()).Any();
                                         if (!alreadyExist)
                                         {
@@ -174,6 +183,12 @@ namespace BTCPayServer.Payments.Bitcoin
                                     }
 
                                 }
+                                _Aggregator.Publish(new NewOnChainTransactionEvent()
+                                {
+                                    CryptoCode = wallet.Network.CryptoCode,
+                                    NewTransactionEvent = evt
+                                });
+
                                 break;
                             default:
                                 Logs.PayServer.LogWarning("Received unknown message from NBXplorer");
@@ -297,6 +312,8 @@ namespace BTCPayServer.Payments.Bitcoin
                 if (strategy == null)
                     continue;
                 var cryptoId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
+                var paymentMethod = invoice.GetPaymentMethod(cryptoId).GetPaymentMethodDetails() as BitcoinLikeOnChainPaymentMethod;
+                
                 if (!invoice.Support(cryptoId))
                     continue;
                 var coins = (await wallet.GetUnspentCoins(strategy))
@@ -307,9 +324,12 @@ namespace BTCPayServer.Payments.Bitcoin
                     var transaction = await wallet.GetTransactionAsync(coin.OutPoint.Hash);
 
                     var address = network.NBXplorerNetwork.CreateAddress(strategy, coin.KeyPath, coin.ScriptPubKey);
-                    var paymentData = new BitcoinLikePaymentData(address, coin.Value, coin.OutPoint,
-                        transaction.Transaction.RBF);
+                    var payJoinSelfContributedAmount =
+                        GetPayJoinContributedAmount(paymentMethod, coin.Value.GetValue(network), transaction.TransactionHash);
 
+                    var paymentData = new BitcoinLikePaymentData(address, coin.Value, coin.OutPoint,
+                        transaction.Transaction.RBF, payJoinSelfContributedAmount);
+                    
                     var payment = await _InvoiceRepository.AddPayment(invoice.Id, coin.Timestamp, paymentData, network).ConfigureAwait(false);
                     alreadyAccounted.Add(coin.OutPoint);
                     if (payment != null)
@@ -322,6 +342,32 @@ namespace BTCPayServer.Payments.Bitcoin
                 }
             }
             return totalPayment;
+        }
+
+        private decimal GetPayJoinContributedAmount(BitcoinLikeOnChainPaymentMethod paymentMethod, decimal amount, uint256 transactionHash)
+        {
+            if (paymentMethod.PayJoin.Enabled &&
+                paymentMethod.PayJoin.ProposedTransactionHash == transactionHash &&
+                paymentMethod.PayJoin.TotalOutputAmount == amount)
+            {
+                //this is the payjoin output!
+              return  paymentMethod.PayJoin.ContributedAmount;
+            }
+            
+            return 0;
+        }
+        private decimal GetPayJoinContributedAmount(WalletId walletId, decimal amount, uint256 transactionHash)
+        {
+            var payJoinState =
+                _payJoinStateProvider.Get(walletId);
+
+            if (payJoinState == null || !payJoinState.TryGetWithProposedHash(transactionHash, out var record) ||
+                record.TotalOutputAmount != amount) return 0;
+            
+            //this is the payjoin output!
+            payJoinState.RemoveRecord(transactionHash);
+            return record.ContributedAmount;
+
         }
 
         private DerivationStrategyBase GetDerivationStrategy(InvoiceEntity invoice, BTCPayNetworkBase network)

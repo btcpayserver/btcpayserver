@@ -166,6 +166,14 @@
                                 </a>
                             </div>
                         }
+                        @if (!string.IsNullOrEmpty(Model.PayJoinEndpointUrl))
+                        {
+                            <div class="form-group">
+                                <label asp-for="PayJoinEndpointUrl" class="control-label"></label>
+                                <input asp-for="PayJoinEndpointUrl" class="form-control"/>
+                                <span asp-validation-for="PayJoinEndpointUrl" class="text-danger"></span>
+                            </div>
+                        }
                         <div class="form-group">
                             <button id="toggleInputSelection" type="submit" name="command" value="toggle-input-selection" class="btn btn-sm btn-secondary">Toggle coin selection</button>
                         </div>

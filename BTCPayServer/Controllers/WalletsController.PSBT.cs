@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.ModelBinders;
+using BTCPayServer.Models;
 using BTCPayServer.Models.WalletViewModels;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
@@ -121,7 +124,7 @@ namespace BTCPayServer.Controllers
                             .GetMetadataAsync<string>(derivationScheme.AccountDerivation,
                                 WellknownMetadataKeys.MasterHDKey);
 
-                        return SignWithSeed(walletId,
+                        return await SignWithSeed(walletId,
                             new SignWithSeedViewModel() {SeedOrKey = extKey, PSBT = psbt.ToBase64()});
                     }
 
@@ -153,6 +156,80 @@ namespace BTCPayServer.Controllers
             return result.PSBT;
         }
 
+        private async Task<PSBT> TryGetBPProposedTX(PSBT psbt, DerivationSchemeSettings derivationSchemeSettings, BTCPayNetwork btcPayNetwork)
+        {
+            
+            if (TempData.TryGetValue( "bpu", out var bpu) && !string.IsNullOrEmpty(bpu?.ToString()) && Uri.TryCreate(bpu.ToString(), UriKind.Absolute, out var endpoint))
+            {
+                TempData.Remove("bpu");
+                HttpClient httpClient;
+                if (endpoint.IsOnion() && _socketFactory.SocksClient!= null)
+                {
+                    if ( _socketFactory.SocksClient == null)
+                    {
+                        return null;
+                    }
+                    httpClient = _socketFactory.SocksClient;
+                }
+                else
+                {
+                    httpClient = _httpClientFactory.CreateClient("bpu");
+                }
+                
+                var cloned = psbt.Clone();
+                    
+                if (!cloned.IsAllFinalized() && !cloned.TryFinalize(out var errors))
+                {
+                    return null;
+                }
+                
+                var bpuresponse = await httpClient.PostAsync(bpu.ToString(), new StringContent(cloned.ToHex(), Encoding.UTF8, "text/plain"));
+                if (bpuresponse.IsSuccessStatusCode)
+                {
+                    var hex = await bpuresponse.Content.ReadAsStringAsync();
+                    if (PSBT.TryParse(hex, btcPayNetwork.NBitcoinNetwork, out var newPSBT))
+                    {
+                        //check that all the inputs we provided are still there and that there is at least one new(signed) input.
+                        bool valid = false;
+                        var existingInputs = psbt.Inputs.Select(input => input.PrevOut).ToList();
+                        foreach (var input in newPSBT.Inputs)
+                        {
+                            var existingInput = existingInputs.SingleOrDefault(point => point == input.PrevOut);
+                            if (existingInput != null)
+                            {
+                                existingInputs.Remove(existingInput);
+                                continue;
+                            }
+
+                            if (!input.TryFinalizeInput(out _))
+                            {
+                                valid = false;
+                                break;
+                            }
+                            // a new signed input was provided
+                            valid = true;
+                        }
+
+                        if (!valid || existingInputs.Any())
+                        {
+                            return null;
+                        }
+
+                        newPSBT = await UpdatePSBT(derivationSchemeSettings, newPSBT, btcPayNetwork);
+                            TempData.SetStatusMessageModel(new StatusMessageModel()
+                            {
+                                Severity = StatusMessageModel.StatusSeverity.Info,
+                                AllowDismiss = false,
+                                Message = "This transaction has been coordinated between the receiver and you to create a <a href='https://en.bitcoin.it/wiki/PayJoin' target='_blank'>payjoin transaction</a> by adding inputs from the receiver. The amount being sent may appear higher but is in fact the same"
+                            });
+                            return newPSBT;
+                    }
+                }
+            }
+
+            return null;
+        }
+        
         [HttpGet]
         [Route("{walletId}/psbt/ready")]
         public async Task<IActionResult> WalletPSBTReady(

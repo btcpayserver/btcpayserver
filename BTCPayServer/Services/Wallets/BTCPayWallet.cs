@@ -23,7 +23,7 @@ namespace BTCPayServer.Services.Wallets
         public DateTimeOffset Timestamp { get; set; }
         public KeyPath KeyPath { get; set; }
         public IMoney Value { get; set; }
-        
+        public Coin Coin { get; set; }
     }
     public class NetworkCoins
     {
@@ -180,7 +180,8 @@ namespace BTCPayServer.Services.Wallets
                               Value = c.Value,
                               Timestamp = c.Timestamp,
                               OutPoint = c.Outpoint,
-                              ScriptPubKey = c.ScriptPubKey
+                              ScriptPubKey = c.ScriptPubKey,
+                              Coin = c.AsCoin(derivationStrategy)
                           }).ToArray();
         }
 

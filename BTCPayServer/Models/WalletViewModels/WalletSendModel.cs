@@ -10,7 +10,6 @@ namespace BTCPayServer.Models.WalletViewModels
 {
     public class WalletSendModel
     {
-    
         public List<TransactionOutput> Outputs { get; set; } = new List<TransactionOutput>();
 
         public class TransactionOutput
@@ -49,6 +48,8 @@ namespace BTCPayServer.Models.WalletViewModels
         public bool DisableRBF { get; set; }
 
         public bool NBXSeedAvailable { get; set; }
+        [Display(Name = "PayJoin Endpoint Url (BIP79)")]
+        public string PayJoinEndpointUrl { get; set; }
         public bool InputSelection { get; set; }
         public InputSelectionOption[] InputsAvailable { get; set; }
         

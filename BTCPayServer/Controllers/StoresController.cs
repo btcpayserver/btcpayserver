@@ -381,6 +381,7 @@ namespace BTCPayServer.Controllers
             vm.LightningMaxValue = storeBlob.LightningMaxValue?.ToString() ?? "";
             vm.LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi;
             vm.RedirectAutomatically = storeBlob.RedirectAutomatically;
+            vm.PayJoinEnabled = storeBlob.PayJoinEnabled;
             return View(vm);
         }
         void SetCryptoCurrencies(CheckoutExperienceViewModel vm, Data.StoreData storeData)
@@ -441,6 +442,7 @@ namespace BTCPayServer.Controllers
             blob.LightningMaxValue = lightningMaxValue;
             blob.LightningAmountInSatoshi = model.LightningAmountInSatoshi;
             blob.RedirectAutomatically = model.RedirectAutomatically;
+            blob.PayJoinEnabled = model.PayJoinEnabled;
             if (CurrentStore.SetStoreBlob(blob))
             {
                 needUpdate = true;

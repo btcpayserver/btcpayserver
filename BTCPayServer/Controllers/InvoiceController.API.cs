@@ -19,10 +19,10 @@ namespace BTCPayServer.Controllers
         private InvoiceRepository _InvoiceRepository;
 
         public InvoiceControllerAPI(InvoiceController invoiceController,
-                                    InvoiceRepository invoceRepository)
+                                    InvoiceRepository invoiceRepository)
         {
             _InvoiceController = invoiceController;
-            _InvoiceRepository = invoceRepository;
+            _InvoiceRepository = invoiceRepository;
         }
 
         [HttpPost]

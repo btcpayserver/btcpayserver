@@ -9,10 +9,23 @@ namespace BTCPayServer.Data
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
+        //public ApplicationDbContext(): base(CreateMySql())
+        //{
+
+        //}
+
+        //private static DbContextOptions CreateMySql()
+        //{
+        //    return new DbContextOptionsBuilder<ApplicationDbContext>()
+        //        .UseMySql("Server=myServerAddress;Database=myDataBase;Uid=myUsername;Pwd=myPassword;")
+        //        .Options;
+        //}
+
         public ApplicationDbContext()
         {
 
         }
+
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {

@@ -12,6 +12,7 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            int? maxLength = this.IsMySql(migrationBuilder.ActiveProvider) ? (int?)255 : null;
             if (this.SupportDropColumn(migrationBuilder.ActiveProvider))
             {
                 migrationBuilder.DropColumn(
@@ -26,7 +27,7 @@ namespace BTCPayServer.Migrations
                 name: "PendingInvoices",
                 columns: table => new
                 {
-                    Id = table.Column<string>(nullable: false)
+                    Id = table.Column<string>(nullable: false, maxLength: maxLength)
                 },
                 constraints: table =>
                 {

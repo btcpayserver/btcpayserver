@@ -55,7 +55,9 @@
                 </div>
             </template>
         }
-        <form method="post" asp-action="AddDerivationScheme" asp-route-cryptoCode="@Model.CryptoCode" >
+        <form method="post" asp-action="AddDerivationScheme" 
+              asp-route-cryptoCode="@Model.CryptoCode"
+              asp-route-storeId="@this.Context.GetRouteValue("storeId")">
 
             <input id="Config" asp-for="Config" type="hidden" />
 

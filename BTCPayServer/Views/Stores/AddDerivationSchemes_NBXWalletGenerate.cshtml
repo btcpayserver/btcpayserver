@@ -2,7 +2,11 @@
 @model NBXplorer.Models.GenerateWalletRequest
 <div class="modal fade" id="nbxplorergeneratewallet" tabindex="-1" role="dialog" aria-labelledby="nbxplorergeneratewallet" aria-hidden="true">
     <div class="modal-dialog" role="document">
-        <form id="generate-wallet-form" class="modal-content" form method="post" onsubmit="return validatePassphraseConf();" asp-action="GenerateNBXWallet" enctype="multipart/form-data">
+        <form id="generate-wallet-form" class="modal-content" form method="post" onsubmit="return validatePassphraseConf();" 
+              asp-action="GenerateNBXWallet" 
+              asp-route-storeId="@this.Context.GetRouteValue("storeId")"
+              asp-route-cryptoCode="@this.Context.GetRouteValue("cryptoCode")"
+              enctype="multipart/form-data">
             <div class="modal-header">
                 <h5 class="modal-title" id="exampleModalLabel">Generate a wallet with a seed</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">

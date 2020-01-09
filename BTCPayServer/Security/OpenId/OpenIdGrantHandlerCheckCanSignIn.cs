@@ -66,7 +66,6 @@ namespace BTCPayServer.Security.OpenId
             }
 
             notification.Principal = await this.CreateClaimsPrincipalAsync(request, user);
-            notification.HandleAuthentication();
         }
     }
 }

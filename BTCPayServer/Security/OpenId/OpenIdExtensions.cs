@@ -16,7 +16,7 @@ namespace BTCPayServer.Security.OpenId
 {
     public static class OpenIdExtensions
     {
-        public static ImmutableHashSet<string> Restrict(this ImmutableHashSet<string> scopes, ClaimsPrincipal claimsPrincipal)
+        public static ImmutableHashSet<string> Restrict(this ImmutableArray<string> scopes, ClaimsPrincipal claimsPrincipal)
         {
             HashSet<string> restricted = new HashSet<string>();
             foreach (var scope in scopes)

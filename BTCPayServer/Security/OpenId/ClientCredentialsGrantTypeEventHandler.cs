@@ -56,7 +56,6 @@ namespace BTCPayServer.Security.OpenId
 
             var user = await _userManager.FindByIdAsync(application.ApplicationUserId);
             context.Principal = await CreateClaimsPrincipalAsync(request, user);
-            notification.HandleAuthentication();
         }
     }
 }

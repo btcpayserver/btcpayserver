@@ -161,8 +161,7 @@ namespace BTCPayServer.Hosting
                         .EnableStatusCodePagesIntegration()
                         .EnableAuthorizationEndpointPassthrough()
                         .EnableLogoutEndpointPassthrough()
-                        .EnableTokenEndpointPassthrough()
-                        .EnableRequestCaching()
+                        .EnableAuthorizationEndpointCaching()
                         .DisableTransportSecurityRequirement();
 
                     // Enable the token endpoint (required to use the password flow).

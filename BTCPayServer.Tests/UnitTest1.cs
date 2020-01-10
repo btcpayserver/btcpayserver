@@ -665,8 +665,7 @@ namespace BTCPayServer.Tests
                 var localInvoice = await user.BitPay.GetInvoiceAsync(invoice.Id);
                 Assert.Equal("complete", localInvoice.Status);
                 // C-Lightning may overpay for privacy
-                Assert.True(localInvoice.ExceptionStatus.ToString() == "False" ||
-                localInvoice.ExceptionStatus.ToString() == "paidOver", $"Actual:{localInvoice.ExceptionStatus}, Expected:False or paidOver");
+                Assert.Contains(localInvoice.ExceptionStatus.ToString(), new[] { "False", "paidOver" });
             });
         }
 

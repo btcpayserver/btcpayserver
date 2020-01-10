@@ -8,12 +8,23 @@ using BTCPayServer.Services.Rates;
 
 namespace BTCPayServer.Tests.Mocks
 {
-    public class MockRateProvider : IRateProvider
+    public class MockRateProvider : CoinGeckoRateProvider
     {
         public ExchangeRates ExchangeRates { get; set; } = new ExchangeRates();
-        public Task<ExchangeRates> GetRatesAsync(CancellationToken cancellationToken)
+        public List<AvailableRateProvider> AvailableRateProviders { get; set; } = new List<AvailableRateProvider>();
+
+        public MockRateProvider():base(null)
+        {
+            
+        }
+        public override Task<ExchangeRates> GetRatesAsync(CancellationToken cancellationToken)
         {
             return Task.FromResult(ExchangeRates);
+        }
+
+        public override Task<IEnumerable<AvailableRateProvider>> GetAvailableExchanges(bool reload = false)
+        {
+            return Task.FromResult((IEnumerable<AvailableRateProvider>)AvailableRateProviders);
         }
     }
 }

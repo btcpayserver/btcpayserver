@@ -202,29 +202,29 @@ namespace BTCPayServer.Tests
                 var coinAverageMock = new MockRateProvider();
                 coinAverageMock.ExchangeRates.Add(new Rating.ExchangeRate()
                 {
-                    Exchange = "coinaverage",
+                    Exchange = "coingecko",
                     CurrencyPair = CurrencyPair.Parse("BTC_USD"),
                     BidAsk = new BidAsk(5000m)
                 });
                 coinAverageMock.ExchangeRates.Add(new Rating.ExchangeRate()
                 {
-                    Exchange = "coinaverage",
+                    Exchange = "coingecko",
                     CurrencyPair = CurrencyPair.Parse("BTC_CAD"),
                     BidAsk = new BidAsk(4500m)
                 });
                 coinAverageMock.ExchangeRates.Add(new Rating.ExchangeRate()
                 {
-                    Exchange = "coinaverage",
+                    Exchange = "coingecko",
                     CurrencyPair = CurrencyPair.Parse("LTC_BTC"),
                     BidAsk = new BidAsk(0.001m)
                 });
                 coinAverageMock.ExchangeRates.Add(new Rating.ExchangeRate()
                 {
-                    Exchange = "coinaverage",
+                    Exchange = "coingecko",
                     CurrencyPair = CurrencyPair.Parse("LTC_USD"),
                     BidAsk = new BidAsk(500m)
                 });
-                rateProvider.Providers.Add("coinaverage", coinAverageMock);
+                rateProvider.Providers.Add("coingecko", coinAverageMock);
 
                 var bitflyerMock = new MockRateProvider();
                 bitflyerMock.ExchangeRates.Add(new Rating.ExchangeRate()
@@ -262,6 +262,15 @@ namespace BTCPayServer.Tests
                     BidAsk = new BidAsk(0.000136m)
                 });
                 rateProvider.Providers.Add("bitfinex", bitfinex);
+                
+                
+                coinAverageMock.AvailableRateProviders.AddRange(new []
+                {
+                    new AvailableRateProvider("bitflyer", "bitflyer", "bitflyer"), 
+                    new AvailableRateProvider("quadrigacx", "quadrigacx", "quadrigacx"), 
+                    new AvailableRateProvider("bittrex", "bittrex", "bittrex"), 
+                    new AvailableRateProvider("bitfinex", "bitfinex", "bitfinex"), 
+                });
             }
 
 

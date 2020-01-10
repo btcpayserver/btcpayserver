@@ -962,7 +962,7 @@ namespace BTCPayServer.Tests
                 Assert.Null(GetRatesResult?.Data);
 
                 var store = acc.GetController<StoresController>();
-                var ratesVM = (RatesViewModel)(Assert.IsType<ViewResult>(store.Rates()).Model);
+                var ratesVM = (RatesViewModel)(Assert.IsType<ViewResult>(await store.Rates()).Model);
                 ratesVM.DefaultCurrencyPairs = "BTC_USD,LTC_USD";
                 store.Rates(ratesVM).Wait();
                 store = acc.GetController<StoresController>();
@@ -1240,7 +1240,7 @@ namespace BTCPayServer.Tests
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
                 List<decimal> rates = new List<decimal>();
-                rates.Add(CreateInvoice(tester, user, "coinaverage"));
+                rates.Add(CreateInvoice(tester, user, "coingecko"));
                 var bitflyer = CreateInvoice(tester, user, "bitflyer", "JPY");
                 var bitflyer2 = CreateInvoice(tester, user, "bitflyer", "JPY");
                 Assert.Equal(bitflyer, bitflyer2); // Should be equal because cache
@@ -1256,7 +1256,7 @@ namespace BTCPayServer.Tests
         private static decimal CreateInvoice(ServerTester tester, TestAccount user, string exchange, string currency = "USD")
         {
             var storeController = user.GetController<StoresController>();
-            var vm = (RatesViewModel)((ViewResult)storeController.Rates()).Model;
+            var vm = (RatesViewModel)((ViewResult)storeController.Rates().GetAwaiter().GetResult()).Model;
             vm.PreferredExchange = exchange;
             storeController.Rates(vm).Wait();
             var invoice2 = user.BitPay.CreateInvoice(new Invoice()
@@ -1337,7 +1337,7 @@ namespace BTCPayServer.Tests
                 Assert.Equal(Money.Coins(1.0m), invoice1.BtcPrice);
 
                 var storeController = user.GetController<StoresController>();
-                var vm = (RatesViewModel)((ViewResult)storeController.Rates()).Model;
+                var vm = (RatesViewModel)((ViewResult)storeController.Rates().GetAwaiter().GetResult()).Model;
                 Assert.Equal(0.0, vm.Spread);
                 vm.Spread = 40;
                 storeController.Rates(vm).Wait();
@@ -1438,15 +1438,15 @@ namespace BTCPayServer.Tests
                 user.RegisterDerivationScheme("BTC");
 
                 var store = user.GetController<StoresController>();
-                var rateVm = Assert.IsType<RatesViewModel>(Assert.IsType<ViewResult>(store.Rates()).Model);
+                var rateVm = Assert.IsType<RatesViewModel>(Assert.IsType<ViewResult>( await store.Rates()).Model);
                 Assert.False(rateVm.ShowScripting);
-                Assert.Equal("coinaverage", rateVm.PreferredExchange);
+                Assert.Equal(CoinGeckoRateProvider.CoinGeckoName, rateVm.PreferredExchange);
                 Assert.Equal(0.0, rateVm.Spread);
                 Assert.Null(rateVm.TestRateRules);
 
                 rateVm.PreferredExchange = "bitflyer";
                 Assert.IsType<RedirectToActionResult>(store.Rates(rateVm, "Save").Result);
-                rateVm = Assert.IsType<RatesViewModel>(Assert.IsType<ViewResult>(store.Rates()).Model);
+                rateVm = Assert.IsType<RatesViewModel>(Assert.IsType<ViewResult>( await store.Rates()).Model);
                 Assert.Equal("bitflyer", rateVm.PreferredExchange);
 
                 rateVm.ScriptTest = "BTC_JPY,BTC_CAD";
@@ -1463,7 +1463,7 @@ namespace BTCPayServer.Tests
                 Assert.IsType<RedirectToActionResult>(store.ShowRateRulesPost(true).Result);
                 Assert.IsType<RedirectToActionResult>(store.Rates(rateVm, "Save").Result);
                 store = user.GetController<StoresController>();
-                rateVm = Assert.IsType<RatesViewModel>(Assert.IsType<ViewResult>(store.Rates()).Model);
+                rateVm = Assert.IsType<RatesViewModel>(Assert.IsType<ViewResult>( await store.Rates()).Model);
                 Assert.Equal(rateVm.StoreId, user.StoreId);
                 Assert.Equal(rateVm.DefaultScript, rateVm.Script);
                 Assert.True(rateVm.ShowScripting);
@@ -1475,13 +1475,13 @@ namespace BTCPayServer.Tests
                 rateVm.ScriptTest = "BTC_USD,BTC_CAD,DOGE_USD,DOGE_CAD";
                 rateVm.Script = "DOGE_X = bittrex(DOGE_BTC) * BTC_X;\n" +
                                 "X_CAD = quadrigacx(X_CAD);\n" +
-                                 "X_X = coinaverage(X_X);";
+                                 "X_X = coingecko(X_X);";
                 rateVm.Spread = 50;
                 rateVm = Assert.IsType<RatesViewModel>(Assert.IsType<ViewResult>(store.Rates(rateVm, "Test").Result).Model);
                 Assert.True(rateVm.TestRateRules.All(t => !t.Error));
                 Assert.IsType<RedirectToActionResult>(store.Rates(rateVm, "Save").Result);
                 store = user.GetController<StoresController>();
-                rateVm = Assert.IsType<RatesViewModel>(Assert.IsType<ViewResult>(store.Rates()).Model);
+                rateVm = Assert.IsType<RatesViewModel>(Assert.IsType<ViewResult>( await store.Rates()).Model);
                 Assert.Equal(50, rateVm.Spread);
                 Assert.True(rateVm.ShowScripting);
                 Assert.Contains("DOGE_X", rateVm.Script, StringComparison.OrdinalIgnoreCase);
@@ -2687,9 +2687,12 @@ noninventoryitem:
                 .Select(p => (ExpectedName: p.Key, ResultAsync: p.Value.GetRatesAsync(default), Fetcher: (BackgroundFetcherRateProvider)p.Value))
                 .ToList())
             {
+                
                 Logs.Tester.LogInformation($"Testing {result.ExpectedName}");
                 if (result.ExpectedName == "quadrigacx")
                     continue; // 29 january, the exchange is down
+                if (result.ExpectedName == "coinaverage")
+                    continue; // no more free plan
                 result.Fetcher.InvalidateCache();
                 var exchangeRates = result.ResultAsync.Result;
                 result.Fetcher.InvalidateCache();
@@ -2782,7 +2785,9 @@ noninventoryitem:
 
         public static RateProviderFactory CreateBTCPayRateFactory()
         {
-            return new RateProviderFactory(CreateMemoryCache(), null, new CoinAverageSettings());
+            var result =   new RateProviderFactory(CreateMemoryCache(), new MockHttpClientFactory(), new CoinAverageSettings());
+            result.InitExchanges().GetAwaiter().GetResult();
+            return result;
         }
 
         private static MemoryCacheOptions CreateMemoryCache()

@@ -126,7 +126,7 @@ namespace BTCPayServer.Controllers
             {
                 var application = await _applicationManager.FindByClientIdAsync(request.ClientId);
                 var authorization = await _authorizationManager.CreateAsync(User, user.Id, application.Id,
-                                    type, principal.GetScopes().ToImmutableArray());
+                                    type, principal.GetScopes());
                 principal.SetInternalAuthorizationId(authorization.Id);
             }
 

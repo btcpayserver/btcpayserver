@@ -80,6 +80,9 @@ namespace BTCPayServer.Hosting
             })
 #if !NETCOREAPP21
             .AddNewtonsoftJson()
+#if DEBUG
+            .AddRazorRuntimeCompilation()
+#endif
 #endif
             .AddControllersAsServices();
             services.TryAddScoped<ContentSecurityPolicies>();

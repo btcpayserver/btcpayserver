@@ -80,10 +80,9 @@ namespace BTCPayServer.Security.OpenId
         {
             var authorizations = await authorizationManager.ListAsync(queryable =>
                     queryable.Where(authorization =>
-                        authorization.Subject.Equals(userId, StringComparison.OrdinalIgnoreCase) &&
-                        applicationId.Equals(authorization.Application.Id, StringComparison.OrdinalIgnoreCase) &&
-                        authorization.Status.Equals(OpenIddictConstants.Statuses.Valid,
-                            StringComparison.OrdinalIgnoreCase))).ToArrayAsync();
+                        authorization.Subject == userId &&
+                        authorization.Application.Id == applicationId &&
+                        authorization.Status == OpenIddictConstants.Statuses.Valid)).ToArrayAsync();
 
             if (authorizations.Length > 0)
             {

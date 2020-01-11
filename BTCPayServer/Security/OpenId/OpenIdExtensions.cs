@@ -16,7 +16,7 @@ namespace BTCPayServer.Security.OpenId
 {
     public static class OpenIdExtensions
     {
-        public static ImmutableHashSet<string> Restrict(this ImmutableHashSet<string> scopes, ClaimsPrincipal claimsPrincipal)
+        public static ImmutableHashSet<string> Restrict(this ImmutableArray<string> scopes, ClaimsPrincipal claimsPrincipal)
         {
             HashSet<string> restricted = new HashSet<string>();
             foreach (var scope in scopes)
@@ -80,10 +80,9 @@ namespace BTCPayServer.Security.OpenId
         {
             var authorizations = await authorizationManager.ListAsync(queryable =>
                     queryable.Where(authorization =>
-                        authorization.Subject.Equals(userId, StringComparison.OrdinalIgnoreCase) &&
-                        applicationId.Equals(authorization.Application.Id, StringComparison.OrdinalIgnoreCase) &&
-                        authorization.Status.Equals(OpenIddictConstants.Statuses.Valid,
-                            StringComparison.OrdinalIgnoreCase))).ToArrayAsync();
+                        authorization.Subject == userId &&
+                        authorization.Application.Id == applicationId &&
+                        authorization.Status == OpenIddictConstants.Statuses.Valid)).ToArrayAsync();
 
             if (authorizations.Length > 0)
             {

@@ -80,6 +80,9 @@ namespace BTCPayServer.Hosting
             })
 #if !NETCOREAPP21
             .AddNewtonsoftJson()
+#if DEBUG
+            .AddRazorRuntimeCompilation()
+#endif
 #endif
             .AddControllersAsServices();
             services.TryAddScoped<ContentSecurityPolicies>();
@@ -161,8 +164,7 @@ namespace BTCPayServer.Hosting
                         .EnableStatusCodePagesIntegration()
                         .EnableAuthorizationEndpointPassthrough()
                         .EnableLogoutEndpointPassthrough()
-                        .EnableTokenEndpointPassthrough()
-                        .EnableRequestCaching()
+                        .EnableAuthorizationEndpointCaching()
                         .DisableTransportSecurityRequirement();
 
                     // Enable the token endpoint (required to use the password flow).

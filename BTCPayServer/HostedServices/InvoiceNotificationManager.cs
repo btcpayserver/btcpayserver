@@ -118,8 +118,6 @@ namespace BTCPayServer.HostedServices
 #pragma warning restore CS0618
             }
 
-            CancellationTokenSource cts = new CancellationTokenSource(10000);
-
             if (!String.IsNullOrEmpty(invoice.NotificationEmail))
             {
                 var emailBody = NBitcoin.JsonConverters.Serializer.ToString(notification);

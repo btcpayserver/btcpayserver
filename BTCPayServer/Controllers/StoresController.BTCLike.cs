@@ -117,7 +117,8 @@ namespace BTCPayServer.Controllers
                     {
                         UTF8Encoding UTF8NOBOM = new UTF8Encoding(false);
                         var bytes = UTF8NOBOM.GetBytes(JsonConvert.SerializeObject(result, network.NBXplorerNetwork.JsonSerializerSettings));
-                        await webSocket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, new CancellationTokenSource(2000).Token);
+                        using var cts = new CancellationTokenSource(2000);
+                        await webSocket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, cts.Token);
                     }
                 }
                 catch { }

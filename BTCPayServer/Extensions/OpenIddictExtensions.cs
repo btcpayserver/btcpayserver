@@ -14,7 +14,7 @@ namespace BTCPayServer
         {
           
             var file = Path.Combine(configuration.GetDataDir(), fileName);
-            var rsa = new RSACryptoServiceProvider(2048);
+            using var rsa = new RSACryptoServiceProvider(2048);
             if (File.Exists(file))
             {
                 rsa.FromXmlString2(File.ReadAllText(file));

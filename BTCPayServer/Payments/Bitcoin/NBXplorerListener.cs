@@ -338,15 +338,6 @@ namespace BTCPayServer.Payments.Bitcoin
                              .ToArray();
                 foreach (var coin in coins.Where(c => !alreadyAccounted.Contains(c.OutPoint)))
                 {
-                
-                
-                
-                //{
-                    var transaction = await wallet.GetTransactionAsync(coin.Coin.Outpoint.Hash);
-                    var paymentData = new BitcoinLikePaymentData(coin.Coin.TxOut, coin.Coin.Outpoint, transaction.Transaction.RBF);
-                    var payment = await _InvoiceRepository.AddPayment(invoice.Id, coin.Timestamp, paymentData, network.CryptoCode, network).ConfigureAwait(false);
-                    alreadyAccounted.Add(coin.Coin.Outpoint);//
-                
                     var transaction = await wallet.GetTransactionAsync(coin.OutPoint.Hash);
                     
                     var address = network.NBXplorerNetwork.CreateAddress(strategy, coin.KeyPath, coin.ScriptPubKey);

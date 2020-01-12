@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using BTCPayServer.Data;
+﻿using BTCPayServer.Data;
 using BTCPayServer.Services.Invoices;
 using NBitcoin;
 using Newtonsoft.Json;
-using SpeedPolicy = BTCPayServer.Data.SpeedPolicy;
 
 namespace BTCPayServer.Payments.Bitcoin
 {

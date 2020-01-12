@@ -6,8 +6,6 @@ using System.Net;
 using System.Threading.Tasks;
 using System.Security.Claims;
 using BTCPayServer.Tests.Logging;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Xunit;
 using Xunit.Abstractions;
 using System.Net.Http;
@@ -66,8 +64,7 @@ namespace BTCPayServer.Tests
                     {
                         var json = await streamToReadFrom.ReadToEndAsync();
                         Assert.NotNull(json);
-                        var configuration = OpenIdConnectConfiguration.Create(json);
-                        Assert.NotNull(configuration);
+                        JObject.Parse(json); // Should do more tests but good enough
                     }
                 }
             }

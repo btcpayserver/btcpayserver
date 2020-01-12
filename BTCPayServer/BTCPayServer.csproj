@@ -6,7 +6,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Build\**" />
-    <Compile Remove="Storage\Services\Providers\GoogleCloudStorage\**" />
     <Compile Remove="wwwroot\bundles\jqueryvalidate\**" />
     <Compile Remove="wwwroot\vendor\jquery-nice-select\**" />
     <Content Remove="Build\**" />

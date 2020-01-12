@@ -72,16 +72,16 @@ namespace BTCPayServer.Tests
 
         internal void AssertHappyMessage()
         {
-            try
+            using var cts = new CancellationTokenSource(10_000);
+            while (!cts.IsCancellationRequested)
             {
-                Assert.Single(Driver.FindElements(By.ClassName("alert-success")).Where(el => el.Displayed));
+                var success = Driver.FindElements(By.ClassName("alert-success")).Where(el => el.Displayed).Any();
+                if (success)
+                    return;
+                Thread.Sleep(100);
             }
-            catch (Xunit.Sdk.SingleException)
-            {
-                Logs.Tester.LogInformation("Should have shown happy message, but instead got");
-                Logs.Tester.LogInformation(this.Driver.PageSource);
-                throw;
-            }
+            Logs.Tester.LogInformation(this.Driver.PageSource);
+            Assert.True(false, "Should have shown happy message");
         }
 
         public static readonly TimeSpan ImplicitWait = TimeSpan.FromSeconds(10);

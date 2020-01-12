@@ -39,18 +39,18 @@ namespace BTCPayServer.Tests
             };
         }
 
-      
+
         public async Task StartAsync()
         {
             await Server.StartAsync();
             ChromeOptions options = new ChromeOptions();
             var isDebug = !Server.PayTester.InContainer;
-        
+
             if (!isDebug)
             {
                 options.AddArguments("headless"); // Comment to view browser
                 options.AddArguments("window-size=1200x1000"); // Comment to view browser
-            }  
+            }
             options.AddArgument("shm-size=2g");
             if (Server.PayTester.InContainer)
             {
@@ -72,7 +72,16 @@ namespace BTCPayServer.Tests
 
         internal void AssertHappyMessage()
         {
-            Assert.Single(Driver.FindElements(By.ClassName("alert-success")).Where(el => el.Displayed));
+            try
+            {
+                Assert.Single(Driver.FindElements(By.ClassName("alert-success")).Where(el => el.Displayed));
+            }
+            catch (Xunit.Sdk.SingleException)
+            {
+                Logs.Tester.LogInformation("Should have shown happy message, but instead got");
+                Logs.Tester.LogInformation(this.Driver.PageSource);
+                throw;
+            }
         }
 
         public static readonly TimeSpan ImplicitWait = TimeSpan.FromSeconds(10);
@@ -105,7 +114,7 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.Id("CreateStore")).Click();
             Driver.FindElement(By.Id("Name")).SendKeys(usr);
             Driver.FindElement(By.Id("Create")).Click();
-            
+
             return (usr, Driver.FindElement(By.Id("Id")).GetAttribute("value"));
         }
 
@@ -127,7 +136,7 @@ namespace BTCPayServer.Tests
             AssertHappyMessage();
             return seed;
         }
-        
+
         public void AddDerivationScheme(string cryptoCode = "BTC", string derivationScheme = "xpub661MyMwAqRbcGABgHMUXDzPzH1tU7eZaAaJQXhDXsSxsqyQzQeU6kznNfSuAyqAK9UaWSaZaMFdNiY5BCF4zBPAzSnwfUAwUhwttuAKwfRX-[legacy]")
         {
             Driver.FindElement(By.Id($"Modify{cryptoCode}")).ForceClick();
@@ -136,7 +145,7 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.Id("Confirm")).ForceClick();
             AssertHappyMessage();
         }
-        
+
         public void AddLightningNode(string cryptoCode, LightningConnectionType connectionType)
         {
             string connectionString = null;
@@ -148,12 +157,12 @@ namespace BTCPayServer.Tests
                 connectionString = $"type=lnd-rest;server={Server.MerchantLnd.Swagger.BaseUrl};allowinsecure=true";
             else
                 throw new NotSupportedException(connectionType.ToString());
-            
+
             Driver.FindElement(By.Id($"Modify-Lightning{cryptoCode}")).ForceClick();
             Driver.FindElement(By.Name($"ConnectionString")).SendKeys(connectionString);
             Driver.FindElement(By.Id($"save")).ForceClick();
         }
-        
+
         public void AddInternalLightningNode(string cryptoCode)
         {
             Driver.FindElement(By.Id($"Modify-Lightning{cryptoCode}")).ForceClick();
@@ -174,7 +183,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-       
+
 
         public void Dispose()
         {
@@ -223,15 +232,15 @@ namespace BTCPayServer.Tests
                 Driver.FindElement(By.Id(storeNavPage.ToString())).Click();
             }
         }
-        
+
         public void GoToInvoiceCheckout(string invoiceId)
         {
             Driver.FindElement(By.Id("Invoices")).Click();
             Driver.FindElement(By.Id($"invoice-checkout-{invoiceId}")).Click();
             CheckForJSErrors();
         }
-        
-        
+
+
         public void SetCheckbox(IWebElement element, bool value)
         {
             if ((value && !element.Selected) || (!value && element.Selected))
@@ -287,30 +296,30 @@ namespace BTCPayServer.Tests
         }
 
 
-        
+
         private void CheckForJSErrors()
         {
             //wait for seleniun update: https://stackoverflow.com/questions/57520296/selenium-webdriver-3-141-0-driver-manage-logs-availablelogtypes-throwing-syste
-//            var errorStrings = new List<string> 
-//            { 
-//                "SyntaxError", 
-//                "EvalError", 
-//                "ReferenceError", 
-//                "RangeError", 
-//                "TypeError", 
-//                "URIError" 
-//            };
-//
-//            var jsErrors = Driver.Manage().Logs.GetLog(LogType.Browser).Where(x => errorStrings.Any(e => x.Message.Contains(e)));
-//
-//            if (jsErrors.Any())
-//            {
-//                Logs.Tester.LogInformation("JavaScript error(s):" + Environment.NewLine + jsErrors.Aggregate("", (s, entry) => s + entry.Message + Environment.NewLine));
-//            }
-//            Assert.Empty(jsErrors);
+            //            var errorStrings = new List<string> 
+            //            { 
+            //                "SyntaxError", 
+            //                "EvalError", 
+            //                "ReferenceError", 
+            //                "RangeError", 
+            //                "TypeError", 
+            //                "URIError" 
+            //            };
+            //
+            //            var jsErrors = Driver.Manage().Logs.GetLog(LogType.Browser).Where(x => errorStrings.Any(e => x.Message.Contains(e)));
+            //
+            //            if (jsErrors.Any())
+            //            {
+            //                Logs.Tester.LogInformation("JavaScript error(s):" + Environment.NewLine + jsErrors.Aggregate("", (s, entry) => s + entry.Message + Environment.NewLine));
+            //            }
+            //            Assert.Empty(jsErrors);
 
         }
 
-      
+
     }
 }

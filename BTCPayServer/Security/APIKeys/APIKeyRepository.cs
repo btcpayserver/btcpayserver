@@ -20,9 +20,11 @@ namespace BTCPayServer.Security.APIKeys
         {
             using (var context = _applicationDbContextFactory.CreateContext())
             {
-                return await context.ApiKeys.SingleOrDefaultAsync(data => data.Id == apiKey && data.Type != APIKeyType.Legacy);
+                return await EntityFrameworkQueryableExtensions.SingleOrDefaultAsync(context.ApiKeys,
+                    data => data.Id == apiKey && data.Type != APIKeyType.Legacy);
             }
         }
+
         public async Task<List<APIKeyData>> GetKeys(APIKeyQuery query)
         {
             using (var context = _applicationDbContextFactory.CreateContext())
@@ -34,22 +36,25 @@ namespace BTCPayServer.Security.APIKeys
                     {
                         queryable = queryable.Where(data => query.UserId.Contains(data.UserId));
                     }
-                    
+
                     if (query.ApplicationIdentifier != null && query.ApplicationIdentifier.Any())
                     {
-                        queryable = queryable.Where(data => query.ApplicationIdentifier.Contains(data.ApplicationIdentifier));
+                        queryable = queryable.Where(data =>
+                            query.ApplicationIdentifier.Contains(data.ApplicationIdentifier));
                     }
                 }
+
                 return await queryable.ToListAsync();
             }
         }
-        
+
         public async Task CreateKey(APIKeyData key)
         {
             if (key.Type == APIKeyType.Legacy || !string.IsNullOrEmpty(key.StoreId) || string.IsNullOrEmpty(key.UserId))
             {
                 throw new InvalidOperationException("cannot save a bitpay legacy api key with this repository");
             }
+
             using (var context = _applicationDbContextFactory.CreateContext())
             {
                 await context.ApiKeys.AddAsync(key);
@@ -61,7 +66,8 @@ namespace BTCPayServer.Security.APIKeys
         {
             using (var context = _applicationDbContextFactory.CreateContext())
             {
-                var key = await context.ApiKeys.SingleOrDefaultAsync(data => data.Id == id && data.UserId == getUserId);
+                var key = await EntityFrameworkQueryableExtensions.SingleOrDefaultAsync(context.ApiKeys,
+                    data => data.Id == id && data.UserId == getUserId);
                 context.ApiKeys.Remove(key);
                 await context.SaveChangesAsync();
             }

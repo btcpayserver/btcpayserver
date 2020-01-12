@@ -194,7 +194,7 @@ namespace BTCPayServer.Controllers
             });
             //uri builder has bug around string[] params
             return Redirect(uri.Uri.ToStringInvariant().Replace("permissions=System.String%5B%5D",
-                string.Join("&", key.GetPermissions().Select(s1 => $"permissions={s1}"))));
+                string.Join("&", key.GetPermissions().Select(s1 => $"permissions={s1}")), StringComparison.InvariantCulture));
         }
 
         [HttpPost]

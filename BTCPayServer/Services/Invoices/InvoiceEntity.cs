@@ -394,8 +394,8 @@ namespace BTCPayServer.Services.Invoices
 #pragma warning restore CS0618 // Type or member is obsolete
                 Currency = ProductInformation.Currency,
                 Flags = new Flags() { Refundable = Refundable },
-                PaymentSubtotals = new Dictionary<string, long>(),
-                PaymentTotals = new Dictionary<string, long>(),
+                PaymentSubtotals = new Dictionary<string, decimal>(),
+                PaymentTotals = new Dictionary<string, decimal>(),
                 SupportedTransactionCurrencies = new Dictionary<string, InvoiceSupportedTransactionCurrency>(),
                 Addresses = new Dictionary<string, string>(),
                 PaymentCodes = new Dictionary<string, InvoicePaymentUrls>(),

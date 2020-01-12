@@ -374,7 +374,7 @@ namespace BTCPayServer.Controllers
         {
             if (invoiceId != expectedId || webSocket.State != WebSocketState.Open)
                 return;
-            CancellationTokenSource cts = new CancellationTokenSource();
+            using CancellationTokenSource cts = new CancellationTokenSource();
             cts.CancelAfter(5000);
             try
             {
@@ -500,7 +500,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> CreateInvoice()
         {
             var stores = new SelectList(await _StoreRepository.GetStoresByUserId(GetUserId()), nameof(StoreData.Id), nameof(StoreData.StoreName), null);
-            if (stores.Count() == 0)
+            if (!stores.Any())
             {
                 TempData[WellKnownTempData.ErrorMessage] = "You need to create at least one store before creating a transaction";
                 return RedirectToAction(nameof(UserStoresController.ListStores), "UserStores");
@@ -524,7 +524,7 @@ namespace BTCPayServer.Controllers
                 return View(model);
             }
 
-            if (store.GetSupportedPaymentMethods(_NetworkProvider).Count() == 0)
+            if (!store.GetSupportedPaymentMethods(_NetworkProvider).Any())
             {
                 ModelState.AddModelError(nameof(model.StoreId), "You need to configure the derivation scheme in order to create an invoice");
                 return View(model);
@@ -624,7 +624,7 @@ namespace BTCPayServer.Controllers
                         {
                             case JTokenType.Array:
                                 var items = item.Value.AsEnumerable().ToList();
-                                for (var i = 0; i < items.Count(); i++)
+                                for (var i = 0; i < items.Count; i++)
                                 {
                                     result.Add($"{item.Key}[{i}]", ParsePosData(items[i].ToString()));
                                 }

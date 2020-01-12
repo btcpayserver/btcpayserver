@@ -41,7 +41,8 @@ namespace BTCPayServer.Services
             string errorMessage = null;
             try
             {
-                var result = await httpClient.SendAsync(CreateUpdateRequest());
+                using var request = CreateUpdateRequest();
+                var result = await httpClient.SendAsync(request);
                 if (!result.IsSuccessStatusCode)
                 {
                     try

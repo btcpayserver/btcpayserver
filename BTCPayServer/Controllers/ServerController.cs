@@ -1121,9 +1121,11 @@ namespace BTCPayServer.Controllers
             {
                 try
                 {
-                    var client = model.Settings.CreateSmtpClient();
-                    var message = model.Settings.CreateMailMessage(new MailAddress(model.TestEmail), "BTCPay test", "BTCPay test");
-                    await client.SendMailAsync(message);
+                    using (var client = model.Settings.CreateSmtpClient())
+                    using (var message = model.Settings.CreateMailMessage(new MailAddress(model.TestEmail), "BTCPay test", "BTCPay test"))
+                    {
+                        await client.SendMailAsync(message);
+                    }
                     TempData[WellKnownTempData.SuccessMessage] = "Email sent to " + model.TestEmail + ", please, verify you received it";
                 }
                 catch (Exception ex)

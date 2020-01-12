@@ -750,7 +750,7 @@ namespace BTCPayServer.Controllers
             ViewBag.ShowMenu = false;
             var stores = await _Repo.GetStoresByUserId(userId);
             model.Stores = new SelectList(stores.Where(s => s.Role == StoreRoles.Owner), nameof(CurrentStore.Id), nameof(CurrentStore.StoreName));
-            if (model.Stores.Count() == 0)
+            if (!model.Stores.Any())
             {
                 TempData[WellKnownTempData.ErrorMessage] = "You need to be owner of at least one store before pairing";
                 return RedirectToAction(nameof(UserStoresController.ListStores), "UserStores");
@@ -827,9 +827,9 @@ namespace BTCPayServer.Controllers
             if (pairingResult == PairingResult.Complete || pairingResult == PairingResult.Partial)
             {
                 var excludeFilter = store.GetStoreBlob().GetExcludedPaymentMethods();
-                StoreNotConfigured = store.GetSupportedPaymentMethods(_NetworkProvider)
+                StoreNotConfigured = !store.GetSupportedPaymentMethods(_NetworkProvider)
                                           .Where(p => !excludeFilter.Match(p.PaymentId))
-                                          .Count() == 0;
+                                          .Any();
                 TempData[WellKnownTempData.SuccessMessage] = "Pairing is successful";
                 if (pairingResult == PairingResult.Partial)
                     TempData[WellKnownTempData.SuccessMessage] = "Server initiated pairing code: " + pairingCode;

@@ -139,7 +139,7 @@ workflows:
           requires:
             - amd64
             - arm32v7
-            - arm32v8
+            - arm64v8
           filters:
             branches:
               ignore: /.*/

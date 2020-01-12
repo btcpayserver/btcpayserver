@@ -6,7 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Build\**" />
-    <Compile Remove="Storage\Services\Providers\GoogleCloudStorage\**" Condition="'$(SupportGoogleStorage)' == 'false'" />
+    <Compile Remove="Storage\Services\Providers\GoogleCloudStorage\**" />
     <Compile Remove="wwwroot\bundles\jqueryvalidate\**" />
     <Compile Remove="wwwroot\vendor\jquery-nice-select\**" />
     <Content Remove="Build\**" />
@@ -60,7 +60,7 @@
     <PackageReference Include="TwentyTwenty.Storage" Version="2.11.2" />
     <PackageReference Include="TwentyTwenty.Storage.Amazon" Version="2.11.2" />
     <PackageReference Include="TwentyTwenty.Storage.Azure" Version="2.11.2" />
-    <PackageReference Include="TwentyTwenty.Storage.Google" Version="2.11.2" Condition="'$(SupportGoogleStorage)' == 'true'" />
+    <PackageReference Include="TwentyTwenty.Storage.Google" Version="2.11.2" />
     <PackageReference Include="TwentyTwenty.Storage.Local" Version="2.11.2" />
     <PackageReference Include="U2F.Core" Version="1.0.4" />
 		<PackageReference Include="YamlDotNet" Version="5.2.1" />
@@ -208,7 +208,7 @@
 	  <Content Update="Views\Wallets\WalletTransactions.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
-    <Content Remove="Views\Server\EditGoogleCloudStorageStorageProvider.cshtml" Condition="'$(SupportGoogleStorage)' == 'true'">
+    <Content Remove="Views\Server\EditGoogleCloudStorageStorageProvider.cshtml">
     </Content>
 	  <Content Update="Views\Wallets\_Nav.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>

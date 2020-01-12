@@ -4,7 +4,7 @@
     <TargetFramework Condition="'$(TargetFrameworkOverride)' != ''">$(TargetFrameworkOverride)</TargetFramework>
     <NoWarn>NU1701,CA1816,CA1308,CA1810,CA2208</NoWarn>
     <LangVersion>8.0</LangVersion>
-    <SupportGoogleStorage>false</SupportGoogleStorage>
+    <SupportGoogleStorage>true</SupportGoogleStorage>
   </PropertyGroup>
   <PropertyGroup Condition="'$(SupportGoogleStorage)' == 'true'">
     <DefineConstants>$(DefineConstants);SUPPORT_GOOGLE_STORAGE</DefineConstants>

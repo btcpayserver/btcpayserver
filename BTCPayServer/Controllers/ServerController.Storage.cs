@@ -10,7 +10,7 @@ using BTCPayServer.Storage.Services.Providers.AzureBlobStorage;
 using BTCPayServer.Storage.Services.Providers.AzureBlobStorage.Configuration;
 using BTCPayServer.Storage.Services.Providers.FileSystemStorage;
 using BTCPayServer.Storage.Services.Providers.FileSystemStorage.Configuration;
-#if NETCOREAPP21
+#if SupportGoogleStorage
 using BTCPayServer.Storage.Services.Providers.GoogleCloudStorage;
 using BTCPayServer.Storage.Services.Providers.GoogleCloudStorage.Configuration;
 #endif
@@ -221,7 +221,7 @@ namespace BTCPayServer.Controllers
                 case AmazonS3FileProviderService fileProviderService:
                     return View(nameof(EditAmazonS3StorageProvider),
                         fileProviderService.GetProviderConfiguration(data));
-#if NETCOREAPP21
+#if SupportGoogleStorage
                 case GoogleCloudStorageFileProviderService fileProviderService:
                     return View(nameof(EditGoogleCloudStorageStorageProvider),
                         fileProviderService.GetProviderConfiguration(data));
@@ -252,7 +252,7 @@ namespace BTCPayServer.Controllers
         {
             return await SaveStorageProvider(viewModel, BTCPayServer.Storage.Models.StorageProvider.AmazonS3);
         }
-#if NETCOREAPP21
+#if SupportGoogleStorage
         [HttpPost("server/storage/GoogleCloudStorage")]
         public async Task<IActionResult> EditGoogleCloudStorageStorageProvider(
             GoogleCloudStorageConfiguration viewModel)

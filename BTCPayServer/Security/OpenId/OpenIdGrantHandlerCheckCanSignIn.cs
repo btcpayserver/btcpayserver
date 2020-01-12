@@ -8,7 +8,6 @@ using Microsoft.Extensions.Options;
 using OpenIddict.Core;
 using OpenIddict.Server;
 using Microsoft.AspNetCore;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using OpenIddict.Server.AspNetCore;
 
 namespace BTCPayServer.Security.OpenId

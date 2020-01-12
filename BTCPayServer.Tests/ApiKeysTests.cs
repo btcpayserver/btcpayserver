@@ -250,7 +250,7 @@ namespace BTCPayServer.Tests
             params string[] permissions)
         {
             var resultUser =
-                await TestApiAgainstAccessToken<string>(accessToken, "{TestApiPath}/me/id",
+                await TestApiAgainstAccessToken<string>(accessToken, $"{TestApiPath}/me/id",
                     tester.PayTester.HttpClient);
             Assert.Equal(testAccount.UserId, resultUser);
 
@@ -262,7 +262,7 @@ namespace BTCPayServer.Tests
             if (permissions.Contains(APIKeyConstants.Permissions.StoreManagement) || selectiveStorePermissions.Any())
             {
                 var resultStores =
-                    await TestApiAgainstAccessToken<StoreData[]>(accessToken, "{TestApiPath}/me/stores",
+                    await TestApiAgainstAccessToken<StoreData[]>(accessToken, $"{TestApiPath}/me/stores",
                         tester.PayTester.HttpClient);
 
                 foreach (string selectiveStorePermission in selectiveStorePermissions)

@@ -52,16 +52,7 @@ namespace BTCPayServer.Controllers.RestApi
         public async Task<StoreData[]> GetCurrentUserStores()
         {
             return await _storeRepository.GetStoresByUserId(_userManager.GetUserId(User));
-
-
-
-
-
-
-
-
         }
-
 
         [HttpGet("me/stores/{storeId}/can-edit")]
         [Authorize(Policy = Policies.CanModifyStoreSettings.Key,

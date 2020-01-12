@@ -21,6 +21,7 @@ namespace BTCPayServer.Tests
 {
     public class AuthenticationTests
     {
+        public const string TestApiPath = "{TestApiPath}/openid";
         public const int TestTimeout = TestUtils.TestTimeout;
         public AuthenticationTests(ITestOutputHelper helper)
         {
@@ -130,12 +131,12 @@ namespace BTCPayServer.Tests
                 await TestApiAgainstAccessToken(results["access_token"], tester, user);
 
                 var stores = await TestApiAgainstAccessToken<StoreData[]>(results["access_token"],
-                    $"api/test/me/stores",
+                    $"{TestApiPath}/me/stores",
                     tester.PayTester.HttpClient);
                 Assert.NotEmpty(stores);
 
                 Assert.True(await TestApiAgainstAccessToken<bool>(results["access_token"],
-                $"api/test/me/stores/{stores[0].Id}/can-edit",
+                $"{TestApiPath}/me/stores/{stores[0].Id}/can-edit",
                 tester.PayTester.HttpClient));
 
                 //we dont ask for consent after acquiring it the first time for the same scopes.
@@ -166,13 +167,13 @@ namespace BTCPayServer.Tests
                 await Assert.ThrowsAnyAsync<HttpRequestException>(async () =>
                 {
                     await TestApiAgainstAccessToken<StoreData[]>(results["access_token"],
-                    $"api/test/me/stores",
+                    $"{TestApiPath}/me/stores",
                     tester.PayTester.HttpClient);
                 });
                 await Assert.ThrowsAnyAsync<HttpRequestException>(async () =>
                 {
                     await TestApiAgainstAccessToken<bool>(results["access_token"],
-                    $"api/test/me/stores/{stores[0].Id}/can-edit",
+                    $"{TestApiPath}/me/stores/{stores[0].Id}/can-edit",
                     tester.PayTester.HttpClient);
                 });
             }
@@ -377,7 +378,7 @@ namespace BTCPayServer.Tests
         async Task TestApiAgainstAccessToken(string accessToken, ServerTester tester, TestAccount testAccount)
         {
             var resultUser =
-                await TestApiAgainstAccessToken<string>(accessToken, "api/test/me/id",
+                await TestApiAgainstAccessToken<string>(accessToken, $"{TestApiPath}/me/id",
                     tester.PayTester.HttpClient);
             Assert.Equal(testAccount.UserId, resultUser);
 
@@ -385,7 +386,7 @@ namespace BTCPayServer.Tests
             secondUser.GrantAccess();
 
             var resultStores =
-                await TestApiAgainstAccessToken<StoreData[]>(accessToken, "api/test/me/stores",
+                await TestApiAgainstAccessToken<StoreData[]>(accessToken, $"{TestApiPath}/me/stores",
                     tester.PayTester.HttpClient);
             Assert.Contains(resultStores,
                 data => data.Id.Equals(testAccount.StoreId, StringComparison.InvariantCultureIgnoreCase));
@@ -393,16 +394,16 @@ namespace BTCPayServer.Tests
                 data => data.Id.Equals(secondUser.StoreId, StringComparison.InvariantCultureIgnoreCase));
 
             Assert.True(await TestApiAgainstAccessToken<bool>(accessToken,
-                $"api/test/me/stores/{testAccount.StoreId}/can-edit",
+                $"{TestApiPath}/me/stores/{testAccount.StoreId}/can-edit",
                 tester.PayTester.HttpClient));
 
             Assert.True(await TestApiAgainstAccessToken<bool>(accessToken,
-                $"api/test/me/is-admin",
+                $"{TestApiPath}/me/is-admin",
                 tester.PayTester.HttpClient));
 
             await Assert.ThrowsAnyAsync<HttpRequestException>(async () =>
             {
-                await TestApiAgainstAccessToken<bool>(accessToken, $"api/test/me/stores/{secondUser.StoreId}/can-edit",
+                await TestApiAgainstAccessToken<bool>(accessToken, $"{TestApiPath}/me/stores/{secondUser.StoreId}/can-edit",
                     tester.PayTester.HttpClient);
             });
         }

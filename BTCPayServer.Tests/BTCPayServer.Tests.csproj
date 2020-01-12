@@ -9,10 +9,6 @@
     <UserSecretsId>AB0AC1DD-9D26-485B-9416-56A33F268117</UserSecretsId>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)' == 'netcoreapp2.1'">
-    <DefineConstants>$(DefineConstants);NETCOREAPP21</DefineConstants>
-  </PropertyGroup>
-  
   <PropertyGroup Condition="'$(CI_TESTS)' == 'true'">
     <DefineConstants>$(DefineConstants);SHORT_TIMEOUT</DefineConstants>
   </PropertyGroup>

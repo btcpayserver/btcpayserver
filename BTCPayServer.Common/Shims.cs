@@ -1,4 +1,3 @@
-#if !NETCOREAPP21
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
@@ -235,25 +234,3 @@ namespace Microsoft.Extensions.Logging.Abstractions.Internal
         }
     }
 }
-
-
-#else
-using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
-
-namespace Microsoft.AspNetCore.Mvc
-{
-    /// <summary>
-    /// Provides programmatic configuration for JSON formatters using Newtonsoft.JSON.
-    /// </summary>
-    public class MvcNewtonsoftJsonOptions
-    {
-		IOptions<MvcJsonOptions> jsonOptions;
-		public MvcNewtonsoftJsonOptions(IOptions<MvcJsonOptions> jsonOptions)
-		{
-			this.jsonOptions = jsonOptions;
-		}
-		public JsonSerializerSettings SerializerSettings => this.jsonOptions.Value.SerializerSettings;
-	}
-}
-#endif

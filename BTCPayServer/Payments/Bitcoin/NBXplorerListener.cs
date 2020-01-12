@@ -20,10 +20,6 @@ using BTCPayServer.Payments;
 using BTCPayServer.HostedServices;
 using NBitcoin.Altcoins.Elements;
 
-#if NETCOREAPP21
-using IHostApplicationLifetime = Microsoft.AspNetCore.Hosting.IApplicationLifetime;
-#endif
-
 namespace BTCPayServer.Payments.Bitcoin
 {
     /// <summary>

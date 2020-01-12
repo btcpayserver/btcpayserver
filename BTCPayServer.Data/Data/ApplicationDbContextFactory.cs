@@ -45,11 +45,7 @@ namespace BTCPayServer.Data
 
         class CustomNpgsqlMigrationsSqlGenerator : NpgsqlMigrationsSqlGenerator
         {
-#if NETCOREAPP21
-            public CustomNpgsqlMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies dependencies) : base(dependencies)
-#else
             public CustomNpgsqlMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies dependencies,  IMigrationsAnnotationProvider annotations, Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure.Internal.INpgsqlOptions opts) : base(dependencies, annotations, opts)
-#endif
             {
             }
 

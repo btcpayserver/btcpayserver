@@ -41,12 +41,10 @@ namespace BTCPayServer
 {
     public static class Extensions
     {
-#if !NETCOREAPP21
         public static IQueryable<TEntity> Where<TEntity>(this Microsoft.EntityFrameworkCore.DbSet<TEntity> obj, System.Linq.Expressions.Expression<Func<TEntity, bool>> predicate) where TEntity : class
         {
             return System.Linq.Queryable.Where(obj, predicate);
         }
-#endif
 
         public static string Truncate(this string value, int maxLength)
         {

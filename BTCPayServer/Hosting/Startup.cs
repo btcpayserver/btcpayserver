@@ -1,9 +1,5 @@
 ﻿using Microsoft.AspNetCore.Hosting;
-#if NETCOREAPP21
-using IWebHostEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
-#else
 using Microsoft.Extensions.Hosting;
-#endif
 using OpenIddict.Validation.AspNetCore;
 using OpenIddict.Abstractions;
 using Microsoft.AspNetCore.Builder;
@@ -78,11 +74,9 @@ namespace BTCPayServer.Hosting
                 //    ScriptSrc = "'self' 'unsafe-inline'"
                 //});
             })
-#if !NETCOREAPP21
             .AddNewtonsoftJson()
 #if DEBUG
             .AddRazorRuntimeCompilation()
-#endif
 #endif
             .AddControllersAsServices();
             services.TryAddScoped<ContentSecurityPolicies>();
@@ -239,35 +233,18 @@ namespace BTCPayServer.Hosting
             forwardingOptions.ForwardedHeaders = ForwardedHeaders.All;
             app.UseForwardedHeaders(forwardingOptions);
             app.UsePayServer();
-#if !NETCOREAPP21
             app.UseRouting();
-#endif
             app.UseCors();
 
             app.UseStaticFiles();
             app.UseProviderStorage(options);
             app.UseAuthentication();
-#if !NETCOREAPP21
             app.UseAuthorization();
-#endif
             app.UseSession();
-#if NETCOREAPP21
-            app.UseSignalR(route =>
-            {
-                AppHub.Register(route);
-                PaymentRequestHub.Register(route);
-            });
-#endif
+
             app.UseWebSockets();
             app.UseStatusCodePages();
-#if NETCOREAPP21
-            app.UseMvc(routes =>
-            {
-                routes.MapRoute(
-                    name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
-            });
-#else
+
             app.UseEndpoints(endpoints =>
             {
                 AppHub.Register(endpoints);
@@ -275,7 +252,6 @@ namespace BTCPayServer.Hosting
                 endpoints.MapControllers();
                 endpoints.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
             });
-#endif
         }
     }
 }

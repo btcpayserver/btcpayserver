@@ -14,6 +14,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Misc", "Misc", "{29290EC7-0
 		Build\Common.csproj = Build\Common.csproj
 		.circleci\config.yml = .circleci\config.yml
 		docker-entrypoint.sh = docker-entrypoint.sh
+		linuxarm64v8.Dockerfile = linuxarm64v8.Dockerfile
 		Build\Version.csproj = Build\Version.csproj
 	EndProjectSection
 EndProject

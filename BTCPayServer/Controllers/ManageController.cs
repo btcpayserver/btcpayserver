@@ -19,9 +19,6 @@ using System.Globalization;
 using BTCPayServer.Security;
 using BTCPayServer.U2F;
 using BTCPayServer.Data;
-#if NETCOREAPP21
-using IWebHostEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
-#endif
 
 namespace BTCPayServer.Controllers
 {

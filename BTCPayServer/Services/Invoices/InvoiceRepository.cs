@@ -89,18 +89,12 @@ retry:
             using (var db = _ContextFactory.CreateContext())
             {
                 return  (await db.AddressInvoices
-#if !NETCOREAPP21
                     .Include(a => a.InvoiceData.Payments)
                     .Include(a => a.InvoiceData.RefundAddresses)
-#endif
 #pragma warning disable CS0618
                     .Where(a => addresses.Contains(a.Address))
 #pragma warning restore CS0618
                     .Select(a => a.InvoiceData)
-#if NETCOREAPP21
-                    .Include(a => a.Payments)
-                    .Include(a => a.RefundAddresses)
-#endif
                     .ToListAsync()).Select(ToEntity);
             }
         }

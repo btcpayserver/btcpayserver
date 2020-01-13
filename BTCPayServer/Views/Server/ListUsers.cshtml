@@ -23,7 +23,6 @@
 <table class="table table-sm table-responsive-md">
     <thead>
         <tr>
-            <th>Name</th>
             <th>Email</th>
             <th>Actions</th>
         </tr>
@@ -32,7 +31,6 @@
         @foreach (var user in Model.Users)
         {
             <tr>
-                <td>@user.Name</td>
                 <td>@user.Email</td>
                 <td><a asp-action="User" asp-route-userId="@user.Id">Edit</a> <span> - </span> <a asp-action="DeleteUser" asp-route-userId="@user.Id">Remove</a></td>
             </tr>

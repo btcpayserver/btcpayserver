@@ -64,7 +64,7 @@ services:
         - "sshd_datadir:/root/.ssh"
 
   devlnd: 
-    image: btcpayserver/bitcoin:0.19.0.1
+    image: btcpayserver/bitcoin:0.18.0
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_EXTRA_ARGS: |
@@ -108,7 +108,7 @@ services:
 
   bitcoind:
     restart: unless-stopped
-    image: btcpayserver/bitcoin:0.19.0.1
+    image: btcpayserver/bitcoin:0.18.0
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_EXTRA_ARGS: |-

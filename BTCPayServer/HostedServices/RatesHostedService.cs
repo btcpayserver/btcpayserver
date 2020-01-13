@@ -44,7 +44,6 @@ namespace BTCPayServer.HostedServices
         {
             return new Task[]
             {
-                CreateLoopTask(RefreshCoinAverageSupportedExchanges),
                 CreateLoopTask(RefreshCoinAverageSettings),
                 CreateLoopTask(RefreshRates)
             };
@@ -142,12 +141,6 @@ namespace BTCPayServer.HostedServices
                                     .Select(p => p.GetState())
                                     .ToList();
             await _SettingsRepository.UpdateSetting(cache);
-        }
-
-        async Task RefreshCoinAverageSupportedExchanges()
-        {
-            await _RateProviderFactory.InitExchanges();
-            await Task.Delay(TimeSpan.FromHours(5), Cancellation);
         }
 
         async Task RefreshCoinAverageSettings()

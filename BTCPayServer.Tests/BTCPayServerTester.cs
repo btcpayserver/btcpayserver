@@ -215,8 +215,8 @@ namespace BTCPayServer.Tests
                 coinAverageMock.ExchangeRates.Add(new Rating.ExchangeRate()
                 {
                     Exchange = "coingecko",
-                    CurrencyPair = CurrencyPair.Parse("LTC_BTC"),
-                    BidAsk = new BidAsk(0.001m)
+                    CurrencyPair = CurrencyPair.Parse("BTC_LTC"),
+                    BidAsk = new BidAsk(162m)
                 });
                 coinAverageMock.ExchangeRates.Add(new Rating.ExchangeRate()
                 {
@@ -262,15 +262,6 @@ namespace BTCPayServer.Tests
                     BidAsk = new BidAsk(0.000136m)
                 });
                 rateProvider.Providers.Add("bitfinex", bitfinex);
-                
-                
-                coinAverageMock.AvailableRateProviders.AddRange(new []
-                {
-                    new AvailableRateProvider("bitflyer", "bitflyer", "bitflyer"), 
-                    new AvailableRateProvider("quadrigacx", "quadrigacx", "quadrigacx"), 
-                    new AvailableRateProvider("bittrex", "bittrex", "bittrex"), 
-                    new AvailableRateProvider("bitfinex", "bitfinex", "bitfinex"), 
-                });
             }
 
 

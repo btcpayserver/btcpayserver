@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using BTCPayServer.Rating;
@@ -17,11 +18,27 @@ namespace BTCPayServer.Models.StoreViewModels
         }
         public void SetExchangeRates(IEnumerable<AvailableRateProvider> supportedList, string preferredExchange)
         {
-            var defaultStore = preferredExchange ?? CoinAverageRateProvider.CoinAverageName;
+            var defaultStore = preferredExchange ?? CoinGeckoRateProvider.CoinGeckoName;
+            supportedList = supportedList.Select(a => new AvailableRateProvider(a.Id, GetName(a), a.Url, a.Source)).ToArray();
             var chosen = supportedList.FirstOrDefault(f => f.Id == defaultStore) ?? supportedList.FirstOrDefault();
             Exchanges = new SelectList(supportedList, nameof(chosen.Id), nameof(chosen.Name), chosen);
             PreferredExchange = chosen.Id;
             RateSource = chosen.Url;
+        }
+
+        private string GetName(AvailableRateProvider a)
+        {
+            switch (a.Source)
+            {
+                case Rating.RateSource.Direct:
+                    return a.Name;
+                case Rating.RateSource.Coingecko:
+                    return $"{a.Name} (via CoinGecko, free)";
+                case Rating.RateSource.CoinAverage:
+                    return $"{a.Name} (via BitcoinAverage, commercial)";
+                default:
+                    throw new NotSupportedException(a.Source.ToString());
+            }
         }
 
         public List<TestResultViewModel> TestRateRules { get; set; }

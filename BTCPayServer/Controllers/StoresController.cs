@@ -193,9 +193,9 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("{storeId}/rates")]
-        public async Task<IActionResult> Rates()
+        public IActionResult Rates()
         {
-            var exchanges = await GetSupportedExchanges();
+            var exchanges = GetSupportedExchanges();
             var storeBlob = CurrentStore.GetStoreBlob();
             var vm = new RatesViewModel();
             vm.SetExchangeRates(exchanges, storeBlob.PreferredExchange ?? CoinGeckoRateProvider.CoinGeckoName);
@@ -221,7 +221,7 @@ namespace BTCPayServer.Controllers
                 return RedirectToAction(nameof(ShowRateRules), new {scripting = false, storeId = model.StoreId});
             }
 
-            var exchanges = await GetSupportedExchanges();
+            var exchanges = GetSupportedExchanges();
             model.SetExchangeRates(exchanges, model.PreferredExchange);
             model.StoreId = storeId ?? model.StoreId;
             CurrencyPair[] currencyPairs = null;
@@ -338,7 +338,7 @@ namespace BTCPayServer.Controllers
                 Description = scripting ?
                                 "This action will modify your current rate sources. Are you sure to turn on rate rules scripting? (Advanced users)"
                                 : "This action will delete your rate script. Are you sure to turn off rate rules scripting?",
-                ButtonClass = "btn-primary"
+                ButtonClass = scripting ? "btn-primary" : "btn-danger"
             });
         }
 
@@ -603,9 +603,9 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(UserStoresController.ListStores), "UserStores");
         }
 
-        private async Task<IEnumerable<AvailableRateProvider>> GetSupportedExchanges()
+        private IEnumerable<AvailableRateProvider> GetSupportedExchanges()
         {
-            var exchanges = await _RateFactory.RateProviderFactory.GetSupportedExchanges();
+            var exchanges = _RateFactory.RateProviderFactory.GetSupportedExchanges();
             return exchanges
                 .Where(r => !string.IsNullOrWhiteSpace(r.Name))
                 .OrderBy(s => s.Id, StringComparer.OrdinalIgnoreCase);

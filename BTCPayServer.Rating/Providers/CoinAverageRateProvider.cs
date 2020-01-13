@@ -19,19 +19,6 @@ namespace BTCPayServer.Services.Rates
         }
     }
 
-    public class GetExchangeTickersResponse
-    {
-        public class Exchange
-        {
-            public string Name { get; set; }
-            [JsonProperty("display_name")]
-            public string DisplayName { get; set; }
-            public string[] Symbols { get; set; }
-        }
-        public bool Success { get; set; }
-        public Exchange[] Exchanges { get; set; }
-    }
-
     public class RatesSetting
     {
         public string PublicKey { get; set; }
@@ -194,32 +181,6 @@ namespace BTCPayServer.Services.Rates
             }
             response.RequestsLeft = jobj["requests_left"].Value<int>();
             response.RequestsPerPeriod = jobj["requests_per_period"].Value<int>();
-            return response;
-        }
-
-        public async Task<GetExchangeTickersResponse> GetExchangeTickersAsync()
-        {
-            var request = new HttpRequestMessage(HttpMethod.Get, "https://apiv2.bitcoinaverage.com/symbols/exchanges/ticker");
-            var auth = Authenticator;
-            if (auth != null)
-            {
-                await auth.AddHeader(request);
-            }
-            var resp = await HttpClient.SendAsync(request);
-            resp.EnsureSuccessStatusCode();
-            var jobj = JObject.Parse(await resp.Content.ReadAsStringAsync());
-            var response = new GetExchangeTickersResponse();
-            response.Success = jobj["success"].Value<bool>();
-            var exchanges = (JObject)jobj["exchanges"];
-            response.Exchanges = exchanges
-                .Properties()
-                .Select(p =>
-                {
-                    var exchange = JsonConvert.DeserializeObject<GetExchangeTickersResponse.Exchange>(p.Value.ToString());
-                    exchange.Name = p.Name;
-                    return exchange;
-                })
-                .ToArray();
             return response;
         }
     }

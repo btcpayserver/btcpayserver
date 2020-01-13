@@ -10,6 +10,7 @@ using BTCPayServer.Rating;
 using BTCPayServer.Services.Mails;
 using Newtonsoft.Json;
 using System.Text;
+using BTCPayServer.Services.Rates;
 
 namespace BTCPayServer.Data
 {
@@ -156,7 +157,7 @@ namespace BTCPayServer.Data
                 }
             }
 
-            var preferredExchange = string.IsNullOrEmpty(PreferredExchange) ? "coinaverage" : PreferredExchange;
+            var preferredExchange = string.IsNullOrEmpty(PreferredExchange) ? CoinGeckoRateProvider.CoinGeckoName : PreferredExchange;
             builder.AppendLine($"X_X = {preferredExchange}(X_X);");
 
             BTCPayServer.Rating.RateRules.TryParse(builder.ToString(), out var rules);

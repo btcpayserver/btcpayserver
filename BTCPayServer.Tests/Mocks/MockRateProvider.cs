@@ -11,6 +11,11 @@ namespace BTCPayServer.Tests.Mocks
     public class MockRateProvider : IRateProvider
     {
         public ExchangeRates ExchangeRates { get; set; } = new ExchangeRates();
+
+        public MockRateProvider()
+        {
+            
+        }
         public Task<ExchangeRates> GetRatesAsync(CancellationToken cancellationToken)
         {
             return Task.FromResult(ExchangeRates);

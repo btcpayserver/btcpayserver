@@ -21,6 +21,11 @@ namespace BTCPayServer
                     : "http://explorer.litecointools.com/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "litecoin",
+                DefaultRateRules = new[]
+                {
+                    "LTC_X = LTC_BTC * BTC_X",
+                    "LTC_BTC = coingecko(LTC_BTC)"
+                },
                 CryptoImagePath = "imlegacy/litecoin.svg",
                 LightningImagePath = "imlegacy/litecoin-lightning.svg",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),

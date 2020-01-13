@@ -44,7 +44,6 @@ namespace BTCPayServer.HostedServices
         {
             return new Task[]
             {
-                CreateLoopTask(RefreshCoinAverageSupportedExchanges),
                 CreateLoopTask(RefreshCoinAverageSettings),
                 CreateLoopTask(RefreshRates)
             };
@@ -142,19 +141,6 @@ namespace BTCPayServer.HostedServices
                                     .Select(p => p.GetState())
                                     .ToList();
             await _SettingsRepository.UpdateSetting(cache);
-        }
-
-        async Task RefreshCoinAverageSupportedExchanges()
-        {
-            var exchanges = new CoinAverageExchanges();
-            foreach (var item in (await new CoinAverageRateProvider() { Authenticator = _coinAverageSettings }.GetExchangeTickersAsync())
-                .Exchanges
-                .Select(c => new CoinAverageExchange(c.Name, c.DisplayName, $"https://apiv2.bitcoinaverage.com/exchanges/{c.Name}")))
-            {
-                exchanges.Add(item);
-            }
-            _coinAverageSettings.AvailableExchanges = exchanges;
-            await Task.Delay(TimeSpan.FromHours(5), Cancellation);
         }
 
         async Task RefreshCoinAverageSettings()

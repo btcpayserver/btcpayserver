@@ -103,7 +103,8 @@
                                 >
                                     @label.Value
                                     <form 
-                                        asp-action="ModifyTransaction" 
+                                        asp-route-walletId="@this.Context.GetRouteValue("walletId")"
+                                        asp-action="ModifyTransaction"
                                         method="post" 
                                         class="removeTransactionLabelForm"
                                     >
@@ -136,7 +137,8 @@
                             <div class="dropdown" style="display:inline-block;">
                                 <span class="fa fa-tags" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></span>
                                 <div class="dropdown-menu">
-                                    <form asp-action="ModifyTransaction" method="post">
+                                    <form asp-action="ModifyTransaction" method="post" 
+                                        asp-route-walletId="@this.Context.GetRouteValue("walletId")">
                                         <input type="hidden" name="transactionId" value="@transaction.Id" />
                                         <div class="dropdown-item input-group">
                                             <input name="addlabel" placeholder="Label name" maxlength="20" type="text" class="form-control form-control-sm" />
@@ -169,7 +171,8 @@
                                     <span class="fa fa-commenting" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></span>
                                 }
                                 <div class="dropdown-menu">
-                                    <form asp-action="ModifyTransaction" method="post">
+                                    <form asp-action="ModifyTransaction" method="post" 
+                                        asp-route-walletId="@this.Context.GetRouteValue("walletId")">
                                         <input type="hidden" name="transactionId" value="@transaction.Id" />
                                         <textarea name="addcomment" class="dropdown-item" maxlength="200" rows="2" cols="20">@transaction.Comment</textarea>
                                         <div class="dropdown-item"><button type="submit" class="btn btn-primary">Save comment</button></div>

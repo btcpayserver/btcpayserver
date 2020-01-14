@@ -12,6 +12,7 @@ using U2F.Core.Models;
 using U2F.Core.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
+using U2F.Core.Exceptions;
 
 namespace BTCPayServer.U2F
 {
@@ -115,7 +116,7 @@ namespace BTCPayServer.U2F
 
                 if (duplicate)
                 {
-                    throw new InvalidOperationException("The U2F Device has already been registered with this user");
+                    throw new U2fException("The U2F Device has already been registered with this user");
                 }
                 
                 await context.U2FDevices.AddAsync(new U2FDevice()

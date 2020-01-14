@@ -774,14 +774,17 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("{storeId}/tokens/apikey")]
-        public async Task<IActionResult> GenerateAPIKey()
+        public async Task<IActionResult> GenerateAPIKey(string storeId)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
             await _TokenRepository.GenerateLegacyAPIKey(CurrentStore.Id);
             TempData[WellKnownTempData.SuccessMessage] = "API Key re-generated";
-            return RedirectToAction(nameof(ListTokens));
+            return RedirectToAction(nameof(ListTokens), new
+            {
+                storeId
+            });
         }
 
         [HttpGet]

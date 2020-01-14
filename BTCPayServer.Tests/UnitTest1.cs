@@ -1188,13 +1188,13 @@ namespace BTCPayServer.Tests
                 // Can generate API Key
                 var repo = tester.PayTester.GetService<TokenRepository>();
                 Assert.Empty(repo.GetLegacyAPIKeys(user.StoreId).GetAwaiter().GetResult());
-                Assert.IsType<RedirectToActionResult>(user.GetController<StoresController>().GenerateAPIKey().GetAwaiter().GetResult());
+                Assert.IsType<RedirectToActionResult>(user.GetController<StoresController>().GenerateAPIKey(user.StoreId).GetAwaiter().GetResult());
 
                 var apiKey = Assert.Single(repo.GetLegacyAPIKeys(user.StoreId).GetAwaiter().GetResult());
                 ///////
 
                 // Generating a new one remove the previous
-                Assert.IsType<RedirectToActionResult>(user.GetController<StoresController>().GenerateAPIKey().GetAwaiter().GetResult());
+                Assert.IsType<RedirectToActionResult>(user.GetController<StoresController>().GenerateAPIKey(user.StoreId).GetAwaiter().GetResult());
                 var apiKey2 = Assert.Single(repo.GetLegacyAPIKeys(user.StoreId).GetAwaiter().GetResult());
                 Assert.NotEqual(apiKey, apiKey2);
                 ////////

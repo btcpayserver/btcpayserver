@@ -48,9 +48,9 @@ namespace BTCPayServer
                 throw new FormatException();
             }
             if (type == DerivationType.Segwit)
-                return new DirectDerivationStrategy(extPubKey) { Segwit = true };
+                return new DirectDerivationStrategy(extPubKey, true);
             if (type == DerivationType.Legacy)
-                return new DirectDerivationStrategy(extPubKey) { Segwit = false };
+                return new DirectDerivationStrategy(extPubKey, false);
             if (type == DerivationType.SegwitP2SH)
                 return BtcPayNetwork.NBXplorerNetwork.DerivationStrategyFactory.Parse(extPubKey.ToString() + "-[p2sh]");
             throw new FormatException();

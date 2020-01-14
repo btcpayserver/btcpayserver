@@ -21,6 +21,6 @@ ENV SCREEN_HEIGHT 600 \
     SCREEN_WIDTH 1200
 
 COPY . .
-RUN cd BTCPayServer.Tests && dotnet build /p:CI_TESTS=true
+RUN cd BTCPayServer.Tests && dotnet build /p:CI_TESTS=true /p:RazorCompileOnBuild=true
 WORKDIR /source/BTCPayServer.Tests
 ENTRYPOINT ["./docker-entrypoint.sh"]

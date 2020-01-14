@@ -8,7 +8,6 @@
     <LangVersion>8.0</LangVersion>
     <UserSecretsId>AB0AC1DD-9D26-485B-9416-56A33F268117</UserSecretsId>
   </PropertyGroup>
-
   <PropertyGroup Condition="'$(CI_TESTS)' == 'true'">
     <DefineConstants>$(DefineConstants);SHORT_TIMEOUT</DefineConstants>
   </PropertyGroup>

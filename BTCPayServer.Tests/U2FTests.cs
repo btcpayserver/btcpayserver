@@ -57,7 +57,7 @@ namespace BTCPayServer.Tests
                     .IsType<ViewResult>(manageController.AddU2FDevice("testdevice")).Model);
 
                 Assert.NotEmpty(addDeviceVM.Challenge);
-                Assert.Equal(addDeviceVM.Name, "testdevice");
+                Assert.Equal("testdevice", addDeviceVM.Name);
                 Assert.NotEmpty(addDeviceVM.Version);
                 Assert.Null(addDeviceVM.DeviceResponse);
 

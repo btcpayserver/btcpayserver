@@ -79,7 +79,10 @@ namespace BTCPayServer
             }
 
             if (!Network.Consensus.SupportSegwit)
+            {
                 hintedLabels.Add("legacy");
+                str = str.Replace("-[p2sh]", string.Empty, StringComparison.OrdinalIgnoreCase);
+            }
 
             try
             {

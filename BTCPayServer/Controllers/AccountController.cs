@@ -39,7 +39,7 @@ namespace BTCPayServer.Controllers
         SettingsRepository _SettingsRepository;
         Configuration.BTCPayServerOptions _Options;
         private readonly BTCPayServerEnvironment _btcPayServerEnvironment;
-        private readonly U2FService _u2FService;
+        public  U2FService _u2FService;
         ILogger _logger;
 
         public AccountController(

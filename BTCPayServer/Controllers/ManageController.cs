@@ -32,7 +32,7 @@ namespace BTCPayServer.Controllers
         private readonly ILogger _logger;
         private readonly UrlEncoder _urlEncoder;
         IWebHostEnvironment _Env;
-        private readonly U2FService _u2FService;
+        public U2FService _u2FService;
         private readonly BTCPayServerEnvironment _btcPayServerEnvironment;
         StoreRepository _StoreRepository;
 

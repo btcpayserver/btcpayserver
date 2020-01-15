@@ -23,7 +23,7 @@ namespace BTCPayServer
                     "USDT_BTC = bitfinex(UST_BTC)",
                 },
                 AssetId = new uint256("ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2"),
-                DisplayName = "Tether USD",
+                DisplayName = "Liquid Tether",
                 BlockExplorerLink = NetworkType == NetworkType.Mainnet ? "https://blockstream.info/liquid/tx/{0}" : "https://blockstream.info/testnet/liquid/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "liquidnetwork",

@@ -276,7 +276,7 @@ namespace BTCPayServer.Controllers
                                               return new PaymentModel.AvailableCrypto()
                                               {
                                                   PaymentMethodId = kv.GetId().ToString(),
-                                                  CryptoCode = kv.GetId().CryptoCode,
+                                                  CryptoCode = kv.Network?.CryptoCode ?? kv.GetId().CryptoCode,
                                                   PaymentMethodName = availableCryptoHandler.GetPaymentMethodName(availableCryptoPaymentMethodId),
                                                   IsLightning =
                                                       kv.GetId().PaymentType == PaymentTypes.LightningLike,

@@ -22,5 +22,10 @@ namespace BTCPayServer
                 return (output, outpoint);
             });
         }
+
+        public override string GenerateBIP21(string cryptoInfoAddress, string cryptoInfoDue)
+        {
+            return $"{base.GenerateBIP21(cryptoInfoAddress, cryptoInfoDue)}&assetid={AssetId}";
+        }
     }
 }

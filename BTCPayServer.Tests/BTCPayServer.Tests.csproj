@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
@@ -7,7 +7,16 @@
     <NoWarn>NU1701,CA1816,CA1308,CA1810,CA2208</NoWarn>
     <LangVersion>8.0</LangVersion>
     <UserSecretsId>AB0AC1DD-9D26-485B-9416-56A33F268117</UserSecretsId>
+    <!--https://devblogs.microsoft.com/aspnet/testing-asp-net-core-mvc-web-apps-in-memory/-->
+    <PreserveCompilationContext>true</PreserveCompilationContext>
   </PropertyGroup>
+  <!--https://devblogs.microsoft.com/aspnet/testing-asp-net-core-mvc-web-apps-in-memory/-->
+  <Target Name="CopyAditionalFiles" AfterTargets="Build" Condition="'$(TargetFramework)'!=''">
+    <ItemGroup>
+      <DepsFilePaths Include="$([System.IO.Path]::ChangeExtension('%(_ResolvedProjectReferencePaths.FullPath)', '.deps.json'))" />
+    </ItemGroup>
+    <Copy SourceFiles="%(DepsFilePaths.FullPath)" DestinationFolder="$(OutputPath)" Condition="Exists('%(DepsFilePaths.FullPath)')" />
+  </Target>
 
   <PropertyGroup Condition="'$(CI_TESTS)' == 'true'">
     <DefineConstants>$(DefineConstants);SHORT_TIMEOUT</DefineConstants>

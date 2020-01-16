@@ -275,7 +275,7 @@ namespace BTCPayServer.Hosting
                         .MinimumLevel.Is(BTCPayServerOptions.GetDebugLogLevel(configuration))
                         .WriteTo.File(debugLogFile, rollingInterval: RollingInterval.Day, fileSizeLimitBytes: MAX_DEBUG_LOG_FILE_SIZE, rollOnFileSizeLimit: true, retainedFileCountLimit: 1)
                         .CreateLogger();
-                    logBuilder.AddSerilog(Serilog.Log.Logger);
+                    logBuilder.AddProvider(new Serilog.Extensions.Logging.SerilogLoggerProvider(Log.Logger));
                 }
             });
             return services;

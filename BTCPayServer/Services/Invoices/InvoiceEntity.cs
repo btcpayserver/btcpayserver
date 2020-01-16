@@ -461,8 +461,6 @@ namespace BTCPayServer.Services.Invoices
                 }
                 else if (paymentId.PaymentType == PaymentTypes.BTCLike)
                 {
-                    var scheme = ((BTCPayNetwork)info.Network).UriScheme;
-
                     var minerInfo = new MinerFeeInfo();
                     minerInfo.TotalFee = accounting.NetworkFee.Satoshi;
                     minerInfo.SatoshiPerBytes = ((BitcoinLikeOnChainPaymentMethod)info.GetPaymentMethodDetails()).FeeRate
@@ -470,7 +468,7 @@ namespace BTCPayServer.Services.Invoices
                     dto.MinerFees.TryAdd(cryptoInfo.CryptoCode, minerInfo);
                     cryptoInfo.PaymentUrls = new NBitpayClient.InvoicePaymentUrls()
                     {
-                        BIP21 = $"{scheme}:{cryptoInfo.Address}?amount={cryptoInfo.Due}",
+                        BIP21 = ((BTCPayNetwork)info.Network).GenerateBIP21(cryptoInfo.Address, cryptoInfo.Due),
                     };
 
 #pragma warning disable 618

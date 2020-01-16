@@ -112,6 +112,11 @@ namespace BTCPayServer
                 return (output, outpoint);
             });
         }
+
+        public virtual string GenerateBIP21(string cryptoInfoAddress, string cryptoInfoDue)
+        {
+            return $"{UriScheme}:{cryptoInfoAddress}?amount={cryptoInfoDue}";
+        }
     }
 
     public abstract class BTCPayNetworkBase

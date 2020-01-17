@@ -138,30 +138,28 @@ namespace BTCPayServer.Services.Rates
 
             foreach (var provider in Providers.ToArray())
             {
-                if (provider.Key == "cryptopia") // Shitty exchange, rate often unavailable, it spams the logs
-                    continue;
                 var prov = new BackgroundFetcherRateProvider(provider.Key, Providers[provider.Key]);
                 prov.RefreshRate = TimeSpan.FromMinutes(1.0);
                 prov.ValidatyTime = TimeSpan.FromMinutes(5.0);
                 Providers[provider.Key] = prov;
             }
 
-            var cache = new MemoryCache(_CacheOptions);
             foreach (var supportedExchange in GetCoinGeckoSupportedExchanges())
             {
                 if (!Providers.ContainsKey(supportedExchange.Id))
                 {
-                    var coinAverage = new CoinGeckoRateProvider(_httpClientFactory)
+                    var coingecko = new CoinGeckoRateProvider(_httpClientFactory)
                     {
                         Exchange = supportedExchange.Id
                     };
-                    var cached = new CachedRateProvider(supportedExchange.Id, coinAverage, cache)
-                    {
-                        CacheSpan = CacheSpan
-                    };
-                    Providers.Add(supportedExchange.Id, cached);
+                    var bgFetcher = new BackgroundFetcherRateProvider(supportedExchange.Id, coingecko);
+                    bgFetcher.RefreshRate = TimeSpan.FromMinutes(1.0);
+                    bgFetcher.ValidatyTime = TimeSpan.FromMinutes(5.0);
+                    Providers.Add(supportedExchange.Id, bgFetcher);
                 }
             }
+
+            var cache = new MemoryCache(_CacheOptions);
             foreach (var supportedExchange in GetCoinAverageSupportedExchanges())
             {
                 if (!Providers.ContainsKey(supportedExchange.Id))

@@ -2684,14 +2684,14 @@ noninventoryitem:
             var all = string.Join("\r\n", factory.GetSupportedExchanges().Select(e => e.Id).ToArray());
             foreach (var result in factory
                 .Providers
-                .Where(p => p.Value is BackgroundFetcherRateProvider bf && !(bf.Inner is CoinGeckoRateProvider cg && !cg.CoinGeckoRate))
+                .Where(p => p.Value is BackgroundFetcherRateProvider bf && !(bf.Inner is CoinGeckoRateProvider cg && cg.UnderlyingExchange != null))
                 .Select(p => (ExpectedName: p.Key, ResultAsync: p.Value.GetRatesAsync(default), Fetcher: (BackgroundFetcherRateProvider)p.Value))
                 .ToList())
             {
                 
                 Logs.Tester.LogInformation($"Testing {result.ExpectedName}");
                 result.Fetcher.InvalidateCache();
-                var exchangeRates = result.ResultAsync.Result;
+                var exchangeRates = new ExchangeRates(result.ExpectedName, result.ResultAsync.Result);
                 result.Fetcher.InvalidateCache();
                 Assert.NotNull(exchangeRates);
                 Assert.NotEmpty(exchangeRates);
@@ -2788,12 +2788,12 @@ noninventoryitem:
         class SpyRateProvider : IRateProvider
         {
             public bool Hit { get; set; }
-            public Task<ExchangeRates> GetRatesAsync(CancellationToken cancellationToken)
+            public Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
             {
                 Hit = true;
-                var rates = new ExchangeRates();
-                rates.Add(new ExchangeRate("coinaverage", CurrencyPair.Parse("BTC_USD"), new BidAsk(5000)));
-                return Task.FromResult(rates);
+                var rates = new List<PairRate>();
+                rates.Add(new PairRate(CurrencyPair.Parse("BTC_USD"), new BidAsk(5000)));
+                return Task.FromResult(rates.ToArray());
             }
 
             public void AssertHit()
@@ -2890,7 +2890,6 @@ noninventoryitem:
 
             var factory = CreateBTCPayRateFactory();
             factory.Providers.Clear();
-            factory.CacheSpan = TimeSpan.FromSeconds(1);
             var fetcher = new RateFetcher(factory);
             factory.Providers.Clear();
             var fetch = new BackgroundFetcherRateProvider("spy", spy);

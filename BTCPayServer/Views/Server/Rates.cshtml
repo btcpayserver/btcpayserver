@@ -28,11 +28,6 @@
                 <input asp-for="PrivateKey" style="width:50%;" class="form-control" placeholder="Private key" />
                 <p class="form-text text-muted">You can find the information on the <a target="_blank" href="https://bitcoinaverage.com/en/apikeys">bitcoinaverage api key page</a></p>
             </div>
-            <div class="form-group">
-                <label asp-for="CacheMinutes"></label>
-                <input asp-for="CacheMinutes" class="form-control" />
-                <span asp-validation-for="CacheMinutes" class="text-danger"></span>
-            </div>
             @if(Model.RateLimits != null)
             {
                 <h5>Current Bitcoin Average Quotas:</h5>

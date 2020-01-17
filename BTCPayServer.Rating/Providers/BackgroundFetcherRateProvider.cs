@@ -54,7 +54,7 @@ namespace BTCPayServer.Services.Rates
     }
 
     /// <summary>
-    /// This class is a decorator which handle caching and pre-emptive query to the underlying exchange
+    /// This class is a decorator which handle caching and pre-emptive query to the underlying rate provider
     /// </summary>
     public class BackgroundFetcherRateProvider : IRateProvider
     {
@@ -139,6 +139,9 @@ namespace BTCPayServer.Services.Rates
         }
 
         TimeSpan _RefreshRate = TimeSpan.FromSeconds(30);
+        /// <summary>
+        /// The timespan after which <see cref="UpdateIfNecessary(CancellationToken)"/> will get the rates from the underlying rate provider
+        /// </summary>
         public TimeSpan RefreshRate
         {
             get
@@ -156,6 +159,9 @@ namespace BTCPayServer.Services.Rates
         }
 
         TimeSpan _ValidatyTime = TimeSpan.FromMinutes(10);
+        /// <summary>
+        /// The timespan after which calls to <see cref="GetRatesAsync(CancellationToken)"/> will fails if the rate has not been updated
+        /// </summary>
         public TimeSpan ValidatyTime
         {
             get

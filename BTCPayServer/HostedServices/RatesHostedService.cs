@@ -146,7 +146,6 @@ namespace BTCPayServer.HostedServices
         async Task RefreshCoinAverageSettings()
         {
             var rates = (await _SettingsRepository.GetSettingAsync<RatesSetting>()) ?? new RatesSetting();
-            _RateProviderFactory.CacheSpan = TimeSpan.FromMinutes(rates.CacheInMinutes);
             if (!string.IsNullOrWhiteSpace(rates.PrivateKey) && !string.IsNullOrWhiteSpace(rates.PublicKey))
             {
                 _coinAverageSettings.KeyPair = (rates.PublicKey, rates.PrivateKey);

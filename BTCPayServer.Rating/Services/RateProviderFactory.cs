@@ -100,18 +100,18 @@ namespace BTCPayServer.Services.Rates
         }
         internal IEnumerable<AvailableRateProvider> GetDirectlySupportedExchanges()
         {
-            yield return new AvailableRateProvider("binance", "Binance", "https://api.binance.com/api/v1/ticker/24hr", RateSource.Direct);
-            yield return new AvailableRateProvider("bittrex", "Bittrex", "https://bittrex.com/api/v1.1/public/getmarketsummaries", RateSource.Direct);
-            yield return new AvailableRateProvider("poloniex", "Poloniex", "https://poloniex.com/public?command=returnTicker", RateSource.Direct);
-            yield return new AvailableRateProvider("hitbtc", "HitBTC", "https://api.hitbtc.com/api/2/public/ticker", RateSource.Direct);
-            yield return new AvailableRateProvider("ndax", "NDAX", "https://ndax.io/api/returnTicker", RateSource.Direct);
+            yield return new AvailableRateProvider("binance", "Binance", "https://api.binance.com/api/v1/ticker/24hr");
+            yield return new AvailableRateProvider("bittrex", "Bittrex", "https://bittrex.com/api/v1.1/public/getmarketsummaries");
+            yield return new AvailableRateProvider("poloniex", "Poloniex", "https://poloniex.com/public?command=returnTicker");
+            yield return new AvailableRateProvider("hitbtc", "HitBTC", "https://api.hitbtc.com/api/2/public/ticker");
+            yield return new AvailableRateProvider("ndax", "NDAX", "https://ndax.io/api/returnTicker");
 
-            yield return new AvailableRateProvider(CoinGeckoRateProvider.CoinGeckoName, "Coin Gecko", "https://api.coingecko.com/api/v3/exchange_rates", RateSource.Direct);
-            yield return new AvailableRateProvider(CoinAverageRateProvider.CoinAverageName, "Coin Average", "https://apiv2.bitcoinaverage.com/indices/global/ticker/short", RateSource.Direct);
-            yield return new AvailableRateProvider("kraken", "Kraken", "https://api.kraken.com/0/public/Ticker?pair=ATOMETH,ATOMEUR,ATOMUSD,ATOMXBT,BATETH,BATEUR,BATUSD,BATXBT,BCHEUR,BCHUSD,BCHXBT,DAIEUR,DAIUSD,DAIUSDT,DASHEUR,DASHUSD,DASHXBT,EOSETH,EOSXBT,ETHCHF,ETHDAI,ETHUSDC,ETHUSDT,GNOETH,GNOXBT,ICXETH,ICXEUR,ICXUSD,ICXXBT,LINKETH,LINKEUR,LINKUSD,LINKXBT,LSKETH,LSKEUR,LSKUSD,LSKXBT,NANOETH,NANOEUR,NANOUSD,NANOXBT,OMGETH,OMGEUR,OMGUSD,OMGXBT,PAXGETH,PAXGEUR,PAXGUSD,PAXGXBT,SCETH,SCEUR,SCUSD,SCXBT,USDCEUR,USDCUSD,USDCUSDT,USDTCAD,USDTEUR,USDTGBP,USDTZUSD,WAVESETH,WAVESEUR,WAVESUSD,WAVESXBT,XBTCHF,XBTDAI,XBTUSDC,XBTUSDT,XDGEUR,XDGUSD,XETCXETH,XETCXXBT,XETCZEUR,XETCZUSD,XETHXXBT,XETHZCAD,XETHZEUR,XETHZGBP,XETHZJPY,XETHZUSD,XLTCXXBT,XLTCZEUR,XLTCZUSD,XMLNXETH,XMLNXXBT,XMLNZEUR,XMLNZUSD,XREPXETH,XREPXXBT,XREPZEUR,XXBTZCAD,XXBTZEUR,XXBTZGBP,XXBTZJPY,XXBTZUSD,XXDGXXBT,XXLMXXBT,XXMRXXBT,XXMRZEUR,XXMRZUSD,XXRPXXBT,XXRPZEUR,XXRPZUSD,XZECXXBT,XZECZEUR,XZECZUSD", RateSource.Direct);
-            yield return new AvailableRateProvider("bylls", "Bylls", "https://bylls.com/api/price?from_currency=BTC&to_currency=CAD", RateSource.Direct);
-            yield return new AvailableRateProvider("bitbank", "Bitbank", "https://public.bitbank.cc/prices", RateSource.Direct);
-            yield return new AvailableRateProvider("bitpay", "Bitpay", "https://bitpay.com/rates", RateSource.Direct);
+            yield return new AvailableRateProvider(CoinGeckoRateProvider.CoinGeckoName, "Coin Gecko", "https://api.coingecko.com/api/v3/exchange_rates");
+            yield return new AvailableRateProvider(CoinAverageRateProvider.CoinAverageName, "Coin Average", "https://apiv2.bitcoinaverage.com/indices/global/ticker/short");
+            yield return new AvailableRateProvider("kraken", "Kraken", "https://api.kraken.com/0/public/Ticker?pair=ATOMETH,ATOMEUR,ATOMUSD,ATOMXBT,BATETH,BATEUR,BATUSD,BATXBT,BCHEUR,BCHUSD,BCHXBT,DAIEUR,DAIUSD,DAIUSDT,DASHEUR,DASHUSD,DASHXBT,EOSETH,EOSXBT,ETHCHF,ETHDAI,ETHUSDC,ETHUSDT,GNOETH,GNOXBT,ICXETH,ICXEUR,ICXUSD,ICXXBT,LINKETH,LINKEUR,LINKUSD,LINKXBT,LSKETH,LSKEUR,LSKUSD,LSKXBT,NANOETH,NANOEUR,NANOUSD,NANOXBT,OMGETH,OMGEUR,OMGUSD,OMGXBT,PAXGETH,PAXGEUR,PAXGUSD,PAXGXBT,SCETH,SCEUR,SCUSD,SCXBT,USDCEUR,USDCUSD,USDCUSDT,USDTCAD,USDTEUR,USDTGBP,USDTZUSD,WAVESETH,WAVESEUR,WAVESUSD,WAVESXBT,XBTCHF,XBTDAI,XBTUSDC,XBTUSDT,XDGEUR,XDGUSD,XETCXETH,XETCXXBT,XETCZEUR,XETCZUSD,XETHXXBT,XETHZCAD,XETHZEUR,XETHZGBP,XETHZJPY,XETHZUSD,XLTCXXBT,XLTCZEUR,XLTCZUSD,XMLNXETH,XMLNXXBT,XMLNZEUR,XMLNZUSD,XREPXETH,XREPXXBT,XREPZEUR,XXBTZCAD,XXBTZEUR,XXBTZGBP,XXBTZJPY,XXBTZUSD,XXDGXXBT,XXLMXXBT,XXMRXXBT,XXMRZEUR,XXMRZUSD,XXRPXXBT,XXRPZEUR,XXRPZUSD,XZECXXBT,XZECZEUR,XZECZUSD");
+            yield return new AvailableRateProvider("bylls", "Bylls", "https://bylls.com/api/price?from_currency=BTC&to_currency=CAD");
+            yield return new AvailableRateProvider("bitbank", "Bitbank", "https://public.bitbank.cc/prices");
+            yield return new AvailableRateProvider("bitpay", "Bitpay", "https://bitpay.com/rates");
         }
         void InitExchanges()
         {
@@ -141,16 +141,8 @@ namespace BTCPayServer.Services.Rates
                 if (provider.Key == "cryptopia") // Shitty exchange, rate often unavailable, it spams the logs
                     continue;
                 var prov = new BackgroundFetcherRateProvider(provider.Key, Providers[provider.Key]);
-                if (provider.Key == CoinGeckoRateProvider.CoinGeckoName)
-                {
-                    prov.RefreshRate = CacheSpan;
-                    prov.ValidatyTime = CacheSpan + TimeSpan.FromMinutes(1.0);
-                }
-                else
-                {
-                    prov.RefreshRate = TimeSpan.FromMinutes(1.0);
-                    prov.ValidatyTime = TimeSpan.FromMinutes(5.0);
-                }
+                prov.RefreshRate = TimeSpan.FromMinutes(1.0);
+                prov.ValidatyTime = TimeSpan.FromMinutes(5.0);
                 Providers[provider.Key] = prov;
             }
 
@@ -174,8 +166,9 @@ namespace BTCPayServer.Services.Rates
             {
                 if (!Providers.ContainsKey(supportedExchange.Id))
                 {
-                    var coinAverage = new CoinGeckoRateProvider(_httpClientFactory)
+                    var coinAverage = new CoinAverageRateProvider()
                     {
+                        HttpClient = _httpClientFactory.CreateClient("RATEPROVIDER_COINAVERAGE"),
                         Exchange = supportedExchange.Id
                     };
                     var cached = new CachedRateProvider(supportedExchange.Id, coinAverage, cache)
@@ -275,17 +268,17 @@ namespace BTCPayServer.Services.Rates
                 (DisplayName: "itBit", Name: "itbit"),
                 })
             {
-                yield return new AvailableRateProvider(item.Name, item.DisplayName, $"https://apiv2.bitcoinaverage.com/exchanges/{item.Name}", RateSource.CoinAverage);
+                yield return new AvailableRateProvider(item.Name, item.Name, item.DisplayName, $"https://apiv2.bitcoinaverage.com/exchanges/{item.Name}", RateSource.CoinAverage);
             }
-            yield return new AvailableRateProvider("gdax", string.Empty, $"https://apiv2.bitcoinaverage.com/exchanges/gdax", RateSource.CoinAverage);
+            yield return new AvailableRateProvider("gdax", "coinbasepro", string.Empty, $"https://apiv2.bitcoinaverage.com/exchanges/coinbasepro", RateSource.CoinAverage);
         }
 
         internal IEnumerable<AvailableRateProvider> GetCoinGeckoSupportedExchanges()
         {
             return JArray.Parse(CoinGeckoRateProvider.SupportedExchanges).Select(token =>
-                    new AvailableRateProvider(Normalize(token["id"].ToString().ToLowerInvariant()), token["name"].ToString(),
+                    new AvailableRateProvider(Normalize(token["id"].ToString().ToLowerInvariant()), token["id"].ToString().ToLowerInvariant(), token["name"].ToString(),
                         $"https://api.coingecko.com/api/v3/exchanges/{token["id"]}/tickers", RateSource.Coingecko))
-                .Concat(new[] { new AvailableRateProvider("gdax", string.Empty, $"https://api.coingecko.com/api/v3/exchanges/gdax", RateSource.Coingecko) });
+                .Concat(new[] { new AvailableRateProvider("gdax", "gdax", string.Empty, $"https://api.coingecko.com/api/v3/exchanges/gdax", RateSource.Coingecko) });
         }
 
         private string Normalize(string name)

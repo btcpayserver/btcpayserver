@@ -23,9 +23,6 @@ namespace BTCPayServer.Services.Rates
     {
         public string PublicKey { get; set; }
         public string PrivateKey { get; set; }
-        [DefaultValue(15)]
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
-        public int CacheInMinutes { get; set; } = 15;
     }
 
     public interface ICoinAverageAuthenticator

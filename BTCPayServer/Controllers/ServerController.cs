@@ -91,7 +91,6 @@ namespace BTCPayServer.Controllers
 
             var vm = new RatesViewModel()
             {
-                CacheMinutes = rates.CacheInMinutes,
                 PrivateKey = rates.PrivateKey,
                 PublicKey = rates.PublicKey
             };
@@ -119,7 +118,6 @@ namespace BTCPayServer.Controllers
             var rates = (await _SettingsRepository.GetSettingAsync<RatesSetting>()) ?? new RatesSetting();
             rates.PrivateKey = vm.PrivateKey;
             rates.PublicKey = vm.PublicKey;
-            rates.CacheInMinutes = vm.CacheMinutes;
             try
             {
                 var service = GetCoinaverageService(vm, true);

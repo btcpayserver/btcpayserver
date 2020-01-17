@@ -160,7 +160,7 @@ namespace BTCPayServer.Services.Rates
 
         TimeSpan _ValidatyTime = TimeSpan.FromMinutes(10);
         /// <summary>
-        /// The timespan after which calls to <see cref="GetRatesAsync(CancellationToken)"/> will fails if the rate has not been updated
+        /// The timespan after which calls to <see cref="GetRatesAsync(CancellationToken)"/> will query underlying provider if the rate has not been updated
         /// </summary>
         public TimeSpan ValidatyTime
         {

@@ -94,6 +94,10 @@ namespace BTCPayServer.Services.Rates
             Providers.Add("bitbank", new BitbankRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_BITBANK")));
             Providers.Add("bitpay", new BitpayRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_BITPAY")));
 
+
+            // Backward compatibility: coinaverage should be using coingecko to prevent stores from breaking
+            Providers.Add("coinaverage", new CoinGeckoRateProvider(_httpClientFactory));
+
             // Those exchanges make multiple requests when calling GetTickers so we remove them
             //DirectProviders.Add("gemini", new ExchangeSharpRateProvider("gemini", new ExchangeGeminiAPI()));
             //DirectProviders.Add("bitfinex", new ExchangeSharpRateProvider("bitfinex", new ExchangeBitfinexAPI()));
@@ -110,7 +114,7 @@ namespace BTCPayServer.Services.Rates
 
             foreach (var supportedExchange in GetCoinGeckoSupportedExchanges())
             {
-                if (!Providers.ContainsKey(supportedExchange.Id) && supportedExchange.Id != "coingecko")
+                if (!Providers.ContainsKey(supportedExchange.Id) && supportedExchange.Id != CoinGeckoRateProvider.CoinGeckoName)
                 {
                     var coingecko = new CoinGeckoRateProvider(_httpClientFactory)
                     {

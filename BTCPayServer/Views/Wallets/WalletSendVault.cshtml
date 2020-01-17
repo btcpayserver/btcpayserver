@@ -12,7 +12,7 @@
 </div>
 <div class="row">
     <div id="body" class="col-md-10">
-        <form id="broadcastForm" asp-action="WalletPSBTReady" method="post" style="display:none;">
+        <form id="broadcastForm" asp-action="WalletPSBTReady" asp-route-walletId="@this.Context.GetRouteValue("walletId")" method="post" style="display:none;">
             <input type="hidden" id="WalletId" asp-for="WalletId" />
             <input type="hidden" id="PSBT" asp-for="PSBT" />
             <input type="hidden" asp-for="WebsocketPath" />

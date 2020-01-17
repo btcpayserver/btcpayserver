@@ -3,7 +3,6 @@ namespace BTCPayServer.Rating
     public enum RateSource
     {
         Coingecko,
-        CoinAverage,
         Direct
     }
     public class AvailableRateProvider

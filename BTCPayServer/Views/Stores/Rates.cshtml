@@ -55,23 +55,6 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="card">
-                            <div class="card-header" id="coinaverage-header">
-                                <h2 class="mb-0">
-                                    <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#coinaverage-content" aria-expanded="true">
-                                        CoinAverage integration (commercial API)
-                                    </button>
-                                </h2>
-                            </div>
-                            <div id="coinaverage-content" class="collapse">
-                                <div class="card-body text-muted overflow-auto">
-                                    @foreach (var exchange in Model.AvailableExchanges.Where(a => a.Source == BTCPayServer.Rating.RateSource.CoinAverage))
-                                    {
-                                        <a href="@exchange.Url">@exchange.Id</a><span>&nbsp;</span>
-                                    }
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             }

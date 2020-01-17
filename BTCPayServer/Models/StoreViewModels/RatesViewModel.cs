@@ -33,9 +33,7 @@ namespace BTCPayServer.Models.StoreViewModels
                 case Rating.RateSource.Direct:
                     return a.Name;
                 case Rating.RateSource.Coingecko:
-                    return $"{a.Name} (via CoinGecko, free)";
-                case Rating.RateSource.CoinAverage:
-                    return $"{a.Name} (via BitcoinAverage, commercial)";
+                    return $"{a.Name} (via CoinGecko)";
                 default:
                     throw new NotSupportedException(a.Source.ToString());
             }

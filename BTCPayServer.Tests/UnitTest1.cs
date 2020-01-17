@@ -2786,7 +2786,7 @@ noninventoryitem:
 
         public static RateProviderFactory CreateBTCPayRateFactory()
         {
-            return new RateProviderFactory(CreateMemoryCache(), new MockHttpClientFactory(), new CoinAverageSettings());
+            return new RateProviderFactory(CreateMemoryCache(), new MockHttpClientFactory());
         }
 
         private static MemoryCacheOptions CreateMemoryCache()

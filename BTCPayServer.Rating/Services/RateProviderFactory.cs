@@ -50,11 +50,9 @@ namespace BTCPayServer.Services.Rates
             public ExchangeException Exception { get; internal set; }
         }
         public RateProviderFactory(IOptions<MemoryCacheOptions> cacheOptions,
-                                   IHttpClientFactory httpClientFactory,
-                                   CoinAverageSettings coinAverageSettings)
+                                   IHttpClientFactory httpClientFactory)
         {
             _httpClientFactory = httpClientFactory;
-            _CoinAverageSettings = coinAverageSettings;
             _CacheOptions = cacheOptions;
             // We use 15 min because of limits with free version of bitcoinaverage
             CacheSpan = TimeSpan.FromMinutes(15.0);
@@ -88,7 +86,6 @@ namespace BTCPayServer.Services.Rates
                 c.ValidatyTime = CacheSpan + TimeSpan.FromMinutes(1.0);
             }
         }
-        CoinAverageSettings _CoinAverageSettings;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly Dictionary<string, IRateProvider> _DirectProviders = new Dictionary<string, IRateProvider>();
         public Dictionary<string, IRateProvider> Providers
@@ -107,7 +104,6 @@ namespace BTCPayServer.Services.Rates
             yield return new AvailableRateProvider("ndax", "NDAX", "https://ndax.io/api/returnTicker");
 
             yield return new AvailableRateProvider(CoinGeckoRateProvider.CoinGeckoName, "Coin Gecko", "https://api.coingecko.com/api/v3/exchange_rates");
-            yield return new AvailableRateProvider(CoinAverageRateProvider.CoinAverageName, "Coin Average", "https://apiv2.bitcoinaverage.com/indices/global/ticker/short");
             yield return new AvailableRateProvider("kraken", "Kraken", "https://api.kraken.com/0/public/Ticker?pair=ATOMETH,ATOMEUR,ATOMUSD,ATOMXBT,BATETH,BATEUR,BATUSD,BATXBT,BCHEUR,BCHUSD,BCHXBT,DAIEUR,DAIUSD,DAIUSDT,DASHEUR,DASHUSD,DASHXBT,EOSETH,EOSXBT,ETHCHF,ETHDAI,ETHUSDC,ETHUSDT,GNOETH,GNOXBT,ICXETH,ICXEUR,ICXUSD,ICXXBT,LINKETH,LINKEUR,LINKUSD,LINKXBT,LSKETH,LSKEUR,LSKUSD,LSKXBT,NANOETH,NANOEUR,NANOUSD,NANOXBT,OMGETH,OMGEUR,OMGUSD,OMGXBT,PAXGETH,PAXGEUR,PAXGUSD,PAXGXBT,SCETH,SCEUR,SCUSD,SCXBT,USDCEUR,USDCUSD,USDCUSDT,USDTCAD,USDTEUR,USDTGBP,USDTZUSD,WAVESETH,WAVESEUR,WAVESUSD,WAVESXBT,XBTCHF,XBTDAI,XBTUSDC,XBTUSDT,XDGEUR,XDGUSD,XETCXETH,XETCXXBT,XETCZEUR,XETCZUSD,XETHXXBT,XETHZCAD,XETHZEUR,XETHZGBP,XETHZJPY,XETHZUSD,XLTCXXBT,XLTCZEUR,XLTCZUSD,XMLNXETH,XMLNXXBT,XMLNZEUR,XMLNZUSD,XREPXETH,XREPXXBT,XREPZEUR,XXBTZCAD,XXBTZEUR,XXBTZGBP,XXBTZJPY,XXBTZUSD,XXDGXXBT,XXLMXXBT,XXMRXXBT,XXMRZEUR,XXMRZUSD,XXRPXXBT,XXRPZEUR,XXRPZUSD,XZECXXBT,XZECZEUR,XZECZUSD");
             yield return new AvailableRateProvider("bylls", "Bylls", "https://bylls.com/api/price?from_currency=BTC&to_currency=CAD");
             yield return new AvailableRateProvider("bitbank", "Bitbank", "https://public.bitbank.cc/prices");
@@ -124,7 +120,6 @@ namespace BTCPayServer.Services.Rates
 
             // Handmade providers
             Providers.Add(CoinGeckoRateProvider.CoinGeckoName, new CoinGeckoRateProvider(_httpClientFactory));
-            Providers.Add(CoinAverageRateProvider.CoinAverageName, new CoinAverageRateProvider() { Exchange = CoinAverageRateProvider.CoinAverageName, HttpClient = _httpClientFactory?.CreateClient("EXCHANGE_COINAVERAGE"), Authenticator = _CoinAverageSettings });
             Providers.Add("kraken", new KrakenExchangeRateProvider() { HttpClient = _httpClientFactory?.CreateClient("EXCHANGE_KRAKEN") });
             Providers.Add("bylls", new ByllsRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_BYLLS")));
             Providers.Add("bitbank", new BitbankRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_BITBANK")));

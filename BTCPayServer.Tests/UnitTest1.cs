@@ -2690,10 +2690,6 @@ noninventoryitem:
             {
                 
                 Logs.Tester.LogInformation($"Testing {result.ExpectedName}");
-                if (result.ExpectedName == "quadrigacx")
-                    continue; // 29 january, the exchange is down
-                if (result.ExpectedName == "coinaverage")
-                    continue; // no more free plan
                 result.Fetcher.InvalidateCache();
                 var exchangeRates = result.ResultAsync.Result;
                 result.Fetcher.InvalidateCache();

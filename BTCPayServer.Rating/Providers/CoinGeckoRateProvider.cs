@@ -39,12 +39,12 @@ namespace BTCPayServer.Services.Rates
 
         public virtual Task<ExchangeRates> GetRatesAsync(CancellationToken cancellationToken)
         {
-            return CoinGeckoRate ? GetCoinGeckoRates() : GetCoinGeckoExchangeSpecificRates();
+            return CoinGeckoRate ? GetCoinGeckoRates(cancellationToken) : GetCoinGeckoExchangeSpecificRates(1, cancellationToken);
         }
 
-        private async Task<ExchangeRates> GetCoinGeckoRates()
+        private async Task<ExchangeRates> GetCoinGeckoRates(CancellationToken cancellationToken)
         {
-            using var resp = await Client.GetAsync("exchange_rates");
+            using var resp = await GetWithBackoffAsync("exchange_rates", cancellationToken);
             resp.EnsureSuccessStatusCode();
             return new ExchangeRates(JObject.Parse(await resp.Content.ReadAsStringAsync()).GetValue("rates").Children()
                 .Where(token => ((JProperty)token).Name != "btc")
@@ -53,9 +53,28 @@ namespace BTCPayServer.Services.Rates
                     new BidAsk(((JProperty)token).Value["value"].Value<decimal>()))));
         }
 
-        private async Task<ExchangeRates> GetCoinGeckoExchangeSpecificRates(int page = 1)
+        private async Task<HttpResponseMessage> GetWithBackoffAsync(string request, CancellationToken cancellationToken)
         {
-            using var resp = await Client.GetAsync($"exchanges/{Exchange}/tickers?page={page}");
+            TimeSpan retryWait = TimeSpan.FromSeconds(1);
+retry:
+            var resp = await Client.GetAsync(request, cancellationToken);
+            if (resp.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+            {
+                resp.Dispose();
+                if (retryWait < TimeSpan.FromSeconds(60))
+                {
+                    await Task.Delay(retryWait, cancellationToken);
+                    retryWait = TimeSpan.FromSeconds(retryWait.TotalSeconds * 2);
+                    goto retry;
+                }
+                resp.EnsureSuccessStatusCode();
+            }
+            return resp;
+        }
+
+        private async Task<ExchangeRates> GetCoinGeckoExchangeSpecificRates(int page, CancellationToken cancellationToken)
+        {
+            using var resp = await GetWithBackoffAsync($"exchanges/{Exchange}/tickers?page={page}", cancellationToken);
 
             resp.EnsureSuccessStatusCode();
             List<ExchangeRate> result = JObject.Parse(await resp.Content.ReadAsStringAsync()).GetValue("tickers")
@@ -77,7 +96,7 @@ namespace BTCPayServer.Services.Rates
                 var tasks = new List<Task<ExchangeRates>>();
                 for (int i = 2; i <= totalPages; i++)
                 {
-                    tasks.Add(GetCoinGeckoExchangeSpecificRates(i));
+                    tasks.Add(GetCoinGeckoExchangeSpecificRates(i, cancellationToken));
                 }
 
                 foreach (var t in (await Task.WhenAll(tasks)))

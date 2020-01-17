@@ -17,7 +17,7 @@ namespace BTCPayServer.Services.Rates
             _Providers = providers;
         }
 
-        public async Task<ExchangeRates> GetRatesAsync(CancellationToken cancellationToken)
+        public async Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
         {
             foreach (var p in _Providers)
             {
@@ -31,7 +31,7 @@ namespace BTCPayServer.Services.Rates
                 }
                 catch(Exception ex) { Exceptions.Add(ex); }
             }
-            return new ExchangeRates();
+            return Array.Empty<PairRate>();
         }
 
         public List<Exception> Exceptions { get; set; } = new List<Exception>();

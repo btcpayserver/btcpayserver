@@ -11,17 +11,15 @@ using ExchangeSharp;
 
 namespace BTCPayServer.Services.Rates
 {
-    public class ExchangeSharpRateProvider : IRateProvider, IHasExchangeName
+    public class ExchangeSharpRateProvider : IRateProvider
     {
         readonly ExchangeAPI _ExchangeAPI;
-        readonly string _ExchangeName;
-        public ExchangeSharpRateProvider(string exchangeName, ExchangeAPI exchangeAPI, bool reverseCurrencyPair = false)
+        public ExchangeSharpRateProvider(ExchangeAPI exchangeAPI, bool reverseCurrencyPair = false)
         {
             if (exchangeAPI == null)
                 throw new ArgumentNullException(nameof(exchangeAPI));
             exchangeAPI.RequestTimeout = TimeSpan.FromSeconds(5.0);
             _ExchangeAPI = exchangeAPI;
-            _ExchangeName = exchangeName;
             ReverseCurrencyPair = reverseCurrencyPair;
         }
 
@@ -30,9 +28,7 @@ namespace BTCPayServer.Services.Rates
             get; set;
         }
 
-        public string ExchangeName => _ExchangeName;
-
-        public async Task<ExchangeRates> GetRatesAsync(CancellationToken cancellationToken)
+        public async Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
         {
             await new SynchronizationContextRemover();
             var rates = await _ExchangeAPI.GetTickersAsync();
@@ -43,14 +39,14 @@ namespace BTCPayServer.Services.Rates
 
                 var exchangeRates = await Task.WhenAll(exchangeRateTasks);
                 
-            return new ExchangeRates(exchangeRates
+            return exchangeRates
                 .Where(t => t != null)
-                .ToArray());
+                .ToArray();
         }
 
         // ExchangeSymbolToGlobalSymbol throws exception which would kill perf
         ConcurrentDictionary<string, string> notFoundSymbols = new ConcurrentDictionary<string, string>();
-        private async Task<ExchangeRate> CreateExchangeRate(KeyValuePair<string, ExchangeTicker> ticker)
+        private async Task<PairRate> CreateExchangeRate(KeyValuePair<string, ExchangeTicker> ticker)
         {
             if (notFoundSymbols.TryGetValue(ticker.Key, out _))
                 return null;
@@ -64,11 +60,7 @@ namespace BTCPayServer.Services.Rates
                 }
                 if(ReverseCurrencyPair)
                     pair = new CurrencyPair(pair.Right, pair.Left);
-                var rate = new ExchangeRate();
-                rate.CurrencyPair = pair;
-                rate.Exchange = _ExchangeName;
-                rate.BidAsk = new BidAsk(ticker.Value.Bid, ticker.Value.Ask);
-                return rate;
+                return new PairRate(pair, new BidAsk(ticker.Value.Bid, ticker.Value.Ask));
             }
             catch (ArgumentException)
             {

@@ -60,14 +60,13 @@ namespace BTCPayServer.Services.Rates
     {
         public class LatestFetch
         {
-            public ExchangeRates Latest;
+            public PairRate[] Latest;
             public DateTimeOffset NextRefresh;
             public TimeSpan Backoff = TimeSpan.FromSeconds(5.0);
             public DateTimeOffset Updated;
             public DateTimeOffset Expiration;
             public Exception Exception;
-            public string ExchangeName;
-            internal ExchangeRates GetResult()
+            internal PairRate[] GetResult()
             {
                 if (Expiration <= DateTimeOffset.UtcNow)
                 {
@@ -77,7 +76,7 @@ namespace BTCPayServer.Services.Rates
                     }
                     else
                     {
-                        throw new InvalidOperationException($"The rate has expired ({ExchangeName})");
+                        throw new InvalidOperationException($"The rate has expired");
                     }
                 }
                 return Latest;
@@ -108,7 +107,6 @@ namespace BTCPayServer.Services.Rates
             {
                 state.LastUpdated = fetch.Updated;
                 state.Rates = fetch.Latest
-                            .Where(e => e.Exchange == ExchangeName)
                             .Select(r => new BackgroundFetcherRate()
                             {
                                 Pair = r.CurrencyPair,
@@ -128,8 +126,7 @@ namespace BTCPayServer.Services.Rates
             {
                 var fetch = new LatestFetch()
                 {
-                    ExchangeName = state.ExchangeName,
-                    Latest = new ExchangeRates(rates.Select(r => new ExchangeRate(state.ExchangeName, r.Pair, r.BidAsk))),
+                    Latest = rates.Select(r => new PairRate(r.Pair, r.BidAsk)).ToArray(),
                     Updated = updated,
                     NextRefresh = updated + RefreshRate,
                     Expiration = updated + ValidatyTime
@@ -207,7 +204,7 @@ namespace BTCPayServer.Services.Rates
         }
 
         LatestFetch _Latest;
-        public async Task<ExchangeRates> GetRatesAsync(CancellationToken cancellationToken)
+        public async Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
         {
             LastRequested = DateTimeOffset.UtcNow;
             var latest = _Latest;
@@ -241,7 +238,6 @@ namespace BTCPayServer.Services.Rates
             cancellationToken.ThrowIfCancellationRequested();
             var previous = _Latest;
             var fetch = new LatestFetch();
-            fetch.ExchangeName = ExchangeName;
             try
             {
                 var rates = await _Inner.GetRatesAsync(cancellationToken);

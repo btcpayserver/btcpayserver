@@ -18,6 +18,14 @@ namespace BTCPayServer.Services.Rates
         public string Exchange { get; set; }
         public string ExchangeName => Exchange ?? CoinGeckoName;
 
+        public bool CoinGeckoRate
+        {
+            get
+            {
+                return ExchangeName == CoinGeckoName;
+            }
+        }
+
         public CoinGeckoRateProvider(IHttpClientFactory httpClientFactory)
         {
             if (httpClientFactory == null)
@@ -31,7 +39,7 @@ namespace BTCPayServer.Services.Rates
 
         public virtual Task<ExchangeRates> GetRatesAsync(CancellationToken cancellationToken)
         {
-            return ExchangeName == CoinGeckoName ? GetCoinGeckoRates() : GetCoinGeckoExchangeSpecificRates();
+            return CoinGeckoRate ? GetCoinGeckoRates() : GetCoinGeckoExchangeSpecificRates();
         }
 
         private async Task<ExchangeRates> GetCoinGeckoRates()

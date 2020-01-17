@@ -2684,7 +2684,7 @@ noninventoryitem:
             var all = string.Join("\r\n", factory.GetSupportedExchanges().Select(e => e.Id).ToArray());
             foreach (var result in factory
                 .Providers
-                .Where(p => p.Value is BackgroundFetcherRateProvider)
+                .Where(p => p.Value is BackgroundFetcherRateProvider bf && !(bf.Inner is CoinGeckoRateProvider cg && !cg.CoinGeckoRate))
                 .Select(p => (ExpectedName: p.Key, ResultAsync: p.Value.GetRatesAsync(default), Fetcher: (BackgroundFetcherRateProvider)p.Value))
                 .ToList())
             {

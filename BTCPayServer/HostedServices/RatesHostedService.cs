@@ -29,14 +29,11 @@ namespace BTCPayServer.HostedServices
             }
         }
         private SettingsRepository _SettingsRepository;
-        private CoinAverageSettings _coinAverageSettings;
         RateProviderFactory _RateProviderFactory;
         public RatesHostedService(SettingsRepository repo,
-                                  RateProviderFactory rateProviderFactory,
-                                  CoinAverageSettings coinAverageSettings)
+                                  RateProviderFactory rateProviderFactory)
         {
             this._SettingsRepository = repo;
-            _coinAverageSettings = coinAverageSettings;
             _RateProviderFactory = rateProviderFactory;
         }
 
@@ -44,7 +41,6 @@ namespace BTCPayServer.HostedServices
         {
             return new Task[]
             {
-                CreateLoopTask(RefreshCoinAverageSettings),
                 CreateLoopTask(RefreshRates)
             };
         }
@@ -141,20 +137,6 @@ namespace BTCPayServer.HostedServices
                                     .Select(p => p.GetState())
                                     .ToList();
             await _SettingsRepository.UpdateSetting(cache);
-        }
-
-        async Task RefreshCoinAverageSettings()
-        {
-            var rates = (await _SettingsRepository.GetSettingAsync<RatesSetting>()) ?? new RatesSetting();
-            if (!string.IsNullOrWhiteSpace(rates.PrivateKey) && !string.IsNullOrWhiteSpace(rates.PublicKey))
-            {
-                _coinAverageSettings.KeyPair = (rates.PublicKey, rates.PrivateKey);
-            }
-            else
-            {
-                _coinAverageSettings.KeyPair = null;
-            }
-            await _SettingsRepository.WaitSettingsChanged<RatesSetting>(Cancellation);
         }
     }
 }

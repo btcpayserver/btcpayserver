@@ -158,24 +158,6 @@ namespace BTCPayServer.Services.Rates
                     Providers.Add(supportedExchange.Id, bgFetcher);
                 }
             }
-
-            var cache = new MemoryCache(_CacheOptions);
-            foreach (var supportedExchange in GetCoinAverageSupportedExchanges())
-            {
-                if (!Providers.ContainsKey(supportedExchange.Id))
-                {
-                    var coinAverage = new CoinAverageRateProvider()
-                    {
-                        HttpClient = _httpClientFactory.CreateClient("RATEPROVIDER_COINAVERAGE"),
-                        Exchange = supportedExchange.Id
-                    };
-                    var cached = new CachedRateProvider(supportedExchange.Id, coinAverage, cache)
-                    {
-                        CacheSpan = CacheSpan
-                    };
-                    Providers.Add(supportedExchange.Id, cached);
-                }
-            }
         }
 
         IEnumerable<AvailableRateProvider> _AvailableRateProviders = null;
@@ -192,83 +174,9 @@ namespace BTCPayServer.Services.Rates
                 {
                     availableProviders.TryAdd(exchange.Id, exchange);
                 }
-                foreach (var exchange in GetCoinAverageSupportedExchanges())
-                {
-                    availableProviders.TryAdd(exchange.Id, exchange);
-                }
                 _AvailableRateProviders = availableProviders.Values.OrderBy(o => o.Name).ToArray();
             }
             return _AvailableRateProviders;
-        }
-
-        internal IEnumerable<AvailableRateProvider> GetCoinAverageSupportedExchanges()
-        {
-            foreach (var item in
-             new[] {
-                (DisplayName: "Idex", Name: "idex"),
-                (DisplayName: "Coinfloor", Name: "coinfloor"),
-                (DisplayName: "Okex", Name: "okex"),
-                (DisplayName: "Bitfinex", Name: "bitfinex"),
-                (DisplayName: "Bittylicious", Name: "bittylicious"),
-                (DisplayName: "BTC Markets", Name: "btcmarkets"),
-                (DisplayName: "Kucoin", Name: "kucoin"),
-                (DisplayName: "IDAX", Name: "idax"),
-                (DisplayName: "Kraken", Name: "kraken"),
-                (DisplayName: "Bit2C", Name: "bit2c"),
-                (DisplayName: "Mercado Bitcoin", Name: "mercado"),
-                (DisplayName: "CEX.IO", Name: "cex"),
-                (DisplayName: "Bitex.la", Name: "bitex"),
-                (DisplayName: "Quoine", Name: "quoine"),
-                (DisplayName: "Stex", Name: "stex"),
-                (DisplayName: "CoinTiger", Name: "cointiger"),
-                (DisplayName: "Poloniex", Name: "poloniex"),
-                (DisplayName: "Zaif", Name: "zaif"),
-                (DisplayName: "Huobi", Name: "huobi"),
-                (DisplayName: "QuickBitcoin", Name: "quickbitcoin"),
-                (DisplayName: "Tidex", Name: "tidex"),
-                (DisplayName: "Tokenomy", Name: "tokenomy"),
-                (DisplayName: "Bitcoin.co.id", Name: "bitcoin_co_id"),
-                (DisplayName: "Kryptono", Name: "kryptono"),
-                (DisplayName: "Bitso", Name: "bitso"),
-                (DisplayName: "Korbit", Name: "korbit"),
-                (DisplayName: "Yobit", Name: "yobit"),
-                (DisplayName: "BitBargain", Name: "bitbargain"),
-                (DisplayName: "Livecoin", Name: "livecoin"),
-                (DisplayName: "Hotbit", Name: "hotbit"),
-                (DisplayName: "Coincheck", Name: "coincheck"),
-                (DisplayName: "Binance", Name: "binance"),
-                (DisplayName: "Bit-Z", Name: "bitz"),
-                (DisplayName: "Coinbase Pro", Name: "coinbasepro"),
-                (DisplayName: "Rock Trading", Name: "rocktrading"),
-                (DisplayName: "Bittrex", Name: "bittrex"),
-                (DisplayName: "BitBay", Name: "bitbay"),
-                (DisplayName: "Tokenize", Name: "tokenize"),
-                (DisplayName: "Hitbtc", Name: "hitbtc"),
-                (DisplayName: "Upbit", Name: "upbit"),
-                (DisplayName: "Bitstamp", Name: "bitstamp"),
-                (DisplayName: "Luno", Name: "luno"),
-                (DisplayName: "Trade.io", Name: "tradeio"),
-                (DisplayName: "LocalBitcoins", Name: "localbitcoins"),
-                (DisplayName: "Independent Reserve", Name: "independentreserve"),
-                (DisplayName: "Coinsquare", Name: "coinsquare"),
-                (DisplayName: "Exmoney", Name: "exmoney"),
-                (DisplayName: "Coinegg", Name: "coinegg"),
-                (DisplayName: "FYB-SG", Name: "fybsg"),
-                (DisplayName: "Cryptonit", Name: "cryptonit"),
-                (DisplayName: "BTCTurk", Name: "btcturk"),
-                (DisplayName: "bitFlyer", Name: "bitflyer"),
-                (DisplayName: "Negocie Coins", Name: "negociecoins"),
-                (DisplayName: "OasisDEX", Name: "oasisdex"),
-                (DisplayName: "CoinMate", Name: "coinmate"),
-                (DisplayName: "BitForex", Name: "bitforex"),
-                (DisplayName: "Bitsquare", Name: "bitsquare"),
-                (DisplayName: "FYB-SE", Name: "fybse"),
-                (DisplayName: "itBit", Name: "itbit"),
-                })
-            {
-                yield return new AvailableRateProvider(item.Name, item.Name, item.DisplayName, $"https://apiv2.bitcoinaverage.com/exchanges/{item.Name}", RateSource.CoinAverage);
-            }
-            yield return new AvailableRateProvider("gdax", "coinbasepro", string.Empty, $"https://apiv2.bitcoinaverage.com/exchanges/coinbasepro", RateSource.CoinAverage);
         }
 
         internal IEnumerable<AvailableRateProvider> GetCoinGeckoSupportedExchanges()

@@ -49,16 +49,13 @@ namespace BTCPayServer.Services.Rates
             public ExchangeRates ExchangeRates { get; set; }
             public ExchangeException Exception { get; internal set; }
         }
-        public RateProviderFactory(IOptions<MemoryCacheOptions> cacheOptions,
-                                   IHttpClientFactory httpClientFactory)
+        public RateProviderFactory(IHttpClientFactory httpClientFactory)
         {
             _httpClientFactory = httpClientFactory;
-            _CacheOptions = cacheOptions;
             // We use 15 min because of limits with free version of bitcoinaverage
             CacheSpan = TimeSpan.FromMinutes(15.0);
             InitExchanges();
         }
-        private IOptions<MemoryCacheOptions> _CacheOptions;
         TimeSpan _CacheSpan;
         public TimeSpan CacheSpan
         {
@@ -74,12 +71,6 @@ namespace BTCPayServer.Services.Rates
         }
         public void InvalidateCache()
         {
-            var cache = new MemoryCache(_CacheOptions);
-            foreach (var provider in Providers.Select(p => p.Value as CachedRateProvider).Where(p => p != null))
-            {
-                provider.CacheSpan = CacheSpan;
-                provider.MemoryCache = cache;
-            }
             if (Providers.TryGetValue(CoinGeckoRateProvider.CoinGeckoName, out var coinAverage) && coinAverage is BackgroundFetcherRateProvider c)
             {
                 c.RefreshRate = CacheSpan;

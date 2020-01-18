@@ -92,7 +92,7 @@ namespace BTCPayServer.Tests
                 Assert.Contains(psbtReady.Destinations, d => d.Destination == sendDestination && !d.Positive);
                 Assert.Contains(psbtReady.Destinations, d => d.Positive);
                 var redirect = Assert.IsType<RedirectToActionResult>(await walletController.WalletPSBTReady(walletId, psbtReady, command: "broadcast"));
-                Assert.Equal(nameof(walletController.WalletTransactions), redirect.ActionName);
+                Assert.Equal(nameof(walletController.WalletGeneral), redirect.ActionName);
 
                 vmPSBT.PSBT = unsignedPSBT.ToBase64();
                 var combineVM = await walletController.WalletPSBT(walletId, vmPSBT, "combine").AssertViewModelAsync<WalletPSBTCombineViewModel>();
@@ -119,7 +119,7 @@ namespace BTCPayServer.Tests
                 psbt = AssertRedirectedPSBT(await walletController.WalletPSBTReady(walletId, ready, command: "analyze-psbt"));
                 Assert.Equal(signedPSBT.ToBase64(), psbt);
                 redirect = Assert.IsType<RedirectToActionResult>(await walletController.WalletPSBTReady(walletId, ready, command: "broadcast"));
-                Assert.Equal(nameof(walletController.WalletTransactions), redirect.ActionName);
+                Assert.Equal(nameof(walletController.WalletGeneral), redirect.ActionName);
             }
         }
 

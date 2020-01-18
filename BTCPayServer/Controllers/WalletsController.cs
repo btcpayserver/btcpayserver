@@ -103,7 +103,7 @@ namespace BTCPayServer.Controllers
         const int MaxLabelSize = 20;
         const int MaxCommentSize = 200;
         [HttpPost]
-        [Route("{walletId}")]
+        [Route("{walletId}/transactions/{transactionId}")]
         public async Task<IActionResult> ModifyTransaction(
             // We need addlabel and addlabelclick. addlabel is the + button if the label does not exists,
             // addlabelclick is if the user click on existing label. For some reason, reusing the same name attribute for both
@@ -191,7 +191,7 @@ namespace BTCPayServer.Controllers
                 walletTransactionInfo.Comment = addcomment;
                 await WalletRepository.SetWalletTransactionInfo(walletId, transactionId, walletTransactionInfo);
             }
-            return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
+            return RedirectToAction(nameof(WalletGeneral), new { walletId = walletId.ToString() });
         }
 
         [HttpGet]
@@ -240,8 +240,7 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("{walletId}")]
-        [Route("{walletId}/transactions")]
-        public async Task<IActionResult> WalletTransactions(
+        public async Task<IActionResult> WalletGeneral(
             [ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, string labelFilter = null)
         {
@@ -255,7 +254,7 @@ namespace BTCPayServer.Controllers
             var transactions = await wallet.FetchTransactions(paymentMethod.AccountDerivation);
             var walletBlob = await walletBlobAsync;
             var walletTransactionsInfo = await walletTransactionsInfoAsync;
-            var model = new ListTransactionsViewModel();
+            var model = new WalletGeneralViewModel();
             if (transactions == null)
             {
                 TempData.SetStatusMessageModel(new StatusMessageModel()
@@ -264,14 +263,14 @@ namespace BTCPayServer.Controllers
                     Message =
                         "There was an error retrieving the transactions list. Is NBXplorer configured correctly?"
                 });
-                model.Transactions = new List<ListTransactionsViewModel.TransactionViewModel>();
+                model.Transactions = new List<WalletGeneralViewModel.TransactionViewModel>();
             }
             else
             {
                 foreach (var tx in transactions.UnconfirmedTransactions.Transactions
                     .Concat(transactions.ConfirmedTransactions.Transactions).ToArray())
                 {
-                    var vm = new ListTransactionsViewModel.TransactionViewModel();
+                    var vm = new WalletGeneralViewModel.TransactionViewModel();
                     vm.Id = tx.TransactionId.ToString();
                     vm.Link = string.Format(CultureInfo.InvariantCulture, paymentMethod.Network.BlockExplorerLink,
                         vm.Id);
@@ -295,47 +294,16 @@ namespace BTCPayServer.Controllers
 
                 model.Transactions = model.Transactions.OrderByDescending(t => t.Timestamp).ToList();
             }
-
+            model.CryptoCode = walletId.CryptoCode;
+            model.Address = _WalletReceiveStateService.Get(walletId)?.Address?.ToString();
+            model.CryptoImage = GetImage(paymentMethod.PaymentId, paymentMethod.Network);
             return View(model);
         }
-
-        private static string GetLabelTarget(WalletId walletId, uint256 txId)
-        {
-            return $"{walletId}:{txId}";
-        }
-
-        [HttpGet]
-        [Route("{walletId}/receive")]
-        public IActionResult WalletReceive([ModelBinder(typeof(WalletIdModelBinder))]
-            WalletId walletId, string statusMessage = null)
-        {
-            if (walletId?.StoreId == null)
-                return NotFound();
-            DerivationSchemeSettings paymentMethod = GetDerivationSchemeSettings(walletId);
-            if (paymentMethod == null)
-                return NotFound();
-            var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId?.CryptoCode);
-            if (network == null)
-                return NotFound();
-
-            var address = _WalletReceiveStateService.Get(walletId)?.Address;
-            if (!string.IsNullOrEmpty(statusMessage))
-            {
-                TempData[WellKnownTempData.SuccessMessage] = statusMessage;
-            }
-
-            return View(new WalletReceiveViewModel()
-            {
-                CryptoCode = walletId.CryptoCode,
-                Address = address?.ToString(),
-                CryptoImage = GetImage(paymentMethod.PaymentId, network)
-            });
-        }
-
         [HttpPost]
-        [Route("{walletId}/receive")]
-        public async Task<IActionResult> WalletReceive([ModelBinder(typeof(WalletIdModelBinder))]
-            WalletId walletId, WalletReceiveViewModel viewModel, string command)
+        [Route("{walletId}")]
+        public async Task<IActionResult> WalletGeneral(
+            [ModelBinder(typeof(WalletIdModelBinder))]
+            WalletId walletId, string command, string labelFilter = null)
         {
             if (walletId?.StoreId == null)
                 return NotFound();
@@ -345,7 +313,6 @@ namespace BTCPayServer.Controllers
             var network = this.NetworkProvider.GetNetwork<BTCPayNetwork>(walletId?.CryptoCode);
             if (network == null)
                 return NotFound();
-            var statusMessage = string.Empty;
             var wallet = _walletProvider.GetWallet(network);
             switch (command)
             {
@@ -357,21 +324,28 @@ namespace BTCPayServer.Controllers
                     }
                     var address = cachedAddress.ScriptPubKey.GetDestinationAddress(network.NBitcoinNetwork);
                     ExplorerClientProvider.GetExplorerClient(network)
-                        .CancelReservation(cachedAddress.DerivationStrategy, new[] {cachedAddress.KeyPath});
-                    statusMessage = new StatusMessageModel()
+                        .CancelReservation(cachedAddress.DerivationStrategy, new[] { cachedAddress.KeyPath });
+                    TempData.SetStatusMessageModel(new StatusMessageModel()
                     {
-                        AllowDismiss =true,
+                        AllowDismiss = true,
                         Message = $"Address {address} was unreserved.",
                         Severity = StatusMessageModel.StatusSeverity.Success,
-                    }.ToString();
+                    });
                     _WalletReceiveStateService.Remove(walletId);
                     break;
                 case "generate-new-address":
                     var reserve = (await wallet.ReserveAddressAsync(paymentMethod.AccountDerivation));
                     _WalletReceiveStateService.Set(walletId, reserve);
                     break;
+                default:
+                    return NotFound();
             }
-            return RedirectToAction(nameof(WalletReceive), new {walletId, statusMessage});
+            return RedirectToAction(nameof(WalletGeneral), new { walletId, labelFilter });
+        }
+
+        private static string GetLabelTarget(WalletId walletId, uint256 txId)
+        {
+            return $"{walletId}:{txId}";
         }
 
         [HttpGet]
@@ -732,7 +706,7 @@ namespace BTCPayServer.Controllers
                 wallet.InvalidateCache(derivationSettings.AccountDerivation);
                 TempData[WellKnownTempData.SuccessMessage] = $"Transaction broadcasted successfully ({transaction.GetHash().ToString()})";
             }
-            return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
+            return RedirectToAction(nameof(WalletGeneral), new { walletId = walletId.ToString() });
         }
 
         [HttpGet]
@@ -1048,14 +1022,6 @@ namespace BTCPayServer.Controllers
             return "/" + res;
         }
     }
-
-    public class WalletReceiveViewModel
-    {
-        public string CryptoImage { get; set; }
-        public string CryptoCode { get; set; }
-        public string Address { get; set; }
-    }
-
 
     public class GetInfoResult
     {

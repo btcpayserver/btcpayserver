@@ -831,7 +831,7 @@ namespace BTCPayServer.Tests
                 // Sending a coin
                 var txId = tester.ExplorerNode.SendToAddress(btcDerivationScheme.GetDerivation(new KeyPath("0/90")).ScriptPubKey, Money.Coins(1.0m));
                 tester.ExplorerNode.Generate(1);
-                var transactions = Assert.IsType<ListTransactionsViewModel>(Assert.IsType<ViewResult>(walletController.WalletTransactions(walletId).Result).Model);
+                var transactions = Assert.IsType<WalletGeneralViewModel>(Assert.IsType<ViewResult>(walletController.WalletGeneral(walletId).Result).Model);
                 Assert.Empty(transactions.Transactions);
 
                 Assert.IsType<RedirectToActionResult>(walletController.WalletRescan(walletId, rescan).Result);
@@ -857,7 +857,7 @@ namespace BTCPayServer.Tests
                 Assert.Null(rescan.PreviousError);
                 Assert.NotNull(rescan.TimeOfScan);
                 Assert.Equal(1, rescan.LastSuccess.Found);
-                transactions = Assert.IsType<ListTransactionsViewModel>(Assert.IsType<ViewResult>(walletController.WalletTransactions(walletId).Result).Model);
+                transactions = Assert.IsType<WalletGeneralViewModel>(Assert.IsType<ViewResult>(walletController.WalletGeneral(walletId).Result).Model);
                 var tx = Assert.Single(transactions.Transactions);
                 Assert.Equal(tx.Id, txId.ToString());
 
@@ -867,7 +867,7 @@ namespace BTCPayServer.Tests
                 Assert.IsType<RedirectToActionResult>(await walletController.ModifyTransaction(walletId, tx.Id, addlabelclick: "test2"));
                 Assert.IsType<RedirectToActionResult>(await walletController.ModifyTransaction(walletId, tx.Id, addcomment: "hello"));
 
-                transactions = Assert.IsType<ListTransactionsViewModel>(Assert.IsType<ViewResult>(walletController.WalletTransactions(walletId).Result).Model);
+                transactions = Assert.IsType<WalletGeneralViewModel>(Assert.IsType<ViewResult>(walletController.WalletGeneral(walletId).Result).Model);
                 tx = Assert.Single(transactions.Transactions);
 
                 Assert.Equal("hello", tx.Comment);
@@ -877,7 +877,7 @@ namespace BTCPayServer.Tests
 
                 Assert.IsType<RedirectToActionResult>(await walletController.ModifyTransaction(walletId, tx.Id, removelabel: "test2"));
 
-                transactions = Assert.IsType<ListTransactionsViewModel>(Assert.IsType<ViewResult>(walletController.WalletTransactions(walletId).Result).Model);
+                transactions = Assert.IsType<WalletGeneralViewModel>(Assert.IsType<ViewResult>(walletController.WalletGeneral(walletId).Result).Model);
                 tx = Assert.Single(transactions.Transactions);
 
                 Assert.Equal("hello", tx.Comment);

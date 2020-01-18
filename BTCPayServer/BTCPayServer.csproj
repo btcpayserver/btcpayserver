@@ -2,7 +2,7 @@
   <Import Project="../Build/Version.csproj" Condition="Exists('../Build/Version.csproj')" />
   <Import Project="../Build/Common.csproj" />
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-    <RazorCompileOnBuild>false</RazorCompileOnBuild>
+    <RazorCompileOnBuild>true</RazorCompileOnBuild>
   </PropertyGroup>
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -205,7 +205,7 @@
 	  <Content Update="Views\Wallets\WalletSendLedger.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
-	  <Content Update="Views\Wallets\WalletTransactions.cshtml">
+	  <Content Update="Views\Wallets\WalletGeneral.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
     <Content Remove="Views\Server\EditGoogleCloudStorageStorageProvider.cshtml">

@@ -7,7 +7,7 @@ using BTCPayServer.Services;
 
 namespace BTCPayServer.Models.WalletViewModels
 {
-    public class ListTransactionsViewModel
+    public class WalletGeneralViewModel
     {
         public class TransactionViewModel
         {
@@ -20,6 +20,11 @@ namespace BTCPayServer.Models.WalletViewModels
             public string Balance { get; set; }
             public HashSet<Label> Labels { get; set; } = new HashSet<Label>();
         }
+
+        public string CryptoImage { get; set; }
+        public string CryptoCode { get; set; }
+        public string Address { get; set; }
+
         public HashSet<Label> Labels { get; set; } = new HashSet<Label>();
         public List<TransactionViewModel> Transactions { get; set; } = new List<TransactionViewModel>();
     }

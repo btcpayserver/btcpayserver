@@ -1,10 +1,11 @@
-﻿@model ListTransactionsViewModel
+﻿@model WalletGeneralViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData["Title"] = "Manage wallet";
-    ViewData.SetActivePageAndTitle(WalletsNavPages.Transactions);
+    ViewData.SetActivePageAndTitle(WalletsNavPages.General);
 }
 <style type="text/css">
+
     .smMaxWidth {
         max-width: 200px;
     }
@@ -38,14 +39,14 @@
         right: 4px;
     }
 
-    .removeTransactionLabelForm button {
-        color: #212529;
-        cursor: pointer;
-        display: inline;
-        padding: 0;
-        background-color: transparent;
-        border: 0;
-    }
+        .removeTransactionLabelForm button {
+            color: #212529;
+            cursor: pointer;
+            display: inline;
+            padding: 0;
+            background-color: transparent;
+            border: 0;
+        }
 </style>
 @if (TempData.HasStatusMessage())
 {
@@ -55,6 +56,60 @@
         </div>
     </div>
 }
+
+<div class="row">
+    <div class="col-md-12">
+        Reserving an address make sure this address will not be generated for the invoice of one of your customer.
+    </div>
+</div>
+<div class="row">
+    <div class="col-lg-6  mx-auto my-auto ">
+        <form method="post" asp-action="WalletGeneral" asp-route-walletId="@this.Context.GetRouteValue("walletId")" class="card text-center">
+            @if (string.IsNullOrEmpty(Model.Address))
+            {
+
+
+                <div class="card-body m-sm-0 p-sm-0">
+                    <button class="btn btn-link m-2" type="submit" name="command" value="generate-new-address">Reserve a new address</button>
+                </div>
+            }
+            else
+            {
+                <h2 class="card-title">Next available @Model.CryptoCode address</h2>
+                <noscript>
+                    <div class="card-body m-sm-0 p-sm-0">
+                        <div class="input-group">
+                            <input type="text" class="form-control " readonly="readonly" asp-for="Address" id="address" />
+                            <div class="input-group-append">
+                                <span class="input-group-text fa fa-copy"> </span>
+                            </div>
+                        </div>
+
+                        <button type="submit" name="command" value="unreserve-current-address" class="btn btn-link">Unreserve this address</button>
+
+                    </div>
+                </noscript>
+                <div class="only-for-js card-body m-sm-0 p-sm-0" id="app">
+                    <div class="qr-container mb-2">
+                        <img v-bind:src="srvModel.cryptoImage" class="qr-icon" />
+                        <qrcode v-bind:value="srvModel.address" :options="{ width: 256, margin: 0, color: {dark:'#000', light:'#fff'} }" tag="svg">
+                        </qrcode>
+                    </div>
+                    <div class="input-group copy" data-clipboard-target="#vue-address">
+                        <input type="text" class="form-control" style="text-align:center;" readonly="readonly" :value="srvModel.address" id="vue-address" />
+                        <div class="input-group-append">
+                            <span class="input-group-text fa fa-copy"> </span>
+                        </div>
+                    </div>
+
+                    <button type="submit" name="command" value="unreserve-current-address" class="btn btn-link">Unreserve this address</button>
+
+                </div>
+            }
+
+        </form>
+    </div>
+</div>
 <div class="row">
     <div class="col-md-12">
         If BTCPay Server shows you an invalid balance, <a asp-action="WalletRescan">rescan your wallet</a>. <br />
@@ -90,30 +145,24 @@
                         <td style="text-align:left">
                             @foreach (var label in transaction.Labels)
                             {
-                                <a
-                                    asp-route-labelFilter="@label.Value"
-                                    class="badge transactionLabel"
-                                    style="
+                                <a asp-route-labelFilter="@label.Value"
+                                   class="badge transactionLabel"
+                                   style="
                                         background-color: @label.Color;
                                         color: white;
                                         display: block;
                                         padding-right: 16px;
                                         position: relative;
-                                    "
-                                >
+                                    ">
                                     @label.Value
-                                    <form 
-                                        asp-route-walletId="@this.Context.GetRouteValue("walletId")"
-                                        asp-action="ModifyTransaction"
-                                        method="post" 
-                                        class="removeTransactionLabelForm"
-                                    >
+                                    <form asp-route-walletId="@this.Context.GetRouteValue("walletId")"
+                                          asp-action="ModifyTransaction"
+                                          method="post"
+                                          class="removeTransactionLabelForm">
                                         <input type="hidden" name="transactionId" value="@transaction.Id" />
-                                        <button
-                                            name="removelabel"
-                                            type="submit"
-                                            value="@label.Value"
-                                        >
+                                        <button name="removelabel"
+                                                type="submit"
+                                                value="@label.Value">
                                             <span class="fa fa-close"></span>
                                         </button>
                                     </form>
@@ -137,8 +186,8 @@
                             <div class="dropdown" style="display:inline-block;">
                                 <span class="fa fa-tags" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></span>
                                 <div class="dropdown-menu">
-                                    <form asp-action="ModifyTransaction" method="post" 
-                                        asp-route-walletId="@this.Context.GetRouteValue("walletId")">
+                                    <form asp-action="ModifyTransaction" method="post"
+                                          asp-route-walletId="@this.Context.GetRouteValue("walletId")">
                                         <input type="hidden" name="transactionId" value="@transaction.Id" />
                                         <div class="dropdown-item input-group">
                                             <input name="addlabel" placeholder="Label name" maxlength="20" type="text" class="form-control form-control-sm" />
@@ -171,8 +220,8 @@
                                     <span class="fa fa-commenting" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></span>
                                 }
                                 <div class="dropdown-menu">
-                                    <form asp-action="ModifyTransaction" method="post" 
-                                        asp-route-walletId="@this.Context.GetRouteValue("walletId")">
+                                    <form asp-action="ModifyTransaction" method="post"
+                                          asp-route-walletId="@this.Context.GetRouteValue("walletId")">
                                         <input type="hidden" name="transactionId" value="@transaction.Id" />
                                         <textarea name="addcomment" class="dropdown-item" maxlength="200" rows="2" cols="20">@transaction.Comment</textarea>
                                         <div class="dropdown-item"><button type="submit" class="btn btn-primary">Save comment</button></div>
@@ -186,3 +235,70 @@
         </table>
     </div>
 </div>
+
+@section HeadScripts
+{
+    <script src="~/bundles/lightning-node-info-bundle.min.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        var srvModel = @Safe.Json(Model);
+        window.onload = function() {
+            if($("#app").length <1){
+                return;
+            }
+            Vue.use(Toasted);
+            var app = new Vue({
+                el: '#app',
+                components: {
+                    qrcode: VueQrcode
+                },
+                data: {
+                    srvModel: srvModel
+                },
+                mounted: function() {
+
+                    this.$nextTick(function() {
+                        var copyInput = new Clipboard('.copy');
+
+                        copyInput.on("success",
+                            function(e) {
+                                Vue.toasted.show('Copied',
+                                    {
+                                        iconPack: "fontawesome",
+                                        icon: "copy",
+                                        duration: 5000
+                                    });
+                            });
+                    });
+                }
+            });
+        }
+    </script>
+
+    <style>
+
+        .qr-icon {
+            height: 64px;
+            width: 64px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            margin: auto;
+        }
+
+        .qr-container {
+            position: relative;
+            text-align: center;
+        }
+
+            .qr-container svg {
+                width: 256px;
+                height: 256px;
+            }
+
+        .copy {
+            cursor: copy;
+        }
+    </style>
+}

@@ -501,7 +501,7 @@ namespace BTCPayServer.Tests
 //                s.Driver.FindElement(By.Id("AccountKeys_0__AccountKeyPath")).SendKeys("m/49'/0'/0'" + Keys.Enter);
 
                 // Check the tx sent earlier arrived
-                s.Driver.FindElement(By.Id("WalletTransactions")).ForceClick();
+                s.Driver.FindElement(By.Id("WalletGeneral")).ForceClick();
                 var walletTransactionLink = s.Driver.Url;
                 Assert.Contains(tx.ToString(), s.Driver.PageSource);
 

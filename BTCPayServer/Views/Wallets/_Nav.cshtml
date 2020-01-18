@@ -5,12 +5,11 @@
     var network = BtcPayNetworkProvider.GetNetwork<BTCPayNetwork>(wallet.CryptoCode);
 }
 <div class="nav flex-column nav-pills">
-    <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.Transactions)" asp-action="WalletTransactions" asp-route-walletId="@this.Context.GetRouteValue("walletId")" id="WalletTransactions">Transactions</a>
+    <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.General)" asp-action="WalletGeneral" asp-route-walletId="@this.Context.GetRouteValue("walletId")" id="WalletGeneral">General</a>
     @if (!network.ReadonlyWallet)
     {
         <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.Send)" asp-action="WalletSend" asp-route-walletId="@this.Context.GetRouteValue("walletId")" id="WalletSend">Send</a>
     }
-    <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.Receive)" asp-action="WalletReceive" asp-route-walletId="@this.Context.GetRouteValue("walletId")" id="WalletReceive">Receive</a>
     <a class="nav-link @ViewData.IsActivePage(WalletsNavPages.Rescan)" asp-action="WalletRescan" asp-route-walletId="@this.Context.GetRouteValue("walletId")" id="WalletRescan">Rescan</a>
     @if (!network.ReadonlyWallet)
     {

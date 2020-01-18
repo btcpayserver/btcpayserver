@@ -115,7 +115,7 @@
                                 <td style="text-align:right">
                                     @if(!string.IsNullOrWhiteSpace(scheme.Value) && scheme.WalletSupported)
                                     {
-                                        <a asp-action="WalletTransactions" asp-controller="Wallets" asp-route-walletId="@scheme.WalletId">Wallet</a><span> - </span>
+                                        <a asp-action="WalletGeneral" asp-controller="Wallets" asp-route-walletId="@scheme.WalletId">Wallet</a><span> - </span>
                                     }
                                     <a asp-action="AddDerivationScheme" asp-route-cryptoCode="@scheme.Crypto" asp-route-storeId="@this.Context.GetRouteValue("storeId")" id="@($"Modify{scheme.Crypto}")">Modify</a>
                                 </td>

@@ -8,10 +8,12 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
+using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
 using BTCPayServer.ModelBinders;
 using BTCPayServer.Models;
 using BTCPayServer.Models.WalletViewModels;
+using BTCPayServer.Payments;
 using BTCPayServer.Security;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Rates;
@@ -23,6 +25,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBitcoin.DataEncoders;
@@ -49,6 +52,8 @@ namespace BTCPayServer.Controllers
         private readonly IAuthorizationService _authorizationService;
         private readonly IFeeProviderFactory _feeRateProvider;
         private readonly BTCPayWalletProvider _walletProvider;
+        private readonly WalletReceiveStateService _WalletReceiveStateService;
+        private readonly EventAggregator _EventAggregator;
         public RateFetcher RateFetcher { get; }
 
         CurrencyNameTable _currencyTable;
@@ -63,7 +68,9 @@ namespace BTCPayServer.Controllers
                                  IAuthorizationService authorizationService,
                                  ExplorerClientProvider explorerProvider,
                                  IFeeProviderFactory feeRateProvider,
-                                 BTCPayWalletProvider walletProvider)
+                                 BTCPayWalletProvider walletProvider,
+                                 WalletReceiveStateService walletReceiveStateService,
+                                 EventAggregator eventAggregator)
         {
             _currencyTable = currencyTable;
             Repository = repo;
@@ -77,6 +84,8 @@ namespace BTCPayServer.Controllers
             ExplorerClientProvider = explorerProvider;
             _feeRateProvider = feeRateProvider;
             _walletProvider = walletProvider;
+            _WalletReceiveStateService = walletReceiveStateService;
+            _EventAggregator = eventAggregator;
         }
 
         // Borrowed from https://github.com/ManageIQ/guides/blob/master/labels.md
@@ -231,6 +240,7 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("{walletId}")]
+        [Route("{walletId}/transactions")]
         public async Task<IActionResult> WalletTransactions(
             [ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, string labelFilter = null)
@@ -292,6 +302,76 @@ namespace BTCPayServer.Controllers
         private static string GetLabelTarget(WalletId walletId, uint256 txId)
         {
             return $"{walletId}:{txId}";
+        }
+
+        [HttpGet]
+        [Route("{walletId}/receive")]
+        public IActionResult WalletReceive([ModelBinder(typeof(WalletIdModelBinder))]
+            WalletId walletId, string statusMessage = null)
+        {
+            if (walletId?.StoreId == null)
+                return NotFound();
+            DerivationSchemeSettings paymentMethod = GetDerivationSchemeSettings(walletId);
+            if (paymentMethod == null)
+                return NotFound();
+            var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId?.CryptoCode);
+            if (network == null)
+                return NotFound();
+
+            var address = _WalletReceiveStateService.Get(walletId)?.Address;
+            if (!string.IsNullOrEmpty(statusMessage))
+            {
+                TempData[WellKnownTempData.SuccessMessage] = statusMessage;
+            }
+
+            return View(new WalletReceiveViewModel()
+            {
+                CryptoCode = walletId.CryptoCode,
+                Address = address?.ToString(),
+                CryptoImage = GetImage(paymentMethod.PaymentId, network)
+            });
+        }
+
+        [HttpPost]
+        [Route("{walletId}/receive")]
+        public async Task<IActionResult> WalletReceive([ModelBinder(typeof(WalletIdModelBinder))]
+            WalletId walletId, WalletReceiveViewModel viewModel, string command)
+        {
+            if (walletId?.StoreId == null)
+                return NotFound();
+            DerivationSchemeSettings paymentMethod = GetDerivationSchemeSettings(walletId);
+            if (paymentMethod == null)
+                return NotFound();
+            var network = this.NetworkProvider.GetNetwork<BTCPayNetwork>(walletId?.CryptoCode);
+            if (network == null)
+                return NotFound();
+            var statusMessage = string.Empty;
+            var wallet = _walletProvider.GetWallet(network);
+            switch (command)
+            {
+                case "unreserve-current-address":
+                    KeyPathInformation cachedAddress = _WalletReceiveStateService.Get(walletId);
+                    if (cachedAddress == null)
+                    {
+                        break;
+                    }
+                    var address = cachedAddress.ScriptPubKey.GetDestinationAddress(network.NBitcoinNetwork);
+                    ExplorerClientProvider.GetExplorerClient(network)
+                        .CancelReservation(cachedAddress.DerivationStrategy, new[] {cachedAddress.KeyPath});
+                    statusMessage = new StatusMessageModel()
+                    {
+                        AllowDismiss =true,
+                        Message = $"Address {address} was unreserved.",
+                        Severity = StatusMessageModel.StatusSeverity.Success,
+                    }.ToString();
+                    _WalletReceiveStateService.Remove(walletId);
+                    break;
+                case "generate-new-address":
+                    var reserve = (await wallet.ReserveAddressAsync(paymentMethod.AccountDerivation));
+                    _WalletReceiveStateService.Set(walletId, reserve);
+                    break;
+            }
+            return RedirectToAction(nameof(WalletReceive), new {walletId, statusMessage});
         }
 
         [HttpGet]
@@ -957,6 +1037,23 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
         }
+        
+
+
+        private string GetImage(PaymentMethodId paymentMethodId, BTCPayNetwork network)
+        {
+            var res = paymentMethodId.PaymentType == PaymentTypes.BTCLike
+                ? Url.Content(network.CryptoImagePath)
+                : Url.Content(network.LightningImagePath);
+            return "/" + res;
+        }
+    }
+
+    public class WalletReceiveViewModel
+    {
+        public string CryptoImage { get; set; }
+        public string CryptoCode { get; set; }
+        public string Address { get; set; }
     }
 
 

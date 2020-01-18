@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
+using BTCPayServer.Events;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
@@ -267,6 +268,11 @@ namespace BTCPayServer.Controllers
                 }
 
                 await _Repo.UpdateStore(store);
+                _EventAggregator.Publish(new WalletChangedEvent()
+                {
+                    WalletId = new WalletId(storeId, cryptoCode)
+                });
+                    
                 if (willBeExcluded != wasExcluded)
                 {
                     var label = willBeExcluded ? "disabled" : "enabled";

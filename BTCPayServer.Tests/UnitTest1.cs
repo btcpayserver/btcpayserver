@@ -2715,7 +2715,9 @@ noninventoryitem:
                 }
                 // We are not showing a directly implemented exchange as directly implemented in the UI
                 // we need to modify the AvailableRateProvider
-                if (result.ExpectedName != "coinaverage")
+
+                // There are some exception we stopped supporting but don't want to break backward compat
+                if (result.ExpectedName != "coinaverage" && result.ExpectedName != "gdax")
                     Assert.Contains(result.ExpectedName, directlySupported);
             }
             // Kraken emit one request only after first GetRates

@@ -50,13 +50,20 @@ namespace BTCPayServer.HostedServices
             return fetcher.LastRequested is DateTimeOffset v &&
                    DateTimeOffset.UtcNow - v < TimeSpan.FromDays(1.0);
         }
+
+        IEnumerable<(string ExchangeName, BackgroundFetcherRateProvider Fetcher)> GetStillUsedProviders()
+        {
+            foreach (var kv in _RateProviderFactory.Providers)
+            {
+                if (kv.Value is BackgroundFetcherRateProvider fetcher && IsStillUsed(fetcher))
+                {
+                    yield return (kv.Key, fetcher);
+                }
+            }
+        }
         async Task RefreshRates()
         {
-            var usedProviders = _RateProviderFactory.Providers
-                                    .Select(p => p.Value)
-                                    .OfType<BackgroundFetcherRateProvider>()
-                                    .Where(IsStillUsed)
-                                    .ToArray();
+            var usedProviders = GetStillUsedProviders().ToArray();
             if (usedProviders.Length == 0)
             {
                 await Task.Delay(TimeSpan.FromSeconds(30), Cancellation);
@@ -68,11 +75,11 @@ namespace BTCPayServer.HostedServices
                 try
                 {
                     await Task.WhenAll(usedProviders
-                                    .Select(p => p.UpdateIfNecessary(timeout.Token).ContinueWith(t =>
+                                    .Select(p => p.Fetcher.UpdateIfNecessary(timeout.Token).ContinueWith(t =>
                                     {
                                         if (t.Result.Exception != null)
                                         {
-                                            Logs.PayServer.LogWarning($"Error while contacting {p.ExchangeName}: {t.Result.Exception.Message}");
+                                            Logs.PayServer.LogWarning($"Error while contacting exchange {p.ExchangeName}: {t.Result.Exception.Message}");
                                         }
                                     }, TaskScheduler.Default))
                                     .ToArray()).WithCancellation(timeout.Token);
@@ -113,13 +120,13 @@ namespace BTCPayServer.HostedServices
             {
                 _LastCacheDate = cache.Created;
                 var stateByExchange = cache.States.ToDictionary(o => o.ExchangeName);
-                foreach (var obj in _RateProviderFactory.Providers
-                                    .Select(p => p.Value)
-                                    .OfType<BackgroundFetcherRateProvider>()
-                                    .Select(v => (Fetcher: v, State: stateByExchange.TryGet(v.ExchangeName)))
-                                    .Where(v => v.State != null))
+                foreach (var provider in _RateProviderFactory.Providers)
                 {
-                    obj.Fetcher.LoadState(obj.State);
+                    if (stateByExchange.TryGetValue(provider.Key, out var state) &&
+                        provider.Value is BackgroundFetcherRateProvider fetcher)
+                    {
+                        fetcher.LoadState(state);
+                    }
                 }
             }
         }
@@ -130,12 +137,15 @@ namespace BTCPayServer.HostedServices
             var cache = new ExchangeRatesCache();
             cache.Created = DateTimeOffset.UtcNow;
             _LastCacheDate = cache.Created;
-            cache.States = _RateProviderFactory.Providers
-                                    .Select(p => p.Value)
-                                    .OfType<BackgroundFetcherRateProvider>()
-                                    .Where(IsStillUsed)
-                                    .Select(p => p.GetState())
-                                    .ToList();
+
+            var usedProviders = GetStillUsedProviders().ToArray();
+            cache.States = new List<BackgroundFetcherState>(usedProviders.Length);
+            foreach (var provider in usedProviders)
+            {
+                var state = provider.Fetcher.GetState();
+                state.ExchangeName = provider.ExchangeName;
+                cache.States.Add(state);
+            }
             await _SettingsRepository.UpdateSetting(cache);
         }
     }

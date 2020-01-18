@@ -64,6 +64,7 @@ namespace BTCPayServer.Services.Rates
                 return _DirectProviders;
             }
         }
+
         internal IEnumerable<AvailableRateProvider> GetDirectlySupportedExchanges()
         {
             yield return new AvailableRateProvider("binance", "Binance", "https://api.binance.com/api/v1/ticker/24hr");
@@ -106,7 +107,7 @@ namespace BTCPayServer.Services.Rates
 
             foreach (var provider in Providers.ToArray())
             {
-                var prov = new BackgroundFetcherRateProvider(provider.Key, Providers[provider.Key]);
+                var prov = new BackgroundFetcherRateProvider(Providers[provider.Key]);
                 prov.RefreshRate = TimeSpan.FromMinutes(1.0);
                 prov.ValidatyTime = TimeSpan.FromMinutes(5.0);
                 Providers[provider.Key] = prov;
@@ -118,9 +119,9 @@ namespace BTCPayServer.Services.Rates
                 {
                     var coingecko = new CoinGeckoRateProvider(_httpClientFactory)
                     {
-                        UnderlyingExchange = supportedExchange.Id
+                        UnderlyingExchange = supportedExchange.SourceId
                     };
-                    var bgFetcher = new BackgroundFetcherRateProvider(supportedExchange.Id, coingecko);
+                    var bgFetcher = new BackgroundFetcherRateProvider(coingecko);
                     bgFetcher.RefreshRate = TimeSpan.FromMinutes(1.0);
                     bgFetcher.ValidatyTime = TimeSpan.FromMinutes(5.0);
                     Providers.Add(supportedExchange.Id, bgFetcher);

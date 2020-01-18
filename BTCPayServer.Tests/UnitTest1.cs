@@ -2732,7 +2732,7 @@ noninventoryitem:
             await provider.GetRatesAsync(default);
             var state = provider.GetState();
             Assert.Single(state.Rates, r => r.Pair == new CurrencyPair("BTC", "EUR"));
-            var provider2 = new BackgroundFetcherRateProvider("kraken", provider.Inner)
+            var provider2 = new BackgroundFetcherRateProvider(provider.Inner)
             {
                 RefreshRate = provider.RefreshRate,
                 ValidatyTime = provider.ValidatyTime
@@ -2751,7 +2751,6 @@ noninventoryitem:
                 // Should not throw, as things should be cached
                 await provider2.GetRatesAsync(cts.Token);
             }
-            Assert.Equal(provider.ExchangeName, provider2.ExchangeName);
             Assert.Equal(provider.NextUpdate, provider2.NextUpdate);
             Assert.NotEqual(provider.LastRequested, provider2.LastRequested);
             Assert.Equal(provider.Expiration, provider2.Expiration);
@@ -2897,7 +2896,7 @@ noninventoryitem:
             factory.Providers.Clear();
             var fetcher = new RateFetcher(factory);
             factory.Providers.Clear();
-            var fetch = new BackgroundFetcherRateProvider("spy", spy);
+            var fetch = new BackgroundFetcherRateProvider(spy);
             fetch.DoNotAutoFetchIfExpired = true;
             factory.Providers.Add("bittrex", fetch);
             var fetchedRate = fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules, default).GetAwaiter().GetResult();

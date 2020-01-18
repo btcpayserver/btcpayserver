@@ -72,7 +72,7 @@ namespace BTCPayServer.Tests
 
         internal void AssertHappyMessage()
         {
-            using var cts = new CancellationTokenSource(10_000);
+            using var cts = new CancellationTokenSource(20_000);
             while (!cts.IsCancellationRequested)
             {
                 var success = Driver.FindElements(By.ClassName("alert-success")).Where(el => el.Displayed).Any();

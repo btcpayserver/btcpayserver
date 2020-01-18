@@ -36,12 +36,8 @@ namespace BTCPayServer.Security.APIKeys
                 case Policies.CanListStoreSettings.Key:
                     var selectiveStorePermissions =
                         APIKeyConstants.Permissions.ExtractStorePermissionsIds(context.GetPermissions());
-                    if (context.HasPermissions(APIKeyConstants.Permissions.StoreManagement) || selectiveStorePermissions.Any())
-                        success = true;
-                    else
-                    {
-                        success = false;
-                    }
+                    success = context.HasPermissions(APIKeyConstants.Permissions.StoreManagement) ||
+                              selectiveStorePermissions.Any();
                     break;
                 case Policies.CanModifyStoreSettings.Key:
                     string storeId = _HttpContext.GetImplicitStoreId();

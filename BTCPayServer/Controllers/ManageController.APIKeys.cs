@@ -5,8 +5,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
+using BTCPayServer.Security;
 using BTCPayServer.Security.APIKeys;
 using ExchangeSharp;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
@@ -292,7 +294,7 @@ namespace BTCPayServer.Controllers
         private async Task<T> SetViewModelValues<T>(T viewModel) where T : AddApiKeyViewModel
         {
             viewModel.Stores = await _StoreRepository.GetStoresByUserId(_userManager.GetUserId(User));
-            viewModel.IsServerAdmin = User.IsInRole(Roles.ServerAdmin);
+            viewModel.IsServerAdmin = (await _authorizationService.AuthorizeAsync(User, Policies.CanModifyServerSettings.Key)).Succeeded;
             return viewModel;
         }
 

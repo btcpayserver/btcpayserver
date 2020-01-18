@@ -307,7 +307,7 @@ namespace BTCPayServer.Controllers
         [HttpGet]
         [Route("{walletId}/receive")]
         public IActionResult WalletReceive([ModelBinder(typeof(WalletIdModelBinder))]
-            WalletId walletId, string statusMessage = null)
+            WalletId walletId)
         {
             if (walletId?.StoreId == null)
                 return NotFound();
@@ -319,11 +319,6 @@ namespace BTCPayServer.Controllers
                 return NotFound();
 
             var address = _WalletReceiveStateService.Get(walletId)?.Address;
-            if (!string.IsNullOrEmpty(statusMessage))
-            {
-                TempData[WellKnownTempData.SuccessMessage] = statusMessage;
-            }
-
             return View(new WalletReceiveViewModel()
             {
                 CryptoCode = walletId.CryptoCode,
@@ -345,7 +340,6 @@ namespace BTCPayServer.Controllers
             var network = this.NetworkProvider.GetNetwork<BTCPayNetwork>(walletId?.CryptoCode);
             if (network == null)
                 return NotFound();
-            var statusMessage = string.Empty;
             var wallet = _walletProvider.GetWallet(network);
             switch (command)
             {
@@ -358,12 +352,12 @@ namespace BTCPayServer.Controllers
                     var address = cachedAddress.ScriptPubKey.GetDestinationAddress(network.NBitcoinNetwork);
                     ExplorerClientProvider.GetExplorerClient(network)
                         .CancelReservation(cachedAddress.DerivationStrategy, new[] {cachedAddress.KeyPath});
-                    statusMessage = new StatusMessageModel()
+                    this.TempData.SetStatusMessageModel(new StatusMessageModel()
                     {
-                        AllowDismiss =true,
+                        AllowDismiss = true,
                         Message = $"Address {address} was unreserved.",
                         Severity = StatusMessageModel.StatusSeverity.Success,
-                    }.ToString();
+                    });
                     _WalletReceiveStateService.Remove(walletId);
                     break;
                 case "generate-new-address":
@@ -371,7 +365,7 @@ namespace BTCPayServer.Controllers
                     _WalletReceiveStateService.Set(walletId, reserve);
                     break;
             }
-            return RedirectToAction(nameof(WalletReceive), new {walletId, statusMessage});
+            return RedirectToAction(nameof(WalletReceive), new {walletId});
         }
 
         [HttpGet]

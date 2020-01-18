@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Xunit.Sdk;
 using System.Linq;
+using System.Net.Http;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace BTCPayServer.Tests
 {
@@ -103,6 +105,13 @@ namespace BTCPayServer.Tests
                     await Task.Delay(500);
                 }
             }
+        }
+
+        internal static IHttpClientFactory CreateHttpFactory()
+        {
+            var services = new ServiceCollection();
+            services.AddHttpClient();
+            return services.BuildServiceProvider().GetRequiredService<IHttpClientFactory>();
         }
     }
 }

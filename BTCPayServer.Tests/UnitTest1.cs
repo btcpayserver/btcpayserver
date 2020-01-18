@@ -2681,6 +2681,7 @@ noninventoryitem:
         public void CanQueryDirectProviders()
         {
             var factory = CreateBTCPayRateFactory();
+            var directlySupported = factory.GetSupportedExchanges().Where(s => s.Source == RateSource.Direct).Select(s => s.Id).ToHashSet();
             var all = string.Join("\r\n", factory.GetSupportedExchanges().Select(e => e.Id).ToArray());
             foreach (var result in factory
                 .Providers
@@ -2712,6 +2713,10 @@ noninventoryitem:
                                && e.BidAsk.Bid > 1.0m // 1BTC will always be more than 1USD
                                );
                 }
+                // We are not showing a directly implemented exchange as directly implemented in the UI
+                // we need to modify the AvailableRateProvider
+                if (result.ExpectedName != "coinaverage")
+                    Assert.Contains(result.ExpectedName, directlySupported);
             }
             // Kraken emit one request only after first GetRates
             factory.Providers["kraken"].GetRatesAsync(default).GetAwaiter().GetResult();
@@ -2782,7 +2787,7 @@ noninventoryitem:
 
         public static RateProviderFactory CreateBTCPayRateFactory()
         {
-            return new RateProviderFactory(new MockHttpClientFactory());
+            return new RateProviderFactory(TestUtils.CreateHttpFactory());
         }
 
         class SpyRateProvider : IRateProvider

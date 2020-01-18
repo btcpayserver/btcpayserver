@@ -21,7 +21,7 @@ namespace BTCPayServer.Tests
 {
     public class AuthenticationTests
     {
-        public const string TestApiPath = "{TestApiPath}/openid";
+        public const string TestApiPath = "api/test/openid";
         public const int TestTimeout = TestUtils.TestTimeout;
         public AuthenticationTests(ITestOutputHelper helper)
         {

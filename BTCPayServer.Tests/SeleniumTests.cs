@@ -550,9 +550,6 @@ namespace BTCPayServer.Tests
                 }
                 
                 SignWith(mnemonic);
-                var accountKey = root.Derive(new KeyPath("m/84'/1'/0'")).GetWif(Network.RegTest).ToString();
-                SignWith(accountKey);
-                
                 
                 s.Driver.FindElement(By.Id("Wallets")).Click();
                 s.Driver.FindElement(By.LinkText("Manage")).Click();

@@ -22,13 +22,28 @@ namespace BTCPayServer.Migrations
                         .HasColumnType("TEXT")
                         .HasMaxLength(50);
 
+                    b.Property<string>("ApplicationIdentifier")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Permissions")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("StoreId")
+                        .HasColumnType("TEXT")
+                        .HasMaxLength(50);
+
+                    b.Property<int>("Type")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("UserId")
                         .HasColumnType("TEXT")
                         .HasMaxLength(50);
 
                     b.HasKey("Id");
 
                     b.HasIndex("StoreId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("ApiKeys");
                 });
@@ -841,6 +856,11 @@ namespace BTCPayServer.Migrations
                     b.HasOne("BTCPayServer.Data.StoreData", "StoreData")
                         .WithMany("APIKeys")
                         .HasForeignKey("StoreId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("BTCPayServer.Data.ApplicationUser", "User")
+                        .WithMany("APIKeys")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 

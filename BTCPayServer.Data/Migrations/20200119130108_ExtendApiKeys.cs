@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace BTCPayServer.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20200110064617_OpenIddictUpdate")]
+    [Migration("20200119130108_ExtendApiKeys")]
     public partial class ExtendApiKeys : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)

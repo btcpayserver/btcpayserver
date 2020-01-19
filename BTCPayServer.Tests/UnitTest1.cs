@@ -2889,6 +2889,18 @@ noninventoryitem:
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Fast", "Fast")]
+        public async Task CanCreateSqlitedb()
+        {
+            if (File.Exists("temp.db"))
+                File.Delete("temp.db");
+            // This test sqlite can migrate
+            var builder = new DbContextOptionsBuilder<ApplicationDbContext>();
+            builder.UseSqlite("Data Source=temp.db");
+            await new ApplicationDbContext(builder.Options).Database.MigrateAsync();
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Fast", "Fast")]
         public void CheckRatesProvider()
         {
             var spy = new SpyRateProvider();

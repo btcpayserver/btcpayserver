@@ -31,7 +31,8 @@ namespace BTCPayServer.Data
 
         public void SetPermissions(IEnumerable<string> permissions)
         {
-            Permissions = string.Join(';', permissions ?? new string[0]);
+            Permissions = string.Join(';',
+                permissions?.Select(s => s.Replace(";", string.Empty)) ?? new string[0]);
         }
     }
 

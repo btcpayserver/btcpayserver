@@ -55,6 +55,7 @@ namespace BTCPayServer.Controllers
         private readonly BTCPayWalletProvider _walletProvider;
         private readonly WalletReceiveStateService _WalletReceiveStateService;
         private readonly EventAggregator _EventAggregator;
+        private readonly SettingsRepository _settingsRepository;
         public RateFetcher RateFetcher { get; }
 
         CurrencyNameTable _currencyTable;
@@ -71,7 +72,8 @@ namespace BTCPayServer.Controllers
                                  IFeeProviderFactory feeRateProvider,
                                  BTCPayWalletProvider walletProvider,
                                  WalletReceiveStateService walletReceiveStateService,
-                                 EventAggregator eventAggregator)
+                                 EventAggregator eventAggregator,
+                                 SettingsRepository settingsRepository)
         {
             _currencyTable = currencyTable;
             Repository = repo;
@@ -87,6 +89,7 @@ namespace BTCPayServer.Controllers
             _walletProvider = walletProvider;
             _WalletReceiveStateService = walletReceiveStateService;
             _EventAggregator = eventAggregator;
+            _settingsRepository = settingsRepository;
         }
 
         // Borrowed from https://github.com/ManageIQ/guides/blob/master/labels.md
@@ -369,6 +372,15 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(WalletReceive), new {walletId});
         }
 
+        private async Task<bool> CanUseHotWallet()
+        {
+            var isAdmin = (await _authorizationService.AuthorizeAsync(User, Policies.CanModifyServerSettings.Key)).Succeeded;
+            if (isAdmin)
+                return true;
+            var policies = await _settingsRepository.GetSettingAsync<PoliciesSettings>();
+            return policies?.AllowHotWalletForAll is true;
+        }
+        
         [HttpGet]
         [Route("{walletId}/send")]
         public async Task<IActionResult> WalletSend(
@@ -406,7 +418,7 @@ namespace BTCPayServer.Controllers
             var feeProvider = _feeRateProvider.CreateFeeProvider(network);
             var recommendedFees = feeProvider.GetFeeRateAsync();
             var balance = _walletProvider.GetWallet(network).GetBalance(paymentMethod.AccountDerivation);
-            model.NBXSeedAvailable = !string.IsNullOrEmpty(await ExplorerClientProvider.GetExplorerClient(network)
+            model.NBXSeedAvailable = await CanUseHotWallet() && !string.IsNullOrEmpty(await ExplorerClientProvider.GetExplorerClient(network)
                 .GetMetadataAsync<string>(GetDerivationSchemeSettings(walletId).AccountDerivation,
                     WellknownMetadataKeys.Mnemonic));
             model.CurrentBalance = await balance;

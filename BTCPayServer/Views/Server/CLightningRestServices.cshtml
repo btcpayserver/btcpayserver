@@ -1,0 +1,165 @@
+﻿@model LndServicesViewModel
+@{
+    ViewData.SetActivePageAndTitle(ServerNavPages.Services);
+}
+
+<h4>C-Lightning @Model.ConnectionType</h4>
+<partial name="_StatusMessage" />
+<div class="row">
+    <div class="col-md-6">
+        <div asp-validation-summary="All" class="text-danger"></div>
+    </div>
+</div>
+
+<div class="row">
+
+    <div class="col-md-8">
+        <div class="form-group">
+            <p>
+                <span>BTCPay exposes Clightning-Rest's service for outside consumption, you will find connection information here.<br /></span>
+            </p>
+        </div>
+
+        <div class="form-group">
+            <h5>Compatible wallets</h5>
+        </div>
+
+            <div class="row">
+                <div class="col-lg-3 ml-auto text-center">
+                    <a href="https://github.com/ZeusLN/zeus" target="_blank">
+                        <img src="~/img/zeus.jpg" height="100" />
+                    </a>
+                    <p><a href="https://github.com/ZeusLN/zeus" target="_blank">Zeus</a></p>
+                </div>
+                <div class="col-lg-3 mr-auto text-center">
+
+                </div>
+                <div class="col-lg-3 mr-auto text-center">
+
+                </div>
+                <div class="col-lg-3 mr-auto text-center">
+
+                </div>
+            </div>
+        
+        <div class="form-group">
+            <h5>QR Code connection</h5>
+            <p>
+                <span>You can use this QR Code to connect external software to your C-Lightning instance.<br /></span>
+                <span>This QR Code is only valid for 10 minutes</span>
+            </p>
+        </div>
+        <div class="form-group">
+            @if (Model.QRCode == null)
+            {
+                <div class="form-group">
+                    <form method="post">
+                        <button type="submit" class="btn btn-primary">Show QR Code</button>
+                    </form>
+                </div>
+            }
+            else
+            {
+                <div class="form-group">
+                    <div id="qrCode"></div>
+                    <div id="qrCodeData" data-url="@Model.QRCode"></div>
+                </div>
+                <p>See QR Code information by clicking <a href="#detailsQR" data-toggle="collapse">here</a></p>
+                <div id="detailsQR" class="collapse">
+                    <div class="form-group">
+                        <label>QR Code data</label>
+                        <input asp-for="QRCode" readonly class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        Click <a href="@Model.QRCodeLink" target="_blank">here</a> to open the configuration file.
+                    </div>
+                </div>
+            }
+
+            <div class="form-group">
+                <h5>More details...</h5>
+                <p>Alternatively, you can see the settings by clicking <a href="#details" data-toggle="collapse">here</a></p>
+            </div>
+            <div id="details" class="collapse">
+                @if (Model.Uri == null)
+                {
+                    <div class="form-group">
+                        <label asp-for="Host"></label>
+                        <input asp-for="Host" readonly class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="SSL"></label>
+                        <input asp-for="SSL" disabled type="checkbox" class="form-check-inline" />
+                    </div>
+                }
+                else
+                {
+                    <div class="form-group">
+                        <label asp-for="Uri"></label>
+                        <input asp-for="Uri" readonly class="form-control" />
+                    </div>
+                }
+                @if (Model.Macaroon != null)
+                {
+                    <div class="form-group">
+                        <label asp-for="Macaroon"></label>
+                        <input asp-for="Macaroon" readonly class="form-control" />
+                    </div>
+                }
+                @if (Model.AdminMacaroon != null)
+                {
+                    <div class="form-group">
+                        <label asp-for="AdminMacaroon"></label>
+                        <input asp-for="AdminMacaroon" readonly class="form-control" />
+                    </div>
+                }
+                @if (Model.InvoiceMacaroon != null)
+                {
+                    <div class="form-group">
+                        <label asp-for="InvoiceMacaroon"></label>
+                        <input asp-for="InvoiceMacaroon" readonly class="form-control" />
+                    </div>
+                }
+                @if (Model.ReadonlyMacaroon != null)
+                {
+                    <div class="form-group">
+                        <label asp-for="ReadonlyMacaroon"></label>
+                        <input asp-for="ReadonlyMacaroon" readonly class="form-control" />
+                    </div>
+                }
+                @if (Model.GRPCSSLCipherSuites != null)
+                {
+                    <div class="form-group">
+                        <label asp-for="GRPCSSLCipherSuites"></label>
+                        <input asp-for="GRPCSSLCipherSuites" readonly class="form-control" />
+                    </div>
+                }
+                @if (Model.CertificateThumbprint != null)
+                {
+                    <div class="form-group">
+                        <label asp-for="CertificateThumbprint"></label>
+                        <input asp-for="CertificateThumbprint" readonly class="form-control" />
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+
+    @if(Model.QRCode != null)
+    {
+        <script type="text/javascript" src="~/js/qrcode.js"></script>
+        <script type="text/javascript">
+        new QRCode(document.getElementById("qrCode"),
+            {
+                text: @Safe.Json(Model.QRCode),
+                width: 200,
+                height: 200,
+                useSVG: true
+            });
+        </script>
+    }
+}

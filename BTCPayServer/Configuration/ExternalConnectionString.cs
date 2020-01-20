@@ -47,7 +47,7 @@ namespace BTCPayServer.Configuration
             }
             connectionString.Server = serviceUri;
 
-            if (serviceType == ExternalServiceTypes.LNDGRPC || serviceType == ExternalServiceTypes.LNDRest)
+            if (serviceType == ExternalServiceTypes.LNDGRPC || serviceType == ExternalServiceTypes.LNDRest || serviceType == ExternalServiceTypes.CLightningRest)
             {
                 // Read the MacaroonDirectory
                 if (connectionString.MacaroonDirectoryPath != null)

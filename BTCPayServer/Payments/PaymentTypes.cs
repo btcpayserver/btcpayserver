@@ -66,6 +66,11 @@ namespace BTCPayServer.Payments
         public abstract ISupportedPaymentMethod DeserializeSupportedPaymentMethod(BTCPayNetworkBase network, JToken value);
 
         public abstract string GetTransactionLink(BTCPayNetworkBase network, string txId);
+
+        public virtual int GetDivisibility(BTCPayNetworkBase network)
+        {
+            return network.Divisibility;
+        }
         public abstract string InvoiceViewPaymentPartialName { get; }
     }
 }

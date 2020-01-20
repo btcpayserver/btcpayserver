@@ -422,9 +422,9 @@ namespace BTCPayServer.Services.Invoices
                 cryptoInfo.Rate = info.Rate;
                 cryptoInfo.Price = subtotalPrice.ToString();
 
-                cryptoInfo.Due = accounting.Due.ToString();
+                cryptoInfo.Due = accounting.Due.ToString(false, true);
                 cryptoInfo.Paid = accounting.Paid.ToString();
-                cryptoInfo.TotalDue = accounting.TotalDue.ToString();
+                cryptoInfo.TotalDue = accounting.TotalDue.ToString(false, true);
                 cryptoInfo.NetworkFee = accounting.NetworkFee.ToString();
                 cryptoInfo.TxCount = accounting.TxCount;
                 cryptoInfo.CryptoPaid = accounting.CryptoPaid.ToString();
@@ -847,7 +847,7 @@ namespace BTCPayServer.Services.Invoices
             var paid = 0m;
             var cryptoPaid = 0.0m;
 
-            int precision = 8;
+            int precision = this.GetId().PaymentType.GetDivisibility(Network);
             var totalDueNoNetworkCost = Money.Coins(Extensions.RoundUp(totalDue, precision));
             bool paidEnough = paid >= Extensions.RoundUp(totalDue, precision);
             int txRequired = 0;
@@ -857,8 +857,8 @@ namespace BTCPayServer.Services.Invoices
                 .OrderBy(p => p.ReceivedTime)
                 .Select(_ =>
                 {
-                    var txFee = _.GetValue(paymentMethods, GetId(), _.NetworkFee);
-                    paid += _.GetValue(paymentMethods, GetId());
+                    var txFee = _.GetValue(paymentMethods, GetId(), _.NetworkFee, precision);
+                    paid += _.GetValue(paymentMethods, GetId(), null,  precision);
                     if (!paidEnough)
                     {
                         totalDue += txFee;
@@ -991,18 +991,18 @@ namespace BTCPayServer.Services.Invoices
 #pragma warning restore CS0618
             return this;
         }
-        internal decimal GetValue(PaymentMethodDictionary paymentMethods, PaymentMethodId paymentMethodId, decimal? value = null)
+        internal decimal GetValue(PaymentMethodDictionary paymentMethods, PaymentMethodId paymentMethodId, decimal? value, int precision)
         {
             
             value = value ?? this.GetCryptoPaymentData().GetValue();
             var to = paymentMethodId;
             var from = this.GetPaymentMethodId();
             if (to == from)
-                return decimal.Round(value.Value, 8);
+                return decimal.Round(value.Value, precision);
             var fromRate = paymentMethods[from].Rate;
             var toRate = paymentMethods[to].Rate;
 
-            var fiatValue = fromRate * decimal.Round(value.Value, 8);
+            var fiatValue = fromRate * decimal.Round(value.Value, precision);
             var otherCurrencyValue = toRate == 0 ? 0.0m : fiatValue / toRate;
             return otherCurrencyValue;
         }

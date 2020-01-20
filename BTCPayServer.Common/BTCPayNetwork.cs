@@ -124,7 +124,7 @@ namespace BTCPayServer
         public string CryptoCode { get; internal set; }
         public string BlockExplorerLink { get; internal set; }
         public string DisplayName { get; set; }
-
+        public virtual int Divisibility { get; set; } = 8;
         [Obsolete("Should not be needed")]
         public bool IsBTC
         {

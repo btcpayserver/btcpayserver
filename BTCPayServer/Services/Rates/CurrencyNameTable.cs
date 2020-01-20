@@ -96,7 +96,7 @@ namespace BTCPayServer.Services.Rates
 
                     foreach (var network in new BTCPayNetworkProvider(NetworkType.Mainnet).GetAll())
                     {
-                        AddCurrency(_CurrencyProviders, network.CryptoCode, 8, network.CryptoCode);
+                        AddCurrency(_CurrencyProviders, network.CryptoCode, network.Divisibility, network.CryptoCode);
                     }
                 }
                 return _CurrencyProviders.TryGet(currency.ToUpperInvariant());
@@ -180,7 +180,7 @@ namespace BTCPayServer.Services.Rates
                 if (!dico.TryAdd(network.CryptoCode, new CurrencyData()
                 {
                     Code = network.CryptoCode,
-                    Divisibility = 8,
+                    Divisibility = network.Divisibility,
                     Name = network.CryptoCode,
                     Crypto = true
                 }))

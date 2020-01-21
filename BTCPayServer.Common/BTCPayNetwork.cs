@@ -113,9 +113,9 @@ namespace BTCPayServer
             });
         }
 
-        public virtual string GenerateBIP21(string cryptoInfoAddress, string cryptoInfoDue)
+        public virtual string GenerateBIP21(string cryptoInfoAddress, Money cryptoInfoDue)
         {
-            return $"{UriScheme}:{cryptoInfoAddress}?amount={cryptoInfoDue}";
+            return $"{UriScheme}:{cryptoInfoAddress}?amount={cryptoInfoDue.ToString(false, true)}";
         }
     }
 
@@ -124,7 +124,7 @@ namespace BTCPayServer
         public string CryptoCode { get; internal set; }
         public string BlockExplorerLink { get; internal set; }
         public string DisplayName { get; set; }
-
+        public int Divisibility { get; set; } = 8;
         [Obsolete("Should not be needed")]
         public bool IsBTC
         {

@@ -47,7 +47,7 @@ namespace BTCPayServer.Payments.Lightning
             var storeBlob = store.GetStoreBlob();
             var test = GetNodeInfo(paymentMethod.PreferOnion, supportedPaymentMethod, (BTCPayNetwork)network);
             var invoice = paymentMethod.ParentEntity;
-            var due = Extensions.RoundUp(invoice.ProductInformation.Price / paymentMethod.Rate, 8);
+            var due = Extensions.RoundUp(invoice.ProductInformation.Price / paymentMethod.Rate, network.Divisibility);
             var client = _lightningClientFactory.Create(supportedPaymentMethod.GetLightningUrl(), (BTCPayNetwork)network);
             var expiry = invoice.ExpirationTime - DateTimeOffset.UtcNow;
             if (expiry < TimeSpan.Zero)

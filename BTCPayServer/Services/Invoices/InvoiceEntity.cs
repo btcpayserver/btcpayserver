@@ -420,14 +420,14 @@ namespace BTCPayServer.Services.Invoices
                 cryptoInfo.CryptoCode = cryptoCode;
                 cryptoInfo.PaymentType = info.GetId().PaymentType.ToString();
                 cryptoInfo.Rate = info.Rate;
-                cryptoInfo.Price = subtotalPrice.ToString(false, true);
+                cryptoInfo.Price = subtotalPrice.ToString();
 
-                cryptoInfo.Due = accounting.Due.ToString(false, true);
-                cryptoInfo.Paid = accounting.Paid.ToString(false, true);
-                cryptoInfo.TotalDue = accounting.TotalDue.ToString(false, true);
+                cryptoInfo.Due = accounting.Due.ToString();
+                cryptoInfo.Paid = accounting.Paid.ToString();
+                cryptoInfo.TotalDue = accounting.TotalDue.ToString();
                 cryptoInfo.NetworkFee = accounting.NetworkFee.ToString();
                 cryptoInfo.TxCount = accounting.TxCount;
-                cryptoInfo.CryptoPaid = accounting.CryptoPaid.ToString(false, true);
+                cryptoInfo.CryptoPaid = accounting.CryptoPaid.ToString();
 
                 cryptoInfo.Address = address;
 

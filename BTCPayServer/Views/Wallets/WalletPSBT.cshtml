@@ -30,6 +30,7 @@
             <div class="form-group">
                 <form method="post" asp-action="WalletPSBT">
                     <input type="hidden" asp-for="CryptoCode" />
+                    <input type="hidden" asp-for="NBXSeedAvailable" />
                     <input type="hidden" asp-for="PSBT" />
                     <input type="hidden" asp-for="FileName" />
                     <div class="dropdown d-inline-block" style="margin-top:16px;">
@@ -42,6 +43,10 @@
                             <button name="command" type="submit" class="dropdown-item" value="save-psbt">... a wallet supporting PSBT (save as file)</button>
                             @if (Model.CryptoCode == "BTC") {
                                 <button name="command" type="submit" class="dropdown-item" value="vault">... the vault (preview)</button>
+                            }
+                            @if (Model.NBXSeedAvailable)
+                            {
+                                <button name="command" type="submit" class="dropdown-item" value="nbx-seed">... the seed saved in NBXplorer</button>
                             }
                         </div>
                     </div>

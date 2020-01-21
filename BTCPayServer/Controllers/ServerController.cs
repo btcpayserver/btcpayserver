@@ -528,10 +528,12 @@ namespace BTCPayServer.Controllers
             return null;
         }
 
-        [Route("server/services/{serviceName}/{cryptoCode}")]
+
+        
+        [Route("server/services/{serviceName}/{cryptoCode?}")]
         public async Task<IActionResult> Service(string serviceName, string cryptoCode, bool showQR = false, uint? nonce = null)
         {
-            if (!_dashBoard.IsFullySynched(cryptoCode, out _))
+            if (!string.IsNullOrEmpty(cryptoCode) && !_dashBoard.IsFullySynched(cryptoCode, out _))
             {
                 TempData[WellKnownTempData.ErrorMessage] = $"{cryptoCode} is not fully synched";
                 return RedirectToAction(nameof(Services));
@@ -542,6 +544,7 @@ namespace BTCPayServer.Controllers
 
             try
             {
+                
                 if (service.Type == ExternalServiceTypes.P2P)
                 {
                     return View("P2PService", new LightningWalletServices()
@@ -595,6 +598,14 @@ namespace BTCPayServer.Controllers
                     case ExternalServiceTypes.LNDGRPC:
                     case ExternalServiceTypes.LNDRest:
                         return LndServices(service, connectionString, nonce);
+                    case ExternalServiceTypes.Configurator:
+                        return View("ConfiguratorService",
+                            new LightningWalletServices()
+                            {
+                                ShowQR = showQR,
+                                WalletName = service.ServiceName,
+                                ServiceLink = $"{connectionString.Server}?password={connectionString.AccessKey}"
+                            });
                     default:
                         throw new NotSupportedException(service.Type.ToString());
                 }

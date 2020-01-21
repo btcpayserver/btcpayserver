@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Controllers;
@@ -77,7 +78,7 @@ namespace BTCPayServer.Configuration
                 }
             }
 
-            if (serviceType == ExternalServiceTypes.Charge || serviceType == ExternalServiceTypes.RTL || serviceType == ExternalServiceTypes.Spark)
+            if (new []{ExternalServiceTypes.Charge, ExternalServiceTypes.RTL,  ExternalServiceTypes.Spark, ExternalServiceTypes.Configurator}.Contains(serviceType))
             {
                 // Read access key from cookie file
                 if (connectionString.CookieFilePath != null)

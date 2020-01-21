@@ -10,6 +10,7 @@ namespace BTCPayServer
             {
                 CryptoCode = "XMR",
                 DisplayName = "Monero",
+                Divisibility = 12,
                 BlockExplorerLink =
                     NetworkType == NetworkType.Mainnet
                         ? "https://www.exploremonero.com/transaction/{0}"

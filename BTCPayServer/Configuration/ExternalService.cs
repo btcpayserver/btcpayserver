@@ -105,7 +105,7 @@ namespace BTCPayServer.Configuration
         Charge,
         P2P,
         RPC,
-        Configurator
+        Configurator,
         CLightningRest
     }
 }

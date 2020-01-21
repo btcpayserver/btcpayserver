@@ -580,7 +580,7 @@ namespace BTCPayServer.Controllers
                       PSBT = psbt.PSBT.ToBase64()
                   });
                 case "ledger":
-                    return ViewWalletSendLedger(psbt.PSBT, psbt.ChangeAddress);
+                    return ViewWalletSendLedger(walletId, psbt.PSBT, psbt.ChangeAddress);
                 case "seed":
                     return SignWithSeed(walletId, psbt.PSBT.ToBase64());
                 case "analyze-psbt":
@@ -641,14 +641,14 @@ namespace BTCPayServer.Controllers
             return null;
         }
 
-        private ViewResult ViewWalletSendLedger(PSBT psbt, BitcoinAddress hintChange = null)
+        private ViewResult ViewWalletSendLedger(WalletId walletId, PSBT psbt, BitcoinAddress hintChange = null)
         {
             SetAmbientPSBT(psbt);
             return View("WalletSendLedger", new WalletSendLedgerModel()
             {
                 PSBT = psbt.ToBase64(),
                 HintChange = hintChange?.ToString(),
-                WebsocketPath = this.Url.Action(nameof(LedgerConnection))
+                WebsocketPath = this.Url.Action(nameof(LedgerConnection), new { walletId = walletId.ToString() })
             });
         }
       

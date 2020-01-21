@@ -97,7 +97,7 @@ namespace BTCPayServer.Controllers
                 case "vault":
                     return ViewVault(walletId, psbt);
                 case "ledger":
-                    return ViewWalletSendLedger(psbt);
+                    return ViewWalletSendLedger(walletId, psbt);
                 case "update":
                     var derivationSchemeSettings = GetDerivationSchemeSettings(walletId);
                     psbt = await UpdatePSBT(derivationSchemeSettings, psbt, network);

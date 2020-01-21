@@ -69,7 +69,7 @@ namespace BTCPayServer.Payments
 
         public virtual int GetDivisibility(BTCPayNetworkBase network)
         {
-            return network.Divisibility;
+            return network?.Divisibility ?? 8;
         }
         public abstract string InvoiceViewPaymentPartialName { get; }
     }

@@ -95,7 +95,7 @@ namespace BTCPayServer.Configuration
                     {
                         throw new System.IO.FileNotFoundException("Cookie file path not found", ex);
                     }
-                    if (serviceType == ExternalServiceTypes.RTL)
+                    if (serviceType == ExternalServiceTypes.RTL || serviceType == ExternalServiceTypes.Configurator)
                     {
                         connectionString.AccessKey = cookieFileContent;
                     }

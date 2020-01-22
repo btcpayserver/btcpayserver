@@ -47,7 +47,7 @@ namespace BTCPayServer.Configuration
         public void LoadNonCryptoServices(IConfiguration configuration)
         {
             Load(configuration, null, "configurator", ExternalServiceTypes.Configurator, "Invalid setting {0}, " + Environment.NewLine +
-                                                                                   $"configurator: 'passwordfile=/etc/configurator/password'" + Environment.NewLine +
+                                                                                   $"configurator: 'cookiefilepathfile=/etc/configurator/cookie'" + Environment.NewLine +
                                                                                    "Error: {1}",
                 "Configurator");
         }

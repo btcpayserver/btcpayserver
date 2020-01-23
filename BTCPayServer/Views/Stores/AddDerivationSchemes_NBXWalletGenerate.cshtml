@@ -20,7 +20,9 @@
                     <label asp-for="ExistingMnemonic">Existing Seed</label>
                     <input type="text" asp-for="ExistingMnemonic" class="form-control" />
                     <span asp-validation-for="ExistingMnemonic" class="text-danger"></span>
-                    <p class="text-black-50">You can choose to import an existing mnemonic seed phrase. If you leave blank, we will generate one for you.</p>
+                    <small class="form-text text-muted">
+                        You can choose to import an existing mnemonic seed phrase. If you leave blank, we will generate one for you.
+                    </small>
                 </div>
                 <div class="form-group">
                     <label asp-for="Passphrase">Passphrase (optional)</label>
@@ -56,14 +58,17 @@
                     <input type="checkbox" class="form-check-inline" asp-for="SavePrivateKeys" />
                     <label asp-for="SavePrivateKeys">Is hot wallet</label>
                     <span asp-validation-for="SavePrivateKeys" class="text-danger"></span>
-                    <p class="text-danger">If checked, each private key associated with an address generated will be stored as metadata in NBXplorer. While convenient, this means that anyone with access to your server will have access to your private keys and will be able to steal your funds.</p>
-
+                    <small class="form-text text-danger">
+                        If checked, each private key associated with an address generated will be stored as metadata in NBXplorer. While convenient, this means that anyone with access to your server will have access to your private keys and will be able to steal your funds.
+                    </small>
                 </div>
                 <div class="form-group">
                     <input type="checkbox" class="form-check-inline" asp-for="ImportKeysToRPC" />
                     <label asp-for="ImportKeysToRPC">Import keys to RPC</label>
                     <span asp-validation-for="ImportKeysToRPC" class="text-danger"></span>
-                    <p class="text-black-50">If checked, each address generated will be imported into the node wallet so that you can view your balance through your node. When this is enabled alongside <code>Is hot wallet</code>, you're also able to use the node wallet to spend (this works pretty well in conjunction with apps such as FullyNoded).</p>
+                     <small class="form-text text-muted">
+                        If checked, each address generated will be imported into the node wallet so that you can view your balance through your node. When this is enabled alongside <code>Is hot wallet</code>, you're also able to use the node wallet to spend (this works pretty well in conjunction with apps such as FullyNoded).
+                    </small>
                 </div>
             </div>
             <div class="modal-footer">

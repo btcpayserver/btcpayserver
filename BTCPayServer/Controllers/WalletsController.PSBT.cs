@@ -111,15 +111,19 @@ namespace BTCPayServer.Controllers
                 case "seed":
                     return SignWithSeed(walletId, psbt.ToBase64());
                 case "nbx-seed":
-                    var derivationScheme = GetDerivationSchemeSettings(walletId);
-                    var extKey = await ExplorerClientProvider.GetExplorerClient(network)
-                        .GetMetadataAsync<string>(derivationScheme.AccountDerivation, WellknownMetadataKeys.MasterHDKey);
-
-                    return await SignWithSeed(walletId, new SignWithSeedViewModel()
+                    if (await CanUseHotWallet())
                     {
-                        SeedOrKey = extKey,
-                        PSBT = psbt.ToBase64()
-                    });
+                        var derivationScheme = GetDerivationSchemeSettings(walletId);
+                                            var extKey = await ExplorerClientProvider.GetExplorerClient(network)
+                                                .GetMetadataAsync<string>(derivationScheme.AccountDerivation, WellknownMetadataKeys.MasterHDKey);
+                        
+                                            return await SignWithSeed(walletId, new SignWithSeedViewModel()
+                                            {
+                                                SeedOrKey = extKey,
+                                                PSBT = psbt.ToBase64()
+                                            });
+                    }
+                    return View(vm);
                 case "broadcast":
                 {
                     return await WalletPSBTReady(walletId, psbt.ToBase64());

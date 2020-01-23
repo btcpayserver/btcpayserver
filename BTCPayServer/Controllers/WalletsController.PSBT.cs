@@ -114,15 +114,14 @@ namespace BTCPayServer.Controllers
                     if (await CanUseHotWallet())
                     {
                         var derivationScheme = GetDerivationSchemeSettings(walletId);
-                                            var extKey = await ExplorerClientProvider.GetExplorerClient(network)
-                                                .GetMetadataAsync<string>(derivationScheme.AccountDerivation, WellknownMetadataKeys.MasterHDKey);
-                        
-                                            return await SignWithSeed(walletId, new SignWithSeedViewModel()
-                                            {
-                                                SeedOrKey = extKey,
-                                                PSBT = psbt.ToBase64()
-                                            });
+                        var extKey = await ExplorerClientProvider.GetExplorerClient(network)
+                            .GetMetadataAsync<string>(derivationScheme.AccountDerivation,
+                                WellknownMetadataKeys.MasterHDKey);
+
+                        return await SignWithSeed(walletId,
+                            new SignWithSeedViewModel() {SeedOrKey = extKey, PSBT = psbt.ToBase64()});
                     }
+
                     return View(vm);
                 case "broadcast":
                 {

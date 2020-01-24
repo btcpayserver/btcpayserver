@@ -157,26 +157,16 @@ namespace BTCPayServer.Controllers
             app.TagAllInvoices = vm.UseAllStoreInvoices;
             app.SetSettings(newSettings);
 
-            if (command == "save")
-            {
-                await _AppService.UpdateOrCreateApp(app);
+            await _AppService.UpdateOrCreateApp(app);
 
-                _EventAggregator.Publish(new AppUpdated()
-                {
-                    AppId = appId,
-                    StoreId = app.StoreDataId,
-                    Settings = newSettings
-                });
-                TempData[WellKnownTempData.SuccessMessage] = "App updated";
-                return RedirectToAction(nameof(UpdateCrowdfund), new { appId });
-            }
-            // TODO: Check with Kukks if we can remove this tricky logic of redirecting to viewapp
-            // I've already switched do button directly linking to AppPublic ViewCrowdfund action
-            else if (command == "viewapp")
+            _EventAggregator.Publish(new AppUpdated()
             {
-                return RedirectToAction(nameof(AppsPublicController.ViewCrowdfund), "AppsPublic", new { appId });
-            }
-            return NotFound();
+                AppId = appId,
+                StoreId = app.StoreDataId,
+                Settings = newSettings
+            });
+            TempData[WellKnownTempData.SuccessMessage] = "App updated";
+            return RedirectToAction(nameof(UpdateCrowdfund), new { appId });
         }
     }
 }

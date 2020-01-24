@@ -145,7 +145,7 @@
                     </div>
                     <input type="hidden" asp-for="NotificationEmailWarning" />
                     <div class="form-group">
-                        <input type="submit" class="btn btn-primary" value="Save Settings" id="SaveSettings" />
+                        <button type="submit" class="btn btn-primary" id="SaveSettings">Save Settings</button>
                         <div class="btn-group">
                             <a class="btn btn-outline-primary" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
                             <a class="btn btn-outline-primary" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm"

@@ -224,7 +224,7 @@
                         @if (Model.ModelWithMinimumData)
                         {
                             <div class="btn-group">
-                                <a class="btn btn-outline-primary" asp-action="ViewCrowdfund" asp-controller="AppsPublic" asp-route-appId="@Model.AppId">View App</a>
+                                <a class="btn btn-outline-primary" asp-action="ViewCrowdfund" asp-controller="AppsPublic" asp-route-appId="@Model.AppId" id="ViewApp">View App</a>
                                 <a class="btn btn-outline-primary" asp-action="ViewCrowdfund" asp-controller="AppsPublic" asp-route-appId="@Model.AppId"
                                    target="viewapp_@Model.AppId"><span class="fa fa-external-link"></span></a>
                             </div>

@@ -216,12 +216,20 @@
                     <input type="hidden" asp-for="NotificationEmailWarning" />
                     <div class="form-group">
                         <button name="command" type="submit" class="btn btn-primary" value="save" id="SaveSettings">Save settings</button>
-                        <a class="btn btn-secondary" target="_blank" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
-                        @if ((Model.Description != null) && (Model.Title != null) && (Model.TargetCurrency != null))
+                        <div class="btn-group">
+                            <a class="btn btn-outline-primary" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
+                            <a class="btn btn-outline-primary" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm"
+                               target="viewinvoices_@Model.AppId"><span class="fa fa-external-link"></span></a>
+                        </div>
+                        @if (Model.ModelWithMinimumData)
                         {
-                        <button name="command" type="submit" value="viewapp" class="btn btn-secondary" id="ViewApp">View App</button>
+                            <div class="btn-group">
+                                <a class="btn btn-outline-primary" asp-action="ViewCrowdfund" asp-controller="AppsPublic" asp-route-appId="@Model.AppId">View App</a>
+                                <a class="btn btn-outline-primary" asp-action="ViewCrowdfund" asp-controller="AppsPublic" asp-route-appId="@Model.AppId"
+                                   target="viewapp_@Model.AppId"><span class="fa fa-external-link"></span></a>
+                            </div>
                         }
-                        <a class="btn btn-secondary" target="_blank" asp-action="ListApps">Back to the app list</a>
+                        <a class="btn btn-outline-primary" target="_blank" asp-action="ListApps">Back to the app list</a>
                     </div>
                 </form>
             </div>

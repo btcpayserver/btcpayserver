@@ -170,6 +170,8 @@ namespace BTCPayServer.Controllers
                 TempData[WellKnownTempData.SuccessMessage] = "App updated";
                 return RedirectToAction(nameof(UpdateCrowdfund), new { appId });
             }
+            // TODO: Check with Kukks if we can remove this tricky logic of redirecting to viewapp
+            // I've already switched do button directly linking to AppPublic ViewCrowdfund action
             else if (command == "viewapp")
             {
                 return RedirectToAction(nameof(AppsPublicController.ViewCrowdfund), "AppsPublic", new { appId });

@@ -215,13 +215,21 @@
                     </div>
                     <input type="hidden" asp-for="NotificationEmailWarning" />
                     <div class="form-group">
-                        <button name="command" type="submit" class="btn btn-primary" value="save" id="SaveSettings">Save settings</button>
-                        <a class="btn btn-secondary" target="_blank" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
-                        @if ((Model.Description != null) && (Model.Title != null) && (Model.TargetCurrency != null))
+                        <button type="submit" class="btn btn-primary" id="SaveSettings">Save Settings</button>
+                        <div class="btn-group">
+                            <a class="btn btn-outline-primary" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
+                            <a class="btn btn-outline-primary" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm"
+                               target="viewinvoices_@Model.AppId"><span class="fa fa-external-link"></span></a>
+                        </div>
+                        @if (Model.ModelWithMinimumData)
                         {
-                        <button name="command" type="submit" value="viewapp" class="btn btn-secondary" id="ViewApp">View App</button>
+                            <div class="btn-group">
+                                <a class="btn btn-outline-primary" asp-action="ViewCrowdfund" asp-controller="AppsPublic" asp-route-appId="@Model.AppId" id="ViewApp">View App</a>
+                                <a class="btn btn-outline-primary" asp-action="ViewCrowdfund" asp-controller="AppsPublic" asp-route-appId="@Model.AppId"
+                                   target="viewapp_@Model.AppId"><span class="fa fa-external-link"></span></a>
+                            </div>
                         }
-                        <a class="btn btn-secondary" target="_blank" asp-action="ListApps">Back to the app list</a>
+                        <a class="btn btn-outline-primary" target="_blank" asp-action="ListApps">Back to the app list</a>
                     </div>
                 </form>
             </div>
@@ -255,13 +263,12 @@
                 </div>
                 <div class="col-sm-3">
                     <label>Price</label>*
-                    <input
-                        class="js-product-price form-control mb-2"
-                        inputmode="numeric"
-                        pattern="\d*"
-                        step="any"
-                        type="number"
-                        value="{price}" />
+                    <input class="js-product-price form-control mb-2"
+                           inputmode="numeric"
+                           pattern="\d*"
+                           step="any"
+                           type="number"
+                           value="{price}" />
                 </div>
                 <div class="col-sm-3">
                     <label>Custom price</label>
@@ -285,7 +292,7 @@
             <div class="form-row">
                 <div class="col">
                     <label>Inventory (leave blank to not use inventory feature)</label>
-                    <input type="number" step="1" class="js-product-inventory form-control mb-2" value="{inventory}"/>
+                    <input type="number" step="1" class="js-product-inventory form-control mb-2" value="{inventory}" />
                 </div>
             </div>
         </div>

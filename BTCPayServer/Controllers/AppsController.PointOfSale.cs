@@ -79,9 +79,9 @@ namespace BTCPayServer.Controllers
 
 
             public string CustomCSSLink { get; set; }
-            
+
             public string EmbeddedCSS { get; set; }
-            
+
             public string Description { get; set; }
             public string NotificationEmail { get; set; }
             public string NotificationUrl { get; set; }
@@ -96,7 +96,7 @@ namespace BTCPayServer.Controllers
             if (app == null)
                 return NotFound();
             var settings = app.GetSettings<PointOfSaleSettings>();
-          
+
             var vm = new UpdatePointOfSaleViewModel()
             {
                 NotificationEmailWarning = !await IsEmailConfigured(app.StoreDataId),
@@ -119,7 +119,7 @@ namespace BTCPayServer.Controllers
                 NotificationEmail = settings.NotificationEmail,
                 NotificationUrl = settings.NotificationUrl,
                 SearchTerm = $"storeid:{app.StoreDataId}",
-                RedirectAutomatically = settings.RedirectAutomatically.HasValue? settings.RedirectAutomatically.Value? "true": "false" : "" 
+                RedirectAutomatically = settings.RedirectAutomatically.HasValue ? settings.RedirectAutomatically.Value ? "true" : "false" : ""
             };
             if (HttpContext?.Request != null)
             {
@@ -197,8 +197,8 @@ namespace BTCPayServer.Controllers
                 NotificationEmail = vm.NotificationEmail,
                 Description = vm.Description,
                 EmbeddedCSS = vm.EmbeddedCSS,
-                RedirectAutomatically = string.IsNullOrEmpty(vm.RedirectAutomatically)? (bool?) null: bool.Parse(vm.RedirectAutomatically)
-                
+                RedirectAutomatically = string.IsNullOrEmpty(vm.RedirectAutomatically) ? (bool?)null : bool.Parse(vm.RedirectAutomatically)
+
             });
             await _AppService.UpdateOrCreateApp(app);
             TempData[WellKnownTempData.SuccessMessage] = "App updated";
@@ -211,8 +211,8 @@ namespace BTCPayServer.Controllers
             if (string.IsNullOrEmpty(list))
             {
                 return Array.Empty<int>();
-            } 
-            else 
+            }
+            else
             {
                 // Remove all characters except numeric and comma
                 Regex charsToDestroy = new Regex(@"[^\d|\" + separator + "]");

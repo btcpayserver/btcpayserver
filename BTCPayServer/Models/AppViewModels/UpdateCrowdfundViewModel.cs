@@ -10,16 +10,20 @@ namespace BTCPayServer.Models.AppViewModels
     public class UpdateCrowdfundViewModel
     {
         public string StoreId { get; set; }
-        [Required] [MaxLength(30)] public string Title { get; set; }
+        [Required]
+        [MaxLength(30)]
+        public string Title { get; set; }
 
-        [MaxLength(50)] public string Tagline { get; set; }
+        [MaxLength(50)]
+        public string Tagline { get; set; }
 
-        [Required] public string Description { get; set; }
-        
+        [Required]
+        public string Description { get; set; }
+
         [Display(Name = "Featured Image")]
         public string MainImageUrl { get; set; }
-        
-        [Display(Name = "Callback Notification Url")] 
+
+        [Display(Name = "Callback Notification Url")]
         [Uri]
         public string NotificationUrl { get; set; }
         [Display(Name = "Invoice IPN Notification")]
@@ -59,7 +63,8 @@ namespace BTCPayServer.Models.AppViewModels
 
         public IEnumerable<string> ResetEveryValues = Enum.GetNames(typeof(CrowdfundResetEvery));
 
-        [Display(Name = "Reset goal every")] public string ResetEvery { get; set; } = nameof(CrowdfundResetEvery.Never);
+        [Display(Name = "Reset goal every")]
+        public string ResetEvery { get; set; } = nameof(CrowdfundResetEvery.Never);
 
         public int ResetEveryAmount { get; set; } = 1;
 
@@ -78,7 +83,7 @@ namespace BTCPayServer.Models.AppViewModels
         public string EmbeddedCSS { get; set; }
 
         [Display(Name = "Count all invoices created on the store as part of the crowdfunding goal")]
-        public bool UseAllStoreInvoices { get; set; } 
+        public bool UseAllStoreInvoices { get; set; }
 
         public string AppId { get; set; }
         public string SearchTerm { get; set; }
@@ -90,10 +95,18 @@ namespace BTCPayServer.Models.AppViewModels
 
 
         [Display(Name = "Sounds to play when a payment is made. One sound per line")]
-        public string Sounds{ get; set; }
+        public string Sounds { get; set; }
         [Display(Name = "Colors to rotate between with animation when a payment is made. First color is the default background. One color per line. Can be any valid css color value.")]
-        public string AnimationColors{ get; set; }
+        public string AnimationColors { get; set; }
 
         public bool NotificationEmailWarning { get; set; }
+
+
+        // NOTE: Improve validation if needed
+        public bool ModelWithMinimumData
+        {
+            get { return Description != null && Title != null && TargetCurrency != null; }
+        }
+
     }
 }

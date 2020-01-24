@@ -22,8 +22,8 @@ namespace BTCPayServer.Controllers
                 return String.Empty;
             }
         }
-        
-        
+
+
         [HttpGet]
         [Route("{appId}/settings/crowdfund")]
         public async Task<IActionResult> UpdateCrowdfund(string appId)
@@ -61,8 +61,8 @@ namespace BTCPayServer.Controllers
                 SearchTerm = app.TagAllInvoices ? $"storeid:{app.StoreDataId}" : $"orderid:{AppService.GetCrowdfundOrderId(appId)}",
                 DisplayPerksRanking = settings.DisplayPerksRanking,
                 SortPerksByPopularity = settings.SortPerksByPopularity,
-                Sounds                = string.Join(Environment.NewLine, settings.Sounds),
-                AnimationColors                = string.Join(Environment.NewLine, settings.AnimationColors)
+                Sounds = string.Join(Environment.NewLine, settings.Sounds),
+                AnimationColors = string.Join(Environment.NewLine, settings.AnimationColors)
             };
             return View(vm);
         }
@@ -70,9 +70,9 @@ namespace BTCPayServer.Controllers
         [Route("{appId}/settings/crowdfund")]
         public async Task<IActionResult> UpdateCrowdfund(string appId, UpdateCrowdfundViewModel vm, string command)
         {
-            if (!string.IsNullOrEmpty( vm.TargetCurrency) && _currencies.GetCurrencyData(vm.TargetCurrency, false) == null)
+            if (!string.IsNullOrEmpty(vm.TargetCurrency) && _currencies.GetCurrencyData(vm.TargetCurrency, false) == null)
                 ModelState.AddModelError(nameof(vm.TargetCurrency), "Invalid currency");
-          
+
             try
             {
                 _AppService.Parse(vm.PerksTemplate, vm.TargetCurrency).ToString();
@@ -98,14 +98,14 @@ namespace BTCPayServer.Controllers
             }
 
             var parsedSounds = vm.Sounds.Split(
-                new[] {"\r\n", "\r", "\n"},
+                new[] { "\r\n", "\r", "\n" },
                 StringSplitOptions.None
             ).Select(s => s.Trim()).ToArray();
             if (vm.SoundsEnabled && !parsedSounds.Any())
             {
                 ModelState.AddModelError(nameof(vm.Sounds), "You must have at least one sound if you enable sounds");
             }
-            
+
             var parsedAnimationColors = vm.AnimationColors.Split(
                 new[] { "\r\n", "\r", "\n" },
                 StringSplitOptions.None
@@ -114,13 +114,13 @@ namespace BTCPayServer.Controllers
             {
                 ModelState.AddModelError(nameof(vm.AnimationColors), "You must have at least one animation color if you enable animations");
             }
-            
+
             if (!ModelState.IsValid)
             {
                 return View(vm);
             }
-            
-            
+
+
             var app = await GetOwnedApp(appId, AppType.Crowdfund);
             if (app == null)
                 return NotFound();
@@ -157,24 +157,16 @@ namespace BTCPayServer.Controllers
             app.TagAllInvoices = vm.UseAllStoreInvoices;
             app.SetSettings(newSettings);
 
-            if (command == "save")
-            {
-                await _AppService.UpdateOrCreateApp(app);
+            await _AppService.UpdateOrCreateApp(app);
 
-                _EventAggregator.Publish(new AppUpdated()
-                {
-                    AppId = appId,
-                    StoreId = app.StoreDataId,
-                    Settings = newSettings
-                });
-                TempData[WellKnownTempData.SuccessMessage] = "App updated";
-                return RedirectToAction(nameof(UpdateCrowdfund), new { appId });
-            }
-            else if (command == "viewapp")
+            _EventAggregator.Publish(new AppUpdated()
             {
-                return RedirectToAction(nameof(AppsPublicController.ViewCrowdfund), "AppsPublic", new { appId });
-            }
-            return NotFound();
+                AppId = appId,
+                StoreId = app.StoreDataId,
+                Settings = newSettings
+            });
+            TempData[WellKnownTempData.SuccessMessage] = "App updated";
+            return RedirectToAction(nameof(UpdateCrowdfund), new { appId });
         }
     }
 }

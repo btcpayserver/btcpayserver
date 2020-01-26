@@ -14,7 +14,7 @@
             <p>
                 Your node is synching the entire blockchain and validating the consensus rules...
             </p>
-            @foreach (var line in dashboard.GetAll())
+            @foreach (var line in dashboard.GetAll().Where(summary => summary.Network.ShowSyncSummary))
             {
                 <h4>@line.Network.CryptoCode</h4>
                 @if (line.Status == null)

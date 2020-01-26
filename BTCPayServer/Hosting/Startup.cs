@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Hosting;
 using OpenIddict.Validation.AspNetCore;
 using OpenIddict.Abstractions;
@@ -49,6 +50,9 @@ namespace BTCPayServer.Hosting
             Logs.Configure(LoggerFactory);
             services.ConfigureBTCPayServer(Configuration);
             services.AddMemoryCache();
+            services.AddDataProtection()
+                .SetApplicationName("BTCPay Server")
+                .PersistKeysToFileSystem(GetDataDir());
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
@@ -138,6 +142,11 @@ namespace BTCPayServer.Hosting
                     });
                 });
             }
+        }
+
+        private DirectoryInfo GetDataDir()
+        {
+            return new DirectoryInfo(Configuration.GetDataDir(DefaultConfiguration.GetNetworkType(Configuration)));
         }
 
         private void ConfigureOpenIddict(IServiceCollection services)

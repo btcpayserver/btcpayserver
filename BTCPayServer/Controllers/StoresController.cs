@@ -499,13 +499,16 @@ namespace BTCPayServer.Controllers
                     case BitcoinPaymentType _:
                         var strategy = derivationByCryptoCode.TryGet(paymentMethodId.CryptoCode);
                         var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
+                        var value = strategy?.ToPrettyString() ?? string.Empty;
+                        
                         vm.DerivationSchemes.Add(new StoreViewModel.DerivationScheme()
                         {
                             Crypto = paymentMethodId.CryptoCode,
                             WalletSupported = network.WalletSupported,
-                            Value = strategy?.ToPrettyString() ?? string.Empty,
+                            Value = value,
                             WalletId = new WalletId(store.Id, paymentMethodId.CryptoCode),
-                            Enabled = !excludeFilters.Match(paymentMethodId) && strategy != null
+                            Enabled = !excludeFilters.Match(paymentMethodId) && strategy != null,
+                            Collapsed = network is ElementsBTCPayNetwork elementsBTCPayNetwork && elementsBTCPayNetwork.NetworkCryptoCode != elementsBTCPayNetwork.CryptoCode && string.IsNullOrEmpty(value)
                         });
                         break;
                     case LightningPaymentType _:

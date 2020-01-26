@@ -14,6 +14,7 @@ namespace BTCPayServer.Models.StoreViewModels
             public WalletId WalletId { get; set; }
             public bool WalletSupported { get; set; }
             public bool Enabled { get; set; }
+            public bool Collapsed { get; set; }
         }
         
         public class AdditionalPaymentMethod

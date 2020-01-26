@@ -97,9 +97,9 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach(var scheme in Model.DerivationSchemes)
+                        @foreach(var scheme in Model.DerivationSchemes.OrderBy(scheme => scheme.Collapsed))
                         {
-                            <tr>
+                            <tr class="@(@scheme.Collapsed? "collapsed": "")">
                                 <td>@scheme.Crypto</td>
                                 <td class="smMaxWidth text-truncate">@scheme.Value</td>
                                 <td style="text-align:center;">
@@ -121,6 +121,13 @@
                                 </td>
                             </tr>
                         }
+                    
+                    @if (Model.DerivationSchemes.Any(scheme => scheme.Collapsed))
+                    {
+                        <tr class="only-for-js">
+                            <td colspan="4"><button class="btn btn-link" id="toggle-assets" type="button">Show additional assets</button></td>
+                        </tr>
+                    }
                     </tbody>
                 </table>
             </div>
@@ -250,4 +257,14 @@
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
+
+    <script>
+    $(document).ready(function(){
+       $(".collapsed").hide(); 
+       $("#toggle-assets").click(function() {
+         $(".collapsed").show(); 
+         $(this).parents("tr").hide();
+       });
+    });
+    </script>
 }

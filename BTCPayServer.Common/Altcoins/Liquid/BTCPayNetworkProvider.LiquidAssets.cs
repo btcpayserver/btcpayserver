@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using NBitcoin;
-using NBXplorer;
+﻿using NBitcoin;
 
 namespace BTCPayServer
 {
@@ -16,6 +11,7 @@ namespace BTCPayServer
             {
                 CryptoCode = "USDt",
                 NetworkCryptoCode = "LBTC",
+                ShowSyncSummary = false,
                 DefaultRateRules = new[]
                 {
                     "USDT_UST = 1",
@@ -37,6 +33,7 @@ namespace BTCPayServer
             {
                 CryptoCode = "ETB",
                 NetworkCryptoCode = "LBTC",
+                ShowSyncSummary = false,
                 DefaultRateRules = new[]
                 {
                     

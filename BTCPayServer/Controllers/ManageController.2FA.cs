@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
-using BTCPayServer.Models;
 using BTCPayServer.Models.ManageViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -17,6 +16,7 @@ namespace BTCPayServer.Controllers
         private const string AuthenicatorUriFormat = "otpauth://totp/{0}:{1}?secret={2}&issuer={0}&digits=6";
 
         [HttpGet]
+        [Route("two-factor-authentication")]
         public async Task<IActionResult> TwoFactorAuthentication()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -36,6 +36,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
+        [Route("disable-2fa-warning")]
         public async Task<IActionResult> Disable2faWarning()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -75,6 +76,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
+        [Route("enable-authenticator")]
         public async Task<IActionResult> EnableAuthenticator()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -90,6 +92,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost]
+        [Route("enable-authenticator")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EnableAuthenticator(EnableAuthenticatorViewModel model)
         {
@@ -127,6 +130,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
+        [Route("reset-authenticator-warning")]
         public IActionResult ResetAuthenticatorWarning()
         {
             return View(nameof(ResetAuthenticator));
@@ -150,6 +154,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
+        [Route("generate-recovery-codes")]
         public IActionResult GenerateRecoveryCodes()
         {
             var recoveryCodes = (string[])TempData[RecoveryCodesKey];
@@ -163,6 +168,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
+        [Route("generate-recovery-codes-warning")]
         public async Task<IActionResult> GenerateRecoveryCodesWarning()
         {
             var user = await _userManager.GetUserAsync(User);

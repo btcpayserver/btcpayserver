@@ -1,4 +1,3 @@
-using System;
 using System.Threading.Tasks;
 using BTCPayServer.Models;
 using BTCPayServer.U2F.Models;
@@ -10,6 +9,7 @@ namespace BTCPayServer.Controllers
     public partial class ManageController
     {
         [HttpGet]
+        [Route("u2f-authentication")]
         public async Task<IActionResult> U2FAuthentication()
         {
             return View(new U2FAuthenticationViewModel()
@@ -19,6 +19,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
+        [Route("remove-u2f-device")]
         public async Task<IActionResult> RemoveU2FDevice(string id)
         {
             await _u2FService.RemoveDevice(id, _userManager.GetUserId(User));
@@ -29,6 +30,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
+        [Route("add-u2f-device")]
         public IActionResult AddU2FDevice(string name)
         {
             if (!_btcPayServerEnvironment.IsSecure)
@@ -54,6 +56,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost]
+        [Route("add-u2f-device")]
         public async Task<IActionResult> AddU2FDevice(AddU2FDeviceViewModel viewModel)
         {
             var errorMessage = string.Empty;

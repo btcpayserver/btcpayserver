@@ -1,21 +1,16 @@
 ﻿using System;
-using System.Linq;
-using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using BTCPayServer.Models;
 using BTCPayServer.Models.ManageViewModels;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Hosting;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Services.Mails;
-using System.Globalization;
 using BTCPayServer.Security;
 using BTCPayServer.U2F;
 using BTCPayServer.Data;
@@ -25,7 +20,7 @@ using BTCPayServer.Security.APIKeys;
 namespace BTCPayServer.Controllers
 {
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    [Route("[controller]/[action]")]
+    [Route("manage")]
     public partial class ManageController : Controller
     {
         private readonly UserManager<ApplicationUser> _userManager;
@@ -71,6 +66,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
+        [Route("")]
         public async Task<IActionResult> Index()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -90,6 +86,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost]
+        [Route("")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Index(IndexViewModel model)
         {
@@ -141,6 +138,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost]
+        [Route("send-verification-email")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SendVerificationEmail(IndexViewModel model)
         {
@@ -164,6 +162,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
+        [Route("change-password")]
         public async Task<IActionResult> ChangePassword()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -183,6 +182,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost]
+        [Route("change-password")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
         {
@@ -212,6 +212,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
+        [Route("set-password")]
         public async Task<IActionResult> SetPassword()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -232,6 +233,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost]
+        [Route("set-password")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SetPassword(SetPasswordViewModel model)
         {

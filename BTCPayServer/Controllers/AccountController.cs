@@ -1,15 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using BTCPayServer.Models;
 using BTCPayServer.Models.AccountViewModels;
 using BTCPayServer.Services;
@@ -20,7 +15,6 @@ using BTCPayServer.Security;
 using System.Globalization;
 using BTCPayServer.U2F;
 using BTCPayServer.U2F.Models;
-using Newtonsoft.Json;
 using NicolasDorier.RateLimits;
 using BTCPayServer.Data;
 using U2F.Core.Exceptions;
@@ -28,7 +22,7 @@ using U2F.Core.Exceptions;
 namespace BTCPayServer.Controllers
 {
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    [Route("[controller]/[action]")]
+    [Route("account")]
     public class AccountController : Controller
     {
         private readonly UserManager<ApplicationUser> _userManager;
@@ -72,10 +66,10 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
+        [Route("login")]
         [AllowAnonymous]
         public async Task<IActionResult> Login(string returnUrl = null)
-        {
-            
+        {   
             if (User.Identity.IsAuthenticated && string.IsNullOrEmpty(returnUrl))
                 return RedirectToLocal();
             // Clear the existing external cookie to ensure a clean login process
@@ -92,6 +86,7 @@ namespace BTCPayServer.Controllers
 
 
         [HttpPost]
+        [Route("login")]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
         [RateLimitsFilter(ZoneLimits.Login, Scope = RateLimitsScope.RemoteAddress)]
@@ -255,6 +250,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
+        [Route("login-with-2fa")]
         [AllowAnonymous]
         public async Task<IActionResult> LoginWith2fa(bool rememberMe, string returnUrl = null)
         {
@@ -281,6 +277,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost]
+        [Route("login-with-2fa")]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> LoginWith2fa(LoginWith2faViewModel model, bool rememberMe, string returnUrl = null)
@@ -328,6 +325,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
+        [Route("login-with-recovery-code")]
         [AllowAnonymous]
         public async Task<IActionResult> LoginWithRecoveryCode(string returnUrl = null)
         {
@@ -349,6 +347,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost]
+        [Route("login-with-recovery-code")]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> LoginWithRecoveryCode(LoginWithRecoveryCodeViewModel model, string returnUrl = null)
@@ -392,6 +391,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
+        [Route("lockout")]
         [AllowAnonymous]
         public IActionResult Lockout()
         {
@@ -399,6 +399,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
+        [Route("register")]
         [AllowAnonymous]
         public async Task<IActionResult> Register(string returnUrl = null, bool logon = true, bool useBasicLayout = false)
         {
@@ -417,6 +418,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost]
+        [Route("register")]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel model, string returnUrl = null, bool logon = true)
@@ -488,6 +490,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
+        [Route("logout")]
         public async Task<IActionResult> Logout()
         {
             await _signInManager.SignOutAsync();
@@ -496,6 +499,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
+        [Route("confirm-email")]
         [AllowAnonymous]
         public async Task<IActionResult> ConfirmEmail(string userId, string code)
         {
@@ -513,6 +517,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
+        [Route("forgot-password")]
         [AllowAnonymous]
         public IActionResult ForgotPassword()
         {
@@ -548,6 +553,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
+        [Route("forgot-password-confirmation")]
         [AllowAnonymous]
         public IActionResult ForgotPasswordConfirmation()
         {
@@ -555,6 +561,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
+        [Route("reset-password")]
         [AllowAnonymous]
         public IActionResult ResetPassword(string code = null)
         {
@@ -567,6 +574,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost]
+        [Route("reset-password")]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
@@ -591,6 +599,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
+        [Route("reset-password-confirmation")]
         [AllowAnonymous]
         public IActionResult ResetPasswordConfirmation()
         {
@@ -599,6 +608,7 @@ namespace BTCPayServer.Controllers
 
 
         [HttpGet]
+        [Route("access-denied")]
         public IActionResult AccessDenied()
         {
             return View();

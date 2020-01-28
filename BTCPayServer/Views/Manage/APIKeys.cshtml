@@ -18,14 +18,16 @@
     {
         <tr>
             <td>@keyData.Id</td>
-            <td>@if (string.IsNullOrEmpty(keyData.Permissions))
+            <td>
+                @if (string.IsNullOrEmpty(keyData.Permissions))
                 {
                     <span>No permissions</span>
                 }
                 else
                 {
                     <span>@string.Join(", ", keyData.GetPermissions())</span>
-                }</td>
+                }
+            </td>
             <td class="text-right">
                 <a asp-action="RemoveAPIKey" asp-route-id="@keyData.Id">Remove</a>
             </td>

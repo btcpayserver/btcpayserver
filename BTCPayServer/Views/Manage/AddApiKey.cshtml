@@ -4,6 +4,16 @@
 
 @{
     ViewData.SetActivePageAndTitle(ManageNavPages.APIKeys, "Add API Key");
+
+    string GetDescription(string permission)
+    {
+        return APIKeyConstants.Permissions.PermissionDescriptions[permission].Description;
+    }
+
+    string GetTitle(string permission)
+    {
+        return APIKeyConstants.Permissions.PermissionDescriptions[permission].Description;
+    }
 }
 
 <h4>@ViewData["Title"]</h4>
@@ -21,19 +31,19 @@
             {
                 <div class="list-group-item form-group">
                     <input asp-for="ServerManagementPermission" class="form-check-inline"/>
-                    <label asp-for="ServerManagementPermission" class="h5">@APIKeyConstants.Permissions.PermissionDescriptions[APIKeyConstants.Permissions.ServerManagement].Title</label>
+                    <label asp-for="ServerManagementPermission" class="h5">@GetTitle(APIKeyConstants.Permissions.ServerManagement)</label>
                     <span asp-validation-for="ServerManagementPermission" class="text-danger"></span>
-                    <p>@APIKeyConstants.Permissions.PermissionDescriptions[APIKeyConstants.Permissions.ServerManagement].Description.</p>
+                    <p>@GetDescription(APIKeyConstants.Permissions.ServerManagement).</p>
                 </div>
             }
             @if (Model.StoreMode == ManageController.AddApiKeyViewModel.ApiKeyStoreMode.AllStores)
             {
                 <div class="list-group-item form-group">
-                    @Html.CheckBoxFor(model => model.StoreManagementPermission, new Dictionary<string,string>(){ {"class", "form-check-inline"}} )
-                 
-                    <label asp-for="StoreManagementPermission" class="h5">@APIKeyConstants.Permissions.PermissionDescriptions[APIKeyConstants.Permissions.StoreManagement].Title</label>
+                    @Html.CheckBoxFor(model => model.StoreManagementPermission, new Dictionary<string, string>() {{"class", "form-check-inline"}})
+
+                    <label asp-for="StoreManagementPermission" class="h5">@GetTitle(APIKeyConstants.Permissions.StoreManagement)</label>
                     <span asp-validation-for="StoreManagementPermission" class="text-danger"></span>
-                    <p class="mb-0">@APIKeyConstants.Permissions.PermissionDescriptions[APIKeyConstants.Permissions.StoreManagement].Description.</p>
+                    <p class="mb-0">@GetDescription(APIKeyConstants.Permissions.StoreManagement).</p>
                     <button type="submit" class="btn btn-link" name="command" value="change-store-mode">Give permission to specific stores instead</button>
                 </div>
             }
@@ -41,8 +51,8 @@
             {
                 <div class="list-group-item p-0 border-0 mb-2">
                     <li class="list-group-item ">
-                        <h5 class="mb-1">@APIKeyConstants.Permissions.PermissionDescriptions[APIKeyConstants.Permissions.StoreManagement + ":"].Title</h5>
-                        <p class="mb-0">@APIKeyConstants.Permissions.PermissionDescriptions[APIKeyConstants.Permissions.StoreManagement + ":"].Description.</p>
+                        <h5 class="mb-1">@GetTitle(APIKeyConstants.Permissions.StoreManagement + ":")</h5>
+                        <p class="mb-0">@GetDescription(APIKeyConstants.Permissions.StoreManagement + ":").</p>
                         <button type="submit" class="btn btn-link" name="command" value="change-store-mode">Give permission to all stores instead</button>
                     </li>
                     @if (!Model.Stores.Any())

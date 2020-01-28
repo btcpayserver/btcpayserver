@@ -12,6 +12,6 @@ namespace BTCPayServer.Security
         public const string Cookie = "Identity.Application";
         public const string Bitpay = "Bitpay";
         public const string OpenId = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
-        public const string ApiKey = "ApiKey";
+        public const string ApiKey = "GreenfieldApiKey";
     }
 }

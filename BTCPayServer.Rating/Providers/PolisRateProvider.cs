@@ -17,10 +17,10 @@ namespace BTCPayServer.Services.Rates
 
         public async Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
         {
-            var response = await _httpClient.GetAsync("https://obol.polispay.com/complex/btc/polis", cancellationToken);
+            var response = await _httpClient.GetAsync("https://obol.polispay.com/complex/polis/btc", cancellationToken);
             var jobj = await response.Content.ReadAsAsync<JObject>(cancellationToken);
             var value = jobj["data"].Value<decimal>();
-            return new[] { new PairRate(new CurrencyPair("POLIS", "BTC"), new BidAsk(value)) };
+            return new[] { new PairRate(new CurrencyPair("BTC", "POLIS"), new BidAsk(value)) };
         }
     }
 }

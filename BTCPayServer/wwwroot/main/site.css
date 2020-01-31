@@ -2,6 +2,7 @@
 html {
     position: relative;
     min-height: 100%;
+    font-size: var(--btcpay-font-size-base);
 }
 
 .logo {

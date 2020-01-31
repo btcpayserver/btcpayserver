@@ -66,10 +66,6 @@
 }
 
 /* Bootstrap modifications */
-html {
-  font-size: var(--btcpay-font-size-base);
-}
-
 .bg-dark {
   background-color: var(--btcpay-bg-dark) !important;
 }

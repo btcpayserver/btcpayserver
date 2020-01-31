@@ -69,10 +69,6 @@
 }
 
 /* Bootstrap modifications */
-html {
-  font-size: var(--btcpay-font-size-base);
-}
-
 body {
   background: linear-gradient(var(--btcpay-header-bg), var(--btcpay-footer-bg));
   background-attachment: fixed;

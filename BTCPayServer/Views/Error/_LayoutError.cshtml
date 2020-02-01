@@ -10,12 +10,12 @@
     <link href="~/main/fonts/Montserrat.css" rel="stylesheet">
     <style>
         .content-wrapper {
-            padding: 70px 0;
+            padding: 20px 0;
         }
 
         @@media screen and (min-width: 768px) {
             .content-wrapper {
-                padding: 100px 0;
+                padding: 20px 0;
             }
         }
 
@@ -88,41 +88,31 @@
     </style>
 </head>
 <body>
-    <section class="content-wrapper">
-        <!-- Dummy navbar-brand, hackish way to keep test AssertNoError passing -->
-        <div class="navbar-brand" style="display:none;"></div>
-        <div class="container">
-            <div class="row">
-                <div class="col-12 col-head">
-                    <a asp-controller="Home" asp-action="Index"><img src="~/img/btcpay-logo.svg" alt="BTCPay Server" class="head-logo" /></a>
-                    <h1 class="lead-title text-uppercase">Welcome to your BTCPay Server</h1>
+    <center>
+        <section class="content-wrapper">
+            <!-- Dummy navbar-brand, hackish way to keep test AssertNoError passing -->
+            <div class="navbar-brand" style="display:none;"></div>
+            <div class="container">
+                <div class="row">
+                    <div class="col-12 col-head" style="justify-content:center;">
+                        <a asp-controller="Home" asp-action="Index"><img src="~/img/btcpay-logo.svg" alt="BTCPay Server" class="head-logo" /></a>
+                        <h1 class="lead-title text-uppercase">@ViewData["ErrorTitle"]</h1>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <hr class="primary ml-0" style="margin:20px auto;" />
+                        @RenderBody()
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <hr class="primary ml-0" style="margin:20px auto;" />
+                        @await Html.PartialAsync("_BTCPaySupporters")
+                    </div>
                 </div>
             </div>
-            <div class="row">
-                <div class="col-md-7 order-md-1 order-2">
-                    <hr class="primary ml-0" style="margin:30px auto;">
-                    <p class="lead-login" style="margin-bottom:69px;">BTCPay Server is a self-hosted, open-source cryptocurrency payment processor. It is secure, private, censorship-resistant and free.</p>
-                    @await Html.PartialAsync("_BTCPaySupporters")
-                </div>
-                <div class="col-md-5 order-md-2 order-1">
-                    @RenderBody()
-
-                    @if (env.OnionUrl != null)
-                    {
-                        <div class="input-group form-group">
-                            <div class="input-group-prepend">
-                                <a href="@env.OnionUrl" class="input-group-text">
-                                    <span class="input-group-addon"></span>
-                                    <img src="~/img/icons/Onion_Color.svg" height="16" />
-                                </a>
-                            </div>
-                            <input class="form-control" onClick="this.select();" type="text" style="font-size:0.75em;" value="@env.OnionUrl" readonly>
-                        </div>
-                    }
-                </div>
-            </div>
-        </div>
-    </section>
-    @await Html.PartialAsync("_ValidationScriptsPartial")
+        </section>
+    </center>
 </body>
 </html>

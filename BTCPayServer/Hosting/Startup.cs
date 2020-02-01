@@ -241,6 +241,10 @@ namespace BTCPayServer.Hosting
             forwardingOptions.KnownProxies.Clear();
             forwardingOptions.ForwardedHeaders = ForwardedHeaders.All;
             app.UseForwardedHeaders(forwardingOptions);
+
+
+            app.UseStatusCodePagesWithReExecute("/Error/Handle", "?statusCode={0}");
+
             app.UsePayServer();
             app.UseRouting();
             app.UseCors();
@@ -252,7 +256,6 @@ namespace BTCPayServer.Hosting
             app.UseSession();
 
             app.UseWebSockets();
-            app.UseStatusCodePages();
 
             app.UseEndpoints(endpoints =>
             {

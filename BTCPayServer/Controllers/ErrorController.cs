@@ -12,6 +12,14 @@ namespace BTCPayServer.Controllers
     {
         public IActionResult Handle(int? statusCode = null)
         {
+            if (statusCode.HasValue)
+            {
+                if (statusCode.Value == 404)
+                {
+                    var viewName = statusCode.ToString();
+                    return View(viewName);
+                }
+            }
             return View(statusCode);
         }
     }

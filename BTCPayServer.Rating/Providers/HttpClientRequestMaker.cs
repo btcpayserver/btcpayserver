@@ -196,9 +196,12 @@ namespace BTCPayServer.Services.Rates
                     throw new APIException(text);
                 }
                 api.ProcessResponse(new InternalHttpWebResponse(webHttpResponse));
-                if (RequestStateChanged != null)
+                // local reference to handle delegate becoming null, extended discussion here:
+                // https://github.com/btcpayserver/btcpayserver/commit/00747906849f093712c3907c99404c55b3defa66#r37022103
+                var requestStateChanged = RequestStateChanged;
+                if (requestStateChanged != null)
                 {
-                    RequestStateChanged(this, RequestMakerState.Finished, text);
+                    requestStateChanged(this, RequestMakerState.Finished, text);
                     return text;
                 }
                 return text;

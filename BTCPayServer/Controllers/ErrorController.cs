@@ -14,7 +14,7 @@ namespace BTCPayServer.Controllers
         {
             if (statusCode.HasValue)
             {
-                var specialPages = new[] { 404, 500 };
+                var specialPages = new[] { 404, 429, 500 };
                 if (specialPages.Any(a => a == statusCode.Value))
                 {
                     var viewName = statusCode.ToString();

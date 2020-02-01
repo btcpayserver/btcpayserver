@@ -202,7 +202,7 @@ namespace BTCPayServer.Tests
 
         internal void AssertNotFound()
         {
-            Assert.Contains("Status Code: 404; Not Found", Driver.PageSource);
+            Assert.Contains("404 - Page not found</h1>", Driver.PageSource);
         }
 
         public void GoToHome()

@@ -522,6 +522,39 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Integration", "Integration")]
+        public async Task CanThrowBitpay404Error()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                await tester.StartAsync();
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                user.RegisterDerivationScheme("BTC");
+
+                var invoice = user.BitPay.CreateInvoice(new Invoice()
+                {
+                    Buyer = new Buyer() { email = "test@fwf.com" },
+                    Price = 5000.0m,
+                    Currency = "USD",
+                    PosData = "posData",
+                    OrderId = "orderId",
+                    ItemDesc = "Some description",
+                    FullNotifications = true
+                }, Facade.Merchant);
+
+                try
+                {
+                    var throwsBitpay404Error = user.BitPay.GetInvoice(invoice.Id + "123");
+                }
+                catch (BitPayException ex)
+                {
+                    Assert.Equal("Object not found", ex.Errors.First());
+                }
+            }
+        }
+
+        [Fact]
         [Trait("Fast", "Fast")]
         public void RoundupCurrenciesCorrectly()
         {

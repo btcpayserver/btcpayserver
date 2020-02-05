@@ -451,7 +451,7 @@ namespace BTCPayServer.Controllers
         [Route("{walletId}/send")]
         public async Task<IActionResult> WalletSend(
             [ModelBinder(typeof(WalletIdModelBinder))]
-            WalletId walletId, WalletSendModel vm, string command = "", CancellationToken cancellation = default)
+            WalletId walletId, WalletSendModel vm, string command = "", CancellationToken cancellation = default, string bip21 = "")
         {
             if (walletId?.StoreId == null)
                 return NotFound();
@@ -462,6 +462,50 @@ namespace BTCPayServer.Controllers
             if (network == null || network.ReadonlyWallet)
                 return NotFound();
             vm.SupportRBF = network.SupportRBF;
+            
+            if (!string.IsNullOrEmpty(bip21))
+            {
+                try
+                {
+                    if (bip21.StartsWith(network.UriScheme, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        bip21 = $"bitcoin{bip21.Substring( network.UriScheme.Length)}";
+                    }
+
+                    var uriBuilder = new NBitcoin.Payment.BitcoinUrlBuilder(bip21, network.NBitcoinNetwork);
+                    vm.Outputs = new List<WalletSendModel.TransactionOutput>()
+                    {
+                        new WalletSendModel.TransactionOutput()
+                        {
+                            Amount = uriBuilder.Amount.ToDecimal(MoneyUnit.BTC),
+                            DestinationAddress = uriBuilder.Address.ToString(),
+                            SubtractFeesFromOutput = false
+                        }
+                    };
+                    if (!string.IsNullOrEmpty(uriBuilder.Label) || !string.IsNullOrEmpty(uriBuilder.Message))
+                    {
+                        TempData.SetStatusMessageModel(new StatusMessageModel()
+                        {
+                            Severity = StatusMessageModel.StatusSeverity.Info,
+                            Html =
+                                $"Payment {(string.IsNullOrEmpty(uriBuilder.Label) ? string.Empty : $" to {uriBuilder.Label}")} {(string.IsNullOrEmpty(uriBuilder.Message) ? string.Empty : $" for {uriBuilder.Message}")}"
+                        });
+                    }
+                }
+                catch (Exception)
+                {
+                    ModelState.Clear();
+                    TempData.SetStatusMessageModel(new StatusMessageModel()
+                    {
+                        Severity = StatusMessageModel.StatusSeverity.Error,
+                        Message = "The provided BIP21 payment URI was malformed"
+                    });
+                    return View(vm);
+                }
+                ModelState.Clear();
+                return View(vm);
+            }
+            
             decimal transactionAmountSum  = 0;
             
             if (command == "add-output")
@@ -477,7 +521,6 @@ namespace BTCPayServer.Controllers
                 vm.Outputs.RemoveAt(index);
                 return View(vm);
             }
-            
 
             if (!vm.Outputs.Any())
             {

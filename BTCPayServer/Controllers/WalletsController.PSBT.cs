@@ -65,7 +65,7 @@ namespace BTCPayServer.Controllers
                 vm.Decoded = psbt.ToString();
                 vm.PSBT = psbt.ToBase64();
             }
-            return View(vm ?? new WalletPSBTViewModel() { CryptoCode = walletId.CryptoCode });
+            return View(nameof(WalletPSBT), vm ?? new WalletPSBTViewModel() { CryptoCode = walletId.CryptoCode });
         }
         [HttpPost]
         [Route("{walletId}/psbt")]
@@ -107,7 +107,7 @@ namespace BTCPayServer.Controllers
                         return View(vm);
                     }
                     TempData[WellKnownTempData.SuccessMessage] = "PSBT updated!";
-                    return RedirectToWalletPSBT(walletId, psbt, vm.FileName);
+                    return await WalletPSBT(walletId, new WalletPSBTViewModel() {PSBT = psbt.ToBase64(), FileName = vm.FileName});
                 case "seed":
                     return SignWithSeed(walletId, psbt.ToBase64());
                 case "nbx-seed":
@@ -325,7 +325,7 @@ namespace BTCPayServer.Controllers
             }
             else if (command == "analyze-psbt")
             {
-                return RedirectToWalletPSBT(walletId, psbt);
+                return await WalletPSBT(walletId, new WalletPSBTViewModel() {PSBT = psbt.ToBase64()});
             }
             else
             {
@@ -359,7 +359,7 @@ namespace BTCPayServer.Controllers
             }
             sourcePSBT = sourcePSBT.Combine(psbt);
             TempData[WellKnownTempData.SuccessMessage] = "PSBT Successfully combined!";
-            return RedirectToWalletPSBT(walletId, sourcePSBT);
+            return await WalletPSBT(walletId, new WalletPSBTViewModel() {PSBT = sourcePSBT.ToBase64()});
         }
     }
 }

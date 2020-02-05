@@ -586,7 +586,7 @@ namespace BTCPayServer.Controllers
                 case "analyze-psbt":
                     var name =
                         $"Send-{string.Join('_', vm.Outputs.Select(output => $"{output.Amount}->{output.DestinationAddress}{(output.SubtractFeesFromOutput ? "-Fees" : string.Empty)}"))}.psbt";
-                    return RedirectToWalletPSBT(walletId, psbt.PSBT, name);
+                    return await WalletPSBT(walletId, new WalletPSBTViewModel() {PSBT = psbt.PSBT.ToBase64(), FileName = name});
                 default:
                     return View(vm);
             }
@@ -601,22 +601,6 @@ namespace BTCPayServer.Controllers
                 PSBT = psbt.ToBase64(),
                 WebsocketPath = this.Url.Action(nameof(VaultController.VaultBridgeConnection), "Vault", new { walletId = walletId.ToString() })
             });
-        }
-
-        private IActionResult RedirectToWalletPSBT(WalletId walletId, PSBT psbt, string fileName = null)
-        {
-            var vm = new PostRedirectViewModel()
-            {
-                AspController = "Wallets",
-                AspAction = nameof(WalletPSBT),
-                Parameters =
-                {
-                    new KeyValuePair<string, string>("psbt", psbt.ToBase64())
-                }
-            };
-            if (!string.IsNullOrEmpty(fileName))
-                vm.Parameters.Add(new KeyValuePair<string, string>("fileName", fileName));
-            return View("PostRedirect", vm);
         }
 
         void SetAmbientPSBT(PSBT psbt)

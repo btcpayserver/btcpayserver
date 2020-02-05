@@ -125,10 +125,9 @@ namespace BTCPayServer.Tests
 
         private static string AssertRedirectedPSBT(IActionResult view)
         {
-            var postRedirectView = Assert.IsType<ViewResult>(view);
-            var postRedirectViewModel = Assert.IsType<PostRedirectViewModel>(postRedirectView.Model);
-            var redirectedPSBT = postRedirectViewModel.Parameters.Single(p => p.Key == "psbt").Value;
-            return redirectedPSBT;
+            var postRedirectViewModel = Assert.IsType<WalletPSBTViewModel>( Assert.IsType<ViewResult>(view).Model);
+            Assert.NotNull(postRedirectViewModel.PSBT);
+            return postRedirectViewModel.PSBT;
         }
     }
 }

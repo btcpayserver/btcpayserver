@@ -77,9 +77,9 @@ namespace BTCPayServer.Tests
             using var cts = new CancellationTokenSource(20_000);
             while (!cts.IsCancellationRequested)
             {
-                var success = Driver.FindElements(By.ClassName($"alert-{StatusMessageModel.ToString(severity)}")).Any(el => el.Displayed);
-                if (success)
-                    return success.First();
+                var result = Driver.FindElements(By.ClassName($"alert-{StatusMessageModel.ToString(severity)}")).Where(el => el.Displayed);
+                if (result.Any())
+                    return result.First();
                 Thread.Sleep(100);
             }
             Logs.Tester.LogInformation(this.Driver.PageSource);

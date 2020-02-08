@@ -446,6 +446,7 @@ namespace BTCPayServer.Controllers
             }
             return View(model);
         }
+        
 
         [HttpPost]
         [Route("{walletId}/send")]
@@ -462,47 +463,10 @@ namespace BTCPayServer.Controllers
             if (network == null || network.ReadonlyWallet)
                 return NotFound();
             vm.SupportRBF = network.SupportRBF;
-            
+
             if (!string.IsNullOrEmpty(bip21))
             {
-                try
-                {
-                    if (bip21.StartsWith(network.UriScheme, StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        bip21 = $"bitcoin{bip21.Substring( network.UriScheme.Length)}";
-                    }
-
-                    var uriBuilder = new NBitcoin.Payment.BitcoinUrlBuilder(bip21, network.NBitcoinNetwork);
-                    vm.Outputs = new List<WalletSendModel.TransactionOutput>()
-                    {
-                        new WalletSendModel.TransactionOutput()
-                        {
-                            Amount = uriBuilder.Amount.ToDecimal(MoneyUnit.BTC),
-                            DestinationAddress = uriBuilder.Address.ToString(),
-                            SubtractFeesFromOutput = false
-                        }
-                    };
-                    if (!string.IsNullOrEmpty(uriBuilder.Label) || !string.IsNullOrEmpty(uriBuilder.Message))
-                    {
-                        TempData.SetStatusMessageModel(new StatusMessageModel()
-                        {
-                            Severity = StatusMessageModel.StatusSeverity.Info,
-                            Html =
-                                $"Payment {(string.IsNullOrEmpty(uriBuilder.Label) ? string.Empty : $" to {uriBuilder.Label}")} {(string.IsNullOrEmpty(uriBuilder.Message) ? string.Empty : $" for {uriBuilder.Message}")}"
-                        });
-                    }
-                }
-                catch (Exception)
-                {
-                    ModelState.Clear();
-                    TempData.SetStatusMessageModel(new StatusMessageModel()
-                    {
-                        Severity = StatusMessageModel.StatusSeverity.Error,
-                        Message = "The provided BIP21 payment URI was malformed"
-                    });
-                    return View(vm);
-                }
-                ModelState.Clear();
+                LoadFromBIP21(vm, bip21, network);
                 return View(vm);
             }
             
@@ -634,6 +598,47 @@ namespace BTCPayServer.Controllers
                     return View(vm);
             }
             
+        }
+
+        private void LoadFromBIP21(WalletSendModel vm, string bip21, BTCPayNetwork network)
+        {
+            try
+            {
+                if (bip21.StartsWith(network.UriScheme, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    bip21 = $"bitcoin{bip21.Substring(network.UriScheme.Length)}";
+                }
+
+                var uriBuilder = new NBitcoin.Payment.BitcoinUrlBuilder(bip21, network.NBitcoinNetwork);
+                vm.Outputs = new List<WalletSendModel.TransactionOutput>()
+                {
+                    new WalletSendModel.TransactionOutput()
+                    {
+                        Amount = uriBuilder.Amount.ToDecimal(MoneyUnit.BTC),
+                        DestinationAddress = uriBuilder.Address.ToString(),
+                        SubtractFeesFromOutput = false
+                    }
+                };
+                if (!string.IsNullOrEmpty(uriBuilder.Label) || !string.IsNullOrEmpty(uriBuilder.Message))
+                {
+                    TempData.SetStatusMessageModel(new StatusMessageModel()
+                    {
+                        Severity = StatusMessageModel.StatusSeverity.Info,
+                        Html =
+                            $"Payment {(string.IsNullOrEmpty(uriBuilder.Label) ? string.Empty : $" to {uriBuilder.Label}")} {(string.IsNullOrEmpty(uriBuilder.Message) ? string.Empty : $" for {uriBuilder.Message}")}"
+                    });
+                }
+            }
+            catch (Exception)
+            {
+                TempData.SetStatusMessageModel(new StatusMessageModel()
+                {
+                    Severity = StatusMessageModel.StatusSeverity.Error,
+                    Message = "The provided BIP21 payment URI was malformed"
+                });
+            }
+
+            ModelState.Clear();
         }
 
         private IActionResult ViewVault(WalletId walletId, PSBT psbt)

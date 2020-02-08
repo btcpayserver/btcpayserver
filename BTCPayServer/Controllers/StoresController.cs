@@ -673,7 +673,7 @@ namespace BTCPayServer.Controllers
                 TempData[WellKnownTempData.ErrorMessage] = "Failure to revoke this token";
             else
                 TempData[WellKnownTempData.SuccessMessage] = "Token revoked";
-            return RedirectToAction(nameof(ListTokens));
+            return RedirectToAction(nameof(ListTokens), new { storeId = token.StoreId});
         }
 
         [HttpGet]

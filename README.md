@@ -141,7 +141,7 @@ Bitcoin is the only focus of the project and its core developers. However, opt i
 
 ## License
 
-BTCPay Server software, logo and designs are provided under [MIT License](License.md).
+BTCPay Server software, logo and designs are provided under [MIT License](https://github.com/btcpayserver/btcpayserver/blob/master/LICENSE).
 
 ## Supporters
 

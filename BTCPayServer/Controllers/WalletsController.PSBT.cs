@@ -60,12 +60,18 @@ namespace BTCPayServer.Controllers
             vm.NBXSeedAvailable = await CanUseHotWallet() && !string.IsNullOrEmpty(await ExplorerClientProvider.GetExplorerClient(network)
                 .GetMetadataAsync<string>(GetDerivationSchemeSettings(walletId).AccountDerivation,
                     WellknownMetadataKeys.Mnemonic));
-            if (await vm.GetPSBT(network.NBitcoinNetwork) is PSBT psbt)
+
+            if (TempData.TryGet("psbt") is PSBT psbt1)
             {
-                vm.Decoded = psbt.ToString();
-                vm.PSBT = psbt.ToBase64();
+                TempData.Remove("psbt");
+                vm.Decoded = psbt1.ToString();
+                vm.PSBT = psbt1.ToBase64();
+            }else if (await vm.GetPSBT(network.NBitcoinNetwork) is PSBT psbt2)
+            {
+                vm.Decoded = psbt2.ToString();
+                vm.PSBT = psbt2.ToBase64();
             }
-            return View(nameof(WalletPSBT), vm ?? new WalletPSBTViewModel() { CryptoCode = walletId.CryptoCode });
+            return View(nameof(WalletPSBT), vm);
         }
         [HttpPost]
         [Route("{walletId}/psbt")]
@@ -325,13 +331,19 @@ namespace BTCPayServer.Controllers
             }
             else if (command == "analyze-psbt")
             {
-                return await WalletPSBT(walletId, new WalletPSBTViewModel() {PSBT = psbt.ToBase64()});
+                return RedirectToWalletPSBT(walletId, psbt);
             }
             else
             {
                 vm.GlobalError = "Unknown command";
                 return View(vm);
             }
+        }
+
+        private IActionResult RedirectToWalletPSBT(WalletId walletId, PSBT psbt, string fileName = null)
+        {
+            TempData.AddOrReplace("psbt", psbt);
+            return RedirectToAction(nameof(WalletPSBT), new {walletId, fileName});
         }
 
         private IActionResult FilePSBT(PSBT psbt, string fileName)
@@ -359,7 +371,7 @@ namespace BTCPayServer.Controllers
             }
             sourcePSBT = sourcePSBT.Combine(psbt);
             TempData[WellKnownTempData.SuccessMessage] = "PSBT Successfully combined!";
-            return await WalletPSBT(walletId, new WalletPSBTViewModel() {PSBT = sourcePSBT.ToBase64()});
+            return RedirectToWalletPSBT(walletId, sourcePSBT);
         }
     }
 }

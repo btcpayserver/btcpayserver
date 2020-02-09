@@ -48,14 +48,14 @@ Thanks to the [apps](https://github.com/btcpayserver/btcpayserver-doc/blob/maste
 * SegWit support
 * Lightning Network support (LND, c-lightning, Eclair and Ptarmigan)
 * Tor support
-* Opt-in [altcoin](Altcoins.md) integrations
+* Opt-in [altcoin](https://github.com/btcpayserver/btcpayserver-doc/blob/master/Altcoins.md) integrations
 * Full compatibility with BitPay API (easy migration)
 * Process payments for others
 * Easy-embeddable Payment buttons
 * Point of sale app
 * Crowdfunding app
 * Payment Requests
-* Internal, full-node reliant wallet with [hardware wallet integration](Vault.md)
+* Internal, full-node reliant wallet with [hardware wallet integration](https://github.com/btcpayserver/btcpayserver-doc/blob/master/Vault.md)
 
 ## Getting Started
 

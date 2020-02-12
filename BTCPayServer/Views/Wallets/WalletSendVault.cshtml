@@ -6,15 +6,23 @@
 }
 
 <h4>Sign the transaction with BTCPayServer Vault</h4>
+@if (TempData.HasStatusMessage())
+{
+    <div class="row">
+        <div class="col-md-10 text-center">
+            <partial name="_StatusMessage" />
+        </div>
+    </div>
+}
 <div id="walletAlert" class="alert alert-danger alert-dismissible" style="display:none;" role="alert">
     <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
     <span id="alertMessage"></span>
 </div>
 <div class="row">
     <div id="body" class="col-md-10">
-        <form id="broadcastForm" asp-action="WalletPSBTReady" asp-route-walletId="@this.Context.GetRouteValue("walletId")" method="post" style="display:none;">
+        <form id="broadcastForm" asp-action="SubmitVault" asp-route-walletId="@this.Context.GetRouteValue("walletId")" method="post" style="display:none;">
             <input type="hidden" id="WalletId" asp-for="WalletId" />
-            <input type="hidden" id="PSBT" asp-for="PSBT" />
+            <input type="hidden" id="PSBT" asp-for="PSBT" value="@Model.PSBT"/>
             <input type="hidden" asp-for="WebsocketPath" />
         </form>
         <div id="vaultPlaceholder"></div>

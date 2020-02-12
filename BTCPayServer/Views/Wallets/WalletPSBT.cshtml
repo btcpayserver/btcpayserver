@@ -28,7 +28,7 @@
         {
             <h3>Decoded PSBT</h3>
             <div class="form-group">
-                <form method="post" asp-action="WalletPSBT">
+                <form method="post" asp-action="WalletPSBT" asp-route-walletId="@this.Context.GetRouteValue("walletId")">
                     <input type="hidden" asp-for="CryptoCode" />
                     <input type="hidden" asp-for="NBXSeedAvailable" />
                     <input type="hidden" asp-for="PSBT" />
@@ -65,7 +65,7 @@
             <pre><code class="json">@Model.Decoded</code></pre>
         }
         <h3>PSBT to decode</h3>
-        <form class="form-group" method="post" asp-action="WalletPSBT" enctype="multipart/form-data">
+        <form class="form-group" method="post" asp-action="WalletPSBT" asp-route-walletId="@this.Context.GetRouteValue("walletId")" enctype="multipart/form-data">
             <div class="form-group">
                 <textarea class="form-control" rows="5" asp-for="PSBT"></textarea>
                 <span asp-validation-for="PSBT" class="text-danger"></span>

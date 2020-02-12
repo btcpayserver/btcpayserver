@@ -6,14 +6,22 @@
 }
 
 <h4>Sign the transaction with Ledger</h4>
+@if (TempData.HasStatusMessage())
+{
+    <div class="row">
+        <div class="col-md-10 text-center">
+            <partial name="_StatusMessage" />
+        </div>
+    </div>
+}
 <div id="walletAlert" class="alert alert-danger alert-dismissible" style="display:none;" role="alert">
     <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
     <span id="alertMessage"></span>
 </div>
 <div class="row">
     <div class="col-md-10">
-        <form id="broadcastForm" asp-action="WalletPSBTReady" asp-route-walletId="@this.Context.GetRouteValue("walletId")" method="post" style="display:none;">
-            <input type="hidden" id="PSBT" asp-for="PSBT" />
+        <form id="broadcastForm" asp-action="SubmitLedger" asp-route-walletId="@this.Context.GetRouteValue("walletId")" method="post" style="display:none;">
+            <input type="hidden" id="PSBT" asp-for="PSBT" value="@Model.PSBT"/>
             <input type="hidden" asp-for="HintChange" />
             <input type="hidden" asp-for="WebsocketPath" />
         </form>

@@ -18,9 +18,12 @@ namespace BTCPayServer.Services.Wallets
 {
     public class ReceivedCoin
     {
-        public Coin Coin { get; set; }
+        public Script ScriptPubKey { get; set; }
+        public OutPoint OutPoint { get; set; }
         public DateTimeOffset Timestamp { get; set; }
         public KeyPath KeyPath { get; set; }
+        public IMoney Value { get; set; }
+        
     }
     public class NetworkCoins
     {
@@ -60,7 +63,7 @@ namespace BTCPayServer.Services.Wallets
 
         public TimeSpan CacheSpan { get; private set; } = TimeSpan.FromMinutes(5);
 
-        public async Task<BitcoinAddress> ReserveAddressAsync(DerivationStrategyBase derivationStrategy)
+        public async Task<KeyPathInformation> ReserveAddressAsync(DerivationStrategyBase derivationStrategy)
         {
             if (derivationStrategy == null)
                 throw new ArgumentNullException(nameof(derivationStrategy));
@@ -71,7 +74,7 @@ namespace BTCPayServer.Services.Wallets
                 await _Client.TrackAsync(derivationStrategy).ConfigureAwait(false);
                 pathInfo = await _Client.GetUnusedAsync(derivationStrategy, DerivationFeature.Deposit, 0, true).ConfigureAwait(false);
             }
-            return pathInfo.ScriptPubKey.GetDestinationAddress(Network.NBitcoinNetwork);
+            return pathInfo;
         }
 
         public async Task<(BitcoinAddress, KeyPath)> GetChangeAddressAsync(DerivationStrategyBase derivationStrategy)
@@ -104,6 +107,7 @@ namespace BTCPayServer.Services.Wallets
         public void InvalidateCache(DerivationStrategyBase strategy)
         {
             _MemoryCache.Remove("CACHEDCOINS_" + strategy.ToString());
+            _MemoryCache.Remove("CACHEDBALANCE_" + strategy.ToString());
             _FetchingUTXOs.TryRemove(strategy.ToString(), out var unused);
         }
         ConcurrentDictionary<string, TaskCompletionSource<UTXOChanges>> _FetchingUTXOs = new ConcurrentDictionary<string, TaskCompletionSource<UTXOChanges>>();
@@ -172,16 +176,22 @@ namespace BTCPayServer.Services.Wallets
                           .GetUnspentUTXOs()
                           .Select(c => new ReceivedCoin()
                           {
-                              Coin = c.AsCoin(derivationStrategy),
                               KeyPath = c.KeyPath,
-                              Timestamp = c.Timestamp
+                              Value = c.Value,
+                              Timestamp = c.Timestamp,
+                              OutPoint = c.Outpoint,
+                              ScriptPubKey = c.ScriptPubKey
                           }).ToArray();
         }
 
-        public async Task<Money> GetBalance(DerivationStrategyBase derivationStrategy, CancellationToken cancellation = default(CancellationToken))
+        public Task<decimal> GetBalance(DerivationStrategyBase derivationStrategy, CancellationToken cancellation = default(CancellationToken))
         {
-            UTXOChanges changes = await GetUTXOChanges(derivationStrategy, cancellation);
-            return changes.GetUnspentUTXOs().Select(c => c.Value).Sum();
+            return _MemoryCache.GetOrCreateAsync("CACHEDBALANCE_" + derivationStrategy.ToString(), async (entry) =>
+            {
+                var result = await _Client.GetBalanceAsync(derivationStrategy, cancellation);
+                entry.AbsoluteExpiration = DateTimeOffset.UtcNow + CacheSpan;
+                return result.Total.GetValue(_Network);
+            });
         }
     }
 }

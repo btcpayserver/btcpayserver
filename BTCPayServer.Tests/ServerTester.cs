@@ -46,27 +46,15 @@ namespace BTCPayServer.Tests
             NetworkProvider = new BTCPayNetworkProvider(NetworkType.Regtest);
             ExplorerNode = new RPCClient(RPCCredentialString.Parse(GetEnvironment("TESTS_BTCRPCCONNECTION", "server=http://127.0.0.1:43782;ceiwHEbqWI83:DwubwWsoo3")), NetworkProvider.GetNetwork<BTCPayNetwork>("BTC").NBitcoinNetwork);
             ExplorerNode.ScanRPCCapabilities();
-            LTCExplorerNode = new RPCClient(RPCCredentialString.Parse(GetEnvironment("TESTS_LTCRPCCONNECTION", "server=http://127.0.0.1:43783;ceiwHEbqWI83:DwubwWsoo3")), NetworkProvider.GetNetwork<BTCPayNetwork>("LTC").NBitcoinNetwork);
 
             ExplorerClient = new ExplorerClient(NetworkProvider.GetNetwork<BTCPayNetwork>("BTC").NBXplorerNetwork, new Uri(GetEnvironment("TESTS_BTCNBXPLORERURL", "http://127.0.0.1:32838/")));
-            LTCExplorerClient = new ExplorerClient(NetworkProvider.GetNetwork<BTCPayNetwork>("LTC").NBXplorerNetwork, new Uri(GetEnvironment("TESTS_LTCNBXPLORERURL", "http://127.0.0.1:32838/")));
-
-            var btc = NetworkProvider.GetNetwork<BTCPayNetwork>("BTC").NBitcoinNetwork;
-            CustomerLightningD = LightningClientFactory.CreateClient(GetEnvironment("TEST_CUSTOMERLIGHTNINGD", "type=clightning;server=tcp://127.0.0.1:30992/"), btc);
-            MerchantLightningD = LightningClientFactory.CreateClient(GetEnvironment("TEST_MERCHANTLIGHTNINGD", "type=clightning;server=tcp://127.0.0.1:30993/"), btc);
-
-            MerchantCharge = new ChargeTester(this, "TEST_MERCHANTCHARGE", "type=charge;server=http://127.0.0.1:54938/;api-token=foiewnccewuify", "merchant_lightningd", btc);
-
-            MerchantLnd = new LndMockTester(this, "TEST_MERCHANTLND", "https://lnd:lnd@127.0.0.1:53280/", "merchant_lnd", btc);
 
             PayTester = new BTCPayServerTester(Path.Combine(_Directory, "pay"))
             {
                 NBXplorerUri = ExplorerClient.Address,
-                LTCNBXplorerUri = LTCExplorerClient.Address,
                 TestDatabase = Enum.Parse<TestDatabases>(GetEnvironment("TESTS_DB", TestDatabases.Postgres.ToString()), true),
                 Postgres = GetEnvironment("TESTS_POSTGRES", "User ID=postgres;Host=127.0.0.1;Port=39372;Database=btcpayserver"),
-                MySQL = GetEnvironment("TESTS_MYSQL", "User ID=root;Host=127.0.0.1;Port=33036;Database=btcpayserver"),
-                IntegratedLightning = MerchantCharge.Client.Uri
+                MySQL = GetEnvironment("TESTS_MYSQL", "User ID=root;Host=127.0.0.1;Port=33036;Database=btcpayserver")
             };
             PayTester.Port = int.Parse(GetEnvironment("TESTS_PORT", Utils.FreeTcpPort().ToString(CultureInfo.InvariantCulture)), CultureInfo.InvariantCulture);
             PayTester.HostName = GetEnvironment("TESTS_HOSTNAME", "127.0.0.1");
@@ -75,6 +63,32 @@ namespace BTCPayServer.Tests
             PayTester.SSHPassword = GetEnvironment("TESTS_SSHPASSWORD", "opD3i2282D");
             PayTester.SSHKeyFile = GetEnvironment("TESTS_SSHKEYFILE", "");
             PayTester.SSHConnection = GetEnvironment("TESTS_SSHCONNECTION", "root@127.0.0.1:21622");
+        }
+
+        public void ActivateLTC()
+        {
+            LTCExplorerNode = new RPCClient(RPCCredentialString.Parse(GetEnvironment("TESTS_LTCRPCCONNECTION", "server=http://127.0.0.1:43783;ceiwHEbqWI83:DwubwWsoo3")), NetworkProvider.GetNetwork<BTCPayNetwork>("LTC").NBitcoinNetwork);
+            LTCExplorerClient = new ExplorerClient(NetworkProvider.GetNetwork<BTCPayNetwork>("LTC").NBXplorerNetwork, new Uri(GetEnvironment("TESTS_LTCNBXPLORERURL", "http://127.0.0.1:32838/")));
+            PayTester.Chains.Add("LTC");
+            PayTester.LTCNBXplorerUri = LTCExplorerClient.Address;
+        }
+        public void ActivateLBTC()
+        {
+            LBTCExplorerNode = new RPCClient(RPCCredentialString.Parse(GetEnvironment("TESTS_LBTCRPCCONNECTION", "server=http://127.0.0.1:19332;liquid:liquid")), NetworkProvider.GetNetwork<BTCPayNetwork>("LBTC").NBitcoinNetwork);
+            LBTCExplorerClient = new ExplorerClient(NetworkProvider.GetNetwork<BTCPayNetwork>("LBTC").NBXplorerNetwork, new Uri(GetEnvironment("TESTS_LBTCNBXPLORERURL", "http://127.0.0.1:32838/")));
+            PayTester.Chains.Add("LBTC");
+            PayTester.LBTCNBXplorerUri = LBTCExplorerClient.Address;
+        }
+
+        public void ActivateLightning()
+        {
+            var btc = NetworkProvider.GetNetwork<BTCPayNetwork>("BTC").NBitcoinNetwork;
+            CustomerLightningD = LightningClientFactory.CreateClient(GetEnvironment("TEST_CUSTOMERLIGHTNINGD", "type=clightning;server=tcp://127.0.0.1:30992/"), btc);
+            MerchantLightningD = LightningClientFactory.CreateClient(GetEnvironment("TEST_MERCHANTLIGHTNINGD", "type=clightning;server=tcp://127.0.0.1:30993/"), btc);
+            MerchantCharge = new ChargeTester(this, "TEST_MERCHANTCHARGE", "type=charge;server=http://127.0.0.1:54938/;api-token=foiewnccewuify", "merchant_lightningd", btc);
+            MerchantLnd = new LndMockTester(this, "TEST_MERCHANTLND", "https://lnd:lnd@127.0.0.1:53280/", "merchant_lnd", btc);
+            PayTester.UseLightning = true;
+            PayTester.IntegratedLightning = MerchantCharge.Client.Uri;
         }
 
         public bool Dockerized
@@ -148,12 +162,15 @@ namespace BTCPayServer.Tests
         {
             get; set;
         }
+        
+        public RPCClient LBTCExplorerNode { get; set; }
 
         public ExplorerClient ExplorerClient
         {
             get; set;
         }
         public ExplorerClient LTCExplorerClient { get; set; }
+        public ExplorerClient LBTCExplorerClient { get; set; }
 
         HttpClient _Http = new HttpClient();
 

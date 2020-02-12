@@ -66,8 +66,8 @@
                     </tbody>
                 </table>
                 <p>Note that the <code>certthumbprint</code> to connect to your LND node can be obtained through this command line:</p>
-                <p><pre><code>openssl x509 -noout -fingerprint -sha256 -inform pem -in /root/.lnd/tls.cert</code></pre></p>
-                <p>You can omit <code>certthumbprint</code> if you the certificate is trusted by your machine</p>
+                <p><pre><code>openssl x509 -noout -fingerprint -sha256 -inform pem -in /root/.lnd/tls.cert | sed -e 's/.*=//' -e 's/://g'</code></pre></p>
+                <p>You can omit <code>certthumbprint</code> if the certificate is trusted by your machine</p>
                 <p>You can set <code>allowinsecure</code> to <code>true</code> if your LND REST server is using HTTP or HTTPS with an untrusted certificate which you don't know the <code>certthumbprint</code></p>
             </div>
             <div class="form-group">

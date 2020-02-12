@@ -32,6 +32,11 @@
             <label asp-for="AllowLightningInternalNodeForAll" class="form-check-label"></label>
             <span asp-validation-for="AllowLightningInternalNodeForAll" class="text-danger"></span>
         </div>
+        <div class="form-check">
+            <input asp-for="AllowHotWalletForAll" type="checkbox" class="form-check-input"/>
+            <label asp-for="AllowHotWalletForAll" class="form-check-label"></label>
+            <span asp-validation-for="AllowHotWalletForAll" class="text-danger"></span>
+        </div>
     </div>
     <div class="form-group">
         <label asp-for="RootAppId"></label>

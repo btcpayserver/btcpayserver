@@ -17,7 +17,6 @@ namespace BTCPayServer
                 CryptoCode = nbxplorerNetwork.CryptoCode,
                 DisplayName = "Bitcoin",
                 BlockExplorerLink = NetworkType == NetworkType.Mainnet ? "https://blockstream.info/tx/{0}" : "https://blockstream.info/testnet/tx/{0}",
-                NBitcoinNetwork = nbxplorerNetwork.NBitcoinNetwork,
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "bitcoin",
                 CryptoImagePath = "imlegacy/bitcoin.svg",

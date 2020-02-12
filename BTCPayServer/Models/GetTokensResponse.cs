@@ -47,11 +47,7 @@ namespace BTCPayServer.Models
             }
             context.HttpContext.Response.Headers.Add("Content-Type", new Microsoft.Extensions.Primitives.StringValues("application/json"));
             var str = JsonConvert.SerializeObject(jobj);
-#if NETCOREAPP21
-            using (var writer = new StreamWriter(context.HttpContext.Response.Body, new UTF8Encoding(false), 1024 * 10, true))
-#else
             await using (var writer = new StreamWriter(context.HttpContext.Response.Body, new UTF8Encoding(false), 1024 * 10, true))
-#endif
             {
                 await writer.WriteAsync(str);
             }

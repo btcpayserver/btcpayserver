@@ -8,7 +8,6 @@ using NBitpayClient;
 using Newtonsoft.Json;
 using System.Linq;
 using NBitcoin;
-using NBitcoin.DataEncoders;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
@@ -21,7 +20,10 @@ using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Logging;
 using BTCPayServer.Payments;
 using System.Data.Common;
+using NBitcoin.Altcoins;
+using NBitcoin.Altcoins.Elements;
 using Newtonsoft.Json.Linq;
+using Encoders = NBitcoin.DataEncoders.Encoders;
 
 namespace BTCPayServer.Services.Invoices
 {
@@ -87,18 +89,12 @@ retry:
             using (var db = _ContextFactory.CreateContext())
             {
                 return  (await db.AddressInvoices
-#if !NETCOREAPP21
                     .Include(a => a.InvoiceData.Payments)
                     .Include(a => a.InvoiceData.RefundAddresses)
-#endif
 #pragma warning disable CS0618
                     .Where(a => addresses.Contains(a.Address))
 #pragma warning restore CS0618
                     .Select(a => a.InvoiceData)
-#if NETCOREAPP21
-                    .Include(a => a.Payments)
-                    .Include(a => a.RefundAddresses)
-#endif
                     .ToListAsync()).Select(ToEntity);
             }
         }
@@ -707,7 +703,7 @@ retry:
                 PaymentData data = new PaymentData
                 {
                     Id = paymentData.GetPaymentId(),
-                    Blob = ToBytes(entity, network),
+                    Blob = ToBytes(entity, entity.Network),
                     InvoiceDataId = invoiceId,
                     Accounted = accounted
                 };

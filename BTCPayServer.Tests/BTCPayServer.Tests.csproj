@@ -1,26 +1,31 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <TargetFramework Condition="'$(TargetFrameworkOverride)' != ''">$(TargetFrameworkOverride)</TargetFramework>
     <IsPackable>false</IsPackable>
     <NoWarn>NU1701,CA1816,CA1308,CA1810,CA2208</NoWarn>
-    <LangVersion>7.2</LangVersion>
+    <LangVersion>8.0</LangVersion>
     <UserSecretsId>AB0AC1DD-9D26-485B-9416-56A33F268117</UserSecretsId>
+    <!--https://devblogs.microsoft.com/aspnet/testing-asp-net-core-mvc-web-apps-in-memory/-->
+    <PreserveCompilationContext>true</PreserveCompilationContext>
   </PropertyGroup>
+  <!--https://devblogs.microsoft.com/aspnet/testing-asp-net-core-mvc-web-apps-in-memory/-->
+  <Target Name="CopyAditionalFiles" AfterTargets="Build" Condition="'$(TargetFramework)'!=''">
+    <ItemGroup>
+      <DepsFilePaths Include="$([System.IO.Path]::ChangeExtension('%(_ResolvedProjectReferencePaths.FullPath)', '.deps.json'))" />
+    </ItemGroup>
+    <Copy SourceFiles="%(DepsFilePaths.FullPath)" DestinationFolder="$(OutputPath)" Condition="Exists('%(DepsFilePaths.FullPath)')" />
+  </Target>
 
-  <PropertyGroup Condition="'$(TargetFramework)' == 'netcoreapp2.1'">
-    <DefineConstants>$(DefineConstants);NETCOREAPP21</DefineConstants>
-  </PropertyGroup>
-  
   <PropertyGroup Condition="'$(CI_TESTS)' == 'true'">
     <DefineConstants>$(DefineConstants);SHORT_TIMEOUT</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.2.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.4.0" />
     <PackageReference Include="Selenium.WebDriver" Version="3.141.0" />
-    <PackageReference Include="Selenium.WebDriver.ChromeDriver" Version="78.0.3904.7000" />
+    <PackageReference Include="Selenium.WebDriver.ChromeDriver" Version="79.0.3945.3600" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1">
       <PrivateAssets>all</PrivateAssets>

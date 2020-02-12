@@ -21,9 +21,9 @@ namespace BTCPayServer.Services.Rates
                 return _Instance;
             }
         }
-        public Task<ExchangeRates> GetRatesAsync(CancellationToken cancellationToken)
+        public Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
         {
-            return Task.FromResult(new ExchangeRates());
+            return Task.FromResult(Array.Empty<PairRate>());
         }
     }
 }

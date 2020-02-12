@@ -1,5 +1,9 @@
+@using NBXplorer.Models
 @model DerivationSchemeViewModel
-
+@if (Model.CanUseHotWallet)
+{
+    <partial name="AddDerivationSchemes_NBXWalletGenerate" model="@(new GenerateWalletRequest())"/>
+}
 <div class="modal fade" id="ledgerimport" tabindex="-1" role="dialog" aria-labelledby="ledgerimport" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content" form method="post">
@@ -28,10 +32,9 @@
 
                     <p>
                         <a href="https://docs.btcpayserver.org/getting-started/connectwallet/ledgerwallet#manual-setup"
-                            title="Open Ledger wallet manual setup docs"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                        >
+                           title="Open Ledger wallet manual setup docs"
+                           target="_blank"
+                           rel="noopener noreferrer">
                             Can't find your account in the select?
                         </a>
                     </p>
@@ -60,7 +63,7 @@
     <div class="modal-dialog" role="document">
         <form class="modal-content" form method="post" enctype="multipart/form-data">
             <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Import Coldcard Wallet</h5>
+                <h5 class="modal-title" id="coldcardimportLabel">Import Coldcard Wallet</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -80,3 +83,45 @@
         </form>
     </div>
 </div>
+
+<template id="btcpayservervault_template">
+    <div class="modal-dialog" role="document">
+        <form class="modal-content" form method="post" enctype="multipart/form-data">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Import from BTCPayServer Vault</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>You may import from BTCPayServer Vault.</p>
+                <div class="form-group">
+                    <div id="vaultPlaceholder"></div>
+                </div>
+                <div id="vault-xpub" style="display:none;">
+                    <div class="form-group">
+                        <label for="addressType">Address type</label>
+                        <select name="addressType" class="form-control">
+                            <option value="segwit">Segwit (Recommended, cheapest transaction fee)</option>
+                            <option value="segwitWrapped">Segwit wrapped (less cheap but compatible with old wallets)</option>
+                            <option value="legacy">Legacy (Not recommended)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="accountNumber">Account</label>
+                        <select name="accountNumber" class="form-control">
+                            @for (int i = 0; i < 20; i++)
+                            {
+                                <option value="@i">@i</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button id="vault-confirm" class="btn btn-primary" style="display:none;"></button>
+            </div>
+        </form>
+    </div>
+</template>

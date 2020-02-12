@@ -6,7 +6,7 @@
 <html>
 <head></head>
 <body>
-    <form method="post" id="postform" asp-action="@Model.AspAction" asp-controller="@Model.AspController">
+    <form method="post" id="postform" asp-action="@Model.AspAction" asp-controller="@Model.AspController" asp-route-walletId="@this.Context.GetRouteValue("walletId").ToString()">
         @foreach(var o in Model.Parameters) {
             <input type="hidden" name="@o.Key" value="@o.Value" />
         }

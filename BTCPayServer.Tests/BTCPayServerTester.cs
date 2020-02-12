@@ -63,6 +63,7 @@ namespace BTCPayServer.Tests
         }
 
         public Uri LTCNBXplorerUri { get; set; }
+        public Uri LBTCNBXplorerUri { get; set; }
 
         public Uri ServerUri
         {
@@ -93,6 +94,9 @@ namespace BTCPayServer.Tests
 
         public bool MockRates { get; set; } = true;
 
+        public HashSet<string> Chains { get; set; } = new HashSet<string>(){"BTC"};
+        public bool UseLightning { get; set; }
+
         public async Task StartAsync()
         {
             if (!Directory.Exists(_Directory))
@@ -109,20 +113,37 @@ namespace BTCPayServer.Tests
                 config.AppendLine($"bind=0.0.0.0");
             }
             config.AppendLine($"port={Port}");
-            config.AppendLine($"chains=btc,ltc");
+            config.AppendLine($"chains={string.Join(',', Chains)}");
+            if (Chains.Contains("BTC", StringComparer.OrdinalIgnoreCase))
+            {
+                config.AppendLine($"btc.explorer.url={NBXplorerUri.AbsoluteUri}");
+                config.AppendLine($"btc.explorer.cookiefile=0");
+            }
 
-            config.AppendLine($"btc.explorer.url={NBXplorerUri.AbsoluteUri}");
-            config.AppendLine($"btc.explorer.cookiefile=0");
+            if (UseLightning)
+            {
+                config.AppendLine($"btc.lightning={IntegratedLightning.AbsoluteUri}");
+                var localLndBackupFile = Path.Combine(_Directory, "walletunlock.json");
+                File.Copy(TestUtils.GetTestDataFullPath("LndSeedBackup/walletunlock.json"), localLndBackupFile, true);
+                config.AppendLine($"btc.external.lndseedbackup={localLndBackupFile}");
+            }
+
+            if (Chains.Contains("LTC", StringComparer.OrdinalIgnoreCase))
+            {
+                config.AppendLine($"ltc.explorer.url={LTCNBXplorerUri.AbsoluteUri}");
+                config.AppendLine($"ltc.explorer.cookiefile=0");
+            }
+            if (Chains.Contains("LBTC", StringComparer.OrdinalIgnoreCase))
+            {
+                config.AppendLine($"lbtc.explorer.url={LBTCNBXplorerUri.AbsoluteUri}");
+                config.AppendLine($"lbtc.explorer.cookiefile=0");
+            }
             config.AppendLine("allow-admin-registration=1");
-            config.AppendLine($"ltc.explorer.url={LTCNBXplorerUri.AbsoluteUri}");
-            config.AppendLine($"ltc.explorer.cookiefile=0");
-            config.AppendLine($"btc.lightning={IntegratedLightning.AbsoluteUri}");
+           
             config.AppendLine($"torrcfile={TestUtils.GetTestDataFullPath("Tor/torrc")}");
             config.AppendLine($"debuglog=debug.log");
 
-            var localLndBackupFile = Path.Combine(_Directory, "walletunlock.json");
-            File.Copy(TestUtils.GetTestDataFullPath("LndSeedBackup/walletunlock.json"), localLndBackupFile, true);
-            config.AppendLine($"btc.external.lndseedbackup={localLndBackupFile}");
+
             if (!string.IsNullOrEmpty(SSHPassword) && string.IsNullOrEmpty(SSHKeyFile))
                 config.AppendLine($"sshpassword={SSHPassword}");
             if (!string.IsNullOrEmpty(SSHKeyFile))
@@ -179,58 +200,28 @@ namespace BTCPayServer.Tests
                 rateProvider.Providers.Clear();
 
                 var coinAverageMock = new MockRateProvider();
-                coinAverageMock.ExchangeRates.Add(new Rating.ExchangeRate()
-                {
-                    Exchange = "coinaverage",
-                    CurrencyPair = CurrencyPair.Parse("BTC_USD"),
-                    BidAsk = new BidAsk(5000m)
-                });
-                coinAverageMock.ExchangeRates.Add(new Rating.ExchangeRate()
-                {
-                    Exchange = "coinaverage",
-                    CurrencyPair = CurrencyPair.Parse("BTC_CAD"),
-                    BidAsk = new BidAsk(4500m)
-                });
-                coinAverageMock.ExchangeRates.Add(new Rating.ExchangeRate()
-                {
-                    Exchange = "coinaverage",
-                    CurrencyPair = CurrencyPair.Parse("LTC_BTC"),
-                    BidAsk = new BidAsk(0.001m)
-                });
-                coinAverageMock.ExchangeRates.Add(new Rating.ExchangeRate()
-                {
-                    Exchange = "coinaverage",
-                    CurrencyPair = CurrencyPair.Parse("LTC_USD"),
-                    BidAsk = new BidAsk(500m)
-                });
-                rateProvider.Providers.Add("coinaverage", coinAverageMock);
+                coinAverageMock.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("BTC_USD"), new BidAsk(5000m)));
+                coinAverageMock.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("BTC_CAD"), new BidAsk(4500m)));
+                coinAverageMock.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("BTC_LTC"), new BidAsk(162m)));
+                coinAverageMock.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("LTC_USD"), new BidAsk(500m)));
+                rateProvider.Providers.Add("coingecko", coinAverageMock);
 
                 var bitflyerMock = new MockRateProvider();
-                bitflyerMock.ExchangeRates.Add(new Rating.ExchangeRate()
-                {
-                    Exchange = "bitflyer",
-                    CurrencyPair = CurrencyPair.Parse("BTC_JPY"),
-                    BidAsk = new BidAsk(700000m)
-                });
+                bitflyerMock.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("BTC_JPY"), new BidAsk(700000m)));
                 rateProvider.Providers.Add("bitflyer", bitflyerMock);
 
                 var quadrigacx = new MockRateProvider();
-                quadrigacx.ExchangeRates.Add(new Rating.ExchangeRate()
-                {
-                    Exchange = "quadrigacx",
-                    CurrencyPair = CurrencyPair.Parse("BTC_CAD"),
-                    BidAsk = new BidAsk(6000m)
-                });
+                quadrigacx.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("BTC_CAD"), new BidAsk(6000m)));
                 rateProvider.Providers.Add("quadrigacx", quadrigacx);
 
                 var bittrex = new MockRateProvider();
-                bittrex.ExchangeRates.Add(new Rating.ExchangeRate()
-                {
-                    Exchange = "bittrex",
-                    CurrencyPair = CurrencyPair.Parse("DOGE_BTC"),
-                    BidAsk = new BidAsk(0.004m)
-                });
+                bittrex.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("DOGE_BTC"), new BidAsk(0.004m)));
                 rateProvider.Providers.Add("bittrex", bittrex);
+                
+                
+                var bitfinex = new MockRateProvider();
+                bitfinex.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("UST_BTC"), new BidAsk(0.000136m)));
+                rateProvider.Providers.Add("bitfinex", bitfinex);
             }
 
 

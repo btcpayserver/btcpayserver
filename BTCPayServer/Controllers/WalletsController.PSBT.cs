@@ -7,6 +7,7 @@ using BTCPayServer.ModelBinders;
 using BTCPayServer.Models.WalletViewModels;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
+using NBXplorer;
 using NBXplorer.Models;
 
 namespace BTCPayServer.Controllers
@@ -55,12 +56,16 @@ namespace BTCPayServer.Controllers
             WalletId walletId, WalletPSBTViewModel vm)
         {
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
+            vm.CryptoCode = network.CryptoCode;
+            vm.NBXSeedAvailable = await CanUseHotWallet() && !string.IsNullOrEmpty(await ExplorerClientProvider.GetExplorerClient(network)
+                .GetMetadataAsync<string>(GetDerivationSchemeSettings(walletId).AccountDerivation,
+                    WellknownMetadataKeys.Mnemonic));
             if (await vm.GetPSBT(network.NBitcoinNetwork) is PSBT psbt)
             {
                 vm.Decoded = psbt.ToString();
                 vm.PSBT = psbt.ToBase64();
             }
-            return View(vm ?? new WalletPSBTViewModel());
+            return View(vm ?? new WalletPSBTViewModel() { CryptoCode = walletId.CryptoCode });
         }
         [HttpPost]
         [Route("{walletId}/psbt")]
@@ -72,6 +77,7 @@ namespace BTCPayServer.Controllers
             if (command == null)
                 return await WalletPSBT(walletId, vm);
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
+            vm.CryptoCode = network.CryptoCode;
             var psbt = await vm.GetPSBT(network.NBitcoinNetwork);
             if (psbt == null)
             {
@@ -88,8 +94,10 @@ namespace BTCPayServer.Controllers
                     vm.PSBT = psbt.ToBase64();
                     vm.FileName = vm.UploadedPSBTFile?.FileName;
                     return View(vm);
+                case "vault":
+                    return ViewVault(walletId, psbt);
                 case "ledger":
-                    return ViewWalletSendLedger(psbt);
+                    return ViewWalletSendLedger(walletId, psbt);
                 case "update":
                     var derivationSchemeSettings = GetDerivationSchemeSettings(walletId);
                     psbt = await UpdatePSBT(derivationSchemeSettings, psbt, network);
@@ -102,6 +110,19 @@ namespace BTCPayServer.Controllers
                     return RedirectToWalletPSBT(walletId, psbt, vm.FileName);
                 case "seed":
                     return SignWithSeed(walletId, psbt.ToBase64());
+                case "nbx-seed":
+                    if (await CanUseHotWallet())
+                    {
+                        var derivationScheme = GetDerivationSchemeSettings(walletId);
+                        var extKey = await ExplorerClientProvider.GetExplorerClient(network)
+                            .GetMetadataAsync<string>(derivationScheme.AccountDerivation,
+                                WellknownMetadataKeys.MasterHDKey);
+
+                        return await SignWithSeed(walletId,
+                            new SignWithSeedViewModel() {SeedOrKey = extKey, PSBT = psbt.ToBase64()});
+                    }
+
+                    return View(vm);
                 case "broadcast":
                 {
                     return await WalletPSBTReady(walletId, psbt.ToBase64());
@@ -156,7 +177,8 @@ namespace BTCPayServer.Controllers
         private async Task FetchTransactionDetails(DerivationSchemeSettings derivationSchemeSettings, WalletPSBTReadyViewModel vm, BTCPayNetwork network)
         {
             var psbtObject = PSBT.Parse(vm.PSBT, network.NBitcoinNetwork);
-            psbtObject = await UpdatePSBT(derivationSchemeSettings, psbtObject, network) ?? psbtObject;
+            if (!psbtObject.IsAllFinalized())
+                psbtObject = await UpdatePSBT(derivationSchemeSettings, psbtObject, network) ?? psbtObject;
             IHDKey signingKey = null;
             RootedKeyPath signingKeyPath = null;
             try

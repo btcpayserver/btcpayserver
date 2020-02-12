@@ -14,12 +14,14 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
         public override string GetId()=> "MoneroLike";
 
 
-        public override CryptoPaymentData DeserializePaymentData(string str)
+        public override CryptoPaymentData DeserializePaymentData(BTCPayNetworkBase network, string str)
         {
-         
-#pragma warning disable CS0618
             return JsonConvert.DeserializeObject<MoneroLikePaymentData>(str);
-#pragma warning restore CS0618
+        }
+
+        public override string SerializePaymentData(BTCPayNetworkBase network, CryptoPaymentData paymentData)
+        {
+            return JsonConvert.SerializeObject(paymentData);
         }
 
         public override IPaymentMethodDetails DeserializePaymentMethodDetails(string str)

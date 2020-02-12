@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using NBitcoin;
 using NBXplorer;
+using NBXplorer.Models;
 using Newtonsoft.Json;
 
 namespace BTCPayServer
@@ -46,7 +47,7 @@ namespace BTCPayServer
 
     public class BTCPayNetwork:BTCPayNetworkBase
     {
-        public Network NBitcoinNetwork { get; set; }
+        public Network NBitcoinNetwork { get { return  NBXplorerNetwork?.NBitcoinNetwork; } }
         public NBXplorer.NBXplorerNetwork NBXplorerNetwork { get; set; }
         public bool SupportRBF { get; internal set; }
         public string LightningImagePath { get; set; }
@@ -55,6 +56,9 @@ namespace BTCPayServer
         
         public Dictionary<uint, DerivationType> ElectrumMapping = new Dictionary<uint, DerivationType>();
 
+        public virtual bool WalletSupported { get; set; } = true;
+        public virtual bool ReadonlyWallet{ get; set; } = false;
+        
         public int MaxTrackedConfirmation { get; internal set; } = 6;
         public string UriScheme { get; internal set; }
         public KeyPath GetRootKeyPath(DerivationType type)
@@ -100,14 +104,28 @@ namespace BTCPayServer
         {
             return NBXplorerNetwork.Serializer.ToString(obj);
         }
+        public virtual IEnumerable<(MatchedOutput matchedOutput, OutPoint outPoint)> GetValidOutputs(NewTransactionEvent evtOutputs)
+        {
+            return evtOutputs.Outputs.Select(output =>
+            {
+                var outpoint = new OutPoint(evtOutputs.TransactionData.TransactionHash, output.Index);
+                return (output, outpoint);
+            });
+        }
+
+        public virtual string GenerateBIP21(string cryptoInfoAddress, Money cryptoInfoDue)
+        {
+            return $"{UriScheme}:{cryptoInfoAddress}?amount={cryptoInfoDue.ToString(false, true)}";
+        }
     }
 
     public abstract class BTCPayNetworkBase
     {
+        public bool ShowSyncSummary { get; set; } = true;
         public string CryptoCode { get; internal set; }
         public string BlockExplorerLink { get; internal set; }
         public string DisplayName { get; set; }
-
+        public int Divisibility { get; set; } = 8;
         [Obsolete("Should not be needed")]
         public bool IsBTC
         {

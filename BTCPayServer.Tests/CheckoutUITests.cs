@@ -106,10 +106,14 @@ namespace BTCPayServer.Tests
         }
         
         [Fact(Timeout = TestTimeout)]
+        [Trait("Altcoins", "Altcoins")]
+        [Trait("Lightning", "Lightning")]
         public async Task CanUsePaymentMethodDropdown()
         {
             using (var s = SeleniumTester.Create())
             {
+                s.Server.ActivateLTC();
+                s.Server.ActivateLightning();
                 await s.StartAsync();
                 s.GoToRegister();
                 s.RegisterNewUser();
@@ -141,6 +145,7 @@ namespace BTCPayServer.Tests
 
                 elements = s.Driver.FindElement(By.ClassName("vex-content")).FindElements(By.ClassName("vexmenuitem"));
                 elements.Single(element => element.Text.Contains("Lightning")).Click();
+                Thread.Sleep(1000);
                 currencyDropdownButton = s.Driver.FindElement(By.ClassName("payment__currencies"));
 
                 Assert.Contains("Lightning", currencyDropdownButton.Text);
@@ -150,10 +155,12 @@ namespace BTCPayServer.Tests
         }
         
         [Fact(Timeout = TestTimeout)]
+        [Trait("Lightning", "Lightning")]
         public async Task CanUseLightningSatsFeature()
         {
             using (var s = SeleniumTester.Create())
             {
+                s.Server.ActivateLightning();
                 await s.StartAsync();
                 s.GoToRegister();
                 s.RegisterNewUser();

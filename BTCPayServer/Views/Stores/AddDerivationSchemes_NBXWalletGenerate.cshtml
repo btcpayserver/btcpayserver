@@ -1,0 +1,91 @@
+@using NBitcoin
+@model NBXplorer.Models.GenerateWalletRequest
+<div class="modal fade" id="nbxplorergeneratewallet" tabindex="-1" role="dialog" aria-labelledby="nbxplorergeneratewallet" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <form id="generate-wallet-form" class="modal-content" form method="post" onsubmit="return validatePassphraseConf();" 
+              asp-action="GenerateNBXWallet" 
+              asp-route-storeId="@this.Context.GetRouteValue("storeId")"
+              asp-route-cryptoCode="@this.Context.GetRouteValue("cryptoCode")"
+              enctype="multipart/form-data">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Generate a wallet with a seed</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>You may generate a wallet with a seed and import the xpub it into BTCPay. You can optionally also tell NBX to import the keys to the node wallet to be able to view & spend received funds from it.</p>
+
+                <div class="form-group">
+                    <label asp-for="ExistingMnemonic">Existing Seed</label>
+                    <input type="text" asp-for="ExistingMnemonic" class="form-control" />
+                    <span asp-validation-for="ExistingMnemonic" class="text-danger"></span>
+                    <small class="form-text text-muted">
+                        You can choose to import an existing mnemonic seed phrase. If you leave blank, we will generate one for you.
+                    </small>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Passphrase">Passphrase (optional)</label>
+                    <input type="password" asp-for="Passphrase" class="form-control" />
+                    <span asp-validation-for="Passphrase" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label for="passphrase_conf">Passphrase confirmation</label>
+                    <input type="password" name="passphrase_conf" class="form-control" />
+                    <span class="text-danger field-validation-valid" id="passphrase_conf_validation"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="ScriptPubKeyType">Address type</label>
+                    <select class="form-control" asp-for="ScriptPubKeyType">
+                        <option value="@ScriptPubKeyType.Segwit">Segwit (Recommended, cheapest transaction fee)</option>
+                        <option value="@ScriptPubKeyType.SegwitP2SH">Segwit wrapped (less cheap but compatible with old wallets)</option>
+                        <option value="@ScriptPubKeyType.Legacy">Legacy (Not recommended)</option>
+                    </select>
+                    <span asp-validation-for="ScriptPubKeyType" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="AccountNumber">Account</label>
+                    <select asp-for="AccountNumber" class="form-control">
+                        @for (int i = 0; i < 20; i++)
+                        {
+                            <option value="@i">@i</option>
+                        }
+                    </select>
+                    <span asp-validation-for="AccountNumber" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <input type="checkbox" class="form-check-inline" asp-for="SavePrivateKeys" />
+                    <label asp-for="SavePrivateKeys">Is hot wallet</label>
+                    <span asp-validation-for="SavePrivateKeys" class="text-danger"></span>
+                    <small class="form-text text-danger">
+                        If checked, each private key associated with an address generated will be stored as metadata in NBXplorer. While convenient, this means that anyone with access to your server will have access to your private keys and will be able to steal your funds.
+                    </small>
+                </div>
+                <div class="form-group">
+                    <input type="checkbox" class="form-check-inline" asp-for="ImportKeysToRPC" />
+                    <label asp-for="ImportKeysToRPC">Import keys to RPC</label>
+                    <span asp-validation-for="ImportKeysToRPC" class="text-danger"></span>
+                     <small class="form-text text-muted">
+                        If checked, each address generated will be imported into the node wallet so that you can view your balance through your node. When this is enabled alongside <code>Is hot wallet</code>, you're also able to use the node wallet to spend (this works pretty well in conjunction with apps such as FullyNoded).
+                    </small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="submit" class="btn btn-primary" id="btn-generate">Generate</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script type="text/javascript">
+    function validatePassphraseConf() {
+        if (document.forms["generate-wallet-form"].elements["passphrase_conf"].value !==
+            document.forms["generate-wallet-form"].elements["Passphrase"].value) {
+            $("#passphrase_conf_validation").removeClass("field-validation-valid");
+            $("#passphrase_conf_validation").text("Invalid passphrase confirmation");
+            return false;
+        }
+        return true;
+    }
+</script>

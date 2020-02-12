@@ -20,7 +20,7 @@
 </div>
 <div class="row">
     <div class="col-md-8">
-        <a id="CreateNewToken" asp-action="CreateToken" class="btn btn-primary" role="button"><span class="fa fa-plus"></span> Create a new token</a>
+        <a id="CreateNewToken" asp-action="CreateToken" class="btn btn-primary" role="button"><span class="fa fa-plus" asp-route-storeId="@this.Context.GetRouteValue("storeId")"></span> Create a new token</a>
         <table class="table table-sm table-responsive-md">
             <thead>
                 <tr>
@@ -34,7 +34,7 @@
                     <tr>
                         <td>@token.Label</td>
                         <td class="text-right">
-                            <a asp-action="ShowToken" asp-route-tokenId="@token.Id">See information</a> - <a asp-action="RevokeToken" asp-route-tokenId="@token.Id">Revoke</a>
+                            <a asp-action="ShowToken" asp-route-storeId="@this.Context.GetRouteValue("storeId")" asp-route-tokenId="@token.Id">See information</a> - <a asp-action="RevokeToken" asp-route-storeId="@this.Context.GetRouteValue("storeId")" asp-route-tokenId="@token.Id">Revoke</a>
                         </td>
                     </tr>
                 }
@@ -52,7 +52,7 @@
 
 <div class="row">
     <div class="col-md-8">
-        <form method="post" asp-action="GenerateAPIKey">
+        <form method="post" asp-action="GenerateAPIKey" asp-route-storeId="@this.Context.GetRouteValue("storeId")">
             <div class="form-group">
                 <label asp-for="ApiKey"></label>
                 <input asp-for="ApiKey" readonly class="form-control" />

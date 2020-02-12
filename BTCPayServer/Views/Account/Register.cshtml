@@ -2,7 +2,7 @@
 @{
     ViewData["Title"] = "Register";
     var useBasicLayout = ViewData["UseBasicLayout"] is true;
-    Layout = useBasicLayout ? "../Shared/_Layout.cshtml" : "_WelcomeLayout.cshtml";
+    Layout = useBasicLayout ? "_Layout" : "_LayoutWelcome";
 }
 @if (TempData.HasStatusMessage())
 {
@@ -70,5 +70,6 @@
                 </fieldset>
             </form>
         </div>
+            <div class="modal-footer"><span>Already have an account? <a id="Login" asp-action="Login" asp-route-returnurl="@ViewData["ReturnUrl"]">Login</a></span></div>
     </div>
 </div>

@@ -23,6 +23,7 @@ using BTCPayServer.U2F.Models;
 using Newtonsoft.Json;
 using NicolasDorier.RateLimits;
 using BTCPayServer.Data;
+using U2F.Core.Exceptions;
 
 namespace BTCPayServer.Controllers
 {
@@ -38,7 +39,7 @@ namespace BTCPayServer.Controllers
         SettingsRepository _SettingsRepository;
         Configuration.BTCPayServerOptions _Options;
         private readonly BTCPayServerEnvironment _btcPayServerEnvironment;
-        private readonly U2FService _u2FService;
+        public  U2FService _u2FService;
         ILogger _logger;
 
         public AccountController(
@@ -235,9 +236,8 @@ namespace BTCPayServer.Controllers
 
                 errorMessage = "Invalid login attempt.";
             }
-            catch (Exception e)
+            catch (U2fException e)
             {
-
                 errorMessage = e.Message;
             }
 

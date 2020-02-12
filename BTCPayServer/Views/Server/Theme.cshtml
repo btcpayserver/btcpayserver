@@ -13,14 +13,23 @@
 <div class="row">
     <div class="col-lg-6">
         <form method="post">
-            <div class="form-group mb-5">
+            <h4>Custom theme</h4>
+            <p>Select one of our predefined themes. Optionally you can also provide a CSS file that customizes the chosen theme.</p>
+            <div class="form-group">
                 <label asp-for="ThemeCssUri"></label>
-                <select id=themes asp-for="ThemeCssUri" class="form-control">
+                <select asp-for="ThemeCssUri" class="form-control">
                     <option value="/main/themes/classic.css">Classic</option>
                     <option value="/main/themes/casa.css">Casa</option>
                 </select>
                 <span asp-validation-for="ThemeCssUri" class="text-danger"></span>
             </div>
+            <div class="form-group mb-5">
+                <label asp-for="CustomThemeCssUri"></label>
+                <a href="https://docs.btcpayserver.org/development/theme#custom-themes" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                <input asp-for="CustomThemeCssUri" class="form-control" />
+                <span asp-validation-for="CustomThemeCssUri" class="text-danger"></span>
+            </div>
+            <h4>Bootstrap theme</h4>
             <div class="form-group">
                 <label asp-for="BootstrapCssUri"></label>
                 <a href="https://docs.btcpayserver.org/development/theme#bootstrap-themes" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>

@@ -97,9 +97,9 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach(var scheme in Model.DerivationSchemes)
+                        @foreach(var scheme in Model.DerivationSchemes.OrderBy(scheme => scheme.Collapsed))
                         {
-                            <tr>
+                            <tr class="@(@scheme.Collapsed? "collapsed": "")">
                                 <td>@scheme.Crypto</td>
                                 <td class="smMaxWidth text-truncate">@scheme.Value</td>
                                 <td style="text-align:center;">
@@ -113,7 +113,7 @@
                                     }
                                 </td>
                                 <td style="text-align:right">
-                                    @if(!string.IsNullOrWhiteSpace(scheme.Value))
+                                    @if(!string.IsNullOrWhiteSpace(scheme.Value) && scheme.WalletSupported)
                                     {
                                         <a asp-action="WalletTransactions" asp-controller="Wallets" asp-route-walletId="@scheme.WalletId">Wallet</a><span> - </span>
                                     }
@@ -121,6 +121,13 @@
                                 </td>
                             </tr>
                         }
+                    
+                    @if (Model.DerivationSchemes.Any(scheme => scheme.Collapsed))
+                    {
+                        <tr class="only-for-js">
+                            <td colspan="4"><button class="btn btn-link" id="toggle-assets" type="button">Show additional assets</button></td>
+                        </tr>
+                    }
                     </tbody>
                 </table>
             </div>
@@ -203,7 +210,7 @@
                                         <span class="fa fa-times"></span>
                                     }
                                 </td>
-                                <td class="text-right"><a asp-action="@scheme.Action" id='Modify-@scheme.Provider'>Modify</a></td>
+                                <td class="text-right"><a asp-action="@scheme.Action" id='Modify-@scheme.Provider' asp-route-storeId="@this.Context.GetRouteValue("storeId")">Modify</a></td>
                             </tr>
                         }
                         </tbody>
@@ -227,7 +234,7 @@
                         <td>
                             Email
                         </td>
-                        <td style="text-align:right"><a asp-action="Emails" >Modify</a></td>
+                        <td style="text-align:right"><a asp-action="Emails" asp-route-storeId="@this.Context.GetRouteValue("storeId")">Modify</a></td>
                     </tr>
                     </tbody>
                 </table>
@@ -250,4 +257,14 @@
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
+
+    <script>
+    $(document).ready(function(){
+       $(".collapsed").hide(); 
+       $("#toggle-assets").click(function() {
+         $(".collapsed").show(); 
+         $(this).parents("tr").hide();
+       });
+    });
+    </script>
 }

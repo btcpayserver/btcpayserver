@@ -9,6 +9,7 @@ using BTCPayServer.Security;
 using BTCPayServer.Services.Rates;
 using NBitcoin;
 using NBXplorer;
+using NBXplorer.DerivationStrategy;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Data
@@ -50,7 +51,7 @@ namespace BTCPayServer.Data
         {
             var result = storeData.StoreBlob == null ? new StoreBlob() : new Serializer(null).ToObject<StoreBlob>(Encoding.UTF8.GetString(storeData.StoreBlob));
             if (result.PreferredExchange == null)
-                result.PreferredExchange = CoinAverageRateProvider.CoinAverageName;
+                result.PreferredExchange = CoinGeckoRateProvider.CoinGeckoName;
             return result;
         }
 

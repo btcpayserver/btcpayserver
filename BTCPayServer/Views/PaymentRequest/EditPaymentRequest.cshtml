@@ -100,7 +100,7 @@
                         <button type="submit" class="btn btn-primary" id="SaveButton">Save</button>
                         @if (!string.IsNullOrEmpty(Model.Id))
                         {
-                            <a class="btn btn-secondary" target="_blank" asp-action="ViewPaymentRequest" id="@Model.Id" name="ViewAppButton">View</a>
+                            <a class="btn btn-secondary" target="_blank" asp-action="ViewPaymentRequest" asp-route-id="@this.Context.GetRouteValue("id")" id="@Model.Id" name="ViewAppButton">View</a>
                             <a class="btn btn-secondary"
                                target="_blank"
                                asp-action="ListInvoices"

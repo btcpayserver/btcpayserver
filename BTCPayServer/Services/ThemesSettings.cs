@@ -16,10 +16,16 @@ namespace BTCPayServer.Services
 
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         [MaxLength(500)]
+        [Display(Name = "Custom Theme CSS file")]
+        public string CustomThemeCssUri { get; set; }
+
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+        [MaxLength(500)]
         [Display(Name = "Custom bootstrap CSS file")]
         public string BootstrapCssUri { get; set; }
 
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+        [Display(Name = "Custom Creative Start CSS file")]
         public string CreativeStartCssUri { get; set; }
         public bool FirstRun { get; set; }
         public override string ToString()

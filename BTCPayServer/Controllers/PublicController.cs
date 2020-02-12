@@ -49,17 +49,27 @@ namespace BTCPayServer.Controllers
             if (!ModelState.IsValid)
                 return View();
 
-            var invoice = await _InvoiceController.CreateInvoiceCore(new CreateInvoiceRequest()
+            DataWrapper<InvoiceResponse> invoice = null;
+            try
             {
-                Price = model.Price,
-                Currency = model.Currency,
-                ItemDesc = model.CheckoutDesc,
-                OrderId = model.OrderId,
-                NotificationEmail = model.NotifyEmail,
-                NotificationURL = model.ServerIpn,
-                RedirectURL = model.BrowserRedirect,
-                FullNotifications = true
-            }, store, HttpContext.Request.GetAbsoluteRoot(), cancellationToken: cancellationToken);
+                invoice = await _InvoiceController.CreateInvoiceCore(new CreateInvoiceRequest()
+                {
+                    Price = model.Price,
+                    Currency = model.Currency,
+                    ItemDesc = model.CheckoutDesc,
+                    OrderId = model.OrderId,
+                    NotificationEmail = model.NotifyEmail,
+                    NotificationURL = model.ServerIpn,
+                    RedirectURL = model.BrowserRedirect,
+                    FullNotifications = true
+                }, store, HttpContext.Request.GetAbsoluteRoot(), cancellationToken: cancellationToken);
+            }
+            catch (BitpayHttpException e)
+            {
+                ModelState.AddModelError("Store", e.Message);
+                return View();
+            }
+
             if (string.IsNullOrEmpty(model.CheckoutQueryString))
             {
                 return Redirect(invoice.Data.Url);

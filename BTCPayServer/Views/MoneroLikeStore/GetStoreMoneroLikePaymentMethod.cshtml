@@ -33,7 +33,10 @@
 
         @if (!Model.WalletFileFound || Model.Summary.WalletHeight == default(long))
         {
-            <form method="post" asp-action="GetStoreMoneroLikePaymentMethod" class="mt-4" enctype="multipart/form-data">
+            <form method="post" asp-action="GetStoreMoneroLikePaymentMethod" 
+                  asp-route-storeId="@this.Context.GetRouteValue("storeId")"
+                  asp-route-cryptoCode="@this.Context.GetRouteValue("cryptoCode")" 
+                  class="mt-4" enctype="multipart/form-data">
 
                 <div class="card my-2">
                     <h3 class="card-title p-2">Upload Wallet</h3>
@@ -58,7 +61,10 @@
                 </div>
             </form>
         }
-        <form method="post" asp-action="GetStoreMoneroLikePaymentMethod" class="mt-4" enctype="multipart/form-data">
+        <form method="post" asp-action="GetStoreMoneroLikePaymentMethod"
+              asp-route-storeId="@this.Context.GetRouteValue("storeId")"
+              asp-route-cryptoCode="@this.Context.GetRouteValue("cryptoCode")" 
+              class="mt-4" enctype="multipart/form-data">
 
             <input type="hidden" asp-for="CryptoCode"/>
             @if (!Model.WalletFileFound || Model.Summary.WalletHeight == default(long))
@@ -100,7 +106,13 @@
             <div class="form-group">
                 <button type="submit" class="btn btn-primary" id="SaveButton">Save</button>
 
-                <a class="btn btn-secondary" asp-action="GetStoreMoneroLikePaymentMethods" asp-controller="MoneroLikeStore">Back to list</a>
+                <a class="btn btn-secondary" asp-action="GetStoreMoneroLikePaymentMethods"
+
+                   asp-route-storeId="@this.Context.GetRouteValue("storeId")"
+                   asp-route-cryptoCode="@this.Context.GetRouteValue("cryptoCode")"
+                   asp-controller="MoneroLikeStore">
+                    Back to list
+                </a>
             </div>
         </form>
     </div>

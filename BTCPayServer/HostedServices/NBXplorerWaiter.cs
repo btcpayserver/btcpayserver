@@ -33,7 +33,7 @@ namespace BTCPayServer.HostedServices
         public void Publish(BTCPayNetworkBase network, NBXplorerState state, StatusResult status, string error)
         {
             var summary = new NBXplorerSummary() { Network = network, State = state, Status = status, Error = error };
-            _Summaries.AddOrUpdate(network.CryptoCode, summary, (k, v) => summary);
+            _Summaries.AddOrUpdate(network.CryptoCode.ToUpperInvariant(), summary, (k, v) => summary);
         }
 
         public bool IsFullySynched()

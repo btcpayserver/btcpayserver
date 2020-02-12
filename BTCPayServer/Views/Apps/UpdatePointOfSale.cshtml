@@ -145,10 +145,18 @@
                     </div>
                     <input type="hidden" asp-for="NotificationEmailWarning" />
                     <div class="form-group">
-                        <input type="submit" class="btn btn-primary" value="Save Settings" id="SaveSettings" />
-                        <a class="btn btn-secondary" target="_blank" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
-                        <a class="btn btn-secondary" target="_blank" asp-action="ViewPointOfSale" asp-controller="AppsPublic" asp-route-appId="@Model.Id" id="ViewApp">View App</a>
-                        <a class="btn btn-secondary" target="_blank" asp-action="ListApps">Back to the app list</a>
+                        <button type="submit" class="btn btn-primary" id="SaveSettings">Save Settings</button>
+                        <div class="btn-group">
+                            <a class="btn btn-outline-primary" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
+                            <a class="btn btn-outline-primary" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm"
+                               target="viewinvoices_@Model.Id"><span class="fa fa-external-link"></span></a>
+                        </div>
+                        <div class="btn-group">
+                            <a class="btn btn-outline-primary" asp-action="ViewPointOfSale" asp-controller="AppsPublic" asp-route-appId="@Model.Id" id="ViewApp">View App</a>
+                            <a class="btn btn-outline-primary" asp-action="ViewPointOfSale" asp-controller="AppsPublic" asp-route-appId="@Model.Id"
+                               target="viewapp_@Model.Id"><span class="fa fa-external-link"></span></a>
+                        </div>
+                        <a class="btn btn-outline-primary" target="_blank" asp-action="ListApps">Back to the app list</a>
                     </div>
                     <div class="form-group">
                         <div class="accordion" id="accordian-dev-info">
@@ -253,12 +261,11 @@
                 </div>
                 <div class="col-sm-3">
                     <label>Price</label>*
-                    <input
-                        class="js-product-price form-control mb-2"
-                        inputmode="numeric"
-                        pattern="\d*"
-                        type="number"
-                        value="{price}" />
+                    <input class="js-product-price form-control mb-2"
+                           inputmode="numeric"
+                           pattern="\d*"
+                           type="number"
+                           value="{price}" />
                 </div>
                 <div class="col-sm-3">
                     <label>Custom price</label>
@@ -282,7 +289,7 @@
             <div class="form-row">
                 <div class="col">
                     <label>Inventory (leave blank to not use inventory feature)</label>
-                    <input type="number" step="1" class="js-product-inventory form-control mb-2" value="{inventory}"/>
+                    <input type="number" step="1" class="js-product-inventory form-control mb-2" value="{inventory}" />
                 </div>
             </div>
         </div>

@@ -109,7 +109,7 @@ namespace BTCPayServer.Tests
             SupportedNetwork = parent.NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
             var store = parent.PayTester.GetController<StoresController>(UserId, StoreId);
             ExtKey = new ExtKey().GetWif(SupportedNetwork.NBitcoinNetwork);
-            DerivationScheme = new DerivationStrategyFactory(SupportedNetwork.NBitcoinNetwork).Parse(ExtKey.Neuter().ToString() + (segwit ? "" : "-[legacy]"));
+            DerivationScheme = SupportedNetwork.NBXplorerNetwork.DerivationStrategyFactory.Parse(ExtKey.Neuter().ToString() + (segwit ? "" : "-[legacy]"));
             await store.AddDerivationScheme(StoreId, new DerivationSchemeViewModel()
             {
                 DerivationScheme = DerivationScheme.ToString(),

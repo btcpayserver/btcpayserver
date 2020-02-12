@@ -48,11 +48,11 @@ namespace BTCPayServer
                 throw new FormatException();
             }
             if (type == DerivationType.Segwit)
-                return new DirectDerivationStrategy(extPubKey) { Segwit = true };
+                return new DirectDerivationStrategy(extPubKey, true);
             if (type == DerivationType.Legacy)
-                return new DirectDerivationStrategy(extPubKey) { Segwit = false };
+                return new DirectDerivationStrategy(extPubKey, false);
             if (type == DerivationType.SegwitP2SH)
-                return new DerivationStrategyFactory(Network).Parse(extPubKey.ToString() + "-[p2sh]");
+                return BtcPayNetwork.NBXplorerNetwork.DerivationStrategyFactory.Parse(extPubKey.ToString() + "-[p2sh]");
             throw new FormatException();
         }
 
@@ -79,11 +79,14 @@ namespace BTCPayServer
             }
 
             if (!Network.Consensus.SupportSegwit)
+            {
                 hintedLabels.Add("legacy");
+                str = str.Replace("-[p2sh]", string.Empty, StringComparison.OrdinalIgnoreCase);
+            }
 
             try
             {
-                var result = new DerivationStrategyFactory(Network).Parse(str);
+                var result = BtcPayNetwork.NBXplorerNetwork.DerivationStrategyFactory.Parse(str);
                 return FindMatch(hintedLabels, result);
             }
             catch
@@ -150,12 +153,11 @@ namespace BTCPayServer
                 str = $"{str}-[{label}]";
             }
 
-            return FindMatch(hintedLabels, new DerivationStrategyFactory(Network).Parse(str));
+            return FindMatch(hintedLabels, BtcPayNetwork.NBXplorerNetwork.DerivationStrategyFactory.Parse(str));
         }
 
         private DerivationStrategyBase FindMatch(HashSet<string> hintLabels, DerivationStrategyBase result)
         {
-            var facto = new DerivationStrategyFactory(Network);
             var firstKeyPath = new KeyPath("0/0");
             if (HintScriptPubKey == null)
                 return result;
@@ -169,7 +171,7 @@ namespace BTCPayServer
             resultNoLabels = string.Join('-', resultNoLabels.Split('-').Where(p => !IsLabel(p)));
             foreach (var labels in ItemCombinations(hintLabels.ToList()))
             {
-                var hinted = facto.Parse(resultNoLabels + '-' + string.Join('-', labels.Select(l => $"[{l}]").ToArray()));
+                var hinted = BtcPayNetwork.NBXplorerNetwork.DerivationStrategyFactory.Parse(resultNoLabels + '-' + string.Join('-', labels.Select(l => $"[{l}]").ToArray()));
                 if (HintScriptPubKey == hinted.GetDerivation(firstKeyPath).ScriptPubKey)
                     return hinted;
             }

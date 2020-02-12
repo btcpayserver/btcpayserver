@@ -12,6 +12,7 @@ using U2F.Core.Models;
 using U2F.Core.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
+using U2F.Core.Exceptions;
 
 namespace BTCPayServer.U2F
 {
@@ -66,7 +67,7 @@ namespace BTCPayServer.U2F
 
         public ServerRegisterResponse StartDeviceRegistration(string userId, string appId)
         {
-            var startedRegistration = global::U2F.Core.Crypto.U2F.StartRegistration(appId);
+            var startedRegistration = StartDeviceRegistrationCore(appId);
 
             UserAuthenticationRequests.AddOrReplace(userId, new List<U2FDeviceAuthenticationRequest>()
             {
@@ -103,23 +104,24 @@ namespace BTCPayServer.U2F
 
             var startedRegistration =
                 new StartedRegistration(authenticationRequest.Challenge, authenticationRequest.AppId);
-            var registration = global::U2F.Core.Crypto.U2F.FinishRegistration(startedRegistration, registerResponse);
+            var registration = FinishRegistrationCore(startedRegistration, registerResponse);
 
             UserAuthenticationRequests.AddOrReplace(userId, new List<U2FDeviceAuthenticationRequest>());
             using (var context = _contextFactory.CreateContext())
             {
                 var duplicate = context.U2FDevices.Any(device =>
-                    device.ApplicationUserId.Equals(userId, StringComparison.InvariantCulture) &&
+                    device.ApplicationUserId == userId &&
                     device.KeyHandle.Equals(registration.KeyHandle) &&
                     device.PublicKey.Equals(registration.PublicKey));
 
                 if (duplicate)
                 {
-                    throw new InvalidOperationException("The U2F Device has already been registered with this user");
+                    throw new U2fException("The U2F Device has already been registered with this user");
                 }
                 
                 await context.U2FDevices.AddAsync(new U2FDevice()
                 {
+                    Id = Guid.NewGuid().ToString(),
                     AttestationCert = registration.AttestationCert,
                     Counter = Convert.ToInt32(registration.Counter),
                     Name = name,
@@ -146,8 +148,8 @@ namespace BTCPayServer.U2F
             {
                 var keyHandle = authenticateResponse.KeyHandle.Base64StringToByteArray();
                 var device = await context.U2FDevices.Where(fDevice =>
-                    fDevice.ApplicationUserId.Equals(userId, StringComparison.InvariantCulture) &&
-                    fDevice.KeyHandle.SequenceEqual(keyHandle)).SingleOrDefaultAsync();
+                    fDevice.ApplicationUserId == userId &&
+                    fDevice.KeyHandle == keyHandle).SingleOrDefaultAsync();
 
                 if (device == null)
                     return false;
@@ -172,7 +174,7 @@ namespace BTCPayServer.U2F
                 {
                     authentication = new StartedAuthentication(challengeAuthenticationRequestMatch.Challenge, authenticationRequest.AppId, authenticationRequest.KeyHandle);
                 }
-                global::U2F.Core.Crypto.U2F.FinishAuthentication(authentication, authenticateResponse, registration);
+                FinishAuthenticationCore(authentication, authenticateResponse, registration);
 
                 UserAuthenticationRequests.AddOrReplace(userId, new List<U2FDeviceAuthenticationRequest>());
 
@@ -199,9 +201,7 @@ namespace BTCPayServer.U2F
                 var serverChallenges = new List<ServerChallenge>();
                 foreach (var registeredDevice in devices)
                 {
-                   var challenge =  global::U2F.Core.Crypto.U2F.StartAuthentication(appId,
-                       new DeviceRegistration(registeredDevice.KeyHandle, registeredDevice.PublicKey,
-                           registeredDevice.AttestationCert, (uint)registeredDevice.Counter));
+                   var challenge =  StartAuthenticationCore(appId, registeredDevice);
                    serverChallenges.Add(new ServerChallenge()
                    {
                        challenge = challenge.Challenge,
@@ -223,6 +223,29 @@ namespace BTCPayServer.U2F
                 UserAuthenticationRequests.AddOrReplace(userId, requests);
                 return serverChallenges;
             }
+        }
+
+        protected virtual StartedRegistration StartDeviceRegistrationCore(string appId)
+        {
+            return global::U2F.Core.Crypto.U2F.StartRegistration(appId);
+        }
+        
+        protected virtual DeviceRegistration FinishRegistrationCore(StartedRegistration startedRegistration, RegisterResponse registerResponse)
+        {
+            return global::U2F.Core.Crypto.U2F.FinishRegistration(startedRegistration, registerResponse);
+        }
+        
+        protected virtual StartedAuthentication StartAuthenticationCore(string appId, U2FDevice registeredDevice)
+        {
+            return global::U2F.Core.Crypto.U2F.StartAuthentication(appId,
+                new DeviceRegistration(registeredDevice.KeyHandle, registeredDevice.PublicKey,
+                    registeredDevice.AttestationCert, (uint)registeredDevice.Counter));
+        }
+        
+        protected virtual void FinishAuthenticationCore(StartedAuthentication authentication,
+            AuthenticateResponse authenticateResponse, DeviceRegistration registration)
+        {
+            global::U2F.Core.Crypto.U2F.FinishAuthentication(authentication, authenticateResponse, registration);
         }
     }
 }

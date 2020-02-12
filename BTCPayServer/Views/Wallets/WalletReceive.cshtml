@@ -1,0 +1,129 @@
+﻿@using Microsoft.AspNetCore.Mvc.ModelBinding
+@model BTCPayServer.Controllers.WalletReceiveViewModel
+@{
+    Layout = "../Shared/_NavLayout.cshtml";
+    ViewData["Title"] = "Manage wallet";
+    ViewData.SetActivePageAndTitle(WalletsNavPages.Receive);
+}
+@if (TempData.HasStatusMessage())
+{
+    <div class="row">
+        <div class="col-md-12 text-center">
+            <partial name="_StatusMessage" />
+        </div>
+    </div>
+}
+<div class="row no-gutters">
+    <div class="col-lg-6  mx-auto my-auto ">
+        <form method="post" asp-action="WalletReceive" class="card text-center">
+            @if (string.IsNullOrEmpty(Model.Address))
+            {
+
+                <h2 class="card-title">Receive @Model.CryptoCode</h2>
+                <button class="btn btn-lg btn-primary m-2" type="submit" name="command" value="generate-new-address">Generate @Model.CryptoCode address</button>
+            }
+            else
+            {
+                <h2 class="card-title">Next available @Model.CryptoCode address</h2>
+                <noscript>
+                    <div class="card-body m-sm-0 p-sm-0">
+                        <div class="input-group">
+                            <input type="text" class="form-control " readonly="readonly" asp-for="Address" id="address" />
+                            <div class="input-group-append">
+                                <span class="input-group-text fa fa-copy"> </span>
+                            </div>
+                        </div>
+
+                        <button type="submit" name="command" value="unreserve-current-address" class="btn btn-link">Unreserve this address</button>
+
+                    </div>
+                </noscript>
+                <div class="only-for-js card-body m-sm-0 p-sm-0" id="app">
+                    <div class="qr-container mb-2">
+                        <img v-bind:src="srvModel.cryptoImage" class="qr-icon" />
+                        <qrcode v-bind:value="srvModel.address" :options="{ width: 256, margin: 0, color: {dark:'#000', light:'#fff'} }" tag="svg">
+                        </qrcode>
+                    </div>
+                    <div class="input-group copy" data-clipboard-target="#vue-address">
+                        <input type="text" class=" form-control " readonly="readonly" :value="srvModel.address" id="vue-address" />
+                        <div class="input-group-append">
+                            <span class="input-group-text fa fa-copy"> </span>
+                        </div>
+                    </div>
+
+                    <button type="submit" name="command" value="unreserve-current-address" class="btn btn-link">Unreserve this address</button>
+
+                </div>
+            }
+
+        </form>
+    </div>
+</div>
+
+@section HeadScripts
+
+{
+    <script src="~/bundles/lightning-node-info-bundle.min.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        var srvModel = @Safe.Json(Model);
+        window.onload = function() {
+            if($("#app").length <1){
+                return;
+            }
+            Vue.use(Toasted);
+            var app = new Vue({
+                el: '#app',
+                components: {
+                    qrcode: VueQrcode
+                },
+                data: {
+                    srvModel: srvModel
+                },
+                mounted: function() {
+
+                    this.$nextTick(function() {
+                        var copyInput = new Clipboard('.copy');
+
+                        copyInput.on("success",
+                            function(e) {
+                                Vue.toasted.show('Copied',
+                                    {
+                                        iconPack: "fontawesome",
+                                        icon: "copy",
+                                        duration: 5000
+                                    });
+                            });
+                    });
+                }
+            });
+        }
+    </script>
+
+    <style>
+
+        .qr-icon {
+            height: 64px;
+            width: 64px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            margin: auto;
+        }
+
+        .qr-container {
+            position: relative;
+            text-align: center;
+        }
+
+            .qr-container svg {
+                width: 256px;
+                height: 256px;
+            }
+
+        .copy {
+            cursor: copy;
+        }
+    </style>
+}

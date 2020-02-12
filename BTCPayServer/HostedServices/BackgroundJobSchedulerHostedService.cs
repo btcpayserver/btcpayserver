@@ -83,7 +83,7 @@ namespace BTCPayServer.HostedServices
         {
             lock (_Processing)
             {
-                return _Processing.Count();
+                return _Processing.Count;
             }
         }
 

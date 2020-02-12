@@ -19,10 +19,10 @@ namespace BTCPayServer.Models.StoreViewModels
             get; set;
         }
 
-        public List<(string KeyPath, string Address)> AddressSamples
+        public List<(string KeyPath, string Address, RootedKeyPath RootedKeyPath)> AddressSamples
         {
             get; set;
-        } = new List<(string KeyPath, string Address)>();
+        } = new List<(string KeyPath, string Address, RootedKeyPath RootedKeyPath)>();
 
         public string CryptoCode { get; set; }
         public string KeyPath { get; set; }
@@ -41,5 +41,17 @@ namespace BTCPayServer.Models.StoreViewModels
         public string DerivationSchemeFormat { get; set; }
         public string AccountKey { get; set; }
         public BTCPayNetwork Network { get; set; }
+        public bool CanUseHotWallet { get; set; }
+
+        public RootedKeyPath GetAccountKeypath()
+        {
+            if (KeyPath != null && RootFingerprint != null &&
+                NBitcoin.KeyPath.TryParse(KeyPath, out var p) &&
+                HDFingerprint.TryParse(RootFingerprint, out var fp))
+            {
+                return new RootedKeyPath(fp, p);
+            }
+            return null;
+        }
     }
 }

@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;

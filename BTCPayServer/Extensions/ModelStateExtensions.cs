@@ -1,11 +1,7 @@
 using System;
 using System.Linq.Expressions;
 using Microsoft.AspNetCore.Mvc;
-#if NETCOREAPP21
-using Microsoft.AspNetCore.Mvc.ViewFeatures.Internal;
-#else
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
-#endif
 
 namespace BTCPayServer
 {
@@ -17,12 +13,8 @@ namespace BTCPayServer
             string message,
             Controller controller)
         {
-#if NETCOREAPP21
-            var key = ExpressionHelper.GetExpressionText(ex);
-#else
             var provider = (ModelExpressionProvider)controller.HttpContext.RequestServices.GetService(typeof(ModelExpressionProvider));
             var key = provider.GetExpressionText(ex);
-#endif
             controller.ModelState.AddModelError(key, message);
         }
     }

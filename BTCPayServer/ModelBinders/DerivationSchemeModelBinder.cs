@@ -41,7 +41,7 @@ namespace BTCPayServer.ModelBinders
             var network = networkProvider.GetNetwork<BTCPayNetwork>(cryptoCode ?? "BTC");
             try
             {
-                var data = new DerivationStrategyFactory(network.NBitcoinNetwork).Parse(key);
+                var data =network.NBXplorerNetwork.DerivationStrategyFactory.Parse(key);
                 if (!bindingContext.ModelType.IsInstanceOfType(data))
                 {
                     throw new FormatException("Invalid destination type");

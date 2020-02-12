@@ -1,0 +1,56 @@
+﻿<script id="VaultConnection" type="text/template">
+    <div class="vault-feedback vault-feedback1">
+        <span class="vault-feedback-icon"></span> <span class="vault-feedback-content"></span>
+    </div>
+    <div class="vault-feedback vault-feedback2">
+        <span class="vault-feedback-icon"></span> <span class="vault-feedback-content"></span>
+    </div>
+    <div class="vault-feedback vault-feedback3">
+        <span class="vault-feedback-icon"></span> <span class="vault-feedback-content"></span>
+    </div>
+    <div id="pin-input" class="mt-4" style="display: none;">
+        <div class="row">
+            <div class="col">
+                <div class="input-group mb-2">
+                    <input id="pin-display" type="text" class="form-control" readonly>
+                    <div class="input-group-append">
+                        <div id="pin-display-delete" class="input-group-text" style="cursor: pointer"><span class="fa fa-remove"></span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col"><div class="pin-button" id="pin-7"></div></div>
+            <div class="col"><div class="pin-button" id="pin-8"></div></div>
+            <div class="col"><div class="pin-button" id="pin-9"></div></div>
+        </div>
+        <div class="row">
+            <div class="col"><div class="pin-button" id="pin-4"></div></div>
+            <div class="col"><div class="pin-button" id="pin-5"></div></div>
+            <div class="col"><div class="pin-button" id="pin-6"></div></div>
+        </div>
+        <div class="row">
+            <div class="col"><div class="pin-button" id="pin-1"></div></div>
+            <div class="col"><div class="pin-button" id="pin-2"></div></div>
+            <div class="col"><div class="pin-button" id="pin-3"></div></div>
+        </div>
+    </div>
+    <div id="passphrase-input" class="mt-4" style="display: none;">
+        <div class="form-group">
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <label for="Password" class="input-group-text"><span class="input-group-addon fa fa-lock"></span></label>
+                </div>
+                <input id="Password" type="password" class="form-control" placeholder="Passphrase" />
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <label for="PasswordConfirmation" class="input-group-text"><span class="input-group-addon fa fa-lock"></span></label>
+                </div>
+                <input id="PasswordConfirmation" type="password" class="form-control" placeholder="Passphrase confirmation" />
+            </div>
+        </div>
+    </div>
+</script>

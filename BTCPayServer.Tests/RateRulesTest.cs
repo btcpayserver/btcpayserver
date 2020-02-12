@@ -56,6 +56,8 @@ namespace BTCPayServer.Tests
                 (Pair: "BTC_CAD", Expected: "coinbase(BTC_CAD)"),
                 (Pair: "DOGE_CAD", Expected: "bittrex(DOGE_BTC) * coinbase(BTC_CAD) * 1.1"),
                 (Pair: "LTC_CAD", Expected: "coinaverage(LTC_CAD) * 1.02"),
+                (Pair: "SATS_CAD", Expected: "0.00000001 * coinbase(BTC_CAD)"),
+                (Pair: "Sats_USD", Expected: "0.00000001 * kraken(BTC_USD)")
             };
             foreach (var test in tests)
             {
@@ -102,6 +104,8 @@ namespace BTCPayServer.Tests
                 (Pair: "BTC_CAD", Expected: "coinbase(BTC_CAD)", ExpectedExchangeRates: "coinbase(BTC_CAD)"),
                 (Pair: "DOGE_CAD", Expected: "bittrex(DOGE_BTC) * coinbase(BTC_CAD) * 1.1", ExpectedExchangeRates: "bittrex(DOGE_BTC),coinbase(BTC_CAD)"),
                 (Pair: "LTC_CAD", Expected: "coinaverage(LTC_CAD) * 1.02", ExpectedExchangeRates: "coinaverage(LTC_CAD)"),
+                (Pair: "SATS_USD", Expected: "0.00000001 * kraken(BTC_USD)", ExpectedExchangeRates: "kraken(BTC_USD)"),
+                (Pair: "SATS_EUR", Expected: "0.00000001 * coinbase(BTC_EUR)", ExpectedExchangeRates: "coinbase(BTC_EUR)")
             };
             foreach (var test in tests2)
             {
@@ -189,6 +193,37 @@ namespace BTCPayServer.Tests
             rule2.ExchangeRates.SetRate("coinaverage", CurrencyPair.Parse("BTC_USD"), new BidAsk(6000m, 6100m));
             Assert.True(rule2.Reevaluate());
             Assert.Equal($"({(1m / 6100m).ToString(CultureInfo.InvariantCulture)}, {(1m / 6000m).ToString(CultureInfo.InvariantCulture)})", rule2.ToString(true));
+
+            // Make sure defining value in sats works
+            builder = new StringBuilder();
+            builder.AppendLine("BTC_USD = kraken(BTC_USD)");
+            builder.AppendLine("BTC_X = coinbase(BTC_X)");
+            Assert.True(RateRules.TryParse(builder.ToString(), out rules));
+            rule2 = rules.GetRuleFor(CurrencyPair.Parse("SATS_USD"));
+            rule2.ExchangeRates.SetRate("kraken", CurrencyPair.Parse("BTC_USD"), new BidAsk(6000m, 6100m));
+            Assert.True(rule2.Reevaluate());
+            Assert.Equal("0.00000001 * (6000, 6100)", rule2.ToString(true));
+            Assert.Equal(0.00006m, rule2.BidAsk.Bid);
+            rule2 = rules.GetRuleFor(CurrencyPair.Parse("USD_SATS"));
+            rule2.ExchangeRates.SetRate("kraken", CurrencyPair.Parse("BTC_USD"), new BidAsk(6000m, 6100m));
+            Assert.True(rule2.Reevaluate());
+            Assert.Equal("1 / (0.00000001 * (6000, 6100))", rule2.ToString(true));
+            Assert.Equal(1m / 0.000061m, rule2.BidAsk.Bid);
+
+            // testing rounding 
+            rule2 = rules.GetRuleFor(CurrencyPair.Parse("Sats_EUR"));
+            rule2.ExchangeRates.SetRate("coinbase", CurrencyPair.Parse("BTC_EUR"), new BidAsk(1.23m, 2.34m));
+            Assert.True(rule2.Reevaluate());
+            Assert.Equal("0.00000001 * (1.23, 2.34)", rule2.ToString(true));
+            Assert.Equal(0.0000000234m, rule2.BidAsk.Ask);
+            Assert.Equal(0.0000000123m, rule2.BidAsk.Bid);
+
+            rule2 = rules.GetRuleFor(CurrencyPair.Parse("EUR_Sats"));
+            rule2.ExchangeRates.SetRate("coinbase", CurrencyPair.Parse("BTC_EUR"), new BidAsk(1.23m, 2.34m));
+            Assert.True(rule2.Reevaluate());
+            Assert.Equal("1 / (0.00000001 * (1.23, 2.34))", rule2.ToString(true));
+            Assert.Equal(1m / 0.0000000123m, rule2.BidAsk.Ask);
+            Assert.Equal(1m / 0.0000000234m, rule2.BidAsk.Bid);
         }
     }
 }

@@ -14,7 +14,7 @@
             <p>
                 Your node is synching the entire blockchain and validating the consensus rules...
             </p>
-            @foreach (var line in dashboard.GetAll())
+            @foreach (var line in dashboard.GetAll().Where(summary => summary.Network.ShowSyncSummary))
             {
                 <h4>@line.Network.CryptoCode</h4>
                 @if (line.Status == null)
@@ -77,7 +77,7 @@
                 <a href="https://www.youtube.com/watch?v=OrYDehC-8TU" target="_blank">Watch this video</a> to understand the importance of blockchain synchronization.
             </p>
 
-            <p>If you really don't want to synch and that you are familiar with command line, check <a href="https://github.com/btcpayserver/btcpayserver-docker/blob/master/contrib/FastSync/README.md" target="_blank">FastSync</a>.</p>
+            <p>If you really don't want to synch and you are familiar with the command line, check <a href="https://github.com/btcpayserver/btcpayserver-docker/blob/master/contrib/FastSync/README.md" target="_blank">FastSync</a>.</p>
         </div>
 
     </div>

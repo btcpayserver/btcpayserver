@@ -11,9 +11,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Misc", "Misc", "{29290EC7-0
 	ProjectSection(SolutionItems) = preProject
 		amd64.Dockerfile = amd64.Dockerfile
 		arm32v7.Dockerfile = arm32v7.Dockerfile
+		arm64v8.Dockerfile = arm64v8.Dockerfile
 		Build\Common.csproj = Build\Common.csproj
 		.circleci\config.yml = .circleci\config.yml
 		docker-entrypoint.sh = docker-entrypoint.sh
+		.circleci\run-tests.sh = .circleci\run-tests.sh
 		Build\Version.csproj = Build\Version.csproj
 	EndProjectSection
 EndProject

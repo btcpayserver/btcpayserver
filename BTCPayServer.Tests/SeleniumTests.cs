@@ -34,6 +34,27 @@ namespace BTCPayServer.Tests
                 s.ClickOnAllSideMenus();
                 s.Driver.FindElement(By.LinkText("Services")).Click();
 
+                Logs.Tester.LogInformation("Let's check if we can access the logs");
+                s.Driver.FindElement(By.LinkText("Logs")).Click();
+                s.Driver.FindElement(By.PartialLinkText(".log")).Click();
+                Assert.Contains("Starting listening NBXplorer", s.Driver.PageSource);
+                s.Driver.Quit();
+            }
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Lightning", "Lightning")]
+        public async Task CanUseLndSeedBackup()
+        {
+            using (var s = SeleniumTester.Create())
+            {
+                s.Server.ActivateLightning();
+                await s.StartAsync();
+                s.RegisterNewUser(true);
+                s.Driver.FindElement(By.Id("ServerSettings")).Click();
+                s.Driver.AssertNoError();
+                s.Driver.FindElement(By.LinkText("Services")).Click();
+
                 Logs.Tester.LogInformation("Let's if we can access LND's seed");
                 Assert.Contains("server/services/lndseedbackup/BTC", s.Driver.PageSource);
                 s.Driver.Navigate().GoToUrl(s.Link("/server/services/lndseedbackup/BTC"));
@@ -49,12 +70,6 @@ namespace BTCPayServer.Tests
                 s.AssertHappyMessage();
                 seedEl = s.Driver.FindElement(By.Id("SeedTextArea"));
                 Assert.Contains("Seed removed", seedEl.Text, StringComparison.OrdinalIgnoreCase);
-
-                Logs.Tester.LogInformation("Let's check if we can access the logs");
-                s.Driver.FindElement(By.LinkText("Logs")).Click();
-                s.Driver.FindElement(By.PartialLinkText(".log")).Click();
-                Assert.Contains("Starting listening NBXplorer", s.Driver.PageSource);
-                s.Driver.Quit();
             }
         }
 
@@ -400,7 +415,7 @@ namespace BTCPayServer.Tests
                 s.Driver.Quit();
             }
         }
-
+        
         [Fact(Timeout = TestTimeout)]
         public async Task CanManageWallet()
         {
@@ -408,14 +423,77 @@ namespace BTCPayServer.Tests
             {
                 await s.StartAsync();
                 s.RegisterNewUser(true);
-                s.CreateNewStore();
+               var storeId =  s.CreateNewStore();
 
                 // In this test, we try to spend from a manual seed. We import the xpub 49'/0'/0', then try to use the seed 
                 // to sign the transaction
-                var mnemonic = "usage fever hen zero slide mammal silent heavy donate budget pulse say brain thank sausage brand craft about save attract muffin advance illegal cabbage";
+                s.GenerateWallet("BTC", "", true, false);
+               
+                //let's test quickly the receive wallet page
+                s.Driver.FindElement(By.Id("Wallets")).Click();
+                s.Driver.FindElement(By.LinkText("Manage")).Click();
+                
+                s.Driver.FindElement(By.Id("WalletSend")).Click();
+                s.Driver.ScrollTo(By.Id("SendMenu"));
+                s.Driver.FindElement(By.Id("SendMenu")).ForceClick();
+                //you cant use the Sign with NBX option without saving private keys when generating the wallet.
+                Assert.DoesNotContain("nbx-seed", s.Driver.PageSource);
+                
+                s.Driver.FindElement(By.Id("WalletReceive")).Click();
+                //generate a receiving address
+                s.Driver.FindElement(By.CssSelector("button[value=generate-new-address]")).Click();
+                Assert.True(s.Driver.FindElement(By.ClassName("qr-container")).Displayed);
+                var receiveAddr = s.Driver.FindElement(By.Id("vue-address")).GetAttribute("value");
+                //unreserve
+                s.Driver.FindElement(By.CssSelector("button[value=unreserve-current-address]")).Click();
+                //generate it again, should be the same one as before as nothign got used in the meantime
+                s.Driver.FindElement(By.CssSelector("button[value=generate-new-address]")).Click();
+                Assert.True(s.Driver.FindElement(By.ClassName("qr-container")).Displayed);
+                Assert.Equal( receiveAddr, s.Driver.FindElement(By.Id("vue-address")).GetAttribute("value"));
+                
+                //send money to addr and ensure it changed
+                
+                var sess = await s.Server.ExplorerClient.CreateWebsocketNotificationSessionAsync();
+                sess.ListenAllTrackedSource();
+                var nextEvent = sess.NextEventAsync();
+                s.Server.ExplorerNode.SendToAddress(BitcoinAddress.Create(receiveAddr, Network.RegTest),
+                    Money.Parse("0.1"));
+                await nextEvent;
+                await Task.Delay(200);
+                s.Driver.Navigate().Refresh();
+                s.Driver.FindElement(By.CssSelector("button[value=generate-new-address]")).Click();
+                Assert.NotEqual( receiveAddr, s.Driver.FindElement(By.Id("vue-address")).GetAttribute("value"));
+                receiveAddr = s.Driver.FindElement(By.Id("vue-address")).GetAttribute("value");
+                //change the wallet and ensure old address is not there and generating a new one does not result in the prev one
+                s.GoToStore(storeId.storeId);
+                s.GenerateWallet("BTC", "", true, false);
+                s.Driver.FindElement(By.Id("Wallets")).Click();
+                s.Driver.FindElement(By.LinkText("Manage")).Click();
+                s.Driver.FindElement(By.Id("WalletReceive")).Click();
+                s.Driver.FindElement(By.CssSelector("button[value=generate-new-address]")).Click();
+                Assert.NotEqual( receiveAddr, s.Driver.FindElement(By.Id("vue-address")).GetAttribute("value"));
+                
+                
+                var invoiceId = s.CreateInvoice(storeId.storeId);
+                var invoice = await s.Server.PayTester.InvoiceRepository.GetInvoice(invoiceId);
+                var address = invoice.EntityToDTO().Addresses["BTC"];
+                
+
+                //wallet should have been imported to bitcoin core wallet in watch only mode.
+                var result = await s.Server.ExplorerNode.GetAddressInfoAsync(BitcoinAddress.Create(address, Network.RegTest));
+                Assert.True(result.IsWatchOnly);
+                s.GoToStore(storeId.storeId);
+                var mnemonic = s.GenerateWallet("BTC", "", true, true);
+                
+                //lets import and save private keys
                 var root = new Mnemonic(mnemonic).DeriveExtKey();
-                s.AddDerivationScheme("BTC", "ypub6WWc2gWwHbdnAAyJDnR4SPL1phRh7REqrPBfZeizaQ1EmTshieRXJC3Z5YoU4wkcdKHEjQGkh6AYEzCQC1Kz3DNaWSwdc1pc8416hAjzqyD");
-                var tx = s.Server.ExplorerNode.SendToAddress(BitcoinAddress.Create("bcrt1qmxg8fgnmkp354vhe78j6sr4ut64tyz2xyejel4", Network.RegTest), Money.Coins(3.0m));
+                 invoiceId = s.CreateInvoice(storeId.storeId);
+                 invoice = await s.Server.PayTester.InvoiceRepository.GetInvoice( invoiceId);
+                 address = invoice.EntityToDTO().Addresses["BTC"];
+                 result = await s.Server.ExplorerNode.GetAddressInfoAsync(BitcoinAddress.Create(address, Network.RegTest));
+                 //spendable from bitcoin core wallet!
+                 Assert.False(result.IsWatchOnly);
+                var tx = s.Server.ExplorerNode.SendToAddress(BitcoinAddress.Create(address, Network.RegTest), Money.Coins(3.0m));
                 s.Server.ExplorerNode.Generate(1);
 
                 s.Driver.FindElement(By.Id("Wallets")).Click();
@@ -429,8 +507,8 @@ namespace BTCPayServer.Tests
 
                 // We setup the fingerprint and the account key path
                 s.Driver.FindElement(By.Id("WalletSettings")).ForceClick();
-                s.Driver.FindElement(By.Id("AccountKeys_0__MasterFingerprint")).SendKeys("8bafd160");
-                s.Driver.FindElement(By.Id("AccountKeys_0__AccountKeyPath")).SendKeys("m/49'/0'/0'" + Keys.Enter);
+//                s.Driver.FindElement(By.Id("AccountKeys_0__MasterFingerprint")).SendKeys("8bafd160");
+//                s.Driver.FindElement(By.Id("AccountKeys_0__AccountKeyPath")).SendKeys("m/49'/0'/0'" + Keys.Enter);
 
                 // Check the tx sent earlier arrived
                 s.Driver.FindElement(By.Id("WalletTransactions")).ForceClick();
@@ -470,9 +548,27 @@ namespace BTCPayServer.Tests
                         checkboxElement.Click();
                     }
                 }
+                
                 SignWith(mnemonic);
-                var accountKey = root.Derive(new KeyPath("m/49'/0'/0'")).GetWif(Network.RegTest).ToString();
-                SignWith(accountKey);
+                
+                s.Driver.FindElement(By.Id("Wallets")).Click();
+                s.Driver.FindElement(By.LinkText("Manage")).Click();
+                s.Driver.FindElement(By.Id("WalletSend")).Click();
+                
+                var jack = new Key().PubKey.Hash.GetAddress(Network.RegTest);
+                SetTransactionOutput(0, jack, 0.01m);
+                s.Driver.ScrollTo(By.Id("SendMenu"));
+                s.Driver.FindElement(By.Id("SendMenu")).ForceClick();
+                
+                s.Driver.FindElement(By.CssSelector("button[value=nbx-seed]")).Click();
+                Assert.Contains(jack.ToString(), s.Driver.PageSource);
+                Assert.Contains("0.01000000", s.Driver.PageSource);
+                s.Driver.FindElement(By.CssSelector("button[value=analyze-psbt]")).ForceClick();
+                s.Driver.FindElement(By.CssSelector("#OtherActions")).ForceClick();
+                s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).ForceClick();
+                Assert.EndsWith("psbt", s.Driver.Url);
+                s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).ForceClick();
+                Assert.Equal(walletTransactionLink, s.Driver.Url);
             }
         }
     }

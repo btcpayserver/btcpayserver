@@ -104,7 +104,6 @@ namespace BTCPayServer.Controllers
                 cryptoPayment.Paid = _CurrencyNameTable.DisplayFormatCurrency(accounting.CryptoPaid.ToDecimal(MoneyUnit.BTC), paymentMethodId.CryptoCode);
                 cryptoPayment.Overpaid = _CurrencyNameTable.DisplayFormatCurrency(accounting.OverpaidHelper.ToDecimal(MoneyUnit.BTC), paymentMethodId.CryptoCode);
                 var paymentMethodDetails = data.GetPaymentMethodDetails();
-                cryptoPayment.Address = paymentMethodDetails.GetPaymentDestination();
                 cryptoPayment.Rate = ExchangeRate(data);
                 model.CryptoPayments.Add(cryptoPayment);
             }
@@ -276,7 +275,7 @@ namespace BTCPayServer.Controllers
                                               return new PaymentModel.AvailableCrypto()
                                               {
                                                   PaymentMethodId = kv.GetId().ToString(),
-                                                  CryptoCode = kv.GetId().CryptoCode,
+                                                  CryptoCode = kv.Network?.CryptoCode ?? kv.GetId().CryptoCode,
                                                   PaymentMethodName = availableCryptoHandler.GetPaymentMethodName(availableCryptoPaymentMethodId),
                                                   IsLightning =
                                                       kv.GetId().PaymentType == PaymentTypes.LightningLike,
@@ -294,6 +293,10 @@ namespace BTCPayServer.Controllers
             };
 
             paymentMethodHandler.PreparePaymentModel(model, dto, storeBlob);
+            if (model.IsLightning && storeBlob.LightningAmountInSatoshi && model.CryptoCode == "Sats")
+            {
+                model.Rate = _CurrencyNameTable.DisplayFormatCurrency(paymentMethod.Rate / 100_000_000, paymentMethod.ParentEntity.ProductInformation.Currency);
+            }
             model.UISettings = paymentMethodHandler.GetCheckoutUISettings();
             model.PaymentMethodId = paymentMethodId.ToString();
             var expiration = TimeSpan.FromSeconds(model.ExpirationSeconds);
@@ -370,7 +373,7 @@ namespace BTCPayServer.Controllers
         {
             if (invoiceId != expectedId || webSocket.State != WebSocketState.Open)
                 return;
-            CancellationTokenSource cts = new CancellationTokenSource();
+            using CancellationTokenSource cts = new CancellationTokenSource();
             cts.CancelAfter(5000);
             try
             {
@@ -496,7 +499,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> CreateInvoice()
         {
             var stores = new SelectList(await _StoreRepository.GetStoresByUserId(GetUserId()), nameof(StoreData.Id), nameof(StoreData.StoreName), null);
-            if (stores.Count() == 0)
+            if (!stores.Any())
             {
                 TempData[WellKnownTempData.ErrorMessage] = "You need to create at least one store before creating a transaction";
                 return RedirectToAction(nameof(UserStoresController.ListStores), "UserStores");
@@ -520,7 +523,7 @@ namespace BTCPayServer.Controllers
                 return View(model);
             }
 
-            if (store.GetSupportedPaymentMethods(_NetworkProvider).Count() == 0)
+            if (!store.GetSupportedPaymentMethods(_NetworkProvider).Any())
             {
                 ModelState.AddModelError(nameof(model.StoreId), "You need to configure the derivation scheme in order to create an invoice");
                 return View(model);
@@ -620,7 +623,7 @@ namespace BTCPayServer.Controllers
                         {
                             case JTokenType.Array:
                                 var items = item.Value.AsEnumerable().ToList();
-                                for (var i = 0; i < items.Count(); i++)
+                                for (var i = 0; i < items.Count; i++)
                                 {
                                     result.Add($"{item.Key}[{i}]", ParsePosData(items[i].ToString()));
                                 }

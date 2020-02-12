@@ -41,12 +41,10 @@ namespace BTCPayServer
 {
     public static class Extensions
     {
-#if !NETCOREAPP21
         public static IQueryable<TEntity> Where<TEntity>(this Microsoft.EntityFrameworkCore.DbSet<TEntity> obj, System.Linq.Expressions.Expression<Func<TEntity, bool>> predicate) where TEntity : class
         {
             return System.Linq.Queryable.Where(obj, predicate);
         }
-#endif
 
         public static string Truncate(this string value, int maxLength)
         {
@@ -128,9 +126,11 @@ namespace BTCPayServer
             {
                 if (webSocket.State == WebSocketState.Open)
                 {
-                    CancellationTokenSource cts = new CancellationTokenSource();
-                    cts.CancelAfter(5000);
-                    await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", cts.Token);
+                    using (CancellationTokenSource cts = new CancellationTokenSource())
+                    {
+                        cts.CancelAfter(5000);
+                        await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", cts.Token);
+                    }
                 }
             }
             catch { }

@@ -20,10 +20,12 @@ namespace BTCPayServer.Payments.Bitcoin
         {
 
         }
-        public BitcoinLikePaymentData(Coin coin, bool rbf)
+        
+        public BitcoinLikePaymentData(BitcoinAddress address, IMoney value, OutPoint outpoint, bool rbf)
         {
-            Outpoint = coin.Outpoint;
-            Output = coin.TxOut;
+            Address = address;
+            Value = value;
+            Outpoint = outpoint;
             ConfirmationCount = 0;
             RBF = rbf;
         }
@@ -36,7 +38,18 @@ namespace BTCPayServer.Payments.Bitcoin
         public int ConfirmationCount { get; set; }
         public bool RBF { get; set; }
         public decimal NetworkFee { get; set; }
+        public BitcoinAddress Address { get; set; }
+        public IMoney Value { get; set; }
 
+        [JsonIgnore]
+        public Script ScriptPubKey
+        {
+            get
+            {
+                return Address?.ScriptPubKey ?? Output.ScriptPubKey;
+            }
+        }
+        
         /// <summary>
         /// This is set to true if the payment was created before CryptoPaymentData existed in BTCPayServer
         /// </summary>
@@ -54,7 +67,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
         public decimal GetValue()
         {
-            return Output.Value.ToDecimal(MoneyUnit.BTC);
+            return Value?.GetValue(Network as BTCPayNetwork)??Output.Value.ToDecimal(MoneyUnit.BTC);
         }
 
         public bool PaymentCompleted(PaymentEntity entity)
@@ -85,7 +98,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
         public BitcoinAddress GetDestination()
         {
-            return Output.ScriptPubKey.GetDestinationAddress(((BTCPayNetwork)Network).NBitcoinNetwork);
+            return Address?? Output.ScriptPubKey.GetDestinationAddress(((BTCPayNetwork)Network).NBitcoinNetwork);
         }
 
         string CryptoPaymentData.GetDestination()

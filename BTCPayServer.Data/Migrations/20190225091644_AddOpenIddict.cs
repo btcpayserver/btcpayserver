@@ -40,6 +40,11 @@ namespace BTCPayServer.Migrations
                         onDelete: ReferentialAction.Restrict);
                 });
 
+            if (this.IsMySql(migrationBuilder.ActiveProvider))
+            {
+                migrationBuilder.AlterColumn<string>(name: "Id", table: "AspNetUsers", maxLength: maxLength);
+            }
+
             migrationBuilder.CreateTable(
                 name: "OpenIddictScopes",
                 columns: table => new

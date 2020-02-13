@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Linq;
 using System.Net.WebSockets;
@@ -8,7 +7,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
-using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
 using BTCPayServer.ModelBinders;
 using BTCPayServer.Models;
@@ -19,21 +17,15 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
-using LedgerWallet;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBXplorer;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json;
-using static BTCPayServer.Controllers.StoresController;
 
 namespace BTCPayServer.Controllers
 {
@@ -420,7 +412,7 @@ namespace BTCPayServer.Controllers
             var balance = _walletProvider.GetWallet(network).GetBalance(paymentMethod.AccountDerivation);
             model.NBXSeedAvailable = await CanUseHotWallet() && !string.IsNullOrEmpty(await ExplorerClientProvider.GetExplorerClient(network)
                 .GetMetadataAsync<string>(GetDerivationSchemeSettings(walletId).AccountDerivation,
-                    WellknownMetadataKeys.Mnemonic));
+                    WellknownMetadataKeys.MasterHDKey));
             model.CurrentBalance = await balance;
             model.RecommendedSatoshiPerByte = (int)(await recommendedFees).GetFee(1).Satoshi;
             model.FeeSatoshiPerByte = model.RecommendedSatoshiPerByte;
@@ -593,7 +585,7 @@ namespace BTCPayServer.Controllers
                 case "analyze-psbt":
                     var name =
                         $"Send-{string.Join('_', vm.Outputs.Select(output => $"{output.Amount}->{output.DestinationAddress}{(output.SubtractFeesFromOutput ? "-Fees" : string.Empty)}"))}.psbt";
-                    return RedirectToWalletPSBT(walletId, psbt.PSBT, name);
+                    return RedirectToWalletPSBT(psbt.PSBT, name);
                 default:
                     return View(vm);
             }
@@ -651,7 +643,31 @@ namespace BTCPayServer.Controllers
             });
         }
 
-        private IActionResult RedirectToWalletPSBT(WalletId walletId, PSBT psbt, string fileName = null)
+        [HttpPost]
+        [Route("{walletId}/vault")]
+        public async Task<IActionResult> SubmitVault([ModelBinder(typeof(WalletIdModelBinder))]
+            WalletId walletId, WalletSendVaultModel model)
+        {
+
+            return RedirectToWalletPSBTReady(model.PSBT);
+        }
+        private IActionResult RedirectToWalletPSBTReady(string psbt, string signingKey=  null, string signingKeyPath = null)
+        {
+            var vm = new PostRedirectViewModel()
+            {
+                AspController = "Wallets",
+                AspAction = nameof(WalletPSBTReady),
+                Parameters =
+                {
+                    new KeyValuePair<string, string>("psbt", psbt),
+                    new KeyValuePair<string, string>("SigningKey", signingKey),
+                    new KeyValuePair<string, string>("SigningKeyPath", signingKeyPath)
+                }
+            };
+            return View("PostRedirect", vm);
+        }
+        
+        private IActionResult RedirectToWalletPSBT(PSBT psbt, string fileName = null)
         {
             var vm = new PostRedirectViewModel()
             {
@@ -700,6 +716,14 @@ namespace BTCPayServer.Controllers
             });
         }
       
+        [HttpPost]
+        [Route("{walletId}/ledger")]
+        public async Task<IActionResult> SubmitLedger([ModelBinder(typeof(WalletIdModelBinder))]
+            WalletId walletId, WalletSendLedgerModel model)
+        {
+            return RedirectToWalletPSBTReady(model.PSBT);
+        }
+        
         [HttpGet("{walletId}/psbt/seed")]
         public IActionResult SignWithSeed([ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId,string psbt)
@@ -773,7 +797,7 @@ namespace BTCPayServer.Controllers
                 return View(viewModel);
             }
             ModelState.Remove(nameof(viewModel.PSBT));
-            return await WalletPSBTReady(walletId, psbt.ToBase64(), signingKey.GetWif(network.NBitcoinNetwork).ToString(), rootedKeyPath?.ToString());
+            return RedirectToWalletPSBTReady(psbt.ToBase64(), signingKey.GetWif(network.NBitcoinNetwork).ToString(), rootedKeyPath?.ToString());
         }
 
         private bool PSBTChanged(PSBT psbt, Action act)

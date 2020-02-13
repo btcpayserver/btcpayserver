@@ -12,6 +12,10 @@ namespace BTCPayServer.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             int? maxLength = this.IsMySql(migrationBuilder.ActiveProvider) ? (int?)255 : null;
+            if (this.IsMySql(migrationBuilder.ActiveProvider))
+            {
+                migrationBuilder.AlterColumn<string>(name: "Id", table: "AspNetUsers", maxLength: maxLength);
+            }
             migrationBuilder.CreateTable(
                 name: "OpenIddictApplications",
                 columns: table => new
@@ -39,11 +43,6 @@ namespace BTCPayServer.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
-
-            if (this.IsMySql(migrationBuilder.ActiveProvider))
-            {
-                migrationBuilder.AlterColumn<string>(name: "Id", table: "AspNetUsers", maxLength: maxLength);
-            }
 
             migrationBuilder.CreateTable(
                 name: "OpenIddictScopes",

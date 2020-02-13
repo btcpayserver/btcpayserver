@@ -9,6 +9,8 @@ using System.Linq;
 using NBitcoin;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
+using BTCPayServer.Models;
+using NBitcoin.Payment;
 
 namespace BTCPayServer.Tests
 {
@@ -569,6 +571,21 @@ namespace BTCPayServer.Tests
                 Assert.EndsWith("psbt", s.Driver.Url);
                 s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).ForceClick();
                 Assert.Equal(walletTransactionLink, s.Driver.Url);
+                
+                var bip21 = invoice.EntityToDTO().CryptoInfo.First().PaymentUrls.BIP21;
+                //let's make bip21 more interesting
+                bip21 += "&label=Solid Snake&message=Snake? Snake? SNAAAAKE!";
+                var parsedBip21 = new BitcoinUrlBuilder(bip21, Network.RegTest);
+                s.Driver.FindElement(By.Id("Wallets")).Click();
+                s.Driver.FindElement(By.LinkText("Manage")).Click();
+                s.Driver.FindElement(By.Id("WalletSend")).Click();
+                s.Driver.FindElement(By.Id("bip21parse")).Click();
+                s.Driver.SwitchTo().Alert().SendKeys(bip21);
+                s.Driver.SwitchTo().Alert().Accept();
+                s.AssertHappyMessage(StatusMessageModel.StatusSeverity.Info);
+                Assert.Equal(parsedBip21.Amount.ToString(false), s.Driver.FindElement(By.Id($"Outputs_0__Amount")).GetAttribute("value"));
+                Assert.Equal(parsedBip21.Address.ToString(), s.Driver.FindElement(By.Id($"Outputs_0__DestinationAddress")).GetAttribute("value"));
+                
             }
         }
     }

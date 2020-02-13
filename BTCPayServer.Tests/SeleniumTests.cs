@@ -566,7 +566,7 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.CssSelector("button[value=analyze-psbt]")).ForceClick();
                 s.Driver.FindElement(By.CssSelector("#OtherActions")).ForceClick();
                 s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).ForceClick();
-                Assert.EndsWith("psbt", s.Driver.Url);
+                Assert.EndsWith("psbt/ready", s.Driver.Url);
                 s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).ForceClick();
                 Assert.Equal(walletTransactionLink, s.Driver.Url);
             }

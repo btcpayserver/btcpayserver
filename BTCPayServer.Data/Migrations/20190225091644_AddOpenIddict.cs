@@ -27,8 +27,7 @@ namespace BTCPayServer.Migrations
                     Properties = table.Column<string>(nullable: true),
                     RedirectUris = table.Column<string>(nullable: true),
                     Type = table.Column<string>(maxLength: 25, nullable: false),
-                    // do not set the maxLength, else http://MySql.Data.MySqlClient.MySqlException (0x80004005): Can't create table `btcpay`.`OpenIddictApplications` (errno: 150 "Foreign key constraint is incorrectly formed")
-                    ApplicationUserId = table.Column<string>(nullable: true)
+                    ApplicationUserId = table.Column<string>(nullable: true, maxLength: maxLength)
                 },
                 constraints: table =>
                 {

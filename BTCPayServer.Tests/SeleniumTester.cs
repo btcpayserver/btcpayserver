@@ -18,6 +18,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Lightning;
 using BTCPayServer.Lightning.CLightning;
+using BTCPayServer.Models;
 using BTCPayServer.Views.Stores;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -70,18 +71,18 @@ namespace BTCPayServer.Tests
             Driver.AssertNoError();
         }
 
-        internal void AssertHappyMessage()
+        internal void AssertHappyMessage(StatusMessageModel.StatusSeverity severity = StatusMessageModel.StatusSeverity.Success)
         {
             using var cts = new CancellationTokenSource(20_000);
             while (!cts.IsCancellationRequested)
             {
-                var success = Driver.FindElements(By.ClassName("alert-success")).Where(el => el.Displayed).Any();
+                var success = Driver.FindElements(By.ClassName($"alert-{StatusMessageModel.ToString(severity)}")).Any(el => el.Displayed);
                 if (success)
                     return;
                 Thread.Sleep(100);
             }
             Logs.Tester.LogInformation(this.Driver.PageSource);
-            Assert.True(false, "Should have shown happy message");
+            Assert.True(false, $"Should have shown {severity} message");
         }
 
         public static readonly TimeSpan ImplicitWait = TimeSpan.FromSeconds(10);

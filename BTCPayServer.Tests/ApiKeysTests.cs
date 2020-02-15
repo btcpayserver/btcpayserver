@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Security.APIKeys;
@@ -328,7 +329,7 @@ namespace BTCPayServer.Tests
         {
             var httpRequest = new HttpRequestMessage(HttpMethod.Get,
                 new Uri(client.BaseAddress, url));
-            httpRequest.Headers.Add("X-APIKEY", apikey);
+            httpRequest.Headers.Authorization = new AuthenticationHeaderValue("token", apikey);
             var result = await client.SendAsync(httpRequest);
             result.EnsureSuccessStatusCode();
 

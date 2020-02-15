@@ -7,7 +7,6 @@ using BTCPayServer.Security.Bitpay;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,10 +18,18 @@ namespace BTCPayServer.Security.APIKeys
     {
         public static bool GetAPIKey(this HttpContext httpContext, out StringValues apiKey)
         {
-            return httpContext.Request.Headers.TryGetValue("X-APIKEY", out apiKey);
+            if (httpContext.Request.Headers.TryGetValue("Authorization", out var value) &&
+                value.ToString().StartsWith("token ", StringComparison.InvariantCultureIgnoreCase))
+            {
+                apiKey = value.ToString().Substring("token ".Length);
+                return true;
+            }
+
+            return false;
         }
 
-        public static Task<StoreData[]> GetStores(this ClaimsPrincipal claimsPrincipal, UserManager<ApplicationUser> userManager ,StoreRepository storeRepository)
+        public static Task<StoreData[]> GetStores(this ClaimsPrincipal claimsPrincipal,
+            UserManager<ApplicationUser> userManager, StoreRepository storeRepository)
         {
             var permissions =
                 claimsPrincipal.Claims.Where(claim => claim.Type == APIKeyConstants.ClaimTypes.Permissions)
@@ -36,7 +43,7 @@ namespace BTCPayServer.Security.APIKeys
             var storeIds = APIKeyConstants.Permissions.ExtractStorePermissionsIds(permissions);
             return storeRepository.GetStoresByUserId(userManager.GetUserId(claimsPrincipal), storeIds);
         }
-        
+
         public static AuthenticationBuilder AddAPIKeyAuthentication(this AuthenticationBuilder builder)
         {
             builder.AddScheme<APIKeyAuthenticationOptions, APIKeyAuthenticationHandler>(AuthenticationSchemes.ApiKey,
@@ -54,11 +61,15 @@ namespace BTCPayServer.Security.APIKeys
         public static string[] GetPermissions(this AuthorizationHandlerContext context)
         {
             return context.User.Claims.Where(c =>
-                c.Type.Equals(APIKeyConstants.ClaimTypes.Permissions, StringComparison.InvariantCultureIgnoreCase)).Select(claim => claim.Value).ToArray();
+                    c.Type.Equals(APIKeyConstants.ClaimTypes.Permissions, StringComparison.InvariantCultureIgnoreCase))
+                .Select(claim => claim.Value).ToArray();
         }
+
         public static bool HasPermissions(this AuthorizationHandlerContext context, params string[] scopes)
         {
-            return scopes.All(s => context.User.HasClaim(c => c.Type.Equals(APIKeyConstants.ClaimTypes.Permissions, StringComparison.InvariantCultureIgnoreCase) && c.Value.Split(' ').Contains(s)));
+            return scopes.All(s => context.User.HasClaim(c =>
+                c.Type.Equals(APIKeyConstants.ClaimTypes.Permissions, StringComparison.InvariantCultureIgnoreCase) &&
+                c.Value.Split(' ').Contains(s)));
         }
     }
 }

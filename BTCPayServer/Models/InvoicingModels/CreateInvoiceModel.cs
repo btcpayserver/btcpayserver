@@ -56,13 +56,6 @@ namespace BTCPayServer.Models.InvoicingModels
             get; set;
         }
 
-        [EmailAddress]
-        [DisplayName("Notification Email")]
-        public string NotificationEmail
-        {
-            get; set;
-        }
-
         [Uri]
         [DisplayName("Notification Url")]
         public string NotificationUrl

@@ -44,4 +44,12 @@ $(function () {
         updateFiatValue(outputAmountElement);
         return false;
     });
+
+    $("#bip21parse").on("click", function(){
+        var bip21 = prompt("Paste BIP21 here");
+        if(bip21){
+            $("#BIP21").val(bip21);
+            $("form").submit();
+        }
+    });
 });

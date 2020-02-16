@@ -69,8 +69,8 @@
     <PackageReference Include="OpenIddict" Version="3.0.0-alpha1.20058.15" />
     <PackageReference Include="OpenIddict.Server.AspNetCore" Version="3.0.0-alpha1.20058.15"></PackageReference>
     <PackageReference Include="OpenIddict.Validation.AspNetCore" Version="3.0.0-alpha1.20058.15"></PackageReference>
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="3.1.0" Condition="'$(Configuration)' == 'Debug'" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="3.1.1" Condition="'$(Configuration)' == 'Debug'" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.1" />
   </ItemGroup>
 
 	<ItemGroup>

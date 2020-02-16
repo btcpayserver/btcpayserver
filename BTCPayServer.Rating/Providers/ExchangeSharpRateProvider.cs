@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Rating;
@@ -11,16 +12,15 @@ using ExchangeSharp;
 
 namespace BTCPayServer.Services.Rates
 {
-    public class ExchangeSharpRateProvider : IRateProvider
+    public class ExchangeSharpRateProvider<T> : IRateProvider where T : ExchangeAPI, new()
     {
-        readonly ExchangeAPI _ExchangeAPI;
-        public ExchangeSharpRateProvider(ExchangeAPI exchangeAPI, bool reverseCurrencyPair = false)
+        HttpClient _httpClient;
+        public ExchangeSharpRateProvider(HttpClient httpClient, bool reverseCurrencyPair = false)
         {
-            if (exchangeAPI == null)
-                throw new ArgumentNullException(nameof(exchangeAPI));
-            exchangeAPI.RequestTimeout = TimeSpan.FromSeconds(5.0);
-            _ExchangeAPI = exchangeAPI;
+            if (httpClient == null)
+                throw new ArgumentNullException(nameof(httpClient));
             ReverseCurrencyPair = reverseCurrencyPair;
+            _httpClient = httpClient;
         }
 
         public bool ReverseCurrencyPair
@@ -31,14 +31,17 @@ namespace BTCPayServer.Services.Rates
         public async Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
         {
             await new SynchronizationContextRemover();
-            var rates = await _ExchangeAPI.GetTickersAsync();
 
-                var exchangeRateTasks = rates
-                    .Where(t => t.Value.Ask != 0m && t.Value.Bid != 0m)
-                    .Select(t => CreateExchangeRate(t));
+            var exchangeAPI = new T();
+            exchangeAPI.RequestMaker = new HttpClientRequestMaker(exchangeAPI, _httpClient, cancellationToken);
+            var rates = await exchangeAPI.GetTickersAsync();
 
-                var exchangeRates = await Task.WhenAll(exchangeRateTasks);
-                
+            var exchangeRateTasks = rates
+                .Where(t => t.Value.Ask != 0m && t.Value.Bid != 0m)
+                .Select(t => CreateExchangeRate(exchangeAPI, t));
+
+            var exchangeRates = await Task.WhenAll(exchangeRateTasks);
+
             return exchangeRates
                 .Where(t => t != null)
                 .ToArray();
@@ -46,19 +49,19 @@ namespace BTCPayServer.Services.Rates
 
         // ExchangeSymbolToGlobalSymbol throws exception which would kill perf
         ConcurrentDictionary<string, string> notFoundSymbols = new ConcurrentDictionary<string, string>();
-        private async Task<PairRate> CreateExchangeRate(KeyValuePair<string, ExchangeTicker> ticker)
+        private async Task<PairRate> CreateExchangeRate(T exchangeAPI, KeyValuePair<string, ExchangeTicker> ticker)
         {
             if (notFoundSymbols.TryGetValue(ticker.Key, out _))
                 return null;
             try
             {
-                var tickerName = await _ExchangeAPI.ExchangeMarketSymbolToGlobalMarketSymbolAsync(ticker.Key);
+                var tickerName = await exchangeAPI.ExchangeMarketSymbolToGlobalMarketSymbolAsync(ticker.Key);
                 if (!CurrencyPair.TryParse(tickerName, out var pair))
                 {
                     notFoundSymbols.TryAdd(ticker.Key, ticker.Key);
                     return null;
                 }
-                if(ReverseCurrencyPair)
+                if (ReverseCurrencyPair)
                     pair = new CurrencyPair(pair.Right, pair.Left);
                 return new PairRate(pair, new BidAsk(ticker.Value.Bid, ticker.Value.Ask));
             }

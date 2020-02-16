@@ -1,0 +1,19 @@
+﻿@using System.Net
+@model int?
+@{
+    ViewData["ErrorTitle"] = "Generic Error occurred";
+    if (Model.HasValue)
+    {
+        var httpCode = (HttpStatusCode)Model.Value;
+        ViewData["ErrorTitle"] = $"{(int)httpCode} - {httpCode.ToString()}";
+    }
+}
+
+<p class="lead-login">
+    Generic error occurred, HTTP Code: @Model
+    <br /><br />
+    Consult server log for more details.
+    <br /><br />
+    <a href="/">Navigate back to home</a>.
+    <br /><br />
+</p>

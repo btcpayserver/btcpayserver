@@ -528,10 +528,12 @@ namespace BTCPayServer.Controllers
             return null;
         }
 
-        [Route("server/services/{serviceName}/{cryptoCode}")]
+
+        
+        [Route("server/services/{serviceName}/{cryptoCode?}")]
         public async Task<IActionResult> Service(string serviceName, string cryptoCode, bool showQR = false, uint? nonce = null)
         {
-            if (!_dashBoard.IsFullySynched(cryptoCode, out _))
+            if (!string.IsNullOrEmpty(cryptoCode) && !_dashBoard.IsFullySynched(cryptoCode, out _))
             {
                 TempData[WellKnownTempData.ErrorMessage] = $"{cryptoCode} is not fully synched";
                 return RedirectToAction(nameof(Services));
@@ -542,6 +544,7 @@ namespace BTCPayServer.Controllers
 
             try
             {
+                
                 if (service.Type == ExternalServiceTypes.P2P)
                 {
                     return View("P2PService", new LightningWalletServices()
@@ -592,9 +595,19 @@ namespace BTCPayServer.Controllers
                         vm.WalletName = service.DisplayName;
                         vm.ServiceLink = $"{connectionString.Server}?access-key={connectionString.AccessKey}";
                         return View("LightningWalletServices", vm);
+                    case ExternalServiceTypes.CLightningRest:
+                        return LndServices(service, connectionString, nonce, "CLightningRestServices");
                     case ExternalServiceTypes.LNDGRPC:
                     case ExternalServiceTypes.LNDRest:
                         return LndServices(service, connectionString, nonce);
+                    case ExternalServiceTypes.Configurator:
+                        return View("ConfiguratorService",
+                            new LightningWalletServices()
+                            {
+                                ShowQR = showQR,
+                                WalletName = service.ServiceName,
+                                ServiceLink = $"{connectionString.Server}?password={connectionString.AccessKey}"
+                            });
                     default:
                         throw new NotSupportedException(service.Type.ToString());
                 }
@@ -663,7 +676,7 @@ namespace BTCPayServer.Controllers
             return View(nameof(LightningChargeServices), vm);
         }
 
-        private IActionResult LndServices(ExternalService service, ExternalConnectionString connectionString, uint? nonce)
+        private IActionResult LndServices(ExternalService service, ExternalConnectionString connectionString, uint? nonce, string view = nameof(LndServices))
         {
             var model = new LndServicesViewModel();
             if (service.Type == ExternalServiceTypes.LNDGRPC)
@@ -673,7 +686,7 @@ namespace BTCPayServer.Controllers
                 model.ConnectionType = "GRPC";
                 model.GRPCSSLCipherSuites = "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA256";
             }
-            else if (service.Type == ExternalServiceTypes.LNDRest)
+            else if (service.Type == ExternalServiceTypes.LNDRest || service.Type == ExternalServiceTypes.CLightningRest)
             {
                 model.Uri = connectionString.Server.AbsoluteUri;
                 model.ConnectionType = "REST";
@@ -702,7 +715,7 @@ namespace BTCPayServer.Controllers
                 }
             }
 
-            return View(nameof(LndServices), model);
+            return View(view, model);
         }
 
         private static uint GetConfigKey(string type, string serviceName, string cryptoCode, uint nonce)
@@ -754,10 +767,10 @@ namespace BTCPayServer.Controllers
                 grpcConf.SSL = connectionString.Server.Scheme == "https";
                 confs.Configurations.Add(grpcConf);
             }
-            else if (service.Type == ExternalServiceTypes.LNDRest)
+            else if (service.Type == ExternalServiceTypes.LNDRest || service.Type == ExternalServiceTypes.CLightningRest)
             {
                 var restconf = new LNDRestConfiguration();
-                restconf.Type = "lnd-rest";
+                restconf.Type = service.Type  == ExternalServiceTypes.LNDRest? "lnd-rest": "clightning-rest";
                 restconf.Uri = connectionString.Server.AbsoluteUri;
                 confs.Configurations.Add(restconf);
             }
@@ -777,7 +790,6 @@ namespace BTCPayServer.Controllers
             _LnConfigProvider.KeepConfig(configKey, confs);
             return RedirectToAction(nameof(Service), new { cryptoCode = cryptoCode, serviceName = serviceName, nonce = nonce });
         }
-
 
         [Route("server/services/dynamic-dns")]
         public async Task<IActionResult> DynamicDnsServices()

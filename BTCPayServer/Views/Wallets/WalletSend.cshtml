@@ -5,16 +5,25 @@
     ViewData["Title"] = "Manage wallet";
     ViewData.SetActivePageAndTitle(WalletsNavPages.Send);
 }
-
+@if (TempData.HasStatusMessage())
+{
+    <div class="row">
+        <div class="col-md-10 text-center">
+            <partial name="_StatusMessage" />
+        </div>
+    </div>
+}
 <div class="row">
     <div class="@(Model.Outputs.Count==1? "col-lg-6 transaction-output-form": "col-lg-8")">
         <form method="post">
             <input type="hidden" asp-for="Divisibility" />
+            <input type="hidden" asp-for="NBXSeedAvailable" />
             <input type="hidden" asp-for="Fiat" />
             <input type="hidden" asp-for="Rate" />
             <input type="hidden" asp-for="CurrentBalance" />
             <input type="hidden" asp-for="RecommendedSatoshiPerByte" />
             <input type="hidden" asp-for="CryptoCode" />
+            <input type="hidden" name="BIP21" id="BIP21" />
             <ul class="text-danger">
                 @foreach (var errors in ViewData.ModelState.Where(pair => pair.Key == string.Empty && pair.Value.ValidationState == ModelValidationState.Invalid))
                 {
@@ -117,6 +126,7 @@
                     </div>
                 </div>
             }
+            
             <div class="card">
                 <button class="btn btn-light collapsed" type="button" data-toggle="collapse" data-target="#accordian-advanced" aria-expanded="false" aria-controls="accordian-advanced">
                     Advanced settings
@@ -155,9 +165,14 @@
                         @if (Model.CryptoCode == "BTC") {
                             <button name="command" type="submit" class="dropdown-item" value="vault">... the vault (preview)</button>
                         }
+                        @if (Model.NBXSeedAvailable)
+                        {
+                            <button name="command" type="submit" class="dropdown-item" value="nbx-seed">... the seed saved in NBXplorer</button>
+                        }
                     </div>
                 </div>
                 <button type="submit" name="command" value="add-output" class="ml-1 btn btn-secondary">Add another destination </button>
+                <button type="button" id="bip21parse" class="ml-1 btn btn-secondary">Parse BIP21</button>
             </div>
         </form>
     </div>

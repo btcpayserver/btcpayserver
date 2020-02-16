@@ -86,21 +86,17 @@ namespace BTCPayServer.Services.Rates
         IRateProvider _Inner;
         public IRateProvider Inner => _Inner;
 
-        public BackgroundFetcherRateProvider(string exchangeName, IRateProvider inner)
+        public BackgroundFetcherRateProvider(IRateProvider inner)
         {
             if (inner == null)
                 throw new ArgumentNullException(nameof(inner));
-            if (exchangeName == null)
-                throw new ArgumentNullException(nameof(exchangeName));
             _Inner = inner;
-            ExchangeName = exchangeName;
         }
 
         public BackgroundFetcherState GetState()
         {
             var state = new BackgroundFetcherState()
             {
-                ExchangeName = ExchangeName,
                 LastRequested = LastRequested
             };
             if (_Latest is LatestFetch fetch)
@@ -118,8 +114,6 @@ namespace BTCPayServer.Services.Rates
 
         public void LoadState(BackgroundFetcherState state)
         {
-            if (ExchangeName != state.ExchangeName)
-                throw new InvalidOperationException("The state does not belong to this fetcher");
             if (state.LastRequested is DateTimeOffset lastRequested)
                 this.LastRequested = state.LastRequested;
             if (state.LastUpdated is DateTimeOffset updated && state.Rates is List<BackgroundFetcherRate> rates)
@@ -220,7 +214,6 @@ namespace BTCPayServer.Services.Rates
         /// </summary>
         public DateTimeOffset? LastRequested { get; set; }
 
-        public string ExchangeName { get; }
         public DateTimeOffset? Expiration
         {
             get

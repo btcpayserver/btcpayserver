@@ -58,6 +58,7 @@ namespace BTCPayServer.Controllers
             PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
             SettingsRepository settingsRepository,
             IAuthorizationService authorizationService,
+            EventAggregator eventAggregator,
             CssThemeManager cssThemeManager)
         {
             _RateFactory = rateFactory;
@@ -74,6 +75,7 @@ namespace BTCPayServer.Controllers
             _settingsRepository = settingsRepository;
             _authorizationService = authorizationService;
             _CssThemeManager = cssThemeManager;
+            _EventAggregator = eventAggregator;
             _NetworkProvider = networkProvider;
             _ExplorerProvider = explorerProvider;
             _FeeRateProvider = feeRateProvider;
@@ -100,6 +102,7 @@ namespace BTCPayServer.Controllers
         private readonly SettingsRepository _settingsRepository;
         private readonly IAuthorizationService _authorizationService;
         private readonly CssThemeManager _CssThemeManager;
+        private readonly EventAggregator _EventAggregator;
 
         [TempData]
         public bool StoreNotConfigured
@@ -496,13 +499,16 @@ namespace BTCPayServer.Controllers
                     case BitcoinPaymentType _:
                         var strategy = derivationByCryptoCode.TryGet(paymentMethodId.CryptoCode);
                         var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
+                        var value = strategy?.ToPrettyString() ?? string.Empty;
+                        
                         vm.DerivationSchemes.Add(new StoreViewModel.DerivationScheme()
                         {
                             Crypto = paymentMethodId.CryptoCode,
                             WalletSupported = network.WalletSupported,
-                            Value = strategy?.ToPrettyString() ?? string.Empty,
+                            Value = value,
                             WalletId = new WalletId(store.Id, paymentMethodId.CryptoCode),
-                            Enabled = !excludeFilters.Match(paymentMethodId) && strategy != null
+                            Enabled = !excludeFilters.Match(paymentMethodId) && strategy != null,
+                            Collapsed = network is ElementsBTCPayNetwork elementsBTCPayNetwork && elementsBTCPayNetwork.NetworkCryptoCode != elementsBTCPayNetwork.CryptoCode && string.IsNullOrEmpty(value)
                         });
                         break;
                     case LightningPaymentType _:
@@ -667,7 +673,7 @@ namespace BTCPayServer.Controllers
                 TempData[WellKnownTempData.ErrorMessage] = "Failure to revoke this token";
             else
                 TempData[WellKnownTempData.SuccessMessage] = "Token revoked";
-            return RedirectToAction(nameof(ListTokens));
+            return RedirectToAction(nameof(ListTokens), new { storeId = token.StoreId});
         }
 
         [HttpGet]

@@ -3,12 +3,11 @@
 
 <div class="row">
     <div class="col-md-12 invoice-payments">
-        <h3>Paid summary</h3>
+        <h3>Current status</h3>
         <table class="table table-sm table-responsive-md">
             <thead class="thead-inverse">
             <tr>
                 <th>Payment method</th>
-                <th>Address</th>
                 <th class="text-right">Rate</th>
                 <th class="text-right">Paid</th>
                 <th class="text-right">Due</th>
@@ -23,9 +22,6 @@
             {
                 <tr>
                     <td>@payment.PaymentMethod</td>
-                    <td title="@payment.Address">
-                        <span  class="text-truncate d-block" style="max-width: 400px">@payment.Address</span>
-                    </td>
                     <td class="text-right">@payment.Rate</td>
                     <td class="text-right">@payment.Paid</td>
                     <td class="text-right">@payment.Due</td>

@@ -76,7 +76,7 @@ services:
       - customer_lnd
       - merchant_lnd
   nbxplorer:
-    image: nicolasdorier/nbxplorer:2.1.5
+    image: nicolasdorier/nbxplorer:2.1.8
     restart: unless-stopped
     ports:
       - "32838:32838"
@@ -98,6 +98,8 @@ services:
       NBXPLORER_LBTCRPCUSER: "liquid"
       NBXPLORER_LBTCRPCPASSWORD: "liquid"
       NBXPLORER_BIND: 0.0.0.0:32838
+      NBXPLORER_MINGAPSIZE: 5
+      NBXPLORER_MAXGAPSIZE: 10
       NBXPLORER_VERBOSE: 1
       NBXPLORER_NOAUTH: 1
     links:

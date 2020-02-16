@@ -57,7 +57,7 @@
 }
 <div class="row">
     <div class="col-md-12">
-        If BTCPay Server shows you an invalid balance, <a asp-action="WalletRescan">rescan your wallet</a>. <br />
+        If BTCPay Server shows you an invalid balance, <a asp-action="WalletRescan" asp-route-walletId="@this.Context.GetRouteValue("walletId")">rescan your wallet</a>. <br />
         If some transactions appear in BTCPay Server, but are missing on Electrum or another wallet, <a href="https://docs.btcpayserver.org/faq-and-common-issues/faq-wallet#missing-payments-in-my-software-or-hardware-wallet">follow those instructions</a>.
     </div>
 </div>

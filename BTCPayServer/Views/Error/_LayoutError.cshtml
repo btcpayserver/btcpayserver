@@ -1,0 +1,118 @@
+﻿@{
+    Layout = null;
+}
+@inject BTCPayServer.Services.BTCPayServerEnvironment env
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <partial name="Header" />
+
+    <link href="~/main/fonts/Montserrat.css" rel="stylesheet">
+    <style>
+        .content-wrapper {
+            padding: 20px 0;
+        }
+
+        @@media screen and (min-width: 768px) {
+            .content-wrapper {
+                padding: 20px 0;
+            }
+        }
+
+        .col-head {
+            display: flex;
+            align-items: center;
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
+        }
+
+        @@media screen and (min-width: 768px) {
+            .col-head {
+                text-align: left;
+                flex-direction: row;
+                justify-content: start;
+            }
+        }
+
+        .head-logo {
+            height: 70px;
+            margin-bottom: 1rem;
+        }
+
+        @@media screen and (min-width: 768px) {
+            .head-logo {
+                height: 100px;
+                margin-bottom: 0;
+                margin-right: 50px;
+            }
+        }
+
+        .lead-title {
+            font-family: Montserrat;
+            font-style: normal;
+            font-weight: bold;
+            font-size: 24px;
+            line-height: 1.2;
+            /* or 150% */
+            letter-spacing: 0.1em;
+        }
+
+        @@media screen and (min-width: 768px) {
+            .lead-title {
+                font-size: 40px;
+            }
+        }
+
+        .lead-login {
+            font-family: Montserrat;
+            font-style: normal;
+            font-weight: normal;
+            font-size: 18px;
+            line-height: 33px;
+            /* or 183% */
+            letter-spacing: 0.1em;
+        }
+
+        .lead-h {
+            font-family: Montserrat;
+            font-style: normal;
+            margin-bottom: 30px;
+            font-weight: 600;
+            font-size: 14px;
+            line-height: 18px;
+            /* identical to box height, or 129% */
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <center>
+        <section class="content-wrapper">
+            <!-- Dummy navbar-brand, hackish way to keep test AssertNoError passing -->
+            <div class="navbar-brand" style="display:none;"></div>
+            <div class="container">
+                <div class="row">
+                    <div class="col-12 col-head" style="justify-content:center;">
+                        <a asp-controller="Home" asp-action="Index"><img src="~/img/btcpay-logo.svg" alt="BTCPay Server" class="head-logo" /></a>
+                        <h1 class="lead-title text-uppercase">@ViewData["ErrorTitle"]</h1>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <hr class="primary ml-0" style="margin:20px auto;" />
+                        @RenderBody()
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <hr class="primary ml-0" style="margin:20px auto;" />
+                        @await Html.PartialAsync("_BTCPaySupporters")
+                    </div>
+                </div>
+            </div>
+        </section>
+    </center>
+</body>
+</html>

@@ -99,6 +99,8 @@ namespace BTCPayServer.Rating
         RuleList ruleList;
 
         decimal _Spread;
+        private const string ImplicitSatsRule = "SATS_X = SATS_BTC * BTC_X;\nSATS_BTC = 0.00000001;\n";
+
         public decimal Spread
         {
             get
@@ -126,6 +128,7 @@ namespace BTCPayServer.Rating
         }
         public static bool TryParse(string str, out RateRules rules, out List<RateRulesErrors> errors)
         {
+            str = ImplicitSatsRule + str;
             rules = null;
             errors = null;
             var expression = CSharpSyntaxTree.ParseText(str, new CSharpParseOptions(LanguageVersion.Default).WithKind(SourceCodeKind.Script));
@@ -195,6 +198,7 @@ namespace BTCPayServer.Rating
         {
             return root.NormalizeWhitespace("", "\n")
                 .ToFullString()
+                .Replace(ImplicitSatsRule, string.Empty, StringComparison.OrdinalIgnoreCase)
                 .Replace("{\n", string.Empty, StringComparison.OrdinalIgnoreCase)
                             .Replace("\n}", string.Empty, StringComparison.OrdinalIgnoreCase);
         }

@@ -96,8 +96,14 @@ namespace BTCPayServer.Services.Rates
 
                     foreach (var network in new BTCPayNetworkProvider(NetworkType.Mainnet).GetAll())
                     {
-                        AddCurrency(_CurrencyProviders, network.CryptoCode, 8, network.CryptoCode);
+                        AddCurrency(_CurrencyProviders, network.CryptoCode, network.Divisibility, network.CryptoCode);
                     }
+
+                    _CurrencyProviders.TryAdd("SATS",
+                        new NumberFormatInfo()
+                        {
+                            CurrencySymbol = "sats", CurrencyDecimalDigits = 0, CurrencyPositivePattern = 3
+                        });
                 }
                 return _CurrencyProviders.TryGet(currency.ToUpperInvariant());
             }
@@ -180,7 +186,7 @@ namespace BTCPayServer.Services.Rates
                 if (!dico.TryAdd(network.CryptoCode, new CurrencyData()
                 {
                     Code = network.CryptoCode,
-                    Divisibility = 8,
+                    Divisibility = network.Divisibility,
                     Name = network.CryptoCode,
                     Crypto = true
                 }))
@@ -188,6 +194,15 @@ namespace BTCPayServer.Services.Rates
                     dico[network.CryptoCode].Crypto = true;
                 }
             }
+
+            dico.TryAdd("SATS", new CurrencyData()
+            {
+                Code = "SATS",
+                Crypto = true,
+                Divisibility = 0,
+                Name = "Satoshis",
+                Symbol = "Sats",
+            });
 
             return dico.Values.ToArray();
         }

@@ -63,7 +63,7 @@ namespace BTCPayServer.Services.Wallets
 
         public TimeSpan CacheSpan { get; private set; } = TimeSpan.FromMinutes(5);
 
-        public async Task<BitcoinAddress> ReserveAddressAsync(DerivationStrategyBase derivationStrategy)
+        public async Task<KeyPathInformation> ReserveAddressAsync(DerivationStrategyBase derivationStrategy)
         {
             if (derivationStrategy == null)
                 throw new ArgumentNullException(nameof(derivationStrategy));
@@ -74,8 +74,7 @@ namespace BTCPayServer.Services.Wallets
                 await _Client.TrackAsync(derivationStrategy).ConfigureAwait(false);
                 pathInfo = await _Client.GetUnusedAsync(derivationStrategy, DerivationFeature.Deposit, 0, true).ConfigureAwait(false);
             }
-
-            return pathInfo.Address;
+            return pathInfo;
         }
 
         public async Task<(BitcoinAddress, KeyPath)> GetChangeAddressAsync(DerivationStrategyBase derivationStrategy)

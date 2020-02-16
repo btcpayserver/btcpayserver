@@ -45,5 +45,7 @@ namespace BTCPayServer.Models.WalletViewModels
         public bool SupportRBF { get; set; }
         [Display(Name = "Disable RBF")]
         public bool DisableRBF { get; set; }
+
+        public bool NBXSeedAvailable { get; set; }
     }
 }

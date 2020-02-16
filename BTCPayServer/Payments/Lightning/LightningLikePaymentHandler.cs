@@ -47,7 +47,7 @@ namespace BTCPayServer.Payments.Lightning
             var storeBlob = store.GetStoreBlob();
             var test = GetNodeInfo(paymentMethod.PreferOnion, supportedPaymentMethod, (BTCPayNetwork)network);
             var invoice = paymentMethod.ParentEntity;
-            var due = Extensions.RoundUp(invoice.ProductInformation.Price / paymentMethod.Rate, 8);
+            var due = Extensions.RoundUp(invoice.ProductInformation.Price / paymentMethod.Rate, network.Divisibility);
             var client = _lightningClientFactory.Create(supportedPaymentMethod.GetLightningUrl(), (BTCPayNetwork)network);
             var expiry = invoice.ExpirationTime - DateTimeOffset.UtcNow;
             if (expiry < TimeSpan.Zero)
@@ -180,11 +180,15 @@ namespace BTCPayServer.Payments.Lightning
             model.LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi;
             if (storeBlob.LightningAmountInSatoshi && model.CryptoCode == "BTC" )
             {
+                var satoshiCulture = new CultureInfo(CultureInfo.InvariantCulture.Name);
+                satoshiCulture.NumberFormat.NumberGroupSeparator = " ";
+
                 model.CryptoCode = "Sats";
-                model.BtcDue = Money.Parse(model.BtcDue).ToUnit(MoneyUnit.Satoshi).ToString(CultureInfo.InvariantCulture);
-                model.BtcPaid =  Money.Parse(model.BtcPaid).ToUnit(MoneyUnit.Satoshi).ToString(CultureInfo.InvariantCulture);
+                model.BtcDue = Money.Parse(model.BtcDue).ToUnit(MoneyUnit.Satoshi).ToString("N0", satoshiCulture);
+                model.BtcPaid =  Money.Parse(model.BtcPaid).ToUnit(MoneyUnit.Satoshi).ToString("N0", satoshiCulture);
+                model.OrderAmount = Money.Parse(model.OrderAmount).ToUnit(MoneyUnit.Satoshi).ToString("N0", satoshiCulture);
+
                 model.NetworkFee = new Money(model.NetworkFee, MoneyUnit.BTC).ToUnit(MoneyUnit.Satoshi);
-                model.OrderAmount = Money.Parse(model.OrderAmount).ToUnit(MoneyUnit.Satoshi).ToString(CultureInfo.InvariantCulture);
             }
         }
         public override string GetCryptoImage(PaymentMethodId paymentMethodId)

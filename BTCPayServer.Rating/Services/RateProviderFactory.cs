@@ -64,6 +64,7 @@ namespace BTCPayServer.Services.Rates
                 return _DirectProviders;
             }
         }
+
         internal IEnumerable<AvailableRateProvider> GetDirectlySupportedExchanges()
         {
             yield return new AvailableRateProvider("binance", "Binance", "https://api.binance.com/api/v1/ticker/24hr");
@@ -77,15 +78,21 @@ namespace BTCPayServer.Services.Rates
             yield return new AvailableRateProvider("bylls", "Bylls", "https://bylls.com/api/price?from_currency=BTC&to_currency=CAD");
             yield return new AvailableRateProvider("bitbank", "Bitbank", "https://public.bitbank.cc/prices");
             yield return new AvailableRateProvider("bitpay", "Bitpay", "https://bitpay.com/rates");
+
+            yield return new AvailableRateProvider("polispay", "PolisPay", "https://obol.polispay.com/complex/btc/polis");
+
+            yield return new AvailableRateProvider("bitfinex", "Bitfinex", "https://api.bitfinex.com/v2/tickers?symbols=tBTCUSD,tLTCUSD,tLTCBTC,tETHUSD,tETHBTC,tETCBTC,tETCUSD,tRRTUSD,tRRTBTC,tZECUSD,tZECBTC,tXMRUSD,tXMRBTC,tDSHUSD,tDSHBTC,tBTCEUR,tBTCJPY,tXRPUSD,tXRPBTC,tIOTUSD,tIOTBTC,tIOTETH,tEOSUSD,tEOSBTC,tEOSETH,tSANUSD,tSANBTC,tSANETH,tOMGUSD,tOMGBTC,tOMGETH,tNEOUSD,tNEOBTC,tNEOETH,tETPUSD,tETPBTC,tETPETH,tQTMUSD,tQTMBTC,tQTMETH,tAVTUSD,tAVTBTC,tAVTETH,tEDOUSD,tEDOBTC,tEDOETH,tBTGUSD,tBTGBTC,tDATUSD,tDATBTC,tDATETH,tQSHUSD,tQSHBTC,tQSHETH,tYYWUSD,tYYWBTC,tYYWETH,tGNTUSD,tGNTBTC,tGNTETH,tSNTUSD,tSNTBTC,tSNTETH,tIOTEUR,tBATUSD,tBATBTC,tBATETH,tMNAUSD,tMNABTC,tMNAETH,tFUNUSD,tFUNBTC,tFUNETH,tZRXUSD,tZRXBTC,tZRXETH,tTNBUSD,tTNBBTC,tTNBETH,tSPKUSD,tSPKBTC,tSPKETH,tTRXUSD,tTRXBTC,tTRXETH,tRCNUSD,tRCNBTC,tRCNETH,tRLCUSD,tRLCBTC,tRLCETH,tAIDUSD,tAIDBTC,tAIDETH,tSNGUSD,tSNGBTC,tSNGETH,tREPUSD,tREPBTC,tREPETH,tELFUSD,tELFBTC,tELFETH,tNECUSD,tNECBTC,tNECETH,tBTCGBP,tETHEUR,tETHJPY,tETHGBP,tNEOEUR,tNEOJPY,tNEOGBP,tEOSEUR,tEOSJPY,tEOSGBP,tIOTJPY,tIOTGBP,tIOSUSD,tIOSBTC,tIOSETH,tAIOUSD,tAIOBTC,tAIOETH,tREQUSD,tREQBTC,tREQETH,tRDNUSD,tRDNBTC,tRDNETH,tLRCUSD,tLRCBTC,tLRCETH,tWAXUSD,tWAXBTC,tWAXETH,tDAIUSD,tDAIBTC,tDAIETH,tAGIUSD,tAGIBTC,tAGIETH,tBFTUSD,tBFTBTC,tBFTETH,tMTNUSD,tMTNBTC,tMTNETH,tODEUSD,tODEBTC,tODEETH,tANTUSD,tANTBTC,tANTETH,tDTHUSD,tDTHBTC,tDTHETH,tMITUSD,tMITBTC,tMITETH,tSTJUSD,tSTJBTC,tSTJETH,tXLMUSD,tXLMEUR,tXLMJPY,tXLMGBP,tXLMBTC,tXLMETH,tXVGUSD,tXVGEUR,tXVGJPY,tXVGGBP,tXVGBTC,tXVGETH,tBCIUSD,tBCIBTC,tMKRUSD,tMKRBTC,tMKRETH,tKNCUSD,tKNCBTC,tKNCETH,tPOAUSD,tPOABTC,tPOAETH,tEVTUSD,tLYMUSD,tLYMBTC,tLYMETH,tUTKUSD,tUTKBTC,tUTKETH,tVEEUSD,tVEEBTC,tVEEETH,tDADUSD,tDADBTC,tDADETH,tORSUSD,tORSBTC,tORSETH,tAUCUSD,tAUCBTC,tAUCETH,tPOYUSD,tPOYBTC,tPOYETH,tFSNUSD,tFSNBTC,tFSNETH,tCBTUSD,tCBTBTC,tCBTETH,tZCNUSD,tZCNBTC,tZCNETH,tSENUSD,tSENBTC,tSENETH,tNCAUSD,tNCABTC,tNCAETH,tCNDUSD,tCNDBTC,tCNDETH,tCTXUSD,tCTXBTC,tCTXETH,tPAIUSD,tPAIBTC,tSEEUSD,tSEEBTC,tSEEETH,tESSUSD,tESSBTC,tESSETH,tATMUSD,tATMBTC,tATMETH,tHOTUSD,tHOTBTC,tHOTETH,tDTAUSD,tDTABTC,tDTAETH,tIQXUSD,tIQXBTC,tIQXEOS,tWPRUSD,tWPRBTC,tWPRETH,tZILUSD,tZILBTC,tZILETH,tBNTUSD,tBNTBTC,tBNTETH,tABSUSD,tABSETH,tXRAUSD,tXRAETH,tMANUSD,tMANETH,tBBNUSD,tBBNETH,tNIOUSD,tNIOETH,tDGXUSD,tDGXETH,tVETUSD,tVETBTC,tVETETH,tUTNUSD,tUTNETH,tTKNUSD,tTKNETH,tGOTUSD,tGOTEUR,tGOTETH,tXTZUSD,tXTZBTC,tCNNUSD,tCNNETH,tBOXUSD,tBOXETH,tTRXEUR,tTRXGBP,tTRXJPY,tMGOUSD,tMGOETH,tRTEUSD,tRTEETH,tYGGUSD,tYGGETH,tMLNUSD,tMLNETH,tWTCUSD,tWTCETH,tCSXUSD,tCSXETH,tOMNUSD,tOMNBTC,tINTUSD,tINTETH,tDRNUSD,tDRNETH,tPNKUSD,tPNKETH,tDGBUSD,tDGBBTC,tBSVUSD,tBSVBTC,tBABUSD,tBABBTC,tWLOUSD,tWLOXLM,tVLDUSD,tVLDETH,tENJUSD,tENJETH,tONLUSD,tONLETH,tRBTUSD,tRBTBTC,tUSTUSD,tEUTEUR,tEUTUSD,tGSDUSD,tUDCUSD,tTSDUSD,tPAXUSD,tRIFUSD,tRIFBTC,tPASUSD,tPASETH,tVSYUSD,tVSYBTC,tZRXDAI,tMKRDAI,tOMGDAI,tBTTUSD,tBTTBTC,tBTCUST,tETHUST,tCLOUSD,tCLOBTC,tIMPUSD,tIMPETH,tLTCUST,tEOSUST,tBABUST,tSCRUSD,tSCRETH,tGNOUSD,tGNOETH,tGENUSD,tGENETH,tATOUSD,tATOBTC,tATOETH,tWBTUSD,tXCHUSD,tEUSUSD,tWBTETH,tXCHETH,tEUSETH,tLEOUSD,tLEOBTC,tLEOUST,tLEOEOS,tLEOETH,tASTUSD,tASTETH,tFOAUSD,tFOAETH,tUFRUSD,tUFRETH,tZBTUSD,tZBTUST,tOKBUSD,tUSKUSD,tGTXUSD,tKANUSD,tOKBUST,tOKBETH,tOKBBTC,tUSKUST,tUSKETH,tUSKBTC,tUSKEOS,tGTXUST,tKANUST,tAMPUSD,tALGUSD,tALGBTC,tALGUST,tBTCXCH,tSWMUSD,tSWMETH,tTRIUSD,tTRIETH,tLOOUSD,tLOOETH,tAMPUST,tDUSK:USD,tDUSK:BTC,tUOSUSD,tUOSBTC,tRRBUSD,tRRBUST,tDTXUSD,tDTXUST,tAMPBTC,tFTTUSD,tFTTUST,tPAXUST,tUDCUST,tTSDUST,tBTC:CNHT,tUST:CNHT,tCNH:CNHT,tCHZUSD,tCHZUST,tBTCF0:USTF0,tETHF0:USTF0");
+            yield return new AvailableRateProvider("okex", "OKEx", "https://www.okex.com/api/futures/v3/instruments/ticker");
+            yield return new AvailableRateProvider("coinbasepro", "Coinbase Pro", "https://api.pro.coinbase.com/products");
         }
         void InitExchanges()
         {
             // We need to be careful to only add exchanges which OnGetTickers implementation make only 1 request
-            Providers.Add("binance", new ExchangeSharpRateProvider(new ExchangeBinanceAPI(), true));
-            Providers.Add("bittrex", new ExchangeSharpRateProvider(new ExchangeBittrexAPI(), true));
-            Providers.Add("poloniex", new ExchangeSharpRateProvider(new ExchangePoloniexAPI(), true));
-            Providers.Add("hitbtc", new ExchangeSharpRateProvider(new ExchangeHitBTCAPI(), true));
-            Providers.Add("ndax", new ExchangeSharpRateProvider(new ExchangeNDAXAPI(), true));
+            AddExchangeSharpProviders<ExchangeBinanceAPI>("binance");
+            AddExchangeSharpProviders<ExchangeBittrexAPI>("bittrex");
+            AddExchangeSharpProviders<ExchangePoloniexAPI>("poloniex");
+            AddExchangeSharpProviders<ExchangeHitBTCAPI>("hitbtc");
+            AddExchangeSharpProviders<ExchangeNDAXAPI>("ndax");
 
             // Handmade providers
             Providers.Add("coingecko", new CoinGeckoRateProvider(_httpClientFactory));
@@ -93,24 +100,28 @@ namespace BTCPayServer.Services.Rates
             Providers.Add("bylls", new ByllsRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_BYLLS")));
             Providers.Add("bitbank", new BitbankRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_BITBANK")));
             Providers.Add("bitpay", new BitpayRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_BITPAY")));
+            Providers.Add("polispay", new PolisRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_POLIS")));
 
 
             // Backward compatibility: coinaverage should be using coingecko to prevent stores from breaking
             Providers.Add("coinaverage", new CoinGeckoRateProvider(_httpClientFactory));
 
-            // Those exchanges make multiple requests when calling GetTickers so we remove them
-            //DirectProviders.Add("gemini", new ExchangeSharpRateProvider("gemini", new ExchangeGeminiAPI()));
-            //DirectProviders.Add("bitfinex", new ExchangeSharpRateProvider("bitfinex", new ExchangeBitfinexAPI()));
-            //DirectProviders.Add("okex", new ExchangeSharpRateProvider("okex", new ExchangeOkexAPI()));
-            //DirectProviders.Add("bitstamp", new ExchangeSharpRateProvider("bitstamp", new ExchangeBitstampAPI()));
+            AddExchangeSharpProviders<ExchangeBitfinexAPI>("bitfinex");
+            AddExchangeSharpProviders<ExchangeOKExAPI>("okex");
+            AddExchangeSharpProviders<ExchangeCoinbaseAPI>("coinbasepro");
+            // Those exchanges make too many requests, exchange sharp do not parallelize so it is too slow...
+            //AddExchangeSharpProviders<ExchangeGeminiAPI>("gemini");
+            //AddExchangeSharpProviders<ExchangeBitstampAPI>("bitstamp");
+            //AddExchangeSharpProviders<ExchangeBitMEXAPI>("bitmex");
 
             foreach (var provider in Providers.ToArray())
             {
-                var prov = new BackgroundFetcherRateProvider(provider.Key, Providers[provider.Key]);
+                var prov = new BackgroundFetcherRateProvider(Providers[provider.Key]);
                 prov.RefreshRate = TimeSpan.FromMinutes(1.0);
                 prov.ValidatyTime = TimeSpan.FromMinutes(5.0);
                 Providers[provider.Key] = prov;
             }
+            Providers["gdax"] = Providers["coinbasepro"];
 
             foreach (var supportedExchange in GetCoinGeckoSupportedExchanges())
             {
@@ -118,14 +129,21 @@ namespace BTCPayServer.Services.Rates
                 {
                     var coingecko = new CoinGeckoRateProvider(_httpClientFactory)
                     {
-                        UnderlyingExchange = supportedExchange.Id
+                        UnderlyingExchange = supportedExchange.SourceId
                     };
-                    var bgFetcher = new BackgroundFetcherRateProvider(supportedExchange.Id, coingecko);
+                    var bgFetcher = new BackgroundFetcherRateProvider(coingecko);
                     bgFetcher.RefreshRate = TimeSpan.FromMinutes(1.0);
                     bgFetcher.ValidatyTime = TimeSpan.FromMinutes(5.0);
                     Providers.Add(supportedExchange.Id, bgFetcher);
                 }
             }
+        }
+
+        private IRateProvider AddExchangeSharpProviders<T>(string providerName) where T: ExchangeAPI, new()
+        {
+            var provider = new ExchangeSharpRateProvider<T>(_httpClientFactory.CreateClient($"EXCHANGE_{providerName}".ToUpperInvariant()), true);
+            Providers.Add(providerName, provider);
+            return provider;
         }
 
         IEnumerable<AvailableRateProvider> _AvailableRateProviders = null;
@@ -151,8 +169,7 @@ namespace BTCPayServer.Services.Rates
         {
             return JArray.Parse(CoinGeckoRateProvider.SupportedExchanges).Select(token =>
                     new AvailableRateProvider(Normalize(token["id"].ToString().ToLowerInvariant()), token["id"].ToString().ToLowerInvariant(), token["name"].ToString(),
-                        $"https://api.coingecko.com/api/v3/exchanges/{token["id"]}/tickers", RateSource.Coingecko))
-                .Concat(new[] { new AvailableRateProvider("gdax", "gdax", string.Empty, $"https://api.coingecko.com/api/v3/exchanges/gdax", RateSource.Coingecko) });
+                        $"https://api.coingecko.com/api/v3/exchanges/{token["id"]}/tickers", RateSource.Coingecko));
         }
 
         private string Normalize(string name)

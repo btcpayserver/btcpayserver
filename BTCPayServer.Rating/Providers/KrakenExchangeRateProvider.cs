@@ -33,8 +33,6 @@ namespace BTCPayServer.Services.Rates
             }
         }
 
-        public string ExchangeName => "kraken";
-
         HttpClient _LocalClient;
         static HttpClient _Client = new HttpClient();
 

@@ -132,7 +132,10 @@ namespace BTCPayServer.HostedServices
                     }
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Logs.PayServer.LogWarning(ex, "Warning: Error while trying to load rates from cache");
+            }
         }
 
         DateTimeOffset? _LastCacheDate;

@@ -150,17 +150,19 @@ namespace BTCPayServer.Tests
                 new BitcoinLikePaymentHandler(null, networkProvider, null, null),
                 new LightningLikePaymentHandler(null, null, networkProvider, null),
             });
+            var networkBTC = networkProvider.GetNetwork("BTC");
+            var networkLTC = networkProvider.GetNetwork("LTC");
             InvoiceEntity invoiceEntity = new InvoiceEntity();
             invoiceEntity.Networks = networkProvider;
             invoiceEntity.Payments = new System.Collections.Generic.List<PaymentEntity>();
             invoiceEntity.ProductInformation = new ProductInformation() {Price = 100};
             PaymentMethodDictionary paymentMethods = new PaymentMethodDictionary();
-            paymentMethods.Add(new PaymentMethod() {CryptoCode = "BTC", Rate = 10513.44m,}.SetPaymentMethodDetails(
+            paymentMethods.Add(new PaymentMethod() {Network = networkBTC, CryptoCode = "BTC", Rate = 10513.44m,}.SetPaymentMethodDetails(
                 new BTCPayServer.Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod()
                 {
                     NextNetworkFee = Money.Coins(0.00000100m), DepositAddress = dummy
                 }));
-            paymentMethods.Add(new PaymentMethod() {CryptoCode = "LTC", Rate = 216.79m}.SetPaymentMethodDetails(
+            paymentMethods.Add(new PaymentMethod() {Network = networkLTC, CryptoCode = "LTC", Rate = 216.79m}.SetPaymentMethodDetails(
                 new BTCPayServer.Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod()
                 {
                     NextNetworkFee = Money.Coins(0.00010000m), DepositAddress = dummy

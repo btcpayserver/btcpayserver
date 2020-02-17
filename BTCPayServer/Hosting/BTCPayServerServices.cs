@@ -260,10 +260,20 @@ namespace BTCPayServer.Hosting
             {
                 options.AddPolicy(CorsPolicies.All, p => p.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
             });
-
-            var rateLimits = new RateLimitService();
-            rateLimits.SetZone($"zone={ZoneLimits.Login} rate=5r/min burst=3 nodelay");
-            services.AddSingleton(rateLimits);
+            services.AddSingleton(provider =>
+            {
+                var btcPayEnv = provider.GetService<BTCPayServerEnvironment>();
+                var rateLimits = new RateLimitService();
+                if (btcPayEnv.IsDevelopping)
+                {
+                    rateLimits.SetZone($"zone={ZoneLimits.Login} rate=1000r/min burst=100 nodelay");
+                }
+                else
+                {
+                    rateLimits.SetZone($"zone={ZoneLimits.Login} rate=5r/min burst=3 nodelay");
+                }
+                return rateLimits;
+            });
 
 
             services.AddLogging(logBuilder =>

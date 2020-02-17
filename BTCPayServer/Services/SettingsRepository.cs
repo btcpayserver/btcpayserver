@@ -19,9 +19,9 @@ namespace BTCPayServer.Services
             _EventAggregator = eventAggregator;
         }
 
-        public async Task<T> GetSettingAsync<T>()
+        public async Task<T> GetSettingAsync<T>(string name = null)
         {
-            var name = typeof(T).FullName;
+            name ??= typeof(T).FullName;
             using (var ctx = _ContextFactory.CreateContext())
             {
                 var data = await ctx.Settings.Where(s => s.Id == name).FirstOrDefaultAsync();
@@ -31,9 +31,9 @@ namespace BTCPayServer.Services
             }
         }
 
-        public async Task UpdateSetting<T>(T obj)
+        public async Task UpdateSetting<T>(T obj, string name = null)
         {
-            var name = obj.GetType().FullName;
+            name ??= obj.GetType().FullName;
             using (var ctx = _ContextFactory.CreateContext())
             {
                 var settings = new SettingData();

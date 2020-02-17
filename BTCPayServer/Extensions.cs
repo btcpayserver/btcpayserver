@@ -268,7 +268,7 @@ namespace BTCPayServer
         
         public static bool IsOnion(this Uri uri)
         {
-            return uri?.DnsSafeHost?.EndsWith(".onion", StringComparison.OrdinalIgnoreCase) ?? false;
+            return uri?.DnsSafeHost?.EndsWith(".onion", StringComparison.OrdinalIgnoreCase) is true;
         }
 
 

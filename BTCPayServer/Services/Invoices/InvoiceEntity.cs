@@ -821,7 +821,7 @@ namespace BTCPayServer.Services.Invoices
                 FeeRate = bitcoinPaymentMethod.FeeRate;
                 DepositAddress = bitcoinPaymentMethod.DepositAddress;
             }
-            PaymentMethodDetails = JObject.Parse(paymentMethod.GetPaymentType().SerializePaymentMethodDetails(Network, paymentMethod));;
+            PaymentMethodDetails = JObject.Parse(paymentMethod.GetPaymentType().SerializePaymentMethodDetails(Network, paymentMethod));
 
 #pragma warning restore CS0618 // Type or member is obsolete
             return this;

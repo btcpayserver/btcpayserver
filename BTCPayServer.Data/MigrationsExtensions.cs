@@ -11,7 +11,10 @@ namespace BTCPayServer.Migrations
         {
             return activeProvider != "Microsoft.EntityFrameworkCore.Sqlite";
         }
-
+        public static bool SupportAddForeignKey(this Microsoft.EntityFrameworkCore.Migrations.Migration migration, string activeProvider)
+        {
+            return activeProvider != "Microsoft.EntityFrameworkCore.Sqlite";
+        }
         public static bool SupportDropForeignKey(this Microsoft.EntityFrameworkCore.Migrations.Migration migration, string activeProvider)
         {
             return activeProvider != "Microsoft.EntityFrameworkCore.Sqlite";

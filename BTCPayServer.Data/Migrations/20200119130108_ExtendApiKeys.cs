@@ -36,7 +36,7 @@ namespace BTCPayServer.Migrations
                 name: "IX_ApiKeys_UserId",
                 table: "ApiKeys",
                 column: "UserId");
-            if (this.SupportDropForeignKey(migrationBuilder.ActiveProvider))
+            if (this.SupportAddForeignKey(migrationBuilder.ActiveProvider))
             {
                 migrationBuilder.AddForeignKey(
                     name: "FK_ApiKeys_AspNetUsers_UserId",

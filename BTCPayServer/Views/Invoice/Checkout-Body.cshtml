@@ -208,7 +208,7 @@
                     <span v-html="$t('Return to StoreName', srvModel)"></span>
                 </a>
                 <button class="action-button close-action" v-show="isModal" v-on:click="close">
-                    <span v-html="$t('Close')">{{$t("Return to StoreName", srvModel)}}</span>
+                    <span v-html="$t('Close')"></span>
                 </button>
             </div>
         </div>
@@ -241,7 +241,7 @@
                 <span>{{$t("Return to StoreName", srvModel)}}</span>
             </a>
             <button class="action-button close-action" v-show="isModal" v-on:click="close">
-                <span>{{$t("Return to StoreName", srvModel)}}</span>
+                <span v-html="$t('Close')"></span>
             </button>
         </div>
     </div>

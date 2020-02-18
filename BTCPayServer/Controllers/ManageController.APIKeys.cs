@@ -4,13 +4,16 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
+using BTCPayServer.Hosting.OpenApi;
 using BTCPayServer.Models;
 using BTCPayServer.Security;
 using BTCPayServer.Security.APIKeys;
 using ExchangeSharp;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using NSwag.Annotations;
 
 namespace BTCPayServer.Controllers
 {
@@ -56,8 +59,16 @@ namespace BTCPayServer.Controllers
             return View("AddApiKey", await SetViewModelValues(new AddApiKeyViewModel()));
         }
 
+        /// <param name="permissions">The permissions to request. Current permissions available: ServerManagement, StoreManagement</param>
+        /// <param name="applicationName">The name of your application</param>
+        /// <param name="strict">If permissions are specified, and strict is set to false, it will allow the user to reject some of permissions the application is requesting.</param>
+        /// <param name="selectiveStores">If the application is requesting the CanModifyStoreSettings permission and selectiveStores is set to true, this allows the user to only grant permissions to selected stores under the user's control.</param>
         [HttpGet("~/api-keys/authorize")]
-        public async Task<IActionResult> AuthorizeAPIKey( string[] permissions, string applicationName = null,
+        [OpenApiTags("Authorization")]
+        [OpenApiOperation("Authorize User",
+            "Redirect the browser to this endpoint to request the user to generate an api-key with specific permissions")]
+        [IncludeInOpenApiDocs]
+        public async Task<IActionResult> AuthorizeAPIKey(string[] permissions, string applicationName = null,
             bool strict = true, bool selectiveStores = false)
         {
             if (!_btcPayServerEnvironment.IsSecure)

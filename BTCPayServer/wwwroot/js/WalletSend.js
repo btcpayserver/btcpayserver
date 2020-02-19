@@ -25,8 +25,6 @@ function updateFiatValueWithCurrentElement() {
 }
 
 $(function () {
-
-
     $(".output-amount").on("input", updateFiatValueWithCurrentElement).each(updateFiatValueWithCurrentElement);
 
     $("#crypto-fee-link").on("click", function (elem) {

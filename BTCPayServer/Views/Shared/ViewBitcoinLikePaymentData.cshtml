@@ -26,6 +26,7 @@
         m.ReceivedTime = payment.ReceivedTime;
         m.TransactionLink = string.Format(CultureInfo.InvariantCulture, payment.Network.BlockExplorerLink, m.TransactionId);
         m.Replaced = !payment.Accounted;
+        m.CryptoPaymentData = onChainPaymentData;
         return m;
     });
 }
@@ -40,6 +41,7 @@
                 <tr>
                     <th>Crypto</th>
                     <th>Deposit address</th>
+                    <th>Amount</th>
                     <th>Transaction Id</th>
                     <th class="text-right">Confirmations</th>
                 </tr>
@@ -50,6 +52,7 @@
                     <tr class="@(payment.Replaced ? "linethrough" : "")" >
                         <td>@payment.Crypto</td>
                         <td>@payment.DepositAddress</td>
+                        <td>@payment.CryptoPaymentData.GetValue()</td>
                         <td>
                             <div class="wraptextAuto">
                                 <a href="@payment.TransactionLink" target="_blank">

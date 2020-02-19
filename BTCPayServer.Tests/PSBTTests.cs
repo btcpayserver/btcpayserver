@@ -88,7 +88,7 @@ namespace BTCPayServer.Tests
                 Assert.Equal(vmPSBT.PSBT, vmPSBT2.PSBT);
 
                 var signedPSBT = unsignedPSBT.Clone();
-                signedPSBT.SignAll(user.DerivationScheme, user.ExtKey);
+                signedPSBT.SignAll(user.DerivationScheme, user.GenerateWalletResponseV.AccountHDKey, user.GenerateWalletResponseV.AccountKeyPath);
                 vmPSBT.PSBT = signedPSBT.ToBase64();
                 var psbtReady = await walletController.WalletPSBTReady(walletId, new WalletPSBTReadyViewModel()
                 {

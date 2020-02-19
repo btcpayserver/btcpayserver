@@ -32,7 +32,12 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> RemoveAPIKey(string id)
         {
             await _apiKeyRepository.Remove(id, _userManager.GetUserId(User));
-            return RedirectToAction("APIKeys", new {StatusMessage = "API Key removed"});
+            TempData.SetStatusMessageModel(new StatusMessageModel()
+            {
+                Severity = StatusMessageModel.StatusSeverity.Success,
+                Message = "API Key removed"
+            });
+            return RedirectToAction("APIKeys");
         }
 
         [HttpGet]

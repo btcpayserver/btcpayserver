@@ -606,7 +606,7 @@ retry:
                 if (queryObject.IncludeEvents)
                     query = query.Include(o => o.Events);
 
-                var data = await query.ToArrayAsync().ConfigureAwait(false);
+                var data = await query.OrderByDescending(i => i.Created).ToArrayAsync().ConfigureAwait(false);
                 return data.Select(ToEntity).ToArray();
             }
         }

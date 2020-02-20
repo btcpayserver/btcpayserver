@@ -180,7 +180,11 @@ namespace BTCPayServer.HostedServices
         {
             if (invoiceId == null)
                 throw new ArgumentNullException(nameof(invoiceId));
-            _WatchRequests.Writer.TryWrite(invoiceId);
+            
+            if (!_WatchRequests.Writer.TryWrite(invoiceId))
+            {
+                Logs.PayServer.LogWarning($"Failed to write invoice {invoiceId} into WatchRequests channel");
+            }
         }
 
         private async Task Wait(string invoiceId)

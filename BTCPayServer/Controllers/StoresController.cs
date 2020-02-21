@@ -647,6 +647,7 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
+
         [HttpGet]
         [Route("{storeId}/tokens/{tokenId}/revoke")]
         public async Task<IActionResult> RevokeToken(string tokenId)
@@ -780,13 +781,22 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("{storeId}/tokens/apikey")]
-        public async Task<IActionResult> GenerateAPIKey(string storeId)
+        public async Task<IActionResult> GenerateAPIKey(string storeId, string command="")
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
-            await _TokenRepository.GenerateLegacyAPIKey(CurrentStore.Id);
-            TempData[WellKnownTempData.SuccessMessage] = "API Key re-generated";
+            if (command == "revoke")
+            {
+                await _TokenRepository.RevokeLegacyAPIKeys(CurrentStore.Id);
+                TempData[WellKnownTempData.SuccessMessage] = "API Key revoked";
+            }
+            else
+            {
+                await _TokenRepository.GenerateLegacyAPIKey(CurrentStore.Id);
+                TempData[WellKnownTempData.SuccessMessage] = "API Key re-generated";
+            }
+            
             return RedirectToAction(nameof(ListTokens), new
             {
                 storeId

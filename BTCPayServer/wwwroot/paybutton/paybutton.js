@@ -51,14 +51,18 @@ function inputChanges(event, buttonSize) {
     var isSlider = srvModel.buttonType == 2
 
     var width = "209px";
+    var height = "57px";
     var widthInput = "3em";
     if (srvModel.buttonSize === 0) {
         width = "146px";
         widthInput = "2em";
+        height = "40px";
     } else if (srvModel.buttonSize === 1) {
         width = "168px";
+        height = "46px";
     } else if (srvModel.buttonSize === 2) {
         width = "209px";
+        height = "57px";
     }
 
     var html =
@@ -103,8 +107,15 @@ function inputChanges(event, buttonSize) {
         html += addSlider(srvModel.price, srvModel.min, srvModel.max, srvModel.step, width);
         html += '  </div>\n';
     }
-
-    html += '  <input type="image" class="submit" name="submit" src="' + esc(srvModel.payButtonImageUrl) + '" style="width:' + width + '" alt="Pay with BtcPay, Self-Hosted Bitcoin Payment Processor">\n';
+    
+    if(!srvModel.payButtonText){
+        html += '  <input type="image" class="submit" name="submit" src="' + esc(srvModel.payButtonImageUrl) + '" style="width:' + width + '" alt="Pay with BtcPay, Self-Hosted Bitcoin Payment Processor">\n';
+    }else{
+        var numwidth = parseInt(width.replace("px", ""));
+        html+= '<button type="submit" class="submit" name="submit" style="min-width:' + width + '; min-height:' + height + '; border-radius: 4px;border-style: none;background-color: #0f3b21;" alt="Pay with BtcPay, Self-Hosted Bitcoin Payment Processor"><span style="color:#fff">'+srvModel.payButtonText+'</span>\n' +
+            (srvModel.payButtonImageUrl? '<img src="'+srvModel.payButtonImageUrl+'" style="width:'+numwidth/2+'px;">\n' : '')+
+            '</button>'
+    }
     html += '</form>';
 
     $("#mainCode").text(html).html();

@@ -40,5 +40,6 @@ namespace BTCPayServer.Models.StoreViewModels
         public string UrlRoot { get; set; }
         public List<string> CurrencyDropdown { get; set; }
         public string PayButtonImageUrl { get; set; }
+        public string PayButtonText { get; set; }
     }
 }

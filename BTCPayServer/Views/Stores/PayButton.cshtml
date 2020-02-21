@@ -48,14 +48,25 @@
     <div class="row">
         <div class="col-lg-7">
             <div class="form-group">
+                <label>
+                    <input type="checkbox" v-model="buttonInlineTextMode" v-on:change="inputChanges" class="form-check-inline"/> Customize text in button
+                </label>
+            </div>
+            <div class="form-group" v-show="buttonInlineTextMode">
+                <label>Pay Button Text</label>
+                <input name="payButtonText" type="text" class="form-control" id="inputAddress"
+                       v-model="srvModel.payButtonText" v-on:change="inputChanges">
+            </div>
+            <div class="form-group">
                 <label>Pay Button Image Url</label>
                 <input name="payButtonImageUrl" type="text" class="form-control" id="inputAddress"
                        v-model="srvModel.payButtonImageUrl" v-on:change="inputChanges"
-                       v-validate="'required|url'" :class="{'is-invalid': errors.has('payButtonImageUrl') }">
+                       v-validate="{ required: this.imageUrlRequired, url: {require_tld:false} }"
+                       :class="{'is-invalid': errors.has('payButtonImageUrl') }">
                 <small class="text-danger">{{ errors.first('payButtonImageUrl') }}</small>
             </div>
             <div class="form-group">
-                <label>Button Size</label>
+                <label>Image Size</label>
                 <div style="vertical-align:top; font-size:12px; display:flex;">
                     <button class="btn text-nowrap" style="width:146px;height:40px;margin-right:40px;"
                             v-on:click="inputChanges($event, 0)" v-bind:class="{'btn-primary': (srvModel.buttonSize == 0) }">
@@ -74,15 +85,15 @@
             <div class="form-group">
                 <label>Button Type</label>
                 <div>
-                    <input type="radio" name="button-type" id="btn-fixed" value="0" v-model="srvModel.buttonType" v-on:change="inputChanges" checked />
+                    <input type="radio" name="button-type" id="btn-fixed" value="0" v-model="srvModel.buttonType" v-on:change="inputChanges" checked/>
                     <label for="btn-fixed">Fixed amount</label>
                 </div>
                 <div>
-                    <input type="radio" name="button-type" id="btn-custom" value="1" v-model="srvModel.buttonType" v-on:change="inputChanges" />
+                    <input type="radio" name="button-type" id="btn-custom" value="1" v-model="srvModel.buttonType" v-on:change="inputChanges"/>
                     <label for="btn-custom">Custom amount</label>
                 </div>
                 <div>
-                    <input type="radio" name="button-type" id="btn-slider" value="2" v-model="srvModel.buttonType" v-on:change="inputChanges" />
+                    <input type="radio" name="button-type" id="btn-slider" value="2" v-model="srvModel.buttonType" v-on:change="inputChanges"/>
                     <label for="btn-slider">Slider</label>
                 </div>
             </div>
@@ -122,15 +133,15 @@
                     <small class="text-danger">{{ errors.first('simpleInput') }}</small>
                 </div>
                 <div class="form-check">
-                   <input name="fitButtonInline"
-                          id="fitButtonInline"
-                          type="checkbox"
-                          class="form-check-input"
-                          v-model="srvModel.fitButtonInline"
-                          v-on:change="inputChanges"
-                          :class="{'is-invalid': errors.has('fitButtonInline') }">
-                   <label class="form-check-label" for="fitButtonInline">Fit button inline</label>
-                   <small class="text-danger">{{ errors.first('fitButtonInline') }}</small>
+                    <input name="fitButtonInline"
+                           id="fitButtonInline"
+                           type="checkbox"
+                           class="form-check-input"
+                           v-model="srvModel.fitButtonInline"
+                           v-on:change="inputChanges"
+                           :class="{'is-invalid': errors.has('fitButtonInline') }">
+                    <label class="form-check-label" for="fitButtonInline">Fit button inline</label>
+                    <small class="text-danger">{{ errors.first('fitButtonInline') }}</small>
                 </div>
             </div>
         </div>
@@ -232,13 +243,33 @@
         var payButtonCtrl = new Vue({
             el: '#payButtonCtrl',
             data: {
-                srvModel: srvModel
+                srvModel: srvModel,
+                originalButtonImageUrl: srvModel.payButtonImageUrl+"",
+                buttonInlineTextMode: false
+            },
+            computed: {
+                imageUrlRequired: function(){
+                    return !this.buttonInlineTextMode;
+                }
             },
             methods: {
                 inputChanges: function (event, buttonSize) {
                     inputChanges(event, buttonSize);
                 }
-            }
+                
+            },
+            watch: {
+                buttonInlineTextMode: function (checked) {
+                  if(!checked){
+                      this.srvModel.payButtonText = "";
+                      this.srvModel.payButtonImageUrl = this.originalButtonImageUrl;
+                  }else {
+                      this.srvModel.payButtonText = "Pay with..";
+                      this.srvModel.payButtonImageUrl = this.srvModel.urlRoot + "img/logo.svg";
+                  }
+                  this.inputChanges();
+                }
+              }
         });
     </script>
 }

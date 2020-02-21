@@ -54,7 +54,7 @@ namespace BTCPayServer.HostedServices
         private async Task UpdateInvoice(UpdateInvoiceContext context)
         {
             var invoice = context.Invoice;
-            if (invoice.Status == InvoiceStatus.New && invoice.ExpirationTime < DateTimeOffset.UtcNow)
+            if (invoice.Status == InvoiceStatus.New && invoice.ExpirationTime <= DateTimeOffset.UtcNow)
             {
                 context.MarkDirty();
                 await _InvoiceRepository.UnaffectAddress(invoice.Id);
@@ -192,13 +192,16 @@ namespace BTCPayServer.HostedServices
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
             try
             {
-                var delay = invoice.ExpirationTime - DateTimeOffset.UtcNow;
+                // add 1 second to ensure watch won't trigger moments before invoice expires
+                var delay = invoice.ExpirationTime.AddSeconds(1) - DateTimeOffset.UtcNow;
                 if (delay > TimeSpan.Zero)
                 {
                     await Task.Delay(delay, _Cts.Token);
                 }
                 Watch(invoiceId);
-                delay = invoice.MonitoringExpiration - DateTimeOffset.UtcNow;
+
+                // add 1 second to ensure watch won't trigger moments before monitoring expires
+                delay = invoice.MonitoringExpiration.AddSeconds(1) - DateTimeOffset.UtcNow;
                 if (delay > TimeSpan.Zero)
                 {
                     await Task.Delay(delay, _Cts.Token);

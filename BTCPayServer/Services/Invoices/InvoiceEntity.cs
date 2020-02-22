@@ -325,6 +325,11 @@ namespace BTCPayServer.Services.Invoices
             get;
             set;
         }
+        public string NotificationEmail
+        {
+            get;
+            set;
+        }
 
         [JsonProperty("notificationURL")]
         public string NotificationURLTemplate

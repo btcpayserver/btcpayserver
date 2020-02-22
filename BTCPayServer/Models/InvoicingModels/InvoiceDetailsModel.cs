@@ -120,6 +120,7 @@ namespace BTCPayServer.Models.InvoicingModels
         public AddressModel[] Addresses { get; set; }
         public DateTimeOffset MonitoringDate { get; internal set; }
         public List<Data.InvoiceEventData> Events { get; internal set; }
+        public string NotificationEmail { get; internal set; }
         public Dictionary<string, object> PosData { get; set; }
         public List<PaymentEntity> Payments { get; set; }
     }

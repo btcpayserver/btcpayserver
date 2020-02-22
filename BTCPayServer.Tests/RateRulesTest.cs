@@ -5,6 +5,7 @@ using System.Text;
 using BTCPayServer.Rating;
 using Xunit;
 using System.Globalization;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Tests
 {
@@ -22,6 +23,35 @@ namespace BTCPayServer.Tests
             rule.Reevaluate();
             Assert.True(!rule.HasError);
             Assert.Equal(1.1m, rule.BidAsk.Ask);
+        }
+
+        [Fact]
+        [Trait("Fast", "Fast")]
+        public void CanSerializeExchangeRatesCache()
+        {
+            HostedServices.RatesHostedService.ExchangeRatesCache cache = new HostedServices.RatesHostedService.ExchangeRatesCache();
+            cache.Created = DateTimeOffset.UtcNow;
+            cache.States = new List<Services.Rates.BackgroundFetcherState>();
+            cache.States.Add(new Services.Rates.BackgroundFetcherState()
+            {
+                ExchangeName = "Kraken",
+                LastRequested = DateTimeOffset.UtcNow,
+                LastUpdated = DateTimeOffset.UtcNow,
+                Rates = new List<Services.Rates.BackgroundFetcherRate>()
+                {
+                    new Services.Rates.BackgroundFetcherRate()
+                    {
+                        Pair = new CurrencyPair("USD", "BTC"),
+                        BidAsk = new BidAsk(1.0m, 2.0m)
+                    }
+                }
+            });
+            var str = JsonConvert.SerializeObject(cache, Formatting.Indented);
+
+            var cache2 = JsonConvert.DeserializeObject<HostedServices.RatesHostedService.ExchangeRatesCache>(str);
+            Assert.Equal(cache.Created.ToUnixTimeSeconds(), cache2.Created.ToUnixTimeSeconds());
+            Assert.Equal(cache.States[0].Rates[0].BidAsk, cache2.States[0].Rates[0].BidAsk);
+            Assert.Equal(cache.States[0].Rates[0].Pair, cache2.States[0].Rates[0].Pair);
         }
 
         [Fact]

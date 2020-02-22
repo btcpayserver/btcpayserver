@@ -4,8 +4,10 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Lightning;
+using BTCPayServer.Payments;
 using BTCPayServer.Tests.Logging;
 using BTCPayServer.Views.Stores;
+using NBitcoin;
 using NBitpayClient;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Interactions;
@@ -175,6 +177,44 @@ namespace BTCPayServer.Tests
                 s.GoToInvoiceCheckout(invoiceId);
                 Assert.Contains("Sats", s.Driver.FindElement(By.ClassName("payment__currencies_noborder")).Text);
                 
+            }
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        public async Task CanUseJSModal()
+        {
+            using (var s = SeleniumTester.Create())
+            {
+                await s.StartAsync();
+                s.GoToRegister();
+                s.RegisterNewUser();
+                var store = s.CreateNewStore();
+                s.GoToStore(store.storeId);
+                s.AddDerivationScheme();
+                var invoiceId = s.CreateInvoice(store.storeId, 0.001m, "BTC", "a@x.com");
+                var invoice = await s.Server.PayTester.InvoiceRepository.GetInvoice(invoiceId);
+                s.Driver.Navigate()
+                    .GoToUrl(new Uri(s.Server.PayTester.ServerUri, $"tests/index.html?invoice={invoiceId}"));
+                TestUtils.Eventually(() =>
+                {
+                    Assert.True(s.Driver.FindElement(By.Name("btcpay")).Displayed);
+                });
+                await s.Server.ExplorerNode.SendToAddressAsync(BitcoinAddress.Create(invoice
+                        .GetPaymentMethod(new PaymentMethodId("BTC", PaymentTypes.BTCLike))
+                        .GetPaymentMethodDetails().GetPaymentDestination(), Network.RegTest),
+                    new Money(0.001m, MoneyUnit.BTC));
+
+                IWebElement closebutton = null;
+                TestUtils.Eventually(() =>
+                {
+                    var iframe = s.Driver.SwitchTo().Frame("btcpay");
+                    closebutton = iframe.FindElement(By.ClassName("close-action"));
+                    Assert.True(closebutton.Displayed);
+                });
+                closebutton.Click();
+                s.Driver.AssertElementNotFound(By.Name("btcpay"));
+                Assert.Equal(s.Driver.Url,
+                    new Uri(s.Server.PayTester.ServerUri, $"tests/index.html?invoice={invoiceId}").ToString());
             }
         }
     }

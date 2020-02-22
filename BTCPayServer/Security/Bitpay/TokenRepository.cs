@@ -76,6 +76,21 @@ namespace BTCPayServer.Security.Bitpay
             }
         }
 
+        public async Task RevokeLegacyAPIKeys(string storeId)
+        {
+            var keys = await GetLegacyAPIKeys(storeId);
+            if (!keys.Any())
+            {
+                return;
+            }
+
+            using (var ctx = _Factory.CreateContext())
+            {
+                ctx.ApiKeys.RemoveRange(keys.Select(s => new APIKeyData() {Id = s}));
+                await ctx.SaveChangesAsync();
+            }
+        }
+
         public async Task<string[]> GetLegacyAPIKeys(string storeId)
         {
             using (var ctx = _Factory.CreateContext())

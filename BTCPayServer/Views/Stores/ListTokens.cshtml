@@ -55,9 +55,25 @@
         <form method="post" asp-action="GenerateAPIKey" asp-route-storeId="@this.Context.GetRouteValue("storeId")">
             <div class="form-group">
                 <label asp-for="ApiKey"></label>
-                <input asp-for="ApiKey" readonly class="form-control" />
+                <div class="input-group">
+                    <input asp-for="ApiKey" readonly class="form-control"/>
+                    @if (string.IsNullOrEmpty(Model.ApiKey))
+                    {
+                        <div class="input-group-append">
+                            <button class="btn btn-success" type="submit">Generate</button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="input-group-append">
+                            <button class="btn btn-danger" type="submit" name="command" value="revoke">Revoke</button>
+                        </div>
+                        <div class="input-group-append">
+                            <button class="btn btn-success" type="submit">Re-generate</button>
+                        </div>
+                    }
+                </div>               
             </div>
-            <button type="submit" class="btn btn-primary" role="button">Create new API Key</button>
         </form>
     </div>
 </div>

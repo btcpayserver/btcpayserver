@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Payments;
+using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services.Invoices;
 using NBitcoin;
 using Newtonsoft.Json;
@@ -21,6 +22,7 @@ namespace BTCPayServer.Models.InvoicingModels
         public string TransactionLink { get; set; }
 
         public bool Replaced { get; set; }
+        public BitcoinLikePaymentData CryptoPaymentData { get; set; }
     }
 
     public class OffChainPaymentViewModel

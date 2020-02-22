@@ -31,9 +31,14 @@ namespace BTCPayServer.Payments
             return ((BTCPayNetwork) network).ToString(paymentData);
         }
 
-        public override IPaymentMethodDetails DeserializePaymentMethodDetails(string str)
+        public override IPaymentMethodDetails DeserializePaymentMethodDetails(BTCPayNetworkBase network, string str)
         {
-            return JsonConvert.DeserializeObject<Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod>(str);
+            return JsonConvert.DeserializeObject<BitcoinLikeOnChainPaymentMethod>(str);
+        }
+
+        public override string SerializePaymentMethodDetails(BTCPayNetworkBase network, IPaymentMethodDetails details)
+        {
+            return JsonConvert.SerializeObject(details);
         }
 
         public override ISupportedPaymentMethod DeserializeSupportedPaymentMethod(BTCPayNetworkBase network, JToken value)

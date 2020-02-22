@@ -145,9 +145,7 @@ namespace BTCPayServer.Configuration
         }
         public bool? IsOnion()
         {
-            if (this.Server == null || !this.Server.IsAbsoluteUri)
-                return null;
-            return this.Server.DnsSafeHost.EndsWith(".onion", StringComparison.OrdinalIgnoreCase);
+            return Server?.IsOnion();
         }
         public static bool TryParse(string str, out ExternalConnectionString result, out string error)
         {

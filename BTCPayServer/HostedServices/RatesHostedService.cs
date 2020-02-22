@@ -115,19 +115,26 @@ namespace BTCPayServer.HostedServices
 
         private async Task TryLoadRateCache()
         {
-            var cache = await _SettingsRepository.GetSettingAsync<ExchangeRatesCache>();
-            if (cache != null)
+            try
             {
-                _LastCacheDate = cache.Created;
-                var stateByExchange = cache.States.ToDictionary(o => o.ExchangeName);
-                foreach (var provider in _RateProviderFactory.Providers)
+                var cache = await _SettingsRepository.GetSettingAsync<ExchangeRatesCache>();
+                if (cache != null)
                 {
-                    if (stateByExchange.TryGetValue(provider.Key, out var state) &&
-                        provider.Value is BackgroundFetcherRateProvider fetcher)
+                    _LastCacheDate = cache.Created;
+                    var stateByExchange = cache.States.ToDictionary(o => o.ExchangeName);
+                    foreach (var provider in _RateProviderFactory.Providers)
                     {
-                        fetcher.LoadState(state);
+                        if (stateByExchange.TryGetValue(provider.Key, out var state) &&
+                            provider.Value is BackgroundFetcherRateProvider fetcher)
+                        {
+                            fetcher.LoadState(state);
+                        }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                Logs.PayServer.LogWarning(ex, "Warning: Error while trying to load rates from cache");
             }
         }
 

@@ -26,9 +26,6 @@ namespace BTCPayServer.Models.AppViewModels
         [Display(Name = "Callback Notification Url")]
         [Uri]
         public string NotificationUrl { get; set; }
-        [Display(Name = "Invoice IPN Notification")]
-        [EmailAddress]
-        public string NotificationEmail { get; set; }
 
         [Required]
         [Display(Name = "Allow crowdfund to be publicly visible (still visible to you)")]
@@ -98,8 +95,6 @@ namespace BTCPayServer.Models.AppViewModels
         public string Sounds { get; set; }
         [Display(Name = "Colors to rotate between with animation when a payment is made. First color is the default background. One color per line. Can be any valid css color value.")]
         public string AnimationColors { get; set; }
-
-        public bool NotificationEmailWarning { get; set; }
 
 
         // NOTE: Improve validation if needed

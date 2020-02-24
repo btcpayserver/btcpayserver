@@ -83,7 +83,6 @@ namespace BTCPayServer.Controllers
             public string EmbeddedCSS { get; set; }
 
             public string Description { get; set; }
-            public string NotificationEmail { get; set; }
             public string NotificationUrl { get; set; }
             public bool? RedirectAutomatically { get; set; }
         }
@@ -99,7 +98,6 @@ namespace BTCPayServer.Controllers
 
             var vm = new UpdatePointOfSaleViewModel()
             {
-                NotificationEmailWarning = !await IsEmailConfigured(app.StoreDataId),
                 Id = appId,
                 StoreId = app.StoreDataId,
                 Title = settings.Title,
@@ -116,7 +114,6 @@ namespace BTCPayServer.Controllers
                 CustomCSSLink = settings.CustomCSSLink,
                 EmbeddedCSS = settings.EmbeddedCSS,
                 Description = settings.Description,
-                NotificationEmail = settings.NotificationEmail,
                 NotificationUrl = settings.NotificationUrl,
                 SearchTerm = $"storeid:{app.StoreDataId}",
                 RedirectAutomatically = settings.RedirectAutomatically.HasValue ? settings.RedirectAutomatically.Value ? "true" : "false" : ""
@@ -194,7 +191,6 @@ namespace BTCPayServer.Controllers
                 CustomTipPercentages = ListSplit(vm.CustomTipPercentages),
                 CustomCSSLink = vm.CustomCSSLink,
                 NotificationUrl = vm.NotificationUrl,
-                NotificationEmail = vm.NotificationEmail,
                 Description = vm.Description,
                 EmbeddedCSS = vm.EmbeddedCSS,
                 RedirectAutomatically = string.IsNullOrEmpty(vm.RedirectAutomatically) ? (bool?)null : bool.Parse(vm.RedirectAutomatically)

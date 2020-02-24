@@ -120,15 +120,6 @@
                         <span asp-validation-for="NotificationUrl" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="NotificationEmail" class="control-label"></label>
-                        @if (Model.NotificationEmailWarning)
-                        {
-                            <partial name="NotificationEmailWarning" model="@Model.StoreId" />
-                        }
-                        <input type="email" asp-for="NotificationEmail" class="form-control" />
-                        <span asp-validation-for="NotificationEmail" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
                         <label asp-for="RedirectAutomatically" class="control-label"></label>*
                         <select asp-for="RedirectAutomatically" asp-items="Model.RedirectAutomaticallySelectList" class="form-control"></select>
                         <span asp-validation-for="RedirectAutomatically" class="text-danger"></span>
@@ -143,7 +134,6 @@
                         <textarea asp-for="EmbeddedCSS" rows="10" cols="40" class="form-control"></textarea>
                         <span asp-validation-for="EmbeddedCSS" class="text-danger"></span>
                     </div>
-                    <input type="hidden" asp-for="NotificationEmailWarning" />
                     <div class="form-group">
                         <button type="submit" class="btn btn-primary" id="SaveSettings">Save Settings</button>
                         <div class="btn-group">

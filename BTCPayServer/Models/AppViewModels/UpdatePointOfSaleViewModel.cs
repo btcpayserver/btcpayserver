@@ -32,9 +32,6 @@ namespace BTCPayServer.Models.AppViewModels
         [Display(Name = "Callback Notification Url")] 
         [Uri]
         public string NotificationUrl { get; set; }
-        [Display(Name = "Invoice IPN Notification")]
-        [EmailAddress]
-        public string NotificationEmail { get; set; }
 
         [Required]
         [MaxLength(30)]
@@ -84,7 +81,6 @@ namespace BTCPayServer.Models.AppViewModels
                 }
             }, nameof(SelectListItem.Value), nameof(SelectListItem.Text), RedirectAutomatically);
 
-        public bool NotificationEmailWarning { get; set; }
         public string EmbeddedCSS { get; set; }
         public string Description { get; set; }
     }

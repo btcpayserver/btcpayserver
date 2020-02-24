@@ -128,6 +128,7 @@ namespace BTCPayServer.HostedServices
                     emailBody);
 
             }
+
             if (invoice.NotificationURL != null)
             {
                 var invoiceStr = NBitcoin.JsonConverters.Serializer.ToString(new ScheduledJob() { TryCount = 0, Notification = notification });

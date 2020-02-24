@@ -13,15 +13,15 @@ namespace BTCPayServer.Controllers.RestApi
     /// <summary>
     /// this controller serves as a testing endpoint for our OpenId unit tests
     /// </summary>
-    [Route("api/[controller]")]
+    [Route("api/test/openid")]
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.OpenId)]
-    public class TestController : ControllerBase
+    public class TestOpenIdController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly StoreRepository _storeRepository;
 
-        public TestController(UserManager<ApplicationUser> userManager, StoreRepository storeRepository)
+        public TestOpenIdController(UserManager<ApplicationUser> userManager, StoreRepository storeRepository)
         {
             _userManager = userManager;
             _storeRepository = storeRepository;
@@ -53,7 +53,6 @@ namespace BTCPayServer.Controllers.RestApi
         {
             return await _storeRepository.GetStoresByUserId(_userManager.GetUserId(User));
         }
-
 
         [HttpGet("me/stores/{storeId}/can-edit")]
         [Authorize(Policy = Policies.CanModifyStoreSettings.Key,

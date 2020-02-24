@@ -11,6 +11,7 @@ namespace BTCPayServer.Security
         public static AuthorizationOptions AddBTCPayPolicies(this AuthorizationOptions options)
         {
             options.AddPolicy(CanModifyStoreSettings.Key);
+            options.AddPolicy(CanListStoreSettings.Key);
             options.AddPolicy(CanCreateInvoice.Key);
             options.AddPolicy(CanGetRates.Key);
             options.AddPolicy(CanModifyServerSettings.Key);
@@ -29,6 +30,10 @@ namespace BTCPayServer.Security
         public class CanModifyStoreSettings
         {
             public const string Key = "btcpay.store.canmodifystoresettings";
+        }
+        public class CanListStoreSettings
+        {
+            public const string Key = "btcpay.store.canliststoresettings";
         }
         public class CanCreateInvoice
         {

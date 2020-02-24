@@ -117,7 +117,7 @@ namespace BTCPayServer.Controllers
                             .GetMetadataAsync<string>(derivationScheme.AccountDerivation,
                                 WellknownMetadataKeys.MasterHDKey);
 
-                        return await SignWithSeed(walletId,
+                        return SignWithSeed(walletId,
                             new SignWithSeedViewModel() {SeedOrKey = extKey, PSBT = psbt.ToBase64()});
                     }
 

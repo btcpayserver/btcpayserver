@@ -573,7 +573,7 @@ namespace BTCPayServer.Controllers
                   var extKey = await ExplorerClientProvider.GetExplorerClient(network)
                         .GetMetadataAsync<string>(derivationScheme.AccountDerivation, WellknownMetadataKeys.MasterHDKey, cancellation);
 
-                  return await SignWithSeed(walletId, new SignWithSeedViewModel()
+                  return SignWithSeed(walletId, new SignWithSeedViewModel()
                   {
                       SeedOrKey = extKey,
                       PSBT = psbt.PSBT.ToBase64()
@@ -645,10 +645,9 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("{walletId}/vault")]
-        public async Task<IActionResult> SubmitVault([ModelBinder(typeof(WalletIdModelBinder))]
+        public IActionResult SubmitVault([ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, WalletSendVaultModel model)
         {
-
             return RedirectToWalletPSBTReady(model.PSBT);
         }
         private IActionResult RedirectToWalletPSBTReady(string psbt, string signingKey=  null, string signingKeyPath = null)
@@ -718,7 +717,7 @@ namespace BTCPayServer.Controllers
       
         [HttpPost]
         [Route("{walletId}/ledger")]
-        public async Task<IActionResult> SubmitLedger([ModelBinder(typeof(WalletIdModelBinder))]
+        public IActionResult SubmitLedger([ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, WalletSendLedgerModel model)
         {
             return RedirectToWalletPSBTReady(model.PSBT);
@@ -735,7 +734,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("{walletId}/psbt/seed")]
-        public async Task<IActionResult> SignWithSeed([ModelBinder(typeof(WalletIdModelBinder))]
+        public IActionResult SignWithSeed([ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, SignWithSeedViewModel viewModel)
         {
             if (!ModelState.IsValid)

@@ -26,6 +26,15 @@ namespace BTCPayServer.Controllers
         private InvoiceController _InvoiceController;
         private StoreRepository _StoreRepository;
 
+        [HttpGet]
+        [IgnoreAntiforgeryToken]
+        [EnableCors(CorsPolicies.All)]
+        [Route("api/v1/invoices")]
+        public async Task<IActionResult> PayButtonHandle(PayButtonViewModel model)
+        {
+            return await PayButtonHandle(model, CancellationToken.None);
+        }
+        
         [HttpPost]
         [Route("api/v1/invoices")]
         [MediaTypeAcceptConstraintAttribute("text/html")]

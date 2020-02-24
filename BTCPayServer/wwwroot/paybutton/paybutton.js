@@ -112,8 +112,8 @@ function inputChanges(event, buttonSize) {
         html += '  <input type="image" class="submit" name="submit" src="' + esc(srvModel.payButtonImageUrl) + '" style="width:' + width + '" alt="Pay with BtcPay, Self-Hosted Bitcoin Payment Processor">\n';
     }else{
         var numwidth = parseInt(width.replace("px", ""));
-        html+= '<button type="submit" class="submit" name="submit" style="min-width:' + width + '; min-height:' + height + '; border-radius: 4px;border-style: none;background-color: #0f3b21;" alt="Pay with BtcPay, Self-Hosted Bitcoin Payment Processor"><span style="color:#fff">'+srvModel.payButtonText+'</span>\n' +
-            (srvModel.payButtonImageUrl? '<img src="'+srvModel.payButtonImageUrl+'" style="width:'+numwidth/2+'px;">\n' : '')+
+        html+= '<button type="submit" class="submit" name="submit" style="min-width:' + width + '; min-height:' + height + '; border-radius: 4px;border-style: none;background-color: #0f3b21;" alt="Pay with BtcPay, Self-Hosted Bitcoin Payment Processor"><span style="color:#fff">'+esc(srvModel.payButtonText)+'</span>\n' +
+            (srvModel.payButtonImageUrl? '<img src="'+esc(srvModel.payButtonImageUrl)+'" style="width:'+numwidth/2+'px;">\n' : '')+
             '</button>'
     }
     html += '</form>';

@@ -30,18 +30,9 @@ namespace BTCPayServer.Security.APIKeys
             using (var context = _applicationDbContextFactory.CreateContext())
             {
                 var queryable = context.ApiKeys.AsQueryable();
-                if (query != null)
+                if (query?.UserId != null && query.UserId.Any())
                 {
-                    if (query.UserId != null && query.UserId.Any())
-                    {
-                        queryable = queryable.Where(data => query.UserId.Contains(data.UserId));
-                    }
-
-                    if (query.ApplicationIdentifier != null && query.ApplicationIdentifier.Any())
-                    {
-                        queryable = queryable.Where(data =>
-                            query.ApplicationIdentifier.Contains(data.ApplicationIdentifier));
-                    }
+                    queryable = queryable.Where(data => query.UserId.Contains(data.UserId));
                 }
 
                 return await queryable.ToListAsync();
@@ -76,7 +67,6 @@ namespace BTCPayServer.Security.APIKeys
         public class APIKeyQuery
         {
             public string[] UserId { get; set; }
-            public string[] ApplicationIdentifier { get; set; }
         }
     }
 }

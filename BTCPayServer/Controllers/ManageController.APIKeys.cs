@@ -57,8 +57,8 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("~/api-keys/authorize")]
-        public async Task<IActionResult> AuthorizeAPIKey( string[] permissions, string applicationName = null, Uri redirect = null,
-            bool strict = true, bool selectiveStores = false, string applicationIdentifier = null)
+        public async Task<IActionResult> AuthorizeAPIKey( string[] permissions, string applicationName = null,
+            bool strict = true, bool selectiveStores = false)
         {
             if (!_btcPayServerEnvironment.IsSecure)
             {
@@ -70,52 +70,16 @@ namespace BTCPayServer.Controllers
                 return RedirectToAction("APIKeys");
             }
 
-            permissions = permissions ?? Array.Empty<string>();
+            permissions ??= Array.Empty<string>();
 
-            if (!string.IsNullOrEmpty(applicationIdentifier) && redirect != null)
-            {
-                applicationIdentifier = $"{applicationIdentifier.Replace(';','_')};{redirect.Authority}";
-                //check if there is an app identifier that matches and belongs to the current user
-                var keys = await _apiKeyRepository.GetKeys(new APIKeyRepository.APIKeyQuery()
-                {
-                    UserId = new[] {_userManager.GetUserId(User)},
-                    ApplicationIdentifier = new[] {applicationIdentifier}
-                });
-
-                if (keys.Any())
-                {
-                    //matched the identifier, but we need to check if what the app is requesting in terms of permissions is enough
-                    foreach (var key in keys)
-                    {
-                       var existingKeyPermissions =  key.GetPermissions();
-
-                       var selectiveStorePermissions =  APIKeyConstants.Permissions.ExtractStorePermissionsIds(existingKeyPermissions);
-                       //if application is requesting the store management permission without the selective option but the existing key only has selective stores, skip
-                       if (permissions.Contains(APIKeyConstants.Permissions.StoreManagement) && !selectiveStores && selectiveStorePermissions.Any())
-                       {
-                           continue;
-                       }
-
-                       if (strict && permissions.Any(s => !existingKeyPermissions.Contains(s)))
-                       {
-                           continue;
-                       }
-                       //we have a key that is sufficient, redirect instantly
-                       return RedirectToApplication(redirect, key);
-                    }
-                }
-            }
-            
             var vm = await SetViewModelValues(new AuthorizeApiKeysViewModel()
             {
-                RedirectUrl = redirect,
                 ServerManagementPermission = permissions.Contains(APIKeyConstants.Permissions.ServerManagement),
                 StoreManagementPermission = permissions.Contains(APIKeyConstants.Permissions.StoreManagement),
                 PermissionsFormatted = permissions,
                 ApplicationName = applicationName,
                 SelectiveStores = selectiveStores,
                 Strict = strict,
-                ApplicationIdentifier = applicationIdentifier
             });
 
             vm.ServerManagementPermission = vm.ServerManagementPermission && vm.IsServerAdmin;
@@ -175,33 +139,15 @@ namespace BTCPayServer.Controllers
                 case "no":
                     return RedirectToAction("APIKeys");
                 case "yes":
-                    var key = await CreateKey(viewModel, viewModel.ApplicationIdentifier);
-
-                    if (viewModel.RedirectUrl != null)
-                    {
-                        return RedirectToApplication(viewModel.RedirectUrl, key);
-                    }
-
+                    var key = await CreateKey(viewModel);
                     TempData.SetStatusMessageModel(new StatusMessageModel()
                     {
                         Severity = StatusMessageModel.StatusSeverity.Success,
                         Html = $"API key generated! <code>{key.Id}</code>"
                     });
-                    return RedirectToAction("APIKeys");
+                    return RedirectToAction("APIKeys", new { key = key.Id});
                 default: return View(viewModel);
             }
-        }
-
-        private IActionResult RedirectToApplication(Uri redirect, APIKeyData key)
-        {
-            var uri = new UriBuilder(redirect);
-            uri.AppendPayloadToQuery(new Dictionary<string, object>()
-            {
-                {"api-key", key.Id}, {"permissions", key.GetPermissions()}, {"user-id", key.UserId}
-            });
-            //uri builder has bug around string[] params
-            return Redirect(uri.Uri.ToStringInvariant().Replace("permissions=System.String%5B%5D",
-                string.Join("&", key.GetPermissions().Select(s1 => $"permissions={s1}")), StringComparison.InvariantCulture));
         }
 
         [HttpPost]
@@ -264,11 +210,11 @@ namespace BTCPayServer.Controllers
             return null;
         }
 
-        private async Task<APIKeyData> CreateKey(AddApiKeyViewModel viewModel, string appIdentifier = null)
+        private async Task<APIKeyData> CreateKey(AddApiKeyViewModel viewModel)
         {
             var key = new APIKeyData()
             {
-                Id = Guid.NewGuid().ToString(), Type = APIKeyType.Permanent, UserId = _userManager.GetUserId(User), ApplicationIdentifier = appIdentifier
+                Id = Guid.NewGuid().ToString(), Type = APIKeyType.Permanent, UserId = _userManager.GetUserId(User)
             };
             key.SetPermissions(GetPermissionsFromViewModel(viewModel));
             await _apiKeyRepository.CreateKey(key);
@@ -323,8 +269,6 @@ namespace BTCPayServer.Controllers
         public class AuthorizeApiKeysViewModel : AddApiKeyViewModel
         {
             public string ApplicationName { get; set; }
-            public string ApplicationIdentifier { get; set; }
-            public Uri RedirectUrl { get; set; }
             public bool Strict { get; set; }
             public bool SelectiveStores { get; set; }
             public string Permissions { get; set; }

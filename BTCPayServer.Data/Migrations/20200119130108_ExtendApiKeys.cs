@@ -11,11 +11,6 @@ namespace BTCPayServer.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(
-                name: "ApplicationIdentifier",
-                table: "ApiKeys",
-                nullable: true);
-
-            migrationBuilder.AddColumn<string>(
                 name: "Permissions",
                 table: "ApiKeys",
                 nullable: true);
@@ -62,10 +57,6 @@ namespace BTCPayServer.Migrations
                 table: "ApiKeys");
             if (this.SupportDropColumn(migrationBuilder.ActiveProvider))
             {
-                migrationBuilder.DropColumn(
-                    name: "ApplicationIdentifier",
-                    table: "ApiKeys");
-
                 migrationBuilder.DropColumn(
                     name: "Permissions",
                     table: "ApiKeys");

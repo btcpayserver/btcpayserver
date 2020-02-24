@@ -20,9 +20,7 @@ namespace BTCPayServer.Data
         {
             get; set;
         }
-        
-        public List<BTCPayOpenIdClient> OpenIdClients { get; set; }
-        
+
         public List<StoredFile> StoredFiles
         {
             get;

@@ -142,7 +142,7 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("{storeId}/derivations/{cryptoCode}")]
-        public async Task<IActionResult> AddDerivationScheme(string storeId, [FromBody] DerivationSchemeViewModel vm,
+        public async Task<IActionResult> AddDerivationScheme(string storeId, [FromForm] DerivationSchemeViewModel vm,
             string cryptoCode)
         {
             vm.CryptoCode = cryptoCode;

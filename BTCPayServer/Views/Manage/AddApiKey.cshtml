@@ -27,6 +27,14 @@
 
             <input type="hidden" asp-for="StoreMode" value="@Model.StoreMode"/>
             <div asp-validation-summary="All" class="text-danger"></div>
+
+            <div class="list-group-item ">
+                <div class="form-group">
+                    <label asp-for="Label"></label>
+                    <input asp-for="Label" class="form-control"/>
+                    <span asp-validation-for="Label" class="text-danger"></span>
+                </div>
+            </div>
             @if (Model.IsServerAdmin)
             {
                 <div class="list-group-item form-group">

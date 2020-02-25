@@ -85,6 +85,7 @@ namespace BTCPayServer.Controllers
 
             var vm = await SetViewModelValues(new AuthorizeApiKeysViewModel()
             {
+                Label = applicationName,
                 ServerManagementPermission = permissions.Contains(APIKeyConstants.Permissions.ServerManagement),
                 StoreManagementPermission = permissions.Contains(APIKeyConstants.Permissions.StoreManagement),
                 PermissionsFormatted = permissions,
@@ -225,7 +226,10 @@ namespace BTCPayServer.Controllers
         {
             var key = new APIKeyData()
             {
-                Id = Guid.NewGuid().ToString(), Type = APIKeyType.Permanent, UserId = _userManager.GetUserId(User)
+                Id = Guid.NewGuid().ToString().Replace("-", string.Empty),
+                Type = APIKeyType.Permanent,
+                UserId = _userManager.GetUserId(User),
+                Label = viewModel.Label
             };
             key.SetPermissions(GetPermissionsFromViewModel(viewModel));
             await _apiKeyRepository.CreateKey(key);
@@ -262,6 +266,7 @@ namespace BTCPayServer.Controllers
 
         public class AddApiKeyViewModel
         {
+            public string Label { get; set; }
             public StoreData[] Stores { get; set; }
             public ApiKeyStoreMode StoreMode { get; set; }
             public List<string> SpecificStores { get; set; } = new List<string>();
@@ -288,7 +293,7 @@ namespace BTCPayServer.Controllers
             {
                 get
                 {
-                    return Permissions?.Split(";", StringSplitOptions.RemoveEmptyEntries);
+                    return Permissions?.Split(";", StringSplitOptions.RemoveEmptyEntries)?? Array.Empty<string>();
                 }
                 set
                 {

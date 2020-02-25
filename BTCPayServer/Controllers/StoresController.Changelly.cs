@@ -33,8 +33,6 @@ namespace BTCPayServer.Controllers
             vm.ChangellyMerchantId = existing.ChangellyMerchantId;
             vm.Enabled = existing.Enabled;
             vm.AmountMarkupPercentage = existing.AmountMarkupPercentage;
-            vm.ShowFiat = existing.ShowFiat;
-
         }
 
         [HttpPost]
@@ -60,8 +58,7 @@ namespace BTCPayServer.Controllers
                 ApiUrl = vm.ApiUrl,
                 ChangellyMerchantId = vm.ChangellyMerchantId,
                 Enabled = vm.Enabled,
-                AmountMarkupPercentage = vm.AmountMarkupPercentage,
-                ShowFiat = vm.ShowFiat
+                AmountMarkupPercentage = vm.AmountMarkupPercentage
             };
             
             switch (command)

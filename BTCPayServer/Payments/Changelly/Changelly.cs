@@ -16,13 +16,11 @@ namespace BTCPayServer.Payments.Changelly
     public class Changelly
     {
         private readonly string _apisecret;
-        private readonly bool _showFiat;
         private readonly HttpClient _httpClient;
 
-        public Changelly(HttpClient httpClient,  string apiKey, string apiSecret, string apiUrl, bool showFiat = true)
+        public Changelly(HttpClient httpClient,  string apiKey, string apiSecret, string apiUrl)
         {
             _apisecret = apiSecret;
-            _showFiat = showFiat;
             _httpClient = httpClient;
             _httpClient.BaseAddress = new Uri(apiUrl);
             _httpClient.DefaultRequestHeaders.Add("api-key", apiKey);
@@ -62,36 +60,16 @@ namespace BTCPayServer.Payments.Changelly
 
         public virtual async Task<IEnumerable<CurrencyFull>> GetCurrenciesFull()
         {
-                const string message = @"{
+            const string message = @"{
 		            ""jsonrpc"": ""2.0"",
 		            ""id"": 1,
 		            ""method"": ""getCurrenciesFull"",
 		            ""params"": []
 			    }";
 
-                var result = await PostToApi<IEnumerable<CurrencyFull>>(message);
-                var appendedResult = _showFiat
-                    ? result.Result.Concat(new[]
-                    {
-                        new CurrencyFull()
-                        {
-                            Enable = true,
-                            Name = "EUR",
-                            FullName = "Euro",
-                            PayInConfirmations = 0,
-                            ImageLink = "https://changelly.com/api/coins/eur.png"
-                        },
-                        new CurrencyFull()
-                        {
-                            Enable = true,
-                            Name = "USD",
-                            FullName = "US Dollar",
-                            PayInConfirmations = 0,
-                            ImageLink = "https://changelly.com/api/coins/usd.png"
-                        }
-                    })
-                    : result.Result;
-            return appendedResult;
+            var result = await PostToApi<IEnumerable<CurrencyFull>>(message);
+
+            return result.Result;
         }
 
         public virtual async Task<decimal> GetExchangeAmount(string fromCurrency,

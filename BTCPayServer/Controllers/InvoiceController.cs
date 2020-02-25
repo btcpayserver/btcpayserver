@@ -75,7 +75,7 @@ namespace BTCPayServer.Controllers
             var storeBlob = store.GetStoreBlob();
             EmailAddressAttribute emailValidator = new EmailAddressAttribute();
             entity.ExpirationTime = invoice.ExpirationTime is DateTimeOffset v ? v : entity.InvoiceTime.AddMinutes(storeBlob.InvoiceExpiration);
-            if (entity.ExpirationTime - TimeSpan.FromSeconds(30.0) < DateTimeOffset.UtcNow)
+            if (entity.ExpirationTime - TimeSpan.FromSeconds(30.0) < entity.InvoiceTime)
             {
                 throw new BitpayHttpException(400, "The expirationTime is set too soon");
             }

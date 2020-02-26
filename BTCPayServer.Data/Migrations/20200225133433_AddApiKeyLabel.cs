@@ -1,9 +1,14 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using BTCPayServer.Data;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace BTCPayServer.Migrations
 {
+    [DbContext(typeof(ApplicationDbContext))]
+    [Migration("20200225133433_AddApiKeyLabel")]
     public partial class AddApiKeyLabel : Migration
     {
+        
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(

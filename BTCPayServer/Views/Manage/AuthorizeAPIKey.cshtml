@@ -42,7 +42,12 @@
                             <span asp-validation-for="Label" class="text-danger"></span>
                         </div>
                     </div>
-                    
+                    @if (!Model.PermissionsFormatted.Any())
+                    {
+                        <div class="list-group-item form-group">
+                            <p >There are no associated permissions to the API key being requested here. The application cannot do anything with your BTCPay account other than validating your account exists.</p>
+                        </div>
+                    }
                     @if (Model.PermissionsFormatted.Contains(APIKeyConstants.Permissions.ServerManagement) && (Model.IsServerAdmin || Model.Strict))
                     {
                         <div class="list-group-item form-group">

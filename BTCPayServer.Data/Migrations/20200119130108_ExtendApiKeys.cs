@@ -26,11 +26,6 @@ namespace BTCPayServer.Migrations
                 table: "ApiKeys",
                 maxLength: 50,
                 nullable: true);
-            
-            migrationBuilder.AddColumn<string>(
-                name: "Label",
-                table: "ApiKeys",
-                nullable: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_ApiKeys_UserId",
@@ -73,11 +68,6 @@ namespace BTCPayServer.Migrations
                 migrationBuilder.DropColumn(
                     name: "UserId",
                     table: "ApiKeys");
-                
-                migrationBuilder.DropColumn(
-                    name: "Label",
-                    table: "ApiKeys");
-            
             }
         }
     }

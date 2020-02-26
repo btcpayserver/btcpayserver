@@ -38,13 +38,13 @@
     @if (!Model.ApiKeyDatas.Any())
     {
         <tr>
-            <td colspan="2" class="text-center h5 py-2">
+            <td colspan="4" class="text-center h5 py-2">
                 No API keys
             </td>
         </tr>
     }
     <tr class="bg-gray">
-        <td colspan="3">
+        <td colspan="4">
             <a class="btn btn-primary" asp-action="AddApiKey" id="AddApiKey">Generate new key</a>
         </td>
     </tr>

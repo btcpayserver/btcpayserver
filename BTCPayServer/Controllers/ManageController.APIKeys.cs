@@ -8,11 +8,8 @@ using BTCPayServer.Hosting.OpenApi;
 using BTCPayServer.Models;
 using BTCPayServer.Security;
 using BTCPayServer.Security.APIKeys;
-using ExchangeSharp;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 using NSwag.Annotations;
 
 namespace BTCPayServer.Controllers
@@ -31,9 +28,33 @@ namespace BTCPayServer.Controllers
             });
         }
 
-        [HttpGet]
+        
+        
+        [HttpGet("api-keys/{id}/delete")]
         public async Task<IActionResult> RemoveAPIKey(string id)
         {
+            var key = await _apiKeyRepository.GetKey(id);
+            if (key == null || key.UserId != _userManager.GetUserId(User))
+            {
+                return NotFound();
+            }
+            return View("Confirm", new ConfirmModel()
+            {
+                Title = "Delete API Key "+ ( string.IsNullOrEmpty(key.Label)? string.Empty: key.Label) + "("+key.Id+")",
+                Description = "Any application using this api key will immediately lose access",
+                Action = "Delete",
+                ActionUrl = Request.GetCurrentUrl().Replace("RemoveAPIKey", "RemoveAPIKeyPost")
+            });
+        }
+
+        [HttpPost("api-keys/{id}/delete")]
+        public async Task<IActionResult> RemoveAPIKeyPost(string id)
+        {
+            var key = await _apiKeyRepository.GetKey(id);
+            if (key == null || key.UserId != _userManager.GetUserId(User))
+            {
+                return NotFound();
+            }
             await _apiKeyRepository.Remove(id, _userManager.GetUserId(User));
             TempData.SetStatusMessageModel(new StatusMessageModel()
             {

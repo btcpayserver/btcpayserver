@@ -29,5 +29,6 @@ namespace BTCPayServer.Models
             get; set;
         }
         public string ButtonClass { get; set; } = "btn-danger";
+        public string ActionUrl { get; set; }
     }
 }

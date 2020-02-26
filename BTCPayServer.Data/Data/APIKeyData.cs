@@ -26,6 +26,7 @@ namespace BTCPayServer.Data
         
         public StoreData StoreData { get; set; }
         public ApplicationUser User { get; set; }
+        public string Label { get; set; }
         public string[] GetPermissions() { return Permissions?.Split(';') ?? new string[0]; }
 
         public void SetPermissions(IEnumerable<string> permissions)

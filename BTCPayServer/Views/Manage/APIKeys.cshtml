@@ -8,8 +8,9 @@
 <table class="table table-lg">
     <thead>
     <tr>
-        <th >Key</th>
-        <th >Permissions</th>
+        <th>Label</th>
+        <th>Key</th>
+        <th>Permissions</th>
         <th class="text-right">Actions</th>
     </tr>
     </thead>
@@ -17,6 +18,7 @@
     @foreach (var keyData in Model.ApiKeyDatas)
     {
         <tr>
+            <td>@keyData.Label</td>
             <td>@keyData.Id</td>
             <td>
                 @if (string.IsNullOrEmpty(keyData.Permissions))
@@ -29,20 +31,20 @@
                 }
             </td>
             <td class="text-right">
-                <a asp-action="RemoveAPIKey" asp-route-id="@keyData.Id">Remove</a>
+                <a asp-action="RemoveAPIKey" asp-route-id="@keyData.Id" asp-controller="Manage">Remove</a>
             </td>
         </tr>
     }
     @if (!Model.ApiKeyDatas.Any())
     {
         <tr>
-            <td colspan="2" class="text-center h5 py-2">
+            <td colspan="4" class="text-center h5 py-2">
                 No API keys
             </td>
         </tr>
     }
     <tr class="bg-gray">
-        <td colspan="3">
+        <td colspan="4">
             <a class="btn btn-primary" asp-action="AddApiKey" id="AddApiKey">Generate new key</a>
         </td>
     </tr>

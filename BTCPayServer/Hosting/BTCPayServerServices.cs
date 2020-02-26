@@ -26,6 +26,7 @@ using System.Threading;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Logging;
 using BTCPayServer.HostedServices;
+using BTCPayServer.Hosting.OpenApi;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
@@ -262,7 +263,7 @@ namespace BTCPayServer.Hosting
                 }
                 return rateLimits;
             });
-
+			services.AddBTCPayOpenApi();
 
             services.AddLogging(logBuilder =>
             {
@@ -291,6 +292,7 @@ namespace BTCPayServer.Hosting
         public static IApplicationBuilder UsePayServer(this IApplicationBuilder app)
         {
             app.UseMiddleware<BTCPayMiddleware>();
+            app.UseBTCPayOpenApi();
             return app; 
         }
         public static IApplicationBuilder UseHeadersOverride(this IApplicationBuilder app)

@@ -14,22 +14,6 @@ namespace BTCPayServer.Models
     {
         [JsonProperty(PropertyName = "buyer")]
         public Buyer Buyer { get; set; }
-        [JsonProperty(PropertyName = "buyerEmail", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string BuyerEmail { get; set; }
-        [JsonProperty(PropertyName = "buyerCountry", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string BuyerCountry { get; set; }
-        [JsonProperty(PropertyName = "buyerZip", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string BuyerZip { get; set; }
-        [JsonProperty(PropertyName = "buyerState", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string BuyerState { get; set; }
-        [JsonProperty(PropertyName = "buyerCity", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string BuyerCity { get; set; }
-        [JsonProperty(PropertyName = "buyerAddress2", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string BuyerAddress2 { get; set; }
-        [JsonProperty(PropertyName = "buyerAddress1", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string BuyerAddress1 { get; set; }
-        [JsonProperty(PropertyName = "buyerName", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string BuyerName { get; set; }
         [JsonProperty(PropertyName = "physical", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public bool Physical { get; set; }
         [JsonProperty(PropertyName = "redirectURL", DefaultValueHandling = DefaultValueHandling.Ignore)]
@@ -42,8 +26,6 @@ namespace BTCPayServer.Models
         public bool FullNotifications { get; set; }
         [JsonProperty(PropertyName = "transactionSpeed", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string TransactionSpeed { get; set; }
-        [JsonProperty(PropertyName = "buyerPhone", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string BuyerPhone { get; set; }
         [JsonProperty(PropertyName = "posData", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string PosData { get; set; }
         [JsonProperty(PropertyName = "itemCode", DefaultValueHandling = DefaultValueHandling.Ignore)]

@@ -184,7 +184,7 @@
                 return !this.showEmailForm && !this.invoiceUnpayable && !this.invoicePaid;
             },
             showEmailForm: function(){
-                return this.srvModel.requiresRefundEmail && (!this.srvModel.customerEmail || !this.validateEmail(this.srvModel.customerEmail)) && !this.invoiceUnpayable && !this.invoicePaid;
+                return this.srvModel.requiresRefundEmail && (!this.srvModel.customerEmail || !this.validateEmail(this.srvModel.customerEmail)) && !this.invoiceUnpayable;
             },
             showRecommendedFee: function(){
                 return  this.srvModel.showRecommendedFee && this.srvModel.feeRate != 0;

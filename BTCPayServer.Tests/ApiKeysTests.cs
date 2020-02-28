@@ -151,19 +151,22 @@ namespace BTCPayServer.Tests
                 Assert.DoesNotContain("change-store-mode", s.Driver.PageSource);
                 s.Driver.FindElement(By.Id("consent-yes")).Click();
                 var url = s.Driver.Url;
+                Assert.StartsWith("https://local.local/callback", url);
                 IEnumerable<KeyValuePair<string, string>> results = url.Split("?").Last().Split("&")
                     .Select(s1 => new KeyValuePair<string, string>(s1.Split("=")[0], s1.Split("=")[1]));
 
-                var apiKeyRepo = s.Server.PayTester.GetService<APIKeyRepository>();
-               
-                await TestApiAgainstAccessToken(results.Single(pair => pair.Key == "key").Value, tester, user,
-                    (await apiKeyRepo.GetKey(results.Single(pair => pair.Key == "key").Value)).GetPermissions());
+                Assert.Equal(user.UserId, results.Single(pair => pair.Key == "user-id").Value);
+                await TestApiAgainstAccessToken(results.Single(pair => pair.Key == "api-key").Value, tester, user,
+                    results.Where(pair => pair.Key == "permissions").Select(pair => pair.Value).ToArray());
 
                 authorize = new UriBuilder(tester.PayTester.ServerUri);
                 authorize.Path = "api-keys/authorize";
+                var appIdentifier = $"test_{Guid.NewGuid()}";
                 authorize.AppendPayloadToQuery(new Dictionary<string, object>()
                 {
+                    {"redirect", "https://local.local/callback"},
                     {"strict", false},
+                    {"applicationIdentifier", appIdentifier},
                     {"selectiveStores", true},
                     {
                         "permissions",
@@ -193,12 +196,55 @@ namespace BTCPayServer.Tests
                 Assert.Contains("change-store-mode", s.Driver.PageSource);
                 s.Driver.FindElement(By.Id("consent-yes")).Click();
                 url = s.Driver.Url;
+                Assert.StartsWith("https://local.local/callback", url);
                 results = url.Split("?").Last().Split("&")
                     .Select(s1 => new KeyValuePair<string, string>(s1.Split("=")[0], s1.Split("=")[1]));
-                
-                await TestApiAgainstAccessToken(results.Single(pair => pair.Key == "key").Value, tester, user,
-                    (await apiKeyRepo.GetKey(results.Single(pair => pair.Key == "key").Value)).GetPermissions());
-                
+
+                Assert.Equal(user.UserId, results.Single(pair => pair.Key == "user-id").Value);
+                await TestApiAgainstAccessToken(results.Single(pair => pair.Key == "api-key").Value, tester, user,
+                    results.Where(pair => pair.Key == "permissions").Select(pair => pair.Value).ToArray());
+
+                //let's test the app identifier system
+
+
+                //if it's the same, go to the confirm page
+                s.Driver.Navigate().GoToUrl(authUrl);
+                s.Driver.FindElement(By.Id("continue")).Click();
+                url = s.Driver.Url;
+                Assert.StartsWith("https://local.local/callback", url);
+
+
+                //if we request authorization for app identifier "test" but with different callback url, show auth screen
+
+                authorize = new UriBuilder(tester.PayTester.ServerUri);
+                authorize.Path = "api-keys/authorize";
+
+                authorize.AppendPayloadToQuery(new Dictionary<string, object>()
+                {
+                    {"redirect", "https://international.com/callback"},
+                    {"strict", false},
+                    {"applicationIdentifier", appIdentifier},
+                    {"selectiveStores", true},
+                    {
+                        "permissions",
+                        new[]
+                        {
+                            APIKeyConstants.Permissions.StoreManagement,
+                            APIKeyConstants.Permissions.ServerManagement
+                        }
+                    }
+                });
+                authUrl = authorize.ToString();
+                perms = new[]
+                {
+                    APIKeyConstants.Permissions.StoreManagement, APIKeyConstants.Permissions.ServerManagement
+                };
+                authUrl = authUrl.Replace("permissions=System.String%5B%5D",
+                    string.Join("&", perms.Select(s1 => $"permissions={s1}")));
+                s.Driver.Navigate().GoToUrl(authUrl);
+
+                url = s.Driver.Url;
+                Assert.False(url.StartsWith("https://international.com/callback"));
             }
         }
 

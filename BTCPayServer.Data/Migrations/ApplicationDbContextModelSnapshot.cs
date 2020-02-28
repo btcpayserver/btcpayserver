@@ -22,6 +22,9 @@ namespace BTCPayServer.Migrations
                         .HasColumnType("TEXT")
                         .HasMaxLength(50);
 
+                    b.Property<string>("ApplicationIdentifier")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Label")
                         .HasColumnType("TEXT");
 

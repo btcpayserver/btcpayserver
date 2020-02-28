@@ -8,7 +8,9 @@ using BTCPayServer.Hosting.OpenApi;
 using BTCPayServer.Models;
 using BTCPayServer.Security;
 using BTCPayServer.Security.APIKeys;
+using ExchangeSharp;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NSwag.Annotations;
 
@@ -80,17 +82,21 @@ namespace BTCPayServer.Controllers
             return View("AddApiKey", await SetViewModelValues(new AddApiKeyViewModel()));
         }
 
-        /// <param name="permissions">The permissions to request. Current permissions available: ServerManagement, StoreManagement</param>
+        /// <param name="permissions">The permissions to request</param>
         /// <param name="applicationName">The name of your application</param>
+        /// <param name="redirect">The URl to redirect to after the user consents, with the query paramters appended to it: permissions, user-id, api-key. If not specified, user is redirect to their API Key list.</param>
         /// <param name="strict">If permissions are specified, and strict is set to false, it will allow the user to reject some of permissions the application is requesting.</param>
         /// <param name="selectiveStores">If the application is requesting the CanModifyStoreSettings permission and selectiveStores is set to true, this allows the user to only grant permissions to selected stores under the user's control.</param>
-        [HttpGet("~/api-keys/authorize")]
+        /// <param name="applicationIdentifier">If specified, BTCPay will check if there is an existing API key stored associated with the user that also has this application identifer, redirect host AND the permissions required match(takes selectiveStores and strict into account). applicationIdentifier is ignored if redirect is not specified.</param>
         [OpenApiTags("Authorization")]
         [OpenApiOperation("Authorize User",
             "Redirect the browser to this endpoint to request the user to generate an api-key with specific permissions")]
+        [SwaggerResponse(StatusCodes.Status307TemporaryRedirect, null,
+            Description = "Redirects to the specified url with query string values for api-key, permissions, and user-id upon consent")]
         [IncludeInOpenApiDocs]
-        public async Task<IActionResult> AuthorizeAPIKey(string[] permissions, string applicationName = null,
-            bool strict = true, bool selectiveStores = false)
+        [HttpGet("~/api-keys/authorize")]
+        public async Task<IActionResult> AuthorizeAPIKey( string[] permissions, string applicationName = null, Uri redirect = null,
+            bool strict = true, bool selectiveStores = false, string applicationIdentifier = null)
         {
             if (!_btcPayServerEnvironment.IsSecure)
             {
@@ -104,8 +110,51 @@ namespace BTCPayServer.Controllers
 
             permissions ??= Array.Empty<string>();
 
+            if (!string.IsNullOrEmpty(applicationIdentifier) && redirect != null)
+            {
+                applicationIdentifier = $"{applicationIdentifier.Replace(';','_')};{redirect.Authority}";
+                //check if there is an app identifier that matches and belongs to the current user
+                var keys = await _apiKeyRepository.GetKeys(new APIKeyRepository.APIKeyQuery()
+                {
+                    UserId = new[] {_userManager.GetUserId(User)},
+                    ApplicationIdentifier = new[] {applicationIdentifier}
+                });
+
+                if (keys.Any())
+                {
+                    //matched the identifier, but we need to check if what the app is requesting in terms of permissions is enough
+                    foreach (var key in keys)
+                    {
+                       var existingKeyPermissions =  key.GetPermissions();
+
+                       var selectiveStorePermissions =  APIKeyConstants.Permissions.ExtractStorePermissionsIds(existingKeyPermissions);
+                       //if application is requesting the store management permission without the selective option but the existing key only has selective stores, skip
+                       if (permissions.Contains(APIKeyConstants.Permissions.StoreManagement) && !selectiveStores && selectiveStorePermissions.Any())
+                       {
+                           continue;
+                       }
+
+                       if (strict && permissions.Any(s => !existingKeyPermissions.Contains(s)))
+                       {
+                           continue;
+                       }
+                       //we have a key that is sufficient, redirect to a page to confirm that it's ok to provide this key to the app.
+                       return View("Confirm",
+                           new ConfirmModel()
+                           {
+                               Title = $"Are you sure about exposing your API Key to {redirect}?",
+                               Description = $"You've previously generated this API Key ({key.Id}) specifically for {applicationName}",
+                               ActionUrl = GetRedirectToApplicationUrl(redirect, key),
+                               ButtonClass = "btn-secondary",
+                               Action = "Confirm"
+                           });
+                    }
+                }
+            }
+            
             var vm = await SetViewModelValues(new AuthorizeApiKeysViewModel()
             {
+                RedirectUrl = redirect,
                 Label = applicationName,
                 ServerManagementPermission = permissions.Contains(APIKeyConstants.Permissions.ServerManagement),
                 StoreManagementPermission = permissions.Contains(APIKeyConstants.Permissions.StoreManagement),
@@ -113,6 +162,7 @@ namespace BTCPayServer.Controllers
                 ApplicationName = applicationName,
                 SelectiveStores = selectiveStores,
                 Strict = strict,
+                ApplicationIdentifier = applicationIdentifier
             });
 
             vm.ServerManagementPermission = vm.ServerManagementPermission && vm.IsServerAdmin;
@@ -172,16 +222,35 @@ namespace BTCPayServer.Controllers
                 case "no":
                     return RedirectToAction("APIKeys");
                 case "yes":
-                    var key = await CreateKey(viewModel);
+                    var key = await CreateKey(viewModel, viewModel.ApplicationIdentifier);
+
+                    if (viewModel.RedirectUrl != null)
+                    {
+                        return Redirect(GetRedirectToApplicationUrl(viewModel.RedirectUrl, key));
+                    }
+
                     TempData.SetStatusMessageModel(new StatusMessageModel()
                     {
                         Severity = StatusMessageModel.StatusSeverity.Success,
                         Html = $"API key generated! <code>{key.Id}</code>"
                     });
-                    return RedirectToAction("APIKeys", new { key = key.Id});
+                    return RedirectToAction("APIKeys");
                 default: return View(viewModel);
             }
         }
+
+        private string GetRedirectToApplicationUrl(Uri redirect, APIKeyData key)
+        {
+            var uri = new UriBuilder(redirect);
+            uri.AppendPayloadToQuery(new Dictionary<string, object>()
+            {
+                {"api-key", key.Id}, {"permissions", key.GetPermissions()}, {"user-id", key.UserId}
+            });
+            //uri builder has bug around string[] params
+            return uri.Uri.ToStringInvariant().Replace("permissions=System.String%5B%5D",
+                string.Join("&", key.GetPermissions().Select(s1 => $"permissions={s1}")), StringComparison.InvariantCulture);
+        }
+        
 
         [HttpPost]
         public async Task<IActionResult> AddApiKey(AddApiKeyViewModel viewModel)
@@ -243,14 +312,15 @@ namespace BTCPayServer.Controllers
             return null;
         }
 
-        private async Task<APIKeyData> CreateKey(AddApiKeyViewModel viewModel)
+        private async Task<APIKeyData> CreateKey(AddApiKeyViewModel viewModel, string appIdentifier = null)
         {
             var key = new APIKeyData()
             {
                 Id = Guid.NewGuid().ToString().Replace("-", string.Empty),
                 Type = APIKeyType.Permanent,
                 UserId = _userManager.GetUserId(User),
-                Label = viewModel.Label
+                Label = viewModel.Label,
+                ApplicationIdentifier = appIdentifier
             };
             key.SetPermissions(GetPermissionsFromViewModel(viewModel));
             await _apiKeyRepository.CreateKey(key);
@@ -306,6 +376,8 @@ namespace BTCPayServer.Controllers
         public class AuthorizeApiKeysViewModel : AddApiKeyViewModel
         {
             public string ApplicationName { get; set; }
+            public string ApplicationIdentifier { get; set; }
+            public Uri RedirectUrl { get; set; }
             public bool Strict { get; set; }
             public bool SelectiveStores { get; set; }
             public string Permissions { get; set; }

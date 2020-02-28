@@ -11,10 +11,12 @@
 
 <partial name="_StatusMessage"/>
 <form method="post" asp-action="AuthorizeAPIKey">
+    <input type="hidden" asp-for="RedirectUrl" value="@Model.RedirectUrl"/>
     <input type="hidden" asp-for="Permissions" value="@Model.Permissions"/>
     <input type="hidden" asp-for="Strict" value="@Model.Strict"/>
     <input type="hidden" asp-for="ApplicationName" value="@Model.ApplicationName"/>
     <input type="hidden" asp-for="SelectiveStores" value="@Model.SelectiveStores"/>
+    <input type="hidden" asp-for="ApplicationIdentifier" value="@Model.ApplicationIdentifier"/>
     <section>
         <div class="card container">
             <div class="row">
@@ -22,6 +24,12 @@
                     <h2>Authorization Request</h2>
                     <hr class="primary">
                     <p class="mb-1">@(Model.ApplicationName ?? "An application") is requesting access to your account.</p>
+                    @if (Model.RedirectUrl != null)
+                    {
+                        <p class="mb-1 alert alert-info">
+                        If authorized, the generated API key will be provided to <strong>@Model.RedirectUrl.AbsoluteUri</strong>
+                        </p>
+                    }
                 </div>
             </div>
             <div class="row">

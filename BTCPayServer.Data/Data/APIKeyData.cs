@@ -15,6 +15,7 @@ namespace BTCPayServer.Data
         [MaxLength(50)] public string StoreId { get; set; }
 
         [MaxLength(50)] public string UserId { get; set; }
+        public string ApplicationIdentifier { get; set; }
 
         public APIKeyType Type { get; set; } = APIKeyType.Legacy;
 
@@ -43,6 +44,8 @@ namespace BTCPayServer.Data
     public class APIKeyBlob
     {
         public string[] Permissions { get; set; }
+        public string ApplicationIdentifier { get; set; }
+        public string ApplicationAuthority { get; set; }
 
     }
 

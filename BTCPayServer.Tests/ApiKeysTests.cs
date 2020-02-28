@@ -128,6 +128,7 @@ namespace BTCPayServer.Tests
                 Assert.DoesNotContain("change-store-mode", s.Driver.PageSource);
                 s.Driver.FindElement(By.Id("consent-yes")).Click();
                 var url = s.Driver.Url;
+                Assert.StartsWith("https://local.local/callback", url);
                 IEnumerable<KeyValuePair<string, string>> results = url.Split("?").Last().Split("&")
                     .Select(s1 => new KeyValuePair<string, string>(s1.Split("=")[0], s1.Split("=")[1]));
 
@@ -151,6 +152,7 @@ namespace BTCPayServer.Tests
                 Assert.Contains("change-store-mode", s.Driver.PageSource);
                 s.Driver.FindElement(By.Id("consent-yes")).Click();
                 url = s.Driver.Url;
+                Assert.StartsWith("https://local.local/callback", url);
                 results = url.Split("?").Last().Split("&")
                     .Select(s1 => new KeyValuePair<string, string>(s1.Split("=")[0], s1.Split("=")[1]));
 

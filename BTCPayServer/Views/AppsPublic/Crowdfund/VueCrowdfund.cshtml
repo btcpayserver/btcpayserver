@@ -128,7 +128,7 @@
                 <b-tooltip target="crowdfund-body-raised-amount" v-if="paymentStats && paymentStats.length > 0">
                     <ul class="p-0 text-uppercase">
                         <li v-for="stat of paymentStats" class="list-unstyled">
-                            {{stat.label}} <span v-if="stat.lightning" class="fa fa-bolt"></span> {{stat.value.toFixed(srvModel.currencyData.divisibility)}}
+                            {{stat.label}} <span v-if="stat.lightning" class="fa fa-bolt"></span> {{stat.value}}
                         </li>
                     </ul>
                 </b-tooltip>      

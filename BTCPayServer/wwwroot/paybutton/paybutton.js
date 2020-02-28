@@ -41,6 +41,34 @@ function getStyles (styles) {
     return document.getElementById(styles).innerHTML.trim().replace(/\s{2}/g, '') + '\n'
 }
 
+function getScripts(srvModel) {
+    return ""+
+        "<script>" +
+        "if(!window.btcpay){ " +
+        "   var head = document.getElementsByTagName('head')[0];" +
+        "   var script = document.createElement('script');" +
+        "   script.src='"+esc(srvModel.urlRoot)+"modal/btcpay.js';" +
+        "   script.type = 'text/javascript';" +
+        "   head.append(script);" +
+        "}" +
+        "function onBTCPayFormSubmit(event){" +
+        "    var xhttp = new XMLHttpRequest();" +
+        "    xhttp.onreadystatechange = function() {" +
+        "        if (this.readyState == 4 && this.status == 200) {" +
+        "            if(this.status == 200 && this.responseText){" +
+        "                var response = JSON.parse(this.responseText);" +
+        "                window.btcpay.showInvoice(response.invoiceId);" +
+        "            }" +
+        "        }" +
+        "    };" +
+        "    xhttp.open(\"POST\", event.target.getAttribute('action'), true);" +
+        "    xhttp.send(new FormData( event.target ));" +
+        "}" +       
+        "</script>";
+}
+
+
+
 function inputChanges(event, buttonSize) {
     if (buttonSize !== null && buttonSize !== undefined) {
         srvModel.buttonSize = buttonSize;
@@ -64,14 +92,16 @@ function inputChanges(event, buttonSize) {
         width = "209px";
         height = "57px";
     }
-
     var html =
+        //Scripts
+        (srvModel.useModal? getScripts(srvModel) :"") +
         // Styles
         getStyles('template-paybutton-styles') + (isSlider ? getStyles('template-slider-styles') : '') +
         // Form
-        '<form method="POST" action="' + esc(srvModel.urlRoot) + 'api/v1/invoices" class="btcpay-form btcpay-form--' + (srvModel.fitButtonInline ? 'inline' : 'block') +'">\n' +
+        '<form method="POST" '+ ( srvModel.useModal? ' onsubmit="onBTCPayFormSubmit(event);return false" ' : '' )+' action="' + esc(srvModel.urlRoot) + 'api/v1/invoices" class="btcpay-form btcpay-form--' + (srvModel.fitButtonInline ? 'inline' : 'block') +'">\n' +
             addInput("storeId", srvModel.storeId);
 
+    if (srvModel.useModal) html += addInput("jsonResponse", true);
     if (srvModel.checkoutDesc) html += addInput("checkoutDesc", srvModel.checkoutDesc);
 
     if (srvModel.orderId) html += addInput("orderId", srvModel.orderId);

@@ -40,8 +40,7 @@
     </div>
 </div>
 @{
-    var grouped = Model.Payments.GroupBy(payment => payment.GetPaymentMethodId().PaymentType);
-    
+    var grouped = Model.Payments.GroupBy(payment => payment.GetPaymentMethodId().PaymentType);    
 }
 @foreach (var paymentGroup in grouped)
 {

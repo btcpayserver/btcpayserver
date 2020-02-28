@@ -38,6 +38,7 @@ namespace BTCPayServer.Models.InvoicingModels
             public string PaymentMethod { get; set; }
             public string Due { get; set; }
             public string Paid { get; set; }
+            public string Address { get; internal set; }
             public string Rate { get; internal set; }
             public string PaymentUrl { get; internal set; }
             public string Overpaid { get; set; }

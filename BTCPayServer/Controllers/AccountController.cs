@@ -447,12 +447,13 @@ namespace BTCPayServer.Controllers
                         var settings = await _SettingsRepository.GetSettingAsync<ThemeSettings>();
                         settings.FirstRun = false;
                         await _SettingsRepository.UpdateSetting<ThemeSettings>(settings);
-                        if(_Options.DisableRegistration)
+                        if (_Options.DisableRegistration)
                         {
                             // Once the admin user has been created lock subsequent user registrations (needs to be disabled for unit tests that require multiple users).
                             policies.LockSubscription = true;
                             await _SettingsRepository.UpdateSetting(policies);
                         }
+                        RegisteredAdmin = true;
                     }
 
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
@@ -479,13 +480,9 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
-        /// <summary> 
-        /// Test property
-        /// </summary>
-        public string RegisteredUserId
-        {
-            get; set;
-        }
+        // Properties used by tests
+        public string RegisteredUserId { get; set; }
+        public bool RegisteredAdmin { get; set; }
 
         [HttpGet]
         public async Task<IActionResult> Logout()

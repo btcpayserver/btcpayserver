@@ -146,6 +146,7 @@ namespace BTCPayServer.Tests
             };
             await account.Register(RegisterDetails);
             UserId = account.RegisteredUserId;
+            IsAdmin = account.RegisteredAdmin;
         }
 
         public RegisterViewModel RegisterDetails{ get; set; }

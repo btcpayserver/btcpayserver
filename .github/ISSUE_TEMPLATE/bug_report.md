@@ -14,6 +14,11 @@ A clear and concise description of what the bug is.
 **Logs (if applicable)**
 Basic logs can be found in Server Settings > Logs.
 
+**Profile Configuration**
+If you're reporting a deployment issue, paste your configuration:
+
+`cat /etc/profile.d/btcpay-env.sh`
+
 **To Reproduce**
 Steps to reproduce the behavior:
 1. Go to '...'

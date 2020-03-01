@@ -55,7 +55,8 @@
                 text: @Safe.Json(Model.BitcoinUri),
                 width: 200,
                 height: 200,
-                useSVG: true
+                useSVG: true,
+                correctLevel : QRCode.CorrectLevel.M
             });
         $("#qrCode > img").css({ "margin": "auto" });
     </script>

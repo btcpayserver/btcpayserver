@@ -17,6 +17,7 @@ namespace BTCPayServer.Controllers
     public partial class ManageController
     {
         [HttpGet]
+        [Route("api-keys")]
         public async Task<IActionResult> APIKeys()
         {
             return View(new ApiKeysViewModel()
@@ -28,8 +29,6 @@ namespace BTCPayServer.Controllers
             });
         }
 
-        
-        
         [HttpGet("api-keys/{id}/delete")]
         public async Task<IActionResult> RemoveAPIKey(string id)
         {
@@ -65,6 +64,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
+        [Route("add-api-key")]
         public async Task<IActionResult> AddApiKey()
         {
             if (!_btcPayServerEnvironment.IsSecure)
@@ -184,6 +184,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost]
+        [Route("add-api-key")]
         public async Task<IActionResult> AddApiKey(AddApiKeyViewModel viewModel)
         {
             await SetViewModelValues(viewModel);

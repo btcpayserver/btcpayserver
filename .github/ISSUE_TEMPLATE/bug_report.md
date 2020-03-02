@@ -14,6 +14,9 @@ A clear and concise description of what the bug is.
 **Logs (if applicable)**
 Basic logs can be found in Server Settings > Logs.
 
+**Setup Parameters**
+If you're reporting a deployment issue run `. btcpay-setup.sh -i` and paste your the paremeters by obscuring private information.
+
 **To Reproduce**
 Steps to reproduce the behavior:
 1. Go to '...'

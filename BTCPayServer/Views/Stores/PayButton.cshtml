@@ -49,6 +49,11 @@
         <div class="col-lg-7">
             <div class="form-group">
                 <label>
+                    <input type="checkbox" v-model="srvModel.useModal" v-on:change="inputChanges" class="form-check-inline"/>Use Modal
+                </label>
+            </div>
+            <div class="form-group">
+                <label>
                     <input type="checkbox" v-model="buttonInlineTextMode" v-on:change="inputChanges" class="form-check-inline"/> Customize text in button
                 </label>
             </div>

@@ -275,7 +275,7 @@
                                 <td colspan="99">
                                     <div style="margin-left: 15px; margin-bottom: 0;">
                                         @* Leaving this as partial because it abstracts complexity of Invoice Payments *@
-                                        <partial name="ListInvoicesPaymentsPartial" model="invoice.Details" />
+                                        <partial name="ListInvoicesPaymentsPartial" model="(invoice.Details, true)" />
                                     </div>
                                 </td>
                             </tr>

@@ -153,6 +153,10 @@ namespace BTCPayServer.Services.Apps
                 Sounds = settings.Sounds,
                 AnimationColors = settings.AnimationColors,
                 CurrencyData = _Currencies.GetCurrencyData(settings.TargetCurrency, true),
+                CurrencyDataPayments = currentPayments.Select(pair => pair.Key)
+                    .Concat(pendingPayments.Select(pair => pair.Key)).Distinct()
+                    .Select(id => _Currencies.GetCurrencyData(id.CryptoCode, true))
+                    .ToDictionary(data => data.Code, data => data),
                 Info = new ViewCrowdfundViewModel.CrowdfundInfo()
                 {
                     TotalContributors = paidInvoices.Length,

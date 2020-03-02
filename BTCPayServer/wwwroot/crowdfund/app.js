@@ -109,11 +109,8 @@ addLoadEvent(function (ev) {
                 return this.srvModel.targetCurrency.toUpperCase();
             },
             paymentStats: function(){
-                var result= [];
-                
+                var result= [];                
                 var combinedStats = {};
-                
-                
                 var keys = Object.keys(this.srvModel.info.paymentStats);
 
                 for (var i = 0; i < keys.length; i++) {
@@ -135,20 +132,24 @@ addLoadEvent(function (ev) {
                 }
 
                 keys = Object.keys(combinedStats);
-
+        
                 for (var i = 0; i < keys.length; i++) {
-                    var newItem = {key:keys[i], value: combinedStats[keys[i]], label: keys[i].replace("_","")};
-                    result.push(newItem);
-                    
-                }
-                for (var i = 0; i < result.length; i++) {
-                    var current = result[i];
-                    if(current.label.endsWith("LightningLike")){
-                        current.label = current.label.substr(0,current.label.indexOf("LightningLike"));
-                        current.lightning = true;
+                    if(!combinedStats[keys[i]]){
+                        continue;
                     }
+                    var paymentMethodId = keys[i].split("_");
+                    var value = combinedStats[keys[i]].toFixed(this.srvModel.currencyDataPayments[paymentMethodId[0]].divisibility);
+                    var newItem = {key:keys[i], value: value, label: paymentMethodId[0]};
+                                                       
+                    if(paymentMethodId.length > 1 && paymentMethodId[1].endsWith("LightningLike")){
+                        newItem.lightning = true;   
+                    }
+                    result.push(newItem);                    
+                }   
+                
+                if(result.length === 1 && result[0].label === srvModel.targetCurrency){
+                    return [];
                 }
-                    
                 return result;
             },
             perks: function(){
@@ -255,7 +256,7 @@ addLoadEvent(function (ev) {
                 } );
             });
             eventAggregator.$on("payment-received", function (amount, cryptoCode, type) {
-                var onChain = type.toLowerCase() === "btclike";
+                var onChain = type.toLowerCase() !== "lightninglike";
                 if(self.sound) {
                     playRandomSound();
                 }

@@ -39,7 +39,7 @@ namespace BTCPayServer.Controllers
         SettingsRepository _SettingsRepository;
         Configuration.BTCPayServerOptions _Options;
         private readonly BTCPayServerEnvironment _btcPayServerEnvironment;
-        public  U2FService _u2FService;
+        public U2FService _u2FService;
         ILogger _logger;
 
         public AccountController(
@@ -75,7 +75,7 @@ namespace BTCPayServer.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Login(string returnUrl = null)
         {
-            
+
             if (User.Identity.IsAuthenticated && string.IsNullOrEmpty(returnUrl))
                 return RedirectToLocal();
             // Clear the existing external cookie to ensure a clean login process
@@ -85,7 +85,7 @@ namespace BTCPayServer.Controllers
             {
                 SetInsecureFlags();
             }
-            
+
             ViewData["ReturnUrl"] = returnUrl;
             return View();
         }
@@ -126,7 +126,7 @@ namespace BTCPayServer.Controllers
                     if (await _userManager.CheckPasswordAsync(user, model.Password))
                     {
                         LoginWith2faViewModel twoFModel = null;
-                        
+
                         if (user.TwoFactorEnabled)
                         {
                             // we need to do an actual sign in attempt so that 2fa can function in next step
@@ -145,14 +145,14 @@ namespace BTCPayServer.Controllers
                     }
                     else
                     {
-                      var incrementAccessFailedResult = await  _userManager.AccessFailedAsync(user);
-                      ModelState.AddModelError(string.Empty, "Invalid login attempt.");
-                      return View(model);
-                      
+                        var incrementAccessFailedResult = await _userManager.AccessFailedAsync(user);
+                        ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                        return View(model);
+
                     }
                 }
-                
-               
+
+
                 var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: true);
                 if (result.Succeeded)
                 {
@@ -215,7 +215,7 @@ namespace BTCPayServer.Controllers
             {
                 return RedirectToAction("Login");
             }
-            
+
             ViewData["ReturnUrl"] = returnUrl;
             var user = await _userManager.FindByIdAsync(viewModel.UserId);
 
@@ -276,7 +276,7 @@ namespace BTCPayServer.Controllers
             return View("SecondaryLogin", new SecondaryLoginViewModel()
             {
                 LoginWith2FaViewModel = new LoginWith2faViewModel { RememberMe = rememberMe },
-                LoginWithU2FViewModel =  (await _u2FService.HasDevices(user.Id))? await BuildU2FViewModel(rememberMe, user): null
+                LoginWithU2FViewModel = (await _u2FService.HasDevices(user.Id)) ? await BuildU2FViewModel(rememberMe, user) : null
             });
         }
 
@@ -322,7 +322,7 @@ namespace BTCPayServer.Controllers
                 return View("SecondaryLogin", new SecondaryLoginViewModel()
                 {
                     LoginWith2FaViewModel = model,
-                    LoginWithU2FViewModel =  (await _u2FService.HasDevices(user.Id))? await BuildU2FViewModel(rememberMe, user): null
+                    LoginWithU2FViewModel = (await _u2FService.HasDevices(user.Id)) ? await BuildU2FViewModel(rememberMe, user) : null
                 });
             }
         }
@@ -447,12 +447,13 @@ namespace BTCPayServer.Controllers
                         var settings = await _SettingsRepository.GetSettingAsync<ThemeSettings>();
                         settings.FirstRun = false;
                         await _SettingsRepository.UpdateSetting<ThemeSettings>(settings);
-                        if(_Options.DisableRegistration)
+                        if (_Options.DisableRegistration)
                         {
                             // Once the admin user has been created lock subsequent user registrations (needs to be disabled for unit tests that require multiple users).
                             policies.LockSubscription = true;
                             await _SettingsRepository.UpdateSetting(policies);
                         }
+                        RegisteredAdmin = true;
                     }
 
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
@@ -462,7 +463,7 @@ namespace BTCPayServer.Controllers
                     _EmailSenderFactory.GetEmailSender().SendEmailConfirmation(model.Email, callbackUrl);
                     if (!policies.RequiresConfirmedEmail)
                     {
-                        if(logon)
+                        if (logon)
                             await _signInManager.SignInAsync(user, isPersistent: false);
                         return RedirectToLocal(returnUrl);
                     }
@@ -479,13 +480,9 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
-        /// <summary> 
-        /// Test property
-        /// </summary>
-        public string RegisteredUserId
-        {
-            get; set;
-        }
+        // Properties used by tests
+        public string RegisteredUserId { get; set; }
+        public bool RegisteredAdmin { get; set; }
 
         [HttpGet]
         public async Task<IActionResult> Logout()
@@ -539,7 +536,7 @@ namespace BTCPayServer.Controllers
                 var callbackUrl = Url.ResetPasswordCallbackLink(user.Id, code, Request.Scheme);
                 _EmailSenderFactory.GetEmailSender().SendEmail(model.Email, "Reset Password",
                     $"Please reset your password by clicking here: <a href='{callbackUrl}'>link</a>");
-                
+
                 return RedirectToAction(nameof(ForgotPasswordConfirmation));
             }
 
@@ -625,8 +622,8 @@ namespace BTCPayServer.Controllers
                 return RedirectToAction(nameof(HomeController.Index), "Home");
             }
         }
-        
-        
+
+
         private bool CanLoginOrRegister()
         {
             return _btcPayServerEnvironment.IsDevelopping || _btcPayServerEnvironment.IsSecure;
@@ -639,7 +636,7 @@ namespace BTCPayServer.Controllers
                 Severity = StatusMessageModel.StatusSeverity.Error,
                 Message = "You cannot login over an insecure connection. Please use HTTPS or Tor."
             });
-            
+
             ViewData["disabled"] = true;
         }
 

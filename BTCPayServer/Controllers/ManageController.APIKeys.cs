@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Hosting.OpenApi;
 using BTCPayServer.Models;
@@ -109,8 +110,8 @@ namespace BTCPayServer.Controllers
             var vm = await SetViewModelValues(new AuthorizeApiKeysViewModel()
             {
                 Label = applicationName,
-                ServerManagementPermission = permissions.Contains(APIKeyConstants.Permissions.ServerManagement),
-                StoreManagementPermission = permissions.Contains(APIKeyConstants.Permissions.StoreManagement),
+                ServerManagementPermission = permissions.Contains(Permissions.ServerManagement),
+                StoreManagementPermission = permissions.Contains(Permissions.StoreManagement),
                 PermissionsFormatted = permissions,
                 ApplicationName = applicationName,
                 SelectiveStores = selectiveStores,
@@ -133,7 +134,7 @@ namespace BTCPayServer.Controllers
             }
 
 
-            if (viewModel.PermissionsFormatted.Contains(APIKeyConstants.Permissions.ServerManagement))
+            if (viewModel.PermissionsFormatted.Contains(Permissions.ServerManagement))
             {
                 if (!viewModel.IsServerAdmin && viewModel.ServerManagementPermission)
                 {
@@ -147,7 +148,7 @@ namespace BTCPayServer.Controllers
                 }
             }
 
-            if (viewModel.PermissionsFormatted.Contains(APIKeyConstants.Permissions.StoreManagement))
+            if (viewModel.PermissionsFormatted.Contains(Permissions.StoreManagement))
             {
                 if (!viewModel.SelectiveStores &&
                     viewModel.StoreMode == AddApiKeyViewModel.ApiKeyStoreMode.Specific)
@@ -265,16 +266,16 @@ namespace BTCPayServer.Controllers
 
             if (viewModel.StoreMode == AddApiKeyViewModel.ApiKeyStoreMode.Specific)
             {
-                permissions.AddRange(viewModel.SpecificStores.Select(APIKeyConstants.Permissions.GetStorePermission));
+                permissions.AddRange(viewModel.SpecificStores.Select(Permissions.GetStorePermission));
             }
             else if (viewModel.StoreManagementPermission)
             {
-                permissions.Add(APIKeyConstants.Permissions.StoreManagement);
+                permissions.Add(Permissions.StoreManagement);
             }
 
             if (viewModel.IsServerAdmin && viewModel.ServerManagementPermission)
             {
-                permissions.Add(APIKeyConstants.Permissions.ServerManagement);
+                permissions.Add(Permissions.ServerManagement);
             }
 
             return permissions;

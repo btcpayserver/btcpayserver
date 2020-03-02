@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Security.Bitpay;
 using BTCPayServer.Services.Stores;
@@ -35,12 +36,12 @@ namespace BTCPayServer.Security.APIKeys
                 claimsPrincipal.Claims.Where(claim => claim.Type == APIKeyConstants.ClaimTypes.Permissions)
                     .Select(claim => claim.Value).ToList();
 
-            if (permissions.Contains(APIKeyConstants.Permissions.StoreManagement))
+            if (permissions.Contains(Permissions.StoreManagement))
             {
                 return storeRepository.GetStoresByUserId(userManager.GetUserId(claimsPrincipal));
             }
 
-            var storeIds = APIKeyConstants.Permissions.ExtractStorePermissionsIds(permissions);
+            var storeIds = Permissions.ExtractStorePermissionsIds(permissions);
             return storeRepository.GetStoresByUserId(userManager.GetUserId(claimsPrincipal), storeIds);
         }
 

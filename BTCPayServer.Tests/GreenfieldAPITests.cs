@@ -1,14 +1,10 @@
-using System;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using BTCPayServer.Client;
 using BTCPayServer.Controllers;
-using BTCPayServer.Controllers.RestApi.ApiKeys;
-using BTCPayServer.Data;
-using BTCPayServer.Security.APIKeys;
 using BTCPayServer.Tests.Logging;
+using Microsoft.AspNet.SignalR.Client;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json.Linq;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -37,17 +33,20 @@ namespace BTCPayServer.Tests
                 user.GrantAccess();
                 await user.MakeAdmin();
                 string apiKey = await GenerateAPIKey(tester, user);
-                
+                var client = new BTCPayServerClient(tester.PayTester.ServerUri, apiKey);
                 //Get current api key 
-                var request = new HttpRequestMessage(HttpMethod.Get,  "api/v1/api-keys/current");
-                request.Headers.Authorization = new AuthenticationHeaderValue("token", apiKey);
-                var result = await tester.PayTester.HttpClient.SendAsync(request);
-                Assert.True(result.IsSuccessStatusCode);
-                var apiKeyData = JObject.Parse(await result.Content.ReadAsStringAsync()).ToObject<ApiKeyData>();
+                var apiKeyData = await client.GetCurrentAPIKeyInfo();
                 Assert.NotNull(apiKeyData);
                 Assert.Equal(apiKey, apiKeyData.ApiKey);
                 Assert.Equal(user.UserId, apiKeyData.UserId);
                 Assert.Equal(2, apiKeyData.Permissions.Length);
+                
+                //revoke current api key
+                await client.RevokeCurrentAPIKeyInfo();
+                await Assert.ThrowsAsync<HttpRequestException>(async () =>
+                {
+                    await client.GetCurrentAPIKeyInfo();
+                });
             }
         }
 

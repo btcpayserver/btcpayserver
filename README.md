@@ -81,16 +81,17 @@ Contributors looking to do something a bit more challenging, before opening a pu
 
 - [Setting up development environment on Windows](https://www.youtube.com/watch?v=ZePbMPSIvHM)
 - [Setting up development environment Linux (Ubuntu)](https://www.youtube.com/watch?v=j486T_Rk-yw&t)
+- [Setting up development environment MacOS](https://www.youtube.com/watch?v=GWR_CcMsEV0)
 
 You also have an awesome video of our contributors which explains how to get started.[![Rockstar Dev and Britt Kelly - Btc Pay Server Code Along](https://img.youtube.com/vi/ZePbMPSIvHM/sddefault.jpg)](https://www.youtube.com/embed/VNMnd-dX9Q8)
 
-Here is some info about [how to extend the themes](Docs/Themes.md)
+Here is some info about [how to extend the themes](https://github.com/btcpayserver/btcpayserver-doc/blob/master/Theme.md)
 
 ## How to build
 
-While the documentation advises to use docker-compose, you may want to build BTCPay yourself.
+While the documentation advises to use docker-compose, you may want to build BTCPay Server yourself.
 
-First install .NET Core SDK v2.1.9 as specified by [Microsoft website](https://www.microsoft.com/net/download/dotnet-core/2.1).
+First install .NET Core SDK v3.1 as specified by [Microsoft website](https://dotnet.microsoft.com/download/dotnet-core/3.1).
 
 On Powershell:
 ```
@@ -118,7 +119,7 @@ On linux:
 
 ## How to debug
 
-If you want to debug, use Visual Studio Code or Visual Studio 2017.
+If you want to debug, use Visual Studio Code or Visual Studio 2019.
 
 You need to run the development time docker-compose as described [in the test guide](BTCPayServer.Tests/README.md).
 

@@ -33,20 +33,44 @@ namespace BTCPayServer.Payments.PayJoin
                 cutoff.TotalMilliseconds);
         }
 
-        public bool CheckIfTransactionValid(Transaction transaction, string invoiceId, out bool alreadyExists)
+        public enum TransactionValidityResult
+        {
+            Valid_ExactMatch,
+            Invalid_PartialMatch, 
+            Valid_NoMatch,
+            Invalid_Inputs_Seen,
+            Valid_SameInputs
+        }
+
+        public TransactionValidityResult CheckIfTransactionValid(Transaction transaction, string invoiceId)
         {
             if (RecordedTransactions.ContainsKey($"{invoiceId}_{transaction.GetHash()}"))
             {
-                alreadyExists = true;
-                return true;
+                return TransactionValidityResult.Valid_ExactMatch;
             }
 
-            alreadyExists = false;
             var hashes = transaction.Inputs.Select(txIn => txIn.PrevOut.ToString());
-            return !RecordedTransactions.Any(record =>
+
+            var matches = RecordedTransactions.Where(record =>
                 record.Key.Contains(invoiceId, StringComparison.InvariantCultureIgnoreCase) ||
-                record.Key.Contains(transaction.GetHash().ToString(), StringComparison.InvariantCultureIgnoreCase) ||
-                record.Value.Transaction.Inputs.Any(txIn => hashes.Contains(txIn.PrevOut.ToString())));
+                record.Key.Contains(transaction.GetHash().ToString(), StringComparison.InvariantCultureIgnoreCase));
+
+            if (matches.Any())
+            {
+                if(matches.Any(record => 
+                    record.Key.Contains(invoiceId, StringComparison.InvariantCultureIgnoreCase) &&
+                    record.Value.Transaction.RBF &&
+                    record.Value.Transaction.Inputs.All(recordTxIn => hashes.Contains(recordTxIn.PrevOut.ToString()))))
+                {
+                    return TransactionValidityResult.Valid_SameInputs;
+                }
+                
+                return TransactionValidityResult.Invalid_PartialMatch;
+            }
+
+            return RecordedTransactions.Any(record =>
+                record.Value.Transaction.Inputs.Any(txIn => hashes.Contains(txIn.PrevOut.ToString())))
+                ? TransactionValidityResult.Invalid_Inputs_Seen: TransactionValidityResult.Valid_NoMatch;
         }
 
         public void AddRecord(PayJoinStateRecordedItem recordedItem)
@@ -73,9 +97,19 @@ namespace BTCPayServer.Payments.PayJoin
 
         public void RemoveRecord(uint256 proposedTxHash)
         {
-            var id = RecordedTransactions.Single(pair =>
+            var id = RecordedTransactions.SingleOrDefault(pair =>
                 pair.Value.ProposedTransactionHash == proposedTxHash ||
                 pair.Value.OriginalTransactionHash == proposedTxHash).Key;
+            if (id != null)
+            {
+                RecordedTransactions.TryRemove(id, out _);
+            }
+        }
+        
+        public void RemoveRecord(string invoiceId)
+        {
+            var id = RecordedTransactions.Single(pair =>
+                pair.Value.InvoiceId == invoiceId).Key;
             RecordedTransactions.TryRemove(id, out _);
         }
 

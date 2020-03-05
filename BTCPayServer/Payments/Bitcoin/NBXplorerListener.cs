@@ -232,6 +232,7 @@ namespace BTCPayServer.Payments.Bitcoin
             var transactions = await wallet.GetTransactions(GetAllBitcoinPaymentData(invoice)
                     .Select(p => p.Outpoint.Hash)
                     .ToArray());
+            var payJoinState = _payJoinStateProvider.Get(new WalletId(invoice.StoreId, wallet.Network.CryptoCode));
             foreach (var payment in invoice.GetPayments(wallet.Network))
             {
                 if (payment.GetPaymentMethodId().PaymentType != PaymentTypes.BTCLike)
@@ -267,7 +268,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
                     }
                 }
-
+                
                 bool updated = false;
                 if (accounted != payment.Accounted)
                 {
@@ -284,7 +285,12 @@ namespace BTCPayServer.Payments.Bitcoin
                         updated = true;
                     }
                 }
-
+                
+                // we keep the state of the payjoin tx until it is confirmed in case of rbf situations where the tx is cancelled
+                if (paymentData.PayJoinSelfContributedAmount> 0 && accounted && paymentData.PaymentConfirmed(payment, invoice.SpeedPolicy))
+                {
+                    payJoinState?.RemoveRecord(paymentData.Outpoint.Hash);
+                }
                 // if needed add invoice back to pending to track number of confirmations
                 if (paymentData.ConfirmationCount < wallet.Network.MaxTrackedConfirmation)
                     await _InvoiceRepository.AddPendingInvoiceIfNotPresent(invoice.Id);
@@ -363,9 +369,8 @@ namespace BTCPayServer.Payments.Bitcoin
 
             if (payJoinState == null || !payJoinState.TryGetWithProposedHash(transactionHash, out var record) ||
                 record.TotalOutputAmount != amount) return 0;
-            
+            record.TxSeen = true;
             //this is the payjoin output!
-            payJoinState.RemoveRecord(transactionHash);
             return record.ContributedAmount;
 
         }

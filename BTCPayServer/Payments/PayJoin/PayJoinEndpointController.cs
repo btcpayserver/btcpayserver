@@ -105,12 +105,7 @@ namespace BTCPayServer.Payments.PayJoin
             {
                 return UnprocessableEntity($"invalid invoice");
             }
-
-            if (matchingInvoice.IsExpired() || matchingInvoice.GetInvoiceState().Status != InvoiceStatus.New)
-            {
-                return UnprocessableEntity($"cannot handle payjoin tx");
-            }
-
+            
             var invoicePaymentMethod = matchingInvoice.GetPaymentMethod(paymentMethodId);
             //get outs to our current invoice address
             var currentPaymentMethodDetails =
@@ -121,8 +116,19 @@ namespace BTCPayServer.Payments.PayJoin
                 return UnprocessableEntity($"cannot handle payjoin tx");
             }
 
+            //the invoice must be active, and the status must be new OR paid if 
+            if (matchingInvoice.IsExpired() ||
+                ((matchingInvoice.GetInvoiceState().Status == InvoiceStatus.Paid &&
+                  currentPaymentMethodDetails.PayJoin.OriginalTransactionHash == null) ||
+                 matchingInvoice.GetInvoiceState().Status != InvoiceStatus.New)) 
+            {
+                return UnprocessableEntity($"cannot handle payjoin tx");
+            }
+
+
             if (currentPaymentMethodDetails.PayJoin.OriginalTransactionHash != null &&
-                currentPaymentMethodDetails.PayJoin.OriginalTransactionHash != transaction.GetHash())
+                currentPaymentMethodDetails.PayJoin.OriginalTransactionHash != transaction.GetHash() && 
+                !transaction.RBF)
             {
                 return UnprocessableEntity($"cannot handle payjoin tx");
             }
@@ -152,7 +158,8 @@ namespace BTCPayServer.Payments.PayJoin
 
             //check if any of the inputs have been spotted in other txs sent our way..Reject anything but the original  
             //also reject if the invoice being payjoined to already has a record
-            if (!state.CheckIfTransactionValid(transaction, invoice, out var alreadyExists))
+            var validity = state.CheckIfTransactionValid(transaction, invoice);
+            if (validity == PayJoinState.TransactionValidityResult.Invalid_Inputs_Seen || validity == PayJoinState.TransactionValidityResult.Invalid_PartialMatch)
             {
                 return UnprocessableEntity($"cannot handle payjoin tx");
             }
@@ -196,7 +203,7 @@ namespace BTCPayServer.Payments.PayJoin
                 .Select(entity => entity.GetCryptoPaymentData() as BitcoinLikePaymentData);
 
             if (transaction.Outputs.Any(
-                txout => previousPayments.Any(data => txout.IsTo(data.GetDestination()))))
+                txout => previousPayments.Any(data => !txout.IsTo(address) && txout.IsTo(data.GetDestination()))))
             {
                 //Meh, address reuse from the customer would be happening with this tx, skip 
                 return UnprocessableEntity($"cannot handle payjoin tx");
@@ -302,7 +309,12 @@ namespace BTCPayServer.Payments.PayJoin
                     .Select(coin => extKey.Derive(coin.KeyPath).PrivateKey)
                     .ToArray());
 
-                if (!alreadyExists)
+                if (validity == PayJoinState.TransactionValidityResult.Valid_SameInputs)
+                {
+                    //if the invoice was rbfed, remove the current record and replace it with the new one
+                    state.RemoveRecord(invoice);
+                }
+                if (validity == PayJoinState.TransactionValidityResult.Valid_NoMatch)
                 {
                     await AddRecord(invoice, state, transaction, utxosToContributeToThisPayment,
                         cjOutputContributedAmount, cjOutputSum, newTx, currentPaymentMethodDetails,
@@ -324,7 +336,12 @@ namespace BTCPayServer.Payments.PayJoin
                         extKey.Derive(coin.KeyPath).PrivateKey.GetWif(network.NBitcoinNetwork)),
                     utxosToContributeToThisPayment.Select(coin => coin.Coin));
 
-                if (!alreadyExists)
+                if (validity == PayJoinState.TransactionValidityResult.Valid_SameInputs)
+                {
+                    //if the invoice was rbfed, remove the current record and replace it with the new one
+                    state.RemoveRecord(invoice);
+                }
+                if (validity == PayJoinState.TransactionValidityResult.Valid_NoMatch)
                 {
                     await AddRecord(invoice, state, transaction, utxosToContributeToThisPayment,
                         cjOutputContributedAmount, cjOutputSum, newTx, currentPaymentMethodDetails,

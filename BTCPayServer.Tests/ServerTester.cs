@@ -144,6 +144,18 @@ namespace BTCPayServer.Tests
             await CustomerLightningD.Pay(bolt11);
         }
 
+        public async Task WaitForEvent<T>(Func<Task> action)
+        {
+            var tcs = new TaskCompletionSource<bool>();
+            var sub = PayTester.GetService<EventAggregator>().Subscribe<T>(evt =>
+            {
+                tcs.SetResult(true);
+            });
+            await action.Invoke();
+            await tcs.Task;
+            sub.Dispose();
+        }
+
         public ILightningClient CustomerLightningD { get; set; }
 
         public ILightningClient MerchantLightningD { get; private set; }

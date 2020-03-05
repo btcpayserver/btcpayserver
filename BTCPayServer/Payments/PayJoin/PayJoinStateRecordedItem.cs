@@ -12,10 +12,11 @@ namespace BTCPayServer.Payments.PayJoin
         public uint256 ProposedTransactionHash { get; set; }
         public List<ReceivedCoin> CoinsExposed { get; set; }
         public decimal TotalOutputAmount { get; set; }
-        public decimal ContributedAmount { get; set; }
+        public decimal ContributedAmount { get; set                                                                                                                                                                                                                                                                                                                                                                                                                                  ; }
         public uint256 OriginalTransactionHash { get; set; }
 
         public string InvoiceId { get; set; }
+        public bool TxSeen { get; set; }
 
         public override string ToString()
         {

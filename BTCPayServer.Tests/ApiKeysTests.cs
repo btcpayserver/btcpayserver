@@ -122,10 +122,10 @@ namespace BTCPayServer.Tests
                     new[] {Permissions.StoreManagement, Permissions.ServerManagement}).ToString();
                 s.Driver.Navigate().GoToUrl(authUrl);
                 s.Driver.PageSource.Contains("kukksappname");
-                Assert.NotNull(s.Driver.FindElement(By.Id("StoreManagementPermission")).GetAttribute("readonly"));
-                Assert.True(s.Driver.FindElement(By.Id("StoreManagementPermission")).Selected);
-                Assert.NotNull(s.Driver.FindElement(By.Id("ServerManagementPermission")).GetAttribute("readonly"));
-                Assert.True(s.Driver.FindElement(By.Id("ServerManagementPermission")).Selected);
+                Assert.Equal("hidden", s.Driver.FindElement(By.Id("StoreManagementPermission")).GetAttribute("type").ToLowerInvariant());
+                Assert.Equal("true", s.Driver.FindElement(By.Id("StoreManagementPermission")).GetAttribute("value").ToLowerInvariant());
+                Assert.Equal("hidden", s.Driver.FindElement(By.Id("ServerManagementPermission")).GetAttribute("type").ToLowerInvariant());
+                Assert.Equal("true",s.Driver.FindElement(By.Id("ServerManagementPermission")).GetAttribute("value").ToLowerInvariant());
                 Assert.DoesNotContain("change-store-mode", s.Driver.PageSource);
                 s.Driver.FindElement(By.Id("consent-yes")).Click();
                 var url = s.Driver.Url;
@@ -138,15 +138,15 @@ namespace BTCPayServer.Tests
                     (await apiKeyRepo.GetKey(results.Single(pair => pair.Key == "key").Value)).GetPermissions());
 
                 authUrl = BTCPayServerClient.GenerateAuthorizeUri(tester.PayTester.ServerUri,
-                    new[] {Permissions.StoreManagement, Permissions.ServerManagement}).ToString();
+                    new[] {Permissions.StoreManagement, Permissions.ServerManagement}, false, true).ToString();
                 
                 s.Driver.Navigate().GoToUrl(authUrl);
                 Assert.DoesNotContain("kukksappname", s.Driver.PageSource);
 
-                Assert.Null(s.Driver.FindElement(By.Id("StoreManagementPermission")).GetAttribute("readonly"));
-                Assert.True(s.Driver.FindElement(By.Id("StoreManagementPermission")).Selected);
-                Assert.Null(s.Driver.FindElement(By.Id("ServerManagementPermission")).GetAttribute("readonly"));
-                Assert.True(s.Driver.FindElement(By.Id("ServerManagementPermission")).Selected);
+                Assert.Equal("checkbox", s.Driver.FindElement(By.Id("StoreManagementPermission")).GetAttribute("type").ToLowerInvariant());
+                Assert.Equal("true", s.Driver.FindElement(By.Id("StoreManagementPermission")).GetAttribute("value").ToLowerInvariant());
+                Assert.Equal("checkbox", s.Driver.FindElement(By.Id("ServerManagementPermission")).GetAttribute("type").ToLowerInvariant());
+                Assert.Equal("true",s.Driver.FindElement(By.Id("ServerManagementPermission")).GetAttribute("value").ToLowerInvariant());
 
                 s.SetCheckbox(s, "ServerManagementPermission", false);
                 Assert.Contains("change-store-mode", s.Driver.PageSource);

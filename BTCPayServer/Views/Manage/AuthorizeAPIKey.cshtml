@@ -52,7 +52,16 @@
                     @if (Model.PermissionsFormatted.Contains(Permissions.ServerManagement) && (Model.IsServerAdmin || Model.Strict))
                     {
                         <div class="list-group-item form-group">
-                            <input asp-for="ServerManagementPermission" class="form-check-inline" readonly="@(Model.Strict || !Model.IsServerAdmin)"/>
+                            @if (Model.Strict || !Model.IsServerAdmin)
+                            {
+                                <input type="hidden" asp-for="ServerManagementPermission"/>
+                                <input type="checkbox" class="form-check-inline" checked="@Model.ServerManagementPermission" disabled/>
+                            }
+                            else
+                            {
+                                <input type="checkbox" asp-for="ServerManagementPermission" class="form-check-inline"/>
+                            }
+
                             <label asp-for="ServerManagementPermission" class="h5">@GetTitle(Permissions.ServerManagement)</label>
                             @if (!Model.IsServerAdmin)
                             {
@@ -71,7 +80,15 @@
                         @if (Model.StoreMode == ManageController.AddApiKeyViewModel.ApiKeyStoreMode.AllStores)
                         {
                             <div class="list-group-item form-group">
-                                <input type="checkbox" asp-for="StoreManagementPermission" class="form-check-inline" readonly="@Model.Strict"/>
+                                @if (Model.Strict)
+                                {
+                                    <input type="hidden" asp-for="StoreManagementPermission"/>
+                                    <input type="checkbox" class="form-check-inline" checked="@Model.StoreManagementPermission" disabled/>
+                                }
+                                else
+                                {
+                                    <input type="checkbox" asp-for="StoreManagementPermission" class="form-check-inline"/>
+                                }
                                 <label asp-for="StoreManagementPermission" class="h5">@GetTitle(Permissions.StoreManagement)</label>
                                 <span asp-validation-for="StoreManagementPermission" class="text-danger"></span>
                                 <p class="mb-0">@GetDescription(Permissions.StoreManagement).</p>

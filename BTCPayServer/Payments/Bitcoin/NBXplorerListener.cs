@@ -18,7 +18,9 @@ using NBitcoin;
 using NBXplorer.Models;
 using BTCPayServer.Payments;
 using BTCPayServer.HostedServices;
+using Microsoft.EntityFrameworkCore.Internal;
 using NBitcoin.Altcoins.Elements;
+using NBitcoin.RPC;
 
 namespace BTCPayServer.Payments.Bitcoin
 {
@@ -30,6 +32,7 @@ namespace BTCPayServer.Payments.Bitcoin
         EventAggregator _Aggregator;
         ExplorerClientProvider _ExplorerClients;
         IHostApplicationLifetime _Lifetime;
+        private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         InvoiceRepository _InvoiceRepository;
         private TaskCompletionSource<bool> _RunningTask;
         private CancellationTokenSource _Cts;
@@ -39,7 +42,8 @@ namespace BTCPayServer.Payments.Bitcoin
                                 BTCPayWalletProvider wallets,
                                 InvoiceRepository invoiceRepository,
                                 EventAggregator aggregator, 
-                                IHostApplicationLifetime lifetime)
+                                IHostApplicationLifetime lifetime,
+                                BTCPayNetworkProvider btcPayNetworkProvider)
         {
             PollInterval = TimeSpan.FromMinutes(1.0);
             _Wallets = wallets;
@@ -47,6 +51,7 @@ namespace BTCPayServer.Payments.Bitcoin
             _ExplorerClients = explorerClients;
             _Aggregator = aggregator;
             _Lifetime = lifetime;
+            _btcPayNetworkProvider = btcPayNetworkProvider;
         }
 
         CompositeDisposable leases = new CompositeDisposable();
@@ -97,6 +102,11 @@ namespace BTCPayServer.Payments.Bitcoin
                 }
             }, null, 0, (int)PollInterval.TotalMilliseconds);
             leases.Add(_ListenPoller);
+            
+            leases.Add(new Timer(async s =>
+            {
+                await CheckForDoubleSpends();
+            }, null, 0, (int)PollInterval.TotalMilliseconds));
             return Task.CompletedTask;
         }
 
@@ -227,8 +237,15 @@ namespace BTCPayServer.Payments.Bitcoin
                 var txId = tx.Transaction.GetHash();
                 var txConflict = conflicts.GetConflict(txId);
                 var accounted = txConflict == null || txConflict.IsWinner(txId);
-
+                if (accounted && paymentData.ConfirmationCount == 0 && paymentData.RBF)
+                {
+                    // we should check the mempool and see if it's still available as NBX does not know of txs that double spend to external addresses
+                    var explorerClient = _ExplorerClients.GetExplorerClient(wallet.Network);
+                    accounted = (await explorerClient.RPCClient.GetMempoolEntryAsync(paymentData.Outpoint.Hash)) != null;
+                }
+                
                 bool updated = false;
+                
                 if (accounted != payment.Accounted)
                 {
                     updated = true;
@@ -256,6 +273,61 @@ namespace BTCPayServer.Payments.Bitcoin
             if (updatedPaymentEntities.Count != 0)
                 _Aggregator.Publish(new Events.InvoiceNeedUpdateEvent(invoice.Id));
             return invoice;
+        }
+
+        async Task CheckForDoubleSpends()
+        {
+            var pendingInvoices = await _InvoiceRepository.GetPendingInvoices();
+            var invoices = await _InvoiceRepository.GetInvoices(new InvoiceQuery() {InvoiceId = pendingInvoices});
+            //get a list of payments which could potentially be double spent
+            var potentialRBFTransactions = invoices.SelectMany(entity =>
+                    entity.GetPayments().Where(paymentEntity =>
+                            paymentEntity.Accounted &&
+                            paymentEntity.GetPaymentMethodId().PaymentType == BitcoinPaymentType.Instance)
+                        .Select(paymentEntity => (entity.Id, paymentEntity,
+                            paymentEntity.GetCryptoPaymentData() as BitcoinLikePaymentData))
+                        .Where((tuple) => tuple.Item3.RBF && tuple.Item3.ConfirmationCount == 0))
+                .GroupBy(tuple => tuple.Item2.GetCryptoCode());
+
+            Dictionary<BTCPayNetwork, IEnumerable<(string Id, PaymentEntity paymentEntity, BitcoinLikePaymentData,
+                Task<MempoolEntry>)>> networkToRPCs =
+                new Dictionary<BTCPayNetwork, IEnumerable<(string Id, PaymentEntity paymentEntity,
+                    BitcoinLikePaymentData, Task<MempoolEntry>)>>();
+            var masterTasks = new List<Task>();
+            foreach (var y in potentialRBFTransactions)
+            {
+                var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(y.Key);
+                if (!_Wallets.IsAvailable(network))
+                {
+                    continue;
+                }
+
+                var explorerClient = _ExplorerClients.GetExplorerClient(network);
+                RPCClient rpcClient = null;//explorerClient.RPCClient
+
+                var batchClient = rpcClient.PrepareBatch();
+                var z = y.Select(tuple => (tuple.Id, tuple.paymentEntity, tuple.Item3,
+                    batchClient.GetMempoolEntryAsync(tuple.Item3.Outpoint.Hash, false)));
+
+                networkToRPCs.Add(network, z);
+                masterTasks.Add(batchClient.SendBatchAsync());
+            }
+
+            await Task.WhenAll(masterTasks);
+            var updatedPayments = new List<PaymentEntity>();
+            var updatedInvoices = new List<string>();
+            foreach (KeyValuePair<BTCPayNetwork, IEnumerable<(string Id, PaymentEntity paymentEntity,
+                BitcoinLikePaymentData, Task<MempoolEntry>)>> keyValuePair in networkToRPCs)
+            {
+                updatedPayments.AddRange(keyValuePair.Value.Where(tuple => tuple.Item4.Result == null).Select(tuple =>
+                {
+                    updatedInvoices.Add(tuple.Id);
+                    tuple.paymentEntity.Accounted = false;
+                    return tuple.paymentEntity;
+                }));
+            }
+
+            updatedInvoices.Distinct().ToList().ForEach(s => _Aggregator.Publish(new Events.InvoiceNeedUpdateEvent(s)));
         }
 
         class TransactionConflict

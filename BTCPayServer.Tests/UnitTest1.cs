@@ -1101,6 +1101,55 @@ namespace BTCPayServer.Tests
                     Assert.Equal(payment2, invoice.BtcPaid);
                     Assert.Equal("False", invoice.ExceptionStatus.ToString());
                 });
+                
+                // let's test out rbf payments where the payment gets sent elsehwere instead
+                var invoice2 = user.BitPay.CreateInvoice(new Invoice()
+                {
+                    Price = 0.01m,
+                    Currency = "BTC"
+                }, Facade.Merchant);
+                
+                var invoice2Address = BitcoinAddress.Create(invoice2.BitcoinAddress, user.SupportedNetwork.NBitcoinNetwork);
+                Transaction invoice2Tx1 = null;
+                uint256 invoice2tx1Id = null;
+                var evt = await tester.WaitForEvent<InvoiceEvent>(async () =>
+                {
+                    invoice2tx1Id = await tester.ExplorerNode.SendToAddressAsync(invoice2Address, new Money(0.01m, MoneyUnit.BTC));
+                });
+                Assert.Equal(invoice2.Id,evt.Invoice.Id);
+                Assert.Equal(invoice2tx1Id,Assert.IsType<BitcoinLikePaymentData>(evt.Payment.GetCryptoPaymentData()).Outpoint.Hash);
+                TestUtils.Eventually(() =>
+                {
+                    invoice = user.BitPay.GetInvoice(invoice2.Id);
+                    Assert.Equal("paid", invoice2.Status);
+                    invoice2Tx1 = tester.ExplorerNode.GetRawTransaction(new uint256(invoice2tx1Id));
+                });
+                var invoice2Tx2 = invoice2Tx1.Clone();
+                foreach (var input in invoice2Tx2.Inputs)
+                {
+                    input.ScriptSig = Script.Empty; //Strip signatures
+                    input.WitScript = WitScript.Empty; //Strip signatures
+                }
+
+                output = invoice2Tx2.Outputs.First(o =>
+                    o.Value.ToDecimal(MoneyUnit.BTC) == evt.Payment.GetCryptoPaymentData().GetValue());
+                output.Value = payment2;
+                output.ScriptPubKey = new Key().ScriptPubKey;
+                invoice2Tx2 = await tester.ExplorerNode.SignRawTransactionAsync(invoice2Tx2);
+              var evt2 =  await  tester.WaitForEvent<InvoiceNeedUpdateEvent>(async () =>
+                {
+                    await tester.ExplorerNode.SendRawTransactionAsync(invoice2Tx2);
+                });
+              Assert.Equal(invoice2.Id, evt2.InvoiceId);
+
+              TestUtils.Eventually(async () =>
+              {
+                  var i = await tester.PayTester.InvoiceRepository.GetInvoice(invoice2.Id);
+                  Assert.Equal(InvoiceStatus.New, i.Status);
+                  Assert.Single(i.GetPayments());
+                  Assert.False(i.GetPayments().First().Accounted);
+              });
+
             }
         }
 

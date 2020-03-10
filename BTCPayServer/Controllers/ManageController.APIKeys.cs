@@ -10,6 +10,8 @@ using BTCPayServer.Security;
 using BTCPayServer.Security.APIKeys;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using NBitcoin;
+using NBitcoin.DataEncoders;
 using NSwag.Annotations;
 
 namespace BTCPayServer.Controllers
@@ -247,7 +249,7 @@ namespace BTCPayServer.Controllers
         {
             var key = new APIKeyData()
             {
-                Id = Guid.NewGuid().ToString().Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase),
+                Id = Encoders.Hex.EncodeData(RandomUtils.GetBytes(20)),
                 Type = APIKeyType.Permanent,
                 UserId = _userManager.GetUserId(User),
                 Label = viewModel.Label

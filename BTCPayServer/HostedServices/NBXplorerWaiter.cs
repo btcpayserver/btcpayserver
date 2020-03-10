@@ -38,14 +38,13 @@ namespace BTCPayServer.HostedServices
 
         public bool IsFullySynched()
         {
-            return _Summaries.All(s => s.Value.Status != null && s.Value.Status.IsFullySynched);
+            return _Summaries.All(s => s.Value.Status?.IsFullySynched is true);
         }
 
         public bool IsFullySynched(string cryptoCode, out NBXplorerSummary summary)
         {
             return _Summaries.TryGetValue(cryptoCode.ToUpperInvariant(), out summary) && 
-                   summary.Status != null && 
-                   summary.Status.IsFullySynched;
+                   summary.Status?.IsFullySynched is true;
         }
         public NBXplorerSummary Get(string cryptoCode)
         {
@@ -88,6 +87,7 @@ namespace BTCPayServer.HostedServices
             _Client = client;
             _Aggregator = aggregator;
             _Dashboard = dashboard;
+            _Dashboard.Publish(_Network, State, null, null);
         }
 
         NBXplorerDashboard _Dashboard;

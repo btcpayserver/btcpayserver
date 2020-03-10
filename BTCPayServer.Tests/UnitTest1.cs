@@ -2493,12 +2493,15 @@ noninventoryitem:
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
+                DateTimeOffset expiration = DateTimeOffset.UtcNow + TimeSpan.FromMinutes(21);
                 var invoice1 = user.BitPay.CreateInvoice(new Invoice()
                 {
                     Price = 0.000000012m,
                     Currency = "USD",
-                    FullNotifications = true
+                    FullNotifications = true,
+                    ExpirationTime = expiration
                 }, Facade.Merchant);
+                Assert.Equal(expiration.ToUnixTimeSeconds(), invoice1.ExpirationTime.ToUnixTimeSeconds());
                 var invoice2 = user.BitPay.CreateInvoice(new Invoice()
                 {
                     Price = 0.000000019m,

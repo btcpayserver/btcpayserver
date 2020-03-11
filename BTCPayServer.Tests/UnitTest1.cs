@@ -1101,45 +1101,6 @@ namespace BTCPayServer.Tests
                     Assert.Equal(payment2, invoice.BtcPaid);
                     Assert.Equal("False", invoice.ExceptionStatus.ToString());
                 });
-
-
-                Logs.Tester.LogInformation($"Let's test out rbf payments where the payment gets sent elsehwere instead");
-                var invoice2 = user.BitPay.CreateInvoice(new Invoice()
-                {
-                    Price = 0.01m,
-                    Currency = "BTC"
-                }, Facade.Merchant);
-
-                var invoice2Address = BitcoinAddress.Create(invoice2.BitcoinAddress, user.SupportedNetwork.NBitcoinNetwork);
-                uint256 invoice2tx1Id = await tester.ExplorerNode.SendToAddressAsync(invoice2Address, invoice2.BtcDue, replaceable: true);
-                Transaction invoice2Tx1 = null;
-                TestUtils.Eventually(() =>
-                {
-                    invoice2 = user.BitPay.GetInvoice(invoice2.Id);
-                    Assert.Equal("paid", invoice2.Status);
-                    invoice2Tx1 = tester.ExplorerNode.GetRawTransaction(new uint256(invoice2tx1Id));
-                });
-                var invoice2Tx2 = invoice2Tx1.Clone();
-                foreach (var input in invoice2Tx2.Inputs)
-                {
-                    input.ScriptSig = Script.Empty; //Strip signatures
-                    input.WitScript = WitScript.Empty; //Strip signatures
-                }
-
-                output = invoice2Tx2.Outputs.First(o =>
-                    o.ScriptPubKey == invoice2Address.ScriptPubKey);
-                output.Value -= new Money(10_000, MoneyUnit.Satoshi);
-                output.ScriptPubKey = new Key().ScriptPubKey;
-                invoice2Tx2 = await tester.ExplorerNode.SignRawTransactionAsync(invoice2Tx2);
-                await tester.ExplorerNode.SendRawTransactionAsync(invoice2Tx2);
-                tester.ExplorerNode.Generate(1);
-                await TestUtils.EventuallyAsync(async () =>
-                {
-                    var i = await tester.PayTester.InvoiceRepository.GetInvoice(invoice2.Id);
-                    Assert.Equal(InvoiceStatus.New, i.Status);
-                    Assert.Single(i.GetPayments());
-                    Assert.False(i.GetPayments().First().Accounted);
-                });
             }
         }
 

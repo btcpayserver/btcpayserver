@@ -88,6 +88,10 @@ namespace BTCPayServer.Tests
                     if (!webElement.Displayed)
                         return;
                 }
+                catch (NoSuchWindowException)
+                {
+                    return;
+                }
                 catch (NoSuchElementException)
                 {
                     return;

@@ -241,7 +241,7 @@ namespace BTCPayServer.Payments.Bitcoin
                 {
                     // we should check the mempool and see if it's still available as NBX does not know of txs that double spend to external addresses
                     var explorerClient = _ExplorerClients.GetExplorerClient(wallet.Network);
-                    accounted = (await explorerClient.RPCClient.GetMempoolEntryAsync(paymentData.Outpoint.Hash)) != null;
+                    accounted = (await explorerClient.RPCClient.GetMempoolEntryAsync(paymentData.Outpoint.Hash, false)) != null;
                 }
                 
                 bool updated = false;
@@ -275,7 +275,7 @@ namespace BTCPayServer.Payments.Bitcoin
             return invoice;
         }
 
-        async Task CheckForDoubleSpends()
+        public async Task CheckForDoubleSpends()
         {
             var pendingInvoices = await _InvoiceRepository.GetPendingInvoices();
             var invoices = await _InvoiceRepository.GetInvoices(new InvoiceQuery() {InvoiceId = pendingInvoices});
@@ -303,9 +303,9 @@ namespace BTCPayServer.Payments.Bitcoin
                 }
 
                 var explorerClient = _ExplorerClients.GetExplorerClient(network);
-                RPCClient rpcClient = null;//explorerClient.RPCClient
+                
 
-                var batchClient = rpcClient.PrepareBatch();
+                var batchClient = explorerClient.RPCClient.PrepareBatch();
                 var z = y.Select(tuple => (tuple.Id, tuple.paymentEntity, tuple.Item3,
                     batchClient.GetMempoolEntryAsync(tuple.Item3.Outpoint.Hash, false)));
 

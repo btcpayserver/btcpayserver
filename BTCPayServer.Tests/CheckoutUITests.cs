@@ -205,7 +205,8 @@ namespace BTCPayServer.Tests
                 IWebElement closebutton = null;
                 TestUtils.Eventually(() =>
                 {
-                    var iframe = s.Driver.SwitchTo().Frame("btcpay");
+                    var frameElement = s.Driver.FindElement(By.Name("btcpay"));
+                    var iframe = s.Driver.SwitchTo().Frame(frameElement);
                     closebutton = iframe.FindElement(By.ClassName("close-action"));
                     Assert.True(closebutton.Displayed);
                 });

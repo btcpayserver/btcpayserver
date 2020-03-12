@@ -34,6 +34,9 @@ namespace BTCPayServer.Security.APIKeys
             bool success = false;
             switch (requirement.Policy)
             {
+                case Policies.CanModifyProfile.Key:
+                    success = context.HasPermissions(Permissions.ProfileManagement);
+                    break;
                 case Policies.CanListStoreSettings.Key:
                     var selectiveStorePermissions =
                         Permissions.ExtractStorePermissionsIds(context.GetPermissions());

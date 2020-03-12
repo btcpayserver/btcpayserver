@@ -9,7 +9,6 @@ using BTCPayServer.Data;
 using BTCPayServer.Security.APIKeys;
 using BTCPayServer.Tests.Logging;
 using BTCPayServer.Views.Manage;
-using ExchangeSharp;
 using Newtonsoft.Json;
 using OpenQA.Selenium;
 using Xunit;

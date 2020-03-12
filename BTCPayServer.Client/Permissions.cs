@@ -9,6 +9,17 @@ namespace BTCPayServer.Client
     {
         public const string ServerManagement = nameof(ServerManagement);
         public const string StoreManagement = nameof(StoreManagement);
+        public const string ProfileManagement = nameof(ProfileManagement);
+
+        public static string[] GetAllPermissionKeys()
+        {
+            return new[]
+            {
+                ServerManagement,
+                StoreManagement,
+                ProfileManagement
+            };
+        }
         public static string GetStorePermission(string storeId) => $"{nameof(StoreManagement)}:{storeId}";
 
         public static IEnumerable<string> ExtractStorePermissionsIds(IEnumerable<string> permissions) => permissions

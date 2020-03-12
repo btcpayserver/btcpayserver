@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NSwag.Annotations;
+using YamlDotNet.Core.Tokens;
 
 namespace BTCPayServer.Controllers
 {
@@ -30,8 +31,6 @@ namespace BTCPayServer.Controllers
                 })
             });
         }
-
-        
         
         [HttpGet("api-keys/{id}/delete")]
         public async Task<IActionResult> RemoveAPIKey(string id)
@@ -113,6 +112,10 @@ namespace BTCPayServer.Controllers
                 ServerManagementPermission = permissions.Contains(Permissions.ServerManagement),
                 StoreManagementPermission = permissions.Contains(Permissions.StoreManagement),
                 PermissionsFormatted = permissions,
+                PermissionValues = permissions.Where(s =>
+                        !s.Contains(Permissions.StoreManagement, StringComparison.InvariantCultureIgnoreCase) &&
+                        s != Permissions.ServerManagement)
+                    .Select(s => new AddApiKeyViewModel.PermissionValueItem() {Permission = s, Value = true}).ToList(),
                 ApplicationName = applicationName,
                 SelectiveStores = selectiveStores,
                 Strict = strict,
@@ -262,7 +265,7 @@ namespace BTCPayServer.Controllers
 
         private IEnumerable<string> GetPermissionsFromViewModel(AddApiKeyViewModel viewModel)
         {
-            var permissions = new List<string>();
+            var permissions = viewModel.PermissionValues.Where(tuple => tuple.Value).Select(tuple => tuple.Permission).ToList();
 
             if (viewModel.StoreMode == AddApiKeyViewModel.ApiKeyStoreMode.Specific)
             {
@@ -278,13 +281,18 @@ namespace BTCPayServer.Controllers
                 permissions.Add(Permissions.ServerManagement);
             }
 
-            return permissions;
+            return permissions.Distinct();
         }
 
         private async Task<T> SetViewModelValues<T>(T viewModel) where T : AddApiKeyViewModel
         {
             viewModel.Stores = await _StoreRepository.GetStoresByUserId(_userManager.GetUserId(User));
-            viewModel.IsServerAdmin = (await _authorizationService.AuthorizeAsync(User, Policies.CanModifyServerSettings.Key)).Succeeded;
+            viewModel.IsServerAdmin =
+                (await _authorizationService.AuthorizeAsync(User, Policies.CanModifyServerSettings.Key)).Succeeded;
+            viewModel.PermissionValues ??= Permissions.GetAllPermissionKeys().Where(s =>
+                    !s.Contains(Permissions.StoreManagement, StringComparison.InvariantCultureIgnoreCase) &&
+                    s != Permissions.ServerManagement)
+                .Select(s => new AddApiKeyViewModel.PermissionValueItem() {Permission = s, Value = true}).ToList();
             return viewModel;
         }
 
@@ -298,11 +306,18 @@ namespace BTCPayServer.Controllers
             public bool ServerManagementPermission { get; set; }
             public bool StoreManagementPermission { get; set; }
             public string Command { get; set; }
+            public List<PermissionValueItem> PermissionValues { get; set; }
 
             public enum ApiKeyStoreMode
             {
                 AllStores,
                 Specific
+            }
+
+            public class PermissionValueItem
+            {
+                public string Permission { get; set; }
+                public bool Value { get; set; }
             }
         }
 

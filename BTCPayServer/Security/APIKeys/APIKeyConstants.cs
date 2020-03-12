@@ -18,6 +18,7 @@ namespace BTCPayServer.Security.APIKeys
                 {Client.Permissions.StoreManagement, ("Manage your stores", "The app will be able to create, modify and delete all your stores.")},
                 {$"{nameof(Client.Permissions.StoreManagement)}:", ("Manage selected stores", "The app will be able to modify and delete selected stores.")},
                 {Client.Permissions.ServerManagement, ("Manage your server", "The app will have total control on your server")},
+                {Client.Permissions.ProfileManagement, ("Manage your profile", "The app will be able to view and modify your user profile.")},
             };
 
         }

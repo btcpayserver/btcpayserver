@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
@@ -33,16 +34,19 @@ namespace BTCPayServer.Security.APIKeys
             bool success = false;
             switch (requirement.Policy)
             {
+                case Policies.CanModifyProfile.Key:
+                    success = context.HasPermissions(Permissions.ProfileManagement);
+                    break;
                 case Policies.CanListStoreSettings.Key:
                     var selectiveStorePermissions =
-                        APIKeyConstants.Permissions.ExtractStorePermissionsIds(context.GetPermissions());
-                    success = context.HasPermissions(APIKeyConstants.Permissions.StoreManagement) ||
+                        Permissions.ExtractStorePermissionsIds(context.GetPermissions());
+                    success = context.HasPermissions(Permissions.StoreManagement) ||
                               selectiveStorePermissions.Any();
                     break;
                 case Policies.CanModifyStoreSettings.Key:
                     string storeId = _HttpContext.GetImplicitStoreId();
-                    if (!context.HasPermissions(APIKeyConstants.Permissions.StoreManagement) &&
-                        !context.HasPermissions(APIKeyConstants.Permissions.GetStorePermission(storeId)))
+                    if (!context.HasPermissions(Permissions.StoreManagement) &&
+                        !context.HasPermissions(Permissions.GetStorePermission(storeId)))
                         break;
 
                     if (storeId == null)
@@ -63,7 +67,7 @@ namespace BTCPayServer.Security.APIKeys
 
                     break;
                 case Policies.CanModifyServerSettings.Key:
-                    if (!context.HasPermissions(APIKeyConstants.Permissions.ServerManagement))
+                    if (!context.HasPermissions(Permissions.ServerManagement))
                         break;
                     // For this authorization, we stil check in database because it is super sensitive.
                     var user = await _userManager.GetUserAsync(context.User);

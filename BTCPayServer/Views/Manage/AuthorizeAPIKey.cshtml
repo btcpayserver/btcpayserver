@@ -1,3 +1,4 @@
+@using BTCPayServer.Client
 @using BTCPayServer.Controllers
 @using BTCPayServer.Security.APIKeys
 @model BTCPayServer.Controllers.ManageController.AuthorizeApiKeysViewModel
@@ -48,11 +49,20 @@
                             <p >There are no associated permissions to the API key being requested here. The application cannot do anything with your BTCPay account other than validating your account exists.</p>
                         </div>
                     }
-                    @if (Model.PermissionsFormatted.Contains(APIKeyConstants.Permissions.ServerManagement) && (Model.IsServerAdmin || Model.Strict))
+                    @if (Model.PermissionsFormatted.Contains(Permissions.ServerManagement) && (Model.IsServerAdmin || Model.Strict))
                     {
                         <div class="list-group-item form-group">
-                            <input asp-for="ServerManagementPermission" class="form-check-inline" readonly="@(Model.Strict || !Model.IsServerAdmin)"/>
-                            <label asp-for="ServerManagementPermission" class="h5">@GetTitle(APIKeyConstants.Permissions.ServerManagement)</label>
+                            @if (Model.Strict || !Model.IsServerAdmin)
+                            {
+                                <input type="hidden" asp-for="ServerManagementPermission"/>
+                                <input type="checkbox" class="form-check-inline" checked="@Model.ServerManagementPermission" disabled/>
+                            }
+                            else
+                            {
+                                <input type="checkbox" asp-for="ServerManagementPermission" class="form-check-inline"/>
+                            }
+
+                            <label asp-for="ServerManagementPermission" class="h5">@GetTitle(Permissions.ServerManagement)</label>
                             @if (!Model.IsServerAdmin)
                             {
                                 <span class="text-danger">
@@ -61,19 +71,44 @@
                             }
 
                             <span asp-validation-for="ServerManagementPermission" class="text-danger"></span>
-                            <p>@GetDescription(APIKeyConstants.Permissions.ServerManagement).</p>
+                            <p>@GetDescription(Permissions.ServerManagement).</p>
                         </div>
                     }
-
-                    @if (Model.PermissionsFormatted.Contains(APIKeyConstants.Permissions.StoreManagement))
+                    @for (int i = 0; i < Model.PermissionValues.Count; i++)
+                    {
+                        <div class="list-group-item form-group">
+                            <input type="hidden" asp-for="PermissionValues[i].Permission">
+                            @if (Model.Strict || !Model.IsServerAdmin)
+                            {
+                                <input type="hidden" asp-for="PermissionValues[i].Value"/>
+                                <input type="checkbox" class="form-check-inline" checked="@Model.PermissionValues[i].Value" disabled/>
+                            }
+                            else
+                            {
+                                <input type="checkbox" asp-for="PermissionValues[i].Value" class="form-check-inline"/>
+                            }
+                            <label asp-for="PermissionValues[i].Value" class="h5">@GetTitle(Model.PermissionValues[i].Permission)</label>
+                            <span asp-validation-for="PermissionValues[i].Value" class="text-danger"></span>
+                            <p>@GetDescription(Model.PermissionValues[i].Permission).</p>
+                        </div>
+                    }
+                    @if (Model.PermissionsFormatted.Contains(Permissions.StoreManagement))
                     {
                         @if (Model.StoreMode == ManageController.AddApiKeyViewModel.ApiKeyStoreMode.AllStores)
                         {
                             <div class="list-group-item form-group">
-                                <input type="checkbox" asp-for="StoreManagementPermission" class="form-check-inline" readonly="@Model.Strict"/>
-                                <label asp-for="StoreManagementPermission" class="h5">@GetTitle(APIKeyConstants.Permissions.StoreManagement)</label>
+                                @if (Model.Strict)
+                                {
+                                    <input type="hidden" asp-for="StoreManagementPermission"/>
+                                    <input type="checkbox" class="form-check-inline" checked="@Model.StoreManagementPermission" disabled/>
+                                }
+                                else
+                                {
+                                    <input type="checkbox" asp-for="StoreManagementPermission" class="form-check-inline"/>
+                                }
+                                <label asp-for="StoreManagementPermission" class="h5">@GetTitle(Permissions.StoreManagement)</label>
                                 <span asp-validation-for="StoreManagementPermission" class="text-danger"></span>
-                                <p class="mb-0">@GetDescription(APIKeyConstants.Permissions.StoreManagement).</p>
+                                <p class="mb-0">@GetDescription(Permissions.StoreManagement).</p>
                                 @if (Model.SelectiveStores)
                                 {
                                     <button type="submit" class="btn btn-link" name="command" value="change-store-mode">Give permission to specific stores instead</button>
@@ -84,8 +119,8 @@
                         {
                             <div class="list-group-item p-0 border-0 mb-2">
                                 <li class="list-group-item">
-                                    <h5 class="mb-1">@GetTitle(APIKeyConstants.Permissions.StoreManagement + ":")</h5>
-                                    <p class="mb-0">@GetDescription(APIKeyConstants.Permissions.StoreManagement + ":").</p>
+                                    <h5 class="mb-1">@GetTitle(Permissions.StoreManagement + ":")</h5>
+                                    <p class="mb-0">@GetDescription(Permissions.StoreManagement + ":").</p>
                                     <button type="submit" class="btn btn-link" name="command" value="change-store-mode">Give permission to all stores instead</button>
                                 </li>
                                 @if (!Model.Stores.Any())

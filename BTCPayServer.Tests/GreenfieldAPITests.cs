@@ -1,14 +1,11 @@
-using System;
+using System.Linq;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using BTCPayServer.Client;
 using BTCPayServer.Controllers;
-using BTCPayServer.Controllers.RestApi.ApiKeys;
-using BTCPayServer.Data;
-using BTCPayServer.Security.APIKeys;
 using BTCPayServer.Tests.Logging;
+using Microsoft.AspNet.SignalR.Client;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json.Linq;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -26,7 +23,7 @@ namespace BTCPayServer.Tests
             Logs.LogProvider = new XUnitLogProvider(helper);
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task ApiKeysControllerTests()
         {
@@ -36,29 +33,59 @@ namespace BTCPayServer.Tests
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 await user.MakeAdmin();
-                string apiKey = await GenerateAPIKey(tester, user);
-                
+                string apiKey = await GenerateAPIKey(tester, user, Permissions.ServerManagement, Permissions.StoreManagement);
+                var client = new BTCPayServerClient(tester.PayTester.ServerUri, apiKey);
                 //Get current api key 
-                var request = new HttpRequestMessage(HttpMethod.Get,  "api/v1/api-keys/current");
-                request.Headers.Authorization = new AuthenticationHeaderValue("token", apiKey);
-                var result = await tester.PayTester.HttpClient.SendAsync(request);
-                Assert.True(result.IsSuccessStatusCode);
-                var apiKeyData = JObject.Parse(await result.Content.ReadAsStringAsync()).ToObject<ApiKeyData>();
+                var apiKeyData = await client.GetCurrentAPIKeyInfo();
                 Assert.NotNull(apiKeyData);
                 Assert.Equal(apiKey, apiKeyData.ApiKey);
                 Assert.Equal(user.UserId, apiKeyData.UserId);
                 Assert.Equal(2, apiKeyData.Permissions.Length);
+                
+                //revoke current api key
+                await client.RevokeCurrentAPIKeyInfo();
+                await Assert.ThrowsAsync<HttpRequestException>(async () =>
+                {
+                    await client.GetCurrentAPIKeyInfo();
+                });
+            }
+        }
+        
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task UsersControllerTests()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                await tester.StartAsync();
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                await user.MakeAdmin();
+                string apiKeyProfile = await GenerateAPIKey(tester, user, Permissions.ProfileManagement);
+                string apiKeyInsufficient = await GenerateAPIKey(tester, user, Permissions.StoreManagement);
+                var clientProfile = new BTCPayServerClient(tester.PayTester.ServerUri, apiKeyProfile);
+                var clientInsufficient= new BTCPayServerClient(tester.PayTester.ServerUri, apiKeyInsufficient);
+                
+                var apiKeyProfileUserData = await clientProfile.GetCurrentUser();
+                Assert.NotNull(apiKeyProfileUserData);
+                Assert.Equal(apiKeyProfileUserData.Id, user.UserId);
+                Assert.Equal(apiKeyProfileUserData.Email, user.RegisterDetails.Email);
+
+                await Assert.ThrowsAsync<HttpRequestException>(async () => await clientInsufficient.GetCurrentUser());
             }
         }
 
-        private static async Task<string> GenerateAPIKey(ServerTester tester, TestAccount user)
+        private static async Task<string> GenerateAPIKey(ServerTester tester, TestAccount user, params string[] permissions)
         {
             var manageController = tester.PayTester.GetController<ManageController>(user.UserId, user.StoreId, user.IsAdmin);
             var x = Assert.IsType<RedirectToActionResult>(await manageController.AddApiKey(
                 new ManageController.AddApiKeyViewModel()
                 {
-                    ServerManagementPermission = true,
-                    StoreManagementPermission = true,
+                    PermissionValues = permissions.Select(s => new ManageController.AddApiKeyViewModel.PermissionValueItem()
+                    {
+                        Permission = s,
+                        Value = true
+                    }).ToList(),
                     StoreMode = ManageController.AddApiKeyViewModel.ApiKeyStoreMode.AllStores
                 }));
             var statusMessage = manageController.TempData.GetStatusMessageModel();

@@ -292,7 +292,6 @@ namespace BTCPayServer.Hosting
         public static IApplicationBuilder UsePayServer(this IApplicationBuilder app)
         {
             app.UseMiddleware<BTCPayMiddleware>();
-            app.UseBTCPayOpenApi();
             return app; 
         }
         public static IApplicationBuilder UseHeadersOverride(this IApplicationBuilder app)

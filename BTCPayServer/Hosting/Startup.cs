@@ -19,6 +19,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using BTCPayServer.Security;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using System.Net;
+using BTCPayServer.Hosting.OpenApi;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Storage;
@@ -183,6 +184,7 @@ namespace BTCPayServer.Hosting
             app.UseProviderStorage(options);
             app.UseAuthentication();
             app.UseAuthorization();
+            app.UseBTCPayOpenApi();
             app.UseSession();
 
             app.UseWebSockets();

@@ -1,15 +1,20 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using BTCPayServer.Configuration;
+using BTCPayServer.Data;
 using BTCPayServer.Payments;
 using BTCPayServer.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using NJsonSchema;
 using NJsonSchema.Generation.TypeMappers;
 using NSwag;
 using NSwag.Generation.Processors.Security;
+using Org.BouncyCastle.Asn1.Ocsp;
 
 namespace BTCPayServer.Hosting.OpenApi
 {
@@ -17,7 +22,6 @@ namespace BTCPayServer.Hosting.OpenApi
     {
         public static IServiceCollection AddBTCPayOpenApi(this IServiceCollection serviceCollection)
         {
-            
             return serviceCollection.AddOpenApiDocument(config =>
             {
                 config.PostProcess = document =>
@@ -67,8 +71,23 @@ namespace BTCPayServer.Hosting.OpenApi
 
         public static IApplicationBuilder UseBTCPayOpenApi(this IApplicationBuilder builder)
         {
+            var roothPath = builder.ApplicationServices.GetService<BTCPayServerOptions>().RootPath;
+            var matched = new PathString($"{roothPath}docs");
             return builder.UseOpenApi()
-                .UseReDoc(settings => settings.Path = "/docs");
+                .Use(async (context, next) =>
+                {
+                    if (context.Request.Path.StartsWithSegments(matched, StringComparison.InvariantCultureIgnoreCase) && !context.User.Claims.Any())
+                    {
+                        context.Response.Redirect(  $"{context.Request.GetRelativePath(roothPath)}account/login?returnUrl={context.Request.Path}");
+                        return;
+                    }
+
+                    await next.Invoke();
+                })
+                .UseReDoc(settings =>
+                {
+                    settings.Path = "/docs";
+                });
         }
 
 

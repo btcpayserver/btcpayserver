@@ -163,13 +163,13 @@ namespace BTCPayServer.Controllers
             {
                 TempData.Remove("bpu");
                 HttpClient httpClient;
-                if (endpoint.IsOnion() && _socketFactory.SocksClient!= null)
+                if (endpoint.IsOnion() )
                 {
-                    if ( _socketFactory.SocksClient == null)
+                    httpClient = await _socketFactory.SocksClient;
+                    if (httpClient == null)
                     {
                         return null;
                     }
-                    httpClient = _socketFactory.SocksClient;
                 }
                 else
                 {

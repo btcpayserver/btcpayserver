@@ -1,4 +1,6 @@
-﻿using NBitcoin;
+﻿using System;
+using System.Linq;
+using NBitcoin;
 using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
@@ -15,12 +17,14 @@ namespace BTCPayServer.Services
     public class SocketFactory
     {
         private readonly BTCPayServerOptions _options;
-        public readonly HttpClient SocksClient;
+        public readonly Task<HttpClient> SocksClient;
+
         public SocketFactory(BTCPayServerOptions options)
         {
             _options = options;
             SocksClient = CreateHttpClientUsingSocks();
         }
+
         public async Task<Socket> ConnectAsync(EndPoint endPoint, CancellationToken cancellationToken)
         {
             DefaultEndpointConnector connector = new DefaultEndpointConnector();
@@ -32,6 +36,7 @@ namespace BTCPayServer.Services
                     SocksEndpoint = _options.SocksEndpoint
                 });
             }
+
             var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
             try
             {
@@ -41,6 +46,7 @@ namespace BTCPayServer.Services
             {
                 SafeCloseSocket(socket);
             }
+
             return socket;
         }
 
@@ -53,6 +59,7 @@ namespace BTCPayServer.Services
             catch
             {
             }
+
             try
             {
                 socket.Dispose();
@@ -62,19 +69,42 @@ namespace BTCPayServer.Services
             }
         }
 
-        private HttpClient CreateHttpClientUsingSocks()
+        private Task<HttpClient> CreateHttpClientUsingSocks()
         {
-            if (_options.SocksEndpoint == null)
-                return null;
-            return new HttpClient(new HttpClientHandler
+            return Task.Run(() =>
             {
-                Proxy = new SocksWebProxy(new ProxyConfig()
+                var proxyConfig = new ProxyConfig() {Version = ProxyConfig.SocksVersion.Five};
+                switch (_options.SocksEndpoint)
                 {
-                    Version = ProxyConfig.SocksVersion.Five,
-                    SocksAddress = _options.SocksEndpoint.AsOnionCatIPEndpoint().Address,
-                    SocksPort = _options.SocksEndpoint.AsOnionCatIPEndpoint().Port,
-                }),
-                UseProxy = true
+                    case null:
+                        return null;
+                    case IPEndPoint ipEndPoint:
+                        proxyConfig.SocksPort = ipEndPoint.Port;
+                        proxyConfig.SocksAddress = ipEndPoint.Address;
+                        break;
+                    case DnsEndPoint dnsEndPoint:
+                        try
+                        {
+                            proxyConfig.SocksPort = dnsEndPoint.Port;
+                            var ip = Dns.GetHostEntry(dnsEndPoint.Host).AddressList
+                                .SingleOrDefault(address => address.AddressFamily == AddressFamily.InterNetwork);
+                            if (ip == null)
+                            {
+                                return null;
+                            }
+
+                            proxyConfig.SocksAddress = ip;
+                            break;
+                        }
+                        catch (Exception e)
+                        {
+                            return null;
+                        }
+                    default:
+                        return null;
+                }
+
+                return new HttpClient(new HttpClientHandler {Proxy = new SocksWebProxy(proxyConfig), UseProxy = true});
             });
         }
     }

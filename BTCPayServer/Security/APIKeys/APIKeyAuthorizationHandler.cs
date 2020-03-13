@@ -29,6 +29,13 @@ namespace BTCPayServer.Security.APIKeys
         protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context,
             PolicyRequirement requirement)
         {
+            //if it is a create user request, and the auth is not specified, and there are no admins in the system: authorize
+            if (context.User.Identity.AuthenticationType == null && requirement.Policy == Policies.CanCreateUser.Key &&
+                !(await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin)).Any())
+            {
+                context.Succeed(requirement);
+            }
+
             if (context.User.Identity.AuthenticationType != APIKeyConstants.AuthenticationType)
                 return;
 
@@ -67,6 +74,7 @@ namespace BTCPayServer.Security.APIKeys
                     }
 
                     break;
+                case Policies.CanCreateUser.Key:
                 case Policies.CanModifyServerSettings.Key:
                     if (!context.HasPermissions(Permissions.ServerManagement))
                         break;

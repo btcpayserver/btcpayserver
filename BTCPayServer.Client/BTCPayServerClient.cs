@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -64,7 +65,7 @@ namespace BTCPayServer.Client
             var request = CreateHttpRequest(path, queryPayload, method);
             if (typeof(T).IsPrimitive || !EqualityComparer<T>.Default.Equals(bodyPayload, default(T)))
             {
-                request.Content = new StringContent(JsonSerializer.Serialize(bodyPayload, _serializerOptions));
+                request.Content = new StringContent(JsonSerializer.Serialize(bodyPayload, _serializerOptions), Encoding.UTF8, "application/json");
             }
 
             return request;

@@ -1,13 +1,17 @@
+using System;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
+using BTCPayServer.Controllers.RestApi.Users;
 using BTCPayServer.Tests.Logging;
 using Microsoft.AspNet.SignalR.Client;
 using Microsoft.AspNetCore.Mvc;
 using Xunit;
 using Xunit.Abstractions;
+using CreateApplicationUserRequest = BTCPayServer.Client.Models.CreateApplicationUserRequest;
 
 namespace BTCPayServer.Tests
 {
@@ -72,6 +76,36 @@ namespace BTCPayServer.Tests
 
                 await Assert.ThrowsAsync<HttpRequestException>(async () => await clientInsufficient.GetCurrentUser());
                 await clientServer.GetCurrentUser();
+                
+                
+                await Assert.ThrowsAsync<HttpRequestException>(async () => await clientInsufficient.CreateUser(new CreateApplicationUserRequest()
+                {
+                    Email = $"{Guid.NewGuid()}@g.com",
+                    Password = Guid.NewGuid().ToString()
+                }) );
+
+                var newUser = await clientServer.CreateUser(new CreateApplicationUserRequest()
+                {
+                    Email = $"{Guid.NewGuid()}@g.com", Password = Guid.NewGuid().ToString()
+                });
+                Assert.NotNull(newUser);
+                
+                await Assert.ThrowsAsync<HttpRequestException>(async () => await clientServer.CreateUser(new CreateApplicationUserRequest()
+                {
+                    Email = $"{Guid.NewGuid()}",
+                    Password = Guid.NewGuid().ToString()
+                }) );
+                
+                await Assert.ThrowsAsync<HttpRequestException>(async () => await clientServer.CreateUser(new CreateApplicationUserRequest()
+                {
+                    Email = $"{Guid.NewGuid()}@g.com",
+                }) );
+                
+                await Assert.ThrowsAsync<HttpRequestException>(async () => await clientServer.CreateUser(new CreateApplicationUserRequest()
+                {
+                    Password = Guid.NewGuid().ToString()
+                }) );
+
             }
         }
     }

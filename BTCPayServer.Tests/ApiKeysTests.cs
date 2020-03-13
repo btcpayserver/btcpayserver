@@ -214,8 +214,9 @@ namespace BTCPayServer.Tests
                 Assert.DoesNotContain(resultStores,
                     data => data.Id.Equals(secondUser.StoreId, StringComparison.InvariantCultureIgnoreCase));
             }
-            else
+            else if(!permissions.Contains(Permissions.ServerManagement))
             {
+                
                 await Assert.ThrowsAnyAsync<HttpRequestException>(async () =>
                 {
                     await TestApiAgainstAccessToken<bool>(accessToken,
@@ -224,11 +225,14 @@ namespace BTCPayServer.Tests
                 });
             }
 
-            await Assert.ThrowsAnyAsync<HttpRequestException>(async () =>
+            if (!permissions.Contains(Permissions.ServerManagement))
             {
-                await TestApiAgainstAccessToken<bool>(accessToken, $"{TestApiPath}/me/stores/{secondUser.StoreId}/can-edit",
-                    tester.PayTester.HttpClient);
-            });
+                await Assert.ThrowsAnyAsync<HttpRequestException>(async () =>
+                {
+                    await TestApiAgainstAccessToken<bool>(accessToken, $"{TestApiPath}/me/stores/{secondUser.StoreId}/can-edit",
+                        tester.PayTester.HttpClient);
+                });
+            }
 
             if (permissions.Contains(Permissions.ServerManagement))
             {

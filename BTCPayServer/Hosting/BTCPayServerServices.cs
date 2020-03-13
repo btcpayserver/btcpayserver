@@ -265,7 +265,7 @@ namespace BTCPayServer.Hosting
                 {
                     rateLimits.SetZone($"zone={ZoneLimits.Login} rate=5r/min burst=3 nodelay");
                     rateLimits.SetZone($"zone={ZoneLimits.Register} rate=2r/min burst=2 nodelay");
-                    rateLimits.SetZone($"zone={ZoneLimits.PayJoin} rate=5r/min burst= nodelay");
+                    rateLimits.SetZone($"zone={ZoneLimits.PayJoin} rate=5r/min burst=3 nodelay");
                 }
                 return rateLimits;
             });

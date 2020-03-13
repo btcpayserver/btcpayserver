@@ -220,7 +220,7 @@ namespace BTCPayServer.Controllers
                             {
                                 Severity = StatusMessageModel.StatusSeverity.Info,
                                 AllowDismiss = false,
-                                Message = "This transaction has been coordinated between the receiver and you to create a <a href='https://en.bitcoin.it/wiki/PayJoin' target='_blank'>payjoin transaction</a> by adding inputs from the receiver. The amount being sent may appear higher but is in fact the same"
+                                Html = "This transaction has been coordinated between the receiver and you to create a <a href='https://en.bitcoin.it/wiki/PayJoin' target='_blank'>payjoin transaction</a> by adding inputs from the receiver. The amount being sent may appear higher but is in fact the same"
                             });
                             return newPSBT;
                     }

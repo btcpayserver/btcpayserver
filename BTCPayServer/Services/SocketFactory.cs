@@ -1,25 +1,66 @@
-﻿using System;
-using NBitcoin;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Concurrent;
 using System.Net;
+using System.Net.Http;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Configuration;
+using MihaZupan;
 using NBitcoin.Protocol.Connectors;
 using NBitcoin.Protocol;
 
 namespace BTCPayServer.Services
 {
+    public class Socks5HttpClientFactory : IHttpClientFactory
+    {
+        private readonly BTCPayServerOptions _options;
+
+        public Socks5HttpClientFactory(BTCPayServerOptions options)
+        {
+            _options = options;
+        }
+
+        private static (string Host, int Port)? ToParts(EndPoint endpoint)
+        {
+            switch (endpoint)
+            {
+                case DnsEndPoint dns:
+                    return (dns.Host, dns.Port);
+                case IPEndPoint ipEndPoint:
+                    return (ipEndPoint.Address.ToString(), ipEndPoint.Port);
+            }
+
+            return null;
+        }
+
+        private ConcurrentDictionary<string, HttpClient> cachedClients = new ConcurrentDictionary<string, HttpClient>();
+        public HttpClient CreateClient(string name)
+        {
+            return cachedClients.GetOrAdd(name, s =>
+            {
+                var parts = ToParts(_options.SocksEndpoint);
+                if (!parts.HasValue)
+                {
+                    return null;
+                }
+
+                var proxy = new HttpToSocks5Proxy(parts.Value.Host, parts.Value.Port);
+                return new HttpClient(
+                    new HttpClientHandler {Proxy = proxy, },
+                    true);
+            });
+        }
+    }
+
     public class SocketFactory
     {
         private readonly BTCPayServerOptions _options;
+
         public SocketFactory(BTCPayServerOptions options)
         {
             _options = options;
         }
+
         public async Task<Socket> ConnectAsync(EndPoint endPoint, CancellationToken cancellationToken)
         {
             DefaultEndpointConnector connector = new DefaultEndpointConnector();
@@ -31,6 +72,7 @@ namespace BTCPayServer.Services
                     SocksEndpoint = _options.SocksEndpoint
                 });
             }
+
             var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
             try
             {
@@ -40,6 +82,7 @@ namespace BTCPayServer.Services
             {
                 SafeCloseSocket(socket);
             }
+
             return socket;
         }
 
@@ -52,6 +95,7 @@ namespace BTCPayServer.Services
             catch
             {
             }
+
             try
             {
                 socket.Dispose();

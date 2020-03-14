@@ -35,6 +35,7 @@
     <PackageReference Include="BundlerMinifier.Core" Version="3.2.435" />
     <PackageReference Include="BundlerMinifier.TagHelpers" Version="3.2.435" />
     <PackageReference Include="HtmlSanitizer" Version="4.0.217" />
+    <PackageReference Include="HttpToSocks5Proxy" Version="1.4.0" />
     <PackageReference Include="LedgerWallet" Version="2.0.0.5" />
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.2" />
     <PackageReference Include="Microsoft.NetCore.Analyzers" Version="2.9.8">
@@ -51,7 +52,6 @@
     <PackageReference Include="Serilog" Version="2.9.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="3.2.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="4.1.0" />
-    <PackageReference Include="SocksWebProxy" Version="1.0.5" />
     <PackageReference Include="SSH.NET" Version="2016.1.0" />
     <PackageReference Include="Text.Analyzers" Version="2.6.4">
       <PrivateAssets>all</PrivateAssets>

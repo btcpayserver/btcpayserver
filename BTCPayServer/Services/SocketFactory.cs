@@ -1,30 +1,64 @@
-﻿using System;
-using System.Linq;
-using NBitcoin;
+﻿using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Configuration;
-using com.LandonKey.SocksWebProxy;
-using com.LandonKey.SocksWebProxy.Proxy;
-using Microsoft.Extensions.Logging;
-using NBitcoin.Logging;
+using MihaZupan;
 using NBitcoin.Protocol.Connectors;
 using NBitcoin.Protocol;
 
 namespace BTCPayServer.Services
 {
+    public class Socks5HttpClientFactory : IHttpClientFactory
+    {
+        private readonly BTCPayServerOptions _options;
+
+        public Socks5HttpClientFactory(BTCPayServerOptions options)
+        {
+            _options = options;
+        }
+
+        private static (string Host, int Port)? ToParts(EndPoint endpoint)
+        {
+            switch (endpoint)
+            {
+                case DnsEndPoint dns:
+                    return (dns.Host, dns.Port);
+                case IPEndPoint ipEndPoint:
+                    return (ipEndPoint.Address.ToString(), ipEndPoint.Port);
+            }
+
+            return null;
+        }
+
+        private ConcurrentDictionary<string, HttpClient> cachedClients = new ConcurrentDictionary<string, HttpClient>();
+        public HttpClient CreateClient(string name)
+        {
+            return cachedClients.GetOrAdd(name, s =>
+            {
+                var parts = ToParts(_options.SocksEndpoint);
+                if (!parts.HasValue)
+                {
+                    return null;
+                }
+
+                var proxy = new HttpToSocks5Proxy(parts.Value.Host, parts.Value.Port);
+                return new HttpClient(
+                    new HttpClientHandler {Proxy = proxy, },
+                    true);
+            });
+        }
+    }
+
     public class SocketFactory
     {
         private readonly BTCPayServerOptions _options;
-        public readonly Task<HttpClient> SocksClient;
 
         public SocketFactory(BTCPayServerOptions options)
         {
             _options = options;
-            SocksClient = CreateHttpClientUsingSocks();
         }
 
         public async Task<Socket> ConnectAsync(EndPoint endPoint, CancellationToken cancellationToken)
@@ -69,52 +103,6 @@ namespace BTCPayServer.Services
             catch
             {
             }
-        }
-
-        private Task<HttpClient> CreateHttpClientUsingSocks()
-        {
-            return Task.Run(() =>
-            {
-                try
-                {
-                    var proxyConfig = new ProxyConfig() {Version = ProxyConfig.SocksVersion.Five};
-                    switch (_options.SocksEndpoint)
-                    {
-                        case null:
-                            return null;
-                        case IPEndPoint ipEndPoint:
-                            proxyConfig.SocksPort = ipEndPoint.Port;
-                            proxyConfig.SocksAddress = ipEndPoint.Address;
-                            break;
-                        case DnsEndPoint dnsEndPoint:
-
-                            proxyConfig.SocksPort = dnsEndPoint.Port;
-                            var ip = Dns.GetHostEntry(dnsEndPoint.Host).AddressList
-                                .SingleOrDefault(address => address.AddressFamily == AddressFamily.InterNetwork);
-                            if (ip == null)
-                            {
-                                Logs.Utils.LogWarning( $"Could not find ip for {dnsEndPoint.Host}");
-                                return null;
-                            }
-
-                            proxyConfig.SocksAddress = ip;
-                            break;
-
-                        default:
-                            return null;
-                    }
-                    Logs.Utils.LogWarning( $"Created socks proxied http client!");
-                    return new HttpClient(new HttpClientHandler
-                    {
-                        Proxy = new SocksWebProxy(proxyConfig), UseProxy = true
-                    });
-                }
-                catch (Exception e)
-                {
-                    Logs.Utils.LogError(e, "Could not create Tor client");
-                    return null;
-                }
-            });
         }
     }
 }

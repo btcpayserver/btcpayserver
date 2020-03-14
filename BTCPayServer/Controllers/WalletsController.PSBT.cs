@@ -156,26 +156,24 @@ namespace BTCPayServer.Controllers
             return result.PSBT;
         }
 
+       
+
         private async Task<PSBT> TryGetBPProposedTX(PSBT psbt, DerivationSchemeSettings derivationSchemeSettings, BTCPayNetwork btcPayNetwork)
         {
             
             if (TempData.TryGetValue( "bpu", out var bpu) && !string.IsNullOrEmpty(bpu?.ToString()) && Uri.TryCreate(bpu.ToString(), UriKind.Absolute, out var endpoint))
             {
                 TempData.Remove("bpu");
-                HttpClient httpClient;
-                if (endpoint.IsOnion() )
+                var httpClient = _socks5HttpClientFactory.CreateClient("payjoin");
+                if (endpoint.IsOnion() && httpClient == null)
                 {
-                    httpClient = await _socketFactory.SocksClient;
-                    if (httpClient == null)
-                    {
-                        return null;
-                    }
+                    return null;
                 }
                 else
                 {
-                    httpClient = _httpClientFactory.CreateClient("bpu");
+                    httpClient = _httpClientFactory.CreateClient("payjoin");
                 }
-                
+
                 var cloned = psbt.Clone();
                     
                 if (!cloned.IsAllFinalized() && !cloned.TryFinalize(out var errors))

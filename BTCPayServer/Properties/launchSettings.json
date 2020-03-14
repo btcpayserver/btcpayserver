@@ -52,7 +52,7 @@
                 "BTCPAY_SSHPASSWORD": "opD3i2282D",
                 "BTCPAY_DEBUGLOG": "debug.log",
                 "BTCPAY_TORRCFILE": "../BTCPayServer.Tests/TestData/Tor/torrc",
-                "BTCPAY_SOCKSENDPOINT": "tor:9050"
+                "BTCPAY_SOCKSENDPOINT": "localhost:9050"
             },
             "applicationUrl": "https://localhost:14142/"
         }

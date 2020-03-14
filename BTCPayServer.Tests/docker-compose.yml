@@ -51,6 +51,7 @@ services:
       - customer_lnd
       - merchant_lnd
       - sshd
+      - tor
 
   sshd:
     build:
@@ -318,6 +319,19 @@ services:
       - "bitcoin_datadir:/deps/.bitcoin"
     links:
       - bitcoind
+  tor:
+    restart: unless-stopped
+    image: btcpayserver/tor:0.4.1.5
+    container_name: tor
+    environment:
+        TOR_PASSWORD: btcpayserver
+    ports:
+        - "9050" # SOCKS
+        - "9051" # Tor Control
+    volumes:
+        - "tor_datadir:/home/tor/.tor"
+        - "torrcdir:/usr/local/etc/tor"
+        - "tor_servicesdir:/var/lib/tor/hidden_services"
 
 volumes:
     sshd_datadir:
@@ -328,3 +342,6 @@ volumes:
     lightning_charge_datadir:
     customer_lnd_datadir:
     merchant_lnd_datadir:
+    tor_datadir:
+    torrcdir:
+    tor_servicesdir:

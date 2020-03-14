@@ -143,6 +143,7 @@ namespace BTCPayServer.Tests
                 config.AppendLine("allow-admin-registration=1");
            
             config.AppendLine($"torrcfile={TestUtils.GetTestDataFullPath("Tor/torrc")}");
+            config.AppendLine($"socksendpoint=localhost:9050");
             config.AppendLine($"debuglog=debug.log");
 
 

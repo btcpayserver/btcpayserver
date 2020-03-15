@@ -18,6 +18,7 @@ using BTCPayServer.Rating;
 using BTCPayServer.Security;
 using BTCPayServer.Security.Bitpay;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
@@ -60,7 +61,8 @@ namespace BTCPayServer.Controllers
             SettingsRepository settingsRepository,
             IAuthorizationService authorizationService,
             EventAggregator eventAggregator,
-            CssThemeManager cssThemeManager)
+            CssThemeManager cssThemeManager,
+            AppService appService)
         {
             _RateFactory = rateFactory;
             _Repo = repo;
@@ -76,6 +78,7 @@ namespace BTCPayServer.Controllers
             _settingsRepository = settingsRepository;
             _authorizationService = authorizationService;
             _CssThemeManager = cssThemeManager;
+            _appService = appService;
             _EventAggregator = eventAggregator;
             _NetworkProvider = networkProvider;
             _ExplorerProvider = explorerProvider;
@@ -103,6 +106,7 @@ namespace BTCPayServer.Controllers
         private readonly SettingsRepository _settingsRepository;
         private readonly IAuthorizationService _authorizationService;
         private readonly CssThemeManager _CssThemeManager;
+        private readonly AppService _appService;
         private readonly EventAggregator _EventAggregator;
 
         [TempData]
@@ -889,7 +893,7 @@ namespace BTCPayServer.Controllers
         const string DEFAULT_CURRENCY = "USD";
 
         [Route("{storeId}/paybutton")]
-        public IActionResult PayButton()
+        public async Task<IActionResult> PayButton()
         {
             var store = CurrentStore;
 
@@ -899,6 +903,7 @@ namespace BTCPayServer.Controllers
                 return View("PayButtonEnable", null);
             }
 
+            var apps = await _appService.GetAllApps(_UserManager.GetUserId(User), false, store.Id);
             var appUrl = HttpContext.Request.GetAbsoluteRoot().WithTrailingSlash();
             var model = new PayButtonViewModel
             {
@@ -911,7 +916,8 @@ namespace BTCPayServer.Controllers
                 ButtonType = 0,
                 Min = 1,
                 Max = 20,
-                Step = 1
+                Step = 1,
+                Apps = apps
             };
             return View(model);
         }

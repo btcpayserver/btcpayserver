@@ -222,12 +222,14 @@ namespace BTCPayServer.Services.Apps
             }
         }
 
-        public async Task<ListAppsViewModel.ListAppViewModel[]> GetAllApps(string userId, bool allowNoUser = false)
+        public async Task<ListAppsViewModel.ListAppViewModel[]> GetAllApps(string userId, bool allowNoUser = false, string storeId = null)
         {
             using (var ctx = _ContextFactory.CreateContext())
             {
                 return await ctx.UserStore
-                    .Where(us => (allowNoUser && string.IsNullOrEmpty(userId)) || us.ApplicationUserId == userId)
+                    .Where(us =>
+                        ((allowNoUser && string.IsNullOrEmpty(userId)) || us.ApplicationUserId == userId) &&
+                        (storeId == null || us.StoreDataId == storeId))
                     .Join(ctx.Apps, us => us.StoreDataId, app => app.StoreDataId,
                         (us, app) =>
                             new ListAppsViewModel.ListAppViewModel()

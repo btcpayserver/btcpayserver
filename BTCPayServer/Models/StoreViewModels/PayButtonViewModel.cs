@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using BTCPayServer.ModelBinders;
+using BTCPayServer.Models.AppViewModels;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Models.StoreViewModels
@@ -43,5 +44,8 @@ namespace BTCPayServer.Models.StoreViewModels
         public string PayButtonText { get; set; }
         public bool UseModal { get; set; }
         public bool JsonResponse { get; set; }
+        public ListAppsViewModel.ListAppViewModel[] Apps { get; set; }
+        public string AppIdEndpoint { get; set; } = "";
+        public string AppChoiceKey { get; set; } = "";
     }
 }

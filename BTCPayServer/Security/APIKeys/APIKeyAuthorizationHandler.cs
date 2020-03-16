@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
@@ -69,20 +70,32 @@ namespace BTCPayServer.Security.APIKeys
                 case Policies.CanModifyServerSettings.Key:
                     if (!context.HasPermissions(Permissions.ServerManagement))
                         break;
-                    // For this authorization, we stil check in database because it is super sensitive.
-                    var user = await _userManager.GetUserAsync(context.User);
-                    if (user == null)
-                        break;
-                    if (!await _userManager.IsInRoleAsync(user, Roles.ServerAdmin))
-                        break;
-                    success = true;
+                    // For this authorization, we still check in database because it is super sensitive.
+                    success = await IsUserAdmin(context.User);
                     break;
+            }
+
+            //if you do not have the specific permissions, BUT you have server management, we enable god mode 
+            if (!success && context.HasPermissions(Permissions.ServerManagement) &&
+                requirement.Policy != Policies.CanModifyServerSettings.Key)
+            {
+                success = await IsUserAdmin(context.User);
             }
 
             if (success)
             {
                 context.Succeed(requirement);
             }
+        }
+
+        private async Task<bool> IsUserAdmin(ClaimsPrincipal contextUser)
+        {
+            var user = await _userManager.GetUserAsync(contextUser);
+            if (user == null)
+                return false;
+            if (!await _userManager.IsInRoleAsync(user, Roles.ServerAdmin))
+                return false;
+            return true;
         }
     }
 }

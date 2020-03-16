@@ -62,8 +62,10 @@ namespace BTCPayServer.Tests
                 user.GrantAccess();
                 await user.MakeAdmin();
                 string apiKeyProfile = await GenerateAPIKey(tester, user, Permissions.ProfileManagement);
+                string apiKeyServer = await GenerateAPIKey(tester, user, Permissions.ServerManagement);
                 string apiKeyInsufficient = await GenerateAPIKey(tester, user, Permissions.StoreManagement);
                 var clientProfile = new BTCPayServerClient(tester.PayTester.ServerUri, apiKeyProfile);
+                var clientServer = new BTCPayServerClient(tester.PayTester.ServerUri, apiKeyServer);
                 var clientInsufficient= new BTCPayServerClient(tester.PayTester.ServerUri, apiKeyInsufficient);
                 
                 var apiKeyProfileUserData = await clientProfile.GetCurrentUser();
@@ -72,6 +74,7 @@ namespace BTCPayServer.Tests
                 Assert.Equal(apiKeyProfileUserData.Email, user.RegisterDetails.Email);
 
                 await Assert.ThrowsAsync<HttpRequestException>(async () => await clientInsufficient.GetCurrentUser());
+                await clientServer.GetCurrentUser();
             }
         }
 

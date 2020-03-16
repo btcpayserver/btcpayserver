@@ -214,8 +214,9 @@ namespace BTCPayServer.Tests
                 Assert.DoesNotContain(resultStores,
                     data => data.Id.Equals(secondUser.StoreId, StringComparison.InvariantCultureIgnoreCase));
             }
-            else
+            else if(!permissions.Contains(Permissions.ServerManagement))
             {
+                
                 await Assert.ThrowsAnyAsync<HttpRequestException>(async () =>
                 {
                     await TestApiAgainstAccessToken<bool>(accessToken,
@@ -223,18 +224,41 @@ namespace BTCPayServer.Tests
                         tester.PayTester.HttpClient);
                 });
             }
+            else
+            {
+                await TestApiAgainstAccessToken<bool>(accessToken,
+                    $"{TestApiPath}/me/stores/{testAccount.StoreId}/can-edit",
+                    tester.PayTester.HttpClient);
+            }
 
-            await Assert.ThrowsAnyAsync<HttpRequestException>(async () =>
+            if (!permissions.Contains(Permissions.ServerManagement))
+            {
+                await Assert.ThrowsAnyAsync<HttpRequestException>(async () =>
+                {
+                    await TestApiAgainstAccessToken<bool>(accessToken, $"{TestApiPath}/me/stores/{secondUser.StoreId}/can-edit",
+                        tester.PayTester.HttpClient);
+                });
+            }
+            else
             {
                 await TestApiAgainstAccessToken<bool>(accessToken, $"{TestApiPath}/me/stores/{secondUser.StoreId}/can-edit",
                     tester.PayTester.HttpClient);
-            });
+            }
 
             if (permissions.Contains(Permissions.ServerManagement))
             {
                 Assert.True(await TestApiAgainstAccessToken<bool>(accessToken,
                     $"{TestApiPath}/me/is-admin",
                     tester.PayTester.HttpClient));
+            }
+            else
+            {
+                await Assert.ThrowsAnyAsync<HttpRequestException>(async () =>
+                {
+                    await TestApiAgainstAccessToken<bool>(accessToken,
+                        $"{TestApiPath}/me/is-admin",
+                        tester.PayTester.HttpClient);
+                });
             }
         }
 

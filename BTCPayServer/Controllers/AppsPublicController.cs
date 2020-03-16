@@ -237,6 +237,10 @@ namespace BTCPayServer.Controllers
         [EnableCors(CorsPolicies.All)]
         public async Task<IActionResult> ContributeToCrowdfund(string appId, ContributeToCrowdfund request, CancellationToken cancellationToken)
         {
+            if (request.Amount <= 0)
+            {
+                return NotFound("Please provide an amount greater than 0");
+            }
             var app = await _AppService.GetApp(appId, AppType.Crowdfund, true);
 
             if (app == null)

@@ -20,6 +20,7 @@ using BTCPayServer.Lightning.CLightning;
 using BTCPayServer.Data;
 using Microsoft.AspNetCore.Identity;
 using NBXplorer.Models;
+using BTCPayServer.Client;
 
 namespace BTCPayServer.Tests
 {
@@ -43,6 +44,26 @@ namespace BTCPayServer.Tests
             var u = await userManager.FindByIdAsync(UserId);
             await userManager.AddToRoleAsync(u, Roles.ServerAdmin);
             IsAdmin = true;
+        }
+
+        public async Task<BTCPayServerClient> CreateClient(params string[] permissions)
+        {
+            var manageController = parent.PayTester.GetController<ManageController>(UserId, StoreId, IsAdmin);
+            var x = Assert.IsType<RedirectToActionResult>(await manageController.AddApiKey(
+                new ManageController.AddApiKeyViewModel()
+                {
+                    PermissionValues = permissions.Select(s => new ManageController.AddApiKeyViewModel.PermissionValueItem()
+                    {
+                        Permission = s,
+                        Value = true
+                    }).ToList(),
+                    StoreMode = ManageController.AddApiKeyViewModel.ApiKeyStoreMode.AllStores
+                }));
+            var statusMessage = manageController.TempData.GetStatusMessageModel();
+            Assert.NotNull(statusMessage);
+            var apiKey = statusMessage.Html.Substring(statusMessage.Html.IndexOf("<code>") + 6);
+            apiKey = apiKey.Substring(0, apiKey.IndexOf("</code>"));
+            return new BTCPayServerClient(parent.PayTester.ServerUri, apiKey);
         }
 
         public void Register()

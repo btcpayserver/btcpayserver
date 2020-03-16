@@ -224,6 +224,12 @@ namespace BTCPayServer.Tests
                         tester.PayTester.HttpClient);
                 });
             }
+            else
+            {
+                await TestApiAgainstAccessToken<bool>(accessToken,
+                    $"{TestApiPath}/me/stores/{testAccount.StoreId}/can-edit",
+                    tester.PayTester.HttpClient);
+            }
 
             if (!permissions.Contains(Permissions.ServerManagement))
             {
@@ -233,12 +239,26 @@ namespace BTCPayServer.Tests
                         tester.PayTester.HttpClient);
                 });
             }
+            else
+            {
+                await TestApiAgainstAccessToken<bool>(accessToken, $"{TestApiPath}/me/stores/{secondUser.StoreId}/can-edit",
+                    tester.PayTester.HttpClient);
+            }
 
             if (permissions.Contains(Permissions.ServerManagement))
             {
                 Assert.True(await TestApiAgainstAccessToken<bool>(accessToken,
                     $"{TestApiPath}/me/is-admin",
                     tester.PayTester.HttpClient));
+            }
+            else
+            {
+                await Assert.ThrowsAnyAsync<HttpRequestException>(async () =>
+                {
+                    await TestApiAgainstAccessToken<bool>(accessToken,
+                        $"{TestApiPath}/me/is-admin",
+                        tester.PayTester.HttpClient);
+                });
             }
         }
 

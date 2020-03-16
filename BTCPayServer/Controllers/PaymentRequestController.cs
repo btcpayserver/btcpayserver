@@ -225,6 +225,10 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> PayPaymentRequest(string id, bool redirectToInvoice = true,
             decimal? amount = null, CancellationToken cancellationToken = default)
         {
+            if (amount.HasValue && amount.Value <= 0)
+            {
+                return BadRequest("Please provide an amount greater than 0");
+            }
             var result = await _PaymentRequestService.GetPaymentRequest(id, GetUserId());
             if (result == null)
             {

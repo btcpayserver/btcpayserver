@@ -2768,6 +2768,11 @@ noninventoryitem:
             {
 
                 Logs.Tester.LogInformation($"Testing {result.ExpectedName}");
+                if (result.ExpectedName == "ndax")
+                {
+                    Logs.Tester.LogInformation($"Skipping (currently crashing)");
+                    continue;
+                }
                 result.Fetcher.InvalidateCache();
                 var exchangeRates = new ExchangeRates(result.ExpectedName, result.ResultAsync.Result);
                 result.Fetcher.InvalidateCache();

@@ -50,7 +50,6 @@ namespace BTCPayServer.Controllers
         private readonly WalletReceiveStateService _WalletReceiveStateService;
         private readonly EventAggregator _EventAggregator;
         private readonly SettingsRepository _settingsRepository;
-        private readonly Socks5HttpClientFactory _socks5HttpClientFactory;
         private readonly IHttpClientFactory _httpClientFactory;
         public RateFetcher RateFetcher { get; }
 
@@ -70,7 +69,6 @@ namespace BTCPayServer.Controllers
                                  WalletReceiveStateService walletReceiveStateService,
                                  EventAggregator eventAggregator,
                                  SettingsRepository settingsRepository,
-                                 Socks5HttpClientFactory socks5HttpClientFactory,
                                  IHttpClientFactory httpClientFactory)
         {
             _currencyTable = currencyTable;
@@ -88,7 +86,6 @@ namespace BTCPayServer.Controllers
             _WalletReceiveStateService = walletReceiveStateService;
             _EventAggregator = eventAggregator;
             _settingsRepository = settingsRepository;
-            _socks5HttpClientFactory = socks5HttpClientFactory;
             _httpClientFactory = httpClientFactory;
         }
 

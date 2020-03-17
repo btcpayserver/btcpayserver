@@ -164,15 +164,7 @@ namespace BTCPayServer.Controllers
             if (TempData.TryGetValue( "bpu", out var bpu) && !string.IsNullOrEmpty(bpu?.ToString()) && Uri.TryCreate(bpu.ToString(), UriKind.Absolute, out var endpoint))
             {
                 TempData.Remove("bpu");
-                var httpClient = _socks5HttpClientFactory.CreateClient("payjoin");
-                if (endpoint.IsOnion() && httpClient == null)
-                {
-                    return null;
-                }
-                else
-                {
-                    httpClient = _httpClientFactory.CreateClient("payjoin");
-                }
+                var httpClient = _httpClientFactory.CreateClient("payjoin");
 
                 var cloned = psbt.Clone();
                     

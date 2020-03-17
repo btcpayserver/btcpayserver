@@ -252,7 +252,7 @@ namespace BTCPayServer.Tests
                 await cashCow.SendToAddressAsync(
                     (await btcPayWallet.ReserveAddressAsync(senderUser.DerivationScheme)).Address,
                     new Money(0.014m, MoneyUnit.BTC));
-                var senderCoins = await btcPayWallet.GetUnspentCoins(senderUser.DerivationScheme);
+                
 
                 var senderChange = (await btcPayWallet.GetChangeAddressAsync(senderUser.DerivationScheme)).Item1;
 
@@ -275,6 +275,13 @@ namespace BTCPayServer.Tests
                 var derivationSchemeSettings = senderStore.GetSupportedPaymentMethods(tester.NetworkProvider)
                     .OfType<DerivationSchemeSettings>().SingleOrDefault(settings =>
                         settings.PaymentId == paymentMethodId);
+
+                ReceivedCoin[] senderCoins = null;
+                await TestUtils.EventuallyAsync(async () =>
+                {
+                    senderCoins = await btcPayWallet.GetUnspentCoins(senderUser.DerivationScheme);
+                    Assert.Contains(senderCoins, coin => coin.Value.GetValue(btcPayNetwork) == 0.026m);
+                });
                 var coin = senderCoins.Single(coin => coin.Value.GetValue(btcPayNetwork) == 0.021m);
                 var coin2 = senderCoins.Single(coin => coin.Value.GetValue(btcPayNetwork) == 0.022m);
                 var coin3 = senderCoins.Single(coin => coin.Value.GetValue(btcPayNetwork) == 0.023m);

@@ -381,7 +381,6 @@ namespace BTCPayServer.Controllers
             vm.LightningMaxValue = storeBlob.LightningMaxValue?.ToString() ?? "";
             vm.LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi;
             vm.RedirectAutomatically = storeBlob.RedirectAutomatically;
-            vm.PayJoinEnabled = storeBlob.PayJoinEnabled;
             return View(vm);
         }
         void SetCryptoCurrencies(CheckoutExperienceViewModel vm, Data.StoreData storeData)
@@ -442,7 +441,6 @@ namespace BTCPayServer.Controllers
             blob.LightningMaxValue = lightningMaxValue;
             blob.LightningAmountInSatoshi = model.LightningAmountInSatoshi;
             blob.RedirectAutomatically = model.RedirectAutomatically;
-            blob.PayJoinEnabled = model.PayJoinEnabled;
             if (CurrentStore.SetStoreBlob(blob))
             {
                 needUpdate = true;
@@ -481,6 +479,7 @@ namespace BTCPayServer.Controllers
             vm.InvoiceExpiration = storeBlob.InvoiceExpiration;
             vm.LightningDescriptionTemplate = storeBlob.LightningDescriptionTemplate;
             vm.PaymentTolerance = storeBlob.PaymentTolerance;
+            vm.PayJoinEnabled = storeBlob.PayJoinEnabled;
             return View(vm);
         }
 
@@ -575,7 +574,7 @@ namespace BTCPayServer.Controllers
             blob.InvoiceExpiration = model.InvoiceExpiration;
             blob.LightningDescriptionTemplate = model.LightningDescriptionTemplate ?? string.Empty;
             blob.PaymentTolerance = model.PaymentTolerance;
-
+            blob.PayJoinEnabled = model.PayJoinEnabled;
             if (CurrentStore.SetStoreBlob(blob))
             {
                 needUpdate = true;

@@ -163,15 +163,15 @@ namespace BTCPayServer.Tests
         public async Task EnablePayJoin()
         {
             var storeController = parent.PayTester.GetController<StoresController>(UserId, StoreId);
-            var checkoutExperienceVM =
-                Assert.IsType<CheckoutExperienceViewModel>(Assert
-                    .IsType<ViewResult>(storeController.CheckoutExperience()).Model);
+            var storeVM =
+                Assert.IsType<StoreViewModel>(Assert
+                    .IsType<ViewResult>(storeController.UpdateStore()).Model);
 
-            checkoutExperienceVM.PayJoinEnabled = true;
+            storeVM.PayJoinEnabled = true;
 
-            Assert.Equal(nameof(storeController.CheckoutExperience),
+            Assert.Equal(nameof(storeController.UpdateStore),
                 Assert.IsType<RedirectToActionResult>(
-                    await storeController.CheckoutExperience(checkoutExperienceVM)).ActionName);
+                    await storeController.UpdateStore(storeVM)).ActionName);
         }
 
         public GenerateWalletResponse GenerateWalletResponseV { get; set; }

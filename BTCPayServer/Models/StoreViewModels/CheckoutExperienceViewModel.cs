@@ -57,9 +57,6 @@ namespace BTCPayServer.Models.StoreViewModels
         
         [Display(Name = "Redirect invoice to redirect url automatically after paid")]
         public bool  RedirectAutomatically { get; set; }
-        
-        [Display(Name = "Enable BIP79 Payjoin/P2EP")]
-        public bool  PayJoinEnabled { get; set; }
 
         public void SetLanguages(LanguageService langService, string defaultLang)
         {

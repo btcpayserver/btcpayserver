@@ -50,7 +50,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
         [Required] public string StoreId { get; set; }
 
         [Required]
-        [Range(double.Epsilon, double.PositiveInfinity, ErrorMessage = "Please enter a value bigger than zero")]
+        [Range(double.Epsilon, double.PositiveInfinity, ErrorMessage = "Please provide an amount greater than 0")]
         public decimal Amount { get; set; }
 
         [Display(Name = "The currency used for payment request. (e.g. BTC, LTC, USD, etc.)")]

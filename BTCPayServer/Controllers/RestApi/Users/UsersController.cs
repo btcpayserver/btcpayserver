@@ -90,11 +90,11 @@ namespace BTCPayServer.Controllers.RestApi.Users
                 return Forbid(AuthenticationSchemes.ApiKey);
             }
 
-            // check if we have permission to create users
-            var canCreateUser = (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanCreateUser.Key))).Succeeded;
-            if (!canCreateUser)
+            if (!isAdmin && policies.LockSubscription)
             {
-                return Forbid(AuthenticationSchemes.ApiKey);
+                // If we are not admin and subscriptions are locked, we need to check the Policies.CanCreateUser.Key permission
+                if (!isAuth || !(await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanCreateUser.Key))).Succeeded)
+                    return Forbid(AuthenticationSchemes.ApiKey);
             }
 
             var user = new ApplicationUser

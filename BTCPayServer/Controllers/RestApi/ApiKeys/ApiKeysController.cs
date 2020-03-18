@@ -24,7 +24,6 @@ namespace BTCPayServer.Controllers.RestApi.ApiKeys
         }
     
         [HttpGet("~/api/v1/api-keys/current")]
-        [HttpGet("~/api/v1/users/me/api-keys/current")]
         public async Task<ActionResult<ApiKeyData>> GetKey()
         {
             ControllerContext.HttpContext.GetAPIKey(out var apiKey);
@@ -33,7 +32,6 @@ namespace BTCPayServer.Controllers.RestApi.ApiKeys
         }
 
         [HttpDelete("~/api/v1/api-keys/current")]
-        [HttpDelete("~/api/v1/users/me/api-keys/current")]
         public async Task<ActionResult<ApiKeyData>> RevokeKey()
         {
             ControllerContext.HttpContext.GetAPIKey(out var apiKey);

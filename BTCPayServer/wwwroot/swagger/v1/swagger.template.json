@@ -134,13 +134,16 @@
                                 "properties": {
                                     "email": {
                                         "type": "string",
+                                        "description": "The email of the new user",
                                         "nullable": false
                                     },
                                     "password": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "description": "The password of the new user"
                                     },
                                     "isAdministrator": {
                                         "type": "boolean",
+                                        "description": "Make this user administrator (only if your APIKey has ServerManagment permission)",
                                         "nullable": true,
                                         "default": false
                                     }
@@ -253,17 +256,21 @@
                 "properties": {
                     "id": {
                         "type": "string",
-                        "nullable": true
+                        "description": "The id of the new user",
+                        "nullable": false
                     },
                     "email": {
                         "type": "string",
-                        "nullable": true
+                        "description": "The email of the new user",
+                        "nullable": false
                     },
                     "emailConfirmed": {
-                        "type": "boolean"
+                        "type": "boolean",
+                        "description": "True if the email has been confirmed by the user"
                     },
                     "requiresEmailConfirmation": {
-                        "type": "boolean"
+                        "type": "boolean",
+                        "description": "True if the email requires email confirmation to log in"
                     }
                 }
             },

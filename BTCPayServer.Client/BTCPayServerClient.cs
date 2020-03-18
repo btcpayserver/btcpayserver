@@ -23,6 +23,13 @@ namespace BTCPayServer.Client
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         };
 
+        public BTCPayServerClient(Uri btcpayHost, HttpClient httpClient = null)
+        {
+            if (btcpayHost == null)
+                throw new ArgumentNullException(nameof(btcpayHost));
+            _btcpayHost = btcpayHost;
+            _httpClient = httpClient ?? new HttpClient();
+        }
         public BTCPayServerClient(Uri btcpayHost, string APIKey, HttpClient httpClient = null)
         {
             _apiKey = APIKey;
@@ -52,7 +59,8 @@ namespace BTCPayServer.Client
             }
 
             var httpRequest = new HttpRequestMessage(method ?? HttpMethod.Get, uriBuilder.Uri);
-            httpRequest.Headers.Authorization = new AuthenticationHeaderValue("token", _apiKey);
+            if (_apiKey != null)
+                httpRequest.Headers.Authorization = new AuthenticationHeaderValue("token", _apiKey);
 
 
             return httpRequest;

@@ -1,18 +1,21 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Security;
+using BTCPayServer.Security.APIKeys;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using NicolasDorier.RateLimits;
 
 namespace BTCPayServer.Controllers.RestApi.Users
 {
@@ -26,11 +29,15 @@ namespace BTCPayServer.Controllers.RestApi.Users
         private readonly SettingsRepository _settingsRepository;
         private readonly EventAggregator _eventAggregator;
         private readonly IPasswordValidator<ApplicationUser> _passwordValidator;
+        private readonly RateLimitService _throttleService;
+        private readonly IAuthorizationService _authorizationService;
 
         public UsersController(UserManager<ApplicationUser> userManager, BTCPayServerOptions btcPayServerOptions,
             RoleManager<IdentityRole> roleManager, SettingsRepository settingsRepository,
             EventAggregator eventAggregator,
-            IPasswordValidator<ApplicationUser> passwordValidator)
+            IPasswordValidator<ApplicationUser> passwordValidator,
+            NicolasDorier.RateLimits.RateLimitService throttleService,
+            IAuthorizationService authorizationService)
         {
             _userManager = userManager;
             _btcPayServerOptions = btcPayServerOptions;
@@ -38,6 +45,8 @@ namespace BTCPayServer.Controllers.RestApi.Users
             _settingsRepository = settingsRepository;
             _eventAggregator = eventAggregator;
             _passwordValidator = passwordValidator;
+            _throttleService = throttleService;
+            _authorizationService = authorizationService;
         }
 
         [Authorize(Policy = Policies.CanModifyProfile.Key, AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
@@ -48,9 +57,9 @@ namespace BTCPayServer.Controllers.RestApi.Users
             return FromModel(user);
         }
 
-        [Authorize(Policy = Policies.CanCreateUser.Key, AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
+        [AllowAnonymous]
         [HttpPost("~/api/v1/users")]
-        public async Task<ActionResult<ApplicationUserData>> CreateUser(CreateApplicationUserRequest request)
+        public async Task<ActionResult<ApplicationUserData>> CreateUser(CreateApplicationUserRequest request, CancellationToken cancellationToken = default)
         {
             if (request?.Email is null)
                 return BadRequest(CreateValidationProblem(nameof(request.Email), "Email is missing"));
@@ -60,15 +69,39 @@ namespace BTCPayServer.Controllers.RestApi.Users
             }
             if (request?.Password is null)
                 return BadRequest(CreateValidationProblem(nameof(request.Password), "Password is missing"));
-            var policies = await _settingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
             var anyAdmin = (await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin)).Any();
-            var admin = request.IsAdministrator.GetValueOrDefault(!anyAdmin);
+            var policies = await _settingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
+            var isAuth = User.Identity.AuthenticationType == APIKeyConstants.AuthenticationType;
+
+            // If registration are locked and that an admin exists, don't accept unauthenticated connection
+            if (anyAdmin && policies.LockSubscription && !isAuth)
+                return Unauthorized();
+
+            // Even if subscription are unlocked, it is forbidden to create admin unauthenticated
+            if (anyAdmin && request.IsAdministrator is true && !isAuth)
+                return Forbid(AuthenticationSchemes.ApiKey);
+            // You are de-facto admin if there is no other admin, else you need to be auth and pass policy requirements
+            bool isAdmin = anyAdmin ? (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanModifyServerSettings.Key))).Succeeded 
+                                     && isAuth
+                                    : true;
+            // You need to be admin to create an admin
+            if (request.IsAdministrator is true && !isAdmin)
+            {
+                return Forbid(AuthenticationSchemes.ApiKey);
+            }
+
+            if (!isAdmin && policies.LockSubscription)
+            {
+                // If we are not admin and subscriptions are locked, we need to check the Policies.CanCreateUser.Key permission
+                if (!isAuth || !(await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanCreateUser.Key))).Succeeded)
+                    return Forbid(AuthenticationSchemes.ApiKey);
+            }
+
             var user = new ApplicationUser
             {
                 UserName = request.Email,
                 Email = request.Email,
-                RequiresEmailConfirmation = policies.RequiresConfirmedEmail,
-                EmailConfirmed = request.EmailConfirmed.GetValueOrDefault(false)
+                RequiresEmailConfirmation = policies.RequiresConfirmedEmail
             };
             var passwordValidation = await this._passwordValidator.ValidateAsync(_userManager, user, request.Password);
             if (!passwordValidation.Succeeded)
@@ -79,6 +112,11 @@ namespace BTCPayServer.Controllers.RestApi.Users
                 }
                 return BadRequest(new ValidationProblemDetails(ModelState));
             }
+            if (!isAdmin)
+            {
+                if (!await _throttleService.Throttle(ZoneLimits.Register, this.HttpContext.Connection.RemoteIpAddress, cancellationToken))
+                    return new TooManyRequestsResult(ZoneLimits.Register);
+            }
             var identityResult = await _userManager.CreateAsync(user, request.Password);
             if (!identityResult.Succeeded)
             {
@@ -88,13 +126,23 @@ namespace BTCPayServer.Controllers.RestApi.Users
                 }
                 return BadRequest(new ValidationProblemDetails(ModelState));
             }
-            else if (admin)
+
+            if (request.IsAdministrator is true)
             {
-                await _roleManager.CreateAsync(new IdentityRole(Roles.ServerAdmin));
+                if (!anyAdmin)
+                {
+                    await _roleManager.CreateAsync(new IdentityRole(Roles.ServerAdmin));
+                }
                 await _userManager.AddToRoleAsync(user, Roles.ServerAdmin);
+                if (!anyAdmin)
+                {
+                    // automatically lock subscriptions now that we have our first admin
+                    policies.LockSubscription = true;
+                    await _settingsRepository.UpdateSetting(policies);
+                }
             }
-            _eventAggregator.Publish(new UserRegisteredEvent() {Request = Request, User = user, Admin = admin});
-            return CreatedAtAction("", user);
+            _eventAggregator.Publish(new UserRegisteredEvent() {Request = Request, User = user, Admin = request.IsAdministrator is true });
+            return CreatedAtAction(string.Empty, user);
         }
 
         private ValidationProblemDetails CreateValidationProblem(string propertyName, string errorMessage)

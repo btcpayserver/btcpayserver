@@ -24,7 +24,7 @@
                 "parameters": [
                     {
                         "name": "permissions",
-                        "description": "The permissions to request. Current permissions available: ServerManagement, StoreManagement",
+                        "description": "The permissions to request. Current permissions available: ServerManagement, StoreManagement, ProfileManagement",
                         "in": "query",
                         "style": "form",
                         "explode": true,
@@ -111,7 +111,7 @@
                 "security": [
                     {
                         "APIKey": [
-                            "btcpay.store.canmodifyprofile"
+                            "ProfileManagement"
                         ]
                     }
                 ]
@@ -123,8 +123,7 @@
                     "Users"
                 ],
                 "summary": "Create user",
-                "description": "Create a new user",
-                "operationId": "Users_CreateUser",
+                "description": "Create a new user. This operation can be called without authentication if there is not any administrator yet on the server.",
                 "requestBody": {
                     "x-name": "request",
                     "content": {
@@ -135,19 +134,15 @@
                                 "properties": {
                                     "email": {
                                         "type": "string",
-                                        "nullable": true
+                                        "nullable": false
                                     },
                                     "password": {
-                                        "type": "string",
-                                        "nullable": true
+                                        "type": "string"
                                     },
                                     "isAdministrator": {
                                         "type": "boolean",
-                                        "nullable": true
-                                    },
-                                    "emailConfirmed": {
-                                        "type": "boolean",
-                                        "nullable": true
+                                        "nullable": true,
+                                        "default": false
                                     }
                                 }
                             }
@@ -176,13 +171,23 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "description": "If you need to authenticate for this endpoint (ie. the server settings policies lock subscriptions and that an admin already exists)"
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to create a new user (ie. you don't have the ServerManagement permission)"
+                    },
+                    "429": {
+                        "description": "DDoS protection if you are creating more than 2 accounts every minutes (non-admin only)"
                     }
                 },
                 "security": [
                     {
                         "APIKey": [
-                            "btcpay.store.cancreateuser"
-                        ]
+                            "ServerManagement"
+                        ],
+                        "Anonymous": [ ]
                     }
                 ]
             }

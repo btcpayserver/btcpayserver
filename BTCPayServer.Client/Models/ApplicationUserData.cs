@@ -34,9 +34,5 @@ namespace BTCPayServer.Client.Models
         /// Whether this user is an administrator. If left null and there are no admins in the system, the user will be created as an admin.
         /// </summary>
         public bool? IsAdministrator { get; set; }
-        /// <summary>
-        /// If the server requires email confirmation, this allows you to set the account as confirmed from the start
-        /// </summary>
-        public bool? EmailConfirmed { get; set; }
     }
 }

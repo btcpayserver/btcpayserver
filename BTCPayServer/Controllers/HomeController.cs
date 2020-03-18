@@ -14,22 +14,30 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Services.Apps;
 using Microsoft.AspNetCore.Identity;
 using BTCPayServer.Data;
+using Microsoft.Extensions.FileProviders;
+using System.IO;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Authorization;
+using BTCPayServer.Security;
 
 namespace BTCPayServer.Controllers
 {
     public class HomeController : Controller
     {
         private readonly CssThemeManager _cachedServerSettings;
+        private readonly IFileProvider _fileProvider;
 
         public IHttpClientFactory HttpClientFactory { get; }
         SignInManager<ApplicationUser> SignInManager { get;  }
 
         public HomeController(IHttpClientFactory httpClientFactory, 
                               CssThemeManager cachedServerSettings,
+                              IWebHostEnvironment webHostEnvironment,
                               SignInManager<ApplicationUser> signInManager)
         {
             HttpClientFactory = httpClientFactory;
             _cachedServerSettings = cachedServerSettings;
+            _fileProvider = webHostEnvironment.WebRootFileProvider;
             SignInManager = signInManager;
         }
 
@@ -104,6 +112,26 @@ namespace BTCPayServer.Controllers
         {
             return View(new BitpayTranslatorViewModel());
         }
+
+        [Route("swagger/v1/swagger.json")]
+        public async Task<IActionResult> Swagger()
+        {
+            var fi = _fileProvider.GetFileInfo("swagger/v1/swagger.template.json");
+            using var stream = fi.CreateReadStream();
+            using var reader = new StreamReader(fi.CreateReadStream());
+            var json = JObject.Parse(await reader.ReadToEndAsync());
+            var servers = new JArray();
+            servers.Add(new JObject(new JProperty("url", HttpContext.Request.GetAbsoluteRoot())));
+            json["servers"] = servers;
+            return Json(json);
+        }
+
+        [Route("docs")]
+        public IActionResult SwaggerDocs()
+        {
+            return View();
+        }
+
 
         [HttpPost]
         [Route("translate")]

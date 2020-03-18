@@ -26,7 +26,6 @@ using System.Threading;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Logging;
 using BTCPayServer.HostedServices;
-using BTCPayServer.Hosting.OpenApi;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
@@ -264,8 +263,6 @@ namespace BTCPayServer.Hosting
                 }
                 return rateLimits;
             });
-			services.AddBTCPayOpenApi();
-
             services.AddLogging(logBuilder =>
             {
                 var debugLogFile = BTCPayServerOptions.GetDebugLog(configuration);

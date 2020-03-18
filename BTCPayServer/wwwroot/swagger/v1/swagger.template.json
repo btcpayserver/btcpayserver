@@ -1,0 +1,430 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "BTCPay Greenfield API",
+        "description": "A full API to use your BTCPay Server",
+        "contact": {
+            "name": "BTCPay Server",
+            "url": "https://btcpayserver.org",
+            "email": "nicolas.dorier@gmail.com"
+        },
+        "version": "v1"
+    },
+    "servers": [
+    ],
+    "paths": {
+        "/api-keys/authorize": {
+            "get": {
+                "tags": [
+                    "Authorization"
+                ],
+                "summary": "Authorize User",
+                "description": "Redirect the browser to this endpoint to request the user to generate an api-key with specific permissions",
+                "operationId": "Manage_AuthorizeAPIKey",
+                "parameters": [
+                    {
+                        "name": "permissions",
+                        "description": "The permissions to request. Current permissions available: ServerManagement, StoreManagement",
+                        "in": "query",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "nullable": true,
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "x-position": 1
+                    },
+                    {
+                        "name": "applicationName",
+                        "description": "The name of your application",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "x-position": 2
+                    },
+                    {
+                        "name": "strict",
+                        "description": "If permissions are specified, and strict is set to false, it will allow the user to reject some of permissions the application is requesting.",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean",
+                            "default": true
+                        },
+                        "x-position": 3
+                    },
+                    {
+                        "name": "selectiveStores",
+                        "description": "If the application is requesting the CanModifyStoreSettings permission and selectiveStores is set to true, this allows the user to only grant permissions to selected stores under the user's control.",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean",
+                            "default": false
+                        },
+                        "x-position": 4
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/octet-stream": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "APIKey": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/users/me": {
+            "get": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get current user information",
+                "description": "View information about the current user",
+                "operationId": "Users_GetCurrentUser",
+                "responses": {
+                    "200": {
+                        "description": "Information about the current user",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApplicationUserData"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "APIKey": [
+                            "btcpay.store.canmodifyprofile"
+                        ]
+                    }
+                ]
+            }
+        },
+        "/api/v1/users": {
+            "post": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Create user",
+                "description": "Create a new user",
+                "operationId": "Users_CreateUser",
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "isAdministrator": {
+                                        "type": "boolean",
+                                        "nullable": true
+                                    },
+                                    "emailConfirmed": {
+                                        "type": "boolean",
+                                        "nullable": true
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "responses": {
+                    "201": {
+                        "description": "Information about the new user",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApplicationUserData"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "A list of validation errors that occurred",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when creating the user",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "APIKey": [
+                            "btcpay.store.cancreateuser"
+                        ]
+                    }
+                ]
+            }
+        },
+        "/api/v1/api-keys/current": {
+            "get": {
+                "tags": [
+                    "API Keys"
+                ],
+                "summary": "Get current API Key information",
+                "description": "View information about the current API key",
+                "operationId": "ApiKeys_GetKey",
+                "responses": {
+                    "200": {
+                        "description": "Information about the current api key",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiKeyData"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "APIKey": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "API Keys"
+                ],
+                "summary": "Revoke the current API Key",
+                "description": "Revoke the current API key so that it cannot be used anymore",
+                "operationId": "ApiKeys_RevokeKey",
+                "responses": {
+                    "200": {
+                        "description": "The key was revoked and is no longer usable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiKeyData"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "APIKey": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/users/me/api-keys/current": {
+            "get": {
+                "tags": [
+                    "API Keys"
+                ],
+                "summary": "Get current API Key information",
+                "description": "View information about the current API key",
+                "operationId": "ApiKeys_GetKey2",
+                "responses": {
+                    "200": {
+                        "description": "Information about the current api key",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiKeyData"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "APIKey": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "API Keys"
+                ],
+                "summary": "Revoke the current API Key",
+                "description": "Revoke the current API key so that it cannot be used anymore",
+                "operationId": "ApiKeys_RevokeKey2",
+                "responses": {
+                    "200": {
+                        "description": "The key was revoked and is no longer usable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiKeyData"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "APIKey": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "ApplicationUserData": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "email": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "emailConfirmed": {
+                        "type": "boolean"
+                    },
+                    "requiresEmailConfirmation": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "ValidationProblemDetails": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                            "errors": {
+                                "type": "object",
+                                "nullable": true,
+                                "additionalProperties": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "ProblemDetails": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "title": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "integer",
+                        "format": "int32",
+                        "nullable": true
+                    },
+                    "detail": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "instance": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "extensions": {
+                        "type": "object",
+                        "nullable": true,
+                        "additionalProperties": {}
+                    }
+                }
+            },
+            "ApiKeyData": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "apiKey": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "label": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "userId": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "permissions": {
+                        "type": "array",
+                        "nullable": true,
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "securitySchemes": {
+            "APIKey": {
+                "type": "apiKey",
+                "description": "BTCPay Server supports authenticating and authorizing users through an API Key that is generated by them. Send the API Key as a header value to Authorization with the format: token {token}. For a smoother experience, you can generate a url that redirects users to an API key creation screen.",
+                "name": "Authorization",
+                "in": "header"
+            }
+        }
+    },
+    "security": [
+        {
+            "APIKey": []
+        }
+    ],
+    "tags": [
+        {
+            "name": "Users"
+        },
+        {
+            "name": "API Keys"
+        }
+    ]
+}

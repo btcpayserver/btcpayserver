@@ -5,7 +5,6 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
-using BTCPayServer.Hosting.OpenApi;
 using BTCPayServer.Security;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -13,13 +12,10 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using NSwag.Annotations;
 
 namespace BTCPayServer.Controllers.RestApi.Users
 {
     [ApiController]
-    [IncludeInOpenApiDocs]
-    [OpenApiTags("Users")]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
     public class UsersController : ControllerBase
     {
@@ -40,9 +36,6 @@ namespace BTCPayServer.Controllers.RestApi.Users
             _eventAggregator = eventAggregator;
         }
 
-        [OpenApiOperation("Get current user information", "View information about the current user")]
-        [SwaggerResponse(StatusCodes.Status200OK, typeof(ApplicationUserData),
-            Description = "Information about the current user")]
         [Authorize(Policy = Policies.CanModifyProfile.Key, AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
         [HttpGet("~/api/v1/users/me")]
         public async Task<ActionResult<ApplicationUserData>> GetCurrentUser()
@@ -51,13 +44,6 @@ namespace BTCPayServer.Controllers.RestApi.Users
             return FromModel(user);
         }
 
-        [OpenApiOperation("Create user", "Create a new user")]
-        [SwaggerResponse(StatusCodes.Status201Created, typeof(ApplicationUserData),
-            Description = "Information about the new user")]
-        [SwaggerResponse(StatusCodes.Status422UnprocessableEntity, typeof(ValidationProblemDetails),
-            Description = "A list of validation errors that occurred")]
-        [SwaggerResponse(StatusCodes.Status400BadRequest, typeof(ValidationProblemDetails),
-            Description = "A list of errors that occurred when creating the user")]
         [Authorize(Policy = Policies.CanCreateUser.Key, AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
         [HttpPost("~/api/v1/users")]
         public async Task<ActionResult<ApplicationUserData>> CreateUser(CreateApplicationUserRequest request)

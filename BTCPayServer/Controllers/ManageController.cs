@@ -20,6 +20,7 @@ using BTCPayServer.Security;
 using BTCPayServer.U2F;
 using BTCPayServer.Data;
 using BTCPayServer.Security.APIKeys;
+using Microsoft.AspNetCore.Routing;
 
 
 namespace BTCPayServer.Controllers
@@ -38,6 +39,7 @@ namespace BTCPayServer.Controllers
         private readonly BTCPayServerEnvironment _btcPayServerEnvironment;
         private readonly APIKeyRepository _apiKeyRepository;
         private readonly IAuthorizationService _authorizationService;
+        private readonly LinkGenerator _linkGenerator;
         StoreRepository _StoreRepository;
 
 
@@ -54,7 +56,8 @@ namespace BTCPayServer.Controllers
           U2FService  u2FService,
           BTCPayServerEnvironment btcPayServerEnvironment,
           APIKeyRepository apiKeyRepository,
-          IAuthorizationService authorizationService
+          IAuthorizationService authorizationService,
+          LinkGenerator linkGenerator
           )
         {
             _userManager = userManager;
@@ -67,6 +70,7 @@ namespace BTCPayServer.Controllers
             _btcPayServerEnvironment = btcPayServerEnvironment;
             _apiKeyRepository = apiKeyRepository;
             _authorizationService = authorizationService;
+            _linkGenerator = linkGenerator;
             _StoreRepository = storeRepository;
         }
 
@@ -156,7 +160,7 @@ namespace BTCPayServer.Controllers
             }
 
             var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            var callbackUrl = Url.EmailConfirmationLink(user.Id, code, Request.Scheme);
+            var callbackUrl = _linkGenerator.EmailConfirmationLink(user.Id, code, Request.Scheme, Request.HttpContext);
             var email = user.Email;
             _EmailSenderFactory.GetEmailSender().SendEmailConfirmation(email, callbackUrl);
             TempData[WellKnownTempData.SuccessMessage] = "Verification email sent. Please check your email.";

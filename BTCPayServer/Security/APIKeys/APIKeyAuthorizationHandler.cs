@@ -67,6 +67,7 @@ namespace BTCPayServer.Security.APIKeys
                     }
 
                     break;
+                case Policies.CanCreateUser.Key:
                 case Policies.CanModifyServerSettings.Key:
                     if (!context.HasPermissions(Permissions.ServerManagement))
                         break;

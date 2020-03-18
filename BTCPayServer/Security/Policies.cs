@@ -13,6 +13,7 @@ namespace BTCPayServer.Security
             options.AddPolicy(CanModifyServerSettings.Key);
             options.AddPolicy(CanModifyServerSettings.Key);
             options.AddPolicy(CanModifyProfile.Key);
+            options.AddPolicy(CanCreateUser.Key);
             return options;
         }
 
@@ -45,6 +46,11 @@ namespace BTCPayServer.Security
         public class CanGetRates
         {
             public const string Key = "btcpay.store.cangetrates";
+        }
+
+        public class CanCreateUser
+        {
+            public const string Key = "btcpay.store.cancreateuser";
         }
     }
 }

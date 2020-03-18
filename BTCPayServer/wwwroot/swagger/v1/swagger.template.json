@@ -20,10 +20,11 @@
                 ],
                 "summary": "Authorize User",
                 "description": "Redirect the browser to this endpoint to request the user to generate an api-key with specific permissions",
+                "operationId": "Manage_AuthorizeAPIKey",
                 "parameters": [
                     {
                         "name": "permissions",
-                        "description": "The permissions to request. Current permissions available: ServerManagement, StoreManagement, ProfileManagement",
+                        "description": "The permissions to request. Current permissions available: ServerManagement, StoreManagement",
                         "in": "query",
                         "style": "form",
                         "explode": true,
@@ -94,6 +95,7 @@
                 ],
                 "summary": "Get current user information",
                 "description": "View information about the current user",
+                "operationId": "Users_GetCurrentUser",
                 "responses": {
                     "200": {
                         "description": "Information about the current user",
@@ -122,6 +124,7 @@
                 ],
                 "summary": "Create user",
                 "description": "Create a new user",
+                "operationId": "Users_CreateUser",
                 "requestBody": {
                     "x-name": "request",
                     "content": {
@@ -163,6 +166,16 @@
                                 }
                             }
                         }
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when creating the user",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -181,6 +194,7 @@
                 ],
                 "summary": "Get current API Key information",
                 "description": "View information about the current API key",
+                "operationId": "ApiKeys_GetKey",
                 "responses": {
                     "200": {
                         "description": "Information about the current api key",
@@ -205,6 +219,59 @@
                 ],
                 "summary": "Revoke the current API Key",
                 "description": "Revoke the current API key so that it cannot be used anymore",
+                "operationId": "ApiKeys_RevokeKey",
+                "responses": {
+                    "200": {
+                        "description": "The key was revoked and is no longer usable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiKeyData"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "APIKey": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/users/me/api-keys/current": {
+            "get": {
+                "tags": [
+                    "API Keys"
+                ],
+                "summary": "Get current API Key information",
+                "description": "View information about the current API key",
+                "operationId": "ApiKeys_GetKey2",
+                "responses": {
+                    "200": {
+                        "description": "Information about the current api key",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiKeyData"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "APIKey": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "API Keys"
+                ],
+                "summary": "Revoke the current API Key",
+                "description": "Revoke the current API key so that it cannot be used anymore",
+                "operationId": "ApiKeys_RevokeKey2",
                 "responses": {
                     "200": {
                         "description": "The key was revoked and is no longer usable",
@@ -244,6 +311,61 @@
                     },
                     "requiresEmailConfirmation": {
                         "type": "boolean"
+                    }
+                }
+            },
+            "ValidationProblemDetails": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                            "errors": {
+                                "type": "object",
+                                "nullable": true,
+                                "additionalProperties": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "ProblemDetails": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "title": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "integer",
+                        "format": "int32",
+                        "nullable": true
+                    },
+                    "detail": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "instance": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "extensions": {
+                        "type": "object",
+                        "nullable": true,
+                        "additionalProperties": {}
                     }
                 }
             },

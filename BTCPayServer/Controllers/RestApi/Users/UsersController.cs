@@ -30,6 +30,7 @@ namespace BTCPayServer.Controllers.RestApi.Users
         private readonly EventAggregator _eventAggregator;
         private readonly IPasswordValidator<ApplicationUser> _passwordValidator;
         private readonly RateLimitService _throttleService;
+        private readonly BTCPayServerOptions _options;
         private readonly IAuthorizationService _authorizationService;
 
         public UsersController(UserManager<ApplicationUser> userManager, BTCPayServerOptions btcPayServerOptions,
@@ -37,6 +38,7 @@ namespace BTCPayServer.Controllers.RestApi.Users
             EventAggregator eventAggregator,
             IPasswordValidator<ApplicationUser> passwordValidator,
             NicolasDorier.RateLimits.RateLimitService throttleService,
+            Configuration.BTCPayServerOptions options,
             IAuthorizationService authorizationService)
         {
             _userManager = userManager;
@@ -46,6 +48,7 @@ namespace BTCPayServer.Controllers.RestApi.Users
             _eventAggregator = eventAggregator;
             _passwordValidator = passwordValidator;
             _throttleService = throttleService;
+            _options = options;
             _authorizationService = authorizationService;
         }
 
@@ -140,9 +143,12 @@ namespace BTCPayServer.Controllers.RestApi.Users
                 await _userManager.AddToRoleAsync(user, Roles.ServerAdmin);
                 if (!anyAdmin)
                 {
-                    // automatically lock subscriptions now that we have our first admin
-                    policies.LockSubscription = true;
-                    await _settingsRepository.UpdateSetting(policies);
+                    if (_options.DisableRegistration)
+                    {
+                        // automatically lock subscriptions now that we have our first admin
+                        policies.LockSubscription = true;
+                        await _settingsRepository.UpdateSetting(policies);
+                    }
                 }
             }
             _eventAggregator.Publish(new UserRegisteredEvent() {Request = Request, User = user, Admin = request.IsAdministrator is true });

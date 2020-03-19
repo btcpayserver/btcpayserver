@@ -61,6 +61,7 @@ namespace BTCPayServer.Tests
         {
             using (var tester = ServerTester.Create(newDb: true))
             {
+                tester.PayTester.DisableRegistration = true;
                 await tester.StartAsync();
                 var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
                 await AssertHttpError(400, async () => await unauthClient.CreateUser(new CreateApplicationUserRequest()));
@@ -133,8 +134,9 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task UsersControllerTests()
         {
-            using (var tester = ServerTester.Create())
+            using (var tester = ServerTester.Create(newDb: true))
             {
+                tester.PayTester.DisableRegistration = true;
                 await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();
@@ -152,12 +154,11 @@ namespace BTCPayServer.Tests
                 await Assert.ThrowsAsync<HttpRequestException>(async () => await clientInsufficient.GetCurrentUser());
                 await clientServer.GetCurrentUser();
 
-                // TODO: Disabling this check for now because it conflicts with expecation in line 120
-                //await Assert.ThrowsAsync<HttpRequestException>(async () => await clientInsufficient.CreateUser(new CreateApplicationUserRequest()
-                //{
-                //    Email = $"{Guid.NewGuid()}@g.com",
-                //    Password = Guid.NewGuid().ToString()
-                //}));
+                await Assert.ThrowsAsync<HttpRequestException>(async () => await clientInsufficient.CreateUser(new CreateApplicationUserRequest()
+                {
+                    Email = $"{Guid.NewGuid()}@g.com",
+                    Password = Guid.NewGuid().ToString()
+                }));
 
                 var newUser = await clientServer.CreateUser(new CreateApplicationUserRequest()
                 {

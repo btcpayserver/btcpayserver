@@ -96,9 +96,10 @@ namespace BTCPayServer.Controllers.RestApi.Users
                     return Forbid(AuthenticationSchemes.ApiKey);
             }
 
+            // TODO: Check if needed to reenable
             // Forbid non-admin users without CanCreateUser permission to create accounts
-            if (isAuth && !isAdmin && !canCreateUser)
-                return Forbid(AuthenticationSchemes.ApiKey);
+            //if (isAuth && !isAdmin && !canCreateUser)
+            //    return Forbid(AuthenticationSchemes.ApiKey);
 
             var user = new ApplicationUser
             {

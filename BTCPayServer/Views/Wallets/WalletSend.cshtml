@@ -38,13 +38,15 @@
             
             @if (Model.InputSelection)
             {
-            
-                <select multiple="multiple" asp-for="SelectedInputs" class="hide-when-js">
-                    @foreach (var input in Model.InputsAvailable)
-                    {
-                        <option value="@input.Outpoint" asp-selected="@(Model.SelectedInputs?.Contains(input.Outpoint)??false)">@input.Outpoint <span>@input.Amount</span>  </option>
-                    }
-                </select>
+                <div class="form-group hide-when-js">
+                    <label asp-for="SelectedInputs"></label>
+                    <select multiple="multiple" asp-for="SelectedInputs" >
+                        @foreach (var input in Model.InputsAvailable)
+                        {
+                            <option value="@input.Outpoint" asp-selected="@(Model.SelectedInputs?.Contains(input.Outpoint)??false)">@input.Outpoint <span>@input.Amount</span>  </option>
+                        }
+                    </select>
+                </div>
                 <partial name="CoinSelection"/>
             }
             

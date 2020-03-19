@@ -51,6 +51,8 @@ namespace BTCPayServer.Models.WalletViewModels
         public bool NBXSeedAvailable { get; set; }
         public bool InputSelection { get; set; }
         public InputSelectionOption[] InputsAvailable { get; set; }
+        
+        [Display(Name = "UTXOs to spend from")]
         public IEnumerable<string> SelectedInputs { get; set; }
 
         public class InputSelectionOption

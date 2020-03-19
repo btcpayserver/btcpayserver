@@ -25,7 +25,7 @@ namespace BTCPayServer
 
         public override string GenerateBIP21(string cryptoInfoAddress, Money cryptoInfoDue)
         {
-            return $"{base.GenerateBIP21(cryptoInfoAddress, cryptoInfoDue)}&assetid={AssetId}";
+            return $"{base.GenerateBIP21(cryptoInfoAddress, new Money(long.Parse(cryptoInfoDue.ToString(false, true).Replace(".", ""))))}&assetid={AssetId}";
         }
     }
 }

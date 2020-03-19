@@ -35,7 +35,7 @@ $(function () {
 
     $(".crypto-balance-link").on("click", function (elem) {
         var val = $(this).text();
-        var parentContainer = $(this).parents(".transaction-output-form");
+        var parentContainer = $(this).parents(".form-group");
         var outputAmountElement = parentContainer.find(".output-amount");
         outputAmountElement.val(val);
         parentContainer.find(".subtract-fees").prop('checked', true);

@@ -14,8 +14,9 @@
     </div>
 }
 <div class="row">
-    <div class="@(Model.Outputs.Count==1? "col-lg-6 transaction-output-form": "col-lg-8")">
+    <div class="@(!Model.InputSelection && Model.Outputs.Count==1? "col-lg-6 transaction-output-form": "col-lg-8")">
         <form method="post">
+            <input type="hidden" asp-for="InputSelection" />
             <input type="hidden" asp-for="Divisibility" />
             <input type="hidden" asp-for="NBXSeedAvailable" />
             <input type="hidden" asp-for="Fiat" />
@@ -34,6 +35,19 @@
                     }
                 }
             </ul>
+            
+            @if (Model.InputSelection)
+            {
+            
+                <select multiple="multiple" asp-for="SelectedInputs" class="hide-when-js">
+                    @foreach (var input in Model.InputsAvailable)
+                    {
+                        <option value="@input.Outpoint" asp-selected="@(Model.SelectedInputs?.Contains(input.Outpoint)??false)">@input.Outpoint <span>@input.Amount</span>  </option>
+                    }
+                </select>
+                <partial name="CoinSelection"/>
+            }
+            
             @if (Model.Outputs.Count == 1)
             {
                 <div class="form-group">
@@ -150,6 +164,9 @@
                                 </a>
                             </div>
                         }
+                        <div class="form-group">
+                            <button type="submit" name="command" value="toggle-input-selection" class="btn btn-sm btn-secondary">Toggle coin selection</button>
+                        </div>
                     </div>
                 </div>
             </div>

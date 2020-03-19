@@ -20,6 +20,10 @@ namespace BTCPayServer.Controllers
         {
             var nbx = ExplorerClientProvider.GetExplorerClient(network);
             CreatePSBTRequest psbtRequest = new CreatePSBTRequest();
+            if (sendModel.InputSelection)
+            {
+                psbtRequest.IncludeOnlyOutpoints = sendModel.SelectedInputs?.Select(OutPoint.Parse)?.ToList()?? new List<OutPoint>();
+            }
             foreach (var transactionOutput in sendModel.Outputs)
             {
                 var psbtDestination = new CreatePSBTDestination();

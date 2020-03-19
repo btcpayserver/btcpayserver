@@ -1,4 +1,5 @@
 using System;
+using Microsoft.Extensions.Logging;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading;
@@ -7,6 +8,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
+using BTCPayServer.Logging;
 using BTCPayServer.Security;
 using BTCPayServer.Security.APIKeys;
 using BTCPayServer.Services;
@@ -146,6 +148,7 @@ namespace BTCPayServer.Controllers.RestApi.Users
                     if (_options.DisableRegistration)
                     {
                         // automatically lock subscriptions now that we have our first admin
+                        Logs.PayServer.LogInformation("First admin created, disabling subscription (disable-registration is set to true)");
                         policies.LockSubscription = true;
                         await _settingsRepository.UpdateSetting(policies);
                     }

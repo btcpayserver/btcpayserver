@@ -454,6 +454,7 @@ namespace BTCPayServer.Controllers
                         if (_Options.DisableRegistration)
                         {
                             // Once the admin user has been created lock subsequent user registrations (needs to be disabled for unit tests that require multiple users).
+                            Logs.PayServer.LogInformation("First admin created, disabling subscription (disable-registration is set to true)");
                             policies.LockSubscription = true;
                             await _SettingsRepository.UpdateSetting(policies);
                         }

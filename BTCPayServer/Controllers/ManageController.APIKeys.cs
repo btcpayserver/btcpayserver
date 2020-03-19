@@ -25,11 +25,11 @@ namespace BTCPayServer.Controllers
             {
                 ApiKeyDatas = await _apiKeyRepository.GetKeys(new APIKeyRepository.APIKeyQuery()
                 {
-                    UserId = new[] {_userManager.GetUserId(User)}
+                    UserId = new[] { _userManager.GetUserId(User) }
                 })
             });
         }
-        
+
         [HttpGet("api-keys/{id}/delete")]
         public async Task<IActionResult> RemoveAPIKey(string id)
         {
@@ -96,22 +96,13 @@ namespace BTCPayServer.Controllers
 
             permissions ??= Array.Empty<string>();
 
-            var vm = await SetViewModelValues(new AuthorizeApiKeysViewModel()
+            var vm = await SetViewModelValues(new AuthorizeApiKeysViewModel(Permission.ToPermissions(permissions))
             {
                 Label = applicationName,
-                ServerManagementPermission = permissions.Contains(Permissions.ServerManagement),
-                StoreManagementPermission = permissions.Contains(Permissions.StoreManagement),
-                PermissionsFormatted = permissions,
-                PermissionValues = permissions.Where(s =>
-                        !s.Contains(Permissions.StoreManagement, StringComparison.InvariantCultureIgnoreCase) &&
-                        s != Permissions.ServerManagement)
-                    .Select(s => new AddApiKeyViewModel.PermissionValueItem() {Permission = s, Value = true}).ToList(),
                 ApplicationName = applicationName,
                 SelectiveStores = selectiveStores,
                 Strict = strict,
             });
-
-            vm.ServerManagementPermission = vm.ServerManagementPermission && vm.IsServerAdmin;
             return View(vm);
         }
 
@@ -126,22 +117,20 @@ namespace BTCPayServer.Controllers
                 return ar;
             }
 
-
-            if (viewModel.PermissionsFormatted.Contains(Permissions.ServerManagement))
+            if (viewModel.Strict)
             {
-                if (!viewModel.IsServerAdmin && viewModel.ServerManagementPermission)
+                for (int i = 0; i < viewModel.PermissionValues.Count; i++)
                 {
-                    viewModel.ServerManagementPermission = false;
-                }
-
-                if (!viewModel.ServerManagementPermission && viewModel.Strict)
-                {
-                    ModelState.AddModelError(nameof(viewModel.ServerManagementPermission),
-                        "This permission is required for this application.");
+                    if (viewModel.PermissionValues[i].Forbidden)
+                    {
+                        ModelState.AddModelError($"{viewModel.PermissionValues}[{i}].Value",
+                                $"The permission '{viewModel.PermissionValues[i].Title}' is required for this application.");
+                    }
                 }
             }
 
-            if (viewModel.PermissionsFormatted.Contains(Permissions.StoreManagement))
+            var permissions = Permission.ToPermissions(viewModel.Permissions).ToHashSet();
+            if (permissions.Contains(Permission.Create(Permission.CanModifyStoreSettings)))
             {
                 if (!viewModel.SelectiveStores &&
                     viewModel.StoreMode == AddApiKeyViewModel.ApiKeyStoreMode.Specific)
@@ -151,10 +140,10 @@ namespace BTCPayServer.Controllers
                         "This application does not allow selective store permissions.");
                 }
 
-                if (!viewModel.StoreManagementPermission && !viewModel.SpecificStores.Any() && viewModel.Strict)
+                if (!viewModel.StoreManagementPermission.Value && !viewModel.SpecificStores.Any() && viewModel.Strict)
                 {
                     ModelState.AddModelError(nameof(viewModel.StoreManagementPermission),
-                        "This permission is required for this application.");
+                        $"This permission '{viewModel.StoreManagementPermission.Title}' is required for this application.");
                 }
             }
 
@@ -174,8 +163,9 @@ namespace BTCPayServer.Controllers
                         Severity = StatusMessageModel.StatusSeverity.Success,
                         Html = $"API key generated! <code>{key.Id}</code>"
                     });
-                    return RedirectToAction("APIKeys", new { key = key.Id});
-                default: return View(viewModel);
+                    return RedirectToAction("APIKeys", new { key = key.Id });
+                default:
+                    return View(viewModel);
             }
         }
 
@@ -225,15 +215,15 @@ namespace BTCPayServer.Controllers
                     return View(viewModel);
 
                 case string x when x.StartsWith("remove-store", StringComparison.InvariantCultureIgnoreCase):
-                {
-                    ModelState.Clear();
-                    var index = int.Parse(
-                        viewModel.Command.Substring(
-                            viewModel.Command.IndexOf(":", StringComparison.InvariantCultureIgnoreCase) + 1),
-                        CultureInfo.InvariantCulture);
-                    viewModel.SpecificStores.RemoveAt(index);
-                    return View(viewModel);
-                }
+                    {
+                        ModelState.Clear();
+                        var index = int.Parse(
+                            viewModel.Command.Substring(
+                                viewModel.Command.IndexOf(":", StringComparison.InvariantCultureIgnoreCase) + 1),
+                            CultureInfo.InvariantCulture);
+                        viewModel.SpecificStores.RemoveAt(index);
+                        return View(viewModel);
+                    }
             }
 
             return null;
@@ -248,53 +238,104 @@ namespace BTCPayServer.Controllers
                 UserId = _userManager.GetUserId(User),
                 Label = viewModel.Label
             };
-            key.SetPermissions(GetPermissionsFromViewModel(viewModel));
+            key.Permissions = string.Join(";", GetPermissionsFromViewModel(viewModel).Select(p => p.ToString()).Distinct().ToArray());
             await _apiKeyRepository.CreateKey(key);
             return key;
         }
 
-        private IEnumerable<string> GetPermissionsFromViewModel(AddApiKeyViewModel viewModel)
+        private IEnumerable<Permission> GetPermissionsFromViewModel(AddApiKeyViewModel viewModel)
         {
-            var permissions = viewModel.PermissionValues.Where(tuple => tuple.Value).Select(tuple => tuple.Permission).ToList();
-
-            if (viewModel.StoreMode == AddApiKeyViewModel.ApiKeyStoreMode.Specific)
+            List<Permission> permissions = new List<Permission>();
+            foreach (var p in viewModel.PermissionValues.Where(tuple => tuple.Value && !tuple.Forbidden))
             {
-                permissions.AddRange(viewModel.SpecificStores.Select(Permissions.GetStorePermission));
+                if (Permission.TryCreatePermission(p.Permission, null, out var pp))
+                    permissions.Add(pp);
             }
-            else if (viewModel.StoreManagementPermission)
+            if (viewModel.StoreMode == AddApiKeyViewModel.ApiKeyStoreMode.AllStores && viewModel.StoreManagementPermission.Value)
             {
-                permissions.Add(Permissions.StoreManagement);
+                permissions.Add(Permission.Create(Permission.CanModifyStoreSettings));
             }
-
-            if (viewModel.IsServerAdmin && viewModel.ServerManagementPermission)
+            else if (viewModel.StoreMode == AddApiKeyViewModel.ApiKeyStoreMode.Specific)
             {
-                permissions.Add(Permissions.ServerManagement);
+                permissions.AddRange(viewModel.SpecificStores.Select(s => Permission.Create(Permission.CanModifyStoreSettings, s)));
             }
-
             return permissions.Distinct();
         }
 
         private async Task<T> SetViewModelValues<T>(T viewModel) where T : AddApiKeyViewModel
         {
             viewModel.Stores = await _StoreRepository.GetStoresByUserId(_userManager.GetUserId(User));
-            viewModel.IsServerAdmin =
-                (await _authorizationService.AuthorizeAsync(User, Policies.CanModifyServerSettings.Key)).Succeeded;
-            viewModel.PermissionValues ??= Permissions.GetAllPermissionKeys().Where(s =>
-                    !s.Contains(Permissions.StoreManagement, StringComparison.InvariantCultureIgnoreCase) &&
-                    s != Permissions.ServerManagement)
-                .Select(s => new AddApiKeyViewModel.PermissionValueItem() {Permission = s, Value = true}).ToList();
+            var isAdmin = (await _authorizationService.AuthorizeAsync(User, Permission.CanModifyServerSettings)).Succeeded;
+            viewModel.PermissionValues ??= Permission.AllPolicies.Where(p => p != Permission.CanModifyStoreSettings)
+                .Select(s => new AddApiKeyViewModel.PermissionValueItem() { Permission = s, Value = false }).ToList();
+            if (!isAdmin)
+            {
+                foreach (var p in viewModel.PermissionValues)
+                {
+                    if (p.Permission == Permission.CanCreateUser ||
+                        p.Permission == Permission.CanModifyServerSettings)
+                    {
+                        p.Forbidden = true;
+                    }
+                }
+            }
             return viewModel;
         }
 
         public class AddApiKeyViewModel
         {
+            public AddApiKeyViewModel()
+            {
+                StoreManagementPermission = new PermissionValueItem()
+                {
+                    Permission = Permission.CanModifyStoreSettings,
+                    Value = false
+                };
+                StoreManagementSelectivePermission = new PermissionValueItem()
+                {
+                    Permission = $"{Permission.CanModifyStoreSettings}:",
+                    Value = true
+                };
+            }
+            public AddApiKeyViewModel(IEnumerable<Permission> permissions):this()
+            {
+                StoreManagementPermission.Value = permissions.Any(p => p.Policy == Permission.CanModifyStoreSettings && p.StoreId == null);
+                PermissionValues = permissions.Where(p => p.Policy != Permission.CanModifyStoreSettings)
+                                    .Select(p => new PermissionValueItem() { Permission = p.ToString(), Value = true })
+                                    .ToList();
+            }
+
+            public IEnumerable<Permission> GetPermissions()
+            {
+                if (!(PermissionValues is null))
+                {
+                    foreach (var p in PermissionValues.Where(o => o.Value))
+                    {
+                        if (Permission.TryCreatePermission(p.Permission, null, out var pp))
+                            yield return pp;
+                    }
+                }
+                if (this.StoreMode == ApiKeyStoreMode.AllStores)
+                {
+                    if (StoreManagementPermission.Value)
+                        yield return Permission.Create(Permission.CanModifyStoreSettings);
+                }
+                else if (this.StoreMode == ApiKeyStoreMode.Specific && SpecificStores is List<string>)
+                {
+                    foreach (var p in SpecificStores)
+                    {
+                        if (Permission.TryCreatePermission(Permission.CanModifyStoreSettings, p, out var pp))
+                            yield return pp;
+                    }
+                }
+            }
             public string Label { get; set; }
             public StoreData[] Stores { get; set; }
+            ApiKeyStoreMode _StoreMode;
             public ApiKeyStoreMode StoreMode { get; set; }
             public List<string> SpecificStores { get; set; } = new List<string>();
-            public bool IsServerAdmin { get; set; }
-            public bool ServerManagementPermission { get; set; }
-            public bool StoreManagementPermission { get; set; }
+            public PermissionValueItem StoreManagementPermission { get; set; }
+            public PermissionValueItem StoreManagementSelectivePermission { get; set; }
             public string Command { get; set; }
             public List<PermissionValueItem> PermissionValues { get; set; }
 
@@ -306,29 +347,52 @@ namespace BTCPayServer.Controllers
 
             public class PermissionValueItem
             {
+                public static readonly Dictionary<string, (string Title, string Description)> PermissionDescriptions = new Dictionary<string, (string Title, string Description)>()
+                {
+                    {BTCPayServer.Client.Permission.Unrestricted, ("Unrestricted access", "The app will have unrestricted access to your account.")},
+                    {BTCPayServer.Client.Permission.CanCreateUser, ("Create new users", "The app will be able to create new users on this server.")},
+                    {BTCPayServer.Client.Permission.CanModifyStoreSettings, ("Modify your stores", "The app will be able to create, view and modify, delete and create new invoices on the  all your stores.")},
+                    {BTCPayServer.Client.Permission.CanViewStoreSettings, ("View your stores", "The app will be able to create, view all your stores.")},
+                    {$"{BTCPayServer.Client.Permission.CanModifyStoreSettings}:", ("Manage selected stores", "The app will be able to view, modify, delete and create new invoices on the selected stores.")},
+                    {BTCPayServer.Client.Permission.CanModifyServerSettings, ("Manage your server", "The app will have total control on your server")},
+                    {BTCPayServer.Client.Permission.CanViewProfile, ("View your profile", "The app will be able to view your user profile.")},
+                    {BTCPayServer.Client.Permission.CanModifyProfile, ("Manage your profile", "The app will be able to view and modify your user profile.")},
+                    {BTCPayServer.Client.Permission.CanCreateInvoice, ("Create an invoice", "The app will be able to create new invoice.")},
+                };
+                public string Title
+                {
+                    get
+                    {
+                        return PermissionDescriptions[Permission].Title;
+                    }
+                }
+                public string Description
+                {
+                    get
+                    {
+                        return PermissionDescriptions[Permission].Description;
+                    }
+                }
                 public string Permission { get; set; }
                 public bool Value { get; set; }
+                public bool Forbidden { get; set; }
             }
         }
 
         public class AuthorizeApiKeysViewModel : AddApiKeyViewModel
         {
+            public AuthorizeApiKeysViewModel()
+            {
+
+            }
+            public AuthorizeApiKeysViewModel(IEnumerable<Permission> permissions) : base(permissions)
+            {
+                Permissions = string.Join(';', permissions.Select(p => p.ToString()).ToArray());
+            }
             public string ApplicationName { get; set; }
             public bool Strict { get; set; }
             public bool SelectiveStores { get; set; }
             public string Permissions { get; set; }
-
-            public string[] PermissionsFormatted
-            {
-                get
-                {
-                    return Permissions?.Split(";", StringSplitOptions.RemoveEmptyEntries)?? Array.Empty<string>();
-                }
-                set
-                {
-                    Permissions = string.Join(';', value ?? Array.Empty<string>());
-                }
-            }
         }
 
 

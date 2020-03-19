@@ -20,14 +20,15 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using BTCPayServer.Filters;
+using BTCPayServer.Client;
 
 namespace BTCPayServer.Services.Altcoins.Monero.UI
 {
     [Route("stores/{storeId}/monerolike")]
     [OnlyIfSupportAttribute("XMR")]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    [Authorize(Policy = Policies.CanModifyStoreSettings.Key, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    [Authorize(Policy = Policies.CanModifyServerSettings.Key, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Permission.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Permission.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public class MoneroLikeStoreController : Controller
     {
         private readonly MoneroLikeConfiguration _MoneroLikeConfiguration;

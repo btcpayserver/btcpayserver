@@ -425,6 +425,15 @@ namespace BTCPayServer
             ctx.Items["BTCPAY.STOREDATA"] = storeData;
         }
 
+        public static StoreData[] GetStoresData(this HttpContext ctx)
+        {
+            return ctx.Items.TryGet("BTCPAY.STORESDATA") as StoreData[];
+        }
+        public static void SetStoresData(this HttpContext ctx, StoreData[] storeData)
+        {
+            ctx.Items["BTCPAY.STORESDATA"] = storeData;
+        }
+
         private static JsonSerializerSettings jsonSettings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
         public static string ToJson(this object o)
         {

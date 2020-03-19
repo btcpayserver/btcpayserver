@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using BTCPayServer.Client;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BTCPayServer.Security
 {
@@ -6,14 +7,11 @@ namespace BTCPayServer.Security
     {
         public static AuthorizationOptions AddBTCPayPolicies(this AuthorizationOptions options)
         {
-            options.AddPolicy(CanModifyStoreSettings.Key);
-            options.AddPolicy(CanListStoreSettings.Key);
-            options.AddPolicy(CanCreateInvoice.Key);
+            foreach (var p in Permission.AllPolicies)
+            {
+                options.AddPolicy(p);
+            }
             options.AddPolicy(CanGetRates.Key);
-            options.AddPolicy(CanModifyServerSettings.Key);
-            options.AddPolicy(CanModifyServerSettings.Key);
-            options.AddPolicy(CanModifyProfile.Key);
-            options.AddPolicy(CanCreateUser.Key);
             return options;
         }
 
@@ -21,36 +19,9 @@ namespace BTCPayServer.Security
         {
             options.AddPolicy(policy, o => o.AddRequirements(new PolicyRequirement(policy)));
         }
-
-        public class CanModifyServerSettings
-        {
-            public const string Key = "btcpay.store.canmodifyserversettings";
-        }
-        public class CanModifyProfile
-        {
-            public const string Key = "btcpay.store.canmodifyprofile";
-        }
-        public class CanModifyStoreSettings
-        {
-            public const string Key = "btcpay.store.canmodifystoresettings";
-        }
-        public class CanListStoreSettings
-        {
-            public const string Key = "btcpay.store.canliststoresettings";
-        }
-        public class CanCreateInvoice
-        {
-            public const string Key = "btcpay.store.cancreateinvoice";
-        }
-
         public class CanGetRates
         {
             public const string Key = "btcpay.store.cangetrates";
-        }
-
-        public class CanCreateUser
-        {
-            public const string Key = "btcpay.store.cancreateuser";
         }
     }
 }

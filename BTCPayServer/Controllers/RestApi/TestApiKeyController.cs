@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Security;
 using BTCPayServer.Security.APIKeys;
@@ -27,45 +28,45 @@ namespace BTCPayServer.Controllers.RestApi
         }
 
         [HttpGet("me/id")]
+        [Authorize(Policy = Permission.CanViewProfile, AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
         public string GetCurrentUserId()
         {
             return _userManager.GetUserId(User);
         }
 
         [HttpGet("me")]
+        [Authorize(Policy = Permission.CanViewProfile, AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
         public async Task<ApplicationUser> GetCurrentUser()
         {
             return await _userManager.GetUserAsync(User);
         }
 
         [HttpGet("me/is-admin")]
-        [Authorize(Policy = Policies.CanModifyServerSettings.Key, AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
+        [Authorize(Policy = Permission.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
         public bool AmIAnAdmin()
         {
             return true;
         }
 
         [HttpGet("me/stores")]
-        [Authorize(Policy = Policies.CanListStoreSettings.Key,
-            AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
-        public async Task<StoreData[]> GetCurrentUserStores()
+        [Authorize(Policy = Permission.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
+        public StoreData[] GetCurrentUserStores()
         {
-            return await  User.GetStores(_userManager, _storeRepository);
+            return this.HttpContext.GetStoresData();
         }
-        
-        [HttpGet("me/stores/actions")]
-        [Authorize(Policy = Policies.CanModifyStoreSettings.Key,
+
+        [HttpGet("me/stores/{storeId}/can-view")]
+        [Authorize(Policy = Permission.CanViewStoreSettings,
             AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
-        public bool CanDoNonImplicitStoreActions()
+        public bool CanViewStore(string storeId)
         {
             return true;
         }
 
-
         [HttpGet("me/stores/{storeId}/can-edit")]
-        [Authorize(Policy = Policies.CanModifyStoreSettings.Key,
+        [Authorize(Policy = Permission.CanModifyStoreSettings,
             AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
-        public bool CanEdit(string storeId)
+        public bool CanEditStore(string storeId)
         {
             return true;
         }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
+using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Security.Bitpay;
 using BTCPayServer.Services.Stores;
@@ -44,11 +45,8 @@ namespace BTCPayServer.Security.APIKeys
             }
 
             List<Claim> claims = new List<Claim>();
-            
             claims.Add(new Claim(_identityOptions.CurrentValue.ClaimsIdentity.UserIdClaimType, key.UserId));
-            claims.AddRange(key.GetPermissions()
-                .Select(permission => new Claim(APIKeyConstants.ClaimTypes.Permissions, permission)));
-
+            claims.AddRange(Permission.ToPermissions(key.Permissions).Select(permission => new Claim(APIKeyConstants.ClaimTypes.Permission, permission.ToString())));
             return AuthenticateResult.Success(new AuthenticationTicket(
                 new ClaimsPrincipal(new ClaimsIdentity(claims, APIKeyConstants.AuthenticationType)), APIKeyConstants.AuthenticationType));
         }

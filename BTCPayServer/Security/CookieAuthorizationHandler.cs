@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Primitives;
+using BTCPayServer.Client;
 
 namespace BTCPayServer.Security
 {
@@ -35,7 +36,7 @@ namespace BTCPayServer.Security
             var isAdmin = context.User.IsInRole(Roles.ServerAdmin);
             switch (requirement.Policy)
             {
-                case Policies.CanModifyServerSettings.Key:
+                case Permission.CanModifyServerSettings:
                     if (isAdmin)
                         context.Succeed(requirement);
                     return;
@@ -56,11 +57,11 @@ namespace BTCPayServer.Security
             bool success = false;
             switch (requirement.Policy)
             {
-                case Policies.CanModifyStoreSettings.Key:
+                case Permission.CanModifyStoreSettings:
                     if (store.Role == StoreRoles.Owner || isAdmin)
                         success = true;
                     break;
-                case Policies.CanCreateInvoice.Key:
+                case Permission.CanCreateInvoice:
                     if (store.Role == StoreRoles.Owner ||
                         store.Role == StoreRoles.Guest ||
                         isAdmin ||

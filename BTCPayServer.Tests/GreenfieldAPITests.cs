@@ -38,7 +38,7 @@ namespace BTCPayServer.Tests
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 await user.MakeAdmin();
-                var client = await user.CreateClient(Permissions.ServerManagement, Permissions.StoreManagement);
+                var client = await user.CreateClient(Permission.CanModifyServerSettings, Permission.CanModifyStoreSettings);
                 //Get current api key 
                 var apiKeyData = await client.GetCurrentAPIKeyInfo();
                 Assert.NotNull(apiKeyData);
@@ -97,14 +97,14 @@ namespace BTCPayServer.Tests
                 var adminAcc = tester.NewAccount();
                 adminAcc.UserId = admin.Id;
                 adminAcc.IsAdmin = true;
-                var adminClient = await adminAcc.CreateClient(Permissions.ProfileManagement);
+                var adminClient = await adminAcc.CreateClient(Permission.CanModifyProfile);
 
                 // We should be forbidden to create a new user without proper admin permissions
                 await AssertHttpError(403, async () => await adminClient.CreateUser(new CreateApplicationUserRequest() { Email = "test4@gmail.com", Password = "afewfoiewiou" }));
                 await AssertHttpError(403, async () => await adminClient.CreateUser(new CreateApplicationUserRequest() { Email = "test4@gmail.com", Password = "afewfoiewiou", IsAdministrator = true }));
 
                 // However, should be ok with the server management permissions
-                adminClient = await adminAcc.CreateClient(Permissions.ServerManagement);
+                adminClient = await adminAcc.CreateClient(Permission.CanModifyServerSettings);
                 await adminClient.CreateUser(new CreateApplicationUserRequest() { Email = "test4@gmail.com", Password = "afewfoiewiou" });
                 // Even creating new admin should be ok
                 await adminClient.CreateUser(new CreateApplicationUserRequest() { Email = "admin4@gmail.com", Password = "afewfoiewiou", IsAdministrator = true });
@@ -112,7 +112,7 @@ namespace BTCPayServer.Tests
                 var user1Acc = tester.NewAccount();
                 user1Acc.UserId = user1.Id;
                 user1Acc.IsAdmin = false;
-                var user1Client = await user1Acc.CreateClient(Permissions.ServerManagement);
+                var user1Client = await user1Acc.CreateClient(Permission.CanModifyServerSettings);
                 // User1 trying to get server management would still fail to create user
                 await AssertHttpError(403, async () => await user1Client.CreateUser(new CreateApplicationUserRequest() { Email = "test8@gmail.com", Password = "afewfoiewiou" }));
 
@@ -141,9 +141,9 @@ namespace BTCPayServer.Tests
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 await user.MakeAdmin();
-                var clientProfile = await user.CreateClient(Permissions.ProfileManagement);
-                var clientServer = await user.CreateClient(Permissions.ServerManagement);
-                var clientInsufficient = await user.CreateClient(Permissions.StoreManagement);
+                var clientProfile = await user.CreateClient(Permission.CanModifyProfile);
+                var clientServer = await user.CreateClient(Permission.CanModifyServerSettings, Permission.CanViewProfile);
+                var clientInsufficient = await user.CreateClient(Permission.CanModifyStoreSettings);
 
 
                 var apiKeyProfileUserData = await clientProfile.GetCurrentUser();
@@ -153,6 +153,7 @@ namespace BTCPayServer.Tests
 
                 await Assert.ThrowsAsync<HttpRequestException>(async () => await clientInsufficient.GetCurrentUser());
                 await clientServer.GetCurrentUser();
+                await clientProfile.GetCurrentUser();
 
                 await Assert.ThrowsAsync<HttpRequestException>(async () => await clientInsufficient.CreateUser(new CreateApplicationUserRequest()
                 {

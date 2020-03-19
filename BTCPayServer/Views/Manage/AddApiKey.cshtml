@@ -5,16 +5,6 @@
 
 @{
     ViewData.SetActivePageAndTitle(ManageNavPages.APIKeys, "Add API Key");
-
-    string GetDescription(string permission)
-    {
-        return APIKeyConstants.Permissions.PermissionDescriptions[permission].Description;
-    }
-
-    string GetTitle(string permission)
-    {
-        return APIKeyConstants.Permissions.PermissionDescriptions[permission].Description;
-    }
 }
 
 <h4>@ViewData["Title"]</h4>
@@ -26,53 +16,47 @@
     <div class="col-md-12">
         <form method="post" asp-action="AddApiKey" class="list-group">
 
-            <input type="hidden" asp-for="StoreMode" value="@Model.StoreMode"/>
+            <input type="hidden" asp-for="StoreMode" value="@Model.StoreMode" />
             <div asp-validation-summary="All" class="text-danger"></div>
 
             <div class="list-group-item ">
                 <div class="form-group">
                     <label asp-for="Label"></label>
-                    <input asp-for="Label" class="form-control"/>
+                    <input asp-for="Label" class="form-control" />
                     <span asp-validation-for="Label" class="text-danger"></span>
                 </div>
             </div>
-            @if (Model.IsServerAdmin)
-            {
-                <div class="list-group-item form-group">
-                    <input asp-for="ServerManagementPermission" class="form-check-inline"/>
-                    <label asp-for="ServerManagementPermission" class="h5">@GetTitle(Permissions.ServerManagement)</label>
-                    <span asp-validation-for="ServerManagementPermission" class="text-danger"></span>
-                    <p>@GetDescription(Permissions.ServerManagement).</p>
-                </div>
-            }
-            
+
             @for (int i = 0; i < Model.PermissionValues.Count; i++)
             {
+                @if (!Model.PermissionValues[i].Forbidden)
+                {
                 <div class="list-group-item form-group">
                     <input type="hidden" asp-for="PermissionValues[i].Permission">
-                    <input type="checkbox" asp-for="PermissionValues[i].Value" class="form-check-inline"/>
-                    <label asp-for="PermissionValues[i].Value" class="h5">@GetTitle(Model.PermissionValues[i].Permission)</label>
+                    <input id="@Model.PermissionValues[i].Permission" type="checkbox" asp-for="PermissionValues[i].Value" class="form-check-inline" />
+                    <label asp-for="PermissionValues[i].Value" class="h5">@Model.PermissionValues[i].Title</label>
                     <span asp-validation-for="PermissionValues[i].Value" class="text-danger"></span>
-                    <p>@GetDescription(Model.PermissionValues[i].Permission).</p>
+                    <p>@Model.PermissionValues[i].Description</p>
                 </div>
-            }
+                }
+             }
             @if (Model.StoreMode == ManageController.AddApiKeyViewModel.ApiKeyStoreMode.AllStores)
             {
-                <div class="list-group-item form-group">
-                    @Html.CheckBoxFor(model => model.StoreManagementPermission, new Dictionary<string, string>() {{"class", "form-check-inline"}})
+        <div class="list-group-item form-group">
+            <input id="@Model.StoreManagementPermission.Permission" type="checkbox" asp-for="@Model.StoreManagementPermission.Value" class="form-check-inline" />
 
-                    <label asp-for="StoreManagementPermission" class="h5">@GetTitle(Permissions.StoreManagement)</label>
-                    <span asp-validation-for="StoreManagementPermission" class="text-danger"></span>
-                    <p class="mb-0">@GetDescription(Permissions.StoreManagement).</p>
-                    <button type="submit" class="btn btn-link" name="command" value="change-store-mode">Give permission to specific stores instead</button>
-                </div>
+            <label asp-for="StoreManagementPermission" class="h5">@Model.StoreManagementPermission.Title</label>
+            <span asp-validation-for="StoreManagementPermission" class="text-danger"></span>
+            <p class="mb-0">@Model.StoreManagementPermission.Description</p>
+            <button type="submit" class="btn btn-link" name="command" value="change-store-mode">Give permission to specific stores instead</button>
+        </div>
             }
             else if (Model.StoreMode == ManageController.AddApiKeyViewModel.ApiKeyStoreMode.Specific)
             {
                 <div class="list-group-item p-0 border-0 mb-2">
                     <li class="list-group-item ">
-                        <h5 class="mb-1">@GetTitle(Permissions.StoreManagement + ":")</h5>
-                        <p class="mb-0">@GetDescription(Permissions.StoreManagement + ":").</p>
+                        <h5 class="mb-1">@Model.StoreManagementSelectivePermission.Title</h5>
+                        <p class="mb-0">@Model.StoreManagementSelectivePermission.Description</p>
                         <button type="submit" class="btn btn-link" name="command" value="change-store-mode">Give permission to all stores instead</button>
                     </li>
                     @if (!Model.Stores.Any())

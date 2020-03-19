@@ -86,16 +86,19 @@ namespace BTCPayServer.Controllers.RestApi.Users
                                     : true;
             // You need to be admin to create an admin
             if (request.IsAdministrator is true && !isAdmin)
-            {
                 return Forbid(AuthenticationSchemes.ApiKey);
-            }
 
+            var canCreateUser = (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanCreateUser.Key))).Succeeded;
             if (!isAdmin && policies.LockSubscription)
             {
                 // If we are not admin and subscriptions are locked, we need to check the Policies.CanCreateUser.Key permission
-                if (!isAuth || !(await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanCreateUser.Key))).Succeeded)
+                if (!isAuth || !canCreateUser)
                     return Forbid(AuthenticationSchemes.ApiKey);
             }
+
+            // Forbid non-admin users without CanCreateUser permission to create accounts
+            if (isAuth && !isAdmin && !canCreateUser)
+                return Forbid(AuthenticationSchemes.ApiKey);
 
             var user = new ApplicationUser
             {

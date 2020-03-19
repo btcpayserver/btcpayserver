@@ -126,7 +126,6 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.Id($"Modify{cryptoCode}")).ForceClick();
             Driver.FindElement(By.Id("import-from-btn")).ForceClick();
             Driver.FindElement(By.Id("nbxplorergeneratewalletbtn")).ForceClick();
-            Thread.Sleep(200); // allow for modal to fade in
             Driver.WaitForElement(By.Id("ExistingMnemonic")).SendKeys(seed);
             SetCheckbox(Driver.FindElement(By.Id("SavePrivateKeys")), privkeys);
             SetCheckbox(Driver.FindElement(By.Id("ImportKeysToRPC")), importkeys);

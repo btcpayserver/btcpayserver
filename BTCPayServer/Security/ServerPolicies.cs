@@ -3,11 +3,11 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace BTCPayServer.Security
 {
-    public static class Policies
+    public static class ServerPolicies
     {
         public static AuthorizationOptions AddBTCPayPolicies(this AuthorizationOptions options)
         {
-            foreach (var p in Permission.AllPolicies)
+            foreach (var p in Policies.AllPolicies)
             {
                 options.AddPolicy(p);
             }

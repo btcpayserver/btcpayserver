@@ -55,7 +55,7 @@ namespace BTCPayServer.Controllers.RestApi.Users
             _authorizationService = authorizationService;
         }
 
-        [Authorize(Policy = Permission.CanViewProfile, AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
+        [Authorize(Policy = Policies.CanViewProfile, AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
         [HttpGet("~/api/v1/users/me")]
         public async Task<ActionResult<ApplicationUserData>> GetCurrentUser()
         {

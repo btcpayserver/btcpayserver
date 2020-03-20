@@ -28,35 +28,35 @@ namespace BTCPayServer.Controllers.RestApi
         }
 
         [HttpGet("me/id")]
-        [Authorize(Policy = Permission.CanViewProfile, AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
+        [Authorize(Policy = Policies.CanViewProfile, AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
         public string GetCurrentUserId()
         {
             return _userManager.GetUserId(User);
         }
 
         [HttpGet("me")]
-        [Authorize(Policy = Permission.CanViewProfile, AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
+        [Authorize(Policy = Policies.CanViewProfile, AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
         public async Task<ApplicationUser> GetCurrentUser()
         {
             return await _userManager.GetUserAsync(User);
         }
 
         [HttpGet("me/is-admin")]
-        [Authorize(Policy = Permission.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
+        [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
         public bool AmIAnAdmin()
         {
             return true;
         }
 
         [HttpGet("me/stores")]
-        [Authorize(Policy = Permission.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
+        [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
         public StoreData[] GetCurrentUserStores()
         {
             return this.HttpContext.GetStoresData();
         }
 
         [HttpGet("me/stores/{storeId}/can-view")]
-        [Authorize(Policy = Permission.CanViewStoreSettings,
+        [Authorize(Policy = Policies.CanViewStoreSettings,
             AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
         public bool CanViewStore(string storeId)
         {
@@ -64,7 +64,7 @@ namespace BTCPayServer.Controllers.RestApi
         }
 
         [HttpGet("me/stores/{storeId}/can-edit")]
-        [Authorize(Policy = Permission.CanModifyStoreSettings,
+        [Authorize(Policy = Policies.CanModifyStoreSettings,
             AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
         public bool CanEditStore(string storeId)
         {

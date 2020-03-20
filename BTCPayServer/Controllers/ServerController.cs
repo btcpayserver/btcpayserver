@@ -39,7 +39,7 @@ using BTCPayServer.Client;
 
 namespace BTCPayServer.Controllers
 {
-    [Authorize(Policy = Permission.CanModifyServerSettings,
+    [Authorize(Policy = Policies.CanModifyServerSettings,
                AuthenticationSchemes = BTCPayServer.Security.AuthenticationSchemes.Cookie)]
     public partial class ServerController : Controller
     {

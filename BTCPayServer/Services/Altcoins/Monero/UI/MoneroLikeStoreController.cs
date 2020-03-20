@@ -27,8 +27,8 @@ namespace BTCPayServer.Services.Altcoins.Monero.UI
     [Route("stores/{storeId}/monerolike")]
     [OnlyIfSupportAttribute("XMR")]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    [Authorize(Policy = Permission.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    [Authorize(Policy = Permission.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public class MoneroLikeStoreController : Controller
     {
         private readonly MoneroLikeConfiguration _MoneroLikeConfiguration;

@@ -34,7 +34,7 @@ namespace BTCPayServer.Controllers
 {
     [Route("stores")]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    [Authorize(Policy = Permission.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [AutoValidateAntiforgeryToken]
     public partial class StoresController : Controller
     {

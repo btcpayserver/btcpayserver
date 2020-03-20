@@ -511,7 +511,7 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("invoices/create")]
-        [Authorize(Policy = Permission.CanCreateInvoice, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [Authorize(Policy = Policies.CanCreateInvoice, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [BitpayAPIConstraint(false)]
         public async Task<IActionResult> CreateInvoice(CreateInvoiceModel model, CancellationToken cancellationToken)
         {

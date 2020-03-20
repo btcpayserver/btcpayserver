@@ -31,7 +31,7 @@ using Newtonsoft.Json;
 namespace BTCPayServer.Controllers
 {
     [Route("wallets")]
-    [Authorize(Policy = Permission.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [AutoValidateAntiforgeryToken]
     public partial class WalletsController : Controller
     {
@@ -840,7 +840,7 @@ namespace BTCPayServer.Controllers
 
             var vm = new RescanWalletModel();
             vm.IsFullySync = _dashboard.IsFullySynched(walletId.CryptoCode, out var unused);
-            vm.IsServerAdmin = (await _authorizationService.AuthorizeAsync(User, Permission.CanModifyServerSettings)).Succeeded;
+            vm.IsServerAdmin = (await _authorizationService.AuthorizeAsync(User, Policies.CanModifyServerSettings)).Succeeded;
             vm.IsSupportedByCurrency = _dashboard.Get(walletId.CryptoCode)?.Status?.BitcoinStatus?.Capabilities?.CanScanTxoutSet == true;
             var explorer = ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode);
             var scanProgress = await explorer.GetScanUTXOSetInformationAsync(paymentMethod.AccountDerivation);
@@ -870,7 +870,7 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("{walletId}/rescan")]
-        [Authorize(Policy = Permission.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> WalletRescan(
             [ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, RescanWalletModel vm)

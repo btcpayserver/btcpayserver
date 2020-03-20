@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 
 namespace BTCPayServer.Client
 {
-    public class Permission
+    public class Policies
     {
         public const string CanModifyServerSettings = "btcpay.server.canmodifyserversettings";
         public const string CanModifyStoreSettings = "btcpay.store.canmodifystoresettings";
@@ -15,7 +15,6 @@ namespace BTCPayServer.Client
         public const string CanViewProfile = "btcpay.user.canviewprofile";
         public const string CanCreateUser = "btcpay.server.cancreateuser";
         public const string Unrestricted = "unrestricted";
-
         public static IEnumerable<string> AllPolicies
         {
             get
@@ -30,7 +29,18 @@ namespace BTCPayServer.Client
                 yield return Unrestricted;
             }
         }
+        public static bool IsValidPolicy(string policy)
+        {
+            return AllPolicies.Any(p => p.Equals(policy, StringComparison.OrdinalIgnoreCase));
+        }
 
+        public static bool IsStorePolicy(string policy)
+        {
+            return policy.StartsWith("btcpay.store", StringComparison.OrdinalIgnoreCase);
+        }
+    }
+    public class Permission
+    {
         public static Permission Create(string policy, string storeId = null)
         {
             if (TryCreatePermission(policy, storeId, out var r))
@@ -44,9 +54,9 @@ namespace BTCPayServer.Client
             if (policy == null)
                 throw new ArgumentNullException(nameof(policy));
             policy = policy.Trim().ToLowerInvariant();
-            if (!IsValidPolicy(policy))
+            if (!Policies.IsValidPolicy(policy))
                 return false;
-            if (storeId != null && !IsStorePolicy(policy))
+            if (storeId != null && !Policies.IsStorePolicy(policy))
                 return false;
             permission = new Permission(policy, storeId);
             return true;
@@ -62,7 +72,7 @@ namespace BTCPayServer.Client
             if (separator == -1)
             {
                 str = str.ToLowerInvariant();
-                if (!IsValidPolicy(str))
+                if (!Policies.IsValidPolicy(str))
                     return false;
                 permission = new Permission(str, null);
                 return true;
@@ -70,9 +80,9 @@ namespace BTCPayServer.Client
             else
             {
                 var policy = str.Substring(0, separator).ToLowerInvariant();
-                if (!IsValidPolicy(policy))
+                if (!Policies.IsValidPolicy(policy))
                     return false;
-                if (!IsStorePolicy(policy))
+                if (!Policies.IsStorePolicy(policy))
                     return false;
                 var storeId = str.Substring(separator + 1);
                 if (storeId.Length == 0)
@@ -82,15 +92,7 @@ namespace BTCPayServer.Client
             }
         }
 
-        private static bool IsValidPolicy(string policy)
-        {
-            return AllPolicies.Any(p => p.Equals(policy, StringComparison.OrdinalIgnoreCase));
-        }
-
-        private static bool IsStorePolicy(string policy)
-        {
-            return policy.StartsWith("btcpay.store", StringComparison.OrdinalIgnoreCase);
-        }
+        
 
         internal Permission(string policy, string storeId)
         {
@@ -107,7 +109,7 @@ namespace BTCPayServer.Client
             {
                 return false;
             }
-            if (!IsStorePolicy(subpermission.Policy))
+            if (!Policies.IsStorePolicy(subpermission.Policy))
                 return true;
             return StoreId == null || subpermission.StoreId == this.StoreId;
         }
@@ -133,15 +135,15 @@ namespace BTCPayServer.Client
 
         private bool ContainsPolicy(string subpolicy)
         {
-            if (this.Policy == Unrestricted)
+            if (this.Policy == Policies.Unrestricted)
                 return true;
             if (this.Policy == subpolicy)
                 return true;
-            if (subpolicy == CanViewStoreSettings && this.Policy == CanModifyStoreSettings)
+            if (subpolicy == Policies.CanViewStoreSettings && this.Policy == Policies.CanModifyStoreSettings)
                 return true;
-            if (subpolicy == CanCreateInvoice && this.Policy == CanModifyStoreSettings)
+            if (subpolicy == Policies.CanCreateInvoice && this.Policy == Policies.CanModifyStoreSettings)
                 return true;
-            if (subpolicy == CanViewProfile && this.Policy == CanModifyProfile)
+            if (subpolicy == Policies.CanViewProfile && this.Policy == Policies.CanModifyProfile)
                 return true;
             return false;
         }

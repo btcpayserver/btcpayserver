@@ -20,7 +20,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using NicolasDorier.RateLimits;
 using BTCPayServer.Client;
 
-namespace BTCPayServer.Controllers.RestApi.Users
+namespace BTCPayServer.Controllers.RestApi
 {
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.ApiKey)]

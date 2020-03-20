@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BTCPayServer.Controllers.RestApi.ApiKeys
+namespace BTCPayServer.Controllers.RestApi
 {
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.ApiKey)]

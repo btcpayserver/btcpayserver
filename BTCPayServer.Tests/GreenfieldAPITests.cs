@@ -42,7 +42,6 @@ namespace BTCPayServer.Tests
                 var apiKeyData = await client.GetCurrentAPIKeyInfo();
                 Assert.NotNull(apiKeyData);
                 Assert.Equal(client.APIKey, apiKeyData.ApiKey);
-                Assert.Equal(user.UserId, apiKeyData.UserId);
                 Assert.Equal(2, apiKeyData.Permissions.Length);
 
                 //revoke current api key

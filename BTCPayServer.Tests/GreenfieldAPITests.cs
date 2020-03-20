@@ -37,19 +37,16 @@ namespace BTCPayServer.Tests
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 await user.MakeAdmin();
-                var client = await user.CreateClient(Policies.CanModifyServerSettings, Policies.CanModifyStoreSettings);
+                var client = await user.CreateClient(Policies.Unrestricted);
                 //Get current api key 
                 var apiKeyData = await client.GetCurrentAPIKeyInfo();
                 Assert.NotNull(apiKeyData);
                 Assert.Equal(client.APIKey, apiKeyData.ApiKey);
-                Assert.Equal(2, apiKeyData.Permissions.Length);
+                Assert.Single(apiKeyData.Permissions);
 
                 //revoke current api key
                 await client.RevokeCurrentAPIKeyInfo();
-                await Assert.ThrowsAsync<HttpRequestException>(async () =>
-                {
-                    await client.GetCurrentAPIKeyInfo();
-                });
+                await AssertHttpError(401, async () => await client.GetCurrentAPIKeyInfo());
             }
         }
 

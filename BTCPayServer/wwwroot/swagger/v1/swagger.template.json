@@ -20,11 +20,10 @@
                 ],
                 "summary": "Authorize User",
                 "description": "Redirect the browser to this endpoint to request the user to generate an api-key with specific permissions",
-                "operationId": "Manage_AuthorizeAPIKey",
                 "parameters": [
                     {
                         "name": "permissions",
-                        "description": "The permissions to request. (See APIKey authentication)",
+                        "description": "The permissions to request. (See GreenField Authentication)",
                         "in": "query",
                         "style": "form",
                         "explode": true,
@@ -53,7 +52,8 @@
                         "in": "query",
                         "schema": {
                             "type": "boolean",
-                            "default": true
+                            "default": true,
+                            "nullable": true
                         },
                         "x-position": 3
                     },
@@ -63,29 +63,22 @@
                         "in": "query",
                         "schema": {
                             "type": "boolean",
-                            "default": false
+                            "default": false,
+                            "nullable": true
                         },
                         "x-position": 4
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "",
+                        "description": "A HTML form that a user can use to confirm permissions to grant",
                         "content": {
-                            "application/octet-stream": {
-                                "schema": {
-                                    "type": "string",
-                                    "format": "binary"
-                                }
+                            "text/html": {
                             }
                         }
                     }
                 },
-                "security": [
-                    {
-                        "APIKey": []
-                    }
-                ]
+                "security": [ ]
             }
         },
         "/api/v1/users/me": {
@@ -110,8 +103,8 @@
                 },
                 "security": [
                     {
-                        "APIKey": [
-                            "ProfileManagement"
+                        "GreenField Authentication": [
+                            "btcpay.user.canviewprofile"
                         ]
                     }
                 ]
@@ -123,7 +116,7 @@
                     "Users"
                 ],
                 "summary": "Create user",
-                "description": "Create a new user. This operation can be called without authentication if there is not any administrator yet on the server.",
+                "description": "Create a new user.\n\nThis operation can be called without authentication in any of this cases:\n* There is not any administrator yet on the server,\n* The subscriptions are not disabled in the server's policies.\n\nIf the first administrator is created by this call, subscriptions are automatically disabled.",
                 "requestBody": {
                     "x-name": "request",
                     "content": {
@@ -143,7 +136,7 @@
                                     },
                                     "isAdministrator": {
                                         "type": "boolean",
-                                        "description": "Make this user administrator (only if your APIKey has `unrestricted` permission of a server administrator)",
+                                        "description": "Make this user administrator (only if you have the `unrestricted` permission of a server administrator)",
                                         "nullable": true,
                                         "default": false
                                     }
@@ -187,10 +180,9 @@
                 },
                 "security": [
                     {
-                        "APIKey": [
-                            "ServerManagement"
-                        ],
-                        "Anonymous": [ ]
+                        "GreenField Authentication": [
+                            "btcpay.server.cancreateuser"
+                        ]
                     }
                 ]
             }
@@ -202,7 +194,6 @@
                 ],
                 "summary": "Get current API Key information",
                 "description": "View information about the current API key",
-                "operationId": "ApiKeys_GetKey",
                 "responses": {
                     "200": {
                         "description": "Information about the current api key",
@@ -217,7 +208,7 @@
                 },
                 "security": [
                     {
-                        "APIKey": []
+                        "GreenField Authentication": []
                     }
                 ]
             },
@@ -227,7 +218,6 @@
                 ],
                 "summary": "Revoke the current API Key",
                 "description": "Revoke the current API key so that it cannot be used anymore",
-                "operationId": "ApiKeys_RevokeKey",
                 "responses": {
                     "200": {
                         "description": "The key was revoked and is no longer usable",
@@ -242,7 +232,7 @@
                 },
                 "security": [
                     {
-                        "APIKey": []
+                        "GreenField Authentication": [ "unrestricted" ]
                     }
                 ]
             }
@@ -335,15 +325,18 @@
                 "properties": {
                     "apiKey": {
                         "type": "string",
+                        "description":  "The API Key to use for Greenfield Authentication",
                         "nullable": false
                     },
                     "label": {
                         "type": "string",
+                        "description": "The label given by the user to this API Key",
                         "nullable": false
                     },
                     "permissions": {
                         "type": "array",
-                        "nullable": true,
+                        "description": "The permissions associated to this API Key",
+                        "nullable": false,
                         "items": {
                             "type": "string"
                         }
@@ -352,24 +345,17 @@
             }
         },
         "securitySchemes": {
-            "APIKey": {
+            "GreenField Authentication": {
                 "type": "apiKey",
                 "description": "BTCPay Server supports authenticating and authorizing users through an API Key that is generated by them. Send the API Key as a header value to Authorization with the format: token {token}. For a smoother experience, you can generate a url that redirects users to an API key creation screen.\n\n The following permissions applies to the context of the user creating the API Key:\n * `unrestricted`: Allow unrestricted access to your account.\n * `btcpay.server.canmodifyserversettings`: Allow total control on the server settings. (only if user is administrator)\n * `btcpay.server.cancreateuser`: Allow the creation new users on this server. (only if user is administrator)\n * `btcpay.user.canviewprofile`: Allow view access to your user profile.\n * `btcpay.user.canmodifyprofile`: Allow view and modification access to your user profile.\n\nThe following permissions applies to all stores of the user, you can limit to a specific store with the following format: `btcpay.store.cancreateinvoice:6HSHAEU4iYWtjxtyRs9KyPjM9GAQp8kw2T9VWbGG1FnZ`:\n * `btcpay.store.canviewstoresettings`: Allow view access to the stores settings. \n * `btcpay.store.canmodifystoresettings`: Allow view and modification access to the stores settings.\n * `btcpay.store.cancreateinvoice`: Allow invoice creation of the store.\n\nNote that API Keys only limits permission of a user and can never expand it. If an API Key has the permission `btcpay.server.canmodifyserversettings` but that the user account creating this API Key is not administrator, the API Key will not be able to modify the server settings.\n",
                 "name": "Authorization",
                 "in": "header"
-            },
-            "Anonymous": {
-                "type": "http",
-                "scheme": "bearer",
-                "bearerFormat": "Nothing required",
-                "description": "Anonymous authentication"
             }
         }
     },
     "security": [
         {
-            "APIKey": [],
-            "Anonymous": []
+            "GreenField Authentication": []
         }
     ],
     "tags": [

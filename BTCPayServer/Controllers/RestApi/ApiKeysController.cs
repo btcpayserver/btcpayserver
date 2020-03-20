@@ -34,6 +34,7 @@ namespace BTCPayServer.Controllers.RestApi
         }
 
         [HttpDelete("~/api/v1/api-keys/current")]
+        [Authorize(Policy = Policies.Unrestricted, AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
         public async Task<ActionResult<ApiKeyData>> RevokeKey()
         {
             ControllerContext.HttpContext.GetAPIKey(out var apiKey);

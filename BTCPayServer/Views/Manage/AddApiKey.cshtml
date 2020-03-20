@@ -56,16 +56,16 @@
             }
             else if (Model.StoreMode == ManageController.AddApiKeyViewModel.ApiKeyStoreMode.Specific)
             {
-            <li class="list-group-item ">
+            <div class="list-group-item ">
                 <h5 class="mb-1">@Model.StoreManagementSelectivePermission.Title</h5>
                 <span class="form-text text-muted">@Model.StoreManagementSelectivePermission.Description</span>
                 <button type="submit" class="btn btn-link" name="command" value="change-store-mode">Give permission to all stores instead</button>
-            </li>
+            </div>
             @if (!Model.Stores.Any())
                     {
-            <li class="list-group-item alert-warning">
+            <div class="list-group-item alert-warning">
                 You currently have no stores configured.
-            </li>
+            </div>
                     }
             @for (var index = 0; index < Model.SpecificStores.Count; index++)
                     {

@@ -38,6 +38,7 @@ namespace BTCPayServer.Security.APIKeys
             {
                 case Policies.CanModifyProfile:
                 case Policies.CanViewProfile:
+                case Policies.Unrestricted:
                     success = context.HasPermission(Permission.Create(requirement.Policy));
                     break;
 

@@ -20,7 +20,7 @@ namespace BTCPayServer.Client.JsonConverters
                 return null;
             if (reader.TokenType != JsonToken.String)
                 throw new JsonObjectException("Type 'Permission' is expected to be a 'String'", reader);
-            if (reader.ReadAsString() is String s && Permission.TryParse(s, out var permission))
+            if (reader.Value is String s && Permission.TryParse(s, out var permission))
                 return permission;
             throw new JsonObjectException("Invalid 'Permission' String", reader);
         }

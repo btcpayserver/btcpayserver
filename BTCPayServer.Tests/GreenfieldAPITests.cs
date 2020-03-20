@@ -116,14 +116,14 @@ namespace BTCPayServer.Tests
                 user1Acc.UserId = user1.Id;
                 user1Acc.IsAdmin = false;
                 var user1Client = await user1Acc.CreateClient(Policies.CanModifyServerSettings);
-                var user1ClientBasic = await user1Acc.CreateClient();
+              
                 // User1 trying to get server management would still fail to create user
                 await AssertHttpError(403, async () => await user1Client.CreateUser(new CreateApplicationUserRequest() { Email = "test8@gmail.com", Password = "afewfoiewiou" }));
 
                 // User1 should be able to create user if subscription unlocked
                 await settings.UpdateSetting<PoliciesSettings>(new PoliciesSettings() { LockSubscription = false });
                 await user1Client.CreateUser(new CreateApplicationUserRequest() { Email = "test8@gmail.com", Password = "afewfoiewiou" });
-                await user1ClientBasic.CreateUser(new CreateApplicationUserRequest() { Email = "testaa8@gmail.com", Password = "afewfoiewiou" });
+
                 // But not an admin
                 await AssertHttpError(403, async () => await user1Client.CreateUser(new CreateApplicationUserRequest() { Email = "admin8@gmail.com", Password = "afewfoiewiou", IsAdministrator = true }));
             }

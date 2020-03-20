@@ -223,6 +223,10 @@ namespace BTCPayServer.Tests
                 var bitfinex = new MockRateProvider();
                 bitfinex.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("UST_BTC"), new BidAsk(0.000136m)));
                 rateProvider.Providers.Add("bitfinex", bitfinex);
+                
+                var bitpay = new MockRateProvider();
+                bitpay.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("ETB_BTC"), new BidAsk(0.1m)));
+                rateProvider.Providers.Add("bitpay", bitpay);
             }
 
 

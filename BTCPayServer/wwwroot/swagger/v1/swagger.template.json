@@ -172,7 +172,7 @@
                         "description": "If you need to authenticate for this endpoint (ie. the server settings policies lock subscriptions and that an admin already exists)"
                     },
                     "403": {
-                        "description": "If you are authenticated but forbidden to create a new user (ie. you don't have the ServerManagement permission)"
+                        "description": "If you are authenticated but forbidden to create a new user (ie. you don't have the `unrestricted` permission on a server administrator or if you are not administrator and registrations are disabled in the server's policies)"
                     },
                     "429": {
                         "description": "DDoS protection if you are creating more than 2 accounts every minutes (non-admin only)"

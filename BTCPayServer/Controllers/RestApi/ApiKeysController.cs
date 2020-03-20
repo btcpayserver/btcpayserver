@@ -6,14 +6,13 @@ using BTCPayServer.Data;
 using BTCPayServer.Security;
 using BTCPayServer.Security.APIKeys;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Controllers.RestApi
 {
     [ApiController]
-    [Authorize(AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
+    [Authorize(AuthenticationSchemes = AuthenticationSchemes.ApiKeyOrBasic)]
     public class ApiKeysController : ControllerBase
     {
         private readonly APIKeyRepository _apiKeyRepository;
@@ -34,7 +33,7 @@ namespace BTCPayServer.Controllers.RestApi
         }
 
         [HttpDelete("~/api/v1/api-keys/current")]
-        [Authorize(Policy = Policies.Unrestricted, AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
+        [Authorize(Policy = Policies.Unrestricted, AuthenticationSchemes = AuthenticationSchemes.ApiKeyOrBasic)]
         public async Task<ActionResult<ApiKeyData>> RevokeKey()
         {
             ControllerContext.HttpContext.GetAPIKey(out var apiKey);

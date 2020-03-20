@@ -7,7 +7,7 @@
     Layout = "_Layout";
     ViewData["Title"] = $"Authorize {(Model.ApplicationName ?? "Application")}";
     var permissions = Permission.ToPermissions(Model.Permissions);
-    var hasStorePermission = permissions.Any(p => p.Policy == Permission.CanModifyStoreSettings);
+    var hasStorePermission = permissions.Any(p => p.Policy == Policies.CanModifyStoreSettings);
 }
 
 <partial name="_StatusMessage"/>

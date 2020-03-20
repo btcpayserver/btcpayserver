@@ -102,8 +102,8 @@ namespace BTCPayServer.Tests
                 await AssertHttpError(403, async () => await adminClient.CreateUser(new CreateApplicationUserRequest() { Email = "test4@gmail.com", Password = "afewfoiewiou" }));
                 await AssertHttpError(403, async () => await adminClient.CreateUser(new CreateApplicationUserRequest() { Email = "test4@gmail.com", Password = "afewfoiewiou", IsAdministrator = true }));
 
-                // However, should be ok with the server management permissions
-                adminClient = await adminAcc.CreateClient(Policies.CanModifyServerSettings);
+                // However, should be ok with the unrestricted permissions of an admin
+                adminClient = await adminAcc.CreateClient(Policies.Unrestricted);
                 await adminClient.CreateUser(new CreateApplicationUserRequest() { Email = "test4@gmail.com", Password = "afewfoiewiou" });
                 // Even creating new admin should be ok
                 await adminClient.CreateUser(new CreateApplicationUserRequest() { Email = "admin4@gmail.com", Password = "afewfoiewiou", IsAdministrator = true });

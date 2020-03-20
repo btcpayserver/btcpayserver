@@ -87,7 +87,8 @@ namespace BTCPayServer.Controllers.RestApi
             if (anyAdmin && request.IsAdministrator is true && !isAuth)
                 return Forbid(AuthenticationSchemes.ApiKey);
             // You are de-facto admin if there is no other admin, else you need to be auth and pass policy requirements
-            bool isAdmin = anyAdmin ? (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanModifyServerSettings))).Succeeded 
+            bool isAdmin = anyAdmin ? (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanModifyServerSettings))).Succeeded
+                                     && (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.Unrestricted))).Succeeded
                                      && isAuth
                                     : true;
             // You need to be admin to create an admin

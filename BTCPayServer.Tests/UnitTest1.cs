@@ -62,6 +62,7 @@ using BTCPayServer.U2F.Models;
 using BTCPayServer.Security.Bitpay;
 using MemoryCache = Microsoft.Extensions.Caching.Memory.MemoryCache;
 using Newtonsoft.Json.Schema;
+using BTCPayServer.Client;
 
 namespace BTCPayServer.Tests
 {
@@ -2998,6 +2999,22 @@ noninventoryitem:
             var builder = new DbContextOptionsBuilder<ApplicationDbContext>();
             builder.UseSqlite("Data Source=temp.db");
             await new ApplicationDbContext(builder.Options).Database.MigrateAsync();
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Fast", "Fast")]
+        public void CanUsePermission()
+        {
+            Assert.True(Permission.Create(Permission.CanModifyServerSettings).Contains(Permission.Create(Permission.CanModifyServerSettings)));
+            Assert.True(Permission.Create(Permission.CanModifyProfile).Contains(Permission.Create(Permission.CanViewProfile)));
+            Assert.True(Permission.Create(Permission.CanModifyStoreSettings).Contains(Permission.Create(Permission.CanViewStoreSettings)));
+            Assert.False(Permission.Create(Permission.CanViewStoreSettings).Contains(Permission.Create(Permission.CanModifyStoreSettings)));
+            Assert.False(Permission.Create(Permission.CanModifyServerSettings).Contains(Permission.Create(Permission.CanModifyStoreSettings)));
+            Assert.True(Permission.Create(Permission.Unrestricted).Contains(Permission.Create(Permission.CanModifyStoreSettings)));
+            Assert.True(Permission.Create(Permission.Unrestricted).Contains(Permission.Create(Permission.CanModifyStoreSettings, "abc")));
+
+            Assert.True(Permission.Create(Permission.CanViewStoreSettings).Contains(Permission.Create(Permission.CanViewStoreSettings, "abcd")));
+            Assert.False(Permission.Create(Permission.CanModifyStoreSettings, "abcd").Contains(Permission.Create(Permission.CanModifyStoreSettings)));
         }
 
         [Fact(Timeout = TestTimeout)]

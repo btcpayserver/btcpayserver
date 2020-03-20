@@ -38,11 +38,14 @@ namespace BTCPayServer.Tests
             GrantAccessAsync().GetAwaiter().GetResult();
         }
 
-        public async Task MakeAdmin()
+        public async Task MakeAdmin(bool isAdmin = true)
         {
             var userManager = parent.PayTester.GetService<UserManager<ApplicationUser>>();
             var u = await userManager.FindByIdAsync(UserId);
-            await userManager.AddToRoleAsync(u, Roles.ServerAdmin);
+            if (isAdmin)
+                await userManager.AddToRoleAsync(u, Roles.ServerAdmin);
+            else
+                await userManager.RemoveFromRoleAsync(u, Roles.ServerAdmin);
             IsAdmin = true;
         }
 

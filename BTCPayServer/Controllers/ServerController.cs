@@ -35,10 +35,11 @@ using BTCPayServer.Services.Apps;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore;
+using BTCPayServer.Client;
 
 namespace BTCPayServer.Controllers
 {
-    [Authorize(Policy = BTCPayServer.Security.Policies.CanModifyServerSettings.Key,
+    [Authorize(Policy = Permission.CanModifyServerSettings,
                AuthenticationSchemes = BTCPayServer.Security.AuthenticationSchemes.Cookie)]
     public partial class ServerController : Controller
     {

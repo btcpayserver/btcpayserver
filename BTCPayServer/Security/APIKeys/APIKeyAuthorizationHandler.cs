@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -35,68 +36,60 @@ namespace BTCPayServer.Security.APIKeys
             bool success = false;
             switch (requirement.Policy)
             {
-                case Policies.CanModifyProfile.Key:
-                    success = context.HasPermissions(Permissions.ProfileManagement);
+                case Permission.CanModifyProfile:
+                case Permission.CanViewProfile:
+                    success = context.HasPermission(Permission.Create(requirement.Policy));
                     break;
-                case Policies.CanListStoreSettings.Key:
-                    var selectiveStorePermissions =
-                        Permissions.ExtractStorePermissionsIds(context.GetPermissions());
-                    success = context.HasPermissions(Permissions.StoreManagement) ||
-                              selectiveStorePermissions.Any();
-                    break;
-                case Policies.CanModifyStoreSettings.Key:
-                    string storeId = _HttpContext.GetImplicitStoreId();
-                    if (!context.HasPermissions(Permissions.StoreManagement) &&
-                        !context.HasPermissions(Permissions.GetStorePermission(storeId)))
-                        break;
 
-                    if (storeId == null)
+                case Permission.CanViewStoreSettings:
+                case Permission.CanModifyStoreSettings:
+                    var storeId = _HttpContext.GetImplicitStoreId();
+                    var userid = _userManager.GetUserId(context.User);
+                    // Specific store action
+                    if (storeId != null)
                     {
-                        success = true;
+                        if (context.HasPermission(Permission.Create(requirement.Policy, storeId)))
+                        {
+                            if (string.IsNullOrEmpty(userid))
+                                break;
+                            var store = await _storeRepository.FindStore((string)storeId, userid);
+                            if (store == null)
+                                break;
+                            success = true;
+                            _HttpContext.SetStoreData(store);
+                        }
                     }
                     else
                     {
-                        var userid = _userManager.GetUserId(context.User);
-                        if (string.IsNullOrEmpty(userid))
+                        var stores = await _storeRepository.GetStoresByUserId(userid);
+                        List<StoreData> permissionedStores = new List<StoreData>();
+                        foreach (var store in stores)
+                        {
+                            if (context.HasPermission(Permission.Create(requirement.Policy, store.Id)))
+                                permissionedStores.Add(store);
+                        }
+                        _HttpContext.SetStoresData(stores.ToArray());
+                        success = true;
+                    }
+                    break;
+                case Permission.CanCreateUser:
+                case Permission.CanModifyServerSettings:
+                    if (context.HasPermission(Permission.Create(requirement.Policy)))
+                    {
+                        var user = await _userManager.GetUserAsync(context.User);
+                        if (user == null)
                             break;
-                        var store = await _storeRepository.FindStore((string)storeId, userid);
-                        if (store == null)
+                        if (!await _userManager.IsInRoleAsync(user, Roles.ServerAdmin))
                             break;
                         success = true;
-                        _HttpContext.SetStoreData(store);
                     }
-
                     break;
-                case Policies.CanCreateUser.Key:
-                case Policies.CanModifyServerSettings.Key:
-                    if (!context.HasPermissions(Permissions.ServerManagement))
-                        break;
-                    // For this authorization, we still check in database because it is super sensitive.
-                    success = await IsUserAdmin(context.User);
-                    break;
-            }
-
-            //if you do not have the specific permissions, BUT you have server management, we enable god mode 
-            if (!success && context.HasPermissions(Permissions.ServerManagement) &&
-                requirement.Policy != Policies.CanModifyServerSettings.Key)
-            {
-                success = await IsUserAdmin(context.User);
             }
 
             if (success)
             {
                 context.Succeed(requirement);
             }
-        }
-
-        private async Task<bool> IsUserAdmin(ClaimsPrincipal contextUser)
-        {
-            var user = await _userManager.GetUserAsync(contextUser);
-            if (user == null)
-                return false;
-            if (!await _userManager.IsInRoleAsync(user, Roles.ServerAdmin))
-                return false;
-            return true;
         }
     }
 }

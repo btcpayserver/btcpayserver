@@ -29,22 +29,6 @@ namespace BTCPayServer.Security.APIKeys
             return false;
         }
 
-        public static Task<StoreData[]> GetStores(this ClaimsPrincipal claimsPrincipal,
-            UserManager<ApplicationUser> userManager, StoreRepository storeRepository)
-        {
-            var permissions =
-                claimsPrincipal.Claims.Where(claim => claim.Type == APIKeyConstants.ClaimTypes.Permissions)
-                    .Select(claim => claim.Value).ToList();
-
-            if (permissions.Contains(Permissions.StoreManagement))
-            {
-                return storeRepository.GetStoresByUserId(userManager.GetUserId(claimsPrincipal));
-            }
-
-            var storeIds = Permissions.ExtractStorePermissionsIds(permissions);
-            return storeRepository.GetStoresByUserId(userManager.GetUserId(claimsPrincipal), storeIds);
-        }
-
         public static AuthenticationBuilder AddAPIKeyAuthentication(this AuthenticationBuilder builder)
         {
             builder.AddScheme<APIKeyAuthenticationOptions, APIKeyAuthenticationHandler>(AuthenticationSchemes.ApiKey,
@@ -62,15 +46,24 @@ namespace BTCPayServer.Security.APIKeys
         public static string[] GetPermissions(this AuthorizationHandlerContext context)
         {
             return context.User.Claims.Where(c =>
-                    c.Type.Equals(APIKeyConstants.ClaimTypes.Permissions, StringComparison.InvariantCultureIgnoreCase))
+                    c.Type.Equals(APIKeyConstants.ClaimTypes.Permission, StringComparison.InvariantCultureIgnoreCase))
                 .Select(claim => claim.Value).ToArray();
         }
 
-        public static bool HasPermissions(this AuthorizationHandlerContext context, params string[] scopes)
+        public static bool HasPermission(this AuthorizationHandlerContext context, Permission permission)
         {
-            return scopes.All(s => context.User.HasClaim(c =>
-                c.Type.Equals(APIKeyConstants.ClaimTypes.Permissions, StringComparison.InvariantCultureIgnoreCase) &&
-                c.Value.Split(' ').Contains(s)));
+            foreach (var claim in context.User.Claims.Where(c =>
+                c.Type.Equals(APIKeyConstants.ClaimTypes.Permission, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                if (Permission.TryParse(claim.Value, out var claimPermission))
+                {
+                    if (claimPermission.Contains(permission))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
     }
 }

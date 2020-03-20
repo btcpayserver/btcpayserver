@@ -6,6 +6,7 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.ModelBinders;
@@ -30,7 +31,7 @@ using Newtonsoft.Json;
 namespace BTCPayServer.Controllers
 {
     [Route("wallets")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings.Key, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Permission.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [AutoValidateAntiforgeryToken]
     public partial class WalletsController : Controller
     {
@@ -366,7 +367,7 @@ namespace BTCPayServer.Controllers
 
         private async Task<bool> CanUseHotWallet()
         {
-            var isAdmin = (await _authorizationService.AuthorizeAsync(User, Policies.CanModifyServerSettings.Key)).Succeeded;
+            var isAdmin = (await _authorizationService.AuthorizeAsync(User, Permission.CanModifyServerSettings)).Succeeded;
             if (isAdmin)
                 return true;
             var policies = await _settingsRepository.GetSettingAsync<PoliciesSettings>();
@@ -839,7 +840,7 @@ namespace BTCPayServer.Controllers
 
             var vm = new RescanWalletModel();
             vm.IsFullySync = _dashboard.IsFullySynched(walletId.CryptoCode, out var unused);
-            vm.IsServerAdmin = (await _authorizationService.AuthorizeAsync(User, Policies.CanModifyServerSettings.Key)).Succeeded;
+            vm.IsServerAdmin = (await _authorizationService.AuthorizeAsync(User, Permission.CanModifyServerSettings)).Succeeded;
             vm.IsSupportedByCurrency = _dashboard.Get(walletId.CryptoCode)?.Status?.BitcoinStatus?.Capabilities?.CanScanTxoutSet == true;
             var explorer = ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode);
             var scanProgress = await explorer.GetScanUTXOSetInformationAsync(paymentMethod.AccountDerivation);
@@ -869,7 +870,7 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("{walletId}/rescan")]
-        [Authorize(Policy = Policies.CanModifyServerSettings.Key, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [Authorize(Policy = Permission.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> WalletRescan(
             [ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, RescanWalletModel vm)

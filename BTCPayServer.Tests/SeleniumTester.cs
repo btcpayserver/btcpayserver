@@ -32,9 +32,9 @@ namespace BTCPayServer.Tests
         public IWebDriver Driver { get; set; }
         public ServerTester Server { get; set; }
 
-        public static SeleniumTester Create([CallerMemberNameAttribute] string scope = null)
+        public static SeleniumTester Create([CallerMemberNameAttribute] string scope = null, bool newDb = false)
         {
-            var server = ServerTester.Create(scope);
+            var server = ServerTester.Create(scope, newDb);
             return new SeleniumTester()
             {
                 Server = server
@@ -259,7 +259,7 @@ namespace BTCPayServer.Tests
 
         public void SetCheckbox(SeleniumTester s, string inputName, bool value)
         {
-            SetCheckbox(s.Driver.FindElement(By.Name(inputName)), value);
+            SetCheckbox(s.Driver.FindElement(By.Id(inputName)), value);
         }
 
         public void ScrollToElement(IWebElement element)

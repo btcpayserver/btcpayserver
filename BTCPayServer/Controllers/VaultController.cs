@@ -7,6 +7,7 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Hwi;
 using BTCPayServer.ModelBinders;
@@ -127,7 +128,7 @@ namespace BTCPayServer.Controllers
                                 }
                                 await websocketHelper.Send("{ \"info\": \"ready\"}", cancellationToken);
                                 o = JObject.Parse(await websocketHelper.NextMessageAsync(cancellationToken));
-                                var authorization = await _authorizationService.AuthorizeAsync(User, Policies.CanModifyStoreSettings.Key);
+                                var authorization = await _authorizationService.AuthorizeAsync(User, Permission.CanModifyStoreSettings);
                                 if (!authorization.Succeeded)
                                 {
                                     await websocketHelper.Send("{ \"error\": \"not-authorized\"}", cancellationToken);

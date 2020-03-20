@@ -6,6 +6,7 @@ using System.Net.Mime;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Filters;
@@ -510,7 +511,7 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("invoices/create")]
-        [Authorize(Policy = Policies.CanCreateInvoice.Key, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [Authorize(Policy = Permission.CanCreateInvoice, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [BitpayAPIConstraint(false)]
         public async Task<IActionResult> CreateInvoice(CreateInvoiceModel model, CancellationToken cancellationToken)
         {

@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Client;
 using BTCPayServer.Filters;
 using BTCPayServer.Models;
 using BTCPayServer.Security;
@@ -12,7 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace BTCPayServer.Controllers
 {
     [BitpayAPIConstraint]
-    [Authorize(Policies.CanCreateInvoice.Key, AuthenticationSchemes = AuthenticationSchemes.Bitpay)]
+    [Authorize(Permission.CanCreateInvoice, AuthenticationSchemes = AuthenticationSchemes.Bitpay)]
     public class InvoiceControllerAPI : Controller
     {
         private InvoiceController _InvoiceController;

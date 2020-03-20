@@ -24,6 +24,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using BTCPayServer.Logging;
 using Microsoft.Extensions.Logging;
+using BTCPayServer.Client;
 
 namespace BTCPayServer.Controllers
 {
@@ -386,7 +387,7 @@ namespace BTCPayServer.Controllers
 
         private async Task<bool> CanUseHotWallet()
         {
-            var isAdmin = (await _authorizationService.AuthorizeAsync(User, BTCPayServer.Security.Policies.CanModifyServerSettings.Key)).Succeeded;
+            var isAdmin = (await _authorizationService.AuthorizeAsync(User, Permission.CanModifyServerSettings)).Succeeded;
             if (isAdmin)
                 return true;
             var policies = await _settingsRepository.GetSettingAsync<PoliciesSettings>();

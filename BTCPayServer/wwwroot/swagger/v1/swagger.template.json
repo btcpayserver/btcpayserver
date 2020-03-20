@@ -209,8 +209,7 @@
                 },
                 "security": [
                     {
-                        "GreenField Authentication": [],
-                        "Basic": []
+                        "GreenField Authentication": []
                     }
                 ]
             },
@@ -234,8 +233,7 @@
                 },
                 "security": [
                     {
-                        "GreenField Authentication": [ "unrestricted" ],
-                        "Basic": []
+                        "GreenField Authentication": [ "unrestricted" ]
                     }
                 ]
             }

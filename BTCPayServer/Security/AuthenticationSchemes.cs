@@ -6,6 +6,6 @@
         public const string Bitpay = "Bitpay";
         public const string ApiKey = "GreenfieldApiKey";
         public const string Basic = "Basic";
-        public const string ApiKeyOrBasic = "Basic,GreenfieldApiKey";
+        public const string ApiKeyOrBasic = ApiKey + "," + Basic;
     }
 }

@@ -128,7 +128,7 @@ namespace BTCPayServer.Controllers
                                 }
                                 await websocketHelper.Send("{ \"info\": \"ready\"}", cancellationToken);
                                 o = JObject.Parse(await websocketHelper.NextMessageAsync(cancellationToken));
-                                var authorization = await _authorizationService.AuthorizeAsync(User, Permission.CanModifyStoreSettings);
+                                var authorization = await _authorizationService.AuthorizeAsync(User, Policies.CanModifyStoreSettings);
                                 if (!authorization.Succeeded)
                                 {
                                     await websocketHelper.Send("{ \"error\": \"not-authorized\"}", cancellationToken);

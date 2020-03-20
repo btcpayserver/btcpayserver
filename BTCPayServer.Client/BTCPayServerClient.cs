@@ -5,23 +5,25 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Client
 {
     public partial class BTCPayServerClient
     {
+        static BTCPayServerClient()
+        {
+            _GlobalSerializer = new JsonSerializerSettings();
+            Serializer.RegisterConverters(_GlobalSerializer);
+        }
         private readonly string _apiKey;
         private readonly Uri _btcpayHost;
         private readonly HttpClient _httpClient;
 
         public string APIKey => _apiKey;
 
-        private readonly JsonSerializerOptions _serializerOptions = new JsonSerializerOptions()
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        };
+        private static readonly JsonSerializerSettings _GlobalSerializer = new JsonSerializerSettings();
 
         public BTCPayServerClient(Uri btcpayHost, HttpClient httpClient = null)
         {
@@ -45,7 +47,7 @@ namespace BTCPayServer.Client
         protected async Task<T> HandleResponse<T>(HttpResponseMessage message)
         {
             HandleResponse(message);
-            return JsonSerializer.Deserialize<T>(await message.Content.ReadAsStringAsync(), _serializerOptions);
+            return JsonConvert.DeserializeObject<T>(await message.Content.ReadAsStringAsync(), _GlobalSerializer);
         }
 
         protected virtual HttpRequestMessage CreateHttpRequest(string path,
@@ -73,7 +75,7 @@ namespace BTCPayServer.Client
             var request = CreateHttpRequest(path, queryPayload, method);
             if (typeof(T).IsPrimitive || !EqualityComparer<T>.Default.Equals(bodyPayload, default(T)))
             {
-                request.Content = new StringContent(JsonSerializer.Serialize(bodyPayload, _serializerOptions), Encoding.UTF8, "application/json");
+                request.Content = new StringContent(JsonConvert.SerializeObject(bodyPayload, _GlobalSerializer), Encoding.UTF8, "application/json");
             }
 
             return request;

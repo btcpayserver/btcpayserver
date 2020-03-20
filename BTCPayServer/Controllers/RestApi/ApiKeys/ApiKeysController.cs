@@ -45,7 +45,7 @@ namespace BTCPayServer.Controllers.RestApi.ApiKeys
         {
             return new ApiKeyData()
             {
-                Permissions = Permission.ToPermissions(data.Permissions).Select(c => c.ToString()).ToArray(),
+                Permissions = Permission.ToPermissions(data.Permissions).ToArray(),
                 ApiKey = data.Id,
                 UserId = data.UserId,
                 Label = data.Label

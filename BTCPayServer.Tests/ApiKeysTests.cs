@@ -165,7 +165,7 @@ namespace BTCPayServer.Tests
             var expectedPermissions = Permission.ToPermissions(expectedPermissionsString).ToArray();
             expectedPermissions ??= new Permission[0];
             var apikeydata = await TestApiAgainstAccessToken<ApiKeyData>(accessToken, $"api/v1/api-keys/current", tester.PayTester.HttpClient);
-            var permissions = Permission.ToPermissions(apikeydata.Permissions).ToArray();
+            var permissions = apikeydata.Permissions;
             Assert.Equal(expectedPermissions.Length, permissions.Length);
             foreach (var expectPermission in expectedPermissions)
             {

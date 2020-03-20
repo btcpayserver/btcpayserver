@@ -36,13 +36,13 @@ namespace BTCPayServer.Security.APIKeys
             bool success = false;
             switch (requirement.Policy)
             {
-                case Permission.CanModifyProfile:
-                case Permission.CanViewProfile:
+                case Policies.CanModifyProfile:
+                case Policies.CanViewProfile:
                     success = context.HasPermission(Permission.Create(requirement.Policy));
                     break;
 
-                case Permission.CanViewStoreSettings:
-                case Permission.CanModifyStoreSettings:
+                case Policies.CanViewStoreSettings:
+                case Policies.CanModifyStoreSettings:
                     var storeId = _HttpContext.GetImplicitStoreId();
                     var userid = _userManager.GetUserId(context.User);
                     // Specific store action
@@ -72,8 +72,8 @@ namespace BTCPayServer.Security.APIKeys
                         success = true;
                     }
                     break;
-                case Permission.CanCreateUser:
-                case Permission.CanModifyServerSettings:
+                case Policies.CanCreateUser:
+                case Policies.CanModifyServerSettings:
                     if (context.HasPermission(Permission.Create(requirement.Policy)))
                     {
                         var user = await _userManager.GetUserAsync(context.User);

@@ -331,7 +331,6 @@ namespace BTCPayServer.Controllers
             }
             public string Label { get; set; }
             public StoreData[] Stores { get; set; }
-            ApiKeyStoreMode _StoreMode;
             public ApiKeyStoreMode StoreMode { get; set; }
             public List<string> SpecificStores { get; set; } = new List<string>();
             public PermissionValueItem StoreManagementPermission { get; set; }

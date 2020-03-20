@@ -36,7 +36,7 @@ namespace BTCPayServer.Security
             var isAdmin = context.User.IsInRole(Roles.ServerAdmin);
             switch (requirement.Policy)
             {
-                case Permission.CanModifyServerSettings:
+                case Policies.CanModifyServerSettings:
                     if (isAdmin)
                         context.Succeed(requirement);
                     return;
@@ -57,11 +57,11 @@ namespace BTCPayServer.Security
             bool success = false;
             switch (requirement.Policy)
             {
-                case Permission.CanModifyStoreSettings:
+                case Policies.CanModifyStoreSettings:
                     if (store.Role == StoreRoles.Owner || isAdmin)
                         success = true;
                     break;
-                case Permission.CanCreateInvoice:
+                case Policies.CanCreateInvoice:
                     if (store.Role == StoreRoles.Owner ||
                         store.Role == StoreRoles.Guest ||
                         isAdmin ||

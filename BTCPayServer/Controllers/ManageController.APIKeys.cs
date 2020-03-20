@@ -130,7 +130,7 @@ namespace BTCPayServer.Controllers
             }
 
             var permissions = Permission.ToPermissions(viewModel.Permissions).ToHashSet();
-            if (permissions.Contains(Permission.Create(Permission.CanModifyStoreSettings)))
+            if (permissions.Contains(Permission.Create(Policies.CanModifyStoreSettings)))
             {
                 if (!viewModel.SelectiveStores &&
                     viewModel.StoreMode == AddApiKeyViewModel.ApiKeyStoreMode.Specific)
@@ -253,11 +253,11 @@ namespace BTCPayServer.Controllers
             }
             if (viewModel.StoreMode == AddApiKeyViewModel.ApiKeyStoreMode.AllStores && viewModel.StoreManagementPermission.Value)
             {
-                permissions.Add(Permission.Create(Permission.CanModifyStoreSettings));
+                permissions.Add(Permission.Create(Policies.CanModifyStoreSettings));
             }
             else if (viewModel.StoreMode == AddApiKeyViewModel.ApiKeyStoreMode.Specific)
             {
-                permissions.AddRange(viewModel.SpecificStores.Select(s => Permission.Create(Permission.CanModifyStoreSettings, s)));
+                permissions.AddRange(viewModel.SpecificStores.Select(s => Permission.Create(Policies.CanModifyStoreSettings, s)));
             }
             return permissions.Distinct();
         }
@@ -265,15 +265,15 @@ namespace BTCPayServer.Controllers
         private async Task<T> SetViewModelValues<T>(T viewModel) where T : AddApiKeyViewModel
         {
             viewModel.Stores = await _StoreRepository.GetStoresByUserId(_userManager.GetUserId(User));
-            var isAdmin = (await _authorizationService.AuthorizeAsync(User, Permission.CanModifyServerSettings)).Succeeded;
-            viewModel.PermissionValues ??= Permission.AllPolicies.Where(p => p != Permission.CanModifyStoreSettings)
+            var isAdmin = (await _authorizationService.AuthorizeAsync(User, Policies.CanModifyServerSettings)).Succeeded;
+            viewModel.PermissionValues ??= Policies.AllPolicies.Where(p => p != Policies.CanModifyStoreSettings)
                 .Select(s => new AddApiKeyViewModel.PermissionValueItem() { Permission = s, Value = false }).ToList();
             if (!isAdmin)
             {
                 foreach (var p in viewModel.PermissionValues)
                 {
-                    if (p.Permission == Permission.CanCreateUser ||
-                        p.Permission == Permission.CanModifyServerSettings)
+                    if (p.Permission == Policies.CanCreateUser ||
+                        p.Permission == Policies.CanModifyServerSettings)
                     {
                         p.Forbidden = true;
                     }
@@ -288,19 +288,19 @@ namespace BTCPayServer.Controllers
             {
                 StoreManagementPermission = new PermissionValueItem()
                 {
-                    Permission = Permission.CanModifyStoreSettings,
+                    Permission = Policies.CanModifyStoreSettings,
                     Value = false
                 };
                 StoreManagementSelectivePermission = new PermissionValueItem()
                 {
-                    Permission = $"{Permission.CanModifyStoreSettings}:",
+                    Permission = $"{Policies.CanModifyStoreSettings}:",
                     Value = true
                 };
             }
             public AddApiKeyViewModel(IEnumerable<Permission> permissions):this()
             {
-                StoreManagementPermission.Value = permissions.Any(p => p.Policy == Permission.CanModifyStoreSettings && p.StoreId == null);
-                PermissionValues = permissions.Where(p => p.Policy != Permission.CanModifyStoreSettings)
+                StoreManagementPermission.Value = permissions.Any(p => p.Policy == Policies.CanModifyStoreSettings && p.StoreId == null);
+                PermissionValues = permissions.Where(p => p.Policy != Policies.CanModifyStoreSettings)
                                     .Select(p => new PermissionValueItem() { Permission = p.ToString(), Value = true })
                                     .ToList();
             }
@@ -318,13 +318,13 @@ namespace BTCPayServer.Controllers
                 if (this.StoreMode == ApiKeyStoreMode.AllStores)
                 {
                     if (StoreManagementPermission.Value)
-                        yield return Permission.Create(Permission.CanModifyStoreSettings);
+                        yield return Permission.Create(Policies.CanModifyStoreSettings);
                 }
                 else if (this.StoreMode == ApiKeyStoreMode.Specific && SpecificStores is List<string>)
                 {
                     foreach (var p in SpecificStores)
                     {
-                        if (Permission.TryCreatePermission(Permission.CanModifyStoreSettings, p, out var pp))
+                        if (Permission.TryCreatePermission(Policies.CanModifyStoreSettings, p, out var pp))
                             yield return pp;
                     }
                 }
@@ -349,15 +349,15 @@ namespace BTCPayServer.Controllers
             {
                 public static readonly Dictionary<string, (string Title, string Description)> PermissionDescriptions = new Dictionary<string, (string Title, string Description)>()
                 {
-                    {BTCPayServer.Client.Permission.Unrestricted, ("Unrestricted access", "The app will have unrestricted access to your account.")},
-                    {BTCPayServer.Client.Permission.CanCreateUser, ("Create new users", "The app will be able to create new users on this server.")},
-                    {BTCPayServer.Client.Permission.CanModifyStoreSettings, ("Modify your stores", "The app will be able to create, view and modify, delete and create new invoices on the  all your stores.")},
-                    {BTCPayServer.Client.Permission.CanViewStoreSettings, ("View your stores", "The app will be able to create, view all your stores.")},
-                    {$"{BTCPayServer.Client.Permission.CanModifyStoreSettings}:", ("Manage selected stores", "The app will be able to view, modify, delete and create new invoices on the selected stores.")},
-                    {BTCPayServer.Client.Permission.CanModifyServerSettings, ("Manage your server", "The app will have total control on your server")},
-                    {BTCPayServer.Client.Permission.CanViewProfile, ("View your profile", "The app will be able to view your user profile.")},
-                    {BTCPayServer.Client.Permission.CanModifyProfile, ("Manage your profile", "The app will be able to view and modify your user profile.")},
-                    {BTCPayServer.Client.Permission.CanCreateInvoice, ("Create an invoice", "The app will be able to create new invoice.")},
+                    {BTCPayServer.Client.Policies.Unrestricted, ("Unrestricted access", "The app will have unrestricted access to your account.")},
+                    {BTCPayServer.Client.Policies.CanCreateUser, ("Create new users", "The app will be able to create new users on this server.")},
+                    {BTCPayServer.Client.Policies.CanModifyStoreSettings, ("Modify your stores", "The app will be able to create, view and modify, delete and create new invoices on the  all your stores.")},
+                    {BTCPayServer.Client.Policies.CanViewStoreSettings, ("View your stores", "The app will be able to create, view all your stores.")},
+                    {$"{BTCPayServer.Client.Policies.CanModifyStoreSettings}:", ("Manage selected stores", "The app will be able to view, modify, delete and create new invoices on the selected stores.")},
+                    {BTCPayServer.Client.Policies.CanModifyServerSettings, ("Manage your server", "The app will have total control on your server")},
+                    {BTCPayServer.Client.Policies.CanViewProfile, ("View your profile", "The app will be able to view your user profile.")},
+                    {BTCPayServer.Client.Policies.CanModifyProfile, ("Manage your profile", "The app will be able to view and modify your user profile.")},
+                    {BTCPayServer.Client.Policies.CanCreateInvoice, ("Create an invoice", "The app will be able to create new invoice.")},
                 };
                 public string Title
                 {

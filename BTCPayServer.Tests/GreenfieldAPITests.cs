@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
-using BTCPayServer.Controllers.RestApi.Users;
 using BTCPayServer.Services;
 using BTCPayServer.Tests.Logging;
 using Microsoft.AspNet.SignalR.Client;

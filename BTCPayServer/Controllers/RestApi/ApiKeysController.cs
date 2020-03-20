@@ -47,8 +47,7 @@ namespace BTCPayServer.Controllers.RestApi
             {
                 Permissions = Permission.ToPermissions(data.Permissions).ToArray(),
                 ApiKey = data.Id,
-                UserId = data.UserId,
-                Label = data.Label
+                Label = data.Label ?? string.Empty
             };
         }
     }

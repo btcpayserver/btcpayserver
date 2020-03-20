@@ -335,15 +335,11 @@
                 "properties": {
                     "apiKey": {
                         "type": "string",
-                        "nullable": true
+                        "nullable": false
                     },
                     "label": {
                         "type": "string",
-                        "nullable": true
-                    },
-                    "userId": {
-                        "type": "string",
-                        "nullable": true
+                        "nullable": false
                     },
                     "permissions": {
                         "type": "array",

@@ -141,7 +141,7 @@ namespace BTCPayServer.Tests
                 user.GrantAccess();
                 await user.MakeAdmin();
                 var clientProfile = await user.CreateClient(Policies.CanModifyProfile);
-                var clientServer = await user.CreateClient(Policies.CanModifyServerSettings, Policies.CanViewProfile);
+                var clientServer = await user.CreateClient(Policies.CanCreateUser, Policies.CanViewProfile);
                 var clientInsufficient = await user.CreateClient(Policies.CanModifyStoreSettings);
 
 

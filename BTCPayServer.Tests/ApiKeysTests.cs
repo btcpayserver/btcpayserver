@@ -311,7 +311,7 @@ namespace BTCPayServer.Tests
                 return (T)Convert.ChangeType(rawJson, typeof(T));
             }
 
-            return JsonConvert.DeserializeObject<T>(rawJson, BTCPayServer.Client.Serializer.GlobalSerializerSettings);
+            return JsonConvert.DeserializeObject<T>(rawJson);
         }
     }
 }

@@ -40,7 +40,7 @@ namespace BTCPayServer.Client
         protected async Task<T> HandleResponse<T>(HttpResponseMessage message)
         {
             HandleResponse(message);
-            return JsonConvert.DeserializeObject<T>(await message.Content.ReadAsStringAsync(), Serializer.GlobalSerializerSettings);
+            return JsonConvert.DeserializeObject<T>(await message.Content.ReadAsStringAsync());
         }
 
         protected virtual HttpRequestMessage CreateHttpRequest(string path,
@@ -68,7 +68,7 @@ namespace BTCPayServer.Client
             var request = CreateHttpRequest(path, queryPayload, method);
             if (typeof(T).IsPrimitive || !EqualityComparer<T>.Default.Equals(bodyPayload, default(T)))
             {
-                request.Content = new StringContent(JsonConvert.SerializeObject(bodyPayload, Serializer.GlobalSerializerSettings), Encoding.UTF8, "application/json");
+                request.Content = new StringContent(JsonConvert.SerializeObject(bodyPayload), Encoding.UTF8, "application/json");
             }
 
             return request;

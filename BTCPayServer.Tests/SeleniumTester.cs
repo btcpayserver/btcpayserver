@@ -127,9 +127,10 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.Id("import-from-btn")).ForceClick();
             Driver.FindElement(By.Id("nbxplorergeneratewalletbtn")).ForceClick();
             Driver.WaitForElement(By.Id("ExistingMnemonic")).SendKeys(seed);
-            SetCheckbox(Driver.FindElement(By.Id("SavePrivateKeys")), privkeys);
-            SetCheckbox(Driver.FindElement(By.Id("ImportKeysToRPC")), importkeys);
-            Driver.FindElement(By.Id("btn-generate")).ForceClick();
+            SetCheckbox(Driver.WaitForElement(By.Id("SavePrivateKeys")), privkeys);
+            SetCheckbox(Driver.WaitForElement(By.Id("ImportKeysToRPC")), importkeys);
+            Logs.Tester.LogInformation("Trying to click btn-generate");
+            Driver.WaitForElement(By.Id("btn-generate")).ForceClick();
             AssertHappyMessage();
             if (string.IsNullOrEmpty(seed))
             {
@@ -253,13 +254,14 @@ namespace BTCPayServer.Tests
 
             if (value != element.Selected)
             {
+                Logs.Tester.LogInformation("SetCheckbox recursion, trying to click again");
                 SetCheckbox(element, value);
             }
         }
 
-        public void SetCheckbox(SeleniumTester s, string inputName, bool value)
+        public void SetCheckbox(SeleniumTester s, string checkboxId, bool value)
         {
-            SetCheckbox(s.Driver.FindElement(By.Id(inputName)), value);
+            SetCheckbox(s.Driver.WaitForElement(By.Id(checkboxId)), value);
         }
 
         public void ScrollToElement(IWebElement element)

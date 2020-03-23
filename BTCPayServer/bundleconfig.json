@@ -179,5 +179,14 @@
             "wwwroot/vendor/bootstrap-vue/bootstrap-vue.css",
             "wwwroot/payment-request/**/*.css"
         ]
+    },
+    {
+        "outputFileName": "wwwroot/bundles/wallet-coin-selection-bundle.min.js",
+        "inputFiles": [
+            "wwwroot/vendor/vuejs/vue.min.js",
+            "wwwroot/vendor/babel-polyfill/polyfill.min.js",
+        ]
     }
+    
+    
 ]

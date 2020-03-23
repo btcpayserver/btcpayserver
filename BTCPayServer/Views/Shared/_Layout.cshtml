@@ -13,6 +13,19 @@
 
     @RenderSection("HeadScripts", required: false)
     @RenderSection("HeaderContent", false)
+
+
+    <noscript>
+        <style>
+            .hide-when-js{
+                display:block !important;
+            }
+            .only-for-js{
+                display:none !important;
+            }
+            [v-cloak]::before { content: "" !important; }
+        </style>
+    </noscript>
 </head>
 
 <body id="page-top">

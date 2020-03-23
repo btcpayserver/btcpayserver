@@ -464,7 +464,36 @@ namespace BTCPayServer.Controllers
             }
             
             decimal transactionAmountSum  = 0;
-            
+            if (command == "toggle-input-selection")
+            {
+                vm.InputSelection = !vm.InputSelection;  
+            }
+            if (vm.InputSelection)
+            {
+                var schemeSettings = GetDerivationSchemeSettings(walletId);
+                var walletBlobAsync = await WalletRepository.GetWalletInfo(walletId);
+                var walletTransactionsInfoAsync = await WalletRepository.GetWalletTransactionsInfo(walletId);
+
+                var utxos =  await _walletProvider.GetWallet(network).GetUnspentCoins(schemeSettings.AccountDerivation, cancellation);
+                vm.InputsAvailable = utxos.Select(coin =>
+                {
+                    walletTransactionsInfoAsync.TryGetValue(coin.OutPoint.Hash.ToString(), out var info);
+                    return new WalletSendModel.InputSelectionOption()
+                    {
+                        Outpoint = coin.OutPoint.ToString(),
+                        Amount = coin.Value.GetValue(network),
+                        Comment = info?.Comment,
+                        Labels = info == null? null :walletBlobAsync.GetLabels(info),
+                        Link = string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink, coin.OutPoint.Hash.ToString())
+                    };
+                }).ToArray();
+            }
+
+            if (command == "toggle-input-selection")
+            {
+                ModelState.Clear();
+                return View(vm);
+            }
             if (command == "add-output")
             {
                 ModelState.Clear();

@@ -49,9 +49,6 @@
         });
     });
 
-
-    $(".only-for-js").show();
-
     function handleInputGroupClearButtonDisplay(element) {
         var inputs = $(element).parents(".input-group").find("input");
 

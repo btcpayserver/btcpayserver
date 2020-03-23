@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Data;
+using NBXplorer.Models;
 
 namespace BTCPayServer.Models.WalletViewModels
 {
@@ -47,5 +49,19 @@ namespace BTCPayServer.Models.WalletViewModels
         public bool DisableRBF { get; set; }
 
         public bool NBXSeedAvailable { get; set; }
+        public bool InputSelection { get; set; }
+        public InputSelectionOption[] InputsAvailable { get; set; }
+        
+        [Display(Name = "UTXOs to spend from")]
+        public IEnumerable<string> SelectedInputs { get; set; }
+
+        public class InputSelectionOption
+        {
+            public IEnumerable<Label> Labels { get; set; }
+            public string Comment { get; set; }
+            public decimal Amount  { get; set; }
+            public string Outpoint { get; set; }
+            public string Link { get; set; }
+        }
     }
 }

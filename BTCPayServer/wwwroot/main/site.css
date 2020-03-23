@@ -7,10 +7,12 @@ html {
 .logo {
     height: 45px;
 }
-
-.only-for-js,
+.hide-when-js,
 .input-group-clear {
     display: none;
+}
+.only-for-js {
+    display: block;
 }
 
 .wraptextAuto {
@@ -142,3 +144,8 @@ pre {
     .pin-button:hover {
         background-color: lightgray;
     }
+[v-cloak] > * { display:none }
+[v-cloak]::before { content: "loading…" }
+.cursor-pointer{
+    cursor: pointer;
+}

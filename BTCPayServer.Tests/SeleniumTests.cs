@@ -447,7 +447,6 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("advancedSettings")).Click();
                 s.Driver.FindElement(By.Id("toggleInputSelection")).Click();
                 s.Driver.WaitForElement(By.Id(spentOutpoint.ToString()));
-                await Task.Delay(1000);
                 var el = s.Driver.FindElement(By.Id(spentOutpoint.ToString()));
                 s.Driver.FindElement(By.Id(spentOutpoint.ToString())).Click();
                 var bob = new Key().PubKey.Hash.GetAddress(Network.RegTest);

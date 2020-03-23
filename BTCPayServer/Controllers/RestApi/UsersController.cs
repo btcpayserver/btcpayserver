@@ -20,7 +20,7 @@ using BTCPayServer.Client;
 namespace BTCPayServer.Controllers.RestApi
 {
     [ApiController]
-    [Authorize(AuthenticationSchemes = AuthenticationSchemes.ApiKeyOrBasic)]
+    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
     public class UsersController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
@@ -52,7 +52,7 @@ namespace BTCPayServer.Controllers.RestApi
             _authorizationService = authorizationService;
         }
 
-        [Authorize(Policy = Policies.CanViewProfile, AuthenticationSchemes = AuthenticationSchemes.ApiKeyOrBasic)]
+        [Authorize(Policy = Policies.CanViewProfile, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/users/me")]
         public async Task<ActionResult<ApplicationUserData>> GetCurrentUser()
         {
@@ -82,7 +82,7 @@ namespace BTCPayServer.Controllers.RestApi
 
             // Even if subscription are unlocked, it is forbidden to create admin unauthenticated
             if (anyAdmin && request.IsAdministrator is true && !isAuth)
-                return Forbid(AuthenticationSchemes.ApiKey, AuthenticationSchemes.Basic);
+                return Forbid(AuthenticationSchemes.Greenfield);
             // You are de-facto admin if there is no other admin, else you need to be auth and pass policy requirements
             bool isAdmin = anyAdmin ? (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanModifyServerSettings))).Succeeded
                                      && (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.Unrestricted))).Succeeded
@@ -90,14 +90,14 @@ namespace BTCPayServer.Controllers.RestApi
                                     : true;
             // You need to be admin to create an admin
             if (request.IsAdministrator is true && !isAdmin)
-                return Forbid(AuthenticationSchemes.ApiKey, AuthenticationSchemes.Basic);
+                return Forbid(AuthenticationSchemes.Greenfield);
 
             if (!isAdmin && policies.LockSubscription)
             {
                 // If we are not admin and subscriptions are locked, we need to check the Policies.CanCreateUser.Key permission
                 var canCreateUser = (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanCreateUser))).Succeeded;
                 if (!isAuth || !canCreateUser)
-                    return Forbid(AuthenticationSchemes.ApiKey, AuthenticationSchemes.Basic);
+                    return Forbid(AuthenticationSchemes.Greenfield);
             }
 
             var user = new ApplicationUser

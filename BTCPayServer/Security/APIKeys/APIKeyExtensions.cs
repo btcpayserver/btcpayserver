@@ -26,7 +26,7 @@ namespace BTCPayServer.Security.APIKeys
 
         public static AuthenticationBuilder AddAPIKeyAuthentication(this AuthenticationBuilder builder)
         {
-            builder.AddScheme<APIKeyAuthenticationOptions, APIKeyAuthenticationHandler>(AuthenticationSchemes.ApiKey,
+            builder.AddScheme<APIKeyAuthenticationOptions, APIKeyAuthenticationHandler>(AuthenticationSchemes.Greenfield,
                 o => { });
             return builder;
         }

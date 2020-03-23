@@ -286,8 +286,7 @@ namespace BTCPayServer.Hosting
             services.AddAuthentication()
                 .AddCookie()
                 .AddBitpayAuthentication()
-                .AddAPIKeyAuthentication()
-                .AddBasicAuthentication();
+                .AddAPIKeyAuthentication();
         }
 
         public static IApplicationBuilder UsePayServer(this IApplicationBuilder app)

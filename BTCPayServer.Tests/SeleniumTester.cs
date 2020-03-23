@@ -121,7 +121,7 @@ namespace BTCPayServer.Tests
             return (usr, Driver.FindElement(By.Id("Id")).GetAttribute("value"));
         }
 
-        public string GenerateWallet(string cryptoCode = "BTC", string seed = "", bool importkeys = false, bool privkeys = false)
+        public Mnemonic GenerateWallet(string cryptoCode = "BTC", string seed = "", bool importkeys = false, bool privkeys = false)
         {
             Driver.FindElement(By.Id($"Modify{cryptoCode}")).ForceClick();
             Driver.FindElement(By.Id("import-from-btn")).ForceClick();
@@ -138,7 +138,7 @@ namespace BTCPayServer.Tests
             }
             Driver.FindElement(By.Id("Confirm")).ForceClick();
             AssertHappyMessage();
-            return seed;
+            return new Mnemonic(seed);
         }
 
         public void AddDerivationScheme(string cryptoCode = "BTC", string derivationScheme = "xpub661MyMwAqRbcGABgHMUXDzPzH1tU7eZaAaJQXhDXsSxsqyQzQeU6kznNfSuAyqAK9UaWSaZaMFdNiY5BCF4zBPAzSnwfUAwUhwttuAKwfRX-[legacy]")
@@ -339,6 +339,14 @@ namespace BTCPayServer.Tests
 
         }
 
+        public void GoToWalletSend(WalletId walletId)
+        {
+            Driver.Navigate().GoToUrl(new Uri(Server.PayTester.ServerUri, $"wallets/{walletId}/send"));
+        }
 
+        internal void GoToWalletReceive(WalletId walletId)
+        {
+            Driver.Navigate().GoToUrl(new Uri(Server.PayTester.ServerUri, $"wallets/{walletId}/receive"));
+        }
     }
 }

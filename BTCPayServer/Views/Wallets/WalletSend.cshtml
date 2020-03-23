@@ -43,7 +43,7 @@
                     <select multiple="multiple" asp-for="SelectedInputs" >
                         @foreach (var input in Model.InputsAvailable)
                         {
-                            <option value="@input.Outpoint" asp-selected="@(Model.SelectedInputs?.Contains(input.Outpoint)??false)">@input.Outpoint <span>@input.Amount</span>  </option>
+                            <option value="@input.Outpoint" asp-selected="@(Model.SelectedInputs?.Contains(input.Outpoint)??false)">@input.Outpoint (@input.Amount)</option>
                         }
                     </select>
                 </div>
@@ -144,7 +144,7 @@
             }
             
             <div class="card">
-                <button class="btn btn-light collapsed" type="button" data-toggle="collapse" data-target="#accordian-advanced" aria-expanded="false" aria-controls="accordian-advanced">
+                <button id="advancedSettings" class="btn btn-light collapsed" type="button" data-toggle="collapse" data-target="#accordian-advanced" aria-expanded="false" aria-controls="accordian-advanced">
                     Advanced settings
                 </button>
                 <div id="accordian-advanced" class="collapse" aria-labelledby="accordian-advanced-header" data-parent="#accordian-advanced">
@@ -167,7 +167,7 @@
                             </div>
                         }
                         <div class="form-group">
-                            <button type="submit" name="command" value="toggle-input-selection" class="btn btn-sm btn-secondary">Toggle coin selection</button>
+                            <button id="toggleInputSelection" type="submit" name="command" value="toggle-input-selection" class="btn btn-sm btn-secondary">Toggle coin selection</button>
                         </div>
                     </div>
                 </div>
@@ -186,7 +186,7 @@
                         }
                         @if (Model.NBXSeedAvailable)
                         {
-                            <button name="command" type="submit" class="dropdown-item" value="nbx-seed">... the seed saved in NBXplorer</button>
+                            <button id="spendWithNBxplorer" name="command" type="submit" class="dropdown-item" value="nbx-seed">... the seed saved in NBXplorer</button>
                         }
                     </div>
                 </div>

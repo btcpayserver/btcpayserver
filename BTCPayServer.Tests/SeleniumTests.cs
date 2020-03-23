@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using BTCPayServer.Models;
 using NBitcoin.Payment;
+using BTCPayServer.Controllers;
 
 namespace BTCPayServer.Tests
 {
@@ -417,7 +418,54 @@ namespace BTCPayServer.Tests
                 s.Driver.Quit();
             }
         }
-        
+
+
+        [Fact(Timeout = TestTimeout)]
+        public async Task CanUseCoinSelection()
+        {
+            using (var s = SeleniumTester.Create())
+            {
+                await s.StartAsync();
+                var userId = s.RegisterNewUser(true);
+                var storeId = s.CreateNewStore().storeId;
+                s.GenerateWallet("BTC", "", false, true);
+                var walletId = new WalletId(storeId, "BTC");
+                s.GoToWalletReceive(walletId);
+                s.Driver.FindElement(By.Id("generateButton")).Click();
+                var addressStr = s.Driver.FindElement(By.Id("vue-address")).GetProperty("value");
+                var address = BitcoinAddress.Create(addressStr, ((BTCPayNetwork)s.Server.NetworkProvider.GetNetwork("BTC")).NBitcoinNetwork);
+                await s.Server.ExplorerNode.GenerateAsync(1);
+                for (int i = 0; i < 6; i++)
+                {
+                    await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(1.0m));
+                }
+                var targetTx = await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(1.2m));
+                var tx = await s.Server.ExplorerNode.GetRawTransactionAsync(targetTx);
+                var spentOutpoint = new OutPoint(targetTx, tx.Outputs.FindIndex(txout => txout.Value == Money.Coins(1.2m)));
+                await s.Server.ExplorerNode.GenerateAsync(1);
+                s.GoToWalletSend(walletId);
+                s.Driver.FindElement(By.Id("advancedSettings")).Click();
+                s.Driver.FindElement(By.Id("toggleInputSelection")).Click();
+                s.Driver.WaitForElement(By.Id(spentOutpoint.ToString()));
+                await Task.Delay(1000);
+                var el = s.Driver.FindElement(By.Id(spentOutpoint.ToString()));
+                s.Driver.FindElement(By.Id(spentOutpoint.ToString())).Click();
+                var bob = new Key().PubKey.Hash.GetAddress(Network.RegTest);
+                SetTransactionOutput(s, 0, bob, 0.3m);
+                s.Driver.FindElement(By.Id("SendMenu")).Click();
+                s.Driver.FindElement(By.Id("spendWithNBxplorer")).Click();
+                s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).ForceClick();
+                var happyElement = s.AssertHappyMessage();
+                var happyText = happyElement.Text;
+                var txid = Regex.Match(happyText, @"\((.*)\)").Groups[1].Value;
+
+                tx = await s.Server.ExplorerNode.GetRawTransactionAsync(new uint256(txid));
+                Assert.Single(tx.Inputs);
+                Assert.Equal(spentOutpoint, tx.Inputs[0].PrevOut);
+            }
+        }
+
+
         [Fact(Timeout = TestTimeout)]
         public async Task CanManageWallet()
         {
@@ -488,7 +536,7 @@ namespace BTCPayServer.Tests
                 var mnemonic = s.GenerateWallet("BTC", "", true, true);
                 
                 //lets import and save private keys
-                var root = new Mnemonic(mnemonic).DeriveExtKey();
+                var root = mnemonic.DeriveExtKey();
                  invoiceId = s.CreateInvoice(storeId.storeId);
                  invoice = await s.Server.PayTester.InvoiceRepository.GetInvoice( invoiceId);
                  address = invoice.EntityToDTO().Addresses["BTC"];
@@ -518,37 +566,24 @@ namespace BTCPayServer.Tests
                 Assert.Contains(tx.ToString(), s.Driver.PageSource);
 
                 
-                void SignWith(string signingSource)
+                void SignWith(Mnemonic signingSource)
                 {
                     // Send to bob
                     s.Driver.FindElement(By.Id("WalletSend")).Click();
                     var bob = new Key().PubKey.Hash.GetAddress(Network.RegTest);
-                    SetTransactionOutput(0, bob, 1);
+                    SetTransactionOutput(s, 0, bob, 1);
                     s.Driver.ScrollTo(By.Id("SendMenu"));
                     s.Driver.FindElement(By.Id("SendMenu")).ForceClick();
                     s.Driver.FindElement(By.CssSelector("button[value=seed]")).Click();
 
                     // Input the seed
-                    s.Driver.FindElement(By.Id("SeedOrKey")).SendKeys(signingSource + Keys.Enter);
+                    s.Driver.FindElement(By.Id("SeedOrKey")).SendKeys(signingSource.ToString() + Keys.Enter);
 
                     // Broadcast
                     Assert.Contains(bob.ToString(), s.Driver.PageSource);
                     Assert.Contains("1.00000000", s.Driver.PageSource);
                     s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).ForceClick();
                     Assert.Equal(walletTransactionLink, s.Driver.Url);
-                }
-
-                void SetTransactionOutput(int index, BitcoinAddress dest, decimal amount, bool subtract = false)
-                {
-                    s.Driver.FindElement(By.Id($"Outputs_{index}__DestinationAddress")).SendKeys(dest.ToString());
-                    var amountElement = s.Driver.FindElement(By.Id($"Outputs_{index}__Amount"));
-                    amountElement.Clear();
-                    amountElement.SendKeys(amount.ToString());
-                    var checkboxElement = s.Driver.FindElement(By.Id($"Outputs_{index}__SubtractFeesFromOutput"));
-                    if (checkboxElement.Selected != subtract)
-                    {
-                        checkboxElement.Click();
-                    }
                 }
                 
                 SignWith(mnemonic);
@@ -558,7 +593,7 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("WalletSend")).Click();
                 
                 var jack = new Key().PubKey.Hash.GetAddress(Network.RegTest);
-                SetTransactionOutput(0, jack, 0.01m);
+                SetTransactionOutput(s, 0, jack, 0.01m);
                 s.Driver.ScrollTo(By.Id("SendMenu"));
                 s.Driver.FindElement(By.Id("SendMenu")).ForceClick();
                 
@@ -587,6 +622,18 @@ namespace BTCPayServer.Tests
                 Assert.Equal(parsedBip21.Amount.ToString(false), s.Driver.FindElement(By.Id($"Outputs_0__Amount")).GetAttribute("value"));
                 Assert.Equal(parsedBip21.Address.ToString(), s.Driver.FindElement(By.Id($"Outputs_0__DestinationAddress")).GetAttribute("value"));
                 
+            }
+        }
+        void SetTransactionOutput(SeleniumTester s, int index, BitcoinAddress dest, decimal amount, bool subtract = false)
+        {
+            s.Driver.FindElement(By.Id($"Outputs_{index}__DestinationAddress")).SendKeys(dest.ToString());
+            var amountElement = s.Driver.FindElement(By.Id($"Outputs_{index}__Amount"));
+            amountElement.Clear();
+            amountElement.SendKeys(amount.ToString());
+            var checkboxElement = s.Driver.FindElement(By.Id($"Outputs_{index}__SubtractFeesFromOutput"));
+            if (checkboxElement.Selected != subtract)
+            {
+                checkboxElement.Click();
             }
         }
     }

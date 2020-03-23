@@ -70,13 +70,11 @@ namespace BTCPayServer.Tests
             var x = Assert.IsType<RedirectToActionResult>(await manageController.AddApiKey(
                 new ManageController.AddApiKeyViewModel()
                 {
-                    PermissionValues =
-                        permissions.Select(s =>
-                            new ManageController.AddApiKeyViewModel.PermissionValueItem()
-                            {
-                                Permission = s, Value = true
-                            }).ToList(),
-                    StoreMode = ManageController.AddApiKeyViewModel.ApiKeyStoreMode.AllStores
+                    PermissionValues = permissions.Select(s => new ManageController.AddApiKeyViewModel.PermissionValueItem()
+                    {
+                        Permission = s,
+                        Value = true
+                    }).ToList()
                 }));
             var statusMessage = manageController.TempData.GetStatusMessageModel();
             Assert.NotNull(statusMessage);

@@ -46,13 +46,13 @@ namespace BTCPayServer.Tests
                 Assert.Single(apiKeyData.Permissions);
                 
                 //a client using Basic Auth has no business here
-                await AssertHttpError(401, async () => await clientBasic.GetCurrentAPIKeyInfo());
+                await AssertHttpError(404, async () => await clientBasic.GetCurrentAPIKeyInfo());
                 
                 //revoke current api key
                 await client.RevokeCurrentAPIKeyInfo();
                 await AssertHttpError(401, async () => await client.GetCurrentAPIKeyInfo());
                 //a client using Basic Auth has no business here
-                await AssertHttpError(401, async () => await clientBasic.RevokeCurrentAPIKeyInfo());
+                await AssertHttpError(404, async () => await clientBasic.RevokeCurrentAPIKeyInfo());
                 
                 
             }

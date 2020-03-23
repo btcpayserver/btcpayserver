@@ -27,7 +27,10 @@ namespace BTCPayServer.Controllers.RestApi
         [HttpGet("~/api/v1/api-keys/current")]
         public async Task<ActionResult<ApiKeyData>> GetKey()
         {
-            ControllerContext.HttpContext.GetAPIKey(out var apiKey);
+            if (!ControllerContext.HttpContext.GetAPIKey(out var apiKey))
+            {
+                return NotFound();
+            }
             var data = await _apiKeyRepository.GetKey(apiKey);
             return Ok(FromModel(data));
         }
@@ -36,7 +39,10 @@ namespace BTCPayServer.Controllers.RestApi
         [Authorize(Policy = Policies.Unrestricted, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<ActionResult<ApiKeyData>> RevokeKey()
         {
-            ControllerContext.HttpContext.GetAPIKey(out var apiKey);
+            if (!ControllerContext.HttpContext.GetAPIKey(out var apiKey))
+            {
+                return NotFound();
+            }
             await _apiKeyRepository.Remove(apiKey, _userManager.GetUserId(User));
             return Ok();
         }

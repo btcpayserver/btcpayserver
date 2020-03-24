@@ -122,12 +122,15 @@ namespace BTCPayServer.Tests
             var url = match.Groups[1].Value;
             try
             {
-                Assert.Equal(HttpStatusCode.OK, (await httpClient.GetAsync(url)).StatusCode);
+                using var request = new HttpRequestMessage(HttpMethod.Get, new Uri(url));
+                request.Headers.TryAddWithoutValidation("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
+                request.Headers.TryAddWithoutValidation("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:75.0) Gecko/20100101 Firefox/75.0");
+                Assert.Equal(HttpStatusCode.OK, (await httpClient.SendAsync(request)).StatusCode);
                 Logs.Tester.LogInformation($"OK: {url} ({file})");
             }
-            catch
+            catch(EqualException ex)
             {
-                Logs.Tester.LogInformation($"FAILED: {url} ({file})");
+                Logs.Tester.LogInformation($"FAILED: {url} ({file}) {ex.Actual}");
                 throw;
             }
         }

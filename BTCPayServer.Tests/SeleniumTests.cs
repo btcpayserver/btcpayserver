@@ -447,8 +447,12 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("advancedSettings")).Click();
                 s.Driver.FindElement(By.Id("toggleInputSelection")).Click();
                 s.Driver.WaitForElement(By.Id(spentOutpoint.ToString()));
+                Assert.Equal("true", s.Driver.FindElement(By.Name("InputSelection")).GetAttribute("value").ToLowerInvariant());
                 var el = s.Driver.FindElement(By.Id(spentOutpoint.ToString()));
                 s.Driver.FindElement(By.Id(spentOutpoint.ToString())).Click();
+                var inputSelectionSelect = s.Driver.FindElement(By.Name("SelectedInputs"));
+                Assert.Equal(1, inputSelectionSelect.FindElements(By.CssSelector("[selected]")).Count);
+
                 var bob = new Key().PubKey.Hash.GetAddress(Network.RegTest);
                 SetTransactionOutput(s, 0, bob, 0.3m);
                 s.Driver.FindElement(By.Id("SendMenu")).Click();

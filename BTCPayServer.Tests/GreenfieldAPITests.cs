@@ -156,7 +156,25 @@ namespace BTCPayServer.Tests
                 await AssertHttpError(403, async () => await user1Client.CreateUser(new CreateApplicationUserRequest() { Email = "admin8@gmail.com", Password = "afewfoiewiou", IsAdministrator = true }));
             }
         }
-
+        
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task StoresControllerTests()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                await tester.StartAsync();
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                await user.MakeAdmin();
+                var client = await user.CreateClient(Policies.Unrestricted);
+                var stores = await client.GetStores();
+                Assert.NotNull(stores);
+                Assert.Single(stores);
+                Assert.Equal(user.StoreId,stores.First().Id);
+            }
+        }
+        
         private async Task AssertHttpError(int code, Func<Task> act)
         {
             var ex = await Assert.ThrowsAsync<HttpRequestException>(act);

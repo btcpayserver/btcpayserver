@@ -14,6 +14,7 @@ using Newtonsoft.Json;
 using OpenQA.Selenium;
 using Xunit;
 using Xunit.Abstractions;
+using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Tests
 {

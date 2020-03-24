@@ -48,16 +48,16 @@ namespace BTCPayServer.PaymentRequest
             if (blob.ExpiryDate.HasValue)
             {
                 if (blob.ExpiryDate.Value <= DateTimeOffset.UtcNow)
-                    currentStatus = PaymentRequestData.PaymentRequestStatus.Expired;
+                    currentStatus = Client.Models.PaymentRequestData.PaymentRequestStatus.Expired;
             }
-            else if (pr.Status == PaymentRequestData.PaymentRequestStatus.Pending)
+            else if (pr.Status == Client.Models.PaymentRequestData.PaymentRequestStatus.Pending)
             {
                 var rateRules = pr.StoreData.GetStoreBlob().GetRateRules(_BtcPayNetworkProvider);
                 var invoices = await _PaymentRequestRepository.GetInvoicesForPaymentRequest(pr.Id);
                 var contributions = _AppService.GetContributionsByPaymentMethodId(blob.Currency, invoices, true);
                 if (contributions.TotalCurrency >= blob.Amount)
                 {
-                    currentStatus = PaymentRequestData.PaymentRequestStatus.Completed;
+                    currentStatus = Client.Models.PaymentRequestData.PaymentRequestStatus.Completed;
                 }
             }
 

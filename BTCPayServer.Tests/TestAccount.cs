@@ -49,9 +49,9 @@ namespace BTCPayServer.Tests
             IsAdmin = true;
         }
 
-        public async Task<BTCPayServerClient> CreateClient()
+        public Task<BTCPayServerClient> CreateClient()
         {
-            return new BTCPayServerClient(parent.PayTester.ServerUri, RegisterDetails.Email, RegisterDetails.Password);
+            return Task.FromResult(new BTCPayServerClient(parent.PayTester.ServerUri, RegisterDetails.Email, RegisterDetails.Password));
         }
 
         public async Task<BTCPayServerClient> CreateClient(params string[] permissions)

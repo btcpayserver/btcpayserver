@@ -14,6 +14,8 @@ namespace BTCPayServer.Client
     {
         private readonly string _apiKey;
         private readonly Uri _btcpayHost;
+        private readonly string _username;
+        private readonly string _password;
         private readonly HttpClient _httpClient;
 
         public string APIKey => _apiKey;
@@ -29,6 +31,15 @@ namespace BTCPayServer.Client
         {
             _apiKey = APIKey;
             _btcpayHost = btcpayHost;
+            _httpClient = httpClient ?? new HttpClient();
+        }
+        
+        public BTCPayServerClient(Uri btcpayHost, string username, string password, HttpClient httpClient = null)
+        {
+            _apiKey = APIKey;
+            _btcpayHost = btcpayHost;
+            _username = username;
+            _password = password;
             _httpClient = httpClient ?? new HttpClient();
         }
 
@@ -56,6 +67,10 @@ namespace BTCPayServer.Client
             var httpRequest = new HttpRequestMessage(method ?? HttpMethod.Get, uriBuilder.Uri);
             if (_apiKey != null)
                 httpRequest.Headers.Authorization = new AuthenticationHeaderValue("token", _apiKey);
+            else if (!string.IsNullOrEmpty(_username))
+            {
+                httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Basic", System.Convert.ToBase64String(Encoding.ASCII.GetBytes(_username + ":" + _password)));
+            }
 
 
             return httpRequest;

@@ -49,6 +49,11 @@ namespace BTCPayServer.Tests
             IsAdmin = true;
         }
 
+        public async Task<BTCPayServerClient> CreateClient()
+        {
+            return new BTCPayServerClient(parent.PayTester.ServerUri, RegisterDetails.Email, RegisterDetails.Password);
+        }
+
         public async Task<BTCPayServerClient> CreateClient(params string[] permissions)
         {
             var manageController = parent.PayTester.GetController<ManageController>(UserId, StoreId, IsAdmin);

@@ -2,7 +2,6 @@ using System.Threading.Tasks;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Security;
-using BTCPayServer.Security.APIKeys;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -15,7 +14,7 @@ namespace BTCPayServer.Controllers.RestApi
     /// </summary>
     [Route("api/test/apikey")]
     [ApiController]
-    [Authorize(AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
+    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
     public class TestApiKeyController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
@@ -28,28 +27,28 @@ namespace BTCPayServer.Controllers.RestApi
         }
 
         [HttpGet("me/id")]
-        [Authorize(Policy = Policies.CanViewProfile, AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
+        [Authorize(Policy = Policies.CanViewProfile, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public string GetCurrentUserId()
         {
             return _userManager.GetUserId(User);
         }
 
         [HttpGet("me")]
-        [Authorize(Policy = Policies.CanViewProfile, AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
+        [Authorize(Policy = Policies.CanViewProfile, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<ApplicationUser> GetCurrentUser()
         {
             return await _userManager.GetUserAsync(User);
         }
 
         [HttpGet("me/is-admin")]
-        [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
+        [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public bool AmIAnAdmin()
         {
             return true;
         }
 
         [HttpGet("me/stores")]
-        [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
+        [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public StoreData[] GetCurrentUserStores()
         {
             return this.HttpContext.GetStoresData();
@@ -57,7 +56,7 @@ namespace BTCPayServer.Controllers.RestApi
 
         [HttpGet("me/stores/{storeId}/can-view")]
         [Authorize(Policy = Policies.CanViewStoreSettings,
-            AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
+            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public bool CanViewStore(string storeId)
         {
             return true;
@@ -65,7 +64,7 @@ namespace BTCPayServer.Controllers.RestApi
 
         [HttpGet("me/stores/{storeId}/can-edit")]
         [Authorize(Policy = Policies.CanModifyStoreSettings,
-            AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
+            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public bool CanEditStore(string storeId)
         {
             return true;

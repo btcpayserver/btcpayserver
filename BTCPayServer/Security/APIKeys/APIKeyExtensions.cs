@@ -1,15 +1,10 @@
 using System;
 using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
 using BTCPayServer.Client;
-using BTCPayServer.Data;
 using BTCPayServer.Security.Bitpay;
-using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Primitives;
 
@@ -31,7 +26,7 @@ namespace BTCPayServer.Security.APIKeys
 
         public static AuthenticationBuilder AddAPIKeyAuthentication(this AuthenticationBuilder builder)
         {
-            builder.AddScheme<APIKeyAuthenticationOptions, APIKeyAuthenticationHandler>(AuthenticationSchemes.ApiKey,
+            builder.AddScheme<APIKeyAuthenticationOptions, APIKeyAuthenticationHandler>(AuthenticationSchemes.Greenfield,
                 o => { });
             return builder;
         }

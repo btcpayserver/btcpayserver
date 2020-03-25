@@ -38,15 +38,23 @@ namespace BTCPayServer.Tests
                 user.GrantAccess();
                 await user.MakeAdmin();
                 var client = await user.CreateClient(Policies.Unrestricted);
+                var clientBasic = await user.CreateClient();
                 //Get current api key 
                 var apiKeyData = await client.GetCurrentAPIKeyInfo();
                 Assert.NotNull(apiKeyData);
                 Assert.Equal(client.APIKey, apiKeyData.ApiKey);
                 Assert.Single(apiKeyData.Permissions);
-
+                
+                //a client using Basic Auth has no business here
+                await AssertHttpError(404, async () => await clientBasic.GetCurrentAPIKeyInfo());
+                
                 //revoke current api key
                 await client.RevokeCurrentAPIKeyInfo();
                 await AssertHttpError(401, async () => await client.GetCurrentAPIKeyInfo());
+                //a client using Basic Auth has no business here
+                await AssertHttpError(404, async () => await clientBasic.RevokeCurrentAPIKeyInfo());
+                
+                
             }
         }
 
@@ -108,12 +116,14 @@ namespace BTCPayServer.Tests
                 user1Acc.UserId = user1.Id;
                 user1Acc.IsAdmin = false;
                 var user1Client = await user1Acc.CreateClient(Policies.CanModifyServerSettings);
+              
                 // User1 trying to get server management would still fail to create user
                 await AssertHttpError(403, async () => await user1Client.CreateUser(new CreateApplicationUserRequest() { Email = "test8@gmail.com", Password = "afewfoiewiou" }));
 
                 // User1 should be able to create user if subscription unlocked
                 await settings.UpdateSetting<PoliciesSettings>(new PoliciesSettings() { LockSubscription = false });
                 await user1Client.CreateUser(new CreateApplicationUserRequest() { Email = "test8@gmail.com", Password = "afewfoiewiou" });
+
                 // But not an admin
                 await AssertHttpError(403, async () => await user1Client.CreateUser(new CreateApplicationUserRequest() { Email = "admin8@gmail.com", Password = "afewfoiewiou", IsAdministrator = true }));
             }
@@ -139,6 +149,7 @@ namespace BTCPayServer.Tests
                 var clientProfile = await user.CreateClient(Policies.CanModifyProfile);
                 var clientServer = await user.CreateClient(Policies.CanCreateUser, Policies.CanViewProfile);
                 var clientInsufficient = await user.CreateClient(Policies.CanModifyStoreSettings);
+                var clientBasic = await user.CreateClient();
 
 
                 var apiKeyProfileUserData = await clientProfile.GetCurrentUser();
@@ -149,6 +160,7 @@ namespace BTCPayServer.Tests
                 await Assert.ThrowsAsync<HttpRequestException>(async () => await clientInsufficient.GetCurrentUser());
                 await clientServer.GetCurrentUser();
                 await clientProfile.GetCurrentUser();
+                await clientBasic.GetCurrentUser();
 
                 await Assert.ThrowsAsync<HttpRequestException>(async () => await clientInsufficient.CreateUser(new CreateApplicationUserRequest()
                 {
@@ -162,6 +174,13 @@ namespace BTCPayServer.Tests
                     Password = Guid.NewGuid().ToString()
                 });
                 Assert.NotNull(newUser);
+
+                var newUser2 = await clientBasic.CreateUser(new CreateApplicationUserRequest()
+                {
+                    Email = $"{Guid.NewGuid()}@g.com",
+                    Password = Guid.NewGuid().ToString()
+                });
+                Assert.NotNull(newUser2);
 
                 await Assert.ThrowsAsync<HttpRequestException>(async () => await clientServer.CreateUser(new CreateApplicationUserRequest()
                 {

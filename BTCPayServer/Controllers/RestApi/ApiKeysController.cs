@@ -6,14 +6,13 @@ using BTCPayServer.Data;
 using BTCPayServer.Security;
 using BTCPayServer.Security.APIKeys;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Controllers.RestApi
 {
     [ApiController]
-    [Authorize(AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
+    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
     public class ApiKeysController : ControllerBase
     {
         private readonly APIKeyRepository _apiKeyRepository;
@@ -28,16 +27,22 @@ namespace BTCPayServer.Controllers.RestApi
         [HttpGet("~/api/v1/api-keys/current")]
         public async Task<ActionResult<ApiKeyData>> GetKey()
         {
-            ControllerContext.HttpContext.GetAPIKey(out var apiKey);
+            if (!ControllerContext.HttpContext.GetAPIKey(out var apiKey))
+            {
+                return NotFound();
+            }
             var data = await _apiKeyRepository.GetKey(apiKey);
             return Ok(FromModel(data));
         }
 
         [HttpDelete("~/api/v1/api-keys/current")]
-        [Authorize(Policy = Policies.Unrestricted, AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
+        [Authorize(Policy = Policies.Unrestricted, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<ActionResult<ApiKeyData>> RevokeKey()
         {
-            ControllerContext.HttpContext.GetAPIKey(out var apiKey);
+            if (!ControllerContext.HttpContext.GetAPIKey(out var apiKey))
+            {
+                return NotFound();
+            }
             await _apiKeyRepository.Remove(apiKey, _userManager.GetUserId(User));
             return Ok();
         }

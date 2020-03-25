@@ -179,7 +179,11 @@ $(function () {
                    res.splice(this.selectedInputs.indexOf(item.outpoint),1);
                }
                          
-               $("#SelectedInputs").val(res);
+               $("select option").each(function(){
+                   var selected = res.indexOf($(this).attr("value")) !== -1;
+                   $(this).attr("selected",selected? "selected": null);
+               });
+               
                this.selectedInputs = res;
                 $(".crypto-balance-link").text(this.selectedAmount);
            }

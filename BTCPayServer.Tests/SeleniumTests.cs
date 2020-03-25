@@ -12,6 +12,8 @@ using System.Text.RegularExpressions;
 using BTCPayServer.Models;
 using NBitcoin.Payment;
 using BTCPayServer.Controllers;
+using BTCPayServer.Data;
+using BTCPayServer.Services.Wallets;
 
 namespace BTCPayServer.Tests
 {
@@ -442,13 +444,28 @@ namespace BTCPayServer.Tests
                 var targetTx = await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(1.2m));
                 var tx = await s.Server.ExplorerNode.GetRawTransactionAsync(targetTx);
                 var spentOutpoint = new OutPoint(targetTx, tx.Outputs.FindIndex(txout => txout.Value == Money.Coins(1.2m)));
+                await TestUtils.EventuallyAsync(async () =>
+                {
+                    var store = await s.Server.PayTester.StoreRepository.FindStore(storeId);
+                    var x = store.GetSupportedPaymentMethods(s.Server.NetworkProvider)
+                        .OfType<DerivationSchemeSettings>()
+                        .Single(settings => settings.PaymentId.CryptoCode == walletId.CryptoCode);
+                    Assert.Contains(
+                        await s.Server.PayTester.GetService<BTCPayWalletProvider>().GetWallet(walletId.CryptoCode)
+                            .GetUnspentCoins(x.AccountDerivation),
+                        coin => coin.OutPoint == spentOutpoint);
+                });
                 await s.Server.ExplorerNode.GenerateAsync(1);
                 s.GoToWalletSend(walletId);
                 s.Driver.FindElement(By.Id("advancedSettings")).Click();
                 s.Driver.FindElement(By.Id("toggleInputSelection")).Click();
                 s.Driver.WaitForElement(By.Id(spentOutpoint.ToString()));
+                Assert.Equal("true", s.Driver.FindElement(By.Name("InputSelection")).GetAttribute("value").ToLowerInvariant());
                 var el = s.Driver.FindElement(By.Id(spentOutpoint.ToString()));
                 s.Driver.FindElement(By.Id(spentOutpoint.ToString())).Click();
+                var inputSelectionSelect = s.Driver.FindElement(By.Name("SelectedInputs"));
+                Assert.Single(inputSelectionSelect.FindElements(By.CssSelector("[selected]")));
+
                 var bob = new Key().PubKey.Hash.GetAddress(Network.RegTest);
                 SetTransactionOutput(s, 0, bob, 0.3m);
                 s.Driver.FindElement(By.Id("SendMenu")).Click();

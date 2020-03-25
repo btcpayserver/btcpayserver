@@ -2804,7 +2804,7 @@ noninventoryitem:
                 Assert.NotNull(exchangeRates);
                 Assert.NotEmpty(exchangeRates);
                 Assert.NotEmpty(exchangeRates.ByExchange[result.ExpectedName]);
-                if (result.ExpectedName == "bitbank")
+                if (result.ExpectedName == "bitbank" || result.ExpectedName == "bitflyer")
                 {
                     Assert.Contains(exchangeRates.ByExchange[result.ExpectedName],
                         e => e.CurrencyPair == new CurrencyPair("BTC", "JPY") && e.BidAsk.Bid > 100m); // 1BTC will always be more than 100JPY

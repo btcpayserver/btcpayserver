@@ -331,7 +331,7 @@ body {
     line-height: 1.5;
     background-color: #fff;
     margin: 0;
-    background: #E4E4E4;
+    background: #f8f9fa;
 }
 
 [tabindex="-1"]:focus {
@@ -8154,11 +8154,11 @@ a:hover {
 
 .action-button {
     color: #fff;
-    background-color: #329F80;
-    border-color: #329F80;
-    padding: 15px;
+    background-color: #51b13e;
+    border-color: #51b13e;
+    padding: 12px;
     word-break: normal;
-    font-size: 13.5px;
+    font-size: 13px;
     min-width: 185px;
     font-weight: 300;
     letter-spacing: .7px;
@@ -8170,21 +8170,21 @@ a:hover {
 
     .action-button:hover {
         color: #fff;
-        background-color: #24725B;
-        border-color: #24725B;
+        background-color: #418e32;
+        border-color: #418e32;
     }
 
     .action-button:focus, .action-button.focus {
         color: #fff;
-        background-color: #24725B;
-        border-color: #24725B;
+        background-color: #418e32;
+        border-color: #418e32;
     }
 
     .action-button:active, .action-button.active,
     .open > .action-button.dropdown-toggle {
         color: #fff;
-        background-color: #24725B;
-        border-color: #24725B;
+        background-color: #418e32;
+        border-color: #418e32;
         background-image: none;
     }
 
@@ -8193,8 +8193,8 @@ a:hover {
         .open > .action-button.dropdown-toggle:focus,
         .open > .action-button.dropdown-toggle.focus {
             color: #fff;
-            background-color: #24725B;
-            border-color: #24725B;
+            background-color: #418e32;
+            border-color: #418e32;
         }
 
     .action-button.disabled:focus, .action-button.disabled.focus, .action-button:disabled:focus, .action-button:disabled.focus {
@@ -8208,7 +8208,7 @@ a:hover {
     }
 
     .action-button:hover {
-        background-color: #24725B;
+        background-color: #418e32;
         border-color: rgba(28, 100, 222, 0);
         opacity: .95;
     }
@@ -8250,7 +8250,7 @@ strong {
 }
 
 .modal-content {
-    box-shadow: 0 2px 32px 0 rgba(0, 0, 0, 0.85);
+    box-shadow: 0 2px 32px 0 rgba(0, 0, 0, 0.5);
     background: #F5F5F7;
     z-index: 999999;
     border-radius: 0;
@@ -8284,8 +8284,8 @@ strong {
 }
 
 .top-header {
-    color: #fff;
-    background-color: #329F80;
+    color: #000;
+    background-color: #fff;
     font-weight: 500;
     letter-spacing: .5px;
 }
@@ -8307,26 +8307,36 @@ strong {
     position: relative;
     width: 100px;
     height: 50px;
-    margin-left: 10px;
-    margin-top: 10px;
+    margin: 10px auto 0px;
 }
 
 .top-header .timer-row {
-    background: #CEDC21;
+    background: #51b13e;
+    color: #fff;
     display: flex;
     align-items: center;
-    padding: 3px 14px;
+    padding: 5px 14px 3px;
+    font-size: 13px;
     position: relative;
     transition: background 1s ease;
 }
 
     .top-header .timer-row.expiring-soon {
-        background: #D3051E;
+        background: #ed4f32;
     }
 
         .top-header .timer-row.expiring-soon .timer-row__message {
             opacity: 1;
         }
+
+.top-header .timer-row__progress-bar {
+    position: absolute;
+    height: 100%;
+    width: 0%;
+    top: 0;
+    left: 0;
+    background: rgba(0, 0, 0, 0.2);
+}
 
 .top-header .timer-row__spinner {
     display: flex;
@@ -8337,7 +8347,7 @@ strong {
     .top-header .timer-row__spinner svg {
         width: 17px;
         height: 17px;
-        fill: #4681e2;
+        fill: #fff;
         animation: spin 0.5s linear infinite;
         margin-top: -2px;
         transition: fill .5s ease;
@@ -8359,22 +8369,11 @@ strong {
 
 .top-header .timer-row__message {
     flex-grow: 1;
-    font-size: 13.5px;
     z-index: 1;
 }
 
 .top-header .timer-row__time-left {
-    font-size: 13.5px;
     z-index: 1;
-}
-
-.top-header .timer-row__progress-bar {
-    position: absolute;
-    height: 100%;
-    width: 0%;
-    top: 0;
-    left: 0;
-    background: rgba(0, 0, 0, 0.2);
 }
 
 .subheader {
@@ -8542,7 +8541,7 @@ strong {
     position: absolute;
     height: 5px;
     width: 50%;
-    background: #329F80;
+    background: #51b13e;
     top: 0;
     right: 50%;
     transition: all .2s ease;
@@ -8805,7 +8804,7 @@ strong {
     transform: rotateZ(45deg);
     margin-left: -5px;
     top: -5px;
-    background: #329F80;
+    background: #51b13e;
     transform-style: preserve-3d;
     backface-visibility: hidden;
 }
@@ -9410,7 +9409,7 @@ strong {
 
     .btnGroupLnd button {
         display: table-cell;
-        border: solid 1px #24725B;
+        border: solid 1px #418e32;
         padding: 6px 9px;
         margin: 0px;
         font-size: 12px;
@@ -9425,14 +9424,14 @@ strong {
         }
 
         .btnGroupLnd button.active {
-            background-color: #329F80;
-            border-color: #329F80;
+            background-color: #51b13e;
+            border-color: #51b13e;
             color: #fff;
         }
 
             .btnGroupLnd button.active:hover {
-                background-color: #24725B;
-                border-color: #24725B;
+                background-color: #418e32;
+                border-color: #418e32;
                 color: #fff;
             }
 
@@ -11396,7 +11395,7 @@ low-fee-timeline {
     transform: rotateZ(45deg);
     margin-left: -5px;
     top: -5px;
-    background: #329F80;
+    background: #51b13e;
     transform-style: preserve-3d;
     backface-visibility: hidden;
     margin-bottom: -10px;
@@ -11547,9 +11546,9 @@ low-fee-timeline {
 
 
 .btn-link {
-    color: #329F80;
+    color: #51b13e;
 }
 
     .btn-link:hover {
-        color: #24725B;
+        color: #418e32;
     }

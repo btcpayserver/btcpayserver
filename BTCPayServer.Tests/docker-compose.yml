@@ -51,7 +51,6 @@ services:
       - customer_lnd
       - merchant_lnd
       - sshd
-      - tor
 
   sshd:
     build:

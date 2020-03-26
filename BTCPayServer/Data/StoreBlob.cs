@@ -93,10 +93,10 @@ namespace BTCPayServer.Data
         public CurrencyValue LightningMaxValue { get; set; }
         public bool LightningAmountInSatoshi { get; set; }
 
-        public string CustomLogo { get; set; }
-        
         public string CustomCSS { get; set; }
+        public string CustomLogo { get; set; }
         public string HtmlTitle { get; set; }
+        public string CheckoutTheme { get; set; }
 
         public bool RateScripting { get; set; }
 

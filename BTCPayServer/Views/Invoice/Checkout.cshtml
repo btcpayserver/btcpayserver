@@ -24,7 +24,7 @@
     <bundle name="wwwroot/bundles/checkout-bundle.min.js" />
     <script>vex.defaultOptions.className = 'vex-theme-btcpay'</script>
 
-    <link href="/checkout/css/themes/default.css" rel="stylesheet" />
+    <link href="/checkout/css/themes/@(Model.CheckoutTheme.ToLower()).css" rel="stylesheet" />
 
     @if (!string.IsNullOrEmpty(Model.CustomCSSLink))
     {

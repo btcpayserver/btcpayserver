@@ -180,17 +180,19 @@ namespace BTCPayServer.Tests
             InvoiceEntity invoiceEntity = new InvoiceEntity();
             invoiceEntity.Networks = networkProvider;
             invoiceEntity.Payments = new System.Collections.Generic.List<PaymentEntity>();
-            invoiceEntity.ProductInformation = new ProductInformation() {Price = 100};
+            invoiceEntity.ProductInformation = new ProductInformation() { Price = 100 };
             PaymentMethodDictionary paymentMethods = new PaymentMethodDictionary();
-            paymentMethods.Add(new PaymentMethod() {Network = networkBTC, CryptoCode = "BTC", Rate = 10513.44m,}.SetPaymentMethodDetails(
+            paymentMethods.Add(new PaymentMethod() { Network = networkBTC, CryptoCode = "BTC", Rate = 10513.44m, }.SetPaymentMethodDetails(
                 new BTCPayServer.Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod()
                 {
-                    NextNetworkFee = Money.Coins(0.00000100m), DepositAddress = dummy
+                    NextNetworkFee = Money.Coins(0.00000100m),
+                    DepositAddress = dummy
                 }));
-            paymentMethods.Add(new PaymentMethod() {Network = networkLTC, CryptoCode = "LTC", Rate = 216.79m}.SetPaymentMethodDetails(
+            paymentMethods.Add(new PaymentMethod() { Network = networkLTC, CryptoCode = "LTC", Rate = 216.79m }.SetPaymentMethodDetails(
                 new BTCPayServer.Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod()
                 {
-                    NextNetworkFee = Money.Coins(0.00010000m), DepositAddress = dummy
+                    NextNetworkFee = Money.Coins(0.00010000m),
+                    DepositAddress = dummy
                 }));
             invoiceEntity.SetPaymentMethods(paymentMethods);
 
@@ -199,31 +201,31 @@ namespace BTCPayServer.Tests
 
             invoiceEntity.Payments.Add(
                 new PaymentEntity()
-                    {
+                {
 
-                        Accounted = true,
-                        CryptoCode = "BTC",
-                        NetworkFee = 0.00000100m,
-                        Network = networkProvider.GetNetwork("BTC"),
-                    }
+                    Accounted = true,
+                    CryptoCode = "BTC",
+                    NetworkFee = 0.00000100m,
+                    Network = networkProvider.GetNetwork("BTC"),
+                }
                     .SetCryptoPaymentData(new BitcoinLikePaymentData()
                     {
                         Network = networkProvider.GetNetwork("BTC"),
-                        Output = new TxOut() {Value = Money.Coins(0.00151263m)}
+                        Output = new TxOut() { Value = Money.Coins(0.00151263m) }
                     }));
             accounting = btc.Calculate();
             invoiceEntity.Payments.Add(
                 new PaymentEntity()
-                    {
-                        Accounted = true,
-                        CryptoCode = "BTC",
-                        NetworkFee = 0.00000100m,
-                        Network = networkProvider.GetNetwork("BTC")
-                    }
+                {
+                    Accounted = true,
+                    CryptoCode = "BTC",
+                    NetworkFee = 0.00000100m,
+                    Network = networkProvider.GetNetwork("BTC")
+                }
                     .SetCryptoPaymentData(new BitcoinLikePaymentData()
                     {
                         Network = networkProvider.GetNetwork("BTC"),
-                        Output = new TxOut() {Value = accounting.Due}
+                        Output = new TxOut() { Value = accounting.Due }
                     }));
             accounting = btc.Calculate();
             Assert.Equal(Money.Zero, accounting.Due);
@@ -296,9 +298,11 @@ namespace BTCPayServer.Tests
             entity.Payments = new System.Collections.Generic.List<PaymentEntity>();
             entity.SetPaymentMethod(new PaymentMethod()
             {
-                CryptoCode = "BTC", Rate = 5000, NextNetworkFee = Money.Coins(0.1m)
+                CryptoCode = "BTC",
+                Rate = 5000,
+                NextNetworkFee = Money.Coins(0.1m)
             });
-            entity.ProductInformation = new ProductInformation() {Price = 5000};
+            entity.ProductInformation = new ProductInformation() { Price = 5000 };
 
             var paymentMethod = entity.GetPaymentMethods().TryGet("BTC", PaymentTypes.BTCLike);
             var accounting = paymentMethod.Calculate();
@@ -352,7 +356,7 @@ namespace BTCPayServer.Tests
 
             entity = new InvoiceEntity();
             entity.Networks = networkProvider;
-            entity.ProductInformation = new ProductInformation() {Price = 5000};
+            entity.ProductInformation = new ProductInformation() { Price = 5000 };
             PaymentMethodDictionary paymentMethods = new PaymentMethodDictionary();
             paymentMethods.Add(
                 new PaymentMethod()
@@ -485,9 +489,11 @@ namespace BTCPayServer.Tests
             entity.Payments = new List<PaymentEntity>();
             entity.SetPaymentMethod(new PaymentMethod()
             {
-                CryptoCode = "BTC", Rate = 5000, NextNetworkFee = Money.Coins(0.1m)
+                CryptoCode = "BTC",
+                Rate = 5000,
+                NextNetworkFee = Money.Coins(0.1m)
             });
-            entity.ProductInformation = new ProductInformation() {Price = 5000};
+            entity.ProductInformation = new ProductInformation() { Price = 5000 };
             entity.PaymentTolerance = 0;
 
 
@@ -497,13 +503,13 @@ namespace BTCPayServer.Tests
             Assert.Equal(Money.Coins(1.1m), accounting.TotalDue);
             Assert.Equal(Money.Coins(1.1m), accounting.MinimumTotalDue);
 
-                entity.PaymentTolerance = 10;
-                accounting = paymentMethod.Calculate();
-                Assert.Equal(Money.Coins(0.99m), accounting.MinimumTotalDue);
+            entity.PaymentTolerance = 10;
+            accounting = paymentMethod.Calculate();
+            Assert.Equal(Money.Coins(0.99m), accounting.MinimumTotalDue);
 
-                entity.PaymentTolerance = 100;
-                accounting = paymentMethod.Calculate();
-                Assert.Equal(Money.Satoshis(1), accounting.MinimumTotalDue);
+            entity.PaymentTolerance = 100;
+            accounting = paymentMethod.Calculate();
+            Assert.Equal(Money.Satoshis(1), accounting.MinimumTotalDue);
 
         }
 
@@ -1746,7 +1752,7 @@ namespace BTCPayServer.Tests
         [Trait("Fast", "Fast")]
         public void CanParseDerivationScheme()
         {
-            var  testnetNetworkProvider = new BTCPayNetworkProvider(NetworkType.Testnet);
+            var testnetNetworkProvider = new BTCPayNetworkProvider(NetworkType.Testnet);
             var regtestNetworkProvider = new BTCPayNetworkProvider(NetworkType.Regtest);
             var mainnetNetworkProvider = new BTCPayNetworkProvider(NetworkType.Mainnet);
             var testnetParser = new DerivationSchemeParser(testnetNetworkProvider.GetNetwork<BTCPayNetwork>("BTC"));
@@ -1926,7 +1932,7 @@ namespace BTCPayServer.Tests
                 var wallet = tester.PayTester.GetController<WalletsController>();
                 var psbt = wallet.CreatePSBT(btcNetwork, onchainBTC, new WalletSendModel()
                 {
-                   Outputs = new List<WalletSendModel.TransactionOutput>()
+                    Outputs = new List<WalletSendModel.TransactionOutput>()
                    {
                        new WalletSendModel.TransactionOutput()
                        {
@@ -2160,7 +2166,7 @@ noninventoryitem:
                 var controller = tester.PayTester.GetController<InvoiceController>(user.UserId, user.StoreId);
                 var appService = tester.PayTester.GetService<AppService>();
                 var eventAggregator = tester.PayTester.GetService<EventAggregator>();
-                Assert.IsType<JsonResult>( await controller.ChangeInvoiceState(inventoryItemInvoice.Id, "invalid"));
+                Assert.IsType<JsonResult>(await controller.ChangeInvoiceState(inventoryItemInvoice.Id, "invalid"));
                 //check that item is back in stock
                 TestUtils.Eventually(() =>
                 {
@@ -2436,8 +2442,8 @@ noninventoryitem:
                     var firstPayment = productPartDue - missingMoney;
                     cashCow.SendToAddress(invoiceAddress, Money.Coins(firstPayment));
 
-                        TestUtils.Eventually(() =>
-                        {
+                    TestUtils.Eventually(() =>
+                    {
                         invoice = user.BitPay.GetInvoice(invoice.Id);
                         // Check that for the second payment, network fee are included
                         due = Money.Parse(invoice.CryptoInfo[0].Due);
@@ -3091,7 +3097,7 @@ noninventoryitem:
         [Trait("Integration", "Integration")]
         [Trait("Altcoins", "Altcoins")]
         [Trait("Lightning", "Lightning")]
-        public  async Task CanCreateInvoiceWithSpecificPaymentMethods()
+        public async Task CanCreateInvoiceWithSpecificPaymentMethods()
         {
             using (var tester = ServerTester.Create())
             {
@@ -3136,63 +3142,63 @@ noninventoryitem:
                 var user = tester.NewAccount();
                 user.GrantAccess();
 
-               var accountController = tester.PayTester.GetController<AccountController>();
+                var accountController = tester.PayTester.GetController<AccountController>();
 
-               //no 2fa or u2f enabled, login should work
-               Assert.Equal(nameof(HomeController.Index), Assert.IsType<RedirectToActionResult>(await accountController.Login(new LoginViewModel()
-               {
-                   Email = user.RegisterDetails.Email,
-                   Password = user.RegisterDetails.Password
-               })).ActionName);
+                //no 2fa or u2f enabled, login should work
+                Assert.Equal(nameof(HomeController.Index), Assert.IsType<RedirectToActionResult>(await accountController.Login(new LoginViewModel()
+                {
+                    Email = user.RegisterDetails.Email,
+                    Password = user.RegisterDetails.Password
+                })).ActionName);
 
-               var manageController = user.GetController<ManageController>();
+                var manageController = user.GetController<ManageController>();
 
-               //by default no u2f devices available
-               Assert.Empty(Assert.IsType<U2FAuthenticationViewModel>(Assert.IsType<ViewResult>(await manageController.U2FAuthentication()).Model).Devices);
-               var addRequest = Assert.IsType<AddU2FDeviceViewModel>(Assert.IsType<ViewResult>(manageController.AddU2FDevice("label")).Model);
-               //name should match the one provided in beginning
-               Assert.Equal("label",addRequest.Name);
+                //by default no u2f devices available
+                Assert.Empty(Assert.IsType<U2FAuthenticationViewModel>(Assert.IsType<ViewResult>(await manageController.U2FAuthentication()).Model).Devices);
+                var addRequest = Assert.IsType<AddU2FDeviceViewModel>(Assert.IsType<ViewResult>(manageController.AddU2FDevice("label")).Model);
+                //name should match the one provided in beginning
+                Assert.Equal("label", addRequest.Name);
 
                 //sending an invalid response model back to server, should error out
                 Assert.IsType<RedirectToActionResult>(await manageController.AddU2FDevice(addRequest));
                 var statusModel = manageController.TempData.GetStatusMessageModel();
-               Assert.Equal(StatusMessageModel.StatusSeverity.Error, statusModel.Severity);
+                Assert.Equal(StatusMessageModel.StatusSeverity.Error, statusModel.Severity);
 
-               var contextFactory = tester.PayTester.GetService<ApplicationDbContextFactory>();
+                var contextFactory = tester.PayTester.GetService<ApplicationDbContextFactory>();
 
-               //add a fake u2f device in db directly since emulating a u2f device is hard and annoying
-               using (var context = contextFactory.CreateContext())
-               {
-                   var newDevice = new U2FDevice()
-                   {
-                       Id = Guid.NewGuid().ToString(),
-                       Name = "fake",
-                       Counter = 0,
-                       KeyHandle = UTF8Encoding.UTF8.GetBytes("fake"),
-                       PublicKey= UTF8Encoding.UTF8.GetBytes("fake"),
-                       AttestationCert= UTF8Encoding.UTF8.GetBytes("fake"),
-                       ApplicationUserId= user.UserId
-                   };
-                   await context.U2FDevices.AddAsync(newDevice);
-                   await context.SaveChangesAsync();
+                //add a fake u2f device in db directly since emulating a u2f device is hard and annoying
+                using (var context = contextFactory.CreateContext())
+                {
+                    var newDevice = new U2FDevice()
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        Name = "fake",
+                        Counter = 0,
+                        KeyHandle = UTF8Encoding.UTF8.GetBytes("fake"),
+                        PublicKey = UTF8Encoding.UTF8.GetBytes("fake"),
+                        AttestationCert = UTF8Encoding.UTF8.GetBytes("fake"),
+                        ApplicationUserId = user.UserId
+                    };
+                    await context.U2FDevices.AddAsync(newDevice);
+                    await context.SaveChangesAsync();
 
-                   Assert.NotNull(newDevice.Id);
-                   Assert.NotEmpty(Assert.IsType<U2FAuthenticationViewModel>(Assert.IsType<ViewResult>(await manageController.U2FAuthentication()).Model).Devices);
+                    Assert.NotNull(newDevice.Id);
+                    Assert.NotEmpty(Assert.IsType<U2FAuthenticationViewModel>(Assert.IsType<ViewResult>(await manageController.U2FAuthentication()).Model).Devices);
 
-               }
+                }
 
-               //check if we are showing the u2f login screen now
-               var secondLoginResult = Assert.IsType<ViewResult>(await accountController.Login(new LoginViewModel()
-               {
-                   Email = user.RegisterDetails.Email,
-                   Password = user.RegisterDetails.Password
-               }));
+                //check if we are showing the u2f login screen now
+                var secondLoginResult = Assert.IsType<ViewResult>(await accountController.Login(new LoginViewModel()
+                {
+                    Email = user.RegisterDetails.Email,
+                    Password = user.RegisterDetails.Password
+                }));
 
-               Assert.Equal("SecondaryLogin", secondLoginResult.ViewName);
-               var vm = Assert.IsType<SecondaryLoginViewModel>(secondLoginResult.Model);
-               //2fa was never enabled for user so this should be empty
-               Assert.Null(vm.LoginWith2FaViewModel);
-               Assert.NotNull(vm.LoginWithU2FViewModel);
+                Assert.Equal("SecondaryLogin", secondLoginResult.ViewName);
+                var vm = Assert.IsType<SecondaryLoginViewModel>(secondLoginResult.Model);
+                //2fa was never enabled for user so this should be empty
+                Assert.Null(vm.LoginWith2FaViewModel);
+                Assert.NotNull(vm.LoginWithU2FViewModel);
             }
         }
 

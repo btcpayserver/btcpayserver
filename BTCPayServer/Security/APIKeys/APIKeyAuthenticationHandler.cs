@@ -74,7 +74,7 @@ namespace BTCPayServer.Security.APIKeys
         {
             string authHeader = Context.Request.Headers["Authorization"];
 
-            if (authHeader == null || !authHeader.StartsWith("Basic ")) return AuthenticateResult.NoResult();
+            if (authHeader == null || !authHeader.StartsWith("Basic ", StringComparison.OrdinalIgnoreCase)) return AuthenticateResult.NoResult();
             var encodedUsernamePassword = authHeader.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries)[1]?.Trim();
             var decodedUsernamePassword =
                 Encoding.UTF8.GetString(Convert.FromBase64String(encodedUsernamePassword)).Split(':');

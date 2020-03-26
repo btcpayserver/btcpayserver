@@ -331,7 +331,7 @@ body {
     line-height: 1.5;
     background-color: #fff;
     margin: 0;
-    background: #f8f9fa;
+    background: #E4E4E4;
 }
 
 [tabindex="-1"]:focus {
@@ -8154,11 +8154,11 @@ a:hover {
 
 .action-button {
     color: #fff;
-    background-color: #51b13e;
-    border-color: #51b13e;
-    padding: 12px;
+    background-color: #329F80;
+    border-color: #329F80;
+    padding: 15px;
     word-break: normal;
-    font-size: 13px;
+    font-size: 13.5px;
     min-width: 185px;
     font-weight: 300;
     letter-spacing: .7px;
@@ -8170,21 +8170,21 @@ a:hover {
 
     .action-button:hover {
         color: #fff;
-        background-color: #418e32;
-        border-color: #418e32;
+        background-color: #24725B;
+        border-color: #24725B;
     }
 
     .action-button:focus, .action-button.focus {
         color: #fff;
-        background-color: #418e32;
-        border-color: #418e32;
+        background-color: #24725B;
+        border-color: #24725B;
     }
 
     .action-button:active, .action-button.active,
     .open > .action-button.dropdown-toggle {
         color: #fff;
-        background-color: #418e32;
-        border-color: #418e32;
+        background-color: #24725B;
+        border-color: #24725B;
         background-image: none;
     }
 
@@ -8193,8 +8193,8 @@ a:hover {
         .open > .action-button.dropdown-toggle:focus,
         .open > .action-button.dropdown-toggle.focus {
             color: #fff;
-            background-color: #418e32;
-            border-color: #418e32;
+            background-color: #24725B;
+            border-color: #24725B;
         }
 
     .action-button.disabled:focus, .action-button.disabled.focus, .action-button:disabled:focus, .action-button:disabled.focus {
@@ -8208,7 +8208,7 @@ a:hover {
     }
 
     .action-button:hover {
-        background-color: #418e32;
+        background-color: #24725B;
         border-color: rgba(28, 100, 222, 0);
         opacity: .95;
     }
@@ -8250,7 +8250,7 @@ strong {
 }
 
 .modal-content {
-    box-shadow: 0 2px 32px 0 rgba(0, 0, 0, 0.5);
+    box-shadow: 0 2px 32px 0 rgba(0, 0, 0, 0.85);
     background: #F5F5F7;
     z-index: 999999;
     border-radius: 0;
@@ -8284,8 +8284,8 @@ strong {
 }
 
 .top-header {
-    color: #000;
-    background-color: #fff;
+    color: #fff;
+    background-color: #329F80;
     font-weight: 500;
     letter-spacing: .5px;
 }
@@ -8307,36 +8307,37 @@ strong {
     position: relative;
     width: 100px;
     height: 50px;
-    margin: 10px auto 0px;
+    margin-left: 10px;
+    margin-top: 10px;
+}
+
+.header__icon__img {
+    display: block;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    background: url(legacy-logo.png) no-repeat;
+    background-size: 92.5px 40px;
+    width: 92.5px;
+    height: 40px;
+    padding-left: 92.5px; /* Must be equal to width */
 }
 
 .top-header .timer-row {
-    background: #51b13e;
-    color: #fff;
+    background: #CEDC21;
     display: flex;
     align-items: center;
-    padding: 5px 14px 3px;
-    font-size: 13px;
+    padding: 3px 14px;
     position: relative;
     transition: background 1s ease;
 }
 
     .top-header .timer-row.expiring-soon {
-        background: #ed4f32;
+        background: #D3051E;
     }
 
         .top-header .timer-row.expiring-soon .timer-row__message {
             opacity: 1;
         }
-
-.top-header .timer-row__progress-bar {
-    position: absolute;
-    height: 100%;
-    width: 0%;
-    top: 0;
-    left: 0;
-    background: rgba(0, 0, 0, 0.2);
-}
 
 .top-header .timer-row__spinner {
     display: flex;
@@ -8347,7 +8348,7 @@ strong {
     .top-header .timer-row__spinner svg {
         width: 17px;
         height: 17px;
-        fill: #fff;
+        fill: #4681e2;
         animation: spin 0.5s linear infinite;
         margin-top: -2px;
         transition: fill .5s ease;
@@ -8369,11 +8370,22 @@ strong {
 
 .top-header .timer-row__message {
     flex-grow: 1;
+    font-size: 13.5px;
     z-index: 1;
 }
 
 .top-header .timer-row__time-left {
+    font-size: 13.5px;
     z-index: 1;
+}
+
+.top-header .timer-row__progress-bar {
+    position: absolute;
+    height: 100%;
+    width: 0%;
+    top: 0;
+    left: 0;
+    background: rgba(0, 0, 0, 0.2);
 }
 
 .subheader {
@@ -8541,7 +8553,7 @@ strong {
     position: absolute;
     height: 5px;
     width: 50%;
-    background: #51b13e;
+    background: #329F80;
     top: 0;
     right: 50%;
     transition: all .2s ease;
@@ -8804,7 +8816,7 @@ strong {
     transform: rotateZ(45deg);
     margin-left: -5px;
     top: -5px;
-    background: #51b13e;
+    background: #329F80;
     transform-style: preserve-3d;
     backface-visibility: hidden;
 }
@@ -9009,15 +9021,14 @@ strong {
 .payment-box {
     padding-top: 15px;
     position: relative;
-    font-size: 13px;
     margin-bottom: 1.5rem !important;
     margin-bottom: 0 !important;
     min-height: 393px;
 }
 
-    .payment-box.with-recommended-fee {
-        min-height: 430px;
-    }
+.payment-box.with-recommended-fee {
+    min-height: 430px;
+}
 
 .paypro {
     padding: 10px;
@@ -9072,13 +9083,13 @@ strong {
 }
 
 .close-icon {
-    padding: 16px;
+    flex-grow: 1;
+    display: none;
+    justify-content: flex-end;
+    padding: 13px;
     transition: opacity 250ms ease;
     opacity: 1;
     cursor: pointer;
-    position: absolute;
-    right: 0px;
-    display:none;
 }
 
     .close-icon img {
@@ -9255,6 +9266,8 @@ strong {
 .recommended-fee {
     box-sizing: border-box;
     color: #818EA9;
+    font-size: 14px;
+    font-weight: 300;
     position: absolute;
     top: calc(100% - 40px);
     left: 50%;
@@ -9408,7 +9421,7 @@ strong {
 
     .btnGroupLnd button {
         display: table-cell;
-        border: solid 1px #418e32;
+        border: solid 1px #24725B;
         padding: 6px 9px;
         margin: 0px;
         font-size: 12px;
@@ -9423,14 +9436,14 @@ strong {
         }
 
         .btnGroupLnd button.active {
-            background-color: #51b13e;
-            border-color: #51b13e;
+            background-color: #329F80;
+            border-color: #329F80;
             color: #fff;
         }
 
             .btnGroupLnd button.active:hover {
-                background-color: #418e32;
-                border-color: #418e32;
+                background-color: #24725B;
+                border-color: #24725B;
                 color: #fff;
             }
 
@@ -11394,7 +11407,7 @@ low-fee-timeline {
     transform: rotateZ(45deg);
     margin-left: -5px;
     top: -5px;
-    background: #51b13e;
+    background: #329F80;
     transform-style: preserve-3d;
     backface-visibility: hidden;
     margin-bottom: -10px;
@@ -11545,9 +11558,9 @@ low-fee-timeline {
 
 
 .btn-link {
-    color: #51b13e;
+    color: #329F80;
 }
 
     .btn-link:hover {
-        color: #418e32;
+        color: #24725B;
     }

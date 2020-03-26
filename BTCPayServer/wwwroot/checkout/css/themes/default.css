@@ -8310,6 +8310,17 @@ strong {
     margin: 10px auto 0px;
 }
 
+.header__icon__img {
+    display: block;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    background: url(default-logo.svg) no-repeat;
+    background-size: 92.5px 40px;
+    width: 92.5px;
+    height: 40px;
+    padding-left: 92.5px; /* Must be equal to width */
+}
+
 .top-header .timer-row {
     background: #51b13e;
     color: #fff;

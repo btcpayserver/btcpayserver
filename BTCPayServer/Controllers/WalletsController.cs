@@ -673,7 +673,7 @@ namespace BTCPayServer.Controllers
 
         private IActionResult ViewVault(WalletId walletId, PSBT psbt)
         {
-            return View("WalletSendVault", new WalletSendVaultModel()
+            return View(nameof(WalletSendVault), new WalletSendVaultModel()
             {
                 WalletId = walletId.ToString(),
                 PSBT = psbt.ToBase64(),
@@ -683,7 +683,7 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("{walletId}/vault")]
-        public async Task<IActionResult> SubmitVault([ModelBinder(typeof(WalletIdModelBinder))]
+        public async Task<IActionResult> WalletSendVault([ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, WalletSendVaultModel model)
         {
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
@@ -691,7 +691,7 @@ namespace BTCPayServer.Controllers
             if (newPSBT != null)
             {
                 model.PSBT = newPSBT.ToBase64();
-                return View("WalletSendVault", model);
+                return View(nameof(WalletSendVault), model);
             }
 
             return RedirectToWalletPSBTReady(model.PSBT);

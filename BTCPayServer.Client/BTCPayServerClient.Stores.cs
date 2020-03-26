@@ -9,7 +9,7 @@ namespace BTCPayServer.Client
     {
         public virtual async Task<IEnumerable<StoreData>> GetStores(CancellationToken token = default)
         {
-            var response = await _httpClient.SendAsync(CreateHttpRequest("api/v1/api-keys/stores"), token);
+            var response = await _httpClient.SendAsync(CreateHttpRequest("api/v1/stores"), token);
             return await HandleResponse<IEnumerable<StoreData>>(response);
         }
     }

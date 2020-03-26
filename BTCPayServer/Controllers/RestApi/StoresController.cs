@@ -11,10 +11,6 @@ namespace BTCPayServer.Controllers.RestApi
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
     public class StoresController : ControllerBase
     {
-        public StoresController()
-        {
-        }
-
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores")]
         public ActionResult<IEnumerable<Client.Models.StoreData>> GetStores()

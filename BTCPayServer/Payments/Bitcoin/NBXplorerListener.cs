@@ -352,7 +352,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
         private decimal GetPayJoinContributedAmount(BitcoinLikeOnChainPaymentMethod paymentMethod, decimal amount, uint256 transactionHash)
         {
-            if (paymentMethod.PayJoin.Enabled &&
+            if (paymentMethod.PayJoin?.Enabled is true &&
                 paymentMethod.PayJoin.ProposedTransactionHash == transactionHash &&
                 paymentMethod.PayJoin.TotalOutputAmount == amount)
             {

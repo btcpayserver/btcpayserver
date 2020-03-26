@@ -20,6 +20,13 @@ $(function () {
         },
         methods: {
             retry: function () {
+                if (!this.data) {
+                    this.close();
+                    this.$nextTick(function () {
+                        this.loaded = true;
+                    });
+                    return;
+                }
                 this.data = "";
             },
             close: function () {
@@ -29,7 +36,6 @@ $(function () {
             },
             onDecode(content) {
                 this.data = decodeURIComponent(content);
-
             },
             submitData: function () {
                 $("#BIP21").val(this.data);

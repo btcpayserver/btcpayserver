@@ -766,13 +766,6 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> SubmitLedger([ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, WalletSendLedgerModel model)
         {
-            var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
-            var newPSBT = await TryGetBPProposedTX(PSBT.Parse(model.PSBT,network.NBitcoinNetwork ), GetDerivationSchemeSettings(walletId), network);
-            if (newPSBT != null)
-            {
-                model.PSBT = newPSBT.ToBase64();
-                return View("WalletSendLedger", model);
-            }
             return RedirectToWalletPSBTReady(model.PSBT);
         }
         

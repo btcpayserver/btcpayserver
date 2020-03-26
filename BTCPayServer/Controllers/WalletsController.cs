@@ -692,13 +692,14 @@ namespace BTCPayServer.Controllers
             model.PayJoinEndpointUrl = null;
             if (newPSBT != null)
             {
+                model.OriginalPSBT = model.PSBT;
                 model.PSBT = newPSBT.ToBase64();
                 return View(nameof(WalletSendVault), model);
             }
 
-            return RedirectToWalletPSBTReady(model.PSBT);
+            return RedirectToWalletPSBTReady(model.PSBT, originalPsbt: model.OriginalPSBT);
         }
-        private IActionResult RedirectToWalletPSBTReady(string psbt, string signingKey=  null, string signingKeyPath = null)
+        private IActionResult RedirectToWalletPSBTReady(string psbt, string signingKey=  null, string signingKeyPath = null, string originalPsbt = null)
         {
             var vm = new PostRedirectViewModel()
             {
@@ -707,6 +708,7 @@ namespace BTCPayServer.Controllers
                 Parameters =
                 {
                     new KeyValuePair<string, string>("psbt", psbt),
+                    new KeyValuePair<string, string>("originalPsbt", originalPsbt),
                     new KeyValuePair<string, string>("SigningKey", signingKey),
                     new KeyValuePair<string, string>("SigningKeyPath", signingKeyPath)
                 }
@@ -851,10 +853,11 @@ namespace BTCPayServer.Controllers
             viewModel.PayJoinEndpointUrl = null;
             if (newPSBT != null)
             {
+                viewModel.OriginalPSBT = psbt.ToBase64();
                 viewModel.PSBT = newPSBT.ToBase64();
                 return await SignWithSeed(walletId, viewModel);
             }
-            return RedirectToWalletPSBTReady(psbt.ToBase64(), signingKey.GetWif(network.NBitcoinNetwork).ToString(), rootedKeyPath?.ToString());
+            return RedirectToWalletPSBTReady(psbt.ToBase64(), signingKey.GetWif(network.NBitcoinNetwork).ToString(), rootedKeyPath?.ToString(), viewModel.OriginalPSBT);
         }
 
         private bool PSBTChanged(PSBT psbt, Action act)

@@ -23,6 +23,7 @@
         <form id="broadcastForm" asp-action="WalletSendVault" asp-route-walletId="@this.Context.GetRouteValue("walletId")" method="post" style="display:none;">
             <input type="hidden" id="WalletId" asp-for="WalletId" />
             <input type="hidden" id="PSBT" asp-for="PSBT" value="@Model.PSBT"/>
+            <input type="hidden" id="OriginalPSBT" asp-for="OriginalPSBT" value="@Model.OriginalPSBT"/>
             <input type="hidden" asp-for="WebsocketPath" />
             <input type="hidden" asp-for="PayJoinEndpointUrl" />
         </form>

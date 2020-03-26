@@ -27,6 +27,7 @@
     <div class="col-md-10">
         <div asp-validation-summary="All" class="text-danger"></div>
         <form method="post" asp-action="SignWithSeed" asp-route-walletId="@this.Context.GetRouteValue("walletId")">
+            <input type="hidden" asp-for="OriginalPSBT" />
             <input type="hidden" asp-for="PSBT" />
             <input type="hidden" asp-for="PayJoinEndpointUrl" />
             <div class="form-group">

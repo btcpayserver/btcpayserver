@@ -7,6 +7,7 @@ namespace BTCPayServer.Models.WalletViewModels
 {
     public class SignWithSeedViewModel
     {
+        public string OriginalPSBT  { get; set; }
         public string PayJoinEndpointUrl { get; set; }
         [Required]
         public string PSBT { get; set; }

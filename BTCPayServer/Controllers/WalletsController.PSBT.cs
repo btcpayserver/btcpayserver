@@ -181,7 +181,7 @@ namespace BTCPayServer.Controllers
                     {
                         //check that all the inputs we provided are still there and that there is at least one new(signed) input.
                         bool valid = false;
-                        var existingInputs = psbt.Inputs.Select(input => input.PrevOut).ToList();
+                        var existingInputs = psbt.Inputs.Select(input => input.PrevOut).ToHashSet();
                         foreach (var input in newPSBT.Inputs)
                         {
                             var existingInput = existingInputs.SingleOrDefault(point => point == input.PrevOut);

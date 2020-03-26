@@ -600,28 +600,28 @@ namespace BTCPayServer.Controllers
                 return View(vm);
             }
             derivationScheme.RebaseKeyPaths(psbt.PSBT);
-            TempData.AddOrReplace("bpu", vm.PayJoinEndpointUrl);
             switch (command)
             {
                 case "vault":
-                    return ViewVault(walletId, psbt.PSBT);
+                    return ViewVault(walletId, psbt.PSBT, vm.PayJoinEndpointUrl);
                 case "nbx-seed":
                   var extKey = await ExplorerClientProvider.GetExplorerClient(network)
                         .GetMetadataAsync<string>(derivationScheme.AccountDerivation, WellknownMetadataKeys.MasterHDKey, cancellation);
 
                   return await SignWithSeed(walletId, new SignWithSeedViewModel()
                   {
+                      PayJoinEndpointUrl = vm.PayJoinEndpointUrl,
                       SeedOrKey = extKey,
                       PSBT = psbt.PSBT.ToBase64()
                   });
                 case "ledger":
                     return ViewWalletSendLedger(walletId, psbt.PSBT, psbt.ChangeAddress);
                 case "seed":
-                    return SignWithSeed(walletId, psbt.PSBT.ToBase64());
+                    return SignWithSeed(walletId, psbt.PSBT.ToBase64(), vm.PayJoinEndpointUrl);
                 case "analyze-psbt":
                     var name =
                         $"Send-{string.Join('_', vm.Outputs.Select(output => $"{output.Amount}->{output.DestinationAddress}{(output.SubtractFeesFromOutput ? "-Fees" : string.Empty)}"))}.psbt";
-                    return RedirectToWalletPSBT(psbt.PSBT, name);
+                    return RedirectToWalletPSBT(psbt.PSBT, name, vm.PayJoinEndpointUrl);
                 default:
                     return View(vm);
             }
@@ -671,10 +671,11 @@ namespace BTCPayServer.Controllers
             ModelState.Clear();
         }
 
-        private IActionResult ViewVault(WalletId walletId, PSBT psbt)
+        private IActionResult ViewVault(WalletId walletId, PSBT psbt, string payJoinEndpointUrl)
         {
             return View(nameof(WalletSendVault), new WalletSendVaultModel()
             {
+                PayJoinEndpointUrl = payJoinEndpointUrl,
                 WalletId = walletId.ToString(),
                 PSBT = psbt.ToBase64(),
                 WebsocketPath = this.Url.Action(nameof(VaultController.VaultBridgeConnection), "Vault", new { walletId = walletId.ToString() })
@@ -687,7 +688,8 @@ namespace BTCPayServer.Controllers
             WalletId walletId, WalletSendVaultModel model)
         {
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
-            var newPSBT = await TryGetBPProposedTX(PSBT.Parse(model.PSBT, network.NBitcoinNetwork), GetDerivationSchemeSettings(walletId), network);
+            var newPSBT = await TryGetBPProposedTX(model.PayJoinEndpointUrl, PSBT.Parse(model.PSBT, network.NBitcoinNetwork), GetDerivationSchemeSettings(walletId), network);
+            model.PayJoinEndpointUrl = null;
             if (newPSBT != null)
             {
                 model.PSBT = newPSBT.ToBase64();
@@ -712,7 +714,7 @@ namespace BTCPayServer.Controllers
             return View("PostRedirect", vm);
         }
         
-        private IActionResult RedirectToWalletPSBT(PSBT psbt, string fileName = null)
+        private IActionResult RedirectToWalletPSBT(PSBT psbt, string fileName = null, string payJoinEndpointUrl = null)
         {
             var vm = new PostRedirectViewModel()
             {
@@ -725,6 +727,8 @@ namespace BTCPayServer.Controllers
             };
             if (!string.IsNullOrEmpty(fileName))
                 vm.Parameters.Add(new KeyValuePair<string, string>("fileName", fileName));
+            if (!string.IsNullOrEmpty(payJoinEndpointUrl))
+                vm.Parameters.Add(new KeyValuePair<string, string>("payJoinEndpointUrl", payJoinEndpointUrl));
             return View("PostRedirect", vm);
         }
 
@@ -771,10 +775,11 @@ namespace BTCPayServer.Controllers
         
         [HttpGet("{walletId}/psbt/seed")]
         public IActionResult SignWithSeed([ModelBinder(typeof(WalletIdModelBinder))]
-            WalletId walletId,string psbt)
+            WalletId walletId,string psbt, string payJoinEndpointUrl)
         {
             return View(nameof(SignWithSeed), new SignWithSeedViewModel()
             {
+                PayJoinEndpointUrl = payJoinEndpointUrl,
                 PSBT = psbt
             });
         }
@@ -842,7 +847,8 @@ namespace BTCPayServer.Controllers
                 return View(viewModel);
             }
             ModelState.Remove(nameof(viewModel.PSBT));
-            var newPSBT = await TryGetBPProposedTX(psbt, GetDerivationSchemeSettings(walletId), network);
+            var newPSBT = await TryGetBPProposedTX(viewModel.PayJoinEndpointUrl,psbt, GetDerivationSchemeSettings(walletId), network);
+            viewModel.PayJoinEndpointUrl = null;
             if (newPSBT != null)
             {
                 viewModel.PSBT = newPSBT.ToBase64();

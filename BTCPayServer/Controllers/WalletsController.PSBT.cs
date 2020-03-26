@@ -71,6 +71,7 @@ namespace BTCPayServer.Controllers
                 vm.Decoded = psbt.ToString();
                 vm.PSBT = psbt.ToBase64();
             }
+            
             return View(nameof(WalletPSBT), vm ?? new WalletPSBTViewModel() { CryptoCode = walletId.CryptoCode });
         }
         [HttpPost]
@@ -101,7 +102,7 @@ namespace BTCPayServer.Controllers
                     vm.FileName = vm.UploadedPSBTFile?.FileName;
                     return View(vm);
                 case "vault":
-                    return ViewVault(walletId, psbt);
+                    return ViewVault(walletId, psbt, vm.PayJoinEndpointUrl);
                 case "ledger":
                     return ViewWalletSendLedger(walletId, psbt);
                 case "update":
@@ -115,7 +116,7 @@ namespace BTCPayServer.Controllers
                     TempData[WellKnownTempData.SuccessMessage] = "PSBT updated!";
                     return RedirectToWalletPSBT(psbt, vm.FileName);
                 case "seed":
-                    return SignWithSeed(walletId, psbt.ToBase64());
+                    return SignWithSeed(walletId, psbt.ToBase64(), vm.PayJoinEndpointUrl);
                 case "nbx-seed":
                     if (await CanUseHotWallet())
                     {
@@ -125,7 +126,7 @@ namespace BTCPayServer.Controllers
                                 WellknownMetadataKeys.MasterHDKey);
 
                         return await SignWithSeed(walletId,
-                            new SignWithSeedViewModel() {SeedOrKey = extKey, PSBT = psbt.ToBase64()});
+                            new SignWithSeedViewModel() {SeedOrKey = extKey, PSBT = psbt.ToBase64(), PayJoinEndpointUrl = vm.PayJoinEndpointUrl});
                     }
 
                     return View(vm);
@@ -158,12 +159,10 @@ namespace BTCPayServer.Controllers
 
        
 
-        private async Task<PSBT> TryGetBPProposedTX(PSBT psbt, DerivationSchemeSettings derivationSchemeSettings, BTCPayNetwork btcPayNetwork)
+        private async Task<PSBT> TryGetBPProposedTX(string bpu, PSBT psbt, DerivationSchemeSettings derivationSchemeSettings, BTCPayNetwork btcPayNetwork)
         {
-            
-            if (TempData.TryGetValue( "bpu", out var bpu) && !string.IsNullOrEmpty(bpu?.ToString()) && Uri.TryCreate(bpu.ToString(), UriKind.Absolute, out var endpoint))
+            if (!string.IsNullOrEmpty(bpu) && Uri.TryCreate(bpu, UriKind.Absolute, out var endpoint))
             {
-                TempData.Remove("bpu");
                 var httpClient = _httpClientFactory.CreateClient("payjoin");
 
                 var cloned = psbt.Clone();
@@ -173,7 +172,7 @@ namespace BTCPayServer.Controllers
                     return null;
                 }
                 
-                var bpuresponse = await httpClient.PostAsync(bpu.ToString(), new StringContent(cloned.ToHex(), Encoding.UTF8, "text/plain"));
+                var bpuresponse = await httpClient.PostAsync(endpoint, new StringContent(cloned.ToHex(), Encoding.UTF8, "text/plain"));
                 if (bpuresponse.IsSuccessStatusCode)
                 {
                     var hex = await bpuresponse.Content.ReadAsStringAsync();

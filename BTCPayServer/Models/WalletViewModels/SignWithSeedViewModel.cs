@@ -7,6 +7,7 @@ namespace BTCPayServer.Models.WalletViewModels
 {
     public class SignWithSeedViewModel
     {
+        public string PayJoinEndpointUrl { get; set; }
         [Required]
         public string PSBT { get; set; }
         [Required][Display(Name = "BIP39 Seed (12/24 word mnemonic phrase) or HD private key (xprv...)")]

@@ -24,6 +24,7 @@
             <input type="hidden" id="WalletId" asp-for="WalletId" />
             <input type="hidden" id="PSBT" asp-for="PSBT" value="@Model.PSBT"/>
             <input type="hidden" asp-for="WebsocketPath" />
+            <input type="hidden" asp-for="PayJoinEndpointUrl" />
         </form>
         <div id="vaultPlaceholder"></div>
         <button id="vault-confirm" class="btn btn-primary" style="display:none;"></button>

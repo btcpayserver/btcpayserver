@@ -154,7 +154,7 @@
     </component>
 </div>
 
-<div class="payment-box" v-bind:class="{ 'payment-box--with-recommended-fee': showRecommendedFee && !showEmailForm }">
+<div class="payment-box" v-bind:class="{ 'with-recommended-fee': showRecommendedFee && !showEmailForm }">
     <div class="bp-view enter-contact-email" id="emailAddressView" v-bind:class="{ 'active': showEmailForm}">
         <form class="manual__step-one refund-address-form contact-email-form" id="emailAddressForm" name="emailAddressForm" novalidate="" v-on:submit.prevent="onEmailSubmit">
             <div class="manual__step-one__header">

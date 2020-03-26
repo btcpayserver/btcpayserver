@@ -9009,14 +9009,15 @@ strong {
 .payment-box {
     padding-top: 15px;
     position: relative;
+    font-size: 13px;
     margin-bottom: 1.5rem !important;
     margin-bottom: 0 !important;
     min-height: 393px;
 }
 
-.payment-box--with-recommended-fee {
-    min-height: 430px;
-}
+    .payment-box.with-recommended-fee {
+        min-height: 430px;
+    }
 
 .paypro {
     padding: 10px;
@@ -9071,13 +9072,13 @@ strong {
 }
 
 .close-icon {
-    flex-grow: 1;
-    display: none;
-    justify-content: flex-end;
-    padding: 13px;
+    padding: 16px;
     transition: opacity 250ms ease;
     opacity: 1;
     cursor: pointer;
+    position: absolute;
+    right: 0px;
+    display:none;
 }
 
     .close-icon img {
@@ -9254,8 +9255,6 @@ strong {
 .recommended-fee {
     box-sizing: border-box;
     color: #818EA9;
-    font-size: 14px;
-    font-weight: 300;
     position: absolute;
     top: calc(100% - 40px);
     left: 50%;

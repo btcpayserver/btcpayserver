@@ -106,7 +106,7 @@
                                asp-action="ListInvoices"
                                asp-controller="Invoice"
                                asp-route-searchterm="@($"orderid:{PaymentRequestRepository.GetOrderIdForPaymentRequest(Model.Id)}")">Invoices</a>
-                            <a class="btn btn-secondary" asp-action="ClonePaymentRequest" id="@Model.Id">Clone</a>
+                            <a class="btn btn-secondary" asp-route-id="@this.Context.GetRouteValue("id")" asp-action="ClonePaymentRequest" id="@Model.Id">Clone</a>
                         }
                         <a class="btn btn-secondary" target="_blank" asp-action="GetPaymentRequests">Back to list</a>
                     </div>

@@ -55,6 +55,33 @@ namespace BTCPayServer.Tests
                 await AssertHttpError(401, async () => await clientBasic.RevokeCurrentAPIKeyInfo());
             }
         }
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CanCreateAPIKeyViaAPI()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                await tester.StartAsync();
+                var acc = tester.NewAccount();
+                await acc.GrantAccessAsync();
+                var unrestricted = await acc.CreateClient();
+                var apiKey = await unrestricted.CreateAPIKey(new CreateApiKeyRequest()
+                {
+                    Label = "Hello world",
+                    Permissions = new Permission[] { Permission.Create(Policies.CanViewProfile) }
+                });
+                Assert.Equal("Hello world", apiKey.Label);
+                var p = Assert.Single(apiKey.Permissions);
+                Assert.Equal(Policies.CanViewProfile, p.Policy);
+
+                var restricted = acc.CreateClientFromAPIKey(apiKey.ApiKey);
+                await AssertHttpError(403, async () => await restricted.CreateAPIKey(new CreateApiKeyRequest()
+                {
+                    Label = "Hello world2",
+                    Permissions = new Permission[] { Permission.Create(Policies.CanViewProfile) }
+                }));
+            }
+        }
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]

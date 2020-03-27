@@ -87,6 +87,12 @@ namespace BTCPayServer.Tests
             Assert.IsType<ViewResult>(await store.RequestPairing(pairingCode.ToString()));
             await store.Pair(pairingCode.ToString(), StoreId);
         }
+
+        public BTCPayServerClient CreateClientFromAPIKey(string apiKey)
+        {
+            return new BTCPayServerClient(parent.PayTester.ServerUri, apiKey);
+        }
+
         public void CreateStore()
         {
             CreateStoreAsync().GetAwaiter().GetResult();

@@ -1,3 +1,4 @@
+using System;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,7 +13,15 @@ namespace BTCPayServer.Client
             var response = await _httpClient.SendAsync(CreateHttpRequest("api/v1/api-keys/current"), token);
             return await HandleResponse<ApiKeyData>(response);
         }
-        
+
+        public virtual async Task<ApiKeyData> CreateAPIKey(CreateApiKeyRequest request, CancellationToken token = default)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+            var response = await _httpClient.SendAsync(CreateHttpRequest("api/v1/api-keys", bodyPayload: request, method: HttpMethod.Post), token);
+            return await HandleResponse<ApiKeyData>(response);
+        }
+
         public virtual async Task RevokeCurrentAPIKeyInfo(CancellationToken token = default)
         {
             var response = await _httpClient.SendAsync(CreateHttpRequest("api/v1/api-keys/current", null, HttpMethod.Delete), token);

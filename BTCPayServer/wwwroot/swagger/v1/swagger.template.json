@@ -77,7 +77,7 @@
                         }
                     }
                 },
-                "security": [ ]
+                "security": []
             }
         },
         "/api/v1/users/me": {
@@ -210,6 +210,83 @@
                 "security": [
                     {
                         "API Key": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "API Keys"
+                ],
+                "summary": "Revoke the current API Key",
+                "description": "Revoke the current API key so that it cannot be used anymore",
+                "responses": {
+                    "200": {
+                        "description": "The key was revoked and is no longer usable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiKeyData"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [ "unrestricted" ]
+                    }
+                ]
+            }
+        },
+        "/api/v1/api-keys": {
+            "post": {
+                "tags": [
+                    "API Keys"
+                ],
+                "summary": "Create a new API Key",
+                "description": "Create a new API Key",
+                "responses": {
+                    "200": {
+                        "description": "Information about the new api key",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiKeyData"
+                                }
+                            }
+                        }
+                    }
+                },
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "properties": {
+                                    "label": {
+                                        "type": "string",
+                                        "description": "The label of the new API Key",
+                                        "nullable": true
+                                    },
+                                    "permissions": {
+                                        "type": "array",
+                                        "description": "The permissions granted to this API Key (See API Key Authentication)",
+                                        "nullable": true,
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [ "unrestricted" ],
+                        "Basic": []
                     }
                 ]
             },

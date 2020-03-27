@@ -12,7 +12,7 @@ using BTCPayServer.Security.GreenField;
 namespace BTCPayServer.Controllers.GreenField
 {
     [ApiController]
-    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+    [Authorize(AuthenticationSchemes = AuthenticationSchemes.GreenfieldAPIKeys)]
     public class ApiKeysController : ControllerBase
     {
         private readonly APIKeyRepository _apiKeyRepository;
@@ -36,7 +36,7 @@ namespace BTCPayServer.Controllers.GreenField
         }
 
         [HttpDelete("~/api/v1/api-keys/current")]
-        [Authorize(Policy = Policies.Unrestricted, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [Authorize(Policy = Policies.Unrestricted, AuthenticationSchemes = AuthenticationSchemes.GreenfieldAPIKeys)]
         public async Task<ActionResult<ApiKeyData>> RevokeKey()
         {
             if (!ControllerContext.HttpContext.GetAPIKey(out var apiKey))

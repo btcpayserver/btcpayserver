@@ -32,7 +32,6 @@ using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Changelly;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Security;
-using BTCPayServer.Security.APIKeys;
 using BTCPayServer.Services.PaymentRequests;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using NBXplorer.DerivationStrategy;
@@ -44,6 +43,7 @@ using BundlerMinifier.TagHelpers;
 using Microsoft.AspNetCore.Authorization;
 using BTCPayServer.Security.Bitpay;
 using Serilog;
+using BTCPayServer.Security.GreenField;
 
 namespace BTCPayServer.Hosting
 {

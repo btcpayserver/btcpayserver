@@ -8,7 +8,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Logging;
 using BTCPayServer.Security;
-using BTCPayServer.Security.APIKeys;
+using BTCPayServer.Security.GreenField;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -74,7 +74,7 @@ namespace BTCPayServer.Controllers.RestApi
                 return BadRequest(CreateValidationProblem(nameof(request.Password), "Password is missing"));
             var anyAdmin = (await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin)).Any();
             var policies = await _settingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
-            var isAuth = User.Identity.AuthenticationType == APIKeyConstants.AuthenticationType;
+            var isAuth = User.Identity.AuthenticationType == GreenFieldConstants.AuthenticationType;
 
             // If registration are locked and that an admin exists, don't accept unauthenticated connection
             if (anyAdmin && policies.LockSubscription && !isAuth)

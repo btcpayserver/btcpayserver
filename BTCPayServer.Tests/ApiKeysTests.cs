@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
-using BTCPayServer.Security.APIKeys;
+using BTCPayServer.Security.GreenField;
 using BTCPayServer.Tests.Logging;
 using BTCPayServer.Views.Manage;
 using Newtonsoft.Json;

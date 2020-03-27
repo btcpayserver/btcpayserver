@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BTCPayServer.Controllers.RestApi
+namespace BTCPayServer.Controllers.GreenField
 {
     /// <summary>
     /// this controller serves as a testing endpoint for our api key unit tests

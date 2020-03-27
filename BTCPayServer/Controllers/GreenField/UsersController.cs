@@ -17,7 +17,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using NicolasDorier.RateLimits;
 using BTCPayServer.Client;
 
-namespace BTCPayServer.Controllers.RestApi
+namespace BTCPayServer.Controllers.GreenField
 {
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]

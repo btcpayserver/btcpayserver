@@ -8307,10 +8307,21 @@ strong {
     position: relative;
     width: 100px;
     height: 50px;
+    margin-left: 10px;
+    margin-top: 10px;
+}
+
+/* centering for new default design */
+.top-header .header__iconcentered {
+    display: inline-block;
+    vertical-align: middle;
+    position: relative;
+    width: 100px;
+    height: 50px;
     margin: 10px auto 0px;
 }
 
-.header__icon__img {
+.header__iconcentered__img {
     display: block;
     -moz-box-sizing: border-box;
     box-sizing: border-box;
@@ -8320,6 +8331,7 @@ strong {
     height: 40px;
     padding-left: 92.5px; /* Must be equal to width */
 }
+/* eof */
 
 .top-header .timer-row {
     background: #51b13e;

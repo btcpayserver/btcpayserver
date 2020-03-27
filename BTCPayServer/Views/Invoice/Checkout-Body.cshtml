@@ -2,16 +2,18 @@
 
 <div class="top-header">
     <div class="header">
-        <div class="header__icon">
-            @if (!string.IsNullOrEmpty(Model.CustomLogoLink))
-            {
+        @if (!string.IsNullOrEmpty(Model.CustomLogoLink))
+        {
+            <div class="header__icon">
                 <img class="header__icon__img" src="@Model.CustomLogoLink" height="40">
-            }
-            else
-            {
-                <img class="header__icon__img">
-            }
-        </div>
+            </div>
+        }
+        else
+        {
+            <div class="header__iconcentered">
+                <img class="header__iconcentered__img">
+            </div>
+        }
         <div class="close-icon close-action" v-on:click="close">
             &#10006;
         </div>

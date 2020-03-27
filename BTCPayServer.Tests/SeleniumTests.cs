@@ -453,7 +453,7 @@ namespace BTCPayServer.Tests
                 SetTransactionOutput(s, 0, bob, 0.3m);
                 s.Driver.FindElement(By.Id("SendMenu")).Click();
                 s.Driver.FindElement(By.Id("spendWithNBxplorer")).Click();
-                s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).ForceClick();
+                s.Driver.WaitForElement(By.CssSelector("button[value=broadcast]")).ForceClick();
                 var happyElement = s.AssertHappyMessage();
                 var happyText = happyElement.Text;
                 var txid = Regex.Match(happyText, @"\((.*)\)").Groups[1].Value;

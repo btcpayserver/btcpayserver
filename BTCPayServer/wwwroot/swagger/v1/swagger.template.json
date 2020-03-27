@@ -188,23 +188,48 @@
                 ]
             }
         },
+        "/api/v1/api-keys/{apikey}": {
+            "delete": {
+                "tags": [
+                    "API Keys"
+                ],
+                "summary": "Revoke an API Key",
+                "description": "Revoke the current API key so that it cannot be used anymore",
+                "parameters": [
+                    {
+                        "name": "apikey",
+                        "in": "path",
+                        "required": true,
+                        "description": "The API Key to revoke",
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The key has been deleted"
+                    },
+                    "404": {
+                        "description": "The key is not found for this user"
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [ "unrestricted" ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
         "/api/v1/api-keys/current": {
             "get": {
                 "tags": [
                     "API Keys"
                 ],
-                "summary": "Get current API Key information",
+                "summary": "Get the current API Key information",
                 "description": "View information about the current API key",
                 "responses": {
                     "200": {
-                        "description": "Information about the current api key",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ApiKeyData"
-                                }
-                            }
-                        }
+                        "description": "The key has been deleted"
                     }
                 },
                 "security": [
@@ -233,7 +258,7 @@
                 },
                 "security": [
                     {
-                        "API Key": [ "unrestricted" ]
+                        "API Key": []
                     }
                 ]
             }
@@ -287,30 +312,6 @@
                     {
                         "API Key": [ "unrestricted" ],
                         "Basic": []
-                    }
-                ]
-            },
-            "delete": {
-                "tags": [
-                    "API Keys"
-                ],
-                "summary": "Revoke the current API Key",
-                "description": "Revoke the current API key so that it cannot be used anymore",
-                "responses": {
-                    "200": {
-                        "description": "The key was revoked and is no longer usable",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ApiKeyData"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "API Key": [ "unrestricted" ]
                     }
                 ]
             }

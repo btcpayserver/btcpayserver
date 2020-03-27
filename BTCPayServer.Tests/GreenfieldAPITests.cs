@@ -37,7 +37,7 @@ namespace BTCPayServer.Tests
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 await user.MakeAdmin();
-                var client = await user.CreateClient(Policies.Unrestricted);
+                var client = await user.CreateClient(Policies.CanViewProfile);
                 var clientBasic = await user.CreateClient();
                 //Get current api key 
                 var apiKeyData = await client.GetCurrentAPIKeyInfo();
@@ -57,7 +57,7 @@ namespace BTCPayServer.Tests
         }
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
-        public async Task CanCreateAPIKeyViaAPI()
+        public async Task CanCreateAndDeleteAPIKeyViaAPI()
         {
             using (var tester = ServerTester.Create())
             {
@@ -80,6 +80,9 @@ namespace BTCPayServer.Tests
                     Label = "Hello world2",
                     Permissions = new Permission[] { Permission.Create(Policies.CanViewProfile) }
                 }));
+
+                await unrestricted.RevokeAPIKey(apiKey.ApiKey);
+                await AssertHttpError(404, async () => await unrestricted.RevokeAPIKey(apiKey.ApiKey));
             }
         }
 

@@ -56,17 +56,28 @@ namespace BTCPayServer.Controllers.GreenField
         }
 
         [HttpDelete("~/api/v1/api-keys/current")]
-        [Authorize(Policy = Policies.Unrestricted, AuthenticationSchemes = AuthenticationSchemes.GreenfieldAPIKeys)]
-        public async Task<IActionResult> RevokeKey()
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.GreenfieldAPIKeys)]
+        public Task<IActionResult> RevokeCurrentKey()
         {
             if (!ControllerContext.HttpContext.GetAPIKey(out var apiKey))
             {
-                return NotFound();
+                // Should be impossible (we force apikey auth)
+                return Task.FromResult<IActionResult>(BadRequest());
             }
-            await _apiKeyRepository.Remove(apiKey, _userManager.GetUserId(User));
-            return Ok();
+            return RevokeKey(apiKey);
         }
-        
+        [HttpDelete("~/api/v1/api-keys/{apikey}", Order = 1)]
+        [Authorize(Policy = Policies.Unrestricted, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> RevokeKey(string apikey)
+        {
+            if (string.IsNullOrEmpty(apikey))
+                return BadRequest();
+            if (await _apiKeyRepository.Remove(apikey, _userManager.GetUserId(User)))
+                return Ok();
+            else
+                return NotFound();
+        }
+
         private static ApiKeyData FromModel(APIKeyData data)
         {
             return new ApiKeyData()

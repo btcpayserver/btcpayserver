@@ -159,7 +159,7 @@ namespace BTCPayServer.Controllers
 
        
 
-        private async Task<PSBT> TryGetBPProposedTX(string bpu, PSBT psbt, DerivationSchemeSettings derivationSchemeSettings, BTCPayNetwork btcPayNetwork)
+        private async Task<PSBT> TryGetPayjoinProposedTX(string bpu, PSBT psbt, DerivationSchemeSettings derivationSchemeSettings, BTCPayNetwork btcPayNetwork)
         {
             if (!string.IsNullOrEmpty(bpu) && Uri.TryCreate(bpu, UriKind.Absolute, out var endpoint))
             {
@@ -192,6 +192,7 @@ namespace BTCPayServer.Controllers
 
                             if (!input.TryFinalizeInput(out _))
                             {
+                                //a new input was provided but was invalid.
                                 valid = false;
                                 break;
                             }
@@ -204,6 +205,17 @@ namespace BTCPayServer.Controllers
                             return null;
                         }
 
+                        //check if output sum to self is the same.
+                        var signingAccountKeySettings = derivationSchemeSettings.GetSigningAccountKeySettings();
+                        var newOutputSumToSelfSum = newPSBT.Outputs.CoinsFor(derivationSchemeSettings.AccountDerivation, signingAccountKeySettings.AccountKey,
+                            signingAccountKeySettings.GetRootedKeyPath()).Sum(output => output.Value);
+
+                        var originalOutputSumToSelf = psbt.Outputs.Sum(output => output.Value);
+                        if (originalOutputSumToSelf < newOutputSumToSelfSum)
+                        {
+                            return null;
+                        }
+                        
                         newPSBT = await UpdatePSBT(derivationSchemeSettings, newPSBT, btcPayNetwork);
                         TempData.SetStatusMessageModel(new StatusMessageModel()
                         {

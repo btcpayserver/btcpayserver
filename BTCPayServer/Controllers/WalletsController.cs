@@ -688,7 +688,7 @@ namespace BTCPayServer.Controllers
             WalletId walletId, WalletSendVaultModel model)
         {
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
-            var newPSBT = await TryGetBPProposedTX(model.PayJoinEndpointUrl, PSBT.Parse(model.PSBT, network.NBitcoinNetwork), GetDerivationSchemeSettings(walletId), network);
+            var newPSBT = await TryGetPayjoinProposedTX(model.PayJoinEndpointUrl, PSBT.Parse(model.PSBT, network.NBitcoinNetwork), GetDerivationSchemeSettings(walletId), network);
             model.PayJoinEndpointUrl = null;
             if (newPSBT != null)
             {
@@ -849,7 +849,7 @@ namespace BTCPayServer.Controllers
                 return View(viewModel);
             }
             ModelState.Remove(nameof(viewModel.PSBT));
-            var newPSBT = await TryGetBPProposedTX(viewModel.PayJoinEndpointUrl,psbt, GetDerivationSchemeSettings(walletId), network);
+            var newPSBT = await TryGetPayjoinProposedTX(viewModel.PayJoinEndpointUrl,psbt, GetDerivationSchemeSettings(walletId), network);
             viewModel.PayJoinEndpointUrl = null;
             if (newPSBT != null)
             {

@@ -443,6 +443,7 @@ namespace BTCPayServer.Tests
                 var tx = await s.Server.ExplorerNode.GetRawTransactionAsync(targetTx);
                 var spentOutpoint = new OutPoint(targetTx, tx.Outputs.FindIndex(txout => txout.Value == Money.Coins(1.2m)));
                 await s.Server.ExplorerNode.GenerateAsync(1);
+                await Task.Delay(1000); // wait for node to confirm coins before going forward
                 s.GoToWalletSend(walletId);
                 s.Driver.FindElement(By.Id("advancedSettings")).Click();
                 s.Driver.FindElement(By.Id("toggleInputSelection")).Click();

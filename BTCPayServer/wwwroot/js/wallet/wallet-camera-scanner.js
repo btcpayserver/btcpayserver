@@ -64,15 +64,15 @@ $(function () {
                         if (error.name === 'StreamApiNotSupportedError') {
                             self.noStreamApiSupport = true;
                         } else if (error.name === 'NotAllowedError') {
-                            self.errorMessage = 'Hey! I need access to your camera'
+                            self.errorMessage = 'A permission to the camera is needed to scan the QR code.'
                         } else if (error.name === 'NotFoundError') {
-                            self.errorMessage = 'Do you even have a camera on your device?'
+                            self.errorMessage = 'A camera was not detected on your device.'
                         } else if (error.name === 'NotSupportedError') {
-                            self.errorMessage = 'Seems like this page is served in non-secure context (HTTPS, localhost or file://)'
+                            self.errorMessage = 'This page is served in non-secure context (HTTPS, localhost or file://)'
                         } else if (error.name === 'NotReadableError') {
                             self.errorMessage = 'Couldn\'t access your camera. Is it already in use?'
                         } else if (error.name === 'OverconstrainedError') {
-                            self.errorMessage = 'Constraints don\'t match any installed camera. Did you asked for the front camera although there is none?'
+                            self.errorMessage = 'Constraints don\'t match any installed camera.'
                         } else {
                             self.errorMessage = 'UNKNOWN ERROR: ' + error.message
                         }

@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Primitives;
 
-namespace BTCPayServer.Security.APIKeys
+namespace BTCPayServer.Security.GreenField
 {
     public static class APIKeyExtensions
     {
@@ -26,7 +26,9 @@ namespace BTCPayServer.Security.APIKeys
 
         public static AuthenticationBuilder AddAPIKeyAuthentication(this AuthenticationBuilder builder)
         {
-            builder.AddScheme<APIKeyAuthenticationOptions, APIKeyAuthenticationHandler>(AuthenticationSchemes.Greenfield,
+            builder.AddScheme<GreenFieldAuthenticationOptions, APIKeysAuthenticationHandler>(AuthenticationSchemes.GreenfieldAPIKeys,
+                o => { });
+            builder.AddScheme<GreenFieldAuthenticationOptions, BasicAuthenticationHandler>(AuthenticationSchemes.GreenfieldBasic,
                 o => { });
             return builder;
         }
@@ -34,21 +36,21 @@ namespace BTCPayServer.Security.APIKeys
         public static IServiceCollection AddAPIKeyAuthentication(this IServiceCollection serviceCollection)
         {
             serviceCollection.AddSingleton<APIKeyRepository>();
-            serviceCollection.AddScoped<IAuthorizationHandler, APIKeyAuthorizationHandler>();
+            serviceCollection.AddScoped<IAuthorizationHandler, GreenFieldAuthorizationHandler>();
             return serviceCollection;
         }
 
         public static string[] GetPermissions(this AuthorizationHandlerContext context)
         {
             return context.User.Claims.Where(c =>
-                    c.Type.Equals(APIKeyConstants.ClaimTypes.Permission, StringComparison.InvariantCultureIgnoreCase))
+                    c.Type.Equals(GreenFieldConstants.ClaimTypes.Permission, StringComparison.InvariantCultureIgnoreCase))
                 .Select(claim => claim.Value).ToArray();
         }
 
         public static bool HasPermission(this AuthorizationHandlerContext context, Permission permission)
         {
             foreach (var claim in context.User.Claims.Where(c =>
-                c.Type.Equals(APIKeyConstants.ClaimTypes.Permission, StringComparison.InvariantCultureIgnoreCase)))
+                c.Type.Equals(GreenFieldConstants.ClaimTypes.Permission, StringComparison.InvariantCultureIgnoreCase)))
             {
                 if (Permission.TryParse(claim.Value, out var claimPermission))
                 {

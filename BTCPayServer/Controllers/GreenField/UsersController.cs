@@ -8,7 +8,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Logging;
 using BTCPayServer.Security;
-using BTCPayServer.Security.APIKeys;
+using BTCPayServer.Security.GreenField;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -17,7 +17,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using NicolasDorier.RateLimits;
 using BTCPayServer.Client;
 
-namespace BTCPayServer.Controllers.RestApi
+namespace BTCPayServer.Controllers.GreenField
 {
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -74,7 +74,7 @@ namespace BTCPayServer.Controllers.RestApi
                 return BadRequest(CreateValidationProblem(nameof(request.Password), "Password is missing"));
             var anyAdmin = (await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin)).Any();
             var policies = await _settingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
-            var isAuth = User.Identity.AuthenticationType == APIKeyConstants.AuthenticationType;
+            var isAuth = User.Identity.AuthenticationType == GreenFieldConstants.AuthenticationType;
 
             // If registration are locked and that an admin exists, don't accept unauthenticated connection
             if (anyAdmin && policies.LockSubscription && !isAuth)
@@ -82,7 +82,7 @@ namespace BTCPayServer.Controllers.RestApi
 
             // Even if subscription are unlocked, it is forbidden to create admin unauthenticated
             if (anyAdmin && request.IsAdministrator is true && !isAuth)
-                return Forbid(AuthenticationSchemes.Greenfield);
+                return Forbid(AuthenticationSchemes.GreenfieldBasic);
             // You are de-facto admin if there is no other admin, else you need to be auth and pass policy requirements
             bool isAdmin = anyAdmin ? (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanModifyServerSettings))).Succeeded
                                      && (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.Unrestricted))).Succeeded
@@ -90,14 +90,14 @@ namespace BTCPayServer.Controllers.RestApi
                                     : true;
             // You need to be admin to create an admin
             if (request.IsAdministrator is true && !isAdmin)
-                return Forbid(AuthenticationSchemes.Greenfield);
+                return Forbid(AuthenticationSchemes.GreenfieldBasic);
 
             if (!isAdmin && policies.LockSubscription)
             {
                 // If we are not admin and subscriptions are locked, we need to check the Policies.CanCreateUser.Key permission
                 var canCreateUser = (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanCreateUser))).Succeeded;
                 if (!isAuth || !canCreateUser)
-                    return Forbid(AuthenticationSchemes.Greenfield);
+                    return Forbid(AuthenticationSchemes.GreenfieldBasic);
             }
 
             var user = new ApplicationUser

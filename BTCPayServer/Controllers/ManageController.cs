@@ -19,9 +19,8 @@ using System.Globalization;
 using BTCPayServer.Security;
 using BTCPayServer.U2F;
 using BTCPayServer.Data;
-using BTCPayServer.Security.APIKeys;
 using Microsoft.AspNetCore.Routing;
-
+using BTCPayServer.Security.GreenField;
 
 namespace BTCPayServer.Controllers
 {

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace BTCPayServer.Security.APIKeys
+namespace BTCPayServer.Security.GreenField
 {
     public class APIKeyRepository
     {

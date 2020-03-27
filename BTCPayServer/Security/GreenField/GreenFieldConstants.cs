@@ -1,11 +1,11 @@
 using System.Collections.Generic;
 using BTCPayServer.Client;
 
-namespace BTCPayServer.Security.APIKeys
+namespace BTCPayServer.Security.GreenField
 {
-    public static class APIKeyConstants
+    public static class GreenFieldConstants
     {
-        public const string AuthenticationType = "APIKey";
+        public const string AuthenticationType = "GreenField";
 
         public static class ClaimTypes
         {

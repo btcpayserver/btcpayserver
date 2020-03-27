@@ -9,16 +9,16 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 
-namespace BTCPayServer.Security.APIKeys
+namespace BTCPayServer.Security.GreenField
 {
-    public class APIKeyAuthorizationHandler : AuthorizationHandler<PolicyRequirement>
+    public class GreenFieldAuthorizationHandler : AuthorizationHandler<PolicyRequirement>
 
     {
         private readonly HttpContext _HttpContext;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly StoreRepository _storeRepository;
 
-        public APIKeyAuthorizationHandler(IHttpContextAccessor httpContextAccessor,
+        public GreenFieldAuthorizationHandler(IHttpContextAccessor httpContextAccessor,
             UserManager<ApplicationUser> userManager,
             StoreRepository storeRepository)
         {
@@ -30,7 +30,7 @@ namespace BTCPayServer.Security.APIKeys
         protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context,
             PolicyRequirement requirement)
         {
-            if (context.User.Identity.AuthenticationType != APIKeyConstants.AuthenticationType)
+            if (context.User.Identity.AuthenticationType != GreenFieldConstants.AuthenticationType)
                 return;
 
             bool success = false;

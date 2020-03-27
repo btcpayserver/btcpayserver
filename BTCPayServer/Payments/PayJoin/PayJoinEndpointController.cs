@@ -76,7 +76,14 @@ namespace BTCPayServer.Payments.PayJoin
 
             if (psbt != null)
             {
-                transaction = psbt.ExtractTransaction();
+                try
+                {
+                    transaction = psbt.ExtractTransaction();
+                }
+                catch (Exception e)
+                {
+                    return UnprocessableEntity("invalid psbt");
+                }
             }
 
             if (transaction.Check() != TransactionCheckResult.Success)
@@ -109,9 +116,9 @@ namespace BTCPayServer.Payments.PayJoin
             var invoicePaymentMethod = matchingInvoice.GetPaymentMethod(paymentMethodId);
             //get outs to our current invoice address
             var currentPaymentMethodDetails =
-                invoicePaymentMethod.GetPaymentMethodDetails() as BitcoinLikeOnChainPaymentMethod;
+                (BitcoinLikeOnChainPaymentMethod) invoicePaymentMethod.GetPaymentMethodDetails();
 
-            if (!currentPaymentMethodDetails.PayJoin.Enabled)
+            if (!currentPaymentMethodDetails.PayJoin?.Enabled is true)
             {
                 return UnprocessableEntity($"cannot handle payjoin tx");
             }

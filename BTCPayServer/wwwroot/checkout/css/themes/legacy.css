@@ -8311,7 +8311,17 @@ strong {
     margin-top: 10px;
 }
 
-.header__icon__img {
+/* centering for new default design */
+.top-header .header__iconcentered {
+    display: inline-block;
+    vertical-align: middle;
+    position: relative;
+    width: 100px;
+    height: 50px;
+    margin: 10px auto 0px;
+}
+
+.header__iconcentered__img {
     display: block;
     -moz-box-sizing: border-box;
     box-sizing: border-box;
@@ -8321,6 +8331,7 @@ strong {
     height: 40px;
     padding-left: 92.5px; /* Must be equal to width */
 }
+/* eof */
 
 .top-header .timer-row {
     background: #CEDC21;

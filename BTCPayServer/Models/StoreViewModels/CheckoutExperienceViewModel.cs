@@ -29,21 +29,6 @@ namespace BTCPayServer.Models.StoreViewModels
             DefaultLang = chosen.Value;
         }
         public SelectList Languages { get; set; }
-        
-        public SelectList ListCheckoutThemes { get; set; }
-        public void SetCheckoutThemes(string dbtheme)
-        {
-            var list = new List<string>
-            {
-                "Default",
-                "Legacy"
-            };
-            if (!list.Any(a => a == dbtheme))
-                dbtheme = "Default"; // select default if not present
-
-            ListCheckoutThemes = new SelectList(list);
-            CheckoutTheme = dbtheme;
-        }
 
         [Display(Name = "Default payment method on checkout")]
         public string DefaultPaymentMethod { get; set; }
@@ -57,9 +42,6 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Custom HTML title to display on Checkout page")]
         public string HtmlTitle { get; set; }
-
-        [Display(Name = "Theme used on Checkout page")]
-        public string CheckoutTheme { get; set; }
 
         [Display(Name = "Requires a refund email")]
         public bool RequiresRefundEmail { get; set; }

@@ -373,8 +373,6 @@ namespace BTCPayServer.Controllers
             vm.CustomCSS = storeBlob.CustomCSS;
             vm.CustomLogo = storeBlob.CustomLogo;
             vm.HtmlTitle = storeBlob.HtmlTitle;
-            vm.SetCheckoutThemes(storeBlob.CheckoutTheme);
-            vm.CheckoutTheme = storeBlob.CheckoutTheme;
             vm.SetLanguages(_LangService, storeBlob.DefaultLang);
             vm.RequiresRefundEmail = storeBlob.RequiresRefundEmail;
             vm.ShowRecommendedFee = storeBlob.ShowRecommendedFee;
@@ -430,13 +428,11 @@ namespace BTCPayServer.Controllers
 
             if (!ModelState.IsValid)
             {
-                model.SetCheckoutThemes(blob.CheckoutTheme);
                 return View(model);
             }
             blob.CustomLogo = model.CustomLogo;
             blob.CustomCSS = model.CustomCSS;
             blob.HtmlTitle = string.IsNullOrWhiteSpace(model.HtmlTitle) ? null : model.HtmlTitle;
-            blob.CheckoutTheme = model.CheckoutTheme;
             blob.DefaultLang = model.DefaultLang;
             blob.RequiresRefundEmail = model.RequiresRefundEmail;
             blob.ShowRecommendedFee = model.ShowRecommendedFee;

@@ -234,7 +234,6 @@ namespace BTCPayServer.Controllers
                 CustomCSSLink = storeBlob.CustomCSS,
                 CustomLogoLink = storeBlob.CustomLogo,
                 HtmlTitle = storeBlob.HtmlTitle ?? "BTCPay Invoice",
-                CheckoutTheme = storeBlob.CheckoutTheme ?? "Default",
                 CryptoImage = Request.GetRelativePathOrAbsolute(paymentMethodHandler.GetCryptoImage(paymentMethodId)),
                 BtcAddress = paymentMethodDetails.GetPaymentDestination(),
                 BtcDue = accounting.Due.ToString(),

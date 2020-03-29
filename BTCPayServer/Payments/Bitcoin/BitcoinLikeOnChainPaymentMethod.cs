@@ -49,7 +49,7 @@ namespace BTCPayServer.Payments.Bitcoin
                 _NetworkFeeRate = value;
             }
         }
-
+        public bool PayjoinEnabled { get; set; }
         // Those properties are JsonIgnore because their data is inside CryptoData class for legacy reason
         [JsonIgnore]
         public FeeRate FeeRate { get; set; }
@@ -58,24 +58,10 @@ namespace BTCPayServer.Payments.Bitcoin
         [JsonIgnore]
         public String DepositAddress { get; set; }
 
-        public PayJoinPaymentState PayJoin { get; set; } = new PayJoinPaymentState();
-        
-        
-
         public BitcoinAddress GetDepositAddress(Network network)
         {
             return string.IsNullOrEmpty(DepositAddress) ? null : BitcoinAddress.Create(DepositAddress, network);
         }
         ///////////////////////////////////////////////////////////////////////////////////////
-    }
-
-    public class PayJoinPaymentState
-    {
-        public bool Enabled { get; set; } = false;
-        public uint256 ProposedTransactionHash { get; set; }
-        public List<ReceivedCoin> CoinsExposed { get; set; }
-        public decimal TotalOutputAmount { get; set; }
-        public decimal ContributedAmount { get; set; }
-        public uint256 OriginalTransactionHash { get; set; }
     }
 }

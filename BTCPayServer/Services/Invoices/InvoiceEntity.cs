@@ -469,9 +469,9 @@ namespace BTCPayServer.Services.Invoices
                     dto.MinerFees.TryAdd(cryptoInfo.CryptoCode, minerInfo);
                     var bip21 = ((BTCPayNetwork)info.Network).GenerateBIP21(cryptoInfo.Address, cryptoInfo.Due);
 
-                    if (((details as BitcoinLikeOnChainPaymentMethod)?.PayJoin?.Enabled??false) && cryptoInfo.CryptoCode.Equals("BTC", StringComparison.InvariantCultureIgnoreCase))
+                    if (((details as BitcoinLikeOnChainPaymentMethod)?.PayjoinEnabled??false) && cryptoInfo.CryptoCode.Equals("BTC", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        bip21 += $"&bpu={ServerUrl.WithTrailingSlash()}{cryptoCode}/bpu/{Id}";
+                        bip21 += $"&bpu={ServerUrl.WithTrailingSlash()}{cryptoCode}/bpu";
                     }
                     cryptoInfo.PaymentUrls = new NBitpayClient.InvoicePaymentUrls()
                     {

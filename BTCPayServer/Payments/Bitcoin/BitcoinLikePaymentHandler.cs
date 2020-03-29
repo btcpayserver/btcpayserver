@@ -143,14 +143,12 @@ namespace BTCPayServer.Payments.Bitcoin
                     onchainMethod.NextNetworkFee = Money.Zero;                    
                     break;
             }
-
+            bool isHotwallet = supportedPaymentMethod.Source == "NBXplorer";
             onchainMethod.DepositAddress = (await prepare.ReserveAddress).Address.ToString();
-            onchainMethod.PayJoin = new PayJoinPaymentState()
-            {
-                Enabled = blob.PayJoinEnabled &&
-                          supportedPaymentMethod.AccountDerivation.ScriptPubKeyType() !=
-                          ScriptPubKeyType.Legacy
-            };
+            onchainMethod.PayjoinEnabled = blob.PayJoinEnabled &&
+                          supportedPaymentMethod.AccountDerivation.ScriptPubKeyType() == ScriptPubKeyType.Segwit &&
+                          network.SupportPayJoin &&
+                          isHotwallet;
             return onchainMethod;
         }
     }

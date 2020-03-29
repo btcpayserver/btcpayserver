@@ -96,13 +96,43 @@ namespace BTCPayServer.Services.Wallets
             await _Client.TrackAsync(derivationStrategy);
         }
 
-        public async Task<TransactionResult> GetTransactionAsync(uint256 txId, CancellationToken cancellation = default(CancellationToken))
+        public async Task<TransactionResult> GetTransactionAsync(uint256 txId, bool includeOffchain = false, CancellationToken cancellation = default(CancellationToken))
         {
             if (txId == null)
                 throw new ArgumentNullException(nameof(txId));
             var tx = await _Client.GetTransactionAsync(txId, cancellation);
+            if (tx is null && includeOffchain)
+            {
+                var offchainTx = await GetOffchainTransactionAsync(txId);
+                if (offchainTx != null)
+                    tx = new TransactionResult()
+                    {
+                        Confirmations = -1,
+                        TransactionHash =  offchainTx.GetHash(),
+                        Transaction =  offchainTx
+                    };
+            }
             return tx;
         }
+
+        public Task<Transaction> GetOffchainTransactionAsync(uint256 txid)
+        {
+            lock (offchain)
+            {
+                return Task.FromResult(offchain.TryGet(txid));
+            }
+        }
+        public Task SaveOffchainTransactionAsync(Transaction tx)
+        {
+            // TODO: Save in database
+            lock (offchain)
+            {
+                offchain.Add(tx.GetHash(), tx);
+                return Task.CompletedTask;
+            }
+        }
+
+        private Dictionary<uint256, Transaction> offchain = new Dictionary<uint256, Transaction>();
 
         public void InvalidateCache(DerivationStrategyBase strategy)
         {

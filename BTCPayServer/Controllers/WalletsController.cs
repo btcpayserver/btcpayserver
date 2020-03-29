@@ -50,7 +50,8 @@ namespace BTCPayServer.Controllers
         private readonly WalletReceiveStateService _WalletReceiveStateService;
         private readonly EventAggregator _EventAggregator;
         private readonly SettingsRepository _settingsRepository;
-        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly DelayedTransactionBroadcaster _broadcaster;
+        private readonly PayjoinClient _payjoinClient;
         public RateFetcher RateFetcher { get; }
 
         CurrencyNameTable _currencyTable;
@@ -69,7 +70,8 @@ namespace BTCPayServer.Controllers
                                  WalletReceiveStateService walletReceiveStateService,
                                  EventAggregator eventAggregator,
                                  SettingsRepository settingsRepository,
-                                 IHttpClientFactory httpClientFactory)
+                                 DelayedTransactionBroadcaster broadcaster,
+                                 PayjoinClient payjoinClient)
         {
             _currencyTable = currencyTable;
             Repository = repo;
@@ -86,7 +88,8 @@ namespace BTCPayServer.Controllers
             _WalletReceiveStateService = walletReceiveStateService;
             _EventAggregator = eventAggregator;
             _settingsRepository = settingsRepository;
-            _httpClientFactory = httpClientFactory;
+            _broadcaster = broadcaster;
+            _payjoinClient = payjoinClient;
         }
 
         // Borrowed from https://github.com/ManageIQ/guides/blob/master/labels.md
@@ -843,7 +846,8 @@ namespace BTCPayServer.Controllers
             ModelState.Remove(nameof(viewModel.PSBT));
             return RedirectToWalletPSBTReady(psbt.ToBase64(), signingKey.GetWif(network.NBitcoinNetwork).ToString(), rootedKeyPath?.ToString(), viewModel.OriginalPSBT, viewModel.PayJoinEndpointUrl);
         }
-
+        
+        
         private bool PSBTChanged(PSBT psbt, Action act)
         {
             var before = psbt.ToBase64();

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
+using BTCPayServer.HostedServices;
+using BTCPayServer.Logging;
 using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Rating;
@@ -19,16 +21,19 @@ namespace BTCPayServer.Payments.Bitcoin
         ExplorerClientProvider _ExplorerProvider;
         private readonly BTCPayNetworkProvider _networkProvider;
         private IFeeProviderFactory _FeeRateProviderFactory;
+        private readonly NBXplorerDashboard _dashboard;
         private Services.Wallets.BTCPayWalletProvider _WalletProvider;
 
         public BitcoinLikePaymentHandler(ExplorerClientProvider provider,
             BTCPayNetworkProvider networkProvider,
             IFeeProviderFactory feeRateProviderFactory,
+            NBXplorerDashboard dashboard,
             Services.Wallets.BTCPayWalletProvider walletProvider)
         {
             _ExplorerProvider = provider;
             _networkProvider = networkProvider;
             _FeeRateProviderFactory = feeRateProviderFactory;
+            _dashboard = dashboard;
             _WalletProvider = walletProvider;
         }
 
@@ -74,16 +79,19 @@ namespace BTCPayServer.Payments.Bitcoin
         {
             if (storeBlob.OnChainMinValue != null)
             {
-                var currentRateToCrypto = await rate[new CurrencyPair(paymentMethodId.CryptoCode, storeBlob.OnChainMinValue.Currency)];
+                var currentRateToCrypto =
+                    await rate[new CurrencyPair(paymentMethodId.CryptoCode, storeBlob.OnChainMinValue.Currency)];
                 if (currentRateToCrypto?.BidAsk != null)
                 {
-                    var limitValueCrypto = Money.Coins(storeBlob.OnChainMinValue.Value / currentRateToCrypto.BidAsk.Bid);
+                    var limitValueCrypto =
+                        Money.Coins(storeBlob.OnChainMinValue.Value / currentRateToCrypto.BidAsk.Bid);
                     if (amount < limitValueCrypto)
                     {
                         return "The amount of the invoice is too low to be paid on chain";
                     }
                 }
             }
+
             return string.Empty;
         }
 
@@ -106,9 +114,12 @@ namespace BTCPayServer.Payments.Bitcoin
             var storeBlob = store.GetStoreBlob();
             return new Prepare()
             {
-                GetFeeRate = _FeeRateProviderFactory.CreateFeeProvider(network).GetFeeRateAsync(storeBlob.RecommendedFeeBlockTarget),
-                GetNetworkFeeRate = storeBlob.NetworkFeeMode == NetworkFeeMode.Never ? null 
-                                    : _FeeRateProviderFactory.CreateFeeProvider(network).GetFeeRateAsync(),
+                GetFeeRate =
+                    _FeeRateProviderFactory.CreateFeeProvider(network)
+                        .GetFeeRateAsync(storeBlob.RecommendedFeeBlockTarget),
+                GetNetworkFeeRate = storeBlob.NetworkFeeMode == NetworkFeeMode.Never
+                    ? null
+                    : _FeeRateProviderFactory.CreateFeeProvider(network).GetFeeRateAsync(),
                 ReserveAddress = _WalletProvider.GetWallet(network)
                     .ReserveAddressAsync(supportedPaymentMethod.AccountDerivation)
             };
@@ -117,6 +128,7 @@ namespace BTCPayServer.Payments.Bitcoin
         public override PaymentType PaymentType => PaymentTypes.BTCLike;
 
         public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(
+            InvoiceLogs logs,
             DerivationSchemeSettings supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store,
             BTCPayNetwork network, object preparePaymentObject)
         {
@@ -132,7 +144,8 @@ namespace BTCPayServer.Payments.Bitcoin
             {
                 case NetworkFeeMode.Always:
                     onchainMethod.NetworkFeeRate = (await prepare.GetNetworkFeeRate);
-                    onchainMethod.NextNetworkFee = onchainMethod.NetworkFeeRate.GetFee(100); // assume price for 100 bytes
+                    onchainMethod.NextNetworkFee =
+                        onchainMethod.NetworkFeeRate.GetFee(100); // assume price for 100 bytes
                     break;
                 case NetworkFeeMode.Never:
                     onchainMethod.NetworkFeeRate = FeeRate.Zero;
@@ -140,17 +153,29 @@ namespace BTCPayServer.Payments.Bitcoin
                     break;
                 case NetworkFeeMode.MultiplePaymentsOnly:
                     onchainMethod.NetworkFeeRate = (await prepare.GetNetworkFeeRate);
-                    onchainMethod.NextNetworkFee = Money.Zero;                    
+                    onchainMethod.NextNetworkFee = Money.Zero;
                     break;
             }
 
             onchainMethod.DepositAddress = (await prepare.ReserveAddress).Address.ToString();
-            onchainMethod.PayJoin = new PayJoinPaymentState()
+            onchainMethod.PayjoinEnabled = blob.PayJoinEnabled &&
+                                           supportedPaymentMethod.AccountDerivation.ScriptPubKeyType() ==
+                                           ScriptPubKeyType.Segwit &&
+                                           network.SupportPayJoin;
+            if (onchainMethod.PayjoinEnabled)
             {
-                Enabled = blob.PayJoinEnabled &&
-                          supportedPaymentMethod.AccountDerivation.ScriptPubKeyType() !=
-                          ScriptPubKeyType.Legacy
-            };
+                var nodeSupport = _dashboard?.Get(network.CryptoCode)?.Status?.BitcoinStatus?.Capabilities
+                    ?.CanSupportTransactionCheck is true;
+                bool isHotwallet = supportedPaymentMethod.Source == "NBXplorer";
+                onchainMethod.PayjoinEnabled &= isHotwallet && nodeSupport;
+                if (!isHotwallet)
+                    logs.Write("Payjoin should have been enabled, but your store is not a hotwallet");
+                if (!nodeSupport)
+                    logs.Write("Payjoin should have been enabled, but your version of NBXplorer or full node does not support it.");
+                if (onchainMethod.PayjoinEnabled)
+                    logs.Write("Payjoin is enabled for this invoice.");
+            }
+
             return onchainMethod;
         }
     }

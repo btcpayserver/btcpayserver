@@ -21,14 +21,13 @@ namespace BTCPayServer.Payments.Bitcoin
 
         }
         
-        public BitcoinLikePaymentData(BitcoinAddress address, IMoney value, OutPoint outpoint, bool rbf, decimal payJoinSelfContributedAmount)
+        public BitcoinLikePaymentData(BitcoinAddress address, IMoney value, OutPoint outpoint, bool rbf)
         {
             Address = address;
             Value = value;
             Outpoint = outpoint;
             ConfirmationCount = 0;
             RBF = rbf;
-            PayJoinSelfContributedAmount = payJoinSelfContributedAmount;
         }
         [JsonIgnore]
         public BTCPayNetworkBase Network { get; set; }
@@ -38,11 +37,11 @@ namespace BTCPayServer.Payments.Bitcoin
         public TxOut Output { get; set; }
         public int ConfirmationCount { get; set; }
         public bool RBF { get; set; }
-        public decimal NetworkFee { get; set; }
         public BitcoinAddress Address { get; set; }
         public IMoney Value { get; set; }
-        public decimal PayJoinSelfContributedAmount { get; set; } = 0;
-        
+
+        public PayjoinInformation PayjoinInformation { get; set; }
+
         [JsonIgnore]
         public Script ScriptPubKey
         {
@@ -69,8 +68,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
         public decimal GetValue()
         {
-            return (Value?.GetValue(Network as BTCPayNetwork) ?? Output.Value.ToDecimal(MoneyUnit.BTC)) -
-                   PayJoinSelfContributedAmount;
+            return Value?.GetValue(Network as BTCPayNetwork) ?? Output.Value.ToDecimal(MoneyUnit.BTC);
         }
 
         public bool PaymentCompleted(PaymentEntity entity)
@@ -108,5 +106,18 @@ namespace BTCPayServer.Payments.Bitcoin
         {
             return GetDestination().ToString();
         }
+    }
+
+
+    public class PayjoinInformation
+    {
+        [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
+        public PayjoinTransactionType Type { get; set; }
+        public OutPoint[] ContributedOutPoints { get; set; }
+    }
+    public enum PayjoinTransactionType
+    {
+        Original,
+        Coinjoin
     }
 }

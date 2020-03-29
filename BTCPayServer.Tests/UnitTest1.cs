@@ -173,7 +173,7 @@ namespace BTCPayServer.Tests
             var networkProvider = new BTCPayNetworkProvider(NetworkType.Regtest);
             var paymentMethodHandlerDictionary = new PaymentMethodHandlerDictionary(new IPaymentMethodHandler[]
             {
-                new BitcoinLikePaymentHandler(null, networkProvider, null, null),
+                new BitcoinLikePaymentHandler(null, networkProvider, null, null, null),
                 new LightningLikePaymentHandler(null, null, networkProvider, null),
             });
             var networkBTC = networkProvider.GetNetwork("BTC");
@@ -288,7 +288,7 @@ namespace BTCPayServer.Tests
             var networkProvider = new BTCPayNetworkProvider(NetworkType.Regtest);
             var paymentMethodHandlerDictionary = new PaymentMethodHandlerDictionary(new IPaymentMethodHandler[]
             {
-                new BitcoinLikePaymentHandler(null, networkProvider, null, null),
+                new BitcoinLikePaymentHandler(null, networkProvider, null, null, null),
                 new LightningLikePaymentHandler(null, null, networkProvider, null),
             });
             var entity = new InvoiceEntity();
@@ -477,7 +477,7 @@ namespace BTCPayServer.Tests
             var networkProvider = new BTCPayNetworkProvider(NetworkType.Regtest);
             var paymentMethodHandlerDictionary = new PaymentMethodHandlerDictionary(new IPaymentMethodHandler[]
             {
-                new BitcoinLikePaymentHandler(null, networkProvider, null, null),
+                new BitcoinLikePaymentHandler(null, networkProvider, null, null, null),
                 new LightningLikePaymentHandler(null, null, networkProvider, null),
             });
             var entity = new InvoiceEntity();

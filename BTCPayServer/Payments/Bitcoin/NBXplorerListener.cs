@@ -22,6 +22,7 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Payments.PayJoin;
 using NBitcoin.Altcoins.Elements;
 using NBitcoin.RPC;
+using BTCPayServer;
 
 namespace BTCPayServer.Payments.Bitcoin
 {
@@ -31,19 +32,18 @@ namespace BTCPayServer.Payments.Bitcoin
     public class NBXplorerListener : IHostedService
     {
         EventAggregator _Aggregator;
-        private readonly PayJoinStateProvider _payJoinStateProvider;
+        private readonly PayJoinRepository _payJoinRepository;
         ExplorerClientProvider _ExplorerClients;
         IHostApplicationLifetime _Lifetime;
         InvoiceRepository _InvoiceRepository;
         private TaskCompletionSource<bool> _RunningTask;
         private CancellationTokenSource _Cts;
         BTCPayWalletProvider _Wallets;
-
         public NBXplorerListener(ExplorerClientProvider explorerClients,
                                 BTCPayWalletProvider wallets,
                                 InvoiceRepository invoiceRepository,
-                                EventAggregator aggregator, 
-                                PayJoinStateProvider payJoinStateProvider,
+                                EventAggregator aggregator,
+                                PayJoinRepository payjoinRepository,
                                 IHostApplicationLifetime lifetime)
         {
             PollInterval = TimeSpan.FromMinutes(1.0);
@@ -51,7 +51,7 @@ namespace BTCPayServer.Payments.Bitcoin
             _InvoiceRepository = invoiceRepository;
             _ExplorerClients = explorerClients;
             _Aggregator = aggregator;
-            _payJoinStateProvider = payJoinStateProvider;
+            _payJoinRepository = payjoinRepository;
             _Lifetime = lifetime;
         }
 
@@ -160,16 +160,11 @@ namespace BTCPayServer.Payments.Bitcoin
                                         var address = network.NBXplorerNetwork.CreateAddress(evt.DerivationStrategy,
                                             output.Item1.KeyPath, output.Item1.ScriptPubKey);
 
-                                        var payJoinSelfContributedAmount = GetPayJoinContributedAmount(
-                                            new WalletId(invoice.StoreId, network.CryptoCode),
-                                            output.matchedOutput.Value.GetValue(network),
-                                            evt.TransactionData.TransactionHash);
-
                                         var paymentData = new BitcoinLikePaymentData(address,
                                             output.matchedOutput.Value, output.outPoint,
-                                            evt.TransactionData.Transaction.RBF, payJoinSelfContributedAmount);
-
-                                        var alreadyExist = GetAllBitcoinPaymentData(invoice).Where(c => c.GetPaymentId() == paymentData.GetPaymentId()).Any();
+                                            evt.TransactionData.Transaction.RBF);
+                                        
+                                        var alreadyExist = invoice.GetAllBitcoinPaymentData().Where(c => c.GetPaymentId() == paymentData.GetPaymentId()).Any();
                                         if (!alreadyExist)
                                         {
                                             var payment = await _InvoiceRepository.AddPayment(invoice.Id, DateTimeOffset.UtcNow, paymentData, network);
@@ -216,23 +211,19 @@ namespace BTCPayServer.Payments.Bitcoin
             }
         }
 
-        IEnumerable<BitcoinLikePaymentData> GetAllBitcoinPaymentData(InvoiceEntity invoice)
-        {
-            return invoice.GetPayments()
-                    .Where(p => p.GetPaymentMethodId().PaymentType == PaymentTypes.BTCLike)
-                    .Select(p => (BitcoinLikePaymentData)p.GetCryptoPaymentData());
-        }
-
         async Task<InvoiceEntity> UpdatePaymentStates(BTCPayWallet wallet, string invoiceId)
         {
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId, false);
             if (invoice == null)
                 return null;
             List<PaymentEntity> updatedPaymentEntities = new List<PaymentEntity>();
-            var transactions = await wallet.GetTransactions(GetAllBitcoinPaymentData(invoice)
+            var transactions = await wallet.GetTransactions(invoice.GetAllBitcoinPaymentData()
                     .Select(p => p.Outpoint.Hash)
-                    .ToArray());
-            var payJoinState = _payJoinStateProvider.Get(new WalletId(invoice.StoreId, wallet.Network.CryptoCode));
+                    .ToArray(), true);
+            bool? originalPJBroadcasted = null;
+            bool? originalPJBroadcastable = null;
+            bool? cjPJBroadcasted = null;
+            OutPoint[] ourPJOutpoints = null;
             foreach (var payment in invoice.GetPayments(wallet.Network))
             {
                 if (payment.GetPaymentMethodId().PaymentType != PaymentTypes.BTCLike)
@@ -240,15 +231,16 @@ namespace BTCPayServer.Payments.Bitcoin
                 var paymentData = (BitcoinLikePaymentData)payment.GetCryptoPaymentData();
                 if (!transactions.TryGetValue(paymentData.Outpoint.Hash, out TransactionResult tx))
                     continue;
-                var txId = tx.Transaction.GetHash();
+
                 bool accounted = true;
-                if (tx.Confirmations == 0)
+
+                if (tx.Confirmations == 0 || tx.Confirmations == -1)
                 {
                     // Let's check if it was orphaned by broadcasting it again
                     var explorerClient = _ExplorerClients.GetExplorerClient(wallet.Network);
                     try
                     {
-                        var result = await explorerClient.BroadcastAsync(tx.Transaction, _Cts.Token);
+                        var result = await explorerClient.BroadcastAsync(tx.Transaction, testMempoolAccept: tx.Confirmations == -1, _Cts.Token);
                         accounted = result.Success ||
                                     result.RPCCode == RPCErrorCode.RPC_TRANSACTION_ALREADY_IN_CHAIN ||
                                     !(
@@ -257,9 +249,23 @@ namespace BTCPayServer.Payments.Bitcoin
                                     result.RPCCode == RPCErrorCode.RPC_TRANSACTION_ERROR ||
                                     // Happen if RBF is on and fee insufficient
                                     result.RPCCode == RPCErrorCode.RPC_TRANSACTION_REJECTED);
-                        if (!accounted && payment.Accounted)
+                        if (!accounted && payment.Accounted && tx.Confirmations != -1)
                         {
                             Logs.PayServer.LogInformation($"{wallet.Network.CryptoCode}: The transaction {tx.TransactionHash} has been replaced.");
+                        }
+                        if (paymentData.PayjoinInformation is PayjoinInformation pj)
+                        {
+                            ourPJOutpoints = pj.ContributedOutPoints;
+                            switch (pj.Type)
+                            {
+                                case PayjoinTransactionType.Original:
+                                    originalPJBroadcasted = accounted && tx.Confirmations >= 0;
+                                    originalPJBroadcastable = accounted;
+                                    break;
+                                case PayjoinTransactionType.Coinjoin:
+                                    cjPJBroadcasted = accounted && tx.Confirmations >= 0;
+                                    break;
+                            }
                         }
                     }
                     // RPC might be unavailable, we can't check double spend so let's assume there is none
@@ -268,7 +274,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
                     }
                 }
-                
+
                 bool updated = false;
                 if (accounted != payment.Accounted)
                 {
@@ -285,12 +291,7 @@ namespace BTCPayServer.Payments.Bitcoin
                         updated = true;
                     }
                 }
-                
-                // we keep the state of the payjoin tx until it is confirmed in case of rbf situations where the tx is cancelled
-                if (paymentData.PayJoinSelfContributedAmount> 0 && accounted && paymentData.PaymentConfirmed(payment, invoice.SpeedPolicy))
-                {
-                    payJoinState?.RemoveRecord(paymentData.Outpoint.Hash);
-                }
+
                 // if needed add invoice back to pending to track number of confirmations
                 if (paymentData.ConfirmationCount < wallet.Network.MaxTrackedConfirmation)
                     await _InvoiceRepository.AddPendingInvoiceIfNotPresent(invoice.Id);
@@ -298,6 +299,17 @@ namespace BTCPayServer.Payments.Bitcoin
                 if (updated)
                     updatedPaymentEntities.Add(payment);
             }
+
+            // If the origin tx of a payjoin has been broadcasted, then we know we can
+            // reuse our outpoint for another PJ
+            if (originalPJBroadcasted is true ||
+                // If the original tx is not broadcastable anymore and nor does the coinjoin
+                // reuse our outpoint for another PJ
+                (originalPJBroadcastable is false && !(cjPJBroadcasted is true)))
+            {
+                await _payJoinRepository.TryUnlock(ourPJOutpoints);
+            }
+
             await _InvoiceRepository.UpdatePayments(updatedPaymentEntities);
             if (updatedPaymentEntities.Count != 0)
                 _Aggregator.Publish(new Events.InvoiceNeedUpdateEvent(invoice.Id));
@@ -313,7 +325,7 @@ namespace BTCPayServer.Payments.Bitcoin
                 var invoice = await _InvoiceRepository.GetInvoice(invoiceId, true);
                 if (invoice == null)
                     continue;
-                var alreadyAccounted = GetAllBitcoinPaymentData(invoice).Select(p => p.Outpoint).ToHashSet();
+                var alreadyAccounted = invoice.GetAllBitcoinPaymentData().Select(p => p.Outpoint).ToHashSet();
                 var strategy = GetDerivationStrategy(invoice, network);
                 if (strategy == null)
                     continue;
@@ -330,11 +342,9 @@ namespace BTCPayServer.Payments.Bitcoin
                     var transaction = await wallet.GetTransactionAsync(coin.OutPoint.Hash);
 
                     var address = network.NBXplorerNetwork.CreateAddress(strategy, coin.KeyPath, coin.ScriptPubKey);
-                    var payJoinSelfContributedAmount =
-                        GetPayJoinContributedAmount(paymentMethod, coin.Value.GetValue(network), transaction.TransactionHash);
 
                     var paymentData = new BitcoinLikePaymentData(address, coin.Value, coin.OutPoint,
-                        transaction.Transaction.RBF, payJoinSelfContributedAmount);
+                        transaction.Transaction.RBF);
                     
                     var payment = await _InvoiceRepository.AddPayment(invoice.Id, coin.Timestamp, paymentData, network).ConfigureAwait(false);
                     alreadyAccounted.Add(coin.OutPoint);
@@ -348,31 +358,6 @@ namespace BTCPayServer.Payments.Bitcoin
                 }
             }
             return totalPayment;
-        }
-
-        private decimal GetPayJoinContributedAmount(BitcoinLikeOnChainPaymentMethod paymentMethod, decimal amount, uint256 transactionHash)
-        {
-            if (paymentMethod.PayJoin?.Enabled is true &&
-                paymentMethod.PayJoin.ProposedTransactionHash == transactionHash &&
-                paymentMethod.PayJoin.TotalOutputAmount == amount)
-            {
-                //this is the payjoin output!
-              return  paymentMethod.PayJoin.ContributedAmount;
-            }
-            
-            return 0;
-        }
-        private decimal GetPayJoinContributedAmount(WalletId walletId, decimal amount, uint256 transactionHash)
-        {
-            var payJoinState =
-                _payJoinStateProvider.Get(walletId);
-
-            if (payJoinState == null || !payJoinState.TryGetWithProposedHash(transactionHash, out var record) ||
-                record.TotalOutputAmount != amount) return 0;
-            record.TxSeen = true;
-            //this is the payjoin output!
-            return record.ContributedAmount;
-
         }
 
         private DerivationStrategyBase GetDerivationStrategy(InvoiceEntity invoice, BTCPayNetworkBase network)

@@ -52,7 +52,7 @@
                     <tr class="@(payment.Replaced ? "linethrough" : "")" >
                         <td>@payment.Crypto</td>
                         <td>@payment.DepositAddress</td>
-                        <td class="payment-value">@payment.CryptoPaymentData.GetValue() @Safe.Raw(payment.CryptoPaymentData.PayJoinSelfContributedAmount == 0? string.Empty : $"<br/>(Payjoin {payment.CryptoPaymentData.PayJoinSelfContributedAmount})")</td>
+                        <td class="payment-value">@payment.CryptoPaymentData.GetValue() @Safe.Raw(payment.CryptoPaymentData.PayjoinInformation?.Type is PayjoinTransactionType.Coinjoin? string.Empty : $"<br/>(Payjoin)")</td>
                         <td>
                             <div class="wraptextAuto">
                                 <a href="@payment.TransactionLink" target="_blank">

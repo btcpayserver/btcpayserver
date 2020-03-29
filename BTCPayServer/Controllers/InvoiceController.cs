@@ -259,7 +259,7 @@ namespace BTCPayServer.Controllers
 
                 using (logs.Measure($"{logPrefix} Payment method details creation"))
                 {
-                    var paymentDetails = await handler.CreatePaymentMethodDetails(supportedPaymentMethod, paymentMethod, store, network, preparePayment);
+                    var paymentDetails = await handler.CreatePaymentMethodDetails(logs, supportedPaymentMethod, paymentMethod, store, network, preparePayment);
                     paymentMethod.SetPaymentMethodDetails(paymentDetails);
                 }
 

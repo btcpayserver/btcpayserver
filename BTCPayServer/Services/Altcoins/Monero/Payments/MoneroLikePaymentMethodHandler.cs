@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Lightning;
+using BTCPayServer.Logging;
 using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Services.Altcoins.Monero.RPC.Models;
@@ -30,7 +31,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
         }
         public override PaymentType PaymentType => MoneroPaymentType.Instance;
 
-        public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(MoneroSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod,
+        public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(InvoiceLogs logs, MoneroSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod,
             StoreData store, MoneroLikeSpecificBtcPayNetwork network, object preparePaymentObject)
         {
             

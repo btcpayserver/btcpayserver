@@ -13,6 +13,7 @@ using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.PayJoin;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Mvc;
@@ -21,6 +22,7 @@ using Microsoft.Extensions.Hosting;
 using NBitcoin;
 using NBitcoin.Payment;
 using NBitpayClient;
+using OpenQA.Selenium;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -36,6 +38,108 @@ namespace BTCPayServer.Tests
             Logs.LogProvider = new XUnitLogProvider(helper);
         }
 
+        [Fact] 
+        [Trait("Selenium", "Selenium")] 
+        public async Task CanUseBIP79Client()
+        {
+            using (var s = SeleniumTester.Create())
+            {
+                await s.StartAsync();
+                s.RegisterNewUser(true);
+                var receiver = s.CreateNewStore();
+                var receiverSeed = s.GenerateWallet("BTC", "", true, true);
+                var receiverWalletId = new WalletId(receiver.storeId, "BTC");
+                var payJoinStateProvider = s.Server.PayTester.GetService<PayJoinStateProvider>();
+                //payjoin is not enabled by default.
+                var invoiceId = s.CreateInvoice(receiver.storeId);
+                s.GoToInvoiceCheckout(invoiceId);
+                var bip21 = s.Driver.FindElement(By.ClassName("payment__details__instruction__open-wallet__btn"))
+                    .GetAttribute("href");
+                Assert.DoesNotContain("bpu", bip21);
+                
+                s.GoToHome();
+                s.GoToStore(receiver.storeId);
+                //payjoin is not enabled by default.
+                Assert.False(s.Driver.FindElement(By.Id("PayJoinEnabled")).Selected);
+                s.SetCheckbox(s,"PayJoinEnabled", true);
+                s.Driver.FindElement(By.Id("Save")).Click();
+                Assert.True(s.Driver.FindElement(By.Id("PayJoinEnabled")).Selected);
+                var sender = s.CreateNewStore();
+                var senderSeed = s.GenerateWallet("BTC", "", true, true);
+                var senderWalletId = new WalletId(sender.storeId, "BTC");
+                await s.Server.ExplorerNode.GenerateAsync(1);
+                await s.FundStoreWallet(senderWalletId);
+
+                invoiceId = s.CreateInvoice(receiver.storeId);
+                s.GoToInvoiceCheckout(invoiceId);
+                bip21 = s.Driver.FindElement(By.ClassName("payment__details__instruction__open-wallet__btn"))
+                    .GetAttribute("href");
+                Assert.Contains("bpu", bip21);
+               
+                s.GoToWalletSend(senderWalletId);
+                s.Driver.FindElement(By.Id("bip21parse")).Click();
+                s.Driver.SwitchTo().Alert().SendKeys(bip21);
+                s.Driver.SwitchTo().Alert().Accept();
+                Assert.False(string.IsNullOrEmpty( s.Driver.FindElement(By.Id("PayJoinEndpointUrl")).GetAttribute("value")));
+                s.Driver.ScrollTo(By.Id("SendMenu"));
+                s.Driver.FindElement(By.Id("SendMenu")).ForceClick();
+                s.Driver.FindElement(By.CssSelector("button[value=nbx-seed]")).Click();
+                await s.Server.WaitForEvent<NewOnChainTransactionEvent>(async () =>
+                {
+                    s.Driver.FindElement(By.CssSelector("button[value=payjoin]")).ForceClick();
+                });
+                //no funds in receiver wallet to do payjoin
+                s.AssertHappyMessage(StatusMessageModel.StatusSeverity.Warning);
+                await TestUtils.EventuallyAsync(async () =>
+                {
+                    var invoice = await s.Server.PayTester.GetService<InvoiceRepository>().GetInvoice(invoiceId);
+                    Assert.Equal(InvoiceStatus.Paid, invoice.Status);
+                });
+                
+                s.GoToInvoices();
+                var paymentValueRowColumn = s.Driver.FindElement(By.Id($"invoice_{invoiceId}")).FindElement(By.ClassName("payment-value"));
+                Assert.False(paymentValueRowColumn.Text.Contains("payjoin", StringComparison.InvariantCultureIgnoreCase));
+                
+                //let's do it all again, except now the receiver has funds and is able to payjoin
+                invoiceId = s.CreateInvoice(receiver.storeId);
+                s.GoToInvoiceCheckout(invoiceId);
+                bip21 = s.Driver.FindElement(By.ClassName("payment__details__instruction__open-wallet__btn"))
+                    .GetAttribute("href");
+                Assert.Contains("bpu", bip21);
+               
+                s.GoToWalletSend(senderWalletId);
+                s.Driver.FindElement(By.Id("bip21parse")).Click();
+                s.Driver.SwitchTo().Alert().SendKeys(bip21);
+                s.Driver.SwitchTo().Alert().Accept();
+                Assert.False(string.IsNullOrEmpty( s.Driver.FindElement(By.Id("PayJoinEndpointUrl")).GetAttribute("value")));
+                s.Driver.ScrollTo(By.Id("SendMenu"));
+                s.Driver.FindElement(By.Id("SendMenu")).ForceClick();
+                s.Driver.FindElement(By.CssSelector("button[value=nbx-seed]")).Click();
+                await s.Server.WaitForEvent<NewOnChainTransactionEvent>(async () =>
+                {
+                    s.Driver.FindElement(By.CssSelector("button[value=payjoin]")).ForceClick();
+                });
+                s.AssertHappyMessage(StatusMessageModel.StatusSeverity.Success);
+                await TestUtils.EventuallyAsync(async () =>
+                {
+                    var invoice = await s.Server.PayTester.GetService<InvoiceRepository>().GetInvoice(invoiceId);
+                    Assert.Equal(InvoiceStatus.Paid, invoice.Status);
+                });
+                s.GoToInvoices();
+                paymentValueRowColumn = s.Driver.FindElement(By.Id($"invoice_{invoiceId}")).FindElement(By.ClassName("payment-value"));
+                Assert.False(paymentValueRowColumn.Text.Contains("payjoin", StringComparison.InvariantCultureIgnoreCase));
+
+                
+                //the state should now hold that there is an ongoing utxo 
+                var receiverWalletPayJoinState = payJoinStateProvider.Get(receiverWalletId);
+                Assert.NotNull(receiverWalletPayJoinState);
+                Assert.Single(receiverWalletPayJoinState.GetRecords());
+                Assert.Equal(0.02m, receiverWalletPayJoinState.GetRecords().First().ContributedAmount);
+                Assert.Single(receiverWalletPayJoinState.GetRecords().First().CoinsExposed);
+                
+            }
+        }
+
         [Fact]
         // [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
@@ -44,6 +148,8 @@ namespace BTCPayServer.Tests
             using (var tester = ServerTester.Create())
             {
                 await tester.StartAsync();
+                
+                var payJoinStateProvider = tester.PayTester.GetService<PayJoinStateProvider>();
                 var btcPayNetwork = tester.NetworkProvider.GetNetwork<BTCPayNetwork>("BTC");
                 var btcPayWallet = tester.PayTester.GetService<BTCPayWalletProvider>().GetWallet(btcPayNetwork);
                 var cashCow = tester.ExplorerNode;
@@ -68,155 +174,9 @@ namespace BTCPayServer.Tests
                 // payjoin is enabled, with a segwit wallet, and the keys are available in nbxplorer
                 invoice = receiverUser.BitPay.CreateInvoice(
                     new Invoice() {Price = 0.02m, Currency = "BTC", FullNotifications = true});
-
-                //check that the BIP21 has an endpoint
-                var bip21 = invoice.CryptoInfo.First().PaymentUrls.BIP21;
-                Assert.Contains("bpu", bip21);
-                var parsedBip21 = new BitcoinUrlBuilder(bip21, tester.ExplorerClient.Network.NBitcoinNetwork);
-                var endpoint = parsedBip21.UnknowParameters["bpu"];
-
-
-                //see if the btcpay send wallet supports BIP21 properly and also the payjoin endpoint
+                cashCow.SendToAddress(BitcoinAddress.Create(invoice.BitcoinAddress, cashCow.Network),
+                    Money.Coins(0.06m));
                 var receiverWalletId = new WalletId(receiverUser.StoreId, "BTC");
-                var senderWalletId = new WalletId(senderUser.StoreId, "BTC");
-                var senderWallerController = senderUser.GetController<WalletsController>();
-                var senderWalletSendVM = await senderWallerController.WalletSend(senderWalletId)
-                    .AssertViewModelAsync<WalletSendModel>();
-                senderWalletSendVM = await senderWallerController
-                    .WalletSend(senderWalletId, senderWalletSendVM, "", CancellationToken.None, bip21)
-                    .AssertViewModelAsync<WalletSendModel>();
-
-                Assert.Single(senderWalletSendVM.Outputs);
-                Assert.Equal(endpoint, senderWalletSendVM.PayJoinEndpointUrl);
-                Assert.Equal(parsedBip21.Address.ToString(), senderWalletSendVM.Outputs.First().DestinationAddress);
-                Assert.Equal(parsedBip21.Amount.ToDecimal(MoneyUnit.BTC), senderWalletSendVM.Outputs.First().Amount);
-
-                //the nbx wallet option should also be available
-                Assert.True(senderWalletSendVM.NBXSeedAvailable);
-
-                //pay the invoice with the nbx seed wallet option + also the invoice 
-                var postRedirectViewModel = await senderWallerController.WalletSend(senderWalletId,
-                        senderWalletSendVM, "nbx-seed", CancellationToken.None)
-                    .AssertViewModelAsync<PostRedirectViewModel>();
-                var redirectedPSBT = postRedirectViewModel.Parameters.Single(p => p.Key == "psbt").Value;
-                var psbt = PSBT.Parse(redirectedPSBT, tester.ExplorerClient.Network.NBitcoinNetwork);
-                var senderWalletSendPSBTResult = new WalletPSBTReadyViewModel()
-                {
-                    PSBT = redirectedPSBT,
-                    SigningKeyPath = postRedirectViewModel.Parameters.Single(p => p.Key == "SigningKeyPath").Value,
-                    SigningKey = postRedirectViewModel.Parameters.Single(p => p.Key == "SigningKey").Value
-                };
-                //While the endpoint was set, the receiver had no utxos. The payment should fall back to original payment terms instead
-                Assert.Equal(parsedBip21.Amount.ToDecimal(MoneyUnit.BTC).ToString(),
-                    psbt.Outputs.Single(model => model.ScriptPubKey == parsedBip21.Address.ScriptPubKey).Value);
-
-                Assert.Equal("WalletTransactions",
-                    Assert.IsType<RedirectToActionResult>(
-                            await senderWallerController.WalletPSBTReady(senderWalletId, senderWalletSendPSBTResult,
-                                "broadcast"))
-                        .ActionName);
-
-                //we used the bip21 link straight away to pay the invoice so it should be paid straight away. 
-                TestUtils.Eventually(() =>
-                {
-                    invoice = receiverUser.BitPay.GetInvoice(invoice.Id);
-                    Assert.Equal(Invoice.STATUS_PAID, invoice.Status);
-                });
-                //verify that there is nothing in the payment state
-                
-                var payJoinStateProvider = tester.PayTester.GetService<PayJoinStateProvider>();
-                var receiverWalletPayJoinState = payJoinStateProvider.Get(receiverWalletId);
-                Assert.NotNull(receiverWalletPayJoinState);
-                Assert.Empty(receiverWalletPayJoinState.GetRecords());
-
-                //now that there is a utxo, let's do it again
-
-                invoice = receiverUser.BitPay.CreateInvoice(
-                    new Invoice() {Price = 0.02m, Currency = "BTC", FullNotifications = true});
-                bip21 = invoice.CryptoInfo.First().PaymentUrls.BIP21;
-                parsedBip21 = new BitcoinUrlBuilder(bip21, tester.ExplorerClient.Network.NBitcoinNetwork);
-                senderWalletSendVM = await senderWallerController.WalletSend(senderWalletId)
-                    .AssertViewModelAsync<WalletSendModel>();
-                senderWalletSendVM = await senderWallerController
-                    .WalletSend(senderWalletId, senderWalletSendVM, "", CancellationToken.None, bip21)
-                    .AssertViewModelAsync<WalletSendModel>();
-                postRedirectViewModel = await senderWallerController.WalletSend(senderWalletId,
-                        senderWalletSendVM, "nbx-seed", CancellationToken.None)
-                    .AssertViewModelAsync<PostRedirectViewModel>();
-                redirectedPSBT = postRedirectViewModel.Parameters.Single(p => p.Key == "psbt").Value;
-                psbt = PSBT.Parse(redirectedPSBT, tester.ExplorerClient.Network.NBitcoinNetwork);
-                senderWalletSendPSBTResult = new WalletPSBTReadyViewModel()
-                {
-                    PSBT = redirectedPSBT,
-                    SigningKeyPath = postRedirectViewModel.Parameters.Single(p => p.Key == "SigningKeyPath").Value,
-                    SigningKey = postRedirectViewModel.Parameters.Single(p => p.Key == "SigningKey").Value
-                };
-                //the payjoin should make the amount being paid to the address higher
-                Assert.True(parsedBip21.Amount.ToDecimal(MoneyUnit.BTC) < psbt.Outputs
-                    .Single(model => model.ScriptPubKey == parsedBip21.Address.ScriptPubKey).Value
-                    .ToDecimal(MoneyUnit.BTC));
-
-                //the state should now hold that there is an ongoing utxo 
-                Assert.Single(receiverWalletPayJoinState.GetRecords());
-                Assert.Equal(0.02m, receiverWalletPayJoinState.GetRecords().First().ContributedAmount);
-                Assert.Single(receiverWalletPayJoinState.GetRecords().First().CoinsExposed);
-                Assert.False(receiverWalletPayJoinState.GetRecords().First().TxSeen);
-                Assert.Equal(psbt.Finalize().ExtractTransaction().GetHash(),
-                    receiverWalletPayJoinState.GetRecords().First().ProposedTransactionHash);
-
-                Assert.Equal("WalletTransactions",
-                    Assert.IsType<RedirectToActionResult>(
-                            await senderWallerController.WalletPSBTReady(senderWalletId, senderWalletSendPSBTResult,
-                                "broadcast"))
-                        .ActionName);
-
-                TestUtils.Eventually(() =>
-                {
-                    invoice = receiverUser.BitPay.GetInvoice(invoice.Id);
-
-                    Assert.Equal(Invoice.STATUS_PAID, invoice.Status);
-                    Assert.Equal(Invoice.EXSTATUS_FALSE, invoice.ExceptionStatus.ToString().ToLowerInvariant());
-                });
-
-                //verify that we have a record that it was a payjoin
-                var receiverController = receiverUser.GetController<InvoiceController>();
-                var invoiceVM =
-                    await receiverController.Invoice(invoice.Id).AssertViewModelAsync<InvoiceDetailsModel>();
-                Assert.Single(invoiceVM.Payments);
-                Assert.True(Assert.IsType<BitcoinLikePaymentData>(invoiceVM.Payments.First().GetCryptoPaymentData())
-                    .PayJoinSelfContributedAmount > 0);
-
-                
-                //we dont remove the payjoin tx state even if we detect it, for cases of RBF
-                Assert.NotEmpty(receiverWalletPayJoinState.GetRecords());
-                Assert.Single(receiverWalletPayJoinState.GetRecords());
-                Assert.True(receiverWalletPayJoinState.GetRecords().First().TxSeen);
-                
-                var debugData = new
-                {
-                    StoreId = receiverWalletId.StoreId,
-                    InvoiceId = receiverWalletPayJoinState.GetRecords().First().InvoiceId,
-                    PayJoinTx = receiverWalletPayJoinState.GetRecords().First().ProposedTransactionHash
-                };
-                for (int i = 0; i < 6; i++)
-                {
-                    await tester.WaitForEvent<NewBlockEvent>(async () =>
-                    {
-                        await cashCow.GenerateAsync(1);
-                    });
-                }
-                
-                //check that the state has cleared that ongoing tx
-                receiverWalletPayJoinState = payJoinStateProvider.Get(receiverWalletId);
-                Assert.NotNull(receiverWalletPayJoinState);
-                Assert.Empty(receiverWalletPayJoinState.GetRecords());
-                Assert.Empty(receiverWalletPayJoinState.GetExposedCoins());
-
-                //Cool, so the payjoin works!
-                //The cool thing with payjoin is that your utxos don't grow
-                Assert.Single(await btcPayWallet.GetUnspentCoins(receiverUser.DerivationScheme));
-
-                //Let's be as malicious as CSW
 
                 //give the cow some cash
                 await cashCow.GenerateAsync(1);
@@ -260,9 +220,9 @@ namespace BTCPayServer.Tests
                 invoice = receiverUser.BitPay.CreateInvoice(
                     new Invoice() {Price = 0.02m, Currency = "BTC", FullNotifications = true});
 
-                parsedBip21 = new BitcoinUrlBuilder(invoice.CryptoInfo.First().PaymentUrls.BIP21,
+                var parsedBip21 = new BitcoinUrlBuilder(invoice.CryptoInfo.First().PaymentUrls.BIP21,
                     tester.ExplorerClient.Network.NBitcoinNetwork);
-                endpoint = parsedBip21.UnknowParameters["bpu"];
+                var endpoint = parsedBip21.UnknowParameters["bpu"];
 
                 var invoice2 = receiverUser.BitPay.CreateInvoice(
                     new Invoice() {Price = 0.02m, Currency = "BTC", FullNotifications = true});
@@ -558,6 +518,9 @@ namespace BTCPayServer.Tests
                 var Invoice7Coin6Response1TxSigned = invoice7Coin6TxBuilder.SignTransaction(invoice7Coin6Response1Tx);
                 var contributedInputsInvoice7Coin6Response1TxSigned =
                     Invoice7Coin6Response1TxSigned.Inputs.Single(txin => coin6.OutPoint != txin.PrevOut);
+                
+                
+                var receiverWalletPayJoinState = payJoinStateProvider.Get(receiverWalletId);
                 Assert.Contains(receiverWalletPayJoinState.GetRecords(), item => item.InvoiceId == invoice7.Id);
                 //broadcast the payjoin
                 await tester.WaitForEvent<InvoiceEvent>(async () =>

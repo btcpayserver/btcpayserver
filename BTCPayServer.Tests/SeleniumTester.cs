@@ -120,6 +120,7 @@ namespace BTCPayServer.Tests
 
             return (usr, Driver.FindElement(By.Id("Id")).GetAttribute("value"));
         }
+        
 
         public Mnemonic GenerateWallet(string cryptoCode = "BTC", string seed = "", bool importkeys = false, bool privkeys = false)
         {
@@ -314,7 +315,37 @@ namespace BTCPayServer.Tests
             return id;
         }
 
+        public async Task FundStoreWallet(WalletId walletId, int coins = 1, decimal denomination = 1m)
+        {
+            GoToWalletReceive(walletId);
+            Driver.FindElement(By.Id("generateButton")).Click();
+            var addressStr = Driver.FindElement(By.Id("vue-address")).GetProperty("value");
+            var address = BitcoinAddress.Create(addressStr, ((BTCPayNetwork)Server.NetworkProvider.GetNetwork(walletId.CryptoCode)).NBitcoinNetwork);
+            for (int i = 0; i < coins; i++)
+            {
+                await Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(denomination));
+            }
+        }
+        
+        public void PayInvoice(WalletId walletId, string invoiceId)
+        {
+            GoToInvoiceCheckout(invoiceId);
+            var bip21 = Driver.FindElement(By.ClassName("payment__details__instruction__open-wallet__btn"))
+                .GetAttribute("href");
+            Assert.Contains("bpu", bip21);
+               
+            GoToWalletSend(walletId);
+            Driver.FindElement(By.Id("bip21parse")).Click();
+            Driver.SwitchTo().Alert().SendKeys(bip21);
+            Driver.SwitchTo().Alert().Accept();
+            Driver.ScrollTo(By.Id("SendMenu"));
+            Driver.FindElement(By.Id("SendMenu")).ForceClick();
+            Driver.FindElement(By.CssSelector("button[value=nbx-seed]")).Click();
+            Driver.FindElement(By.CssSelector("button[value=broadcast]")).ForceClick();
+        }
 
+
+        
 
         private void CheckForJSErrors()
         {

@@ -671,12 +671,13 @@ namespace BTCPayServer.Controllers
             ModelState.Clear();
         }
 
-        private IActionResult ViewVault(WalletId walletId, PSBT psbt, string payJoinEndpointUrl)
+        private IActionResult ViewVault(WalletId walletId, PSBT psbt, string payJoinEndpointUrl, PSBT originalPSBT = null)
         {
             return View(nameof(WalletSendVault), new WalletSendVaultModel()
             {
                 PayJoinEndpointUrl = payJoinEndpointUrl,
                 WalletId = walletId.ToString(),
+                OriginalPSBT = originalPSBT?.ToBase64(),
                 PSBT = psbt.ToBase64(),
                 WebsocketPath = this.Url.Action(nameof(VaultController.VaultBridgeConnection), "Vault", new { walletId = walletId.ToString() })
             });
@@ -687,19 +688,9 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> WalletSendVault([ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, WalletSendVaultModel model)
         {
-            var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
-            var newPSBT = await TryGetPayjoinProposedTX(model.PayJoinEndpointUrl, PSBT.Parse(model.PSBT, network.NBitcoinNetwork), GetDerivationSchemeSettings(walletId), network);
-            model.PayJoinEndpointUrl = null;
-            if (newPSBT != null)
-            {
-                model.OriginalPSBT = model.PSBT;
-                model.PSBT = newPSBT.ToBase64();
-                return View(nameof(WalletSendVault), model);
-            }
-
-            return RedirectToWalletPSBTReady(model.PSBT, originalPsbt: model.OriginalPSBT);
+            return RedirectToWalletPSBTReady(model.PSBT, originalPsbt: model.OriginalPSBT,  payJoinEndpointUrl: model.PayJoinEndpointUrl);
         }
-        private IActionResult RedirectToWalletPSBTReady(string psbt, string signingKey=  null, string signingKeyPath = null, string originalPsbt = null)
+        private IActionResult RedirectToWalletPSBTReady(string psbt, string signingKey=  null, string signingKeyPath = null, string originalPsbt = null, string payJoinEndpointUrl = null)
         {
             var vm = new PostRedirectViewModel()
             {
@@ -709,6 +700,7 @@ namespace BTCPayServer.Controllers
                 {
                     new KeyValuePair<string, string>("psbt", psbt),
                     new KeyValuePair<string, string>("originalPsbt", originalPsbt),
+                    new KeyValuePair<string, string>("payJoinEndpointUrl", payJoinEndpointUrl),
                     new KeyValuePair<string, string>("SigningKey", signingKey),
                     new KeyValuePair<string, string>("SigningKeyPath", signingKeyPath)
                 }
@@ -849,15 +841,7 @@ namespace BTCPayServer.Controllers
                 return View(viewModel);
             }
             ModelState.Remove(nameof(viewModel.PSBT));
-            var newPSBT = await TryGetPayjoinProposedTX(viewModel.PayJoinEndpointUrl,psbt, GetDerivationSchemeSettings(walletId), network);
-            viewModel.PayJoinEndpointUrl = null;
-            if (newPSBT != null)
-            {
-                viewModel.OriginalPSBT = psbt.ToBase64();
-                viewModel.PSBT = newPSBT.ToBase64();
-                return await SignWithSeed(walletId, viewModel);
-            }
-            return RedirectToWalletPSBTReady(psbt.ToBase64(), signingKey.GetWif(network.NBitcoinNetwork).ToString(), rootedKeyPath?.ToString(), viewModel.OriginalPSBT);
+            return RedirectToWalletPSBTReady(psbt.ToBase64(), signingKey.GetWif(network.NBitcoinNetwork).ToString(), rootedKeyPath?.ToString(), viewModel.OriginalPSBT, viewModel.PayJoinEndpointUrl);
         }
 
         private bool PSBTChanged(PSBT psbt, Action act)
@@ -881,7 +865,17 @@ namespace BTCPayServer.Controllers
                 var wallet = _walletProvider.GetWallet(network);
                 var derivationSettings = GetDerivationSchemeSettings(walletId);
                 wallet.InvalidateCache(derivationSettings.AccountDerivation);
-                TempData[WellKnownTempData.SuccessMessage] = $"Transaction broadcasted successfully ({transaction.GetHash().ToString()})";
+                if (TempData.GetStatusMessageModel() == null)
+                {
+                    TempData[WellKnownTempData.SuccessMessage] =
+                        $"Transaction broadcasted successfully ({transaction.GetHash()})";
+                }
+                else
+                {
+                    var statusMessageModel = TempData.GetStatusMessageModel();
+                    statusMessageModel.Message += $" ({transaction.GetHash()})";
+                    TempData.SetStatusMessageModel(statusMessageModel);
+                }
             }
             return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
         }

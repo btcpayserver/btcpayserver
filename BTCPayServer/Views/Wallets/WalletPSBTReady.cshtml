@@ -141,17 +141,18 @@
                     <input type="hidden" asp-for="OriginalPSBT"/>
                     <input type="hidden" asp-for="SigningKey"/>
                     <input type="hidden" asp-for="SigningKeyPath"/>
+                    <input type="hidden" asp-for="PayJoinEndpointUrl"/>
                     @if (!Model.HasErrors)
                     {
                         <button type="submit" class="btn btn-primary" name="command" value="broadcast">Broadcast it</button>
                         <span> or </span>
                     }
                     <button type="submit" class="btn btn-secondary" name="command" value="analyze-psbt">Export as PSBT</button>
-                    @if (!string.IsNullOrEmpty(Model.OriginalPSBT))
-                    {
-                        <span> or </span>
-                        <button type="submit" class="btn btn-secondary" name="command" value="use-original">Skip payjoin</button>
-                    }
+                    @if (!string.IsNullOrEmpty(Model.PayJoinEndpointUrl))
+                     {
+                         <span> or </span>
+                         <button type="submit" class="btn btn-secondary" name="command" value="payjoin">Pay with payjoin</button>
+                     }
                 </form>
             </div>
         </div>

@@ -24,9 +24,9 @@ namespace BTCPayServer.Models.InvoicingModels
             public bool IsLightning { get; set; }
             public string CryptoCode { get; set; }
         }
-        public string HtmlTitle { get; set; }
         public string CustomCSSLink { get; set; }
         public string CustomLogoLink { get; set; }
+        public string HtmlTitle { get; set; }
         public string DefaultLang { get; set; }
         public bool LightningAmountInSatoshi { get; set; }
         public List<AvailableCrypto> AvailableCryptos { get; set; } = new List<AvailableCrypto>();

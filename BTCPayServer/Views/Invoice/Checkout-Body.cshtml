@@ -2,16 +2,18 @@
 
 <div class="top-header">
     <div class="header">
-        <div class="header__icon">
-            @if (!string.IsNullOrEmpty(Model.CustomLogoLink))
-            {
+        @if (!string.IsNullOrEmpty(Model.CustomLogoLink))
+        {
+            <div class="header__icon">
                 <img class="header__icon__img" src="@Model.CustomLogoLink" height="40">
-            }
-            else
-            {
-                <img class="header__icon__img" src="~/img/logo-white.png" height="40">
-            }
-        </div>
+            </div>
+        }
+        else
+        {
+            <div class="header__iconcentered">
+                <img class="header__iconcentered__img">
+            </div>
+        }
         <div class="close-icon close-action" v-on:click="close">
             &#10006;
         </div>
@@ -19,7 +21,7 @@
     <div class="timer-row" v-bind:class="{ 'expiring-soon': expiringSoon }">
         <div class="timer-row__progress-bar" v-bind:style="{ 'width': expirationPercentage+ '%' }"></div>
         <div class="timer-row__spinner" v-if="!invoiceUnpayable && !invoicePaid">
-            <partial name="Checkout-Spinner"/>
+            <partial name="Checkout-Spinner" />
         </div>
         <div class="timer-row__message">
             <span v-if="invoiceUnpayable">
@@ -47,7 +49,7 @@
             {
                 <div class="paywithRowRight cursorPointer" v-on:click="openPaymentMethodDialog">
                     <span class="payment__currencies " v-show="!changingCurrencies">
-                        <img v-bind:src="srvModel.cryptoImage"/>
+                        <img v-bind:src="srvModel.cryptoImage" />
                         <span>{{srvModel.paymentMethodName}} ({{srvModel.cryptoCodeSrv}})</span>
                         <span v-show="srvModel.isLightning">&#9889;</span>
                         <span class="clickable_indicator fa fa-angle-right"></span>
@@ -59,7 +61,7 @@
                         {
                             <li class="vexmenuitem">
                                 <a href="@crypto.Link" onclick="closePaymentMethodDialog('@crypto.PaymentMethodId');return false;">
-                                    <img alt="@crypto.PaymentMethodName" src="@crypto.CryptoImage"/>
+                                    <img alt="@crypto.PaymentMethodName" src="@crypto.CryptoImage" />
                                     @crypto.PaymentMethodName
                                     @(crypto.IsLightning ? Html.Raw("&#9889;") : null)
                                     <span>@crypto.CryptoCode</span>
@@ -72,13 +74,13 @@
             else
             {
                 <div class="payment__currencies_noborder">
-                    <img v-bind:src="srvModel.cryptoImage"/>
+                    <img v-bind:src="srvModel.cryptoImage" />
                     <span>{{srvModel.paymentMethodName}} ({{srvModel.cryptoCodeSrv}})</span>
                     <span v-show="srvModel.isLightning">&#9889;</span>
                 </div>
             }
             <div class="payment__spinner" v-show="changingCurrencies || loading">
-                <partial name="Checkout-Spinner"/>
+                <partial name="Checkout-Spinner" />
             </div>
         </div>
     </div>
@@ -147,14 +149,13 @@
             </div>
         </div>
     </line-items>
-    <component
-        v-if="srvModel.uiSettings && srvModel.uiSettings.checkoutHeaderVueComponentName"
-        v-bind:srv-model="srvModel"
-        v-bind:is="srvModel.uiSettings.checkoutHeaderVueComponentName">
+    <component v-if="srvModel.uiSettings && srvModel.uiSettings.checkoutHeaderVueComponentName"
+               v-bind:srv-model="srvModel"
+               v-bind:is="srvModel.uiSettings.checkoutHeaderVueComponentName">
     </component>
 </div>
 
-<div class="payment-box" v-bind:class="{ 'payment-box--with-recommended-fee': showRecommendedFee && !showEmailForm }">
+<div class="payment-box" v-bind:class="{ 'with-recommended-fee': showRecommendedFee && !showEmailForm }">
     <div class="bp-view enter-contact-email" id="emailAddressView" v-bind:class="{ 'active': showEmailForm}">
         <form class="manual__step-one refund-address-form contact-email-form" id="emailAddressForm" name="emailAddressForm" novalidate="" v-on:submit.prevent="onEmailSubmit">
             <div class="manual__step-one__header">
@@ -175,7 +176,7 @@
                     <button type="submit" class="action-button" style="margin-top: 15px;" v-bind:disabled="emailAddressFormSubmitting" v-bind:class="{ 'loading': emailAddressFormSubmitting }">
                         <span class="button-text">{{$t("Continue")}}</span>
                         <div class="loader-wrapper">
-                            <partial name="Checkout-Spinner"/>
+                            <partial name="Checkout-Spinner" />
                         </div>
                     </button>
                 </bp-loading-button>
@@ -183,10 +184,9 @@
         </form>
     </div>
     <div v-if="showPaymentUI">
-        <component
-            v-if="srvModel.uiSettings && srvModel.uiSettings.checkoutBodyVueComponentName"
-            v-bind:srv-model="srvModel"
-            v-bind:is="srvModel.uiSettings.checkoutBodyVueComponentName">
+        <component v-if="srvModel.uiSettings && srvModel.uiSettings.checkoutBodyVueComponentName"
+                   v-bind:srv-model="srvModel"
+                   v-bind:is="srvModel.uiSettings.checkoutBodyVueComponentName">
         </component>
     </div>
 
@@ -232,7 +232,7 @@
                 <div class="expired__text expired__text__smaller">
                     <span class="expired__text__bullet">{{$t("Invoice ID")}}</span>:
                     {{srvModel.invoiceId}}
-                    <br/>
+                    <br />
                     <span class="expired__text__bullet">{{$t("Order ID")}}</span>:
                     {{srvModel.orderId}}
                 </div>

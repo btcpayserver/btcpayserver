@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
@@ -18,6 +19,13 @@ namespace BTCPayServer.Client
             var response = await _httpClient.SendAsync(
                 CreateHttpRequest($"api/v1/stores/{storeId}"), token);
             return await HandleResponse<StoreData>(response);
+        }
+        
+        public virtual async Task RemoveStore(string storeId, CancellationToken token = default)
+        {
+            var response = await _httpClient.SendAsync(
+                CreateHttpRequest($"api/v1/stores/{storeId}", method: HttpMethod.Delete), token);
+            HandleResponse(response);
         }
     }
 }

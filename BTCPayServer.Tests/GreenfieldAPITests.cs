@@ -179,6 +179,15 @@ namespace BTCPayServer.Tests
                 var store = await client.GetStore(user.StoreId);
                 Assert.Equal(user.StoreId,store.Id);
                 Assert.Equal(store.Name,stores.First().Name);
+                
+                //remove store
+                await client.RemoveStore(user.StoreId);
+                await AssertHttpError(403, async () =>
+                {
+                    await client.GetStore(user.StoreId);
+                });
+                //remove it from the tester state as it will not be happy we removed it ourselves
+                tester.Stores.Remove(user.StoreId);
             }
         }
         

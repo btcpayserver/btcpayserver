@@ -120,7 +120,8 @@ namespace BTCPayServer.Tests
 
             var urlBlacklist = new string[]
             {
-                "https://www.btse.com" // not allowing to be hit from circleci
+                "https://www.btse.com", // not allowing to be hit from circleci
+                "https://www.bitpay.com" // not allowing to be hit from circleci
             };
 
             foreach (var match in regex.Matches(text).OfType<Match>())

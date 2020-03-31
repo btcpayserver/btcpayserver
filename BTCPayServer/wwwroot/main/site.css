@@ -11,9 +11,6 @@ html {
 .input-group-clear {
     display: none;
 }
-.only-for-js {
-    display: block;
-}
 
 .wraptextAuto {
     max-width: 300px;

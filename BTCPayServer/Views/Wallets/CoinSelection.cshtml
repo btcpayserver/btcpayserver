@@ -66,128 +66,139 @@
 
 <script src="~/bundles/wallet-coin-selection-bundle.min.js" type="text/javascript"></script>
 <script>
-$(function () {
-            
-    Vue.directive('tooltip', function(el, binding){
+$(function() {
+
+    Vue.directive('tooltip', function(el, binding) {
         $(el).tooltip({
-                 title: binding.value,
-                 placement: binding.arg||"auto",
-                 trigger: 'hover'             
-             });
+            title: binding.value,
+            placement: binding.arg || "auto",
+            trigger: 'hover'
+        });
     });
-    
+
     function roundNumber(number, decimals) {
-        var newnumber = new Number(number+'').toFixed(parseInt(decimals));
-        return parseFloat(newnumber); 
+        var newnumber = new Number(number + '').toFixed(parseInt(decimals));
+        return parseFloat(newnumber);
     }
-        
-   new Vue({
-       el: '#coin-selection-app',
-       data: {
-           filter: "",
-           items: @Safe.Json(Model.InputsAvailable),
-           selectedInputs: $("#SelectedInputs").val(),
-           page: 0,
-           pageSize: 10,
-           showSelectedOnly: false
-       },
-       watch:{
-           filter: function(){ this.handle();},
-           showSelectedOnly: function(){ this.handle();},
-           selectedInputs: function(){ this.handle();},
-           
-       },
-       computed: {
-           currentItems: function(){
-               return this.showSelectedOnly? this.selectedItems: this.items;
-           },
-           pageStart: function(){
-               return  this.page == 0? 0 : this.page * this.pageSize;
-           },
-           pageEnd: function(){
-               var result = this.pageStart + this.pageSize;
-               if(result > this.currentItems.length){
-                   result = this.currentItems.length;
-               }
-                          return result;
-                      },
-           filteredItems: function(){
-               
-               var result = [];
-               if(!this.filter){
-                   var self = this;
-                   result = this.currentItems.map(function(currentItem){ return {...currentItem, selected: self.selectedInputs.indexOf(currentItem.outpoint) != -1}});
-               }else{
-                var f = this.filter.toLowerCase();
-                for(var i = 0; i < this.currentItems.length; i++) {
-                    var currentItem = this.currentItems[i];
-                    if(currentItem.outpoint.indexOf(f) != -1 ||
-                       currentItem.amount.toString().indexOf(f) != -1||
-                       (currentItem.comment && currentItem.comment.toLowerCase().indexOf(f) != -1) ||
-                       (currentItem.labels && currentItem.labels.filter(function(l){ return l.value.toLowerCase().indexOf(f) != -1} ).length > 0)){
-                        result.push({...currentItem, selected: this.selectedInputs.indexOf(currentItem.outpoint) != -1});
+
+    new Vue({
+        el: '#coin-selection-app',
+        data: {
+            filter: "",
+            items: @Safe.Json(Model.InputsAvailable),
+            selectedInputs: $("#SelectedInputs").val(),
+            page: 0,
+            pageSize: 10,
+            showSelectedOnly: false
+        },
+        watch: {
+            filter: function() {
+                this.page = 0;
+                this.handle();
+            },
+            showSelectedOnly: function() {
+                this.handle();
+            },
+            selectedInputs: function() {
+                this.handle();
+            }
+        },
+        computed: {
+            currentItems: function() {
+                return this.showSelectedOnly ? this.selectedItems : this.items;
+            },
+            pageStart: function() {
+                return this.page == 0 ? 0 : this.page * this.pageSize;
+            },
+            pageEnd: function() {
+                var result = this.pageStart + this.pageSize;
+                if (result > this.currentItems.length) {
+                    result = this.currentItems.length;
+                }
+                return result;
+            },
+            filteredItems: function() {
+                var result = [];
+                if (!this.filter) {
+                    var self = this;
+                    result = this.currentItems.map(function(currentItem) {
+                        return {...currentItem, selected: self.selectedInputs.indexOf(currentItem.outpoint) != -1
+                        }
+                    });
+                } else {
+                    var f = this.filter.toLowerCase();
+                    for (var i = 0; i < this.currentItems.length; i++) {
+                        var currentItem = this.currentItems[i];
+                        if (currentItem.outpoint.indexOf(f) != -1 ||
+                            currentItem.amount.toString().indexOf(f) != -1 ||
+                            (currentItem.comment && currentItem.comment.toLowerCase().indexOf(f) != -1) ||
+                            (currentItem.labels && currentItem.labels.filter(function(l) {
+                                return l.value.toLowerCase().indexOf(f) != -1
+                            }).length > 0)) {
+                            result.push({...currentItem, selected: this.selectedInputs.indexOf(currentItem.outpoint) != -1
+                            });
+                        }
                     }
-                }   
-               }
-               return result.slice(this.pageStart, this.pageEnd);
-           },
-           selectedItems: function() {
-               var result = [];
-               for(var i = 0; i < this.items.length; i++) {
-                   var currentItem = this.items[i];
-                   
-                   if(this.selectedInputs.indexOf(currentItem.outpoint) != -1){
-                       result.push(currentItem);
-                   }
-               }
-               return result;
-           },
-           selectedAmount: function(){
-               var result = 0;
-               for(let i = 0; i <  this.selectedItems.length; i++) {
-                 result += this.selectedItems[i].amount;
-               }
-               return roundNumber(result,12);
-           }
-       },
-       mounted: function() {
-           var self = this;
-           self.selectedInputs = $("#SelectedInputs").val();
-           $(".crypto-balance-link").text(this.selectedAmount);
-           $("#SelectedInputs").on("input change", function(){
-               self.selectedInputs = $("#SelectedInputs").val();
-           });
-       }, 
-       methods: {
-           handle: function(){
-               if(this.selectedInputs.length == 0){
-                   this.showSelectedOnly = false;
-               }
-               if(this.currentItems.length < this.pageEnd){
-                   this.page = 0;
-               }               
-           },
-           toggleItem: function(evt, item, toggle){
-               if(evt.target.tagName == "A"){
-                   return;
-               }
-               var res= $("#SelectedInputs").val();      
-               if(toggle){
-                   res.push(item.outpoint);
-                   
-               }else{
-                   res.splice(this.selectedInputs.indexOf(item.outpoint),1);
-               }
-                         
-               $("select option").each(function(){
-                   var selected = res.indexOf($(this).attr("value")) !== -1;
-                   $(this).attr("selected",selected? "selected": null);
-               });
-               
-               this.selectedInputs = res;
+                }
+                return result.slice(this.pageStart, this.pageEnd);
+            },
+            selectedItems: function() {
+                var result = [];
+                for (var i = 0; i < this.items.length; i++) {
+                    var currentItem = this.items[i];
+
+                    if (this.selectedInputs.indexOf(currentItem.outpoint) != -1) {
+                        result.push(currentItem);
+                    }
+                }
+                return result;
+            },
+            selectedAmount: function() {
+                var result = 0;
+                for (let i = 0; i < this.selectedItems.length; i++) {
+                    result += this.selectedItems[i].amount;
+                }
+                return roundNumber(result, 12);
+            }
+        },
+        mounted: function() {
+            var self = this;
+            self.selectedInputs = $("#SelectedInputs").val();
+            $(".crypto-balance-link").text(this.selectedAmount);
+            $("#SelectedInputs").on("input change", function() {
+                self.selectedInputs = $("#SelectedInputs").val();
+            });
+        },
+        methods: {
+            handle: function() {
+                if (this.selectedInputs.length == 0) {
+                    this.showSelectedOnly = false;
+                }
+                if (this.currentItems.length < this.pageEnd) {
+                    this.page = 0;
+                }
+            },
+            toggleItem: function(evt, item, toggle) {
+                if (evt.target.tagName == "A") {
+                    return;
+                }
+                var res = $("#SelectedInputs").val();
+                if (toggle) {
+                    res.push(item.outpoint);
+
+                } else {
+                    res.splice(this.selectedInputs.indexOf(item.outpoint), 1);
+                }
+
+                $("select option").each(function() {
+                    var selected = res.indexOf($(this).attr("value")) !== -1;
+                    $(this).attr("selected", selected ? "selected" : null);
+                });
+
+                this.selectedInputs = res;
                 $(".crypto-balance-link").text(this.selectedAmount);
-           }
-       }          
-   });
+            }
+        }
+    });
 });
 </script>

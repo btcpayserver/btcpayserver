@@ -96,7 +96,7 @@ namespace BTCPayServer.Client
             foreach (KeyValuePair<string, object> keyValuePair in payload)
             {
                 UriBuilder uriBuilder = uri;
-                if (keyValuePair.Value.GetType().GetInterfaces().Contains((typeof(IEnumerable))))
+                if (!(keyValuePair.Value is string) && keyValuePair.Value.GetType().GetInterfaces().Contains((typeof(IEnumerable))))
                 {
                     foreach (var item in (IEnumerable)keyValuePair.Value)
                     {

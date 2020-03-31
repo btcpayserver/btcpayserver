@@ -168,10 +168,17 @@ namespace BTCPayServer.Tests
                 user.GrantAccess();
                 await user.MakeAdmin();
                 var client = await user.CreateClient(Policies.Unrestricted);
+                
+                //list stores
                 var stores = await client.GetStores();
                 Assert.NotNull(stores);
                 Assert.Single(stores);
                 Assert.Equal(user.StoreId,stores.First().Id);
+
+                //get store
+                var store = await client.GetStore(user.StoreId);
+                Assert.Equal(user.StoreId,store.Id);
+                Assert.Equal(store.Name,stores.First().Name);
             }
         }
         

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Stores;
@@ -62,6 +63,16 @@ namespace BTCPayServer.Controllers.GreenField
             return Ok();
         }
         
+        [HttpPost("~/api/v1/stores")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<ActionResult<Client.Models.StoreData>> CreateStore(CreateStoreRequest request)
+        {
+            if (request is null)
+                return BadRequest();
+            var store = await _storeRepository.CreateStore(_userManager.GetUserId(User), request.Name);
+            return Ok(FromModel(store));
+        }
+
         private static Client.Models.StoreData FromModel(Data.StoreData data)
         {
             return new Client.Models.StoreData()

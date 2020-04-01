@@ -169,25 +169,30 @@ namespace BTCPayServer.Tests
                 await user.MakeAdmin();
                 var client = await user.CreateClient(Policies.Unrestricted);
                 
+                //create store
+                var newStore = await client.CreateStore(new CreateStoreRequest() {Name = "A"});
+                
                 //list stores
                 var stores = await client.GetStores();
+                var storeIds = stores.Select(data => data.Id);
+                var storeNames = stores.Select(data => data.Name);
                 Assert.NotNull(stores);
-                Assert.Single(stores);
-                Assert.Equal(user.StoreId,stores.First().Id);
+                Assert.Equal(2, stores.Count());
+                Assert.Contains(newStore.Id, storeIds);
+                Assert.Contains(user.StoreId, storeIds);
 
                 //get store
                 var store = await client.GetStore(user.StoreId);
                 Assert.Equal(user.StoreId,store.Id);
-                Assert.Equal(store.Name,stores.First().Name);
+                Assert.Contains(store.Name,storeNames);
                 
                 //remove store
-                await client.RemoveStore(user.StoreId);
+                await client.RemoveStore(newStore.Id);
                 await AssertHttpError(403, async () =>
                 {
-                    await client.GetStore(user.StoreId);
+                    await client.GetStore(newStore.Id);
                 });
-                //remove it from the tester state as it will not be happy we removed it ourselves
-                tester.Stores.Remove(user.StoreId);
+                Assert.Single(await client.GetStores());
             }
         }
         

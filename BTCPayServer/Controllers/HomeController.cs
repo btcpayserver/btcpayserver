@@ -116,10 +116,14 @@ namespace BTCPayServer.Controllers
         [Route("swagger/v1/swagger.json")]
         public async Task<IActionResult> Swagger()
         {
-            var fi = _fileProvider.GetFileInfo("swagger/v1/swagger.template.json");
-            using var stream = fi.CreateReadStream();
-            using var reader = new StreamReader(fi.CreateReadStream());
-            var json = JObject.Parse(await reader.ReadToEndAsync());
+            JObject json = new JObject();
+            var directoryContents = _fileProvider.GetDirectoryContents("swagger/v1");
+            foreach (IFileInfo fi in directoryContents)
+            {
+                await using var stream = fi.CreateReadStream();
+                using var reader = new StreamReader(fi.CreateReadStream());
+                json.Merge(JObject.Parse(await reader.ReadToEndAsync()));
+            }
             var servers = new JArray();
             servers.Add(new JObject(new JProperty("url", HttpContext.Request.GetAbsoluteRoot())));
             json["servers"] = servers;

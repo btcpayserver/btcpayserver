@@ -50,7 +50,10 @@ namespace BTCPayServer.Controllers.GreenField
                 UserId = _userManager.GetUserId(User),
                 Label = request.Label
             };
-            key.Permissions = string.Join(";", request.Permissions.Select(p => p.ToString()).Distinct().ToArray());
+            key.SetBlob(new APIKeyBlob()
+            {
+                Permissions = request.Permissions.Select(p => p.ToString()).Distinct().ToArray()
+            });
             await _apiKeyRepository.CreateKey(key);
             return Ok(FromModel(key));
         }
@@ -82,7 +85,7 @@ namespace BTCPayServer.Controllers.GreenField
         {
             return new ApiKeyData()
             {
-                Permissions = Permission.ToPermissions(data.Permissions).ToArray(),
+                Permissions = Permission.ToPermissions(data.GetBlob().Permissions).ToArray(),
                 ApiKey = data.Id,
                 Label = data.Label ?? string.Empty
             };

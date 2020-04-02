@@ -129,7 +129,7 @@ namespace BTCPayServer.Controllers
                 }
             }
 
-            var permissions = Permission.ToPermissions(viewModel.Permissions).ToHashSet();
+            var permissions = Permission.ToPermissions(viewModel.Permissions.Split(';')).ToHashSet();
             if (permissions.Contains(Permission.Create(Policies.CanModifyStoreSettings)))
             {
                 if (!viewModel.SelectiveStores &&
@@ -238,7 +238,10 @@ namespace BTCPayServer.Controllers
                 UserId = _userManager.GetUserId(User),
                 Label = viewModel.Label
             };
-            key.Permissions = string.Join(";", GetPermissionsFromViewModel(viewModel).Select(p => p.ToString()).Distinct().ToArray());
+            key.SetBlob(new APIKeyBlob()
+            {
+                Permissions = GetPermissionsFromViewModel(viewModel).Select(p => p.ToString()).Distinct().ToArray()
+            });
             await _apiKeyRepository.CreateKey(key);
             return key;
         }

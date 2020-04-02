@@ -52,7 +52,7 @@ namespace BTCPayServer.Security.GreenField
 
             List<Claim> claims = new List<Claim>();
             claims.Add(new Claim(_identityOptions.CurrentValue.ClaimsIdentity.UserIdClaimType, key.UserId));
-            claims.AddRange(Permission.ToPermissions(key.Permissions).Select(permission =>
+            claims.AddRange(Permission.ToPermissions(key.GetBlob().Permissions).Select(permission =>
                 new Claim(GreenFieldConstants.ClaimTypes.Permission, permission.ToString())));
             return AuthenticateResult.Success(new AuthenticationTicket(
                 new ClaimsPrincipal(new ClaimsIdentity(claims, GreenFieldConstants.AuthenticationType)),

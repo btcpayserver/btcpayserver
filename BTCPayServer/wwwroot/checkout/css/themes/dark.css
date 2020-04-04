@@ -36,7 +36,7 @@ html {
 }
 
 .invoice {
-    background-color: #333333;
+    background-color: #333333; /* messes up bottom border radius */
 }
 
 .expired__body {
@@ -108,3 +108,11 @@ canvas {
 .recommended-fee {
     color: #fff;
 }
+
+.powered__by__btcpayserver a {
+    color: #51b13e;
+}
+
+    .powered__by__btcpayserver a:hover {
+        color: #418e32;
+    }

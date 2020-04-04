@@ -11575,3 +11575,10 @@ low-fee-timeline {
     .btn-link:hover {
         color: #418e32;
     }
+
+.powered__by__btcpayserver {
+    margin-top: 10px;
+    text-align: center;
+    color: #818a91;
+    font-size: small;
+}

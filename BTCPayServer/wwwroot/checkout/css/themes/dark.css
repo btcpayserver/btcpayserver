@@ -1,0 +1,110 @@
+/* based on https://github.com/btcpayserver/btcpayserver-doc/blob/master/Theme.md#blockstream */
+
+html {
+    background-color: #292929;
+}
+
+.modal.page {
+    background-color: #292929;
+    background-image: linear-gradient(to bottom, #404040, #292929);
+}
+
+/* centering for new default design */
+.top-header .header__iconcentered {
+    display: inline-block;
+    vertical-align: middle;
+    position: relative;
+    width: 100px;
+    height: 50px;
+    margin: 10px auto 0px;
+}
+
+.header__iconcentered__img {
+    display: block;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    background: url(dark-logo.svg) no-repeat;
+    background-size: 92.5px 40px;
+    width: 92.5px;
+    height: 40px;
+    padding-left: 92.5px; /* Must be equal to width */
+}
+/* eof */
+
+.top-header {
+    background-color: #292929;
+}
+
+.invoice {
+    background-color: #333333;
+}
+
+.expired__body {
+    color: #fff;
+}
+
+.currency-selection {
+    background-color: #15181c;
+    border-bottom: 1px solid #565d6e;
+    color: #fff;
+}
+
+line-items {
+    background-color: #111316;
+    color: #565d6e !important;
+    border-top: 1px solid #565d6e !important;
+}
+
+.buyerTotalLine {
+    border-top: 1px solid #202224;
+    background-color: #15181c;
+    color: #fff;
+}
+
+.payment-tabs {
+    background-color: #15181c;
+    color: #fff;
+    border-top: 1px solid #565d6e;
+}
+
+.payment-tabs__tab.active {
+    background-color: #333333;
+    color: #fff;
+}
+
+
+canvas {
+    border: 5px solid #fff;
+}
+
+#prettydropdown-DefaultLang ul {
+    color: #565d6e !important;
+    background-color: #111316 !important;
+}
+
+    #prettydropdown-DefaultLang ul li.hover {
+        color: #fff !important;
+        background-color: #000 !important;
+    }
+
+.manual__step-one__header {
+    color: #ffffff;
+}
+
+.manual__step-one__instructions {
+    color: #ffffff;
+}
+
+.payment__currencies:hover {
+    background: rgba(248, 248, 248,0.1);
+}
+
+
+.content-faded, .manual__step-one__instructions, .manual__step-two__instructions {
+    color: #fff;
+}
+
+
+.recommended-fee {
+    color: #fff;
+}

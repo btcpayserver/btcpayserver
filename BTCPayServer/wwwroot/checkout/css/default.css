@@ -8246,7 +8246,6 @@ strong {
     padding: 20px 20px;
     color: #515664;
     font-weight: 300;
-    opacity: .7;
 }
 
 .modal-content {
@@ -9278,7 +9277,8 @@ strong {
 
 .recommended-fee {
     box-sizing: border-box;
-    color: #818EA9;
+    font-size: smaller;
+    color: #515664;
     position: absolute;
     top: calc(100% - 40px);
     left: 50%;

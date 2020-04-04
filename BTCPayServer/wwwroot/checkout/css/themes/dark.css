@@ -82,7 +82,7 @@ canvas {
     background-color: #111316 !important;
 }
 
-    #prettydropdown-DefaultLang ul li.hover {
+    #prettydropdown-DefaultLang ul.active li:hover {
         color: #fff !important;
         background-color: #000 !important;
     }

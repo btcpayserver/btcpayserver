@@ -9276,9 +9276,8 @@ strong {
 
 .recommended-fee {
     box-sizing: border-box;
-    color: #818EA9;
-    font-size: 14px;
-    font-weight: 300;
+    font-size: smaller;
+    color: #515664;
     position: absolute;
     top: calc(100% - 40px);
     left: 50%;
@@ -9413,7 +9412,6 @@ strong {
     text-align: center;
     width: inherit;
     display: table;
-    background-color: #fff;
     color: #000;
     font-size: 0px;
     width: 100%;
@@ -9433,6 +9431,7 @@ strong {
     .btnGroupLnd button {
         display: table-cell;
         border: solid 1px #24725B;
+        background-color: #fff;
         padding: 6px 9px;
         margin: 0px;
         font-size: 12px;
@@ -9440,6 +9439,7 @@ strong {
         text-overflow: ellipsis;
         overflow: hidden;
         white-space: nowrap;
+        transition: all .2s ease-in-out;
     }
 
         .btnGroupLnd button:hover {

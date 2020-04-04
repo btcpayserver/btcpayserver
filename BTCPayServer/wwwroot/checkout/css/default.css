@@ -8556,16 +8556,17 @@ strong {
 }
 
     .payment-tabs__tab.active {
-        color: #214497;
+        background: #f5f5f5;
         font-weight: 400;
+        transition: all .2s ease;
     }
 
 .payment-tabs__slider {
     position: absolute;
-    height: 5px;
+    height: 3px;
     width: 50%;
     background: #51b13e;
-    top: 0;
+    bottom: 0;
     right: 50%;
     transition: all .2s ease;
 }

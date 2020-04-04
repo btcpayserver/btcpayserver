@@ -9413,7 +9413,6 @@ strong {
     text-align: center;
     width: inherit;
     display: table;
-    background-color: #fff;
     color: #000;
     font-size: 0px;
     width: 100%;
@@ -9432,7 +9431,8 @@ strong {
 
     .btnGroupLnd button {
         display: table-cell;
-        border: solid 1px #418e32;
+        border: solid 1px #51b13e;
+        background-color: #fff;
         padding: 6px 9px;
         margin: 0px;
         font-size: 12px;
@@ -9440,6 +9440,7 @@ strong {
         text-overflow: ellipsis;
         overflow: hidden;
         white-space: nowrap;
+        transition: all .2s ease-in-out;
     }
 
         .btnGroupLnd button:hover {

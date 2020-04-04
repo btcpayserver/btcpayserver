@@ -1893,48 +1893,6 @@ fieldset:disabled a.btn {
     .show > .btn-outline-danger.dropdown-toggle:focus {
       box-shadow: 0 0 0 0.2rem var(--btcpay-color-danger-backdrop); }
 
-.btn-outline-light {
-  color: var(--btcpay-color-light);
-  border-color: var(--btcpay-color-light); }
-  .btn-outline-light:hover {
-    color: var(--btcpay-color-neutral-900);
-    background-color: var(--btcpay-color-light);
-    border-color: var(--btcpay-color-light); }
-  .btn-outline-light:focus, .btn-outline-light.focus {
-    box-shadow: 0 0 0 0.2rem var(--btcpay-color-light-backdrop); }
-  .btn-outline-light.disabled, .btn-outline-light:disabled {
-    color: var(--btcpay-color-light);
-    background-color: transparent; }
-  .btn-outline-light:not(:disabled):not(.disabled):active, .btn-outline-light:not(:disabled):not(.disabled).active,
-  .show > .btn-outline-light.dropdown-toggle {
-    color: var(--btcpay-color-neutral-900);
-    background-color: var(--btcpay-color-light);
-    border-color: var(--btcpay-color-light); }
-    .btn-outline-light:not(:disabled):not(.disabled):active:focus, .btn-outline-light:not(:disabled):not(.disabled).active:focus,
-    .show > .btn-outline-light.dropdown-toggle:focus {
-      box-shadow: 0 0 0 0.2rem var(--btcpay-color-light-backdrop); }
-
-.btn-outline-dark {
-  color: var(--btcpay-color-dark);
-  border-color: var(--btcpay-color-dark); }
-  .btn-outline-dark:hover {
-    color: var(--btcpay-color-neutral-100);
-    background-color: var(--btcpay-color-dark);
-    border-color: var(--btcpay-color-dark); }
-  .btn-outline-dark:focus, .btn-outline-dark.focus {
-    box-shadow: 0 0 0 0.2rem var(--btcpay-color-dark-backdrop); }
-  .btn-outline-dark.disabled, .btn-outline-dark:disabled {
-    color: var(--btcpay-color-dark);
-    background-color: transparent; }
-  .btn-outline-dark:not(:disabled):not(.disabled):active, .btn-outline-dark:not(:disabled):not(.disabled).active,
-  .show > .btn-outline-dark.dropdown-toggle {
-    color: var(--btcpay-color-white);
-    background-color: var(--btcpay-color-dark);
-    border-color: var(--btcpay-color-dark); }
-    .btn-outline-dark:not(:disabled):not(.disabled):active:focus, .btn-outline-dark:not(:disabled):not(.disabled).active:focus,
-    .show > .btn-outline-dark.dropdown-toggle:focus {
-      box-shadow: 0 0 0 0.2rem var(--btcpay-color-dark-backdrop); }
-
 .btn-link {
   font-weight: 400;
   color: var(--btcpay-body-color-link);
@@ -3535,24 +3493,6 @@ input[type="button"].btn-block {
     border-top-color: var(--btcpay-color-danger-accent); }
   .alert-danger .alert-link {
     color: var(--btcpay-color-danger-accent); }
-
-.alert-light {
-  color: var(--btcpay-color-light-accent);
-  background-color: var(--btcpay-color-light-backdrop);
-  border-color: var(--btcpay-color-light-backdrop); }
-  .alert-light hr {
-    border-top-color: var(--btcpay-color-light-accent); }
-  .alert-light .alert-link {
-    color: var(--btcpay-color-light-accent); }
-
-.alert-dark {
-  color: var(--btcpay-color-dark-accent);
-  background-color: var(--btcpay-color-dark-backdrop);
-  border-color: var(--btcpay-color-dark-backdrop); }
-  .alert-dark hr {
-    border-top-color: var(--btcpay-color-dark-accent); }
-  .alert-dark .alert-link {
-    color: var(--btcpay-color-dark-accent); }
 
 @keyframes progress-bar-stripes {
   from {
@@ -5247,18 +5187,6 @@ button.bg-dark:focus {
   overflow: visible;
   clip: auto;
   white-space: normal; }
-
-.shadow-sm {
-  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important; }
-
-.shadow {
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important; }
-
-.shadow-lg {
-  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important; }
-
-.shadow-none {
-  box-shadow: none !important; }
 
 .w-25 {
   width: 25% !important; }

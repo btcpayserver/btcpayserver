@@ -83,7 +83,7 @@ namespace BTCPayServer.Controllers
                 TempData.SetStatusMessageModel(new StatusMessageModel()
                 {
                     Html =
-                        $"Error: You need to create at least one store. <a href='{(Url.Action("CreateStore", "UserStores"))}'>Create store</a>",
+                        $"Error: You need to create at least one store. <a href='{(Url.Action("CreateStore", "UserStores"))}' class='alert-link'>Create store</a>",
                     Severity = StatusMessageModel.StatusSeverity.Error
                 });
                 return RedirectToAction(nameof(ListApps));
@@ -103,7 +103,7 @@ namespace BTCPayServer.Controllers
                 TempData.SetStatusMessageModel(new StatusMessageModel()
                 {
                     Html =
-                        $"Error: You need to create at least one store. <a href='{(Url.Action("CreateStore", "UserStores"))}'>Create store</a>",
+                        $"Error: You need to create at least one store. <a href='{(Url.Action("CreateStore", "UserStores"))}' class='alert-link'>Create store</a>",
                     Severity = StatusMessageModel.StatusSeverity.Error
                 });
                 return RedirectToAction(nameof(ListApps));

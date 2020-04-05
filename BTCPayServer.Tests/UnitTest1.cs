@@ -93,24 +93,32 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
-        [Trait("Fast", "Fast")]
+        [Trait("Integration", "Integration")]
         public async Task CheckSwaggerIsConformToSchema()
         {
-            JObject swagger = JObject.Parse(File.ReadAllText(Path.Combine(TestUtils.TryGetSolutionDirectoryInfo().FullName, "BTCPayServer", "wwwroot", "swagger", "v1", "swagger.template.json")));
-            using HttpClient client = new HttpClient();
-            var resp = await client.GetAsync("https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json");
-            var schema = JSchema.Parse(await resp.Content.ReadAsStringAsync());
-            IList<ValidationError> errors;
-            bool valid = swagger.IsValid(schema, out errors);
-            //the schema is not fully compliant to the spec. We ARE allowed to have multiple security schemas. 
-            if (!valid && errors.Count == 1 && errors.Any(error =>
-                    error.Path == "components.securitySchemes.Basic" && error.ErrorType == ErrorType.OneOf))
+            using (var tester = ServerTester.Create())
             {
-                errors = new List<ValidationError>();
-                valid = true;
+                await tester.StartAsync();
+                var sresp = await tester.PayTester.HttpClient.GetAsync("swagger/v1/swagger.json");
+                
+                JObject swagger = JObject.Parse(await sresp.Content.ReadAsStringAsync());
+                using HttpClient client = new HttpClient();
+                var resp = await client.GetAsync(
+                    "https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json");
+                var schema = JSchema.Parse(await resp.Content.ReadAsStringAsync());
+                IList<ValidationError> errors;
+                bool valid = swagger.IsValid(schema, out errors);
+                //the schema is not fully compliant to the spec. We ARE allowed to have multiple security schemas. 
+                if (!valid && errors.Count == 1 && errors.Any(error =>
+                    error.Path == "components.securitySchemes.Basic" && error.ErrorType == ErrorType.OneOf))
+                {
+                    errors = new List<ValidationError>();
+                    valid = true;
+                }
+
+                Assert.Empty(errors);
+                Assert.True(valid);
             }
-            Assert.Empty(errors);
-            Assert.True(valid);
         }
 
         private static async Task CheckLinks(Regex regex, HttpClient httpClient, string file)

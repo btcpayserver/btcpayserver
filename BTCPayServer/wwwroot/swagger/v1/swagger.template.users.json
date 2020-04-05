@@ -1,0 +1,145 @@
+{
+    "paths": {
+        "/api/v1/users/me": {
+            "get": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get current user information",
+                "description": "View information about the current user",
+                "operationId": "Users_GetCurrentUser",
+                "responses": {
+                    "200": {
+                        "description": "Information about the current user",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApplicationUserData"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.user.canviewprofile"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/users": {
+            "post": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Create user",
+                "description": "Create a new user.\n\nThis operation can be called without authentication in any of this cases:\n* There is not any administrator yet on the server,\n* The subscriptions are not disabled in the server's policies.\n\nIf the first administrator is created by this call, subscriptions are automatically disabled.",
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "description": "The email of the new user",
+                                        "nullable": false
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "description": "The password of the new user"
+                                    },
+                                    "isAdministrator": {
+                                        "type": "boolean",
+                                        "description": "Make this user administrator (only if you have the `unrestricted` permission of a server administrator)",
+                                        "nullable": true,
+                                        "default": false
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "responses": {
+                    "201": {
+                        "description": "Information about the new user",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApplicationUserData"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when creating the user",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "If you need to authenticate for this endpoint (ie. the server settings policies lock subscriptions and that an admin already exists)"
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to create a new user (ie. you don't have the `unrestricted` permission on a server administrator or if you are not administrator and registrations are disabled in the server's policies)"
+                    },
+                    "429": {
+                        "description": "DDoS protection if you are creating more than 2 accounts every minutes (non-admin only)"
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.server.cancreateuser"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "ApplicationUserData": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "The id of the new user",
+                        "nullable": false
+                    },
+                    "email": {
+                        "type": "string",
+                        "description": "The email of the new user",
+                        "nullable": false
+                    },
+                    "emailConfirmed": {
+                        "type": "boolean",
+                        "description": "True if the email has been confirmed by the user"
+                    },
+                    "requiresEmailConfirmation": {
+                        "type": "boolean",
+                        "description": "True if the email requires email confirmation to log in"
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Users"
+        }
+    ]
+}

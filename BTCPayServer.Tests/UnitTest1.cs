@@ -2414,6 +2414,7 @@ noninventoryitem:
         {
             using (var tester = ServerTester.Create())
             {
+                var btc = new PaymentMethodId("BTC", PaymentTypes.BTCLike);
                 await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();
@@ -2431,57 +2432,56 @@ noninventoryitem:
                         ItemDesc = "Some \", description",
                         FullNotifications = true
                     }, Facade.Merchant);
-                    var networkFee = Money.Satoshis(10000).ToDecimal(MoneyUnit.BTC);
+                    var nextNetworkFee = (await tester.PayTester.InvoiceRepository.GetInvoice(invoice.Id))
+                        .GetPaymentMethods()[btc]
+                        .GetPaymentMethodDetails()
+                        .AssertType<BitcoinLikeOnChainPaymentMethod>()
+                        .GetNextNetworkFee();
+                    var firstPaymentFee = nextNetworkFee;
+                    switch (networkFeeMode)
+                    {
+                        case  NetworkFeeMode.Never:
+                        case  NetworkFeeMode.MultiplePaymentsOnly:
+                            Assert.Equal(0.0m, nextNetworkFee);
+                            break;
+                        case NetworkFeeMode.Always:
+                            Assert.NotEqual(0.0m, nextNetworkFee);
+                            break;
+                    }
                     var missingMoney = Money.Satoshis(5000).ToDecimal(MoneyUnit.BTC);
                     var cashCow = tester.ExplorerNode;
                     var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, cashCow.Network);
 
                     var due = Money.Parse(invoice.CryptoInfo[0].Due);
                     var productPartDue = (invoice.Price / invoice.Rate);
-                    Logs.Tester.LogInformation($"Product part due is {productPartDue} and due {productPartDue}");
-                    switch (networkFeeMode)
-                    {
-                        case NetworkFeeMode.MultiplePaymentsOnly:
-                        case NetworkFeeMode.Never:
-                            Logs.Tester.LogInformation($"Check that for the first payment, no network fee are included");
-                            Assert.Equal(productPartDue, due.ToDecimal(MoneyUnit.BTC));
-                            break;
-                        case NetworkFeeMode.Always:
-                            Logs.Tester.LogInformation($"Fee of {networkFee} should be added");
-                            Assert.Equal(productPartDue + networkFee, due.ToDecimal(MoneyUnit.BTC));
-                            break;
-                        default:
-                            throw new NotSupportedException(networkFeeMode.ToString());
-                    }
+                    Logs.Tester.LogInformation($"Product part due is {productPartDue} and due {due} with network fee {nextNetworkFee}");
+                    Assert.Equal(productPartDue + nextNetworkFee, due.ToDecimal(MoneyUnit.BTC));
                     var firstPayment = productPartDue - missingMoney;
                     cashCow.SendToAddress(invoiceAddress, Money.Coins(firstPayment));
 
-                        TestUtils.Eventually(() =>
-                        {
+                    await TestUtils.EventuallyAsync(async () =>
+                    {
                         invoice = user.BitPay.GetInvoice(invoice.Id);
                         due = Money.Parse(invoice.CryptoInfo[0].Due);
                         Logs.Tester.LogInformation($"Remaining due after first payment: {due}");
                         Assert.Equal(Money.Coins(firstPayment), Money.Parse(invoice.CryptoInfo[0].Paid));
+                        nextNetworkFee = (await tester.PayTester.InvoiceRepository.GetInvoice(invoice.Id))
+                            .GetPaymentMethods()[btc]
+                            .GetPaymentMethodDetails()
+                            .AssertType<BitcoinLikeOnChainPaymentMethod>()
+                            .GetNextNetworkFee();
                         switch (networkFeeMode)
                         {
+                            case  NetworkFeeMode.Never:
+                                Assert.Equal(0.0m, nextNetworkFee);
+                                break;
                             case NetworkFeeMode.MultiplePaymentsOnly:
-                                Logs.Tester.LogInformation($"Check that for the second payment, network fee of NetworkFee({networkFee}) + MissingMoney({missingMoney}) are included");
-                                Assert.Equal(missingMoney + networkFee, due.ToDecimal(MoneyUnit.BTC));
-                                Assert.Equal(firstPayment + missingMoney + networkFee, Money.Parse(invoice.CryptoInfo[0].TotalDue).ToDecimal(MoneyUnit.BTC));
-                                break;
                             case NetworkFeeMode.Always:
-                                Logs.Tester.LogInformation($"Check that for the second payment, network fee of 2 * NetworkFee({networkFee}) + MissingMoney({missingMoney}) are included");
-                                Assert.Equal(missingMoney + 2 * networkFee, due.ToDecimal(MoneyUnit.BTC));
-                                Assert.Equal(firstPayment + missingMoney + 2 * networkFee, Money.Parse(invoice.CryptoInfo[0].TotalDue).ToDecimal(MoneyUnit.BTC));
+                                Assert.NotEqual(0.0m, nextNetworkFee);
                                 break;
-                            case NetworkFeeMode.Never:
-                                Logs.Tester.LogInformation($"Check that for the second payment, no network fee should be added, due should be equals to MissingMoney({missingMoney})");
-                                Assert.Equal(missingMoney, due.ToDecimal(MoneyUnit.BTC));
-                                Assert.Equal(firstPayment + missingMoney, Money.Parse(invoice.CryptoInfo[0].TotalDue).ToDecimal(MoneyUnit.BTC));
-                                break;
-                            default:
-                                throw new NotSupportedException(networkFeeMode.ToString());
                         }
+                        Assert.Equal(missingMoney + firstPaymentFee + nextNetworkFee, due.ToDecimal(MoneyUnit.BTC));
+                        Assert.Equal(firstPayment + missingMoney + firstPaymentFee + nextNetworkFee, Money.Parse(invoice.CryptoInfo[0].TotalDue).ToDecimal(MoneyUnit.BTC));
                     });
                     cashCow.SendToAddress(invoiceAddress, due);
                     Logs.Tester.LogInformation($"After payment of {due}, the invoice should be paid");

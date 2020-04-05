@@ -9,6 +9,7 @@ using Xunit.Sdk;
 using System.Linq;
 using System.Net.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Xunit;
 
 namespace BTCPayServer.Tests
 {
@@ -41,6 +42,12 @@ namespace BTCPayServer.Tests
             return Path.Combine(directory.FullName, "TestData", relativeFilePath);
         }
 
+        public static T AssertType<T>(this object obj)
+        {
+            Assert.IsType<T>(obj);
+            return (T)obj;
+        }
+        
         public static FormFile GetFormFile(string filename, string content)
         {
             File.WriteAllText(filename, content);

@@ -8,6 +8,11 @@ html {
 .logo {
     height: 45px;
 }
+
+.logo-brand-text {
+    fill: currentColor;
+}
+
 .hide-when-js,
 .input-group-clear {
     display: none;
@@ -40,6 +45,12 @@ html {
 a {
     transition-duration: 0.2s;
     transition-property: background, color;
+}
+
+.navbar-dark .navbar-brand,
+.navbar-dark .navbar-brand:hover,
+.navbar-dark .navbar-brand:focus {
+    color: inherit ;
 }
 
 /* Admin Sidebar Navigation */
@@ -139,11 +150,13 @@ pre {
     cursor: pointer;
 }
 
-    .pin-button:hover {
-        background-color: lightgray;
-    }
+.pin-button:hover {
+    background-color: lightgray;
+}
+
 [v-cloak] > * { display:none }
 [v-cloak]::before { content: "loading…" }
+
 .cursor-pointer{
     cursor: pointer;
 }

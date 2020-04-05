@@ -56,6 +56,10 @@
   --btcpay-body-color-link: var(--btcpay-color-primary);
   --btcpay-body-color-link-accent: var(--btcpay-color-primary-accent);
 
+  --btcpay-header-bg: var(--btcpay-color-white);
+  --btcpay-header-color: var(--btcpay-body-color);
+  --btcpay-header-color-link: var(--btcpay-body-color);
+
   --btcpay-font-size-base: 16px;
   --btcpay-font-family-head: 'Open Sans', 'Helvetica Neue', Arial, sans-serif;
   --btcpay-font-family-base: 'Open Sans', 'Helvetica Neue', Arial, sans-serif;
@@ -69,6 +73,10 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
 
 .bg-dark {
   background-color: var(--btcpay-bg-dark) !important;
+}
+
+.onion {
+  filter: invert();
 }
 
 .table-sm {
@@ -123,6 +131,10 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
 
   .social-logo {
     filter: contrast(0) brightness(200%);
+  }
+
+  .onion {
+    filter: none;
   }
 
   header.masthead::before,

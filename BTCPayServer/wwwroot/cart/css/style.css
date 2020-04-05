@@ -1,3 +1,11 @@
+.logo {
+    height: 40px;
+}
+
+.logo-brand-text {
+    fill: currentColor;
+}
+
 .modal-content {
     border-radius: 0.5rem;
 }

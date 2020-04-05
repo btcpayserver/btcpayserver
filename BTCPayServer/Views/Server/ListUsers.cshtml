@@ -73,9 +73,13 @@
     {
         var skip = Model.Skip;
         if (prevNext == -1)
+        {
             skip = Math.Max(0, Model.Skip - Model.Count);
+        }
         else if (prevNext == 1)
+        {
             skip = Model.Skip + count;
+        }
 
         var act = Url.Action("ListUsers", new
         {

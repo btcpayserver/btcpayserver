@@ -206,8 +206,6 @@
 	  <Content Update="Views\Wallets\WalletTransactions.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
-    <Content Remove="Views\Server\EditGoogleCloudStorageStorageProvider.cshtml">
-    </Content>
 	  <Content Update="Views\Wallets\_Nav.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>

@@ -162,23 +162,6 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GenerateRecoveryCodesWarning()
-        {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null)
-            {
-                throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
-            }
-
-            if (!user.TwoFactorEnabled)
-            {
-                throw new ApplicationException($"Cannot generate recovery codes for user with ID '{user.Id}' because they do not have 2FA enabled.");
-            }
-
-            return View(nameof(GenerateRecoveryCodesWarning));
-        }
-
         private string GenerateQrCodeUri(string email, string unformattedKey)
         {
             return string.Format(CultureInfo.InvariantCulture,

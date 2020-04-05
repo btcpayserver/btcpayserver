@@ -108,13 +108,13 @@ a.nav-link:hover {
     position: absolute;
     left: 0;
     bottom: 0;
-    height: 18px;
     line-height: 18px;
     vertical-align: middle;
-    font-size: 8px;
+    font-size: 80%;
     width: 100%;
     overflow: hidden;
-    color: var(--btcpay-color-footer, var(--btcpay-color-neutral-100));
+    padding: 10px 0;
+    color: var(--btcpay-footer-color, var(--btcpay-color-neutral-100));
     background: var(--btcpay-footer-bg, var(--btcpay-bg-dark));
 }
 

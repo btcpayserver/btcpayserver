@@ -60,6 +60,9 @@
   --btcpay-header-color: var(--btcpay-body-color);
   --btcpay-header-color-link: var(--btcpay-body-color);
 
+  --btcpay-footer-bg: var(--btcpay-brand-dark);
+  --btcpay-footer-color: var(--btcpay-color-neutral-400);
+
   --btcpay-font-size-base: 16px;
   --btcpay-font-family-head: 'Open Sans', 'Helvetica Neue', Arial, sans-serif;
   --btcpay-font-family-base: 'Open Sans', 'Helvetica Neue', Arial, sans-serif;
@@ -119,6 +122,7 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
     --btcpay-bg-dark: var(--btcpay-color-neutral-950);
     --btcpay-header-bg: var(--btcpay-bg-dark);
     --btcpay-footer-bg: var(--btcpay-bg-dark);
+    --btcpay-footer-color: var(--btcpay-color-neutral-600);
     --btcpay-body-bg: var(--btcpay-color-neutral-900);
     --btcpay-body-color: var(--btcpay-color-white);
 

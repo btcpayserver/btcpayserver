@@ -18,8 +18,8 @@
             <div class="form-group">
                 <label asp-for="ThemeCssUri"></label>
                 <select asp-for="ThemeCssUri" class="form-control">
+                    <option value="/main/themes/default.css">Default</option>
                     <option value="/main/themes/classic.css">Classic</option>
-                    <option value="/main/themes/modern.css">Modern</option>
                     <option value="/main/themes/casa.css">Casa</option>
                 </select>
                 <span asp-validation-for="ThemeCssUri" class="text-danger"></span>

@@ -30,6 +30,7 @@
             <div class="form-group">
                 <form method="post" asp-action="WalletPSBT" asp-route-walletId="@this.Context.GetRouteValue("walletId")">
                     <input type="hidden" asp-for="CryptoCode" />
+                    <input type="hidden" asp-for="PayJoinEndpointUrl" />
                     <input type="hidden" asp-for="NBXSeedAvailable" />
                     <input type="hidden" asp-for="PSBT" />
                     <input type="hidden" asp-for="FileName" />

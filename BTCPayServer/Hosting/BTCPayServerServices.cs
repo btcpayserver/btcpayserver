@@ -31,6 +31,7 @@ using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Changelly;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Payments.PayJoin;
 using BTCPayServer.Security;
 using BTCPayServer.Services.PaymentRequests;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -62,6 +63,7 @@ namespace BTCPayServer.Hosting
             {
                 httpClient.Timeout = Timeout.InfiniteTimeSpan;
             });
+            services.AddPayJoinServices();
             services.AddMoneroLike();
             services.TryAddSingleton<SettingsRepository>();
             services.TryAddSingleton<TorServices>();
@@ -257,11 +259,13 @@ namespace BTCPayServer.Hosting
                 {
                     rateLimits.SetZone($"zone={ZoneLimits.Login} rate=1000r/min burst=100 nodelay");
                     rateLimits.SetZone($"zone={ZoneLimits.Register} rate=1000r/min burst=100 nodelay");
+                    rateLimits.SetZone($"zone={ZoneLimits.PayJoin} rate=1000r/min burst=100 nodelay");
                 }
                 else
                 {
                     rateLimits.SetZone($"zone={ZoneLimits.Login} rate=5r/min burst=3 nodelay");
                     rateLimits.SetZone($"zone={ZoneLimits.Register} rate=2r/min burst=2 nodelay");
+                    rateLimits.SetZone($"zone={ZoneLimits.PayJoin} rate=5r/min burst=3 nodelay");
                 }
                 return rateLimits;
             });

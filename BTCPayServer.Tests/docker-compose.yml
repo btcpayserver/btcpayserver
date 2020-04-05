@@ -76,7 +76,7 @@ services:
       - customer_lnd
       - merchant_lnd
   nbxplorer:
-    image: nicolasdorier/nbxplorer:2.1.14
+    image: nicolasdorier/nbxplorer:2.1.21
     restart: unless-stopped
     ports:
       - "32838:32838"
@@ -318,7 +318,6 @@ services:
       - "bitcoin_datadir:/deps/.bitcoin"
     links:
       - bitcoind
-
 volumes:
     sshd_datadir:
     bitcoin_datadir:

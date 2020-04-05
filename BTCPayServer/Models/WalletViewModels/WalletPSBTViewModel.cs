@@ -10,6 +10,7 @@ namespace BTCPayServer.Models.WalletViewModels
 {
     public class WalletPSBTViewModel
     {
+        public string PayJoinEndpointUrl { get; set; }
         public string CryptoCode { get; set; }
         public string Decoded { get; set; }
         string _FileName;

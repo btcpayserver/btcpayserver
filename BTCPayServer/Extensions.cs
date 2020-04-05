@@ -36,6 +36,7 @@ using System.Net;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Newtonsoft.Json.Linq;
+using BTCPayServer.Payments.Bitcoin;
 
 namespace BTCPayServer
 {
@@ -136,15 +137,37 @@ namespace BTCPayServer
             catch { }
             finally { try { webSocket.Dispose(); } catch { } }
         }
-        public static async Task<Dictionary<uint256, TransactionResult>> GetTransactions(this BTCPayWallet client, uint256[] hashes, CancellationToken cts = default(CancellationToken))
+
+        public static IEnumerable<BitcoinLikePaymentData> GetAllBitcoinPaymentData(this InvoiceEntity invoice)
+        {
+            return invoice.GetPayments()
+                    .Where(p => p.GetPaymentMethodId().PaymentType == PaymentTypes.BTCLike)
+                    .Select(p => (BitcoinLikePaymentData)p.GetCryptoPaymentData());
+        }
+
+        public static async Task<Dictionary<uint256, TransactionResult>> GetTransactions(this BTCPayWallet client, uint256[] hashes, bool includeOffchain = false, CancellationToken cts = default(CancellationToken))
         {
             hashes = hashes.Distinct().ToArray();
             var transactions = hashes
-                                        .Select(async o => await client.GetTransactionAsync(o, cts))
+                                        .Select(async o => await client.GetTransactionAsync(o, includeOffchain, cts))
                                         .ToArray();
             await Task.WhenAll(transactions).ConfigureAwait(false);
             return transactions.Select(t => t.Result).Where(t => t != null).ToDictionary(o => o.Transaction.GetHash());
         }
+        
+        public static async Task<PSBT> UpdatePSBT(this ExplorerClientProvider explorerClientProvider, DerivationSchemeSettings derivationSchemeSettings, PSBT psbt)
+        {
+            var result = await explorerClientProvider.GetExplorerClient(psbt.Network.NetworkSet.CryptoCode).UpdatePSBTAsync(new UpdatePSBTRequest()
+            {
+                PSBT = psbt,
+                DerivationScheme = derivationSchemeSettings.AccountDerivation
+            });
+            if (result == null)
+                return null;
+            derivationSchemeSettings.RebaseKeyPaths(result.PSBT);
+            return result.PSBT;
+        }
+        
         public static string WithTrailingSlash(this string str)
         {
             if (str.EndsWith("/", StringComparison.InvariantCulture))

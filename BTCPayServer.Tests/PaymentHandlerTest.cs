@@ -6,10 +6,12 @@ using BTCPayServer.Data;
 using BTCPayServer.Services.Rates;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using BTCPayServer.Logging;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Rating;
+using Logs = BTCPayServer.Tests.Logging.Logs;
 
 namespace BTCPayServer.Tests
 {
@@ -41,8 +43,8 @@ namespace BTCPayServer.Tests
             
             currencyPairRateResult.Add(new CurrencyPair("USD", "BTC"), Task.FromResult(rateResultUSDBTC));
             currencyPairRateResult.Add(new CurrencyPair("BTC", "USD"), Task.FromResult(rateResultBTCUSD));
- 
-            handlerBTC = new BitcoinLikePaymentHandler(null, networkProvider, null, null);
+            InvoiceLogs logs = new InvoiceLogs();
+            handlerBTC = new BitcoinLikePaymentHandler(null, networkProvider, null, null, null);
             handlerLN = new LightningLikePaymentHandler(null, null, networkProvider, null);
             
 #pragma warning restore CS0618               

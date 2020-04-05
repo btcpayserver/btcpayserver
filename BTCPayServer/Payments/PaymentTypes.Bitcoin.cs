@@ -33,12 +33,12 @@ namespace BTCPayServer.Payments
 
         public override IPaymentMethodDetails DeserializePaymentMethodDetails(BTCPayNetworkBase network, string str)
         {
-            return JsonConvert.DeserializeObject<BitcoinLikeOnChainPaymentMethod>(str);
+            return ((BTCPayNetwork) network).ToObject<BitcoinLikeOnChainPaymentMethod>(str);
         }
 
         public override string SerializePaymentMethodDetails(BTCPayNetworkBase network, IPaymentMethodDetails details)
         {
-            return JsonConvert.SerializeObject(details);
+            return ((BTCPayNetwork) network).ToString((BitcoinLikeOnChainPaymentMethod)details);
         }
 
         public override ISupportedPaymentMethod DeserializeSupportedPaymentMethod(BTCPayNetworkBase network, JToken value)

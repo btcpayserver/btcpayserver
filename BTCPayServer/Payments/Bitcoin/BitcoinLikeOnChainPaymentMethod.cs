@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Wallets;
 using NBitcoin;
 using NBXplorer.JsonConverters;
 using Newtonsoft.Json;
@@ -48,7 +49,7 @@ namespace BTCPayServer.Payments.Bitcoin
                 _NetworkFeeRate = value;
             }
         }
-
+        public bool PayjoinEnabled { get; set; }
         // Those properties are JsonIgnore because their data is inside CryptoData class for legacy reason
         [JsonIgnore]
         public FeeRate FeeRate { get; set; }
@@ -56,6 +57,7 @@ namespace BTCPayServer.Payments.Bitcoin
         public Money NextNetworkFee { get; set; }
         [JsonIgnore]
         public String DepositAddress { get; set; }
+
         public BitcoinAddress GetDepositAddress(Network network)
         {
             return string.IsNullOrEmpty(DepositAddress) ? null : BitcoinAddress.Create(DepositAddress, network);

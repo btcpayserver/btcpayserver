@@ -1,10 +1,5 @@
-﻿using System;
-using NBitcoin;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Configuration;
@@ -16,10 +11,12 @@ namespace BTCPayServer.Services
     public class SocketFactory
     {
         private readonly BTCPayServerOptions _options;
+
         public SocketFactory(BTCPayServerOptions options)
         {
             _options = options;
         }
+
         public async Task<Socket> ConnectAsync(EndPoint endPoint, CancellationToken cancellationToken)
         {
             DefaultEndpointConnector connector = new DefaultEndpointConnector();
@@ -31,6 +28,7 @@ namespace BTCPayServer.Services
                     SocksEndpoint = _options.SocksEndpoint
                 });
             }
+
             var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
             try
             {
@@ -40,6 +38,7 @@ namespace BTCPayServer.Services
             {
                 SafeCloseSocket(socket);
             }
+
             return socket;
         }
 
@@ -52,6 +51,7 @@ namespace BTCPayServer.Services
             catch
             {
             }
+
             try
             {
                 socket.Dispose();

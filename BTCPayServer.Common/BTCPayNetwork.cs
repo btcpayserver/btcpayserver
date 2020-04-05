@@ -61,6 +61,8 @@ namespace BTCPayServer
         
         public int MaxTrackedConfirmation { get; internal set; } = 6;
         public string UriScheme { get; internal set; }
+        public bool SupportPayJoin { get; set; } = false;
+
         public KeyPath GetRootKeyPath(DerivationType type)
         {
             KeyPath baseKey;

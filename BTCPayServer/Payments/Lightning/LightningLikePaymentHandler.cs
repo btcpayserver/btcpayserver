@@ -14,6 +14,7 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Rates;
 using NBitcoin;
 using System.Globalization;
+using BTCPayServer.Logging;
 
 namespace BTCPayServer.Payments.Lightning
 {
@@ -40,6 +41,7 @@ namespace BTCPayServer.Payments.Lightning
 
         public override PaymentType PaymentType => PaymentTypes.LightningLike;
         public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(
+            InvoiceLogs logs,
             LightningSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store,
             BTCPayNetwork network, object preparePaymentObject)
         {

@@ -292,6 +292,21 @@ retry:
             }
         }
 
+        public async Task UpdateInvoicePaymentMethod(string invoiceId, PaymentMethod paymentMethod)
+        {
+            using (var context = _ContextFactory.CreateContext())
+            {
+                var invoice = await context.Invoices.FindAsync(invoiceId);
+                if (invoice == null)
+                    return;
+                var network = paymentMethod.Network;
+                var invoiceEntity = ToObject(invoice.Blob);
+                invoiceEntity.SetPaymentMethod(paymentMethod);
+                invoice.Blob = ToBytes(invoiceEntity, network);
+                await context.SaveChangesAsync();
+            }
+        }
+
         public async Task AddPendingInvoiceIfNotPresent(string invoiceId)
         {
             using (var context = _ContextFactory.CreateContext())
@@ -299,7 +314,11 @@ retry:
                 if (!context.PendingInvoices.Any(a => a.Id == invoiceId))
                 {
                     context.PendingInvoices.Add(new PendingInvoiceData() { Id = invoiceId });
-                    await context.SaveChangesAsync();
+                    try
+                    {
+                        await context.SaveChangesAsync();
+                    }
+                    catch (DbUpdateException) { } // Already exists
                 }
             }
         }
@@ -668,7 +687,7 @@ retry:
         /// <param name="cryptoCode"></param>
         /// <param name="accounted"></param>
         /// <returns>The PaymentEntity or null if already added</returns>
-        public async Task<PaymentEntity> AddPayment(string invoiceId, DateTimeOffset date, CryptoPaymentData paymentData, BTCPayNetworkBase network, bool accounted = false)
+        public async Task<PaymentEntity> AddPayment(string invoiceId, DateTimeOffset date, CryptoPaymentData paymentData, BTCPayNetworkBase network, bool accounted = false, decimal? networkFee = null)
         {
             using (var context = _ContextFactory.CreateContext())
             {
@@ -686,7 +705,7 @@ retry:
 #pragma warning restore CS0618
                     ReceivedTime = date.UtcDateTime,
                     Accounted = accounted,
-                    NetworkFee = paymentMethodDetails.GetNextNetworkFee(),
+                    NetworkFee = networkFee ?? paymentMethodDetails.GetNextNetworkFee(),
                     Network = network
                 };
                 entity.SetCryptoPaymentData(paymentData);

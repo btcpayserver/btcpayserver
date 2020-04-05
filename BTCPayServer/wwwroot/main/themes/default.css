@@ -64,7 +64,7 @@
   --btcpay-footer-bg: var(--btcpay-brand-dark);
   --btcpay-footer-color: var(--btcpay-color-neutral-400);
 
-  --btcpay-font-size-base: 16px;
+  --btcpay-font-size-base: 14px;
   --btcpay-font-family-head: 'Open Sans', 'Helvetica Neue', Arial, sans-serif;
   --btcpay-font-family-base: 'Open Sans', 'Helvetica Neue', Arial, sans-serif;
   --btcpay-font-family-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;

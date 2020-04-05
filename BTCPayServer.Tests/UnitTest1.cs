@@ -2436,16 +2436,18 @@ noninventoryitem:
                     var cashCow = tester.ExplorerNode;
                     var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, cashCow.Network);
 
-                    // Check that for the first payment, no network fee are included
                     var due = Money.Parse(invoice.CryptoInfo[0].Due);
                     var productPartDue = (invoice.Price / invoice.Rate);
+                    Logs.Tester.LogInformation($"Product part due is {productPartDue} and due {productPartDue}");
                     switch (networkFeeMode)
                     {
                         case NetworkFeeMode.MultiplePaymentsOnly:
                         case NetworkFeeMode.Never:
+                            Logs.Tester.LogInformation($"Check that for the first payment, no network fee are included");
                             Assert.Equal(productPartDue, due.ToDecimal(MoneyUnit.BTC));
                             break;
                         case NetworkFeeMode.Always:
+                            Logs.Tester.LogInformation($"Fee of {networkFee} should be added");
                             Assert.Equal(productPartDue + networkFee, due.ToDecimal(MoneyUnit.BTC));
                             break;
                         default:
@@ -2457,20 +2459,23 @@ noninventoryitem:
                         TestUtils.Eventually(() =>
                         {
                         invoice = user.BitPay.GetInvoice(invoice.Id);
-                        // Check that for the second payment, network fee are included
                         due = Money.Parse(invoice.CryptoInfo[0].Due);
+                        Logs.Tester.LogInformation($"Remaining due after first payment: {due}");
                         Assert.Equal(Money.Coins(firstPayment), Money.Parse(invoice.CryptoInfo[0].Paid));
                         switch (networkFeeMode)
                         {
                             case NetworkFeeMode.MultiplePaymentsOnly:
+                                Logs.Tester.LogInformation($"Check that for the second payment, network fee of NetworkFee({networkFee}) + MissingMoney({missingMoney}) are included");
                                 Assert.Equal(missingMoney + networkFee, due.ToDecimal(MoneyUnit.BTC));
                                 Assert.Equal(firstPayment + missingMoney + networkFee, Money.Parse(invoice.CryptoInfo[0].TotalDue).ToDecimal(MoneyUnit.BTC));
                                 break;
                             case NetworkFeeMode.Always:
+                                Logs.Tester.LogInformation($"Check that for the second payment, network fee of 2 * NetworkFee({networkFee}) + MissingMoney({missingMoney}) are included");
                                 Assert.Equal(missingMoney + 2 * networkFee, due.ToDecimal(MoneyUnit.BTC));
                                 Assert.Equal(firstPayment + missingMoney + 2 * networkFee, Money.Parse(invoice.CryptoInfo[0].TotalDue).ToDecimal(MoneyUnit.BTC));
                                 break;
                             case NetworkFeeMode.Never:
+                                Logs.Tester.LogInformation($"Check that for the second payment, no network fee should be added, due should be equals to MissingMoney({missingMoney})");
                                 Assert.Equal(missingMoney, due.ToDecimal(MoneyUnit.BTC));
                                 Assert.Equal(firstPayment + missingMoney, Money.Parse(invoice.CryptoInfo[0].TotalDue).ToDecimal(MoneyUnit.BTC));
                                 break;
@@ -2479,6 +2484,7 @@ noninventoryitem:
                         }
                     });
                     cashCow.SendToAddress(invoiceAddress, due);
+                    Logs.Tester.LogInformation($"After payment of {due}, the invoice should be paid");
                     TestUtils.Eventually(() =>
                     {
                         invoice = user.BitPay.GetInvoice(invoice.Id);

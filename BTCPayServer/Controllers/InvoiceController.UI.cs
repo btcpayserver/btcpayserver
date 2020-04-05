@@ -52,7 +52,7 @@ namespace BTCPayServer.Controllers
             var model = new InvoiceDetailsModel()
             {
                 StoreName = store.StoreName,
-                StoreLink = Url.Action(nameof(StoresController.UpdateStore), "PaymentRequests", new { storeId = store.Id }),
+                StoreLink = Url.Action(nameof(StoresController.UpdateStore), "Stores", new { storeId = store.Id }),
                 Id = invoice.Id,
                 State = invoice.GetInvoiceState().ToString(),
                 TransactionSpeed = invoice.SpeedPolicy == SpeedPolicy.HighSpeed ? "high" :

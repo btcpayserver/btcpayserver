@@ -320,6 +320,8 @@ namespace BTCPayServer.Payments.Bitcoin
         {
             int totalPayment = 0;
             var invoices = await _InvoiceRepository.GetPendingInvoices();
+            var coinsPerDerivationStrategy =
+                new Dictionary<DerivationStrategyBase, ReceivedCoin[]>();
             foreach (var invoiceId in invoices)
             {
                 var invoice = await _InvoiceRepository.GetInvoice(invoiceId, true);
@@ -334,8 +336,13 @@ namespace BTCPayServer.Payments.Bitcoin
                 
                 if (!invoice.Support(cryptoId))
                     continue;
-                var coins = (await wallet.GetUnspentCoins(strategy))
-                             .Where(c => invoice.AvailableAddressHashes.Contains(c.ScriptPubKey.Hash.ToString() + cryptoId))
+
+                if (!coinsPerDerivationStrategy.TryGetValue(strategy, out var coins))
+                {
+                    coins = await wallet.GetUnspentCoins(strategy);
+                    coinsPerDerivationStrategy.Add(strategy, coins);
+                }
+                coins = coins.Where(c => invoice.AvailableAddressHashes.Contains(c.ScriptPubKey.Hash.ToString() + cryptoId))
                              .ToArray();
                 foreach (var coin in coins.Where(c => !alreadyAccounted.Contains(c.OutPoint)))
                 {

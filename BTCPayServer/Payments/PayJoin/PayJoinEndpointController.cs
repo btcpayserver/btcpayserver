@@ -116,6 +116,11 @@ namespace BTCPayServer.Payments.PayJoin
                     return BadRequest(CreatePayjoinError(400, "psbt-not-finalized", "The PSBT should be finalized"));
                 originalTx = psbt.ExtractTransaction();
             }
+
+            async Task BroadcastNow()
+            {
+                await _explorerClientProvider.GetExplorerClient(network).BroadcastAsync(originalTx);
+            }
             
             if (originalTx.Inputs.Any(i => !(i.GetSigner() is WitKeyId)))
                 return BadRequest(CreatePayjoinError(400, "not-using-p2wpkh", "Payjoin only support P2WPKH inputs"));
@@ -160,6 +165,11 @@ namespace BTCPayServer.Payments.PayJoin
             bool paidSomething = false;
             Money due = null;
             Dictionary<OutPoint, UTXO> selectedUTXOs = new Dictionary<OutPoint, UTXO>();
+
+            async Task UnlockUTXOs()
+            {
+                await _payJoinRepository.TryUnlock(selectedUTXOs.Select(o => o.Key).ToArray());
+            }
             PSBTOutput paymentOutput = null;
             BitcoinAddress paymentAddress = null;
             InvoiceEntity invoice = null;
@@ -231,34 +241,14 @@ namespace BTCPayServer.Payments.PayJoin
 
             if (selectedUTXOs.Count == 0)
             {
-                await _explorerClientProvider.GetExplorerClient(network).BroadcastAsync(originalTx);
+                await BroadcastNow();
                 return StatusCode(503,
                     CreatePayjoinError(503, "out-of-utxos",
                         "We do not have any UTXO available for making a payjoin for now"));
             }
 
             var originalPaymentValue = paymentOutput.Value;
-            // Add the original transaction to the payment
-            var originalPaymentData = new BitcoinLikePaymentData(paymentAddress,
-                paymentOutput.Value,
-                new OutPoint(originalTx.GetHash(), paymentOutput.Index),
-                originalTx.RBF);
-            originalPaymentData.PayjoinInformation = new PayjoinInformation()
-            {
-                Type = PayjoinTransactionType.Original, ContributedOutPoints = selectedUTXOs.Select(o => o.Key).ToArray()
-            };
-            originalPaymentData.ConfirmationCount = -1;
-            var now = DateTimeOffset.UtcNow;
-            var payment = await _invoiceRepository.AddPayment(invoice.Id, now, originalPaymentData, network, true);
-            if (payment is null)
-            {
-                return UnprocessableEntity(CreatePayjoinError(422, "already-paid",
-                    $"The original transaction has already been accounted"));
-            }
-
-            await _broadcaster.Schedule(now + TimeSpan.FromMinutes(1.0), originalTx, network);
-            await _btcPayWalletProvider.GetWallet(network).SaveOffchainTransactionAsync(originalTx);
-            _eventAggregator.Publish(new InvoiceEvent(invoice, 1002, InvoiceEvent.ReceivedPayment) {Payment = payment});
+            await _broadcaster.Schedule(DateTimeOffset.UtcNow + TimeSpan.FromMinutes(1.0), originalTx, network);
 
             //check if wallet of store is configured to be hot wallet
             var extKeyStr = await explorer.GetMetadataAsync<string>(
@@ -267,6 +257,8 @@ namespace BTCPayServer.Payments.PayJoin
             if (extKeyStr == null)
             {
                 // This should not happen, as we check the existance of private key before creating invoice with payjoin
+                await UnlockUTXOs();
+                await BroadcastNow();
                 return StatusCode(500, CreatePayjoinError(500, "unavailable", $"This service is unavailable for now"));
             }
 
@@ -344,6 +336,8 @@ namespace BTCPayServer.Payments.PayJoin
                     if (isSecondPass)
                     {
                         // This should not happen
+                        await UnlockUTXOs();
+                        await BroadcastNow();
                         return StatusCode(500,
                             CreatePayjoinError(500, "unavailable",
                                 $"This service is unavailable for now (isSecondPass)"));
@@ -373,7 +367,8 @@ namespace BTCPayServer.Payments.PayJoin
                     var newFeePaid = newTx.GetFee(txBuilder.FindSpentCoins(newTx));
                     if (new FeeRate(newFeePaid, newVSize) < minRelayTxFee)
                     {
-                        await _payJoinRepository.TryUnlock(selectedUTXOs.Select(o => o.Key).ToArray());
+                        await UnlockUTXOs();
+                        await BroadcastNow();
                         return UnprocessableEntity(CreatePayjoinError(422, "not-enough-money",
                             "Not enough money is sent to pay for the additional payjoin inputs"));
                     }
@@ -392,20 +387,30 @@ namespace BTCPayServer.Payments.PayJoin
                 newTx.Inputs[signedInput.Index].WitScript = newPsbt.Inputs[(int)signedInput.Index].FinalScriptWitness;
             }
 
-            // Add the coinjoin transaction to the payments
-            var coinjoinPaymentData = new BitcoinLikePaymentData(paymentAddress,
-                originalPaymentValue - ourFeeContribution,
-                new OutPoint(newPsbt.GetGlobalTransaction().GetHash(), ourOutputIndex),
+            // Add the transaction to the payments with a confirmation of -1.
+            // This will make the invoice paid even if the user do not
+            // broadcast the payjoin.
+            var originalPaymentData = new BitcoinLikePaymentData(paymentAddress,
+                paymentOutput.Value,
+                new OutPoint(originalTx.GetHash(), paymentOutput.Index),
                 originalTx.RBF);
-            coinjoinPaymentData.PayjoinInformation = new PayjoinInformation()
+            originalPaymentData.ConfirmationCount = -1;
+            originalPaymentData.PayjoinInformation = new PayjoinInformation()
             {
-                Type = PayjoinTransactionType.Coinjoin,
+                CoinjoinTransactionHash = newPsbt.GetGlobalTransaction().GetHash(),
+                CoinjoinValue = originalPaymentValue - ourFeeContribution,
                 ContributedOutPoints = selectedUTXOs.Select(o => o.Key).ToArray()
             };
-            coinjoinPaymentData.ConfirmationCount = -1;
-            payment = await _invoiceRepository.AddPayment(invoice.Id, now, coinjoinPaymentData, network, false,
-                payment.NetworkFee);
-            // We do not publish an event on purpose, this would be confusing for the merchant.
+            var payment = await _invoiceRepository.AddPayment(invoice.Id, DateTimeOffset.UtcNow, originalPaymentData, network, true);
+            if (payment is null)
+            {
+                await UnlockUTXOs();
+                await BroadcastNow();
+                return UnprocessableEntity(CreatePayjoinError(422, "already-paid",
+                    $"The original transaction has already been accounted"));
+            }
+            await _btcPayWalletProvider.GetWallet(network).SaveOffchainTransactionAsync(originalTx);
+            _eventAggregator.Publish(new InvoiceEvent(invoice, 1002, InvoiceEvent.ReceivedPayment) {Payment = payment});
 
             if (psbtFormat)
                 return Ok(newPsbt.ToBase64());

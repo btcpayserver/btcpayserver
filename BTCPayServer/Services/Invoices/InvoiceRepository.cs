@@ -687,7 +687,7 @@ retry:
         /// <param name="cryptoCode"></param>
         /// <param name="accounted"></param>
         /// <returns>The PaymentEntity or null if already added</returns>
-        public async Task<PaymentEntity> AddPayment(string invoiceId, DateTimeOffset date, CryptoPaymentData paymentData, BTCPayNetworkBase network, bool accounted = false, decimal? networkFee = null)
+        public async Task<PaymentEntity> AddPayment(string invoiceId, DateTimeOffset date, CryptoPaymentData paymentData, BTCPayNetworkBase network, bool accounted = false)
         {
             using (var context = _ContextFactory.CreateContext())
             {
@@ -705,7 +705,7 @@ retry:
 #pragma warning restore CS0618
                     ReceivedTime = date.UtcDateTime,
                     Accounted = accounted,
-                    NetworkFee = networkFee ?? paymentMethodDetails.GetNextNetworkFee(),
+                    NetworkFee = paymentMethodDetails.GetNextNetworkFee(),
                     Network = network
                 };
                 entity.SetCryptoPaymentData(paymentData);

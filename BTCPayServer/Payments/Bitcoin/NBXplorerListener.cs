@@ -222,8 +222,8 @@ namespace BTCPayServer.Payments.Bitcoin
                     .ToArray(), true);
             bool? originalPJBroadcasted = null;
             bool? originalPJBroadcastable = null;
-            bool? cjPJBroadcasted = null;
-            OutPoint[] ourPJOutpoints = null;
+            bool cjPJBroadcasted = false;
+            PayjoinInformation payjoinInformation = null;
             var paymentEntitiesByPrevOut = new Dictionary<OutPoint, PaymentEntity>();
             foreach (var payment in invoice.GetPayments(wallet.Network))
             {
@@ -256,17 +256,9 @@ namespace BTCPayServer.Payments.Bitcoin
                         }
                         if (paymentData.PayjoinInformation is PayjoinInformation pj)
                         {
-                            ourPJOutpoints = pj.ContributedOutPoints;
-                            switch (pj.Type)
-                            {
-                                case PayjoinTransactionType.Original:
-                                    originalPJBroadcasted = accounted && tx.Confirmations >= 0;
-                                    originalPJBroadcastable = accounted;
-                                    break;
-                                case PayjoinTransactionType.Coinjoin:
-                                    cjPJBroadcasted = accounted && tx.Confirmations >= 0;
-                                    break;
-                            }
+                            payjoinInformation = pj;
+                            originalPJBroadcasted = accounted && tx.Confirmations >= 0;
+                            originalPJBroadcastable = accounted;
                         }
                     }
                     // RPC might be unavailable, we can't check double spend so let's assume there is none
@@ -287,6 +279,14 @@ namespace BTCPayServer.Payments.Bitcoin
                             if (paymentEntitiesByPrevOut.TryGetValue(prevout, out var replaced) && !replaced.Accounted)
                             {
                                 payment.NetworkFee = replaced.NetworkFee;
+                                if (payjoinInformation is PayjoinInformation pj &&
+                                    pj.CoinjoinTransactionHash == tx.TransactionHash)
+                                {
+                                    // This payment is a coinjoin, so the value of
+                                    // the payment output is different from the real value of the payment 
+                                    paymentData.Value = pj.CoinjoinValue;
+                                    payment.SetCryptoPaymentData(paymentData);
+                                }
                             }
                         }
                     }
@@ -322,9 +322,9 @@ namespace BTCPayServer.Payments.Bitcoin
             if (originalPJBroadcasted is true ||
                 // If the original tx is not broadcastable anymore and nor does the coinjoin
                 // reuse our outpoint for another PJ
-                (originalPJBroadcastable is false && !(cjPJBroadcasted is true)))
+                (originalPJBroadcastable is false && !cjPJBroadcasted))
             {
-                await _payJoinRepository.TryUnlock(ourPJOutpoints);
+                await _payJoinRepository.TryUnlock(payjoinInformation.ContributedOutPoints);
             }
 
             await _InvoiceRepository.UpdatePayments(updatedPaymentEntities);

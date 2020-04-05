@@ -301,9 +301,11 @@ namespace BTCPayServer.Tests
             var store = await storeRepository.FindStore(StoreId);
             var settings = store.GetSupportedPaymentMethods(parent.NetworkProvider).OfType<DerivationSchemeSettings>()
                 .First();
+            Logs.Tester.LogInformation($"Proposing {psbt.GetGlobalTransaction().GetHash()}");
             if (expectedError is null)
             {
                 var proposed = await pjClient.RequestPayjoin(endpoint, settings, psbt, default);
+                Logs.Tester.LogInformation($"Proposed payjoin is {proposed.GetGlobalTransaction().GetHash()}");
                 Assert.NotNull(proposed);
                 return proposed;
             }

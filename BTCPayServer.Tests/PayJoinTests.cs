@@ -130,21 +130,22 @@ namespace BTCPayServer.Tests
                 await TestUtils.EventuallyAsync(async () =>
                 {
                     var invoice = await invoiceRepository.GetInvoice(invoiceId);
-                    var payments = invoice.GetPayments().ToArray();
-                    var originalPayment = payments
-                        .Single(p =>
-                            p.GetCryptoPaymentData() is BitcoinLikePaymentData pd &&
-                            pd.PayjoinInformation?.Type is PayjoinTransactionType.Original);
-                    var coinjoinPayment = payments
-                        .Single(p =>
-                            p.GetCryptoPaymentData() is BitcoinLikePaymentData pd &&
-                            pd.PayjoinInformation?.Type is PayjoinTransactionType.Coinjoin);
+                    var payments = invoice.GetPayments();
+                    Assert.Equal(2, payments.Count);
+                    var originalPayment = payments[0];
+                    var coinjoinPayment = payments[1];
                     Assert.Equal(-1, ((BitcoinLikePaymentData)originalPayment.GetCryptoPaymentData()).ConfirmationCount);
                     Assert.Equal(0, ((BitcoinLikePaymentData)coinjoinPayment.GetCryptoPaymentData()).ConfirmationCount);
                     Assert.False(originalPayment.Accounted);
                     Assert.True(coinjoinPayment.Accounted);
                     Assert.Equal(((BitcoinLikePaymentData)originalPayment.GetCryptoPaymentData()).Value,
                         ((BitcoinLikePaymentData)coinjoinPayment.GetCryptoPaymentData()).Value);
+                    Assert.Equal(originalPayment.GetCryptoPaymentData()
+                        .AssertType<BitcoinLikePaymentData>()
+                        .Value,
+                        coinjoinPayment.GetCryptoPaymentData()
+                            .AssertType<BitcoinLikePaymentData>()
+                            .Value);
                 });
                 
                 await TestUtils.EventuallyAsync(async () =>
@@ -211,10 +212,21 @@ namespace BTCPayServer.Tests
                     return pj;
                 }
 
+                async Task LockNewReceiverCoin()
+                {
+                    var coins = await btcPayWallet.GetUnspentCoins(receiverUser.DerivationScheme);
+                    foreach (var coin in coins.Where(c => c.OutPoint != receiverCoin.Outpoint))
+                    {
+                        await payjoinRepository.TryLock(coin.OutPoint);
+                    }
+                }
+
                 Logs.Tester.LogInformation("Here we send exactly the right amount. This should fails as\n" +
-                                           "there is not enough to pay the additional payjoin input. (going below the min relay fee");
+                                           "there is not enough to pay the additional payjoin input. (going below the min relay fee" +
+                                           "However, the original tx has been broadcasted!");
                 vector = (SpentCoin: Money.Satoshis(810), InvoiceAmount: Money.Satoshis(700), Paid: Money.Satoshis(700), Fee: Money.Satoshis(110), ExpectLocked: false, ExpectedError: "not-enough-money");
                 await RunVector();
+                await LockNewReceiverCoin();
                 
                 Logs.Tester.LogInformation("We don't pay enough");
                 vector = (SpentCoin: Money.Satoshis(810), InvoiceAmount: Money.Satoshis(700), Paid: Money.Satoshis(690), Fee: Money.Satoshis(110), ExpectLocked: false, ExpectedError: "invoice-not-fully-paid");
@@ -229,13 +241,8 @@ namespace BTCPayServer.Tests
                 await payjoinRepository.TryLock(receiverCoin.Outpoint);
                 vector = (SpentCoin: Money.Satoshis(810), InvoiceAmount: Money.Satoshis(500), Paid: Money.Satoshis(500), Fee: Money.Satoshis(110), ExpectLocked: true, ExpectedError: "out-of-utxos");
                 await RunVector();
-                await TestUtils.EventuallyAsync(async () =>
-                {
-                    var coins = await btcPayWallet.GetUnspentCoins(receiverUser.DerivationScheme);
-                    Assert.Equal(2, coins.Length);
-                    var newCoin = coins.First(c => (Money)c.Value == Money.Satoshis(500));
-                    await payjoinRepository.TryLock(newCoin.OutPoint);
-                });
+                await LockNewReceiverCoin();
+
                 var originalSenderUser = senderUser;
                 retry:
                 // Additional fee is 96 , minrelaytx is 294
@@ -574,7 +581,8 @@ namespace BTCPayServer.Tests
                 {
                     var invoiceEntity = await tester.PayTester.GetService<InvoiceRepository>().GetInvoice(invoice7.Id);
                     Assert.Equal(InvoiceStatus.Paid, invoiceEntity.Status);
-                    Assert.Contains(invoiceEntity.GetPayments(), p => p.Accounted && ((BitcoinLikePaymentData)p.GetCryptoPaymentData()).PayjoinInformation.Type is PayjoinTransactionType.Coinjoin);
+                    Assert.Contains(invoiceEntity.GetPayments(), p => p.Accounted &&
+                                                                      ((BitcoinLikePaymentData)p.GetCryptoPaymentData()).PayjoinInformation is null);
                 });
                 ////Assert.Contains(receiverWalletPayJoinState.GetRecords(), item => item.InvoiceId == invoice7.Id && item.TxSeen);
 

@@ -23,6 +23,7 @@ namespace BTCPayServer.Models.InvoicingModels
 
         public bool Replaced { get; set; }
         public BitcoinLikePaymentData CryptoPaymentData { get; set; }
+        public string AdditionalInformation { get; set; }
     }
 
     public class OffChainPaymentViewModel

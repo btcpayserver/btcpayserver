@@ -111,13 +111,8 @@ namespace BTCPayServer.Payments.Bitcoin
 
     public class PayjoinInformation
     {
-        [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        public PayjoinTransactionType Type { get; set; }
+        public uint256 CoinjoinTransactionHash { get; set; }
+        public Money CoinjoinValue { get; set; }
         public OutPoint[] ContributedOutPoints { get; set; }
-    }
-    public enum PayjoinTransactionType
-    {
-        Original,
-        Coinjoin
     }
 }

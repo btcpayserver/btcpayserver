@@ -4,6 +4,7 @@
 @model IEnumerable<BTCPayServer.Services.Invoices.PaymentEntity>
 
 @{
+    PayjoinInformation payjoinIformation = null;
     var onchainPayments = Model.Where(entity => entity.GetPaymentMethodId().PaymentType == BitcoinPaymentType.Instance).Select(payment =>
     {
         var m = new OnchainPaymentViewModel();
@@ -21,7 +22,16 @@
         {
             m.Confirmations = confirmationCount.ToString(CultureInfo.InvariantCulture);
         }
-
+        if (onChainPaymentData?.PayjoinInformation is PayjoinInformation pj)
+        {
+            payjoinIformation = pj;
+            m.AdditionalInformation = "Original tranasaction";
+        }
+        if (payjoinIformation is PayjoinInformation &&
+            payjoinIformation.CoinjoinTransactionHash == onChainPaymentData?.Outpoint.Hash)
+        {
+            m.AdditionalInformation = "Payjoin transaction";
+        }
         m.TransactionId = onChainPaymentData.Outpoint.Hash.ToString();
         m.ReceivedTime = payment.ReceivedTime;
         m.TransactionLink = string.Format(CultureInfo.InvariantCulture, payment.Network.BlockExplorerLink, m.TransactionId);
@@ -52,7 +62,7 @@
                     <tr class="@(payment.Replaced ? "linethrough" : "")" >
                         <td>@payment.Crypto</td>
                         <td>@payment.DepositAddress</td>
-                        <td class="payment-value">@payment.CryptoPaymentData.GetValue() @Safe.Raw(payment.CryptoPaymentData.PayjoinInformation?.Type is PayjoinTransactionType.Coinjoin? string.Empty : $"<br/>(Payjoin)")</td>
+                        <td class="payment-value">@payment.CryptoPaymentData.GetValue() @Safe.Raw(payment.AdditionalInformation is string i ? $"<br/>({i})" : string.Empty)</td>
                         <td>
                             <div class="wraptextAuto">
                                 <a href="@payment.TransactionLink" target="_blank">

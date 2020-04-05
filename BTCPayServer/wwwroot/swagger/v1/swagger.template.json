@@ -67,7 +67,7 @@
                         "additionalProperties": {}
                     }
                 }
-            },
+            }
         },
         "securitySchemes": {
             "API Key": {

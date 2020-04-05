@@ -224,6 +224,7 @@ namespace BTCPayServer.Payments.Bitcoin
             bool? originalPJBroadcastable = null;
             bool? cjPJBroadcasted = null;
             OutPoint[] ourPJOutpoints = null;
+            var paymentEntitiesByPrevOut = new Dictionary<OutPoint, PaymentEntity>();
             foreach (var payment in invoice.GetPayments(wallet.Network))
             {
                 if (payment.GetPaymentMethodId().PaymentType != PaymentTypes.BTCLike)
@@ -278,8 +279,24 @@ namespace BTCPayServer.Payments.Bitcoin
                 bool updated = false;
                 if (accounted != payment.Accounted)
                 {
-                    updated = true;
+                    // If a payment is replacing another, use the same network fee as the replaced one.
+                    if (accounted)
+                    {
+                        foreach (var prevout in tx.Transaction.Inputs.Select(o => o.PrevOut))
+                        {
+                            if (paymentEntitiesByPrevOut.TryGetValue(prevout, out var replaced) && !replaced.Accounted)
+                            {
+                                payment.NetworkFee = replaced.NetworkFee;
+                            }
+                        }
+                    }
                     payment.Accounted = accounted;
+                    updated = true;
+                }
+                
+                foreach (var prevout in tx.Transaction.Inputs.Select(o => o.PrevOut))
+                {
+                    paymentEntitiesByPrevOut.TryAdd(prevout, payment);
                 }
 
                 if (paymentData.ConfirmationCount != tx.Confirmations)

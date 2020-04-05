@@ -16,6 +16,7 @@ using BTCPayServer.Payments;
 using NBitpayClient;
 using BTCPayServer.Payments.Bitcoin;
 using System.ComponentModel.DataAnnotations.Schema;
+using BTCPayServer.JsonConverters;
 
 namespace BTCPayServer.Services.Invoices
 {
@@ -919,9 +920,37 @@ namespace BTCPayServer.Services.Invoices
         [JsonIgnore]
         public BTCPayNetworkBase Network { get; set; }
         public int Version { get; set; }
-        public DateTimeOffset ReceivedTime
+        
+        
+        // Old invoices use ReceivedTimeSeconds whose precision is not sufficient
+        [Obsolete("Use ReceivedTime instead")]
+        [JsonProperty("receivedTime", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public DateTimeOffset? ReceivedTimeSeconds
         {
             get; set;
+        }
+        [Obsolete("Use ReceivedTime instead")]
+        [JsonProperty("receivedTimeMs", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonConverter(typeof(DateTimeMilliJsonConverter))]
+        public DateTimeOffset? ReceivedTimeMilli
+        {
+            get; set;
+        }
+        [JsonIgnore]
+        public DateTimeOffset ReceivedTime
+        {
+            get
+            {
+#pragma warning disable 618
+                return (ReceivedTimeMilli ?? ReceivedTimeSeconds).Value;
+#pragma warning restore 618
+            }
+            set
+            {
+#pragma warning disable 618
+                ReceivedTimeMilli = value;
+#pragma warning restore 618
+            }
         }
         public decimal NetworkFee { get; set; }
         [Obsolete("Use ((BitcoinLikePaymentData)GetCryptoPaymentData()).Outpoint")]

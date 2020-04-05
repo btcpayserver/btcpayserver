@@ -40,6 +40,7 @@ namespace BTCPayServer.Payments.Bitcoin
         public BitcoinAddress Address { get; set; }
         public IMoney Value { get; set; }
 
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public PayjoinInformation PayjoinInformation { get; set; }
 
         [JsonIgnore]

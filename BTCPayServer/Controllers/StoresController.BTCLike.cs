@@ -331,7 +331,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> GenerateNBXWallet(string storeId, string cryptoCode,
             GenerateWalletRequest request)
         {
-            Logs.Events.LogInformation($"GenerateNBXWallet called {storeId}, {cryptoCode}, {request.ToJson()}");
+            Logs.Events.LogInformation($"GenerateNBXWallet called {storeId}, {cryptoCode}");
 
             if (!await CanUseHotWallet())
             {

@@ -2431,7 +2431,6 @@ noninventoryitem:
                         ItemDesc = "Some \", description",
                         FullNotifications = true
                     }, Facade.Merchant);
-
                     var networkFee = Money.Satoshis(10000).ToDecimal(MoneyUnit.BTC);
                     var missingMoney = Money.Satoshis(5000).ToDecimal(MoneyUnit.BTC);
                     var cashCow = tester.ExplorerNode;

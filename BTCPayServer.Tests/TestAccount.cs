@@ -154,9 +154,8 @@ namespace BTCPayServer.Tests
             GenerateWalletResponseV = await parent.ExplorerClient.GenerateWalletAsync(new GenerateWalletRequest()
             {
                 ScriptPubKeyType = segwit ? ScriptPubKeyType.Segwit : ScriptPubKeyType.Legacy,
-                SavePrivateKeys = importKeysToNBX
+                SavePrivateKeys = importKeysToNBX,
             });
-
             await store.AddDerivationScheme(StoreId,
                 new DerivationSchemeViewModel()
                 {

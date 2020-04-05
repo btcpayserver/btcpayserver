@@ -93,7 +93,10 @@ namespace BTCPayServer.Services.Wallets
 
         public async Task TrackAsync(DerivationStrategyBase derivationStrategy)
         {
-            await _Client.TrackAsync(derivationStrategy);
+            await _Client.TrackAsync(derivationStrategy, new TrackWalletRequest()
+            {
+                Wait = false
+            });
         }
 
         public async Task<TransactionResult> GetTransactionAsync(uint256 txId, bool includeOffchain = false, CancellationToken cancellation = default(CancellationToken))

@@ -46,7 +46,7 @@
   --btcpay-color-dark-accent:        var(--btcpay-color-neutral-900);
 
   /* Color definitions for specific sections - try to reuse colors defined above */
-  --btcpay-bg-body: var(--btcpay-color-neutral-100);
+  --btcpay-body-bg: var(--btcpay-color-neutral-100);
   --btcpay-bg-dark: var(--btcpay-brand-darker);
   --btcpay-bg-tile: var(--btcpay-color-white);
   --btcpay-bg-cta:  var(--btcpay-bg-dark);

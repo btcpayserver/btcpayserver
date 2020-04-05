@@ -33,7 +33,7 @@ body {
   line-height: 1.5;
   color: var(--btcpay-body-color);
   text-align: left;
-  background-color: var(--btcpay-bg-body); }
+  background-color: var(--btcpay-body-bg); }
 
 [tabindex="-1"]:focus {
   outline: 0 !important; }
@@ -371,7 +371,7 @@ mark,
 
 .img-thumbnail {
   padding: 0.25rem;
-  background-color: var(--btcpay-bg-body);
+  background-color: var(--btcpay-body-bg);
   border: 1px solid var(--btcpay-color-neutral-300);
   border-radius: 0.25rem;
   max-width: 100%;
@@ -2604,11 +2604,11 @@ input[type="button"].btn-block {
   .custom-range:focus {
     outline: none; }
     .custom-range:focus::-webkit-slider-thumb {
-      box-shadow: 0 0 0 1px var(--btcpay-bg-body), 0 0 0 0.2rem var(--btcpay-color-primary-backdrop); }
+      box-shadow: 0 0 0 1px var(--btcpay-body-bg), 0 0 0 0.2rem var(--btcpay-color-primary-backdrop); }
     .custom-range:focus::-moz-range-thumb {
-      box-shadow: 0 0 0 1px var(--btcpay-bg-body), 0 0 0 0.2rem var(--btcpay-color-primary-backdrop); }
+      box-shadow: 0 0 0 1px var(--btcpay-body-bg), 0 0 0 0.2rem var(--btcpay-color-primary-backdrop); }
     .custom-range:focus::-ms-thumb {
-      box-shadow: 0 0 0 1px var(--btcpay-bg-body), 0 0 0 0.2rem var(--btcpay-color-primary-backdrop); }
+      box-shadow: 0 0 0 1px var(--btcpay-body-bg), 0 0 0 0.2rem var(--btcpay-color-primary-backdrop); }
   .custom-range::-moz-focus-outer {
     border: 0; }
   .custom-range::-webkit-slider-thumb {

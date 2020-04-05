@@ -123,9 +123,18 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
   border-top: none;
 }
 
+#mainNav {
+  background: var(--btcpay-header-bg);
+}
+
 #mainNav .navbar-nav > li.nav-item > a.nav-link:focus,
 #mainNav .navbar-nav > li.nav-item > a.nav-link:hover {
   border-bottom-color: var(--btcpay-header-color-link-accent);
+}
+
+header.masthead::before,
+.service-box img {
+  filter: hue-rotate(318deg);
 }
 
 /* Dark theme */
@@ -153,11 +162,6 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
 
   .onion {
     filter: none;
-  }
-
-  header.masthead::before,
-  .service-box img {
-    filter: grayscale() opacity(90%);
   }
 
   .table-sm tbody tr:hover {

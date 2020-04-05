@@ -60,6 +60,8 @@
   --btcpay-header-bg: var(--btcpay-brand-darker);
   --btcpay-footer-bg: var(--btcpay-brand-darkest);
 
+  --btcpay-footer-color: var(--btcpay-color-neutral-600);
+
   --btcpay-preformatted-text-color: var(--btcpay-color-white);
 
   --btcpay-font-size-base: 16px;

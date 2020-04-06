@@ -1,4 +1,5 @@
-﻿@using Microsoft.AspNetCore.Mvc.ModelBinding
+﻿@addTagHelper *, BundlerMinifier.TagHelpers
+@using Microsoft.AspNetCore.Mvc.ModelBinding
 @model WalletSendModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
@@ -13,7 +14,9 @@
         </div>
     </div>
 }
+<partial name="WalletCameraScanner"/>
 <div class="row">
+   
     <div class="@(!Model.InputSelection && Model.Outputs.Count==1? "col-lg-6 transaction-output-form": "col-lg-8")">
         <form method="post">
             <input type="hidden" asp-for="InputSelection" />
@@ -198,16 +201,17 @@
                         }
                     </div>
                 </div>
-                <button type="submit" name="command" value="add-output" class="ml-1 btn btn-secondary">Add another destination </button>
-                <button type="button" id="bip21parse" class="ml-1 btn btn-secondary">Parse BIP21</button>
+                <button type="submit" name="command" value="add-output" class="ml-1 btn btn-secondary" >Add another destination</button>
+                <button type="button" id="bip21parse" class="ml-1 btn btn-secondary" title="Paste BIP21/Address"><i class="fa fa-paste"></i></button>
+                <button type="button" id="scanqrcode" class="ml-1 btn btn-secondary only-for-js" data-toggle="modal" data-target="#scanModal" title="Scan BIP21/Address with camera"><i class="fa fa-camera"></i></button>
             </div>
         </form>
     </div>
 </div>
 
-@section Scripts
+@section HeadScripts
 {
-    <script src="~/js/WalletSend.js" type="text/javascript" defer="defer"></script>
+    <bundle name="wwwroot/bundles/wallet-send-bundle.min.js"></bundle>
     <style>
         .remove-destination-btn{
             font-size: 1.5rem;

@@ -181,12 +181,15 @@
         ]
     },
     {
-        "outputFileName": "wwwroot/bundles/wallet-coin-selection-bundle.min.js",
+        "outputFileName": "wwwroot/bundles/wallet-send-bundle.min.js",
         "inputFiles": [
             "wwwroot/vendor/vuejs/vue.min.js",
             "wwwroot/vendor/babel-polyfill/polyfill.min.js",
-        ]
-    }
-    
-    
+            "wwwroot/vendor/vue-qrcode-reader/vue-qrcode-reader.browser.js",
+            "wwwroot/js/wallet/**/*.js"
+        ],
+        "minify": {
+            "enabled": false
+        }
+    }  
 ]

@@ -662,13 +662,26 @@ namespace BTCPayServer.Controllers
                 uriBuilder.UnknowParameters.TryGetValue("bpu", out var vmPayJoinEndpointUrl);
                 vm.PayJoinEndpointUrl = vmPayJoinEndpointUrl;
             }
-            catch (Exception)
+            catch
             {
-                TempData.SetStatusMessageModel(new StatusMessageModel()
+                try
                 {
-                    Severity = StatusMessageModel.StatusSeverity.Error,
-                    Message = "The provided BIP21 payment URI was malformed"
-                });
+                    vm.Outputs = new List<WalletSendModel.TransactionOutput>()
+                    {
+                        new WalletSendModel.TransactionOutput()
+                        {
+                            DestinationAddress = BitcoinAddress.Create(bip21, network.NBitcoinNetwork).ToString()
+                        }
+                    };
+                }
+                catch
+                {
+                    TempData.SetStatusMessageModel(new StatusMessageModel()
+                    {
+                        Severity = StatusMessageModel.StatusSeverity.Error,
+                        Message = "The provided BIP21 payment URI was malformed"
+                    });
+                }
             }
 
             ModelState.Clear();

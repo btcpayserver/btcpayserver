@@ -921,10 +921,9 @@ namespace BTCPayServer.Services.Invoices
         public BTCPayNetworkBase Network { get; set; }
         public int Version { get; set; }
         
-        
-        // Old invoices use ReceivedTimeSeconds whose precision is not sufficient
         [Obsolete("Use ReceivedTime instead")]
         [JsonProperty("receivedTime", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        // Old invoices were storing the received time in second
         public DateTimeOffset? ReceivedTimeSeconds
         {
             get; set;
@@ -932,6 +931,9 @@ namespace BTCPayServer.Services.Invoices
         [Obsolete("Use ReceivedTime instead")]
         [JsonProperty("receivedTimeMs", DefaultValueHandling = DefaultValueHandling.Ignore)]
         [JsonConverter(typeof(DateTimeMilliJsonConverter))]
+        // Our RBF detection logic depends on properly ordering payments based on
+        // received time, so we needed a received time in milli to ensure that
+        // even if payments are separated by less than a second, they would still be ordering
         public DateTimeOffset? ReceivedTimeMilli
         {
             get; set;

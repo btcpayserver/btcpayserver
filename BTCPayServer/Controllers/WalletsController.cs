@@ -869,17 +869,6 @@ namespace BTCPayServer.Controllers
                 var wallet = _walletProvider.GetWallet(network);
                 var derivationSettings = GetDerivationSchemeSettings(walletId);
                 wallet.InvalidateCache(derivationSettings.AccountDerivation);
-                if (TempData.GetStatusMessageModel() == null)
-                {
-                    TempData[WellKnownTempData.SuccessMessage] =
-                        $"Transaction broadcasted successfully ({transaction.GetHash()})";
-                }
-                else
-                {
-                    var statusMessageModel = TempData.GetStatusMessageModel();
-                    statusMessageModel.Message += $" ({transaction.GetHash()})";
-                    TempData.SetStatusMessageModel(statusMessageModel);
-                }
             }
             return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
         }

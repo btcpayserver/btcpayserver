@@ -28,12 +28,15 @@
                 <p class="form-text text-muted">
                     Bundled Themes:
                     <a href="#" onclick="return setTheme(1);">Legacy</a>
+                    | <a href="#" onclick="return setTheme(2);">Dark</a>
                     @* | <a href="#" onclick="return setTheme(0);">Default</a>*@
                 </p>
                 <script type="text/javascript">
                     function setTheme(themeChoice) {
                         if (themeChoice === 1) { // reserving 0 for potential clear down the road
                             $('#CustomCSS').val('/checkout/css/themes/legacy.css');
+                        } else if (themeChoice == 2) {
+                            $('#CustomCSS').val('/checkout/css/themes/dark.css');
                         } else {
                             $('#CustomCSS').val('');
                         }

@@ -8246,7 +8246,6 @@ strong {
     padding: 20px 20px;
     color: #515664;
     font-weight: 300;
-    opacity: .7;
 }
 
 .modal-content {
@@ -8556,16 +8555,17 @@ strong {
 }
 
     .payment-tabs__tab.active {
-        color: #214497;
+        background: #f5f5f5;
         font-weight: 400;
+        transition: all .2s ease;
     }
 
 .payment-tabs__slider {
     position: absolute;
-    height: 5px;
+    height: 3px;
     width: 50%;
     background: #51b13e;
-    top: 0;
+    bottom: 0;
     right: 50%;
     transition: all .2s ease;
 }
@@ -9101,7 +9101,7 @@ strong {
     cursor: pointer;
     position: absolute;
     right: 0px;
-    display:none;
+    display: none;
 }
 
     .close-icon img {
@@ -9277,7 +9277,8 @@ strong {
 
 .recommended-fee {
     box-sizing: border-box;
-    color: #818EA9;
+    font-size: smaller;
+    color: #515664;
     position: absolute;
     top: calc(100% - 40px);
     left: 50%;
@@ -9412,7 +9413,6 @@ strong {
     text-align: center;
     width: inherit;
     display: table;
-    background-color: #fff;
     color: #000;
     font-size: 0px;
     width: 100%;
@@ -9431,7 +9431,8 @@ strong {
 
     .btnGroupLnd button {
         display: table-cell;
-        border: solid 1px #418e32;
+        border: solid 1px #51b13e;
+        background-color: #fff;
         padding: 6px 9px;
         margin: 0px;
         font-size: 12px;
@@ -9439,6 +9440,7 @@ strong {
         text-overflow: ellipsis;
         overflow: hidden;
         white-space: nowrap;
+        transition: all .2s ease-in-out;
     }
 
         .btnGroupLnd button:hover {
@@ -11574,3 +11576,18 @@ low-fee-timeline {
     .btn-link:hover {
         color: #418e32;
     }
+
+.powered__by__btcpayserver {
+    margin-top: 10px;
+    text-align: center;
+    color: #818a91;
+    font-size: small;
+}
+
+    .powered__by__btcpayserver a {
+        color: #51b13e;
+    }
+
+        .powered__by__btcpayserver a:hover {
+            color: #418e32;
+        }

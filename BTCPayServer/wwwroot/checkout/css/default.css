@@ -9101,7 +9101,7 @@ strong {
     cursor: pointer;
     position: absolute;
     right: 0px;
-    display:none;
+    display: none;
 }
 
     .close-icon img {
@@ -11583,3 +11583,11 @@ low-fee-timeline {
     color: #818a91;
     font-size: small;
 }
+
+    .powered__by__btcpayserver a {
+        color: #51b13e;
+    }
+
+        .powered__by__btcpayserver a:hover {
+            color: #418e32;
+        }

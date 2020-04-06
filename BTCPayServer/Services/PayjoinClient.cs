@@ -37,9 +37,10 @@ namespace BTCPayServer.Services
             var sentBefore = -originalTx.GetBalance(derivationSchemeSettings.AccountDerivation,
                 signingAccount.AccountKey,
                 signingAccount.GetRootedKeyPath());
-
-            if (!originalTx.TryGetEstimatedFeeRate(out var oldFeeRate))
+            var oldGlobalTx = originalTx.GetGlobalTransaction();
+            if (!originalTx.TryGetEstimatedFeeRate(out var originalFeeRate) || !originalTx.TryGetVirtualSize(out var oldVirtualSize))
                 throw new ArgumentException("originalTx should have utxo information", nameof(originalTx));
+            var originalFee = originalTx.GetFee();
             var cloned = originalTx.Clone();
             if (!cloned.IsAllFinalized() && !cloned.TryFinalize(out var errors))
             {
@@ -114,7 +115,12 @@ namespace BTCPayServer.Services
             }
 
             // Making sure that our inputs are finalized, and that some of our inputs have not been added
+            var newGlobalTx = newPSBT.GetGlobalTransaction();
             int ourInputCount = 0;
+            if (newGlobalTx.Version != oldGlobalTx.Version)
+                throw new PayjoinSenderException("The version field of the transaction has been modified");
+            if (newGlobalTx.LockTime != oldGlobalTx.LockTime)
+                throw new PayjoinSenderException("The LockTime field of the transaction has been modified");
             foreach (var input in newPSBT.Inputs.CoinsFor(derivationSchemeSettings.AccountDerivation,
                 signingAccount.AccountKey, signingAccount.GetRootedKeyPath()))
             {
@@ -123,6 +129,8 @@ namespace BTCPayServer.Services
                     ourInputCount++;
                     if (input.IsFinalized())
                         throw new PayjoinSenderException("A PSBT input from us should not be finalized");
+                    if (newGlobalTx.Inputs[input.Index].Sequence != newGlobalTx.Inputs[ourInput.Index].Sequence)
+                        throw new PayjoinSenderException("The sequence of one of our input has been modified");
                 }
                 else
                 {
@@ -131,11 +139,16 @@ namespace BTCPayServer.Services
                 }
             }
 
-            // Making sure that the receiver's inputs are finalized
+            // Making sure that the receiver's inputs are finalized and P2PWKH
             foreach (var input in newPSBT.Inputs)
             {
-                if (originalTx.Inputs.FindIndexedInput(input.PrevOut) is null && !input.IsFinalized())
-                    throw new PayjoinSenderException("The payjoin receiver included a non finalized input");
+                if (originalTx.Inputs.FindIndexedInput(input.PrevOut) is null)
+                {
+                    if (!input.IsFinalized())
+                        throw new PayjoinSenderException("The payjoin receiver included a non finalized input");
+                    if (!(input.FinalScriptWitness.GetSigner() is WitKeyId))
+                        throw new PayjoinSenderException("The payjoin receiver included an input that is not P2PWKH");
+                }
             }
 
             if (ourInputCount < originalTx.Inputs.Count)
@@ -143,29 +156,34 @@ namespace BTCPayServer.Services
 
             // We limit the number of inputs the receiver can add
             var addedInputs = newPSBT.Inputs.Count - originalTx.Inputs.Count;
-            if (originalTx.Inputs.Count < addedInputs)
-                throw new PayjoinSenderException("The payjoin receiver added too much inputs");
+            if (addedInputs == 0)
+                throw new PayjoinSenderException("The payjoin receiver did not added any input");
 
             var sentAfter = -newPSBT.GetBalance(derivationSchemeSettings.AccountDerivation,
                 signingAccount.AccountKey,
                 signingAccount.GetRootedKeyPath());
             if (sentAfter > sentBefore)
             {
+                var overPaying = sentAfter - sentBefore;
                 if (!newPSBT.TryGetEstimatedFeeRate(out var newFeeRate) || !newPSBT.TryGetVirtualSize(out var newVirtualSize))
                     throw new PayjoinSenderException("The payjoin receiver did not included UTXO information to calculate fee correctly");
+                var additionalFee = newPSBT.GetFee() - originalFee;
+                if (overPaying > additionalFee)
+                    throw new PayjoinSenderException("The payjoin receiver is sending more money to himself");
+                if (overPaying > 2 * originalFee)
+                    throw new PayjoinSenderException("The payjoin receiver is making us pay more than twice the original fee");
+
                 // Let's check the difference is only for the fee and that feerate
                 // did not changed that much
-                var expectedFee = oldFeeRate.GetFee(newVirtualSize);
+                var expectedFee = originalFeeRate.GetFee(newVirtualSize);
                 // Signing precisely is hard science, give some breathing room for error.
-                expectedFee += newPSBT.Inputs.Count * Money.Satoshis(2);
+                expectedFee += originalFeeRate.GetFee(newPSBT.Inputs.Count * 2);
                 
                 // If the payjoin is removing some dust, we may pay a bit more as a whole output has been removed
                 var removedOutputs = Math.Max(0, originalTx.Outputs.Count - newPSBT.Outputs.Count);
-                expectedFee +=  removedOutputs * oldFeeRate.GetFee(294);
-
-                var actualFee = newFeeRate.GetFee(newVirtualSize);
-                if (actualFee > expectedFee && actualFee - expectedFee > Money.Satoshis(546))
-                    throw new PayjoinSenderException("The payjoin receiver is paying too much fee");
+                expectedFee +=  removedOutputs * Money.Satoshis(294);
+                if (overPaying > expectedFee)
+                    throw new PayjoinSenderException("The payjoin receiver increased the fee rate we are paying too much");
             }
 
             return newPSBT;

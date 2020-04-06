@@ -1,4 +1,6 @@
 ﻿using BTCPayServer.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Linq;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Hosting;
@@ -178,6 +180,10 @@ namespace BTCPayServer.Tests
                             .AddFilter("Hangfire", LogLevel.Error)
                             .AddProvider(Logs.LogProvider);
                         });
+                    })
+                    .ConfigureServices(services =>
+                    {
+                        services.TryAddSingleton<IFeeProviderFactory>(new BTCPayServer.Services.Fees.FixedFeeProvider(new FeeRate(100L, 1)));
                     })
                     .UseKestrel()
                     .UseStartup<Startup>()

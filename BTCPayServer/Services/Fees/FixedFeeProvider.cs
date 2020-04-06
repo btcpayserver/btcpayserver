@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace BTCPayServer.Services.Fees
 {
-    public class FixedFeeProvider : IFeeProvider
+    public class FixedFeeProvider : IFeeProvider, IFeeProviderFactory
     {
         public FixedFeeProvider(FeeRate feeRate)
         {
@@ -16,6 +16,11 @@ namespace BTCPayServer.Services.Fees
         public FeeRate FeeRate
         {
             get; set;
+        }
+
+        public IFeeProvider CreateFeeProvider(BTCPayNetworkBase network)
+        {
+            return new FixedFeeProvider(FeeRate);
         }
 
         public Task<FeeRate> GetFeeRateAsync(int blockTarget)

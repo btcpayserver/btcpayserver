@@ -43,25 +43,33 @@ html {
 }
 
 .currency-selection {
-    background-color: #15181c;
+    background-color: #292929;
     border-bottom: 1px solid #565d6e;
     color: #fff;
 }
 
+.payment__currencies {
+    background-color: #191919;
+}
+
+    .payment__currencies:hover {
+        background-color: #111316;
+    }
+
 line-items {
-    background-color: #111316;
+    background-color: #292929;
     color: #565d6e !important;
     border-top: 1px solid #565d6e !important;
 }
 
 .buyerTotalLine {
     border-top: 1px solid #202224;
-    background-color: #15181c;
+    background-color: #292929;
     color: #fff;
 }
 
 .payment-tabs {
-    background-color: #15181c;
+    background-color: #292929;
     color: #fff;
     border-top: 1px solid #565d6e;
 }
@@ -78,12 +86,12 @@ canvas {
 
 #prettydropdown-DefaultLang ul {
     color: #565d6e !important;
-    background-color: #111316 !important;
+    background-color: #191919;
 }
 
     #prettydropdown-DefaultLang ul.active li:hover {
         color: #fff !important;
-        background-color: #000 !important;
+        background-color: #111316;
     }
 
 .manual__step-one__header {
@@ -92,10 +100,6 @@ canvas {
 
 .manual__step-one__instructions {
     color: #ffffff;
-}
-
-.payment__currencies:hover {
-    background: rgba(248, 248, 248,0.1);
 }
 
 

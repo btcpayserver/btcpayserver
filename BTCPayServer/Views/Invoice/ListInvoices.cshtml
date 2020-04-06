@@ -204,7 +204,7 @@
                         @foreach (var invoice in Model.Invoices)
                         {
                             <tr>
-                                <td>
+                                <td style="width:10em;">
                                     <span class="switchTimeFormat" data-switch="@invoice.Date.ToTimeAgo()">
                                         @invoice.Date.ToBrowserDate()
                                     </span>
@@ -272,11 +272,10 @@
                                 </td>
                             </tr>
                             <tr id="invoice_@invoice.InvoiceId" style="display:none;">
-                                <td colspan="99">
-                                    <div style="margin-left: 15px; margin-bottom: 0;">
-                                        @* Leaving this as partial because it abstracts complexity of Invoice Payments *@
-                                        <partial name="ListInvoicesPaymentsPartial" model="(invoice.Details, true)" />
-                                    </div>
+                                <td style="border-top:0"></td>
+                                <td style="border-top:0" colspan="6" class="pt-3 pb-5">
+                                    @* Leaving this as partial because it abstracts complexity of Invoice Payments *@
+                                    <partial name="ListInvoicesPaymentsPartial" model="(invoice.Details, true)" />
                                 </td>
                             </tr>
                         }

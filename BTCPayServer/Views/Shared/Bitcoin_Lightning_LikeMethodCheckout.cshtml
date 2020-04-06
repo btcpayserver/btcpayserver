@@ -34,7 +34,7 @@
         </div>
         <div class="bp-view payment manual-flow" id="copy" v-bind:class="{ 'active': currentTab == 'copy'}">
             <div class="manual__step-two__instructions">
-                <span i18n="">{{$t("CompletePay_Body", srvModel)}}</span>
+                <span v-html="$t('CompletePay_Body', srvModel)"></span>
             </div>
             <div class="copyLabelPopup">
                 <span>{{$t("Copied")}}</span>
@@ -171,7 +171,7 @@
 
         @if (Model.ShowRecommendedFee) {
             <div id="recommended-fee" class="recommended-fee" v-bind:class="{ hide: !srvModel.feeRate }">
-                <span>{{$t("Recommended_Fee", srvModel)}}</span>
+                <span v-html="$t('Recommended_Fee', srvModel)"></span>
             </div>
         }
     </div>          

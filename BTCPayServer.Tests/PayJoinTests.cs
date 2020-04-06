@@ -118,6 +118,8 @@ namespace BTCPayServer.Tests
                 s.Driver.SwitchTo().Alert().SendKeys(bip21);
                 s.Driver.SwitchTo().Alert().Accept();
                 Assert.False(string.IsNullOrEmpty(s.Driver.FindElement(By.Id("PayJoinEndpointUrl")).GetAttribute("value")));
+                s.Driver.FindElement(By.Id("FeeSatoshiPerByte")).Clear();
+                s.Driver.FindElement(By.Id("FeeSatoshiPerByte")).SendKeys("1");
                 s.Driver.ScrollTo(By.Id("SendMenu"));
                 s.Driver.FindElement(By.Id("SendMenu")).ForceClick();
                 s.Driver.FindElement(By.CssSelector("button[value=nbx-seed]")).Click();

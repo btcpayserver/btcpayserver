@@ -933,7 +933,7 @@ namespace BTCPayServer.Services.Invoices
         [JsonConverter(typeof(DateTimeMilliJsonConverter))]
         // Our RBF detection logic depends on properly ordering payments based on
         // received time, so we needed a received time in milli to ensure that
-        // even if payments are separated by less than a second, they would still be ordering
+        // even if payments are separated by less than a second, they would still be ordered correctly
         public DateTimeOffset? ReceivedTimeMilli
         {
             get; set;
@@ -944,7 +944,7 @@ namespace BTCPayServer.Services.Invoices
             get
             {
 #pragma warning disable 618
-                return (ReceivedTimeMilli ?? ReceivedTimeSeconds).Value;
+                return (ReceivedTimeMilli ?? ReceivedTimeSeconds).GetValueOrDefault();
 #pragma warning restore 618
             }
             set

@@ -123,7 +123,7 @@ namespace BTCPayServer.Payments.PayJoin
             }
             
             if (originalTx.Inputs.Any(i => !(i.GetSigner() is WitKeyId)))
-                return BadRequest(CreatePayjoinError(400, "not-using-p2wpkh", "Payjoin only support P2WPKH inputs"));
+                return BadRequest(CreatePayjoinError(400, "unsupported-inputs", "Payjoin only support P2WPKH inputs"));
             if (psbt.CheckSanity() is var errors && errors.Count != 0)
             {
                 return BadRequest(CreatePayjoinError(400, "insane-psbt", $"This PSBT is insane ({errors[0]})"));

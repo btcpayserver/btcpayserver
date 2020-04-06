@@ -22,10 +22,10 @@ namespace BTCPayServer.Migrations
                         .HasColumnType("TEXT")
                         .HasMaxLength(50);
 
-                    b.Property<string>("Label")
-                        .HasColumnType("TEXT");
+                    b.Property<byte[]>("Blob")
+                        .HasColumnType("BLOB");
 
-                    b.Property<string>("Permissions")
+                    b.Property<string>("Label")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("StoreId")

@@ -123,14 +123,6 @@ namespace BTCPayServer.Client
                     yield return pp;
             }
         }
-        public static IEnumerable<Permission> ToPermissions(string permissionsFormatted)
-        {
-            foreach(var part in permissionsFormatted.Split(';', StringSplitOptions.RemoveEmptyEntries))
-            {
-                if (Permission.TryParse(part, out var p))
-                    yield return p;
-            }
-        }
 
         private bool ContainsPolicy(string subpolicy)
         {

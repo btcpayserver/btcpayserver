@@ -22,11 +22,17 @@ namespace BTCPayServer.Data
         [MaxLength(50)] public string UserId { get; set; }
 
         public APIKeyType Type { get; set; } = APIKeyType.Legacy;
-        public string Permissions { get; set; }
         
+        public byte[] Blob { get; set; }
         public StoreData StoreData { get; set; }
         public ApplicationUser User { get; set; }
         public string Label { get; set; }
+    }
+
+    public class APIKeyBlob
+    {
+        public string[] Permissions { get; set; }
+        
     }
 
     public enum APIKeyType

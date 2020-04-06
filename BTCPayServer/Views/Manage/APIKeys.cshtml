@@ -22,13 +22,16 @@
             <td>@keyData.Label</td>
             <td>@keyData.Id</td>
             <td>
-                @if (string.IsNullOrEmpty(keyData.Permissions))
+                @{
+                    var permissions = keyData.GetBlob().Permissions;
+                }
+                @if (!permissions.Any())
                 {
                     <span>No permissions</span>
                 }
                 else
                 {
-                    <span>@string.Join(", ", Permission.ToPermissions(keyData.Permissions).Select(c => c.ToString()).Distinct().ToArray())</span>
+                    <span>@string.Join(", ", Permission.ToPermissions(permissions).Select(c => c.ToString()).Distinct().ToArray())</span>
                 }
             </td>
             <td class="text-right">

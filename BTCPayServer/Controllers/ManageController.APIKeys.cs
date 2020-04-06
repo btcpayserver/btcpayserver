@@ -161,7 +161,7 @@ namespace BTCPayServer.Controllers
                     TempData.SetStatusMessageModel(new StatusMessageModel()
                     {
                         Severity = StatusMessageModel.StatusSeverity.Success,
-                        Html = $"API key generated! <code>{key.Id}</code>"
+                        Html = $"API key generated! <code class='alert-link'>{key.Id}</code>"
                     });
                     return RedirectToAction("APIKeys", new { key = key.Id });
                 default:
@@ -191,7 +191,7 @@ namespace BTCPayServer.Controllers
             TempData.SetStatusMessageModel(new StatusMessageModel()
             {
                 Severity = StatusMessageModel.StatusSeverity.Success,
-                Html = $"API key generated! <code>{key.Id}</code>"
+                Html = $"API key generated! <code class='alert-link'>{key.Id}</code>"
             });
             return RedirectToAction("APIKeys");
         }

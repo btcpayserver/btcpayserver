@@ -14,221 +14,209 @@
 <div class="row">
     <div class="col-md-8">
         <form method="post">
-            <div class="form-group">
-                <label asp-for="Id"></label>
-                <input asp-for="Id" readonly class="form-control" />
-            </div>
-            <div class="form-group">
-                <label asp-for="StoreName"></label>
-                <input asp-for="StoreName" class="form-control" />
-                <span asp-validation-for="StoreName" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="StoreWebsite"></label>
-                <input asp-for="StoreWebsite" class="form-control" />
-                <span asp-validation-for="StoreWebsite" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="NetworkFeeMode"></label>
-                <a href="https://docs.btcpayserver.org/faq-and-common-issues/faq-stores#add-network-fee-to-invoice-vary-with-mining-fees" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
-                <select asp-for="NetworkFeeMode" class="form-control">
-                    <option value="MultiplePaymentsOnly">... only if the customer makes more than one payment for the invoice</option>
-                    <option value="Always">... on every payment</option>
-                    <option value="Never">Never add network fee</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <div class="form-check">
-                    <input asp-for="AnyoneCanCreateInvoice" type="checkbox" class="form-check-input" />
-                    <label asp-for="AnyoneCanCreateInvoice" class="form-check-label"></label>
-                    <a href="https://docs.btcpayserver.org/faq-and-common-issues/faq-stores#allow-anyone-to-create-invoice" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+            <div class="mb-5">
+                <div class="form-group">
+                    <label asp-for="Id"></label>
+                    <input asp-for="Id" readonly class="form-control" />
                 </div>
-            </div>
-            <div class="form-group">
-                <div class="mb-2">
-                    <label asp-for="InvoiceExpiration" class="d-inline"></label>
-                    <a href="https://docs.btcpayserver.org/faq-and-common-issues/faq-stores#invoice-expires-if-the-full-amount-has-not-been-paid-after-minutes" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                <div class="form-group">
+                    <label asp-for="StoreName"></label>
+                    <input asp-for="StoreName" class="form-control" />
+                    <span asp-validation-for="StoreName" class="text-danger"></span>
                 </div>
-                <input asp-for="InvoiceExpiration" class="form-control" />
-                <span asp-validation-for="InvoiceExpiration" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <div class="mb-2">
-                    <label asp-for="MonitoringExpiration" class="d-inline"></label>
-                    <a href="https://docs.btcpayserver.org/faq-and-common-issues/faq-stores#payment-invalid-if-transactions-fails-to-confirm-minutes-after-invoice-expiration" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                <div class="form-group">
+                    <label asp-for="StoreWebsite"></label>
+                    <input asp-for="StoreWebsite" class="form-control" />
+                    <span asp-validation-for="StoreWebsite" class="text-danger"></span>
                 </div>
-                <input asp-for="MonitoringExpiration" class="form-control" />
-                <span asp-validation-for="MonitoringExpiration" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <div class="mb-2">
-                    <label asp-for="PaymentTolerance" class="d-inline"></label>
-                    <a href="https://docs.btcpayserver.org/faq-and-common-issues/faq-stores#consider-the-invoice-paid-even-if-the-paid-amount-is-less-than-expected" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                <div class="form-group">
+                    <label asp-for="NetworkFeeMode"></label>
+                    <a href="https://docs.btcpayserver.org/faq-and-common-issues/faq-stores#add-network-fee-to-invoice-vary-with-mining-fees" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                    <select asp-for="NetworkFeeMode" class="form-control">
+                        <option value="MultiplePaymentsOnly">... only if the customer makes more than one payment for the invoice</option>
+                        <option value="Always">... on every payment</option>
+                        <option value="Never">Never add network fee</option>
+                    </select>
                 </div>
-                <input asp-for="PaymentTolerance" class="form-control" />
-                <span asp-validation-for="PaymentTolerance" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <div class="mb-2">
-                    <label asp-for="SpeedPolicy" class="d-inline"></label>
-                    <a href="https://docs.btcpayserver.org/faq-and-common-issues/faq-stores#consider-the-invoice-confirmed-when-the-payment-transaction" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                <div class="form-group">
+                    <div class="form-check">
+                        <input asp-for="AnyoneCanCreateInvoice" type="checkbox" class="form-check-input" />
+                        <label asp-for="AnyoneCanCreateInvoice" class="form-check-label"></label>
+                        <a href="https://docs.btcpayserver.org/faq-and-common-issues/faq-stores#allow-anyone-to-create-invoice" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                    </div>
                 </div>
-                <select asp-for="SpeedPolicy" class="form-control">
-                    <option value="0">Is unconfirmed</option>
-                    <option value="1">Has at least 1 confirmation</option>
-                    <option value="3">Has at least 2 confirmations</option>
-                    <option value="2">Has at least 6 confirmations</option>
-                </select>
-                <span asp-validation-for="SpeedPolicy" class="text-danger"></span>
-            </div>
-            <div class="form-check">
-                <input asp-for="PayJoinEnabled" type="checkbox" class="form-check-input"/>
-                <label asp-for="PayJoinEnabled" class="form-check-label"></label>
-                <span asp-validation-for="PayJoinEnabled" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <h5>Derivation Scheme</h5>
-                <span>The DerivationScheme represents the destination of the funds received by your invoice on chain.</span>
+                <div class="form-group">
+                    <div class="mb-2">
+                        <label asp-for="InvoiceExpiration" class="d-inline"></label>
+                        <a href="https://docs.btcpayserver.org/faq-and-common-issues/faq-stores#invoice-expires-if-the-full-amount-has-not-been-paid-after-minutes" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                    </div>
+                    <input asp-for="InvoiceExpiration" class="form-control" />
+                    <span asp-validation-for="InvoiceExpiration" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <div class="mb-2">
+                        <label asp-for="MonitoringExpiration" class="d-inline"></label>
+                        <a href="https://docs.btcpayserver.org/faq-and-common-issues/faq-stores#payment-invalid-if-transactions-fails-to-confirm-minutes-after-invoice-expiration" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                    </div>
+                    <input asp-for="MonitoringExpiration" class="form-control" />
+                    <span asp-validation-for="MonitoringExpiration" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <div class="mb-2">
+                        <label asp-for="PaymentTolerance" class="d-inline"></label>
+                        <a href="https://docs.btcpayserver.org/faq-and-common-issues/faq-stores#consider-the-invoice-paid-even-if-the-paid-amount-is-less-than-expected" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                    </div>
+                    <input asp-for="PaymentTolerance" class="form-control" />
+                    <span asp-validation-for="PaymentTolerance" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <div class="mb-2">
+                        <label asp-for="SpeedPolicy" class="d-inline"></label>
+                        <a href="https://docs.btcpayserver.org/faq-and-common-issues/faq-stores#consider-the-invoice-confirmed-when-the-payment-transaction" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                    </div>
+                    <select asp-for="SpeedPolicy" class="form-control">
+                        <option value="0">Is unconfirmed</option>
+                        <option value="1">Has at least 1 confirmation</option>
+                        <option value="3">Has at least 2 confirmations</option>
+                        <option value="2">Has at least 6 confirmations</option>
+                    </select>
+                    <span asp-validation-for="SpeedPolicy" class="text-danger"></span>
+                </div>
+                <div class="form-check mb-5">
+                    <input asp-for="PayJoinEnabled" type="checkbox" class="form-check-input"/>
+                    <label asp-for="PayJoinEnabled" class="form-check-label"></label>
+                    <span asp-validation-for="PayJoinEnabled" class="text-danger"></span>
+                </div>
             </div>
 
-            <div class="form-group">
-                <table class="table table-sm table-responsive-md">
-                    <thead>
-                        <tr>
-                            <th>Crypto</th>
-                            <th>Derivation Scheme</th>
-                            <th style="text-align:center;">Enabled</th>
-                            <th style="text-align:right;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach(var scheme in Model.DerivationSchemes.OrderBy(scheme => scheme.Collapsed))
-                        {
-                            <tr class="@(@scheme.Collapsed? "collapsed": "")">
-                                <td>@scheme.Crypto</td>
-                                <td class="smMaxWidth text-truncate">@scheme.Value</td>
-                                <td style="text-align:center;">
-                                    @if(scheme.Enabled)
-                                    {
-                                        <span class="fa fa-check"></span>
-                                    }
-                                    else
-                                    {
-                                        <span class="fa fa-times"></span>
-                                    }
-                                </td>
-                                <td style="text-align:right">
-                                    @if(!string.IsNullOrWhiteSpace(scheme.Value) && scheme.WalletSupported)
-                                    {
-                                        <a asp-action="WalletTransactions" asp-controller="Wallets" asp-route-walletId="@scheme.WalletId">Wallet</a><span> - </span>
-                                    }
-                                    <a asp-action="AddDerivationScheme" asp-route-cryptoCode="@scheme.Crypto" asp-route-storeId="@this.Context.GetRouteValue("storeId")" id="@($"Modify{scheme.Crypto}")">Modify</a>
-                                </td>
-                            </tr>
-                        }
-                    
-                    @if (Model.DerivationSchemes.Any(scheme => scheme.Collapsed))
+            <h5>Derivation Scheme</h5>
+            <p>The Derivation Scheme represents the destination of the funds received by your invoice on chain.</p>
+
+            <table class="table table-sm table-responsive-md mt-0 mb-5">
+                <thead>
+                    <tr>
+                        <th>Crypto</th>
+                        <th>Derivation Scheme</th>
+                        <th style="text-align:center;">Enabled</th>
+                        <th style="text-align:right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach(var scheme in Model.DerivationSchemes.OrderBy(scheme => scheme.Collapsed))
                     {
-                        <tr class="only-for-js">
-                            <td colspan="4"><button class="btn btn-link" id="toggle-assets" type="button">Show additional assets</button></td>
+                        <tr class="@(@scheme.Collapsed? "collapsed": "")">
+                            <td>@scheme.Crypto</td>
+                            <td class="smMaxWidth text-truncate">@scheme.Value</td>
+                            <td style="text-align:center;">
+                                @if(scheme.Enabled)
+                                {
+                                    <span class="fa fa-check"></span>
+                                }
+                                else
+                                {
+                                    <span class="fa fa-times"></span>
+                                }
+                            </td>
+                            <td style="text-align:right">
+                                @if(!string.IsNullOrWhiteSpace(scheme.Value) && scheme.WalletSupported)
+                                {
+                                    <a asp-action="WalletTransactions" asp-controller="Wallets" asp-route-walletId="@scheme.WalletId">Wallet</a><span> - </span>
+                                }
+                                <a asp-action="AddDerivationScheme" asp-route-cryptoCode="@scheme.Crypto" asp-route-storeId="@this.Context.GetRouteValue("storeId")" id="@($"Modify{scheme.Crypto}")">Modify</a>
+                            </td>
                         </tr>
                     }
-                    </tbody>
-                </table>
-            </div>
 
-            <div class="form-group">
-                <div class="form-group">
-                    <h5>Lightning nodes (Experimental)</h5>
-                    <p>
-                        <span>A connection to a lightning charge node is required to generate lightning network enabled invoices.<br /></span>
-                        <span>This is experimental and not advised for production.</span>
-                    </p>
-                </div>
-                <div class="form-group">
-                    <table class="table table-sm table-responsive-md">
-                        <thead>
-                            <tr>
-                                <th>Crypto</th>
-                                <th>Address</th>
-                                <th style="text-align:center;">Enabled</th>
-                                <th style="text-align:right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach(var scheme in Model.LightningNodes)
-                            {
-                                <tr>
-                                    <td>@scheme.CryptoCode</td>
-                                    <td class="smMaxWidth text-truncate">@scheme.Address</td>
-                                    <td style="text-align:center;">
-                                        @if(scheme.Enabled)
-                                        {
-                                            <span class="fa fa-check"></span>
-                                        }
-                                        else
-                                        {
-                                            <span class="fa fa-times"></span>
-                                        }
-                                    </td>
-                                    <td style="text-align:right"><a asp-action="AddLightningNode" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@this.Context.GetRouteValue("storeId")" id="@($"Modify-Lightning{scheme.CryptoCode}")">Modify</a></td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="form-group">
+                @if (Model.DerivationSchemes.Any(scheme => scheme.Collapsed))
+                {
+                    <tr class="only-for-js">
+                        <td colspan="4"><button class="btn btn-link" id="toggle-assets" type="button">Show additional assets</button></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+
+            <h5>Lightning nodes (Experimental)</h5>
+            <p>
+                A connection to a lightning charge node is required to generate lightning network enabled invoices.
+                <br />
+                This is experimental and not advised for production.
+            </p>
+
+            <table class="table table-sm table-responsive-md">
+                <thead>
+                    <tr>
+                        <th>Crypto</th>
+                        <th>Address</th>
+                        <th style="text-align:center;">Enabled</th>
+                        <th style="text-align:right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach(var scheme in Model.LightningNodes)
+                    {
+                        <tr>
+                            <td>@scheme.CryptoCode</td>
+                            <td class="smMaxWidth text-truncate">@scheme.Address</td>
+                            <td style="text-align:center;">
+                                @if(scheme.Enabled)
+                                {
+                                    <span class="fa fa-check"></span>
+                                }
+                                else
+                                {
+                                    <span class="fa fa-times"></span>
+                                }
+                            </td>
+                            <td style="text-align:right"><a asp-action="AddLightningNode" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@this.Context.GetRouteValue("storeId")" id="@($"Modify-Lightning{scheme.CryptoCode}")">Modify</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <div class="form-group mb-5">
                 <label asp-for="LightningDescriptionTemplate"></label>
                 <input asp-for="LightningDescriptionTemplate" class="form-control" />
                 <span asp-validation-for="LightningDescriptionTemplate" class="text-danger"></span>
                 <p class="form-text text-muted">
-                    Available placeholders are: {StoreName}, {ItemDescription} and {OrderId}
+                    Available placeholders:
+                    <code>{StoreName} {ItemDescription} {OrderId}</code>
                 </p>
             </div>
-            
-             <div class="form-group">
-                <div class="form-group">
-                    <h5>Additional Payment methods</h5>
-                </div>
-                <div class="form-group">
-                    <table class="table table-sm table-responsive-md">
-                        <thead>
-                            <tr>
-                                <th>Provider</th>
-                                <th class="text-center">Enabled</th>
-                                <th class="text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        @foreach (var scheme in Model.ThirdPartyPaymentMethods)
-                        {
-                            <tr>
-                                <td>@scheme.Provider</td>
-                                <td  class="text-center">
-                                    @if (scheme.Enabled)
-                                    {
-                                        <span class="fa fa-check"></span>
-                                    }
-                                    else
-                                    {
-                                        <span class="fa fa-times"></span>
-                                    }
-                                </td>
-                                <td class="text-right"><a asp-action="@scheme.Action" id='Modify-@scheme.Provider' asp-route-storeId="@this.Context.GetRouteValue("storeId")">Modify</a></td>
-                            </tr>
-                        }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        <div class="form-group">
-            <div class="form-group">
-                <h5>Services</h5>
-            </div>
-            <div class="form-group">
-                <table class="table table-sm table-responsive-md">
-                    <thead>
+
+            <h5>Additional Payment methods</h5>
+            <table class="table table-sm table-responsive-md mt-1 mb-5">
+                <thead>
+                    <tr>
+                        <th>Provider</th>
+                        <th class="text-center">Enabled</th>
+                        <th class="text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var scheme in Model.ThirdPartyPaymentMethods)
+                {
+                    <tr>
+                        <td>@scheme.Provider</td>
+                        <td  class="text-center">
+                            @if (scheme.Enabled)
+                            {
+                                <span class="fa fa-check"></span>
+                            }
+                            else
+                            {
+                                <span class="fa fa-times"></span>
+                            }
+                        </td>
+                        <td class="text-right"><a asp-action="@scheme.Action" id='Modify-@scheme.Provider' asp-route-storeId="@this.Context.GetRouteValue("storeId")">Modify</a></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+
+            <h5>Services</h5>
+            <table class="table table-sm table-responsive-md mt-1 mb-5">
+                <thead>
                     <tr>
                         <th>Service</th>
                         <th style="text-align:right">Actions</th>
@@ -241,18 +229,15 @@
                         </td>
                         <td style="text-align:right"><a asp-action="Emails" asp-route-storeId="@this.Context.GetRouteValue("storeId")">Modify</a></td>
                     </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+                </tbody>
+            </table>
+
             @if(Model.CanDelete)
             {
-                <div class="form-group">
-                    <h5>Other actions...</h5>
-                    <p><a href="#danger-zone" data-toggle="collapse"><b>Click here to see more actions</b></a></p>
-                    <div id="danger-zone" class="collapse">
-                        <a class="btn btn-outline-danger form-control" asp-action="DeleteStore" asp-route-storeId="@Model.Id">Delete this store</a>
-                    </div>
+                <h5>Other actions...</h5>
+                <p><a href="#danger-zone" data-toggle="collapse"><b>Click here to see more actions</b></a></p>
+                <div id="danger-zone" class="collapse">
+                    <a class="btn btn-outline-danger form-control" asp-action="DeleteStore" asp-route-storeId="@Model.Id">Delete this store</a>
                 </div>
             }
             <button name="command" type="submit" class="btn btn-primary" value="Save" id="Save">Save</button>
@@ -265,9 +250,9 @@
 
     <script>
     $(document).ready(function(){
-       $(".collapsed").hide(); 
+       $(".collapsed").hide();
        $("#toggle-assets").click(function() {
-         $(".collapsed").show(); 
+         $(".collapsed").show();
          $(this).parents("tr").hide();
        });
     });

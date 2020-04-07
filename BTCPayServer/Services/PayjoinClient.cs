@@ -170,7 +170,7 @@ namespace BTCPayServer.Services
                 var additionalFee = newPSBT.GetFee() - originalFee;
                 if (overPaying > additionalFee)
                     throw new PayjoinSenderException("The payjoin receiver is sending more money to himself");
-                if (overPaying > 2 * originalFee)
+                if (overPaying > originalFee)
                     throw new PayjoinSenderException("The payjoin receiver is making us pay more than twice the original fee");
 
                 // Let's check the difference is only for the fee and that feerate
@@ -178,11 +178,7 @@ namespace BTCPayServer.Services
                 var expectedFee = originalFeeRate.GetFee(newVirtualSize);
                 // Signing precisely is hard science, give some breathing room for error.
                 expectedFee += originalFeeRate.GetFee(newPSBT.Inputs.Count * 2);
-                
-                // If the payjoin is removing some dust, we may pay a bit more as a whole output has been removed
-                var removedOutputs = Math.Max(0, originalTx.Outputs.Count - newPSBT.Outputs.Count);
-                expectedFee +=  removedOutputs * Money.Satoshis(294);
-                if (overPaying > expectedFee)
+                if (overPaying > (expectedFee - originalFee))
                     throw new PayjoinSenderException("The payjoin receiver increased the fee rate we are paying too much");
             }
 

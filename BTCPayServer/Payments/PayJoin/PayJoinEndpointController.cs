@@ -283,10 +283,6 @@ namespace BTCPayServer.Payments.PayJoin
 
             Money ourFeeContribution = Money.Zero;
             // We need to adjust the fee to keep a constant fee rate
-            var originalNewTx = newTx.Clone();
-            bool isSecondPass = false;
-            recalculateFee:
-            ourOutput = newTx.Outputs[ourOutputIndex];
             var txBuilder = network.NBitcoinNetwork.CreateTransactionBuilder();
             txBuilder.AddCoins(psbt.Inputs.Select(i => i.GetCoin()));
             txBuilder.AddCoins(selectedUTXOs.Select(o => o.Value.AsCoin()));
@@ -316,47 +312,12 @@ namespace BTCPayServer.Payments.PayJoin
                         if (i != ourOutputIndex)
                         {
                             var outputContribution = Money.Min(additionalFee, newTx.Outputs[i].Value);
+                            outputContribution = Money.Min(outputContribution,
+                                    newTx.Outputs[i].Value - newTx.Outputs[i].GetDustThreshold(minRelayTxFee));
                             newTx.Outputs[i].Value -= outputContribution;
                             additionalFee -= outputContribution;
                         }
                     }
-                }
-
-                List<int> dustIndices = new List<int>();
-                for (int i = 0; i < newTx.Outputs.Count; i++)
-                {
-                    if (newTx.Outputs[i].IsDust(minRelayTxFee))
-                    {
-                        dustIndices.Insert(0, i);
-                    }
-                }
-
-                if (dustIndices.Count > 0)
-                {
-                    if (isSecondPass)
-                    {
-                        // This should not happen
-                        await UnlockUTXOs();
-                        await BroadcastNow();
-                        return StatusCode(500,
-                            CreatePayjoinError(500, "unavailable",
-                                $"This service is unavailable for now (isSecondPass)"));
-                    }
-
-                    foreach (var dustIndex in dustIndices)
-                    {
-                        newTx.Outputs.RemoveAt(dustIndex);
-                    }
-
-                    ourOutputIndex = newTx.Outputs.IndexOf(ourOutput);
-                    newTx = originalNewTx.Clone();
-                    foreach (var dustIndex in dustIndices)
-                    {
-                        newTx.Outputs.RemoveAt(dustIndex);
-                    }
-                    ourFeeContribution = Money.Zero;
-                    isSecondPass = true;
-                    goto recalculateFee;
                 }
 
                 if (additionalFee > Money.Zero)

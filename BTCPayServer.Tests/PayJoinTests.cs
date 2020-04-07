@@ -290,12 +290,15 @@ namespace BTCPayServer.Tests
                 
                 
                 // Same as above. Except the sender send one satoshi less, so the change
-                // output get below dust and should be removed completely.
+                // output would get below dust and would be removed completely.
+                // So we remove as much fee as we can, and still accept the transaction because it is above minrelay fee
                 vector = (SpentCoin: Money.Satoshis(1089), InvoiceAmount: Money.Satoshis(500), Paid: Money.Satoshis(510), Fee: Money.Satoshis(200), ExpectLocked: true, ExpectedError: null as string);
                 proposedPSBT = await RunVector();
-                var output = Assert.Single(proposedPSBT.Outputs);
-                // With the output removed, the user should have largely pay all the needed fee
-                Assert.Equal(Money.Satoshis(510) + receiverCoin.Amount, output.Value);
+                Assert.Equal(2, proposedPSBT.Outputs.Count);
+                // We should have our payment
+                Assert.Contains(proposedPSBT.Outputs, output => output.Value == Money.Satoshis(500) + receiverCoin.Amount);
+                // Plus our other change output with value just at dust level
+                Assert.Contains(proposedPSBT.Outputs, output => output.Value == Money.Satoshis(294));
                 proposedPSBT = await senderUser.Sign(proposedPSBT);
                 proposedPSBT = proposedPSBT.Finalize();
                 explorerClient = tester.PayTester.GetService<ExplorerClientProvider>().GetExplorerClient(proposedPSBT.Network.NetworkSet.CryptoCode);

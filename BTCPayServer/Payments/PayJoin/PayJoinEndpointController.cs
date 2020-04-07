@@ -25,6 +25,7 @@ using NBXplorer.Models;
 using Newtonsoft.Json.Linq;
 using NicolasDorier.RateLimits;
 using Microsoft.Extensions.Logging;
+using NBXplorer.DerivationStrategy;
 
 namespace BTCPayServer.Payments.PayJoin
 {
@@ -170,14 +171,12 @@ namespace BTCPayServer.Payments.PayJoin
             {
                 await _payJoinRepository.TryUnlock(selectedUTXOs.Select(o => o.Key).ToArray());
             }
-            PSBTOutput paymentOutput = null;
+            PSBTOutput originalPaymentOutput = null;
             BitcoinAddress paymentAddress = null;
             InvoiceEntity invoice = null;
-            int ourOutputIndex = -1;
             DerivationSchemeSettings derivationSchemeSettings = null;
             foreach (var output in psbt.Outputs)
             {
-                ourOutputIndex++;
                 var key = output.ScriptPubKey.Hash + "#" + network.CryptoCode.ToUpperInvariant();
                 invoice = (await _invoiceRepository.GetInvoicesFromAddresses(new[] {key})).FirstOrDefault();
                 if (invoice is null)
@@ -222,7 +221,7 @@ namespace BTCPayServer.Payments.PayJoin
                     selectedUTXOs.Add(utxo.Outpoint, utxo);
                 }
 
-                paymentOutput = output;
+                originalPaymentOutput = output;
                 paymentAddress = paymentDetails.GetDepositAddress(network.NBitcoinNetwork);
                 break;
             }
@@ -247,7 +246,7 @@ namespace BTCPayServer.Payments.PayJoin
                         "We do not have any UTXO available for making a payjoin for now"));
             }
 
-            var originalPaymentValue = paymentOutput.Value;
+            var originalPaymentValue = originalPaymentOutput.Value;
             await _broadcaster.Schedule(DateTimeOffset.UtcNow + TimeSpan.FromMinutes(1.0), originalTx, network);
 
             //check if wallet of store is configured to be hot wallet
@@ -261,19 +260,44 @@ namespace BTCPayServer.Payments.PayJoin
                 await BroadcastNow();
                 return StatusCode(500, CreatePayjoinError(500, "unavailable", $"This service is unavailable for now"));
             }
-
+            
+            Money contributedAmount = Money.Zero;
             var newTx = originalTx.Clone();
-            var ourOutput = newTx.Outputs[ourOutputIndex];
+            var ourNewOutput = newTx.Outputs[originalPaymentOutput.Index];
+            HashSet<TxOut> isOurOutput = new HashSet<TxOut>();
+            isOurOutput.Add(ourNewOutput);
             foreach (var selectedUTXO in selectedUTXOs.Select(o => o.Value))
             {
-                ourOutput.Value += (Money)selectedUTXO.Value;
+                contributedAmount += (Money)selectedUTXO.Value;
                 newTx.Inputs.Add(selectedUTXO.Outpoint);
+            }
+            ourNewOutput.Value += contributedAmount;
+            var minRelayTxFee = this._dashboard.Get(network.CryptoCode).Status.BitcoinStatus?.MinRelayTxFee ??
+                                new FeeRate(1.0m);
+
+            // Probably receiving some spare change, let's add an output to make
+            // it looks more like a normal transaction
+            if (newTx.Outputs.Count == 1)
+            {
+                var change = await explorer.GetUnusedAsync(derivationSchemeSettings.AccountDerivation, DerivationFeature.Change);
+                var randomChangeAmount = RandomUtils.GetUInt64() % (ulong)contributedAmount.Satoshi;
+                var fakeChange = newTx.Outputs.CreateNewTxOut(randomChangeAmount, change.ScriptPubKey);
+                if (fakeChange.IsDust(minRelayTxFee))
+                {
+                    randomChangeAmount = fakeChange.GetDustThreshold(minRelayTxFee);
+                    fakeChange.Value = randomChangeAmount;
+                }
+                if (randomChangeAmount < contributedAmount)
+                {
+                    ourNewOutput.Value -= fakeChange.Value;
+                    newTx.Outputs.Add(fakeChange);
+                    isOurOutput.Add(fakeChange);
+                }
             }
 
             var rand = new Random();
             Utils.Shuffle(newTx.Inputs, rand);
             Utils.Shuffle(newTx.Outputs, rand);
-            ourOutputIndex = newTx.Outputs.IndexOf(ourOutput);
 
             // Remove old signatures as they are not valid anymore
             foreach (var input in newTx.Inputs)
@@ -291,32 +315,30 @@ namespace BTCPayServer.Payments.PayJoin
             Money additionalFee = expectedFee - actualFee;
             if (additionalFee > Money.Zero)
             {
-                var minRelayTxFee = this._dashboard.Get(network.CryptoCode).Status.BitcoinStatus?.MinRelayTxFee ??
-                                    new FeeRate(1.0m);
-
                 // If the user overpaid, taking fee on our output (useful if they dump a full UTXO for privacy)
-                if (due < Money.Zero)
+                for (int i = 0; i < newTx.Outputs.Count && additionalFee > Money.Zero && due < Money.Zero; i++)
                 {
-                    ourFeeContribution = Money.Min(additionalFee, -due);
-                    ourFeeContribution = Money.Min(ourFeeContribution,
-                        ourOutput.Value - ourOutput.GetDustThreshold(minRelayTxFee));
-                    ourOutput.Value -= ourFeeContribution;
-                    additionalFee -= ourFeeContribution;
+                    if (isOurOutput.Contains(newTx.Outputs[i]))
+                    {
+                        var outputContribution = Money.Min(additionalFee, -due);
+                        outputContribution = Money.Min(outputContribution,
+                            newTx.Outputs[i].Value - newTx.Outputs[i].GetDustThreshold(minRelayTxFee));
+                        newTx.Outputs[i].Value -= outputContribution;
+                        additionalFee -= outputContribution;
+                        ourFeeContribution += outputContribution;
+                    }
                 }
 
                 // The rest, we take from user's change
-                if (additionalFee > Money.Zero)
+                for (int i = 0; i < newTx.Outputs.Count && additionalFee > Money.Zero; i++)
                 {
-                    for (int i = 0; i < newTx.Outputs.Count && additionalFee != Money.Zero; i++)
+                    if (!isOurOutput.Contains(newTx.Outputs[i]))
                     {
-                        if (i != ourOutputIndex)
-                        {
-                            var outputContribution = Money.Min(additionalFee, newTx.Outputs[i].Value);
-                            outputContribution = Money.Min(outputContribution,
-                                    newTx.Outputs[i].Value - newTx.Outputs[i].GetDustThreshold(minRelayTxFee));
-                            newTx.Outputs[i].Value -= outputContribution;
-                            additionalFee -= outputContribution;
-                        }
+                        var outputContribution = Money.Min(additionalFee, newTx.Outputs[i].Value);
+                        outputContribution = Money.Min(outputContribution,
+                            newTx.Outputs[i].Value - newTx.Outputs[i].GetDustThreshold(minRelayTxFee));
+                        newTx.Outputs[i].Value -= outputContribution;
+                        additionalFee -= outputContribution;
                     }
                 }
 
@@ -352,8 +374,8 @@ namespace BTCPayServer.Payments.PayJoin
             // This will make the invoice paid even if the user do not
             // broadcast the payjoin.
             var originalPaymentData = new BitcoinLikePaymentData(paymentAddress,
-                paymentOutput.Value,
-                new OutPoint(originalTx.GetHash(), paymentOutput.Index),
+                originalPaymentOutput.Value,
+                new OutPoint(originalTx.GetHash(), originalPaymentOutput.Index),
                 originalTx.RBF);
             originalPaymentData.ConfirmationCount = -1;
             originalPaymentData.PayjoinInformation = new PayjoinInformation()

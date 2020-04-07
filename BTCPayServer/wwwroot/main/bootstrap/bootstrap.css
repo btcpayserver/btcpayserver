@@ -372,7 +372,7 @@ mark,
 .img-thumbnail {
   padding: 0.25rem;
   background-color: var(--btcpay-body-bg);
-  border: 1px solid var(--btcpay-color-neutral-300);
+  border: 1px solid var(--btcpay-border-color-medium, var(--btcpay-color-neutral-300));
   border-radius: 0.25rem;
   max-width: 100%;
   height: auto; }
@@ -1014,22 +1014,22 @@ pre {
   .table td {
     padding: 0.75rem;
     vertical-align: top;
-    border-top: 1px solid var(--btcpay-color-neutral-300); }
+    border-top: 1px solid var(--btcpay-border-color-medium, var(--btcpay-color-neutral-300)); }
   .table thead th {
     vertical-align: bottom;
-    border-bottom: 2px solid var(--btcpay-color-neutral-300); }
+    border-bottom: 2px solid var(--btcpay-border-color-medium, var(--btcpay-color-neutral-300)); }
   .table tbody + tbody {
-    border-top: 2px solid var(--btcpay-color-neutral-300); }
+    border-top: 2px solid var(--btcpay-border-color-medium, var(--btcpay-color-neutral-300)); }
 
 .table-sm th,
 .table-sm td {
   padding: 0.3rem; }
 
 .table-bordered {
-  border: 1px solid var(--btcpay-color-neutral-300); }
+  border: 1px solid var(--btcpay-border-color-medium, var(--btcpay-color-neutral-300)); }
   .table-bordered th,
   .table-bordered td {
-    border: 1px solid var(--btcpay-color-neutral-300); }
+    border: 1px solid var(--btcpay-border-color-medium, var(--btcpay-color-neutral-300)); }
   .table-bordered thead th,
   .table-bordered thead td {
     border-bottom-width: 2px; }
@@ -2110,7 +2110,7 @@ input[type="button"].btn-block {
   height: 0;
   margin: 0.5rem 0;
   overflow: hidden;
-  border-top: 1px solid var(--btcpay-color-neutral-200); }
+  border-top: 1px solid var(--btcpay-border-color-light, var(--btcpay-color-neutral-200)); }
 
 .dropdown-item {
   display: block;
@@ -2724,7 +2724,7 @@ input[type="button"].btn-block {
     cursor: default; }
 
 .nav-tabs {
-  border-bottom: 1px solid var(--btcpay-color-neutral-300); }
+  border-bottom: 1px solid var(--btcpay-border-color-medium, var(--btcpay-color-neutral-300)); }
   .nav-tabs .nav-item {
     margin-bottom: -1px; }
   .nav-tabs .nav-link {
@@ -2732,7 +2732,7 @@ input[type="button"].btn-block {
     border-top-left-radius: 0.25rem;
     border-top-right-radius: 0.25rem; }
     .nav-tabs .nav-link:hover, .nav-tabs .nav-link:focus {
-      border-color: var(--btcpay-color-neutral-200) var(--btcpay-color-neutral-200) var(--btcpay-color-neutral-300); }
+      border-color: var(--btcpay-border-color-light, var(--btcpay-color-neutral-200)) var(--btcpay-border-color-light, var(--btcpay-color-neutral-200)) var(--btcpay-border-color-medium, var(--btcpay-color-neutral-300)); }
     .nav-tabs .nav-link.disabled {
       color: var(--btcpay-color-neutral-600);
       background-color: transparent;
@@ -2741,7 +2741,7 @@ input[type="button"].btn-block {
   .nav-tabs .nav-item.show .nav-link {
     color: var(--btcpay-color-primary);
     background-color: var(--btcpay-color-primary-backdrop);
-    border-color: var(--btcpay-color-neutral-300) var(--btcpay-color-neutral-300) var(--btcpay-color-primary-backdrop); }
+    border-color: var(--btcpay-border-color-medium, var(--btcpay-color-neutral-300)) var(--btcpay-border-color-medium, var(--btcpay-color-neutral-300)) var(--btcpay-color-primary-backdrop); }
   .nav-tabs .dropdown-menu {
     margin-top: -1px;
     border-top-left-radius: 0;
@@ -3036,7 +3036,7 @@ input[type="button"].btn-block {
   word-wrap: break-word;
   background-color: var(--btcpay-bg-tile, var(--btcpay-color-white));
   background-clip: border-box;
-  border: 1px solid rgba(0, 0, 0, 0.125);
+  border: 1px solid var(--btcpay-border-color-medium, var(--btcpay-color-neutral-300));
   border-radius: 0.25rem; }
   .card > hr {
     margin-right: 0;
@@ -3072,7 +3072,7 @@ input[type="button"].btn-block {
   padding: 0.75rem 1.25rem;
   margin-bottom: 0;
   background-color: rgba(0, 0, 0, 0.03);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.125); }
+  border-bottom: 1px solid var(--btcpay-border-color-medium, var(--btcpay-color-neutral-300)); }
   .card-header:first-child {
     border-radius: calc(0.25rem - 1px) calc(0.25rem - 1px) 0 0; }
   .card-header + .list-group .list-group-item:first-child {
@@ -3081,7 +3081,7 @@ input[type="button"].btn-block {
 .card-footer {
   padding: 0.75rem 1.25rem;
   background-color: rgba(0, 0, 0, 0.03);
-  border-top: 1px solid rgba(0, 0, 0, 0.125); }
+  border-top: 1px solid var(--btcpay-border-color-medium, var(--btcpay-color-neutral-300)); }
   .card-footer:last-child {
     border-radius: 0 0 calc(0.25rem - 1px) calc(0.25rem - 1px); }
 
@@ -3238,13 +3238,13 @@ input[type="button"].btn-block {
   line-height: 1.25;
   color: var(--btcpay-body-color-link);
   background-color: var(--btcpay-color-white);
-  border: 1px solid var(--btcpay-color-neutral-300); }
+  border: 1px solid var(--btcpay-border-color-medium, var(--btcpay-color-neutral-300)); }
   .page-link:hover {
     z-index: 2;
     color: var(--btcpay-body-color-link-accent);
     text-decoration: none;
     background-color: var(--btcpay-color-neutral-200);
-    border-color: var(--btcpay-color-neutral-300); }
+    border-color: var(--btcpay-border-color-medium, var(--btcpay-color-neutral-300)); }
   .page-link:focus {
     z-index: 2;
     outline: 0;
@@ -3270,7 +3270,7 @@ input[type="button"].btn-block {
   pointer-events: none;
   cursor: auto;
   background-color: var(--btcpay-color-white);
-  border-color: var(--btcpay-color-neutral-300); }
+  border-color: var(--btcpay-border-color-medium, var(--btcpay-color-neutral-300)); }
 
 .pagination-lg .page-link {
   padding: 0.75rem 1.5rem;
@@ -3555,7 +3555,7 @@ input[type="button"].btn-block {
   display: block;
   padding: 0.75rem 1.25rem;
   margin-bottom: -1px;
-  border: 1px solid rgba(0, 0, 0, 0.125); }
+  border: 1px solid var(--btcpay-border-color-medium, var(--btcpay-color-neutral-300)); }
   .list-group-item:first-child {
     border-top-left-radius: 0.25rem;
     border-top-right-radius: 0.25rem; }
@@ -3900,7 +3900,7 @@ a.close.disabled {
   align-items: flex-start;
   justify-content: space-between;
   padding: 1rem 1rem;
-  border-bottom: 1px solid var(--btcpay-color-neutral-300);
+  border-bottom: 1px solid var(--btcpay-border-color-medium, var(--btcpay-color-neutral-300));
   border-top-left-radius: 0.3rem;
   border-top-right-radius: 0.3rem; }
   .modal-header .close {
@@ -3921,7 +3921,7 @@ a.close.disabled {
   align-items: center;
   justify-content: flex-end;
   padding: 1rem;
-  border-top: 1px solid var(--btcpay-color-neutral-300);
+  border-top: 1px solid var(--btcpay-border-color-medium, var(--btcpay-color-neutral-300));
   border-bottom-right-radius: 0.3rem;
   border-bottom-left-radius: 0.3rem; }
   .modal-footer > :not(:first-child) {
@@ -4443,19 +4443,19 @@ button.bg-dark:focus {
   background-color: transparent !important; }
 
 .border {
-  border: 1px solid var(--btcpay-color-neutral-300) !important; }
+  border: 1px solid var(--btcpay-border-color-medium, var(--btcpay-color-neutral-300)) !important; }
 
 .border-top {
-  border-top: 1px solid var(--btcpay-color-neutral-300) !important; }
+  border-top: 1px solid var(--btcpay-border-color-medium, var(--btcpay-color-neutral-300)) !important; }
 
 .border-right {
-  border-right: 1px solid var(--btcpay-color-neutral-300) !important; }
+  border-right: 1px solid var(--btcpay-border-color-medium, var(--btcpay-color-neutral-300)) !important; }
 
 .border-bottom {
-  border-bottom: 1px solid var(--btcpay-color-neutral-300) !important; }
+  border-bottom: 1px solid var(--btcpay-border-color-medium, var(--btcpay-color-neutral-300)) !important; }
 
 .border-left {
-  border-left: 1px solid var(--btcpay-color-neutral-300) !important; }
+  border-left: 1px solid var(--btcpay-border-color-medium, var(--btcpay-color-neutral-300)) !important; }
 
 .border-0 {
   border: 0 !important; }
@@ -6815,14 +6815,14 @@ a.text-dark:hover, a.text-dark:focus {
       background-color: var(--btcpay-color-white); }
   .table-bordered th,
   .table-bordered td {
-    border: 1px solid var(--btcpay-color-neutral-300) !important; }
+    border: 1px solid var(--btcpay-border-color-medium, var(--btcpay-color-neutral-300)) !important; }
   .table-dark {
     color: inherit; }
     .table-dark th,
     .table-dark td,
     .table-dark thead th,
     .table-dark tbody + tbody {
-      border-color: var(--btcpay-color-neutral-300); }
+      border-color: var(--btcpay-border-color-medium, var(--btcpay-color-neutral-300)); }
   .table .thead-dark th {
     color: inherit;
-    border-color: var(--btcpay-color-neutral-300); } }
+    border-color: var(--btcpay-border-color-medium, var(--btcpay-color-neutral-300)); } }

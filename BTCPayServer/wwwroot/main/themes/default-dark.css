@@ -16,6 +16,9 @@
   --btcpay-nav-color-link-active: var(--btcpay-color-white);
 
   --btcpay-bg-tile: var(--btcpay-bg-dark);
+
+  --btcpay-border-color-light: var(--btcpay-color-neutral-600);
+  --btcpay-border-color-medium: var(--btcpay-color-neutral-700);
 }
 
 .social-logo {

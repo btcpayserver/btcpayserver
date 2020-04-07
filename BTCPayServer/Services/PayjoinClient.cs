@@ -15,6 +15,7 @@ namespace BTCPayServer.Services
 {
     public class PayjoinClient
     {
+        public const string BIP21EndpointKey = "bpu";
         private readonly ExplorerClientProvider _explorerClientProvider;
         private HttpClient _httpClient;
 

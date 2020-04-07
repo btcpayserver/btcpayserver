@@ -124,7 +124,7 @@ namespace BTCPayServer.Tests
                 s.GoToInvoiceCheckout(invoiceId);
                 var bip21 = s.Driver.FindElement(By.ClassName("payment__details__instruction__open-wallet__btn"))
                     .GetAttribute("href");
-                Assert.DoesNotContain("bpu=", bip21);
+                Assert.DoesNotContain($"{PayjoinClient.BIP21EndpointKey}=", bip21);
                 
                 s.GoToHome();
                 s.GoToStore(receiver.storeId);
@@ -143,7 +143,7 @@ namespace BTCPayServer.Tests
                 s.GoToInvoiceCheckout(invoiceId);
                 bip21 = s.Driver.FindElement(By.ClassName("payment__details__instruction__open-wallet__btn"))
                     .GetAttribute("href");
-                Assert.Contains("bpu=", bip21);
+                Assert.Contains($"{PayjoinClient.BIP21EndpointKey}=", bip21);
 
                 s.GoToWalletSend(senderWalletId);
                 s.Driver.FindElement(By.Id("bip21parse")).Click();
@@ -175,7 +175,7 @@ namespace BTCPayServer.Tests
                 s.GoToInvoiceCheckout(invoiceId);
                 bip21 = s.Driver.FindElement(By.ClassName("payment__details__instruction__open-wallet__btn"))
                     .GetAttribute("href");
-                Assert.Contains("bpu", bip21);
+                Assert.Contains($"{PayjoinClient.BIP21EndpointKey}", bip21);
 
                 s.GoToWalletSend(senderWalletId);
                 s.Driver.FindElement(By.Id("bip21parse")).Click();
@@ -416,7 +416,7 @@ namespace BTCPayServer.Tests
                 var invoice = senderUser.BitPay.CreateInvoice(
                     new Invoice() {Price = 100, Currency = "USD", FullNotifications = true});
                 //payjoin is not enabled by default.
-                Assert.DoesNotContain("bpu", invoice.CryptoInfo.First().PaymentUrls.BIP21);
+                Assert.DoesNotContain($"{PayjoinClient.BIP21EndpointKey}", invoice.CryptoInfo.First().PaymentUrls.BIP21);
                 cashCow.SendToAddress(BitcoinAddress.Create(invoice.BitcoinAddress, cashCow.Network),
                     Money.Coins(0.06m));
 

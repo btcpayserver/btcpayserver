@@ -30,7 +30,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace BTCPayServer.Payments.PayJoin
 {
-    [Route("{cryptoCode}/bpu")]
+    [Route("{cryptoCode}/" + PayjoinClient.BIP21EndpointKey)]
     public class PayJoinEndpointController : ControllerBase
     {
         /// <summary>

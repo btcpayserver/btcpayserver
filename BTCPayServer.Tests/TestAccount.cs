@@ -366,7 +366,7 @@ namespace BTCPayServer.Tests
             var parsedBip21 = new BitcoinUrlBuilder(
                 invoice.CryptoInfo.First(c => c.CryptoCode == network.NetworkSet.CryptoCode).PaymentUrls.BIP21,
                 network);
-            return parsedBip21.UnknowParameters.TryGetValue("bpu", out var uri) ? new Uri(uri, UriKind.Absolute) : null;
+            return parsedBip21.UnknowParameters.TryGetValue($"{PayjoinClient.BIP21EndpointKey}", out var uri) ? new Uri(uri, UriKind.Absolute) : null;
         }
     }
 }

@@ -15,7 +15,7 @@
         }
     }
 
-    .unconf {
+    .unconf > * {
         opacity: 0.5;
     }
 
@@ -102,10 +102,10 @@
                                     "
                                 >
                                     @label.Value
-                                    <form 
+                                    <form
                                         asp-route-walletId="@this.Context.GetRouteValue("walletId")"
                                         asp-action="ModifyTransaction"
-                                        method="post" 
+                                        method="post"
                                         class="removeTransactionLabelForm"
                                     >
                                         <input type="hidden" name="transactionId" value="@transaction.Id" />
@@ -137,7 +137,7 @@
                             <div class="dropdown" style="display:inline-block;">
                                 <span class="fa fa-tags" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></span>
                                 <div class="dropdown-menu">
-                                    <form asp-action="ModifyTransaction" method="post" 
+                                    <form asp-action="ModifyTransaction" method="post"
                                         asp-route-walletId="@this.Context.GetRouteValue("walletId")">
                                         <input type="hidden" name="transactionId" value="@transaction.Id" />
                                         <div class="dropdown-item input-group">
@@ -171,7 +171,7 @@
                                     <span class="fa fa-commenting" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></span>
                                 }
                                 <div class="dropdown-menu">
-                                    <form asp-action="ModifyTransaction" method="post" 
+                                    <form asp-action="ModifyTransaction" method="post"
                                         asp-route-walletId="@this.Context.GetRouteValue("walletId")">
                                         <input type="hidden" name="transactionId" value="@transaction.Id" />
                                         <textarea name="addcomment" class="dropdown-item" maxlength="200" rows="2" cols="20">@transaction.Comment</textarea>

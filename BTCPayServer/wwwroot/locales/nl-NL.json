@@ -47,6 +47,6 @@
   "Pay with CoinSwitch": "Betalen met CoinSwitch",
   "Pay with Changelly": "Betalen met Changelly",
   "Close": "Sluiten",
-  "NotPaid_ExtraTransaction": "The invoice hasn't been paid in full. Please send another transaction to cover amount Due.",
-  "Recommended_Fee": "Recommended fee: {{feeRate}} sat/byte"
+  "NotPaid_ExtraTransaction": "Het factuur is niet volledig betaald. Stuur nog een transactie om het resterende bedrag te betalen.",
+  "Recommended_Fee": "Aanbevolen vergoeding: {{feeRate}} sat/byte"
 }

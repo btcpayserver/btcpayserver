@@ -315,7 +315,7 @@ namespace BTCPayServer.Payments.PayJoin
             Money additionalFee = expectedFee - actualFee;
             if (additionalFee > Money.Zero)
             {
-                // If the user overpaid, taking fee on our output (useful if they dump a full UTXO for privacy)
+                // If the user overpaid, taking fee on our output (useful if sender dump a full UTXO for privacy)
                 for (int i = 0; i < newTx.Outputs.Count && additionalFee > Money.Zero && due < Money.Zero; i++)
                 {
                     if (isOurOutput.Contains(newTx.Outputs[i]))
@@ -325,6 +325,7 @@ namespace BTCPayServer.Payments.PayJoin
                             newTx.Outputs[i].Value - newTx.Outputs[i].GetDustThreshold(minRelayTxFee));
                         newTx.Outputs[i].Value -= outputContribution;
                         additionalFee -= outputContribution;
+                        due += outputContribution;
                         ourFeeContribution += outputContribution;
                     }
                 }

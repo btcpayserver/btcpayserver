@@ -124,12 +124,12 @@ namespace BTCPayServer.Services
             foreach (var input in newPSBT.Inputs.CoinsFor(derivationSchemeSettings.AccountDerivation,
                 signingAccount.AccountKey, signingAccount.GetRootedKeyPath()))
             {
-                if (originalTx.Inputs.FindIndexedInput(input.PrevOut) is PSBTInput ourInput)
+                if (oldGlobalTx.Inputs.FindIndexedInput(input.PrevOut) is IndexedTxIn ourInput)
                 {
                     ourInputCount++;
                     if (input.IsFinalized())
                         throw new PayjoinSenderException("A PSBT input from us should not be finalized");
-                    if (newGlobalTx.Inputs[input.Index].Sequence != newGlobalTx.Inputs[ourInput.Index].Sequence)
+                    if (newGlobalTx.Inputs[input.Index].Sequence != ourInput.Index)
                         throw new PayjoinSenderException("The sequence of one of our input has been modified");
                 }
                 else

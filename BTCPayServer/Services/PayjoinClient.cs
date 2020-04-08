@@ -18,12 +18,12 @@ namespace BTCPayServer.Services
         private readonly ExplorerClientProvider _explorerClientProvider;
         private HttpClient _httpClient;
 
-        public PayjoinClient(ExplorerClientProvider explorerClientProvider, IHttpClientFactory httpClientFactory)
+        public PayjoinClient(ExplorerClientProvider explorerClientProvider, IHttpClientFactory httpClientFactory, Socks5HttpClientFactory socks5HttpClientFactory)
         {
             if (httpClientFactory == null) throw new ArgumentNullException(nameof(httpClientFactory));
             _explorerClientProvider =
                 explorerClientProvider ?? throw new ArgumentNullException(nameof(explorerClientProvider));
-            _httpClient = httpClientFactory.CreateClient("payjoin");
+            _httpClient = socks5HttpClientFactory.CreateClient("payjoin")?? httpClientFactory.CreateClient("payjoin");
         }
 
         public async Task<PSBT> RequestPayjoin(Uri endpoint, DerivationSchemeSettings derivationSchemeSettings,

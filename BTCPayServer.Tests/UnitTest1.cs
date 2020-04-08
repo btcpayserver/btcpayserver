@@ -901,7 +901,9 @@ namespace BTCPayServer.Tests
                 Assert.NotNull(client);
                 var response = await client.GetAsync("https://check.torproject.org/");
                 response.EnsureSuccessStatusCode();
-                Assert.DoesNotContain("You are not using Tor.", await response.Content.ReadAsStringAsync());
+                var result = await response.Content.ReadAsStringAsync();
+                Assert.DoesNotContain("You are not using Tor.", result);
+                Assert.Contains("Congratulations. This browser is configured to use Tor.", result);
             }
         }
 

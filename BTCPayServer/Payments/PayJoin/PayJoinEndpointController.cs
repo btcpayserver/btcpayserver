@@ -26,12 +26,62 @@ using Newtonsoft.Json.Linq;
 using NicolasDorier.RateLimits;
 using Microsoft.Extensions.Logging;
 using NBXplorer.DerivationStrategy;
+using System.Diagnostics.CodeAnalysis;
 
 namespace BTCPayServer.Payments.PayJoin
 {
     [Route("{cryptoCode}/bpu")]
     public class PayJoinEndpointController : ControllerBase
     {
+        /// <summary>
+        /// This comparer sorts utxo in a deterministic manner
+        /// based on a random parameter.
+        /// When a UTXO is locked because used in a coinjoin, in might be unlocked
+        /// later if the coinjoin failed.
+        /// Such UTXO should be reselected in priority so we don't expose the other UTXOs.
+        /// By making sure this UTXO is almost always coming on the same order as before it was locked,
+        /// it will more likely be selected again.
+        /// </summary>
+        internal class UTXODeterministicComparer : IComparer<UTXO>
+        {
+            static UTXODeterministicComparer()
+            {
+                _Instance = new UTXODeterministicComparer(RandomUtils.GetUInt256());
+            }
+
+            public UTXODeterministicComparer(uint256 blind)
+            {
+                _blind = blind.ToBytes();
+            }
+
+            static UTXODeterministicComparer _Instance;
+            private byte[] _blind;
+
+            public static UTXODeterministicComparer Instance => _Instance;
+            public int Compare([AllowNull] UTXO x, [AllowNull] UTXO y)
+            {
+                if (x == null)
+                    throw new ArgumentNullException(nameof(x));
+                if (y == null)
+                    throw new ArgumentNullException(nameof(y));
+                Span<byte> tmpx = stackalloc byte[32];
+                Span<byte> tmpy = stackalloc byte[32];
+                x.Outpoint.Hash.ToBytes(tmpx);
+                y.Outpoint.Hash.ToBytes(tmpy);
+                for (int i = 0; i < 32; i++)
+                {
+                    if ((byte)(tmpx[i] ^ _blind[i]) < (byte)(tmpy[i] ^ _blind[i]))
+                    {
+                        return 1;
+                    }
+                    if ((byte)(tmpx[i] ^ _blind[i]) > (byte)(tmpy[i] ^ _blind[i]))
+                    {
+                        return -1;
+                    }
+                }
+                return x.Outpoint.N.CompareTo(y.Outpoint.N);
+            }
+        }
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly InvoiceRepository _invoiceRepository;
         private readonly ExplorerClientProvider _explorerClientProvider;
@@ -215,6 +265,7 @@ namespace BTCPayServer.Payments.PayJoin
                 // we can't take spent outpoints.
                 var prevOuts = originalTx.Inputs.Select(o => o.PrevOut).ToHashSet();
                 utxos = utxos.Where(u => !prevOuts.Contains(u.Outpoint)).ToArray();
+                Array.Sort(utxos, UTXODeterministicComparer.Instance);
                 foreach (var utxo in await SelectUTXO(network, utxos, output.Value,
                     psbt.Outputs.Where(o => o.Index != output.Index).Select(o => o.Value).ToArray()))
                 {
@@ -417,7 +468,6 @@ namespace BTCPayServer.Payments.PayJoin
             if (availableUtxos.Length == 0)
                 return Array.Empty<UTXO>();
             // Assume the merchant wants to get rid of the dust
-            Utils.Shuffle(availableUtxos);
             HashSet<OutPoint> locked = new HashSet<OutPoint>();   
             // We don't want to make too many db roundtrip which would be inconvenient for the sender
             int maxTries = 30;

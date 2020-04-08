@@ -473,6 +473,28 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Fast", "Fast")]
+        public void DeterministicUTXOSorter()
+        {
+            UTXO CreateRandomUTXO()
+            {
+                return new UTXO() { Outpoint = new OutPoint(RandomUtils.GetUInt256(), RandomUtils.GetUInt32() % 0xff) };
+            }
+            var comparer = Payments.PayJoin.PayJoinEndpointController.UTXODeterministicComparer.Instance;
+            var utxos = Enumerable.Range(0, 100).Select(_ => CreateRandomUTXO()).ToArray();
+            Array.Sort(utxos, comparer);
+            var utxo53 = utxos[53];
+            Array.Sort(utxos, comparer);
+            Assert.Equal(utxo53, utxos[53]);
+            var utxo54 = utxos[54];
+            var utxo52 = utxos[52];
+            utxos = utxos.Where((_, i) => i != 53).ToArray();
+            Array.Sort(utxos, comparer);
+            Assert.Equal(utxo52, utxos[52]);
+            Assert.Equal(utxo54, utxos[53]);
+        }
+
+        [Fact]
+        [Trait("Fast", "Fast")]
         public void CanAcceptInvoiceWithTolerance()
         {
             var networkProvider = new BTCPayNetworkProvider(NetworkType.Regtest);

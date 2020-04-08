@@ -168,9 +168,8 @@ namespace BTCPayServer.Payments.PayJoin
                 await _explorerClientProvider.GetExplorerClient(network).BroadcastAsync(originalTx);
             }
 
-            var allNativeSegwit = psbt.Inputs.All(i => i.ScriptPubKeyType() == ScriptPubKeyType.Segwit);
-            var allScript = psbt.Inputs.All(i => i.ScriptPubKeyType() == ScriptPubKeyType.SegwitP2SH);
-            if (!allNativeSegwit && !allScript)
+            var sendersInputType = psbt.GetInputsScriptPubKeyType();
+            if (sendersInputType is null)
                 return BadRequest(CreatePayjoinError(400, "unsupported-inputs", "Payjoin only support segwit inputs (of the same type)"));
             if (psbt.CheckSanity() is var errors && errors.Count != 0)
             {
@@ -232,17 +231,19 @@ namespace BTCPayServer.Payments.PayJoin
                     .SingleOrDefault();
                 if (derivationSchemeSettings is null)
                     continue;
-               
-                var type = derivationSchemeSettings.AccountDerivation.ScriptPubKeyType();
-                if (!PayjoinClient.SupportedFormats.Contains(type))
+
+                var receiverInputsType = derivationSchemeSettings.AccountDerivation.ScriptPubKeyType();
+                if (!PayjoinClient.SupportedFormats.Contains(receiverInputsType))
                 {
                     //this should never happen, unless the store owner changed the wallet mid way through an invoice
                     return StatusCode(500, CreatePayjoinError(500, "unavailable", $"This service is unavailable for now"));
                 }
-                else if ((type == ScriptPubKeyType.Segwit && !allNativeSegwit) ||
-                         (type == ScriptPubKeyType.SegwitP2SH && allScript))
-                    return BadRequest(CreatePayjoinError(400, "unsupported-inputs",
-                        "Payjoin only support segwit inputs (of the same type)"));
+                if (sendersInputType != receiverInputsType)
+                {
+                    return StatusCode(503,
+                        CreatePayjoinError(503, "out-of-utxos",
+                            "We do not have any UTXO available for making a payjoin with the sender's inputs type")); 
+                }
                 var paymentMethod = invoice.GetPaymentMethod(paymentMethodId);
                 var paymentDetails =
                     paymentMethod.GetPaymentMethodDetails() as Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod;

@@ -48,7 +48,7 @@ namespace BTCPayServer.Models.WalletViewModels
         public bool DisableRBF { get; set; }
 
         public bool NBXSeedAvailable { get; set; }
-        [Display(Name = "PayJoin Endpoint Url (BIP79)")]
+        [Display(Name = "PayJoin Endpoint Url")]
         public string PayJoinEndpointUrl { get; set; }
         public bool InputSelection { get; set; }
         public InputSelectionOption[] InputsAvailable { get; set; }

@@ -87,7 +87,7 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Description template of the lightning invoice")]
         public string LightningDescriptionTemplate { get; set; }
         
-        [Display(Name = "Enable BIP79 Payjoin/P2EP")]
+        [Display(Name = "Enable Payjoin/P2EP")]
         public bool  PayJoinEnabled { get; set; }
 
         public class LightningNode

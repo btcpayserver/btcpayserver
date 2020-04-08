@@ -152,7 +152,7 @@ namespace BTCPayServer.Controllers
             var cloned = psbt.Clone();
             cloned = cloned.Finalize();
             await _broadcaster.Schedule(DateTimeOffset.UtcNow + TimeSpan.FromMinutes(1.0), cloned.ExtractTransaction(), btcPayNetwork);
-            return await _payjoinClient.RequestPayjoin(endpoint, derivationSchemeSettings, cloned, cancellationToken);
+            return await _payjoinClient.RequestPayjoin(endpoint, derivationSchemeSettings, psbt, cancellationToken);
         }
         
         [HttpGet]

@@ -32,6 +32,8 @@ namespace BTCPayServer.Services
             if (endpoint == null) throw new ArgumentNullException(nameof(endpoint));
             if (derivationSchemeSettings == null) throw new ArgumentNullException(nameof(derivationSchemeSettings));
             if (originalTx == null) throw new ArgumentNullException(nameof(originalTx));
+            if (originalTx.IsAllFinalized())
+                throw new InvalidOperationException("The original PSBT should not be finalized.");
 
             var signingAccount = derivationSchemeSettings.GetSigningAccountKeySettings();
             var sentBefore = -originalTx.GetBalance(derivationSchemeSettings.AccountDerivation,
@@ -42,7 +44,7 @@ namespace BTCPayServer.Services
                 throw new ArgumentException("originalTx should have utxo information", nameof(originalTx));
             var originalFee = originalTx.GetFee();
             var cloned = originalTx.Clone();
-            if (!cloned.IsAllFinalized() && !cloned.TryFinalize(out var errors))
+            if (!cloned.TryFinalize(out var errors))
             {
                 return null;
             }

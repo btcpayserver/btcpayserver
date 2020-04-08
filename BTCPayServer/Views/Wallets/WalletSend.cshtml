@@ -43,10 +43,10 @@
             {
                 <div class="form-group hide-when-js">
                     <label asp-for="SelectedInputs"></label>
-                    <select multiple="multiple" asp-for="SelectedInputs" >
+                    <select multiple="multiple" asp-for="SelectedInputs" class="form-control">
                         @foreach (var input in Model.InputsAvailable)
                         {
-                            <option value="@input.Outpoint" asp-selected="@(Model.SelectedInputs?.Contains(input.Outpoint)??false)">@input.Outpoint (@input.Amount)</option>
+                            <option value="@input.Outpoint" class="text-truncate" asp-selected="@(Model.SelectedInputs?.Contains(input.Outpoint)??false)">(@input.Amount) @input.Outpoint</option>
                         }
                     </select>
                 </div>

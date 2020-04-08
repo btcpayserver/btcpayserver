@@ -5,7 +5,8 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Configuration;
-using MihaZupan;
+using BTCPayServer.Services.Proxy;
+using NBitcoin;
 using NBitcoin.Protocol.Connectors;
 using NBitcoin.Protocol;
 
@@ -19,32 +20,17 @@ namespace BTCPayServer.Services
         {
             _options = options;
         }
-
-        private static (string Host, int Port)? ToParts(EndPoint endpoint)
-        {
-            switch (endpoint)
-            {
-                case DnsEndPoint dns:
-                    return (dns.Host, dns.Port);
-                case IPEndPoint ipEndPoint:
-                    return (ipEndPoint.Address.ToString(), ipEndPoint.Port);
-            }
-
-            return null;
-        }
-
         private ConcurrentDictionary<string, HttpClient> cachedClients = new ConcurrentDictionary<string, HttpClient>();
         public HttpClient CreateClient(string name)
         {
             return cachedClients.GetOrAdd(name, s =>
             {
-                var parts = ToParts(_options.SocksEndpoint);
-                if (!parts.HasValue)
+                if (_options.SocksEndpoint == null)
                 {
                     return null;
                 }
 
-                var proxy = new HttpToSocks5Proxy(parts.Value.Host, parts.Value.Port);
+                var proxy = new ProxyClient(_options.SocksEndpoint.ToEndpointString(), ProxyClient.ProxyType.Socks5);
                 return new HttpClient(
                     new HttpClientHandler {Proxy = proxy, },
                     true);

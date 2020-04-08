@@ -35,7 +35,6 @@
     <PackageReference Include="BundlerMinifier.Core" Version="3.2.435" />
     <PackageReference Include="BundlerMinifier.TagHelpers" Version="3.2.435" />
     <PackageReference Include="HtmlSanitizer" Version="4.0.217" />
-    <PackageReference Include="HttpToSocks5Proxy" Version="1.4.0" />
     <PackageReference Include="LedgerWallet" Version="2.0.0.5" />
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.2" />
     <PackageReference Include="Microsoft.NetCore.Analyzers" Version="2.9.8">

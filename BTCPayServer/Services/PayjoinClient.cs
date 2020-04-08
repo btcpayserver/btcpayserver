@@ -14,9 +14,14 @@ namespace BTCPayServer.Services
 
     public static class PSBTExtensions
     {
-        public static TxDestination GetSigner(this PSBTInput psbtInput)
+        public static ScriptPubKeyType? ScriptPubKeyType(this PSBTInput i)
         {
-            return psbtInput.FinalScriptSig?.GetSigner() ?? psbtInput.FinalScriptWitness?.GetSigner();
+            if (i.WitnessUtxo.ScriptPubKey.IsScriptType(ScriptType.P2WPKH))
+                return NBitcoin.ScriptPubKeyType.Segwit;
+            if (i.WitnessUtxo.ScriptPubKey.IsScriptType(ScriptType.P2SH) &&
+                i.FinalScriptWitness.ToScript().IsScriptType(ScriptType.P2WPKH))
+                return  NBitcoin.ScriptPubKeyType.SegwitP2SH;
+            return null;
         }
     }
 
@@ -160,7 +165,7 @@ namespace BTCPayServer.Services
                 }
             }
 
-            // Making sure that the receiver's inputs are finalized and P2PWKH
+            // Making sure that the receiver's inputs are finalized and match format
             foreach (var input in newPSBT.Inputs)
             {
                 if (originalTx.Inputs.FindIndexedInput(input.PrevOut) is null)
@@ -168,18 +173,9 @@ namespace BTCPayServer.Services
                     if (!input.IsFinalized())
                         throw new PayjoinSenderException("The payjoin receiver included a non finalized input");
 
-                    switch (type)
+                    if (type != input.ScriptPubKeyType())
                     {
-                        case ScriptPubKeyType.Segwit:
-                            if (!(input.FinalScriptWitness.GetSigner() is WitKeyId))
-                                throw new PayjoinSenderException("The payjoin receiver included an input that is not the same segwit input type");
-                            break;
-                        case ScriptPubKeyType.SegwitP2SH:
-                            if (!(input.FinalScriptWitness.GetSigner() is WitKeyId))
-                                throw new PayjoinSenderException("The payjoin receiver included an input that is not the same segwit input type");;
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException();
+                        throw new PayjoinSenderException("The payjoin receiver included an input that is not the same segwit input type");
                     }
                 }
             }

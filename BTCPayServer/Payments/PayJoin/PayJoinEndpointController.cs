@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Filters;
 using BTCPayServer.HostedServices;
@@ -14,12 +13,8 @@ using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Cors;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using NBitcoin;
-using NBitcoin.DataEncoders;
-using NBitcoin.Logging;
 using NBXplorer;
 using NBXplorer.Models;
 using Newtonsoft.Json.Linq;
@@ -173,8 +168,8 @@ namespace BTCPayServer.Payments.PayJoin
                 await _explorerClientProvider.GetExplorerClient(network).BroadcastAsync(originalTx);
             }
 
-            var allNativeSegwit = originalTx.Inputs.All(i => (i.GetSigner() is WitKeyId));
-            var allScript = originalTx.Inputs.All(i => (i.GetSigner() is WitScriptId));
+            var allNativeSegwit = psbt.Inputs.All(i => i.ScriptPubKeyType() == ScriptPubKeyType.Segwit);
+            var allScript = psbt.Inputs.All(i => i.ScriptPubKeyType() == ScriptPubKeyType.SegwitP2SH);
             if (!allNativeSegwit && !allScript)
                 return BadRequest(CreatePayjoinError(400, "unsupported-inputs", "Payjoin only support segwit inputs (of the same type)"));
             if (psbt.CheckSanity() is var errors && errors.Count != 0)

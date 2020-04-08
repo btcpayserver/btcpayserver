@@ -79,7 +79,7 @@ namespace BTCPayServer.Tests
                         var receiverCoin = await receiverUser.ReceiveUTXO(Money.Satoshis(810), network);
 
                         var clientShouldError = unsupportedFormats.Contains(senderAddressType);
-                        var errorCode = !clientShouldError && ( unsupportedFormats.Contains( receiverAddressType) || receiverAddressType != senderAddressType)? "unsupported-inputs"  : null;
+                        var errorCode = ( unsupportedFormats.Contains( receiverAddressType) || receiverAddressType != senderAddressType)? "unsupported-inputs"  : null;
 
                         var invoice = receiverUser.BitPay.CreateInvoice(new Invoice() {Price = 50000, Currency = "sats", FullNotifications = true});
                         

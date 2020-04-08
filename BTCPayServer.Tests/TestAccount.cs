@@ -296,7 +296,7 @@ namespace BTCPayServer.Tests
                 GenerateWalletResponseV.AccountKeyPath);
         }
 
-        public async Task<PSBT> SubmitPayjoin(Invoice invoice, PSBT psbt, string expectedError = null)
+        public async Task<PSBT> SubmitPayjoin(Invoice invoice, PSBT psbt, string expectedError = null, bool senderError= false)
         {
             var endpoint = GetPayjoinEndpoint(invoice, psbt.Network);
             if (endpoint == null)
@@ -309,7 +309,7 @@ namespace BTCPayServer.Tests
             var settings = store.GetSupportedPaymentMethods(parent.NetworkProvider).OfType<DerivationSchemeSettings>()
                 .First();
             Logs.Tester.LogInformation($"Proposing {psbt.GetGlobalTransaction().GetHash()}");
-            if (expectedError is null)
+            if (expectedError is null && !senderError)
             {
                 var proposed = await pjClient.RequestPayjoin(endpoint, settings, psbt, default);
                 Logs.Tester.LogInformation($"Proposed payjoin is {proposed.GetGlobalTransaction().GetHash()}");
@@ -318,8 +318,15 @@ namespace BTCPayServer.Tests
             }
             else
             {
-                var ex = await Assert.ThrowsAsync<PayjoinReceiverException>(async () => await pjClient.RequestPayjoin(endpoint, settings, psbt, default));
-                Assert.Equal(expectedError, ex.ErrorCode);
+                if (senderError)
+                {
+                    await Assert.ThrowsAsync<PayjoinSenderException>(async () => await pjClient.RequestPayjoin(endpoint, settings, psbt, default));
+                }
+                else
+                {
+                    var ex = await Assert.ThrowsAsync<PayjoinReceiverException>(async () => await pjClient.RequestPayjoin(endpoint, settings, psbt, default));
+                    Assert.Equal(expectedError, ex.ErrorCode);
+                }
                 return null;
             }
         }

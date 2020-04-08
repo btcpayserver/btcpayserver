@@ -172,9 +172,11 @@ namespace BTCPayServer.Payments.PayJoin
             {
                 await _explorerClientProvider.GetExplorerClient(network).BroadcastAsync(originalTx);
             }
-            
-            if (originalTx.Inputs.Any(i => !(i.GetSigner() is WitKeyId)))
-                return BadRequest(CreatePayjoinError(400, "unsupported-inputs", "Payjoin only support P2WPKH inputs"));
+
+            var allNativeSegwit = originalTx.Inputs.All(i => (i.GetSigner() is WitKeyId));
+            var allScript = originalTx.Inputs.All(i => (i.GetSigner() is WitScriptId));
+            if (!allNativeSegwit && !allScript)
+                return BadRequest(CreatePayjoinError(400, "unsupported-inputs", "Payjoin only support segwit inputs (of the same type)"));
             if (psbt.CheckSanity() is var errors && errors.Count != 0)
             {
                 return BadRequest(CreatePayjoinError(400, "insane-psbt", $"This PSBT is insane ({errors[0]})"));
@@ -235,6 +237,17 @@ namespace BTCPayServer.Payments.PayJoin
                     .SingleOrDefault();
                 if (derivationSchemeSettings is null)
                     continue;
+               
+                var type = derivationSchemeSettings.AccountDerivation.ScriptPubKeyType();
+                if (!PayjoinClient.SupportedFormats.Contains(type))
+                {
+                    //this should never happen, unless the store owner changed the wallet mid way through an invoice
+                    return StatusCode(500, CreatePayjoinError(500, "unavailable", $"This service is unavailable for now"));
+                }
+                else if ((type == ScriptPubKeyType.Segwit && !allNativeSegwit) ||
+                         (type == ScriptPubKeyType.SegwitP2SH && allScript))
+                    return BadRequest(CreatePayjoinError(400, "unsupported-inputs",
+                        "Payjoin only support segwit inputs (of the same type)"));
                 var paymentMethod = invoice.GetPaymentMethod(paymentMethodId);
                 var paymentDetails =
                     paymentMethod.GetPaymentMethodDetails() as Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod;

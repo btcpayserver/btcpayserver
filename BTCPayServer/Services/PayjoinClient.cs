@@ -2,20 +2,33 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Google.Apis.Util;
 using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services
 {
+
+    public static class PSBTExtensions
+    {
+        public static TxDestination GetSigner(this PSBTInput psbtInput)
+        {
+            return psbtInput.FinalScriptSig?.GetSigner() ?? psbtInput.FinalScriptWitness?.GetSigner();
+        }
+    }
+
     public class PayjoinClient
     {
+        public static readonly ScriptPubKeyType[] SupportedFormats = {
+            ScriptPubKeyType.Segwit,
+            ScriptPubKeyType.SegwitP2SH
+        };
+
         public const string BIP21EndpointKey = "bpu";
+
         private readonly ExplorerClientProvider _explorerClientProvider;
         private HttpClient _httpClient;
 
@@ -36,6 +49,11 @@ namespace BTCPayServer.Services
             if (originalTx.IsAllFinalized())
                 throw new InvalidOperationException("The original PSBT should not be finalized.");
 
+            var type = derivationSchemeSettings.AccountDerivation.ScriptPubKeyType();
+            if (!SupportedFormats.Contains(type))
+            {
+                throw new PayjoinSenderException($"The wallet does not support payjoin");
+            }
             var signingAccount = derivationSchemeSettings.GetSigningAccountKeySettings();
             var sentBefore = -originalTx.GetBalance(derivationSchemeSettings.AccountDerivation,
                 signingAccount.AccountKey,
@@ -149,8 +167,20 @@ namespace BTCPayServer.Services
                 {
                     if (!input.IsFinalized())
                         throw new PayjoinSenderException("The payjoin receiver included a non finalized input");
-                    if (!(input.FinalScriptWitness.GetSigner() is WitKeyId))
-                        throw new PayjoinSenderException("The payjoin receiver included an input that is not P2PWKH");
+
+                    switch (type)
+                    {
+                        case ScriptPubKeyType.Segwit:
+                            if (!(input.FinalScriptWitness.GetSigner() is WitKeyId))
+                                throw new PayjoinSenderException("The payjoin receiver included an input that is not the same segwit input type");
+                            break;
+                        case ScriptPubKeyType.SegwitP2SH:
+                            if (!(input.FinalScriptWitness.GetSigner() is WitKeyId))
+                                throw new PayjoinSenderException("The payjoin receiver included an input that is not the same segwit input type");;
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
                 }
             }
 

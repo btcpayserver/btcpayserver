@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -54,12 +55,10 @@ namespace BTCPayServer.Tests
                 var btcPayWallet = tester.PayTester.GetService<BTCPayWalletProvider>().GetWallet(network);
                 var cashCow = tester.ExplorerNode;
                 cashCow.Generate(2); // get some money in case
-                
-                var unsupportedFormats = new[]
-                {
-                    ScriptPubKeyType.SegwitP2SH,
-                    ScriptPubKeyType.Legacy
-                };
+
+                var unsupportedFormats = Enum.GetValues(typeof(ScriptPubKeyType))
+                    .AssertType<ScriptPubKeyType[]>()
+                    .Where(type => !PayjoinClient.SupportedFormats.Contains(type));
                 
                 
                 foreach (ScriptPubKeyType senderAddressType in Enum.GetValues(typeof(ScriptPubKeyType)))
@@ -79,7 +78,8 @@ namespace BTCPayServer.Tests
                         await receiverUser.EnablePayJoin();
                         var receiverCoin = await receiverUser.ReceiveUTXO(Money.Satoshis(810), network);
 
-                        var errorCode = unsupportedFormats.Contains( receiverAddressType) || receiverAddressType != senderAddressType? "unsupported-inputs"  : null;
+                        var clientShouldError = unsupportedFormats.Contains(senderAddressType);
+                        var errorCode = !clientShouldError && ( unsupportedFormats.Contains( receiverAddressType) || receiverAddressType != senderAddressType)? "unsupported-inputs"  : null;
 
                         var invoice = receiverUser.BitPay.CreateInvoice(new Invoice() {Price = 50000, Currency = "sats", FullNotifications = true});
                         
@@ -92,12 +92,7 @@ namespace BTCPayServer.Tests
                         txBuilder.SendEstimatedFees(new FeeRate(50m));
                         var psbt = txBuilder.BuildPSBT(false);
                         psbt = await senderUser.Sign(psbt);
-                        var pj = await senderUser.SubmitPayjoin(invoice, psbt, errorCode);
-                        if (errorCode == "no-pj")
-                        {
-                            //no payjoin should be possible since the receiver has an unsupported address format
-                            Assert.Null(pj);
-                        }
+                        var pj = await senderUser.SubmitPayjoin(invoice, psbt, errorCode, clientShouldError);
                     }
                 }
                 

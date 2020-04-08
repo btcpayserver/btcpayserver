@@ -93,6 +93,7 @@ namespace BTCPayServer.Tests
         }
 
         public bool MockRates { get; set; } = true;
+        public string SocksEndpoint { get; set; }
 
         public HashSet<string> Chains { get; set; } = new HashSet<string>(){"BTC"};
         public bool UseLightning { get; set; }
@@ -143,7 +144,7 @@ namespace BTCPayServer.Tests
                 config.AppendLine("allow-admin-registration=1");
            
             config.AppendLine($"torrcfile={TestUtils.GetTestDataFullPath("Tor/torrc")}");
-            config.AppendLine($"socksendpoint=localhost:9050");
+            config.AppendLine($"socksendpoint={SocksEndpoint}");
             config.AppendLine($"debuglog=debug.log");
 
 

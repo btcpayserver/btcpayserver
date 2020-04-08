@@ -27,6 +27,7 @@ services:
       TESTS_SSHCONNECTION: "root@sshd:22"
       TESTS_SSHPASSWORD: ""
       TESTS_SSHKEYFILE: ""
+      TESTS_SOCKSENDPOINT: "tor:9050"
     expose:
       - "80"
     links:

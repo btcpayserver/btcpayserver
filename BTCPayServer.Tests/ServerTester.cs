@@ -72,6 +72,7 @@ namespace BTCPayServer.Tests
             PayTester.SSHPassword = GetEnvironment("TESTS_SSHPASSWORD", "opD3i2282D");
             PayTester.SSHKeyFile = GetEnvironment("TESTS_SSHKEYFILE", "");
             PayTester.SSHConnection = GetEnvironment("TESTS_SSHCONNECTION", "root@127.0.0.1:21622");
+            PayTester.SocksEndpoint = GetEnvironment("TESTS_SOCKSENDPOINT", "localhost:9050");
         }
 
         public void ActivateLTC()

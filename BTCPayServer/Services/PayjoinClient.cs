@@ -43,14 +43,16 @@ namespace BTCPayServer.Services
         public const string BIP21EndpointKey = "bpu";
 
         private readonly ExplorerClientProvider _explorerClientProvider;
-        private HttpClient _httpClient;
+        private HttpClient _clearnetHttpClient;
+        private HttpClient _torHttpClient;
 
-        public PayjoinClient(ExplorerClientProvider explorerClientProvider, IHttpClientFactory httpClientFactory)
+        public PayjoinClient(ExplorerClientProvider explorerClientProvider, IHttpClientFactory httpClientFactory, Socks5HttpClientFactory socks5HttpClientFactory)
         {
             if (httpClientFactory == null) throw new ArgumentNullException(nameof(httpClientFactory));
             _explorerClientProvider =
                 explorerClientProvider ?? throw new ArgumentNullException(nameof(explorerClientProvider));
-            _httpClient = httpClientFactory.CreateClient("payjoin");
+            _clearnetHttpClient =  httpClientFactory.CreateClient("payjoin");
+            _torHttpClient = socks5HttpClientFactory.CreateClient("payjoin");
         }
 
         public async Task<PSBT> RequestPayjoin(Uri endpoint, DerivationSchemeSettings derivationSchemeSettings,
@@ -93,7 +95,12 @@ namespace BTCPayServer.Services
             }
 
             cloned.GlobalXPubs.Clear();
-            var bpuresponse = await _httpClient.PostAsync(endpoint,
+            HttpClient client = _clearnetHttpClient;
+            if (endpoint.IsOnion() && _torHttpClient != null)
+            {
+                client = _torHttpClient;
+            }
+            var bpuresponse = await client.PostAsync(endpoint,
                 new StringContent(cloned.ToHex(), Encoding.UTF8, "text/plain"), cancellationToken);
             if (!bpuresponse.IsSuccessStatusCode)
             {

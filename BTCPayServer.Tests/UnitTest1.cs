@@ -888,6 +888,25 @@ namespace BTCPayServer.Tests
             }
         }
 
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CanUseTorClient()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                await tester.StartAsync();
+                var torFactory = tester.PayTester.GetService<Socks5HttpClientFactory>();
+                var client = torFactory.CreateClient("test");
+                Assert.NotNull(client);
+                var response = await client.GetAsync("https://check.torproject.org/");
+                response.EnsureSuccessStatusCode();
+                var result = await response.Content.ReadAsStringAsync();
+                Assert.DoesNotContain("You are not using Tor.", result);
+                Assert.Contains("Congratulations. This browser is configured to use Tor.", result);
+            }
+        }
+
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanRescanWallet()

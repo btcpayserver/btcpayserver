@@ -129,7 +129,7 @@ namespace BTCPayServer.Services
                     ourInputCount++;
                     if (input.IsFinalized())
                         throw new PayjoinSenderException("A PSBT input from us should not be finalized");
-                    if (newGlobalTx.Inputs[input.Index].Sequence != ourInput.Index)
+                    if (newGlobalTx.Inputs[input.Index].Sequence != ourInput.TxIn.Sequence)
                         throw new PayjoinSenderException("The sequence of one of our input has been modified");
                 }
                 else

@@ -15,7 +15,7 @@
         }
     }
 
-    .unconf {
+    .unconf > * {
         opacity: 0.5;
     }
 
@@ -102,10 +102,10 @@
                                     "
                                 >
                                     @label.Value
-                                    <form 
+                                    <form
                                         asp-route-walletId="@this.Context.GetRouteValue("walletId")"
                                         asp-action="ModifyTransaction"
-                                        method="post" 
+                                        method="post"
                                         class="removeTransactionLabelForm"
                                     >
                                         <input type="hidden" name="transactionId" value="@transaction.Id" />

@@ -146,3 +146,7 @@ pre {
 .cursor-pointer{
     cursor: pointer;
 }
+
+.list-group-item a {
+  color: inherit;
+}

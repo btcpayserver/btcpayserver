@@ -23,22 +23,36 @@
         <li class="list-group-item d-flex justify-content-between align-items-center cursor-pointer"
             v-for="item of filteredItems"
             :key="item.outpoint"
-            v-bind:class="{ 'alert-success': item.selected }"
+            v-bind:class="{ 'list-group-item-secondary': item.selected }"
             v-on:click="toggleItem($event, item, !item.selected)">
-            <a v-on:click="toggleItem($event, item, !item.selected)" class="text-truncate" v-tooltip="item.outpoint" style="max-width:50%" v-bind:href="item.link" target="_blank">{{item.outpoint}}</a>
-            <div :id="item.outpoint" class="d-flex justify-content-between align-items-center">
+            <div class="d-flex justify-content-between align-items-center w-100">
+                <input class="mr-2"
+                    type="checkbox"
+                    v-bind:id="item.outpoint"
+                    v-bind:value="item.outpoint"
+                    v-bind:checked="item.selected">
+                <label
+                    class="flex-1 d-inline-block text-truncate mb-0"
+                    v-bind:for="item.outpoint">
+                    <a
+                        v-tooltip="item.outpoint"
+                        v-bind:href="item.link"
+                        target="_blank">
+                        {{item.outpoint}}
+                    </a>
+                </label>
                 <div>
                     <span v-if="item.comment" data-toggle="tooltip" v-tooltip="item.comment" class="badge badge-info badge-pill" style="font-style: italic">i</span>
                     <span
                           v-if="item.labels"
-                          class="badge badge-primary badge-pill ml-1"
+                          class="badge badge-primary badge-pill ml-2"
                           v-for="label of item.labels"
                           v-bind:style="{ 'background-color': label.color}"
                           key="label.value">
                         {{label.value}}
                     </span>
                 </div>
-                <span class="text-muted ml-1">{{item.amount}}</span>
+                <span class="text-muted ml-2">{{item.amount}}</span>
             </div>
         </li>
         <li class="list-group-item">

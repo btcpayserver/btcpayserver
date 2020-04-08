@@ -28,7 +28,7 @@ var vaultui = (function () {
         vaultLoading: new VaultFeedback("?", "Checking BTCPayServer Vault is running...", "vault-feedback1", "vault-loading"),
         vaultDenied: new VaultFeedback("failed", "The user declined access to the vault.", "vault-feedback1", "vault-denied"),
         vaultGranted: new VaultFeedback("ok", "Access to vault granted by owner.", "vault-feedback1", "vault-granted"),
-        noVault: new VaultFeedback("failed", "BTCPayServer Vault does not seems running, you can download it on <a target=\"_blank\" href=\"https://github.com/btcpayserver/BTCPayServer.Vault/releases/latest\">Github</a>.", "vault-feedback1", "no-vault"),
+        noVault: new VaultFeedback("failed", "BTCPayServer Vault does not seem to be running, you can download it on <a target=\"_blank\" href=\"https://github.com/btcpayserver/BTCPayServer.Vault/releases/latest\">Github</a>.", "vault-feedback1", "no-vault"),
         noWebsockets: new VaultFeedback("failed", "Web sockets are not supported by the browser.", "vault-feedback1", "no-websocket"),
         errorWebsockets: new VaultFeedback("failed", "Error of the websocket while connecting to the backend.", "vault-feedback1", "error-websocket"),
         bridgeConnected: new VaultFeedback("ok", "BTCPayServer successfully connected to the vault.", "vault-feedback1", "bridge-connected"),

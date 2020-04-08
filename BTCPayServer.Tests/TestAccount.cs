@@ -285,6 +285,7 @@ namespace BTCPayServer.Tests
                 i++;
             }
             Assert.False(true);
+            return null;
         }
 
         public async Task<BitcoinAddress> GetNewAddress(BTCPayNetwork network)

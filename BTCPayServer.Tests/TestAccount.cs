@@ -271,7 +271,20 @@ namespace BTCPayServer.Tests
             {
                 await cashCow.SendToAddressAsync(address, value);
             });
-            return  (await btcPayWallet.GetUnspentCoins(DerivationScheme)).First(c => c.ScriptPubKey == address.ScriptPubKey).Coin;
+            int i = 0;
+            while (i <30)
+            {
+                var result = (await btcPayWallet.GetUnspentCoins(DerivationScheme))
+                    .FirstOrDefault(c => c.ScriptPubKey == address.ScriptPubKey)?.Coin;
+                if (result != null)
+                {
+                    return result;
+                }
+
+                await Task.Delay(1000);
+                i++;
+            }
+            Assert.False(true);
         }
 
         public async Task<BitcoinAddress> GetNewAddress(BTCPayNetwork network)

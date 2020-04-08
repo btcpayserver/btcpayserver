@@ -897,7 +897,7 @@ namespace BTCPayServer.Tests
                 await tester.StartAsync();
                 var acc = tester.NewAccount();
                 acc.GrantAccess();
-                acc.RegisterDerivationScheme("BTC", true);
+                acc.RegisterDerivationScheme("BTC", ScriptPubKeyType.Segwit);
                 var btcDerivationScheme = acc.DerivationScheme;
 
                 var walletController = acc.GetController<WalletsController>();

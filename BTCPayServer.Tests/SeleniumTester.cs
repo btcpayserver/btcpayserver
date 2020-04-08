@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Lightning;
 using BTCPayServer.Lightning.CLightning;
 using BTCPayServer.Models;
+using BTCPayServer.Services;
 using BTCPayServer.Views.Manage;
 using BTCPayServer.Views.Stores;
 using Newtonsoft.Json;
@@ -332,7 +333,7 @@ namespace BTCPayServer.Tests
             GoToInvoiceCheckout(invoiceId);
             var bip21 = Driver.FindElement(By.ClassName("payment__details__instruction__open-wallet__btn"))
                 .GetAttribute("href");
-            Assert.Contains("bpu", bip21);
+            Assert.Contains($"{PayjoinClient.BIP21EndpointKey}", bip21);
                
             GoToWalletSend(walletId);
             Driver.FindElement(By.Id("bip21parse")).Click();

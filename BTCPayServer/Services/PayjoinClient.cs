@@ -2,19 +2,38 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Google.Apis.Util;
 using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services
 {
+
+    public static class PSBTExtensions
+    {
+        public static ScriptPubKeyType? ScriptPubKeyType(this PSBTInput i)
+        {
+            if (i.WitnessUtxo.ScriptPubKey.IsScriptType(ScriptType.P2WPKH))
+                return NBitcoin.ScriptPubKeyType.Segwit;
+            if (i.WitnessUtxo.ScriptPubKey.IsScriptType(ScriptType.P2SH) &&
+                i.FinalScriptWitness.ToScript().IsScriptType(ScriptType.P2WPKH))
+                return  NBitcoin.ScriptPubKeyType.SegwitP2SH;
+            return null;
+        }
+    }
+
     public class PayjoinClient
     {
+        public static readonly ScriptPubKeyType[] SupportedFormats = {
+            ScriptPubKeyType.Segwit,
+            ScriptPubKeyType.SegwitP2SH
+        };
+
+        public const string BIP21EndpointKey = "bpu";
+
         private readonly ExplorerClientProvider _explorerClientProvider;
         private HttpClient _httpClient;
 
@@ -35,6 +54,11 @@ namespace BTCPayServer.Services
             if (originalTx.IsAllFinalized())
                 throw new InvalidOperationException("The original PSBT should not be finalized.");
 
+            var type = derivationSchemeSettings.AccountDerivation.ScriptPubKeyType();
+            if (!SupportedFormats.Contains(type))
+            {
+                throw new PayjoinSenderException($"The wallet does not support payjoin");
+            }
             var signingAccount = derivationSchemeSettings.GetSigningAccountKeySettings();
             var sentBefore = -originalTx.GetBalance(derivationSchemeSettings.AccountDerivation,
                 signingAccount.AccountKey,
@@ -141,15 +165,18 @@ namespace BTCPayServer.Services
                 }
             }
 
-            // Making sure that the receiver's inputs are finalized and P2PWKH
+            // Making sure that the receiver's inputs are finalized and match format
             foreach (var input in newPSBT.Inputs)
             {
                 if (originalTx.Inputs.FindIndexedInput(input.PrevOut) is null)
                 {
                     if (!input.IsFinalized())
                         throw new PayjoinSenderException("The payjoin receiver included a non finalized input");
-                    if (!(input.FinalScriptWitness.GetSigner() is WitKeyId))
-                        throw new PayjoinSenderException("The payjoin receiver included an input that is not P2PWKH");
+
+                    if (type != input.ScriptPubKeyType())
+                    {
+                        throw new PayjoinSenderException("The payjoin receiver included an input that is not the same segwit input type");
+                    }
                 }
             }
 

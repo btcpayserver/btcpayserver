@@ -23,6 +23,7 @@ using BTCPayServer.Data;
 using Microsoft.AspNetCore.Identity;
 using NBXplorer.Models;
 using BTCPayServer.Client;
+using BTCPayServer.Events;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
@@ -141,19 +142,19 @@ namespace BTCPayServer.Tests
 
         public BTCPayNetwork SupportedNetwork { get; set; }
 
-        public WalletId RegisterDerivationScheme(string crytoCode, bool segwit = false, bool importKeysToNBX = false)
+        public WalletId RegisterDerivationScheme(string crytoCode, ScriptPubKeyType segwit = ScriptPubKeyType.Legacy, bool importKeysToNBX = false)
         {
             return RegisterDerivationSchemeAsync(crytoCode, segwit, importKeysToNBX).GetAwaiter().GetResult();
         }
 
-        public async Task<WalletId> RegisterDerivationSchemeAsync(string cryptoCode, bool segwit = false,
+        public async Task<WalletId> RegisterDerivationSchemeAsync(string cryptoCode, ScriptPubKeyType segwit = ScriptPubKeyType.Legacy,
             bool importKeysToNBX = false)
         {
             SupportedNetwork = parent.NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
             var store = parent.PayTester.GetController<StoresController>(UserId, StoreId);
             GenerateWalletResponseV = await parent.ExplorerClient.GenerateWalletAsync(new GenerateWalletRequest()
             {
-                ScriptPubKeyType = segwit ? ScriptPubKeyType.Segwit : ScriptPubKeyType.Legacy,
+                ScriptPubKeyType = segwit,
                 SavePrivateKeys = importKeysToNBX,
             });
             await store.AddDerivationScheme(StoreId,
@@ -266,9 +267,25 @@ namespace BTCPayServer.Tests
             var cashCow = parent.ExplorerNode;
             var btcPayWallet = parent.PayTester.GetService<BTCPayWalletProvider>().GetWallet(network);
             var address = (await btcPayWallet.ReserveAddressAsync(this.DerivationScheme)).Address;
-            var txid = await cashCow.SendToAddressAsync(address, value);
-            var tx = await cashCow.GetRawTransactionAsync(txid);
-            return tx.Outputs.AsCoins().First(c => c.ScriptPubKey == address.ScriptPubKey);
+            await parent.WaitForEvent<NewOnChainTransactionEvent>(async () =>
+            {
+                await cashCow.SendToAddressAsync(address, value);
+            });
+            int i = 0;
+            while (i <30)
+            {
+                var result = (await btcPayWallet.GetUnspentCoins(DerivationScheme))
+                    .FirstOrDefault(c => c.ScriptPubKey == address.ScriptPubKey)?.Coin;
+                if (result != null)
+                {
+                    return result;
+                }
+
+                await Task.Delay(1000);
+                i++;
+            }
+            Assert.False(true);
+            return null;
         }
 
         public async Task<BitcoinAddress> GetNewAddress(BTCPayNetwork network)
@@ -293,16 +310,20 @@ namespace BTCPayServer.Tests
                 GenerateWalletResponseV.AccountKeyPath);
         }
 
-        public async Task<PSBT> SubmitPayjoin(Invoice invoice, PSBT psbt, string expectedError = null)
+        public async Task<PSBT> SubmitPayjoin(Invoice invoice, PSBT psbt, string expectedError = null, bool senderError= false)
         {
             var endpoint = GetPayjoinEndpoint(invoice, psbt.Network);
+            if (endpoint == null)
+            {
+                return null;
+            }
             var pjClient = parent.PayTester.GetService<PayjoinClient>();
             var storeRepository = parent.PayTester.GetService<StoreRepository>();
             var store = await storeRepository.FindStore(StoreId);
             var settings = store.GetSupportedPaymentMethods(parent.NetworkProvider).OfType<DerivationSchemeSettings>()
                 .First();
             Logs.Tester.LogInformation($"Proposing {psbt.GetGlobalTransaction().GetHash()}");
-            if (expectedError is null)
+            if (expectedError is null && !senderError)
             {
                 var proposed = await pjClient.RequestPayjoin(endpoint, settings, psbt, default);
                 Logs.Tester.LogInformation($"Proposed payjoin is {proposed.GetGlobalTransaction().GetHash()}");
@@ -311,8 +332,15 @@ namespace BTCPayServer.Tests
             }
             else
             {
-                var ex = await Assert.ThrowsAsync<PayjoinReceiverException>(async () => await pjClient.RequestPayjoin(endpoint, settings, psbt, default));
-                Assert.Equal(expectedError, ex.ErrorCode);
+                if (senderError)
+                {
+                    await Assert.ThrowsAsync<PayjoinSenderException>(async () => await pjClient.RequestPayjoin(endpoint, settings, psbt, default));
+                }
+                else
+                {
+                    var ex = await Assert.ThrowsAsync<PayjoinReceiverException>(async () => await pjClient.RequestPayjoin(endpoint, settings, psbt, default));
+                    Assert.Equal(expectedError, ex.ErrorCode);
+                }
                 return null;
             }
         }
@@ -359,7 +387,7 @@ namespace BTCPayServer.Tests
             var parsedBip21 = new BitcoinUrlBuilder(
                 invoice.CryptoInfo.First(c => c.CryptoCode == network.NetworkSet.CryptoCode).PaymentUrls.BIP21,
                 network);
-            return new Uri(parsedBip21.UnknowParameters["bpu"], UriKind.Absolute);
+            return parsedBip21.UnknowParameters.TryGetValue($"{PayjoinClient.BIP21EndpointKey}", out var uri) ? new Uri(uri, UriKind.Absolute) : null;
         }
     }
 }

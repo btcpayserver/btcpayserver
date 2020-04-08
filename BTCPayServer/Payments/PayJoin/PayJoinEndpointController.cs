@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Filters;
 using BTCPayServer.HostedServices;
@@ -14,12 +13,8 @@ using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Cors;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using NBitcoin;
-using NBitcoin.DataEncoders;
-using NBitcoin.Logging;
 using NBXplorer;
 using NBXplorer.Models;
 using Newtonsoft.Json.Linq;
@@ -30,7 +25,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace BTCPayServer.Payments.PayJoin
 {
-    [Route("{cryptoCode}/bpu")]
+    [Route("{cryptoCode}/" + PayjoinClient.BIP21EndpointKey)]
     public class PayJoinEndpointController : ControllerBase
     {
         /// <summary>
@@ -172,9 +167,11 @@ namespace BTCPayServer.Payments.PayJoin
             {
                 await _explorerClientProvider.GetExplorerClient(network).BroadcastAsync(originalTx);
             }
-            
-            if (originalTx.Inputs.Any(i => !(i.GetSigner() is WitKeyId)))
-                return BadRequest(CreatePayjoinError(400, "unsupported-inputs", "Payjoin only support P2WPKH inputs"));
+
+            var allNativeSegwit = psbt.Inputs.All(i => i.ScriptPubKeyType() == ScriptPubKeyType.Segwit);
+            var allScript = psbt.Inputs.All(i => i.ScriptPubKeyType() == ScriptPubKeyType.SegwitP2SH);
+            if (!allNativeSegwit && !allScript)
+                return BadRequest(CreatePayjoinError(400, "unsupported-inputs", "Payjoin only support segwit inputs (of the same type)"));
             if (psbt.CheckSanity() is var errors && errors.Count != 0)
             {
                 return BadRequest(CreatePayjoinError(400, "insane-psbt", $"This PSBT is insane ({errors[0]})"));
@@ -235,6 +232,17 @@ namespace BTCPayServer.Payments.PayJoin
                     .SingleOrDefault();
                 if (derivationSchemeSettings is null)
                     continue;
+               
+                var type = derivationSchemeSettings.AccountDerivation.ScriptPubKeyType();
+                if (!PayjoinClient.SupportedFormats.Contains(type))
+                {
+                    //this should never happen, unless the store owner changed the wallet mid way through an invoice
+                    return StatusCode(500, CreatePayjoinError(500, "unavailable", $"This service is unavailable for now"));
+                }
+                else if ((type == ScriptPubKeyType.Segwit && !allNativeSegwit) ||
+                         (type == ScriptPubKeyType.SegwitP2SH && allScript))
+                    return BadRequest(CreatePayjoinError(400, "unsupported-inputs",
+                        "Payjoin only support segwit inputs (of the same type)"));
                 var paymentMethod = invoice.GetPaymentMethod(paymentMethodId);
                 var paymentDetails =
                     paymentMethod.GetPaymentMethodDetails() as Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod;

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -40,6 +41,64 @@ namespace BTCPayServer.Tests
             Logs.LogProvider = new XUnitLogProvider(helper);
         }
 
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public async Task CanOnlyUseCorrectAddressFormatsForPayjoin()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                await tester.StartAsync();
+                var broadcaster = tester.PayTester.GetService<DelayedTransactionBroadcaster>();
+                var payjoinRepository = tester.PayTester.GetService<PayJoinRepository>();
+                broadcaster.Disable();
+                var network = tester.NetworkProvider.GetNetwork<BTCPayNetwork>("BTC");
+                var btcPayWallet = tester.PayTester.GetService<BTCPayWalletProvider>().GetWallet(network);
+                var cashCow = tester.ExplorerNode;
+                cashCow.Generate(2); // get some money in case
+
+                var unsupportedFormats = Enum.GetValues(typeof(ScriptPubKeyType))
+                    .AssertType<ScriptPubKeyType[]>()
+                    .Where(type => !PayjoinClient.SupportedFormats.Contains(type));
+                
+                
+                foreach (ScriptPubKeyType senderAddressType in Enum.GetValues(typeof(ScriptPubKeyType)))
+                {
+                    var senderUser = tester.NewAccount();
+                    senderUser.GrantAccess(true);
+                    senderUser.RegisterDerivationScheme("BTC", senderAddressType);
+                    
+                    foreach (ScriptPubKeyType receiverAddressType in Enum.GetValues(typeof(ScriptPubKeyType)))
+                    {
+                        var senderCoin = await senderUser.ReceiveUTXO(Money.Satoshis(100000), network);
+                        
+                        Logs.Tester.LogInformation($"Testing payjoin with sender: {senderAddressType} receiver: {receiverAddressType}");
+                        var receiverUser = tester.NewAccount();
+                        receiverUser.GrantAccess(true);
+                        receiverUser.RegisterDerivationScheme("BTC", receiverAddressType, true);
+                        await receiverUser.EnablePayJoin();
+                        var receiverCoin = await receiverUser.ReceiveUTXO(Money.Satoshis(810), network);
+
+                        var clientShouldError = unsupportedFormats.Contains(senderAddressType);
+                        var errorCode = ( unsupportedFormats.Contains( receiverAddressType) || receiverAddressType != senderAddressType)? "unsupported-inputs"  : null;
+
+                        var invoice = receiverUser.BitPay.CreateInvoice(new Invoice() {Price = 50000, Currency = "sats", FullNotifications = true});
+                        
+                        var invoiceAddress = BitcoinAddress.Create(invoice.BitcoinAddress, cashCow.Network);
+                        var txBuilder = network.NBitcoinNetwork.CreateTransactionBuilder();
+                        
+                        txBuilder.AddCoins(senderCoin);
+                        txBuilder.Send(invoiceAddress, invoice.BtcDue);
+                        txBuilder.SetChange(await senderUser.GetNewAddress(network));
+                        txBuilder.SendEstimatedFees(new FeeRate(50m));
+                        var psbt = txBuilder.BuildPSBT(false);
+                        psbt = await senderUser.Sign(psbt);
+                        var pj = await senderUser.SubmitPayjoin(invoice, psbt, errorCode, clientShouldError);
+                    }
+                }
+                
+            }
+        }
+        
         [Fact] 
         [Trait("Selenium", "Selenium")] 
         public async Task CanUseBIP79Client()
@@ -60,7 +119,7 @@ namespace BTCPayServer.Tests
                 s.GoToInvoiceCheckout(invoiceId);
                 var bip21 = s.Driver.FindElement(By.ClassName("payment__details__instruction__open-wallet__btn"))
                     .GetAttribute("href");
-                Assert.DoesNotContain("bpu=", bip21);
+                Assert.DoesNotContain($"{PayjoinClient.BIP21EndpointKey}=", bip21);
                 
                 s.GoToHome();
                 s.GoToStore(receiver.storeId);
@@ -79,7 +138,7 @@ namespace BTCPayServer.Tests
                 s.GoToInvoiceCheckout(invoiceId);
                 bip21 = s.Driver.FindElement(By.ClassName("payment__details__instruction__open-wallet__btn"))
                     .GetAttribute("href");
-                Assert.Contains("bpu=", bip21);
+                Assert.Contains($"{PayjoinClient.BIP21EndpointKey}=", bip21);
 
                 s.GoToWalletSend(senderWalletId);
                 s.Driver.FindElement(By.Id("bip21parse")).Click();
@@ -111,7 +170,7 @@ namespace BTCPayServer.Tests
                 s.GoToInvoiceCheckout(invoiceId);
                 bip21 = s.Driver.FindElement(By.ClassName("payment__details__instruction__open-wallet__btn"))
                     .GetAttribute("href");
-                Assert.Contains("bpu", bip21);
+                Assert.Contains($"{PayjoinClient.BIP21EndpointKey}", bip21);
 
                 s.GoToWalletSend(senderWalletId);
                 s.Driver.FindElement(By.Id("bip21parse")).Click();
@@ -179,11 +238,11 @@ namespace BTCPayServer.Tests
 
                 var senderUser = tester.NewAccount();
                 senderUser.GrantAccess(true);
-                senderUser.RegisterDerivationScheme("BTC", true);
+                senderUser.RegisterDerivationScheme("BTC", ScriptPubKeyType.Segwit);
 
                 var receiverUser = tester.NewAccount();
                 receiverUser.GrantAccess(true);
-                receiverUser.RegisterDerivationScheme("BTC", true, true);
+                receiverUser.RegisterDerivationScheme("BTC", ScriptPubKeyType.Segwit, true);
                 await receiverUser.EnablePayJoin();
                 var receiverCoin = await receiverUser.ReceiveUTXO(Money.Satoshis(810), network);
                 string lastInvoiceId = null;
@@ -330,9 +389,8 @@ namespace BTCPayServer.Tests
                 Assert.True(result.Success);
             }
         }
-
-        [Fact]
-        // [Fact(Timeout = TestTimeout)]
+        
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanUseBIP79()
         {
@@ -348,18 +406,18 @@ namespace BTCPayServer.Tests
 
                 var senderUser = tester.NewAccount();
                 senderUser.GrantAccess(true);
-                senderUser.RegisterDerivationScheme("BTC", true, true);
+                senderUser.RegisterDerivationScheme("BTC", ScriptPubKeyType.Segwit, true);
 
                 var invoice = senderUser.BitPay.CreateInvoice(
                     new Invoice() {Price = 100, Currency = "USD", FullNotifications = true});
                 //payjoin is not enabled by default.
-                Assert.DoesNotContain("bpu", invoice.CryptoInfo.First().PaymentUrls.BIP21);
+                Assert.DoesNotContain($"{PayjoinClient.BIP21EndpointKey}", invoice.CryptoInfo.First().PaymentUrls.BIP21);
                 cashCow.SendToAddress(BitcoinAddress.Create(invoice.BitcoinAddress, cashCow.Network),
                     Money.Coins(0.06m));
 
                 var receiverUser = tester.NewAccount();
                 receiverUser.GrantAccess(true);
-                receiverUser.RegisterDerivationScheme("BTC", true, true);
+                receiverUser.RegisterDerivationScheme("BTC", ScriptPubKeyType.Segwit, true);
 
                 await receiverUser.EnablePayJoin();
                 // payjoin is enabled, with a segwit wallet, and the keys are available in nbxplorer

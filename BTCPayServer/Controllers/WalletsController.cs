@@ -659,7 +659,7 @@ namespace BTCPayServer.Controllers
                             $"Payment {(string.IsNullOrEmpty(uriBuilder.Label) ? string.Empty : $" to {uriBuilder.Label}")} {(string.IsNullOrEmpty(uriBuilder.Message) ? string.Empty : $" for {uriBuilder.Message}")}"
                     });
                 }
-                uriBuilder.UnknowParameters.TryGetValue("bpu", out var vmPayJoinEndpointUrl);
+                uriBuilder.UnknowParameters.TryGetValue(PayjoinClient.BIP21EndpointKey, out var vmPayJoinEndpointUrl);
                 vm.PayJoinEndpointUrl = vmPayJoinEndpointUrl;
             }
             catch

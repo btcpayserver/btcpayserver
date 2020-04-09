@@ -18,7 +18,13 @@ using NBitcoin.Socks;
 
 namespace BTCPayServer.HostedServices
 {
-    // Our implementation follow https://devblogs.microsoft.com/dotnet/system-io-pipelines-high-performance-io-in-net/
+    
+    /// <summary>
+    /// This is a very simple Socks HTTP proxy, that can be used through HttpClient.WebProxy
+    /// However, it only supports a single request/response, so the client must specify Connection: close to not
+    /// reuse the TCP connection to the proxy for another requests. 
+    /// Inspired from https://devblogs.microsoft.com/dotnet/system-io-pipelines-high-performance-io-in-net/
+    /// </summary>
     public class Socks5HttpProxyServer : IHostedService
     {
         class ProxyConnection

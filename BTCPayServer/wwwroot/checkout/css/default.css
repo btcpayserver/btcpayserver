@@ -11448,7 +11448,7 @@ low-fee-timeline {
     position: relative;
 }
 
-    .inputWithIcon img {
+    .inputWithIcon img, .inputWithIcon i {
         position: absolute;
         left: 2px;
         top: 9px;
@@ -11458,7 +11458,7 @@ low-fee-timeline {
         border-right: 1px solid #e0e0e0;
     }
 
-    .inputWithIcon.inputIconBg img {
+    .inputWithIcon.inputIconBg img, .inputWithIcon.inputIconBg i {
         background-color: #aaa;
         color: #fff;
         padding: 9px 4px;

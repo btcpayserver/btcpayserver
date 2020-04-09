@@ -896,14 +896,55 @@ namespace BTCPayServer.Tests
             using (var tester = ServerTester.Create())
             {
                 await tester.StartAsync();
-                var torFactory = tester.PayTester.GetService<Socks5HttpClientFactory>();
-                var client = torFactory.CreateClient("test");
+                var proxy = tester.PayTester.GetService<Socks5HttpProxyServer>();
+                var httpFactory = tester.PayTester.GetService<IHttpClientFactory>();
+                var client = httpFactory.CreateClient(PayjoinClient.PayjoinOnionNamedClient);
                 Assert.NotNull(client);
                 var response = await client.GetAsync("https://check.torproject.org/");
                 response.EnsureSuccessStatusCode();
                 var result = await response.Content.ReadAsStringAsync();
                 Assert.DoesNotContain("You are not using Tor.", result);
                 Assert.Contains("Congratulations. This browser is configured to use Tor.", result);
+                Logs.Tester.LogInformation("Now we should have one connection");
+                TestUtils.Eventually(() =>
+                {
+                    Thread.MemoryBarrier();
+                    Assert.Equal(1, proxy.ConnectionCount);
+                });
+                response = await client.GetAsync("http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/");
+                response.EnsureSuccessStatusCode();
+                result = await response.Content.ReadAsStringAsync();
+                Assert.Contains("Bitcoin", result);
+                Logs.Tester.LogInformation("Now we should have two connections");
+                TestUtils.Eventually(() =>
+                {
+                    Thread.MemoryBarrier();
+                    Assert.Equal(2, proxy.ConnectionCount);
+                });
+                response = await client.GetAsync("http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/");
+                response.EnsureSuccessStatusCode();
+                Logs.Tester.LogInformation("Querying the same address should not create additional connection");
+                TestUtils.Eventually(() =>
+                {
+                    Thread.MemoryBarrier();
+                    Assert.Equal(2, proxy.ConnectionCount);
+                });
+                client.Dispose();
+                Logs.Tester.LogInformation("Disposing a HttpClient should not proxy connection");
+                TestUtils.Eventually(() =>
+                {
+                    Thread.MemoryBarrier();
+                    Assert.Equal(2, proxy.ConnectionCount);
+                });
+                client = httpFactory.CreateClient(PayjoinClient.PayjoinOnionNamedClient);
+                response = await client.GetAsync("http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/");
+                response.EnsureSuccessStatusCode();
+                Logs.Tester.LogInformation("Querying the same address with same client should not create additional connection");
+                TestUtils.Eventually(() =>
+                {
+                    Thread.MemoryBarrier();
+                    Assert.Equal(2, proxy.ConnectionCount);
+                });
             }
         }
 

@@ -5,39 +5,12 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Configuration;
-using BTCPayServer.Services.Proxy;
 using NBitcoin;
 using NBitcoin.Protocol.Connectors;
 using NBitcoin.Protocol;
 
 namespace BTCPayServer.Services
 {
-    public class Socks5HttpClientFactory : IHttpClientFactory
-    {
-        private readonly BTCPayServerOptions _options;
-
-        public Socks5HttpClientFactory(BTCPayServerOptions options)
-        {
-            _options = options;
-        }
-        private ConcurrentDictionary<string, HttpClient> cachedClients = new ConcurrentDictionary<string, HttpClient>();
-        public HttpClient CreateClient(string name)
-        {
-            return cachedClients.GetOrAdd(name, s =>
-            {
-                if (_options.SocksEndpoint == null)
-                {
-                    return null;
-                }
-
-                var proxy = new ProxyClient(_options.SocksEndpoint.ToEndpointString(), ProxyClient.ProxyType.Socks5);
-                return new HttpClient(
-                    new HttpClientHandler {Proxy = proxy, },
-                    true);
-            });
-        }
-    }
-
     public class SocketFactory
     {
         private readonly BTCPayServerOptions _options;

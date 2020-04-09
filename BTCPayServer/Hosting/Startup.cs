@@ -82,7 +82,7 @@ namespace BTCPayServer.Hosting
                 };
             })
             .AddNewtonsoftJson()
-#if DEBUG
+#if RAZOR_RUNTIME_COMPILE
             .AddRazorRuntimeCompilation()
 #endif
             .AddControllersAsServices();

@@ -128,7 +128,6 @@ namespace BTCPayServer.HostedServices
             }
             Interlocked.Increment(ref connection.ServerContext.ConnectionCount);
             var pipe = new Pipe(PipeOptions.Default);
-            CancellationTokenSource.CreateLinkedTokenSource(connection.CancellationToken);
             var reading = FillPipeAsync(connection.ClientSocket, pipe.Writer, connection.CancellationToken)
                 .ContinueWith(_ => connection.CancellationTokenSource.Cancel(), TaskScheduler.Default);
             var writing = ReadPipeAsync(connection.SocksSocket, connection.ClientSocket, pipe.Reader, connection.CancellationToken)

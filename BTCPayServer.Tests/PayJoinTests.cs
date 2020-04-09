@@ -101,7 +101,7 @@ namespace BTCPayServer.Tests
         
         [Fact] 
         [Trait("Selenium", "Selenium")] 
-        public async Task CanUseBIP79Client()
+        public async Task CanUsePayjoinViaUI()
         {
             using (var s = SeleniumTester.Create())
             {
@@ -223,7 +223,7 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Integration", "Integration")]
-        public async Task CanUseBIP79FeeCornerCase()
+        public async Task CanUsePayjoinFeeCornerCase()
         {
             using (var tester = ServerTester.Create())
             {
@@ -392,7 +392,7 @@ namespace BTCPayServer.Tests
         
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
-        public async Task CanUseBIP79()
+        public async Task CanUsePayjoin()
         {
             using (var tester = ServerTester.Create())
             {

@@ -29,6 +29,7 @@ namespace BTCPayServer.HostedServices
     {
         class ProxyConnection
         {
+            public ServerContext ServerContext;
             public Socket ClientSocket;
             public Socket SocksSocket;
             public CancellationToken CancellationToken;
@@ -41,25 +42,41 @@ namespace BTCPayServer.HostedServices
                 CancellationTokenSource.Dispose();
             }
         }
+
+        class ServerContext
+        {
+            public EndPoint SocksEndpoint;
+            public Socket ServerSocket;
+            public CancellationToken CancellationToken;
+            public int ConnectionCount;
+        }
         private readonly BTCPayServerOptions _opts;
 
         public Socks5HttpProxyServer(Configuration.BTCPayServerOptions opts)
         {
             _opts = opts;
         }
-        private Socket _ServerSocket;
+        private ServerContext _ServerContext;
         private CancellationTokenSource _Cts;
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            if (_opts.SocksEndpoint is null)
+            if (_opts.SocksEndpoint is null || _ServerContext != null)
                 return Task.CompletedTask;
             _Cts = new CancellationTokenSource();
-            _ServerSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            _ServerSocket.Bind(new IPEndPoint(IPAddress.Loopback, 0));
-            Port = ((IPEndPoint)(_ServerSocket.LocalEndPoint)).Port;
+            var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            socket.Bind(new IPEndPoint(IPAddress.Loopback, 0));
+            Port = ((IPEndPoint)(socket.LocalEndPoint)).Port;
             Uri = new Uri($"http://127.0.0.1:{Port}");
-            _ServerSocket.Listen(5);
-            _ServerSocket.BeginAccept(Accept, null);
+            socket.Listen(5);
+            _ServerContext = new ServerContext()
+            {
+                SocksEndpoint = _opts.SocksEndpoint,
+                ServerSocket = socket,
+                CancellationToken = _Cts.Token,
+                ConnectionCount = 0
+            };
+            socket.BeginAccept(Accept, _ServerContext);
             Logs.PayServer.LogInformation($"Internal Socks HTTP Proxy listening at {Uri}");
             return Task.CompletedTask;
         }
@@ -67,47 +84,49 @@ namespace BTCPayServer.HostedServices
         public int Port { get; private set; }
         public Uri Uri { get; private set; }
 
-        void Accept(IAsyncResult ar)
+        static void Accept(IAsyncResult ar)
         {
+            var ctx = (ServerContext)ar.AsyncState;
             Socket clientSocket = null;
             try
             {
-                clientSocket = _ServerSocket.EndAccept(ar);
+                clientSocket = ctx.ServerSocket.EndAccept(ar);
             }
-            catch (ObjectDisposedException e)
+            catch (ObjectDisposedException)
             {
                 return;
             }
-            if (_Cts.IsCancellationRequested)
+            if (ctx.CancellationToken.IsCancellationRequested)
             {
                 Dispose(clientSocket);
                 return;
             }
             var toSocksProxy  = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            var connectionCts = CancellationTokenSource.CreateLinkedTokenSource(_Cts.Token);
-            toSocksProxy.BeginConnect(_opts.SocksEndpoint, ConnectToSocks, new ProxyConnection()
+            var connectionCts = CancellationTokenSource.CreateLinkedTokenSource(ctx.CancellationToken);
+            toSocksProxy.BeginConnect(ctx.SocksEndpoint, ConnectToSocks, new ProxyConnection()
             {
+                ServerContext = ctx,
                 ClientSocket = clientSocket,
                 SocksSocket = toSocksProxy,
                 CancellationToken = connectionCts.Token,
                 CancellationTokenSource = connectionCts 
             });
-            _ServerSocket.BeginAccept(Accept, null);
+            ctx.ServerSocket.BeginAccept(Accept, ctx);
         }
 
-        void ConnectToSocks(IAsyncResult ar)
+        static void ConnectToSocks(IAsyncResult ar)
         {
             var connection = (ProxyConnection)ar.AsyncState;
             try
             {
                 connection.SocksSocket.EndConnect(ar);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 connection.Dispose();
                 return;
             }
-            Interlocked.Increment(ref connectionCount);
+            Interlocked.Increment(ref connection.ServerContext.ConnectionCount);
             var pipe = new Pipe(PipeOptions.Default);
             CancellationTokenSource.CreateLinkedTokenSource(connection.CancellationToken);
             var reading = FillPipeAsync(connection.ClientSocket, pipe.Writer, connection.CancellationToken)
@@ -118,12 +137,11 @@ namespace BTCPayServer.HostedServices
                 .ContinueWith(_ =>
                 {
                     connection.Dispose();
-                    Interlocked.Decrement(ref connectionCount);
+                    Interlocked.Decrement(ref connection.ServerContext.ConnectionCount);
                 }, TaskScheduler.Default);
         }
-
-        private int connectionCount = 0;
-        public int ConnectionCount => connectionCount;
+        
+        public int ConnectionCount => _ServerContext is ServerContext s ? s.ConnectionCount : 0;
         private static async Task ReadPipeAsync(Socket socksSocket, Socket clientSocket, PipeReader reader, CancellationToken cancellationToken)
         {
             bool handshaked = false;
@@ -295,43 +313,28 @@ namespace BTCPayServer.HostedServices
         {
             while (true)
             {
-                // Allocate at least 512 bytes from the PipeWriter
                 Memory<byte> memory = writer.GetMemory(BufferSize);
-                try 
+                int bytesRead = await socket.ReceiveAsync(memory, SocketFlags.None, cancellationToken);
+                if (bytesRead == 0)
                 {
-                    int bytesRead = await socket.ReceiveAsync(memory, SocketFlags.None, cancellationToken);
-                    if (bytesRead == 0)
-                    {
-                        break;
-                    }
-                    // Tell the PipeWriter how much was read from the Socket
-                    writer.Advance(bytesRead);
-                }
-                catch (Exception ex)
-                {
-                    //LogError(ex);
                     break;
                 }
-
-                // Make the data available to the PipeReader
+                writer.Advance(bytesRead);
                 FlushResult result = await writer.FlushAsync(cancellationToken);
-
                 if (result.IsCompleted)
                 {
                     break;
                 }
             }
-
-            // Tell the PipeReader that there's no more data coming
             writer.Complete();
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            if (_ServerSocket is Socket)
+            if (_ServerContext is ServerContext ctx)
             {
                 _Cts.Cancel();
-                Dispose(_ServerSocket);
+                Dispose(ctx.ServerSocket);
                 Logs.PayServer.LogInformation($"Internal Socks HTTP Proxy closed");
             }
             return Task.CompletedTask;

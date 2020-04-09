@@ -148,7 +148,7 @@ namespace BTCPayServer.Controllers.GreenField
                     }
                 }
             }
-            _eventAggregator.Publish(new UserRegisteredEvent() {Request = Request, User = user, Admin = request.IsAdministrator is true });
+            _eventAggregator.Publish(new UserRegisteredEvent() {RequestUri = Request.GetAbsoluteRootUri(), User = user, Admin = request.IsAdministrator is true });
             return CreatedAtAction(string.Empty, user);
         }
 

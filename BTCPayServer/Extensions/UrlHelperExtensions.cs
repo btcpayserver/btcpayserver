@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿
 using BTCPayServer.Controllers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -10,10 +7,10 @@ namespace Microsoft.AspNetCore.Mvc
 {
     public static class UrlHelperExtensions
     {
-        public static string EmailConfirmationLink(this LinkGenerator urlHelper, string userId, string code, string scheme, HttpContext context)
+        public static string EmailConfirmationLink(this LinkGenerator urlHelper, string userId, string code, string scheme, HostString host, string pathbase)
         {
-            return urlHelper.GetUriByAction(context, nameof(AccountController.ConfirmEmail), "Account",
-                new {userId, code}, scheme);
+            return urlHelper.GetUriByAction( nameof(AccountController.ConfirmEmail), "Account",
+                new {userId, code}, scheme, host, pathbase);
         }
 
         public static string ResetPasswordCallbackLink(this IUrlHelper urlHelper, string userId, string code, string scheme)

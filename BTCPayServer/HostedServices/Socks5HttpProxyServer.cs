@@ -92,7 +92,7 @@ namespace BTCPayServer.HostedServices
             {
                 clientSocket = ctx.ServerSocket.EndAccept(ar);
             }
-            catch (ObjectDisposedException)
+            catch (Exception)
             {
                 return;
             }
@@ -111,7 +111,14 @@ namespace BTCPayServer.HostedServices
                 CancellationToken = connectionCts.Token,
                 CancellationTokenSource = connectionCts 
             });
-            ctx.ServerSocket.BeginAccept(Accept, ctx);
+            try
+            {
+                ctx.ServerSocket.BeginAccept(Accept, ctx);
+            }
+            catch (Exception)
+            {
+                return;
+            }
         }
 
         static void ConnectToSocks(IAsyncResult ar)

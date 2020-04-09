@@ -28,7 +28,9 @@ namespace BTCPayServer
                 CryptoImagePath = "imlegacy/groestlcoin.png",
                 LightningImagePath = "imlegacy/groestlcoin-lightning.svg",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),
-                CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("17'") : new KeyPath("1'")
+                CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("17'") : new KeyPath("1'"),
+                SupportRBF = true,
+                SupportPayJoin = true
             });
         }
     }

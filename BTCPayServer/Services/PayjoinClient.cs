@@ -22,16 +22,21 @@ namespace BTCPayServer.Services
                 throw new InvalidOperationException("The psbt should be finalized with witness information");
             var coinsPerTypes = psbt.Inputs.Select(i =>
             {
-                if (i.WitnessUtxo.ScriptPubKey.IsScriptType(ScriptType.P2WPKH))
-                    return ((PSBTCoin)i, ScriptPubKeyType.Segwit);
-                if (i.WitnessUtxo.ScriptPubKey.IsScriptType(ScriptType.P2SH) &&
-                    i.FinalScriptWitness.ToScript().IsScriptType(ScriptType.P2WPKH))
-                    return ((PSBTCoin)i, ScriptPubKeyType.SegwitP2SH);
-                return ((PSBTCoin)i, null as ScriptPubKeyType?);
+                return ((PSBTCoin)i, i.GetInputScriptPubKeyType());
             }).GroupBy(o => o.Item2, o => o.Item1).ToArray();
             if (coinsPerTypes.Length != 1)
                 return default;
             return coinsPerTypes[0].Key;
+        }
+
+        public static ScriptPubKeyType? GetInputScriptPubKeyType(this PSBTInput i)
+        {
+            if (i.WitnessUtxo.ScriptPubKey.IsScriptType(ScriptType.P2WPKH))
+                return ScriptPubKeyType.Segwit;
+            if (i.WitnessUtxo.ScriptPubKey.IsScriptType(ScriptType.P2SH) &&
+                i.FinalScriptWitness.ToScript().IsScriptType(ScriptType.P2WPKH))
+                return ScriptPubKeyType.SegwitP2SH;
+            return null as ScriptPubKeyType?;
         }
     }
 
@@ -178,19 +183,18 @@ namespace BTCPayServer.Services
                 }
             }
 
-            // Making sure that the receiver's inputs are finalized and match format
-            var payjoinInputType = newPSBT.GetInputsScriptPubKeyType();
-            if (payjoinInputType is null || payjoinInputType.Value != type)
-            {
-                throw new PayjoinSenderException("The payjoin receiver included an input that is not the same segwit input type");
-            }
-
             foreach (var input in newPSBT.Inputs)
             {
                 if (originalTx.Inputs.FindIndexedInput(input.PrevOut) is null)
                 {
                     if (!input.IsFinalized())
                         throw new PayjoinSenderException("The payjoin receiver included a non finalized input");
+                    // Making sure that the receiver's inputs are finalized and match format
+                    var payjoinInputType = input.GetInputScriptPubKeyType();
+                    if (payjoinInputType is null || payjoinInputType.Value != type)
+                    {
+                        throw new PayjoinSenderException("The payjoin receiver included an input that is not the same segwit input type");
+                    }
                 }
             }
 

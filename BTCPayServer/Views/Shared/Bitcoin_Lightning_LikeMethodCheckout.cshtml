@@ -58,15 +58,6 @@
                 </div>
             </nav>
             <nav v-else class="copyBox">
-                <div class="copySectionBox bottomBorder" :title="$t(hasPayjoin? 'BIP21 payment link' : 'BIP21 payment link with payjoin support') " >
-                    <label>{{$t("Payment link")}}</label>
-                    <div class="inputWithIcon _copyInput">
-                        <input type="text" class="checkoutTextbox" v-bind:value="srvModel.invoiceBitcoinUrl" readonly="readonly"/>
-                        <img v-bind:src="srvModel.cryptoImage" v-if="hasPayjoin"/>
-                        <i class="fa fa-user-secret" v-else/>
-                    </div>
-                </div>
-                <div class="separatorGem"></div>
                 <div class="copySectionBox bottomBorder">
                     <label>{{$t("Amount")}}</label>
                     <div class="copyAmountText copy-cursor _copySpan">
@@ -74,11 +65,20 @@
                     </div>
                 </div>
                 <div class="separatorGem"></div>
-                <div class="copySectionBox">
+                <div class="copySectionBox bottomBorder">
                     <label>{{$t("Address")}}</label>
                     <div class="inputWithIcon _copyInput">
                         <input type="text" class="checkoutTextbox" v-bind:value="srvModel.btcAddress" readonly="readonly"/>
                         <img v-bind:src="srvModel.cryptoImage"/>
+                    </div>
+                </div>
+                <div class="separatorGem"></div>
+                <div class="copySectionBox" :title="$t(hasPayjoin? 'BIP21 payment link' : 'BIP21 payment link with payjoin support') " >
+                    <label>{{$t("Payment link")}}</label>
+                    <div class="inputWithIcon _copyInput">
+                        <input type="text" class="checkoutTextbox" v-bind:value="srvModel.invoiceBitcoinUrl" readonly="readonly"/>
+                        <img v-bind:src="srvModel.cryptoImage" v-if="hasPayjoin"/>
+                        <i class="fa fa-user-secret" v-else/>
                     </div>
                 </div>
             </nav>

@@ -26,11 +26,13 @@ namespace BTCPayServer.HostedServices
             public Socket ClientSocket;
             public Socket SocksSocket;
             public CancellationToken CancellationToken;
+            public CancellationTokenSource CancellationTokenSource;
 
             public void Dispose()
             {
                 Socks5HttpProxyServer.Dispose(ClientSocket);
                 Socks5HttpProxyServer.Dispose(SocksSocket);
+                CancellationTokenSource.Dispose();
             }
         }
         private readonly BTCPayServerOptions _opts;
@@ -76,11 +78,13 @@ namespace BTCPayServer.HostedServices
                 return;
             }
             var toSocksProxy  = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            var connectionCts = CancellationTokenSource.CreateLinkedTokenSource(_Cts.Token);
             toSocksProxy.BeginConnect(_opts.SocksEndpoint, ConnectToSocks, new ProxyConnection()
             {
                 ClientSocket = clientSocket,
                 SocksSocket = toSocksProxy,
-                CancellationToken = _Cts.Token
+                CancellationToken = connectionCts.Token,
+                CancellationTokenSource = connectionCts 
             });
             _ServerSocket.BeginAccept(Accept, null);
         }
@@ -99,14 +103,17 @@ namespace BTCPayServer.HostedServices
             }
             Interlocked.Increment(ref connectionCount);
             var pipe = new Pipe(PipeOptions.Default);
-            var reading = FillPipeAsync(connection.ClientSocket, pipe.Writer, connection.CancellationToken);
-            var writing = ReadPipeAsync(connection.SocksSocket, connection.ClientSocket, pipe.Reader, connection.CancellationToken);
+            CancellationTokenSource.CreateLinkedTokenSource(connection.CancellationToken);
+            var reading = FillPipeAsync(connection.ClientSocket, pipe.Writer, connection.CancellationToken)
+                .ContinueWith(_ => connection.CancellationTokenSource.Cancel(), TaskScheduler.Default);
+            var writing = ReadPipeAsync(connection.SocksSocket, connection.ClientSocket, pipe.Reader, connection.CancellationToken)
+                .ContinueWith(_ => connection.CancellationTokenSource.Cancel(), TaskScheduler.Default);
             _ = Task.WhenAll(reading, writing)
                 .ContinueWith(_ =>
                 {
                     connection.Dispose();
                     Interlocked.Decrement(ref connectionCount);
-                });
+                }, TaskScheduler.Default);
         }
 
         private int connectionCount = 0;
@@ -197,19 +204,23 @@ namespace BTCPayServer.HostedServices
                     }
                     catch (SocksException e) when (e.SocksErrorCode == SocksErrorCode.HostUnreachable || e.SocksErrorCode == SocksErrorCode.HostUnreachable)
                     {
-                        await SendAsync(clientSocket , $"{httpVersion} 502 Bad Gateway\r\n\r\n", cancellationToken);
+                        await SendAsync(clientSocket , $"{httpVersion} 502 Bad Gateway\r\nContent-Length: 0\r\n\r\n", cancellationToken);
+                        goto done;
                     }
                     catch (SocksException e)
                     {
-                        await SendAsync(clientSocket , $"{httpVersion} 500 Internal Server Error\r\nX-Proxy-Error-Type: Socks {e.SocksErrorCode}\r\n\r\n", cancellationToken);
+                        await SendAsync(clientSocket , $"{httpVersion} 500 Internal Server Error\r\nContent-Length: 0\r\nX-Proxy-Error-Type: Socks {e.SocksErrorCode}\r\n\r\n", cancellationToken);
+                        goto done;
                     }
                     catch (SocketException e)
                     {
-                        await SendAsync(clientSocket , $"{httpVersion} 500 Internal Server Error\r\nX-Proxy-Error-Type: Socket {e.SocketErrorCode}\r\n\r\n", cancellationToken);
+                        await SendAsync(clientSocket , $"{httpVersion} 500 Internal Server Error\r\nContent-Length: 0\r\nX-Proxy-Error-Type: Socket {e.SocketErrorCode}\r\n\r\n", cancellationToken);
+                        goto done;
                     }
                     catch
                     {
                         await SendAsync(clientSocket , $"{httpVersion} 500 Internal Server Error\r\n\r\n", cancellationToken);
+                        goto done;
                     }
                 }
                 else
@@ -231,6 +242,7 @@ namespace BTCPayServer.HostedServices
                 }
             }
 
+            done:
             // Mark the PipeReader as complete
             reader.Complete();
         }

@@ -463,7 +463,7 @@ namespace BTCPayServer.Controllers
 
                     _eventAggregator.Publish(new UserRegisteredEvent()
                     {
-                        Request = Request,
+                        RequestUri = Request.GetAbsoluteRootUri(),
                         User = user,
                         Admin = RegisteredAdmin
                     });

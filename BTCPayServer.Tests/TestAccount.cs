@@ -80,7 +80,8 @@ namespace BTCPayServer.Tests
                 }));
             var statusMessage = manageController.TempData.GetStatusMessageModel();
             Assert.NotNull(statusMessage);
-            var apiKey = statusMessage.Html.Substring(statusMessage.Html.IndexOf("<code>") + 6);
+            var str = "<code class='alert-link'>";
+            var apiKey = statusMessage.Html.Substring(statusMessage.Html.IndexOf(str) + str.Length);
             apiKey = apiKey.Substring(0, apiKey.IndexOf("</code>"));
             return new BTCPayServerClient(parent.PayTester.ServerUri, apiKey);
         }

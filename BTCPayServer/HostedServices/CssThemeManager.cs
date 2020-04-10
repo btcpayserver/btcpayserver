@@ -22,7 +22,7 @@ namespace BTCPayServer.HostedServices
         public void Update(ThemeSettings data)
         {
             if (String.IsNullOrWhiteSpace(data.ThemeCssUri))
-                _themeUri = "/main/themes/classic.css";
+                _themeUri = "/main/themes/default.css";
             else
                 _themeUri = data.ThemeCssUri;
 

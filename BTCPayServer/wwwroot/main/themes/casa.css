@@ -20,33 +20,41 @@
   --btcpay-color-neutral-800: #181334;
   --btcpay-color-neutral-900: #100d20;
 
-  --btcpay-color-primary:            var(--btcpay-brand-medium); /* Usage: Text color */
-  --btcpay-color-primary-backdrop:   #baa4fd;                    /* Usage: Backgrounds, borders, shadows */
-  --btcpay-color-primary-accent:     #4b3bc0;                    /* Usage: Background on Focus/Hover */
+  --btcpay-color-primary:            var(--btcpay-brand-medium);
+  --btcpay-color-primary-backdrop:   #baa4fd;
+  --btcpay-color-primary-accent:     #4b3bc0;
+  --btcpay-color-primary-text:       #4b3bc0;
   --btcpay-color-secondary:          var(--btcpay-color-neutral-600);
   --btcpay-color-secondary-backdrop: var(--btcpay-color-neutral-100);
   --btcpay-color-secondary-accent:   var(--btcpay-color-neutral-500);
+  --btcpay-color-secondary-text:     var(--btcpay-color-neutral-500);
   --btcpay-color-success:            #25933d;
   --btcpay-color-success-backdrop:   #c3e6cb;
   --btcpay-color-success-accent:     #137929;
+  --btcpay-color-success-text:       #137929;
   --btcpay-color-info:               #0698c9;
   --btcpay-color-info-backdrop:      #c0eefe;
   --btcpay-color-info-accent:        #0698c9;
+  --btcpay-color-info-text:          #0698c9;
   --btcpay-color-warning:            #e5ac00;
   --btcpay-color-warning-backdrop:   #ffeeba;
   --btcpay-color-warning-accent:     #e5ac00;
+  --btcpay-color-warning-text:       #e5ac00;
   --btcpay-color-danger:             #bd2130;
   --btcpay-color-danger-backdrop:    #EDA1B0;
   --btcpay-color-danger-accent:      #bd2130;
+  --btcpay-color-danger-text:        #bd2130;
   --btcpay-color-light:              var(--btcpay-color-neutral-200);
   --btcpay-color-light-backdrop:     var(--btcpay-color-neutral-200);
   --btcpay-color-light-accent:       var(--btcpay-color-neutral-100);
+  --btcpay-color-light-text:         var(--btcpay-color-neutral-800);
   --btcpay-color-dark:               var(--btcpay-color-neutral-800);
   --btcpay-color-dark-backdrop:      var(--btcpay-color-neutral-800);
   --btcpay-color-dark-accent:        var(--btcpay-color-neutral-900);
+  --btcpay-color-dark-text:          var(--btcpay-color-neutral-200);
 
   /* Color definitions for specific sections - try to reuse colors defined above */
-  --btcpay-bg-body: var(--btcpay-brand-darkest);
+  --btcpay-body-bg: var(--btcpay-brand-darkest);
   --btcpay-bg-dark: var(--btcpay-brand-darker);
   --btcpay-bg-tile: var(--btcpay-brand-dark);
   --btcpay-bg-cta:  var(--btcpay-brand-dark);
@@ -60,6 +68,8 @@
   --btcpay-header-bg: var(--btcpay-brand-darker);
   --btcpay-footer-bg: var(--btcpay-brand-darkest);
 
+  --btcpay-footer-color: var(--btcpay-color-neutral-600);
+
   --btcpay-preformatted-text-color: var(--btcpay-color-white);
 
   --btcpay-font-size-base: 16px;
@@ -69,10 +79,6 @@
 }
 
 /* Bootstrap modifications */
-html {
-  font-size: var(--btcpay-font-size-base);
-}
-
 body {
   background: linear-gradient(var(--btcpay-header-bg), var(--btcpay-footer-bg));
   background-attachment: fixed;

@@ -2,11 +2,17 @@
 html {
     position: relative;
     min-height: 100%;
+    font-size: var(--btcpay-font-size-base);
 }
 
 .logo {
     height: 45px;
 }
+
+.logo-brand-text {
+    fill: currentColor;
+}
+
 .hide-when-js,
 .input-group-clear {
     display: none;
@@ -39,6 +45,12 @@ html {
 a {
     transition-duration: 0.2s;
     transition-property: background, color;
+}
+
+.navbar-dark .navbar-brand,
+.navbar-dark .navbar-brand:hover,
+.navbar-dark .navbar-brand:focus {
+    color: inherit ;
 }
 
 /* Admin Sidebar Navigation */
@@ -95,14 +107,12 @@ a.nav-link:hover {
 .footer {
     position: absolute;
     left: 0;
+    right: 0;
     bottom: 0;
-    height: 18px;
-    line-height: 18px;
-    vertical-align: middle;
-    font-size: 8px;
-    width: 100%;
+    font-size: 12px;
     overflow: hidden;
-    color: var(--btcpay-color-footer, var(--btcpay-color-neutral-100));
+    padding: .5em 0;
+    color: var(--btcpay-footer-color, var(--btcpay-color-neutral-100));
     background: var(--btcpay-footer-bg, var(--btcpay-bg-dark));
 }
 
@@ -138,11 +148,13 @@ pre {
     cursor: pointer;
 }
 
-    .pin-button:hover {
-        background-color: lightgray;
-    }
+.pin-button:hover {
+    background-color: lightgray;
+}
+
 [v-cloak] > * { display:none }
 [v-cloak]::before { content: "loading…" }
+
 .cursor-pointer{
     cursor: pointer;
 }

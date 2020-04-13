@@ -47,10 +47,14 @@ a {
     transition-property: background, color;
 }
 
+.navbar .onion {
+    margin-right: auto;
+}
+
 .navbar-dark .navbar-brand,
 .navbar-dark .navbar-brand:hover,
 .navbar-dark .navbar-brand:focus {
-    color: inherit ;
+    color: inherit;
 }
 
 /* Admin Sidebar Navigation */

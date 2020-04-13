@@ -383,7 +383,7 @@ namespace BTCPayServer.Controllers
                 TempData.SetStatusMessageModel(new StatusMessageModel()
                 {
                     Severity = StatusMessageModel.StatusSeverity.Success,
-                    Html = $"Your wallet has been generated. Please store your seed securely! <br/><code class="alert-link">{response.Mnemonic}</code>"
+                    Html = $"Your wallet has been generated. Please store your seed securely! <br/><code class=\"alert-link\">{response.Mnemonic}</code>"
                 });
             }
             else

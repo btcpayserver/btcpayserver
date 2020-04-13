@@ -297,6 +297,17 @@ namespace BTCPayServer.Migrations
                     b.ToTable("PairingCodes");
                 });
 
+            modelBuilder.Entity("BTCPayServer.Data.PayjoinLock", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("TEXT")
+                        .HasMaxLength(100);
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PayjoinLocks");
+                });
+
             modelBuilder.Entity("BTCPayServer.Data.PaymentData", b =>
                 {
                     b.Property<string>("Id")

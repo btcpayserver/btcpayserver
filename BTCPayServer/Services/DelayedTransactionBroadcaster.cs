@@ -53,7 +53,13 @@ namespace BTCPayServer.Services
                     BroadcastAt = broadcastTime,
                     Blob = transaction.ToBytes()
                 });
-                await db.SaveChangesAsync();
+                try
+                {
+                    await db.SaveChangesAsync();
+                }
+                catch (DbUpdateException)
+                {
+                }
             }
         }
 

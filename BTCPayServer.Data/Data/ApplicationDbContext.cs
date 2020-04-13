@@ -36,6 +36,7 @@ namespace BTCPayServer.Data
         }
 
         public DbSet<PlannedTransaction> PlannedTransactions { get; set; }
+        public DbSet<PayjoinLock> PayjoinLocks { get; set; }
 
         public DbSet<AppData> Apps
         {

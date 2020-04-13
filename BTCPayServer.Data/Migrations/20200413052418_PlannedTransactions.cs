@@ -23,10 +23,22 @@ namespace BTCPayServer.Migrations
                 {
                     table.PrimaryKey("PK_PlannedTransactions", x => x.Id);
                 });
+            migrationBuilder.CreateTable(
+                name: "PayjoinLocks",
+                columns: table => new
+                {
+                    Id = table.Column<string>(maxLength: 100, nullable: false),
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PayjoinLocks", x => x.Id);
+                });
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "PayjoinLocks");
             migrationBuilder.DropTable(
                 name: "PlannedTransactions");
         }

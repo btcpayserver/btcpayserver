@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Data;
+using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBXplorer.Models;
 
@@ -9,40 +11,69 @@ namespace BTCPayServer.Payments.PayJoin
 {
     public class PayJoinRepository
     {
-        HashSet<OutPoint> _Outpoints = new HashSet<OutPoint>();
-        HashSet<OutPoint> _LockedInputs = new HashSet<OutPoint>();
-        public Task<bool> TryLock(OutPoint outpoint)
+        private readonly ApplicationDbContextFactory _dbContextFactory;
+
+        public PayJoinRepository(ApplicationDbContextFactory dbContextFactory)
         {
-            lock (_Outpoints)
+            _dbContextFactory = dbContextFactory;
+        }
+        public async Task<bool> TryLock(OutPoint outpoint)
+        {
+            using var ctx = _dbContextFactory.CreateContext();
+            ctx.PayjoinLocks.Add(new PayjoinLock()
             {
-                return Task.FromResult(_Outpoints.Add(outpoint));
+                Id = outpoint.ToString()
+            });
+            try
+            {
+                return await ctx.SaveChangesAsync() == 1;
+            }
+            catch (DbUpdateException e)
+            {
+                return false;
             }
         }
 
-        public Task<bool> TryUnlock(params OutPoint[] outPoints)
+        public async Task<bool> TryUnlock(params OutPoint[] outPoints)
         {
-            if (outPoints.Length == 0)
-                return Task.FromResult(true);
-            lock (_Outpoints)
+            using var ctx = _dbContextFactory.CreateContext();
+            foreach (OutPoint outPoint in outPoints)
             {
-                bool r = true;
-                foreach (var outpoint in outPoints)
+                ctx.PayjoinLocks.Remove(new PayjoinLock()
                 {
-                    r &= _Outpoints.Remove(outpoint);
-                }
-                return Task.FromResult(r);
+                    Id = outPoint.ToString()
+                });   
+            }
+            try
+            {
+                return await ctx.SaveChangesAsync() == outPoints.Length;
+            }
+            catch (DbUpdateException e)
+            {
+                return false;
             }
         }
 
-        public Task<bool> TryLockInputs(OutPoint[] outPoint)
+        public async Task<bool> TryLockInputs(OutPoint[] outPoints)
         {
-            lock (_LockedInputs)
+            using var ctx = _dbContextFactory.CreateContext();
+            foreach (OutPoint outPoint in outPoints)
             {
-                foreach (var o in outPoint)
-                    if (!_LockedInputs.Add(o))
-                        return Task.FromResult(false);
+                ctx.PayjoinLocks.Add(new PayjoinLock()
+                {
+                    // Random flag so it does not lock same id
+                    // as the lock utxo
+                    Id = "K-" + outPoint.ToString()
+                });   
             }
-            return Task.FromResult(true);
+            try
+            {
+                return await ctx.SaveChangesAsync() == outPoints.Length;
+            }
+            catch (DbUpdateException e)
+            {
+                return false;
+            }
         }
     }
 }

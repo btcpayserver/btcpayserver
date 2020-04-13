@@ -49,7 +49,7 @@ namespace BTCPayServer.Services
             ScriptPubKeyType.SegwitP2SH
         };
 
-        public const string BIP21EndpointKey = "bpu";
+        public const string BIP21EndpointKey = "pj";
 
         private readonly ExplorerClientProvider _explorerClientProvider;
         private IHttpClientFactory _httpClientFactory;

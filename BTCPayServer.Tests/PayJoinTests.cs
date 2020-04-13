@@ -23,6 +23,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
 using NBitcoin;
+using NBitcoin.Altcoins;
 using NBitcoin.Payment;
 using NBitpayClient;
 using OpenQA.Selenium;
@@ -39,6 +40,33 @@ namespace BTCPayServer.Tests
         {
             Logs.Tester = new XUnitLog(helper) {Name = "Tests"};
             Logs.LogProvider = new XUnitLogProvider(helper);
+        }
+
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public async Task CanUseTheDelayedBroadcaster()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                await tester.StartAsync();
+                var network = tester.NetworkProvider.GetNetwork<BTCPayNetwork>("BTC");
+                var broadcaster = tester.PayTester.GetService<DelayedTransactionBroadcaster>();
+                await broadcaster.Schedule(DateTimeOffset.UtcNow + TimeSpan.FromDays(500), RandomTransaction(network), network);
+                await broadcaster.Schedule(DateTimeOffset.UtcNow - TimeSpan.FromDays(5), RandomTransaction(network), network);
+                broadcaster.Disable();
+                Assert.Equal(0, await broadcaster.ProcessAll());
+                broadcaster.Enable();
+                Assert.Equal(1, await broadcaster.ProcessAll());
+                Assert.Equal(0, await broadcaster.ProcessAll());
+            }
+        }
+
+        private Transaction RandomTransaction(BTCPayNetwork network)
+        {
+            var tx = network.NBitcoinNetwork.CreateTransaction();
+            tx.Inputs.Add(new OutPoint(RandomUtils.GetUInt256(), 0), Script.Empty);
+            tx.Outputs.Add(Money.Coins(1.0m), new Key().ScriptPubKey);
+            return tx;
         }
 
         [Fact]

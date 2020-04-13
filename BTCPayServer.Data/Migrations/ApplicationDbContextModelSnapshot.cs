@@ -356,6 +356,23 @@ namespace BTCPayServer.Migrations
                     b.ToTable("PendingInvoices");
                 });
 
+            modelBuilder.Entity("BTCPayServer.Data.PlannedTransaction", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("TEXT")
+                        .HasMaxLength(100);
+
+                    b.Property<byte[]>("Blob")
+                        .HasColumnType("BLOB");
+
+                    b.Property<DateTimeOffset>("BroadcastAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PlannedTransactions");
+                });
+
             modelBuilder.Entity("BTCPayServer.Data.RefundAddressesData", b =>
                 {
                     b.Property<string>("Id")

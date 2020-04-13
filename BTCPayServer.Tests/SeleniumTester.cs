@@ -138,8 +138,6 @@ namespace BTCPayServer.Tests
             {
                 seed = Driver.FindElements(By.ClassName("alert-success")).First().FindElement(By.TagName("code")).Text;
             }
-            Driver.FindElement(By.Id("Confirm")).ForceClick();
-            AssertHappyMessage();
             return new Mnemonic(seed);
         }
 

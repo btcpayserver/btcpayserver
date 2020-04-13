@@ -297,6 +297,17 @@ namespace BTCPayServer.Migrations
                     b.ToTable("PairingCodes");
                 });
 
+            modelBuilder.Entity("BTCPayServer.Data.PayjoinLock", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("TEXT")
+                        .HasMaxLength(100);
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PayjoinLocks");
+                });
+
             modelBuilder.Entity("BTCPayServer.Data.PaymentData", b =>
                 {
                     b.Property<string>("Id")
@@ -354,6 +365,23 @@ namespace BTCPayServer.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("PendingInvoices");
+                });
+
+            modelBuilder.Entity("BTCPayServer.Data.PlannedTransaction", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("TEXT")
+                        .HasMaxLength(100);
+
+                    b.Property<byte[]>("Blob")
+                        .HasColumnType("BLOB");
+
+                    b.Property<DateTimeOffset>("BroadcastAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PlannedTransactions");
                 });
 
             modelBuilder.Entity("BTCPayServer.Data.RefundAddressesData", b =>

@@ -7,7 +7,9 @@ using System.Threading.Tasks;
 using NBXplorer;
 using System.Threading.Channels;
 using System.Threading;
+using BTCPayServer.Data;
 using BTCPayServer.Logging;
+using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Services
 {
@@ -15,52 +17,68 @@ namespace BTCPayServer.Services
     {
         class Record
         {
-            public DateTimeOffset Recorded;
+            public string Id;
             public DateTimeOffset BroadcastTime;
             public Transaction Transaction;
             public BTCPayNetwork Network;
         }
-        Channel<Record> _Records = Channel.CreateUnbounded<Record>();
-        private readonly ExplorerClientProvider _explorerClientProvider;
 
-        public DelayedTransactionBroadcaster(ExplorerClientProvider explorerClientProvider)
+        private readonly BTCPayNetworkProvider _networkProvider;
+        private readonly ExplorerClientProvider _explorerClientProvider;
+        private readonly ApplicationDbContextFactory _dbContextFactory;
+
+        public DelayedTransactionBroadcaster(
+            BTCPayNetworkProvider networkProvider,
+            ExplorerClientProvider explorerClientProvider, 
+            Data.ApplicationDbContextFactory dbContextFactory)
         {
             if (explorerClientProvider == null)
                 throw new ArgumentNullException(nameof(explorerClientProvider));
+            _networkProvider = networkProvider;
             _explorerClientProvider = explorerClientProvider;
+            _dbContextFactory = dbContextFactory;
         }
 
-        public Task Schedule(DateTimeOffset broadcastTime, Transaction transaction, BTCPayNetwork network)
+        public async Task Schedule(DateTimeOffset broadcastTime, Transaction transaction, BTCPayNetwork network)
         {
             if (transaction == null)
                 throw new ArgumentNullException(nameof(transaction));
             if (network == null)
                 throw new ArgumentNullException(nameof(network));
-            var now = DateTimeOffset.UtcNow;
-            var record = new Record()
+            using (var db = _dbContextFactory.CreateContext())
             {
-                Recorded = now,
-                BroadcastTime = broadcastTime,
-                Transaction = transaction,
-                Network = network
-            };
-            _Records.Writer.TryWrite(record);
-            // TODO: persist
-            return Task.CompletedTask;
+                db.PlannedTransactions.Add(new PlannedTransaction()
+                {
+                    Id = $"{network.CryptoCode}-{transaction.GetHash()}",
+                    BroadcastAt = broadcastTime,
+                    Blob = transaction.ToBytes()
+                });
+                try
+                {
+                    await db.SaveChangesAsync();
+                }
+                catch (DbUpdateException)
+                {
+                }
+            }
         }
 
-        public async Task ProcessAll(CancellationToken cancellationToken = default)
+        public async Task<int> ProcessAll(CancellationToken cancellationToken = default)
         {
             if (disabled)
-                return;
-            var now = DateTimeOffset.UtcNow;
-            List<Record> rescheduled = new List<Record>();
+                return 0;
             List<Record> scheduled = new List<Record>();
-            List<Record> broadcasted = new List<Record>();
-            while (_Records.Reader.TryRead(out var r))
+            using (var db = _dbContextFactory.CreateContext())
             {
-                (r.BroadcastTime > now ? rescheduled : scheduled).Add(r);
+                scheduled = (await db.PlannedTransactions
+                    .ToListAsync()).Select(ToRecord)
+                    .Where(r => r != null)
+                    // Client side filtering because entity framework is retarded.
+                    .Where(r => r.BroadcastTime < DateTimeOffset.UtcNow).ToList();
             }
+            
+            List<Record> rescheduled = new List<Record>();
+            List<Record> broadcasted = new List<Record>();
 
             var broadcasts = scheduled.Select(async (record) =>
             {
@@ -89,17 +107,41 @@ namespace BTCPayServer.Services
                 var needReschedule = await broadcasts[i];
                 (needReschedule ? rescheduled : broadcasted).Add(scheduled[i]);
             }
-            foreach (var record in rescheduled)
+
+            using (var db = _dbContextFactory.CreateContext())
             {
-                _Records.Writer.TryWrite(record);
+                foreach (Record record in broadcasted)
+                {
+                    db.PlannedTransactions.Remove(new PlannedTransaction() {Id = record.Id});
+                }
+                return await db.SaveChangesAsync();
             }
-            // TODO: Remove everything in broadcasted from DB
+        }
+
+        private Record ToRecord(PlannedTransaction plannedTransaction)
+        {
+            var s = plannedTransaction.Id.Split('-');
+            var network = _networkProvider.GetNetwork(s[0]) as BTCPayNetwork;
+            if (network is null)
+                return null;
+            return new Record()
+            {
+                Id = plannedTransaction.Id,
+                Network = network,
+                Transaction = Transaction.Load(plannedTransaction.Blob, network.NBitcoinNetwork),
+                BroadcastTime = plannedTransaction.BroadcastAt
+            };
         }
 
         private bool disabled = false;
         public void Disable()
         {
             disabled = true;
+        }
+
+        public void Enable()
+        {
+            disabled = false;
         }
     }
 }

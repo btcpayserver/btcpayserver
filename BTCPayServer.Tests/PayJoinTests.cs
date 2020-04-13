@@ -23,6 +23,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
 using NBitcoin;
+using NBitcoin.Altcoins;
 using NBitcoin.Payment;
 using NBitpayClient;
 using OpenQA.Selenium;
@@ -39,6 +40,67 @@ namespace BTCPayServer.Tests
         {
             Logs.Tester = new XUnitLog(helper) {Name = "Tests"};
             Logs.LogProvider = new XUnitLogProvider(helper);
+        }
+
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public async Task CanUseTheDelayedBroadcaster()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                await tester.StartAsync();
+                var network = tester.NetworkProvider.GetNetwork<BTCPayNetwork>("BTC");
+                var broadcaster = tester.PayTester.GetService<DelayedTransactionBroadcaster>();
+                await broadcaster.Schedule(DateTimeOffset.UtcNow + TimeSpan.FromDays(500), RandomTransaction(network), network);
+                var tx = RandomTransaction(network);
+                await broadcaster.Schedule(DateTimeOffset.UtcNow - TimeSpan.FromDays(5), tx, network);
+                // twice on same tx should be noop
+                await broadcaster.Schedule(DateTimeOffset.UtcNow - TimeSpan.FromDays(5), tx, network);
+                broadcaster.Disable();
+                Assert.Equal(0, await broadcaster.ProcessAll());
+                broadcaster.Enable();
+                Assert.Equal(1, await broadcaster.ProcessAll());
+                Assert.Equal(0, await broadcaster.ProcessAll());
+            }
+        }
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public async Task CanUsePayjoinRepository()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                await tester.StartAsync();
+                var network = tester.NetworkProvider.GetNetwork<BTCPayNetwork>("BTC");
+                var repo = tester.PayTester.GetService<PayJoinRepository>();
+                var outpoint = RandomOutpoint();
+                
+                // Should not be locked
+                Assert.False(await repo.TryUnlock(outpoint));
+                
+                // Can lock input
+                Assert.True(await repo.TryLockInputs(new [] { outpoint }));
+                // Can't twice
+                Assert.False(await repo.TryLockInputs(new [] { outpoint }));
+                Assert.False(await repo.TryUnlock(outpoint));
+                
+                // Lock and unlock outpoint utxo
+                Assert.True(await repo.TryLock(outpoint));
+                Assert.True(await repo.TryUnlock(outpoint));
+                Assert.False(await repo.TryUnlock(outpoint));
+            }
+        }
+
+        private Transaction RandomTransaction(BTCPayNetwork network)
+        {
+            var tx = network.NBitcoinNetwork.CreateTransaction();
+            tx.Inputs.Add(new OutPoint(RandomUtils.GetUInt256(), 0), Script.Empty);
+            tx.Outputs.Add(Money.Coins(1.0m), new Key().ScriptPubKey);
+            return tx;
+        }
+
+        private OutPoint RandomOutpoint()
+        {
+            return new OutPoint(RandomUtils.GetUInt256(), 0);
         }
 
         [Fact]

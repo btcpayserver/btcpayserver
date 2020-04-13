@@ -341,6 +341,22 @@ namespace BTCPayServer.Payments.PayJoin
             {
                 var change = await explorer.GetUnusedAsync(derivationSchemeSettings.AccountDerivation, DerivationFeature.Change);
                 var randomChangeAmount = RandomUtils.GetUInt64() % (ulong)contributedAmount.Satoshi;
+
+                // Randomly round the amount to make the payment output look like a change output
+                var roundMultiple = (ulong)Math.Pow(10, (ulong)Math.Log10(randomChangeAmount));
+                while (roundMultiple > 1_000UL)
+                {
+                    if (RandomUtils.GetUInt32() % 2 == 0)
+                    {
+                        roundMultiple = roundMultiple / 10;
+                    }
+                    else
+                    {
+                        randomChangeAmount = (randomChangeAmount / roundMultiple) * roundMultiple;
+                        break;
+                    }
+                }
+
                 var fakeChange = newTx.Outputs.CreateNewTxOut(randomChangeAmount, change.ScriptPubKey);
                 if (fakeChange.IsDust(minRelayTxFee))
                 {

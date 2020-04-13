@@ -98,7 +98,7 @@ namespace BTCPayServer.Tests
                 
             }
         }
-        
+
         [Fact] 
         [Trait("Selenium", "Selenium")] 
         public async Task CanUsePayjoinViaUI()

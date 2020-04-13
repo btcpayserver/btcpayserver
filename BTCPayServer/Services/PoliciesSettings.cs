@@ -25,6 +25,8 @@ namespace BTCPayServer.Services
         public bool AllowLightningInternalNodeForAll { get; set; }
         [Display(Name = "Allow non-admins to create hot wallets for their stores")]
         public bool AllowHotWalletForAll { get; set; }
+        [Display(Name = "Allow non-admins to import their hot wallets to the node wallet")]
+        public bool AllowHotWalletRPCImportForAll  { get; set; }
         
         [Display(Name = "Display app on website root")]
         public string RootAppId { get; set; }

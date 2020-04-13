@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.WebSockets;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -54,7 +55,9 @@ namespace BTCPayServer.Controllers
                 vm.Config = derivation.ToJson();
             }
             vm.Enabled = !store.GetStoreBlob().IsExcluded(new PaymentMethodId(vm.CryptoCode, PaymentTypes.BTCLike));
-            vm.CanUseHotWallet = await CanUseHotWallet();
+            var hotWallet = await CanUseHotWallet();
+            vm.CanUseHotWallet = hotWallet.HotWallet;
+            vm.CanUseRPCImport = hotWallet.RPCImport;
             return View(vm);
         }
 
@@ -332,8 +335,8 @@ namespace BTCPayServer.Controllers
             GenerateWalletRequest request)
         {
             Logs.Events.LogInformation($"GenerateNBXWallet called {storeId}, {cryptoCode}");
-
-            if (!await CanUseHotWallet())
+            var hotWallet = await CanUseHotWallet();
+            if (!hotWallet.HotWallet || (!hotWallet.RPCImport && request.ImportKeysToRPC))
             {
                 return NotFound();
             }
@@ -395,13 +398,14 @@ namespace BTCPayServer.Controllers
             return result;
         }
 
-        private async Task<bool> CanUseHotWallet()
+        private async Task<(bool HotWallet, bool RPCImport)> CanUseHotWallet()
         {
             var isAdmin = (await _authorizationService.AuthorizeAsync(User, Policies.CanModifyServerSettings)).Succeeded;
             if (isAdmin)
-                return true;
+                return (true, true);
             var policies = await _settingsRepository.GetSettingAsync<PoliciesSettings>();
-            return policies?.AllowHotWalletForAll is true;
+            var hotWallet = policies?.AllowHotWalletForAll is true;
+            return (hotWallet, hotWallet && policies?.AllowHotWalletRPCImportForAll is true);
         }
 
         private async Task<string> ReadAllText(IFormFile file)

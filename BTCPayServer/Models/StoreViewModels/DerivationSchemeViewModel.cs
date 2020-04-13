@@ -11,6 +11,7 @@ namespace BTCPayServer.Models.StoreViewModels
 {
     public class DerivationSchemeViewModel
     {
+
         public DerivationSchemeViewModel()
         {
         }
@@ -42,6 +43,7 @@ namespace BTCPayServer.Models.StoreViewModels
         public string AccountKey { get; set; }
         public BTCPayNetwork Network { get; set; }
         public bool CanUseHotWallet { get; set; }
+        public bool CanUseRPCImport { get; set; }
 
         public RootedKeyPath GetAccountKeypath()
         {

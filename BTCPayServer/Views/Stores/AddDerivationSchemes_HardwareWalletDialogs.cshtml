@@ -2,6 +2,8 @@
 @model DerivationSchemeViewModel
 @if (Model.CanUseHotWallet)
 {
+    ViewData.Add(nameof(Model.CanUseRPCImport), Model.CanUseRPCImport);
+    
     <partial name="AddDerivationSchemes_NBXWalletGenerate" model="@(new GenerateWalletRequest())"/>
 }
 <div class="modal fade" id="ledgerimport" tabindex="-1" role="dialog" aria-labelledby="ledgerimport" aria-hidden="true">

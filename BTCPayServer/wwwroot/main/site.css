@@ -47,10 +47,20 @@ a {
     transition-property: background, color;
 }
 
-.navbar-dark .navbar-brand,
-.navbar-dark .navbar-brand:hover,
-.navbar-dark .navbar-brand:focus {
-    color: inherit ;
+.navbar .onion {
+    margin-right: auto;
+}
+
+.navbar-brand,
+.navbar-brand:hover,
+.navbar-brand:focus {
+    color: inherit;
+}
+
+.navbar-toggler {
+    color: inherit;
+    border-color: inherit;
+    opacity: .5;
 }
 
 /* Admin Sidebar Navigation */

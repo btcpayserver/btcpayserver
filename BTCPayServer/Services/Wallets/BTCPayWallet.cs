@@ -13,6 +13,7 @@ using NBXplorer.Models;
 using Microsoft.Extensions.Caching.Memory;
 using BTCPayServer.Logging;
 using System.Collections.Concurrent;
+using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Services.Wallets
 {
@@ -40,7 +41,8 @@ namespace BTCPayServer.Services.Wallets
     {
         private ExplorerClient _Client;
         private IMemoryCache _MemoryCache;
-        public BTCPayWallet(ExplorerClient client, IMemoryCache memoryCache, BTCPayNetwork network)
+        public BTCPayWallet(ExplorerClient client, IMemoryCache memoryCache, BTCPayNetwork network, 
+            ApplicationDbContextFactory dbContextFactory)
         {
             if (client == null)
                 throw new ArgumentNullException(nameof(client));
@@ -48,11 +50,14 @@ namespace BTCPayServer.Services.Wallets
                 throw new ArgumentNullException(nameof(memoryCache));
             _Client = client;
             _Network = network;
+            _dbContextFactory = dbContextFactory;
             _MemoryCache = memoryCache;
         }
 
 
         private readonly BTCPayNetwork _Network;
+        private readonly ApplicationDbContextFactory _dbContextFactory;
+
         public BTCPayNetwork Network
         {
             get
@@ -118,24 +123,31 @@ namespace BTCPayServer.Services.Wallets
             return tx;
         }
 
-        public Task<Transaction> GetOffchainTransactionAsync(uint256 txid)
+        public async Task<Transaction> GetOffchainTransactionAsync(uint256 txid)
         {
-            lock (offchain)
+            using var ctx = this._dbContextFactory.CreateContext();
+            var txData = await ctx.OffchainTransactions.FindAsync(txid.ToString());
+            if (txData is null)
+                return null;
+            return Transaction.Load(txData.Blob, this._Network.NBitcoinNetwork);
+        }
+        public async Task SaveOffchainTransactionAsync(Transaction tx)
+        {
+            using var ctx = this._dbContextFactory.CreateContext();
+            ctx.OffchainTransactions.Add(new OffchainTransactionData()
             {
-                return Task.FromResult(offchain.TryGet(txid));
+                Id = tx.GetHash().ToString(),
+                Blob = tx.ToBytes()
+            });
+            try
+            {
+                await ctx.SaveChangesAsync();
+            }
+            // Already in db
+            catch (DbUpdateException)
+            {
             }
         }
-        public Task SaveOffchainTransactionAsync(Transaction tx)
-        {
-            // TODO: Save in database
-            lock (offchain)
-            {
-                offchain.Add(tx.GetHash(), tx);
-                return Task.CompletedTask;
-            }
-        }
-
-        private Dictionary<uint256, Transaction> offchain = new Dictionary<uint256, Transaction>();
 
         public void InvalidateCache(DerivationStrategyBase strategy)
         {

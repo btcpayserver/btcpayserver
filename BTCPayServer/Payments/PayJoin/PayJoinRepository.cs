@@ -28,7 +28,7 @@ namespace BTCPayServer.Payments.PayJoin
             {
                 return await ctx.SaveChangesAsync() == 1;
             }
-            catch (DbUpdateException e)
+            catch (DbUpdateException)
             {
                 return false;
             }
@@ -48,7 +48,7 @@ namespace BTCPayServer.Payments.PayJoin
             {
                 return await ctx.SaveChangesAsync() == outPoints.Length;
             }
-            catch (DbUpdateException e)
+            catch (DbUpdateException)
             {
                 return false;
             }
@@ -70,7 +70,7 @@ namespace BTCPayServer.Payments.PayJoin
             {
                 return await ctx.SaveChangesAsync() == outPoints.Length;
             }
-            catch (DbUpdateException e)
+            catch (DbUpdateException)
             {
                 return false;
             }

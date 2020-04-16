@@ -33,6 +33,17 @@ namespace BTCPayServer.Migrations
                 {
                     table.PrimaryKey("PK_PayjoinLocks", x => x.Id);
                 });
+            migrationBuilder.CreateTable(
+                name: "OffchainTransactions",
+                columns: table => new
+                {
+                    Id = table.Column<string>(maxLength: 64, nullable: false),
+                    Blob = table.Column<byte[]>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OffchainTransactions", x => x.Id);
+                });
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
@@ -41,6 +52,8 @@ namespace BTCPayServer.Migrations
                 name: "PayjoinLocks");
             migrationBuilder.DropTable(
                 name: "PlannedTransactions");
+            migrationBuilder.DropTable(
+                name: "OffchainTransactions");
         }
     }
 }

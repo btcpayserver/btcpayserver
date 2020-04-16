@@ -48,6 +48,8 @@ namespace BTCPayServer.Data
             get; set;
         }
 
+        public DbSet<OffchainTransactionData> OffchainTransactions { get; set; }
+
         public DbSet<HistoricalAddressInvoiceData> HistoricalAddressInvoices
         {
             get; set;

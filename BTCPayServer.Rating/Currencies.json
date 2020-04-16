@@ -1274,6 +1274,13 @@
       "crypto":true
    },
    {
+      "name":"Argoneum",
+      "code":"AGM",
+      "divisibility":8,
+      "symbol":null,
+      "crypto":true
+   },
+   {
       "name":"Satoshis",
       "code":"SATS",
       "divisibility":0,

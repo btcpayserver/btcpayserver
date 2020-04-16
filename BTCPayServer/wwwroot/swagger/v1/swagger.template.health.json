@@ -1,0 +1,26 @@
+{
+    "paths": {
+        "/api/v1/health": {
+            "get": {
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Get health status",
+                "description": "Check whether of not the instance is up",
+                "operationId": "Health_GetHealth",
+                "responses": {
+                    "200": {
+                        "description": "Instance is up",
+                        "content": {}
+                    }
+                },
+                "security": []
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Health"
+        }
+    ]
+}

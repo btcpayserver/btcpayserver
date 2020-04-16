@@ -14,6 +14,7 @@ namespace BTCPayServer.Services.Wallets
         IOptions<MemoryCacheOptions> _Options;
         public BTCPayWalletProvider(ExplorerClientProvider client,
                                     IOptions<MemoryCacheOptions> memoryCacheOption,
+                                    Data.ApplicationDbContextFactory dbContextFactory,
                                     BTCPayNetworkProvider networkProvider)
         {
             if (client == null)
@@ -27,7 +28,7 @@ namespace BTCPayServer.Services.Wallets
                 var explorerClient = _Client.GetExplorerClient(network.CryptoCode);
                 if (explorerClient == null)
                     continue;
-                _Wallets.Add(network.CryptoCode.ToUpperInvariant(), new BTCPayWallet(explorerClient, new MemoryCache(_Options), network));
+                _Wallets.Add(network.CryptoCode.ToUpperInvariant(), new BTCPayWallet(explorerClient, new MemoryCache(_Options), network, dbContextFactory));
             }
         }
 

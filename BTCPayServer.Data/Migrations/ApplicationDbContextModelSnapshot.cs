@@ -240,6 +240,20 @@ namespace BTCPayServer.Migrations
                     b.ToTable("InvoiceEvents");
                 });
 
+            modelBuilder.Entity("BTCPayServer.Data.OffchainTransactionData", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("TEXT")
+                        .HasMaxLength(64);
+
+                    b.Property<byte[]>("Blob")
+                        .HasColumnType("BLOB");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("OffchainTransactions");
+                });
+
             modelBuilder.Entity("BTCPayServer.Data.PairedSINData", b =>
                 {
                     b.Property<string>("Id")

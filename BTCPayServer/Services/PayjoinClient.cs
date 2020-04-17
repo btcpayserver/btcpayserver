@@ -34,7 +34,7 @@ namespace BTCPayServer.Services
             if (i.WitnessUtxo.ScriptPubKey.IsScriptType(ScriptType.P2WPKH))
                 return ScriptPubKeyType.Segwit;
             if (i.WitnessUtxo.ScriptPubKey.IsScriptType(ScriptType.P2SH) &&
-                i.FinalScriptWitness.ToScript().IsScriptType(ScriptType.P2WPKH))
+                i.FinalScriptWitness.GetSigner().ScriptPubKey.IsScriptType(ScriptType.P2WPKH))
                 return ScriptPubKeyType.SegwitP2SH;
             return null as ScriptPubKeyType?;
         }

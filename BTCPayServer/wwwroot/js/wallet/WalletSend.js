@@ -38,7 +38,10 @@ $(function () {
         var parentContainer = $(this).parents(".form-group");
         var outputAmountElement = parentContainer.find(".output-amount");
         outputAmountElement.val(val);
-        parentContainer.find(".subtract-fees").prop('checked', true);
+        var subtractFeesEl = parentContainer.find(".subtract-fees");
+        if(subtractFeesEl.length === 0)
+            subtractFeesEl = $(".subtract-fees");
+        subtractFeesEl.prop('checked', true);
         updateFiatValue(outputAmountElement);
         return false;
     });

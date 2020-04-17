@@ -451,8 +451,11 @@ namespace BTCPayServer.Payments.PayJoin
             foreach (var selectedUtxo in selectedUTXOs.Select(o => o.Value))
             {
                 var signedInput = newPsbt.Inputs.FindIndexedInput(selectedUtxo.Outpoint);
-                signedInput.UpdateFromCoin(selectedUtxo.AsCoin());
+                var coin = selectedUtxo.AsCoin(derivationSchemeSettings.AccountDerivation);
+                signedInput.UpdateFromCoin(coin);
                 var privateKey = accountKey.Derive(selectedUtxo.KeyPath).PrivateKey;
+                //hack until UpdateFromCoin is fixed in NBitcoin when the coin is p2sh
+                signedInput.WitnessUtxo = coin.TxOut;
                 signedInput.Sign(privateKey);
                 signedInput.FinalizeInput();
                 newTx.Inputs[signedInput.Index].WitScript = newPsbt.Inputs[(int)signedInput.Index].FinalScriptWitness;

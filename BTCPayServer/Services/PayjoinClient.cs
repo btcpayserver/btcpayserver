@@ -34,9 +34,9 @@ namespace BTCPayServer.Services
             if (i.WitnessUtxo.ScriptPubKey.IsScriptType(ScriptType.P2WPKH))
                 return ScriptPubKeyType.Segwit;
             if (i.WitnessUtxo.ScriptPubKey.IsScriptType(ScriptType.P2SH) &&
-                i.FinalScriptWitness.GetSigner().ScriptPubKey.IsScriptType(ScriptType.P2WPKH))
+                PayToWitPubKeyHashTemplate.Instance.ExtractWitScriptParameters(i.FinalScriptWitness) is {})
                 return ScriptPubKeyType.SegwitP2SH;
-            return null as ScriptPubKeyType?;
+            return null;
         }
     }
 
@@ -212,8 +212,33 @@ namespace BTCPayServer.Services
             if (sentAfter > sentBefore)
             {
                 var overPaying = sentAfter - sentBefore;
-                if (!newPSBT.TryGetEstimatedFeeRate(out var newFeeRate) || !newPSBT.TryGetVirtualSize(out var newVirtualSize))
-                    throw new PayjoinSenderException("The payjoin receiver did not included UTXO information to calculate fee correctly");
+               
+                //hack until GetAllCoins is fixed in NBitcoin when the coin is p2sh (redeem needs to be loaded from RedeemScript and fallback to i.FinalScriptSig extraction)
+                int newVirtualSize = 0;
+                if (type == ScriptPubKeyType.SegwitP2SH)
+                {
+                    if (!newPSBT.TryGetFee(out var fee))
+                    {
+                        throw new PayjoinSenderException("The payjoin receiver did not included UTXO information to calculate fee correctly");
+                    }
+                    var transactionBuilder = originalTx.Network.CreateTransactionBuilder();
+                    transactionBuilder.AddCoins(newPSBT.Inputs.Select(i =>i.GetCoin().ToScriptCoin(i.RedeemScript??PayToScriptHashTemplate.Instance.ExtractScriptSigParameters(i.FinalScriptSig).RedeemScript)));
+                    try
+                    {
+                        newVirtualSize = transactionBuilder.EstimateSize(newPSBT.GetGlobalTransaction(), true);
+                    }
+                    catch
+                    {
+                        throw new PayjoinSenderException("The payjoin receiver did not included UTXO information to calculate fee correctly");
+                    }
+                    
+                }
+                else
+                {
+                    if (!newPSBT.TryGetEstimatedFeeRate(out var newFeeRate) || !newPSBT.TryGetVirtualSize(out newVirtualSize))
+                        throw new PayjoinSenderException("The payjoin receiver did not included UTXO information to calculate fee correctly");
+                }
+                
                 var additionalFee = newPSBT.GetFee() - originalFee;
                 if (overPaying > additionalFee)
                     throw new PayjoinSenderException("The payjoin receiver is sending more money to himself");

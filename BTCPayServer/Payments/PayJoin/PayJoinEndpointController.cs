@@ -19,10 +19,8 @@ using NBXplorer;
 using NBXplorer.Models;
 using Newtonsoft.Json.Linq;
 using NicolasDorier.RateLimits;
-using Microsoft.Extensions.Logging;
 using NBXplorer.DerivationStrategy;
 using System.Diagnostics.CodeAnalysis;
-using BTCPayServer.Logging;
 
 namespace BTCPayServer.Payments.PayJoin
 {
@@ -385,18 +383,8 @@ namespace BTCPayServer.Payments.PayJoin
             Money ourFeeContribution = Money.Zero;
             // We need to adjust the fee to keep a constant fee rate
             var txBuilder = network.NBitcoinNetwork.CreateTransactionBuilder();
-            var coins = new List<Coin>();
-            if (sendersInputType != ScriptPubKeyType.SegwitP2SH)
-            {
-                coins.AddRange(psbt.Inputs.Select(i => i.GetCoin()));
-                coins.AddRange(selectedUTXOs.Select(o => o.Value.AsCoin()));
-            }
-            else
-            {
-                coins.AddRange(psbt.Inputs.Select(i =>i.GetCoin().ToScriptCoin(PayToScriptHashTemplate.Instance.ExtractScriptSigParameters(i.FinalScriptSig).RedeemScript)));
-                coins.AddRange(selectedUTXOs.Select(pair => pair.Value.AsCoin(derivationSchemeSettings.AccountDerivation)));
-            }
-            txBuilder.AddCoins(coins);
+            txBuilder.AddCoins(psbt.Inputs.Select(i => i.GetSignableCoin()));
+            txBuilder.AddCoins(selectedUTXOs.Select(o => o.Value.AsCoin(derivationSchemeSettings.AccountDerivation)));
             Money expectedFee = txBuilder.EstimateFees(newTx, originalFeeRate);
             Money actualFee = newTx.GetFee(txBuilder.FindSpentCoins(newTx));
             Money additionalFee = expectedFee - actualFee;
@@ -454,8 +442,6 @@ namespace BTCPayServer.Payments.PayJoin
                 var coin = selectedUtxo.AsCoin(derivationSchemeSettings.AccountDerivation);
                 signedInput.UpdateFromCoin(coin);
                 var privateKey = accountKey.Derive(selectedUtxo.KeyPath).PrivateKey;
-                //hack until UpdateFromCoin is fixed in NBitcoin when the coin is p2sh
-                signedInput.WitnessUtxo = coin.TxOut;
                 signedInput.Sign(privateKey);
                 signedInput.FinalizeInput();
                 newTx.Inputs[signedInput.Index].WitScript = newPsbt.Inputs[(int)signedInput.Index].FinalScriptWitness;

@@ -18,6 +18,7 @@ using System.IO;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using BTCPayServer.Security;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.Net.Http.Headers;
 using System.Net;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Services.Apps;
@@ -189,7 +190,17 @@ namespace BTCPayServer.Hosting
             app.UseRouting();
             app.UseCors();
 
-            app.UseStaticFiles();
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                OnPrepareResponse = ctx =>
+                {
+                    // Cache static assets for one year, set asp-append-version="true" on references to update on change.
+                    // https://andrewlock.net/adding-cache-control-headers-to-static-files-in-asp-net-core/
+                    const int durationInSeconds = 60 * 60 * 24 * 365;
+                    ctx.Context.Response.Headers[HeaderNames.CacheControl] = "public,max-age=" + durationInSeconds;
+                }
+            });
+            
             app.UseProviderStorage(options);
             app.UseAuthentication();
             app.UseAuthorization();

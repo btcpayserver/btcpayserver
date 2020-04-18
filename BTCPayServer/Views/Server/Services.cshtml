@@ -38,7 +38,7 @@
                             @if (s.ConnectionString.IsOnion() == true || 
                                 (s.ConnectionString.IsOnion() == false && this.Context.Request.IsOnion()))
                             {
-                            <span><img style="display:inline; margin-top:-8px;" src="~/img/icons/Onion_Color.svg" height="20" /></span>
+                            <span><img style="display:inline; margin-top:-8px;" src="~/img/icons/Onion_Color.svg" height="20" asp-append-version="true" /></span>
                             }
                         </td>
                         <td style="text-align: right">

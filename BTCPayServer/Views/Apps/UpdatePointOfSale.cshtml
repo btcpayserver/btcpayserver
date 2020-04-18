@@ -225,8 +225,8 @@
     </div>
 </section>
 @section Scripts {
-    <link rel="stylesheet" href="~/vendor/highlightjs/default.min.css">
-    <script src="~/vendor/highlightjs/highlight.min.js"></script>
+    <link rel="stylesheet" href="~/vendor/highlightjs/default.min.css" asp-append-version="true">
+    <script src="~/vendor/highlightjs/highlight.min.js" asp-append-version="true"></script>
     <script>hljs.initHighlightingOnLoad();</script>
     <script id="template-product-item" type="text/template">
         <div class="col-sm-4 col-md-3 mb-3">
@@ -285,6 +285,6 @@
         </div>
     </script>
 
-    <bundle name="wwwroot/bundles/pos-admin-bundle.min.js"></bundle>
-    <bundle name="wwwroot/bundles/pos-admin-bundle.min.css"></bundle>
+    <bundle name="wwwroot/bundles/pos-admin-bundle.min.js" asp-append-version="true"></bundle>
+    <bundle name="wwwroot/bundles/pos-admin-bundle.min.css" asp-append-version="true"></bundle>
 }

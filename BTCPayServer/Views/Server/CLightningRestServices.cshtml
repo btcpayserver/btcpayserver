@@ -27,7 +27,7 @@
             <div class="row">
                 <div class="col-lg-3 ml-auto text-center">
                     <a href="https://github.com/ZeusLN/zeus" target="_blank">
-                        <img src="~/img/zeus.jpg" height="100" />
+                        <img src="~/img/zeus.jpg" height="100" asp-append-version="true" />
                     </a>
                     <p><a href="https://github.com/ZeusLN/zeus" target="_blank">Zeus</a></p>
                 </div>
@@ -151,7 +151,7 @@
 
     @if(Model.QRCode != null)
     {
-        <script type="text/javascript" src="~/js/qrcode.js"></script>
+        <script type="text/javascript" src="~/js/qrcode.js" asp-append-version="true"></script>
         <script type="text/javascript">
         new QRCode(document.getElementById("qrCode"),
             {

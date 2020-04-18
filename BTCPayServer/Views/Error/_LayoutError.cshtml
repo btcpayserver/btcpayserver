@@ -7,7 +7,7 @@
 <head>
     <partial name="Header" />
 
-    <link href="~/main/fonts/Montserrat.css" rel="stylesheet">
+    <link href="~/main/fonts/Montserrat.css" rel="stylesheet" asp-append-version="true">
     <style>
         .content-wrapper {
             padding: 20px 0;
@@ -95,7 +95,9 @@
             <div class="container">
                 <div class="row">
                     <div class="col-12 col-head" style="justify-content:center;">
-                        <a asp-controller="Home" asp-action="Index"><img src="~/img/btcpay-logo.svg" alt="BTCPay Server" class="head-logo" /></a>
+                        <a asp-controller="Home" asp-action="Index">
+                            <img src="~/img/btcpay-logo.svg" alt="BTCPay Server" class="head-logo" asp-append-version="true" />
+                        </a>
                         <h1 class="lead-title text-uppercase">@ViewData["ErrorTitle"]</h1>
                     </div>
                 </div>

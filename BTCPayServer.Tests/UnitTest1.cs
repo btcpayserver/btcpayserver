@@ -158,9 +158,11 @@ namespace BTCPayServer.Tests
                 Assert.Equal(HttpStatusCode.OK, (await httpClient.SendAsync(request)).StatusCode);
                 Logs.Tester.LogInformation($"OK: {url} ({file})");
             }
-            catch (EqualException ex)
+            catch (Exception ex)
             {
-                Logs.Tester.LogInformation($"FAILED: {url} ({file}) {ex.Actual}");
+                var details = ex is EqualException ? (ex as EqualException).Actual : ex.Message;
+                Logs.Tester.LogInformation($"FAILED: {url} ({file}) {details}");
+                
                 throw;
             }
         }

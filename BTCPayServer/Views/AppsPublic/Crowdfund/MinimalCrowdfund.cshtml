@@ -8,7 +8,7 @@
         <div class="card w-100 p-0 mx-0">
             @if (!string.IsNullOrEmpty(Model.MainImageUrl))
             {
-                <img class="card-img-top" src="@Model.MainImageUrl"/>
+                <img class="card-img-top" src="@Model.MainImageUrl" asp-append-version="true" />
             }
             <div class="d-flex justify-content-between px-2">
                 <h1>

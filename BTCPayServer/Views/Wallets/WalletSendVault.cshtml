@@ -36,8 +36,8 @@
 <partial name="VaultElements" />
 @section Scripts
 {
-    <script src="~/js/vaultbridge.js" type="text/javascript" defer="defer"></script>
-    <script src="~/js/vaultbridge.ui.js" type="text/javascript" defer="defer"></script>
+    <script src="~/js/vaultbridge.js" type="text/javascript" defer="defer" asp-append-version="true"></script>
+    <script src="~/js/vaultbridge.ui.js" type="text/javascript" defer="defer" asp-append-version="true"></script>
     <script type="text/javascript">
         async function askSign() {
             var websocketPath = $("#WebsocketPath").val();

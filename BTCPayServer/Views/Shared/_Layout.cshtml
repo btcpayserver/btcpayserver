@@ -52,7 +52,7 @@
             @if (env.OnionUrl != null)
             {
                 <a class="onion" href="@env.OnionUrl" target="_blank">
-                    <img src="~/img/icons/onion.svg" width="26" height="32" />
+                    <img src="~/img/icons/onion.svg" width="26" height="32" asp-append-version="true" />
                 </a>
             }
             <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">

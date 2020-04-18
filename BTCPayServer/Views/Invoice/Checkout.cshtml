@@ -15,13 +15,13 @@
     <META NAME="robots" CONTENT="noindex,nofollow">
     <title>@Model.HtmlTitle</title>
 
-    <bundle name="wwwroot/bundles/checkout-bundle.min.css" />
+    <bundle name="wwwroot/bundles/checkout-bundle.min.css" asp-append-version="true" />
 
     <script type="text/javascript">
         var initialSrvModel = @Safe.Json(Model);
     </script>
 
-    <bundle name="wwwroot/bundles/checkout-bundle.min.js" />
+    <bundle name="wwwroot/bundles/checkout-bundle.min.js" asp-append-version="true" />
     <script>vex.defaultOptions.className = 'vex-theme-btcpay'</script>
 
     @if (!string.IsNullOrEmpty(Model.CustomCSSLink))

@@ -5,7 +5,7 @@
         @if (!string.IsNullOrEmpty(Model.CustomLogoLink))
         {
             <div class="header__icon">
-                <img class="header__icon__img" src="@Model.CustomLogoLink" height="40">
+                <img class="header__icon__img" src="@Model.CustomLogoLink" height="40" asp-append-version="true">
             </div>
         }
         else
@@ -61,7 +61,7 @@
                         {
                             <li class="vexmenuitem">
                                 <a href="@crypto.Link" onclick="closePaymentMethodDialog('@crypto.PaymentMethodId');return false;">
-                                    <img alt="@crypto.PaymentMethodName" src="@crypto.CryptoImage" />
+                                    <img alt="@crypto.PaymentMethodName" src="@crypto.CryptoImage" asp-append-version="true" />
                                     @crypto.PaymentMethodName
                                     @(crypto.IsLightning ? Html.Raw("&#9889;") : null)
                                     <span>@crypto.CryptoCode</span>
@@ -197,7 +197,7 @@
                     <div class="status-icon__wrapper">
                         <div class="inner-wrapper">
                             <div class="status-icon__wrapper__icon">
-                                <img src="~/imlegacy/checkmark.svg">
+                                <img src="~/imlegacy/checkmark.svg" asp-append-version="true">
                             </div>
                             <div class="status-icon__wrapper__outline"></div>
                         </div>

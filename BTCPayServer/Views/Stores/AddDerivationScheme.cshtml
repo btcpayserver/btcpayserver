@@ -209,10 +209,10 @@
 </div>
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
-    <script src="~/js/ledgerwebsocket.js" type="text/javascript" defer="defer"></script>
-    <script src="~/js/StoreAddDerivationScheme.js" type="text/javascript" defer="defer"></script>
-    <script src="~/js/vaultbridge.js" type="text/javascript" defer="defer"></script>
-    <script src="~/js/vaultbridge.ui.js" type="text/javascript" defer="defer"></script>
+    <script src="~/js/ledgerwebsocket.js" type="text/javascript" defer="defer" asp-append-version="true"></script>
+    <script src="~/js/StoreAddDerivationScheme.js" type="text/javascript" defer="defer" asp-append-version="true"></script>
+    <script src="~/js/vaultbridge.js" type="text/javascript" defer="defer" asp-append-version="true"></script>
+    <script src="~/js/vaultbridge.ui.js" type="text/javascript" defer="defer" asp-append-version="true"></script>
     <script>
         window.coinName = "@Model.Network.DisplayName.ToLowerInvariant()";
     </script>

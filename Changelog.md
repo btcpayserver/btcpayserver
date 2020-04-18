@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.4.1
+
+### Bug fixes
+* Payjoin not working correctly for P2SH-P2WPKH merchants. @MrKukks
+
+* Clicking on the balance amount on send wallet, was not checking "Substract fees" automatically @MrKukks
+
 ## 1.0.4.0
 
 Since this release is substantial, we invite your to read our [blog post](https://blog.btcpayserver.org/btcpay-server-1-0-4-0/) as well.

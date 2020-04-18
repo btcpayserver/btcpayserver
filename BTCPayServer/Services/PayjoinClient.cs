@@ -34,9 +34,9 @@ namespace BTCPayServer.Services
             if (i.WitnessUtxo.ScriptPubKey.IsScriptType(ScriptType.P2WPKH))
                 return ScriptPubKeyType.Segwit;
             if (i.WitnessUtxo.ScriptPubKey.IsScriptType(ScriptType.P2SH) &&
-                i.FinalScriptWitness.ToScript().IsScriptType(ScriptType.P2WPKH))
+                PayToWitPubKeyHashTemplate.Instance.ExtractWitScriptParameters(i.FinalScriptWitness) is {})
                 return ScriptPubKeyType.SegwitP2SH;
-            return null as ScriptPubKeyType?;
+            return null;
         }
     }
 
@@ -212,8 +212,10 @@ namespace BTCPayServer.Services
             if (sentAfter > sentBefore)
             {
                 var overPaying = sentAfter - sentBefore;
+               
                 if (!newPSBT.TryGetEstimatedFeeRate(out var newFeeRate) || !newPSBT.TryGetVirtualSize(out var newVirtualSize))
                     throw new PayjoinSenderException("The payjoin receiver did not included UTXO information to calculate fee correctly");
+                
                 var additionalFee = newPSBT.GetFee() - originalFee;
                 if (overPaying > additionalFee)
                     throw new PayjoinSenderException("The payjoin receiver is sending more money to himself");

@@ -19,7 +19,6 @@ using NBXplorer;
 using NBXplorer.Models;
 using Newtonsoft.Json.Linq;
 using NicolasDorier.RateLimits;
-using Microsoft.Extensions.Logging;
 using NBXplorer.DerivationStrategy;
 using System.Diagnostics.CodeAnalysis;
 
@@ -384,8 +383,8 @@ namespace BTCPayServer.Payments.PayJoin
             Money ourFeeContribution = Money.Zero;
             // We need to adjust the fee to keep a constant fee rate
             var txBuilder = network.NBitcoinNetwork.CreateTransactionBuilder();
-            txBuilder.AddCoins(psbt.Inputs.Select(i => i.GetCoin()));
-            txBuilder.AddCoins(selectedUTXOs.Select(o => o.Value.AsCoin()));
+            txBuilder.AddCoins(psbt.Inputs.Select(i => i.GetSignableCoin()));
+            txBuilder.AddCoins(selectedUTXOs.Select(o => o.Value.AsCoin(derivationSchemeSettings.AccountDerivation)));
             Money expectedFee = txBuilder.EstimateFees(newTx, originalFeeRate);
             Money actualFee = newTx.GetFee(txBuilder.FindSpentCoins(newTx));
             Money additionalFee = expectedFee - actualFee;
@@ -440,7 +439,8 @@ namespace BTCPayServer.Payments.PayJoin
             foreach (var selectedUtxo in selectedUTXOs.Select(o => o.Value))
             {
                 var signedInput = newPsbt.Inputs.FindIndexedInput(selectedUtxo.Outpoint);
-                signedInput.UpdateFromCoin(selectedUtxo.AsCoin());
+                var coin = selectedUtxo.AsCoin(derivationSchemeSettings.AccountDerivation);
+                signedInput.UpdateFromCoin(coin);
                 var privateKey = accountKey.Derive(selectedUtxo.KeyPath).PrivateKey;
                 signedInput.Sign(privateKey);
                 signedInput.FinalizeInput();

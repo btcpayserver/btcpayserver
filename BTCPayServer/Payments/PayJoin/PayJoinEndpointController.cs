@@ -275,8 +275,9 @@ namespace BTCPayServer.Payments.PayJoin
                 var prevOuts = originalTx.Inputs.Select(o => o.PrevOut).ToHashSet();
                 utxos = utxos.Where(u => !prevOuts.Contains(u.Outpoint)).ToArray();
                 Array.Sort(utxos, UTXODeterministicComparer.Instance);
-                foreach (var utxo in await SelectUTXO(network, utxos, output.Value,
-                    psbt.Outputs.Where(o => o.Index != output.Index).Select(o => o.Value).ToArray()))
+                
+                foreach (var utxo in await SelectUTXO(network, utxos, psbt.Inputs.Select(input => input.WitnessUtxo.Value.ToDecimal(MoneyUnit.BTC)),  
+                    psbt.Outputs.Select(psbtOutput => psbtOutput.Value.ToDecimal(MoneyUnit.BTC))))
                 {
                     selectedUTXOs.Add(utxo.Outpoint, utxo);
                 }
@@ -505,8 +506,8 @@ namespace BTCPayServer.Payments.PayJoin
             return o;
         }
 
-        private async Task<UTXO[]> SelectUTXO(BTCPayNetwork network, UTXO[] availableUtxos, Money paymentAmount,
-            Money[] otherOutputs)
+        private async Task<UTXO[]> SelectUTXO(BTCPayNetwork network, UTXO[] availableUtxos, IEnumerable<decimal> otherInputs,
+            IEnumerable<decimal> otherOutputs)
         {
             if (availableUtxos.Length == 0)
                 return Array.Empty<UTXO>();
@@ -527,21 +528,24 @@ namespace BTCPayServer.Payments.PayJoin
             {
                 if (currentTry >= maxTries)
                     break;
-                //we can only check against our input as we dont know the value of the rest.
-                var input = (Money)availableUtxo.Value;
-                var paymentAmountSum = input + paymentAmount;
-                if (otherOutputs.Concat(new[] {paymentAmountSum}).Any(output => input > output))
-                {
-                    //UIH 1 & 2
-                    continue;
-                }
 
-                if (await _payJoinRepository.TryLock(availableUtxo.Outpoint))
+                foreach (var input in otherInputs.Concat(new[] {availableUtxo.Value.GetValue(network)}))
                 {
-                    return new UTXO[] { availableUtxo };
+                    var paymentAmountSum = input + otherInputs.Sum();
+                    if (otherOutputs.Concat(new[] {paymentAmountSum}).Any(output => input > output))
+                    {
+                        //UIH 1 & 2
+                        continue;
+                    }
+
+                    if (await _payJoinRepository.TryLock(availableUtxo.Outpoint))
+                    {
+                        return new UTXO[] {availableUtxo};
+                    }
+
+                    locked.Add(availableUtxo.Outpoint);
+                    currentTry++;
                 }
-                locked.Add(availableUtxo.Outpoint);
-                currentTry++;
             }
             foreach (var utxo in availableUtxos.Where(u => !locked.Contains(u.Outpoint)))
             {

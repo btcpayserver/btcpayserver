@@ -23,7 +23,7 @@ namespace BTCPayServer.Migrations
                 columns: table => new
                 {
                     InvoiceDataId = table.Column<string>(nullable: false, maxLength: maxLength),
-                    Address = table.Column<string>(nullable: false),
+                    Address = table.Column<string>(nullable: false, maxLength: this.IsMySql(migrationBuilder.ActiveProvider) ? (int?)512 : null),
                     Assigned = table.Column<DateTimeOffset>(nullable: false),
                     UnAssigned = table.Column<DateTimeOffset>(nullable: true)
                 },

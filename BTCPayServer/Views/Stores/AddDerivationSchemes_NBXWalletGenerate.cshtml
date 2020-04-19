@@ -14,11 +14,17 @@
                 </button>
             </div>
             <div class="modal-body">
+                @if (!User.IsInRole(Roles.ServerAdmin))
+                {
+                    <div class="alert alert-warning">
+                        You are not an admin on this server. While you are able to import or generate a wallet via seed with your account, please understand that you are trusting the server admins not just with your <a href="https://docs.btcpayserver.org/deployment/thirdpartyhosting#privacy-concerns" target="_blank" class="alert-link">privacy</a> but also with <a href="https://docs.btcpayserver.org/deployment/thirdpartyhosting#trust-concerns" target="_blank"  class="alert-link">trivial access to your funds.</a> If you NEED to use this feature, please reconsider hosting your own BTCPay Server instance. 
+                    </div>
+                }
                 <p>You may generate a wallet with a seed and import the xpub it into BTCPay. You can optionally also tell NBX to import the keys to the node wallet to be able to view & spend received funds from it.</p>
 
                 <div class="form-group">
                     <label asp-for="ExistingMnemonic">Existing Seed</label>
-                    <input type="text" asp-for="ExistingMnemonic" class="form-control" />
+                    <input type="text" asp-for="ExistingMnemonic" class="form-control"/>
                     <span asp-validation-for="ExistingMnemonic" class="text-danger"></span>
                     <small class="form-text text-muted">
                         You can choose to import an existing mnemonic seed phrase. If you leave blank, we will generate one for you.
@@ -26,12 +32,12 @@
                 </div>
                 <div class="form-group">
                     <label asp-for="Passphrase">Passphrase (optional)</label>
-                    <input type="password" asp-for="Passphrase" class="form-control" />
+                    <input type="password" asp-for="Passphrase" class="form-control"/>
                     <span asp-validation-for="Passphrase" class="text-danger"></span>
                 </div>
                 <div class="form-group">
                     <label for="passphrase_conf">Passphrase confirmation</label>
-                    <input type="password" name="passphrase_conf" class="form-control" />
+                    <input type="password" name="passphrase_conf" class="form-control"/>
                     <span class="text-danger field-validation-valid" id="passphrase_conf_validation"></span>
                 </div>
                 <div class="form-group">
@@ -55,7 +61,7 @@
                 </div>
 
                 <div class="form-group">
-                    <input type="checkbox" class="form-check-inline" asp-for="SavePrivateKeys" />
+                    <input type="checkbox" class="form-check-inline" asp-for="SavePrivateKeys"/>
                     <label asp-for="SavePrivateKeys">Is hot wallet</label>
                     <span asp-validation-for="SavePrivateKeys" class="text-danger"></span>
                     <small class="form-text text-danger">

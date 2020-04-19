@@ -25,7 +25,7 @@
         if (onChainPaymentData?.PayjoinInformation is PayjoinInformation pj)
         {
             payjoinIformation = pj;
-            m.AdditionalInformation = "Original tranasaction";
+            m.AdditionalInformation = "Original transaction";
         }
         if (payjoinIformation is PayjoinInformation &&
             payjoinIformation.CoinjoinTransactionHash == onChainPaymentData?.Outpoint.Hash)

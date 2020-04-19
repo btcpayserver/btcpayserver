@@ -26,6 +26,7 @@ using NBitcoin;
 using NBitcoin.Altcoins;
 using NBitcoin.Payment;
 using NBitpayClient;
+using NBXplorer.Models;
 using OpenQA.Selenium;
 using Xunit;
 using Xunit.Abstractions;
@@ -90,12 +91,44 @@ namespace BTCPayServer.Tests
             }
         }
 
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public async Task ChooseBestUTXOsForPayjoin()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                await tester.StartAsync();
+                var network = tester.NetworkProvider.GetNetwork<BTCPayNetwork>("BTC");
+                var controller = tester.PayTester.GetService<PayJoinEndpointController>();
+
+
+                void SelectionVector()
+                {
+                    
+                };
+                //Test1: 
+                var utxos = new[] {FakeUTXO(1.0m)};
+                Assert.Contains( await controller.SelectUTXO(network, utxos, new[] {1m}, new[] {0.5m, 0.5m}), utxo => utxos.Contains(utxo));
+            }
+        }
+        
+        
+
         private Transaction RandomTransaction(BTCPayNetwork network)
         {
             var tx = network.NBitcoinNetwork.CreateTransaction();
             tx.Inputs.Add(new OutPoint(RandomUtils.GetUInt256(), 0), Script.Empty);
             tx.Outputs.Add(Money.Coins(1.0m), new Key().ScriptPubKey);
             return tx;
+        }
+
+        private UTXO FakeUTXO(decimal amount)
+        {
+            return new UTXO()
+            {
+                Value = new Money(amount, MoneyUnit.BTC),
+                Outpoint = RandomOutpoint()
+            };
         }
 
         private OutPoint RandomOutpoint()

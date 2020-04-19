@@ -505,8 +505,8 @@ namespace BTCPayServer.Payments.PayJoin
             o.Add(new JProperty("message", friendlyMessage));
             return o;
         }
-
-        private async Task<UTXO[]> SelectUTXO(BTCPayNetwork network, UTXO[] availableUtxos, IEnumerable<decimal> otherInputs,
+        [NonAction]
+        public async Task<UTXO[]> SelectUTXO(BTCPayNetwork network, UTXO[] availableUtxos, IEnumerable<decimal> otherInputs,
             IEnumerable<decimal> otherOutputs)
         {
             if (availableUtxos.Length == 0)
@@ -516,7 +516,6 @@ namespace BTCPayServer.Payments.PayJoin
             // We don't want to make too many db roundtrip which would be inconvenient for the sender
             int maxTries = 30;
             int currentTry = 0;
-            List<UTXO> utxosByPriority = new List<UTXO>();
             // UIH = "unnecessary input heuristic", basically "a wallet wouldn't choose more utxos to spend in this scenario".
             //
             // "UIH1" : one output is smaller than any input. This heuristically implies that that output is not a payment, and must therefore be a change output.
@@ -540,7 +539,7 @@ namespace BTCPayServer.Payments.PayJoin
 
                     if (await _payJoinRepository.TryLock(availableUtxo.Outpoint))
                     {
-                        return new UTXO[] {availableUtxo};
+                        return new[] {availableUtxo};
                     }
 
                     locked.Add(availableUtxo.Outpoint);
@@ -553,7 +552,7 @@ namespace BTCPayServer.Payments.PayJoin
                     break;
                 if (await _payJoinRepository.TryLock(utxo.Outpoint))
                 {
-                    return new UTXO[] { utxo };
+                    return new[] { utxo };
                 }
                 currentTry++;
             }

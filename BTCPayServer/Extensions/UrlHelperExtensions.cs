@@ -21,5 +21,14 @@ namespace Microsoft.AspNetCore.Mvc
                 values: new { userId, code },
                 protocol: scheme);
         }
+
+        public static string PaymentRequestLink(this LinkGenerator urlHelper, string paymentRequestId,  string scheme, HostString host, string pathbase)
+        {
+            return urlHelper.GetUriByAction(
+                action: nameof(PaymentRequestController.ViewPaymentRequest),
+                controller: "PaymentRequest",
+                values: new { id = paymentRequestId},
+                scheme, host, pathbase);
+        }
     }
 }

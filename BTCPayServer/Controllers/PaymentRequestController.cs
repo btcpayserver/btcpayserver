@@ -25,6 +25,7 @@ using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using NBitpayClient;
 
@@ -42,6 +43,7 @@ namespace BTCPayServer.Controllers
         private readonly EventAggregator _EventAggregator;
         private readonly CurrencyNameTable _Currencies;
         private readonly InvoiceRepository _InvoiceRepository;
+        private readonly LinkGenerator _linkGenerator;
 
         public PaymentRequestController(
             InvoiceController invoiceController,
@@ -51,7 +53,8 @@ namespace BTCPayServer.Controllers
             PaymentRequestService paymentRequestService,
             EventAggregator eventAggregator,
             CurrencyNameTable currencies,
-            InvoiceRepository invoiceRepository)
+            InvoiceRepository invoiceRepository,
+            LinkGenerator linkGenerator)
         {
             _InvoiceController = invoiceController;
             _UserManager = userManager;
@@ -61,6 +64,7 @@ namespace BTCPayServer.Controllers
             _EventAggregator = eventAggregator;
             _Currencies = currencies;
             _InvoiceRepository = invoiceRepository;
+            _linkGenerator = linkGenerator;
         }
 
         [HttpGet]
@@ -284,8 +288,7 @@ namespace BTCPayServer.Controllers
             var store = pr.StoreData;
             try
             {
-                var redirectUrl = Request.GetDisplayUrl().TrimEnd("/pay", StringComparison.InvariantCulture)
-                    .Replace("hub?id=", string.Empty, StringComparison.InvariantCultureIgnoreCase);
+                var redirectUrl = _linkGenerator.PaymentRequestLink(id, Request.Scheme, Request.Host, Request.PathBase);
                 var newInvoiceId = (await _InvoiceController.CreateInvoiceCore(new CreateInvoiceRequest()
                         {
                             OrderId = $"{PaymentRequestRepository.GetOrderIdForPaymentRequest(id)}",

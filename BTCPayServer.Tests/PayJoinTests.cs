@@ -101,14 +101,21 @@ namespace BTCPayServer.Tests
                 var network = tester.NetworkProvider.GetNetwork<BTCPayNetwork>("BTC");
                 var controller = tester.PayTester.GetService<PayJoinEndpointController>();
 
-
-                void SelectionVector()
-                {
-                    
-                };
-                //Test1: 
+                //Only one utxo, so obvious result
                 var utxos = new[] {FakeUTXO(1.0m)};
-                Assert.Contains( await controller.SelectUTXO(network, utxos, new[] {1m}, new[] {0.5m, 0.5m}), utxo => utxos.Contains(utxo));
+                var paymentAmount = 0.5m;
+                var otherOutputs = new[] {0.5m};
+                var inputs = new[] {1m};
+                Assert.Contains( await controller.SelectUTXO(network, utxos, inputs, paymentAmount, otherOutputs), utxo => utxos.Contains(utxo));
+                
+                
+                utxos = new[] {FakeUTXO(1.0m)};
+                paymentAmount = 0.5m;
+                otherOutputs = new[] {0.5m};
+                inputs = new[] {1m};
+                Assert.Contains( await controller.SelectUTXO(network, utxos, inputs, paymentAmount, otherOutputs), utxo => utxos.Contains(utxo));
+                
+                
             }
         }
         

@@ -276,8 +276,8 @@ namespace BTCPayServer.Payments.PayJoin
                 utxos = utxos.Where(u => !prevOuts.Contains(u.Outpoint)).ToArray();
                 Array.Sort(utxos, UTXODeterministicComparer.Instance);
                 
-                foreach (var utxo in await SelectUTXO(network, utxos, psbt.Inputs.Select(input => input.WitnessUtxo.Value.ToDecimal(MoneyUnit.BTC)),  
-                    psbt.Outputs.Select(psbtOutput => psbtOutput.Value.ToDecimal(MoneyUnit.BTC))))
+                foreach (var utxo in await SelectUTXO(network, utxos, psbt.Inputs.Select(input => input.WitnessUtxo.Value.ToDecimal(MoneyUnit.BTC)),  output.Value.ToDecimal(MoneyUnit.BTC),
+                    psbt.Outputs.Where(psbtOutput => !psbtOutput.Equals(output)).Select(psbtOutput => psbtOutput.Value.ToDecimal(MoneyUnit.BTC))))
                 {
                     selectedUTXOs.Add(utxo.Outpoint, utxo);
                 }
@@ -506,7 +506,7 @@ namespace BTCPayServer.Payments.PayJoin
             return o;
         }
         [NonAction]
-        public async Task<UTXO[]> SelectUTXO(BTCPayNetwork network, UTXO[] availableUtxos, IEnumerable<decimal> otherInputs,
+        public async Task<UTXO[]> SelectUTXO(BTCPayNetwork network, UTXO[] availableUtxos, IEnumerable<decimal> otherInputs, decimal mainPaymentOutput,
             IEnumerable<decimal> otherOutputs)
         {
             if (availableUtxos.Length == 0)
@@ -530,8 +530,9 @@ namespace BTCPayServer.Payments.PayJoin
 
                 foreach (var input in otherInputs.Concat(new[] {availableUtxo.Value.GetValue(network)}))
                 {
-                    var paymentAmountSum = input + otherInputs.Sum();
-                    if (otherOutputs.Concat(new[] {paymentAmountSum}).Any(output => input > output))
+                    var computedOutputs =
+                        otherOutputs.Concat(new[] {mainPaymentOutput + availableUtxo.Value.GetValue(network)});
+                    if (computedOutputs.Any(output => input > output))
                     {
                         //UIH 1 & 2
                         continue;

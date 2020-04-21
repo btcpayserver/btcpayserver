@@ -12,7 +12,10 @@ namespace BTCPayServer.Controllers.GreenField
         [HttpGet("~/api/v1/health")]
         public ActionResult GetHealth(NBXplorerDashboard dashBoard)
         {
-            ApiHealthData model = new ApiHealthData() {Synchronized = dashBoard.IsFullySynched()};
+            ApiHealthData model = new ApiHealthData()
+            {
+                Synchronized = dashBoard.IsFullySynched()
+            };
             return Ok(model);
         }
     }

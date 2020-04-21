@@ -32,7 +32,7 @@
                 "properties": {
                     "synchronized": {
                         "type": "boolean",
-                        "description": "True if the instance is fully synchronized"
+                        "description": "True if the instance is fully synchronized, according to NBXplorer"
                     }
                 }
             }

@@ -9,7 +9,7 @@ namespace BTCPayServer.Client
     {
         public virtual async Task<ApiHealthData> GetHealth(CancellationToken token = default)
         {
-            var response = await _httpClient.SendAsync(CreateHttpRequest("api/v1/health", bodyPayload: new {}), token);
+            var response = await _httpClient.SendAsync(CreateHttpRequest("api/v1/health"), token);
             return await HandleResponse<ApiHealthData>(response);
         }
     }

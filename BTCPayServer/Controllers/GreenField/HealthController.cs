@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Controllers.GreenField
 {
-    [ApiController]
+    [Controller]
     public class HealthController : ControllerBase
     {
         [AllowAnonymous]

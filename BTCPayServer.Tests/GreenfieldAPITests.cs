@@ -238,8 +238,9 @@ namespace BTCPayServer.Tests
                 await tester.StartAsync();
                 var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
 
-                var isHealthy = await unauthClient.IsHealthy();
-                Assert.True(isHealthy);
+                var apiHealthData = await unauthClient.GetHealth();
+                Assert.NotNull(apiHealthData);
+                Assert.True(apiHealthData.Synchronized);
             }
         }
     }

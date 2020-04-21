@@ -6,15 +6,35 @@
                     "Health"
                 ],
                 "summary": "Get health status",
-                "description": "Check whether of not the instance is up",
+                "description": "Check the instance health status",
                 "operationId": "Health_GetHealth",
                 "responses": {
                     "200": {
                         "description": "Instance is up",
-                        "content": {}
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApplicationHealthData"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": []
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "ApplicationHealthData": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "synchronized": {
+                        "type": "boolean",
+                        "description": "True if the instance is fully synchronized"
+                    }
+                }
             }
         }
     },

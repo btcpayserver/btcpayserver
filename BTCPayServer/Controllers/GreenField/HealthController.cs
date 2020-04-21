@@ -1,3 +1,5 @@
+using BTCPayServer.HostedServices;
+using BTCPayServer.Client.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,9 +10,10 @@ namespace BTCPayServer.Controllers.GreenField
     {
         [AllowAnonymous]
         [HttpGet("~/api/v1/health")]
-        public ActionResult GetHealth()
+        public ActionResult GetHealth(NBXplorerDashboard dashBoard)
         {
-            return Ok();
+            ApiHealthData model = new ApiHealthData() {Synchronized = dashBoard.IsFullySynched()};
+            return Ok(model);
         }
     }
 }

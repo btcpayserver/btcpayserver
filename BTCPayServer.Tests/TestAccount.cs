@@ -70,10 +70,22 @@ namespace BTCPayServer.Tests
             var x = Assert.IsType<RedirectToActionResult>(await manageController.AddApiKey(
                 new ManageController.AddApiKeyViewModel()
                 {
-                    PermissionValues = permissions.Select(s => new ManageController.AddApiKeyViewModel.PermissionValueItem()
+                    PermissionValues = permissions.Select(s =>
                     {
-                        Permission = s,
-                        Value = true
+                        Permission.TryParse(s, out var p);
+                        return p;
+                    }).GroupBy(permission => permission.Policy).Select(p =>
+                    {
+                        var stores = p.Where(permission => !string.IsNullOrEmpty(permission.StoreId))
+                            .Select(permission => permission.StoreId).ToList();
+                        return new ManageController.AddApiKeyViewModel.PermissionValueItem()
+                        {
+                            Permission = p.Key,
+                            Forbidden = false,
+                            StoreMode = stores.Any()?  ManageController.AddApiKeyViewModel.ApiKeyStoreMode.Specific: ManageController.AddApiKeyViewModel.ApiKeyStoreMode.AllStores,
+                            SpecificStores = stores,
+                            Value = true
+                        };
                     }).ToList()
                 }));
             var statusMessage = manageController.TempData.GetStatusMessageModel();

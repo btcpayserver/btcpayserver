@@ -1,6 +1,7 @@
 ﻿/* jshint browser: true, strict: false, maxlen: false, maxstatements: false */
 (function () {
     var showingInvoice = false;
+    var scriptSrcRegex = /\/modal\/btcpay\.js(\?v=.*)?$/;
     var supportsCurrentScript = ("currentScript" in document);
     var thisScript = "";
     if (supportsCurrentScript) {
@@ -9,7 +10,7 @@
     else {
         for (var i = 0; i < document.scripts.length; i++) {
             var script = document.scripts[i];
-            if (script.src.endsWith("btcpay.js")) {
+            if (script.src.match(scriptSrcRegex)) {
                 thisScript = script.src;
             }
         }
@@ -40,9 +41,10 @@
     iframe.style.zIndex = '2000';
 
     var origin = 'http://slack.btcpayserver.org join us there, and initialize this with your origin url through setApiUrlPrefix';
-    if (thisScript.endsWith("/modal/btcpay.js")) {
+    var scriptMatch = thisScript.match(scriptSrcRegex)
+    if (scriptMatch) {
         // We can't just take the domain as btcpay can run under a sub path with RootPath
-        origin = thisScript.substr(0, thisScript.length - "/modal/btcpay.js".length);
+        origin = thisScript.substr(0, thisScript.length - scriptMatch[0].length);
     }
     // urlPrefix should be site root without trailing slash
     function setApiUrlPrefix(urlPrefix) {
@@ -50,7 +52,7 @@
     }
     function stripTrailingSlashes(site) {
         return site.replace(/\/+$/, "");
-    } 
+    }
 
     var onModalWillEnterMethod = function () { };
     var onModalWillLeaveMethod = function () { };

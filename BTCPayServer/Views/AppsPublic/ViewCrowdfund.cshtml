@@ -27,7 +27,7 @@
         <bundle name="wwwroot/bundles/crowdfund-bundle-1.min.js" asp-append-version="true"></bundle>
         <bundle name="wwwroot/bundles/crowdfund-bundle-2.min.js" asp-append-version="true"></bundle>
         @*We need to make sure btcpay.js is not bundled, else it will not work if there is a RootPath*@
-        <script src="~/modal/btcpay.js" asp-append-version="false"></script>
+        <script src="~/modal/btcpay.js" asp-append-version="true"></script>
     }
 
     <bundle name="wwwroot/bundles/crowdfund-bundle.min.css" asp-append-version="true"></bundle>

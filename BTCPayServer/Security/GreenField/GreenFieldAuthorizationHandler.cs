@@ -69,7 +69,7 @@ namespace BTCPayServer.Security.GreenField
                             if (context.HasPermission(Permission.Create(requirement.Policy, store.Id)))
                                 permissionedStores.Add(store);
                         }
-                        _HttpContext.SetStoresData(stores.ToArray());
+                        _HttpContext.SetStoresData(permissionedStores.ToArray());
                         success = true;
                     }
                     break;

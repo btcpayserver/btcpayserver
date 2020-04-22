@@ -193,6 +193,11 @@ namespace BTCPayServer.Tests
                     await client.GetStore(newStore.Id);
                 });
                 Assert.Single(await client.GetStores());
+                
+                
+                newStore = await client.CreateStore(new CreateStoreRequest() {Name = "A"});
+                var scopedClient = await user.CreateClient(Permission.Create(Policies.CanViewStoreSettings, user.StoreId).ToString());
+                Assert.Single(await scopedClient.GetStores());
             }
         }
         

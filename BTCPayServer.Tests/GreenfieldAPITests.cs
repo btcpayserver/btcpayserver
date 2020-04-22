@@ -156,7 +156,51 @@ namespace BTCPayServer.Tests
                 await AssertHttpError(403, async () => await user1Client.CreateUser(new CreateApplicationUserRequest() { Email = "admin8@gmail.com", Password = "afewfoiewiou", IsAdministrator = true }));
             }
         }
+        
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task StoresControllerTests()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                await tester.StartAsync();
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                await user.MakeAdmin();
+                var client = await user.CreateClient(Policies.Unrestricted);
+                
+                //create store
+                var newStore = await client.CreateStore(new CreateStoreRequest() {Name = "A"});
+                
+                //list stores
+                var stores = await client.GetStores();
+                var storeIds = stores.Select(data => data.Id);
+                var storeNames = stores.Select(data => data.Name);
+                Assert.NotNull(stores);
+                Assert.Equal(2, stores.Count());
+                Assert.Contains(newStore.Id, storeIds);
+                Assert.Contains(user.StoreId, storeIds);
 
+                //get store
+                var store = await client.GetStore(user.StoreId);
+                Assert.Equal(user.StoreId,store.Id);
+                Assert.Contains(store.Name,storeNames);
+                
+                //remove store
+                await client.RemoveStore(newStore.Id);
+                await AssertHttpError(403, async () =>
+                {
+                    await client.GetStore(newStore.Id);
+                });
+                Assert.Single(await client.GetStores());
+                
+                
+                newStore = await client.CreateStore(new CreateStoreRequest() {Name = "A"});
+                var scopedClient = await user.CreateClient(Permission.Create(Policies.CanViewStoreSettings, user.StoreId).ToString());
+                Assert.Single(await scopedClient.GetStores());
+            }
+        }
+        
         private async Task AssertHttpError(int code, Func<Task> act)
         {
             var ex = await Assert.ThrowsAsync<HttpRequestException>(act);

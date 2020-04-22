@@ -9,6 +9,7 @@ using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace BTCPayServer.Controllers.GreenField
 {
@@ -67,8 +68,8 @@ namespace BTCPayServer.Controllers.GreenField
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<ActionResult<Client.Models.StoreData>> CreateStore(CreateStoreRequest request)
         {
-            if (request is null)
-                return BadRequest();
+            if (request?.Name is null)
+                return BadRequest(CreateValidationProblem(nameof(request.Name), "Name is missing"));
             var store = await _storeRepository.CreateStore(_userManager.GetUserId(User), request.Name);
             return Ok(FromModel(store));
         }
@@ -80,6 +81,13 @@ namespace BTCPayServer.Controllers.GreenField
                 Id = data.Id,
                 Name = data.StoreName
             };
+        }
+        
+        private ValidationProblemDetails CreateValidationProblem(string propertyName, string errorMessage)
+        {
+            var modelState = new ModelStateDictionary();
+            modelState.AddModelError(propertyName, errorMessage);
+            return new ValidationProblemDetails(modelState);
         }
     }
 }

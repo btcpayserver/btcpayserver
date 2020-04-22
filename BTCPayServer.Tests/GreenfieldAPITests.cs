@@ -272,5 +272,20 @@ namespace BTCPayServer.Tests
 
             }
         }
+        
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task HealthControllerTests()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                await tester.StartAsync();
+                var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
+
+                var apiHealthData = await unauthClient.GetHealth();
+                Assert.NotNull(apiHealthData);
+                Assert.True(apiHealthData.Synchronized);
+            }
+        }
     }
 }

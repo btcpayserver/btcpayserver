@@ -476,7 +476,8 @@ namespace BTCPayServer.Payments.PayJoin
             if (psbtFormat && HexEncoder.IsWellFormed(rawBody))
             {
                 return Ok(newPsbt.ToHex());
-            }else if (psbtFormat)
+            }
+            else if (psbtFormat)
             {
                 return Ok(newPsbt.ToBase64());
             }

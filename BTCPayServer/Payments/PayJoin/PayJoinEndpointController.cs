@@ -21,6 +21,7 @@ using Newtonsoft.Json.Linq;
 using NicolasDorier.RateLimits;
 using NBXplorer.DerivationStrategy;
 using System.Diagnostics.CodeAnalysis;
+using NBitcoin.DataEncoders;
 
 namespace BTCPayServer.Payments.PayJoin
 {
@@ -472,8 +473,13 @@ namespace BTCPayServer.Payments.PayJoin
             await _btcPayWalletProvider.GetWallet(network).SaveOffchainTransactionAsync(originalTx);
             _eventAggregator.Publish(new InvoiceEvent(invoice, 1002, InvoiceEvent.ReceivedPayment) {Payment = payment});
 
-            if (psbtFormat)
+            if (psbtFormat && HexEncoder.IsWellFormed(rawBody))
+            {
+                return Ok(newPsbt.ToHex());
+            }else if (psbtFormat)
+            {
                 return Ok(newPsbt.ToBase64());
+            }
             else
                 return Ok(newTx.ToHex());
         }

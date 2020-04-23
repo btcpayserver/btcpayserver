@@ -36,6 +36,16 @@ namespace BTCPayServer.Client
             var response = await _httpClient.SendAsync(CreateHttpRequest("api/v1/stores", bodyPayload: request, method: HttpMethod.Post), token);
             return await HandleResponse<StoreData>(response);
         }
+        
+        public virtual async Task<StoreData> UpdateStore(string storeId, UpdateStoreRequest request, CancellationToken token = default)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+            if (storeId == null)
+                throw new ArgumentNullException(nameof(storeId));
+            var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}", bodyPayload: request, method: HttpMethod.Put), token);
+            return await HandleResponse<StoreData>(response);
+        }
 
     }
 }

@@ -28,7 +28,7 @@ namespace BTCPayServer.HostedServices
             _generator = generator;
         }
 
-        protected override void SubscibeToEvents()
+        protected override void SubscribeToEvents()
         {
             Subscribe<UserRegisteredEvent>();
         }

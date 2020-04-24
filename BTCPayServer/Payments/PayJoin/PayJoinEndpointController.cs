@@ -21,6 +21,7 @@ using Newtonsoft.Json.Linq;
 using NicolasDorier.RateLimits;
 using NBXplorer.DerivationStrategy;
 using System.Diagnostics.CodeAnalysis;
+using BTCPayServer.Data;
 using NBitcoin.DataEncoders;
 
 namespace BTCPayServer.Payments.PayJoin
@@ -86,6 +87,7 @@ namespace BTCPayServer.Payments.PayJoin
         private readonly EventAggregator _eventAggregator;
         private readonly NBXplorerDashboard _dashboard;
         private readonly DelayedTransactionBroadcaster _broadcaster;
+        private readonly WalletRepository _walletRepository;
 
         public PayJoinEndpointController(BTCPayNetworkProvider btcPayNetworkProvider,
             InvoiceRepository invoiceRepository, ExplorerClientProvider explorerClientProvider,
@@ -93,7 +95,8 @@ namespace BTCPayServer.Payments.PayJoin
             PayJoinRepository payJoinRepository,
             EventAggregator eventAggregator,
             NBXplorerDashboard dashboard,
-            DelayedTransactionBroadcaster broadcaster)
+            DelayedTransactionBroadcaster broadcaster,
+            WalletRepository walletRepository)
         {
             _btcPayNetworkProvider = btcPayNetworkProvider;
             _invoiceRepository = invoiceRepository;
@@ -104,6 +107,7 @@ namespace BTCPayServer.Payments.PayJoin
             _eventAggregator = eventAggregator;
             _dashboard = dashboard;
             _broadcaster = broadcaster;
+            _walletRepository = walletRepository;
         }
 
         [HttpPost("")]
@@ -474,7 +478,12 @@ namespace BTCPayServer.Payments.PayJoin
             }
             await _btcPayWalletProvider.GetWallet(network).SaveOffchainTransactionAsync(originalTx);
             _eventAggregator.Publish(new InvoiceEvent(invoice, 1002, InvoiceEvent.ReceivedPayment) {Payment = payment});
-
+            
+            _walletRepository.AddLabels(new WalletId(invoice.StoreId, network.CryptoCode), selectedUTXOs.Select(utxo =>
+                    new KeyValuePair<uint256, List<(string color, string label)>>(utxo.Key.Hash,
+                        new List<(string color, string label)>() {("#51b13e", $"pj-exposed-{invoice.Id}")}))
+                .ToDictionary(pair => pair.Key, pair => pair.Value));
+            
             if (psbtFormat && HexEncoder.IsWellFormed(rawBody))
             {
                 return Ok(newPsbt.ToHex());

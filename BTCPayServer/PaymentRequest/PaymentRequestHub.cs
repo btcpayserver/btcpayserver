@@ -139,7 +139,7 @@ namespace BTCPayServer.PaymentRequest
             await (_CheckingPendingPayments ?? Task.CompletedTask);
         }
 
-        protected override void SubscibeToEvents()
+        protected override void SubscribeToEvents()
         {
             Subscribe<InvoiceEvent>();
             Subscribe<PaymentRequestUpdated>();

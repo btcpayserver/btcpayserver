@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore;
+using NBitcoin;
 
 namespace BTCPayServer.Services
 {
@@ -96,6 +98,56 @@ namespace BTCPayServer.Services
                     }
                 }
             }
+        }
+
+
+        private ConcurrentQueue<Func<Task>> labelProcessor = new ConcurrentQueue<Func<Task>>();
+
+        public async Task ProcessLabels()
+        {
+            while (labelProcessor.TryDequeue(out var func))
+            {
+                await func.Invoke();
+            }
+        }
+
+        public void AddLabels(WalletId walletId,
+            Dictionary<uint256, List<(string color, string label)>> transactionLabels)
+        {
+            labelProcessor.Enqueue(async () =>
+            {
+                var walletTransactionsInfo = await GetWalletTransactionsInfo(walletId);
+                var walletBlobInfo = await GetWalletInfo(walletId);
+                await Task.WhenAll(transactionLabels.Select(async pair =>
+                {
+                    if (!walletTransactionsInfo.TryGetValue(pair.Key.ToString(), out var walletTransactionInfo))
+                    {
+                        walletTransactionInfo = new WalletTransactionInfo();
+                    }
+
+                    foreach (var label in pair.Value)
+                    {
+                        walletBlobInfo.LabelColors.TryAdd(label.label, label.color);
+
+                    }
+
+                    await SetWalletInfo(walletId, walletBlobInfo);
+                    var update = false;
+                    foreach (var label in pair.Value)
+                    {
+                        if (walletTransactionInfo.Labels.Add(label.label))
+                        {
+                            update = true;
+                        }
+                    }
+
+                    if (update)
+                    {
+                        await SetWalletTransactionInfo(walletId, pair.Key.ToString(), walletTransactionInfo);
+                    }
+                }));
+            });
+            
         }
     }
 }

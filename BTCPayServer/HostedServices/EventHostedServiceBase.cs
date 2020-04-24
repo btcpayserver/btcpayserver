@@ -14,7 +14,7 @@ namespace BTCPayServer.HostedServices
         private readonly EventAggregator _EventAggregator;
 
         private List<IEventAggregatorSubscription> _Subscriptions;
-        private CancellationTokenSource _Cts;
+        protected CancellationTokenSource _Cts;
 
         public EventHostedServiceBase(EventAggregator eventAggregator)
         {
@@ -50,7 +50,7 @@ namespace BTCPayServer.HostedServices
         }
 
 
-        protected virtual void SubscibeToEvents()
+        protected virtual void SubscribeToEvents()
         {
 
         }
@@ -63,7 +63,7 @@ namespace BTCPayServer.HostedServices
         public virtual Task StartAsync(CancellationToken cancellationToken)
         {
             _Subscriptions = new List<IEventAggregatorSubscription>();
-            SubscibeToEvents();
+            SubscribeToEvents();
             _Cts = new CancellationTokenSource();
             _ProcessingEvents = ProcessEvents(_Cts.Token);
             return Task.CompletedTask;

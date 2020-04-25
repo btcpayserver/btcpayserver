@@ -175,117 +175,127 @@ namespace BTCPayServer.Tests
             {
                 await s.StartAsync();
                 var invoiceRepository = s.Server.PayTester.GetService<InvoiceRepository>();
-                // var payjoinRepository = s.Server.PayTester.GetService<PayJoinRepository>();
-                // var broadcaster = s.Server.PayTester.GetService<DelayedTransactionBroadcaster>();
                 s.RegisterNewUser(true);
-                var receiver = s.CreateNewStore();
-                var receiverSeed = s.GenerateWallet("BTC", "", true, true);
-                var receiverWalletId = new WalletId(receiver.storeId, "BTC");
 
-                //payjoin is not enabled by default.
-                var invoiceId = s.CreateInvoice(receiver.storeId);
-                s.GoToInvoiceCheckout(invoiceId);
-                var bip21 = s.Driver.FindElement(By.ClassName("payment__details__instruction__open-wallet__btn"))
-                    .GetAttribute("href");
-                Assert.DoesNotContain($"{PayjoinClient.BIP21EndpointKey}=", bip21);
-                
-                s.GoToHome();
-                s.GoToStore(receiver.storeId);
-                //payjoin is not enabled by default.
-                Assert.False(s.Driver.FindElement(By.Id("PayJoinEnabled")).Selected);
-                s.SetCheckbox(s,"PayJoinEnabled", true);
-                s.Driver.FindElement(By.Id("Save")).Click();
-                Assert.True(s.Driver.FindElement(By.Id("PayJoinEnabled")).Selected);
-                var sender = s.CreateNewStore();
-                var senderSeed = s.GenerateWallet("BTC", "", true, true);
-                var senderWalletId = new WalletId(sender.storeId, "BTC");
-                await s.Server.ExplorerNode.GenerateAsync(1);
-                await s.FundStoreWallet(senderWalletId);
-
-                invoiceId = s.CreateInvoice(receiver.storeId);
-                s.GoToInvoiceCheckout(invoiceId);
-                bip21 = s.Driver.FindElement(By.ClassName("payment__details__instruction__open-wallet__btn"))
-                    .GetAttribute("href");
-                Assert.Contains($"{PayjoinClient.BIP21EndpointKey}=", bip21);
-
-                s.GoToWalletSend(senderWalletId);
-                s.Driver.FindElement(By.Id("bip21parse")).Click();
-                s.Driver.SwitchTo().Alert().SendKeys(bip21);
-                s.Driver.SwitchTo().Alert().Accept();
-                Assert.False(string.IsNullOrEmpty(s.Driver.FindElement(By.Id("PayJoinEndpointUrl")).GetAttribute("value")));
-                s.Driver.ScrollTo(By.Id("SendMenu"));
-                s.Driver.FindElement(By.Id("SendMenu")).ForceClick();
-                s.Driver.FindElement(By.CssSelector("button[value=nbx-seed]")).Click();
-                await s.Server.WaitForEvent<NewOnChainTransactionEvent>(() =>
+                foreach (var format in new []{ScriptPubKeyType.SegwitP2SH})
                 {
-                    s.Driver.FindElement(By.CssSelector("button[value=payjoin]")).ForceClick();
-                    return Task.CompletedTask;
-                });
-                //no funds in receiver wallet to do payjoin
-                s.AssertHappyMessage(StatusMessageModel.StatusSeverity.Warning);
-                await TestUtils.EventuallyAsync(async () =>
-                {
-                    var invoice = await s.Server.PayTester.GetService<InvoiceRepository>().GetInvoice(invoiceId);
-                    Assert.Equal(InvoiceStatus.Paid, invoice.Status);
-                });
+                    var receiver = s.CreateNewStore();
+                    var receiverSeed = s.GenerateWallet("BTC", "", true, true, format);
+                    var receiverWalletId = new WalletId(receiver.storeId, "BTC");
 
-                s.GoToInvoices();
-                var paymentValueRowColumn = s.Driver.FindElement(By.Id($"invoice_{invoiceId}")).FindElement(By.ClassName("payment-value"));
-                Assert.False(paymentValueRowColumn.Text.Contains("payjoin", StringComparison.InvariantCultureIgnoreCase));
+                    //payjoin is not enabled by default.
+                    var invoiceId = s.CreateInvoice(receiver.storeId);
+                    s.GoToInvoiceCheckout(invoiceId);
+                    var bip21 = s.Driver.FindElement(By.ClassName("payment__details__instruction__open-wallet__btn"))
+                        .GetAttribute("href");
+                    Assert.DoesNotContain($"{PayjoinClient.BIP21EndpointKey}=", bip21);
 
-                //let's do it all again, except now the receiver has funds and is able to payjoin
-                invoiceId = s.CreateInvoice(receiver.storeId);
-                s.GoToInvoiceCheckout(invoiceId);
-                bip21 = s.Driver.FindElement(By.ClassName("payment__details__instruction__open-wallet__btn"))
-                    .GetAttribute("href");
-                Assert.Contains($"{PayjoinClient.BIP21EndpointKey}", bip21);
+                    s.GoToHome();
+                    s.GoToStore(receiver.storeId);
+                    //payjoin is not enabled by default.
+                    Assert.False(s.Driver.FindElement(By.Id("PayJoinEnabled")).Selected);
+                    s.SetCheckbox(s, "PayJoinEnabled", true);
+                    s.Driver.FindElement(By.Id("Save")).Click();
+                    Assert.True(s.Driver.FindElement(By.Id("PayJoinEnabled")).Selected);
+                    var sender = s.CreateNewStore();
+                    var senderSeed = s.GenerateWallet("BTC", "", true, true, format);
+                    var senderWalletId = new WalletId(sender.storeId, "BTC");
+                    await s.Server.ExplorerNode.GenerateAsync(1);
+                    await s.FundStoreWallet(senderWalletId);
 
-                s.GoToWalletSend(senderWalletId);
-                s.Driver.FindElement(By.Id("bip21parse")).Click();
-                s.Driver.SwitchTo().Alert().SendKeys(bip21);
-                s.Driver.SwitchTo().Alert().Accept();
-                Assert.False(string.IsNullOrEmpty(s.Driver.FindElement(By.Id("PayJoinEndpointUrl")).GetAttribute("value")));
-                s.Driver.FindElement(By.Id("FeeSatoshiPerByte")).Clear();
-                s.Driver.FindElement(By.Id("FeeSatoshiPerByte")).SendKeys("1");
-                s.Driver.ScrollTo(By.Id("SendMenu"));
-                s.Driver.FindElement(By.Id("SendMenu")).ForceClick();
-                s.Driver.FindElement(By.CssSelector("button[value=nbx-seed]")).Click();
-                await s.Server.WaitForEvent<NewOnChainTransactionEvent>(() =>
-                {
-                    s.Driver.FindElement(By.CssSelector("button[value=payjoin]")).ForceClick();
-                    return Task.CompletedTask;
-                });
-                s.AssertHappyMessage(StatusMessageModel.StatusSeverity.Success);
-                await TestUtils.EventuallyAsync(async () =>
-                {
-                    var invoice = await invoiceRepository.GetInvoice(invoiceId);
-                    var payments = invoice.GetPayments();
-                    Assert.Equal(2, payments.Count);
-                    var originalPayment = payments[0];
-                    var coinjoinPayment = payments[1];
-                    Assert.Equal(-1, ((BitcoinLikePaymentData)originalPayment.GetCryptoPaymentData()).ConfirmationCount);
-                    Assert.Equal(0, ((BitcoinLikePaymentData)coinjoinPayment.GetCryptoPaymentData()).ConfirmationCount);
-                    Assert.False(originalPayment.Accounted);
-                    Assert.True(coinjoinPayment.Accounted);
-                    Assert.Equal(((BitcoinLikePaymentData)originalPayment.GetCryptoPaymentData()).Value,
-                        ((BitcoinLikePaymentData)coinjoinPayment.GetCryptoPaymentData()).Value);
-                    Assert.Equal(originalPayment.GetCryptoPaymentData()
-                        .AssertType<BitcoinLikePaymentData>()
-                        .Value,
-                        coinjoinPayment.GetCryptoPaymentData()
-                            .AssertType<BitcoinLikePaymentData>()
-                            .Value);
-                });
-                
-                await TestUtils.EventuallyAsync(async () =>
-                {
-                    var invoice = await s.Server.PayTester.GetService<InvoiceRepository>().GetInvoice(invoiceId);
-                    var dto = invoice.EntityToDTO();
-                    Assert.Equal(InvoiceStatus.Paid, invoice.Status);
-                });
-                s.GoToInvoices();
-                paymentValueRowColumn = s.Driver.FindElement(By.Id($"invoice_{invoiceId}")).FindElement(By.ClassName("payment-value"));
-                Assert.False(paymentValueRowColumn.Text.Contains("payjoin", StringComparison.InvariantCultureIgnoreCase));
+                    invoiceId = s.CreateInvoice(receiver.storeId);
+                    s.GoToInvoiceCheckout(invoiceId);
+                    bip21 = s.Driver.FindElement(By.ClassName("payment__details__instruction__open-wallet__btn"))
+                        .GetAttribute("href");
+                    Assert.Contains($"{PayjoinClient.BIP21EndpointKey}=", bip21);
+
+                    s.GoToWalletSend(senderWalletId);
+                    s.Driver.FindElement(By.Id("bip21parse")).Click();
+                    s.Driver.SwitchTo().Alert().SendKeys(bip21);
+                    s.Driver.SwitchTo().Alert().Accept();
+                    Assert.False(string.IsNullOrEmpty(s.Driver.FindElement(By.Id("PayJoinEndpointUrl"))
+                        .GetAttribute("value")));
+                    s.Driver.ScrollTo(By.Id("SendMenu"));
+                    s.Driver.FindElement(By.Id("SendMenu")).ForceClick();
+                    s.Driver.FindElement(By.CssSelector("button[value=nbx-seed]")).Click();
+                    await s.Server.WaitForEvent<NewOnChainTransactionEvent>(() =>
+                    {
+                        s.Driver.FindElement(By.CssSelector("button[value=payjoin]")).ForceClick();
+                        return Task.CompletedTask;
+                    });
+                    //no funds in receiver wallet to do payjoin
+                    s.AssertHappyMessage(StatusMessageModel.StatusSeverity.Warning);
+                    await TestUtils.EventuallyAsync(async () =>
+                    {
+                        var invoice = await s.Server.PayTester.GetService<InvoiceRepository>().GetInvoice(invoiceId);
+                        Assert.Equal(InvoiceStatus.Paid, invoice.Status);
+                    });
+
+                    s.GoToInvoices();
+                    var paymentValueRowColumn = s.Driver.FindElement(By.Id($"invoice_{invoiceId}"))
+                        .FindElement(By.ClassName("payment-value"));
+                    Assert.False(paymentValueRowColumn.Text.Contains("payjoin",
+                        StringComparison.InvariantCultureIgnoreCase));
+
+                    //let's do it all again, except now the receiver has funds and is able to payjoin
+                    invoiceId = s.CreateInvoice(receiver.storeId);
+                    s.GoToInvoiceCheckout(invoiceId);
+                    bip21 = s.Driver.FindElement(By.ClassName("payment__details__instruction__open-wallet__btn"))
+                        .GetAttribute("href");
+                    Assert.Contains($"{PayjoinClient.BIP21EndpointKey}", bip21);
+
+                    s.GoToWalletSend(senderWalletId);
+                    s.Driver.FindElement(By.Id("bip21parse")).Click();
+                    s.Driver.SwitchTo().Alert().SendKeys(bip21);
+                    s.Driver.SwitchTo().Alert().Accept();
+                    Assert.False(string.IsNullOrEmpty(s.Driver.FindElement(By.Id("PayJoinEndpointUrl"))
+                        .GetAttribute("value")));
+                    s.Driver.FindElement(By.Id("FeeSatoshiPerByte")).Clear();
+                    s.Driver.FindElement(By.Id("FeeSatoshiPerByte")).SendKeys("1");
+                    s.Driver.ScrollTo(By.Id("SendMenu"));
+                    s.Driver.FindElement(By.Id("SendMenu")).ForceClick();
+                    s.Driver.FindElement(By.CssSelector("button[value=nbx-seed]")).Click();
+                    await s.Server.WaitForEvent<NewOnChainTransactionEvent>(() =>
+                    {
+                        s.Driver.FindElement(By.CssSelector("button[value=payjoin]")).ForceClick();
+                        return Task.CompletedTask;
+                    });
+                    s.AssertHappyMessage(StatusMessageModel.StatusSeverity.Success);
+                    await TestUtils.EventuallyAsync(async () =>
+                    {
+                        var invoice = await invoiceRepository.GetInvoice(invoiceId);
+                        var payments = invoice.GetPayments();
+                        Assert.Equal(2, payments.Count);
+                        var originalPayment = payments[0];
+                        var coinjoinPayment = payments[1];
+                        Assert.Equal(-1,
+                            ((BitcoinLikePaymentData)originalPayment.GetCryptoPaymentData()).ConfirmationCount);
+                        Assert.Equal(0,
+                            ((BitcoinLikePaymentData)coinjoinPayment.GetCryptoPaymentData()).ConfirmationCount);
+                        Assert.False(originalPayment.Accounted);
+                        Assert.True(coinjoinPayment.Accounted);
+                        Assert.Equal(((BitcoinLikePaymentData)originalPayment.GetCryptoPaymentData()).Value,
+                            ((BitcoinLikePaymentData)coinjoinPayment.GetCryptoPaymentData()).Value);
+                        Assert.Equal(originalPayment.GetCryptoPaymentData()
+                                .AssertType<BitcoinLikePaymentData>()
+                                .Value,
+                            coinjoinPayment.GetCryptoPaymentData()
+                                .AssertType<BitcoinLikePaymentData>()
+                                .Value);
+                    });
+
+                    await TestUtils.EventuallyAsync(async () =>
+                    {
+                        var invoice = await s.Server.PayTester.GetService<InvoiceRepository>().GetInvoice(invoiceId);
+                        var dto = invoice.EntityToDTO();
+                        Assert.Equal(InvoiceStatus.Paid, invoice.Status);
+                    });
+                    s.GoToInvoices();
+                    paymentValueRowColumn = s.Driver.FindElement(By.Id($"invoice_{invoiceId}"))
+                        .FindElement(By.ClassName("payment-value"));
+                    Assert.False(paymentValueRowColumn.Text.Contains("payjoin",
+                        StringComparison.InvariantCultureIgnoreCase));
+                }
             }
         }
 

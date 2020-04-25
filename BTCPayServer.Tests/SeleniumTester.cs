@@ -123,7 +123,7 @@ namespace BTCPayServer.Tests
         }
         
 
-        public Mnemonic GenerateWallet(string cryptoCode = "BTC", string seed = "", bool importkeys = false, bool privkeys = false)
+        public Mnemonic GenerateWallet(string cryptoCode = "BTC", string seed = "", bool importkeys = false, bool privkeys = false, ScriptPubKeyType format = ScriptPubKeyType.Segwit)
         {
             Driver.FindElement(By.Id($"Modify{cryptoCode}")).ForceClick();
             Driver.FindElement(By.Id("import-from-btn")).ForceClick();
@@ -131,6 +131,8 @@ namespace BTCPayServer.Tests
             Driver.WaitForElement(By.Id("ExistingMnemonic")).SendKeys(seed);
             SetCheckbox(Driver.WaitForElement(By.Id("SavePrivateKeys")), privkeys);
             SetCheckbox(Driver.WaitForElement(By.Id("ImportKeysToRPC")), importkeys);
+            Driver.WaitForElement(By.Id("ScriptPubKeyType")).Click();
+            Driver.WaitForElement(By.CssSelector($"#ScriptPubKeyType option[value={format}]")).Click();
             Logs.Tester.LogInformation("Trying to click btn-generate");
             Driver.WaitForElement(By.Id("btn-generate")).ForceClick();
             AssertHappyMessage();

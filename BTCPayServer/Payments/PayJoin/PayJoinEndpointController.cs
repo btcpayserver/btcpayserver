@@ -458,7 +458,7 @@ namespace BTCPayServer.Payments.PayJoin
             originalPaymentData.ConfirmationCount = -1;
             originalPaymentData.PayjoinInformation = new PayjoinInformation()
             {
-                CoinjoinTransactionHash = newPsbt.GetGlobalTransaction().GetHash(),
+                CoinjoinTransactionHash = GetExpectedHash(newPsbt),
                 CoinjoinValue = originalPaymentValue - ourFeeContribution,
                 ContributedOutPoints = selectedUTXOs.Select(o => o.Key).ToArray()
             };
@@ -483,6 +483,27 @@ namespace BTCPayServer.Payments.PayJoin
             }
             else
                 return Ok(newTx.ToHex());
+        }
+
+        private uint256 GetExpectedHash(PSBT psbt)
+        {
+            var tx = psbt.GetGlobalTransaction();
+            var type = psbt.GetInputsScriptPubKeyType();
+            if (type is ScriptPubKeyType.Segwit)
+                return tx.GetHash();
+            else if (type is ScriptPubKeyType.SegwitP2SH)
+            {
+                for (int i = 0; i < psbt.Inputs.Count; i++)
+                {
+                    tx.Inputs[i].ScriptSig = PayToScriptHashTemplate.Instance.GenerateScriptSig(Array.Empty<byte[]>(), ((ScriptCoin)psbt.Inputs[i].GetSignableCoin()).GetP2SHRedeem());
+                }
+                return tx.GetHash();
+            }
+            else
+            {
+                throw new NotSupportedException();
+            }
+            
         }
 
         private JObject CreatePayjoinError(int httpCode, string errorCode, string friendlyMessage)

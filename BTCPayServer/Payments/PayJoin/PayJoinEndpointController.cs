@@ -460,7 +460,7 @@ namespace BTCPayServer.Payments.PayJoin
             originalPaymentData.ConfirmationCount = -1;
             originalPaymentData.PayjoinInformation = new PayjoinInformation()
             {
-                CoinjoinTransactionHash = GetExpectedHash(newPsbt, sendersInputType, coins),
+                CoinjoinTransactionHash = GetExpectedHash(newPsbt, coins),
                 CoinjoinValue = originalPaymentValue - ourFeeContribution,
                 ContributedOutPoints = selectedUTXOs.Select(o => o.Key).ToArray()
             };
@@ -487,25 +487,13 @@ namespace BTCPayServer.Payments.PayJoin
                 return Ok(newTx.ToHex());
         }
 
-        private uint256 GetExpectedHash(PSBT psbt, ScriptPubKeyType? sendersInputType, Coin[] coins)
+        private uint256 GetExpectedHash(PSBT psbt, Coin[] coins)
         {
-            var tx = psbt.GetGlobalTransaction();
-            if (sendersInputType is ScriptPubKeyType.Segwit)
-                return tx.GetHash();
-            else if (sendersInputType is ScriptPubKeyType.SegwitP2SH)
-            {
-                for (int i = 0; i < psbt.Inputs.Count; i++)
-                {
-                    
-                    tx.Inputs[i].ScriptSig = PayToScriptHashTemplate.Instance.GenerateScriptSig(Array.Empty<byte[]>(), ((ScriptCoin)coins.Single(coin => coin.Outpoint == psbt.Inputs[i].PrevOut)).GetP2SHRedeem());
-                }
-                return tx.GetHash();
-            }
-            else
-            {
-                throw new NotSupportedException();
-            }
-            
+            psbt = psbt.Clone();
+            psbt.AddCoins(coins);
+            if (!psbt.TryGetFinalizedHash(out var hash))
+                throw new InvalidOperationException("Unable to get the finalized hash");
+            return hash;
         }
 
         private JObject CreatePayjoinError(int httpCode, string errorCode, string friendlyMessage)

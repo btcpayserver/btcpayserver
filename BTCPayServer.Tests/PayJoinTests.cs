@@ -177,7 +177,7 @@ namespace BTCPayServer.Tests
                 var invoiceRepository = s.Server.PayTester.GetService<InvoiceRepository>();
                 s.RegisterNewUser(true);
 
-                foreach (var format in new []{ScriptPubKeyType.SegwitP2SH})
+                foreach (var format in PayjoinClient.SupportedFormats)
                 {
                     var receiver = s.CreateNewStore();
                     var receiverSeed = s.GenerateWallet("BTC", "", true, true, format);

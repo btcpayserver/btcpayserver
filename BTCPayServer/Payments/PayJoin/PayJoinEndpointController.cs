@@ -478,11 +478,14 @@ namespace BTCPayServer.Payments.PayJoin
             }
             await _btcPayWalletProvider.GetWallet(network).SaveOffchainTransactionAsync(originalTx);
             _eventAggregator.Publish(new InvoiceEvent(invoice, 1002, InvoiceEvent.ReceivedPayment) {Payment = payment});
-            
-            _walletRepository.AddLabels(new WalletId(invoice.StoreId, network.CryptoCode), selectedUTXOs.Select(utxo =>
-                    new KeyValuePair<uint256, List<(string color, string label)>>(utxo.Key.Hash,
-                        new List<(string color, string label)>() {("#51b13e", $"pj-exposed-{invoice.Id}")}))
-                .ToDictionary(pair => pair.Key, pair => pair.Value));
+            _eventAggregator.Publish(new UpdateTransactionLabel()
+            {
+                WalletId = new WalletId(invoice.StoreId, network.CryptoCode),
+                TransactionLabels = selectedUTXOs.Select(utxo =>
+                        new KeyValuePair<uint256, List<(string color, string label)>>(utxo.Key.Hash,
+                            new List<(string color, string label)>() {("#51b13e",TransactionLabelMarkerHostedService.PayjoinExposed(invoice.Id))}))
+                    .ToDictionary(pair => pair.Key, pair => pair.Value)
+            });
             
             if (psbtFormat && HexEncoder.IsWellFormed(rawBody))
             {

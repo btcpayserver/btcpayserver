@@ -334,14 +334,11 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> GenerateNBXWallet(string storeId, string cryptoCode,
             GenerateWalletRequest request)
         {
-            Logs.Events.LogInformation($"GenerateNBXWallet called {storeId}, {cryptoCode}");
             var hotWallet = await CanUseHotWallet();
             if (!hotWallet.HotWallet || (!hotWallet.RPCImport && request.ImportKeysToRPC))
             {
                 return NotFound();
             }
-
-            Logs.Events.LogInformation($"GenerateNBXWallet after CanUseHotWallet");
 
             var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
             var client = _ExplorerProvider.GetExplorerClient(cryptoCode);
@@ -369,8 +366,6 @@ namespace BTCPayServer.Controllers
                 });
                 return RedirectToAction(nameof(AddDerivationScheme), new {storeId, cryptoCode});
             }
-
-            Logs.Events.LogInformation($"GenerateNBXWallet after GenerateWalletAsync");
 
             var store = HttpContext.GetStoreData();
             var result = await AddDerivationScheme(storeId,
@@ -408,7 +403,6 @@ namespace BTCPayServer.Controllers
                     Html = "Please check your addresses and confirm"
                 });
             }
-            Logs.Events.LogInformation($"GenerateNBXWallet returning success result");
             return result;
         }
 

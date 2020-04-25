@@ -298,7 +298,7 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.Id("CreateNewInvoice")).Click();
         }
 
-        public string CreateInvoice(string store, decimal amount = 100, string currency = "USD", string refundEmail = "")
+        public string CreateInvoice(string storeName, decimal amount = 100, string currency = "USD", string refundEmail = "")
         {
             GoToInvoices();
             Driver.FindElement(By.Id("CreateNewInvoice")).Click();
@@ -307,7 +307,7 @@ namespace BTCPayServer.Tests
             currencyEl.Clear();
             currencyEl.SendKeys(currency);
             Driver.FindElement(By.Id("BuyerEmail")).SendKeys(refundEmail);
-            Driver.FindElement(By.Name("StoreId")).SendKeys(store + Keys.Enter);
+            Driver.FindElement(By.Name("StoreId")).SendKeys(storeName + Keys.Enter);
             Driver.FindElement(By.Id("Create")).ForceClick();
             Assert.True(Driver.PageSource.Contains("just created!"), "Unable to create Invoice");
             var statusElement = Driver.FindElement(By.ClassName("alert-success"));

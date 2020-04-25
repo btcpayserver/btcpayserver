@@ -184,7 +184,7 @@ namespace BTCPayServer.Tests
                     var receiverWalletId = new WalletId(receiver.storeId, "BTC");
 
                     //payjoin is not enabled by default.
-                    var invoiceId = s.CreateInvoice(receiver.storeId);
+                    var invoiceId = s.CreateInvoice(receiver.storeName);
                     s.GoToInvoiceCheckout(invoiceId);
                     var bip21 = s.Driver.FindElement(By.ClassName("payment__details__instruction__open-wallet__btn"))
                         .GetAttribute("href");
@@ -203,7 +203,7 @@ namespace BTCPayServer.Tests
                     await s.Server.ExplorerNode.GenerateAsync(1);
                     await s.FundStoreWallet(senderWalletId);
 
-                    invoiceId = s.CreateInvoice(receiver.storeId);
+                    invoiceId = s.CreateInvoice(receiver.storeName);
                     s.GoToInvoiceCheckout(invoiceId);
                     bip21 = s.Driver.FindElement(By.ClassName("payment__details__instruction__open-wallet__btn"))
                         .GetAttribute("href");
@@ -238,7 +238,7 @@ namespace BTCPayServer.Tests
                         StringComparison.InvariantCultureIgnoreCase));
 
                     //let's do it all again, except now the receiver has funds and is able to payjoin
-                    invoiceId = s.CreateInvoice(receiver.storeId);
+                    invoiceId = s.CreateInvoice(receiver.storeName);
                     s.GoToInvoiceCheckout(invoiceId);
                     bip21 = s.Driver.FindElement(By.ClassName("payment__details__instruction__open-wallet__btn"))
                         .GetAttribute("href");

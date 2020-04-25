@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore.Internal;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Data
 {
@@ -17,7 +19,15 @@ namespace BTCPayServer.Data
             var blobInfo = JsonConvert.DeserializeObject<WalletTransactionInfo>(ZipUtils.Unzip(walletTransactionData.Blob));
             if (!string.IsNullOrEmpty(walletTransactionData.Labels))
             {
-                blobInfo.Labels.AddRange(walletTransactionData.Labels.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(s => s.Replace("BTCPAY_REPLACEFIX", ",", StringComparison.InvariantCultureIgnoreCase)));
+                if (walletTransactionData.Labels.StartsWith('['))
+                {
+                    blobInfo.Labels.AddRange(JArray.Parse(walletTransactionData.Labels).Values<string>());
+                }
+                else
+                {
+                    blobInfo.Labels.AddRange(walletTransactionData.Labels.Split(',',
+                        StringSplitOptions.RemoveEmptyEntries));
+                }
             }
             return blobInfo;
         }
@@ -30,9 +40,7 @@ namespace BTCPayServer.Data
                 return;
             }
 
-            var newlist = blobInfo.Labels.Select(s => s.Contains(',', StringComparison.OrdinalIgnoreCase) ? s.Replace(",", "BTCPAY_REPLACEFIX", StringComparison.InvariantCultureIgnoreCase) : s);
-            
-            walletTransactionData.Labels = string.Join(',', newlist);
+            walletTransactionData.Labels = JArray.FromObject(blobInfo.Labels).ToString();
             walletTransactionData.Blob = ZipUtils.Zip(JsonConvert.SerializeObject(blobInfo));
         }
     }

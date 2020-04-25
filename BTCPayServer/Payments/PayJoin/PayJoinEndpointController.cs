@@ -384,8 +384,10 @@ namespace BTCPayServer.Payments.PayJoin
             Money ourFeeContribution = Money.Zero;
             // We need to adjust the fee to keep a constant fee rate
             var txBuilder = network.NBitcoinNetwork.CreateTransactionBuilder();
-            txBuilder.AddCoins(psbt.Inputs.Select(i => i.GetSignableCoin()));
-            txBuilder.AddCoins(selectedUTXOs.Select(o => o.Value.AsCoin(derivationSchemeSettings.AccountDerivation)));
+            var coins = psbt.Inputs.Select(i => i.GetSignableCoin())
+                .Concat(selectedUTXOs.Select(o => o.Value.AsCoin(derivationSchemeSettings.AccountDerivation))).ToArray();
+
+            txBuilder.AddCoins(coins);
             Money expectedFee = txBuilder.EstimateFees(newTx, originalFeeRate);
             Money actualFee = newTx.GetFee(txBuilder.FindSpentCoins(newTx));
             Money additionalFee = expectedFee - actualFee;
@@ -458,7 +460,7 @@ namespace BTCPayServer.Payments.PayJoin
             originalPaymentData.ConfirmationCount = -1;
             originalPaymentData.PayjoinInformation = new PayjoinInformation()
             {
-                CoinjoinTransactionHash = GetExpectedHash(newPsbt),
+                CoinjoinTransactionHash = GetExpectedHash(newPsbt, sendersInputType, coins),
                 CoinjoinValue = originalPaymentValue - ourFeeContribution,
                 ContributedOutPoints = selectedUTXOs.Select(o => o.Key).ToArray()
             };
@@ -485,17 +487,17 @@ namespace BTCPayServer.Payments.PayJoin
                 return Ok(newTx.ToHex());
         }
 
-        private uint256 GetExpectedHash(PSBT psbt)
+        private uint256 GetExpectedHash(PSBT psbt, ScriptPubKeyType? sendersInputType, Coin[] coins)
         {
             var tx = psbt.GetGlobalTransaction();
-            var type = psbt.GetInputsScriptPubKeyType();
-            if (type is ScriptPubKeyType.Segwit)
+            if (sendersInputType is ScriptPubKeyType.Segwit)
                 return tx.GetHash();
-            else if (type is ScriptPubKeyType.SegwitP2SH)
+            else if (sendersInputType is ScriptPubKeyType.SegwitP2SH)
             {
                 for (int i = 0; i < psbt.Inputs.Count; i++)
                 {
-                    tx.Inputs[i].ScriptSig = PayToScriptHashTemplate.Instance.GenerateScriptSig(Array.Empty<byte[]>(), ((ScriptCoin)psbt.Inputs[i].GetSignableCoin()).GetP2SHRedeem());
+                    
+                    tx.Inputs[i].ScriptSig = PayToScriptHashTemplate.Instance.GenerateScriptSig(Array.Empty<byte[]>(), ((ScriptCoin)coins.Single(coin => coin.Outpoint == psbt.Inputs[i].PrevOut)).GetP2SHRedeem());
                 }
                 return tx.GetHash();
             }

@@ -17,7 +17,7 @@ namespace BTCPayServer.Data
             var blobInfo = JsonConvert.DeserializeObject<WalletTransactionInfo>(ZipUtils.Unzip(walletTransactionData.Blob));
             if (!string.IsNullOrEmpty(walletTransactionData.Labels))
             {
-                blobInfo.Labels.AddRange(walletTransactionData.Labels.Split(',', StringSplitOptions.RemoveEmptyEntries));
+                blobInfo.Labels.AddRange(walletTransactionData.Labels.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(s => s.Replace("BTCPAY_REPLACEFIX", ",", StringComparison.InvariantCultureIgnoreCase)));
             }
             return blobInfo;
         }
@@ -29,9 +29,10 @@ namespace BTCPayServer.Data
                 walletTransactionData.Blob = Array.Empty<byte>();
                 return;
             }
-            if (blobInfo.Labels.Any(l => l.Contains(',', StringComparison.OrdinalIgnoreCase)))
-                throw new ArgumentException(paramName: nameof(blobInfo), message: "Labels must not contains ','");
-            walletTransactionData.Labels = String.Join(',', blobInfo.Labels);
+
+            var newlist = blobInfo.Labels.Select(s => s.Contains(',', StringComparison.OrdinalIgnoreCase) ? s.Replace(",", "BTCPAY_REPLACEFIX", StringComparison.InvariantCultureIgnoreCase) : s);
+            
+            walletTransactionData.Labels = string.Join(',', newlist);
             walletTransactionData.Blob = ZipUtils.Zip(JsonConvert.SerializeObject(blobInfo));
         }
     }

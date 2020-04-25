@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Data
 {
@@ -24,12 +25,35 @@ namespace BTCPayServer.Data
                 throw new ArgumentNullException(nameof(value));
             if (color == null)
                 throw new ArgumentNullException(nameof(color));
+            if (value.StartsWith("{"))
+            {
+                var jObj = JObject.Parse(value);
+                if (jObj.ContainsKey("value"))
+                {
+                    switch (jObj["value"].Value<string>())
+                    {
+                        case "invoice":
+                            Text = "invoice";
+                            Tooltip = "Received through an invoice";
+                            Link = jObj.ContainsKey("id") ? $"/invoices/{jObj["id"].Value<string>()}" : "";
+                            break;
+                        case "pj-exposed":
+                            Text = "payjoin-exposed";
+                            Tooltip = "This utxo was exposed through a payjoin proposal";
+                            Link = jObj.ContainsKey("id") ? $"/invoices/{jObj["id"].Value<string>()}" : "";
+                            break;
+                    }
+                }
+            }
             Value = value;
             Color = color;
         }
 
         public string Value { get; }
         public string Color { get; }
+        public string Link { get; }
+        public string Tooltip { get; }
+        public string Text { get; }
 
         public override bool Equals(object obj)
         {

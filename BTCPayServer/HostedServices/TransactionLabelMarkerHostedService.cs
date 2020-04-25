@@ -21,7 +21,6 @@ namespace BTCPayServer.HostedServices
         private readonly WalletRepository _walletRepository;
         private Channel<UpdateTransactionLabel> _labels = Channel.CreateUnbounded<UpdateTransactionLabel>();
 
-
         public TransactionLabelMarkerHostedService(EventAggregator eventAggregator, WalletRepository walletRepository) :
             base(eventAggregator)
         {
@@ -135,12 +134,12 @@ namespace BTCPayServer.HostedServices
 
         public static string InvoiceLabelTemplate(string invoice)
         {
-            return JObject.FromObject(new {label = "invoice", id = invoice}).ToString();
+            return JObject.FromObject(new {value = "invoice", id = invoice}).ToString();
         }
 
         public static string PayjoinExposed(string invoice)
         {
-            return JObject.FromObject(new {label = "pj-exposed", id = invoice}).ToString();
+            return JObject.FromObject(new {value = "pj-exposed", id = invoice}).ToString();
         }
     }
 

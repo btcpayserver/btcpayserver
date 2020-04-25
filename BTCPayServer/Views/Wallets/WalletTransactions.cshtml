@@ -90,8 +90,8 @@
                         <td style="text-align:left">
                             @foreach (var label in transaction.Labels)
                             {
-                                <a
-                                    asp-route-labelFilter="@label.Value"
+                                <div
+
                                     class="badge transactionLabel"
                                     style="
                                         background-color: @label.Color;
@@ -100,24 +100,27 @@
                                         padding-right: 16px;
                                         position: relative;
                                     "
-                                >
-                                    @label.Value
+                                    title="@label.Tooltip">
+                                    <a asp-route-labelFilter="@label.Value" class="text-white"> @(label.Text ?? @label.Value)</a>
+                                   
+                                    @if (!string.IsNullOrEmpty(label.Link))
+                                    {
+                                        <a href="@label.Link" target="_blank" class="fa fa-info-circle"></a>
+                                    }
                                     <form
                                         asp-route-walletId="@this.Context.GetRouteValue("walletId")"
                                         asp-action="ModifyTransaction"
                                         method="post"
-                                        class="removeTransactionLabelForm"
-                                    >
-                                        <input type="hidden" name="transactionId" value="@transaction.Id" />
+                                        class="removeTransactionLabelForm">
+                                        <input type="hidden" name="transactionId" value="@transaction.Id"/>
                                         <button
                                             name="removelabel"
                                             type="submit"
-                                            value="@label.Value"
-                                        >
+                                            value="@label.Value">
                                             <span class="fa fa-close"></span>
                                         </button>
                                     </form>
-                                </a>
+                                </div>
                             }
                         </td>
                         <td class="smMaxWidth text-truncate @(transaction.IsConfirmed ? "" : "unconf")">

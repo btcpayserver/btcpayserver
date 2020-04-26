@@ -40,22 +40,20 @@ namespace BTCPayServer.HostedServices
                 invoiceEvent.Payment.GetPaymentMethodId().PaymentType == BitcoinPaymentType.Instance &&
                 invoiceEvent.Payment.GetCryptoPaymentData() is BitcoinLikePaymentData bitcoinLikePaymentData)
             {
-                var payjoinLabelColor = "#51b13e";
-                var invoiceLabelColor = "#0f3b21";
                 var walletId = new WalletId(invoiceEvent.Invoice.StoreId, invoiceEvent.Payment.GetCryptoCode());
                 var transactionId = bitcoinLikePaymentData.Outpoint.Hash;
                 var labels = new List<(string color, string label)>
                 {
-                    (invoiceLabelColor, InvoiceLabelTemplate(invoiceEvent.Invoice.Id))
+                    UpdateTransactionLabel.InvoiceLabelTemplate(invoiceEvent.Invoice.Id)
                 };
 
                 if (invoiceEvent.Invoice.GetPayments(invoiceEvent.Payment.GetCryptoCode()).Any(entity =>
                     entity.GetCryptoPaymentData() is BitcoinLikePaymentData pData &&
                     pData.PayjoinInformation?.CoinjoinTransactionHash == transactionId))
                 {
-                    labels.Add((payjoinLabelColor, "payjoin"));
+                    labels.Add(UpdateTransactionLabel.PayjoinLabelTemplate());
                 }
-                
+
                 _eventAggregator.Publish(new UpdateTransactionLabel()
                 {
                     WalletId = walletId,
@@ -98,20 +96,25 @@ namespace BTCPayServer.HostedServices
                 }));
             }
         }
-
-        public static string InvoiceLabelTemplate(string invoice)
-        {
-            return JObject.FromObject(new {value = "invoice", id = invoice}).ToString();
-        }
-
-        public static string PayjoinExposed(string invoice)
-        {
-            return JObject.FromObject(new {value = "pj-exposed", id = invoice}).ToString();
-        }
     }
 
     public class UpdateTransactionLabel
     {
+        public static (string color, string label) PayjoinLabelTemplate()
+        {
+            return ("#51b13e", "payjoin");
+        }
+
+        public static (string color, string label) InvoiceLabelTemplate(string invoice)
+        {
+            return ("#0f3b21", JObject.FromObject(new {value = "invoice", id = invoice}).ToString());
+        }
+
+        public static (string color, string label) PayjoinExposedLabelTemplate(string invoice)
+        {
+            return ("#51b13e", JObject.FromObject(new {value = "pj-exposed", id = invoice}).ToString());
+        }
+
         public WalletId WalletId { get; set; }
         public Dictionary<uint256, List<(string color, string label)>> TransactionLabels { get; set; }
     }

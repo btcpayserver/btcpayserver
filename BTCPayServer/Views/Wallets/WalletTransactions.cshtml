@@ -101,7 +101,7 @@
                                         position: relative;
                                     "
                                     title="@label.Tooltip">
-                                    <a asp-route-labelFilter="@label.Value" class="text-white"> @(label.Text ?? @label.Value)</a>
+                                    <a asp-route-labelFilter="@label.Value" class="text-white">@label.Value</a>
                                    
                                     @if (!string.IsNullOrEmpty(label.Link))
                                     {

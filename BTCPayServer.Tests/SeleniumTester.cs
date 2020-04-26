@@ -377,7 +377,7 @@ namespace BTCPayServer.Tests
             Driver.Navigate().GoToUrl(new Uri(Server.PayTester.ServerUri, $"wallets/{walletId}"));
             if (navPages != WalletsNavPages.Transactions)
             {
-                Driver.FindElement(By.Id(navPages.ToString())).Click();
+                Driver.FindElement(By.Id($"Wallet{navPages}")).Click();
             }
         }
     }

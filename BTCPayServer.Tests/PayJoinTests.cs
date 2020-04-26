@@ -297,8 +297,7 @@ namespace BTCPayServer.Tests
                     Assert.False(paymentValueRowColumn.Text.Contains("payjoin",
                         StringComparison.InvariantCultureIgnoreCase));
                     
-                    
-                    await TestUtils.EventuallyAsync(async () =>
+                    TestUtils.Eventually(() =>
                     {
                         s.GoToWallet(receiverWalletId, WalletsNavPages.Transactions);
                         Assert.Contains(invoiceId, s.Driver.PageSource);

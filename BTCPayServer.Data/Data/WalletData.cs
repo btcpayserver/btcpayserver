@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Data
@@ -33,12 +30,12 @@ namespace BTCPayServer.Data
                     switch (jObj["value"].Value<string>())
                     {
                         case "invoice":
-                            Text = "invoice";
+                            Value = "invoice";
                             Tooltip = "Received through an invoice";
                             Link = jObj.ContainsKey("id") ? $"/invoices/{jObj["id"].Value<string>()}" : "";
                             break;
                         case "pj-exposed":
-                            Text = "payjoin-exposed";
+                            Value = "payjoin-exposed";
                             Tooltip = "This utxo was exposed through a payjoin proposal";
                             Link = jObj.ContainsKey("id") ? $"/invoices/{jObj["id"].Value<string>()}" : "";
                             break;
@@ -53,7 +50,6 @@ namespace BTCPayServer.Data
         public string Color { get; }
         public string Link { get; }
         public string Tooltip { get; }
-        public string Text { get; }
 
         public override bool Equals(object obj)
         {

@@ -50,17 +50,12 @@
                         v-bind:style="{ 'background-color': label.color}"
                         key="label.value">
 
-                        <span v-if="!label.text && !label.link" data-toggle="tooltip" v-tooltip="label.tooltip">
+                        <span v-if="!label.link" data-toggle="tooltip" v-tooltip="label.tooltip">
                             {{label.value}}
                         </span>
 
                         <a :href="label.link" target="_blank"v-if="label.link" data-toggle="tooltip" v-tooltip="label.tooltip">
-                            <template v-if="label.text">
-                                {{label.text}}
-                            </template>
-                            <template v-else>
-                                {{label.value}}
-                            </template>
+                            {{label.value}}
                             <i class="fa fa-info-circle"></i>
 
                         </a>

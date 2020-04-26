@@ -1,16 +1,12 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
-using BTCPayServer.Logging;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services;
-using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Newtonsoft.Json.Linq;
 
@@ -18,12 +14,13 @@ namespace BTCPayServer.HostedServices
 {
     public class TransactionLabelMarkerHostedService : EventHostedServiceBase
     {
+        private readonly EventAggregator _eventAggregator;
         private readonly WalletRepository _walletRepository;
-        private Channel<UpdateTransactionLabel> _labels = Channel.CreateUnbounded<UpdateTransactionLabel>();
 
         public TransactionLabelMarkerHostedService(EventAggregator eventAggregator, WalletRepository walletRepository) :
             base(eventAggregator)
         {
+            _eventAggregator = eventAggregator;
             _walletRepository = walletRepository;
         }
 
@@ -35,62 +32,9 @@ namespace BTCPayServer.HostedServices
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
             await base.StartAsync(cancellationToken);
-            _ = StartLoop();
         }
 
-        private async Task StartLoop()
-        {
-            while (await _labels.Reader.WaitToReadAsync(_Cts.Token))
-            {
-                if (_labels.Reader.TryRead(out var updateTransactionLabel))
-                {
-                    try
-                    {
-                        var walletTransactionsInfo =
-                            await _walletRepository.GetWalletTransactionsInfo(updateTransactionLabel.WalletId);
-                        var walletBlobInfo = await _walletRepository.GetWalletInfo(updateTransactionLabel.WalletId);
-                        await Task.WhenAll(updateTransactionLabel.TransactionLabels.Select(async pair =>
-                        {
-                            if (!walletTransactionsInfo.TryGetValue(pair.Key.ToString(), out var walletTransactionInfo))
-                            {
-                                walletTransactionInfo = new WalletTransactionInfo();
-                            }
-
-                            foreach (var label in pair.Value)
-                            {
-                                walletBlobInfo.LabelColors.TryAdd(label.label, label.color);
-                            }
-
-                            await _walletRepository.SetWalletInfo(updateTransactionLabel.WalletId, walletBlobInfo);
-                            var update = false;
-                            foreach (var label in pair.Value)
-                            {
-                                if (walletTransactionInfo.Labels.Add(label.label))
-                                {
-                                    update = true;
-                                }
-                            }
-
-                            if (update)
-                            {
-                                await _walletRepository.SetWalletTransactionInfo(updateTransactionLabel.WalletId,
-                                    pair.Key.ToString(), walletTransactionInfo);
-                            }
-                        }));
-                    }
-                    catch when (_Cts.Token.IsCancellationRequested)
-                    {
-                        throw;
-                    }
-                    catch (Exception ex)
-                    {
-                        Logs.PayServer.LogWarning(ex, $"Unhandled exception in {this.GetType().Name}");
-                    }
-                }
-            }
-        }
-
-        protected override Task ProcessEvent(object evt, CancellationToken cancellationToken)
+        protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
         {
             if (evt is InvoiceEvent invoiceEvent && invoiceEvent.Name == InvoiceEvent.ReceivedPayment &&
                 invoiceEvent.Payment.GetPaymentMethodId().PaymentType == BitcoinPaymentType.Instance &&
@@ -111,8 +55,8 @@ namespace BTCPayServer.HostedServices
                 {
                     labels.Add((payjoinLabelColor, "payjoin"));
                 }
-
-                AddLabels(new UpdateTransactionLabel()
+                
+                _eventAggregator.Publish(new UpdateTransactionLabel()
                 {
                     WalletId = walletId,
                     TransactionLabels =
@@ -121,15 +65,38 @@ namespace BTCPayServer.HostedServices
             }
             else if (evt is UpdateTransactionLabel updateTransactionLabel)
             {
-                AddLabels(updateTransactionLabel);
+                var walletTransactionsInfo =
+                    await _walletRepository.GetWalletTransactionsInfo(updateTransactionLabel.WalletId);
+                var walletBlobInfo = await _walletRepository.GetWalletInfo(updateTransactionLabel.WalletId);
+                await Task.WhenAll(updateTransactionLabel.TransactionLabels.Select(async pair =>
+                {
+                    if (!walletTransactionsInfo.TryGetValue(pair.Key.ToString(), out var walletTransactionInfo))
+                    {
+                        walletTransactionInfo = new WalletTransactionInfo();
+                    }
+
+                    foreach (var label in pair.Value)
+                    {
+                        walletBlobInfo.LabelColors.TryAdd(label.label, label.color);
+                    }
+
+                    await _walletRepository.SetWalletInfo(updateTransactionLabel.WalletId, walletBlobInfo);
+                    var update = false;
+                    foreach (var label in pair.Value)
+                    {
+                        if (walletTransactionInfo.Labels.Add(label.label))
+                        {
+                            update = true;
+                        }
+                    }
+
+                    if (update)
+                    {
+                        await _walletRepository.SetWalletTransactionInfo(updateTransactionLabel.WalletId,
+                            pair.Key.ToString(), walletTransactionInfo);
+                    }
+                }));
             }
-
-            return Task.CompletedTask;
-        }
-
-        private void AddLabels(UpdateTransactionLabel updateTransactionLabel)
-        {
-            _labels.Writer.TryWrite(updateTransactionLabel);
         }
 
         public static string InvoiceLabelTemplate(string invoice)

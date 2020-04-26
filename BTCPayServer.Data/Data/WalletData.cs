@@ -31,22 +31,31 @@ namespace BTCPayServer.Data
                     {
                         case "invoice":
                             Value = "invoice";
-                            Tooltip = "Received through an invoice";
+                            Tooltip = $"Received through an invoice ({jObj["id"].Value<string>()})";
                             Link = jObj.ContainsKey("id") ? $"/invoices/{jObj["id"].Value<string>()}" : "";
                             break;
                         case "pj-exposed":
                             Value = "payjoin-exposed";
-                            Tooltip = "This utxo was exposed through a payjoin proposal";
+                            Tooltip = $"This utxo was exposed through a payjoin proposal for an invoice ({jObj["id"].Value<string>()})";
                             Link = jObj.ContainsKey("id") ? $"/invoices/{jObj["id"].Value<string>()}" : "";
+                            break;
+                        default:
+                            Value = value;
                             break;
                     }
                 }
             }
-            Value = value;
+            else
+            {
+                Value = value;
+            }
+            RawValue = value;
+            
             Color = color;
         }
 
         public string Value { get; }
+        public string RawValue { get; }
         public string Color { get; }
         public string Link { get; }
         public string Tooltip { get; }

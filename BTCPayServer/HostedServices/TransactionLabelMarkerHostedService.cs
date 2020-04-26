@@ -108,7 +108,7 @@ namespace BTCPayServer.HostedServices
 
         public static (string color, string label) InvoiceLabelTemplate(string invoice)
         {
-            return ("#0f3b21", JObject.FromObject(new {value = "invoice", id = invoice}).ToString());
+            return ("#cedc21", JObject.FromObject(new {value = "invoice", id = invoice}).ToString());
         }
 
         public static (string color, string label) PayjoinExposedLabelTemplate(string invoice)

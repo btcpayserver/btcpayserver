@@ -107,7 +107,21 @@
                     {
                         <tr class="@(@scheme.Collapsed? "collapsed": "")">
                             <td>@scheme.Crypto</td>
-                            <td class="smMaxWidth text-truncate">@scheme.Value</td>
+                            <td title="@scheme.Value" data-toggle="tooltip">
+                                @if (string.IsNullOrEmpty(scheme.Value))
+                                {
+                                    <span class="smMaxWidth">Not set</span>
+                                }
+                                else
+                                {
+                                    <div class="d-inline-flex justify-content-between smMaxWidth">
+                                        <span class="text-truncate ">
+                                            @scheme.Value.Substring(0, scheme.Value.Length - 6)
+                                        </span>
+                                        @scheme.Value?.Substring(scheme.Value.Length - 6, 6)
+                                    </div>
+                                }
+                            </td>
                             <td style="text-align:center;">
                                 @if(scheme.Enabled)
                                 {

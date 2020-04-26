@@ -38,8 +38,13 @@ html {
     background-color: #333333; /* messes up bottom border radius */
 }
 
-.expired__body {
+.expired__body,
+.success-message {
     color: #fff;
+}
+
+line-items .line-items__item {
+    color: #8D8D8F;
 }
 
 .currency-selection {
@@ -85,7 +90,7 @@ canvas {
 }
 
 #prettydropdown-DefaultLang ul {
-    color: #565d6e !important;
+    color: #818a91 !important;
     background-color: #191919;
 }
 

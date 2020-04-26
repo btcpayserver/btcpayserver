@@ -2,7 +2,7 @@
   "NOTICE_WARN": "THIS CODE HAS BEEN AUTOMATICALLY GENERATED FROM TRANSIFEX, IF YOU WISH TO HELP TRANSLATION COME ON THE SLACK http://slack.btcpayserver.org TO REQUEST PERMISSION TO https://www.transifex.com/btcpayserver/btcpayserver/",
   "code": "es-ES",
   "currentLanguage": "Español",
-  "lang": "Lenguaje",
+  "lang": "Idioma",
   "Awaiting Payment...": "Esperando el pago...",
   "Pay with": "Pagar con",
   "Contact and Refund Email": "Contacto y correo electrónico de reembolso",
@@ -48,5 +48,5 @@
   "Pay with Changelly": "Pagar con Changelly",
   "Close": "Cerrar",
   "NotPaid_ExtraTransaction": "La factura no ha sido pagada en su totalidad. Por favor envía otra transacción para cubrir el monto faltante.",
-  "Recommended_Fee": "Recommended fee: {{feeRate}} sat/byte"
+  "Recommended_Fee": "Comisión recomendada: {{feeRate}} sat/byte"
 }

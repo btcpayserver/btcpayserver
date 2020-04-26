@@ -48,5 +48,5 @@
   "Pay with Changelly": "Betal med Changelly",
   "Close": "Luk",
   "NotPaid_ExtraTransaction": "Fakturaen er ikke fuldt ud betalt. Venligst send endnu en transaktion for at dække for den manglende mængde.",
-  "Recommended_Fee": "Recommended fee: {{feeRate}} sat/byte"
+  "Recommended_Fee": "Anbefalt gebyr: {{feeRate}} sat/byte"
 }

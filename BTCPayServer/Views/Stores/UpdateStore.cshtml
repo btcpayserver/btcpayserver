@@ -1,4 +1,5 @@
-﻿@model StoreViewModel
+﻿@using System.Text.RegularExpressions
+@model StoreViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePageAndTitle(StoreNavPages.Index, "Profile");
@@ -114,11 +115,15 @@
                                 }
                                 else
                                 {
-                                    <div class="d-inline-flex justify-content-between smMaxWidth">
+                                    <div class="d-inline-flex  smMaxWidth">
                                         <span class="text-truncate ">
                                             @scheme.Value.Substring(0, scheme.Value.Length - 6)
                                         </span>
-                                        @scheme.Value?.Substring(scheme.Value.Length - 6, 6)
+                                        @if (scheme.Value.Length > 6)
+                                        {
+                                            var match =Regex.Match(scheme.Value, @"((?:-\[(?:[^\]])+\])+|\S{6})$");
+                                            @match.Value;
+                                        }
                                     </div>
                                 }
                             </td>

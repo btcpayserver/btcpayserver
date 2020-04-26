@@ -170,7 +170,7 @@ namespace BTCPayServer.Controllers
             }
             else if (removelabel != null)
             {
-                removelabel = removelabel.Trim().ToLowerInvariant().Truncate(MaxLabelSize);
+                removelabel = removelabel.Trim();
                 if (walletTransactionsInfo.TryGetValue(transactionId, out var walletTransactionInfo))
                 {
                     if (walletTransactionInfo.Labels.Remove(removelabel))

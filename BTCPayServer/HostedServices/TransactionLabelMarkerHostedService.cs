@@ -27,6 +27,7 @@ namespace BTCPayServer.HostedServices
         protected override void SubscribeToEvents()
         {
             Subscribe<InvoiceEvent>();
+            Subscribe<UpdateTransactionLabel>();
         }
 
         public override async Task StartAsync(CancellationToken cancellationToken)

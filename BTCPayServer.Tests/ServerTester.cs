@@ -118,6 +118,7 @@ namespace BTCPayServer.Tests
         public async Task EnsureChannelsSetup()
         {
             Logs.Tester.LogInformation("Connecting channels");
+            BTCPayServer.Lightning.Tests.ConnectChannels.Logs = Logs.LogProvider.CreateLogger("Connect channels");
             await BTCPayServer.Lightning.Tests.ConnectChannels.ConnectAll(ExplorerNode, GetLightningSenderClients(), GetLightningDestClients()).ConfigureAwait(false);
             Logs.Tester.LogInformation("Channels connected");
         }

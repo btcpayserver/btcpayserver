@@ -276,8 +276,8 @@ namespace BTCPayServer.Payments.PayJoin
                 utxos = utxos.Where(u => !prevOuts.Contains(u.Outpoint)).ToArray();
                 Array.Sort(utxos, UTXODeterministicComparer.Instance);
                 
-                foreach (var utxo in await SelectUTXO(network, utxos, psbt.Inputs.Select(input => input.WitnessUtxo.Value.ToDecimal(MoneyUnit.BTC)),  output.Value.ToDecimal(MoneyUnit.BTC),
-                    psbt.Outputs.Where(psbtOutput => !psbtOutput.Equals(output)).Select(psbtOutput => psbtOutput.Value.ToDecimal(MoneyUnit.BTC))))
+                foreach (var utxo in (await SelectUTXO(network, utxos, psbt.Inputs.Select(input => input.WitnessUtxo.Value.ToDecimal(MoneyUnit.BTC)),  output.Value.ToDecimal(MoneyUnit.BTC),
+                    psbt.Outputs.Where(psbtOutput => !psbtOutput.Equals(output)).Select(psbtOutput => psbtOutput.Value.ToDecimal(MoneyUnit.BTC)))).selectedUTXO)
                 {
                     selectedUTXOs.Add(utxo.Outpoint, utxo);
                 }
@@ -506,11 +506,11 @@ namespace BTCPayServer.Payments.PayJoin
             return o;
         }
         [NonAction]
-        public async Task<UTXO[]> SelectUTXO(BTCPayNetwork network, UTXO[] availableUtxos, IEnumerable<decimal> otherInputs, decimal mainPaymentOutput,
+        public async Task<(UTXO[] selectedUTXO, bool randomized)> SelectUTXO(BTCPayNetwork network, UTXO[] availableUtxos, IEnumerable<decimal> otherInputs, decimal mainPaymentOutput,
             IEnumerable<decimal> otherOutputs)
         {
             if (availableUtxos.Length == 0)
-                return Array.Empty<UTXO>();
+                return (Array.Empty<UTXO>(), false);
             // Assume the merchant wants to get rid of the dust
             HashSet<OutPoint> locked = new HashSet<OutPoint>();   
             // We don't want to make too many db roundtrip which would be inconvenient for the sender
@@ -522,12 +522,13 @@ namespace BTCPayServer.Payments.PayJoin
             //
             // "UIH2": one input is larger than any output. This heuristically implies that no output is a payment, or, to say it better, it implies that this is not a normal wallet-created payment, it's something strange/exotic.
             //src: https://gist.github.com/AdamISZ/4551b947789d3216bacfcb7af25e029e#gistcomment-2796539
-
+            
             foreach (var availableUtxo in availableUtxos)
             {
                 if (currentTry >= maxTries)
                     break;
 
+                var invalid = false;
                 foreach (var input in otherInputs.Concat(new[] {availableUtxo.Value.GetValue(network)}))
                 {
                     var computedOutputs =
@@ -535,17 +536,25 @@ namespace BTCPayServer.Payments.PayJoin
                     if (computedOutputs.Any(output => input > output))
                     {
                         //UIH 1 & 2
-                        continue;
+                        invalid = true;
+                        break;
+
+
                     }
 
-                    if (await _payJoinRepository.TryLock(availableUtxo.Outpoint))
-                    {
-                        return new[] {availableUtxo};
-                    }
-
-                    locked.Add(availableUtxo.Outpoint);
-                    currentTry++;
                 }
+
+                if (invalid)
+                {
+                    continue;
+                }
+                if (await _payJoinRepository.TryLock(availableUtxo.Outpoint))
+                {
+                    return (new[] {availableUtxo}, false);
+                }
+
+                locked.Add(availableUtxo.Outpoint);
+                currentTry++;
             }
             foreach (var utxo in availableUtxos.Where(u => !locked.Contains(u.Outpoint)))
             {
@@ -553,11 +562,11 @@ namespace BTCPayServer.Payments.PayJoin
                     break;
                 if (await _payJoinRepository.TryLock(utxo.Outpoint))
                 {
-                    return new[] { utxo };
+                    return (new[] {utxo}, true);
                 }
                 currentTry++;
             }
-            return Array.Empty<UTXO>();
+            return (Array.Empty<UTXO>(), false);
         }
     }
 }

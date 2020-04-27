@@ -1,5 +1,57 @@
 # Changelog
 
+## 1.0.4.2
+
+### New feature and improvements
+* Auto labelling of wallet transactions, for now three labels "invoice", "pj-exposed", "payjoin" (@MrKukks)
+* Checkout dark theme improvements (@dennisreimann #1508)
+* Show warning when create a hot wallet when you are not admin of the server (@MrKukks)
+* In store settings, shows "Not set" if a derivation scheme is not set. If it is set, always show the last few letters of the derivation scheme. (@MrKukks)
+* Do not show lightning network configuration for Liquid assets. (@MrKukks)
+* Better UTXO selection for payjoin receiver (@MrKukks #1470)
+* Payjoin: But the automatic broadcast of original transaction from 1 minute to 2 minutes. (to give more time to sign with a hardware wallet)
+* Greenfield: Expose an health check endpoint without authentication (@dennisreimann)
+* Greenfield: Very primitive create/read/update/delete store endpoints (@MrKukks)
+
+### Bug fixes
+* With LND above 0.9, invoices were immediately transitioning as partially paid. (@r0ckstardev)
+* Successful payjoin in P2SH-P2WPKH would result in overpaid invoice (@MrKukks)
+* If payjoin sender is sending the PSBT in hex format, we should send back the proposal in hex format (@MrKukks)
+* Payment request were redirecting to non-existing (404) URL after payment (@MrKukks)
+* Incorrect derivation scheme in generate wallet were giving an error 500 instead of proper error message (@MrKukks)
+* When pasting a BIP21 when using coin selection, it would throw an error. (@MrKukks)
+* In the Wallet Send page, remove a JS script reference which does not exist anymore. (@MrKukks)
+* Fix LCAD logo (@dennisreimann)
+* Fix dark theme contrast for Payment Requests (@ubolator and @dennisreimann #1488)
+* Fix MySql supports details (@ketominer)
+* In dark theme, the pay button was rendering BTCPAY text in black. (@dennisreimann #1517)
+
+### Miscalleneous
+* Refactor CSS to be in line with [the new design system](https://design.btcpayserver.org/views/bootstrap/) (@dennisreimann)
+* Tests utilities: Fix docker-lightning-cli scripts
+* Improve static asset caching (@dennisreimann)
+* New invoice checkout languages added:**
+  * Bulgarian (Bulgaria) (bg_BG) @doynovbps
+  * Danish (Denmark) (da_DK) @Berlelund
+  * Norwegian (no) [@devenia](https://www.transifex.com/user/profile/devenia/)
+  * Persian (fa) [@firildakh](https://www.transifex.com/user/profile/firildakh/)
+  * Romanian (ro) [@BTCfactura](https://www.transifex.com/user/profile/BTCfactura/)
+  * Slovak (Slovakia) (sk_SK) [@MSedivy](https://www.transifex.com/user/profile/MSedivy/)
+  * Zulu (zu) [@kpangako](https://www.transifex.com/user/profile/kpangako/)
+* Updated translation for checkout invoice:**
+  * Arabic (Ar) @kemoantemo
+  * Bosnian (Bosnia and Herzegovina) (bs_BA) @Ruxiol
+  * Danish (Denmark) (da_DK) @Berlelund
+  * German (Germany) (de_DE)[@andhans](https://twitter.com/andhans_jail)
+  * Greek (Greece) (el_GR) @kaloudis
+  * Spanish (Spain) (es_ES) @RzeroD
+  * Hindi(hi) @blockbitmedia
+  * Indonesian (id) @anditto
+  * Polish (pl) [@kodxana](https://www.transifex.com/user/profile/kodxana/)
+  * Portuguese (Pt_pt) [MarcosMe](@https://www.transifex.com/user/profile/MarcosMe/)
+  * Turkish (tr) [efecini](https://www.transifex.com/user/profile/efecini/)
+
+
 ## 1.0.4.1
 
 ### Bug fixes

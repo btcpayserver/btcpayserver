@@ -29,12 +29,6 @@ namespace BTCPayServer.HostedServices
             Subscribe<InvoiceEvent>();
             Subscribe<UpdateTransactionLabel>();
         }
-
-        public override async Task StartAsync(CancellationToken cancellationToken)
-        {
-            await base.StartAsync(cancellationToken);
-        }
-
         protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
         {
             if (evt is InvoiceEvent invoiceEvent && invoiceEvent.Name == InvoiceEvent.ReceivedPayment &&

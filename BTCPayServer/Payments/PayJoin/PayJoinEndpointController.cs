@@ -538,10 +538,7 @@ namespace BTCPayServer.Payments.PayJoin
                         //UIH 1 & 2
                         invalid = true;
                         break;
-
-
                     }
-
                 }
 
                 if (invalid)

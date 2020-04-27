@@ -277,7 +277,7 @@ namespace BTCPayServer.Payments.PayJoin
                 Array.Sort(utxos, UTXODeterministicComparer.Instance);
                 
                 foreach (var utxo in (await SelectUTXO(network, utxos, psbt.Inputs.Select(input => input.WitnessUtxo.Value.ToDecimal(MoneyUnit.BTC)),  output.Value.ToDecimal(MoneyUnit.BTC),
-                    psbt.Outputs.Where(psbtOutput => psbtOutput != output).Select(psbtOutput => psbtOutput.Value.ToDecimal(MoneyUnit.BTC)))).selectedUTXO)
+                    psbt.Outputs.Where(psbtOutput => psbtOutput.Index != output.Index).Select(psbtOutput => psbtOutput.Value.ToDecimal(MoneyUnit.BTC)))).selectedUTXO)
                 {
                     selectedUTXOs.Add(utxo.Outpoint, utxo);
                 }

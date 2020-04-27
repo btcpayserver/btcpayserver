@@ -26,7 +26,8 @@ namespace BTCPayServer
                 CryptoImagePath = "imlegacy/liquid-tether.svg",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),
                 CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("1776'") : new KeyPath("1'"),
-                SupportRBF = true
+                SupportRBF = true,
+                SupportLightning = false
             });
             
             Add(new ElementsBTCPayNetwork()
@@ -49,7 +50,8 @@ namespace BTCPayServer
                 CryptoImagePath = "imlegacy/etb.png",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),
                 CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("1776'") : new KeyPath("1'"),
-                SupportRBF = true
+                SupportRBF = true,
+                SupportLightning = false
             });
             
               Add(new ElementsBTCPayNetwork()
@@ -71,7 +73,8 @@ namespace BTCPayServer
                 CryptoImagePath = "imlegacy/lcad.png",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),
                 CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("1776'") : new KeyPath("1'"),
-                SupportRBF = true
+                SupportRBF = true,
+                SupportLightning = false
             });
         }
     }

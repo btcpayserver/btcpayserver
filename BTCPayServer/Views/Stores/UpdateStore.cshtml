@@ -1,4 +1,5 @@
-﻿@model StoreViewModel
+﻿@using System.Text.RegularExpressions
+@model StoreViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePageAndTitle(StoreNavPages.Index, "Profile");
@@ -107,7 +108,25 @@
                     {
                         <tr class="@(@scheme.Collapsed? "collapsed": "")">
                             <td>@scheme.Crypto</td>
-                            <td class="smMaxWidth text-truncate">@scheme.Value</td>
+                            <td title="@scheme.Value" data-toggle="tooltip">
+                                @if (string.IsNullOrEmpty(scheme.Value))
+                                {
+                                    <span class="smMaxWidth">Not set</span>
+                                }
+                                else
+                                {
+                                    <div class="d-inline-flex justify-content-between smMaxWidth">
+                                        <span class="text-truncate ">
+                                            @scheme.Value
+                                        </span>
+                                        @if (scheme.Value.Length > 20)
+                                        {
+                                            var match =Regex.Match(scheme.Value, @"((?:-\[(?:[^\]])+\])+|\S{6})$");
+                                            @match.Value;
+                                        }
+                                    </div>
+                                }
+                            </td>
                             <td style="text-align:center;">
                                 @if(scheme.Enabled)
                                 {

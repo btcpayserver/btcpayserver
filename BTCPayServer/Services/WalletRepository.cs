@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore;
-using NBitcoin;
 
 namespace BTCPayServer.Services
 {
@@ -99,7 +97,5 @@ namespace BTCPayServer.Services
                 }
             }
         }
-
-
     }
 }

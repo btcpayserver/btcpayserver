@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
@@ -112,5 +113,16 @@ namespace BTCPayServer.HostedServices
 
         public WalletId WalletId { get; set; }
         public Dictionary<uint256, List<(string color, string label)>> TransactionLabels { get; set; }
+        public override string ToString()
+        {
+            var result = new StringBuilder();
+            foreach (var transactionLabel in TransactionLabels)
+            {
+                result.AppendLine(
+                    $"Adding {transactionLabel.Value.Count} labels to {transactionLabel.Key} in wallet {WalletId}");
+            }
+
+            return result.ToString();
+        }
     }
 }

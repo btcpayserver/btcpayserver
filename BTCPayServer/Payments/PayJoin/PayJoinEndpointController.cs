@@ -277,7 +277,7 @@ namespace BTCPayServer.Payments.PayJoin
                 Array.Sort(utxos, UTXODeterministicComparer.Instance);
                 
                 foreach (var utxo in (await SelectUTXO(network, utxos, psbt.Inputs.Select(input => input.WitnessUtxo.Value.ToDecimal(MoneyUnit.BTC)),  output.Value.ToDecimal(MoneyUnit.BTC),
-                    psbt.Outputs.Where(psbtOutput => !psbtOutput.Equals(output)).Select(psbtOutput => psbtOutput.Value.ToDecimal(MoneyUnit.BTC)))).selectedUTXO)
+                    psbt.Outputs.Where(psbtOutput => psbtOutput != output).Select(psbtOutput => psbtOutput.Value.ToDecimal(MoneyUnit.BTC)))).selectedUTXO)
                 {
                     selectedUTXOs.Add(utxo.Outpoint, utxo);
                 }
@@ -505,12 +505,19 @@ namespace BTCPayServer.Payments.PayJoin
             o.Add(new JProperty("message", friendlyMessage));
             return o;
         }
+
+        public enum PayjoinUtxoSelectionType
+        {
+            Unavailable,
+            HeuristicBased,
+            Ordered
+        }
         [NonAction]
-        public async Task<(UTXO[] selectedUTXO, bool randomized)> SelectUTXO(BTCPayNetwork network, UTXO[] availableUtxos, IEnumerable<decimal> otherInputs, decimal mainPaymentOutput,
+        public async Task<(UTXO[] selectedUTXO, PayjoinUtxoSelectionType selectionType)> SelectUTXO(BTCPayNetwork network, UTXO[] availableUtxos, IEnumerable<decimal> otherInputs, decimal mainPaymentOutput,
             IEnumerable<decimal> otherOutputs)
         {
             if (availableUtxos.Length == 0)
-                return (Array.Empty<UTXO>(), false);
+                return (Array.Empty<UTXO>(), PayjoinUtxoSelectionType.Unavailable);
             // Assume the merchant wants to get rid of the dust
             HashSet<OutPoint> locked = new HashSet<OutPoint>();   
             // We don't want to make too many db roundtrip which would be inconvenient for the sender
@@ -547,7 +554,7 @@ namespace BTCPayServer.Payments.PayJoin
                 }
                 if (await _payJoinRepository.TryLock(availableUtxo.Outpoint))
                 {
-                    return (new[] {availableUtxo}, false);
+                    return (new[] {availableUtxo}, PayjoinUtxoSelectionType.HeuristicBased);
                 }
 
                 locked.Add(availableUtxo.Outpoint);
@@ -559,11 +566,11 @@ namespace BTCPayServer.Payments.PayJoin
                     break;
                 if (await _payJoinRepository.TryLock(utxo.Outpoint))
                 {
-                    return (new[] {utxo}, true);
+                    return (new[] {utxo}, PayjoinUtxoSelectionType.Ordered);
                 }
                 currentTry++;
             }
-            return (Array.Empty<UTXO>(), false);
+            return (Array.Empty<UTXO>(), PayjoinUtxoSelectionType.Unavailable);
         }
     }
 }

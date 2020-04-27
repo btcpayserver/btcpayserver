@@ -107,7 +107,7 @@ namespace BTCPayServer.Tests
                 var otherOutputs = new[] {0.5m};
                 var inputs = new[] {1m};
                 var result = await controller.SelectUTXO(network, utxos, inputs, paymentAmount, otherOutputs);
-                Assert.True(result.randomized);
+                Assert.Equal(PayJoinEndpointController.PayjoinUtxoSelectionType.Ordered, result.selectionType);
                 Assert.Contains( result.selectedUTXO, utxo => utxos.Contains(utxo));
                 
                 //no matter what here, no good selection, it seems that payment with 1 utxo generally makes payjoin coin selection unperformant
@@ -116,7 +116,7 @@ namespace BTCPayServer.Tests
                 otherOutputs = new[] {0.5m};
                 inputs = new[] {1m};
                 result = await controller.SelectUTXO(network, utxos, inputs, paymentAmount, otherOutputs);
-                Assert.True(result.randomized);
+                Assert.Equal(PayJoinEndpointController.PayjoinUtxoSelectionType.Ordered, result.selectionType);
                 
                 //when there is no change, anything works
                 utxos = new[] {FakeUTXO(1),FakeUTXO(0.1m),FakeUTXO(0.001m),FakeUTXO(0.003m)};
@@ -124,7 +124,7 @@ namespace BTCPayServer.Tests
                 otherOutputs = new decimal[0];
                 inputs = new[] {0.03m, 0.07m};
                 result = await controller.SelectUTXO(network, utxos, inputs, paymentAmount, otherOutputs);
-                Assert.False(result.randomized);
+                Assert.Equal(PayJoinEndpointController.PayjoinUtxoSelectionType.HeuristicBased, result.selectionType);
             }
         }
         

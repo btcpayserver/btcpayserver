@@ -2,6 +2,7 @@
 
 /* Dark theme overrides */
 :root {
+  --btcpay-color-neutral-950: #222222;
   --btcpay-color-primary-backdrop: #389725;
 
   --btcpay-bg-dark: var(--btcpay-color-neutral-950);

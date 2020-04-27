@@ -144,7 +144,7 @@ namespace BTCPayServer.Payments.Lightning
             return _networkProvider
                 .GetAll()
                 .OfType<BTCPayNetwork>()
-                .Where(network => network.NBitcoinNetwork.Consensus.SupportSegwit)
+                .Where(network => network.NBitcoinNetwork.Consensus.SupportSegwit && network.SupportLightning)
                 .Select(network => new PaymentMethodId(network.CryptoCode, PaymentTypes.LightningLike));
         }
         

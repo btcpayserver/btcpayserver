@@ -3327,60 +3327,60 @@ input[type="button"].btn-block {
   border-radius: 10rem; }
 
 .badge-primary {
-  color: var(--btcpay-color-white);
+  color: var(--btcpay-color-primary-text);
   background-color: var(--btcpay-color-primary); }
   a.badge-primary:hover, a.badge-primary:focus {
-    color: var(--btcpay-color-white);
+    color: var(--btcpay-color-primary-text);
     background-color: var(--btcpay-color-primary-accent); }
   a.badge-primary:focus, a.badge-primary.focus {
     outline: 0;
     box-shadow: 0 0 0 0.2rem var(--btcpay-color-primary-backdrop); }
 
 .badge-secondary {
-  color: var(--btcpay-color-white);
+  color: var(--btcpay-color-secondary-text);
   background-color: var(--btcpay-color-secondary); }
   a.badge-secondary:hover, a.badge-secondary:focus {
-    color: var(--btcpay-color-white);
+    color: var(--btcpay-color-secondary-text);
     background-color: var(--btcpay-color-secondary-accent); }
   a.badge-secondary:focus, a.badge-secondary.focus {
     outline: 0;
     box-shadow: 0 0 0 0.2rem var(--btcpay-color-secondary-backdrop); }
 
 .badge-success {
-  color: var(--btcpay-color-white);
+  color: var(--btcpay-color-success-text);
   background-color: var(--btcpay-color-success); }
   a.badge-success:hover, a.badge-success:focus {
-    color: var(--btcpay-color-white);
+    color: var(--btcpay-color-success-text);
     background-color: var(--btcpay-color-success-accent); }
   a.badge-success:focus, a.badge-success.focus {
     outline: 0;
     box-shadow: 0 0 0 0.2rem var(--btcpay-color-success-backdrop); }
 
 .badge-info {
-  color: var(--btcpay-color-white);
+  color: var(--btcpay-color-info-text);
   background-color: var(--btcpay-color-info); }
   a.badge-info:hover, a.badge-info:focus {
-    color: var(--btcpay-color-white);
+    color: var(--btcpay-color-info-text);
     background-color: var(--btcpay-color-info-accent); }
   a.badge-info:focus, a.badge-info.focus {
     outline: 0;
     box-shadow: 0 0 0 0.2rem var(--btcpay-color-info-backdrop); }
 
 .badge-warning {
-  color: var(--btcpay-color-neutral-900);
+  color: var(--btcpay-color-warning-text);
   background-color: var(--btcpay-color-warning); }
   a.badge-warning:hover, a.badge-warning:focus {
-    color: var(--btcpay-color-neutral-900);
+    color: var(--btcpay-color-warning-text);
     background-color: var(--btcpay-color-warning-accent); }
   a.badge-warning:focus, a.badge-warning.focus {
     outline: 0;
     box-shadow: 0 0 0 0.2rem var(--btcpay-color-warning-backdrop); }
 
 .badge-danger {
-  color: var(--btcpay-color-white);
+  color: var(--btcpay-color-danger-text);
   background-color: var(--btcpay-color-danger); }
   a.badge-danger:hover, a.badge-danger:focus {
-    color: var(--btcpay-color-white);
+    color: var(--btcpay-color-danger-text);
     background-color: var(--btcpay-color-danger-accent); }
   a.badge-danger:focus, a.badge-danger.focus {
     outline: 0;s
@@ -6738,7 +6738,7 @@ a.text-dark:hover, a.text-dark:focus {
   color: var(--btcpay-body-color) !important; }
 
 .text-muted {
-  color: var(--btcpay-color-neutral-600) !important; }
+  color: var(--btcpay-color-secondary) !important; }
 
 .text-black-50 {
   color: rgba(0, 0, 0, 0.5) !important; }

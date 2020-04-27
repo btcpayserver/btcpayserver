@@ -481,8 +481,8 @@ namespace BTCPayServer.Payments.PayJoin
             _eventAggregator.Publish(new UpdateTransactionLabel()
             {
                 WalletId = new WalletId(invoice.StoreId, network.CryptoCode),
-                TransactionLabels = selectedUTXOs.Select(utxo =>
-                        new KeyValuePair<uint256, List<(string color, string label)>>(utxo.Key.Hash,
+                TransactionLabels = selectedUTXOs.GroupBy(pair => pair.Key.Hash ).Select(utxo =>
+                        new KeyValuePair<uint256, List<(string color, string label)>>(utxo.Key,
                             new List<(string color, string label)>()
                             {
                                 UpdateTransactionLabel.PayjoinExposedLabelTemplate(invoice.Id)

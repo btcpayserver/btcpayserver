@@ -1,7 +1,6 @@
 namespace BTCPayServer.Client.Models
 {
-    public class UpdateStoreRequest
+    public class UpdateStoreRequest: StoreBaseData
     {
-        public string Name { get; set; }
     }
 }

@@ -15,12 +15,12 @@ namespace BTCPayServer.Controllers.GreenField
 {
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-    public class StoresController : ControllerBase
+    public class GreenFieldController : ControllerBase
     {
         private readonly StoreRepository _storeRepository;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public StoresController(StoreRepository storeRepository, UserManager<ApplicationUser> userManager)
+        public GreenFieldController(StoreRepository storeRepository, UserManager<ApplicationUser> userManager)
         {
             _storeRepository = storeRepository;
             _userManager = userManager;

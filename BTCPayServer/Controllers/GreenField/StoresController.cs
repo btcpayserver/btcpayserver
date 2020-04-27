@@ -15,12 +15,12 @@ namespace BTCPayServer.Controllers.GreenField
 {
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-    public class StoresController : ControllerBase
+    public class GreenFieldController : ControllerBase
     {
         private readonly StoreRepository _storeRepository;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public StoresController(StoreRepository storeRepository, UserManager<ApplicationUser> userManager)
+        public GreenFieldController(StoreRepository storeRepository, UserManager<ApplicationUser> userManager)
         {
             _storeRepository = storeRepository;
             _userManager = userManager;
@@ -71,6 +71,23 @@ namespace BTCPayServer.Controllers.GreenField
             if (request?.Name is null)
                 return BadRequest(CreateValidationProblem(nameof(request.Name), "Name is missing"));
             var store = await _storeRepository.CreateStore(_userManager.GetUserId(User), request.Name);
+            return Ok(FromModel(store));
+        }
+        
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpPut("~/api/v1/stores/{storeId}")]
+        public async Task<ActionResult> UpdateStore(string storeId, UpdateStoreRequest request)
+        {
+            var store = HttpContext.GetStoreData();
+            if (store == null)
+            {
+                return NotFound();
+            }
+
+            if (request?.Name is null)
+                return BadRequest(CreateValidationProblem(nameof(request.Name), "Name is missing"));
+            store.StoreName = request.Name;
+            await _storeRepository.UpdateStore(store);
             return Ok(FromModel(store));
         }
 

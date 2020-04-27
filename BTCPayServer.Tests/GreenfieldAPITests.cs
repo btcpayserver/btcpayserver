@@ -172,6 +172,11 @@ namespace BTCPayServer.Tests
                 //create store
                 var newStore = await client.CreateStore(new CreateStoreRequest() {Name = "A"});
                 
+                //update store
+                var updatedStore = await client.UpdateStore(newStore.Id, new UpdateStoreRequest() {Name = "B"});
+                Assert.Equal("B", updatedStore.Name);
+                Assert.Equal("B", (await client.GetStore(newStore.Id)).Name);
+                
                 //list stores
                 var stores = await client.GetStores();
                 var storeIds = stores.Select(data => data.Id);
@@ -193,7 +198,6 @@ namespace BTCPayServer.Tests
                     await client.GetStore(newStore.Id);
                 });
                 Assert.Single(await client.GetStores());
-                
                 
                 newStore = await client.CreateStore(new CreateStoreRequest() {Name = "A"});
                 var scopedClient = await user.CreateClient(Permission.Create(Policies.CanViewStoreSettings, user.StoreId).ToString());

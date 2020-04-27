@@ -469,7 +469,6 @@ namespace BTCPayServer.Controllers
             if (!string.IsNullOrEmpty(bip21))
             {
                 LoadFromBIP21(vm, bip21, network);
-                return View(vm);
             }
             
             decimal transactionAmountSum  = 0;
@@ -501,6 +500,11 @@ namespace BTCPayServer.Controllers
             if (command == "toggle-input-selection")
             {
                 ModelState.Clear();
+                return View(vm);
+            }
+
+            if (!string.IsNullOrEmpty(bip21))
+            {
                 return View(vm);
             }
             if (command == "add-output")

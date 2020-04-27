@@ -289,32 +289,57 @@ namespace BTCPayServer.Tests
             }
         }
         
-        [Fact(Timeout = TestTimeout)]
+         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
-        public async Task ServerInfoControllerTests()
+        public async Task PaymentControllerTests()
         {
             using (var tester = ServerTester.Create())
             {
                 await tester.StartAsync();
-                var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
-                await AssertHttpError(401, async () => await unauthClient.GetServerInfo());
-
                 var user = tester.NewAccount();
                 user.GrantAccess();
-                var clientBasic = await user.CreateClient();
-                var serverInfoData = await clientBasic.GetServerInfo();
+                await user.MakeAdmin();
+                var client = await user.CreateClient(Policies.Unrestricted);
                 
-                Assert.NotNull(serverInfoData);
-                Assert.NotNull(serverInfoData.Version);
-                Assert.NotNull(serverInfoData.Onion);
-                Assert.NotNull(serverInfoData.Status);
+                //create payment request
+                await AssertHttpError(400, async () =>
+                {
+                    await client.CreatePaymentRequest(user.StoreId, new CreatePaymentRequestRequest() {Title = "A"});
+                });
+                await AssertHttpError(400, async () =>
+                {
+                    await client.CreatePaymentRequest(user.StoreId, new CreatePaymentRequestRequest() {Title = "A", Currency ="BTC", Amount = 0});
+                });
+                await AssertHttpError(400, async () =>
+                {
+                    await client.CreatePaymentRequest(user.StoreId, new CreatePaymentRequestRequest() {Title = "A",Currency ="helloinvalid", Amount = 1});
+                });
+                var newPaymentRequest =  await client.CreatePaymentRequest(user.StoreId, new CreatePaymentRequestRequest() {Title = "A",Currency ="USD", Amount = 1});
                 
-                Assert.True(serverInfoData.Status.FullySynched);
-                Assert.Contains("BTC", serverInfoData.SupportedPaymentMethods);
-                Assert.Contains("BTC_LightningLike", serverInfoData.SupportedPaymentMethods);
+                //list payment request
+                var paymentRequests = await client.GetPaymentRequests(user.StoreId);
                 
-                Assert.NotNull(serverInfoData.Status.SyncStatus);
-                Assert.Single(serverInfoData.Status.SyncStatus.Select(s => s.CryptoCode == "BTC"));
+                Assert.NotNull(paymentRequests);
+                Assert.Single(paymentRequests);
+                Assert.Equal(newPaymentRequest.Id, paymentRequests.First().Id);
+                
+                //get payment request
+                var paymentRequest = await client.GetPaymentRequest(user.StoreId, newPaymentRequest.Id);
+                Assert.Equal(newPaymentRequest.Title,paymentRequest.Title);
+                
+                //update payment request
+                var updateRequest = JObject.FromObject(paymentRequest).ToObject<UpdatePaymentRequestRequest>();
+                updateRequest.Title = "B";
+                await client.UpdatePaymentRequest(user.StoreId, paymentRequest.Id, updateRequest);
+                paymentRequest = await client.GetPaymentRequest(user.StoreId, newPaymentRequest.Id);
+                Assert.Equal(updateRequest.Title,paymentRequest.Title);
+                
+                //remove payment request
+                await client.RemovePaymentRequest(user.StoreId, paymentRequest.Id);
+                await AssertHttpError(404, async () =>
+                {
+                    await client.GetPaymentRequest(user.StoreId, paymentRequest.Id);
+                });
             }
         }
     }

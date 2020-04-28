@@ -30,5 +30,14 @@ namespace Microsoft.AspNetCore.Mvc
                 values: new { id = paymentRequestId},
                 scheme, host, pathbase);
         }
+
+        public static string InvoiceLink(this LinkGenerator urlHelper, string invoiceId,  string scheme, HostString host, string pathbase)
+        {
+            return urlHelper.GetUriByAction(
+                action: nameof(InvoiceController.Invoice),
+                controller: "Invoice",
+                values: new { invoiceId = invoiceId},
+                scheme, host, pathbase);
+        }
     }
 }

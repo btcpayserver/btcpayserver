@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using BTCPayServer.Data;
-using BTCPayServer.Services;
+using BTCPayServer.Services.Labels;
 
 namespace BTCPayServer.Models.WalletViewModels
 {

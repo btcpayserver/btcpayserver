@@ -101,11 +101,13 @@
                                         position: relative;
                                     "
                                     title="@label.Tooltip">
-                                    <a asp-route-labelFilter="@label.RawValue" class="text-white">@label.Value</a>
-                                   
                                     @if (!string.IsNullOrEmpty(label.Link))
                                     {
-                                        <a href="@label.Link" target="_blank" class="fa fa-info-circle"></a>
+                                        <a href="@label.Link" target="_blank"><span class="text-white">@label.Value</span> <span class="fa fa-info-circle"></span></a>
+                                    }
+                                    else
+                                    {
+                                        <a asp-route-labelFilter="@label.Value" class="text-white">@label.Value</a>
                                     }
                                     <form
                                         asp-route-walletId="@this.Context.GetRouteValue("walletId")"

@@ -22,6 +22,7 @@ using BTCPayServer.Models;
 using BTCPayServer.Services;
 using BTCPayServer.Views.Manage;
 using BTCPayServer.Views.Stores;
+using BTCPayServer.Views.Wallets;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OpenQA.Selenium.Interactions;
@@ -318,7 +319,7 @@ namespace BTCPayServer.Tests
 
         public async Task FundStoreWallet(WalletId walletId, int coins = 1, decimal denomination = 1m)
         {
-            GoToWalletReceive(walletId);
+            GoToWallet(walletId, WalletsNavPages.Receive);
             Driver.FindElement(By.Id("generateButton")).Click();
             var addressStr = Driver.FindElement(By.Id("vue-address")).GetProperty("value");
             var address = BitcoinAddress.Create(addressStr, ((BTCPayNetwork)Server.NetworkProvider.GetNetwork(walletId.CryptoCode)).NBitcoinNetwork);
@@ -335,7 +336,7 @@ namespace BTCPayServer.Tests
                 .GetAttribute("href");
             Assert.Contains($"{PayjoinClient.BIP21EndpointKey}", bip21);
                
-            GoToWalletSend(walletId);
+            GoToWallet(walletId, WalletsNavPages.Send);
             Driver.FindElement(By.Id("bip21parse")).Click();
             Driver.SwitchTo().Alert().SendKeys(bip21);
             Driver.SwitchTo().Alert().Accept();
@@ -371,14 +372,13 @@ namespace BTCPayServer.Tests
 
         }
 
-        public void GoToWalletSend(WalletId walletId)
+        public void GoToWallet(WalletId walletId, WalletsNavPages navPages = WalletsNavPages.Send)
         {
-            Driver.Navigate().GoToUrl(new Uri(Server.PayTester.ServerUri, $"wallets/{walletId}/send"));
-        }
-
-        internal void GoToWalletReceive(WalletId walletId)
-        {
-            Driver.Navigate().GoToUrl(new Uri(Server.PayTester.ServerUri, $"wallets/{walletId}/receive"));
+            Driver.Navigate().GoToUrl(new Uri(Server.PayTester.ServerUri, $"wallets/{walletId}"));
+            if (navPages != WalletsNavPages.Transactions)
+            {
+                Driver.FindElement(By.Id($"Wallet{navPages}")).Click();
+            }
         }
     }
 }

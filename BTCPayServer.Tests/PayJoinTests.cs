@@ -18,6 +18,7 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Tests.Logging;
+using BTCPayServer.Views.Wallets;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -258,7 +259,7 @@ namespace BTCPayServer.Tests
                         .GetAttribute("href");
                     Assert.Contains($"{PayjoinClient.BIP21EndpointKey}=", bip21);
 
-                    s.GoToWalletSend(senderWalletId);
+                    s.GoToWallet(senderWalletId, WalletsNavPages.Send);
                     s.Driver.FindElement(By.Id("bip21parse")).Click();
                     s.Driver.SwitchTo().Alert().SendKeys(bip21);
                     s.Driver.SwitchTo().Alert().Accept();
@@ -293,7 +294,7 @@ namespace BTCPayServer.Tests
                         .GetAttribute("href");
                     Assert.Contains($"{PayjoinClient.BIP21EndpointKey}", bip21);
 
-                    s.GoToWalletSend(senderWalletId);
+                    s.GoToWallet(senderWalletId, WalletsNavPages.Send);
                     s.Driver.FindElement(By.Id("bip21parse")).Click();
                     s.Driver.SwitchTo().Alert().SendKeys(bip21);
                     s.Driver.SwitchTo().Alert().Accept();
@@ -304,7 +305,7 @@ namespace BTCPayServer.Tests
                     s.Driver.ScrollTo(By.Id("SendMenu"));
                     s.Driver.FindElement(By.Id("SendMenu")).ForceClick();
                     s.Driver.FindElement(By.CssSelector("button[value=nbx-seed]")).Click();
-                    await s.Server.WaitForEvent<NewOnChainTransactionEvent>(() =>
+                    var txId = await s.Server.WaitForEvent<NewOnChainTransactionEvent>(() =>
                     {
                         s.Driver.FindElement(By.CssSelector("button[value=payjoin]")).ForceClick();
                         return Task.CompletedTask;
@@ -344,6 +345,15 @@ namespace BTCPayServer.Tests
                         .FindElement(By.ClassName("payment-value"));
                     Assert.False(paymentValueRowColumn.Text.Contains("payjoin",
                         StringComparison.InvariantCultureIgnoreCase));
+                    
+                    TestUtils.Eventually(() =>
+                    {
+                        s.GoToWallet(receiverWalletId, WalletsNavPages.Transactions);
+                        Assert.Contains(invoiceId, s.Driver.PageSource);
+                        Assert.Contains("payjoin", s.Driver.PageSource);
+                        //this label does not always show since input gets used
+                        // Assert.Contains("payjoin-exposed", s.Driver.PageSource);
+                    });
                 }
             }
         }

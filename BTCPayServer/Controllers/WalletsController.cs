@@ -143,7 +143,7 @@ namespace BTCPayServer.Controllers
             var walletTransactionsInfo = await walletTransactionsInfoAsync;
             if (addlabel != null)
             {
-                addlabel = addlabel.Trim().ToLowerInvariant().Replace(',',' ').Truncate(MaxLabelSize);
+                addlabel = addlabel.Trim().TrimStart('{').ToLowerInvariant().Replace(',',' ').Truncate(MaxLabelSize);
                 var labels = walletBlobInfo.GetLabels();
                 if (!walletTransactionsInfo.TryGetValue(transactionId, out var walletTransactionInfo))
                 {
@@ -170,7 +170,7 @@ namespace BTCPayServer.Controllers
             }
             else if (removelabel != null)
             {
-                removelabel = removelabel.Trim().ToLowerInvariant().Truncate(MaxLabelSize);
+                removelabel = removelabel.Trim();
                 if (walletTransactionsInfo.TryGetValue(transactionId, out var walletTransactionInfo))
                 {
                     if (walletTransactionInfo.Labels.Remove(removelabel))

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -37,7 +37,7 @@ namespace BTCPayServer.Services.Apps
             _HubContext = hubContext;
         }
 
-        protected override void SubscibeToEvents()
+        protected override void SubscribeToEvents()
         {
             Subscribe<InvoiceEvent>();
             Subscribe<AppsController.AppUpdated>();

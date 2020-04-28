@@ -44,12 +44,21 @@
                 <div>
                     <span v-if="item.comment" data-toggle="tooltip" v-tooltip="item.comment" class="badge badge-info badge-pill" style="font-style: italic">i</span>
                     <span
-                          v-if="item.labels"
-                          class="badge badge-primary badge-pill ml-2"
-                          v-for="label of item.labels"
-                          v-bind:style="{ 'background-color': label.color}"
-                          key="label.value">
-                        {{label.value}}
+                        v-if="item.labels"
+                        class="badge badge-primary badge-pill ml-2"
+                        v-for="label of item.labels"
+                        v-bind:style="{ 'background-color': label.color}"
+                        key="label.value">
+
+                        <span v-if="!label.link" data-toggle="tooltip" v-tooltip="label.tooltip">
+                            {{label.value}}
+                        </span>
+
+                        <a :href="label.link" target="_blank"v-if="label.link" data-toggle="tooltip" v-tooltip="label.tooltip">
+                            {{label.value}}
+                            <i class="fa fa-info-circle"></i>
+
+                        </a>
                     </span>
                 </div>
                 <span class="text-muted ml-2">{{item.amount}}</span>

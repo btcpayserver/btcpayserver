@@ -13,7 +13,7 @@ namespace BTCPayServer.HostedServices
     {
         private readonly AppService _AppService;
 
-        protected override void SubscibeToEvents()
+        protected override void SubscribeToEvents()
         {
             Subscribe<InvoiceEvent>();
         }

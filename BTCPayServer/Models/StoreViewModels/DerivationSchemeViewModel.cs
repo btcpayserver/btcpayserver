@@ -24,7 +24,7 @@ namespace BTCPayServer.Models.StoreViewModels
         {
             get; set;
         } = new List<(string KeyPath, string Address, RootedKeyPath RootedKeyPath)>();
-        public bool NBXSeedAvailable { get; set; }
+
         public string CryptoCode { get; set; }
         public string KeyPath { get; set; }
         public string RootFingerprint { get; set; }

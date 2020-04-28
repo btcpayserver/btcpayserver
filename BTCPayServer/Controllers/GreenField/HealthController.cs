@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace BTCPayServer.Controllers.GreenField
 {
     [Controller]
-    public class HealthController : ControllerBase
+    public class GreenFieldHealthController : ControllerBase
     {
         [AllowAnonymous]
         [HttpGet("~/api/v1/health")]

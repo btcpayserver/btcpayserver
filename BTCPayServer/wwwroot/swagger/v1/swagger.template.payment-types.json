@@ -1,0 +1,89 @@
+{
+    "paths": {
+        "/api/v1/payment-types": {
+            "get": {
+                "tags": [
+                    "Payment Types"
+                ],
+                "summary": "Get available payment types",
+                "description": "View information about the available payment types on this server",
+                "operationId": "PaymentTypes_GetPaymentTypes",
+                "responses": {
+                    "200": {
+                        "description": "list of payment types",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "description": "The payment type id",
+                                        "nullable": false
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/payment-types/{paymentType}": {
+            "get": {
+                "tags": [
+                    "Payment Types"
+                ],
+                "summary": "Get payment methods of type",
+                "parameters": [
+                    {
+                        "name": "paymentType",
+                        "in": "path",
+                        "required": true,
+                        "description": "The payment type to fetch available payment methods for",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "Get available payment methods of a specific payment type",
+                "operationId": "PaymentTypes_GetPaymentMethodsForType",
+                "responses": {
+                    "200": {
+                        "description": "list of payment methods for the specified payment type",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "description": "The payment method id",
+                                        "nullable": false
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "The key is not found for this server"
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [],
+                        "Basic": []
+                    }
+                ]
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Payment Types"
+        }
+    ]
+}

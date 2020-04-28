@@ -15,12 +15,12 @@ namespace BTCPayServer.Controllers.GreenField
 {
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.GreenfieldAPIKeys)]
-    public class ApiKeysController : ControllerBase
+    public class GrenFieldApiKeysController : ControllerBase
     {
         private readonly APIKeyRepository _apiKeyRepository;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public ApiKeysController(APIKeyRepository apiKeyRepository, UserManager<ApplicationUser> userManager)
+        public GrenFieldApiKeysController(APIKeyRepository apiKeyRepository, UserManager<ApplicationUser> userManager)
         {
             _apiKeyRepository = apiKeyRepository;
             _userManager = userManager;

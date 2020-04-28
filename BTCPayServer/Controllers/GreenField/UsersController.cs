@@ -21,7 +21,7 @@ namespace BTCPayServer.Controllers.GreenField
 {
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-    public class UsersController : ControllerBase
+    public class GreenFieldUsersController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly BTCPayServerOptions _btcPayServerOptions;
@@ -33,7 +33,7 @@ namespace BTCPayServer.Controllers.GreenField
         private readonly BTCPayServerOptions _options;
         private readonly IAuthorizationService _authorizationService;
 
-        public UsersController(UserManager<ApplicationUser> userManager, BTCPayServerOptions btcPayServerOptions,
+        public GreenFieldUsersController(UserManager<ApplicationUser> userManager, BTCPayServerOptions btcPayServerOptions,
             RoleManager<IdentityRole> roleManager, SettingsRepository settingsRepository,
             EventAggregator eventAggregator,
             IPasswordValidator<ApplicationUser> passwordValidator,

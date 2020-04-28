@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
+using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Tests.Logging;
 using Microsoft.AspNet.SignalR.Client;
@@ -204,7 +205,35 @@ namespace BTCPayServer.Tests
                 Assert.Single(await scopedClient.GetStores());
             }
         }
-        
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task PaymentTypesControllerTests()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                await tester.StartAsync();
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                await user.MakeAdmin();
+                var client = await user.CreateClient(Policies.Unrestricted);
+
+                //create store
+                var types = await client.GetAvailablePaymentTypes();
+                
+                foreach (var paymentType in types)
+                {
+                    Assert.True(PaymentTypes.TryParse(paymentType, out var type));
+                    var methods = await client.GetAvailablePaymentMethods(paymentType);
+                    foreach (string method in methods)
+                    {
+                            Assert.True( PaymentMethodId.TryParse(method, out var paymentMethodId));
+                            Assert.Equal(type, paymentMethodId.PaymentType);
+                    }
+                }
+            }
+        }
+
         private async Task AssertHttpError(int code, Func<Task> act)
         {
             var ex = await Assert.ThrowsAsync<HttpRequestException>(act);

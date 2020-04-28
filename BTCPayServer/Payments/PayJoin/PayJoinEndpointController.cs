@@ -312,7 +312,7 @@ namespace BTCPayServer.Payments.PayJoin
             }
 
             var originalPaymentValue = originalPaymentOutput.Value;
-            await _broadcaster.Schedule(DateTimeOffset.UtcNow + TimeSpan.FromMinutes(1.0), originalTx, network);
+            await _broadcaster.Schedule(DateTimeOffset.UtcNow + TimeSpan.FromMinutes(2.0), originalTx, network);
 
             //check if wallet of store is configured to be hot wallet
             var extKeyStr = await explorer.GetMetadataAsync<string>(

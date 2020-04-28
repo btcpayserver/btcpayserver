@@ -154,7 +154,7 @@ namespace BTCPayServer.Controllers
                 throw new InvalidOperationException("No payjoin url available");
             var cloned = psbt.Clone();
             cloned = cloned.Finalize();
-            await _broadcaster.Schedule(DateTimeOffset.UtcNow + TimeSpan.FromMinutes(1.0), cloned.ExtractTransaction(), btcPayNetwork);
+            await _broadcaster.Schedule(DateTimeOffset.UtcNow + TimeSpan.FromMinutes(2.0), cloned.ExtractTransaction(), btcPayNetwork);
             return await _payjoinClient.RequestPayjoin(endpoint, derivationSchemeSettings, psbt, cancellationToken);
         }
         

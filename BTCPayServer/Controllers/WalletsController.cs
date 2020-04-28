@@ -495,7 +495,7 @@ namespace BTCPayServer.Controllers
                         Outpoint = coin.OutPoint.ToString(),
                         Amount = coin.Value.GetValue(network),
                         Comment = info?.Comment,
-                        Labels = info == null? null : _labelFactory.GetLabels(walletBlobAsync,info, Request),
+                        Labels = info == null? null : _labelFactory.GetLabels(walletBlobAsync, info, Request),
                         Link = string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink, coin.OutPoint.Hash.ToString())
                     };
                 }).ToArray();

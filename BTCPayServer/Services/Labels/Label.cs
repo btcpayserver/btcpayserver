@@ -19,7 +19,7 @@ namespace BTCPayServer.Services.Labels
             Label item = obj as Label;
             if (item == null)
                 return false;
-            return Value.Equals(item.Value, StrWingComparison.OrdinalIgnoreCase);
+            return Value.Equals(item.Value, StringComparison.OrdinalIgnoreCase);
         }
 
         public static bool operator ==(Label a, Label b)

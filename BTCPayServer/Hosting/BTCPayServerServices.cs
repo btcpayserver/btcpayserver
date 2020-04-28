@@ -45,6 +45,7 @@ using Microsoft.AspNetCore.Authorization;
 using BTCPayServer.Security.Bitpay;
 using Serilog;
 using BTCPayServer.Security.GreenField;
+using BTCPayServer.Services.Labels;
 
 namespace BTCPayServer.Hosting
 {
@@ -66,6 +67,7 @@ namespace BTCPayServer.Hosting
             services.AddPayJoinServices();
             services.AddMoneroLike();
             services.TryAddSingleton<SettingsRepository>();
+            services.TryAddSingleton<LabelFactory>();
             services.TryAddSingleton<TorServices>();
             services.TryAddSingleton<SocketFactory>();
             services.TryAddSingleton<LightningClientFactoryService>();

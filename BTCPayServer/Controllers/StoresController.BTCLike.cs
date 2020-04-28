@@ -26,7 +26,6 @@ using Newtonsoft.Json.Linq;
 using BTCPayServer.Logging;
 using Microsoft.Extensions.Logging;
 using BTCPayServer.Client;
-using NBXplorer;
 
 namespace BTCPayServer.Controllers
 {
@@ -54,59 +53,12 @@ namespace BTCPayServer.Controllers
             {
                 vm.DerivationScheme = derivation.AccountDerivation.ToString();
                 vm.Config = derivation.ToJson();
-                vm.NBXSeedAvailable = (await CanUseHotWallet() ).HotWallet && !string.IsNullOrEmpty(await _ExplorerProvider.GetExplorerClient(network)
-                    .GetMetadataAsync<string>(derivation.AccountDerivation,
-                        WellknownMetadataKeys.Mnemonic));
             }
             vm.Enabled = !store.GetStoreBlob().IsExcluded(new PaymentMethodId(vm.CryptoCode, PaymentTypes.BTCLike));
             var hotWallet = await CanUseHotWallet();
             vm.CanUseHotWallet = hotWallet.HotWallet;
             vm.CanUseRPCImport = hotWallet.RPCImport;
             return View(vm);
-        }
-        [HttpPost]
-        [Route("{storeId}/derivations/{cryptoCode}/seed")]        
-        [ApiExplorerSettings(IgnoreApi = true)]
-        public async Task<IActionResult> ViewSeed(string storeId, string cryptoCode)
-        {
-            var store = HttpContext.GetStoreData();
-            if (store == null)
-                return NotFound();
-            var network = cryptoCode == null ? null : _ExplorerProvider.GetNetwork(cryptoCode);
-            if (network == null)
-            {
-                return NotFound();
-            }
-            var derivation = GetExistingDerivationStrategy(cryptoCode, store);
-            if (derivation == null)
-            {
-                return NotFound();
-            }
-
-            var canExtract = (await CanUseHotWallet()).HotWallet;
-            
-            var seed = await _ExplorerProvider.GetExplorerClient(network)
-                .GetMetadataAsync<string>(derivation.AccountDerivation,
-                    WellknownMetadataKeys.Mnemonic);
-
-            if (string.IsNullOrEmpty(seed))
-            {
-                TempData.SetStatusMessageModel(new StatusMessageModel()
-                {
-                    Severity = StatusMessageModel.StatusSeverity.Error,
-                    Message = "The seed was not found"
-                });
-            }
-            else
-            {
-                TempData.SetStatusMessageModel(new StatusMessageModel()
-                {
-                    Severity = StatusMessageModel.StatusSeverity.Success,
-                    Html = $"Please store your seed securely! <br/><code class=\"alert-link\">{seed}</code>"
-                });
-            }
-            
-            return RedirectToAction(nameof(UpdateStore), new { storeId });
         }
 
         class GetXPubs
@@ -211,7 +163,6 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
-            vm.NBXSeedAvailable = false;
             vm.Network = network;
             vm.RootKeyPath = network.GetRootKeyPath();
             DerivationSchemeSettings strategy = null;

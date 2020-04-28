@@ -1,9 +1,9 @@
 :root {
   /* General color definitions */
-  --btcpay-brand-light:   #CEDC21;
-  --btcpay-brand-medium:  #51B13E;
-  --btcpay-brand-dark:    #137547;
-  --btcpay-brand-darker:  #0F3B21;
+  --btcpay-brand-light: #CEDC21;
+  --btcpay-brand-secondary: #51B13E;
+  --btcpay-brand-tertiary: #137547;
+  --btcpay-brand-dark: #0F3B21;
   --btcpay-brand-darkest: #05120a;
 
   /* Color definitions for specific purposes - map the general colors or define additional ones */
@@ -55,7 +55,7 @@
 
   /* Color definitions for specific sections - try to reuse colors defined above */
   --btcpay-body-bg: var(--btcpay-color-neutral-100);
-  --btcpay-bg-dark: var(--btcpay-brand-darker);
+  --btcpay-bg-dark: var(--btcpay-brand-dark);
   --btcpay-bg-tile: var(--btcpay-color-white);
   --btcpay-bg-cta:  var(--btcpay-bg-dark);
 

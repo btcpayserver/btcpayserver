@@ -76,6 +76,10 @@
                     </button>
                     <div class="dropdown-menu" aria-labelledby="SendMenu">
                         <button name="command" type="submit" class="dropdown-item" value="prune">Prune old transactions from history</button>
+                        @if (Model.NBXSeedAvailable)
+                        {
+                            <button name="command" type="submit" class="dropdown-item" value="view-seed">View seed</button>
+                        }
                     </div>
                 </div>
             </div>

@@ -71,9 +71,7 @@
                 @foreach (var label in Model.Labels)
                 {
                     <a asp-route-labelFilter="@label.Value" class="badge mr-2 my-1 position-relative text-white d-block"
-                       style="
-                                                                                            background-color: @label.Color;
-                                                                                        "><span class="text-white">@label.Value</span></a>
+                       style="background-color: @label.Color;"><span class="text-white">@label.Value</span></a>
                 }
             </div>
         </div>
@@ -109,12 +107,8 @@
                             @foreach (var label in transaction.Labels)
                             {
                                 <div
-
                                     class="badge transactionLabel position-relative text-white d-block"
-                                    style="
-                                        background-color: @label.Color;
-                                        padding-right: 16px;
-                                    "
+                                    style="background-color: @label.Color; padding-right: 16px;"
                                     data-toggle="tooltip"
                                     title="@label.Tooltip">
                                      <a asp-route-labelFilter="@label.Value" class="text-white">@label.Value</a>

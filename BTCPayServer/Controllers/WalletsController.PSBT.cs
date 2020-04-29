@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.HostedServices;
 using BTCPayServer.ModelBinders;
 using BTCPayServer.Models;
 using BTCPayServer.Models.WalletViewModels;
@@ -329,6 +330,21 @@ namespace BTCPayServer.Controllers
                             vm.PSBT = proposedPayjoin.ToBase64();
                             vm.OriginalPSBT = psbt.ToBase64();
                             proposedPayjoin.Finalize();
+                            var hash = proposedPayjoin.ExtractTransaction().GetHash();
+                            _EventAggregator.Publish(new UpdateTransactionLabel()
+                            {
+                                WalletId = walletId,
+                                TransactionLabels = new Dictionary<uint256, List<(string color, string label)>>()
+                                {
+                                    {
+                                        hash,
+                                        new List<(string color, string label)>
+                                        {
+                                            UpdateTransactionLabel.PayjoinLabelTemplate()
+                                        }
+                                    }
+                                }
+                            });
                             TempData.SetStatusMessageModel(new StatusMessageModel()
                             {
                                 Severity = StatusMessageModel.StatusSeverity.Success,

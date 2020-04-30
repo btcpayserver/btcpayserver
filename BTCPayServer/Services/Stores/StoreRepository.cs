@@ -158,31 +158,34 @@ namespace BTCPayServer.Services.Stores
             }
         }
 
-        public async Task<StoreData> CreateStore(string ownerId, string name)
+        public async Task CreateStore(string ownerId, StoreData storeData)
         {
-            if (string.IsNullOrEmpty(name))
-                throw new ArgumentException("name should not be empty", nameof(name));
+            if (!string.IsNullOrEmpty(storeData.Id))
+                throw new ArgumentException("id should be empty", nameof(storeData.StoreName));
+            if (string.IsNullOrEmpty(storeData.StoreName))
+                throw new ArgumentException("name should not be empty", nameof(storeData.StoreName));
             if (ownerId == null)
                 throw new ArgumentNullException(nameof(ownerId));
             using (var ctx = _ContextFactory.CreateContext())
             {
-                StoreData store = new StoreData
-                {
-                    Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(32)),
-                    StoreName = name,
-                    SpeedPolicy = SpeedPolicy.MediumSpeed
-                };
+                storeData.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(32));
                 var userStore = new UserStore
                 {
-                    StoreDataId = store.Id,
+                    StoreDataId = storeData.Id,
                     ApplicationUserId = ownerId,
-                    Role = "Owner"
+                    Role = StoreRoles.Owner
                 };
-                ctx.Add(store);
+                ctx.Add(storeData);
                 ctx.Add(userStore);
-                await ctx.SaveChangesAsync().ConfigureAwait(false);
-                return store;
+                await ctx.SaveChangesAsync();
             }
+        }
+
+        public async Task<StoreData> CreateStore(string ownerId, string name)
+        {
+            var store = new StoreData() {StoreName = name};
+            await CreateStore(ownerId,store);
+            return store;
         }
 
         public async Task RemoveStore(string storeId, string userId)

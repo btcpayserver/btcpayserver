@@ -9,7 +9,6 @@ using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace BTCPayServer.Controllers.GreenField
 {
@@ -66,27 +65,36 @@ namespace BTCPayServer.Controllers.GreenField
         
         [HttpPost("~/api/v1/stores")]
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        public async Task<ActionResult<Client.Models.StoreData>> CreateStore(CreateStoreRequest request)
+        public async Task<IActionResult> CreateStore(CreateStoreRequest request)
         {
-            if (request?.Name is null)
-                return BadRequest(CreateValidationProblem(nameof(request.Name), "Name is missing"));
-            var store = await _storeRepository.CreateStore(_userManager.GetUserId(User), request.Name);
+            var validationResult = Validate(request);
+            if (validationResult != null)
+            {
+                return validationResult;
+            }
+
+            var store = new Data.StoreData();
+            ToModel(request, store);
+            await _storeRepository.CreateStore(_userManager.GetUserId(User), store);
             return Ok(FromModel(store));
         }
         
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPut("~/api/v1/stores/{storeId}")]
-        public async Task<ActionResult> UpdateStore(string storeId, UpdateStoreRequest request)
+        public async Task<IActionResult> UpdateStore(string storeId, UpdateStoreRequest request)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
             {
                 return NotFound();
             }
+            var validationResult = Validate(request);
+            if (validationResult != null)
+            {
+                return validationResult;
+            }
 
-            if (request?.Name is null)
-                return BadRequest(CreateValidationProblem(nameof(request.Name), "Name is missing"));
-            store.StoreName = request.Name;
+            ToModel(request, store);
             await _storeRepository.UpdateStore(store);
             return Ok(FromModel(store));
         }
@@ -100,11 +108,16 @@ namespace BTCPayServer.Controllers.GreenField
             };
         }
         
-        private ValidationProblemDetails CreateValidationProblem(string propertyName, string errorMessage)
+        private static void ToModel(StoreBaseData restModel,Data.StoreData model)
         {
-            var modelState = new ModelStateDictionary();
-            modelState.AddModelError(propertyName, errorMessage);
-            return new ValidationProblemDetails(modelState);
+            model.StoreName = restModel.Name;
+        }
+
+        private IActionResult Validate(StoreBaseData request)
+        {
+            if (request?.Name is null)
+                ModelState.AddModelError(nameof(request.Name), "Name is missing");
+            return !ModelState.IsValid ? BadRequest(new ValidationProblemDetails(ModelState)) : null;
         }
     }
 }

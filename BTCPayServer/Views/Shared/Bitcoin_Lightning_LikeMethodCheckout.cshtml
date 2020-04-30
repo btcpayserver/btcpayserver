@@ -228,7 +228,7 @@
             },
             computed: {
                 hasPayjoin: function(){
-                    return this.srvModel.invoiceBitcoinUrl.indexOf('@PayjoinClient.BIP21EndpointKey') === -1;
+                    return this.srvModel.invoiceBitcoinUrl.indexOf('@PayjoinClient.BIP21EndpointKey=') === -1;
                 },
                 coinswitchAmountDue: function() {
                     return this.srvModel.coinSwitchAmountMarkupPercentage

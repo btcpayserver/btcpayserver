@@ -224,6 +224,27 @@ namespace BTCPayServer.Controllers
                 : (decimal?)null;
 
             var paymentMethodHandler = _paymentMethodHandlerDictionary[paymentMethodId];
+            
+            var divisibility = _CurrencyNameTable.GetNumberFormatInfo(paymentMethod.GetId().CryptoCode, false)?.CurrencyDecimalDigits;
+
+            string ShowMoney(Money money)
+            {
+                if (!divisibility.HasValue) return money.ToString();
+                var res = money.ToString(false, true);
+                var split = res.Split('.');
+                var decimals = res.Split('.')[1];
+                if (decimals.Length >= divisibility.Value && decimals != "00")
+                {
+                    return res;
+                }
+                if (decimals == "00")
+                {
+                    decimals = string.Empty;
+                }
+                res = $"{split[0]}{(divisibility.Value > 0? ".": string.Empty)}{decimals.PadRight(divisibility.Value, '0')}";
+                return res;
+            }
+
             var model = new PaymentModel()
             {
                 CryptoCode = network.CryptoCode,
@@ -236,8 +257,8 @@ namespace BTCPayServer.Controllers
                 HtmlTitle = storeBlob.HtmlTitle ?? "BTCPay Invoice",
                 CryptoImage = Request.GetRelativePathOrAbsolute(paymentMethodHandler.GetCryptoImage(paymentMethodId)),
                 BtcAddress = paymentMethodDetails.GetPaymentDestination(),
-                BtcDue = accounting.Due.ToString(),
-                OrderAmount = (accounting.TotalDue - accounting.NetworkFee).ToString(),
+                BtcDue = ShowMoney(accounting.Due),
+                OrderAmount = ShowMoney(accounting.TotalDue - accounting.NetworkFee),
                 OrderAmountFiat = OrderAmountFromInvoice(network.CryptoCode, invoice.ProductInformation),
                 CustomerEmail = invoice.RefundMail,
                 RequiresRefundEmail = storeBlob.RequiresRefundEmail,
@@ -253,7 +274,7 @@ namespace BTCPayServer.Controllers
                 StoreName = store.StoreName,
                 PeerInfo = (paymentMethodDetails as LightningLikePaymentMethodDetails)?.NodeInfo,
                 TxCount = accounting.TxRequired,
-                BtcPaid = accounting.Paid.ToString(),
+                BtcPaid = ShowMoney(accounting.Paid),
 #pragma warning disable CS0618 // Type or member is obsolete
                 Status = invoice.StatusString,
 #pragma warning restore CS0618 // Type or member is obsolete

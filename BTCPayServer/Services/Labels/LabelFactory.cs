@@ -43,12 +43,13 @@ namespace BTCPayServer.Services.Labels
                 throw new ArgumentNullException(nameof(value));
             if (color == null)
                 throw new ArgumentNullException(nameof(color));
-            if (value.StartsWith("{"))
+            if (value.StartsWith("{", StringComparison.InvariantCultureIgnoreCase))
             {
                 var jObj = JObject.Parse(value);
                 if (jObj.ContainsKey("value"))
                 {
                     var id = jObj.ContainsKey("id") ? jObj["id"].Value<string>() : string.Empty;
+                    var idInLabel = string.IsNullOrEmpty(id) ? string.Empty : $"({id})";
                     switch (jObj["value"].Value<string>())
                     {
                         case "invoice":
@@ -57,7 +58,7 @@ namespace BTCPayServer.Services.Labels
                                 RawValue = value,
                                 Value = "invoice",
                                 Color = color,
-                                Tooltip = $"Received through an invoice ({id})",
+                                Tooltip = $"Received through an invoice {idInLabel}",
                                 Link = string.IsNullOrEmpty(id)
                                     ? null
                                     : _linkGenerator.InvoiceLink(id, request.Scheme, request.Host, request.PathBase)
@@ -68,7 +69,7 @@ namespace BTCPayServer.Services.Labels
                                 RawValue = value,
                                 Value = "payjoin-exposed",
                                 Color = color,
-                                Tooltip = $"This utxo was exposed through a payjoin proposal for an invoice ({id})",
+                                Tooltip = $"This utxo was exposed through a payjoin proposal for an invoice {idInLabel}",
                                 Link = string.IsNullOrEmpty(id)
                                     ? null
                                     : _linkGenerator.InvoiceLink(id, request.Scheme, request.Host, request.PathBase)

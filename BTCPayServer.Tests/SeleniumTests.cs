@@ -639,6 +639,13 @@ namespace BTCPayServer.Tests
                 Assert.Equal(parsedBip21.Amount.ToString(false), s.Driver.FindElement(By.Id($"Outputs_0__Amount")).GetAttribute("value"));
                 Assert.Equal(parsedBip21.Address.ToString(), s.Driver.FindElement(By.Id($"Outputs_0__DestinationAddress")).GetAttribute("value"));
                 
+                
+                s.GoToWallet(new WalletId(storeId.storeId, "BTC"), WalletsNavPages.Settings);
+                
+                s.Driver.FindElement(By.Id("SettingsMenu")).ForceClick();
+                s.Driver.FindElement(By.CssSelector("button[value=view-seed]")).Click();
+                s.AssertHappyMessage();
+                Assert.Equal(mnemonic.ToString(), s.Driver.FindElements(By.ClassName("alert-success")).First().FindElement(By.TagName("code")).Text);
             }
         }
         void SetTransactionOutput(SeleniumTester s, int index, BitcoinAddress dest, decimal amount, bool subtract = false)

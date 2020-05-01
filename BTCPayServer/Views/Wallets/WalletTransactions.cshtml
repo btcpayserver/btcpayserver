@@ -61,6 +61,22 @@
         If some transactions appear in BTCPay Server, but are missing on Electrum or another wallet, <a href="https://docs.btcpayserver.org/faq-and-common-issues/faq-wallet#missing-payments-in-my-software-or-hardware-wallet">follow those instructions</a>.
     </div>
 </div>
+@if (Model.Labels.Any())
+{
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="d-flex flex-row card card-body p-2">
+                <span class="mr-2">Filter by label:</span>
+                @foreach (var label in Model.Labels)
+                {
+                    <a asp-route-labelFilter="@label.Value" class="badge mr-2 my-1 position-relative text-white d-block"
+                       style="background-color: @label.Color;"><span class="text-white">@label.Value</span></a>
+                }
+            </div>
+        </div>
+    </div>
+}
 <div class="row">
     <div class="col-md-12">
         <table class="table table-sm table-responsive-lg">
@@ -72,10 +88,10 @@
                             <span class="fa fa-clock-o" title="Switch date format"></span>
                         </a>
                     </th>
-                    <th style="text-align:left">Label</th>
+                    <th class="text-left">Label</th>
                     <th>Transaction Id</th>
-                    <th style="text-align:right">Balance</th>
-                    <th style="text-align:right"></th>
+                    <th class="text-right">Balance</th>
+                    <th class="text-right"></th>
                 </tr>
             </thead>
             <tbody>
@@ -87,27 +103,19 @@
                                 @transaction.Timestamp.ToBrowserDate()
                             </span>
                         </td>
-                        <td style="text-align:left">
+                        <td class="text-left">
                             @foreach (var label in transaction.Labels)
                             {
                                 <div
-
-                                    class="badge transactionLabel"
-                                    style="
-                                        background-color: @label.Color;
-                                        color: white;
-                                        display: block;
-                                        padding-right: 16px;
-                                        position: relative;
-                                    "
+                                    class="badge transactionLabel position-relative text-white d-block"
+                                    style="background-color: @label.Color; padding-right: 16px;"
+                                    data-toggle="tooltip"
                                     title="@label.Tooltip">
+                                     <a asp-route-labelFilter="@label.Value" class="text-white">@label.Value</a>
+                                    
                                     @if (!string.IsNullOrEmpty(label.Link))
                                     {
-                                        <a href="@label.Link" target="_blank"><span class="text-white">@label.Value</span> <span class="fa fa-info-circle"></span></a>
-                                    }
-                                    else
-                                    {
-                                        <a asp-route-labelFilter="@label.Value" class="text-white">@label.Value</a>
+                                        <a href="@label.Link" target="_blank"> <span class="fa fa-info-circle"></span></a>
                                     }
                                     <form
                                         asp-route-walletId="@this.Context.GetRouteValue("walletId")"
@@ -132,14 +140,14 @@
                         </td>
                         @if (transaction.Positive)
                         {
-                            <td style="text-align:right; color:green;">@transaction.Balance</td>
+                            <td style="text-align:right; color:green;" class="text-right">@transaction.Balance</td>
                         }
                         else
                         {
-                            <td style="text-align:right; color:red;">@transaction.Balance</td>
+                            <td style="text-align:right; color:red;" class="text-right">@transaction.Balance</td>
                         }
-                        <td style="text-align:right;">
-                            <div class="dropdown" style="display:inline-block;">
+                        <td class="text-right">
+                            <div class="dropdown d-inline-block" >
                                 <span class="fa fa-tags" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></span>
                                 <div class="dropdown-menu">
                                     <form asp-action="ModifyTransaction" method="post"
@@ -169,7 +177,7 @@
                                     </form>
                                 </div>
                             </div>
-                            <div class="dropdown" style="display:inline-block;">
+                            <div class="dropdown d-inline-block">
                                 @if (string.IsNullOrEmpty(transaction.Comment))
                                 {
                                     <span class="fa fa-comment" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></span>

@@ -12,18 +12,20 @@ namespace BTCPayServer.Controllers
     {
         public IActionResult Handle(int? statusCode = null)
         {
-            if (Request.ContentType.StartsWith("application/json", StringComparison.OrdinalIgnoreCase))
-                return this.StatusCode(statusCode.Value);
-            if (statusCode.HasValue)
+            if (Request.Headers.TryGetValue("Accept", out var v) && v.Any(v => v.Contains("text/html", StringComparison.OrdinalIgnoreCase)))
             {
-                var specialPages = new[] { 404, 429, 500 };
-                if (specialPages.Any(a => a == statusCode.Value))
+                if (statusCode.HasValue)
                 {
-                    var viewName = statusCode.ToString();
-                    return View(viewName);
+                    var specialPages = new[] { 404, 429, 500 };
+                    if (specialPages.Any(a => a == statusCode.Value))
+                    {
+                        var viewName = statusCode.ToString();
+                        return View(viewName);
+                    }
                 }
+                return View(statusCode);
             }
-            return View(statusCode);
+            return this.StatusCode(statusCode.Value);
         }
     }
 }

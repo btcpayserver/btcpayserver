@@ -12,6 +12,8 @@ namespace BTCPayServer.Controllers
     {
         public IActionResult Handle(int? statusCode = null)
         {
+            if (Request.ContentType.StartsWith("application/json", StringComparison.OrdinalIgnoreCase))
+                return this.StatusCode(statusCode.Value);
             if (statusCode.HasValue)
             {
                 var specialPages = new[] { 404, 429, 500 };

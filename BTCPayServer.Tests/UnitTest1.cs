@@ -607,6 +607,12 @@ namespace BTCPayServer.Tests
                 {
                     Assert.Equal("Object not found", ex.Errors.First());
                 }
+                var req = new HttpRequestMessage(HttpMethod.Get, "/invoices/Cy9jfK82eeEED1T3qhwF3Y");
+                req.Headers.TryAddWithoutValidation("Authorization", "Basic dGVzdA==");
+                req.Content = new StringContent("{}", Encoding.UTF8, "application/json");
+                var result = await tester.PayTester.HttpClient.SendAsync(req);
+                Assert.Equal(HttpStatusCode.Unauthorized, result.StatusCode);
+                Assert.Equal(0, result.Content.Headers.ContentLength.Value);
             }
         }
 

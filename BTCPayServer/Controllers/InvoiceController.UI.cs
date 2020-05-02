@@ -230,19 +230,8 @@ namespace BTCPayServer.Controllers
             string ShowMoney(Money money)
             {
                 if (!divisibility.HasValue) return money.ToString();
-                var res = money.ToString(false, true);
-                var split = res.Split('.');
-                var decimals = res.Split('.')[1];
-                if (decimals.Length >= divisibility.Value && decimals != "00")
-                {
-                    return res;
-                }
-                if (decimals == "00")
-                {
-                    decimals = string.Empty;
-                }
-                res = $"{split[0]}{(divisibility.Value > 0? ".": string.Empty)}{decimals.PadRight(divisibility.Value, '0')}";
-                return res;
+                var format = $"0{(divisibility.Value > 0 ? "." : string.Empty)}".PadRight(divisibility.Value, '0');
+                return money.ToDecimal(MoneyUnit.BTC).ToString(format, CultureInfo.InvariantCulture);
             }
 
             var model = new PaymentModel()

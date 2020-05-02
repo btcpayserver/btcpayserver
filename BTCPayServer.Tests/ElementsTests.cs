@@ -37,14 +37,13 @@ namespace BTCPayServer.Tests
             {
                 tester.ActivateLBTC();
                 await tester.StartAsync();
-                await tester.EnsureChannelsSetup();
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("LBTC");
                 user.RegisterDerivationScheme("BTC");
                 user.RegisterDerivationScheme("USDT");
                 
-                Assert.Single(Assert.IsType<ListWalletsViewModel>(Assert.IsType<ViewResult>(await user.GetController<WalletsController>().ListWallets()).Model).Wallets);
+                Assert.Equal(3, Assert.IsType<ListWalletsViewModel>(Assert.IsType<ViewResult>(await user.GetController<WalletsController>().ListWallets()).Model).Wallets.Count);
             }
         }
 

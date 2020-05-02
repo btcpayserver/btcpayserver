@@ -228,7 +228,7 @@ services:
   elementsd-liquid:
       restart: always
       container_name: btcpayserver_elementsd_liquid
-      image: btcpayserver/elements:0.18.1.1-1
+      image: btcpayserver/elements:0.18.1.7
       environment:
           ELEMENTS_CHAIN: elementsregtest
           ELEMENTS_EXTRA_ARGS: |

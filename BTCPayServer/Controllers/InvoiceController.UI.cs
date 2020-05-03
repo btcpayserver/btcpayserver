@@ -227,14 +227,6 @@ namespace BTCPayServer.Controllers
             
             var divisibility = _CurrencyNameTable.GetNumberFormatInfo(paymentMethod.GetId().CryptoCode, false)?.CurrencyDecimalDigits;
 
-            string ShowMoney(Money money)
-            {
-                if (!divisibility.HasValue) return money.ToString();
-                var res = $"0{(divisibility.Value > 0 ? "." : string.Empty)}";
-                var format = res.PadRight(divisibility.Value + res.Length, '0');
-                return money.ToDecimal(MoneyUnit.BTC).ToString(format, CultureInfo.InvariantCulture);
-            }
-
             var model = new PaymentModel()
             {
                 CryptoCode = network.CryptoCode,
@@ -247,8 +239,8 @@ namespace BTCPayServer.Controllers
                 HtmlTitle = storeBlob.HtmlTitle ?? "BTCPay Invoice",
                 CryptoImage = Request.GetRelativePathOrAbsolute(paymentMethodHandler.GetCryptoImage(paymentMethodId)),
                 BtcAddress = paymentMethodDetails.GetPaymentDestination(),
-                BtcDue = ShowMoney(accounting.Due),
-                OrderAmount = ShowMoney(accounting.TotalDue - accounting.NetworkFee),
+                BtcDue = accounting.Due.ShowMoney(divisibility),
+                OrderAmount = (accounting.TotalDue - accounting.NetworkFee).ShowMoney(divisibility),
                 OrderAmountFiat = OrderAmountFromInvoice(network.CryptoCode, invoice.ProductInformation),
                 CustomerEmail = invoice.RefundMail,
                 RequiresRefundEmail = storeBlob.RequiresRefundEmail,
@@ -264,7 +256,7 @@ namespace BTCPayServer.Controllers
                 StoreName = store.StoreName,
                 PeerInfo = (paymentMethodDetails as LightningLikePaymentMethodDetails)?.NodeInfo,
                 TxCount = accounting.TxRequired,
-                BtcPaid = ShowMoney(accounting.Paid),
+                BtcPaid = accounting.Paid.ShowMoney(divisibility),
 #pragma warning disable CS0618 // Type or member is obsolete
                 Status = invoice.StatusString,
 #pragma warning restore CS0618 // Type or member is obsolete

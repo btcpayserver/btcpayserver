@@ -120,6 +120,11 @@ namespace BTCPayServer
         {
             return $"{UriScheme}:{cryptoInfoAddress}?amount={cryptoInfoDue.ToString(false, true)}";
         }
+
+        public virtual GetTransactionsResponse FilterValidTransactions(GetTransactionsResponse response)
+        {
+            return response;
+        }
     }
 
     public abstract class BTCPayNetworkBase

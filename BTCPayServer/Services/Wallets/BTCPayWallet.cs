@@ -200,9 +200,9 @@ namespace BTCPayServer.Services.Wallets
             return await completionSource.Task;
         }
 
-        public Task<GetTransactionsResponse> FetchTransactions(DerivationStrategyBase derivationStrategyBase)
+        public async Task<GetTransactionsResponse> FetchTransactions(DerivationStrategyBase derivationStrategyBase)
         {
-            return _Client.GetTransactionsAsync(derivationStrategyBase);
+            return _Network.FilterValidTransactions(await _Client.GetTransactionsAsync(derivationStrategyBase));
         }
 
         public Task<BroadcastResult[]> BroadcastTransactionsAsync(List<Transaction> transactions)

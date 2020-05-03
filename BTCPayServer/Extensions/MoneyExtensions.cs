@@ -36,5 +36,27 @@ namespace BTCPayServer
 
             return decimal.Parse(amt, CultureInfo.InvariantCulture);
         }
+        public static string ShowMoney(this IMoney money, BTCPayNetwork network)
+        {
+            return money.GetValue(network).ShowMoney(network.Divisibility);
+        }
+
+        public static string ShowMoney(this Money money, int? divisibility)
+        {
+            return !divisibility.HasValue
+                ? money.ToString()
+                : money.ToDecimal(MoneyUnit.BTC).ShowMoney(divisibility.Value);
+        }
+
+        public static string ShowMoney(this decimal d, int divisibility)
+        {
+            return d.ToString(GetDecimalFormat(divisibility), CultureInfo.InvariantCulture);
+        }
+
+        private static string GetDecimalFormat(int divisibility)
+        {
+            var res = $"0{(divisibility > 0 ? "." : string.Empty)}";
+            return res.PadRight(divisibility + res.Length, '0');
+        }
     }
 }

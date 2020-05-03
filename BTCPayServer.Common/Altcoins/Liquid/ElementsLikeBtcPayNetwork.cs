@@ -23,6 +23,31 @@ namespace BTCPayServer
             });
         }
 
+        public override GetTransactionsResponse FilterValidTransactions(GetTransactionsResponse response)
+        {
+            TransactionInformationSet Filter(TransactionInformationSet transactionInformationSet)
+            {
+                return new TransactionInformationSet()
+                {
+                    Transactions =
+                        transactionInformationSet.Transactions.FindAll(information =>
+                            information.Outputs.Any(output =>
+                                output.Value is AssetMoney assetMoney && assetMoney.AssetId == AssetId) ||
+                            information.Inputs.Any(output =>
+                                output.Value is AssetMoney assetMoney && assetMoney.AssetId == AssetId))
+                };
+            }
+
+            return new GetTransactionsResponse()
+            {
+                Height = response.Height,
+                ConfirmedTransactions = Filter(response.ConfirmedTransactions),
+                ReplacedTransactions = Filter(response.ReplacedTransactions),
+                UnconfirmedTransactions = Filter(response.UnconfirmedTransactions)
+            };
+        }
+
+
         public override string GenerateBIP21(string cryptoInfoAddress, Money cryptoInfoDue)
         {
             //precision 0: 10 = 0.00000010

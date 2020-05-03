@@ -285,7 +285,7 @@ namespace BTCPayServer.Controllers
                         vm.Id);
                     vm.Timestamp = tx.Timestamp;
                     vm.Positive = tx.BalanceChange.GetValue(wallet.Network) >= 0;
-                    vm.Balance = tx.BalanceChange.ToString();
+                    vm.Balance = tx.BalanceChange.ShowMoney(wallet.Network);
                     vm.IsConfirmed = tx.Confirmations != 0;
 
                     if (walletTransactionsInfo.TryGetValue(tx.TransactionId.ToString(), out var transactionInfo))
@@ -996,7 +996,8 @@ namespace BTCPayServer.Controllers
             {
                 try
                 {
-                    return (await wallet.GetBalance(derivationStrategy, cts.Token)).ToString(CultureInfo.InvariantCulture);
+                    return (await wallet.GetBalance(derivationStrategy, cts.Token)).ShowMoney(wallet.Network
+                        .Divisibility);
                 }
                 catch
                 {

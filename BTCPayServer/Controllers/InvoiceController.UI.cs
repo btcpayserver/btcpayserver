@@ -230,7 +230,8 @@ namespace BTCPayServer.Controllers
             string ShowMoney(Money money)
             {
                 if (!divisibility.HasValue) return money.ToString();
-                var format = $"0{(divisibility.Value > 0 ? "." : string.Empty)}".PadRight(divisibility.Value, '0');
+                var res = $"0{(divisibility.Value > 0 ? "." : string.Empty)}";
+                var format = res.PadRight(divisibility.Value + res.Length, '0');
                 return money.ToDecimal(MoneyUnit.BTC).ToString(format, CultureInfo.InvariantCulture);
             }
 

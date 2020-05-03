@@ -333,7 +333,9 @@ namespace BTCPayServer.Services.Apps
                                  Formatted = Currencies.FormatCurrency(cc.Value.Value, currency)
                              }).Single(),
                     Custom = c.GetDetailString("custom") == "true",
-                    Inventory = string.IsNullOrEmpty(c.GetDetailString("inventory")) ?(int?) null:  int.Parse(c.GetDetailString("inventory"), CultureInfo.InvariantCulture)
+                    Inventory = string.IsNullOrEmpty(c.GetDetailString("inventory")) ?(int?) null:  int.Parse(c.GetDetailString("inventory"), CultureInfo.InvariantCulture),
+                    PaymentMethods = c.GetDetailStringList("payment_methods")
+                    
                 })
                 .ToArray();
         }
@@ -410,6 +412,14 @@ namespace BTCPayServer.Services.Apps
             public string GetDetailString(string field)
             {
                 return GetDetail(field).FirstOrDefault()?.Value?.Value;
+            }
+            public string[] GetDetailStringList(string field)
+            {
+                if (!Value.Children.ContainsKey(field) || !( Value.Children[field] is YamlSequenceNode sequenceNode))
+                {
+                    return null;
+                }
+                return sequenceNode.Children.Select(node => (node as YamlScalarNode)?.Value).Where( s => s!= null).ToArray();
             }
         }
         private class PosScalar

@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using NBitpayClient;
 using static BTCPayServer.Controllers.AppsController;
 
 namespace BTCPayServer.Controllers
@@ -182,6 +183,10 @@ namespace BTCPayServer.Controllers
                     ExtendedNotifications = true,
                     PosData = string.IsNullOrEmpty(posData) ? null : posData,
                     RedirectAutomatically = settings.RedirectAutomatically,
+                    SupportedTransactionCurrencies = !(choice?.PaymentMethods?.Any() ?? false)
+                        ? null
+                        : choice?.PaymentMethods?.ToDictionary(s => s,
+                            s => new InvoiceSupportedTransactionCurrency() {Enabled = true})
                 }, store, HttpContext.Request.GetAbsoluteRoot(),
                     new List<string>() { AppService.GetAppInternalTag(appId) },
                     cancellationToken);
@@ -311,6 +316,10 @@ namespace BTCPayServer.Controllers
                         NotificationURL = settings.NotificationUrl,
                         FullNotifications = true,
                         ExtendedNotifications = true,
+                        SupportedTransactionCurrencies = !(choice?.PaymentMethods?.Any() ?? false)
+                            ? null
+                            : choice?.PaymentMethods?.ToDictionary(s => s,
+                                s => new InvoiceSupportedTransactionCurrency() {Enabled = true}),
                         RedirectURL = request.RedirectUrl ?? 
                                      new Uri(new Uri( new Uri(HttpContext.Request.GetAbsoluteRoot()),  _BtcPayServerOptions.RootPath), $"apps/{appId}/crowdfund").ToString()
                     }, store, HttpContext.Request.GetAbsoluteRoot(),

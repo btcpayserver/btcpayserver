@@ -204,7 +204,7 @@
                         @foreach (var invoice in Model.Invoices)
                         {
                             <tr>
-                                <td style="width:10em;">
+                                <td>
                                     <span class="switchTimeFormat" data-switch="@invoice.Date.ToTimeAgo()">
                                         @invoice.Date.ToBrowserDate()
                                     </span>
@@ -225,7 +225,7 @@
                                     {
                                         <div id="pavpill_@invoice.InvoiceId">
                                             <span class="dropdown-toggle dropdown-toggle-split pavpill pavpil-@invoice.Status.ToString().ToLower()"
-                                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                  data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                 @invoice.StatusString
                                             </span>
                                             <div class="dropdown-menu pull-right">
@@ -272,27 +272,32 @@
                                 </td>
                             </tr>
                             <tr id="invoice_@invoice.InvoiceId" style="display:none;">
-                                <td style="border-top:0"></td>
-                                <td style="border-top:0" colspan="6" class="pt-3 pb-5">
-                                    @* Leaving this as partial because it abstracts complexity of Invoice Payments *@
-                                    <partial name="ListInvoicesPaymentsPartial" model="(invoice.Details, true)" />
+                                <td colspan="99" class="border-top-0">
+                                    <div style="margin-left: 15px; margin-bottom: 0;">
+                                        @* Leaving this as partial because it abstracts complexity of Invoice Payments *@
+                                        <partial name="ListInvoicesPaymentsPartial" model="(invoice.Details, true)" />
+                                    </div>
                                 </td>
                             </tr>
                         }
                     </tbody>
                 </table>
                 <nav aria-label="..." class="w-100">
-                    @if (Model.Total != 0) {
+                    @if (Model.Total != 0)
+                    {
                         <ul class="pagination float-left">
                             <li class="page-item @(Model.Skip == 0 ? "disabled" : null)">
                                 <a class="page-link" tabindex="-1" href="@ListInvoicesPage(-1, Model.Count)">&laquo;</a>
                             </li>
                             <li class="page-item disabled">
-                                @if (Model.Total <= Model.Count) {
+                                @if (Model.Total <= Model.Count)
+                                {
                                     <span class="page-link">
                                         1–@Model.Invoices.Count
                                     </span>
-                                } else {
+                                }
+                                else
+                                {
                                     <span class="page-link">
                                         @(Model.Skip + 1)–@(Model.Skip + Model.Invoices.Count), Total: @Model.Total
                                     </span>

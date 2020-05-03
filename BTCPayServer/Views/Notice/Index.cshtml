@@ -1,0 +1,53 @@
+﻿@model BTCPayServer.Models.NoticeViewModels.IndexViewModel
+@{
+    ViewData["Title"] = "Notices";
+}
+@section HeadScripts {
+    <script src="~/modal/btcpay.js" asp-append-version="true"></script>
+}
+<section>
+    <div class="container">
+        @if (TempData.HasStatusMessage())
+        {
+            <div class="row">
+                <div class="col-lg-12 text-center">
+                    <partial name="_StatusMessage" />
+                </div>
+            </div>
+        }
+        <div class="row">
+            <div class="col-lg-12 section-heading">
+                <h2>Notices</h2>
+                <hr class="primary">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <table class="table table-sm table-responsive-md">
+                    <thead>
+                        <tr>
+                            <th>Message</th>
+                            <th>Level</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr>
+                                <td>@item.Body</td>
+                                <td>@item.Level</td>
+                                <td width="100px">@item.Created.ToString("yyyy-MM-dd")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                <nav aria-label="...">
+                    <ul class="pagination">
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</section>

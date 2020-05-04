@@ -36,7 +36,7 @@ namespace BTCPayServer.Payments.Bitcoin
         public Data.NetworkFeeMode NetworkFeeMode { get; set; }
 
         FeeRate _NetworkFeeRate;
-        [JsonConverter(typeof(FeeRateJsonConverter))]
+        [JsonConverter(typeof(NBitcoin.JsonConverters.FeeRateJsonConverter))]
         public FeeRate NetworkFeeRate
         {
             get

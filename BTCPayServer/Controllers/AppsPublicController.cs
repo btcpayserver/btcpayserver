@@ -112,6 +112,7 @@ namespace BTCPayServer.Controllers
             }
             string title = null;
             var price = 0.0m;
+            Dictionary<string, InvoiceSupportedTransactionCurrency> paymentMethods = null;
             ViewPointOfSaleViewModel.Item choice = null;
             if (!string.IsNullOrEmpty(choiceKey))
             {
@@ -130,6 +131,12 @@ namespace BTCPayServer.Controllers
                     {
                         return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
                     }
+                }
+
+                if (choice?.PaymentMethods?.Any() is true)
+                {
+                    paymentMethods = choice?.PaymentMethods.ToDictionary(s => s,
+                        s => new InvoiceSupportedTransactionCurrency() {Enabled = true});
                 }
             }
             else
@@ -183,10 +190,7 @@ namespace BTCPayServer.Controllers
                     ExtendedNotifications = true,
                     PosData = string.IsNullOrEmpty(posData) ? null : posData,
                     RedirectAutomatically = settings.RedirectAutomatically,
-                    SupportedTransactionCurrencies = !(choice?.PaymentMethods?.Any() ?? false)
-                        ? null
-                        : choice?.PaymentMethods?.ToDictionary(s => s,
-                            s => new InvoiceSupportedTransactionCurrency() {Enabled = true})
+                    SupportedTransactionCurrencies = paymentMethods,
                 }, store, HttpContext.Request.GetAbsoluteRoot(),
                     new List<string>() { AppService.GetAppInternalTag(appId) },
                     cancellationToken);
@@ -275,6 +279,7 @@ namespace BTCPayServer.Controllers
             var store = await _AppService.GetStore(app);
             var title = settings.Title;
             var price = request.Amount;
+            Dictionary<string, InvoiceSupportedTransactionCurrency> paymentMethods = null;
             ViewPointOfSaleViewModel.Item choice = null;
             if (!string.IsNullOrEmpty(request.ChoiceKey))
             {
@@ -294,6 +299,13 @@ namespace BTCPayServer.Controllers
                     {
                         return NotFound("Option was out of stock");
                     }
+                }
+                
+
+                if (choice?.PaymentMethods?.Any() is true)
+                {
+                    paymentMethods = choice?.PaymentMethods.ToDictionary(s => s,
+                        s => new InvoiceSupportedTransactionCurrency() {Enabled = true});
                 }
             }
 
@@ -316,10 +328,7 @@ namespace BTCPayServer.Controllers
                         NotificationURL = settings.NotificationUrl,
                         FullNotifications = true,
                         ExtendedNotifications = true,
-                        SupportedTransactionCurrencies = !(choice?.PaymentMethods?.Any() ?? false)
-                            ? null
-                            : choice?.PaymentMethods?.ToDictionary(s => s,
-                                s => new InvoiceSupportedTransactionCurrency() {Enabled = true}),
+                        SupportedTransactionCurrencies = paymentMethods,
                         RedirectURL = request.RedirectUrl ?? 
                                      new Uri(new Uri( new Uri(HttpContext.Request.GetAbsoluteRoot()),  _BtcPayServerOptions.RootPath), $"apps/{appId}/crowdfund").ToString()
                     }, store, HttpContext.Request.GetAbsoluteRoot(),

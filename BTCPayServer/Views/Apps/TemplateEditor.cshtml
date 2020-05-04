@@ -1,0 +1,306 @@
+@model (string templateId, string title)
+
+<div id="template-editor-app" v-cloak>
+    <div class="form-group">
+        <label class="control-label mb-3">@Model.title </label>
+        <div class="bg-light row p-3">
+
+            <div v-for="(item, index) of items" class="col-sm-4 col-md-3 mb-3" v-bind:key="item.id">
+                <div class="card">
+                    <img v-if="item.image" class="card-img-top" v-bind:src="item.image"/>
+                    <div class="card-body">
+                        <h6 class="card-title">{{item.title}}</h6>
+                        <button type="button" class="btn btn-primary" v-on:click="editItem(index)">Edit</button>
+                        <button type="button"  class="btn btn-danger" v-on:click="removeItem(index)">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div v-if="!items || items.length === 0" class="col-12 text-center">No items.<br/>
+                <button type="button" class="btn btn-secondary" v-on:click="editItem(-1)">
+                    <i class="fa fa-plus fa-fw"></i> Add
+                </button>
+                </div>
+            <div v-else class="col-sm-4 col-md-3 mb-3 text-center">
+                <button type="button" class="btn btn-secondary my-5" v-on:click="editItem(-1)">
+                    <i class="fa fa-plus fa-fw"></i> Add
+                </button>
+            </div>
+        </div>
+        <div class="modal" id="product-modal" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit item</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close" ref="close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body" v-if="editingItem">
+                        <div class="mb-3">
+                            <span class="text-danger w-100 my-2" v-for="error of errors">{{error}}</span>
+                            <div class="form-row">
+                                <div class="col-sm-6">
+                                    <label>Title</label>*
+                                    <input type="text" required class="form-control mb-2" v-model="editingItem.title" autofocus ref="txtTitle" />
+                                </div>
+                                <div class="col-sm-3">
+                                    <label>Price</label>*
+                                    <input class="form-control mb-2"
+                                           inputmode="numeric"
+                                           pattern="\d*"
+                                           step="any"
+                                           min="0"
+                                           type="number"
+                                           v-model="editingItem.price" ref="txtPrice"/>
+                                </div>
+                                <div class="col-sm-3">
+                                    <label>Custom price</label>
+                                    <select class="form-control" v-model="editingItem.custom">
+                                        <option v-bind:value="false">No</option>
+                                        <option v-bind:value="true">Yes</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="col">
+                                    <label>Image</label>
+                                    <input type="text" class="form-control mb-2" v-model="editingItem.image"/>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="col">
+                                    <label>Description</label>
+                                    <textarea rows="3" cols="40" class="form-control mb-2" v-model="editingItem.description"></textarea>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="col">
+                                    <label>Inventory (leave blank to not use inventory feature)</label>
+                                    <input type="number" min="0" step="1" class="form-control mb-2" v-model="editingItem.inventory" ref="txtInventory" />
+                                </div>
+                                
+                            </div>
+                            <div class="form-row">
+                                <div class="col">
+                                    <label>Id (leave blank to generate from title)</label>
+                                    <input type="text" class="form-control mb-2" v-model="editingItem.id"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal" v-on:click="clearEditingItem()">Close</button>
+                        <button type="button" class="btn btn-primary" v-on:click="saveEditingItem()">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(function() {
+    new Vue({
+        el: '#template-editor-app',
+        data: {
+            errors: [],
+            items: [],
+            editingItem: null,
+            elementId: "@Model.templateId"
+        },
+        mounted: function() {
+            this.loadYml();
+            this.getInputElement().on("input change", this.loadYml.bind(this));            
+            this.getModalElement().on("hide.bs.modal", this.clearEditingItem.bind(this));
+        },
+        methods: {
+            getInputElement : function(){ return $("#"+this.elementId); },
+            getModalElement : function(){ return $("#product-modal"); },
+            loadYml: function(){
+                var result = [];
+                var template = this.getInputElement().val().trim();
+    
+                var lines = [];
+                var items = template.split("\n");
+                for (var i = 0; i < items.length; i++) {
+                    if(items[i] === ""){
+                        continue;
+                    }
+                    if(items[i].startsWith("  ")){
+                        lines[lines.length-1]+=items[i] + "\n";
+                    }else{
+                       
+                        lines.push(items[i] + "\n");
+                    }
+                }            
+            
+                // Split products from the template
+                for (var kl in lines) {
+                    var line = lines[kl],
+                        product = line.split("\n"),
+                        id, price, title, description, image = null,
+                        custom, inventory=null, paymentMethods = [];
+            
+                    for (var kp in product) {
+                        var productProperty = product[kp].trim();
+            
+                        if (kp == 0) {
+                            id = productProperty.replace(":", "");
+                        }
+            
+                        if (productProperty.indexOf('price:') !== -1) {
+                            price = parseFloat(productProperty.replace('price:', '').trim()).noExponents();
+                        }
+                        if (productProperty.indexOf('title:') !== -1) {
+                            title = productProperty.replace('title:', '').trim();
+                        }
+                        if (productProperty.indexOf('description:') !== -1) {
+                            description =productProperty.replace('description:', '').trim();
+                        }
+                        if (productProperty.indexOf('image:') !== -1) {
+                            image = productProperty.replace('image:', '').trim();
+                        }
+                        if (productProperty.indexOf('custom:') !== -1) {
+                            custom =productProperty.replace('custom:', '').trim();
+                        }
+                        if (productProperty.indexOf('inventory:') !== -1) {
+                            inventory = parseInt(productProperty.replace('inventory:', '').trim(),10);
+                        }
+                        if (productProperty.indexOf('payment_methods:') !== -1) {
+                            //inventory = parseInt(productProperty.replace('inventory:', '').trim(),10);
+                        }
+                    }
+            
+                    if (price != null || title != null) {
+                        // Add product to the list
+                        result.push({
+                            id: id,
+                            title: title,
+                            price: price,
+                            image: image || null,
+                            description: description || '',
+                            custom: Boolean(custom),
+                            inventory: isNaN(inventory)? null: inventory,
+                            paymentMethods: paymentMethods
+                        });
+                    }                    
+                }
+                this.items = result;
+            },
+            toYml: function(){
+                    var template = '';
+
+                    // Construct template from the product list
+                    for (var key in this.items) {
+                        var product = this.items[key],
+                            id = product.id,
+                            title = product.title,
+                            price = product.price? product.price : 0,
+                            image = product.image,
+                            description = product.description,
+                            custom = product.custom,
+                            inventory = product.inventory,
+                            paymentMethods = product.paymentMethods;
+
+                        template += id + ':\n' +
+                        '  price: ' + parseFloat(price).noExponents() + '\n' +
+                        '  title: ' + title + '\n';
+
+                        if (description) {
+                            template += '  description: ' + description + '\n';
+                        }
+                        if (image) {
+                            template += '  image: ' + image + '\n';
+                        }
+                        if (custom) {
+                            template += '  custom: true\n';
+                        }
+                        if(paymentMethods != null && paymentMethods.length > 0){
+                            template+= '  payment_methods:\n';
+                            for (var method of paymentMethods){
+                                template+= '    - '+method+'\n';
+                            }
+                        }                       
+                        template += '\n';
+                    }
+                    this.getInputElement().val(template);
+            },
+            editItem: function(index){
+                this.errors = [];
+                if(index < 0){
+                    this.editingItem = {index:-1, id:"", title: "", price: 0, image: "", description: "", custom: false, inventory: null, paymentMethods: []};
+                }else{
+                    this.editingItem = {...this.items[index], index};
+                }
+                
+                this.getModalElement().modal("show");
+            },
+            removeItem: function(index){
+                this.items.splice(index,1);
+                this.toYml();
+            },
+            clearEditingItem: function(){
+                this.editingItem = null;
+                this.errors = [];
+            },
+            validate: function(){
+                this.errors = [];
+                if (this.editingItem.id) {
+                    var matchedId = this.items.findIndex((x)=> { return x.id === this.editingItem.id;});
+                    if( matchedId>= 0 && matchedId !== this.editingItem.index)
+                        this.errors.push("You cannot have multiple items with the same id");
+                    
+                    if(this.editingItem.id.indexOf(":") > -1){
+                        this.errors.push("You cannot have : in the id");
+                    }
+                }
+                
+                if (!this.$refs.txtPrice.checkValidity()) {
+                    this.errors.push("Price must be a valid number");
+                }
+                if (!this.$refs.txtTitle.checkValidity()) {
+                    this.errors.push("Title is required");
+                }
+                if (!this.$refs.txtInventory.checkValidity()) {
+                    this.errors.push("Inventory must be blank or a a valid number (>=0)");
+                }
+                return this.errors.length === 0;
+            },
+            saveEditingItem: function(){
+                if(!this.validate()){
+                    return;
+                }
+                this.editingItem.id = this.editingItem.id || this.editingItem.title.toLowerCase().replace(/:/g, '');
+                if(this.editingItem.index < 0){
+                    this.items.push(this.editingItem);
+                }else{
+                    this.items.splice(this.editingItem.index,1,this.editingItem);
+                }
+                this.toYml();
+                this.getModalElement().modal("hide");
+            }
+        }
+    });
+});
+
+Number.prototype.noExponents= function(){
+    var data= String(this).split(/[eE]/);
+    if(data.length== 1) return data[0];
+
+    var  z= '', sign= this<0? '-':'',
+        str= data[0].replace('.', ''),
+        mag= Number(data[1])+ 1;
+
+    if(mag<0){
+        z= sign + '0.';
+        while(mag++) z += '0';
+        return z + str.replace(/^\-/,'');
+    }
+    mag -= str.length;
+    while(mag--) z += '0';
+    return str + z;
+};
+
+</script>

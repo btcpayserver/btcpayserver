@@ -392,6 +392,7 @@ namespace BTCPayServer.Tests
                     lastInvoiceId = invoice.Id;
                     var invoiceAddress = BitcoinAddress.Create(invoice.BitcoinAddress, cashCow.Network);
                     var txBuilder = network.NBitcoinNetwork.CreateTransactionBuilder();
+                    txBuilder.OptInRBF = true;
                     txBuilder.AddCoins(coin);
                     txBuilder.Send(invoiceAddress, vector.Paid);
                     txBuilder.SendFees(vector.Fee);
@@ -402,6 +403,10 @@ namespace BTCPayServer.Tests
                     if (vector.ExpectedError is null)
                     {
                         Assert.Contains(pj.Inputs, o => o.PrevOut == receiverCoin.Outpoint);
+                        foreach (var input in pj.GetGlobalTransaction().Inputs)
+                        {
+                            Assert.Equal(Sequence.OptInRBF, input.Sequence);
+                        }
                         if (!skipLockedCheck)
                             Assert.True(await payjoinRepository.TryUnlock(receiverCoin.Outpoint));
                     }

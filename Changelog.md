@@ -1,5 +1,31 @@
 # Changelog
 
+## 1.0.4.3:
+
+### New features
+
+* If you use a hot wallet, you can retrieve the seed in wallet settings / Other actions / View seed (@MrKukks)
+* Add top Label filter (@MrKukks)
+* As a sender, payjoin transaction are tagged in the wallet (@MrKukks)
+
+### Bug fixes
+
+* The wallet now discourage fee sniping (increase privacy by mimicking wallets like bitcoin core) (@NicolasDorier)
+* Payjoin receiver fix: The receiver's inputs sequence must be the same as the sender's inputs' sequence (@NicolasDorier, reported by @waxwing)
+* The wallet do not round fee rate to the nearest integer. (@NicolasDorier)
+* Invoice row should not cut off the "AM/PM" part of the date (@r0ckstardev)
+* Ensure dropdown in checkout page does not overflow (@ubolator)
+* Fix decimal points shown in Checkout UI based on currency ( always showed btc decimal precision before) (@MrKukks #1529)
+* fix label link inconsistency (@MrKukks)
+* Fix payjoin detection in checkout UI (@MrKukks)
+
+### Altcoins
+* For liquid, fix decimal precision issue in the wallet (@MrKukks)
+* For liquid, the transactions in a wallet of a specific asset should only show transactions specific to this asset (@MrKukks)
+
+### Language
+* Update portuguese strings (@BitcoinHeiro)
+
 ## 1.0.4.2
 
 ### New feature and improvements

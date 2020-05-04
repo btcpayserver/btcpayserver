@@ -2269,6 +2269,7 @@ namespace BTCPayServer.Tests
         {
             using (var tester = ServerTester.Create())
             {
+                tester.ActivateLBTC();
                 await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();
@@ -2443,6 +2444,41 @@ noninventoryitem:
                     Assert.Equal(1,
                         appService.Parse(vmpos.Template, "BTC").Single(item => item.Id == "inventoryitem").Inventory);
                 }, 10000);
+                
+                
+                //test payment methods option
+                user.RegisterDerivationScheme("LBTC");
+                vmpos = Assert.IsType<UpdatePointOfSaleViewModel>(Assert
+                    .IsType<ViewResult>(apps.UpdatePointOfSale(appId).Result).Model);
+                vmpos.Title = "hello";
+                vmpos.Currency = "BTC";
+                vmpos.Template = @"
+btconly:
+  price: 1.0
+  title: good apple
+  payment_methods:
+    - BTC
+normal:
+  price: 1.0";
+                Assert.IsType<RedirectToActionResult>(apps.UpdatePointOfSale(appId, vmpos).Result);
+                Assert.IsType<RedirectToActionResult>(publicApps
+                    .ViewPointOfSale(appId, 1, null, null, null, null, "btconly").Result);
+                Assert.IsType<RedirectToActionResult>(publicApps
+                    .ViewPointOfSale(appId, 1, null, null, null, null, "normal").Result);
+                invoices = user.BitPay.GetInvoices();
+                Assert.Single(invoices.Single(invoice => invoice.ItemCode == "btconly").SupportedTransactionCurrencies
+                    .Keys);
+                Assert.Equal("BTC",
+                    invoices.Single(invoice => invoice.ItemCode == "btconly").SupportedTransactionCurrencies.Keys.First());
+                
+                Assert.Equal(2, invoices.Single(invoice => invoice.ItemCode == "normal").SupportedTransactionCurrencies
+                    .Keys.Count);
+                Assert.Contains(
+                    invoices.Single(invoice => invoice.ItemCode == "btconly").SupportedTransactionCurrencies.Keys,
+                    s => new PaymentMethodId("BTC", PaymentTypes.BTCLike) == PaymentMethodId.Parse(s) ||
+                         new PaymentMethodId("LBTC", PaymentTypes.BTCLike) == PaymentMethodId.Parse(s));
+
+
             }
         }
 

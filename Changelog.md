@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.4.4:
+
+### New Feature
+
+* Allow user to select different fee rate based on expected confirmation time (@NicolasDorier)
+
+### Bug fixes
+
+* Fix QR Code on dark theme by adding some white margin around it (@chewsta)
+* Make sure wallet support decimal fee ... again. (@NicolasDorier)
+
 ## 1.0.4.3:
 
 ### New features

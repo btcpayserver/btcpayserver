@@ -167,11 +167,17 @@ $(function() {
                         id, price, title, description, image = null,
                         custom, inventory=null, paymentMethods = [];
             
+                    var goingThroughMethods = false;
                     for (var kp in product) {
                         var productProperty = product[kp].trim();
             
                         if (kp == 0) {
                             id = productProperty.replace(":", "");
+                        }
+                        if(productProperty.startsWith("-") && goingThroughMethods){
+                            paymentMethods.push(productProperty.substr(1));
+                        }else{
+                            goingThroughMethods = false;
                         }
             
                         if (productProperty.indexOf('price:') !== -1) {
@@ -193,7 +199,7 @@ $(function() {
                             inventory = parseInt(productProperty.replace('inventory:', '').trim(),10);
                         }
                         if (productProperty.indexOf('payment_methods:') !== -1) {
-                            //inventory = parseInt(productProperty.replace('inventory:', '').trim(),10);
+                            goingThroughMethods = true;
                         }
                     }
             

@@ -203,7 +203,12 @@
                         </div>
                     </div>
                 </div>
-                <div class="success-message">{{$t("This invoice has been paid")}}</div>
+                <div class="success-message">
+                    {{$t("This invoice has been paid")}}
+                    <div class="success-message__explanation" v-bind:class="{ 'invisible': invoiceConfirmed }">
+                        <br />{{$t("Payment pending confirmation")}}
+                    </div>
+                </div>
                 <a class="action-button" :href="srvModel.merchantRefLink" v-show="!isModal">
                     <span v-html="$t('Return to StoreName', srvModel)"></span>
                 </a>

@@ -6,7 +6,7 @@
             grid-gap: .5rem;
         }
         .card-deck .card {
-            max-width: 247px;
+            width: 247px;
         }
         .card-img-top{
             min-height:247px; background-repeat: no-repeat; background-size:contain; background-position: top;
@@ -56,7 +56,7 @@
                             <div class="form-row">
                                 <div class="col-sm-6">
                                     <label>Title</label>*
-                                    <input type="text" required class="form-control mb-2" v-model="editingItem.title" autofocus ref="txtTitle" />
+                                    <input type="text" required pattern="[^\*#]+" class="form-control mb-2" v-model="editingItem.title" autofocus ref="txtTitle" />
                                 </div>
                                 <div class="col-sm-3">
                                     <label>Price</label>*
@@ -86,7 +86,7 @@
                             <div class="form-row">
                                 <div class="col">
                                     <label>Description</label>
-                                    <textarea rows="3" cols="40" class="form-control mb-2" v-model="editingItem.description"></textarea>
+                                    <textarea rows="3" cols="40" class="form-control mb-2" v-model="editingItem.description" ref="txtDescription"></textarea>
                                 </div>
                             </div>
                             <div class="form-row">
@@ -99,7 +99,7 @@
                             <div class="form-row">
                                 <div class="col">
                                     <label>Id (leave blank to generate from title)</label>
-                                    <input type="text" class="form-control mb-2" v-model="editingItem.id"/>
+                                    <input type="text" required pattern="[^\*#]+"  class="form-control mb-2" v-model="editingItem.id" ref="txtId"/>
                                 </div>
                             </div>
                         </div>
@@ -282,14 +282,26 @@ $(function() {
                     var matchedId = this.items.findIndex((x)=> { return this.unEscapeKey(x.id) === this.editingItem.id;});
                     if( matchedId>= 0 && matchedId != this.editingItem.index)
                         this.errors.push("You cannot have multiple items with the same id");
-                }
-                
+                    
+                    if (!this.$refs.txtId.checkValidity()) {
+                        this.errors.push("Id is required and cannot have * or #");
+                    }
+                    if(this.editingItem.id.startsWith("- ")){
+                        this.errors.push("Id cannot start with \"- \"");
+                    }else if(this.editingItem.id.trim() == ""){
+                        this.errors.push("Id is required");
+                    }                   
+                }                
                 if (!this.$refs.txtPrice.checkValidity()) {
                     this.errors.push("Price must be a valid number");
                 }
                 if (!this.$refs.txtTitle.checkValidity()) {
+                    this.errors.push("Title is required and cannot have * or #");
+                }else if(this.editingItem.title.startsWith("- ")){
+                    this.errors.push("Title cannot start with \"- \"");
+                }else if(this.editingItem.title.trim() == ""){
                     this.errors.push("Title is required");
-                }
+                }                
                 if (!this.$refs.txtInventory.checkValidity()) {
                     this.errors.push("Inventory must be blank or a a valid number (>=0)");
                 }
@@ -297,7 +309,9 @@ $(function() {
             },
             saveEditingItem: function(){
                 if(!this.editingItem.id){
-                    this.editingItem.id = this.editingItem.title.toLowerCase();
+                    this.editingItem.id = this.editingItem.title.toLowerCase().trim();
+                    this.$nextTick(this.saveEditingItem.bind(this));
+                    return;
                 }
                 if(!this.validate()){
                     return;

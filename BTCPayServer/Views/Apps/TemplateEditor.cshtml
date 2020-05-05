@@ -1,29 +1,43 @@
 @model (string templateId, string title)
+<style>
+        .card-deck {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-gap: .5rem;
+        }
+        .card-deck .card {
+            max-width: 247px;
+        }
+        .card-img-top{
+            min-height:247px; background-repeat: no-repeat; background-size:contain; background-position: top;
+        }
+</style>
 
 <div id="template-editor-app" v-cloak>
     <div class="form-group">
+    {{anyImages}}
         <label class="control-label mb-3">@Model.title </label>
-        <div class="bg-light row p-3">
-
-            <div v-for="(item, index) of items" class="col-sm-4 col-md-3 mb-3" v-bind:key="item.id">
-                <div class="card">
-                    <img v-if="item.image" class="card-img-top" v-bind:src="item.image"/>
+        <div class="bg-light card">
+            <div class="card-body " v-bind:class="{ 'card-deck': items.length > 0}">
+                <div v-for="(item, index) of items" class="card my-2 card-wrapper" v-bind:key="item.id">
+                    <div v-if="anyImages" class="card-img-top" v-bind:style="getImage(item)"></div>
                     <div class="card-body">
                         <h6 class="card-title">{{item.title}}</h6>
                         <button type="button" class="btn btn-primary" v-on:click="editItem(index)">Edit</button>
-                        <button type="button"  class="btn btn-danger" v-on:click="removeItem(index)">
+                        <button type="button" class="btn btn-danger" v-on:click="removeItem(index)">
                             <i class="fa fa-trash"></i>
                         </button>
                     </div>
                 </div>
-            </div>
-            <div v-if="!items || items.length === 0" class="col-12 text-center">No items.<br/>
-                <button type="button" class="btn btn-secondary" v-on:click="editItem(-1)">
-                    <i class="fa fa-plus fa-fw"></i> Add
-                </button>
+                <div v-if="!items || items.length === 0" class="col-12 text-center">
+                    No items.<br/>
+                    <button type="button" class="btn btn-link" v-on:click="editItem(-1)">
+                        Add your first item
+                    </button>
                 </div>
-            <div v-else class="col-sm-4 col-md-3 mb-3 text-center">
-                <button type="button" class="btn btn-secondary my-5" v-on:click="editItem(-1)">
+            </div>
+            <div class="card-footer text-left">
+                <button type="button" class="btn btn-secondary" v-on:click="editItem(-1)">
                     <i class="fa fa-plus fa-fw"></i> Add
                 </button>
             </div>
@@ -110,12 +124,23 @@ $(function() {
             editingItem: null,
             elementId: "@Model.templateId"
         },
+        computed: {
+            anyImages: function(){
+                return !!this.items.find(function(i){ return !!i.image;});
+            }
+        },
         mounted: function() {
             this.loadYml();
             this.getInputElement().on("input change", this.loadYml.bind(this));            
             this.getModalElement().on("hide.bs.modal", this.clearEditingItem.bind(this));
         },
         methods: {
+            getImage: function(item){
+                return {
+                    "background-image" : "url('"+(item.image || "/img/img-placeholder.svg") +"')",
+                    "opacity": item.image? 1: 0.5
+                }
+            },
             getInputElement : function(){ return $("#"+this.elementId); },
             getModalElement : function(){ return $("#product-modal"); },
             loadYml: function(){

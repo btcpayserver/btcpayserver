@@ -2,11 +2,11 @@
 <style>
         .card-deck {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             grid-gap: .5rem;
         }
-        .card-deck .card {
-            width: 247px;
+        .card-deck .card{
+            max-width:480px;
         }
         .card-img-top{
             min-height:247px; background-repeat: no-repeat; background-size:contain; background-position: top;
@@ -18,7 +18,7 @@
         <label class="control-label mb-3">@Model.title </label>
         <div class="bg-light card">
             <div class="card-body " v-bind:class="{ 'card-deck': items.length > 0}">
-                <div v-for="(item, index) of items" class="card my-2 card-wrapper template-item" v-bind:key="item.id">
+                <div v-for="(item, index) of items" class="card my-2 card-wrapper template-item mr-0 ml-0" v-bind:key="item.id">
                     <div v-if="anyImages" class="card-img-top border-bottom" v-bind:style="getImage(item)"></div>
                     <div class="card-body">
                         <h6 class="card-title" v-html="item.title"></h6>

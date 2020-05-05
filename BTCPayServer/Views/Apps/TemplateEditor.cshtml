@@ -19,7 +19,7 @@
         <div class="bg-light card">
             <div class="card-body " v-bind:class="{ 'card-deck': items.length > 0}">
                 <div v-for="(item, index) of items" class="card my-2 card-wrapper" v-bind:key="item.id">
-                    <div v-if="anyImages" class="card-img-top" v-bind:style="getImage(item)"></div>
+                    <div v-if="anyImages" class="card-img-top border-bottom" v-bind:style="getImage(item)"></div>
                     <div class="card-body">
                         <h6 class="card-title">{{item.title}}</h6>
                         <button type="button" class="btn btn-primary" v-on:click="editItem(index)">Edit</button>

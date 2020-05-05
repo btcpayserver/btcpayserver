@@ -18,10 +18,10 @@
         <label class="control-label mb-3">@Model.title </label>
         <div class="bg-light card">
             <div class="card-body " v-bind:class="{ 'card-deck': items.length > 0}">
-                <div v-for="(item, index) of items" class="card my-2 card-wrapper" v-bind:key="item.id">
+                <div v-for="(item, index) of items" class="card my-2 card-wrapper template-item" v-bind:key="item.id">
                     <div v-if="anyImages" class="card-img-top border-bottom" v-bind:style="getImage(item)"></div>
                     <div class="card-body">
-                        <h6 class="card-title">{{item.title}}</h6>
+                        <h6 class="card-title" v-html="item.title"></h6>
                         <button type="button" class="btn btn-primary" v-on:click="editItem(index)">Edit</button>
                         <button type="button" class="btn btn-danger" v-on:click="removeItem(index)">
                             <i class="fa fa-trash"></i>
@@ -30,13 +30,13 @@
                 </div>
                 <div v-if="!items || items.length === 0" class="col-12 text-center">
                     No items.<br/>
-                    <button type="button" class="btn btn-link" v-on:click="editItem(-1)">
+                    <button type="button" class="btn btn-link" v-on:click="editItem(-1)" id="btn-add-first">
                         Add your first item
                     </button>
                 </div>
             </div>
             <div class="card-footer text-left">
-                <button type="button" class="btn btn-secondary" v-on:click="editItem(-1)">
+                <button type="button" class="btn btn-secondary" v-on:click="editItem(-1)" id="btn-add">
                     <i class="fa fa-plus fa-fw"></i> Add
                 </button>
             </div>
@@ -137,7 +137,7 @@ $(function() {
         methods: {
             getImage: function(item){
                 return {
-                    "background-image" : "url('"+(item.image || "/img/img-placeholder.svg") +"')",
+                    "background-image" : "url('"+(this.unEscapeKey(item.image) || "/img/img-placeholder.svg") +"')",
                     "opacity": item.image? 1: 0.5
                 }
             },
@@ -222,7 +222,6 @@ $(function() {
             },
             toYml: function(){
                     var template = '';
-
                     // Construct template from the product list
                     for (var key in this.items) {
                         var product = this.items[key],
@@ -266,6 +265,7 @@ $(function() {
                     this.editingItem = {...this.items[index], index};
                 }
                 
+                this.editingItem = this.unEscape(this.editingItem);
                 this.getModalElement().modal("show");
             },
             removeItem: function(index){
@@ -279,13 +279,9 @@ $(function() {
             validate: function(){
                 this.errors = [];
                 if (this.editingItem.id) {
-                    var matchedId = this.items.findIndex((x)=> { return x.id === this.editingItem.id;});
-                    if( matchedId>= 0 && matchedId !== this.editingItem.index)
+                    var matchedId = this.items.findIndex((x)=> { return this.unEscapeKey(x.id) === this.editingItem.id;});
+                    if( matchedId>= 0 && matchedId != this.editingItem.index)
                         this.errors.push("You cannot have multiple items with the same id");
-                    
-                    if(this.editingItem.id.indexOf(":") > -1){
-                        this.errors.push("You cannot have : in the id");
-                    }
                 }
                 
                 if (!this.$refs.txtPrice.checkValidity()) {
@@ -300,10 +296,14 @@ $(function() {
                 return this.errors.length === 0;
             },
             saveEditingItem: function(){
+                if(!this.editingItem.id){
+                    this.editingItem.id = this.editingItem.title.toLowerCase();
+                }
                 if(!this.validate()){
                     return;
                 }
-                this.editingItem.id = this.editingItem.id || this.editingItem.title.toLowerCase().replace(/:/g, '');
+                this.editingItem = this.escape(this.editingItem);
+                
                 if(this.editingItem.index < 0){
                     this.items.push(this.editingItem);
                 }else{
@@ -311,6 +311,25 @@ $(function() {
                 }
                 this.toYml();
                 this.getModalElement().modal("hide");
+            },
+            escape: function(item) {
+                for(var k in item){
+                    if(k !== "paymentMethods" && k!=="id"){
+                        item[k] = $('<div/>').text(item[k]).html();
+                    }
+                }
+                return item;
+            },
+            unEscape: function(item){
+                for(var k in item){
+                    if(k !== "paymentMethods" && k!=="id"){
+                        item[k] = this.unEscapeKey(item[k]);
+                    }
+                }
+                return item;
+            },
+            unEscapeKey : function(k){
+                return $('<div/>').html(k).text();
             }
         }
     });

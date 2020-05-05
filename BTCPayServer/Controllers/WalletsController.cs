@@ -420,14 +420,35 @@ namespace BTCPayServer.Controllers
             
 
             var feeProvider = _feeRateProvider.CreateFeeProvider(network);
-            var recommendedFees = feeProvider.GetFeeRateAsync();
+            var recommendedFees = new[] {
+                TimeSpan.FromMinutes(10.0),
+                TimeSpan.FromMinutes(60.0),
+                TimeSpan.FromHours(6.0),
+                TimeSpan.FromHours(24.0),
+            }
+            .Select(time => network.NBitcoinNetwork.Consensus.GetExpectedBlocksFor(time))
+            .Select(blockCount => feeProvider.GetFeeRateAsync((int)blockCount))
+            .ToArray();
             var balance = _walletProvider.GetWallet(network).GetBalance(paymentMethod.AccountDerivation);
             model.NBXSeedAvailable = await CanUseHotWallet() && !string.IsNullOrEmpty(await ExplorerClientProvider.GetExplorerClient(network)
                 .GetMetadataAsync<string>(GetDerivationSchemeSettings(walletId).AccountDerivation,
                     WellknownMetadataKeys.MasterHDKey));
             model.CurrentBalance = await balance;
-            model.RecommendedSatoshiPerByte = (int)(await recommendedFees).GetFee(1).Satoshi;
-            model.FeeSatoshiPerByte = model.RecommendedSatoshiPerByte;
+            model.RecommendedSatoshiPerByte = new decimal?[recommendedFees.Length];
+            for (int i = 0; i < model.RecommendedSatoshiPerByte.Length; i++)
+            {
+                decimal? feeRate = null;
+                try
+                {
+                    feeRate = (await recommendedFees[i]).SatoshiPerByte;
+                }
+                catch
+                {
+
+                }
+                model.RecommendedSatoshiPerByte[i] = feeRate;
+            }
+            model.FeeSatoshiPerByte = model.RecommendedSatoshiPerByte.Reverse().Where(r => r is decimal).FirstOrDefault();
             model.SupportRBF = network.SupportRBF;
             using (CancellationTokenSource cts = new CancellationTokenSource())
             {
@@ -587,6 +608,25 @@ namespace BTCPayServer.Controllers
                 {
                     vm.AddModelError(model => model.Outputs[i].Amount,
                         "You are sending more than what you own", this);
+                }
+            }
+            if (vm.FeeSatoshiPerByte is decimal fee)
+            {
+                if (fee < 0)
+                {
+                    vm.AddModelError(model => model.FeeSatoshiPerByte,
+                            "The fee rate should be above 0", this);
+                }
+                if (fee > 5_000m)
+                {
+                    vm.AddModelError(model => model.FeeSatoshiPerByte,
+                            "The fee rate is absurdly high", this);
+                }
+                if (_dashboard.Get(network.CryptoCode).Status?.BitcoinStatus?.MinRelayTxFee?.SatoshiPerByte is decimal minFee)
+                {
+                    if (vm.FeeSatoshiPerByte < minFee)
+                        vm.AddModelError(model => model.FeeSatoshiPerByte,
+                            $"The fee rate is lower than the minimum relay fee ({vm.FeeSatoshiPerByte} < {minFee})", this);
                 }
             }
 

@@ -27,8 +27,8 @@ function updateFiatValueWithCurrentElement() {
 $(function () {
     $(".output-amount").on("input", updateFiatValueWithCurrentElement).each(updateFiatValueWithCurrentElement);
 
-    $("#crypto-fee-link").on("click", function (elem) {
-        var val = $(this).text();
+    $(".crypto-fee-link").on("click", function (elem) {
+        var val = $(this).attr("data-feerate").valueOf();
         $("#FeeSatoshiPerByte").val(val);
         return false;
     });

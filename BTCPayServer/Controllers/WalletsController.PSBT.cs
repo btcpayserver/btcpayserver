@@ -44,7 +44,11 @@ namespace BTCPayServer.Controllers
             }
            
             psbtRequest.FeePreference = new FeePreference();
-            psbtRequest.FeePreference.ExplicitFeeRate = new FeeRate(Money.Satoshis(sendModel.FeeSatoshiPerByte), 1);
+            if (sendModel.FeeSatoshiPerByte is decimal v &&
+                v > decimal.Zero)
+            {
+                psbtRequest.FeePreference.ExplicitFeeRate = new FeeRate(Money.Satoshis(v), 1);
+            }
             if (sendModel.NoChange)
             {
                 psbtRequest.ExplicitChangeAddress = psbtRequest.Destinations.First().Destination;

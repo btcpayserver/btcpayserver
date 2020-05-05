@@ -25,7 +25,10 @@
             <input type="hidden" asp-for="Fiat" />
             <input type="hidden" asp-for="Rate" />
             <input type="hidden" asp-for="CurrentBalance" />
-            <input type="hidden" asp-for="RecommendedSatoshiPerByte" />
+            @for (int i = 0; i < Model.RecommendedSatoshiPerByte.Length; i++)
+            {
+                <input type="hidden" asp-for="RecommendedSatoshiPerByte[i]" />
+            }
             <input type="hidden" asp-for="CryptoCode" />
             <input type="hidden" name="BIP21" id="BIP21" />
             <ul class="text-danger">
@@ -38,7 +41,7 @@
                     }
                 }
             </ul>
-            
+
             @if (Model.InputSelection)
             {
                 <div class="form-group hide-when-js">
@@ -50,10 +53,10 @@
                         }
                     </select>
                 </div>
-                <partial name="CoinSelection"/>
+                <partial name="CoinSelection" />
                 <br>
             }
-            
+
             @if (Model.Outputs.Count == 1)
             {
                 <div class="form-group">
@@ -130,10 +133,16 @@
             <div class="form-group">
                 <label asp-for="FeeSatoshiPerByte"></label>
                 <input asp-for="FeeSatoshiPerByte" type="number" step="any" class="form-control" />
+                <span asp-validation-for="FeeSatoshiPerByte" class="text-danger"></span>
                 <span id="FeeRate-Error" class="text-danger"></span>
                 <p class="form-text text-muted crypto-info">
-                    The recommended value is
-                    <button type="button" id="crypto-fee-link" class="btn btn-link p-0 align-baseline">@Model.RecommendedSatoshiPerByte</button> satoshi per byte.
+                    Target confirmation in:
+                    @for (int i = 0; i < Model.RecommendedSatoshiPerByte.Length; i++)
+                    {
+                        if (Model.RecommendedSatoshiPerByte[i] is null)
+                            continue;
+                    <span><button type="button" class="btn btn-link p-0 align-baseline crypto-fee-link" data-feerate="@Model.RecommendedSatoshiPerByte[i]">@Model.RecommendedSatoshiLabels[i]</button>.</span>
+                    }
                 </p>
             </div>
             @if (Model.Outputs.Count == 1)
@@ -146,7 +155,7 @@
                     </div>
                 </div>
             }
-            
+
             <div class="card">
                 <button id="advancedSettings" class="btn btn-light collapsed" type="button" data-toggle="collapse" data-target="#accordian-advanced" aria-expanded="false" aria-controls="accordian-advanced">
                     Advanced settings
@@ -174,7 +183,7 @@
                         {
                             <div class="form-group">
                                 <label asp-for="PayJoinEndpointUrl" class="control-label"></label>
-                                <input asp-for="PayJoinEndpointUrl" class="form-control"/>
+                                <input asp-for="PayJoinEndpointUrl" class="form-control" />
                                 <span asp-validation-for="PayJoinEndpointUrl" class="text-danger"></span>
                             </div>
                         }
@@ -193,7 +202,8 @@
                         <button name="command" type="submit" class="dropdown-item" value="ledger">... your Ledger Wallet device</button>
                         <button name="command" type="submit" class="dropdown-item" value="seed">... an HD private key or mnemonic seed</button>
                         <button name="command" type="submit" class="dropdown-item" value="analyze-psbt">... a wallet supporting PSBT</button>
-                        @if (Model.CryptoCode == "BTC") {
+                        @if (Model.CryptoCode == "BTC")
+                        {
                             <button name="command" type="submit" class="dropdown-item" value="vault">... the vault (preview)</button>
                         }
                         @if (Model.NBXSeedAvailable)
@@ -202,7 +212,7 @@
                         }
                     </div>
                 </div>
-                <button type="submit" name="command" value="add-output" class="ml-1 btn btn-secondary" >Add another destination</button>
+                <button type="submit" name="command" value="add-output" class="ml-1 btn btn-secondary">Add another destination</button>
                 <button type="button" id="bip21parse" class="ml-1 btn btn-secondary" title="Paste BIP21/Address"><i class="fa fa-paste"></i></button>
                 <button type="button" id="scanqrcode" class="ml-1 btn btn-secondary only-for-js" data-toggle="modal" data-target="#scanModal" title="Scan BIP21/Address with camera"><i class="fa fa-camera"></i></button>
             </div>

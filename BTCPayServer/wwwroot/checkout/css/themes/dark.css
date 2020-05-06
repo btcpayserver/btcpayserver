@@ -39,7 +39,8 @@ html {
 }
 
 .expired__body,
-.success-message {
+.success-message,
+.confirmation-pending-message {
     color: #fff;
 }
 

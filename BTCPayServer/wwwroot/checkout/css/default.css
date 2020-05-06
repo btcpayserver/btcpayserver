@@ -9302,6 +9302,14 @@ strong {
     font-weight: 300;
 }
 
+.confirmation-pending-message {
+    color: rgba(111, 111, 111, 0.9);
+    text-align: center;
+    font-size: 13px;
+    letter-spacing: .2px;
+    padding-bottom: 8px;
+}
+
 .status-icon {
     position: relative;
     text-align: center;

@@ -192,10 +192,10 @@
             invoiceUnpayable: function(){
                 return  ["expired", "invalid"].indexOf(this.srvModel.status) >= 0;
             },
-            invoicePaid: function() {
+            invoicePaid: function(){
                 return  ["complete", "confirmed", "paid"].indexOf(this.srvModel.status) >= 0;
             },
-            invoiceConfirmed: function() {
+            invoiceConfirmed: function(){
                 return ["complete", "confirmed"].indexOf(this.srvModel.status) >= 0;                
             }
         },

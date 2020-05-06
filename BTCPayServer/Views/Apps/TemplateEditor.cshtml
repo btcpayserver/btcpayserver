@@ -16,6 +16,15 @@
 <div id="template-editor-app" v-cloak>
     <div class="form-group">
         <label class="control-label mb-3">@Model.title </label>
+        @if (ViewContext.ViewData.ModelState.TryGetValue(Model.templateId, out var errors))
+        {
+            foreach (var error in errors.Errors)
+            {
+                <br/>
+                <span class="text-danger">@error.ErrorMessage</span>
+            }
+        }
+        
         <div class="bg-light card">
             <div class="card-body " v-bind:class="{ 'card-deck': items.length > 0}">
                 <div v-for="(item, index) of items" class="card my-2 card-wrapper template-item mr-0 ml-0" v-bind:key="item.id">

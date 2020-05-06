@@ -291,7 +291,7 @@
         function copyElement(trigger, popupLeftModifier, popupTopModifier) {
             var elm = $(trigger);
             var position = elm.offset();
-            position.top -= popupLeftModifier;
+            position.top -= popupLeftModifier + $(window).scrollTop();
             position.left += (elm.width() / 2) - popupTopModifier;
             $(".copyLabelPopup").css(position).addClass("copied");
             elm.removeClass("copy-cursor").addClass("clipboardCopied");

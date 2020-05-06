@@ -92,7 +92,7 @@
                             <div class="form-row">
                                 <div class="col">
                                     <label>Image</label>
-                                    <input type="text" class="form-control mb-2" v-model="editingItem.image"/>
+                                    <input type="text" class="form-control mb-2" pattern="[^\*#]+"  v-model="editingItem.image" ref="txtImage"/>
                                 </div>
                             </div>
                             <div class="form-row">
@@ -307,7 +307,21 @@ $(function() {
                     }else if(this.editingItem.id.trim() == ""){
                         this.errors.push("Id is required");
                     }                   
-                }                
+                }   
+                
+                if (this.editingItem.description.indexOf("*") >= 0 || this.editingItem.description.indexOf("#") >= 0) {
+                    this.errors.push("Description cannot have * or #");
+                }
+                if(this.editingItem.description.startsWith("- ")){
+                    this.errors.push("Description cannot start with \"- \"");
+                }
+                if (!this.$refs.txtImage.checkValidity()) {
+                    this.errors.push("Image cannot have * or #");
+                }
+                if(this.editingItem.image.startsWith("- ")){
+                    this.errors.push("Image cannot start with \"- \"");
+                }
+                
                 if (!this.$refs.txtPrice.checkValidity()) {
                     this.errors.push("Price must be a valid number");
                 }

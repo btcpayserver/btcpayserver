@@ -127,6 +127,7 @@ services:
         deprecatedrpc=signrawtransaction
     ports: 
       - "43782:43782"
+      - "39388:39388"
     expose:
       - "43782" # RPC
       - "39388" # P2P

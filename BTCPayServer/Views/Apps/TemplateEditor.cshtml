@@ -39,6 +39,9 @@
                 <button type="button" class="btn btn-secondary" v-on:click="editItem(-1)" id="btn-add">
                     <i class="fa fa-plus fa-fw"></i> Add
                 </button>
+                <button type="button" class="btn btn-secondary ml-2" v-on:click="toggleTemplateElement()">
+                    Toggle raw editor
+                </button>
             </div>
         </div>
         <div class="modal" id="product-modal" tabindex="-1" role="dialog">
@@ -133,8 +136,12 @@ $(function() {
             this.loadYml();
             this.getInputElement().on("input change", this.loadYml.bind(this));            
             this.getModalElement().on("hide.bs.modal", this.clearEditingItem.bind(this));
+            this.toggleTemplateElement();
         },
         methods: {
+            toggleTemplateElement: function(){
+                this.getInputElement().parent().toggle();
+            },
             getImage: function(item){
                 return {
                     "background-image" : "url('"+(this.unEscapeKey(item.image) || "/img/img-placeholder.svg") +"')",

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Net.Http;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
@@ -417,38 +416,37 @@ namespace BTCPayServer.Controllers
                 },
                 CryptoCode = walletId.CryptoCode
             };
-            
-
-            var feeProvider = _feeRateProvider.CreateFeeProvider(network);
-            var recommendedFees = new[] {
-                TimeSpan.FromMinutes(10.0),
-                TimeSpan.FromMinutes(60.0),
-                TimeSpan.FromHours(6.0),
-                TimeSpan.FromHours(24.0),
-            }
-            .Select(time => network.NBitcoinNetwork.Consensus.GetExpectedBlocksFor(time))
-            .Select(blockCount => feeProvider.GetFeeRateAsync((int)blockCount))
-            .ToArray();
+           var feeProvider = _feeRateProvider.CreateFeeProvider(network);
+            var recommendedFees =
+                new[]
+                    {
+                        TimeSpan.FromMinutes(10.0), TimeSpan.FromMinutes(60.0), TimeSpan.FromHours(6.0),
+                        TimeSpan.FromHours(24.0),
+                    }.Select(async time =>
+                    {
+                        try
+                        {
+                            var result = await feeProvider.GetFeeRateAsync(
+                                (int)network.NBitcoinNetwork.Consensus.GetExpectedBlocksFor(time));
+                            return new WalletSendModel.FeeRateOption() {Target = time, FeeRate = result.SatoshiPerByte};
+                        }
+                        catch (Exception)
+                        {
+                            return null;
+                        }
+                    })
+                    .ToArray();
             var balance = _walletProvider.GetWallet(network).GetBalance(paymentMethod.AccountDerivation);
             model.NBXSeedAvailable = await CanUseHotWallet() && !string.IsNullOrEmpty(await ExplorerClientProvider.GetExplorerClient(network)
                 .GetMetadataAsync<string>(GetDerivationSchemeSettings(walletId).AccountDerivation,
                     WellknownMetadataKeys.MasterHDKey));
             model.CurrentBalance = await balance;
-            model.RecommendedSatoshiPerByte = new decimal?[recommendedFees.Length];
-            for (int i = 0; i < model.RecommendedSatoshiPerByte.Length; i++)
-            {
-                decimal? feeRate = null;
-                try
-                {
-                    feeRate = (await recommendedFees[i]).SatoshiPerByte;
-                }
-                catch
-                {
+            
+            await Task.WhenAll(recommendedFees);
+            model.RecommendedSatoshiPerByte =
+                recommendedFees.Select(tuple => tuple.Result).Where(option => option != null).ToList();
 
-                }
-                model.RecommendedSatoshiPerByte[i] = feeRate;
-            }
-            model.FeeSatoshiPerByte = model.RecommendedSatoshiPerByte.Reverse().Where(r => r is decimal).FirstOrDefault();
+            model.FeeSatoshiPerByte = model.RecommendedSatoshiPerByte.LastOrDefault()?.FeeRate;
             model.SupportRBF = network.SupportRBF;
             using (CancellationTokenSource cts = new CancellationTokenSource())
             {

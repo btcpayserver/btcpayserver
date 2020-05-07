@@ -1,5 +1,6 @@
 ﻿@addTagHelper *, BundlerMinifier.TagHelpers
 @using Microsoft.AspNetCore.Mvc.ModelBinding
+@using BTCPayServer.Views
 @model WalletSendModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
@@ -25,10 +26,6 @@
             <input type="hidden" asp-for="Fiat" />
             <input type="hidden" asp-for="Rate" />
             <input type="hidden" asp-for="CurrentBalance" />
-            @for (int i = 0; i < Model.RecommendedSatoshiPerByte.Length; i++)
-            {
-                <input type="hidden" asp-for="RecommendedSatoshiPerByte[i]" />
-            }
             <input type="hidden" asp-for="CryptoCode" />
             <input type="hidden" name="BIP21" id="BIP21" />
             <ul class="text-danger">
@@ -135,15 +132,27 @@
                 <input asp-for="FeeSatoshiPerByte" type="number" step="any" class="form-control" />
                 <span asp-validation-for="FeeSatoshiPerByte" class="text-danger"></span>
                 <span id="FeeRate-Error" class="text-danger"></span>
-                <p class="form-text text-muted crypto-info">
-                    Target confirmation in:
-                    @for (int i = 0; i < Model.RecommendedSatoshiPerByte.Length; i++)
-                    {
-                        if (Model.RecommendedSatoshiPerByte[i] is null)
-                            continue;
-                    <span><button type="button" class="btn btn-link p-0 align-baseline crypto-fee-link" data-feerate="@Model.RecommendedSatoshiPerByte[i]">@Model.RecommendedSatoshiLabels[i]</button>.</span>
-                    }
-                </p>
+                @if (Model.RecommendedSatoshiPerByte.Any())
+                {
+                    <div class="text-left mt-1" >
+                        <span class="text-muted">
+                            Confirm in the next
+                        </span>
+                        <div class="btn-group btn-group-toggle feerate-options" data-toggle="buttons">
+
+                            @for (var index = 0; index < Model.RecommendedSatoshiPerByte.Count; index++)
+                            {
+                                var feeRateOption = Model.RecommendedSatoshiPerByte[index];
+                                <button type="button" class="btn btn-sm btn-outline-primary crypto-fee-link" value="@feeRateOption.FeeRate" data-toggle="tooltip" title="@feeRateOption.FeeRate sat/b">
+                                    <input type="hidden" asp-for="RecommendedSatoshiPerByte[index].Target" />
+                                    <input type="hidden" asp-for="RecommendedSatoshiPerByte[index].FeeRate" />
+                                    @feeRateOption.Target.TimeString()
+
+                                </button>
+                            }
+                        </div>
+                    </div>
+                }
             </div>
             @if (Model.Outputs.Count == 1)
             {

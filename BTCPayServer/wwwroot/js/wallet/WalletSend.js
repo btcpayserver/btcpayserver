@@ -24,15 +24,24 @@ function updateFiatValueWithCurrentElement() {
     updateFiatValue($(this))
 }
 
+function selectCorrectFeeOption(){
+    var val =  $("#FeeSatoshiPerByte").val();
+    $(".feerate-options").children(".crypto-fee-link").removeClass("active");
+    $(".feerate-options").find("[value='"+val+"']").first().addClass("active");
+}
+
 $(function () {
     $(".output-amount").on("input", updateFiatValueWithCurrentElement).each(updateFiatValueWithCurrentElement);
 
     $(".crypto-fee-link").on("click", function (elem) {
-        var val = $(this).attr("data-feerate").valueOf();
+        $(this).parent().children().removeClass("active");
+        var val = $(this).addClass("active").val();
         $("#FeeSatoshiPerByte").val(val);
         return false;
     });
+    $("#FeeSatoshiPerByte").on("change input", selectCorrectFeeOption);
 
+    selectCorrectFeeOption();
     $(".crypto-balance-link").on("click", function (elem) {
         var val = $(this).text();
         var parentContainer = $(this).parents(".form-group");

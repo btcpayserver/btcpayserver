@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Services.Labels;
 
@@ -6,6 +7,11 @@ namespace BTCPayServer.Models.WalletViewModels
 {
     public class WalletSendModel
     {
+        public class FeeRateOption
+        {
+            public TimeSpan Target { get; set; }
+            public decimal FeeRate { get; set; }
+        }
         public List<TransactionOutput> Outputs { get; set; } = new List<TransactionOutput>();
 
         public class TransactionOutput
@@ -25,15 +31,8 @@ namespace BTCPayServer.Models.WalletViewModels
         public decimal CurrentBalance { get; set; }
 
         public string CryptoCode { get; set; }
-
-        public string[] RecommendedSatoshiLabels = new string[]
-        {
-            "10 minutes",
-            "1 hour",
-            "6 hours",
-            "1 day"
-        };
-        public decimal?[] RecommendedSatoshiPerByte { get; set; }
+       
+        public List<FeeRateOption> RecommendedSatoshiPerByte { get; set; }
 
         [Display(Name = "Fee rate (satoshi per byte)")]
         [Required]

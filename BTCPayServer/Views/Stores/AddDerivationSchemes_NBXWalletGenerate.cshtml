@@ -24,7 +24,7 @@
 
                 <div class="form-group">
                     <label asp-for="ExistingMnemonic">Existing Seed</label>
-                    <input type="text" asp-for="ExistingMnemonic" class="form-control"/>
+                    <input type="text" asp-for="ExistingMnemonic" class="form-control" autocomplete="off"/>
                     <span asp-validation-for="ExistingMnemonic" class="text-danger"></span>
                     <small class="form-text text-muted">
                         You can choose to import an existing mnemonic seed phrase. If you leave blank, we will generate one for you.
@@ -32,7 +32,7 @@
                 </div>
                 <div class="form-group">
                     <label asp-for="Passphrase">Passphrase (optional)</label>
-                    <input type="password" asp-for="Passphrase" class="form-control"/>
+                    <input type="password" asp-for="Passphrase" class="form-control"  autocomplete="off"/>
                     <span asp-validation-for="Passphrase" class="text-danger"></span>
                 </div>
                 <div class="form-group">

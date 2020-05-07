@@ -2265,11 +2265,12 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Integration", "Integration")]
+        [Trait("Lightning", "Lightning")]
         public async Task CanUsePoSApp()
         {
             using (var tester = ServerTester.Create())
             {
-                tester.ActivateLBTC();
+                tester.ActivateLightning();
                 await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();
@@ -2447,7 +2448,7 @@ noninventoryitem:
                 
                 
                 //test payment methods option
-                user.RegisterDerivationScheme("LBTC");
+                user.RegisterLightningNode("BTC", LightningConnectionType.Charge);
                 vmpos = Assert.IsType<UpdatePointOfSaleViewModel>(Assert
                     .IsType<ViewResult>(apps.UpdatePointOfSale(appId).Result).Model);
                 vmpos.Title = "hello";
@@ -2476,7 +2477,7 @@ normal:
                 Assert.Contains(
                     invoices.Single(invoice => invoice.ItemCode == "btconly").SupportedTransactionCurrencies.Keys,
                     s => new PaymentMethodId("BTC", PaymentTypes.BTCLike) == PaymentMethodId.Parse(s) ||
-                         new PaymentMethodId("LBTC", PaymentTypes.BTCLike) == PaymentMethodId.Parse(s));
+                         new PaymentMethodId("BTC", PaymentTypes.LightningLike) == PaymentMethodId.Parse(s));
 
 
             }

@@ -88,6 +88,7 @@
                                     <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=exceptionstatus%3ApaidPartial@{@storeIds}">Paid Partial Invoices</a>
                                     <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=exceptionstatus%3ApaidOver@{@storeIds}">Paid Over Invoices</a>
                                     <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=unusual%3Atrue@{@storeIds}">Unusual Invoices</a>
+                                    <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=includearchived%3Atrue@{@storeIds}">Archived Invoices</a>
                                     <div role="separator" class="dropdown-divider"></div>
                                     <a class="dropdown-item last24" href="/invoices?Count=@Model.Count&timezoneoffset=0&SearchTerm=startDate%3Alast24@{@storeIds}">Last 24 hours</a>
                                     <a class="dropdown-item last72" href="/invoices?Count=@Model.Count&timezoneoffset=0&SearchTerm=startDate%3Alast72@{@storeIds}">Last 3 days</a>
@@ -220,7 +221,11 @@
                                     }
                                 </td>
                                 <td>@invoice.InvoiceId</td>
-                                <td>
+                                <td>                                
+                                    @if(invoice.Details.Archived)
+                                    {
+                                        <span class="badge badge-warning" >archived</span>
+                                    }
                                     @if (invoice.CanMarkStatus)
                                     {
                                         <div id="pavpill_@invoice.InvoiceId">
@@ -364,6 +369,7 @@
             $("a.last24").each(function () { this.href = this.href.replace("last24", getDateStringWithOffset(24)); });
             $("a.last72").each(function () { this.href = this.href.replace("last72", getDateStringWithOffset(72)); });
             $("a.last168").each(function () { this.href = this.href.replace("last168", getDateStringWithOffset(168)); });
+            
         });
 
         function getDateStringWithOffset(hoursDiff) {

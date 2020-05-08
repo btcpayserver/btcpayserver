@@ -143,7 +143,12 @@ else
                                                 </td>
                                             </tr>
                                         </template>
-                                        <tr v-if="!ended && (srvModel.amountDue) > 0" class="d-print-none">
+                                        <tr v-if="srvModel.archived">
+                                            <td colspan="4" class="text-center">
+                                                <button type="button" class="btn btn-secondary" disabled>Archived</button>
+                                            </td>
+                                        </tr> 
+                                        <tr v-else-if="!ended && (srvModel.amountDue) > 0" class="d-print-none">
                                             <td colspan="4" class="text-center">
 
                                                 <template v-if="srvModel.allowCustomPaymentAmounts && !srvModel.anyPendingInvoice">

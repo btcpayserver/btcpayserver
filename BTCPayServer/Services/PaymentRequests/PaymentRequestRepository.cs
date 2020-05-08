@@ -94,6 +94,11 @@ namespace BTCPayServer.Services.PaymentRequests
             using (var context = _ContextFactory.CreateContext())
             {
                 var queryable = context.PaymentRequests.Include(data => data.StoreData).AsQueryable();
+
+                if (!query.IncludeArchived)
+                {
+                    queryable = queryable.Where(data =>  !data.Archived);
+                }
                 if (!string.IsNullOrEmpty(query.StoreId))
                 {
                     queryable = queryable.Where(data =>
@@ -126,25 +131,6 @@ namespace BTCPayServer.Services.PaymentRequests
                     queryable = queryable.Take(query.Count.Value);
                 }
                 return (total, await queryable.ToArrayAsync(cancellationToken));
-            }
-        }
-
-        public async Task<bool> RemovePaymentRequest(string id, string userId)
-        {
-            using (var context = _ContextFactory.CreateContext())
-            {
-                var canDelete = !(await GetInvoicesForPaymentRequest(id)).Any();
-                if (!canDelete) return false;
-                var pr = await FindPaymentRequest(id, userId);
-                if (pr == null)
-                {
-                    return false;
-                }
-
-                context.PaymentRequests.Remove(pr);
-                await context.SaveChangesAsync();
-
-                return true;
             }
         }
 
@@ -195,7 +181,7 @@ namespace BTCPayServer.Services.PaymentRequests
     public class PaymentRequestQuery
     {
         public string StoreId { get; set; }
-        
+        public bool IncludeArchived { get; set; } = true;
         public PaymentRequestData.PaymentRequestStatus[] Status{ get; set; }
         public string UserId { get; set; }
         public int? Skip { get; set; }

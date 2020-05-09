@@ -300,8 +300,11 @@ namespace BTCPayServer.Tests
                 user.GrantAccess();
                 await user.MakeAdmin();
                 var client = await user.CreateClient(Policies.Unrestricted);
+                var viewOnly = await user.CreateClient(Policies.CanViewPaymentRequests);
                 
                 //create payment request
+                
+                //validation errors
                 await AssertHttpError(400, async () =>
                 {
                     await client.CreatePaymentRequest(user.StoreId, new CreatePaymentRequestRequest() {Title = "A"});
@@ -314,27 +317,40 @@ namespace BTCPayServer.Tests
                 {
                     await client.CreatePaymentRequest(user.StoreId, new CreatePaymentRequestRequest() {Title = "A",Currency ="helloinvalid", Amount = 1});
                 });
+                await AssertHttpError(403, async () =>
+                {
+                    await viewOnly.CreatePaymentRequest(user.StoreId, new CreatePaymentRequestRequest() {Title = "A",Currency ="helloinvalid", Amount = 1});
+                });
                 var newPaymentRequest =  await client.CreatePaymentRequest(user.StoreId, new CreatePaymentRequestRequest() {Title = "A",Currency ="USD", Amount = 1});
                 
                 //list payment request
-                var paymentRequests = await client.GetPaymentRequests(user.StoreId);
+                var paymentRequests = await viewOnly.GetPaymentRequests(user.StoreId);
                 
                 Assert.NotNull(paymentRequests);
                 Assert.Single(paymentRequests);
                 Assert.Equal(newPaymentRequest.Id, paymentRequests.First().Id);
                 
                 //get payment request
-                var paymentRequest = await client.GetPaymentRequest(user.StoreId, newPaymentRequest.Id);
+                var paymentRequest = await viewOnly.GetPaymentRequest(user.StoreId, newPaymentRequest.Id);
                 Assert.Equal(newPaymentRequest.Title,paymentRequest.Title);
                 
                 //update payment request
                 var updateRequest = JObject.FromObject(paymentRequest).ToObject<UpdatePaymentRequestRequest>();
                 updateRequest.Title = "B";
+                await AssertHttpError(403, async () =>
+                {
+                    await viewOnly.UpdatePaymentRequest(user.StoreId, paymentRequest.Id, updateRequest);
+                });
                 await client.UpdatePaymentRequest(user.StoreId, paymentRequest.Id, updateRequest);
                 paymentRequest = await client.GetPaymentRequest(user.StoreId, newPaymentRequest.Id);
                 Assert.Equal(updateRequest.Title,paymentRequest.Title);
                 
                 //remove payment request
+                await AssertHttpError(403, async () =>
+                {
+                    await viewOnly.RemovePaymentRequest(user.StoreId, paymentRequest.Id);
+                });
+                
                 await client.RemovePaymentRequest(user.StoreId, paymentRequest.Id);
                 await AssertHttpError(404, async () =>
                 {

@@ -10,6 +10,8 @@ namespace BTCPayServer.Client
         public const string CanModifyStoreSettings = "btcpay.store.canmodifystoresettings";
         public const string CanViewStoreSettings = "btcpay.store.canviewstoresettings";
         public const string CanCreateInvoice = "btcpay.store.cancreateinvoice";
+        public const string CanViewPaymentRequests = "btcpay.store.canviewpaymentrequests";
+        public const string CanModifyPaymentRequests = "btcpay.store.canmodifypaymentrequests";
         public const string CanModifyProfile = "btcpay.user.canmodifyprofile";
         public const string CanViewProfile = "btcpay.user.canviewprofile";
         public const string CanCreateUser = "btcpay.server.cancreateuser";
@@ -22,6 +24,8 @@ namespace BTCPayServer.Client
                 yield return CanModifyServerSettings;
                 yield return CanModifyStoreSettings;
                 yield return CanViewStoreSettings;
+                yield return CanViewPaymentRequests;
+                yield return CanModifyPaymentRequests;
                 yield return CanModifyProfile;
                 yield return CanViewProfile;
                 yield return CanCreateUser;

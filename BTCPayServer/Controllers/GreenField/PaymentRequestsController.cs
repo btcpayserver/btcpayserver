@@ -17,13 +17,13 @@ namespace BTCPayServer.Controllers.GreenField
 {
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-    public class PaymentRequestsController : ControllerBase
+    public class GreenFieldPaymentRequestsController : ControllerBase
     {
         private readonly PaymentRequestRepository _paymentRequestRepository;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly CurrencyNameTable _currencyNameTable;
 
-        public PaymentRequestsController(PaymentRequestRepository paymentRequestRepository,
+        public GreenFieldPaymentRequestsController(PaymentRequestRepository paymentRequestRepository,
             UserManager<ApplicationUser> userManager, CurrencyNameTable currencyNameTable)
         {
             _paymentRequestRepository = paymentRequestRepository;
@@ -31,7 +31,7 @@ namespace BTCPayServer.Controllers.GreenField
             _currencyNameTable = currencyNameTable;
         }
 
-        [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [Authorize(Policy = Policies.CanViewPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/payment-requests")]
         public async Task<ActionResult<IEnumerable<PaymentRequestData>>> GetPaymentRequests(string storeId)
         {
@@ -40,7 +40,7 @@ namespace BTCPayServer.Controllers.GreenField
             return Ok(prs.Items.Select(FromModel));
         }
 
-        [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [Authorize(Policy = Policies.CanViewPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/payment-requests/{paymentRequestId}")]
         public async Task<ActionResult<PaymentRequestData>> GetPaymentRequest(string storeId, string paymentRequestId)
         {
@@ -55,7 +55,7 @@ namespace BTCPayServer.Controllers.GreenField
             return Ok(FromModel(pr.Items.First()));
         }
 
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [Authorize(Policy = Policies.CanModifyPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpDelete("~/api/v1/stores/{storeId}/payment-requests/{paymentRequestId}")]
         public async Task<ActionResult> RemovePaymentRequest(string storeId, string paymentRequestId)
         {
@@ -72,7 +72,7 @@ namespace BTCPayServer.Controllers.GreenField
         }
 
         [HttpPost("~/api/v1/stores/{storeId}/payment-requests")]
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [Authorize(Policy = Policies.CanModifyPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> CreatePaymentRequest(string storeId,
             CreatePaymentRequestRequest request)
         {
@@ -94,7 +94,7 @@ namespace BTCPayServer.Controllers.GreenField
         }
 
         [HttpPut("~/api/v1/stores/{storeId}/payment-requests/{paymentRequestId}")]
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [Authorize(Policy = Policies.CanModifyPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> UpdatePaymentRequest(string storeId,
             string paymentRequestId, [FromBody] UpdatePaymentRequestRequest request)
         {

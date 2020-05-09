@@ -6,9 +6,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Payments.Changelly.Models;
 using Google.Apis.Http;
-using Microsoft.WindowsAzure.Storage.Queue.Protocol;
 using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -265,7 +263,8 @@ namespace BTCPayServer.Services
         OutOfUTXOS,
         NotEnoughMoney,
         InsanePSBT,
-        VersionUnsupported
+        VersionUnsupported,
+        NeedUTXOInformation
     }
     public class PayjoinReceiverException : PayjoinException
     {
@@ -282,6 +281,7 @@ namespace BTCPayServer.Services
                 "not-enough-money" => PayjoinReceiverWellknownErrors.NotEnoughMoney,
                 "insane-psbt" => PayjoinReceiverWellknownErrors.InsanePSBT,
                 "version-unsupported" => PayjoinReceiverWellknownErrors.VersionUnsupported,
+                "need-utxo-information" => PayjoinReceiverWellknownErrors.NeedUTXOInformation,
                 _ => null
             };
         }
@@ -310,6 +310,7 @@ namespace BTCPayServer.Services
                 "not-enough-money" => "The receiver added some inputs but could not bump the fee of the payjoin proposal.",
                 "insane-psbt" => "Some consistency check on the PSBT failed.",
                 "version-unsupported" => "This version of payjoin is not supported.",
+                "need-utxo-information" => "The witness UTXO or non witness UTXO is missing",
                 _ => "Unknown error"
             };
         }

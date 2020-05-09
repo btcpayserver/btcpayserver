@@ -23,6 +23,7 @@ using NBXplorer.DerivationStrategy;
 using System.Diagnostics.CodeAnalysis;
 using BTCPayServer.Data;
 using NBitcoin.DataEncoders;
+using Amazon.S3.Model;
 
 namespace BTCPayServer.Payments.PayJoin
 {
@@ -115,8 +116,20 @@ namespace BTCPayServer.Payments.PayJoin
         [EnableCors(CorsPolicies.All)]
         [MediaTypeConstraint("text/plain")]
         [RateLimitsFilter(ZoneLimits.PayJoin, Scope = RateLimitsScope.RemoteAddress)]
-        public async Task<IActionResult> Submit(string cryptoCode)
+        public async Task<IActionResult> Submit(string cryptoCode,
+            bool noadjustfee = false,
+            int feebumpindex = -1,
+            int v = 1)
         {
+            if (v != 1)
+            {
+                return BadRequest(new JObject
+                {
+                    new JProperty("errorCode", "version-unsupported"),
+                    new JProperty("supported", new JArray(1)),
+                    new JProperty("message", "This version of payjoin is not supported.")
+                });
+            }
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
             if (network == null)
             {
@@ -146,25 +159,27 @@ namespace BTCPayServer.Payments.PayJoin
             Transaction originalTx = null;
             FeeRate originalFeeRate = null;
             bool psbtFormat = true;
-            if (!PSBT.TryParse(rawBody, network.NBitcoinNetwork, out var psbt))
+
+            if (PSBT.TryParse(rawBody, network.NBitcoinNetwork, out var psbt))
+            {
+                if (!psbt.IsAllFinalized())
+                    return BadRequest(CreatePayjoinError("psbt-not-finalized", "The PSBT should be finalized"));
+                originalTx = psbt.ExtractTransaction();
+            }
+            // BTCPay Server implementation support a transaction instead of PSBT
+            else
             {
                 psbtFormat = false;
                 if (!Transaction.TryParse(rawBody, network.NBitcoinNetwork, out var tx))
                     return BadRequest(CreatePayjoinError("invalid-format", "invalid transaction or psbt"));
                 originalTx = tx;
                 psbt = PSBT.FromTransaction(tx, network.NBitcoinNetwork);
-                psbt = (await explorer.UpdatePSBTAsync(new UpdatePSBTRequest() {PSBT = psbt})).PSBT;
+                psbt = (await explorer.UpdatePSBTAsync(new UpdatePSBTRequest() { PSBT = psbt })).PSBT;
                 for (int i = 0; i < tx.Inputs.Count; i++)
                 {
                     psbt.Inputs[i].FinalScriptSig = tx.Inputs[i].ScriptSig;
                     psbt.Inputs[i].FinalScriptWitness = tx.Inputs[i].WitScript;
                 }
-            }
-            else
-            {
-                if (!psbt.IsAllFinalized())
-                    return BadRequest(CreatePayjoinError("psbt-not-finalized", "The PSBT should be finalized"));
-                originalTx = psbt.ExtractTransaction();
             }
 
             async Task BroadcastNow()
@@ -173,8 +188,6 @@ namespace BTCPayServer.Payments.PayJoin
             }
 
             var sendersInputType = psbt.GetInputsScriptPubKeyType();
-            if (sendersInputType is null)
-                return BadRequest(CreatePayjoinError("unsupported-inputs", "Payjoin only support segwit inputs (of the same type)"));
             if (psbt.CheckSanity() is var errors && errors.Count != 0)
             {
                 return BadRequest(CreatePayjoinError("insane-psbt", $"This PSBT is insane ({errors[0]})"));
@@ -242,7 +255,7 @@ namespace BTCPayServer.Payments.PayJoin
                     //this should never happen, unless the store owner changed the wallet mid way through an invoice
                     return StatusCode(500, CreatePayjoinError("unavailable", $"This service is unavailable for now"));
                 }
-                if (sendersInputType != receiverInputsType)
+                if (sendersInputType is ScriptPubKeyType t && t != receiverInputsType)
                 {
                     return StatusCode(503,
                         CreatePayjoinError("out-of-utxos",
@@ -331,6 +344,10 @@ namespace BTCPayServer.Payments.PayJoin
             var ourNewOutput = newTx.Outputs[originalPaymentOutput.Index];
             HashSet<TxOut> isOurOutput = new HashSet<TxOut>();
             isOurOutput.Add(ourNewOutput);
+            TxOut preferredFeeBumpOutput = feebumpindex >= 0
+                                            && feebumpindex < newTx.Outputs.Count
+                                            && !isOurOutput.Contains(newTx.Outputs[feebumpindex])
+                                            ? newTx.Outputs[feebumpindex] : null;
             var rand = new Random();
             int senderInputCount = newTx.Inputs.Count;
             foreach (var selectedUTXO in selectedUTXOs.Select(o => o.Value))
@@ -398,7 +415,7 @@ namespace BTCPayServer.Payments.PayJoin
             Money expectedFee = txBuilder.EstimateFees(newTx, originalFeeRate);
             Money actualFee = newTx.GetFee(txBuilder.FindSpentCoins(newTx));
             Money additionalFee = expectedFee - actualFee;
-            if (additionalFee > Money.Zero)
+            if (additionalFee > Money.Zero && !noadjustfee)
             {
                 // If the user overpaid, taking fee on our output (useful if sender dump a full UTXO for privacy)
                 for (int i = 0; i < newTx.Outputs.Count && additionalFee > Money.Zero && due < Money.Zero; i++)
@@ -418,6 +435,9 @@ namespace BTCPayServer.Payments.PayJoin
                 // The rest, we take from user's change
                 for (int i = 0; i < newTx.Outputs.Count && additionalFee > Money.Zero; i++)
                 {
+                    if (preferredFeeBumpOutput is TxOut &&
+                        preferredFeeBumpOutput != newTx.Outputs[i])
+                        continue;
                     if (!isOurOutput.Contains(newTx.Outputs[i]))
                     {
                         var outputContribution = Money.Min(additionalFee, newTx.Outputs[i].Value);
@@ -492,7 +512,8 @@ namespace BTCPayServer.Payments.PayJoin
                             }))
                     .ToDictionary(pair => pair.Key, pair => pair.Value)
             });
-            
+
+            // BTCPay Server support PSBT set as hex
             if (psbtFormat && HexEncoder.IsWellFormed(rawBody))
             {
                 return Ok(newPsbt.ToHex());
@@ -501,6 +522,7 @@ namespace BTCPayServer.Payments.PayJoin
             {
                 return Ok(newPsbt.ToBase64());
             }
+            // BTCPay Server should returns transaction if received transaction
             else
                 return Ok(newTx.ToHex());
         }

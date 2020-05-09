@@ -61,34 +61,38 @@ namespace BTCPayServer.Tests
                     Description = "description"
                 };
                 var id = (Assert
-                    .IsType<RedirectToActionResult>(paymentRequestController.EditPaymentRequest(null, request).Result).RouteValues.Values.First().ToString());
+                    .IsType<RedirectToActionResult>(await paymentRequestController.EditPaymentRequest(null, request)).RouteValues.Values.First().ToString());
 
                 
 
                 //permission guard for guests editing 
                 Assert
-                    .IsType<NotFoundResult>(guestpaymentRequestController.EditPaymentRequest(id).Result);
+                    .IsType<NotFoundResult>(await guestpaymentRequestController.EditPaymentRequest(id));
 
                 request.Title = "update";
-               Assert.IsType<RedirectToActionResult>(paymentRequestController.EditPaymentRequest(id, request).Result);
+               Assert.IsType<RedirectToActionResult>(await paymentRequestController.EditPaymentRequest(id, request));
                
-               Assert.Equal(request.Title, Assert.IsType<ViewPaymentRequestViewModel>( Assert.IsType<ViewResult>(paymentRequestController.ViewPaymentRequest(id).Result).Model).Title);
+               Assert.Equal(request.Title, Assert.IsType<ViewPaymentRequestViewModel>( Assert.IsType<ViewResult>(await paymentRequestController.ViewPaymentRequest(id)).Model).Title);
 
                 Assert.False(string.IsNullOrEmpty(id));
 
                 Assert.IsType<ViewPaymentRequestViewModel>(Assert
-                    .IsType<ViewResult>(paymentRequestController.ViewPaymentRequest(id).Result).Model);
+                    .IsType<ViewResult>(await paymentRequestController.ViewPaymentRequest(id)).Model);
 
-                //Delete
-
-                Assert.IsType<ConfirmModel>(Assert
-                    .IsType<ViewResult>(paymentRequestController.RemovePaymentRequestPrompt(id).Result).Model);
-
-
-                Assert.IsType<RedirectToActionResult>(paymentRequestController.RemovePaymentRequest(id).Result);
+                //Archive
 
                 Assert
-                    .IsType<NotFoundResult>(paymentRequestController.ViewPaymentRequest(id).Result);
+                    .IsType<RedirectToActionResult>(await paymentRequestController.TogglePaymentRequestArchival(id));
+               Assert.True(Assert.IsType<ViewPaymentRequestViewModel>( Assert.IsType<ViewResult>(await paymentRequestController.ViewPaymentRequest(id)).Model).Archived);
+
+               Assert.Empty(Assert.IsType<ListPaymentRequestsViewModel>(Assert.IsType<ViewResult>(await paymentRequestController.GetPaymentRequests()).Model).Items);
+               //unarchive
+               Assert
+                   .IsType<RedirectToActionResult>(await paymentRequestController.TogglePaymentRequestArchival(id));
+               
+               Assert.False(Assert.IsType<ViewPaymentRequestViewModel>( Assert.IsType<ViewResult>(await paymentRequestController.ViewPaymentRequest(id)).Model).Archived);
+               
+               Assert.Single(Assert.IsType<ListPaymentRequestsViewModel>(Assert.IsType<ViewResult>(await paymentRequestController.GetPaymentRequests()).Model).Items);
             }
         }
 

@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Payments.Changelly.Models;
 using Google.Apis.Http;
+using Microsoft.WindowsAzure.Storage.Queue.Protocol;
 using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -34,7 +37,7 @@ namespace BTCPayServer.Services
             if (i.WitnessUtxo.ScriptPubKey.IsScriptType(ScriptType.P2WPKH))
                 return ScriptPubKeyType.Segwit;
             if (i.WitnessUtxo.ScriptPubKey.IsScriptType(ScriptType.P2SH) &&
-                PayToWitPubKeyHashTemplate.Instance.ExtractWitScriptParameters(i.FinalScriptWitness) is {})
+                PayToWitPubKeyHashTemplate.Instance.ExtractWitScriptParameters(i.FinalScriptWitness) is { })
                 return ScriptPubKeyType.SegwitP2SH;
             return null;
         }
@@ -56,18 +59,22 @@ namespace BTCPayServer.Services
 
         public PayjoinClient(ExplorerClientProvider explorerClientProvider, IHttpClientFactory httpClientFactory)
         {
-            if (httpClientFactory == null) throw new ArgumentNullException(nameof(httpClientFactory));
+            if (httpClientFactory == null)
+                throw new ArgumentNullException(nameof(httpClientFactory));
             _explorerClientProvider =
                 explorerClientProvider ?? throw new ArgumentNullException(nameof(explorerClientProvider));
-            _httpClientFactory =  httpClientFactory;
+            _httpClientFactory = httpClientFactory;
         }
 
         public async Task<PSBT> RequestPayjoin(Uri endpoint, DerivationSchemeSettings derivationSchemeSettings,
             PSBT originalTx, CancellationToken cancellationToken)
         {
-            if (endpoint == null) throw new ArgumentNullException(nameof(endpoint));
-            if (derivationSchemeSettings == null) throw new ArgumentNullException(nameof(derivationSchemeSettings));
-            if (originalTx == null) throw new ArgumentNullException(nameof(originalTx));
+            if (endpoint == null)
+                throw new ArgumentNullException(nameof(endpoint));
+            if (derivationSchemeSettings == null)
+                throw new ArgumentNullException(nameof(derivationSchemeSettings));
+            if (originalTx == null)
+                throw new ArgumentNullException(nameof(originalTx));
             if (originalTx.IsAllFinalized())
                 throw new InvalidOperationException("The original PSBT should not be finalized.");
 
@@ -111,7 +118,7 @@ namespace BTCPayServer.Services
                 try
                 {
                     var error = JObject.Parse(errorStr);
-                    throw new PayjoinReceiverException((int)bpuresponse.StatusCode, error["errorCode"].Value<string>(),
+                    throw new PayjoinReceiverException(error["errorCode"].Value<string>(),
                         error["message"].Value<string>());
                 }
                 catch (JsonReaderException)
@@ -151,7 +158,7 @@ namespace BTCPayServer.Services
             foreach (var output in newPSBT.Outputs)
             {
                 output.HDKeyPaths.Clear();
-                foreach (var originalOutput in  originalTx.Outputs)
+                foreach (var originalOutput in originalTx.Outputs)
                 {
                     if (output.ScriptPubKey == originalOutput.ScriptPubKey)
                         output.UpdateFrom(originalOutput);
@@ -212,10 +219,10 @@ namespace BTCPayServer.Services
             if (sentAfter > sentBefore)
             {
                 var overPaying = sentAfter - sentBefore;
-               
+
                 if (!newPSBT.TryGetEstimatedFeeRate(out var newFeeRate) || !newPSBT.TryGetVirtualSize(out var newVirtualSize))
                     throw new PayjoinSenderException("The payjoin receiver did not included UTXO information to calculate fee correctly");
-                
+
                 var additionalFee = newPSBT.GetFee() - originalFee;
                 if (overPaying > additionalFee)
                     throw new PayjoinSenderException("The payjoin receiver is sending more money to himself");
@@ -250,23 +257,61 @@ namespace BTCPayServer.Services
         }
     }
 
+    public enum PayjoinReceiverWellknownErrors
+    {
+        LeakingData,
+        PSBTNotFinalized,
+        Unavailable,
+        OutOfUTXOS,
+        NotEnoughMoney,
+        InsanePSBT,
+        VersionUnsupported
+    }
     public class PayjoinReceiverException : PayjoinException
     {
-        public PayjoinReceiverException(int httpCode, string errorCode, string message) : base(FormatMessage(httpCode,
-            errorCode, message))
+        public PayjoinReceiverException(string errorCode, string receiverDebugMessage) : base(FormatMessage(errorCode, receiverDebugMessage))
         {
-            HttpCode = httpCode;
             ErrorCode = errorCode;
-            ErrorMessage = message;
+            ReceiverDebugMessage = receiverDebugMessage;
+            WellknownError = errorCode switch
+            {
+                "leaking-data" => PayjoinReceiverWellknownErrors.LeakingData,
+                "psbt-not-finalized" => PayjoinReceiverWellknownErrors.PSBTNotFinalized,
+                "unavailable" => PayjoinReceiverWellknownErrors.Unavailable,
+                "out-of-utxos" => PayjoinReceiverWellknownErrors.OutOfUTXOS,
+                "not-enough-money" => PayjoinReceiverWellknownErrors.NotEnoughMoney,
+                "insane-psbt" => PayjoinReceiverWellknownErrors.InsanePSBT,
+                "version-unsupported" => PayjoinReceiverWellknownErrors.VersionUnsupported,
+                _ => null
+            };
         }
-
-        public int HttpCode { get; }
         public string ErrorCode { get; }
         public string ErrorMessage { get; }
+        public string ReceiverDebugMessage { get; }
 
-        private static string FormatMessage(in int httpCode, string errorCode, string message)
+        public PayjoinReceiverWellknownErrors? WellknownError
         {
-            return $"{errorCode}: {message} (HTTP: {httpCode})";
+            get;
+        }
+
+        private static string FormatMessage(string errorCode, string receiverDebugMessage)
+        {
+            return $"{errorCode}: {GetMessage(errorCode)}";
+        }
+
+        private static string GetMessage(string errorCode)
+        {
+            return errorCode switch
+            {
+                "leaking-data" => "Key path information or GlobalXPubs should not be included in the original PSBT.",
+                "psbt-not-finalized" => "The original PSBT must be finalized.",
+                "unavailable" => "The payjoin endpoint is not available for now.",
+                "out-of-utxos" => "The receiver does not have any UTXO to contribute in a payjoin proposal.",
+                "not-enough-money" => "The receiver added some inputs but could not bump the fee of the payjoin proposal.",
+                "insane-psbt" => "Some consistency check on the PSBT failed.",
+                "version-unsupported" => "This version of payjoin is not supported.",
+                _ => "Unknown error"
+            };
         }
     }
 

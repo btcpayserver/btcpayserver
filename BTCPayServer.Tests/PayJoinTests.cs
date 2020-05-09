@@ -28,6 +28,7 @@ using NBitcoin.Altcoins;
 using NBitcoin.Payment;
 using NBitpayClient;
 using NBXplorer.Models;
+using Newtonsoft.Json.Linq;
 using OpenQA.Selenium;
 using Xunit;
 using Xunit.Abstractions;
@@ -587,6 +588,14 @@ namespace BTCPayServer.Tests
                 //Let's start the harassment
                 invoice = receiverUser.BitPay.CreateInvoice(
                     new Invoice() {Price = 0.02m, Currency = "BTC", FullNotifications = true});
+                // Bad version should throw incorrect version
+                var endpoint = TestAccount.GetPayjoinEndpoint(invoice, btcPayNetwork.NBitcoinNetwork);
+                var response = await tester.PayTester.HttpClient.PostAsync(endpoint.AbsoluteUri + "?v=2",
+                    new StringContent("", Encoding.UTF8, "text/plain"));
+                Assert.False(response.IsSuccessStatusCode);
+                var error = JObject.Parse(await response.Content.ReadAsStringAsync());
+                Assert.Equal("version-unsupported", error["errorCode"].Value<string>());
+                Assert.Equal(1, ((JArray)error["supported"]).Single().Value<int>());
 
                 var parsedBip21 = new BitcoinUrlBuilder(invoice.CryptoInfo.First().PaymentUrls.BIP21,
                     tester.ExplorerClient.Network.NBitcoinNetwork);
@@ -665,6 +674,7 @@ namespace BTCPayServer.Tests
                 //Attempt 2: Create two transactions using different inputs and send them to the same invoice. 
                 //Result: Second Tx should be rejected. 
                 var Invoice1Coin1ResponseTx = await senderUser.SubmitPayjoin(invoice, Invoice1Coin1, btcPayNetwork);
+
                 await senderUser.SubmitPayjoin(invoice, Invoice1Coin1, btcPayNetwork, "already-paid");
                 var contributedInputsInvoice1Coin1ResponseTx =
                     Invoice1Coin1ResponseTx.Inputs.Where(txin => coin.OutPoint != txin.PrevOut);

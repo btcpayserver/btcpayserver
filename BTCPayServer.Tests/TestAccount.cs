@@ -393,7 +393,7 @@ namespace BTCPayServer.Tests
             return response;
         }
 
-        private static Uri GetPayjoinEndpoint(Invoice invoice, Network network)
+        public static Uri GetPayjoinEndpoint(Invoice invoice, Network network)
         {
             var parsedBip21 = new BitcoinUrlBuilder(
                 invoice.CryptoInfo.First(c => c.CryptoCode == network.NetworkSet.CryptoCode).PaymentUrls.BIP21,

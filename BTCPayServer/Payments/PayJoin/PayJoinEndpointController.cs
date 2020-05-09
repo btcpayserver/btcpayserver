@@ -23,6 +23,7 @@ using NBXplorer.DerivationStrategy;
 using System.Diagnostics.CodeAnalysis;
 using BTCPayServer.Data;
 using NBitcoin.DataEncoders;
+using Amazon.S3.Model;
 
 namespace BTCPayServer.Payments.PayJoin
 {
@@ -115,12 +116,24 @@ namespace BTCPayServer.Payments.PayJoin
         [EnableCors(CorsPolicies.All)]
         [MediaTypeConstraint("text/plain")]
         [RateLimitsFilter(ZoneLimits.PayJoin, Scope = RateLimitsScope.RemoteAddress)]
-        public async Task<IActionResult> Submit(string cryptoCode)
+        public async Task<IActionResult> Submit(string cryptoCode,
+            bool noadjustfee = false,
+            int feebumpindex = -1,
+            int v = 1)
         {
+            if (v != 1)
+            {
+                return BadRequest(new JObject
+                {
+                    new JProperty("errorCode", "version-unsupported"),
+                    new JProperty("supported", new JArray(1)),
+                    new JProperty("message", "This version of payjoin is not supported.")
+                });
+            }
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
             if (network == null)
             {
-                return BadRequest(CreatePayjoinError(400, "invalid-network", "Incorrect network"));
+                return BadRequest(CreatePayjoinError("invalid-network", "Incorrect network"));
             }
 
             var explorer = _explorerClientProvider.GetExplorerClient(network);
@@ -128,12 +141,12 @@ namespace BTCPayServer.Payments.PayJoin
             {
                 if (length > 1_000_000)
                     return this.StatusCode(413,
-                        CreatePayjoinError(413, "payload-too-large", "The transaction is too big to be processed"));
+                        CreatePayjoinError("payload-too-large", "The transaction is too big to be processed"));
             }
             else
             {
                 return StatusCode(411,
-                    CreatePayjoinError(411, "missing-content-length",
+                    CreatePayjoinError("missing-content-length",
                         "The http header Content-Length should be filled"));
             }
 
@@ -146,25 +159,27 @@ namespace BTCPayServer.Payments.PayJoin
             Transaction originalTx = null;
             FeeRate originalFeeRate = null;
             bool psbtFormat = true;
-            if (!PSBT.TryParse(rawBody, network.NBitcoinNetwork, out var psbt))
+
+            if (PSBT.TryParse(rawBody, network.NBitcoinNetwork, out var psbt))
+            {
+                if (!psbt.IsAllFinalized())
+                    return BadRequest(CreatePayjoinError("psbt-not-finalized", "The PSBT should be finalized"));
+                originalTx = psbt.ExtractTransaction();
+            }
+            // BTCPay Server implementation support a transaction instead of PSBT
+            else
             {
                 psbtFormat = false;
                 if (!Transaction.TryParse(rawBody, network.NBitcoinNetwork, out var tx))
-                    return BadRequest(CreatePayjoinError(400, "invalid-format", "invalid transaction or psbt"));
+                    return BadRequest(CreatePayjoinError("invalid-format", "invalid transaction or psbt"));
                 originalTx = tx;
                 psbt = PSBT.FromTransaction(tx, network.NBitcoinNetwork);
-                psbt = (await explorer.UpdatePSBTAsync(new UpdatePSBTRequest() {PSBT = psbt})).PSBT;
+                psbt = (await explorer.UpdatePSBTAsync(new UpdatePSBTRequest() { PSBT = psbt })).PSBT;
                 for (int i = 0; i < tx.Inputs.Count; i++)
                 {
                     psbt.Inputs[i].FinalScriptSig = tx.Inputs[i].ScriptSig;
                     psbt.Inputs[i].FinalScriptWitness = tx.Inputs[i].WitScript;
                 }
-            }
-            else
-            {
-                if (!psbt.IsAllFinalized())
-                    return BadRequest(CreatePayjoinError(400, "psbt-not-finalized", "The PSBT should be finalized"));
-                originalTx = psbt.ExtractTransaction();
             }
 
             async Task BroadcastNow()
@@ -173,15 +188,13 @@ namespace BTCPayServer.Payments.PayJoin
             }
 
             var sendersInputType = psbt.GetInputsScriptPubKeyType();
-            if (sendersInputType is null)
-                return BadRequest(CreatePayjoinError(400, "unsupported-inputs", "Payjoin only support segwit inputs (of the same type)"));
             if (psbt.CheckSanity() is var errors && errors.Count != 0)
             {
-                return BadRequest(CreatePayjoinError(400, "insane-psbt", $"This PSBT is insane ({errors[0]})"));
+                return BadRequest(CreatePayjoinError("insane-psbt", $"This PSBT is insane ({errors[0]})"));
             }
             if (!psbt.TryGetEstimatedFeeRate(out originalFeeRate))
             {
-                return BadRequest(CreatePayjoinError(400, "need-utxo-information",
+                return BadRequest(CreatePayjoinError("need-utxo-information",
                     "You need to provide Witness UTXO information to the PSBT."));
             }
 
@@ -189,26 +202,26 @@ namespace BTCPayServer.Payments.PayJoin
             // to leak global xpubs
             if (psbt.GlobalXPubs.Any())
             {
-                return BadRequest(CreatePayjoinError(400, "leaking-data",
+                return BadRequest(CreatePayjoinError("leaking-data",
                     "GlobalXPubs should not be included in the PSBT"));
             }
 
             if (psbt.Outputs.Any(o => o.HDKeyPaths.Count != 0) || psbt.Inputs.Any(o => o.HDKeyPaths.Count != 0))
             {
-                return BadRequest(CreatePayjoinError(400, "leaking-data",
+                return BadRequest(CreatePayjoinError("leaking-data",
                     "Keypath information should not be included in the PSBT"));
             }
 
             if (psbt.Inputs.Any(o => !o.IsFinalized()))
             {
-                return BadRequest(CreatePayjoinError(400, "psbt-not-finalized", "The PSBT Should be finalized"));
+                return BadRequest(CreatePayjoinError("psbt-not-finalized", "The PSBT Should be finalized"));
             }
             ////////////
 
             var mempool = await explorer.BroadcastAsync(originalTx, true);
             if (!mempool.Success)
             {
-                return BadRequest(CreatePayjoinError(400, "invalid-transaction",
+                return BadRequest(CreatePayjoinError("invalid-transaction",
                     $"Provided transaction isn't mempool eligible {mempool.RPCCodeMessage}"));
             }
 
@@ -240,12 +253,12 @@ namespace BTCPayServer.Payments.PayJoin
                 if (!PayjoinClient.SupportedFormats.Contains(receiverInputsType))
                 {
                     //this should never happen, unless the store owner changed the wallet mid way through an invoice
-                    return StatusCode(500, CreatePayjoinError(500, "unavailable", $"This service is unavailable for now"));
+                    return StatusCode(500, CreatePayjoinError("unavailable", $"This service is unavailable for now"));
                 }
-                if (sendersInputType != receiverInputsType)
+                if (sendersInputType is ScriptPubKeyType t && t != receiverInputsType)
                 {
                     return StatusCode(503,
-                        CreatePayjoinError(503, "out-of-utxos",
+                        CreatePayjoinError("out-of-utxos",
                             "We do not have any UTXO available for making a payjoin with the sender's inputs type")); 
                 }
                 var paymentMethod = invoice.GetPaymentMethod(paymentMethodId);
@@ -255,7 +268,7 @@ namespace BTCPayServer.Payments.PayJoin
                     continue;
                 if (invoice.GetAllBitcoinPaymentData().Any())
                 {
-                    return UnprocessableEntity(CreatePayjoinError(422, "already-paid",
+                    return UnprocessableEntity(CreatePayjoinError("already-paid",
                         $"The invoice this PSBT is paying has already been partially or completely paid"));
                 }
 
@@ -268,7 +281,7 @@ namespace BTCPayServer.Payments.PayJoin
 
                 if (!await _payJoinRepository.TryLockInputs(originalTx.Inputs.Select(i => i.PrevOut).ToArray()))
                 {
-                    return BadRequest(CreatePayjoinError(400, "inputs-already-used",
+                    return BadRequest(CreatePayjoinError("inputs-already-used",
                         "Some of those inputs have already been used to make payjoin transaction"));
                 }
 
@@ -293,13 +306,13 @@ namespace BTCPayServer.Payments.PayJoin
 
             if (!paidSomething)
             {
-                return BadRequest(CreatePayjoinError(400, "invoice-not-found",
+                return BadRequest(CreatePayjoinError("invoice-not-found",
                     "This transaction does not pay any invoice with payjoin"));
             }
 
             if (due is null || due > Money.Zero)
             {
-                return BadRequest(CreatePayjoinError(400, "invoice-not-fully-paid",
+                return BadRequest(CreatePayjoinError("invoice-not-fully-paid",
                     "The transaction must pay the whole invoice"));
             }
 
@@ -307,7 +320,7 @@ namespace BTCPayServer.Payments.PayJoin
             {
                 await BroadcastNow();
                 return StatusCode(503,
-                    CreatePayjoinError(503, "out-of-utxos",
+                    CreatePayjoinError("out-of-utxos",
                         "We do not have any UTXO available for making a payjoin for now"));
             }
 
@@ -323,7 +336,7 @@ namespace BTCPayServer.Payments.PayJoin
                 // This should not happen, as we check the existance of private key before creating invoice with payjoin
                 await UnlockUTXOs();
                 await BroadcastNow();
-                return StatusCode(500, CreatePayjoinError(500, "unavailable", $"This service is unavailable for now"));
+                return StatusCode(500, CreatePayjoinError("unavailable", $"This service is unavailable for now"));
             }
             
             Money contributedAmount = Money.Zero;
@@ -331,6 +344,10 @@ namespace BTCPayServer.Payments.PayJoin
             var ourNewOutput = newTx.Outputs[originalPaymentOutput.Index];
             HashSet<TxOut> isOurOutput = new HashSet<TxOut>();
             isOurOutput.Add(ourNewOutput);
+            TxOut preferredFeeBumpOutput = feebumpindex >= 0
+                                            && feebumpindex < newTx.Outputs.Count
+                                            && !isOurOutput.Contains(newTx.Outputs[feebumpindex])
+                                            ? newTx.Outputs[feebumpindex] : null;
             var rand = new Random();
             int senderInputCount = newTx.Inputs.Count;
             foreach (var selectedUTXO in selectedUTXOs.Select(o => o.Value))
@@ -398,7 +415,7 @@ namespace BTCPayServer.Payments.PayJoin
             Money expectedFee = txBuilder.EstimateFees(newTx, originalFeeRate);
             Money actualFee = newTx.GetFee(txBuilder.FindSpentCoins(newTx));
             Money additionalFee = expectedFee - actualFee;
-            if (additionalFee > Money.Zero)
+            if (additionalFee > Money.Zero && !noadjustfee)
             {
                 // If the user overpaid, taking fee on our output (useful if sender dump a full UTXO for privacy)
                 for (int i = 0; i < newTx.Outputs.Count && additionalFee > Money.Zero && due < Money.Zero; i++)
@@ -418,6 +435,9 @@ namespace BTCPayServer.Payments.PayJoin
                 // The rest, we take from user's change
                 for (int i = 0; i < newTx.Outputs.Count && additionalFee > Money.Zero; i++)
                 {
+                    if (preferredFeeBumpOutput is TxOut &&
+                        preferredFeeBumpOutput != newTx.Outputs[i])
+                        continue;
                     if (!isOurOutput.Contains(newTx.Outputs[i]))
                     {
                         var outputContribution = Money.Min(additionalFee, newTx.Outputs[i].Value);
@@ -438,7 +458,7 @@ namespace BTCPayServer.Payments.PayJoin
                     {
                         await UnlockUTXOs();
                         await BroadcastNow();
-                        return UnprocessableEntity(CreatePayjoinError(422, "not-enough-money",
+                        return UnprocessableEntity(CreatePayjoinError("not-enough-money",
                             "Not enough money is sent to pay for the additional payjoin inputs"));
                     }
                 }
@@ -476,7 +496,7 @@ namespace BTCPayServer.Payments.PayJoin
             {
                 await UnlockUTXOs();
                 await BroadcastNow();
-                return UnprocessableEntity(CreatePayjoinError(422, "already-paid",
+                return UnprocessableEntity(CreatePayjoinError("already-paid",
                     $"The original transaction has already been accounted"));
             }
             await _btcPayWalletProvider.GetWallet(network).SaveOffchainTransactionAsync(originalTx);
@@ -492,7 +512,8 @@ namespace BTCPayServer.Payments.PayJoin
                             }))
                     .ToDictionary(pair => pair.Key, pair => pair.Value)
             });
-            
+
+            // BTCPay Server support PSBT set as hex
             if (psbtFormat && HexEncoder.IsWellFormed(rawBody))
             {
                 return Ok(newPsbt.ToHex());
@@ -501,6 +522,7 @@ namespace BTCPayServer.Payments.PayJoin
             {
                 return Ok(newPsbt.ToBase64());
             }
+            // BTCPay Server should returns transaction if received transaction
             else
                 return Ok(newTx.ToHex());
         }
@@ -514,10 +536,9 @@ namespace BTCPayServer.Payments.PayJoin
             return hash;
         }
 
-        private JObject CreatePayjoinError(int httpCode, string errorCode, string friendlyMessage)
+        private JObject CreatePayjoinError(string errorCode, string friendlyMessage)
         {
             var o = new JObject();
-            o.Add(new JProperty("httpCode", httpCode));
             o.Add(new JProperty("errorCode", errorCode));
             o.Add(new JProperty("message", friendlyMessage));
             return o;

@@ -127,5 +127,6 @@ namespace BTCPayServer.Models.InvoicingModels
         public string NotificationEmail { get; internal set; }
         public Dictionary<string, object> PosData { get; set; }
         public List<PaymentEntity> Payments { get; set; }
+        public bool Archived { get; set; }
     }
 }

@@ -41,7 +41,8 @@ namespace BTCPayServer.Controllers
                 InvoiceId = new[] {invoiceId},
                 UserId = GetUserId(),
                 IncludeAddresses = true,
-                IncludeEvents = true
+                IncludeEvents = true,
+                IncludeArchived = true,
             })).FirstOrDefault();
             if (invoice == null)
                 return NotFound();
@@ -71,7 +72,8 @@ namespace BTCPayServer.Controllers
                 ProductInformation = invoice.ProductInformation,
                 StatusException = invoice.ExceptionStatus,
                 Events = invoice.Events,
-                PosData = PosDataParser.ParsePosData(invoice.PosData)
+                PosData = PosDataParser.ParsePosData(invoice.PosData),
+                Archived = invoice.Archived
             };
 
             model.Addresses = invoice.HistoricalAddresses.Select(h =>
@@ -91,6 +93,7 @@ namespace BTCPayServer.Controllers
         private InvoiceDetailsModel InvoicePopulatePayments(InvoiceEntity invoice)
         {
             var model = new InvoiceDetailsModel();
+            model.Archived = invoice.Archived;
             model.Payments = invoice.GetPayments();
             foreach (var data in invoice.GetPaymentMethods())
             {
@@ -111,6 +114,26 @@ namespace BTCPayServer.Controllers
             return model;
         }
 
+        [HttpPost("invoices/{invoiceId}/archive")]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [BitpayAPIConstraint(false)]
+        public async Task<IActionResult> ToggleArchive(string invoiceId)
+        {
+            var invoice = (await _InvoiceRepository.GetInvoices(new InvoiceQuery()
+            {
+                InvoiceId = new[] {invoiceId}, UserId = GetUserId(), IncludeAddresses = true, IncludeEvents = true, IncludeArchived = true,
+            })).FirstOrDefault();
+            if (invoice == null)
+                return NotFound();
+            await _InvoiceRepository.ToggleInvoiceArchival(invoiceId, !invoice.Archived);
+            TempData.SetStatusMessageModel(new StatusMessageModel()
+            {
+                Severity = StatusMessageModel.StatusSeverity.Success,
+                Message = invoice.Archived ? "The invoice has been unarchived and will appear in the invoice list by default again." : "The invoice has been archived and will no longer appear in the invoice list by default."
+            });
+            return RedirectToAction(nameof(invoice), new {invoiceId});
+        }
+        
         [HttpGet]
         [Route("i/{invoiceId}")]
         [Route("i/{invoiceId}/{paymentMethodId}")]
@@ -437,7 +460,7 @@ namespace BTCPayServer.Controllers
                     AmountCurrency = _CurrencyNameTable.DisplayFormatCurrency(invoice.ProductInformation.Price, invoice.ProductInformation.Currency),
                     CanMarkInvalid = state.CanMarkInvalid(),
                     CanMarkComplete = state.CanMarkComplete(),
-                    Details = InvoicePopulatePayments(invoice)
+                    Details = InvoicePopulatePayments(invoice),
                 });
             }
             model.Total = await counting;
@@ -452,6 +475,7 @@ namespace BTCPayServer.Controllers
                 TextSearch = fs.TextSearch,
                 UserId = GetUserId(),
                 Unusual = fs.GetFilterBool("unusual"),
+                IncludeArchived = fs.GetFilterBool("includearchived") ?? false,
                 Status = fs.GetFilterArray("status"),
                 ExceptionStatus = fs.GetFilterArray("exceptionstatus"),
                 StoreId = fs.GetFilterArray("storeid"),

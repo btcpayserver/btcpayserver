@@ -240,10 +240,26 @@ namespace BTCPayServer.Tests
                 var storeUrl = s.Driver.Url;
                 s.ClickOnAllSideMenus();
                 s.GoToInvoices();
-                s.CreateInvoice(store);
+                var invoiceId = s.CreateInvoice(store);
                 s.AssertHappyMessage();
                 s.Driver.FindElement(By.ClassName("invoice-details-link")).Click();
                 var invoiceUrl = s.Driver.Url;
+                
+                //let's test archiving an invoice
+                Assert.DoesNotContain("Archived", s.Driver.FindElement(By.Id("btn-archive-toggle")).Text);    
+                s.Driver.FindElement(By.Id("btn-archive-toggle")).Click();
+                s.AssertHappyMessage();
+                Assert.Contains("Archived", s.Driver.FindElement(By.Id("btn-archive-toggle")).Text);    
+                //check that it no longer appears in list
+                s.GoToInvoices();
+                Assert.DoesNotContain(invoiceId, s.Driver.PageSource);
+                //ok, let's unarchive and see that it shows again
+                s.Driver.Navigate().GoToUrl(invoiceUrl);
+                s.Driver.FindElement(By.Id("btn-archive-toggle")).Click();
+                s.AssertHappyMessage();
+                Assert.DoesNotContain("Archived", s.Driver.FindElement(By.Id("btn-archive-toggle")).Text);  
+                s.GoToInvoices();
+                Assert.Contains(invoiceId, s.Driver.PageSource);
 
                 // When logout we should not be able to access store and invoice details
                 s.Driver.FindElement(By.Id("Logout")).Click();

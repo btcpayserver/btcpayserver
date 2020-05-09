@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -79,6 +79,8 @@ namespace BTCPayServer.Data
         {
             get; set;
         }
+
+        public bool Archived { get; set; }
         public List<PendingInvoiceData> PendingInvoices { get; set; }
     }
 }

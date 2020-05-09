@@ -87,6 +87,7 @@ namespace BTCPayServer.PaymentRequest
 
             return new ViewPaymentRequestViewModel(pr)
             {
+                Archived = pr.Archived,
                 AmountFormatted = _currencies.FormatCurrency(blob.Amount, blob.Currency),
                 AmountCollected = paymentStats.TotalCurrency,
                 AmountCollectedFormatted = _currencies.FormatCurrency(paymentStats.TotalCurrency, blob.Currency),

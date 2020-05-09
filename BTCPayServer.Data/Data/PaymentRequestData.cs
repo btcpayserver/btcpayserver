@@ -12,6 +12,7 @@ namespace BTCPayServer.Data
             get; set;
         }
         public string StoreDataId { get; set; }
+        public bool Archived { get; set; }
 
         public StoreData StoreData { get; set; }
 

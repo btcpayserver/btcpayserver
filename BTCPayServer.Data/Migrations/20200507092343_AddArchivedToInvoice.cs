@@ -15,6 +15,11 @@ namespace BTCPayServer.Migrations
                 table: "Invoices",
                 nullable: false,
                 defaultValue: false);
+            migrationBuilder.AddColumn<bool>(
+                name: "Archived",
+                table: "PaymentRequests",
+                nullable: false,
+                defaultValue: false);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
@@ -24,6 +29,9 @@ namespace BTCPayServer.Migrations
                 migrationBuilder.DropColumn(
                     name: "Archived",
                     table: "Invoices");
+                migrationBuilder.DropColumn(
+                   name: "Archived",
+                   table: "PaymentRequests");
             }
         }
     }

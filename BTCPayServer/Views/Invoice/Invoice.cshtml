@@ -31,7 +31,7 @@
                 <div class="d-flex justify-content-between">
                     <h2>@ViewData["Title"]</h2>
                     <form asp-action="ToggleArchive" asp-route-invoiceId="@Model.Id" method="post">
-                        <button type="submit" class="@(Model.Archived ? "btn badge badge-warning" : "btn btn-link")">
+                        <button type="submit" class="@(Model.Archived ? "btn badge badge-warning" : "btn btn-link")" id="btn-archive-toggle">
                                 @if (Model.Archived)
                                 {
                                     <span data-toggle="tooltip" title="Unarchive this invoice">Archived <i class=" ml-1 fa fa-close" ></i></span>

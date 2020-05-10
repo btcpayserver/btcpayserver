@@ -7,6 +7,7 @@ namespace BTCPayServer.Client.Models
         public PaymentRequestData.PaymentRequestStatus Status { get; set; }
         public DateTimeOffset Created { get; set; }
         public string Id { get; set; }
+        public bool Archived { get; set; }
 
         public enum PaymentRequestStatus
         {

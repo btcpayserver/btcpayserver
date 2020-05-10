@@ -154,9 +154,9 @@
                 "tags": [
                     "Payment Requests"
                 ],
-                "summary": "Remove payment request",
-                "description": "Removes the specified payment request.",
-                "operationId": "PaymentRequests_RemovePaymentRequest",
+                "summary": "Archive payment request",
+                "description": "Archives the specified payment request.",
+                "operationId": "PaymentRequests_ArchivePaymentRequest",
                 "parameters": [
                     {
                         "name": "storeId",
@@ -175,10 +175,10 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "The payment request has been removed"
+                        "description": "The payment request has been archived"
                     },
                     "400": {
-                        "description": "A list of errors that occurred when removing the payment request",
+                        "description": "A list of errors that occurred when archiving the payment request",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -188,7 +188,7 @@
                         }
                     },
                     "403": {
-                        "description": "If you are authenticated but forbidden to remove the specified payment request"
+                        "description": "If you are authenticated but forbidden to archive the specified payment request"
                     },
                     "404": {
                         "description": "The key is not found for this payment request"

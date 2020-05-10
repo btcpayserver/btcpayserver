@@ -345,13 +345,13 @@ namespace BTCPayServer.Tests
                 paymentRequest = await client.GetPaymentRequest(user.StoreId, newPaymentRequest.Id);
                 Assert.Equal(updateRequest.Title,paymentRequest.Title);
                 
-                //remove payment request
+                //archive payment request
                 await AssertHttpError(403, async () =>
                 {
-                    await viewOnly.RemovePaymentRequest(user.StoreId, paymentRequest.Id);
+                    await viewOnly.ArchivePaymentRequest(user.StoreId, paymentRequest.Id);
                 });
                 
-                await client.RemovePaymentRequest(user.StoreId, paymentRequest.Id);
+                await client.ArchivePaymentRequest(user.StoreId, paymentRequest.Id);
                 await AssertHttpError(404, async () =>
                 {
                     await client.GetPaymentRequest(user.StoreId, paymentRequest.Id);

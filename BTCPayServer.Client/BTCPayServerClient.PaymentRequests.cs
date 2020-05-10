@@ -25,7 +25,7 @@ namespace BTCPayServer.Client
             return await HandleResponse<PaymentRequestData>(response);
         }
 
-        public virtual async Task RemovePaymentRequest(string storeId, string paymentRequestId,
+        public virtual async Task ArchivePaymentRequest(string storeId, string paymentRequestId,
             CancellationToken token = default)
         {
             var response = await _httpClient.SendAsync(

@@ -352,10 +352,7 @@ namespace BTCPayServer.Tests
                 });
                 
                 await client.ArchivePaymentRequest(user.StoreId, paymentRequest.Id);
-                await AssertHttpError(404, async () =>
-                {
-                    await client.GetPaymentRequest(user.StoreId, paymentRequest.Id);
-                });
+                Assert.DoesNotContain(paymentRequest.Id, (await client.GetPaymentRequests(user.StoreId)).Select(data => data.Id));
             }
         }
     }

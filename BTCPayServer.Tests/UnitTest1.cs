@@ -2265,16 +2265,17 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Integration", "Integration")]
-        [Trait("Lightning", "Lightning")]
+        [Trait("Altcoins", "Altcoins")]
         public async Task CanUsePoSApp()
         {
             using (var tester = ServerTester.Create())
             {
-                tester.ActivateLightning();
+                tester.ActivateLTC();
                 await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
+                user.RegisterDerivationScheme("LTC");
                 var apps = user.GetController<AppsController>();
                 var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp().Result).Model);
                 vm.Name = "test";
@@ -2445,10 +2446,10 @@ noninventoryitem:
                     Assert.Equal(1,
                         appService.Parse(vmpos.Template, "BTC").Single(item => item.Id == "inventoryitem").Inventory);
                 }, 10000);
-                
-                
+
+
                 //test payment methods option
-                user.RegisterLightningNode("BTC", LightningConnectionType.Charge);
+                
                 vmpos = Assert.IsType<UpdatePointOfSaleViewModel>(Assert
                     .IsType<ViewResult>(apps.UpdatePointOfSale(appId).Result).Model);
                 vmpos.Title = "hello";
@@ -2467,19 +2468,19 @@ normal:
                 Assert.IsType<RedirectToActionResult>(publicApps
                     .ViewPointOfSale(appId, 1, null, null, null, null, "normal").Result);
                 invoices = user.BitPay.GetInvoices();
-                Assert.Single(invoices.Single(invoice => invoice.ItemCode == "btconly").SupportedTransactionCurrencies
-                    .Keys);
+                var normalInvoice = invoices.Single(invoice => invoice.ItemCode == "normal");
+                var btcOnlyInvoice = invoices.Single(invoice => invoice.ItemCode == "btconly");
+                Assert.Single(btcOnlyInvoice.CryptoInfo);
                 Assert.Equal("BTC",
-                    invoices.Single(invoice => invoice.ItemCode == "btconly").SupportedTransactionCurrencies.Keys.First());
-                
-                Assert.Equal(2, invoices.Single(invoice => invoice.ItemCode == "normal").SupportedTransactionCurrencies
-                    .Keys.Count);
+                    btcOnlyInvoice.CryptoInfo.First().CryptoCode);
+                Assert.Equal(PaymentTypes.BTCLike.ToString(),
+                    btcOnlyInvoice.CryptoInfo.First().PaymentType);
+
+                Assert.Equal(2, normalInvoice.CryptoInfo.Length);
                 Assert.Contains(
-                    invoices.Single(invoice => invoice.ItemCode == "btconly").SupportedTransactionCurrencies.Keys,
-                    s => new PaymentMethodId("BTC", PaymentTypes.BTCLike) == PaymentMethodId.Parse(s) ||
-                         new PaymentMethodId("BTC", PaymentTypes.LightningLike) == PaymentMethodId.Parse(s));
-
-
+                    normalInvoice.CryptoInfo,
+                    s => PaymentTypes.BTCLike.ToString() == s.PaymentType &&  new[] {"BTC", "LTC"}.Contains(
+                             s.CryptoCode));
             }
         }
 

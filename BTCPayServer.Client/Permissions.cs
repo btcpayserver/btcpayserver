@@ -139,13 +139,19 @@ namespace BTCPayServer.Client
                 return true;
             if (this.Policy == subpolicy)
                 return true;
-            if (subpolicy == Policies.CanViewStoreSettings && this.Policy == Policies.CanModifyStoreSettings)
-                return true;
-            if (subpolicy == Policies.CanCreateInvoice && this.Policy == Policies.CanModifyStoreSettings)
-                return true;
-            if (subpolicy == Policies.CanViewProfile && this.Policy == Policies.CanModifyProfile)
-                return true;
-            return false;
+            switch (subpolicy)
+            {   
+                case Policies.CanViewStoreSettings when this.Policy == Policies.CanModifyStoreSettings:
+                case Policies.CanCreateInvoice when this.Policy == Policies.CanModifyStoreSettings:
+                case Policies.CanViewProfile when this.Policy == Policies.CanModifyProfile:
+                case Policies.CanModifyPaymentRequests when this.Policy == Policies.CanModifyStoreSettings:
+                case Policies.CanViewPaymentRequests when this.Policy == Policies.CanModifyStoreSettings:
+                case Policies.CanViewPaymentRequests when this.Policy == Policies.CanViewStoreSettings:
+                case Policies.CanViewPaymentRequests when this.Policy == Policies.CanModifyPaymentRequests:
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         public string StoreId { get; }

@@ -74,7 +74,6 @@
                    var store = $(this).data("storename");
                    var scheme = $(this).data("scheme");
                    var url = decodeURIComponent($(this).data("url"));
-                   debugger;
                    navigator.registerProtocolHandler(scheme, url, "BTCPay Wallet -" + store + " "+ cryptoCode);
                });
         } 

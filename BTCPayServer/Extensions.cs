@@ -33,6 +33,7 @@ using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using NBXplorer.DerivationStrategy;
 using System.Net;
+using BTCPayServer.Lightning;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Newtonsoft.Json.Linq;
@@ -42,6 +43,15 @@ namespace BTCPayServer
 {
     public static class Extensions
     {
+        public static bool IsInternalNode(this LightningConnectionString connectionString, LightningConnectionString internalLightning)
+        {
+            var internalDomain = internalLightning?.BaseUri?.DnsSafeHost;
+
+            return connectionString.ConnectionType == LightningConnectionType.CLightning ||
+                                  connectionString.BaseUri.DnsSafeHost == internalDomain ||
+                                  (internalDomain == "127.0.0.1" || internalDomain == "localhost");
+        }
+        
         public static IQueryable<TEntity> Where<TEntity>(this Microsoft.EntityFrameworkCore.DbSet<TEntity> obj, System.Linq.Expressions.Expression<Func<TEntity, bool>> predicate) where TEntity : class
         {
             return System.Linq.Queryable.Where(obj, predicate);

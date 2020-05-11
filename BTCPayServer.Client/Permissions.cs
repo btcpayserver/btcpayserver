@@ -6,6 +6,10 @@ namespace BTCPayServer.Client
 {
     public class Policies
     {
+        public const string CanCreateLightningInvoiceInternalNode = "btcpay.server.cancreatelightninginvoiceinternalnode";
+        public const string CanCreateLightningInvoiceInStore = "btcpay.store.cancreatelightninginvoice";
+        public const string CanUseInternalLightningNode = "btcpay.server.canuseinternallightningnode";
+        public const string CanUseLightningNodeInStore = "btcpay.store.canuselightningnode";
         public const string CanModifyServerSettings = "btcpay.server.canmodifyserversettings";
         public const string CanModifyStoreSettings = "btcpay.store.canmodifystoresettings";
         public const string CanViewStoreSettings = "btcpay.store.canviewstoresettings";
@@ -30,6 +34,10 @@ namespace BTCPayServer.Client
                 yield return CanViewProfile;
                 yield return CanCreateUser;
                 yield return Unrestricted;
+                yield return CanUseInternalLightningNode;
+                yield return CanCreateLightningInvoiceInternalNode;
+                yield return CanUseLightningNodeInStore;
+                yield return CanCreateLightningInvoiceInStore;
             }
         }
         public static bool IsValidPolicy(string policy)
@@ -100,8 +108,6 @@ namespace BTCPayServer.Client
             }
         }
 
-        
-
         internal Permission(string policy, string storeId)
         {
             Policy = policy;
@@ -147,7 +153,8 @@ namespace BTCPayServer.Client
                 case Policies.CanModifyPaymentRequests when this.Policy == Policies.CanModifyStoreSettings:
                 case Policies.CanViewPaymentRequests when this.Policy == Policies.CanModifyStoreSettings:
                 case Policies.CanViewPaymentRequests when this.Policy == Policies.CanViewStoreSettings:
-                case Policies.CanViewPaymentRequests when this.Policy == Policies.CanModifyPaymentRequests:
+                case Policies.CanCreateLightningInvoiceInternalNode when this.Policy == Policies.CanUseInternalLightningNode:
+                case Policies.CanCreateLightningInvoiceInStore when this.Policy == Policies.CanUseLightningNodeInStore:
                     return true;
                 default:
                     return false;

@@ -264,7 +264,8 @@ namespace BTCPayServer.Services
         NotEnoughMoney,
         InsanePSBT,
         VersionUnsupported,
-        NeedUTXOInformation
+        NeedUTXOInformation,
+        InvalidTransaction
     }
     public class PayjoinReceiverException : PayjoinException
     {
@@ -282,6 +283,7 @@ namespace BTCPayServer.Services
                 "insane-psbt" => PayjoinReceiverWellknownErrors.InsanePSBT,
                 "version-unsupported" => PayjoinReceiverWellknownErrors.VersionUnsupported,
                 "need-utxo-information" => PayjoinReceiverWellknownErrors.NeedUTXOInformation,
+                "invalid-transaction" => PayjoinReceiverWellknownErrors.InvalidTransaction,
                 _ => null
             };
         }
@@ -311,6 +313,7 @@ namespace BTCPayServer.Services
                 "insane-psbt" => "Some consistency check on the PSBT failed.",
                 "version-unsupported" => "This version of payjoin is not supported.",
                 "need-utxo-information" => "The witness UTXO or non witness UTXO is missing",
+                "invalid-transaction" => "The original transaction is invalid for payjoin",
                 _ => "Unknown error"
             };
         }

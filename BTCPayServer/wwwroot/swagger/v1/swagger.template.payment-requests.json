@@ -308,7 +308,7 @@
                 "additionalProperties": false,
                 "properties": {
                     "amount": {
-                        "type": "number",
+                        "type": "string",
                         "format": "decimal",
                         "minimum": 0,
                         "exclusiveMinimum": true,

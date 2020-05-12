@@ -20,6 +20,7 @@ using BTCPayServer.Security;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Net.Http.Headers;
 using System.Net;
+using BTCPayServer.JsonConverters;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Storage;
@@ -82,7 +83,10 @@ namespace BTCPayServer.Hosting
                     return builtInFactory(context);
                 };
             })
-            .AddNewtonsoftJson()
+            .AddNewtonsoftJson(options =>
+            {
+                options.SerializerSettings.Converters.Add(new DecimalStringJsonConverter());
+            })
 #if RAZOR_RUNTIME_COMPILE
             .AddRazorRuntimeCompilation()
 #endif

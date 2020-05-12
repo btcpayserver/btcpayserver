@@ -388,7 +388,7 @@ namespace BTCPayServer.Controllers
         [Route("{walletId}/send")]
         public async Task<IActionResult> WalletSend(
             [ModelBinder(typeof(WalletIdModelBinder))]
-            WalletId walletId, string defaultDestination = null, string defaultAmount = null)
+            WalletId walletId, string defaultDestination = null, string defaultAmount = null, string bip21 = null)
         {
             if (walletId?.StoreId == null)
                 return NotFound();
@@ -416,6 +416,10 @@ namespace BTCPayServer.Controllers
                 },
                 CryptoCode = walletId.CryptoCode
             };
+           if (!string.IsNullOrEmpty(bip21))
+           {
+               LoadFromBIP21(model, bip21, network);
+           }
            var feeProvider = _feeRateProvider.CreateFeeProvider(network);
             var recommendedFees =
                 new[]
@@ -1173,6 +1177,8 @@ namespace BTCPayServer.Controllers
             var store = (await Repository.FindStore(walletId.StoreId, GetUserId()));
             var vm = new WalletSettingsViewModel()
             {
+                StoreName = store.StoreName,
+                UriScheme = derivationSchemeSettings.Network.UriScheme,
                 Label = derivationSchemeSettings.Label,
                 DerivationScheme = derivationSchemeSettings.AccountDerivation.ToString(),
                 DerivationSchemeInput = derivationSchemeSettings.AccountOriginal,

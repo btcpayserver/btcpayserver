@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -17,6 +17,8 @@ namespace BTCPayServer.Models.WalletViewModels
 
         public List<WalletSettingsAccountKeyViewModel> AccountKeys { get; set; } = new List<WalletSettingsAccountKeyViewModel>();
         public bool NBXSeedAvailable { get; set; }
+        public string StoreName { get; set; }
+        public string UriScheme { get; set; }
     }
 
     public class WalletSettingsAccountKeyViewModel

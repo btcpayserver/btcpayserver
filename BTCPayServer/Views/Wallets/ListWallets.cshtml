@@ -30,7 +30,7 @@
                             <th>Store Name</th>
                             <th>Crypto Code</th>
                             <th>Balance</th>
-                            <th style="text-align:right">Actions</th>
+                            <th class="text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -47,7 +47,7 @@
                                 }
                                 <td>@wallet.CryptoCode</td>
                                 <td>@wallet.Balance</td>
-                                <td style="text-align:right">
+                                <td class="text-right">
                                     <a asp-action="WalletTransactions" asp-route-walletId="@wallet.Id">Manage</a>
                                 </td>
                             </tr>

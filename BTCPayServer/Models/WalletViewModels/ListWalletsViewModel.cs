@@ -15,7 +15,6 @@ namespace BTCPayServer.Models.WalletViewModels
             public string Balance { get; set; }
             public bool IsOwner { get; set; }
             public WalletId Id { get; set; }
-            public string Scheme { get; set; }
         }
 
         public List<WalletViewModel> Wallets { get; set; } = new List<WalletViewModel>();

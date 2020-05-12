@@ -30,7 +30,7 @@
                             <th>Store Name</th>
                             <th>Crypto Code</th>
                             <th>Balance</th>
-                            <th style="text-align:right">Actions</th>
+                            <th class="text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -47,12 +47,8 @@
                                 }
                                 <td>@wallet.CryptoCode</td>
                                 <td>@wallet.Balance</td>
-                                <td style="text-align:right">
+                                <td class="text-right">
                                     <a asp-action="WalletTransactions" asp-route-walletId="@wallet.Id">Manage</a>
-                                    @if (wallet.Scheme == "bitcoin")
-                                    {
-                                        <button type="button" class="btn btn-link register-wallet" data-cryptocode="@wallet.CryptoCode" data-storename="@wallet.StoreName" data-scheme="@wallet.Scheme" data-url="@Url.Action("WalletSend", "Wallets", new { walletId = new WalletId(wallet.StoreId, wallet.CryptoCode), bip21 = "%s"})">Register as default wallet</button>
-                                    }
                                 </td>
                             </tr>
                         }
@@ -62,25 +58,3 @@
         </div>
     </div>
 </section>
-
-
-<script>
-    $(document).ready(function(){
-        if(navigator.registerProtocolHandler){
-            $(".register-wallet")
-                .show()
-                .on("click", function(){
-                   var cryptoCode = $(this).data("cryptocode");
-                   var store = $(this).data("storename");
-                   var scheme = $(this).data("scheme");
-                   var url = decodeURIComponent($(this).data("url"));
-                   navigator.registerProtocolHandler(scheme, url, "BTCPay Wallet -" + store + " "+ cryptoCode);
-               });
-        } 
-    });
-</script>
-<style>
-    .register-wallet{
-        display: none;
-    }
-</style>

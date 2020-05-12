@@ -23,48 +23,50 @@
 <div class="row">
     <div class="col-md-6">
         <form method="post" asp-action="WalletSettings">
+            <input type="hidden" asp-for="StoreName"/>
+            <input type="hidden" asp-for="UriScheme"/>
             <div class="form-group">
                 <label asp-for="Label"></label>
-                <input asp-for="Label" class="form-control" />
+                <input asp-for="Label" class="form-control"/>
                 <span asp-validation-for="Label" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="DerivationScheme"></label>
-                <input asp-for="DerivationScheme" class="form-control" readonly />
+                <input asp-for="DerivationScheme" class="form-control" readonly/>
                 <span asp-validation-for="DerivationScheme" class="text-danger"></span>
             </div>
             @if (!string.IsNullOrEmpty(Model.DerivationSchemeInput) && Model.DerivationSchemeInput != Model.DerivationScheme)
             {
                 <div class="form-group">
                     <label asp-for="DerivationSchemeInput"></label>
-                    <input asp-for="DerivationSchemeInput" class="form-control" readonly />
+                    <input asp-for="DerivationSchemeInput" class="form-control" readonly/>
                     <span asp-validation-for="DerivationSchemeInput" class="text-danger"></span>
                 </div>
             }
             @for (int i = 0; i < Model.AccountKeys.Count; i++)
             {
-                <hr />
+                <hr/>
                 <h5>Account key @i</h5>
                 <div class="form-group">
                     <label asp-for="@Model.AccountKeys[i].AccountKey"></label>
-                    <input asp-for="@Model.AccountKeys[i].AccountKey" class="form-control" readonly />
+                    <input asp-for="@Model.AccountKeys[i].AccountKey" class="form-control" readonly/>
                     <span asp-validation-for="@Model.AccountKeys[i].AccountKey" class="text-danger"></span>
                 </div>
                 <div class="form-group">
                     <label asp-for="@Model.AccountKeys[i].MasterFingerprint"></label>
-                    <input asp-for="@Model.AccountKeys[i].MasterFingerprint" class="form-control" />
+                    <input asp-for="@Model.AccountKeys[i].MasterFingerprint" class="form-control"/>
                     <span asp-validation-for="@Model.AccountKeys[i].MasterFingerprint" class="text-danger"></span>
                 </div>
                 <div class="form-group">
                     <label asp-for="@Model.AccountKeys[i].AccountKeyPath"></label>
-                    <input asp-for="@Model.AccountKeys[i].AccountKeyPath" class="form-control" />
+                    <input asp-for="@Model.AccountKeys[i].AccountKeyPath" class="form-control"/>
                     <span asp-validation-for="@Model.AccountKeys[i].AccountKeyPath" class="text-danger"></span>
                 </div>
                 @if (Model.IsMultiSig)
                 {
                     <div class="form-group">
                         <label asp-for="SelectedSigningKey"></label>
-                        <input asp-for="SelectedSigningKey" type="radio" value="@Model.AccountKeys[i].AccountKey" />
+                        <input asp-for="SelectedSigningKey" type="radio" value="@Model.AccountKeys[i].AccountKey"/>
                     </div>
                 }
             }
@@ -80,9 +82,35 @@
                         {
                             <button name="command" type="submit" class="dropdown-item" value="view-seed">View seed</button>
                         }
+
+                        @if (Model.UriScheme == "bitcoin")
+                        {
+                            <button type="button" class="dropdown-item register-wallet" data-storename="@Model.StoreName" data-scheme="@Model.UriScheme" data-url="@Url.Action("WalletSend", "Wallets", new {walletId = Context.GetRouteValue("walletId"), bip21 = "%s"})">Open this bitcoin wallet on payment links</button>
+                        }
                     </div>
                 </div>
             </div>
         </form>
     </div>
 </div>
+
+<script>
+    $(document).ready(function(){
+        if(navigator.registerProtocolHandler){
+            $(".register-wallet")
+                .show()
+                .on("click", function(){
+                   var store = $(this).data("storename");
+                   var scheme = $(this).data("scheme");
+                   var url = decodeURIComponent($(this).data("url"));
+                   navigator.registerProtocolHandler(scheme, url, "BTCPay Wallet -" + store);
+               });
+        } 
+    });
+</script>
+<style>
+    .register-wallet{
+        display: none;
+    }
+</style>
+

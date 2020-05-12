@@ -236,7 +236,6 @@ namespace BTCPayServer.Controllers
                 {
                     walletVm.Balance = "";
                 }
-                walletVm.Scheme = wallet.Network.UriScheme;
                 walletVm.CryptoCode = wallet.Network.CryptoCode;
                 walletVm.StoreId = wallet.Store.Id;
                 walletVm.Id = new WalletId(wallet.Store.Id, wallet.Network.CryptoCode);
@@ -1178,6 +1177,8 @@ namespace BTCPayServer.Controllers
             var store = (await Repository.FindStore(walletId.StoreId, GetUserId()));
             var vm = new WalletSettingsViewModel()
             {
+                StoreName = store.StoreName,
+                UriScheme = derivationSchemeSettings.Network.UriScheme,
                 Label = derivationSchemeSettings.Label,
                 DerivationScheme = derivationSchemeSettings.AccountDerivation.ToString(),
                 DerivationSchemeInput = derivationSchemeSettings.AccountOriginal,

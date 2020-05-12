@@ -41,6 +41,13 @@ namespace BTCPayServer.Services
         }
     }
 
+    public class PayjoinClientParameters
+    {
+        public Money MaxFeeBumpContribution { get; set; }
+        public int? FeeBumpIndex { get; set; }
+        public int Version { get; set; } = 1;
+    }
+
     public class PayjoinClient
     {
         public const string PayjoinOnionNamedClient = "payjoin.onion";
@@ -64,6 +71,8 @@ namespace BTCPayServer.Services
             _httpClientFactory = httpClientFactory;
         }
 
+        public Money MaxFeeBumpContribution { get; set; }
+
         public async Task<PSBT> RequestPayjoin(Uri endpoint, DerivationSchemeSettings derivationSchemeSettings,
             PSBT originalTx, CancellationToken cancellationToken)
         {
@@ -75,13 +84,17 @@ namespace BTCPayServer.Services
                 throw new ArgumentNullException(nameof(originalTx));
             if (originalTx.IsAllFinalized())
                 throw new InvalidOperationException("The original PSBT should not be finalized.");
-
+            var clientParameters = new PayjoinClientParameters();
             var type = derivationSchemeSettings.AccountDerivation.ScriptPubKeyType();
             if (!SupportedFormats.Contains(type))
             {
                 throw new PayjoinSenderException($"The wallet does not support payjoin");
             }
             var signingAccount = derivationSchemeSettings.GetSigningAccountKeySettings();
+            var changeOutput = originalTx.Outputs.CoinsFor(derivationSchemeSettings.AccountDerivation, signingAccount.AccountKey, signingAccount.GetRootedKeyPath())
+                    .FirstOrDefault();
+            if (changeOutput is PSBTOutput o)
+                clientParameters.FeeBumpIndex = (int)o.Index;
             var sentBefore = -originalTx.GetBalance(derivationSchemeSettings.AccountDerivation,
                 signingAccount.AccountKey,
                 signingAccount.GetRootedKeyPath());
@@ -89,11 +102,10 @@ namespace BTCPayServer.Services
             if (!originalTx.TryGetEstimatedFeeRate(out var originalFeeRate) || !originalTx.TryGetVirtualSize(out var oldVirtualSize))
                 throw new ArgumentException("originalTx should have utxo information", nameof(originalTx));
             var originalFee = originalTx.GetFee();
+
+            clientParameters.MaxFeeBumpContribution = MaxFeeBumpContribution is null ? originalFee : MaxFeeBumpContribution;
             var cloned = originalTx.Clone();
-            if (!cloned.TryFinalize(out var errors))
-            {
-                return null;
-            }
+            cloned.Finalize();
 
             // We make sure we don't send unnecessary information to the receiver
             foreach (var finalized in cloned.Inputs.Where(i => i.IsFinalized()))
@@ -107,6 +119,8 @@ namespace BTCPayServer.Services
             }
 
             cloned.GlobalXPubs.Clear();
+
+            endpoint = ApplyOptionalParameters(endpoint, clientParameters);
             using HttpClient client = CreateHttpClient(endpoint);
             var bpuresponse = await client.PostAsync(endpoint,
                 new StringContent(cloned.ToHex(), Encoding.UTF8, "text/plain"), cancellationToken);
@@ -206,11 +220,6 @@ namespace BTCPayServer.Services
             if (ourInputCount < originalTx.Inputs.Count)
                 throw new PayjoinSenderException("The payjoin receiver removed some of our inputs");
 
-            // We limit the number of inputs the receiver can add
-            var addedInputs = newPSBT.Inputs.Count - originalTx.Inputs.Count;
-            if (addedInputs == 0)
-                throw new PayjoinSenderException("The payjoin receiver did not added any input");
-
             var sentAfter = -newPSBT.GetBalance(derivationSchemeSettings.AccountDerivation,
                 signingAccount.AccountKey,
                 signingAccount.GetRootedKeyPath());
@@ -224,8 +233,8 @@ namespace BTCPayServer.Services
                 var additionalFee = newPSBT.GetFee() - originalFee;
                 if (overPaying > additionalFee)
                     throw new PayjoinSenderException("The payjoin receiver is sending more money to himself");
-                if (overPaying > originalFee)
-                    throw new PayjoinSenderException("The payjoin receiver is making us pay more than twice the original fee");
+                if (overPaying > clientParameters.MaxFeeBumpContribution)
+                    throw new PayjoinSenderException("The payjoin receiver is making us pay too much fee");
 
                 // Let's check the difference is only for the fee and that feerate
                 // did not changed that much
@@ -237,6 +246,21 @@ namespace BTCPayServer.Services
             }
 
             return newPSBT;
+        }
+
+        private static Uri ApplyOptionalParameters(Uri endpoint, PayjoinClientParameters clientParameters)
+        {
+            var requestUri = endpoint.AbsoluteUri;
+            if (requestUri.IndexOf('?', StringComparison.OrdinalIgnoreCase) is int i && i != -1)
+                requestUri = requestUri.Substring(0, i);
+            List<string> parameters = new List<string>(3);
+            parameters.Add($"v={clientParameters.Version}");
+            if (clientParameters.FeeBumpIndex is int feeBumpIndex)
+                parameters.Add($"feebumpindex={feeBumpIndex}");
+            if (clientParameters.MaxFeeBumpContribution is Money maxFeeBumpContribution)
+                parameters.Add($"maxfeebumpcontribution={maxFeeBumpContribution.Satoshi}");
+            endpoint = new Uri($"{requestUri}?{string.Join('&', parameters)}");
+            return endpoint;
         }
 
         private HttpClient CreateHttpClient(Uri uri)

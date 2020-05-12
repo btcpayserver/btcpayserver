@@ -117,7 +117,7 @@ namespace BTCPayServer.Payments.PayJoin
         [MediaTypeConstraint("text/plain")]
         [RateLimitsFilter(ZoneLimits.PayJoin, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> Submit(string cryptoCode,
-            bool noadjustfee = false,
+            long maxfeebumpcontribution = -1,
             int feebumpindex = -1,
             int v = 1)
         {
@@ -130,6 +130,7 @@ namespace BTCPayServer.Payments.PayJoin
                     new JProperty("message", "This version of payjoin is not supported.")
                 });
             }
+            Money allowedFeeBumpContribution = Money.Satoshis(maxfeebumpcontribution >= 0 ? maxfeebumpcontribution : long.MaxValue);
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
             if (network == null)
             {
@@ -415,7 +416,7 @@ namespace BTCPayServer.Payments.PayJoin
             Money expectedFee = txBuilder.EstimateFees(newTx, originalFeeRate);
             Money actualFee = newTx.GetFee(txBuilder.FindSpentCoins(newTx));
             Money additionalFee = expectedFee - actualFee;
-            if (additionalFee > Money.Zero && !noadjustfee)
+            if (additionalFee > Money.Zero)
             {
                 // If the user overpaid, taking fee on our output (useful if sender dump a full UTXO for privacy)
                 for (int i = 0; i < newTx.Outputs.Count && additionalFee > Money.Zero && due < Money.Zero; i++)
@@ -433,7 +434,7 @@ namespace BTCPayServer.Payments.PayJoin
                 }
 
                 // The rest, we take from user's change
-                for (int i = 0; i < newTx.Outputs.Count && additionalFee > Money.Zero; i++)
+                for (int i = 0; i < newTx.Outputs.Count && additionalFee > Money.Zero && allowedFeeBumpContribution > Money.Zero; i++)
                 {
                     if (preferredFeeBumpOutput is TxOut &&
                         preferredFeeBumpOutput != newTx.Outputs[i])
@@ -443,8 +444,10 @@ namespace BTCPayServer.Payments.PayJoin
                         var outputContribution = Money.Min(additionalFee, newTx.Outputs[i].Value);
                         outputContribution = Money.Min(outputContribution,
                             newTx.Outputs[i].Value - newTx.Outputs[i].GetDustThreshold(minRelayTxFee));
+                        outputContribution = Money.Min(outputContribution, allowedFeeBumpContribution);
                         newTx.Outputs[i].Value -= outputContribution;
                         additionalFee -= outputContribution;
+                        allowedFeeBumpContribution -= outputContribution;
                     }
                 }
 

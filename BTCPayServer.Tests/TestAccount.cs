@@ -145,6 +145,10 @@ namespace BTCPayServer.Tests
 
         public async Task CreateStoreAsync()
         {
+            if (UserId is null)
+            {
+                await RegisterAsync();
+            }
             var store = this.GetController<UserStoresController>();
             await store.CreateStore(new CreateStoreViewModel() {Name = "Test Store"});
             StoreId = store.CreatedStoreId;
@@ -161,6 +165,8 @@ namespace BTCPayServer.Tests
         public async Task<WalletId> RegisterDerivationSchemeAsync(string cryptoCode, ScriptPubKeyType segwit = ScriptPubKeyType.Legacy,
             bool importKeysToNBX = false)
         {
+            if (StoreId is null)
+                await CreateStoreAsync();
             SupportedNetwork = parent.NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
             var store = parent.PayTester.GetController<StoresController>(UserId, StoreId);
             GenerateWalletResponseV = await parent.ExplorerClient.GenerateWalletAsync(new GenerateWalletRequest()

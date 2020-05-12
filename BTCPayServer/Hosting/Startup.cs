@@ -83,10 +83,7 @@ namespace BTCPayServer.Hosting
                     return builtInFactory(context);
                 };
             })
-            .AddNewtonsoftJson(options =>
-            {
-                options.SerializerSettings.Converters.Add(new DecimalStringJsonConverter());
-            })
+            .AddNewtonsoftJson()
 #if RAZOR_RUNTIME_COMPILE
             .AddRazorRuntimeCompilation()
 #endif

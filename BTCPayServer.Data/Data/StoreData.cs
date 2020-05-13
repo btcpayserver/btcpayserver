@@ -46,6 +46,8 @@ namespace BTCPayServer.Data
 
         public List<PairedSINData> PairedSINs { get; set; }
         public IEnumerable<APIKeyData> APIKeys { get; set; }
+        public IEnumerable<StoreWalletData> StoreWalletDatas { get; set; }
+        
     }
 
     public enum NetworkFeeMode

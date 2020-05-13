@@ -17,7 +17,7 @@ namespace BTCPayServer.Services.Labels
             _linkGenerator = linkGenerator;
         }
 
-        public IEnumerable<Label> GetLabels(WalletBlobInfo walletBlobInfo, WalletTransactionInfo transactionInfo,
+        public IEnumerable<Label> GetLabels(WalletDataExtensions.IWalletHasDefinedLabelColors walletBlobInfo, WalletTransactionInfo transactionInfo,
             HttpRequest request)
         {
             foreach (var label in transactionInfo.Labels)
@@ -29,7 +29,7 @@ namespace BTCPayServer.Services.Labels
             }
         }
 
-        public IEnumerable<Label> GetLabels(WalletBlobInfo walletBlobInfo, HttpRequest request)
+        public IEnumerable<Label> GetLabels(WalletDataExtensions.IWalletHasDefinedLabelColors walletBlobInfo, HttpRequest request)
         {
             foreach (var kv in walletBlobInfo.LabelColors)
             {

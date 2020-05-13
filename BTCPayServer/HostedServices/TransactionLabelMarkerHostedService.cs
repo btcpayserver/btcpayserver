@@ -17,12 +17,14 @@ namespace BTCPayServer.HostedServices
     {
         private readonly EventAggregator _eventAggregator;
         private readonly WalletRepository _walletRepository;
+        private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
 
-        public TransactionLabelMarkerHostedService(EventAggregator eventAggregator, WalletRepository walletRepository) :
+        public TransactionLabelMarkerHostedService(EventAggregator eventAggregator, WalletRepository walletRepository, BTCPayNetworkProvider btcPayNetworkProvider) :
             base(eventAggregator)
         {
             _eventAggregator = eventAggregator;
             _walletRepository = walletRepository;
+            _btcPayNetworkProvider = btcPayNetworkProvider;
         }
 
         protected override void SubscribeToEvents()
@@ -59,37 +61,41 @@ namespace BTCPayServer.HostedServices
             }
             else if (evt is UpdateTransactionLabel updateTransactionLabel)
             {
-                var walletTransactionsInfo =
-                    await _walletRepository.GetWalletTransactionsInfo(updateTransactionLabel.WalletId);
-                var walletBlobInfo = await _walletRepository.GetWalletInfo(updateTransactionLabel.WalletId);
-                await Task.WhenAll(updateTransactionLabel.TransactionLabels.Select(async pair =>
+                var wallet = await _walletRepository.GetWallet(updateTransactionLabel.WalletId.ToString(), true);
+                if (wallet?.GetBlob(_btcPayNetworkProvider) is WalletDataExtensions.IWalletHasDefinedLabelColors
+                    labelBlob)
                 {
-                    if (!walletTransactionsInfo.TryGetValue(pair.Key.ToString(), out var walletTransactionInfo))
+                    var walletTransactionsInfo = wallet.GetWalletTransactionsInfo();
+                    await Task.WhenAll(updateTransactionLabel.TransactionLabels.Select(async pair =>
                     {
-                        walletTransactionInfo = new WalletTransactionInfo();
-                    }
-
-                    foreach (var label in pair.Value)
-                    {
-                        walletBlobInfo.LabelColors.TryAdd(label.label, label.color);
-                    }
-
-                    await _walletRepository.SetWalletInfo(updateTransactionLabel.WalletId, walletBlobInfo);
-                    var update = false;
-                    foreach (var label in pair.Value)
-                    {
-                        if (walletTransactionInfo.Labels.Add(label.label))
+                        if (!walletTransactionsInfo.TryGetValue(pair.Key.ToString(), out var walletTransactionInfo))
                         {
-                            update = true;
+                            walletTransactionInfo = new WalletTransactionInfo();
                         }
-                    }
 
-                    if (update)
-                    {
-                        await _walletRepository.SetWalletTransactionInfo(updateTransactionLabel.WalletId,
-                            pair.Key.ToString(), walletTransactionInfo);
-                    }
-                }));
+                        foreach (var label in pair.Value)
+                        {
+                            labelBlob.LabelColors.TryAdd(label.label, label.color);
+                        }
+                        wallet.SetBlob((ISupportedPaymentMethod) labelBlob, _btcPayNetworkProvider);
+                        await _walletRepository.CreateOrUpdateWallet(wallet);
+                        var update = false;
+                        foreach (var label in pair.Value)
+                        {
+                            if (walletTransactionInfo.Labels.Add(label.label))
+                            {
+                                update = true;
+                            }
+                        }
+
+                        if (update)
+                        {
+                            await _walletRepository.SetWalletTransactionInfo(updateTransactionLabel.WalletId.ToString(),
+                                pair.Key.ToString(), walletTransactionInfo);
+                        }
+                    }));
+                }
+                
             }
         }
     }

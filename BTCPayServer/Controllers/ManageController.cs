@@ -49,7 +49,7 @@ namespace BTCPayServer.Controllers
           EmailSenderFactory emailSenderFactory,
           ILogger<ManageController> logger,
           UrlEncoder urlEncoder,
-          BTCPayWalletProvider walletProvider,
+          BTCPayOnChainWalletManagerProvider chainWalletManagerProvider,
           StoreRepository storeRepository,
           IWebHostEnvironment env, 
           U2FService  u2FService,

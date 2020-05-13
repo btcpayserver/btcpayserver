@@ -35,13 +35,13 @@ namespace BTCPayServer.Services.Wallets
         }
         public TimestampedCoin[] TimestampedCoins { get; set; }
         public DerivationStrategyBase Strategy { get; set; }
-        public BTCPayWallet Wallet { get; set; }
+        public BTCPayOnChainWalletManager OnChainWalletManager { get; set; }
     }
-    public class BTCPayWallet
+    public class BTCPayOnChainWalletManager
     {
         private ExplorerClient _Client;
         private IMemoryCache _MemoryCache;
-        public BTCPayWallet(ExplorerClient client, IMemoryCache memoryCache, BTCPayNetwork network, 
+        public BTCPayOnChainWalletManager(ExplorerClient client, IMemoryCache memoryCache, BTCPayNetwork network, 
             ApplicationDbContextFactory dbContextFactory)
         {
             if (client == null)

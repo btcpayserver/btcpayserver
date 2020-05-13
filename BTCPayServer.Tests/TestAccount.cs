@@ -276,7 +276,7 @@ namespace BTCPayServer.Tests
         public async Task<Coin> ReceiveUTXO(Money value, BTCPayNetwork network)
         {
             var cashCow = parent.ExplorerNode;
-            var btcPayWallet = parent.PayTester.GetService<BTCPayWalletProvider>().GetWallet(network);
+            var btcPayWallet = parent.PayTester.GetService<BTCPayOnChainWalletManagerProvider>().GetWallet(network);
             var address = (await btcPayWallet.ReserveAddressAsync(this.DerivationScheme)).Address;
             await parent.WaitForEvent<NewOnChainTransactionEvent>(async () =>
             {
@@ -302,14 +302,14 @@ namespace BTCPayServer.Tests
         public async Task<BitcoinAddress> GetNewAddress(BTCPayNetwork network)
         {
             var cashCow = parent.ExplorerNode;
-            var btcPayWallet = parent.PayTester.GetService<BTCPayWalletProvider>().GetWallet(network);
+            var btcPayWallet = parent.PayTester.GetService<BTCPayOnChainWalletManagerProvider>().GetWallet(network);
             var address = (await btcPayWallet.ReserveAddressAsync(this.DerivationScheme)).Address;
             return address;
         }
 
         public async Task<PSBT> Sign(PSBT psbt)
         {
-            var btcPayWallet = parent.PayTester.GetService<BTCPayWalletProvider>()
+            var btcPayWallet = parent.PayTester.GetService<BTCPayOnChainWalletManagerProvider>()
                 .GetWallet(psbt.Network.NetworkSet.CryptoCode);
             var explorerClient = parent.PayTester.GetService<ExplorerClientProvider>()
                 .GetExplorerClient(psbt.Network.NetworkSet.CryptoCode);

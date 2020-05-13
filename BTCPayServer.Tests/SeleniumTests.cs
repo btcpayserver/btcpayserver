@@ -468,7 +468,7 @@ namespace BTCPayServer.Tests
                         .OfType<DerivationSchemeSettings>()
                         .Single(settings => settings.PaymentId.CryptoCode == walletId.CryptoCode);
                     Assert.Contains(
-                        await s.Server.PayTester.GetService<BTCPayWalletProvider>().GetWallet(walletId.CryptoCode)
+                        await s.Server.PayTester.GetService<BTCPayOnChainWalletManagerProvider>().GetWallet(walletId.CryptoCode)
                             .GetUnspentCoins(x.AccountDerivation),
                         coin => coin.OutPoint == spentOutpoint);
                 });

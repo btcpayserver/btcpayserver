@@ -7,12 +7,11 @@ using Microsoft.Extensions.Options;
 
 namespace BTCPayServer.Services.Wallets
 {
-    public class BTCPayWalletProvider
+    public class BTCPayOnChainWalletManagerProvider
     {
         private ExplorerClientProvider _Client;
-        BTCPayNetworkProvider _NetworkProvider;
         IOptions<MemoryCacheOptions> _Options;
-        public BTCPayWalletProvider(ExplorerClientProvider client,
+        public BTCPayOnChainWalletManagerProvider(ExplorerClientProvider client,
                                     IOptions<MemoryCacheOptions> memoryCacheOption,
                                     Data.ApplicationDbContextFactory dbContextFactory,
                                     BTCPayNetworkProvider networkProvider)
@@ -20,7 +19,6 @@ namespace BTCPayServer.Services.Wallets
             if (client == null)
                 throw new ArgumentNullException(nameof(client));
             _Client = client;
-            _NetworkProvider = networkProvider;
             _Options = memoryCacheOption;
 
             foreach(var network in networkProvider.GetAll().OfType<BTCPayNetwork>())
@@ -28,19 +26,19 @@ namespace BTCPayServer.Services.Wallets
                 var explorerClient = _Client.GetExplorerClient(network.CryptoCode);
                 if (explorerClient == null)
                     continue;
-                _Wallets.Add(network.CryptoCode.ToUpperInvariant(), new BTCPayWallet(explorerClient, new MemoryCache(_Options), network, dbContextFactory));
+                _Wallets.Add(network.CryptoCode.ToUpperInvariant(), new BTCPayOnChainWalletManager(explorerClient, new MemoryCache(_Options), network, dbContextFactory));
             }
         }
 
-        Dictionary<string, BTCPayWallet> _Wallets = new Dictionary<string, BTCPayWallet>();
+        Dictionary<string, BTCPayOnChainWalletManager> _Wallets = new Dictionary<string, BTCPayOnChainWalletManager>();
 
-        public BTCPayWallet GetWallet(BTCPayNetworkBase network)
+        public BTCPayOnChainWalletManager GetWallet(BTCPayNetworkBase network)
         {
             if (network == null)
                 throw new ArgumentNullException(nameof(network));
             return GetWallet(network.CryptoCode);
         }
-        public BTCPayWallet GetWallet(string cryptoCode)
+        public BTCPayOnChainWalletManager GetWallet(string cryptoCode)
         {
             if (cryptoCode == null)
                 throw new ArgumentNullException(nameof(cryptoCode));
@@ -53,7 +51,7 @@ namespace BTCPayServer.Services.Wallets
             return _Client.IsAvailable(network);
         }
 
-        public IEnumerable<BTCPayWallet> GetWallets()
+        public IEnumerable<BTCPayOnChainWalletManager> GetWallets()
         {
             foreach (var w in _Wallets)
                 yield return w.Value;

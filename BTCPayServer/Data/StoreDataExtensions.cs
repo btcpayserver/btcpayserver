@@ -65,7 +65,13 @@ namespace BTCPayServer.Data
             return true;
         }
 
-        public static IEnumerable<ISupportedPaymentMethod> GetSupportedPaymentMethods(this StoreData storeData, BTCPayNetworkProvider networks)
+        public static IEnumerable<ISupportedPaymentMethod> GetSupportedPaymentMethods(this StoreData storeData,
+            BTCPayNetworkProvider btcPayNetworkProvider)
+        {
+            return storeData.StoreWalletDatas.Select(data => data.WalletData.GetBlob(btcPayNetworkProvider));
+        }
+
+        public static IEnumerable<ISupportedPaymentMethod> GetSupportedPaymentMethodsLegacy(this StoreData storeData, BTCPayNetworkProvider networks)
         {
             if (storeData == null)
                 throw new ArgumentNullException(nameof(storeData));
@@ -102,63 +108,6 @@ namespace BTCPayServer.Data
 #pragma warning restore CS0618
         }
 
-        public static void SetSupportedPaymentMethod(this StoreData storeData, ISupportedPaymentMethod supportedPaymentMethod)
-        {
-            storeData.SetSupportedPaymentMethod(null, supportedPaymentMethod);
-        }
-
-        /// <summary>
-        /// Set or remove a new supported payment method for the store
-        /// </summary>
-        /// <param name="paymentMethodId">The paymentMethodId</param>
-        /// <param name="supportedPaymentMethod">The payment method, or null to remove</param>
-        public static void SetSupportedPaymentMethod(this StoreData storeData, PaymentMethodId paymentMethodId, ISupportedPaymentMethod supportedPaymentMethod)
-        {
-            if (supportedPaymentMethod != null && paymentMethodId != null && paymentMethodId != supportedPaymentMethod.PaymentId)
-            {
-                throw new InvalidOperationException("Incoherent arguments, this should never happen");
-            }
-            if (supportedPaymentMethod == null && paymentMethodId == null)
-                throw new ArgumentException($"{nameof(supportedPaymentMethod)} or {nameof(paymentMethodId)} should be specified");
-            if (supportedPaymentMethod != null && paymentMethodId == null)
-            {
-                paymentMethodId = supportedPaymentMethod.PaymentId;
-            }
-
-#pragma warning disable CS0618
-            JObject strategies = string.IsNullOrEmpty(storeData.DerivationStrategies) ? new JObject() : JObject.Parse(storeData.DerivationStrategies);
-            bool existing = false;
-            foreach (var strat in strategies.Properties().ToList())
-            {
-                var stratId = PaymentMethodId.Parse(strat.Name);
-                if (stratId.IsBTCOnChain)
-                {
-                    // Legacy stuff which should go away
-                    storeData.DerivationStrategy = null;
-                }
-                if (stratId == paymentMethodId)
-                {
-                    if (supportedPaymentMethod == null)
-                    {
-                        strat.Remove();
-                    }
-                    else
-                    {
-                        strat.Value = PaymentMethodExtensions.Serialize(supportedPaymentMethod);
-                    }
-                    existing = true;
-                    break;
-                }
-            }
-
-            if (!existing && supportedPaymentMethod == null && paymentMethodId.IsBTCOnChain)
-            {
-                storeData.DerivationStrategy = null;
-            }
-            else if (!existing && supportedPaymentMethod != null)
-                strategies.Add(new JProperty(supportedPaymentMethod.PaymentId.ToString(), PaymentMethodExtensions.Serialize(supportedPaymentMethod)));
-            storeData.DerivationStrategies = strategies.ToString();
-#pragma warning restore CS0618
-        }
+       
     }
 }

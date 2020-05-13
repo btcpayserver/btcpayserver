@@ -167,7 +167,7 @@ namespace BTCPayServer.Controllers
             vm.RootKeyPath = network.GetRootKeyPath();
             DerivationSchemeSettings strategy = null;
 
-            var wallet = _WalletProvider.GetWallet(network);
+            var wallet = _chainWalletManagerProvider.GetWallet(network);
             if (wallet == null)
             {
                 return NotFound();

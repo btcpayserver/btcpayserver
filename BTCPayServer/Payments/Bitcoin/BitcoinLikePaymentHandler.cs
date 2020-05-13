@@ -22,19 +22,19 @@ namespace BTCPayServer.Payments.Bitcoin
         private readonly BTCPayNetworkProvider _networkProvider;
         private IFeeProviderFactory _FeeRateProviderFactory;
         private readonly NBXplorerDashboard _dashboard;
-        private Services.Wallets.BTCPayWalletProvider _WalletProvider;
+        private Services.Wallets.BTCPayOnChainWalletManagerProvider _chainWalletManagerProvider;
 
         public BitcoinLikePaymentHandler(ExplorerClientProvider provider,
             BTCPayNetworkProvider networkProvider,
             IFeeProviderFactory feeRateProviderFactory,
             NBXplorerDashboard dashboard,
-            Services.Wallets.BTCPayWalletProvider walletProvider)
+            Services.Wallets.BTCPayOnChainWalletManagerProvider chainWalletManagerProvider)
         {
             _ExplorerProvider = provider;
             _networkProvider = networkProvider;
             _FeeRateProviderFactory = feeRateProviderFactory;
             _dashboard = dashboard;
-            _WalletProvider = walletProvider;
+            _chainWalletManagerProvider = chainWalletManagerProvider;
         }
 
         class Prepare
@@ -120,7 +120,7 @@ namespace BTCPayServer.Payments.Bitcoin
                 GetNetworkFeeRate = storeBlob.NetworkFeeMode == NetworkFeeMode.Never
                     ? null
                     : _FeeRateProviderFactory.CreateFeeProvider(network).GetFeeRateAsync(),
-                ReserveAddress = _WalletProvider.GetWallet(network)
+                ReserveAddress = _chainWalletManagerProvider.GetWallet(network)
                     .ReserveAddressAsync(supportedPaymentMethod.AccountDerivation)
             };
         }

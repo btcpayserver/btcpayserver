@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Data;
 using BTCPayServer.Payments;
 using NBitcoin;
 using NBXplorer.DerivationStrategy;
@@ -10,7 +11,7 @@ using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer
 {
-    public class DerivationSchemeSettings : ISupportedPaymentMethod
+    public class DerivationSchemeSettings : ISupportedPaymentMethod, WalletDataExtensions.IWalletHasDefinedLabelColors
     {
         public static DerivationSchemeSettings Parse(string derivationStrategy, BTCPayNetwork network)
         {
@@ -252,6 +253,8 @@ namespace BTCPayServer
                 psbt.RebaseKeyPaths(rebase.AccountKey, rebase.AccountKeyPath);
             }
         }
+
+        public Dictionary<string, string> LabelColors { get; set; } = new Dictionary<string, string>();
     }
     public class AccountKeySettings
     {

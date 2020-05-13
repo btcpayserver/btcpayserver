@@ -87,14 +87,14 @@ namespace BTCPayServer.Tests
                 var etb = tester.NetworkProvider.GetNetwork<ElementsBTCPayNetwork>("ETB");
                 var issueAssetResult = await tester.LBTCExplorerNode.SendCommandAsync("issueasset", 100000, 0);
                 tether.AssetId = uint256.Parse(issueAssetResult.Result["asset"].ToString());
-                ((ElementsBTCPayNetwork)tester.PayTester.GetService<BTCPayWalletProvider>().GetWallet("USDT").Network)
+                ((ElementsBTCPayNetwork)tester.PayTester.GetService<BTCPayOnChainWalletManagerProvider>().GetWallet("USDT").Network)
                     .AssetId = tether.AssetId;
                 Assert.Equal(tether.AssetId,  tester.NetworkProvider.GetNetwork<ElementsBTCPayNetwork>("USDT").AssetId);
-                Assert.Equal(tether.AssetId,  ((ElementsBTCPayNetwork)tester.PayTester.GetService<BTCPayWalletProvider>().GetWallet("USDT").Network).AssetId);
+                Assert.Equal(tether.AssetId,  ((ElementsBTCPayNetwork)tester.PayTester.GetService<BTCPayOnChainWalletManagerProvider>().GetWallet("USDT").Network).AssetId);
                 
                 var issueAssetResult2 = await tester.LBTCExplorerNode.SendCommandAsync("issueasset", 100000, 0);
                 etb.AssetId = uint256.Parse(issueAssetResult2.Result["asset"].ToString());
-                ((ElementsBTCPayNetwork)tester.PayTester.GetService<BTCPayWalletProvider>().GetWallet("ETB").Network)
+                ((ElementsBTCPayNetwork)tester.PayTester.GetService<BTCPayOnChainWalletManagerProvider>().GetWallet("ETB").Network)
                     .AssetId = etb.AssetId;
                 
                 

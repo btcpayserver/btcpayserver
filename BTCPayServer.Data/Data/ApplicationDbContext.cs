@@ -117,6 +117,11 @@ namespace BTCPayServer.Data
         {
             get; set;
         }
+        
+        public DbSet<StoreWalletData> StoreWallets
+        {
+            get; set;
+        }
        
 
         public DbSet<U2FDevice> U2FDevices { get; set; }   
@@ -264,6 +269,8 @@ namespace BTCPayServer.Data
             builder.Entity<WalletTransactionData>()
                 .HasOne(o => o.WalletData)
                 .WithMany(w => w.WalletTransactions).OnDelete(DeleteBehavior.Cascade);
+            
+            builder.Entity<StoreWalletData>().HasKey(data => new { data.StoreDataId, data.WalletDataId });
             
             if (Database.IsSqlite() && !_designTime)
             {

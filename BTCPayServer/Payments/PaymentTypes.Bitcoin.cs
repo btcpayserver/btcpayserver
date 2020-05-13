@@ -58,6 +58,12 @@ namespace BTCPayServer.Payments
             return DerivationSchemeSettings.Parse(((JValue)value).Value<string>(), net);
         }
 
+        public override string SerializeSupportedPaymentMethod(BTCPayNetworkBase network, ISupportedPaymentMethod value)
+        {
+            var derivation = (DerivationSchemeSettings)value;
+            return derivation.Network.NBXplorerNetwork.Serializer.ToString(derivation);
+        }
+
         public override string GetTransactionLink(BTCPayNetworkBase network, string txId)
         {
             if (txId == null)

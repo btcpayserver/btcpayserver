@@ -83,7 +83,7 @@ namespace BTCPayServer.Payments.PayJoin
         private readonly InvoiceRepository _invoiceRepository;
         private readonly ExplorerClientProvider _explorerClientProvider;
         private readonly StoreRepository _storeRepository;
-        private readonly BTCPayWalletProvider _btcPayWalletProvider;
+        private readonly BTCPayOnChainWalletManagerProvider _btcPayChainWalletManagerProvider;
         private readonly PayJoinRepository _payJoinRepository;
         private readonly EventAggregator _eventAggregator;
         private readonly NBXplorerDashboard _dashboard;
@@ -92,7 +92,7 @@ namespace BTCPayServer.Payments.PayJoin
 
         public PayJoinEndpointController(BTCPayNetworkProvider btcPayNetworkProvider,
             InvoiceRepository invoiceRepository, ExplorerClientProvider explorerClientProvider,
-            StoreRepository storeRepository, BTCPayWalletProvider btcPayWalletProvider,
+            StoreRepository storeRepository, BTCPayOnChainWalletManagerProvider btcPayChainWalletManagerProvider,
             PayJoinRepository payJoinRepository,
             EventAggregator eventAggregator,
             NBXplorerDashboard dashboard,
@@ -103,7 +103,7 @@ namespace BTCPayServer.Payments.PayJoin
             _invoiceRepository = invoiceRepository;
             _explorerClientProvider = explorerClientProvider;
             _storeRepository = storeRepository;
-            _btcPayWalletProvider = btcPayWalletProvider;
+            _btcPayChainWalletManagerProvider = btcPayChainWalletManagerProvider;
             _payJoinRepository = payJoinRepository;
             _eventAggregator = eventAggregator;
             _dashboard = dashboard;
@@ -499,7 +499,7 @@ namespace BTCPayServer.Payments.PayJoin
                 return UnprocessableEntity(CreatePayjoinError("already-paid",
                     $"The original transaction has already been accounted"));
             }
-            await _btcPayWalletProvider.GetWallet(network).SaveOffchainTransactionAsync(originalTx);
+            await _btcPayChainWalletManagerProvider.GetWallet(network).SaveOffchainTransactionAsync(originalTx);
             _eventAggregator.Publish(new InvoiceEvent(invoice, 1002, InvoiceEvent.ReceivedPayment) {Payment = payment});
             _eventAggregator.Publish(new UpdateTransactionLabel()
             {

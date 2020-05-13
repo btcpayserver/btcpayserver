@@ -169,7 +169,7 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<NBXplorerDashboard>();
             services.TryAddSingleton<StoreRepository>();
             services.TryAddSingleton<PaymentRequestRepository>();
-            services.TryAddSingleton<BTCPayWalletProvider>();
+            services.TryAddSingleton<BTCPayOnChainWalletManagerProvider>();
             services.TryAddSingleton<WalletReceiveStateService>();
             services.TryAddSingleton<CurrencyNameTable>();
             services.TryAddSingleton<IFeeProviderFactory>(o => new NBXplorerFeeProviderFactory(o.GetRequiredService<ExplorerClientProvider>())

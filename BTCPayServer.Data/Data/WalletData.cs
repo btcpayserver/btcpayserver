@@ -12,14 +12,16 @@ namespace BTCPayServer.Data
         [System.ComponentModel.DataAnnotations.Key]
         public string Id { get; set; }
 
+        public string PaymentType { get; set; }
+        public string CryptoCode { get; set; }
+
+        public string ApplicationUserId { get; set; }        
+        
         public List<WalletTransactionData> WalletTransactions { get; set; }
 
         public byte[] Blob { get; set; }
-    }
-
-
-    public class WalletBlobInfo
-    {
-        public Dictionary<string, string> LabelColors { get; set; } = new Dictionary<string, string>();
+        
+        public IEnumerable<StoreWalletData> StoreWalletDatas { get; set; }
+        
     }
 }

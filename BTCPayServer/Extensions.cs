@@ -145,7 +145,7 @@ namespace BTCPayServer
                     .Select(p => (BitcoinLikePaymentData)p.GetCryptoPaymentData());
         }
 
-        public static async Task<Dictionary<uint256, TransactionResult>> GetTransactions(this BTCPayWallet client, uint256[] hashes, bool includeOffchain = false, CancellationToken cts = default(CancellationToken))
+        public static async Task<Dictionary<uint256, TransactionResult>> GetTransactions(this BTCPayOnChainWalletManager client, uint256[] hashes, bool includeOffchain = false, CancellationToken cts = default(CancellationToken))
         {
             hashes = hashes.Distinct().ToArray();
             var transactions = hashes

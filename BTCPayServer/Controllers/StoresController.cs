@@ -50,7 +50,7 @@ namespace BTCPayServer.Controllers
             TokenRepository tokenRepo,
             UserManager<ApplicationUser> userManager,
             AccessTokenController tokenController,
-            BTCPayWalletProvider walletProvider,
+            BTCPayOnChainWalletManagerProvider chainWalletManagerProvider,
             BTCPayNetworkProvider networkProvider,
             RateFetcher rateFactory,
             ExplorerClientProvider explorerProvider,
@@ -72,7 +72,7 @@ namespace BTCPayServer.Controllers
             _LangService = langService;
             _changellyClientProvider = changellyClientProvider;
             _TokenController = tokenController;
-            _WalletProvider = walletProvider;
+            _chainWalletManagerProvider = chainWalletManagerProvider;
             _Env = env;
             _httpClientFactory = httpClientFactory;
             _paymentMethodHandlerDictionary = paymentMethodHandlerDictionary;
@@ -94,7 +94,7 @@ namespace BTCPayServer.Controllers
         BTCPayNetworkProvider _NetworkProvider;
         private ExplorerClientProvider _ExplorerProvider;
         private IFeeProviderFactory _FeeRateProvider;
-        BTCPayWalletProvider _WalletProvider;
+        BTCPayOnChainWalletManagerProvider _chainWalletManagerProvider;
         AccessTokenController _TokenController;
         StoreRepository _Repo;
         TokenRepository _TokenRepository;

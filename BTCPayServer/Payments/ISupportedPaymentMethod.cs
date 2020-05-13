@@ -15,4 +15,5 @@ namespace BTCPayServer.Payments
     {
         PaymentMethodId PaymentId { get; }
     }
+    
 }

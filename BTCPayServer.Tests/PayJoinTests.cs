@@ -165,7 +165,7 @@ namespace BTCPayServer.Tests
                 var payjoinRepository = tester.PayTester.GetService<PayJoinRepository>();
                 broadcaster.Disable();
                 var network = tester.NetworkProvider.GetNetwork<BTCPayNetwork>("BTC");
-                var btcPayWallet = tester.PayTester.GetService<BTCPayWalletProvider>().GetWallet(network);
+                var btcPayWallet = tester.PayTester.GetService<BTCPayOnChainWalletManagerProvider>().GetWallet(network);
                 var cashCow = tester.ExplorerNode;
                 cashCow.Generate(2); // get some money in case
 
@@ -370,7 +370,7 @@ namespace BTCPayServer.Tests
                 var payjoinRepository = tester.PayTester.GetService<PayJoinRepository>();
                 broadcaster.Disable();
                 var network = tester.NetworkProvider.GetNetwork<BTCPayNetwork>("BTC");
-                var btcPayWallet = tester.PayTester.GetService<BTCPayWalletProvider>().GetWallet(network);
+                var btcPayWallet = tester.PayTester.GetService<BTCPayOnChainWalletManagerProvider>().GetWallet(network);
                 var cashCow = tester.ExplorerNode;
                 cashCow.Generate(2); // get some money in case
 
@@ -543,7 +543,7 @@ namespace BTCPayServer.Tests
                 
                 ////var payJoinStateProvider = tester.PayTester.GetService<PayJoinStateProvider>();
                 var btcPayNetwork = tester.NetworkProvider.GetNetwork<BTCPayNetwork>("BTC");
-                var btcPayWallet = tester.PayTester.GetService<BTCPayWalletProvider>().GetWallet(btcPayNetwork);
+                var btcPayWallet = tester.PayTester.GetService<BTCPayOnChainWalletManagerProvider>().GetWallet(btcPayNetwork);
                 var cashCow = tester.ExplorerNode;
                 cashCow.Generate(2); // get some money in case
 

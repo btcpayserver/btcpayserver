@@ -227,6 +227,7 @@ namespace BTCPayServer.Controllers
                 .Select(data => ((data.data,data.Item2, Wallet: _chainWalletManagerProvider.GetWallet(data.Item2.Network))))
                 .Where(_ => _.Wallet != null && _.Item2.Network.WalletSupported)
                 .Select(_ => (Wallet: _.Wallet,
+                    Id:  _.data.Id,
                     Balance: GetBalanceString(_.Wallet, _.Item2.AccountDerivation),
                     DerivationStrategy: _.Item2.AccountDerivation,
                     Network: _.Item2.Network))
@@ -239,15 +240,13 @@ namespace BTCPayServer.Controllers
                 ListWalletsViewModel.WalletViewModel walletVm = new ListWalletsViewModel.WalletViewModel();
                 wallets.Wallets.Add(walletVm);
                 walletVm.Balance = await wallet.Balance + " " + wallet.Wallet.Network.CryptoCode;
-                walletVm.IsOwner = wallet.Store.Role == StoreRoles.Owner;
+                walletVm.IsOwner = true;
                 if (!walletVm.IsOwner)
                 {
                     walletVm.Balance = "";
                 }
                 walletVm.CryptoCode = wallet.Network.CryptoCode;
-                walletVm.StoreId = wallet.Store.Id;
-                walletVm.Id = new WalletId(wallet.Store.Id, wallet.Network.CryptoCode);
-                walletVm.StoreName = wallet.Store.StoreName;
+                walletVm.Id = wallet.Id;
             }
 
             return View(wallets);
@@ -264,10 +263,10 @@ namespace BTCPayServer.Controllers
             if (paymentMethod == null)
                 return NotFound();
 
-            var wallet = _chainWalletManagerProvider.GetWallet(paymentMethod.Network);
+            var onChainWalletManager = _chainWalletManagerProvider.GetWallet(paymentMethod.Network);
             var walletBlobAsync = WalletRepository.GetWalletInfo(walletId);
             var walletTransactionsInfoAsync = WalletRepository.GetWalletTransactionsInfo(walletId);
-            var transactions = await wallet.FetchTransactions(paymentMethod.AccountDerivation);
+            var transactions = await onChainWalletManager.FetchTransactions(paymentMethod.AccountDerivation);
             var walletBlob = await walletBlobAsync;
             var walletTransactionsInfo = await walletTransactionsInfoAsync;
             var model = new ListTransactionsViewModel();
@@ -291,8 +290,8 @@ namespace BTCPayServer.Controllers
                     vm.Link = string.Format(CultureInfo.InvariantCulture, paymentMethod.Network.BlockExplorerLink,
                         vm.Id);
                     vm.Timestamp = tx.Timestamp;
-                    vm.Positive = tx.BalanceChange.GetValue(wallet.Network) >= 0;
-                    vm.Balance = tx.BalanceChange.ShowMoney(wallet.Network);
+                    vm.Positive = tx.BalanceChange.GetValue(onChainWalletManager.Network) >= 0;
+                    vm.Balance = tx.BalanceChange.ShowMoney(onChainWalletManager.Network);
                     vm.IsConfirmed = tx.Confirmations != 0;
 
                     if (walletTransactionsInfo.TryGetValue(tx.TransactionId.ToString(), out var transactionInfo))
@@ -1030,18 +1029,6 @@ namespace BTCPayServer.Controllers
                 return HttpContext.GetStoreData();
             }
         }
-
-        private DerivationSchemeSettings GetDerivationSchemeSettings(WalletId walletId)
-        {
-            
-            
-            var paymentMethod = CurrentStore
-                            .GetSupportedPaymentMethods(NetworkProvider)
-                            .OfType<DerivationSchemeSettings>()
-                            .FirstOrDefault(p => p.PaymentId.PaymentType == Payments.PaymentTypes.BTCLike && p.PaymentId.CryptoCode == walletId.CryptoCode);
-            return paymentMethod;
-        }
-
         private static async Task<string> GetBalanceString(BTCPayOnChainWalletManager onChainWalletManager, DerivationStrategyBase derivationStrategy)
         {
             using (CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))

@@ -35,15 +35,17 @@ namespace BTCPayServer.Services.Altcoins.Monero.UI
         private readonly StoreRepository _StoreRepository;
         private readonly MoneroRPCProvider _MoneroRpcProvider;
         private readonly BTCPayNetworkProvider _BtcPayNetworkProvider;
+        private readonly WalletRepository _walletRepository;
 
         public MoneroLikeStoreController(MoneroLikeConfiguration moneroLikeConfiguration,
             StoreRepository storeRepository, MoneroRPCProvider moneroRpcProvider,
-            BTCPayNetworkProvider btcPayNetworkProvider)
+            BTCPayNetworkProvider btcPayNetworkProvider, WalletRepository walletRepository)
         {
             _MoneroLikeConfiguration = moneroLikeConfiguration;
             _StoreRepository = storeRepository;
             _MoneroRpcProvider = moneroRpcProvider;
             _BtcPayNetworkProvider = btcPayNetworkProvider;
+            _walletRepository = walletRepository;
         }
 
         public StoreData StoreData => HttpContext.GetStoreData();
@@ -241,11 +243,30 @@ namespace BTCPayServer.Services.Altcoins.Monero.UI
 
             var storeData = StoreData;
             var blob = storeData.GetStoreBlob();
-            storeData.SetSupportedPaymentMethod(new MoneroSupportedPaymentMethod()
+
+            var existingMoneroWallets = await _walletRepository.GetWallets(new WalletRepository.WalletQuery()
+            {
+                StoreId = new[] {StoreData.Id}, PaymentTypes = new[] {MoneroPaymentType.Instance.ToString()},
+            });
+            WalletData walletData = existingMoneroWallets.Wallets.Any()?  existingMoneroWallets.Wallets.FirstOrDefault(): new WalletData()
+            {
+                CryptoCode = cryptoCode,
+                PaymentType = MoneroPaymentType.Instance.ToString(),
+                ApplicationUserId = "",
+                StoreWalletDatas = new List<StoreWalletData>()
+                {
+                    new StoreWalletData()
+                    {
+                        StoreDataId = storeData.Id
+                    }
+                }
+            };
+            walletData.SetBlob(new MoneroSupportedPaymentMethod()
             {
                 AccountIndex = viewModel.AccountIndex,
                 CryptoCode = viewModel.CryptoCode
-            });
+            }, _BtcPayNetworkProvider);
+            await _walletRepository.CreateOrUpdateWallet(walletData);
             
             blob.SetExcluded(new PaymentMethodId(viewModel.CryptoCode, MoneroPaymentType.Instance), !viewModel.Enabled);
             storeData.SetStoreBlob(blob);

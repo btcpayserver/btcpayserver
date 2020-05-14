@@ -228,19 +228,19 @@ namespace BTCPayServer.Services.Invoices
 #pragma warning restore CS0618
         }
 
-        internal void SetSupportedPaymentMethods(IEnumerable<ISupportedPaymentMethod> derivationStrategies)
-        {
-            JObject obj = new JObject();
-            foreach (var strat in derivationStrategies)
-            {
-                obj.Add(strat.PaymentId.ToString(), PaymentMethodExtensions.Serialize(strat));
-#pragma warning disable CS0618
-                // This field should eventually disappear
-                DerivationStrategy = null;
-            }
-            DerivationStrategies = JsonConvert.SerializeObject(obj);
-#pragma warning restore CS0618
-        }
+//         internal void SetSupportedPaymentMethods(IEnumerable<ISupportedPaymentMethod> derivationStrategies)
+//         {
+//             JObject obj = new JObject();
+//             foreach (var strat in derivationStrategies)
+//             {
+//                 obj.Add(strat.PaymentId.ToString(), PaymentMethodExtensions.Serialize(strat));
+// #pragma warning disable CS0618
+//                 // This field should eventually disappear
+//                 DerivationStrategy = null;
+//             }
+//             DerivationStrategies = JsonConvert.SerializeObject(obj);
+// #pragma warning restore CS0618
+//         }
 
         [JsonIgnore]
         public InvoiceStatus Status

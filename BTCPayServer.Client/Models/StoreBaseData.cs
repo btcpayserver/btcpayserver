@@ -13,7 +13,7 @@ namespace BTCPayServer.Client.Models
 
         public string Website { get; set; }
         public int InvoiceExpiration { get; set; } = 15;
-        public int MonitoringExpiration { get; set; } = 50;
+        public int MonitoringExpiration { get; set; } = 60;
         
         [JsonConverter(typeof(StringEnumConverter))]
         public SpeedPolicy SpeedPolicy { get; set; }

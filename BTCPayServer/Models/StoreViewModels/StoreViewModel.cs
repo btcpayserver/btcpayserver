@@ -1,6 +1,7 @@
 ﻿using BTCPayServer.Validation;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 
 namespace BTCPayServer.Models.StoreViewModels
@@ -79,7 +80,7 @@ namespace BTCPayServer.Models.StoreViewModels
         }
 
         [Display(Name = "Add additional fee (network fee) to invoice...")]
-        public Data.NetworkFeeMode NetworkFeeMode
+        public NetworkFeeMode NetworkFeeMode
         {
             get; set;
         }

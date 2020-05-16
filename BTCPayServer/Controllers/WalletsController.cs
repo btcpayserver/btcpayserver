@@ -1023,7 +1023,7 @@ namespace BTCPayServer.Controllers
             }
         }
 
-        private DerivationSchemeSettings GetDerivationSchemeSettings(WalletId walletId)
+        internal DerivationSchemeSettings GetDerivationSchemeSettings(WalletId walletId)
         {
             var paymentMethod = CurrentStore
                             .GetSupportedPaymentMethods(NetworkProvider)

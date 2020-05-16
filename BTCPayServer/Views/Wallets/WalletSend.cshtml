@@ -144,11 +144,11 @@
                             {
                                 var feeRateOption = Model.RecommendedSatoshiPerByte[index];
                                 <button type="button" class="btn btn-sm btn-outline-primary crypto-fee-link" value="@feeRateOption.FeeRate" data-toggle="tooltip" title="@feeRateOption.FeeRate sat/b">
-                                    <input type="hidden" asp-for="RecommendedSatoshiPerByte[index].Target" />
-                                    <input type="hidden" asp-for="RecommendedSatoshiPerByte[index].FeeRate" />
                                     @feeRateOption.Target.TimeString()
 
                                 </button>
+                                <input type="hidden" asp-for="RecommendedSatoshiPerByte[index].Target" />
+                                <input type="hidden" asp-for="RecommendedSatoshiPerByte[index].FeeRate" />
                             }
                         </div>
                     </div>

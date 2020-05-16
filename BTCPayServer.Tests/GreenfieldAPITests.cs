@@ -291,5 +291,27 @@ namespace BTCPayServer.Tests
                 Assert.True(apiHealthData.Synchronized);
             }
         }
+        
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task ServerInfoControllerTests()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                await tester.StartAsync();
+                var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
+                await AssertHttpError(401, async () => await unauthClient.GetServerInfo());
+
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                var clientBasic = await user.CreateClient();
+                var serverInfoData = await clientBasic.GetServerInfo();
+                Assert.NotNull(serverInfoData);
+                Assert.NotNull(serverInfoData.Status);
+                Assert.True(serverInfoData.Status.FullySynched);
+                Assert.Contains("BTC", serverInfoData.SupportedPaymentMethods);
+                Assert.Contains("BTC_LightningLike", serverInfoData.SupportedPaymentMethods);
+            }
+        }
     }
 }

@@ -21,6 +21,10 @@
     <None Remove="Build\**" />
     <None Remove="wwwroot\bundles\jqueryvalidate\**" />
     <None Remove="wwwroot\vendor\jquery-nice-select\**" />
+    <Content Update="wwwroot\swagger\v1\swagger.template.serverinfo.json">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <None Remove="Currencies.txt" />

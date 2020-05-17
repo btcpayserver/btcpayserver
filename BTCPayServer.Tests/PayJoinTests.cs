@@ -402,8 +402,8 @@ namespace BTCPayServer.Tests
                 var requesting = pjClient.RequestPayjoin(fakeServer.ServerUri, derivationSchemeSettings, psbt, default);
                 var request = await fakeServer.GetNextRequest();
                 Assert.Equal("1", request.Request.Query["v"][0]);
-                Assert.Equal(changeIndex.ToString(), request.Request.Query["feebumpindex"][0]);
-                Assert.Equal("3000", request.Request.Query["maxfeebumpcontribution"][0]);
+                Assert.Equal(changeIndex.ToString(), request.Request.Query["additionalfeeoutputindex"][0]);
+                Assert.Equal("3000", request.Request.Query["maxadditionalfeecontribution"][0]);
 
 
                 Logs.Tester.LogInformation("The payjoin receiver tries to make us pay lots of fee");
@@ -437,6 +437,19 @@ namespace BTCPayServer.Tests
                 fakeServer.Done();
                 ex = await Assert.ThrowsAsync<PayjoinSenderException>(async () => await requesting);
                 Assert.Contains("increased the fee rate", ex.Message);
+
+                Logs.Tester.LogInformation("The payjoin receiver can't decrease the fee rate too much");
+                pjClient.MinimumFeeRate = new FeeRate(50m);
+                requesting = pjClient.RequestPayjoin(fakeServer.ServerUri, derivationSchemeSettings, psbt, default);
+                request = await fakeServer.GetNextRequest();
+                originalPSBT = await ParsePSBT(request);
+                proposalTx = originalPSBT.GetGlobalTransaction();
+                proposalTx.Outputs[changeIndex].Value -= Money.Satoshis(3000);
+                await request.Response.WriteAsync(PSBT.FromTransaction(proposalTx, Network.RegTest).ToBase64(), Encoding.UTF8);
+                fakeServer.Done();
+                ex = await Assert.ThrowsAsync<PayjoinSenderException>(async () => await requesting);
+                Assert.Contains("a too low fee rate", ex.Message);
+                pjClient.MinimumFeeRate = null;
 
                 Logs.Tester.LogInformation("Make sure the receiver implementation do not take more fee than allowed");
                 var bob = tester.NewAccount();
@@ -472,6 +485,36 @@ namespace BTCPayServer.Tests
                 var proposal = await pjClient.RequestPayjoin(endpoint, derivationSchemeSettings, psbt, default);
                 Assert.True(proposal.TryGetFee(out var newFee));
                 Assert.Equal(Money.Satoshis(3001 + 50), newFee);
+                proposal = proposal.SignAll(derivationSchemeSettings.AccountDerivation, alice.GenerateWalletResponseV.AccountHDKey, signingAccount.GetRootedKeyPath());
+                proposal.Finalize();
+                await tester.ExplorerNode.SendRawTransactionAsync(proposal.ExtractTransaction());
+                await notifications.NextEventAsync();
+
+                Logs.Tester.LogInformation("Abusing minFeeRate should give not enough money error");
+                invoice = bob.BitPay.CreateInvoice(
+                    new Invoice() { Price = 0.1m, Currency = "BTC", FullNotifications = true });
+                invoiceBIP21 = new BitcoinUrlBuilder(invoice.CryptoInfo.First().PaymentUrls.BIP21,
+                    tester.ExplorerClient.Network.NBitcoinNetwork);
+                psbt = (await nbx.CreatePSBTAsync(alice.DerivationScheme, new CreatePSBTRequest()
+                {
+                    Destinations =
+                    {
+                        new CreatePSBTDestination()
+                        {
+                            Amount = invoiceBIP21.Amount,
+                            Destination = invoiceBIP21.Address
+                        }
+                    },
+                    FeePreference = new FeePreference()
+                    {
+                        ExplicitFee = Money.Satoshis(3001)
+                    }
+                })).PSBT;
+                psbt.SignAll(derivationSchemeSettings.AccountDerivation, alice.GenerateWalletResponseV.AccountHDKey, signingAccount.GetRootedKeyPath());
+                endpoint = TestAccount.GetPayjoinEndpoint(invoice, Network.RegTest);
+                pjClient.MinimumFeeRate = new FeeRate(100_000_000.2m);
+                var ex2 = await Assert.ThrowsAsync<PayjoinReceiverException>(async () => await pjClient.RequestPayjoin(endpoint, derivationSchemeSettings, psbt, default));
+                Assert.Equal(PayjoinReceiverWellknownErrors.NotEnoughMoney, ex2.WellknownError);
             }
         }
 

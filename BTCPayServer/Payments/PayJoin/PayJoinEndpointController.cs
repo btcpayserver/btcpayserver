@@ -117,8 +117,9 @@ namespace BTCPayServer.Payments.PayJoin
         [MediaTypeConstraint("text/plain")]
         [RateLimitsFilter(ZoneLimits.PayJoin, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> Submit(string cryptoCode,
-            long maxfeebumpcontribution = -1,
-            int feebumpindex = -1,
+            long maxadditionalfeecontribution = -1,
+            int additionalfeeoutputindex = -1,
+            decimal minfeerate = -1.0m,
             int v = 1)
         {
             if (v != 1)
@@ -130,7 +131,8 @@ namespace BTCPayServer.Payments.PayJoin
                     new JProperty("message", "This version of payjoin is not supported.")
                 });
             }
-            Money allowedFeeBumpContribution = Money.Satoshis(maxfeebumpcontribution >= 0 ? maxfeebumpcontribution : long.MaxValue);
+            FeeRate senderMinFeeRate = minfeerate < 0.0m ? null : new FeeRate(minfeerate);
+            Money allowedSenderFeeContribution = Money.Satoshis(maxadditionalfeecontribution >= 0 ? maxadditionalfeecontribution : long.MaxValue);
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
             if (network == null)
             {
@@ -345,10 +347,10 @@ namespace BTCPayServer.Payments.PayJoin
             var ourNewOutput = newTx.Outputs[originalPaymentOutput.Index];
             HashSet<TxOut> isOurOutput = new HashSet<TxOut>();
             isOurOutput.Add(ourNewOutput);
-            TxOut preferredFeeBumpOutput = feebumpindex >= 0
-                                            && feebumpindex < newTx.Outputs.Count
-                                            && !isOurOutput.Contains(newTx.Outputs[feebumpindex])
-                                            ? newTx.Outputs[feebumpindex] : null;
+            TxOut preferredFeeBumpOutput = additionalfeeoutputindex >= 0
+                                            && additionalfeeoutputindex < newTx.Outputs.Count
+                                            && !isOurOutput.Contains(newTx.Outputs[additionalfeeoutputindex])
+                                            ? newTx.Outputs[additionalfeeoutputindex] : null;
             var rand = new Random();
             int senderInputCount = newTx.Inputs.Count;
             foreach (var selectedUTXO in selectedUTXOs.Select(o => o.Value))
@@ -434,7 +436,7 @@ namespace BTCPayServer.Payments.PayJoin
                 }
 
                 // The rest, we take from user's change
-                for (int i = 0; i < newTx.Outputs.Count && additionalFee > Money.Zero && allowedFeeBumpContribution > Money.Zero; i++)
+                for (int i = 0; i < newTx.Outputs.Count && additionalFee > Money.Zero && allowedSenderFeeContribution > Money.Zero; i++)
                 {
                     if (preferredFeeBumpOutput is TxOut &&
                         preferredFeeBumpOutput != newTx.Outputs[i])
@@ -444,10 +446,10 @@ namespace BTCPayServer.Payments.PayJoin
                         var outputContribution = Money.Min(additionalFee, newTx.Outputs[i].Value);
                         outputContribution = Money.Min(outputContribution,
                             newTx.Outputs[i].Value - newTx.Outputs[i].GetDustThreshold(minRelayTxFee));
-                        outputContribution = Money.Min(outputContribution, allowedFeeBumpContribution);
+                        outputContribution = Money.Min(outputContribution, allowedSenderFeeContribution);
                         newTx.Outputs[i].Value -= outputContribution;
                         additionalFee -= outputContribution;
-                        allowedFeeBumpContribution -= outputContribution;
+                        allowedSenderFeeContribution -= outputContribution;
                     }
                 }
 
@@ -457,7 +459,7 @@ namespace BTCPayServer.Payments.PayJoin
                     // we are not under the relay fee, it should be OK.
                     var newVSize = txBuilder.EstimateSize(newTx, true);
                     var newFeePaid = newTx.GetFee(txBuilder.FindSpentCoins(newTx));
-                    if (new FeeRate(newFeePaid, newVSize) < minRelayTxFee)
+                    if (new FeeRate(newFeePaid, newVSize) < (senderMinFeeRate ?? minRelayTxFee))
                     {
                         await UnlockUTXOs();
                         await BroadcastNow();

@@ -136,12 +136,11 @@ namespace BTCPayServer.Controllers.GreenField
             };
         }
 
-        private static void ToModel(StoreBaseData restModel, Data.StoreData model, string id = null)
+        private static void ToModel(StoreBaseData restModel, Data.StoreData model)
         {
             var blob = model.GetStoreBlob();
 
             model.StoreName = restModel.Name;
-            model.Id = id;
             model.StoreName = restModel.Name;
             model.StoreWebsite = restModel.Website;
             model.SpeedPolicy = restModel.SpeedPolicy;

@@ -34,7 +34,7 @@ namespace BTCPayServer.JsonConverters
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
             if (value != null)
-                writer.WriteValue(value.ToString());
+                writer.WriteValue(((decimal)value).ToString(CultureInfo.InvariantCulture));
         }
     }
 }

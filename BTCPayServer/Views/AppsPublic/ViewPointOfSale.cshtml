@@ -420,7 +420,7 @@
                                 <h5 class="card-title">@item.Title</h5>
                                 @if (!String.IsNullOrWhiteSpace(item.Description))
                                 {
-                                    <p class="card-text">@item.Description</p>
+                                    <p class="card-text">@System.Net.WebUtility.HtmlDecode(item.Description)</p>
                                 }
 
                             </div>

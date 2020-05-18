@@ -48,6 +48,7 @@ namespace BTCPayServer.Controllers.GreenField
                 .SelectMany(handler => handler.GetSupportedPaymentMethods().Select(id => id.ToString()))
                 .Distinct();
             var syncStatus = _dashBoard.GetAll()
+                .Where(summary => summary.Network.ShowSyncSummary)
                 .Select(summary => new ServerInfoSyncStatusData
                 {
                     CryptoCode = summary.Network.CryptoCode,

@@ -42,6 +42,6 @@ namespace BTCPayServer.Client.Models
     {
         public string CryptoCode { get; set; }
         public int BlockHeaders { get; set; }
-        public double Progress { get; set; } 
+        public float Progress { get; set; } 
     }
 }

@@ -51,9 +51,8 @@ namespace BTCPayServer.Controllers.GreenField
                 .Select(summary => new ServerInfoSyncStatusData
                 {
                     CryptoCode = summary.Network.CryptoCode,
-                    // TODO: Implement these fields
-                    BlockHeaders = 0, 
-                    Progress = 0
+                    BlockHeaders = summary.Status.ChainHeight, 
+                    Progress = summary.Status.SyncHeight.GetValueOrDefault(0) / (float)summary.Status.ChainHeight
                 });
             ServerInfoStatusData status = new ServerInfoStatusData
             {

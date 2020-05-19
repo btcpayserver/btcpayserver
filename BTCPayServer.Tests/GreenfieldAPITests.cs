@@ -390,9 +390,12 @@ namespace BTCPayServer.Tests
             Assert.Equal(1m, jsonConverter.ReadJson(Get(numberJson), typeof(decimal), null, null));
             Assert.Equal(1.2m, jsonConverter.ReadJson(Get(numberDecimalJson), typeof(decimal), null, null));
             Assert.Null(jsonConverter.ReadJson(Get("null"), typeof(decimal?), null, null));
+            Assert.Throws<JsonSerializationException>(() =>
+            {
+                jsonConverter.ReadJson(Get("null"), typeof(decimal), null, null);
+            });
             Assert.Equal(1.2m, jsonConverter.ReadJson(Get(stringJson), typeof(decimal), null, null));
-            Assert.Equal(1.2m, Assert.IsType<decimal?>( jsonConverter.ReadJson(Get(stringJson), typeof(decimal?), null, null)));
-
+            Assert.Equal(1.2m,  jsonConverter.ReadJson(Get(stringJson), typeof(decimal?), null, null));
         }
     }
 }

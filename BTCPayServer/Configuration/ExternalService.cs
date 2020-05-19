@@ -36,6 +36,10 @@ namespace BTCPayServer.Configuration
                                 $"Valid example: 'server=https://btcpay.example.com/rtl/btc/;cookiefile=/etc/clightning_bitcoin_rtl/.cookie'" + Environment.NewLine +
                                 "Error: {1}",
                                 "Ride the Lightning server");
+            Load(configuration, cryptoCode, "thunderhub", ExternalServiceTypes.ThunderHub, "Invalid setting {0}, " + Environment.NewLine +
+                                $"Valid example: 'server=https://btcpay.example.com/thub/;cookiefile=/etc/clightning_bitcoin_rtl/.cookie'" + Environment.NewLine +
+                                "Error: {1}",
+                                "ThunderHub");
             Load(configuration, cryptoCode, "clightningrest", ExternalServiceTypes.CLightningRest, "Invalid setting {0}, " + Environment.NewLine +
                                 $"Valid example: 'server=https://btcpay.example.com/clightning-rest/btc/;cookiefile=/etc/clightning_bitcoin_rtl/.cookie'" + Environment.NewLine +
                                 "Error: {1}",
@@ -102,6 +106,7 @@ namespace BTCPayServer.Configuration
         LNDSeedBackup,
         Spark,
         RTL,
+        ThunderHub,
         Charge,
         P2P,
         RPC,

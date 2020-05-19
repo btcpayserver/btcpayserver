@@ -34,9 +34,6 @@
             "ApplicationServerInfoData": {
                 "type": "object",
                 "properties": {
-                    "status": {
-                        "$ref": "#/components/schemas/ApplicationServerInfoStatusData"
-                    },
                     "version": {
                         "type": "string",
                         "description": "BTCPay Server version"
@@ -51,13 +48,7 @@
                         "items": {
                             "type": "string"
                         }
-                    }
-                }
-            },
-            "ApplicationServerInfoStatusData": {
-                "type": "object",
-                "description": "Detailed sync status",
-                "properties": {
+                    },
                     "fullySynched": {
                         "type": "boolean",
                         "description": "True if the instance is fully synchronized, according to NBXplorer"
@@ -70,22 +61,48 @@
                     }
                 }
             },
+            "ApplicationServerInfoNodeStatusData": {
+                "type": "object",
+                "nullable": true,
+                "description": "Detailed sync status of the internal full node",
+                "properties": {
+                    "headers": {
+                        "type": "integer",
+                        "description": "The height of the chain of header of the internal full node"
+                    },
+                    "blocks": {
+                        "type": "integer",
+                        "description": "The height of the latest validated block of the internal full node"
+                    },
+                    "verificationProgress": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0.0,
+                        "maximum": 1.0,
+                        "description": "The current synchronization progress"
+                    }
+                }
+            },
             "ApplicationServerInfoSyncStatusData": {
                 "type": "object",
                 "description": "Detailed sync status",
                 "properties": {
                     "cryptoCode": {
                         "type": "string",
-                        "description": "True if the instance is fully synchronized, according to NBXplorer"
+                        "description": "The CryptoCode of the crypto currency (eg. BTC)"
                     },
-                    "blockHeaders": {
+                    "nodeInformation": {
+                        "$ref": "#/components/schemas/ApplicationServerInfoNodeStatusData"
+                    },
+                    "chainHeight": {
                         "type": "integer",
-                        "description": "True if the instance is fully synchronized, according to NBXplorer"
+                        "description": "The height of the chain of header of the internal indexer"
                     },
-                    "progress": {
+                    "syncHeight": {
                         "type": "number",
-                        "format": "double",
-                        "description": "True if the instance is fully synchronized, according to NBXplorer"
+                        "format": "integer",
+                        "nullable": true,
+                        "description": "The height of the latest indexed block of the internal indexer"
                     }
                 }
             }

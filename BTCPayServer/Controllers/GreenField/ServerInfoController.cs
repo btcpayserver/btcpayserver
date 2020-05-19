@@ -10,6 +10,7 @@ using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using NBXplorer.Models;
 
 namespace BTCPayServer.Controllers.GreenField
 {
@@ -52,17 +53,19 @@ namespace BTCPayServer.Controllers.GreenField
                 .Select(summary => new ServerInfoSyncStatusData
                 {
                     CryptoCode = summary.Network.CryptoCode,
-                    BlockHeaders = summary.Status.ChainHeight, 
-                    Progress = summary.Status.SyncHeight.GetValueOrDefault(0) / (float)summary.Status.ChainHeight
+                    NodeInformation = summary.Status.BitcoinStatus is BitcoinStatus s ? new ServerInfoNodeData()
+                    {
+                        Headers = s.Headers,
+                        Blocks = s.Blocks,
+                        VerificationProgress = s.VerificationProgress
+                    }: null,
+                    ChainHeight = summary.Status.ChainHeight,
+                    SyncHeight = summary.Status.SyncHeight
                 });
-            ServerInfoStatusData status = new ServerInfoStatusData
-            {
-                FullySynched = _dashBoard.IsFullySynched(),
-                SyncStatus = syncStatus
-            };
             ServerInfoData model = new ServerInfoData
             {
-                Status = status,
+                FullySynched = _dashBoard.IsFullySynched(),
+                SyncStatus = syncStatus,
                 Onion = _env.OnionUrl,
                 Version = _env.Version,
                 SupportedPaymentMethods = supportedPaymentMethods

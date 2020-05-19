@@ -5,11 +5,6 @@ namespace BTCPayServer.Client.Models
     public class ServerInfoData
     {
         /// <summary>
-        /// detailed status information
-        /// </summary>
-        public ServerInfoStatusData Status { get; set; }
-        
-        /// <summary>
         /// the BTCPay Server version
         /// </summary>
         public string Version { get; set; }
@@ -23,15 +18,12 @@ namespace BTCPayServer.Client.Models
         /// the payment methods this server supports
         /// </summary>
         public IEnumerable<string> SupportedPaymentMethods { get; set; }
-    }
 
-    public class ServerInfoStatusData
-    {
         /// <summary>
         /// are all chains fully synched
         /// </summary>
         public bool FullySynched { get; set; }
-        
+
         /// <summary>
         /// detailed sync information per chain
         /// </summary>
@@ -41,7 +33,15 @@ namespace BTCPayServer.Client.Models
     public class ServerInfoSyncStatusData
     {
         public string CryptoCode { get; set; }
-        public int BlockHeaders { get; set; }
-        public float Progress { get; set; } 
+        public int ChainHeight { get; set; }
+        public int? SyncHeight { get; set; }
+        public ServerInfoNodeData NodeInformation { get; set; }
+    }
+
+    public class ServerInfoNodeData
+    {
+        public int Headers { get; set; }
+        public int Blocks { get; set; }
+        public double VerificationProgress { get; set; }
     }
 }

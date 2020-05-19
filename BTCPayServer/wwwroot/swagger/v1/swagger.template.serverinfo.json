@@ -1,0 +1,99 @@
+{
+    "paths": {
+        "/api/v1/server/info": {
+            "get": {
+                "tags": [
+                    "ServerInfo"
+                ],
+                "summary": "Get server info",
+                "description": "Information about the server, chains and sync states",
+                "operationId": "ServerInfo_GetServerInfo",
+                "responses": {
+                    "200": {
+                        "description": "Server information",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApplicationServerInfoData"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [],
+                        "Basic": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "ApplicationServerInfoData": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "$ref": "#/components/schemas/ApplicationServerInfoStatusData"
+                    },
+                    "version": {
+                        "type": "string",
+                        "description": "BTCPay Server version"
+                    },
+                    "onion": {
+                        "type": "string",
+                        "description": "The Tor hostname"
+                    },
+                    "supportedPaymentMethods": {
+                        "type": "array",
+                        "description": "The payment methods this server supports",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "ApplicationServerInfoStatusData": {
+                "type": "object",
+                "description": "Detailed sync status",
+                "properties": {
+                    "fullySynched": {
+                        "type": "boolean",
+                        "description": "True if the instance is fully synchronized, according to NBXplorer"
+                    },
+                    "syncStatus": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ApplicationServerInfoSyncStatusData"
+                        }
+                    }
+                }
+            },
+            "ApplicationServerInfoSyncStatusData": {
+                "type": "object",
+                "description": "Detailed sync status",
+                "properties": {
+                    "cryptoCode": {
+                        "type": "string",
+                        "description": "True if the instance is fully synchronized, according to NBXplorer"
+                    },
+                    "blockHeaders": {
+                        "type": "integer",
+                        "description": "True if the instance is fully synchronized, according to NBXplorer"
+                    },
+                    "progress": {
+                        "type": "number",
+                        "format": "double",
+                        "description": "True if the instance is fully synchronized, according to NBXplorer"
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "ServerInfo"
+        }
+    ]
+}

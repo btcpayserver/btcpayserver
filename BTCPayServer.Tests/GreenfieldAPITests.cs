@@ -4,11 +4,8 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
-using BTCPayServer.Controllers;
 using BTCPayServer.Services;
 using BTCPayServer.Tests.Logging;
-using Microsoft.AspNet.SignalR.Client;
-using Microsoft.AspNetCore.Mvc;
 using Xunit;
 using Xunit.Abstractions;
 using CreateApplicationUserRequest = BTCPayServer.Client.Models.CreateApplicationUserRequest;
@@ -289,6 +286,35 @@ namespace BTCPayServer.Tests
                 var apiHealthData = await unauthClient.GetHealth();
                 Assert.NotNull(apiHealthData);
                 Assert.True(apiHealthData.Synchronized);
+            }
+        }
+        
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task ServerInfoControllerTests()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                await tester.StartAsync();
+                var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
+                await AssertHttpError(401, async () => await unauthClient.GetServerInfo());
+
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                var clientBasic = await user.CreateClient();
+                var serverInfoData = await clientBasic.GetServerInfo();
+                
+                Assert.NotNull(serverInfoData);
+                Assert.NotNull(serverInfoData.Version);
+                Assert.NotNull(serverInfoData.Onion);
+                Assert.NotNull(serverInfoData.Status);
+                
+                Assert.True(serverInfoData.Status.FullySynched);
+                Assert.Contains("BTC", serverInfoData.SupportedPaymentMethods);
+                Assert.Contains("BTC_LightningLike", serverInfoData.SupportedPaymentMethods);
+                
+                Assert.NotNull(serverInfoData.Status.SyncStatus);
+                Assert.Single(serverInfoData.Status.SyncStatus.Select(s => s.CryptoCode == "BTC"));
             }
         }
     }

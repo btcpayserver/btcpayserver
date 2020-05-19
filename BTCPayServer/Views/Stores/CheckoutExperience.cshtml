@@ -82,6 +82,12 @@
                     <span asp-validation-for="LightningAmountInSatoshi" class="text-danger"></span>
                 </div>
                 <div class="form-check">
+                    <input asp-for="LightningPrivateRouteHints" type="checkbox" class="form-check-input" />
+                    <label asp-for="LightningPrivateRouteHints" class="form-check-label"></label>
+                    <span asp-validation-for="LightningPrivateRouteHints" class="text-danger"></span>
+                </div>
+
+                <div class="form-check">
                     <input asp-for="RedirectAutomatically" type="checkbox" class="form-check-input" />
                     <label asp-for="RedirectAutomatically" class="form-check-label"></label>
                     <span asp-validation-for="RedirectAutomatically" class="text-danger"></span>

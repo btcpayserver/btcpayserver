@@ -65,7 +65,9 @@ namespace BTCPayServer.Payments.Lightning
             {
                 try
                 {
-                    lightningInvoice = await client.CreateInvoice(new LightMoney(due, LightMoneyUnit.BTC), description, expiry, cts.Token);
+                    var request = new CreateInvoiceParams(new LightMoney(due, LightMoneyUnit.BTC), description, expiry);
+                    request.PrivateRouteHints = storeBlob.LightningPrivateRouteHints;
+                    lightningInvoice = await client.CreateInvoice(request, cts.Token);
                 }
                 catch (OperationCanceledException) when (cts.IsCancellationRequested)
                 {

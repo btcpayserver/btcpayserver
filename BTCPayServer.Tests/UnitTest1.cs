@@ -2265,14 +2265,17 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Integration", "Integration")]
+        [Trait("Altcoins", "Altcoins")]
         public async Task CanUsePoSApp()
         {
             using (var tester = ServerTester.Create())
             {
+                tester.ActivateLTC();
                 await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
+                user.RegisterDerivationScheme("LTC");
                 var apps = user.GetController<AppsController>();
                 var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp().Result).Model);
                 vm.Name = "test";
@@ -2443,6 +2446,41 @@ noninventoryitem:
                     Assert.Equal(1,
                         appService.Parse(vmpos.Template, "BTC").Single(item => item.Id == "inventoryitem").Inventory);
                 }, 10000);
+
+
+                //test payment methods option
+                
+                vmpos = Assert.IsType<UpdatePointOfSaleViewModel>(Assert
+                    .IsType<ViewResult>(apps.UpdatePointOfSale(appId).Result).Model);
+                vmpos.Title = "hello";
+                vmpos.Currency = "BTC";
+                vmpos.Template = @"
+btconly:
+  price: 1.0
+  title: good apple
+  payment_methods:
+    - BTC
+normal:
+  price: 1.0";
+                Assert.IsType<RedirectToActionResult>(apps.UpdatePointOfSale(appId, vmpos).Result);
+                Assert.IsType<RedirectToActionResult>(publicApps
+                    .ViewPointOfSale(appId, 1, null, null, null, null, "btconly").Result);
+                Assert.IsType<RedirectToActionResult>(publicApps
+                    .ViewPointOfSale(appId, 1, null, null, null, null, "normal").Result);
+                invoices = user.BitPay.GetInvoices();
+                var normalInvoice = invoices.Single(invoice => invoice.ItemCode == "normal");
+                var btcOnlyInvoice = invoices.Single(invoice => invoice.ItemCode == "btconly");
+                Assert.Single(btcOnlyInvoice.CryptoInfo);
+                Assert.Equal("BTC",
+                    btcOnlyInvoice.CryptoInfo.First().CryptoCode);
+                Assert.Equal(PaymentTypes.BTCLike.ToString(),
+                    btcOnlyInvoice.CryptoInfo.First().PaymentType);
+
+                Assert.Equal(2, normalInvoice.CryptoInfo.Length);
+                Assert.Contains(
+                    normalInvoice.CryptoInfo,
+                    s => PaymentTypes.BTCLike.ToString() == s.PaymentType &&  new[] {"BTC", "LTC"}.Contains(
+                             s.CryptoCode));
             }
         }
 

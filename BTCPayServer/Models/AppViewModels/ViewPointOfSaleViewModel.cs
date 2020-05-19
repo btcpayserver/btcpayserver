@@ -21,6 +21,7 @@ namespace BTCPayServer.Models.AppViewModels
             public string Title { get; set; }
             public bool Custom { get; set; }
             public int? Inventory { get; set; } = null;
+            public string[] PaymentMethods { get; set; }
         }
 
         public class CurrencyInfoData

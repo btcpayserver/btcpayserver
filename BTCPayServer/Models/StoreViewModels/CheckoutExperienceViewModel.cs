@@ -63,7 +63,10 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Display lightning payment amounts in Satoshis")]
         public bool LightningAmountInSatoshi { get; set; }
-        
+
+        [Display(Name = "Add hop hints for private channels to the lightning invoice")]
+        public bool LightningPrivateRouteHints { get; set; }
+
         [Display(Name = "Redirect invoice to redirect url automatically after paid")]
         public bool  RedirectAutomatically { get; set; }
     }

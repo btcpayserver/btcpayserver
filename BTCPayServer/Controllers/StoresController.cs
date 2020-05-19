@@ -381,6 +381,7 @@ namespace BTCPayServer.Controllers
             vm.OnChainMinValue = storeBlob.OnChainMinValue?.ToString() ?? "";
             vm.LightningMaxValue = storeBlob.LightningMaxValue?.ToString() ?? "";
             vm.LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi;
+            vm.LightningPrivateRouteHints = storeBlob.LightningPrivateRouteHints;
             vm.RedirectAutomatically = storeBlob.RedirectAutomatically;
             return View(vm);
         }
@@ -441,6 +442,7 @@ namespace BTCPayServer.Controllers
             blob.OnChainMinValue = onchainMinValue;
             blob.LightningMaxValue = lightningMaxValue;
             blob.LightningAmountInSatoshi = model.LightningAmountInSatoshi;
+            blob.LightningPrivateRouteHints = model.LightningPrivateRouteHints;
             blob.RedirectAutomatically = model.RedirectAutomatically;
             if (CurrentStore.SetStoreBlob(blob))
             {

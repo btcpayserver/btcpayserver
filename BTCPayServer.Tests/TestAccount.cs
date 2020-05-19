@@ -136,6 +136,13 @@ namespace BTCPayServer.Tests
             modify(store);
             storeController.UpdateStore(store).GetAwaiter().GetResult();
         }
+        public Task ModifyStoreAsync(Action<StoreViewModel> modify)
+        {
+            var storeController = GetController<StoresController>();
+            StoreViewModel store = (StoreViewModel)((ViewResult)storeController.UpdateStore()).Model;
+            modify(store);
+            return storeController.UpdateStore(store);
+        }
 
         public T GetController<T>(bool setImplicitStore = true) where T : Controller
         {
@@ -192,18 +199,9 @@ namespace BTCPayServer.Tests
             return new WalletId(StoreId, cryptoCode);
         }
 
-        public async Task EnablePayJoin()
+        public Task EnablePayJoin()
         {
-            var storeController = parent.PayTester.GetController<StoresController>(UserId, StoreId);
-            var storeVM =
-                Assert.IsType<StoreViewModel>(Assert
-                    .IsType<ViewResult>(storeController.UpdateStore()).Model);
-
-            storeVM.PayJoinEnabled = true;
-
-            Assert.Equal(nameof(storeController.UpdateStore),
-                Assert.IsType<RedirectToActionResult>(
-                    await storeController.UpdateStore(storeVM)).ActionName);
+            return ModifyStoreAsync(s => s.PayJoinEnabled = true);
         }
 
         public GenerateWalletResponse GenerateWalletResponseV { get; set; }
@@ -332,7 +330,7 @@ namespace BTCPayServer.Tests
             var endpoint = GetPayjoinEndpoint(invoice, psbt.Network);
             if (endpoint == null)
             {
-                return null;
+                throw new InvalidOperationException("No payjoin endpoint for the invoice");
             }
             var pjClient = parent.PayTester.GetService<PayjoinClient>();
             var storeRepository = parent.PayTester.GetService<StoreRepository>();
@@ -356,7 +354,10 @@ namespace BTCPayServer.Tests
                 else
                 {
                     var ex = await Assert.ThrowsAsync<PayjoinReceiverException>(async () => await pjClient.RequestPayjoin(endpoint, settings, psbt, default));
-                    Assert.Equal(expectedError, ex.ErrorCode);
+                    var split = expectedError.Split('|');
+                    Assert.Equal(split[0], ex.ErrorCode);
+                    if (split.Length > 1)
+                        Assert.Contains(split[1], ex.ReceiverMessage);
                 }
                 return null;
             }
@@ -381,9 +382,13 @@ namespace BTCPayServer.Tests
                 new StringContent(content, Encoding.UTF8, "text/plain"));
             if (expectedError != null)
             {
+                var split = expectedError.Split('|');
                 Assert.False(response.IsSuccessStatusCode);
                 var error = JObject.Parse(await response.Content.ReadAsStringAsync());
-                Assert.Equal(expectedError, error["errorCode"].Value<string>());
+                if (split.Length > 0)
+                    Assert.Equal(split[0], error["errorCode"].Value<string>());
+                if (split.Length > 1)
+                    Assert.Contains(split[1], error["message"].Value<string>());
                 return null;
             }
             else

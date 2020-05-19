@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Payments.Changelly.Models;
 using Google.Apis.Http;
 using NBitcoin;
 using Newtonsoft.Json;
@@ -302,55 +303,61 @@ namespace BTCPayServer.Services
         NeedUTXOInformation,
         InvalidTransaction
     }
+    public class PayjoinReceiverHelper
+    {
+        static IEnumerable<(PayjoinReceiverWellknownErrors EnumValue, string ErrorCode, string Message)> Get()
+        {
+            yield return (PayjoinReceiverWellknownErrors.LeakingData, "leaking-data", "Key path information or GlobalXPubs should not be included in the original PSBT.");
+            yield return (PayjoinReceiverWellknownErrors.PSBTNotFinalized, "psbt-not-finalized", "The original PSBT must be finalized.");
+            yield return (PayjoinReceiverWellknownErrors.Unavailable, "unavailable", "The payjoin endpoint is not available for now.");
+            yield return (PayjoinReceiverWellknownErrors.NotEnoughMoney, "not-enough-money", "The receiver added some inputs but could not bump the fee of the payjoin proposal.");
+            yield return (PayjoinReceiverWellknownErrors.InsanePSBT, "insane-psbt", "Some consistency check on the PSBT failed.");
+            yield return (PayjoinReceiverWellknownErrors.VersionUnsupported, "version-unsupported", "This version of payjoin is not supported.");
+            yield return (PayjoinReceiverWellknownErrors.NeedUTXOInformation, "need-utxo-information", "The witness UTXO or non witness UTXO is missing.");
+            yield return (PayjoinReceiverWellknownErrors.InvalidTransaction, "invalid-transaction", "The original transaction is invalid for payjoin");
+        }
+        public static string GetErrorCode(PayjoinReceiverWellknownErrors err)
+        {
+            return Get().Single(o => o.EnumValue == err).ErrorCode;
+        }
+        public static PayjoinReceiverWellknownErrors? GetWellknownError(string errorCode)
+        {
+            var t = Get().FirstOrDefault(o => o.ErrorCode == errorCode);
+            if (t == default)
+                return null;
+            return t.EnumValue;
+        }
+        static string UnknownError = "Unknown error from the receiver";
+        public static string GetMessage(string errorCode)
+        {
+            return Get().FirstOrDefault(o => o.ErrorCode == errorCode).Message ?? UnknownError;
+        }
+        public static string GetMessage(PayjoinReceiverWellknownErrors err)
+        {
+            return Get().Single(o => o.EnumValue == err).Message;
+        }
+    }
     public class PayjoinReceiverException : PayjoinException
     {
-        public PayjoinReceiverException(string errorCode, string receiverDebugMessage) : base(FormatMessage(errorCode, receiverDebugMessage))
+        public PayjoinReceiverException(string errorCode, string receiverMessage) : base(FormatMessage(errorCode))
         {
             ErrorCode = errorCode;
-            ReceiverDebugMessage = receiverDebugMessage;
-            WellknownError = errorCode switch
-            {
-                "leaking-data" => PayjoinReceiverWellknownErrors.LeakingData,
-                "psbt-not-finalized" => PayjoinReceiverWellknownErrors.PSBTNotFinalized,
-                "unavailable" => PayjoinReceiverWellknownErrors.Unavailable,
-                "out-of-utxos" => PayjoinReceiverWellknownErrors.OutOfUTXOS,
-                "not-enough-money" => PayjoinReceiverWellknownErrors.NotEnoughMoney,
-                "insane-psbt" => PayjoinReceiverWellknownErrors.InsanePSBT,
-                "version-unsupported" => PayjoinReceiverWellknownErrors.VersionUnsupported,
-                "need-utxo-information" => PayjoinReceiverWellknownErrors.NeedUTXOInformation,
-                "invalid-transaction" => PayjoinReceiverWellknownErrors.InvalidTransaction,
-                _ => null
-            };
+            ReceiverMessage = receiverMessage;
+            WellknownError = PayjoinReceiverHelper.GetWellknownError(errorCode);
+            ErrorMessage = PayjoinReceiverHelper.GetMessage(errorCode);
         }
         public string ErrorCode { get; }
         public string ErrorMessage { get; }
-        public string ReceiverDebugMessage { get; }
+        public string ReceiverMessage { get; }
 
         public PayjoinReceiverWellknownErrors? WellknownError
         {
             get;
         }
 
-        private static string FormatMessage(string errorCode, string receiverDebugMessage)
+        private static string FormatMessage(string errorCode)
         {
-            return $"{errorCode}: {GetMessage(errorCode)}";
-        }
-
-        private static string GetMessage(string errorCode)
-        {
-            return errorCode switch
-            {
-                "leaking-data" => "Key path information or GlobalXPubs should not be included in the original PSBT.",
-                "psbt-not-finalized" => "The original PSBT must be finalized.",
-                "unavailable" => "The payjoin endpoint is not available for now.",
-                "out-of-utxos" => "The receiver does not have any UTXO to contribute in a payjoin proposal.",
-                "not-enough-money" => "The receiver added some inputs but could not bump the fee of the payjoin proposal.",
-                "insane-psbt" => "Some consistency check on the PSBT failed.",
-                "version-unsupported" => "This version of payjoin is not supported.",
-                "need-utxo-information" => "The witness UTXO or non witness UTXO is missing",
-                "invalid-transaction" => "The original transaction is invalid for payjoin",
-                _ => "Unknown error"
-            };
+            return $"{errorCode}: {PayjoinReceiverHelper.GetMessage(errorCode)}";
         }
     }
 

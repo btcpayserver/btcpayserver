@@ -194,17 +194,13 @@ namespace BTCPayServer.Tests
                         var receiverCoin = await receiverUser.ReceiveUTXO(Money.Satoshis(810), network);
 
                         var clientShouldError = unsupportedFormats.Contains(senderAddressType);
-                        string errorCode = null;
+                        string errorCode = receiverAddressType == senderAddressType ? null : "unavailable|any UTXO available";
+                        var invoice = receiverUser.BitPay.CreateInvoice(new Invoice() { Price = 50000, Currency = "sats", FullNotifications = true });
                         if (unsupportedFormats.Contains(receiverAddressType))
                         {
-                            errorCode = "unsupported-inputs";
+                            Assert.Null(TestAccount.GetPayjoinEndpoint(invoice, cashCow.Network));
+                            continue;
                         }
-                        else if (receiverAddressType != senderAddressType)
-                        {
-                            errorCode = "out-of-utxos";
-                        }
-                        var invoice = receiverUser.BitPay.CreateInvoice(new Invoice() { Price = 50000, Currency = "sats", FullNotifications = true });
-
                         var invoiceAddress = BitcoinAddress.Create(invoice.BitcoinAddress, cashCow.Network);
                         var txBuilder = network.NBitcoinNetwork.CreateTransactionBuilder();
 
@@ -551,7 +547,7 @@ namespace BTCPayServer.Tests
                 var receiverCoin = await receiverUser.ReceiveUTXO(Money.Satoshis(810), network);
                 string lastInvoiceId = null;
 
-                var vector = (SpentCoin: Money.Satoshis(810), InvoiceAmount: Money.Satoshis(700), Paid: Money.Satoshis(700), Fee: Money.Satoshis(110), InvoicePaid: true, ExpectedError: "not-enough-money");
+                var vector = (SpentCoin: Money.Satoshis(810), InvoiceAmount: Money.Satoshis(700), Paid: Money.Satoshis(700), Fee: Money.Satoshis(110), InvoicePaid: true, ExpectedError: "not-enough-money", OriginalTxBroadcasted: true);
                 async Task<PSBT> RunVector(bool skipLockedCheck = false)
                 {
                     var coin = await senderUser.ReceiveUTXO(vector.SpentCoin, network);
@@ -592,6 +588,19 @@ namespace BTCPayServer.Tests
                             Assert.Equal("paid", invoice.Status);
                         });
                     }
+                    
+                    psbt.Finalize();
+                    var broadcasted = await tester.PayTester.GetService<ExplorerClientProvider>().GetExplorerClient("BTC").BroadcastAsync(psbt.ExtractTransaction(), true);
+                    if (vector.OriginalTxBroadcasted)
+                    {
+                        Assert.Equal("txn-already-in-mempool", broadcasted.RPCCodeMessage);
+                    }
+                    else
+                    {
+                        Assert.True(broadcasted.Success);
+                    }
+                    receiverCoin = await receiverUser.ReceiveUTXO(receiverCoin.Amount, network);
+                    await LockAllButReceiverCoin();
                     return pj;
                 }
 
@@ -610,32 +619,35 @@ namespace BTCPayServer.Tests
                 Logs.Tester.LogInformation("Here we send exactly the right amount. This should fails as\n" +
                                            "there is not enough to pay the additional payjoin input. (going below the min relay fee" +
                                            "However, the original tx has been broadcasted!");
-                vector = (SpentCoin: Money.Satoshis(810), InvoiceAmount: Money.Satoshis(700), Paid: Money.Satoshis(700), Fee: Money.Satoshis(110), InvoicePaid: true, ExpectedError: "not-enough-money");
+                vector = (SpentCoin: Money.Satoshis(810), InvoiceAmount: Money.Satoshis(700), Paid: Money.Satoshis(700), Fee: Money.Satoshis(110), InvoicePaid: true, ExpectedError: "not-enough-money", OriginalTxBroadcasted: true);
                 await RunVector();
-                await LockAllButReceiverCoin();
 
                 Logs.Tester.LogInformation("We don't pay enough");
-                vector = (SpentCoin: Money.Satoshis(810), InvoiceAmount: Money.Satoshis(700), Paid: Money.Satoshis(690), Fee: Money.Satoshis(110), InvoicePaid: false, ExpectedError: "invoice-not-fully-paid");
+                vector = (SpentCoin: Money.Satoshis(810), InvoiceAmount: Money.Satoshis(700), Paid: Money.Satoshis(690), Fee: Money.Satoshis(110), InvoicePaid: false, ExpectedError: "invoice-not-fully-paid", OriginalTxBroadcasted: true);
                 await RunVector();
 
                 Logs.Tester.LogInformation("We pay correctly");
-                vector = (SpentCoin: Money.Satoshis(810), InvoiceAmount: Money.Satoshis(500), Paid: Money.Satoshis(500), Fee: Money.Satoshis(110), InvoicePaid: true, ExpectedError: null as string);
+                vector = (SpentCoin: Money.Satoshis(810), InvoiceAmount: Money.Satoshis(500), Paid: Money.Satoshis(500), Fee: Money.Satoshis(110), InvoicePaid: true, ExpectedError: null as string, OriginalTxBroadcasted: false);
                 await RunVector();
-                await LockAllButReceiverCoin();
 
-                Logs.Tester.LogInformation("We pay a little bit more the invoice with enough fees to support additional input\n" +
-                                           "The receiver should have added a fake output");
-                vector = (SpentCoin: Money.Satoshis(910), InvoiceAmount: Money.Satoshis(500), Paid: Money.Satoshis(700), Fee: Money.Satoshis(110), InvoicePaid: true, ExpectedError: null as string);
-                var proposedPSBT = await RunVector();
-                Assert.Equal(2, proposedPSBT.Outputs.Count);
-                await LockAllButReceiverCoin();
+                PSBT proposedPSBT = null;
+                var outputCountReceived = new bool[2];
+                do
+                {
+                    Logs.Tester.LogInformation("We pay a little bit more the invoice with enough fees to support additional input\n" +
+                                               "The receiver should have added a fake output");
+                    vector = (SpentCoin: Money.Satoshis(910), InvoiceAmount: Money.Satoshis(500), Paid: Money.Satoshis(700), Fee: Money.Satoshis(110), InvoicePaid: true, ExpectedError: null as string, OriginalTxBroadcasted: false);
+                    proposedPSBT = await RunVector();
+                    Assert.True(proposedPSBT.Outputs.Count == 1 || proposedPSBT.Outputs.Count == 2);
+                    outputCountReceived[proposedPSBT.Outputs.Count - 1] = true;
+                    cashCow.Generate(1);
+                } while (outputCountReceived.All(o => o));
 
                 Logs.Tester.LogInformation("We pay correctly, but no utxo\n" +
                                            "However, this has the side effect of having the receiver broadcasting the original tx");
                 await payjoinRepository.TryLock(receiverCoin.Outpoint);
-                vector = (SpentCoin: Money.Satoshis(810), InvoiceAmount: Money.Satoshis(500), Paid: Money.Satoshis(500), Fee: Money.Satoshis(110), InvoicePaid: true, ExpectedError: "out-of-utxos");
+                vector = (SpentCoin: Money.Satoshis(810), InvoiceAmount: Money.Satoshis(500), Paid: Money.Satoshis(500), Fee: Money.Satoshis(110), InvoicePaid: true, ExpectedError: "unavailable|any UTXO available", OriginalTxBroadcasted: true);
                 await RunVector(true);
-                await LockAllButReceiverCoin();
 
                 var originalSenderUser = senderUser;
                 retry:
@@ -645,7 +657,7 @@ namespace BTCPayServer.Tests
                 // The send pay remaining 86 sat from his pocket
                 // So total paid by sender should be 86 + 510 + 200 so we should get 1090 - (86 + 510 + 200) == 294 back)
                 Logs.Tester.LogInformation($"Check if we can take fee on overpaid utxo{(senderUser == receiverUser ? " (to self)" : "")}");
-                vector = (SpentCoin: Money.Satoshis(1090), InvoiceAmount: Money.Satoshis(500), Paid: Money.Satoshis(510), Fee: Money.Satoshis(200), InvoicePaid: true, ExpectedError: null as string);
+                vector = (SpentCoin: Money.Satoshis(1090), InvoiceAmount: Money.Satoshis(500), Paid: Money.Satoshis(510), Fee: Money.Satoshis(200), InvoicePaid: true, ExpectedError: null as string, OriginalTxBroadcasted: false);
                 proposedPSBT = await RunVector();
                 Assert.Equal(2, proposedPSBT.Outputs.Count);
                 Assert.Contains(proposedPSBT.Outputs, o => o.Value == Money.Satoshis(500) + receiverCoin.Amount);
@@ -684,7 +696,7 @@ namespace BTCPayServer.Tests
                 // Same as above. Except the sender send one satoshi less, so the change
                 // output would get below dust and would be removed completely.
                 // So we remove as much fee as we can, and still accept the transaction because it is above minrelay fee
-                vector = (SpentCoin: Money.Satoshis(1089), InvoiceAmount: Money.Satoshis(500), Paid: Money.Satoshis(510), Fee: Money.Satoshis(200), InvoicePaid: true, ExpectedError: null as string);
+                vector = (SpentCoin: Money.Satoshis(1089), InvoiceAmount: Money.Satoshis(500), Paid: Money.Satoshis(510), Fee: Money.Satoshis(200), InvoicePaid: true, ExpectedError: null as string, OriginalTxBroadcasted: false);
                 proposedPSBT = await RunVector();
                 Assert.Equal(2, proposedPSBT.Outputs.Count);
                 // We should have our payment
@@ -848,7 +860,7 @@ namespace BTCPayServer.Tests
 
                 //Attempt 3: Send the same inputs from invoice 1 to invoice 2 while invoice 1 tx has not been broadcasted
                 //Result: Reject Tx1 but accept tx 2 as its inputs were never accepted by invoice 1
-                await senderUser.SubmitPayjoin(invoice2, Invoice2Coin1, btcPayNetwork, "inputs-already-used");
+                await senderUser.SubmitPayjoin(invoice2, Invoice2Coin1, btcPayNetwork, expectedError: "unavailable|Some of those inputs have already been used");
                 var Invoice2Coin2ResponseTx = await senderUser.SubmitPayjoin(invoice2, Invoice2Coin2, btcPayNetwork);
 
                 var contributedInputsInvoice2Coin2ResponseTx =

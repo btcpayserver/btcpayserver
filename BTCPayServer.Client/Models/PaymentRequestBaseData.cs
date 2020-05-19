@@ -1,12 +1,12 @@
 using System;
-using BTCPayServer.Client.JsonConverters;
+using BTCPayServer.JsonConverters;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.Client.Models
 {
     public class PaymentRequestBaseData
     {
-        [JsonProperty(ItemConverterType = typeof(PermissionJsonConverter))]
+        [JsonProperty(ItemConverterType = typeof(DecimalStringJsonConverter))]
         public decimal Amount { get; set; }
         public string Currency { get; set; }
         public DateTime? ExpiryDate { get; set; }

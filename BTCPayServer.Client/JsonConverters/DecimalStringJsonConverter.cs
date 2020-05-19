@@ -20,7 +20,6 @@ namespace BTCPayServer.JsonConverters
             {
                 case JTokenType.Float:
                 case JTokenType.Integer:
-                    return token.ToObject<decimal>();
                 case JTokenType.String:
                     return decimal.Parse(token.ToString(), CultureInfo.InvariantCulture);
                 case JTokenType.Null when objectType == typeof(decimal?):

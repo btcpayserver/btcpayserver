@@ -1,14 +1,25 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Controllers;
+using BTCPayServer.JsonConverters;
+using BTCPayServer.Services;
+using BTCPayServer.Tests.Logging;
+using Microsoft.AspNet.SignalR.Client;
+using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using ThirdParty.Json.LitJson;
 using BTCPayServer.Services;
 using BTCPayServer.Tests.Logging;
 using Xunit;
 using Xunit.Abstractions;
 using CreateApplicationUserRequest = BTCPayServer.Client.Models.CreateApplicationUserRequest;
+using JsonReader = Newtonsoft.Json.JsonReader;
 
 namespace BTCPayServer.Tests
 {
@@ -354,6 +365,34 @@ namespace BTCPayServer.Tests
                 await client.ArchivePaymentRequest(user.StoreId, paymentRequest.Id);
                 Assert.DoesNotContain(paymentRequest.Id, (await client.GetPaymentRequests(user.StoreId)).Select(data => data.Id));
             }
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Fast", "Fast")]
+        public async Task DecimalStringJsonConverterTests()
+        {
+            JsonReader Get(string val)
+            {
+                return new JsonTextReader(new StringReader(val));
+            }
+            
+            var jsonConverter = new DecimalStringJsonConverter();
+            Assert.True(jsonConverter.CanConvert(typeof(decimal)));
+            Assert.True(jsonConverter.CanConvert(typeof(decimal?)));
+            Assert.False(jsonConverter.CanConvert(typeof(double)));
+            Assert.False(jsonConverter.CanConvert(typeof(float)));
+            Assert.False(jsonConverter.CanConvert(typeof(int)));
+            Assert.False(jsonConverter.CanConvert(typeof(string)));
+
+            var numberJson = "1";
+            var numberDecimalJson = "1.2";
+            var stringJson = "\"1.2\"";
+            Assert.Equal(1m, jsonConverter.ReadJson(Get(numberJson), typeof(decimal), null, null));
+            Assert.Equal(1.2m, jsonConverter.ReadJson(Get(numberDecimalJson), typeof(decimal), null, null));
+            Assert.Null(jsonConverter.ReadJson(Get("null"), typeof(decimal?), null, null));
+            Assert.Equal(1.2m, jsonConverter.ReadJson(Get(stringJson), typeof(decimal), null, null));
+            Assert.Equal(1.2m, Assert.IsType<decimal?>( jsonConverter.ReadJson(Get(stringJson), typeof(decimal?), null, null)));
+
         }
     }
 }

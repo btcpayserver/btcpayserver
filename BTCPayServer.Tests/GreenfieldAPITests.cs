@@ -345,12 +345,11 @@ namespace BTCPayServer.Tests
                 Assert.NotNull(serverInfoData);
                 Assert.NotNull(serverInfoData.Version);
                 Assert.NotNull(serverInfoData.Onion);
-                Assert.NotNull(serverInfoData.Status);
-                Assert.True(serverInfoData.Status.FullySynched);
+                Assert.True(serverInfoData.FullySynched);
                 Assert.Contains("BTC", serverInfoData.SupportedPaymentMethods);
                 Assert.Contains("BTC_LightningLike", serverInfoData.SupportedPaymentMethods);
-                Assert.NotNull(serverInfoData.Status.SyncStatus);
-                Assert.Single(serverInfoData.Status.SyncStatus.Select(s => s.CryptoCode == "BTC"));
+                Assert.NotNull(serverInfoData.SyncStatus);
+                Assert.Single(serverInfoData.SyncStatus.Select(s => s.CryptoCode == "BTC"));
             }
         }
 
@@ -428,7 +427,7 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Fast", "Fast")]
-        public async Task DecimalStringJsonConverterTests()
+        public void DecimalStringJsonConverterTests()
         {
             JsonReader Get(string val)
             {

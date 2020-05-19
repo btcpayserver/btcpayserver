@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/core/sdk:3.1.101 AS builder
+FROM mcr.microsoft.com/dotnet/core/sdk:3.1.202 AS builder
 WORKDIR /source
 COPY nuget.config nuget.config
 COPY Build/Common.csproj Build/Common.csproj
@@ -16,7 +16,7 @@ COPY BTCPayServer/. BTCPayServer/.
 COPY Build/Version.csproj Build/Version.csproj
 RUN cd BTCPayServer && dotnet publish --output /app/ --configuration Release
 
-FROM mcr.microsoft.com/dotnet/core/aspnet:3.1.1-buster-slim
+FROM mcr.microsoft.com/dotnet/core/aspnet:3.1.4-buster-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends iproute2 openssh-client \
     && rm -rf /var/lib/apt/lists/* 

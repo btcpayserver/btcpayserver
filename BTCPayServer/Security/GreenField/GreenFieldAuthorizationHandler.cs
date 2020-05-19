@@ -42,6 +42,8 @@ namespace BTCPayServer.Security.GreenField
                     success = context.HasPermission(Permission.Create(requirement.Policy));
                     break;
 
+                case Policies.CanViewPaymentRequests:
+                case Policies.CanModifyPaymentRequests:
                 case Policies.CanViewStoreSettings:
                 case Policies.CanModifyStoreSettings:
                     var storeId = _HttpContext.GetImplicitStoreId();

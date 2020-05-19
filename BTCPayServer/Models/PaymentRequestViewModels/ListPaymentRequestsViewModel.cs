@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Services.PaymentRequests;
 using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using PaymentRequestData = BTCPayServer.Data.PaymentRequestData;
 
 namespace BTCPayServer.Models.PaymentRequestViewModels
 {
@@ -98,14 +100,14 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
                 EmbeddedCSS = $"<style>{EmbeddedCSS}</style>";
             switch (data.Status)
             {
-                case PaymentRequestData.PaymentRequestStatus.Pending:
+                case Client.Models.PaymentRequestData.PaymentRequestStatus.Pending:
                     Status = ExpiryDate.HasValue ? $"Expires on {ExpiryDate.Value:g}" : "Pending";
                     IsPending = true;
                     break;
-                case PaymentRequestData.PaymentRequestStatus.Completed:
+                case Client.Models.PaymentRequestData.PaymentRequestStatus.Completed:
                     Status = "Settled";
                     break;
-                case PaymentRequestData.PaymentRequestStatus.Expired:
+                case Client.Models.PaymentRequestData.PaymentRequestStatus.Expired:
                     Status = "Expired";
                     break;
                 default:

@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -77,7 +76,7 @@ namespace BTCPayServer.Services.PaymentRequests
             }
         }
         
-        public async Task UpdatePaymentRequestStatus(string paymentRequestId, PaymentRequestData.PaymentRequestStatus status, CancellationToken cancellationToken = default)
+        public async Task UpdatePaymentRequestStatus(string paymentRequestId, Client.Models.PaymentRequestData.PaymentRequestStatus status, CancellationToken cancellationToken = default)
         {
             using (var context = _ContextFactory.CreateContext())
             {
@@ -102,7 +101,7 @@ namespace BTCPayServer.Services.PaymentRequests
                 if (!string.IsNullOrEmpty(query.StoreId))
                 {
                     queryable = queryable.Where(data =>
-                       data.StoreDataId.Equals(query.StoreId, StringComparison.InvariantCulture));
+                       data.StoreDataId == query.StoreId);
                 }
 
                 if (query.Status != null && query.Status.Any())
@@ -110,7 +109,13 @@ namespace BTCPayServer.Services.PaymentRequests
                     queryable = queryable.Where(data =>
                         query.Status.Contains(data.Status));
                 }
-
+                
+                if (query.Ids != null && query.Ids.Any())
+                {
+                    queryable = queryable.Where(data =>
+                        query.Ids.Contains(data.Id));
+                }
+                
                 if (!string.IsNullOrEmpty(query.UserId))
                 {
                     queryable = queryable.Where(i =>
@@ -181,10 +186,11 @@ namespace BTCPayServer.Services.PaymentRequests
     public class PaymentRequestQuery
     {
         public string StoreId { get; set; }
-        public bool IncludeArchived { get; set; } = true;
-        public PaymentRequestData.PaymentRequestStatus[] Status{ get; set; }
+        public bool IncludeArchived { get; set; } = true;        
+        public Client.Models.PaymentRequestData.PaymentRequestStatus[] Status{ get; set; }
         public string UserId { get; set; }
         public int? Skip { get; set; }
         public int? Count { get; set; }
+        public string[] Ids { get; set; }
     }
 }

@@ -16,6 +16,7 @@ using BTCPayServer.Data;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Builder;
+using PaymentRequestData = BTCPayServer.Client.Models.PaymentRequestData;
 
 namespace BTCPayServer.PaymentRequest
 {
@@ -123,7 +124,7 @@ namespace BTCPayServer.PaymentRequest
             Logs.PayServer.LogInformation("Starting payment request expiration watcher");
             var (total, items) = await _PaymentRequestRepository.FindPaymentRequests(new PaymentRequestQuery()
             {
-                Status = new[] {PaymentRequestData.PaymentRequestStatus.Pending}
+                Status = new[] {Client.Models.PaymentRequestData.PaymentRequestStatus.Pending}
             }, cancellationToken);
 
             Logs.PayServer.LogInformation($"{total} pending payment requests being checked since last run");
@@ -172,7 +173,8 @@ namespace BTCPayServer.PaymentRequest
                 await InfoUpdated(updated.PaymentRequestId);
 
                 var expiry = updated.Data.GetBlob().ExpiryDate;
-                if (updated.Data.Status == PaymentRequestData.PaymentRequestStatus.Pending &&
+                if (updated.Data.Status == 
+                    PaymentRequestData.PaymentRequestStatus.Pending &&
                     expiry.HasValue)
                 {
                     QueueExpiryTask(

@@ -253,16 +253,21 @@
                 }
             },
             "StoreData": {
-                "type": "object",
-                "additionalProperties": false,
-                "properties": {
-                    "id": {
-                        "type": "string",
-                        "description": "The id of the store",
-                        "nullable": false
+                "allOf": [
+                    {
+                        "$ref": "#/definitions/StoreBaseData"
                     },
-                    "$ref": "#/components/schemas/StoreBaseData"
-                }
+                    {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string",
+                                "description": "The id of the store",
+                                "nullable": false
+                            }
+                        }
+                    }
+                ]
             },
             "StoreBaseData": {
                 "type": "object",

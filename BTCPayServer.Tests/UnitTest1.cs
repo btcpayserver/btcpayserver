@@ -101,9 +101,13 @@ namespace BTCPayServer.Tests
             using (var tester = ServerTester.Create())
             {
                 await tester.StartAsync();
-                var sresp = await tester.PayTester.HttpClient.GetAsync("swagger/v1/swagger.json");
+                var acc = tester.NewAccount();
 
-                JObject swagger = JObject.Parse(await sresp.Content.ReadAsStringAsync());
+                var sresp = Assert
+                    .IsType<JsonResult>(await tester.PayTester.GetController<HomeController>(acc.UserId, acc.StoreId)
+                        .Swagger()).Value.ToJson();
+
+                JObject swagger = JObject.Parse(sresp);
                 using HttpClient client = new HttpClient();
                 var resp = await client.GetAsync(
                     "https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json");

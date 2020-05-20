@@ -114,7 +114,7 @@ namespace BTCPayServer.Controllers
         }
 
         [Route("swagger/v1/swagger.json")]
-        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie+","+ AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> Swagger()
         {
             JObject json = new JObject();

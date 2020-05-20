@@ -59,7 +59,7 @@
                 <tbody>
                 @foreach (var payment in onchainPayments)
                 {
-                    <tr class="@(payment.Replaced ? "linethrough" : "")" >
+                    <tr style="@(payment.Replaced ? "text-decoration: line-through" : "")">
                         <td>@payment.Crypto</td>
                         <td>@payment.DepositAddress</td>
                         <td class="payment-value">@payment.CryptoPaymentData.GetValue() @Safe.Raw(payment.AdditionalInformation is string i ? $"<br/>({i})" : string.Empty)</td>

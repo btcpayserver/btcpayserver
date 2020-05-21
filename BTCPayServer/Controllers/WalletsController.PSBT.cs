@@ -100,6 +100,12 @@ namespace BTCPayServer.Controllers
                 ModelState.AddModelError(nameof(vm.PSBT), "Invalid PSBT");
                 return View(vm);
             }
+
+            var res = await TryHandleSigningCommands(walletId, psbt, command, vm.PayJoinEndpointUrl);
+            if (res != null)
+            {
+                return res;
+            }
             switch (command)
             {
                 case "decode":
@@ -110,10 +116,7 @@ namespace BTCPayServer.Controllers
                     vm.PSBT = psbt.ToBase64();
                     vm.FileName = vm.UploadedPSBTFile?.FileName;
                     return View(vm);
-                case "vault":
-                    return ViewVault(walletId, psbt, vm.PayJoinEndpointUrl);
-                case "ledger":
-                    return ViewWalletSendLedger(walletId, psbt);
+
                 case "update":
                     var derivationSchemeSettings = GetDerivationSchemeSettings(walletId);
                     psbt = await ExplorerClientProvider.UpdatePSBT(derivationSchemeSettings, psbt);
@@ -124,21 +127,7 @@ namespace BTCPayServer.Controllers
                     }
                     TempData[WellKnownTempData.SuccessMessage] = "PSBT updated!";
                     return RedirectToWalletPSBT(psbt, vm.FileName);
-                case "seed":
-                    return SignWithSeed(walletId, psbt.ToBase64(), vm.PayJoinEndpointUrl);
-                case "nbx-seed":
-                    if (await CanUseHotWallet())
-                    {
-                        var derivationScheme = GetDerivationSchemeSettings(walletId);
-                        var extKey = await ExplorerClientProvider.GetExplorerClient(network)
-                            .GetMetadataAsync<string>(derivationScheme.AccountDerivation,
-                                WellknownMetadataKeys.MasterHDKey);
 
-                        return SignWithSeed(walletId,
-                            new SignWithSeedViewModel() {SeedOrKey = extKey, PSBT = psbt.ToBase64(), PayJoinEndpointUrl = vm.PayJoinEndpointUrl});
-                    }
-
-                    return View(vm);
                 case "broadcast":
                 {
                     return RedirectToWalletPSBTReady(psbt.ToBase64());
@@ -469,6 +458,39 @@ namespace BTCPayServer.Controllers
             sourcePSBT = sourcePSBT.Combine(psbt);
             TempData[WellKnownTempData.SuccessMessage] = "PSBT Successfully combined!";
             return RedirectToWalletPSBT(sourcePSBT);
+        }
+
+        private async Task<IActionResult> TryHandleSigningCommands(WalletId walletId, PSBT psbt, string command,
+            string payjoinEndpointUrl)
+        {
+            switch (command )
+            {
+                case "vault":
+                    return ViewVault(walletId, psbt, payjoinEndpointUrl);
+                case "ledger":
+                    return ViewWalletSendLedger(walletId, psbt);
+                case "seed":
+                    return SignWithSeed(walletId, psbt.ToBase64(), payjoinEndpointUrl);
+                case "nbx-seed":
+                    if (await CanUseHotWallet())
+                    {
+                        var derivationScheme = GetDerivationSchemeSettings(walletId);
+                        var extKey = await ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode)
+                            .GetMetadataAsync<string>(derivationScheme.AccountDerivation,
+                                WellknownMetadataKeys.MasterHDKey);
+
+                        return SignWithSeed(walletId,
+                            new SignWithSeedViewModel() {SeedOrKey = extKey, PSBT = psbt.ToBase64(), PayJoinEndpointUrl = payjoinEndpointUrl});
+                    }
+                    TempData.SetStatusMessageModel(new StatusMessageModel()
+                    {
+                        Severity = StatusMessageModel.StatusSeverity.Error,
+                        Message = "NBX seed functionality is not available"
+                    });
+                    break;
+            }
+
+            return null;
         }
     }
 }

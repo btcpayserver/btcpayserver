@@ -655,7 +655,7 @@ namespace BTCPayServer.Controllers
             derivationScheme.RebaseKeyPaths(psbt.PSBT);
             
             
-            var res = await TryHandleSigningCommands(walletId, psbt.PSBT, command, vm.PayJoinEndpointUrl);
+            var res = await TryHandleSigningCommands(walletId, psbt.PSBT, command, vm.PayJoinEndpointUrl, psbt.ChangeAddress);
             if (res != null)
             {
                 return res;

@@ -101,7 +101,7 @@ namespace BTCPayServer.Controllers
                 return View(vm);
             }
 
-            var res = await TryHandleSigningCommands(walletId, psbt, command, vm.PayJoinEndpointUrl);
+            var res = await TryHandleSigningCommands(walletId, psbt, command, vm.PayJoinEndpointUrl, null);
             if (res != null)
             {
                 return res;
@@ -461,14 +461,14 @@ namespace BTCPayServer.Controllers
         }
 
         private async Task<IActionResult> TryHandleSigningCommands(WalletId walletId, PSBT psbt, string command,
-            string payjoinEndpointUrl)
+            string payjoinEndpointUrl, BitcoinAddress changeAddress)
         {
             switch (command )
             {
                 case "vault":
                     return ViewVault(walletId, psbt, payjoinEndpointUrl);
                 case "ledger":
-                    return ViewWalletSendLedger(walletId, psbt);
+                    return ViewWalletSendLedger(walletId, psbt, changeAddress);
                 case "seed":
                     return SignWithSeed(walletId, psbt.ToBase64(), payjoinEndpointUrl);
                 case "nbx-seed":

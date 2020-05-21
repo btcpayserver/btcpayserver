@@ -127,7 +127,15 @@ namespace BTCPayServer.Controllers
             HashSet<CurrencyPair> currencyPairsToFetch = new HashSet<CurrencyPair>();
             var rules = storeBlob.GetRateRules(_NetworkProvider);
             var excludeFilter = storeBlob.GetExcludedPaymentMethods(); // Here we can compose filters from other origin with PaymentFilter.Any()
-
+            
+            if (invoice.PaymentCurrencies?.Any() is true)
+            {
+                foreach (string paymentCurrency in invoice.PaymentCurrencies)
+                {
+                    invoice.SupportedTransactionCurrencies.TryAdd(paymentCurrency,
+                        new InvoiceSupportedTransactionCurrency() {Enabled = true});
+                }
+            }
             if (invoice.SupportedTransactionCurrencies != null && invoice.SupportedTransactionCurrencies.Count != 0)
             {
                 var supportedTransactionCurrencies = invoice.SupportedTransactionCurrencies

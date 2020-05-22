@@ -9,11 +9,15 @@ namespace BTCPayServer.JsonConverters
     public class CurrencyValueJsonConverter : JsonConverter
     {
         private readonly CurrencyNameTable _currencyNameTable;
-
-        public CurrencyValueJsonConverter(CurrencyNameTable currencyNameTable = null)
+        public CurrencyValueJsonConverter()
+        {
+            _currencyNameTable = new CurrencyNameTable();
+        }
+        public CurrencyValueJsonConverter(CurrencyNameTable currencyNameTable)
         {
             _currencyNameTable = currencyNameTable?? new CurrencyNameTable();
         }
+
         public override bool CanConvert(Type objectType)
         {
             return typeof(CurrencyValue).GetTypeInfo().IsAssignableFrom(objectType.GetTypeInfo());

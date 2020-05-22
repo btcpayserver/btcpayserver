@@ -10,6 +10,7 @@ using NBitcoin;
 using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore;
 using System.IO;
+using System.Linq;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Hosting;
 using BTCPayServer.Services;
@@ -32,6 +33,7 @@ using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Changelly;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Payments.PayJoin;
+using BTCPayServer.Rating;
 using BTCPayServer.Security;
 using BTCPayServer.Services.PaymentRequests;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -119,6 +121,8 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<BTCPayNetworkProvider>(o => 
             {
                 var opts = o.GetRequiredService<BTCPayServerOptions>();
+                CurrencyPair.AdditionalCurrencies.AddRange(opts.NetworkProvider.UnfilteredNetworks.GetAll()
+                    .Select(network => network.CryptoCode));
                 return opts.NetworkProvider;
             });
 

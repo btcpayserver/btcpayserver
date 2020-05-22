@@ -1,19 +1,15 @@
 ﻿using System;
 using System.Reflection;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
 using NBitcoin.JsonConverters;
-using BTCPayServer.Rating;
+using Newtonsoft.Json;
 
-namespace BTCPayServer.JsonConverters
+namespace BTCPayServer.Rating.JsonConverters
 {
     public class CurrencyPairJsonConverter : JsonConverter
     {
         public override bool CanConvert(Type objectType)
         {
-            return typeof(CurrencyValue).GetTypeInfo().IsAssignableFrom(objectType.GetTypeInfo());
+            return typeof(CurrencyPair).GetTypeInfo().IsAssignableFrom(objectType.GetTypeInfo());
         }
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)

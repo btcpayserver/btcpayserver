@@ -100,9 +100,9 @@ namespace BTCPayServer.Services.Rates
 
                     if (_additionalCurrencies != null)
                     {
-                        foreach (var network in _additionalCurrencies)
+                        foreach (var additionalCurrency in _additionalCurrencies)
                         {
-                            AddCurrency(_CurrencyProviders, network.Code, network.Divisibility, network.Symbol);
+                            AddCurrency(_CurrencyProviders, additionalCurrency.Code, additionalCurrency.Divisibility, additionalCurrency.Symbol);
                         }
                     }
                     

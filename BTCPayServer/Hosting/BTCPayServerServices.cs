@@ -185,7 +185,8 @@ namespace BTCPayServer.Hosting
                         Code = network.CryptoCode,
                         Divisibility = network.Divisibility,
                         Name = network.CryptoCode,
-                        Crypto = true
+                        Crypto = true,
+                        Symbol = network.CryptoCode
                     }));
             });
             services.TryAddSingleton<IFeeProviderFactory>(o => new NBXplorerFeeProviderFactory(o.GetRequiredService<ExplorerClientProvider>())

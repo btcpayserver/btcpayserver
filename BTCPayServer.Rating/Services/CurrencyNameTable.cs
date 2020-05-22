@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Linq;
 using System.Text;
 using System.Globalization;
+using BTCPayServer.Rating;
 
 namespace BTCPayServer.Services.Rates
 {
@@ -14,29 +15,32 @@ namespace BTCPayServer.Services.Rates
         public string Name
         {
             get;
-            internal set;
+            set;
         }
         public string Code
         {
             get;
-            internal set;
+            set;
         }
         public int Divisibility
         {
             get;
-            internal set;
+            set;
         }
         public string Symbol
         {
             get;
-            internal set;
+            set;
         }
         public bool Crypto { get; set; }
     }
     public class CurrencyNameTable
     {
-        public CurrencyNameTable()
+        private readonly IEnumerable<CurrencyData> _additionalCurrencies;
+
+        public CurrencyNameTable(IEnumerable<CurrencyData> additionalCurrencies = null)
         {
+            _additionalCurrencies = additionalCurrencies;
             _Currencies = LoadCurrency().ToDictionary(k => k.Code);
         }
 
@@ -94,11 +98,14 @@ namespace BTCPayServer.Services.Rates
                         catch { }
                     }
 
-                    foreach (var network in new BTCPayNetworkProvider(NetworkType.Mainnet).GetAll())
+                    if (_additionalCurrencies != null)
                     {
-                        AddCurrency(_CurrencyProviders, network.CryptoCode, network.Divisibility, network.CryptoCode);
+                        foreach (var network in _additionalCurrencies)
+                        {
+                            AddCurrency(_CurrencyProviders, network.Code, network.Divisibility, network.Symbol);
+                        }
                     }
-
+                    
                     _CurrencyProviders.TryAdd("SATS",
                         new NumberFormatInfo()
                         {
@@ -151,7 +158,7 @@ namespace BTCPayServer.Services.Rates
 
         Dictionary<string, CurrencyData> _Currencies;
 
-        static CurrencyData[] LoadCurrency()
+        private CurrencyData[] LoadCurrency()
         {
             var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("BTCPayServer.Currencies.txt");
             string content = null;
@@ -181,17 +188,11 @@ namespace BTCPayServer.Services.Rates
                 }
             }
 
-            foreach (var network in new BTCPayNetworkProvider(NetworkType.Mainnet).GetAll())
+            foreach (var network in _additionalCurrencies)
             {
-                if (!dico.TryAdd(network.CryptoCode, new CurrencyData()
+                if(!dico.TryAdd(network.Code, network))
                 {
-                    Code = network.CryptoCode,
-                    Divisibility = network.Divisibility,
-                    Name = network.CryptoCode,
-                    Crypto = true
-                }))
-                {
-                    dico[network.CryptoCode].Crypto = true;
+                    dico[network.Code].Crypto = network.Crypto;
                 }
             }
 

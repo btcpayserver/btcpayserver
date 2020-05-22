@@ -93,23 +93,6 @@ namespace BTCPayServer
             }
             return value;
         }
-        public static decimal RoundToSignificant(this decimal value, ref int divisibility)
-        {
-            if (value != 0m)
-            {
-                while (true)
-                {
-                    var rounded = decimal.Round(value, divisibility, MidpointRounding.AwayFromZero);
-                    if ((Math.Abs(rounded - value) / value) < 0.001m)
-                    {
-                        value = rounded;
-                        break;
-                    }
-                    divisibility++;
-                }
-            }
-            return value;
-        }
 
         public static bool HasStatusMessage(this ITempDataDictionary tempData)
         {

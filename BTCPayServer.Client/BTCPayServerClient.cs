@@ -17,30 +17,33 @@ namespace BTCPayServer.Client
         private readonly string _username;
         private readonly string _password;
         private readonly HttpClient _httpClient;
-
+        private JsonSerializerSettings _jsonSerializerSettings;
         public string APIKey => _apiKey;
 
-        public BTCPayServerClient(Uri btcpayHost, HttpClient httpClient = null)
+        public BTCPayServerClient(Uri btcpayHost, HttpClient httpClient = null, JsonSerializerSettings jsonSerializerSettings = null)
         {
             if (btcpayHost == null)
                 throw new ArgumentNullException(nameof(btcpayHost));
             _btcpayHost = btcpayHost;
             _httpClient = httpClient ?? new HttpClient();
+            _jsonSerializerSettings = jsonSerializerSettings;
         }
-        public BTCPayServerClient(Uri btcpayHost, string APIKey, HttpClient httpClient = null)
+        public BTCPayServerClient(Uri btcpayHost, string APIKey, HttpClient httpClient = null, JsonSerializerSettings jsonSerializerSettings = null)
         {
             _apiKey = APIKey;
             _btcpayHost = btcpayHost;
             _httpClient = httpClient ?? new HttpClient();
+            _jsonSerializerSettings = jsonSerializerSettings;
         }
         
-        public BTCPayServerClient(Uri btcpayHost, string username, string password, HttpClient httpClient = null)
+        public BTCPayServerClient(Uri btcpayHost, string username, string password, HttpClient httpClient = null, JsonSerializerSettings jsonSerializerSettings = null)
         {
             _apiKey = APIKey;
             _btcpayHost = btcpayHost;
             _username = username;
             _password = password;
             _httpClient = httpClient ?? new HttpClient();
+            _jsonSerializerSettings = jsonSerializerSettings;
         }
 
         protected void HandleResponse(HttpResponseMessage message)
@@ -51,7 +54,7 @@ namespace BTCPayServer.Client
         protected async Task<T> HandleResponse<T>(HttpResponseMessage message)
         {
             HandleResponse(message);
-            return JsonConvert.DeserializeObject<T>(await message.Content.ReadAsStringAsync());
+            return JsonConvert.DeserializeObject<T>(await message.Content.ReadAsStringAsync(), _jsonSerializerSettings);
         }
 
         protected virtual HttpRequestMessage CreateHttpRequest(string path,
@@ -83,7 +86,7 @@ namespace BTCPayServer.Client
             var request = CreateHttpRequest(path, queryPayload, method);
             if (typeof(T).IsPrimitive || !EqualityComparer<T>.Default.Equals(bodyPayload, default(T)))
             {
-                request.Content = new StringContent(JsonConvert.SerializeObject(bodyPayload), Encoding.UTF8, "application/json");
+                request.Content = new StringContent(JsonConvert.SerializeObject(bodyPayload, _jsonSerializerSettings), Encoding.UTF8, "application/json");
             }
 
             return request;

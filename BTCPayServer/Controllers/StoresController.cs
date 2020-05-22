@@ -63,7 +63,8 @@ namespace BTCPayServer.Controllers
             IAuthorizationService authorizationService,
             EventAggregator eventAggregator,
             CssThemeManager cssThemeManager,
-            AppService appService)
+            AppService appService,
+            CurrencyNameTable currencyNameTable)
         {
             _RateFactory = rateFactory;
             _Repo = repo;
@@ -80,6 +81,7 @@ namespace BTCPayServer.Controllers
             _authorizationService = authorizationService;
             _CssThemeManager = cssThemeManager;
             _appService = appService;
+            _currencyNameTable = currencyNameTable;
             _EventAggregator = eventAggregator;
             _NetworkProvider = networkProvider;
             _ExplorerProvider = explorerProvider;
@@ -108,6 +110,7 @@ namespace BTCPayServer.Controllers
         private readonly IAuthorizationService _authorizationService;
         private readonly CssThemeManager _CssThemeManager;
         private readonly AppService _appService;
+        private readonly CurrencyNameTable _currencyNameTable;
         private readonly EventAggregator _EventAggregator;
 
         [TempData]
@@ -403,7 +406,7 @@ namespace BTCPayServer.Controllers
             CurrencyValue lightningMaxValue = null;
             if (!string.IsNullOrWhiteSpace(model.LightningMaxValue))
             {
-                if (!CurrencyValue.TryParse(model.LightningMaxValue, out lightningMaxValue))
+                if (!CurrencyValue.TryParse(model.LightningMaxValue, out lightningMaxValue, _currencyNameTable))
                 {
                     ModelState.AddModelError(nameof(model.LightningMaxValue), "Invalid lightning max value");
                 }
@@ -412,7 +415,7 @@ namespace BTCPayServer.Controllers
             CurrencyValue onchainMinValue = null;
             if (!string.IsNullOrWhiteSpace(model.OnChainMinValue))
             {
-                if (!CurrencyValue.TryParse(model.OnChainMinValue, out onchainMinValue))
+                if (!CurrencyValue.TryParse(model.OnChainMinValue, out onchainMinValue, _currencyNameTable))
                 {
                     ModelState.AddModelError(nameof(model.OnChainMinValue), "Invalid on chain min value");
                 }

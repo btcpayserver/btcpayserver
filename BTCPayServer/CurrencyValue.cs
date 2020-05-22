@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using BTCPayServer.Services.Rates;
 
 namespace BTCPayServer
@@ -11,8 +8,7 @@ namespace BTCPayServer
     public class CurrencyValue
     {
         static Regex _Regex = new Regex("^([0-9]+(\\.[0-9]+)?)\\s*([a-zA-Z]+)$");
-        static CurrencyNameTable _CurrencyTable = new CurrencyNameTable();
-        public static bool TryParse(string str, out CurrencyValue value)
+        public static bool TryParse(string str, out CurrencyValue value, CurrencyNameTable nameTable)
         {
             value = null;
             var match = _Regex.Match(str);
@@ -21,7 +17,7 @@ namespace BTCPayServer
                 return false;
 
             var currency = match.Groups[match.Groups.Count - 1].Value.ToUpperInvariant();
-            var currencyData = _CurrencyTable.GetCurrencyData(currency, false);
+            var currencyData = nameTable.GetCurrencyData(currency, false);
             if (currencyData == null)
                 return false;
             v = Math.Round(v, currencyData.Divisibility);

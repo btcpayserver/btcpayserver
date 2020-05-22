@@ -175,7 +175,19 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<PaymentRequestRepository>();
             services.TryAddSingleton<BTCPayWalletProvider>();
             services.TryAddSingleton<WalletReceiveStateService>();
-            services.TryAddSingleton<CurrencyNameTable>();
+            services.TryAddSingleton(o =>
+            {
+                return new CurrencyNameTable(o.GetService<BTCPayNetworkProvider>()
+                    .UnfilteredNetworks
+                    .GetAll()
+                    .Select(network => new CurrencyData()
+                    {
+                        Code = network.CryptoCode,
+                        Divisibility = network.Divisibility,
+                        Name = network.CryptoCode,
+                        Crypto = true
+                    }));
+            });
             services.TryAddSingleton<IFeeProviderFactory>(o => new NBXplorerFeeProviderFactory(o.GetRequiredService<ExplorerClientProvider>())
             {
                 Fallback = new FeeRate(100L, 1)

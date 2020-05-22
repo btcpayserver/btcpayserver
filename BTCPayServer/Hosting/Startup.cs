@@ -23,7 +23,10 @@ using System.Net;
 using BTCPayServer.JsonConverters;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Services.Apps;
+using BTCPayServer.Services.Rates;
 using BTCPayServer.Storage;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace BTCPayServer.Hosting
 {
@@ -84,6 +87,7 @@ namespace BTCPayServer.Hosting
                 };
             })
             .AddNewtonsoftJson()
+            
 #if RAZOR_RUNTIME_COMPILE
             .AddRazorRuntimeCompilation()
 #endif
@@ -101,6 +105,17 @@ namespace BTCPayServer.Hosting
                 options.Lockout.AllowedForNewUsers = true;
                 options.Password.RequireUppercase = false;
             });
+
+            services.AddSingleton<CurrencyValueJsonConverter>();
+
+            services.AddSingleton<IConfigureOptions<MvcNewtonsoftJsonOptions>>(provider =>
+            {
+               return new ConfigureOptions<MvcNewtonsoftJsonOptions>(options =>
+               {
+                   options.SerializerSettings.Converters.Add(provider.GetService<CurrencyValueJsonConverter>());
+               });
+            });
+            
             // If the HTTPS certificate path is not set this logic will NOT be used and the default Kestrel binding logic will be.
             string httpsCertificateFilePath = Configuration.GetOrDefault<string>("HttpsCertificateFilePath", null);
             bool useDefaultCertificate = Configuration.GetOrDefault<bool>("HttpsUseDefaultCertificate", false);

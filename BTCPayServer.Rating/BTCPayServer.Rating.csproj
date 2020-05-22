@@ -11,4 +11,8 @@
     <PackageReference Include="DigitalRuby.ExchangeSharp" Version="0.6.3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Currencies.txt" />
+  </ItemGroup>
+
 </Project>

@@ -40,7 +40,7 @@ namespace BTCPayServer.Services.Rates
 
         public CurrencyNameTable(IEnumerable<CurrencyData> additionalCurrencies = null)
         {
-            _additionalCurrencies = additionalCurrencies;
+            _additionalCurrencies = additionalCurrencies?? new List<CurrencyData>();
             _Currencies = LoadCurrency().ToDictionary(k => k.Code);
         }
 
@@ -160,14 +160,15 @@ namespace BTCPayServer.Services.Rates
 
         private CurrencyData[] LoadCurrency()
         {
-            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("BTCPayServer.Currencies.txt");
+            
+            Dictionary<string, CurrencyData> dico = new Dictionary<string, CurrencyData>();
+            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("BTCPayServer.Rating.Currencies.txt");
             string content = null;
             using (var reader = new StreamReader(stream, Encoding.UTF8))
             {
                 content = reader.ReadToEnd();
             }
             var currencies = content.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
-            Dictionary<string, CurrencyData> dico = new Dictionary<string, CurrencyData>();
             foreach (var currency in currencies)
             {
                 var splitted = currency.Split(new[] { '\t' }, StringSplitOptions.RemoveEmptyEntries);

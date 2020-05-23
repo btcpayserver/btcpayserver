@@ -203,24 +203,7 @@
                 </div>
             </div>
             <div class="form-group d-flex mt-2">
-                <div class="dropdown">
-                    <button class="btn btn-primary dropdown-toggle" type="button" id="SendMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        Sign with...
-                    </button>
-                    <div class="dropdown-menu" aria-labelledby="SendMenu">
-                        <button name="command" type="submit" class="dropdown-item" value="ledger">... your Ledger Wallet device</button>
-                        <button name="command" type="submit" class="dropdown-item" value="seed">... an HD private key or mnemonic seed</button>
-                        <button name="command" type="submit" class="dropdown-item" value="analyze-psbt">... a wallet supporting PSBT</button>
-                        @if (Model.CryptoCode == "BTC")
-                        {
-                            <button name="command" type="submit" class="dropdown-item" value="vault">... the vault (preview)</button>
-                        }
-                        @if (Model.NBXSeedAvailable)
-                        {
-                            <button id="spendWithNBxplorer" name="command" type="submit" class="dropdown-item" value="nbx-seed">... the seed saved in NBXplorer</button>
-                        }
-                    </div>
-                </div>
+               <partial name="WalletSigningMenu" model="@((Model.CryptoCode, Model.NBXSeedAvailable))"/>
                 <button type="submit" name="command" value="add-output" class="ml-1 btn btn-secondary">Add another destination</button>
                 <button type="button" id="bip21parse" class="ml-1 btn btn-secondary" title="Paste BIP21/Address"><i class="fa fa-paste"></i></button>
                 <button type="button" id="scanqrcode" class="ml-1 btn btn-secondary only-for-js" data-toggle="modal" data-target="#scanModal" title="Scan BIP21/Address with camera"><i class="fa fa-camera"></i></button>

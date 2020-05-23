@@ -653,24 +653,16 @@ namespace BTCPayServer.Controllers
                 return View(vm);
             }
             derivationScheme.RebaseKeyPaths(psbt.PSBT);
+            
+            
+            var res = await TryHandleSigningCommands(walletId, psbt.PSBT, command, vm.PayJoinEndpointUrl, psbt.ChangeAddress);
+            if (res != null)
+            {
+                return res;
+            }
+            
             switch (command)
             {
-                case "vault":
-                    return ViewVault(walletId, psbt.PSBT, vm.PayJoinEndpointUrl);
-                case "nbx-seed":
-                  var extKey = await ExplorerClientProvider.GetExplorerClient(network)
-                        .GetMetadataAsync<string>(derivationScheme.AccountDerivation, WellknownMetadataKeys.MasterHDKey, cancellation);
-
-                  return SignWithSeed(walletId, new SignWithSeedViewModel()
-                  {
-                      PayJoinEndpointUrl = vm.PayJoinEndpointUrl,
-                      SeedOrKey = extKey,
-                      PSBT = psbt.PSBT.ToBase64()
-                  });
-                case "ledger":
-                    return ViewWalletSendLedger(walletId, psbt.PSBT, psbt.ChangeAddress);
-                case "seed":
-                    return SignWithSeed(walletId, psbt.PSBT.ToBase64(), vm.PayJoinEndpointUrl);
                 case "analyze-psbt":
                     var name =
                         $"Send-{string.Join('_', vm.Outputs.Select(output => $"{output.Amount}->{output.DestinationAddress}{(output.SubtractFeesFromOutput ? "-Fees" : string.Empty)}"))}.psbt";

@@ -9,6 +9,7 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Logging;
 using System.Threading;
+using BTCPayServer.Client.Models;
 using Npgsql;
 using Microsoft.AspNetCore.Identity;
 

@@ -63,6 +63,7 @@ using BTCPayServer.Security.Bitpay;
 using MemoryCache = Microsoft.Extensions.Caching.Memory.MemoryCache;
 using Newtonsoft.Json.Schema;
 using BTCPayServer.Client;
+using BTCPayServer.Client.Models;
 
 namespace BTCPayServer.Tests
 {

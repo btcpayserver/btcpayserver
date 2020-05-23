@@ -40,15 +40,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "type": "object",
-                                "additionalProperties": false,
-                                "properties": {
-                                    "name": {
-                                        "type": "string",
-                                        "description": "The name of the new store",
-                                        "nullable": false
-                                    }
-                                }
+                                "$ref": "#/components/schemas/StoreBaseData"
                             }
                         }
                     },
@@ -158,15 +150,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "type": "object",
-                                "additionalProperties": false,
-                                "properties": {
-                                    "name": {
-                                        "type": "string",
-                                        "description": "The name of the store",
-                                        "nullable": false
-                                    }
-                                }
+                                "$ref": "#/components/schemas/StoreData"
                             }
                         }
                     },
@@ -269,20 +253,132 @@
                 }
             },
             "StoreData": {
+                "allOf": [
+                    {
+                        "$ref": "#/definitions/StoreBaseData"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string",
+                                "description": "The id of the store",
+                                "nullable": false
+                            }
+                        }
+                    }
+                ]
+            },
+            "StoreBaseData": {
                 "type": "object",
+                "x-abstract": true,
                 "additionalProperties": false,
                 "properties": {
-                    "id": {
-                        "type": "string",
-                        "description": "The id of the store",
-                        "nullable": false
-                    },
                     "name": {
                         "type": "string",
                         "description": "The name of the store",
-                        "nullable": false
+                        "nullable": true
+                    },
+                    "website": {
+                        "type": "string",
+                        "description": "The absolute url of the store",
+                        "format": "url",
+                        "nullable": true
+                    },
+                    "invoiceExpiration": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "monitoringExpiration": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "speedPolicy": {
+                        "$ref": "#/components/schemas/SpeedPolicy"
+                    },
+                    "lightningDescriptionTemplate": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "paymentTolerance": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "anyoneCanCreateInvoice": {
+                        "type": "boolean"
+                    },
+                    "showRecommendedFee": {
+                        "type": "boolean"
+                    },
+                    "recommendedFeeBlockTarget": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "defaultLang": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "lightningAmountInSatoshi": {
+                        "type": "boolean"
+                    },
+                    "customLogo": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "customCSS": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "htmlTitle": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "anyoneCanInvoice": {
+                        "type": "boolean"
+                    },
+                    "redirectAutomatically": {
+                        "type": "boolean"
+                    },
+                    "requiresRefundEmail": {
+                        "type": "boolean"
+                    },
+                    "networkFeeMode": {
+                        "$ref": "#/components/schemas/NetworkFeeMode"
+                    },
+                    "payJoinEnabled": {
+                        "type": "boolean"
                     }
                 }
+            },
+            "SpeedPolicy": {
+                "type": "string",
+                "description": "",
+                "x-enumNames": [
+                    "HighSpeed",
+                    "MediumSpeed",
+                    "LowSpeed",
+                    "LowMediumSpeed"
+                ],
+                "enum": [
+                    "HighSpeed",
+                    "MediumSpeed",
+                    "LowSpeed",
+                    "LowMediumSpeed"
+                ]
+            },
+            "NetworkFeeMode": {
+                "type": "string",
+                "description": "",
+                "x-enumNames": [
+                    "MultiplePaymentsOnly",
+                    "Always",
+                    "Never"
+                ],
+                "enum": [
+                    "MultiplePaymentsOnly",
+                    "Always",
+                    "Never"
+                ]
             }
         }
     },

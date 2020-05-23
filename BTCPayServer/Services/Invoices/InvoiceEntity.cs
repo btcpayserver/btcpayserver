@@ -16,6 +16,7 @@ using BTCPayServer.Payments;
 using NBitpayClient;
 using BTCPayServer.Payments.Bitcoin;
 using System.ComponentModel.DataAnnotations.Schema;
+using BTCPayServer.Client.Models;
 using BTCPayServer.JsonConverters;
 
 namespace BTCPayServer.Services.Invoices

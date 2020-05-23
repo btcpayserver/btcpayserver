@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -101,22 +102,97 @@ namespace BTCPayServer.Controllers.GreenField
 
         private static Client.Models.StoreData FromModel(Data.StoreData data)
         {
+            var storeBlob = data.GetStoreBlob();
             return new Client.Models.StoreData()
             {
-                Id = data.Id,
-                Name = data.StoreName
+                Id = data.Id, 
+                Name = data.StoreName,
+                Website = data.StoreWebsite,
+                SpeedPolicy = data.SpeedPolicy,
+                //we do not include the default payment method in this model and instead opt to set it in the stores/storeid/payment-methods endpoints
+                //blob
+                //we do not include DefaultCurrencyPairs,Spread, PreferredExchange, RateScripting, RateScript  in this model and instead opt to set it in stores/storeid/rates endpoints
+                //we do not include ChangellySettings in this model and instead opt to set it in stores/storeid/changelly endpoints
+                //we do not include CoinSwitchSettings in this model and instead opt to set it in stores/storeid/coinswitch endpoints
+                //we do not include ExcludedPaymentMethods in this model and instead opt to set it in stores/storeid/payment-methods endpoints
+                //we do not include EmailSettings in this model and instead opt to set it in stores/storeid/email endpoints
+                //we do not include OnChainMinValue and LightningMaxValue because moving the CurrencyValueJsonConverter to the Client csproj is hard and requires a refactor (#1571 & #1572)
+                NetworkFeeMode = storeBlob.NetworkFeeMode,
+                RequiresRefundEmail = storeBlob.RequiresRefundEmail,
+                ShowRecommendedFee = storeBlob.ShowRecommendedFee,
+                RecommendedFeeBlockTarget = storeBlob.RecommendedFeeBlockTarget,
+                DefaultLang = storeBlob.DefaultLang,
+                MonitoringExpiration = storeBlob.MonitoringExpiration,
+                InvoiceExpiration = storeBlob.InvoiceExpiration,
+                LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi,
+                CustomLogo = storeBlob.CustomLogo,
+                CustomCSS = storeBlob.CustomCSS,
+                HtmlTitle = storeBlob.HtmlTitle,
+                AnyoneCanInvoice = storeBlob.AnyoneCanInvoice,
+                LightningDescriptionTemplate = storeBlob.LightningDescriptionTemplate,
+                PaymentTolerance = storeBlob.PaymentTolerance,
+                RedirectAutomatically = storeBlob.RedirectAutomatically,
+                PayJoinEnabled = storeBlob.PayJoinEnabled
             };
         }
-        
-        private static void ToModel(StoreBaseData restModel,Data.StoreData model)
+
+        private static void ToModel(StoreBaseData restModel, Data.StoreData model)
         {
+            var blob = model.GetStoreBlob();
+
             model.StoreName = restModel.Name;
+            model.StoreName = restModel.Name;
+            model.StoreWebsite = restModel.Website;
+            model.SpeedPolicy = restModel.SpeedPolicy;
+            //we do not include the default payment method in this model and instead opt to set it in the stores/storeid/payment-methods endpoints
+            //blob
+            //we do not include DefaultCurrencyPairs;Spread; PreferredExchange; RateScripting; RateScript  in this model and instead opt to set it in stores/storeid/rates endpoints
+            //we do not include ChangellySettings in this model and instead opt to set it in stores/storeid/changelly endpoints
+            //we do not include CoinSwitchSettings in this model and instead opt to set it in stores/storeid/coinswitch endpoints
+            //we do not include ExcludedPaymentMethods in this model and instead opt to set it in stores/storeid/payment-methods endpoints
+            //we do not include EmailSettings in this model and instead opt to set it in stores/storeid/email endpoints
+            //we do not include OnChainMinValue and LightningMaxValue because moving the CurrencyValueJsonConverter to the Client csproj is hard and requires a refactor (#1571 & #1572)
+            blob.NetworkFeeMode = restModel.NetworkFeeMode;
+            blob.RequiresRefundEmail = restModel.RequiresRefundEmail;
+            blob.ShowRecommendedFee = restModel.ShowRecommendedFee;
+            blob.RecommendedFeeBlockTarget = restModel.RecommendedFeeBlockTarget;
+            blob.DefaultLang = restModel.DefaultLang;
+            blob.MonitoringExpiration = restModel.MonitoringExpiration;
+            blob.InvoiceExpiration = restModel.InvoiceExpiration;
+            blob.LightningAmountInSatoshi = restModel.LightningAmountInSatoshi;
+            blob.CustomLogo = restModel.CustomLogo;
+            blob.CustomCSS = restModel.CustomCSS;
+            blob.HtmlTitle = restModel.HtmlTitle;
+            blob.AnyoneCanInvoice = restModel.AnyoneCanInvoice;
+            blob.LightningDescriptionTemplate = restModel.LightningDescriptionTemplate;
+            blob.PaymentTolerance = restModel.PaymentTolerance;
+            blob.RedirectAutomatically = restModel.RedirectAutomatically;
+            blob.PayJoinEnabled = restModel.PayJoinEnabled;
+            model.SetStoreBlob(blob);
         }
 
         private IActionResult Validate(StoreBaseData request)
         {
-            if (request?.Name is null)
+            if (request is null)
+            {
+                return BadRequest();
+            }
+            
+            if (string.IsNullOrEmpty(request.Name))
                 ModelState.AddModelError(nameof(request.Name), "Name is missing");
+            else if(request.Name.Length < 1 || request.Name.Length > 50)
+                ModelState.AddModelError(nameof(request.Name), "Name can only be between 1 and 50 characters");
+            if (!string.IsNullOrEmpty(request.Website) && !Uri.TryCreate(request.Website, UriKind.Absolute, out _))
+            {
+                ModelState.AddModelError(nameof(request.Website), "Website is not a valid url");
+            }
+            if(request.InvoiceExpiration < 1 && request.InvoiceExpiration > 60 * 24 * 24)
+                ModelState.AddModelError(nameof(request.InvoiceExpiration), "InvoiceExpiration can only be between 1 and 34560 mins");
+            if(request.MonitoringExpiration < 10 && request.MonitoringExpiration > 60 * 24 * 24)
+                ModelState.AddModelError(nameof(request.MonitoringExpiration), "InvoiceExpiration can only be between 10 and 34560 mins");
+            if(request.PaymentTolerance < 0 && request.PaymentTolerance > 100)
+                ModelState.AddModelError(nameof(request.PaymentTolerance), "PaymentTolerance can only be between 0 and 100 percent");
+            
             return !ModelState.IsValid ? BadRequest(new ValidationProblemDetails(ModelState)) : null;
         }
     }

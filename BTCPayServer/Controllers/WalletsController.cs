@@ -914,7 +914,10 @@ namespace BTCPayServer.Controllers
                 return View(viewModel);
             }
 
-            var changed = PSBTChanged(psbt, () => psbt.SignAll(settings.AccountDerivation, signingKey, rootedKeyPath));
+            var changed = PSBTChanged(psbt, () => psbt.SignAll(settings.AccountDerivation, signingKey, rootedKeyPath, new SigningOptions()
+            {
+                EnforceLowR = !(viewModel.SigningContext?.EnforceLowR is false)
+            }));
             if (!changed)
             {
                 ModelState.AddModelError(nameof(viewModel.SeedOrKey), "Impossible to sign the transaction. Probable cause: Incorrect account key path in wallet settings, PSBT already signed.");

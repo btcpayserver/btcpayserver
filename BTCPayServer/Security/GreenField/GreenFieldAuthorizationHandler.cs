@@ -77,6 +77,8 @@ namespace BTCPayServer.Security.GreenField
                         success = true;
                     }
                     break;
+                case Policies.CanModifyProfile:
+                case Policies.CanViewProfile:
                 case Policies.Unrestricted:
                     success = context.HasPermission(Permission.Create(requirement.Policy));
                     break;

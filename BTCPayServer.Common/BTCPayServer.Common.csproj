@@ -4,6 +4,6 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="NBXplorer.Client" Version="3.0.11" />
+    <PackageReference Include="NBXplorer.Client" Version="3.0.15" />
   </ItemGroup>
 </Project>

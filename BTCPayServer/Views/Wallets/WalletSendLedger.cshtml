@@ -21,8 +21,7 @@
 <div class="row">
     <div class="col-md-10">
         <form id="broadcastForm" asp-action="SubmitLedger" asp-route-walletId="@this.Context.GetRouteValue("walletId")" method="post" style="display:none;">
-            <input type="hidden" id="PSBT" asp-for="PSBT" value="@Model.PSBT"/>
-            <input type="hidden" asp-for="HintChange" />
+            <partial name="SigningContext" for="SigningContext" />
             <input type="hidden" asp-for="WebsocketPath" />
         </form>
         <p>

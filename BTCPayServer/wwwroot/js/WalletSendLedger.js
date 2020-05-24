@@ -1,6 +1,6 @@
 ﻿$(function () {
     var psbt = $("#PSBT").val();
-    var hintChange = $("#HintChange").val();
+    var hintChange = $("#SigningContext_ChangeAddress").val();
     var websocketPath = $("#WebsocketPath").val();
     
     var loc = window.location, ws_uri;
@@ -38,7 +38,6 @@
             return false;
         $(".crypto-info").css("display", "block");
         var args = "";
-        args += "&psbt=" + encodeURIComponent(psbt);
         args += "&hintChange=" + encodeURIComponent(hintChange);
         
         WriteAlert("warning", 'Please validate the transaction on your ledger');      
@@ -61,7 +60,7 @@
                 if (result.error) {
                     WriteAlert("danger", result.error);
                 } else {
-                    $("#PSBT").val(result.psbt);
+                    $("#SigningContext_PSBT").val(result.psbt);
                     $("#broadcastForm").submit();
                 }
             });

@@ -40,7 +40,10 @@ namespace BTCPayServer.Controllers
            
             if (network.SupportRBF)
             {
-                psbtRequest.RBF = !sendModel.DisableRBF;
+                if (sendModel.AllowFeeBump is WalletSendModel.ThreeStateBool.Yes)
+                    psbtRequest.RBF = true;
+                if (sendModel.AllowFeeBump is WalletSendModel.ThreeStateBool.No)
+                    psbtRequest.RBF = false;
             }
            
             psbtRequest.FeePreference = new FeePreference();

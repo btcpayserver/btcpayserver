@@ -171,21 +171,27 @@
                 </button>
                 <div id="accordian-advanced" class="collapse" aria-labelledby="accordian-advanced-header" data-parent="#accordian-advanced">
                     <div class="card-body">
-                        <div class="form-check">
-                            <input asp-for="NoChange" class="form-check-input" />
-                            <label asp-for="NoChange" class="form-check-label"></label>
-                            <a href="https://docs.btcpayserver.org/features/wallet#make-sure-no-change-utxo-is-created-expert-mode" target="_blank">
-                                <span class="fa fa-question-circle-o" title="More information..."></span>
-                            </a>
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input asp-for="NoChange" class="form-check-input" />
+                                <label asp-for="NoChange" class="form-check-label"></label>
+                                <a href="https://docs.btcpayserver.org/features/wallet#make-sure-no-change-utxo-is-created-expert-mode" target="_blank">
+                                    <span class="fa fa-question-circle-o" title="More information..."></span>
+                                </a>
+                            </div>
                         </div>
                         @if (Model.SupportRBF)
                         {
-                            <div class="form-check">
-                                <input asp-for="DisableRBF" class="form-check-input" />
-                                <label asp-for="DisableRBF" class="form-check-label"></label>
-                                <a href="https://bitcoin.org/en/glossary/rbf" target="_blank">
+                            <div class="form-group">
+                                <label asp-for="AllowFeeBump"></label>
+                                <a href="https://bitcoinops.org/en/rbf-in-the-wild/" target="_blank">
                                     <span class="fa fa-question-circle-o" title="More information..."></span>
                                 </a>
+                                <select asp-for="AllowFeeBump" class="form-control">
+                                    <option value="Maybe">Randomize for higher privacy</option>
+                                    <option value="Yes">Yes</option>
+                                    <option value="No">No</option>
+                                </select>
                             </div>
                         }
                         @if (!string.IsNullOrEmpty(Model.PayJoinEndpointUrl))

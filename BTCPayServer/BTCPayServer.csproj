@@ -2,8 +2,8 @@
   <Import Project="../Build/Version.csproj" Condition="Exists('../Build/Version.csproj')" />
   <Import Project="../Build/Common.csproj" />
   <PropertyGroup Condition="'$(Configuration)' == 'Debug' And '$(RazorCompileOnBuild)' != 'true'">
-    <!--<RazorCompileOnBuild>false</RazorCompileOnBuild>
-    <DefineConstants>$(DefineConstants);RAZOR_RUNTIME_COMPILE</DefineConstants>-->
+    <RazorCompileOnBuild>false</RazorCompileOnBuild>
+    <DefineConstants>$(DefineConstants);RAZOR_RUNTIME_COMPILE</DefineConstants>
   </PropertyGroup>
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -185,6 +185,9 @@
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
 	  <Content Update="Views\Wallets\ListWallets.cshtml">
+	    <Pack>$(IncludeRazorContentInPack)</Pack>
+	  </Content>
+	  <Content Update="Views\Wallets\WalletPSBT - Copy.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
 	  <Content Update="Views\Wallets\WalletPSBTCombine.cshtml">

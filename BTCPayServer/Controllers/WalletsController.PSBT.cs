@@ -101,7 +101,7 @@ namespace BTCPayServer.Controllers
                 return View(vm);
             }
 
-            var res = await TryHandleSigningCommands(walletId, psbt, command, vm.SigningContext, null);
+            var res = await TryHandleSigningCommands(walletId, psbt, command, vm.SigningContext);
             if (res != null)
             {
                 return res;
@@ -137,7 +137,10 @@ namespace BTCPayServer.Controllers
                 {
                     return RedirectToWalletPSBTReady(new WalletPSBTReadyViewModel()
                     {
-                        PSBT = psbt.ToBase64()
+                        SigningContext = new SigningContextModel()
+                        {
+                            PSBT = psbt.ToBase64()
+                        }
                     });
                 }
                 case "combine":
@@ -183,7 +186,7 @@ namespace BTCPayServer.Controllers
 
         private async Task FetchTransactionDetails(DerivationSchemeSettings derivationSchemeSettings, WalletPSBTReadyViewModel vm, BTCPayNetwork network)
         {
-            var psbtObject = PSBT.Parse(vm.PSBT, network.NBitcoinNetwork);
+            var psbtObject = PSBT.Parse(vm.SigningContext.PSBT, network.NBitcoinNetwork);
             if (!psbtObject.IsAllFinalized())
                 psbtObject = await ExplorerClientProvider.UpdatePSBT(derivationSchemeSettings, psbtObject) ?? psbtObject;
             IHDKey signingKey = null;
@@ -296,7 +299,7 @@ namespace BTCPayServer.Controllers
             DerivationSchemeSettings derivationSchemeSettings = null;
             try
             {
-                psbt = PSBT.Parse(vm.PSBT, network.NBitcoinNetwork);
+                psbt = PSBT.Parse(vm.SigningContext.PSBT, network.NBitcoinNetwork);
                 derivationSchemeSettings = GetDerivationSchemeSettings(walletId);
                 if (derivationSchemeSettings == null)
                     return NotFound();
@@ -322,8 +325,8 @@ namespace BTCPayServer.Controllers
                             proposedPayjoin = proposedPayjoin.SignAll(derivationSchemeSettings.AccountDerivation,
                                 extKey,
                                 RootedKeyPath.Parse(vm.SigningKeyPath));
-                            vm.PSBT = proposedPayjoin.ToBase64();
-                            vm.OriginalPSBT = psbt.ToBase64();
+                            vm.SigningContext.PSBT = proposedPayjoin.ToBase64();
+                            vm.SigningContext.OriginalPSBT = psbt.ToBase64();
                             proposedPayjoin.Finalize();
                             var hash = proposedPayjoin.ExtractTransaction().GetHash();
                             _EventAggregator.Publish(new UpdateTransactionLabel()
@@ -359,7 +362,9 @@ namespace BTCPayServer.Controllers
                                     $"The amount being sent may appear higher but is in fact almost same.<br/><br/>" +
                                     $"If you cancel or refuse to sign this transaction, the payment will proceed without payjoin"
                             });
-                            return ViewVault(walletId, proposedPayjoin, vm.SigningContext, psbt);
+                            vm.SigningContext.PSBT = proposedPayjoin.ToBase64();
+                            vm.SigningContext.OriginalPSBT = psbt.ToBase64();
+                            return ViewVault(walletId, vm.SigningContext);
                         }
                     }
                     catch (PayjoinReceiverException ex)
@@ -397,7 +402,7 @@ namespace BTCPayServer.Controllers
                         var broadcastResult = await ExplorerClientProvider.GetExplorerClient(network).BroadcastAsync(transaction);
                         if (!broadcastResult.Success)
                         {
-                            if (!string.IsNullOrEmpty(vm.OriginalPSBT))
+                            if (!string.IsNullOrEmpty(vm.SigningContext.OriginalPSBT))
                             {
                                 TempData.SetStatusMessageModel(new StatusMessageModel()
                                 {
@@ -405,8 +410,8 @@ namespace BTCPayServer.Controllers
                                     AllowDismiss = false,
                                     Html = $"The payjoin transaction could not be broadcasted.<br/>({broadcastResult.RPCCode} {broadcastResult.RPCCodeMessage} {broadcastResult.RPCMessage}).<br/>The transaction has been reverted back to its original format and has been broadcast."
                                 });
-                                vm.PSBT = vm.OriginalPSBT;
-                                vm.OriginalPSBT = null;
+                                vm.SigningContext.PSBT = vm.SigningContext.OriginalPSBT;
+                                vm.SigningContext.OriginalPSBT = null;
                                 return await WalletPSBTReady(walletId, vm, "broadcast");
                             }
                         
@@ -470,16 +475,17 @@ namespace BTCPayServer.Controllers
         }
 
         private async Task<IActionResult> TryHandleSigningCommands(WalletId walletId, PSBT psbt, string command,
-            SigningContextModel signingContext, BitcoinAddress changeAddress)
+            SigningContextModel signingContext)
         {
+            signingContext.PSBT = psbt.ToBase64();
             switch (command )
             {
                 case "vault":
-                    return ViewVault(walletId, psbt, signingContext);
+                    return ViewVault(walletId, signingContext);
                 case "ledger":
-                    return ViewWalletSendLedger(walletId, psbt, changeAddress);
+                    return ViewWalletSendLedger(walletId, signingContext);
                 case "seed":
-                    return SignWithSeed(walletId, psbt.ToBase64(), signingContext);
+                    return SignWithSeed(walletId, signingContext);
                 case "nbx-seed":
                     if (await CanUseHotWallet())
                     {
@@ -487,9 +493,8 @@ namespace BTCPayServer.Controllers
                         var extKey = await ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode)
                             .GetMetadataAsync<string>(derivationScheme.AccountDerivation,
                                 WellknownMetadataKeys.MasterHDKey);
-
                         return SignWithSeed(walletId,
-                            new SignWithSeedViewModel() {SeedOrKey = extKey, PSBT = psbt.ToBase64(), SigningContext = signingContext });
+                            new SignWithSeedViewModel() {SeedOrKey = extKey, SigningContext = signingContext });
                     }
                     TempData.SetStatusMessageModel(new StatusMessageModel()
                     {

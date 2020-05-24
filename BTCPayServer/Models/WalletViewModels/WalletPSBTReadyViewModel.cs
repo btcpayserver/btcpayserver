@@ -8,7 +8,7 @@ namespace BTCPayServer.Models.WalletViewModels
 {
     public class WalletPSBTReadyViewModel
     {
-        public string PayJoinEndpointUrl { get; set; }
+        public SigningContextModel SigningContext { get; set; } = new SigningContextModel();
         public string OriginalPSBT { get; set; }
         public string PSBT { get; set; }
         public string SigningKey { get; set; }

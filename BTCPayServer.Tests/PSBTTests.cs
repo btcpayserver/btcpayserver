@@ -120,7 +120,10 @@ namespace BTCPayServer.Tests
                 Assert.True(signedPSBT2.TryFinalize(out _));
                 Assert.Equal(signedPSBT, signedPSBT2);
 
-                var ready = (await walletController.WalletPSBTReady(walletId, signedPSBT.ToBase64())).AssertViewModel<WalletPSBTReadyViewModel>();
+                var ready = (await walletController.WalletPSBTReady(walletId, new WalletPSBTReadyViewModel()
+                {
+                    PSBT = signedPSBT.ToBase64()
+                })).AssertViewModel<WalletPSBTReadyViewModel>();
                 Assert.Equal(signedPSBT.ToBase64(), ready.PSBT);
                 psbt = AssertRedirectedPSBT(await walletController.WalletPSBTReady(walletId, ready, command: "analyze-psbt"), nameof(walletController.WalletPSBT));
                 Assert.Equal(signedPSBT.ToBase64(), psbt);

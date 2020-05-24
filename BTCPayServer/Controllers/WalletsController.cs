@@ -53,6 +53,7 @@ namespace BTCPayServer.Controllers
         private readonly DelayedTransactionBroadcaster _broadcaster;
         private readonly PayjoinClient _payjoinClient;
         private readonly LabelFactory _labelFactory;
+
         public RateFetcher RateFetcher { get; }
 
         CurrencyNameTable _currencyTable;
@@ -653,9 +654,14 @@ namespace BTCPayServer.Controllers
                 return View(vm);
             }
             derivationScheme.RebaseKeyPaths(psbt.PSBT);
-            
-            
-            var res = await TryHandleSigningCommands(walletId, psbt.PSBT, command, vm.PayJoinEndpointUrl, psbt.ChangeAddress);
+
+            var signingContext = new SigningContextModel()
+            {
+                PayJoinEndpointUrl = vm.PayJoinEndpointUrl,
+                EnforceLowR = psbt.Suggestions?.ShouldEnforceLowR
+            };
+
+            var res = await TryHandleSigningCommands(walletId, psbt.PSBT, command, signingContext, psbt.ChangeAddress);
             if (res != null)
             {
                 return res;
@@ -666,7 +672,12 @@ namespace BTCPayServer.Controllers
                 case "analyze-psbt":
                     var name =
                         $"Send-{string.Join('_', vm.Outputs.Select(output => $"{output.Amount}->{output.DestinationAddress}{(output.SubtractFeesFromOutput ? "-Fees" : string.Empty)}"))}.psbt";
-                    return RedirectToWalletPSBT(psbt.PSBT, name, vm.PayJoinEndpointUrl);
+                    return RedirectToWalletPSBT(new WalletPSBTViewModel()
+                    {
+                        PSBT = psbt.PSBT.ToBase64(),
+                        FileName = name,
+                        SigningContext = signingContext
+                    });
                 default:
                     return View(vm);
             }
@@ -729,11 +740,11 @@ namespace BTCPayServer.Controllers
             ModelState.Clear();
         }
 
-        private IActionResult ViewVault(WalletId walletId, PSBT psbt, string payJoinEndpointUrl, PSBT originalPSBT = null)
+        private IActionResult ViewVault(WalletId walletId, PSBT psbt, SigningContextModel signingContext, PSBT originalPSBT = null)
         {
             return View(nameof(WalletSendVault), new WalletSendVaultModel()
             {
-                PayJoinEndpointUrl = payJoinEndpointUrl,
+                SigningContext = signingContext,
                 WalletId = walletId.ToString(),
                 OriginalPSBT = originalPSBT?.ToBase64(),
                 PSBT = psbt.ToBase64(),
@@ -746,42 +757,48 @@ namespace BTCPayServer.Controllers
         public IActionResult WalletSendVault([ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, WalletSendVaultModel model)
         {
-            return RedirectToWalletPSBTReady(model.PSBT, originalPsbt: model.OriginalPSBT,  payJoinEndpointUrl: model.PayJoinEndpointUrl);
+            return RedirectToWalletPSBTReady(new WalletPSBTReadyViewModel()
+            {
+                PSBT = model.PSBT,
+                OriginalPSBT = model.OriginalPSBT,
+                SigningContext = model.SigningContext
+            });
         }
-        private IActionResult RedirectToWalletPSBTReady(string psbt, string signingKey=  null, string signingKeyPath = null, string originalPsbt = null, string payJoinEndpointUrl = null)
+        private IActionResult RedirectToWalletPSBTReady(WalletPSBTReadyViewModel vm)
         {
-            var vm = new PostRedirectViewModel()
+            var redirectVm = new PostRedirectViewModel()
             {
                 AspController = "Wallets",
                 AspAction = nameof(WalletPSBTReady),
                 Parameters =
                 {
-                    new KeyValuePair<string, string>("psbt", psbt),
-                    new KeyValuePair<string, string>("originalPsbt", originalPsbt),
-                    new KeyValuePair<string, string>("payJoinEndpointUrl", payJoinEndpointUrl),
-                    new KeyValuePair<string, string>("SigningKey", signingKey),
-                    new KeyValuePair<string, string>("SigningKeyPath", signingKeyPath)
+                    new KeyValuePair<string, string>("psbt", vm.PSBT),
+                    new KeyValuePair<string, string>("originalPsbt", vm.OriginalPSBT),
+                    new KeyValuePair<string, string>("SigningContext.PayJoinEndpointUrl", vm.SigningContext?.PayJoinEndpointUrl),
+                    new KeyValuePair<string, string>("SigningContext.EnforceLowR", vm.SigningContext?.EnforceLowR?.ToString(CultureInfo.InvariantCulture)),
+                    new KeyValuePair<string, string>("SigningKey", vm.SigningKey),
+                    new KeyValuePair<string, string>("SigningKeyPath", vm.SigningKeyPath)
                 }
             };
-            return View("PostRedirect", vm);
+            
+            return View("PostRedirect", redirectVm);
         }
         
-        private IActionResult RedirectToWalletPSBT(PSBT psbt, string fileName = null, string payJoinEndpointUrl = null)
+        private IActionResult RedirectToWalletPSBT(WalletPSBTViewModel vm)
         {
-            var vm = new PostRedirectViewModel()
+            var redirectVm = new PostRedirectViewModel()
             {
                 AspController = "Wallets",
                 AspAction = nameof(WalletPSBT),
                 Parameters =
                 {
-                    new KeyValuePair<string, string>("psbt", psbt.ToBase64())
+                    new KeyValuePair<string, string>("psbt", vm.PSBT),
+                    new KeyValuePair<string, string>("fileName", vm.FileName),
+                    new KeyValuePair<string, string>("SigningContext.PayJoinEndpointUrl", vm.SigningContext?.PayJoinEndpointUrl),
+                    new KeyValuePair<string, string>("SigningContext.EnforceLowR", vm.SigningContext?.EnforceLowR?.ToString(CultureInfo.InvariantCulture)),
                 }
             };
-            if (!string.IsNullOrEmpty(fileName))
-                vm.Parameters.Add(new KeyValuePair<string, string>("fileName", fileName));
-            if (!string.IsNullOrEmpty(payJoinEndpointUrl))
-                vm.Parameters.Add(new KeyValuePair<string, string>("payJoinEndpointUrl", payJoinEndpointUrl));
-            return View("PostRedirect", vm);
+            return View("PostRedirect", redirectVm);
         }
 
         void SetAmbientPSBT(PSBT psbt)
@@ -822,16 +839,19 @@ namespace BTCPayServer.Controllers
         public IActionResult SubmitLedger([ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, WalletSendLedgerModel model)
         {
-            return RedirectToWalletPSBTReady(model.PSBT);
+            return RedirectToWalletPSBTReady(new WalletPSBTReadyViewModel()
+            {
+                PSBT = model.PSBT
+            });
         }
         
         [HttpGet("{walletId}/psbt/seed")]
         public IActionResult SignWithSeed([ModelBinder(typeof(WalletIdModelBinder))]
-            WalletId walletId,string psbt, string payJoinEndpointUrl)
+            WalletId walletId,string psbt, SigningContextModel signingContext)
         {
             return View(nameof(SignWithSeed), new SignWithSeedViewModel()
             {
-                PayJoinEndpointUrl = payJoinEndpointUrl,
+                SigningContext = signingContext,
                 PSBT = psbt
             });
         }
@@ -899,7 +919,14 @@ namespace BTCPayServer.Controllers
                 return View(viewModel);
             }
             ModelState.Remove(nameof(viewModel.PSBT));
-            return RedirectToWalletPSBTReady(psbt.ToBase64(), signingKey.GetWif(network.NBitcoinNetwork).ToString(), rootedKeyPath?.ToString(), viewModel.OriginalPSBT, viewModel.PayJoinEndpointUrl);
+            return RedirectToWalletPSBTReady(new WalletPSBTReadyViewModel()
+            {
+                PSBT = psbt.ToBase64(),
+                SigningKey = signingKey.GetWif(network.NBitcoinNetwork).ToString(),
+                SigningKeyPath = rootedKeyPath?.ToString(),
+                OriginalPSBT = viewModel.OriginalPSBT,
+                SigningContext = viewModel.SigningContext
+            });
         }
         
         

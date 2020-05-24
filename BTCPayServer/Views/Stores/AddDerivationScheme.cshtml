@@ -81,16 +81,15 @@
                                 Import from...
                             </button>
                             <div class="dropdown-menu  dropdown-menu-right">
-                                <button class="dropdown-item" type="button" data-toggle="modal" data-target="#coldcardimport">... Coldcard (air gap)</button>
-                                <button class="dropdown-item check-for-ledger" type="button">... Ledger Wallet</button>
                                 @if (Model.CryptoCode == "BTC")
                                 {
-                                    <button class="dropdown-item check-for-vault" type="button">... the vault (preview)</button>
+                                    <button class="dropdown-item check-for-vault" type="button">... a hardware wallet</button>
                                 }
+                                <button class="dropdown-item" type="button" data-toggle="modal" data-target="#coldcardimport">... Coldcard (air gap)</button>
                                 @if (Model.CanUseHotWallet)
                                 {
                                     <button class="dropdown-item" data-toggle="modal" data-target="#nbxplorergeneratewallet" type="button" id="nbxplorergeneratewalletbtn">... a new/existing seed.</button>
-                                }                                                                                                 
+                                }
                             </div>
                         </div>
                     </div>
@@ -209,7 +208,6 @@
 </div>
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
-    <script src="~/js/ledgerwebsocket.js" type="text/javascript" defer="defer" asp-append-version="true"></script>
     <script src="~/js/StoreAddDerivationScheme.js" type="text/javascript" defer="defer" asp-append-version="true"></script>
     <script src="~/js/vaultbridge.js" type="text/javascript" defer="defer" asp-append-version="true"></script>
     <script src="~/js/vaultbridge.ui.js" type="text/javascript" defer="defer" asp-append-version="true"></script>

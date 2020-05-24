@@ -6,61 +6,7 @@
     
     <partial name="AddDerivationSchemes_NBXWalletGenerate" model="@(new GenerateWalletRequest())"/>
 }
-<div class="modal fade" id="ledgerimport" tabindex="-1" role="dialog" aria-labelledby="ledgerimport" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content" form method="post">
-            <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Import Ledger Wallet</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div id="ledger-loading">
-                    Checking if a ledger wallet is connected...
-                </div>
-                <div id="ledger-validate" style="display: none;">
-                    Retrieving, wallet information... you may need to confirm access on your screen.
-                </div>
-                <p id="no-ledger-info" style="display: none;">
-                    No ledger wallet detected. If you own one, use chrome, open the app, and refresh this page.
-                </p>
-                <div id="no-ledger-info" class="display-when-ledger-connected">
-                    <p>
-                        A ledger wallet is detected, which account do you want to use? No need to paste manually
-                        xpub if your ledger device was detected. Just select derivation scheme from the list
-                        bellow and xpub will automatically populate.
-                    </p>
 
-                    <p>
-                        <a href="https://docs.btcpayserver.org/getting-started/connectwallet/ledgerwallet#manual-setup"
-                           title="Open Ledger wallet manual setup docs"
-                           target="_blank"
-                           rel="noopener noreferrer">
-                            Can't find your account in the select?
-                        </a>
-                    </p>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-
-                <div class="dropdown display-when-ledger-connected">
-                    <button class="btn btn-primary dropdown-toggle" type="button" id="ledgerAccountsDropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        Select ledger wallet account
-                    </button>
-                    <div class="dropdown-menu overflow-auto" style="max-height: 200px;" aria-labelledby="ledgerAccountsDropdownMenuButton">
-                        @for (var i = 0; i < 20; i++)
-                        {
-                            <a class="dropdown-item ledger-info-recommended" data-ledgerkeypath="@Model.RootKeyPath.Derive(i, true)" href="#">Account @i (<span>@Model.RootKeyPath.Derive(i, true)</span>)</a>
-                        }
-                    </div>
-                </div>
-            </div>
-
-        </div>
-    </div>
-</div>
 <div class="modal fade" id="coldcardimport" tabindex="-1" role="dialog" aria-labelledby="coldcardimport" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <form class="modal-content" form method="post" enctype="multipart/form-data">

@@ -66,10 +66,6 @@ namespace BTCPayServer.Tests
                     FeeSatoshiPerByte = 1,
                     CurrentBalance = 1.5m
                 };
-                var vmLedger = await walletController.WalletSend(walletId, sendModel, command: "ledger").AssertViewModelAsync<WalletSendLedgerModel>();
-                PSBT.Parse(vmLedger.SigningContext.PSBT, user.SupportedNetwork.NBitcoinNetwork);
-                BitcoinAddress.Create(vmLedger.SigningContext.ChangeAddress, user.SupportedNetwork.NBitcoinNetwork);
-                Assert.NotNull(vmLedger.WebsocketPath);
 
                 string redirectedPSBT = AssertRedirectedPSBT(await walletController.WalletSend(walletId, sendModel, command: "analyze-psbt"), nameof(walletController.WalletPSBT));
                 var vmPSBT = await walletController.WalletPSBT(walletId, new WalletPSBTViewModel() { PSBT = redirectedPSBT }).AssertViewModelAsync<WalletPSBTViewModel>();
@@ -79,7 +75,6 @@ namespace BTCPayServer.Tests
                 var filePSBT = (FileContentResult)(await walletController.WalletPSBT(walletId, vmPSBT, "save-psbt"));
                 PSBT.Load(filePSBT.FileContents, user.SupportedNetwork.NBitcoinNetwork);
 
-                await walletController.WalletPSBT(walletId, vmPSBT, "ledger").AssertViewModelAsync<WalletSendLedgerModel>();
                 var vmPSBT2 = await walletController.WalletPSBTReady(walletId, new WalletPSBTReadyViewModel()
                 {
                     SigningContext = new SigningContextModel()

@@ -479,8 +479,6 @@ namespace BTCPayServer.Controllers
             {
                 case "vault":
                     return ViewVault(walletId, signingContext);
-                case "ledger":
-                    return ViewWalletSendLedger(walletId, signingContext);
                 case "seed":
                     return SignWithSeed(walletId, signingContext);
                 case "nbx-seed":

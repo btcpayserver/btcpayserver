@@ -15,7 +15,6 @@ using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
-using LedgerWallet;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
@@ -59,82 +58,6 @@ namespace BTCPayServer.Controllers
             vm.CanUseHotWallet = hotWallet.HotWallet;
             vm.CanUseRPCImport = hotWallet.RPCImport;
             return View(vm);
-        }
-
-        class GetXPubs
-        {
-            public BitcoinExtPubKey ExtPubKey { get; set; }
-            public DerivationStrategyBase DerivationScheme { get; set; }
-            public HDFingerprint RootFingerprint { get; set; }
-            public string Source { get; set; }
-        }
-
-        [HttpGet]
-        [Route("{storeId}/derivations/{cryptoCode}/ledger/ws")]
-        public async Task<IActionResult> AddDerivationSchemeLedger(
-            string storeId,
-            string cryptoCode,
-            string command,
-            string keyPath = "")
-        {
-            if (!HttpContext.WebSockets.IsWebSocketRequest)
-                return NotFound();
-
-            var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
-            var hw = new LedgerHardwareWalletService(webSocket);
-            object result = null;
-            var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-
-            using (var normalOperationTimeout = new CancellationTokenSource())
-            {
-                normalOperationTimeout.CancelAfter(TimeSpan.FromMinutes(30));
-                try
-                {
-                    if (command == "test")
-                    {
-                        result = await hw.Test(normalOperationTimeout.Token);
-                    }
-                    if (command == "getxpub")
-                    {
-                        var k = KeyPath.Parse(keyPath);
-                        if (k.Indexes.Length == 0)
-                            throw new FormatException("Invalid key path");
-
-                        var getxpubResult = new GetXPubs();
-                        getxpubResult.ExtPubKey = await hw.GetExtPubKey(network, k, normalOperationTimeout.Token);
-                        var segwit = network.NBitcoinNetwork.Consensus.SupportSegwit;
-                        var derivation = network.NBXplorerNetwork.DerivationStrategyFactory.CreateDirectDerivationStrategy(getxpubResult.ExtPubKey, new DerivationStrategyOptions()
-                        {
-                            ScriptPubKeyType = segwit ? ScriptPubKeyType.SegwitP2SH : ScriptPubKeyType.Legacy
-                        });
-                        getxpubResult.DerivationScheme = derivation;
-                        getxpubResult.RootFingerprint = (await hw.GetExtPubKey(network, new KeyPath(), normalOperationTimeout.Token)).ExtPubKey.PubKey.GetHDFingerPrint();
-                        getxpubResult.Source = hw.Device;
-                        result = getxpubResult;
-                    }
-                }
-                catch (OperationCanceledException)
-                { result = new LedgerTestResult() { Success = false, Error = "Timeout" }; }
-                catch (Exception ex)
-                { result = new LedgerTestResult() { Success = false, Error = ex.Message }; }
-                finally { hw.Dispose(); }
-                try
-                {
-                    if (result != null)
-                    {
-                        UTF8Encoding UTF8NOBOM = new UTF8Encoding(false);
-                        var bytes = UTF8NOBOM.GetBytes(JsonConvert.SerializeObject(result, network.NBXplorerNetwork.JsonSerializerSettings));
-                        using var cts = new CancellationTokenSource(2000);
-                        await webSocket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, cts.Token);
-                    }
-                }
-                catch { }
-                finally
-                {
-                    await webSocket.CloseSocket();
-                }
-            }
-            return new EmptyResult();
         }
 
         private DerivationSchemeSettings GetExistingDerivationStrategy(string cryptoCode, StoreData store)

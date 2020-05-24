@@ -25,6 +25,7 @@ using BTCPayServer.Data;
 using NBitcoin.DataEncoders;
 using Amazon.S3.Model;
 using BTCPayServer.Logging;
+using NBitcoin.Crypto;
 
 namespace BTCPayServer.Payments.PayJoin
 {
@@ -234,7 +235,7 @@ namespace BTCPayServer.Payments.PayJoin
                 return BadRequest(CreatePayjoinError("invalid-transaction",
                     $"Provided transaction isn't mempool eligible {mempool.RPCCodeMessage}"));
             }
-
+            var enforcedLowR = ctx.OriginalTransaction.Inputs.All(IsLowR);
             var paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
             bool paidSomething = false;
             Money due = null;
@@ -472,7 +473,10 @@ namespace BTCPayServer.Payments.PayJoin
                 var coin = selectedUtxo.AsCoin(derivationSchemeSettings.AccountDerivation);
                 signedInput.UpdateFromCoin(coin);
                 var privateKey = accountKey.Derive(selectedUtxo.KeyPath).PrivateKey;
-                signedInput.Sign(privateKey);
+                signedInput.Sign(privateKey, new SigningOptions()
+                {
+                    EnforceLowR = enforcedLowR
+                });
                 signedInput.FinalizeInput();
                 newTx.Inputs[signedInput.Index].WitScript = newPsbt.Inputs[(int)signedInput.Index].FinalScriptWitness;
             }
@@ -622,6 +626,13 @@ namespace BTCPayServer.Payments.PayJoin
                 currentTry++;
             }
             return (Array.Empty<UTXO>(), PayjoinUtxoSelectionType.Unavailable);
+        }
+        private static bool IsLowR(TxIn txin)
+        {
+            IEnumerable<byte[]> pushes = txin.WitScript.PushCount > 0 ? txin.WitScript.Pushes :
+                                       txin.ScriptSig.IsPushOnly ? txin.ScriptSig.ToOps().Select(o => o.PushData) :
+                                        Array.Empty<byte[]>();
+            return pushes.Where(p => ECDSASignature.IsValidDER(p)).All(p => p.Length <= 71);
         }
     }
 }

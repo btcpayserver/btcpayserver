@@ -10,7 +10,6 @@ namespace BTCPayServer.Models.WalletViewModels
 {
     public class WalletPSBTViewModel
     {
-        public SigningContextModel SigningContext { get; set; } = new SigningContextModel();
         public string CryptoCode { get; set; }
         public string Decoded { get; set; }
         string _FileName;

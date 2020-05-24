@@ -677,8 +677,7 @@ namespace BTCPayServer.Controllers
                     return RedirectToWalletPSBT(new WalletPSBTViewModel()
                     {
                         PSBT = psbt.PSBT.ToBase64(),
-                        FileName = name,
-                        SigningContext = signingContext
+                        FileName = name
                     });
                 default:
                     return View(vm);
@@ -801,7 +800,6 @@ namespace BTCPayServer.Controllers
                     new KeyValuePair<string, string>("fileName", vm.FileName)
                 }
             };
-            AddSigningContext(redirectVm, vm.SigningContext);
             return View("PostRedirect", redirectVm);
         }
 

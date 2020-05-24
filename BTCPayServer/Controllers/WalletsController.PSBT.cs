@@ -100,8 +100,7 @@ namespace BTCPayServer.Controllers
                 ModelState.AddModelError(nameof(vm.PSBT), "Invalid PSBT");
                 return View(vm);
             }
-
-            var res = await TryHandleSigningCommands(walletId, psbt, command, vm.SigningContext);
+            var res = await TryHandleSigningCommands(walletId, psbt, command, new SigningContextModel(psbt));
             if (res != null)
             {
                 return res;
@@ -129,18 +128,14 @@ namespace BTCPayServer.Controllers
                     return RedirectToWalletPSBT(new WalletPSBTViewModel()
                     {
                         PSBT = psbt.ToBase64(),
-                        FileName = vm.FileName,
-                        SigningContext = vm.SigningContext
+                        FileName = vm.FileName
                     });
 
                 case "broadcast":
                 {
                     return RedirectToWalletPSBTReady(new WalletPSBTReadyViewModel()
                     {
-                        SigningContext = new SigningContextModel()
-                        {
-                            PSBT = psbt.ToBase64()
-                        }
+                        SigningContext = new SigningContextModel(psbt)
                     });
                 }
                 case "combine":
@@ -437,8 +432,7 @@ namespace BTCPayServer.Controllers
                 case "analyze-psbt":
                     return RedirectToWalletPSBT(new WalletPSBTViewModel()
                     {
-                        PSBT = psbt.ToBase64(),
-                        SigningContext = vm.SigningContext
+                        PSBT = psbt.ToBase64()
                     });
                 default:
                     vm.GlobalError = "Unknown command";

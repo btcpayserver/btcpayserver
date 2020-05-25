@@ -110,14 +110,14 @@ namespace BTCPayServer.Controllers
                 }
             }
 
-            if (vm.ColdcardPublicFile != null)
+            if (vm.ElectrumWalletFile != null)
             {
-                if (!DerivationSchemeSettings.TryParseFromColdcard(await ReadAllText(vm.ColdcardPublicFile), network, out strategy))
+                if (!DerivationSchemeSettings.TryParseFromElectrumWallet(await ReadAllText(vm.ElectrumWalletFile), network, out strategy))
                 {
                     TempData.SetStatusMessageModel(new StatusMessageModel()
                     {
                         Severity = StatusMessageModel.StatusSeverity.Error,
-                        Message = "Coldcard public file was not in the correct format"
+                        Message = "Electrum wallet/Air-gapped hardware wallet file was not in the correct format"
                     });
                     vm.Confirmation = false;
                     return View(nameof(AddDerivationScheme),vm);

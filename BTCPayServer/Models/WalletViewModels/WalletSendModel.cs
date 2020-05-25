@@ -7,6 +7,12 @@ namespace BTCPayServer.Models.WalletViewModels
 {
     public class WalletSendModel
     {
+        public enum ThreeStateBool
+        {
+            Maybe,
+            Yes,
+            No
+        }
         public class FeeRateOption
         {
             public TimeSpan Target { get; set; }
@@ -45,8 +51,8 @@ namespace BTCPayServer.Models.WalletViewModels
         public string Fiat { get; set; }
         public string RateError { get; set; }
         public bool SupportRBF { get; set; }
-        [Display(Name = "Disable RBF")]
-        public bool DisableRBF { get; set; }
+        [Display(Name = "Allow fee increase (RBF)")]
+        public ThreeStateBool AllowFeeBump { get; set; }
 
         public bool NBXSeedAvailable { get; set; }
         [Display(Name = "PayJoin Endpoint Url")]

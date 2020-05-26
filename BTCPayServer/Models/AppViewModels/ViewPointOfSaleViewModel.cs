@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using BTCPayServer.Services.Apps;
 
 namespace BTCPayServer.Models.AppViewModels
 {
@@ -36,7 +33,9 @@ namespace BTCPayServer.Models.AppViewModels
 
         public CurrencyInfoData CurrencyInfo { get; set; }
 
-        public bool EnableShoppingCart { get; set; }
+        public PosViewType DefaultView { get; set; }
+
+        public bool IsCartView { get { return DefaultView == PosViewType.Cart; } }
         public bool ShowCustomAmount { get; set; }
         public bool ShowDiscount { get; set; }
         public bool EnableTips { get; set; }

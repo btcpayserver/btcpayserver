@@ -1,4 +1,5 @@
-﻿@addTagHelper *, BundlerMinifier.TagHelpers
+﻿@using BTCPayServer.Services.Apps
+@addTagHelper *, BundlerMinifier.TagHelpers
 @model UpdatePointOfSaleViewModel
 @{
     ViewData["Title"] = "Update Point of Sale";
@@ -35,10 +36,10 @@
                         <span asp-validation-for="Currency" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <div class="form-check">
-                            <input asp-for="EnableShoppingCart" type="checkbox" class="form-check-input" />
-                            <label asp-for="EnableShoppingCart" class="form-check-label"></label>
-                            <span asp-validation-for="EnableShoppingCart" class="text-danger"></span>
+                        <div class="form-group">
+                            <label asp-for="DefaultView" class="control-label"></label>*
+                            <select asp-for="DefaultView" asp-items="@Html.GetEnumSelectList<PosViewType>()" class="form-control"></select>
+                            <span asp-validation-for="DefaultView" class="text-danger"></span>
                         </div>
                         <div class="form-check">
                             <input asp-for="ShowCustomAmount" type="checkbox" class="form-check-input" />

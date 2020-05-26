@@ -10,4 +10,10 @@ namespace BTCPayServer.Services.Apps
         PointOfSale,
         Crowdfund
     }
+    
+    public enum PosViewType
+    {
+        Static,
+        Cart
+    }
 }

@@ -1,4 +1,5 @@
-﻿@addTagHelper *, BundlerMinifier.TagHelpers
+﻿@using BTCPayServer.Services.Apps
+@addTagHelper *, BundlerMinifier.TagHelpers
 @inject BTCPayServer.HostedServices.CssThemeManager themeManager
 
 @model BTCPayServer.Models.AppViewModels.ViewPointOfSaleViewModel
@@ -29,7 +30,7 @@
     }
     <link href="~/vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" asp-append-version="true" />
 
-    @if (Model.EnableShoppingCart)
+    @if (Model.IsCartView)
     {
         <link rel="stylesheet" href="~/cart/css/style.css" asp-append-version="true">
         <script type="text/javascript">
@@ -206,7 +207,7 @@
         <partial name="_StatusMessage" />
     }
 
-    @if (Model.EnableShoppingCart)
+    @if (Model.IsCartView)
     {
         <div id="cartModal" class="modal" tabindex="-1" role="dialog">
             <div class="modal-dialog" role="document">

@@ -69,7 +69,7 @@ namespace BTCPayServer.Controllers
                         var controller = (AppsPublicController)serviceProvider.GetService(typeof(AppsPublicController));
                         controller.Url = Url;
                         controller.ControllerContext = ControllerContext;
-                        var res = await controller.ViewPointOfSale(appId) as ViewResult;
+                        var res = await controller.ViewPointOfSale(appId, PosViewType.Unspecified) as ViewResult;
                         if (res != null)
                         {
                             res.ViewName = "/Views/AppsPublic/ViewPointOfSale.cshtml";

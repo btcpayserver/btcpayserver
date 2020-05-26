@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
 namespace BTCPayServer.Services.Apps
 {
     public enum AppType
@@ -13,7 +8,8 @@ namespace BTCPayServer.Services.Apps
     
     public enum PosViewType
     {
-        Static,
-        Cart
+        Unspecified = -1,
+        Static = 0,
+        Cart = 1
     }
 }

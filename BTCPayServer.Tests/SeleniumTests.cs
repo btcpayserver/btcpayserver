@@ -381,8 +381,17 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("DefaultView")).SendKeys("Cart" + Keys.Enter);
                 s.Driver.FindElement(By.Id("SaveSettings")).ForceClick();
                 s.Driver.FindElement(By.Id("ViewApp")).ForceClick();
-                s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
+                
+                var posBaseUrl = s.Driver.Url;
                 Assert.True(s.Driver.PageSource.Contains("Tea shop"), "Unable to create PoS");
+                Assert.True(s.Driver.PageSource.Contains("Cart"), "PoS not showing correct default view");
+                
+                s.Driver.Url = posBaseUrl + "/static";
+                Assert.False(s.Driver.PageSource.Contains("Cart"), "Static PoS not showing correct view");
+                
+                s.Driver.Url = posBaseUrl + "/cart";
+                Assert.True(s.Driver.PageSource.Contains("Cart"), "Cart PoS not showing correct view");
+                
                 s.Driver.Quit();
             }
         }

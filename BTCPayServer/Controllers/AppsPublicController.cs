@@ -41,14 +41,16 @@ namespace BTCPayServer.Controllers
         private readonly UserManager<ApplicationUser> _UserManager;
 
         [HttpGet]
-        [Route("/apps/{appId}/pos")]
+        [Route("/apps/{appId}/pos/{viewType?}")]
         [XFrameOptionsAttribute(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
-        public async Task<IActionResult> ViewPointOfSale(string appId)
+        public async Task<IActionResult> ViewPointOfSale(string appId, PosViewType viewType = PosViewType.Unspecified)
         {
             var app = await _AppService.GetApp(appId, AppType.PointOfSale);
             if (app == null)
                 return NotFound();
             var settings = app.GetSettings<PointOfSaleSettings>();
+            if (viewType == PosViewType.Unspecified)
+                viewType = settings.DefaultView;
 
             var numberFormatInfo = _AppService.Currencies.GetNumberFormatInfo(settings.Currency) ?? _AppService.Currencies.GetNumberFormatInfo("USD");
             double step = Math.Pow(10, -(numberFormatInfo.CurrencyDecimalDigits));
@@ -57,7 +59,7 @@ namespace BTCPayServer.Controllers
             {
                 Title = settings.Title,
                 Step = step.ToString(CultureInfo.InvariantCulture),
-                DefaultView = settings.DefaultView,
+                ViewType = viewType,
                 ShowCustomAmount = settings.ShowCustomAmount,
                 ShowDiscount = settings.ShowDiscount,
                 EnableTips = settings.EnableTips,
@@ -85,7 +87,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost]
-        [Route("/apps/{appId}/pos")]
+        [Route("/apps/{appId}/pos/{viewType?}")]
         [XFrameOptionsAttribute(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
         [IgnoreAntiforgeryToken]
         [EnableCors(CorsPolicies.All)]

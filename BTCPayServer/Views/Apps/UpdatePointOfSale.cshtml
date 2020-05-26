@@ -38,7 +38,7 @@
                     <div class="form-group">
                         <div class="form-group">
                             <label asp-for="DefaultView" class="control-label"></label>*
-                            <select asp-for="DefaultView" asp-items="@Html.GetEnumSelectList<PosViewType>()" class="form-control"></select>
+                            <select asp-for="DefaultView" asp-items="@Html.GetEnumSelectList<PosViewType>().Where(type => Convert.ToInt32(type.Value) >= 0)" class="form-control"></select>
                             <span asp-validation-for="DefaultView" class="text-danger"></span>
                         </div>
                         <div class="form-check">

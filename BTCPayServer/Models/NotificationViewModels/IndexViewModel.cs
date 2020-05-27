@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BTCPayServer.Models.NoticeViewModels
+namespace BTCPayServer.Models.NotificationViewModels
 {
     public class IndexViewModel
     {

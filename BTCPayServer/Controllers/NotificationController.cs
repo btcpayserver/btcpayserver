@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BTCPayServer.Events.Notifications;
 using BTCPayServer.Filters;
-using BTCPayServer.Models.NoticeViewModels;
+using BTCPayServer.Models.NotificationViewModels;
 using BTCPayServer.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,11 +13,17 @@ using Microsoft.AspNetCore.Mvc;
 namespace BTCPayServer.Controllers
 {
     [BitpayAPIConstraint(false)]
-    public class NoticeController : Controller
+    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    public class NotificationController : Controller
     {
+        private readonly EventAggregator _eventAggregator;
+
+        public NotificationController(EventAggregator eventAggregator)
+        {
+            _eventAggregator = eventAggregator;
+        }
+
         [HttpGet]
-        [Route("notices")]
-        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> Index(int skip = 0, int count = 50, int timezoneOffset = 0)
         {
             var model = new IndexViewModel()
@@ -69,6 +76,13 @@ namespace BTCPayServer.Controllers
             };
             model.Items = model.Items.OrderByDescending(a => a.Created).ToList();
             return View(model);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Generate()
+        {
+            _eventAggregator.NoticeNewVersion("1.1.1");
+            return RedirectToAction(nameof(Index));
         }
     }
 }

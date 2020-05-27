@@ -38,7 +38,26 @@ namespace BTCPayServer
             return strategy != null;
         }
 
-        public static bool TryParseFromColdcard(string coldcardExport, BTCPayNetwork network, out DerivationSchemeSettings settings)
+        private static bool TryParseXpub(string xpub, DerivationSchemeParser derivationSchemeParser, ref DerivationSchemeSettings derivationSchemeSettings)
+        {
+            try
+            {
+                derivationSchemeSettings.AccountOriginal = xpub.Trim();
+                derivationSchemeSettings.AccountDerivation = derivationSchemeParser.ParseElectrum(derivationSchemeSettings.AccountOriginal);
+                derivationSchemeSettings.AccountKeySettings = new AccountKeySettings[1];
+                derivationSchemeSettings.AccountKeySettings[0] = new AccountKeySettings();
+                derivationSchemeSettings.AccountKeySettings[0].AccountKey = derivationSchemeSettings.AccountDerivation.GetExtPubKeys().Single().GetWif(derivationSchemeParser.Network);
+                if (derivationSchemeSettings.AccountDerivation is DirectDerivationStrategy direct && !direct.Segwit)
+                    derivationSchemeSettings.AccountOriginal = null; // Saving this would be confusing for user, as xpub of electrum is legacy derivation, but for btcpay, it is segwit derivation
+                return true;
+            }
+            catch (Exception e)
+            {
+                return false;
+            }
+        }
+        
+        public static bool TryParseFromElectrumWallet(string coldcardExport, BTCPayNetwork network, out DerivationSchemeSettings settings)
         {
             settings = null;
             if (coldcardExport == null)
@@ -46,7 +65,7 @@ namespace BTCPayServer
             if (network == null)
                 throw new ArgumentNullException(nameof(network));
             var result = new DerivationSchemeSettings();
-            result.Source = "Coldcard";
+            result.Source = "Electrum/Airgap hardware wallet";
             var derivationSchemeParser = new DerivationSchemeParser(network);
             JObject jobj = null;
             try
@@ -56,27 +75,11 @@ namespace BTCPayServer
             }
             catch
             {
-                return false;
+                return TryParseXpub(coldcardExport, derivationSchemeParser, ref result);
             }
 
-            if (jobj.ContainsKey("xpub"))
-            {
-                try
-                {
-                    result.AccountOriginal = jobj["xpub"].Value<string>().Trim();
-                    result.AccountDerivation = derivationSchemeParser.ParseElectrum(result.AccountOriginal);
-                    result.AccountKeySettings = new AccountKeySettings[1];
-                    result.AccountKeySettings[0] = new AccountKeySettings();
-                    result.AccountKeySettings[0].AccountKey = result.AccountDerivation.GetExtPubKeys().Single().GetWif(network.NBitcoinNetwork);
-                    if (result.AccountDerivation is DirectDerivationStrategy direct && !direct.Segwit)
-                        result.AccountOriginal = null; // Saving this would be confusing for user, as xpub of electrum is legacy derivation, but for btcpay, it is segwit derivation
-                }
-                catch
-                {
-                    return false;
-                }
-            }
-            else
+            if (!jobj.ContainsKey("xpub") ||
+                !TryParseXpub(jobj["xpub"].Value<string>(), derivationSchemeParser, ref result))
             {
                 return false;
             }

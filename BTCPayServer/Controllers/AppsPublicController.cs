@@ -38,20 +38,31 @@ namespace BTCPayServer.Controllers
         private readonly AppService _AppService;
         private readonly BTCPayServerOptions _BtcPayServerOptions;
         private readonly InvoiceController _InvoiceController;
-        private readonly UserManager<ApplicationUser> _UserManager;
-
+        private readonly UserManager<ApplicationUser> _UserManager; 
+        
         [HttpGet]
-        [Route("/apps/{appId}/pos/{viewType?}")]
+        [Route("/apps/{appId}/pos")]
         [XFrameOptionsAttribute(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
-        public async Task<IActionResult> ViewPointOfSale(string appId, PosViewType viewType = PosViewType.Unspecified)
+        public async Task<IActionResult> ViewPointOfSale(string appId)
         {
             var app = await _AppService.GetApp(appId, AppType.PointOfSale);
             if (app == null)
                 return NotFound();
             var settings = app.GetSettings<PointOfSaleSettings>();
-            if (viewType == PosViewType.Unspecified)
-                viewType = settings.DefaultView;
-
+            PosViewType viewType = settings.DefaultView;
+            
+            return RedirectToAction(nameof(ViewPointOfSale), new { appId, viewType });
+        }
+        
+        [HttpGet]
+        [Route("/apps/{appId}/pos/{viewType}")]
+        [XFrameOptionsAttribute(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
+        public async Task<IActionResult> ViewPointOfSale(string appId, PosViewType viewType)
+        {
+            var app = await _AppService.GetApp(appId, AppType.PointOfSale);
+            if (app == null)
+                return NotFound();
+            var settings = app.GetSettings<PointOfSaleSettings>();
             var numberFormatInfo = _AppService.Currencies.GetNumberFormatInfo(settings.Currency) ?? _AppService.Currencies.GetNumberFormatInfo("USD");
             double step = Math.Pow(10, -(numberFormatInfo.CurrencyDecimalDigits));
 
@@ -87,11 +98,12 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost]
-        [Route("/apps/{appId}/pos/{viewType?}")]
+        [Route("/apps/{appId}/pos/{viewType}")]
         [XFrameOptionsAttribute(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
         [IgnoreAntiforgeryToken]
         [EnableCors(CorsPolicies.All)]
         public async Task<IActionResult> ViewPointOfSale(string appId,
+                                                        PosViewType viewType,
                                                         [ModelBinder(typeof(InvariantDecimalModelBinder))] decimal amount,
                                                         string email,
                                                         string orderId,
@@ -110,7 +122,7 @@ namespace BTCPayServer.Controllers
             var settings = app.GetSettings<PointOfSaleSettings>();
             if (string.IsNullOrEmpty(choiceKey) && !settings.ShowCustomAmount && settings.DefaultView != PosViewType.Cart)
             {
-                return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
+                return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId, viewType = viewType });
             }
             string title = null;
             var price = 0.0m;

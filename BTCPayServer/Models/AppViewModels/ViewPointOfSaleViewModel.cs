@@ -34,8 +34,6 @@ namespace BTCPayServer.Models.AppViewModels
         public CurrencyInfoData CurrencyInfo { get; set; }
 
         public PosViewType ViewType { get; set; }
-
-        public bool IsCartView { get { return ViewType == PosViewType.Cart; } }
         public bool ShowCustomAmount { get; set; }
         public bool ShowDiscount { get; set; }
         public bool EnableTips { get; set; }

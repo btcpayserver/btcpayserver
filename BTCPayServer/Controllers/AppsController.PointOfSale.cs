@@ -60,6 +60,7 @@ namespace BTCPayServer.Controllers
             public string Title { get; set; }
             public string Currency { get; set; }
             public string Template { get; set; }
+            public bool EnableShoppingCart { get; set; }
             public PosViewType DefaultView { get; set; }
             public bool ShowCustomAmount { get; set; }
             public bool ShowDiscount { get; set; }
@@ -92,6 +93,8 @@ namespace BTCPayServer.Controllers
             if (app == null)
                 return NotFound();
             var settings = app.GetSettings<PointOfSaleSettings>();
+            settings.DefaultView = settings.EnableShoppingCart ? PosViewType.Cart : settings.DefaultView;
+            settings.EnableShoppingCart = false;
 
             var vm = new UpdatePointOfSaleViewModel()
             {
@@ -191,7 +194,6 @@ namespace BTCPayServer.Controllers
                 Description = vm.Description,
                 EmbeddedCSS = vm.EmbeddedCSS,
                 RedirectAutomatically = string.IsNullOrEmpty(vm.RedirectAutomatically) ? (bool?)null : bool.Parse(vm.RedirectAutomatically)
-
             });
             await _AppService.UpdateOrCreateApp(app);
             TempData[WellKnownTempData.SuccessMessage] = "App updated";

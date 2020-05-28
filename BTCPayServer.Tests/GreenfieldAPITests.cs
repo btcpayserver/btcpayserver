@@ -5,11 +5,17 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Controllers;
+using BTCPayServer.Events;
 using BTCPayServer.JsonConverters;
 using BTCPayServer.Services;
 using BTCPayServer.Tests.Logging;
+using Microsoft.AspNetCore.Mvc;
+using NBitcoin;
+using NBitpayClient;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using OpenQA.Selenium;
 using Xunit;
 using Xunit.Abstractions;
 using CreateApplicationUserRequest = BTCPayServer.Client.Models.CreateApplicationUserRequest;
@@ -422,6 +428,25 @@ namespace BTCPayServer.Tests
                 await client.ArchivePaymentRequest(user.StoreId, paymentRequest.Id);
                 Assert.DoesNotContain(paymentRequest.Id,
                     (await client.GetPaymentRequests(user.StoreId)).Select(data => data.Id));
+                
+                //let's test some payment stuff
+                await user.RegisterDerivationSchemeAsync("BTC");
+                var paymentTestPaymentRequest = await client.CreatePaymentRequest(user.StoreId,
+                    new CreatePaymentRequestRequest() {Amount = 0.1m, Currency = "BTC", Title = "Payment test title"});
+
+                var invoiceId = Assert.IsType<string>(Assert.IsType<OkObjectResult>(await user.GetController<PaymentRequestController>()
+                    .PayPaymentRequest(paymentTestPaymentRequest.Id, false)).Value);
+                var invoice = user.BitPay.GetInvoice(invoiceId);
+                await tester.WaitForEvent<InvoiceDataChangedEvent>(async () =>
+                {
+                    await tester.ExplorerNode.SendToAddressAsync(
+                        BitcoinAddress.Create(invoice.BitcoinAddress, tester.ExplorerNode.Network), invoice.BtcDue);
+                });
+               await TestUtils.EventuallyAsync(async () =>
+                {
+                    Assert.Equal(Invoice.STATUS_PAID, user.BitPay.GetInvoice(invoiceId).Status);
+                    Assert.Equal(PaymentRequestData.PaymentRequestStatus.Completed, (await client.GetPaymentRequest(user.StoreId, paymentTestPaymentRequest.Id)).Status);
+                });
             }
         }
 

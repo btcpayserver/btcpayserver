@@ -38,8 +38,8 @@ namespace BTCPayServer.Controllers
         private readonly AppService _AppService;
         private readonly BTCPayServerOptions _BtcPayServerOptions;
         private readonly InvoiceController _InvoiceController;
-        private readonly UserManager<ApplicationUser> _UserManager; 
-        
+        private readonly UserManager<ApplicationUser> _UserManager;
+
         [HttpGet]
         [Route("/apps/{appId}/pos")]
         [XFrameOptionsAttribute(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
@@ -49,11 +49,11 @@ namespace BTCPayServer.Controllers
             if (app == null)
                 return NotFound();
             var settings = app.GetSettings<PointOfSaleSettings>();
-            PosViewType viewType = settings.DefaultView;
-            
+            PosViewType viewType = settings.EnableShoppingCart? PosViewType.Cart : settings.DefaultView;
+
             return RedirectToAction(nameof(ViewPointOfSale), new { appId, viewType });
         }
-        
+
         [HttpGet]
         [Route("/apps/{appId}/pos/{viewType}")]
         [XFrameOptionsAttribute(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
@@ -120,6 +120,7 @@ namespace BTCPayServer.Controllers
             if (app == null)
                 return NotFound();
             var settings = app.GetSettings<PointOfSaleSettings>();
+            settings.DefaultView = settings.EnableShoppingCart? PosViewType.Cart : settings.DefaultView;
             if (string.IsNullOrEmpty(choiceKey) && !settings.ShowCustomAmount && settings.DefaultView != PosViewType.Cart)
             {
                 return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId, viewType = viewType });
@@ -161,8 +162,8 @@ namespace BTCPayServer.Controllers
                 title = settings.Title;
                 
                 //if cart IS enabled and we detect posdata that matches the cart system's, check inventory for the items
-                if (!string.IsNullOrEmpty(posData) && 
-                    settings.DefaultView == PosViewType.Cart && 
+                if (!string.IsNullOrEmpty(posData) &&
+                    settings.DefaultView == PosViewType.Cart &&
                     AppService.TryParsePosCartItems(posData, out var cartItems))
                 {
                         

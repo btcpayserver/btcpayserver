@@ -315,7 +315,11 @@
                         "description":  "The amount of the payment request",
                         "nullable": false
                     },
-
+                    "title": {
+                        "type": "string",
+                        "description":  "The title of the payment request",
+                        "nullable": false
+                    },
                     "currency": {
                         "type": "string",
                         "format": "ISO 4217 Currency code(BTC, EUR, USD, etc)",

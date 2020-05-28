@@ -66,7 +66,7 @@ namespace BTCPayServer.Controllers
             var numberFormatInfo = _AppService.Currencies.GetNumberFormatInfo(settings.Currency) ?? _AppService.Currencies.GetNumberFormatInfo("USD");
             double step = Math.Pow(10, -(numberFormatInfo.CurrencyDecimalDigits));
 
-            return View(new ViewPointOfSaleViewModel()
+            return View("PointOfSale/" + viewType, new ViewPointOfSaleViewModel()
             {
                 Title = settings.Title,
                 Step = step.ToString(CultureInfo.InvariantCulture),

@@ -80,12 +80,11 @@
 </head>
 
 <body class="h-100">
-
     @if (this.TempData.HasStatusMessage())
     {
         <partial name="_StatusMessage" />
     }
     
-    <partial name="./PointOfSale/@Model.ViewType" />
+    @RenderBody()
 </body>
 </html>

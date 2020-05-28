@@ -24,6 +24,7 @@ using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBitpayClient;
 using Newtonsoft.Json;
+using CreateInvoiceRequest = BTCPayServer.Models.CreateInvoiceRequest;
 using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers

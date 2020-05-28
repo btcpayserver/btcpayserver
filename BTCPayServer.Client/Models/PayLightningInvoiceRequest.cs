@@ -1,6 +1,6 @@
 namespace BTCPayServer.Client.Models
 {
-    public class PayInvoiceRequest
+    public class PayLightningInvoiceRequest
     {
         public string Invoice { get; set; }
     }

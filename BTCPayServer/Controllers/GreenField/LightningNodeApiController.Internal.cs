@@ -8,7 +8,6 @@ using BTCPayServer.Security;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OpenChannelRequest = BTCPayServer.Client.Models.OpenChannelRequest;
 
 namespace BTCPayServer.Controllers.GreenField
 {
@@ -58,7 +57,7 @@ namespace BTCPayServer.Controllers.GreenField
         [Authorize(Policy = Policies.CanUseInternalLightningNode,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPost("~/api/v1/server/lightning/{cryptoCode}/channels")]
-        public override Task<IActionResult> OpenChannel(string cryptoCode, OpenChannelRequest request)
+        public override Task<IActionResult> OpenChannel(string cryptoCode, OpenLightningChannelRequest request)
         {
             return base.OpenChannel(cryptoCode, request);
         }
@@ -82,15 +81,15 @@ namespace BTCPayServer.Controllers.GreenField
         [Authorize(Policy = Policies.CanUseInternalLightningNode,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPost("~/api/v1/server/lightning/{cryptoCode}/invoices/pay")]
-        public override Task<IActionResult> PayInvoice(string cryptoCode, PayInvoiceRequest invoice)
+        public override Task<IActionResult> PayInvoice(string cryptoCode, PayLightningInvoiceRequest lightningInvoice)
         {
-            return base.PayInvoice(cryptoCode, invoice);
+            return base.PayInvoice(cryptoCode, lightningInvoice);
         }
 
         [Authorize(Policy = Policies.CanCreateLightningInvoiceInternalNode,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPost("~/api/v1/server/lightning/{cryptoCode}/invoices")]
-        public override Task<IActionResult> CreateInvoice(string cryptoCode, CreateInvoiceRequest request)
+        public override Task<IActionResult> CreateInvoice(string cryptoCode, CreateLightningInvoiceRequest request)
         {
             return base.CreateInvoice(cryptoCode, request);
         }

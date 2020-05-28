@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 
 namespace BTCPayServer.Client.Models
 {
-    public class OpenChannelRequest
+    public class OpenLightningChannelRequest
     {
         public ConnectToNodeRequest Node { get; set; }
         [JsonProperty(ItemConverterType = typeof(MoneyJsonConverter))]

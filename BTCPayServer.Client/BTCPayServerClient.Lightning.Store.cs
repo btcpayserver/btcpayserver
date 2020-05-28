@@ -38,7 +38,7 @@ namespace BTCPayServer.Client
             return await HandleResponse<IEnumerable<LightningChannelData>>(response);
         }
 
-        public async Task<string> OpenLightningChannel(string storeId, string cryptoCode, OpenChannelRequest request,
+        public async Task<string> OpenLightningChannel(string storeId, string cryptoCode, OpenLightningChannelRequest request,
             CancellationToken token = default)
         {
             var response = await _httpClient.SendAsync(
@@ -56,7 +56,7 @@ namespace BTCPayServer.Client
             return await HandleResponse<string>(response);
         }
 
-        public async Task PayLightningInvoice(string storeId, string cryptoCode, PayInvoiceRequest request,
+        public async Task PayLightningInvoice(string storeId, string cryptoCode, PayLightningInvoiceRequest request,
             CancellationToken token = default)
         {
             if (request == null)
@@ -79,7 +79,7 @@ namespace BTCPayServer.Client
         }
 
         public async Task<LightningInvoiceData> CreateLightningInvoice(string storeId, string cryptoCode,
-            CreateInvoiceRequest request, CancellationToken token = default)
+            CreateLightningInvoiceRequest request, CancellationToken token = default)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));

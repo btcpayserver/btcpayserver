@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 namespace BTCPayServer.Client.Models
 {
-    public class CreateInvoiceRequest
+    public class CreateLightningInvoiceRequest
     {
         [JsonProperty(ItemConverterType = typeof(LightMoneyJsonConverter))]
         public LightMoney Amount { get; set; }

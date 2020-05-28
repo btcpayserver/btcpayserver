@@ -8,7 +8,6 @@ using BTCPayServer.Lightning;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
-using OpenChannelRequest = BTCPayServer.Client.Models.OpenChannelRequest;
 
 namespace BTCPayServer.Controllers.GreenField
 {
@@ -110,7 +109,7 @@ namespace BTCPayServer.Controllers.GreenField
         }
 
         
-        public virtual async Task<IActionResult> OpenChannel(string cryptoCode, OpenChannelRequest request)
+        public virtual async Task<IActionResult> OpenChannel(string cryptoCode, OpenLightningChannelRequest request)
         {
             var lightningClient = await GetLightningClient(cryptoCode, true);
             if (lightningClient == null)
@@ -179,7 +178,7 @@ namespace BTCPayServer.Controllers.GreenField
             return Ok((await lightningClient.GetDepositAddress()).ToString());
         }
 
-        public virtual async Task<IActionResult> PayInvoice(string cryptoCode, PayInvoiceRequest invoice)
+        public virtual async Task<IActionResult> PayInvoice(string cryptoCode, PayLightningInvoiceRequest lightningInvoice)
         {
             var lightningClient = await GetLightningClient(cryptoCode, true);
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
@@ -190,11 +189,11 @@ namespace BTCPayServer.Controllers.GreenField
 
             try
             {
-                BOLT11PaymentRequest.TryParse(invoice.Invoice, out var bolt11PaymentRequest, network.NBitcoinNetwork);
+                BOLT11PaymentRequest.TryParse(lightningInvoice.Invoice, out var bolt11PaymentRequest, network.NBitcoinNetwork);
             }
             catch (Exception)
             {
-                ModelState.AddModelError(nameof(invoice), "The BOLT11 invoice was invalid.");
+                ModelState.AddModelError(nameof(lightningInvoice), "The BOLT11 invoice was invalid.");
             }
 
             if (CheckValidation(out var errorActionResult))
@@ -202,16 +201,16 @@ namespace BTCPayServer.Controllers.GreenField
                 return errorActionResult;
             }
 
-            var result = await lightningClient.Pay(invoice.Invoice);
+            var result = await lightningClient.Pay(lightningInvoice.Invoice);
             switch (result.Result)
             {
                 case PayResult.Ok:
                     return Ok();
                 case PayResult.CouldNotFindRoute:
-                    ModelState.AddModelError(nameof(invoice.Invoice), "Could not find route");
+                    ModelState.AddModelError(nameof(lightningInvoice.Invoice), "Could not find route");
                     break;
                 case PayResult.Error:
-                    ModelState.AddModelError(nameof(invoice.Invoice), result.ErrorDetail);
+                    ModelState.AddModelError(nameof(lightningInvoice.Invoice), result.ErrorDetail);
                     break;
             }
 
@@ -243,7 +242,7 @@ namespace BTCPayServer.Controllers.GreenField
             }
         }
 
-        public virtual async Task<IActionResult> CreateInvoice(string cryptoCode, CreateInvoiceRequest request)
+        public virtual async Task<IActionResult> CreateInvoice(string cryptoCode, CreateLightningInvoiceRequest request)
         {
             var lightningClient = await GetLightningClient(cryptoCode, false);
             

@@ -56,6 +56,7 @@ namespace BTCPayServer.Data
         public DbSet<APIKeyData> ApiKeys { get; set; }
         public DbSet<StoredFile> Files { get; set; }
         public DbSet<U2FDevice> U2FDevices { get; set; }
+        public DbSet<NotificationData> Notifications { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -67,6 +68,9 @@ namespace BTCPayServer.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+            NotificationData.OnModelCreating(builder);
+
+
             builder.Entity<InvoiceData>()
                 .HasOne(o => o.StoreData)
                 .WithMany(a => a.Invoices).OnDelete(DeleteBehavior.Cascade);

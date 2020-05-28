@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Data.Data;
+using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Events.Notifications;
 

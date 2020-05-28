@@ -50,7 +50,8 @@ namespace BTCPayServer.PaymentRequest
                 if (blob.ExpiryDate.Value <= DateTimeOffset.UtcNow)
                     currentStatus = Client.Models.PaymentRequestData.PaymentRequestStatus.Expired;
             }
-            else if (pr.Status == Client.Models.PaymentRequestData.PaymentRequestStatus.Pending)
+            
+            if (currentStatus == Client.Models.PaymentRequestData.PaymentRequestStatus.Pending)
             {
                 var rateRules = pr.StoreData.GetStoreBlob().GetRateRules(_BtcPayNetworkProvider);
                 var invoices = await _PaymentRequestRepository.GetInvoicesForPaymentRequest(pr.Id);

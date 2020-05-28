@@ -7,12 +7,20 @@ using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Events.Notifications;
+using Microsoft.AspNetCore.Identity;
 
 namespace BTCPayServer.HostedServices
 {
     public class NotificationDbSaver : EventHostedServiceBase
     {
-        public NotificationDbSaver(EventAggregator eventAggregator) : base(eventAggregator) { }
+        private readonly UserManager<ApplicationUser> _userManager;
+
+        public NotificationDbSaver(UserManager<ApplicationUser> userManager,
+            EventAggregator eventAggregator) : base(eventAggregator) {
+            _userManager = userManager;
+        }
+
+        public static List<NotificationData> Notif = new List<NotificationData>();
 
         protected override void SubscribeToEvents()
         {
@@ -20,21 +28,21 @@ namespace BTCPayServer.HostedServices
             base.SubscribeToEvents();
         }
 
-        public static List<NotificationData> Notif = new List<NotificationData>();
-
-        protected override Task ProcessEvent(object evt, CancellationToken cancellationToken)
+        protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
         {
             if (evt is NewVersionNotification)
             {
                 var data = (evt as NewVersionNotification).ToData();
 
-                //var userIds = new[] { "rockstar", "nicolas", "kukkie", "pavel" };
-                //foreach (var uid in userIds)
-                data.Id = Guid.NewGuid().ToString();
-                Notif.Add(data);
-            }
+                var admins = await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin);
+                foreach (var admin in admins)
+                {
+                    data.Id = Guid.NewGuid().ToString();
+                    data.ApplicationUserId = admin.Id;
 
-            return Task.CompletedTask;
+                    Notif.Add(data);
+                }
+            }
         }
     }
 }

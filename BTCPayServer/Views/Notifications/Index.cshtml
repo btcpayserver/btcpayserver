@@ -1,6 +1,6 @@
 ﻿@model BTCPayServer.Models.NotificationViewModels.IndexViewModel
 @{
-    ViewData["Title"] = "Notices";
+    ViewData["Title"] = "Notifications";
 }
 @section HeadScripts {
     <script src="~/modal/btcpay.js" asp-append-version="true"></script>
@@ -26,20 +26,29 @@
                 <table class="table table-sm table-responsive-md">
                     <thead>
                         <tr>
+                            <th width="160px">Date</th>
                             <th>Message</th>
-                            <th>Level</th>
-                            <th>Date</th>
+                            <th width="70px">&nbsp;</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var item in Model.Items)
                         {
                             <tr>
+                                <td>@item.Created.ToBrowserDate()</td>
                                 <td>@item.Body</td>
-                                <td>@item.Level</td>
-                                <td width="100px">@item.Created.ToString("yyyy-MM-dd")</td>
-                            </tr>
-                        }
+                                <td>
+                                    @if (!String.IsNullOrEmpty(item.ActionLink))
+                                    {
+                                        <a href="@item.ActionLink">Action</a>
+                                    }
+                                    else
+                                    {
+                                        <span>&nbsp;</span>
+                                    }
+                            </td>
+                        </tr>
+                    }
                     </tbody>
                 </table>
 

@@ -132,7 +132,8 @@ namespace BTCPayServer.Controllers.GreenField
                 LightningDescriptionTemplate = storeBlob.LightningDescriptionTemplate,
                 PaymentTolerance = storeBlob.PaymentTolerance,
                 RedirectAutomatically = storeBlob.RedirectAutomatically,
-                PayJoinEnabled = storeBlob.PayJoinEnabled
+                PayJoinEnabled = storeBlob.PayJoinEnabled,
+                LightningPrivateRouteHints = storeBlob.LightningPrivateRouteHints
             };
         }
 
@@ -168,6 +169,7 @@ namespace BTCPayServer.Controllers.GreenField
             blob.PaymentTolerance = restModel.PaymentTolerance;
             blob.RedirectAutomatically = restModel.RedirectAutomatically;
             blob.PayJoinEnabled = restModel.PayJoinEnabled;
+            blob.LightningPrivateRouteHints = restModel.LightningPrivateRouteHints;
             model.SetStoreBlob(blob);
         }
 

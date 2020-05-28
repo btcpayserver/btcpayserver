@@ -44,6 +44,7 @@ namespace BTCPayServer.Client.Models
         public NetworkFeeMode NetworkFeeMode { get; set; }
 
         public bool PayJoinEnabled { get; set; }
+        public bool LightningPrivateRouteHints { get; set; }
 
     }
     

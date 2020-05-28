@@ -41,23 +41,9 @@ namespace BTCPayServer.Controllers
         private readonly UserManager<ApplicationUser> _UserManager;
 
         [HttpGet]
-        [Route("/apps/{appId}/pos")]
+        [Route("/apps/{appId}/pos/{viewType?}")]
         [XFrameOptionsAttribute(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
-        public async Task<IActionResult> ViewPointOfSale(string appId)
-        {
-            var app = await _AppService.GetApp(appId, AppType.PointOfSale);
-            if (app == null)
-                return NotFound();
-            var settings = app.GetSettings<PointOfSaleSettings>();
-            PosViewType viewType = settings.EnableShoppingCart? PosViewType.Cart : settings.DefaultView;
-
-            return RedirectToAction(nameof(ViewPointOfSale), new { appId, viewType });
-        }
-
-        [HttpGet]
-        [Route("/apps/{appId}/pos/{viewType}")]
-        [XFrameOptionsAttribute(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
-        public async Task<IActionResult> ViewPointOfSale(string appId, PosViewType viewType)
+        public async Task<IActionResult> ViewPointOfSale(string appId, PosViewType? viewType = null)
         {
             var app = await _AppService.GetApp(appId, AppType.PointOfSale);
             if (app == null)
@@ -65,12 +51,13 @@ namespace BTCPayServer.Controllers
             var settings = app.GetSettings<PointOfSaleSettings>();
             var numberFormatInfo = _AppService.Currencies.GetNumberFormatInfo(settings.Currency) ?? _AppService.Currencies.GetNumberFormatInfo("USD");
             double step = Math.Pow(10, -(numberFormatInfo.CurrencyDecimalDigits));
+            viewType ??= settings.EnableShoppingCart ? PosViewType.Cart : settings.DefaultView;
 
             return View("PointOfSale/" + viewType, new ViewPointOfSaleViewModel()
             {
                 Title = settings.Title,
                 Step = step.ToString(CultureInfo.InvariantCulture),
-                ViewType = viewType,
+                ViewType = (PosViewType)viewType,
                 ShowCustomAmount = settings.ShowCustomAmount,
                 ShowDiscount = settings.ShowDiscount,
                 EnableTips = settings.EnableTips,
@@ -98,7 +85,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost]
-        [Route("/apps/{appId}/pos/{viewType}")]
+        [Route("/apps/{appId}/pos/{viewType?}")]
         [XFrameOptionsAttribute(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
         [IgnoreAntiforgeryToken]
         [EnableCors(CorsPolicies.All)]

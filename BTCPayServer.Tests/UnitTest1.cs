@@ -2312,8 +2312,6 @@ donation:
                 Assert.Equal("hello", vmpos.Title);
 
                 var publicApps = user.GetController<AppsPublicController>();
-                Assert.IsType<RedirectToActionResult>(publicApps.ViewPointOfSale(appId).Result);
-
                 var vmview =
                     Assert.IsType<ViewPointOfSaleViewModel>(Assert
                         .IsType<ViewResult>(publicApps.ViewPointOfSale(appId, PosViewType.Cart).Result).Model);

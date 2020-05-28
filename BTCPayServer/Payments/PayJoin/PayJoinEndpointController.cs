@@ -127,6 +127,10 @@ namespace BTCPayServer.Payments.PayJoin
             decimal minfeerate = -1.0m,
             int v = 1)
         {
+            var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
+            if (network == null)
+                return NotFound();
+
             if (v != 1)
             {
                 return BadRequest(new JObject
@@ -137,11 +141,6 @@ namespace BTCPayServer.Payments.PayJoin
                 });
             }
 
-            var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-            if (network == null)
-            {
-                return BadRequest(CreatePayjoinError("invalid-network", "Incorrect network"));
-            }
             await using var ctx = new PayjoinReceiverContext(_invoiceRepository, _explorerClientProvider.GetExplorerClient(network), _payJoinRepository);
             ObjectResult CreatePayjoinErrorAndLog(int httpCode, PayjoinReceiverWellknownErrors err, string debug)
             {
@@ -174,7 +173,7 @@ namespace BTCPayServer.Payments.PayJoin
             if (PSBT.TryParse(rawBody, network.NBitcoinNetwork, out var psbt))
             {
                 if (!psbt.IsAllFinalized())
-                    return BadRequest(CreatePayjoinError("psbt-not-finalized", "The PSBT should be finalized"));
+                    return BadRequest(CreatePayjoinError("original-psbt-rejected", "The PSBT should be finalized"));
                 ctx.OriginalTransaction = psbt.ExtractTransaction();
             }
             // BTCPay Server implementation support a transaction instead of PSBT
@@ -182,7 +181,7 @@ namespace BTCPayServer.Payments.PayJoin
             {
                 psbtFormat = false;
                 if (!Transaction.TryParse(rawBody, network.NBitcoinNetwork, out var tx))
-                    return BadRequest(CreatePayjoinError("invalid-format", "invalid transaction or psbt"));
+                    return BadRequest(CreatePayjoinError("original-psbt-rejected", "invalid transaction or psbt"));
                 ctx.OriginalTransaction = tx;
                 psbt = PSBT.FromTransaction(tx, network.NBitcoinNetwork);
                 psbt = (await explorer.UpdatePSBTAsync(new UpdatePSBTRequest() { PSBT = psbt })).PSBT;
@@ -200,11 +199,11 @@ namespace BTCPayServer.Payments.PayJoin
             var sendersInputType = psbt.GetInputsScriptPubKeyType();
             if (psbt.CheckSanity() is var errors && errors.Count != 0)
             {
-                return BadRequest(CreatePayjoinError("insane-psbt", $"This PSBT is insane ({errors[0]})"));
+                return BadRequest(CreatePayjoinError("original-psbt-rejected", $"This PSBT is insane ({errors[0]})"));
             }
             if (!psbt.TryGetEstimatedFeeRate(out originalFeeRate))
             {
-                return BadRequest(CreatePayjoinError("need-utxo-information",
+                return BadRequest(CreatePayjoinError("original-psbt-rejected",
                     "You need to provide Witness UTXO information to the PSBT."));
             }
 
@@ -212,19 +211,19 @@ namespace BTCPayServer.Payments.PayJoin
             // to leak global xpubs
             if (psbt.GlobalXPubs.Any())
             {
-                return BadRequest(CreatePayjoinError("leaking-data",
+                return BadRequest(CreatePayjoinError("original-psbt-rejected",
                     "GlobalXPubs should not be included in the PSBT"));
             }
 
             if (psbt.Outputs.Any(o => o.HDKeyPaths.Count != 0) || psbt.Inputs.Any(o => o.HDKeyPaths.Count != 0))
             {
-                return BadRequest(CreatePayjoinError("leaking-data",
+                return BadRequest(CreatePayjoinError("original-psbt-rejected",
                     "Keypath information should not be included in the PSBT"));
             }
 
             if (psbt.Inputs.Any(o => !o.IsFinalized()))
             {
-                return BadRequest(CreatePayjoinError("psbt-not-finalized", "The PSBT Should be finalized"));
+                return BadRequest(CreatePayjoinError("original-psbt-rejected", "The PSBT Should be finalized"));
             }
             ////////////
 
@@ -232,7 +231,7 @@ namespace BTCPayServer.Payments.PayJoin
             if (!mempool.Success)
             {
                 ctx.DoNotBroadcast();
-                return BadRequest(CreatePayjoinError("invalid-transaction",
+                return BadRequest(CreatePayjoinError("original-psbt-rejected",
                     $"Provided transaction isn't mempool eligible {mempool.RPCCodeMessage}"));
             }
             var enforcedLowR = ctx.OriginalTransaction.Inputs.All(IsLowR);

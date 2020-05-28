@@ -293,28 +293,19 @@ namespace BTCPayServer.Services
 
     public enum PayjoinReceiverWellknownErrors
     {
-        LeakingData,
-        PSBTNotFinalized,
         Unavailable,
-        OutOfUTXOS,
         NotEnoughMoney,
-        InsanePSBT,
         VersionUnsupported,
-        NeedUTXOInformation,
-        InvalidTransaction
+        OriginalPSBTRejected
     }
     public class PayjoinReceiverHelper
     {
         static IEnumerable<(PayjoinReceiverWellknownErrors EnumValue, string ErrorCode, string Message)> Get()
         {
-            yield return (PayjoinReceiverWellknownErrors.LeakingData, "leaking-data", "Key path information or GlobalXPubs should not be included in the original PSBT.");
-            yield return (PayjoinReceiverWellknownErrors.PSBTNotFinalized, "psbt-not-finalized", "The original PSBT must be finalized.");
             yield return (PayjoinReceiverWellknownErrors.Unavailable, "unavailable", "The payjoin endpoint is not available for now.");
             yield return (PayjoinReceiverWellknownErrors.NotEnoughMoney, "not-enough-money", "The receiver added some inputs but could not bump the fee of the payjoin proposal.");
-            yield return (PayjoinReceiverWellknownErrors.InsanePSBT, "insane-psbt", "Some consistency check on the PSBT failed.");
             yield return (PayjoinReceiverWellknownErrors.VersionUnsupported, "version-unsupported", "This version of payjoin is not supported.");
-            yield return (PayjoinReceiverWellknownErrors.NeedUTXOInformation, "need-utxo-information", "The witness UTXO or non witness UTXO is missing.");
-            yield return (PayjoinReceiverWellknownErrors.InvalidTransaction, "invalid-transaction", "The original transaction is invalid for payjoin");
+            yield return (PayjoinReceiverWellknownErrors.OriginalPSBTRejected, "original-psbt-rejected", "The receiver rejected the original PSBT.");
         }
         public static string GetErrorCode(PayjoinReceiverWellknownErrors err)
         {

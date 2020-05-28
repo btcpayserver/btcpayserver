@@ -255,7 +255,7 @@
             "StoreData": {
                 "allOf": [
                     {
-                        "$ref": "#/definitions/StoreBaseData"
+                        "$ref": "#/components/schemas/StoreBaseData"
                     },
                     {
                         "type": "object",

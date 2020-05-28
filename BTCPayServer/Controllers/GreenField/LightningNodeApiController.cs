@@ -259,7 +259,11 @@ namespace BTCPayServer.Controllers.GreenField
 
             try
             {
-                var invoice = await lightningClient.CreateInvoice(request.Amount, request.Description, request.Expiry,
+                var invoice = await lightningClient.CreateInvoice(
+                    new CreateInvoiceParams(request.Amount, request.Description, request.Expiry)
+                    {
+                        PrivateRouteHints = request.LightningPrivateRouteHints
+                    },
                     CancellationToken.None);
 
                 return Ok(ToModel(invoice));

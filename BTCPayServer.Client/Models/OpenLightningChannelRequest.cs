@@ -1,6 +1,7 @@
 using NBitcoin;
 using NBitcoin.JsonConverters;
 using Newtonsoft.Json;
+using MoneyJsonConverter = BTCPayServer.Client.JsonConverters.MoneyJsonConverter;
 
 namespace BTCPayServer.Client.Models
 {

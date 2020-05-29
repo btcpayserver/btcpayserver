@@ -61,7 +61,7 @@
             "LightMoney": {
                 "type": "string",
                 "format": "int64",
-                "description": "The id of the store",
+                "description": "a number amount wrapped in a string, represented in millistatoshi (00000000001BTC = 1 mSAT)",
                 "additionalProperties": false
             },
             "LightningChannelData": {
@@ -214,8 +214,9 @@
                 }
             },
             "Money": {
-                "type": "integer",
-                "format": "int64"
+                "type": "string",
+                "format": "int64",
+                "description": "a number amount wrapped in a string, represented in satoshi (00000001BTC = 1 sat)"
             },
             "FeeRate": {
                 "oneOf": [

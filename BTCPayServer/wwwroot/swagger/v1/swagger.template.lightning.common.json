@@ -59,8 +59,9 @@
                         "type": "string",
                         "format": "time-span"
                     },
-                    "lightningPrivateRouteHints": {
-                        "type": "boolean"
+                    "privateRouteHints": {
+                        "type": "boolean",
+                        "nullable": true
                     }
                 }
             },

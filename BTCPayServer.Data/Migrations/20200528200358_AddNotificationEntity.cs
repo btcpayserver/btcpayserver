@@ -1,9 +1,13 @@
 ﻿using System;
+using BTCPayServer.Data;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace BTCPayServer.Migrations
 {
-    public partial class AddNotificationEntity : Migration
+    [DbContext(typeof(ApplicationDbContext))]
+    [Migration("20200528200358_AddNotificationEntity")]
+    public class AddNotificationEntity : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {

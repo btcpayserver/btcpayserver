@@ -23,6 +23,7 @@ using BTCPayServer.Data;
 using Microsoft.AspNetCore.Identity;
 using NBXplorer.Models;
 using BTCPayServer.Client;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Events;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;

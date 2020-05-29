@@ -9,18 +9,28 @@
 <div class="alert alert-warning alert-dismissible" role="alert">
     <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
     <p>
-        <span>Before you proceed, please understand that Lightning Network is still in the experimental stage. Do not put the money you can't afford to lose. There is a high risk of you losing the money.</span>
+        <span>Before you proceed, please understand that the Lightning Network is still considered experimental and is under active development.</span>
     </p>
+    <p><strong>Do not add money that you can't afford to lose - there's a high risk of loss of funds.</strong></p>
     <p>
-        Take time to familiarize yourself with the risk. There's no backup lightning keys automatically done by BTCPayServer. Your keys are in a hot-wallet. This means :
+        Take time to familiarize yourself with the risks, some of which are:
     </p>
     <ul>
-        <li>Most of BTCPay Server deployments run on a pruned node, which, while working, is not officially supported by lightning network implementations.</li>
-        <li>If you erase your BTCPay Server virtual machine - you lose all the funds.</li>
-        <li>If your server gets hacked - a hacker can take all of your funds by accessing your keys.</li>
-        <li>If there is a bug in a lightning network implementation - you might lose all the funds.</li>
-        <li>You approve being #reckless and being the sole responsible party for your loss.</li>
-        <li>You approve to keep on your lightning node only what you can afford to lose.</li>
+        <li>Most BTCPay Server deployments run on a pruned node which, while working, is not officially supported by lightning network implementations.</li>
+        <li>
+            Lightning keys are NOT automatically backed up by BTCPay Server; your keys are in a hot-wallet. This means:
+            <ul>
+                <li>If you erase your BTCPay Server virtual machine: you lose all the funds.</li>
+                <li>If your server gets hacked: a hacker can take all of your funds by accessing your keys.</li>
+                <li>If there is a bug in a lightning network implementation: you could lose all the funds.</li>
+            </ul>
+        </li>
+    </ul>
+
+    <p>To proceed, please ensure that:</p>
+    <ul>
+        <li>You accept being #reckless and being the sole responsible party for any loss of funds.</li>
+        <li>You agree to keep on your lightning node only what you can afford to lose.</li>
     </ul>
 </div>
 

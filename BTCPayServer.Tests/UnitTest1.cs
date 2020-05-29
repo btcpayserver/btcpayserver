@@ -63,6 +63,7 @@ using BTCPayServer.Security.Bitpay;
 using MemoryCache = Microsoft.Extensions.Caching.Memory.MemoryCache;
 using Newtonsoft.Json.Schema;
 using BTCPayServer.Client;
+using BTCPayServer.Client.Models;
 
 namespace BTCPayServer.Tests
 {
@@ -101,9 +102,13 @@ namespace BTCPayServer.Tests
             using (var tester = ServerTester.Create())
             {
                 await tester.StartAsync();
-                var sresp = await tester.PayTester.HttpClient.GetAsync("swagger/v1/swagger.json");
+                var acc = tester.NewAccount();
 
-                JObject swagger = JObject.Parse(await sresp.Content.ReadAsStringAsync());
+                var sresp = Assert
+                    .IsType<JsonResult>(await tester.PayTester.GetController<HomeController>(acc.UserId, acc.StoreId)
+                        .Swagger()).Value.ToJson();
+
+                JObject swagger = JObject.Parse(sresp);
                 using HttpClient client = new HttpClient();
                 var resp = await client.GetAsync(
                     "https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json");
@@ -2116,7 +2121,7 @@ namespace BTCPayServer.Tests
                     .IsType<ViewResult>(await controller.AddDerivationScheme(user.StoreId, "BTC")).Model;
                 string content =
                     "{\"keystore\": {\"ckcc_xpub\": \"xpub661MyMwAqRbcGVBsTGeNZN6QGVHmMHLdSA4FteGsRrEriu4pnVZMZWnruFFFXkMnyoBjyHndD3Qwcfz4MPzBUxjSevweNFQx7SAYZATtcDw\", \"xpub\": \"ypub6WWc2gWwHbdnAAyJDnR4SPL1phRh7REqrPBfZeizaQ1EmTshieRXJC3Z5YoU4wkcdKHEjQGkh6AYEzCQC1Kz3DNaWSwdc1pc8416hAjzqyD\", \"label\": \"Coldcard Import 0x60d1af8b\", \"ckcc_xfp\": 1624354699, \"type\": \"hardware\", \"hw_type\": \"coldcard\", \"derivation\": \"m/49'/0'/0'\"}, \"wallet_type\": \"standard\", \"use_encryption\": false, \"seed_version\": 17}";
-                derivationVM.ColdcardPublicFile = TestUtils.GetFormFile("wallet.json", content);
+                derivationVM.ElectrumWalletFile = TestUtils.GetFormFile("wallet.json", content);
                 derivationVM = (DerivationSchemeViewModel)Assert.IsType<ViewResult>(controller
                     .AddDerivationScheme(user.StoreId, derivationVM, "BTC").GetAwaiter().GetResult()).Model;
                 Assert.False(derivationVM
@@ -2127,7 +2132,7 @@ namespace BTCPayServer.Tests
                     "{\"keystore\": {\"ckcc_xpub\": \"tpubD6NzVbkrYhZ4YHNiuTdTmHRmbcPRLfqgyneZFCL1mkzkUBjXriQShxTh9HL34FK2mhieasJVk9EzJrUfkFqRNQBjiXgx3n5BhPkxKBoFmaS\", \"xpub\": \"upub5DBYp1qGgsTrkzCptMGZc2x18pquLwGrBw6nS59T4NViZ4cni1mGowQzziy85K8vzkp1jVtWrSkLhqk9KDfvrGeB369wGNYf39kX8rQfiLn\", \"label\": \"Coldcard Import 0x60d1af8b\", \"ckcc_xfp\": 1624354699, \"type\": \"hardware\", \"hw_type\": \"coldcard\", \"derivation\": \"m/49'/0'/0'\"}, \"wallet_type\": \"standard\", \"use_encryption\": false, \"seed_version\": 17}";
                 derivationVM = (DerivationSchemeViewModel)Assert
                     .IsType<ViewResult>(await controller.AddDerivationScheme(user.StoreId, "BTC")).Model;
-                derivationVM.ColdcardPublicFile = TestUtils.GetFormFile("wallet2.json", content);
+                derivationVM.ElectrumWalletFile = TestUtils.GetFormFile("wallet2.json", content);
                 derivationVM.Enabled = true;
                 derivationVM = (DerivationSchemeViewModel)Assert.IsType<ViewResult>(controller
                     .AddDerivationScheme(user.StoreId, derivationVM, "BTC").GetAwaiter().GetResult()).Model;
@@ -2139,7 +2144,7 @@ namespace BTCPayServer.Tests
                 var store = tester.PayTester.StoreRepository.FindStore(user.StoreId).GetAwaiter().GetResult();
                 var onchainBTC = store.GetSupportedPaymentMethods(tester.PayTester.Networks)
                     .OfType<DerivationSchemeSettings>().First(o => o.PaymentId.IsBTCOnChain);
-                DerivationSchemeSettings.TryParseFromColdcard(content, onchainBTC.Network, out var expected);
+                DerivationSchemeSettings.TryParseFromElectrumWallet(content, onchainBTC.Network, out var expected);
                 Assert.Equal(expected.ToJson(), onchainBTC.ToJson());
 
                 // Let's check that the root hdkey and account key path are taken into account when making a PSBT
@@ -3443,7 +3448,7 @@ normal:
             var root = new Mnemonic(
                     "usage fever hen zero slide mammal silent heavy donate budget pulse say brain thank sausage brand craft about save attract muffin advance illegal cabbage")
                 .DeriveExtKey();
-            Assert.True(DerivationSchemeSettings.TryParseFromColdcard(
+            Assert.True(DerivationSchemeSettings.TryParseFromElectrumWallet(
                 "{\"keystore\": {\"ckcc_xpub\": \"xpub661MyMwAqRbcGVBsTGeNZN6QGVHmMHLdSA4FteGsRrEriu4pnVZMZWnruFFFXkMnyoBjyHndD3Qwcfz4MPzBUxjSevweNFQx7SAYZATtcDw\", \"xpub\": \"ypub6WWc2gWwHbdnAAyJDnR4SPL1phRh7REqrPBfZeizaQ1EmTshieRXJC3Z5YoU4wkcdKHEjQGkh6AYEzCQC1Kz3DNaWSwdc1pc8416hAjzqyD\", \"label\": \"Coldcard Import 0x60d1af8b\", \"ckcc_xfp\": 1624354699, \"type\": \"hardware\", \"hw_type\": \"coldcard\", \"derivation\": \"m/49'/0'/0'\"}, \"wallet_type\": \"standard\", \"use_encryption\": false, \"seed_version\": 17}",
                 mainnet, out var settings));
             Assert.Equal(root.GetPublicKey().GetHDFingerPrint(), settings.AccountKeySettings[0].RootFingerprint);
@@ -3460,20 +3465,20 @@ normal:
             var testnet = new BTCPayNetworkProvider(NetworkType.Testnet).GetNetwork<BTCPayNetwork>("BTC");
 
             // Should be legacy
-            Assert.True(DerivationSchemeSettings.TryParseFromColdcard(
+            Assert.True(DerivationSchemeSettings.TryParseFromElectrumWallet(
                 "{\"keystore\": {\"ckcc_xpub\": \"tpubD6NzVbkrYhZ4YHNiuTdTmHRmbcPRLfqgyneZFCL1mkzkUBjXriQShxTh9HL34FK2mhieasJVk9EzJrUfkFqRNQBjiXgx3n5BhPkxKBoFmaS\", \"xpub\": \"tpubDDWYqT3P24znfsaGX7kZcQhNc5LAjnQiKQvUCHF2jS6dsgJBRtymopEU5uGpMaR5YChjuiExZG1X2aTbqXkp82KqH5qnqwWHp6EWis9ZvKr\", \"label\": \"Coldcard Import 0x60d1af8b\", \"ckcc_xfp\": 1624354699, \"type\": \"hardware\", \"hw_type\": \"coldcard\", \"derivation\": \"m/44'/1'/0'\"}, \"wallet_type\": \"standard\", \"use_encryption\": false, \"seed_version\": 17}",
                 testnet, out settings));
             Assert.True(settings.AccountDerivation is DirectDerivationStrategy s && !s.Segwit);
 
             // Should be segwit p2sh
-            Assert.True(DerivationSchemeSettings.TryParseFromColdcard(
+            Assert.True(DerivationSchemeSettings.TryParseFromElectrumWallet(
                 "{\"keystore\": {\"ckcc_xpub\": \"tpubD6NzVbkrYhZ4YHNiuTdTmHRmbcPRLfqgyneZFCL1mkzkUBjXriQShxTh9HL34FK2mhieasJVk9EzJrUfkFqRNQBjiXgx3n5BhPkxKBoFmaS\", \"xpub\": \"upub5DSddA9NoRUyJrQ4p86nsCiTSY7kLHrSxx3joEJXjHd4HPARhdXUATuk585FdWPVC2GdjsMePHb6BMDmf7c6KG4K4RPX6LVqBLtDcWpQJmh\", \"label\": \"Coldcard Import 0x60d1af8b\", \"ckcc_xfp\": 1624354699, \"type\": \"hardware\", \"hw_type\": \"coldcard\", \"derivation\": \"m/49'/1'/0'\"}, \"wallet_type\": \"standard\", \"use_encryption\": false, \"seed_version\": 17}",
                 testnet, out settings));
             Assert.True(settings.AccountDerivation is P2SHDerivationStrategy p &&
                         p.Inner is DirectDerivationStrategy s2 && s2.Segwit);
 
             // Should be segwit
-            Assert.True(DerivationSchemeSettings.TryParseFromColdcard(
+            Assert.True(DerivationSchemeSettings.TryParseFromElectrumWallet(
                 "{\"keystore\": {\"ckcc_xpub\": \"tpubD6NzVbkrYhZ4YHNiuTdTmHRmbcPRLfqgyneZFCL1mkzkUBjXriQShxTh9HL34FK2mhieasJVk9EzJrUfkFqRNQBjiXgx3n5BhPkxKBoFmaS\", \"xpub\": \"vpub5YjYxTemJ39tFRnuAhwduyxG2tKGjoEpmvqVQRPqdYrqa6YGoeSzBtHXaJUYB19zDbXs3JjbEcVWERjQBPf9bEfUUMZNMv1QnMyHV8JPqyf\", \"label\": \"Coldcard Import 0x60d1af8b\", \"ckcc_xfp\": 1624354699, \"type\": \"hardware\", \"hw_type\": \"coldcard\", \"derivation\": \"m/84'/1'/0'\"}, \"wallet_type\": \"standard\", \"use_encryption\": false, \"seed_version\": 17}",
                 testnet, out settings));
             Assert.True(settings.AccountDerivation is DirectDerivationStrategy s3 && s3.Segwit);

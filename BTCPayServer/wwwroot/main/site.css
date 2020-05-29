@@ -87,10 +87,6 @@ a.nav-link:hover {
     border-left: 5px solid var(--btcpay-color-primary);
 }
 
-.display-when-ledger-connected {
-    display: none;
-}
-
 /* Homepage */
 #services img {
     margin-bottom: 1rem;

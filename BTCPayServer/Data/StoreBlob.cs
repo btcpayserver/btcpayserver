@@ -10,6 +10,7 @@ using BTCPayServer.Rating;
 using BTCPayServer.Services.Mails;
 using Newtonsoft.Json;
 using System.Text;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Services.Rates;
 
 namespace BTCPayServer.Data

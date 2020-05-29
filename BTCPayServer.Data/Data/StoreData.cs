@@ -1,16 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using BTCPayServer.Client.Models;
 
 namespace BTCPayServer.Data
 {
-    public enum SpeedPolicy
-    {
-        HighSpeed = 0,
-        MediumSpeed = 1,
-        LowSpeed = 2,
-        LowMediumSpeed = 3
-    }
 
     public class StoreData
     {
@@ -48,10 +42,5 @@ namespace BTCPayServer.Data
         public IEnumerable<APIKeyData> APIKeys { get; set; }
     }
 
-    public enum NetworkFeeMode
-    {
-        MultiplePaymentsOnly,
-        Always,
-        Never
-    }
+
 }

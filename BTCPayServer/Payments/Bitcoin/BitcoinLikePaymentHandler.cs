@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
@@ -13,6 +14,7 @@ using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using NBitcoin;
 using NBXplorer.Models;
+using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Payments.Bitcoin
 {

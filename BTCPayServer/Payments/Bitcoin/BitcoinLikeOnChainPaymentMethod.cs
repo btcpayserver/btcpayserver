@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Wallets;
 using NBitcoin;
@@ -33,7 +34,7 @@ namespace BTCPayServer.Payments.Bitcoin
         {
             DepositAddress = newPaymentDestination;
         }
-        public Data.NetworkFeeMode NetworkFeeMode { get; set; }
+        public NetworkFeeMode NetworkFeeMode { get; set; }
 
         FeeRate _NetworkFeeRate;
         [JsonConverter(typeof(NBitcoin.JsonConverters.FeeRateJsonConverter))]

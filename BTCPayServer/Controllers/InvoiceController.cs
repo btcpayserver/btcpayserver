@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Logging;
@@ -23,6 +24,8 @@ using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBitpayClient;
 using Newtonsoft.Json;
+using CreateInvoiceRequest = BTCPayServer.Models.CreateInvoiceRequest;
+using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers
 {
@@ -127,7 +130,15 @@ namespace BTCPayServer.Controllers
             HashSet<CurrencyPair> currencyPairsToFetch = new HashSet<CurrencyPair>();
             var rules = storeBlob.GetRateRules(_NetworkProvider);
             var excludeFilter = storeBlob.GetExcludedPaymentMethods(); // Here we can compose filters from other origin with PaymentFilter.Any()
-
+            
+            if (invoice.PaymentCurrencies?.Any() is true)
+            {
+                foreach (string paymentCurrency in invoice.PaymentCurrencies)
+                {
+                    invoice.SupportedTransactionCurrencies.TryAdd(paymentCurrency,
+                        new InvoiceSupportedTransactionCurrency() {Enabled = true});
+                }
+            }
             if (invoice.SupportedTransactionCurrencies != null && invoice.SupportedTransactionCurrencies.Count != 0)
             {
                 var supportedTransactionCurrencies = invoice.SupportedTransactionCurrencies

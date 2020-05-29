@@ -30,27 +30,11 @@
             <div class="form-group">
                 <form method="post" asp-action="WalletPSBT" asp-route-walletId="@this.Context.GetRouteValue("walletId")">
                     <input type="hidden" asp-for="CryptoCode" />
-                    <input type="hidden" asp-for="PayJoinEndpointUrl" />
                     <input type="hidden" asp-for="NBXSeedAvailable" />
                     <input type="hidden" asp-for="PSBT" />
                     <input type="hidden" asp-for="FileName" />
-                    <div class="dropdown d-inline-block" style="margin-top:16px;">
-                        <button class="btn btn-primary dropdown-toggle" type="button" id="SendMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            Sign with...
-                        </button>
-                        <div class="dropdown-menu" aria-labelledby="SendMenu">
-                            <button name="command" type="submit" class="dropdown-item" value="ledger">... your Ledger Wallet device</button>
-                            <button name="command" type="submit" class="dropdown-item" value="seed">... an HD private key or mnemonic seed</button>
-                            <button name="command" type="submit" class="dropdown-item" value="save-psbt">... a wallet supporting PSBT (save as file)</button>
-                            @if (Model.CryptoCode == "BTC") {
-                                <button name="command" type="submit" class="dropdown-item" value="vault">... the vault (preview)</button>
-                            }
-                            @if (Model.NBXSeedAvailable)
-                            {
-                                <button name="command" type="submit" class="dropdown-item" value="nbx-seed">... the seed saved in NBXplorer</button>
-                            }
-                        </div>
-                    </div>
+
+                    <partial name="WalletSigningMenu" model="@((Model.CryptoCode, Model.NBXSeedAvailable))" />
                     <div class="dropdown d-inline-block">
                         <button class="btn btn-secondary dropdown-toggle" type="button" id="OtherActions" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             Other actions...

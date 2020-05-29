@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
@@ -31,6 +32,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBXplorer;
+using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers
 {

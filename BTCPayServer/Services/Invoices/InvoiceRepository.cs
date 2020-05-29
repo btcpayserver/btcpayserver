@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using System.Globalization;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Logging;
 using BTCPayServer.Payments;

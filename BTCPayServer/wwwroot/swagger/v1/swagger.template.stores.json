@@ -347,6 +347,9 @@
                     },
                     "payJoinEnabled": {
                         "type": "boolean"
+                    },
+                    "lightningPrivateRouteHints": {
+                        "type": "boolean"
                     }
                 }
             },

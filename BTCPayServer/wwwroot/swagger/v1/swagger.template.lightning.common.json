@@ -1,0 +1,244 @@
+{
+    "components": {
+        "schemas": {
+            "ConnectToNodeRequest": {
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/ConnectToNodeRequest1"
+                    },
+                    {
+                        "$ref": "#/components/schemas/ConnectToNodeRequest2"
+                    }
+                ]
+            },
+            "ConnectToNodeRequest1": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "nodeInfo": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                }
+            },
+            "ConnectToNodeRequest2": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "nodeId": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "nodeHost": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "nodePort": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "CreateLightningInvoiceRequest": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "amount": {
+                        "nullable": true,
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/LightMoney"
+                            }
+                        ]
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "expiry": {
+                        "type": "string",
+                        "format": "time-span"
+                    },
+                    "lightningPrivateRouteHints": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "LightMoney": {
+                "type": "integer",
+                "format": "int64",
+                "additionalProperties": false
+            },
+            "LightningChannelData": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "remoteNode": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "isPublic": {
+                        "type": "boolean"
+                    },
+                    "isActive": {
+                        "type": "boolean"
+                    },
+                    "capacity": {
+                        "nullable": true,
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/LightMoney"
+                            }
+                        ]
+                    },
+                    "localBalance": {
+                        "nullable": true,
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/LightMoney"
+                            }
+                        ]
+                    },
+                    "channelPoint": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                }
+            },
+            "LightningInvoiceData": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/LightningInvoiceStatus"
+                    },
+                    "bolT11": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "paidAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "expiresAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "amount": {
+                        "nullable": true,
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/LightMoney"
+                            }
+                        ]
+                    },
+                    "amountReceived": {
+                        "nullable": true,
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/LightMoney"
+                            }
+                        ]
+                    }
+                }
+            },
+            "LightningInvoiceStatus": {
+                "type": "string",
+                "description": "",
+                "x-enumNames": [
+                    "Unpaid",
+                    "Paid",
+                    "Expired"
+                ],
+                "enum": [
+                    "Unpaid",
+                    "Paid",
+                    "Expired"
+                ]
+            },
+            "LightningNodeInformationData": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "nodeInfoList": {
+                        "type": "array",
+                        "nullable": true,
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "blockHeight": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "PayLightningInvoiceRequest": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "invoice": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                }
+            },
+            "OpenLightningChannelRequest": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "node": {
+                        "nullable": true,
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/ConnectToNodeRequest"
+                            }
+                        ]
+                    },
+                    "channelAmount": {
+                        "nullable": true,
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/Money"
+                            }
+                        ]
+                    },
+                    "feeRate": {
+                        "nullable": true,
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/FeeRate"
+                            }
+                        ]
+                    }
+                }
+            },
+            "Money": {
+                "type": "integer",
+                "format": "int64"
+            },
+            "FeeRate": {
+                "oneOf": [
+                    {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    {
+                        "type": "number",
+                        "format": "float"
+                    }
+                ]
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Lightning"
+        }
+    ]
+}

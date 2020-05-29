@@ -13,14 +13,14 @@ namespace BTCPayServer.Controllers.GreenField
 {
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-    public class InternalLightningNodeApiInternalController : LightningNodeApiController
+    public class InternalLightningNodeApiController : LightningNodeApiController
     {
         private readonly BTCPayServerOptions _btcPayServerOptions;
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly LightningClientFactoryService _lightningClientFactory;
 
 
-        public InternalLightningNodeApiInternalController(BTCPayServerOptions btcPayServerOptions,
+        public InternalLightningNodeApiController(BTCPayServerOptions btcPayServerOptions,
             BTCPayNetworkProvider btcPayNetworkProvider, BTCPayServerEnvironment btcPayServerEnvironment,
             CssThemeManager cssThemeManager, LightningClientFactoryService lightningClientFactory) : base(
             btcPayNetworkProvider, btcPayServerEnvironment, cssThemeManager)

@@ -4,40 +4,34 @@
             "ConnectToNodeRequest": {
                 "oneOf": [
                     {
-                        "$ref": "#/components/schemas/ConnectToNodeRequest1"
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                            "nodeInfo": {
+                                "type": "string",
+                                "nullable": true
+                            }
+                        }
                     },
                     {
-                        "$ref": "#/components/schemas/ConnectToNodeRequest2"
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                            "nodeId": {
+                                "type": "string",
+                                "nullable": true
+                            },
+                            "nodeHost": {
+                                "type": "string",
+                                "nullable": true
+                            },
+                            "nodePort": {
+                                "type": "integer",
+                                "format": "int32"
+                            }
+                        }
                     }
                 ]
-            },
-            "ConnectToNodeRequest1": {
-                "type": "object",
-                "additionalProperties": false,
-                "properties": {
-                    "nodeInfo": {
-                        "type": "string",
-                        "nullable": true
-                    }
-                }
-            },
-            "ConnectToNodeRequest2": {
-                "type": "object",
-                "additionalProperties": false,
-                "properties": {
-                    "nodeId": {
-                        "type": "string",
-                        "nullable": true
-                    },
-                    "nodeHost": {
-                        "type": "string",
-                        "nullable": true
-                    },
-                    "nodePort": {
-                        "type": "integer",
-                        "format": "int32"
-                    }
-                }
             },
             "CreateLightningInvoiceRequest": {
                 "type": "object",
@@ -66,8 +60,9 @@
                 }
             },
             "LightMoney": {
-                "type": "integer",
+                "type": "string",
                 "format": "int64",
+                "description": "a number amount wrapped in a string, represented in millistatoshi (00000000001BTC = 1 mSAT)",
                 "additionalProperties": false
             },
             "LightningChannelData": {
@@ -220,8 +215,9 @@
                 }
             },
             "Money": {
-                "type": "integer",
-                "format": "int64"
+                "type": "string",
+                "format": "int64",
+                "description": "a number amount wrapped in a string, represented in satoshi (00000001BTC = 1 sat)"
             },
             "FeeRate": {
                 "oneOf": [
@@ -236,10 +232,5 @@
                 ]
             }
         }
-    },
-    "tags": [
-        {
-            "name": "Lightning"
-        }
-    ]
+    }
 }

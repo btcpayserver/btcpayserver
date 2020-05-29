@@ -4,6 +4,7 @@
 @inject BTCPayServer.Services.BTCPayServerEnvironment env
 @inject BTCPayServer.HostedServices.NBXplorerDashboard dashboard
 @inject BTCPayServer.HostedServices.CssThemeManager themeManager
+@inject BTCPayServer.HostedServices.NotificationManager notificationManager
 
 <!DOCTYPE html>
 <html lang="en">
@@ -80,7 +81,11 @@
                         </li>
                         <li class="nav-item">
                             <a asp-area="" asp-controller="Notifications" asp-action="Index" title="Notifications" class="nav-link js-scroll-trigger" id="Notifications"><i class="fa fa-bell"></i></a>
-                            <span class="alerts-badge badge badge-pill badge-danger">6</span>
+                            @{ var notifications = notificationManager.GetNotificationCount(User); }
+                            @if (notifications > 0)
+                            {
+                            <span class="alerts-badge badge badge-pill badge-danger">@notifications</span>
+                            }
                         </li>
                         <li class="nav-item">
                             <a asp-area="" asp-controller="Account" asp- asp-action="Logout" title="Logout" class="nav-link js-scroll-trigger" id="Logout"><i class="fa fa-sign-out"></i></a>

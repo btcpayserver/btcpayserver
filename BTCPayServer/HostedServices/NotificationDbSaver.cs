@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -51,6 +52,27 @@ namespace BTCPayServer.HostedServices
                     await db.SaveChangesAsync();
                 }
             }
+        }
+    }
+
+    public class NotificationManager
+    {
+        private readonly ApplicationDbContext _db;
+
+        public NotificationManager(ApplicationDbContext db)
+        {
+            _db = db;
+        }
+
+        public int GetNotificationCount(ClaimsPrincipal user)
+        {
+            var claimWithId = user.Claims.SingleOrDefault(a => a.Type == ClaimTypes.NameIdentifier);
+
+            // TODO: Soft caching in order not to pound database too much
+            var count = _db.Notifications
+                .Where(a => a.ApplicationUserId == claimWithId.Value && !a.Seen)
+                .Count();
+            return count;
         }
     }
 }

@@ -32,6 +32,7 @@ namespace BTCPayServer.Controllers
         [HttpGet]
         public async Task<IActionResult> Index(int skip = 0, int count = 50, int timezoneOffset = 0)
         {
+            // TODO: Refactor
             var claimWithId = User.Claims.SingleOrDefault(a => a.Type == ClaimTypes.NameIdentifier);
             if (claimWithId == null)
                 return RedirectToAction("Index", "Home");
@@ -56,6 +57,21 @@ namespace BTCPayServer.Controllers
             _eventAggregator.NoticeNewVersion("1.0.4.4");
             // waiting for event handler to catch up
             await Task.Delay(1000);
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Delete(string id)
+        {
+            // TODO: Refactor
+            var claimWithId = User.Claims.SingleOrDefault(a => a.Type == ClaimTypes.NameIdentifier);
+            if (claimWithId == null)
+                return RedirectToAction("Index", "Home");
+
+            var notif = _db.Notifications.SingleOrDefault(a => a.Id == id && a.ApplicationUserId == claimWithId.Value);
+            _db.Notifications.Remove(notif);
+            await _db.SaveChangesAsync();
+
             return RedirectToAction(nameof(Index));
         }
     }

@@ -17,8 +17,13 @@
         }
         <div class="row">
             <div class="col-lg-12 section-heading">
-                <h2>Notices</h2>
+                <h2>@ViewData["Title"]</h2>
                 <hr class="primary">
+            </div>
+        </div>
+        <div class="row button-row">
+            <div class="col-lg-6">
+                <a asp-action="Generate" class="btn btn-primary" role="button" id="Generate"><span class="fa fa-plus"></span> Generate Test Notification</a>
             </div>
         </div>
         <div class="row">
@@ -26,8 +31,9 @@
                 <table class="table table-sm table-responsive-md">
                     <thead>
                         <tr>
-                            <th width="160px">Date</th>
+                            <th width="165px">Date</th>
                             <th>Message</th>
+                            <th width="70px">&nbsp;</th>
                             <th width="70px">&nbsp;</th>
                         </tr>
                     </thead>
@@ -46,9 +52,12 @@
                                     {
                                         <span>&nbsp;</span>
                                     }
-                            </td>
-                        </tr>
-                    }
+                                </td>
+                                <td>
+                                    <a asp-action="Delete" asp-route-id="@item.Id"><span class="fa fa-trash"></span></a>
+                                </td>
+                            </tr>
+                        }
                     </tbody>
                 </table>
 

@@ -4,11 +4,13 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using BTCPayServer.Data;
 using BTCPayServer.Events.Notifications;
 using BTCPayServer.Filters;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Models.NotificationViewModels;
 using BTCPayServer.Security;
+using Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,10 +20,12 @@ namespace BTCPayServer.Controllers
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public class NotificationsController : Controller
     {
+        private readonly ApplicationDbContext _db;
         private readonly EventAggregator _eventAggregator;
 
-        public NotificationsController(EventAggregator eventAggregator)
+        public NotificationsController(ApplicationDbContext db, EventAggregator eventAggregator)
         {
+            _db = db;
             _eventAggregator = eventAggregator;
         }
 
@@ -35,13 +39,14 @@ namespace BTCPayServer.Controllers
             var userId = claimWithId.Value;
             var model = new IndexViewModel()
             {
-                Items = NotificationDbSaver.Notif
+                Items = _db.Notifications
+                    .OrderByDescending(a => a.Created)
                     .Skip(skip).Take(count)
                     .Where(a => a.ApplicationUserId == userId)
                     .Select(a => a.ViewModel())
                     .ToList()
             };
-            model.Items = model.Items.OrderByDescending(a => a.Created).ToList();
+
             return View(model);
         }
 

@@ -13,14 +13,16 @@ namespace BTCPayServer.HostedServices
 {
     public class NotificationDbSaver : EventHostedServiceBase
     {
-        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly UserManager<ApplicationUser> _UserManager;
+        private readonly ApplicationDbContextFactory _ContextFactory;
 
         public NotificationDbSaver(UserManager<ApplicationUser> userManager,
-            EventAggregator eventAggregator) : base(eventAggregator) {
-            _userManager = userManager;
+                    ApplicationDbContextFactory contextFactory,
+                    EventAggregator eventAggregator) : base(eventAggregator)
+        {
+            _UserManager = userManager;
+            _ContextFactory = contextFactory;
         }
-
-        public static List<NotificationData> Notif = new List<NotificationData>();
 
         protected override void SubscribeToEvents()
         {
@@ -34,13 +36,19 @@ namespace BTCPayServer.HostedServices
             {
                 var data = (evt as NewVersionNotification).ToData();
 
-                var admins = await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin);
-                foreach (var admin in admins)
-                {
-                    data.Id = Guid.NewGuid().ToString();
-                    data.ApplicationUserId = admin.Id;
+                var admins = await _UserManager.GetUsersInRoleAsync(Roles.ServerAdmin);
 
-                    Notif.Add(data);
+                using (var db = _ContextFactory.CreateContext())
+                {
+                    foreach (var admin in admins)
+                    {
+                        data.Id = Guid.NewGuid().ToString();
+                        data.ApplicationUserId = admin.Id;
+
+                        db.Notifications.Add(data);
+                    }
+
+                    await db.SaveChangesAsync();
                 }
             }
         }

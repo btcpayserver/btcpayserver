@@ -40,9 +40,11 @@
                     <tbody>
                         @foreach (var item in Model.Items)
                         {
+                            @* TODO: Click on td to mark notification read through JavaScript magic *@
+                            @* TODO: Multiselect akin to Gmail *@
                             <tr>
-                                <td>@item.Created.ToBrowserDate()</td>
-                                <td>@item.Body</td>
+                                <td class="cursor-pointer @(item.Seen ? "": "font-weight-bold")">@item.Created.ToBrowserDate()</td>
+                                <td class="cursor-pointer @(item.Seen ? "": "font-weight-bold")">@item.Body</td>
                                 <td>
                                     @if (!String.IsNullOrEmpty(item.ActionLink))
                                     {
@@ -54,7 +56,16 @@
                                     }
                                 </td>
                                 <td>
-                                    <a asp-action="Delete" asp-route-id="@item.Id"><span class="fa fa-trash"></span></a>
+                                    @if (item.Seen)
+                                    {
+                                        <a asp-action="FlipRead" asp-route-id="@item.Id"><span class="fa fa-envelope-o" title="Mark Unread"></span></a>
+                                    }
+                                    else
+                                    {
+                                        <a asp-action="FlipRead" asp-route-id="@item.Id"><span class="fa fa-envelope-open-o" title="Mark Read"></span></a>
+                                    }
+                                    &nbsp;
+                                    <a asp-action="Delete" asp-route-id="@item.Id"><span class="fa fa-trash-o" title="Delete"></span></a>
                                 </td>
                             </tr>
                         }

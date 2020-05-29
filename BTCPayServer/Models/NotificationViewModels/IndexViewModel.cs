@@ -22,6 +22,7 @@ namespace BTCPayServer.Models.NotificationViewModels
         public DateTimeOffset Created { get; set; }
         public string Body { get; set; }
         public string ActionLink { get; set; }
+        public bool Seen { get; set; }
     }
 
     public static class NotificationViewModelExt
@@ -36,7 +37,8 @@ namespace BTCPayServer.Models.NotificationViewModels
                     Id = data.Id,
                     Created = data.Created,
                     Body = $"New version {casted.Version} released!",
-                    ActionLink = "https://github.com/btcpayserver/btcpayserver/releases/tag/v" + casted.Version
+                    ActionLink = "https://github.com/btcpayserver/btcpayserver/releases/tag/v" + casted.Version,
+                    Seen = data.Seen
                 };
 
                 return obj;

@@ -74,5 +74,20 @@ namespace BTCPayServer.Controllers
 
             return RedirectToAction(nameof(Index));
         }
+
+        [HttpGet]
+        public async Task<IActionResult> FlipRead(string id)
+        {
+            // TODO: Refactor
+            var claimWithId = User.Claims.SingleOrDefault(a => a.Type == ClaimTypes.NameIdentifier);
+            if (claimWithId == null)
+                return RedirectToAction("Index", "Home");
+
+            var notif = _db.Notifications.SingleOrDefault(a => a.Id == id && a.ApplicationUserId == claimWithId.Value);
+            notif.Seen = !notif.Seen;
+            await _db.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
+        }
     }
 }

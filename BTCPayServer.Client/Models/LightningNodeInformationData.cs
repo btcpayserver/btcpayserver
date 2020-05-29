@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using BTCPayServer.Client.JsonConverters;
 using BTCPayServer.Lightning;
 using NBitcoin;
 using NBitcoin.JsonConverters;
@@ -20,10 +21,10 @@ namespace BTCPayServer.Client.Models
 
         public bool IsActive { get; set; }
 
-        [JsonProperty(ItemConverterType = typeof(MoneyJsonConverter))]
+        [JsonProperty(ItemConverterType = typeof(LightMoneyJsonConverter))]
         public LightMoney Capacity { get; set; }
 
-        [JsonProperty(ItemConverterType = typeof(MoneyJsonConverter))]
+        [JsonProperty(ItemConverterType = typeof(LightMoneyJsonConverter))]
         public LightMoney LocalBalance { get; set; }
 
         public string ChannelPoint { get; set; }

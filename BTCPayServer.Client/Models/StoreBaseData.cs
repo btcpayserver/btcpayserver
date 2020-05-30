@@ -1,3 +1,5 @@
+using System;
+using System.ComponentModel;
 using BTCPayServer.Client.JsonConverters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -12,9 +14,15 @@ namespace BTCPayServer.Client.Models
         public string Name { get; set; }
 
         public string Website { get; set; }
-        public int InvoiceExpiration { get; set; } = 15;
-        public int MonitoringExpiration { get; set; } = 60;
-        
+
+        [JsonConverter(typeof(TimeSpanJsonConverter))]
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public TimeSpan InvoiceExpiration { get; set; } = TimeSpan.FromMinutes(15);
+
+        [JsonConverter(typeof(TimeSpanJsonConverter))]
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public TimeSpan MonitoringExpiration { get; set; } = TimeSpan.FromMinutes(60);
+
         [JsonConverter(typeof(StringEnumConverter))]
         public SpeedPolicy SpeedPolicy { get; set; }
         public string LightningDescriptionTemplate { get; set; }

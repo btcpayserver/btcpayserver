@@ -15,6 +15,8 @@ using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Views.Wallets;
+using Newtonsoft.Json;
+using BTCPayServer.Client.Models;
 
 namespace BTCPayServer.Tests
 {

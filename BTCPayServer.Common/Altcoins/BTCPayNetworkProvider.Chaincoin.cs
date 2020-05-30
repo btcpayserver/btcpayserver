@@ -18,8 +18,7 @@ namespace BTCPayServer
                 UriScheme = "chc",
                 DefaultRateRules = new[]
                     {
-                        "CVC_X = CVC_BTC * BTC_X",
-                        "CVC_BTC = bittrex(CVC_BTC)"
+                        "X_X = txbit(X_X)"
                     },
                 CryptoImagePath = "imlegacy/chaincoin.png",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),

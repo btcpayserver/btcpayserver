@@ -8,6 +8,7 @@ using BTCPayServer.Lightning;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
+using Org.BouncyCastle.Ocsp;
 
 namespace BTCPayServer.Controllers.GreenField
 {
@@ -57,9 +58,9 @@ namespace BTCPayServer.Controllers.GreenField
                 return NotFound();
             }
 
-            if (TryGetNodeInfo(request, out var nodeInfo))
+            if (request?.NodeURI is null)
             {
-                ModelState.AddModelError(nameof(request.NodeId), "A valid node info was not provided to connect to");
+                ModelState.AddModelError(nameof(request.NodeURI), "A valid node info was not provided to connect to");
             }
 
             if (CheckValidation(out var errorActionResult))
@@ -69,7 +70,7 @@ namespace BTCPayServer.Controllers.GreenField
 
             try
             {
-                await lightningClient.ConnectTo(nodeInfo);
+                await lightningClient.ConnectTo(request.NodeURI);
             }
             catch (Exception e)
             {
@@ -117,9 +118,9 @@ namespace BTCPayServer.Controllers.GreenField
                 return NotFound();
             }
 
-            if (TryGetNodeInfo(request.Node, out var nodeInfo))
+            if (request?.NodeURI is null)
             {
-                ModelState.AddModelError(nameof(request.Node),
+                ModelState.AddModelError(nameof(request.NodeURI),
                     "A valid node info was not provided to open a channel with");
             }
 
@@ -150,7 +151,7 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 var response = await lightningClient.OpenChannel(new Lightning.OpenChannelRequest()
                 {
-                    ChannelAmount = request.ChannelAmount, FeeRate = request.FeeRate, NodeInfo = nodeInfo
+                    ChannelAmount = request.ChannelAmount, FeeRate = request.FeeRate, NodeInfo = request.NodeURI
                 });
                 if (response.Result == OpenChannelResult.Ok)
                 {
@@ -304,22 +305,6 @@ namespace BTCPayServer.Controllers.GreenField
         {
             return (_btcPayServerEnvironment.IsDevelopping || User.IsInRole(Roles.ServerAdmin) ||
                     (_cssThemeManager.AllowLightningInternalNodeForAll && !doingAdminThings));
-        }
-
-
-        private bool TryGetNodeInfo(ConnectToNodeRequest request, out NodeInfo nodeInfo)
-        {
-            nodeInfo = null;
-            if (!string.IsNullOrEmpty(request.NodeInfo)) return NodeInfo.TryParse(request.NodeInfo, out nodeInfo);
-            try
-            {
-                nodeInfo = new NodeInfo(new PubKey(request.NodeId), request.NodeHost, request.NodePort);
-                return true;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
         }
 
         protected abstract Task<ILightningClient> GetLightningClient(string cryptoCode, bool doingAdminThings);

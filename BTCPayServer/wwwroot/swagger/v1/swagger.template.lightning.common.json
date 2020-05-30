@@ -2,36 +2,14 @@
     "components": {
         "schemas": {
             "ConnectToNodeRequest": {
-                "oneOf": [
-                    {
-                        "type": "object",
-                        "additionalProperties": false,
-                        "properties": {
-                            "nodeInfo": {
-                                "type": "string",
-                                "nullable": true
-                            }
-                        }
-                    },
-                    {
-                        "type": "object",
-                        "additionalProperties": false,
-                        "properties": {
-                            "nodeId": {
-                                "type": "string",
-                                "nullable": true
-                            },
-                            "nodeHost": {
-                                "type": "string",
-                                "nullable": true
-                            },
-                            "nodePort": {
-                                "type": "integer",
-                                "format": "int32"
-                            }
-                        }
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "nodeURI": {
+                        "nullable": false,
+                        "$ref": "#/components/schemas/NodeURI"
                     }
-                ]
+                }
             },
             "CreateLightningInvoiceRequest": {
                 "type": "object",
@@ -188,13 +166,9 @@
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
-                    "node": {
-                        "nullable": true,
-                        "oneOf": [
-                            {
-                                "$ref": "#/components/schemas/ConnectToNodeRequest"
-                            }
-                        ]
+                    "nodeURI": {
+                        "nullable": false,
+                        "$ref": "#/components/schemas/NodeURI"
                     },
                     "channelAmount": {
                         "nullable": true,
@@ -218,6 +192,10 @@
                 "type": "string",
                 "format": "int64",
                 "description": "a number amount wrapped in a string, represented in satoshi (00000001BTC = 1 sat)"
+            },
+            "NodeURI": {
+                "type": "string",
+                "description": "The node URI in the form of pubkey@host[:port]."
             },
             "FeeRate": {
                 "oneOf": [

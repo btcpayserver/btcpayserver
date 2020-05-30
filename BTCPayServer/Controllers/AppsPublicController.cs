@@ -41,23 +41,23 @@ namespace BTCPayServer.Controllers
         private readonly UserManager<ApplicationUser> _UserManager;
 
         [HttpGet]
-        [Route("/apps/{appId}/pos")]
+        [Route("/apps/{appId}/pos/{viewType?}")]
         [XFrameOptionsAttribute(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
-        public async Task<IActionResult> ViewPointOfSale(string appId)
+        public async Task<IActionResult> ViewPointOfSale(string appId, PosViewType? viewType = null)
         {
             var app = await _AppService.GetApp(appId, AppType.PointOfSale);
             if (app == null)
                 return NotFound();
             var settings = app.GetSettings<PointOfSaleSettings>();
-
             var numberFormatInfo = _AppService.Currencies.GetNumberFormatInfo(settings.Currency) ?? _AppService.Currencies.GetNumberFormatInfo("USD");
             double step = Math.Pow(10, -(numberFormatInfo.CurrencyDecimalDigits));
+            viewType ??= settings.EnableShoppingCart ? PosViewType.Cart : settings.DefaultView;
 
-            return View(new ViewPointOfSaleViewModel()
+            return View("PointOfSale/" + viewType, new ViewPointOfSaleViewModel()
             {
                 Title = settings.Title,
                 Step = step.ToString(CultureInfo.InvariantCulture),
-                EnableShoppingCart = settings.EnableShoppingCart,
+                ViewType = (PosViewType)viewType,
                 ShowCustomAmount = settings.ShowCustomAmount,
                 ShowDiscount = settings.ShowDiscount,
                 EnableTips = settings.EnableTips,
@@ -85,11 +85,12 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost]
-        [Route("/apps/{appId}/pos")]
+        [Route("/apps/{appId}/pos/{viewType?}")]
         [XFrameOptionsAttribute(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
         [IgnoreAntiforgeryToken]
         [EnableCors(CorsPolicies.All)]
         public async Task<IActionResult> ViewPointOfSale(string appId,
+                                                        PosViewType viewType,
                                                         [ModelBinder(typeof(InvariantDecimalModelBinder))] decimal amount,
                                                         string email,
                                                         string orderId,
@@ -106,9 +107,10 @@ namespace BTCPayServer.Controllers
             if (app == null)
                 return NotFound();
             var settings = app.GetSettings<PointOfSaleSettings>();
-            if (string.IsNullOrEmpty(choiceKey) && !settings.ShowCustomAmount && !settings.EnableShoppingCart)
+            settings.DefaultView = settings.EnableShoppingCart? PosViewType.Cart : settings.DefaultView;
+            if (string.IsNullOrEmpty(choiceKey) && !settings.ShowCustomAmount && settings.DefaultView != PosViewType.Cart)
             {
-                return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
+                return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId, viewType = viewType });
             }
             string title = null;
             var price = 0.0m;
@@ -141,14 +143,14 @@ namespace BTCPayServer.Controllers
             }
             else
             {
-                if (!settings.ShowCustomAmount && !settings.EnableShoppingCart)
+                if (!settings.ShowCustomAmount && settings.DefaultView != PosViewType.Cart)
                     return NotFound();
                 price = amount;
                 title = settings.Title;
                 
                 //if cart IS enabled and we detect posdata that matches the cart system's, check inventory for the items
-                if (!string.IsNullOrEmpty(posData) && 
-                    settings.EnableShoppingCart && 
+                if (!string.IsNullOrEmpty(posData) &&
+                    settings.DefaultView == PosViewType.Cart &&
                     AppService.TryParsePosCartItems(posData, out var cartItems))
                 {
                         

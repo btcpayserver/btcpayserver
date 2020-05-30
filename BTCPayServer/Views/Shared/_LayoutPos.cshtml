@@ -1,0 +1,90 @@
+﻿@addTagHelper *, BundlerMinifier.TagHelpers
+@inject BTCPayServer.HostedServices.CssThemeManager themeManager
+
+@using BTCPayServer.Services.Apps
+@model BTCPayServer.Models.AppViewModels.ViewPointOfSaleViewModel
+@{
+    ViewData["Title"] = Model.Title;
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html class="h-100">
+<head>
+    <title>@Model.Title</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="~/img/icons/icon-512x512.png">
+    <link rel="apple-touch-startup-image" href="~/img/splash.png">
+
+    <link rel="manifest" href="~/manifest.json">
+
+    <link href="@this.Context.Request.GetRelativePathOrAbsolute(themeManager.BootstrapUri)" rel="stylesheet" asp-append-version="true" />
+    <link href="@this.Context.Request.GetRelativePathOrAbsolute(themeManager.ThemeUri)" rel="stylesheet" asp-append-version="true" />
+    @if (Model.CustomCSSLink != null)
+    {
+        <link href="@Model.CustomCSSLink" rel="stylesheet" />
+    }
+    <link href="~/vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" asp-append-version="true" />
+
+    @if (Model.ViewType == PosViewType.Cart)
+    {
+        <link rel="stylesheet" href="~/cart/css/style.css" asp-append-version="true">
+        <script type="text/javascript">
+            var srvModel = @Safe.Json(Model);
+        </script>
+        <bundle name="wwwroot/bundles/cart-bundle.min.js" asp-append-version="true" />
+    }
+    <style>
+        .card-deck {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-gap: .5rem;
+        }
+
+        .card-deck .card:only-of-type {
+            max-width: 320px;
+            margin: auto;
+        }
+
+        .js-cart-item-minus .fa,
+        .js-cart-item-plus .fa {
+            background: #fff;
+            border-radius: 50%;
+            width: 17px;
+            height: 17px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .js-cart-item-count {
+            -moz-appearance:textfield;
+            margin: 0;
+            text-align: right;
+        }
+
+        .js-cart-item-count::-webkit-inner-spin-button,
+        .js-cart-item-count::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+    </style>
+    @if (!string.IsNullOrEmpty(Model.EmbeddedCSS))
+    {
+        @Safe.Raw($"<style>{Model.EmbeddedCSS}</style>");
+    }
+
+</head>
+
+<body class="h-100">
+    @if (this.TempData.HasStatusMessage())
+    {
+        <partial name="_StatusMessage" />
+    }
+    
+    @RenderBody()
+</body>
+</html>

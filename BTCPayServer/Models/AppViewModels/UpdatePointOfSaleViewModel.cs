@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using BTCPayServer.Services.Apps;
 using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -16,8 +17,8 @@ namespace BTCPayServer.Models.AppViewModels
         public string Currency { get; set; }
         public string Template { get; set; }
 
-        [Display(Name = "Enable shopping cart")]
-        public bool EnableShoppingCart { get; set; }
+        [Display(Name = "Default view")]
+        public PosViewType DefaultView { get; set; }
         [Display(Name = "User can input custom amount")]
         public bool ShowCustomAmount { get; set; }
         [Display(Name = "User can input discount in %")]

@@ -68,16 +68,16 @@ namespace BTCPayServer.Controllers.GreenField
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> CreateStore(CreateStoreRequest request)
         {
-            var validationResult = Validate(request);
-            if (validationResult != null)
-            {
-                return validationResult;
-            }
-
-            var store = new Data.StoreData();
-            ToModel(request, store);
+            if (request?.Name is string name && (name.Length < 1 || name.Length > 50))
+                ModelState.AddModelError(nameof(request.Name), "Name can only be between 1 and 50 characters");
+            if(!ModelState.IsValid)
+                return BadRequest(new ValidationProblemDetails(ModelState));
+            var store = new BTCPayServer.Data.StoreData() { StoreName = request?.Name ?? "Unnamed store" };
             await _storeRepository.CreateStore(_userManager.GetUserId(User), store);
-            return Ok(FromModel(store));
+            return Ok(new CreateStoreResponse()
+            {
+                StoreId = store.Id
+            });
         }
         
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]

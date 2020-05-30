@@ -40,7 +40,16 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/StoreBaseData"
+                                "type": "object",
+                                "nullable": false,
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "nullable": true,
+                                        "default": "Unnamed store",
+                                        "description": "Store's name"
+                                    }
+                                }
                             }
                         }
                     },
@@ -53,7 +62,12 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/StoreData"
+                                    "type": "object",
+                                    "properties": {
+                                        "storeId": {
+                                            "description": "The store identifier"
+                                        }
+                                    }
                                 }
                             }
                         }

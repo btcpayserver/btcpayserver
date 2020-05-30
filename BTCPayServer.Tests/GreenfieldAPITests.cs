@@ -219,9 +219,9 @@ namespace BTCPayServer.Tests
                 var newStore = await client.CreateStore(new CreateStoreRequest() {Name = "A"});
 
                 //update store
-                var updatedStore = await client.UpdateStore(newStore.Id, new UpdateStoreRequest() {Name = "B"});
+                var updatedStore = await client.UpdateStore(newStore.StoreId, new UpdateStoreRequest() {Name = "B"});
                 Assert.Equal("B", updatedStore.Name);
-                Assert.Equal("B", (await client.GetStore(newStore.Id)).Name);
+                Assert.Equal("B", (await client.GetStore(newStore.StoreId)).Name);
 
                 //list stores
                 var stores = await client.GetStores();
@@ -229,7 +229,7 @@ namespace BTCPayServer.Tests
                 var storeNames = stores.Select(data => data.Name);
                 Assert.NotNull(stores);
                 Assert.Equal(2, stores.Count());
-                Assert.Contains(newStore.Id, storeIds);
+                Assert.Contains(newStore.StoreId, storeIds);
                 Assert.Contains(user.StoreId, storeIds);
 
                 //get store
@@ -238,10 +238,10 @@ namespace BTCPayServer.Tests
                 Assert.Contains(store.Name, storeNames);
 
                 //remove store
-                await client.RemoveStore(newStore.Id);
+                await client.RemoveStore(newStore.StoreId);
                 await AssertHttpError(403, async () =>
                 {
-                    await client.GetStore(newStore.Id);
+                    await client.GetStore(newStore.StoreId);
                 });
                 Assert.Single(await client.GetStores());
 

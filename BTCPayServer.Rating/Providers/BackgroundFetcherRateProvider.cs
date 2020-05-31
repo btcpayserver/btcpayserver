@@ -1,13 +1,10 @@
 ﻿using System;
-using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using BTCPayServer.Rating;
 using System.Threading;
-using Microsoft.Extensions.Logging.Abstractions;
-using BTCPayServer.Logging;
 using Newtonsoft.Json;
 using System.Reflection;
 using System.Globalization;

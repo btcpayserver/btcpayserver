@@ -287,11 +287,19 @@
                     },
                     "invoiceExpiration": {
                         "type": "integer",
-                        "format": "int32"
+                        "format": "int32",
+                        "default": 900,
+                        "minimum": 60,
+                        "maximum": 2073600,
+                        "description": "The time after which an invoice is considered expired if not paid. The value will be rounded down to a minute."
                     },
                     "monitoringExpiration": {
                         "type": "integer",
-                        "format": "int32"
+                        "format": "int32",
+                        "default": 3600,
+                        "minimum": 600,
+                        "maximum": 2073600,
+                        "description": "The time after which an invoice which has been paid but not confirmed will be considered invalid. The value will be rounded down to a minute."
                     },
                     "speedPolicy": {
                         "$ref": "#/components/schemas/SpeedPolicy"

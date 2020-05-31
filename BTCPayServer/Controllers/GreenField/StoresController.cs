@@ -122,8 +122,8 @@ namespace BTCPayServer.Controllers.GreenField
                 ShowRecommendedFee = storeBlob.ShowRecommendedFee,
                 RecommendedFeeBlockTarget = storeBlob.RecommendedFeeBlockTarget,
                 DefaultLang = storeBlob.DefaultLang,
-                MonitoringExpiration = storeBlob.MonitoringExpiration,
-                InvoiceExpiration = storeBlob.InvoiceExpiration,
+                MonitoringExpiration = TimeSpan.FromMinutes(storeBlob.MonitoringExpiration),
+                InvoiceExpiration = TimeSpan.FromMinutes(storeBlob.InvoiceExpiration),
                 LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi,
                 CustomLogo = storeBlob.CustomLogo,
                 CustomCSS = storeBlob.CustomCSS,
@@ -158,8 +158,8 @@ namespace BTCPayServer.Controllers.GreenField
             blob.ShowRecommendedFee = restModel.ShowRecommendedFee;
             blob.RecommendedFeeBlockTarget = restModel.RecommendedFeeBlockTarget;
             blob.DefaultLang = restModel.DefaultLang;
-            blob.MonitoringExpiration = restModel.MonitoringExpiration;
-            blob.InvoiceExpiration = restModel.InvoiceExpiration;
+            blob.MonitoringExpiration = (int)restModel.MonitoringExpiration.TotalMinutes;
+            blob.InvoiceExpiration = (int)restModel.InvoiceExpiration.TotalMinutes;
             blob.LightningAmountInSatoshi = restModel.LightningAmountInSatoshi;
             blob.CustomLogo = restModel.CustomLogo;
             blob.CustomCSS = restModel.CustomCSS;
@@ -188,9 +188,9 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 ModelState.AddModelError(nameof(request.Website), "Website is not a valid url");
             }
-            if(request.InvoiceExpiration < 1 && request.InvoiceExpiration > 60 * 24 * 24)
+            if(request.InvoiceExpiration < TimeSpan.FromMinutes(1) && request.InvoiceExpiration > TimeSpan.FromMinutes(60 * 24 * 24))
                 ModelState.AddModelError(nameof(request.InvoiceExpiration), "InvoiceExpiration can only be between 1 and 34560 mins");
-            if(request.MonitoringExpiration < 10 && request.MonitoringExpiration > 60 * 24 * 24)
+            if(request.MonitoringExpiration < TimeSpan.FromMinutes(10) && request.MonitoringExpiration > TimeSpan.FromMinutes(60 * 24 * 24))
                 ModelState.AddModelError(nameof(request.MonitoringExpiration), "InvoiceExpiration can only be between 10 and 34560 mins");
             if(request.PaymentTolerance < 0 && request.PaymentTolerance > 100)
                 ModelState.AddModelError(nameof(request.PaymentTolerance), "PaymentTolerance can only be between 0 and 100 percent");

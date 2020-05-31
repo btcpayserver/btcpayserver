@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using BTCPayServer.JsonConverters;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Client.Models
 {
@@ -17,5 +19,8 @@ namespace BTCPayServer.Client.Models
         public string EmbeddedCSS { get; set; }
         public string CustomCSSLink { get; set; }
         public bool AllowCustomPaymentAmounts { get; set; }
+
+        [JsonExtensionData]
+        public IDictionary<string, JToken> AdditionalData { get; set; }
     }
 }

@@ -128,7 +128,7 @@ namespace BTCPayServer.Controllers.GreenField
                 CustomLogo = storeBlob.CustomLogo,
                 CustomCSS = storeBlob.CustomCSS,
                 HtmlTitle = storeBlob.HtmlTitle,
-                AnyoneCanInvoice = storeBlob.AnyoneCanInvoice,
+                AnyoneCanCreateInvoice = storeBlob.AnyoneCanInvoice,
                 LightningDescriptionTemplate = storeBlob.LightningDescriptionTemplate,
                 PaymentTolerance = storeBlob.PaymentTolerance,
                 RedirectAutomatically = storeBlob.RedirectAutomatically,
@@ -164,7 +164,7 @@ namespace BTCPayServer.Controllers.GreenField
             blob.CustomLogo = restModel.CustomLogo;
             blob.CustomCSS = restModel.CustomCSS;
             blob.HtmlTitle = restModel.HtmlTitle;
-            blob.AnyoneCanInvoice = restModel.AnyoneCanInvoice;
+            blob.AnyoneCanInvoice = restModel.AnyoneCanCreateInvoice;
             blob.LightningDescriptionTemplate = restModel.LightningDescriptionTemplate;
             blob.PaymentTolerance = restModel.PaymentTolerance;
             blob.RedirectAutomatically = restModel.RedirectAutomatically;

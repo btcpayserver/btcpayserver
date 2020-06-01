@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using BTCPayServer.Client.JsonConverters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Client.Models
 {
@@ -55,6 +57,9 @@ namespace BTCPayServer.Client.Models
         public bool PayJoinEnabled { get; set; }
         public bool LightningPrivateRouteHints { get; set; }
 
+
+        [JsonExtensionData]
+        public IDictionary<string, JToken> AdditionalData { get; set; }
     }
     
     public enum NetworkFeeMode

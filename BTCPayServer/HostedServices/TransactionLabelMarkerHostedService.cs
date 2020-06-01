@@ -50,12 +50,7 @@ namespace BTCPayServer.HostedServices
                     labels.Add(UpdateTransactionLabel.PayjoinLabelTemplate());
                 }
 
-                _eventAggregator.Publish(new UpdateTransactionLabel()
-                {
-                    WalletId = walletId,
-                    TransactionLabels =
-                        new Dictionary<uint256, List<(string color, string label)>>() {{transactionId, labels}}
-                });
+                _eventAggregator.Publish(new UpdateTransactionLabel(walletId, transactionId, labels));
             }
             else if (evt is UpdateTransactionLabel updateTransactionLabel)
             {
@@ -96,6 +91,22 @@ namespace BTCPayServer.HostedServices
 
     public class UpdateTransactionLabel
     {
+        public UpdateTransactionLabel()
+        {
+
+        }
+        public UpdateTransactionLabel(WalletId walletId, uint256 txId, (string color, string label) colorLabel)
+        {
+            WalletId = walletId;
+            TransactionLabels = new Dictionary<uint256, List<(string color, string label)>>();
+            TransactionLabels.Add(txId, new List<(string color, string label)>() { colorLabel });
+        }
+        public UpdateTransactionLabel(WalletId walletId, uint256 txId, List<(string color, string label)> colorLabels)
+        {
+            WalletId = walletId;
+            TransactionLabels = new Dictionary<uint256, List<(string color, string label)>>();
+            TransactionLabels.Add(txId, colorLabels);
+        }
         public static (string color, string label) PayjoinLabelTemplate()
         {
             return ("#51b13e", "payjoin");

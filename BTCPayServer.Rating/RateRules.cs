@@ -530,7 +530,10 @@ namespace BTCPayServer.Rating
             var rewriter = new ReplaceExchangeRateRewriter();
             rewriter.Rates = ExchangeRates;
             var result = rewriter.Visit(this.expression);
-            Errors.AddRange(rewriter.Errors);
+            foreach (var item in rewriter.Errors)
+            {
+                Errors.Add(item);
+            }
             _Evaluated = result.NormalizeWhitespace("", "\n").ToString();
             if (HasError)
                 return false;
@@ -539,7 +542,10 @@ namespace BTCPayServer.Rating
             calculate.Visit(result);
             if (calculate.Values.Count != 1 || calculate.Errors.Count != 0)
             {
-                Errors.AddRange(calculate.Errors);
+                foreach (var item in calculate.Errors)
+                {
+                    Errors.Add(item);
+                }
                 return false;
             }
             _BidAsk = calculate.Values.Pop();

@@ -632,7 +632,7 @@ namespace BTCPayServer.Tests
                 (1000.0001m, "₹ 1,000.00 (INR)", "INR")
             })
             {
-                var actual = new CurrencyNameTable().DisplayFormatCurrency(test.Item1, test.Item3);
+                var actual = CurrencyNameTable.Instance.DisplayFormatCurrency(test.Item1, test.Item3);
                 actual = actual.Replace("￥", "¥"); // Hack so JPY test pass on linux as well
                 Assert.Equal(test.Item2, actual);
             }
@@ -1909,6 +1909,20 @@ namespace BTCPayServer.Tests
                 Assert.Empty(invoice.CryptoInfo.Where(c => c.CryptoCode == "LTC"));
             }
         }
+        
+        [Fact]
+        [Trait("Fast", "Fast")]
+        public void HasCurrencyDataForNetworks()
+        {
+            var btcPayNetworkProvider = new BTCPayNetworkProvider(NetworkType.Regtest);
+            foreach (var network in btcPayNetworkProvider.GetAll())
+            {
+                var cd = CurrencyNameTable.Instance.GetCurrencyData(network.CryptoCode, false);
+                Assert.NotNull(cd);
+                Assert.Equal(network.Divisibility, cd.Divisibility);
+                Assert.True(cd.Crypto);
+            }
+        }
 
         [Fact]
         [Trait("Fast", "Fast")]
@@ -2363,7 +2377,7 @@ donation:
                         ExpectedThousandSeparator: ",", ExpectedPrefixed: true, ExpectedSymbolSpace: true),
                     (Code: "JPY", ExpectedSymbol: "¥", ExpectedDecimalSeparator: ".", ExpectedDivisibility: 0,
                         ExpectedThousandSeparator: ",", ExpectedPrefixed: true, ExpectedSymbolSpace: false),
-                    (Code: "BTC", ExpectedSymbol: "BTC", ExpectedDecimalSeparator: ".", ExpectedDivisibility: 8,
+                    (Code: "BTC", ExpectedSymbol: "₿", ExpectedDecimalSeparator: ".", ExpectedDivisibility: 8,
                         ExpectedThousandSeparator: ",", ExpectedPrefixed: false, ExpectedSymbolSpace: true),
                 })
                 {

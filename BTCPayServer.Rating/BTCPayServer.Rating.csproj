@@ -6,12 +6,14 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.6.0" />
     <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.7" />
+    <PackageReference Include="NBitcoin" Version="5.0.40" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="DigitalRuby.ExchangeSharp" Version="0.6.3" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BTCPayServer.Common\BTCPayServer.Common.csproj" />
+    <EmbeddedResource Include="Currencies.json" />
   </ItemGroup>
+
 
 </Project>

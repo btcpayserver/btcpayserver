@@ -15,7 +15,7 @@ namespace BTCPayServer
                     ? "https://explorer.chaincoin.org/Explorer/Transaction/{0}"
                     : "https://test.explorer.chaincoin.org/Explorer/Transaction/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
-                UriScheme = "chc",
+                UriScheme = "chaincoin",
                 DefaultRateRules = new[]
                     {
                         "X_X = txbit(X_X)"

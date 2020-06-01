@@ -276,14 +276,12 @@
                 "properties": {
                     "name": {
                         "type": "string",
-                        "description": "The name of the store",
-                        "nullable": true
+                        "description": "The name of the store"
                     },
                     "website": {
                         "type": "string",
                         "description": "The absolute url of the store",
-                        "format": "url",
-                        "nullable": true
+                        "format": "url"
                     },
                     "invoiceExpiration": {
                         "type": "integer",
@@ -306,58 +304,79 @@
                     },
                     "lightningDescriptionTemplate": {
                         "type": "string",
-                        "nullable": true
+                        "nullable": true,
+                        "description": "The BOLT11 description of the lightning invoice in the checkout. You can use placeholders '{StoreName}', '{ItemDescription}' and '{OrderId}'."
                     },
                     "paymentTolerance": {
                         "type": "number",
-                        "format": "double"
+                        "format": "double",
+                        "minimum": 0.0,
+                        "maximum": 100.0,
+                        "default": 0.0,
+                        "description": "Consider an invoice fully paid, even if the payment is missing 'x' % of the full amount."
                     },
                     "anyoneCanCreateInvoice": {
-                        "type": "boolean"
+                        "type": "boolean",
+                        "default": false,
+                        "description": "If true, then no authentication is needed to create invoices on this store."
                     },
                     "showRecommendedFee": {
-                        "type": "boolean"
+                        "type": "boolean",
+                        "default": true
                     },
                     "recommendedFeeBlockTarget": {
                         "type": "integer",
-                        "format": "int32"
+                        "format": "int32",
+                        "default": 1,
+                        "description": "The fee rate recommendation in the checkout page for the on-chain payment to be confirmed after 'x' blocks."
                     },
                     "defaultLang": {
                         "type": "string",
-                        "nullable": true
+                        "default": "en",
+                        "description": "The default language to use in the checkout page. (The different translations available are listed [here](https://github.com/btcpayserver/btcpayserver/tree/master/BTCPayServer/wwwroot/locales)"
                     },
                     "lightningAmountInSatoshi": {
-                        "type": "boolean"
+                        "type": "boolean",
+                        "default": false,
+                        "description": "If true, lightning payment methods show amount in satoshi in the checkout page."
                     },
                     "customLogo": {
                         "type": "string",
-                        "nullable": true
+                        "nullable": true,
+                        "description": "URL to a logo to include in the checkout page."
                     },
                     "customCSS": {
                         "type": "string",
-                        "nullable": true
+                        "nullable": true,
+                        "description": "URL to a CSS stylesheet to include in the checkout page"
                     },
                     "htmlTitle": {
                         "type": "string",
-                        "nullable": true
-                    },
-                    "anyoneCanInvoice": {
-                        "type": "boolean"
+                        "nullable": true,
+                        "description": "The HTML title of the checkout page (when you over the tab in your browser)"
                     },
                     "redirectAutomatically": {
-                        "type": "boolean"
+                        "type": "boolean",
+                        "default": false,
+                        "description": "After successfull payment, should the checkout page redirect the user automatically to the redirect URL of the invoice?"
                     },
                     "requiresRefundEmail": {
-                        "type": "boolean"
+                        "type": "boolean",
+                        "default": false,
+                        "description": "If true, the checkout page will ask to enter an email address before accessing payment information."
                     },
                     "networkFeeMode": {
                         "$ref": "#/components/schemas/NetworkFeeMode"
                     },
                     "payJoinEnabled": {
-                        "type": "boolean"
+                        "type": "boolean",
+                        "default": false,
+                        "description": "If true, payjoin will be proposed in the checkout page if possible. ([More information](https://docs.btcpayserver.org/Payjoin/#btcpay-server-payjoin-guide))"
                     },
                     "lightningPrivateRouteHints": {
-                        "type": "boolean"
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Should private route hints be included in the lightning payment of the checkout page."
                     }
                 }
             },
@@ -379,7 +398,7 @@
             },
             "NetworkFeeMode": {
                 "type": "string",
-                "description": "",
+                "description": "Check whether network fee should be added to the invoice if on-chain payment is used. ([More information](https://docs.btcpayserver.org/FAQ/FAQ-Stores/#add-network-fee-to-invoice-vary-with-mining-fees))",
                 "x-enumNames": [
                     "MultiplePaymentsOnly",
                     "Always",

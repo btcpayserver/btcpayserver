@@ -1,4 +1,5 @@
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1.202 AS builder
+ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
 WORKDIR /source
 COPY nuget.config nuget.config
 COPY Build/Common.csproj Build/Common.csproj
@@ -27,6 +28,7 @@ ENV LANG en_US.UTF-8
 WORKDIR /datadir
 WORKDIR /app
 ENV BTCPAY_DATADIR=/datadir
+ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
 VOLUME /datadir
 
 COPY --from=builder "/app" .

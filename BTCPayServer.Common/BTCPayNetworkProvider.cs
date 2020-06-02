@@ -21,8 +21,9 @@ namespace BTCPayServer
                 return _NBXplorerNetworkProvider;
             }
         }
-        
-        public BTCPayNetworkProvider UnfilteredNetworks { get; }
+
+        private BTCPayNetworkProvider _unfilteredNetworks;
+        public BTCPayNetworkProvider UnfilteredNetworks { get { return _unfilteredNetworks ?? this; } }
 
         public NetworkType NetworkType { get; private set; }
 
@@ -35,7 +36,7 @@ namespace BTCPayServer
         BTCPayNetworkProvider(BTCPayNetworkProvider unfiltered, string[] cryptoCodes)
         {
             _cryptoCodes = cryptoCodes.Select(c => c.ToUpperInvariant()).ToArray();
-            UnfilteredNetworks = unfiltered.UnfilteredNetworks ?? unfiltered;
+            _unfilteredNetworks = unfiltered.UnfilteredNetworks ?? unfiltered;
             NetworkType = unfiltered.NetworkType;
             _NBXplorerNetworkProvider = unfiltered.NBXplorerNetworkProvider;
             
@@ -58,9 +59,9 @@ namespace BTCPayServer
         
         public IEnumerable<BTCPayNetworkBase> GetAll(bool refresh = false)
         {
-            if (UnfilteredNetworks != null)
+            if (_unfilteredNetworks != null)
             {
-                return UnfilteredNetworks.GetAll(refresh).Where(network => _cryptoCodes.Contains(network.CryptoCode, StringComparer.InvariantCultureIgnoreCase));
+                return _unfilteredNetworks.GetAll(refresh).Where(network => _cryptoCodes.Contains(network.CryptoCode, StringComparer.InvariantCultureIgnoreCase));
             }
 
             if (_Networks == null || refresh)

@@ -52,7 +52,7 @@ namespace BTCPayServer.Tests
         public void LoadSubChainsAlways()
         {
             var options = new BTCPayServerOptions();
-            options.LoadArgs(new ConfigurationRoot(new List<IConfigurationProvider>()
+            options.LoadArgs(new []{ new AltcoinBTCPayNetworkProvider()},new ConfigurationRoot(new List<IConfigurationProvider>()
             {
                 new MemoryConfigurationProvider(new MemoryConfigurationSource()
                 {

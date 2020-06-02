@@ -562,7 +562,7 @@ namespace BTCPayServer.Services.Invoices
                     r.CryptoCode = paymentMethodId.CryptoCode;
                     r.PaymentType = paymentMethodId.PaymentType.ToString();
                     r.ParentEntity = this;
-                    r.Network = Networks?.UnfilteredNetworks.GetNetwork<BTCPayNetworkBase>(r.CryptoCode);
+                    r.Network = Networks?.UnfilteredNetworks.GetNetwork(r.CryptoCode);
                     paymentMethods.Add(r);
                 }
             }

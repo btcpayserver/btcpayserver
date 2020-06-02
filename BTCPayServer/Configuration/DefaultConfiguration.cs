@@ -9,6 +9,7 @@ using System.Net;
 using System.Threading.Tasks;
 using NBitcoin;
 using System.Text;
+using BTCPayServer.Contracts.BTCPayServer;
 using CommandLine;
 using NBXplorer;
 
@@ -16,9 +17,17 @@ namespace BTCPayServer.Configuration
 {
     public class DefaultConfiguration : StandardConfiguration.DefaultConfiguration
     {
+        private static BTCPayNetworkProvider CreateBTCPayNetworkProviderForSettings(
+            NetworkType networkType = NetworkType.Mainnet)
+        {
+            return new BTCPayNetworkProvider(
+                new IBTCPayNetworkProvider[] {new BitcoinBTCPayNetworkProvider(), new AltcoinBTCPayNetworkProvider()},
+                networkType);
+        }
+
         protected override CommandLineApplication CreateCommandLineApplicationCore()
         {
-            var provider = new BTCPayNetworkProvider(NetworkType.Mainnet);
+            var provider = CreateBTCPayNetworkProviderForSettings();
             var chains = string.Join(",", provider.GetAll().Select(n => n.CryptoCode.ToLowerInvariant()).ToArray());
             CommandLineApplication app = new CommandLineApplication(true)
             {
@@ -125,12 +134,15 @@ namespace BTCPayServer.Configuration
             builder.AppendLine("#mysql=User ID=root;Password=myPassword;Host=localhost;Port=3306;Database=myDataBase;");
             builder.AppendLine();
             builder.AppendLine("### NBXplorer settings ###");
-            foreach (var n in new BTCPayNetworkProvider(networkType).GetAll().OfType<BTCPayNetwork>())
+            foreach (var n in CreateBTCPayNetworkProviderForSettings(networkType).GetAll().OfType<BTCPayNetwork>())
             {
                 builder.AppendLine($"#{n.CryptoCode}.explorer.url={n.NBXplorerNetwork.DefaultSettings.DefaultUrl}");
                 builder.AppendLine($"#{n.CryptoCode}.explorer.cookiefile={ n.NBXplorerNetwork.DefaultSettings.DefaultCookieFile}");
-                builder.AppendLine($"#{n.CryptoCode}.lightning=/root/.lightning/lightning-rpc");
-                builder.AppendLine($"#{n.CryptoCode}.lightning=https://apitoken:API_TOKEN_SECRET@charge.example.com/");
+                if (n.SupportLightning)
+                {
+                    builder.AppendLine($"#{n.CryptoCode}.lightning=/root/.lightning/lightning-rpc");
+                    builder.AppendLine($"#{n.CryptoCode}.lightning=https://apitoken:API_TOKEN_SECRET@charge.example.com/");
+                }
             }
             return builder.ToString();
         }

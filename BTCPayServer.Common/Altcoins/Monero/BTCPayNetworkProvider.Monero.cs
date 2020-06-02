@@ -2,17 +2,17 @@ using NBitcoin;
 
 namespace BTCPayServer
 {
-    public partial class BTCPayNetworkProvider
+    public partial class AltcoinBTCPayNetworkProvider
     {
-        public void InitMonero()
+        public BTCPayNetworkBase InitMonero(NetworkType networkType)
         {
-            Add(new MoneroLikeSpecificBtcPayNetwork()
+            return new MoneroLikeSpecificBtcPayNetwork()
             {
                 CryptoCode = "XMR",
                 DisplayName = "Monero",
                 Divisibility = 12,
                 BlockExplorerLink =
-                    NetworkType == NetworkType.Mainnet
+                    networkType == NetworkType.Mainnet
                         ? "https://www.exploremonero.com/transaction/{0}"
                         : "https://testnet.xmrchain.net/tx/{0}",
                 DefaultRateRules = new[]
@@ -21,7 +21,7 @@ namespace BTCPayServer
                     "XMR_BTC = kraken(XMR_BTC)"
                 },
                 CryptoImagePath = "/imlegacy/monero.svg"
-            });
+            };
         }
     }
 }

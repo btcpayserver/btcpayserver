@@ -1,22 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using NBitcoin;
+﻿using NBitcoin;
 using NBXplorer;
 
 namespace BTCPayServer
 {
-    public partial class BTCPayNetworkProvider
+    public partial class AltcoinBTCPayNetworkProvider
     {
-        public void InitBitcore()
+        public BTCPayNetworkBase InitBitcore(NBXplorerNetworkProvider nbXplorerNetworkProvider)
         {
-            var nbxplorerNetwork = NBXplorerNetworkProvider.GetFromCryptoCode("BTX");
-            Add(new BTCPayNetwork()
+            var nbxplorerNetwork = nbXplorerNetworkProvider.GetFromCryptoCode("BTX");
+            return new BTCPayNetwork()
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
                 DisplayName = "Bitcore",
-                BlockExplorerLink = NetworkType == NetworkType.Mainnet ? "https://insight.bitcore.cc/tx/{0}" : "https://insight.bitcore.cc/tx/{0}",
+                BlockExplorerLink = nbXplorerNetworkProvider.NetworkType ==  NetworkType.Mainnet ? "https://insight.bitcore.cc/tx/{0}" : "https://insight.bitcore.cc/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "bitcore",
                 DefaultRateRules = new[]
@@ -26,9 +22,9 @@ namespace BTCPayServer
                 },
                 CryptoImagePath = "imlegacy/bitcore.svg",
                 LightningImagePath = "imlegacy/bitcore-lightning.svg",
-                DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),
-                CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("160'") : new KeyPath("1'")
-            });
+                DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(nbXplorerNetworkProvider.NetworkType),
+                CoinType = nbXplorerNetworkProvider.NetworkType ==  NetworkType.Mainnet ? new KeyPath("160'") : new KeyPath("1'")
+            };
         }
     }
 }

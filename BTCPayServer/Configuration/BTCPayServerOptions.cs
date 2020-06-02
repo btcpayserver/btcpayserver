@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using BTCPayServer.Contracts.BTCPayServer;
 using Microsoft.Extensions.Configuration;
 using BTCPayServer.SSH;
 using BTCPayServer.Lightning;
@@ -75,7 +76,7 @@ namespace BTCPayServer.Configuration
             return (LogEventLevel)Enum.Parse(typeof(LogEventLevel), raw, true);
         }
 
-        public void LoadArgs(IConfiguration conf)
+        public BTCPayServerOptions LoadArgs(IEnumerable<IBTCPayNetworkProvider> btcPayNetworkProviders, IConfiguration conf)
         {
             NetworkType = DefaultConfiguration.GetNetworkType(conf);
             DataDir = conf.GetDataDir(NetworkType);
@@ -88,7 +89,7 @@ namespace BTCPayServer.Configuration
                 .Split(',', StringSplitOptions.RemoveEmptyEntries)
                 .Select(t => t.ToUpperInvariant()).ToHashSet();
 
-            var networkProvider = new BTCPayNetworkProvider(NetworkType);
+            var networkProvider = new BTCPayNetworkProvider(btcPayNetworkProviders, NetworkType);
             var filtered = networkProvider.Filter(supportedChains.ToArray());
             var elementsBased = filtered.GetAll().OfType<ElementsBTCPayNetwork>();
             var parentChains = elementsBased.Select(network => network.NetworkCryptoCode.ToUpperInvariant()).Distinct();
@@ -231,6 +232,7 @@ namespace BTCPayServer.Configuration
             }
 
             DisableRegistration = conf.GetOrDefault<bool>("disable-registration", true);
+            return this;
         }
 
         private SSHSettings ParseSSHConfiguration(IConfiguration conf)

@@ -1,17 +1,18 @@
 ﻿using NBitcoin;
+using NBXplorer;
 
 namespace BTCPayServer
 {
-    public partial class BTCPayNetworkProvider
+    public partial class AltcoinBTCPayNetworkProvider
     {
-        public void InitBitcoinGold()
+        public BTCPayNetworkBase InitBitcoinGold(NBXplorerNetworkProvider nbXplorerNetworkProvider)
         {
-            var nbxplorerNetwork = NBXplorerNetworkProvider.GetFromCryptoCode("BTG");
-            Add(new BTCPayNetwork()
+            var nbxplorerNetwork = nbXplorerNetworkProvider.GetFromCryptoCode("BTG");
+            return new BTCPayNetwork()
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
                 DisplayName = "BGold",
-                BlockExplorerLink = NetworkType == NetworkType.Mainnet ? "https://explorer.bitcoingold.org/insight/tx/{0}/" : "https://test-explorer.bitcoingold.org/insight/tx/{0}",
+                BlockExplorerLink = nbXplorerNetworkProvider.NetworkType ==  NetworkType.Mainnet ? "https://explorer.bitcoingold.org/insight/tx/{0}/" : "https://test-explorer.bitcoingold.org/insight/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "bitcoingold",
                 DefaultRateRules = new[]
@@ -21,9 +22,9 @@ namespace BTCPayServer
                 },
                 CryptoImagePath = "imlegacy/btg.svg",
                 LightningImagePath = "imlegacy/btg-lightning.svg",
-                DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),
-                CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("156'") : new KeyPath("1'")
-            });
+                DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(nbXplorerNetworkProvider.NetworkType),
+                CoinType = nbXplorerNetworkProvider.NetworkType ==  NetworkType.Mainnet ? new KeyPath("156'") : new KeyPath("1'")
+            };
         }
     }
 }

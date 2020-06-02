@@ -1,18 +1,19 @@
 ﻿using NBitcoin;
+using NBXplorer;
 
 namespace BTCPayServer
 {
-    public partial class BTCPayNetworkProvider
+    public partial class AltcoinBTCPayNetworkProvider
     {
-        public void InitDash()
+        public BTCPayNetworkBase InitDash(NBXplorerNetworkProvider nbXplorerNetworkProvider)
         {
             //not needed: NBitcoin.Altcoins.Dash.Instance.EnsureRegistered();
-            var nbxplorerNetwork = NBXplorerNetworkProvider.GetFromCryptoCode("DASH");
-            Add(new BTCPayNetwork()
+            var nbxplorerNetwork = nbXplorerNetworkProvider.GetFromCryptoCode("DASH");
+            return new BTCPayNetwork()
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
                 DisplayName = "Dash",
-                BlockExplorerLink = NetworkType == NetworkType.Mainnet
+                BlockExplorerLink = nbXplorerNetworkProvider.NetworkType ==  NetworkType.Mainnet
                     ? "https://insight.dash.org/insight/tx/{0}"
                     : "https://testnet-insight.dashevo.org/insight/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
@@ -23,11 +24,11 @@ namespace BTCPayServer
                         "DASH_BTC = bittrex(DASH_BTC)"
                     },
                 CryptoImagePath = "imlegacy/dash.png",
-                DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),
+                DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(nbXplorerNetworkProvider.NetworkType),
                 //https://github.com/satoshilabs/slips/blob/master/slip-0044.md
-                CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("5'")
+                CoinType = nbXplorerNetworkProvider.NetworkType ==  NetworkType.Mainnet ? new KeyPath("5'")
                     : new KeyPath("1'")
-            });
+            };
         }
     }
 }

@@ -1,22 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using NBitcoin;
 using NBXplorer;
 
 namespace BTCPayServer
 {
-    public partial class BTCPayNetworkProvider
+    public partial class AltcoinBTCPayNetworkProvider
     {
-        public void InitLitecoin()
+        public BTCPayNetworkBase InitLitecoin(NBXplorerNetworkProvider nbXplorerNetworkProvider)
         {
-            var nbxplorerNetwork = NBXplorerNetworkProvider.GetFromCryptoCode("LTC");
-            Add(new BTCPayNetwork()
+            var nbxplorerNetwork = nbXplorerNetworkProvider.GetFromCryptoCode("LTC");
+            return new BTCPayNetwork()
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
                 DisplayName = "Litecoin",
-                BlockExplorerLink = NetworkType == NetworkType.Mainnet
+                BlockExplorerLink = nbXplorerNetworkProvider.NetworkType ==  NetworkType.Mainnet
                     ? "https://live.blockcypher.com/ltc/tx/{0}/"
                     : "http://explorer.litecointools.com/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
@@ -28,10 +25,10 @@ namespace BTCPayServer
                 },
                 CryptoImagePath = "imlegacy/litecoin.svg",
                 LightningImagePath = "imlegacy/litecoin-lightning.svg",
-                DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),
-                CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("2'") : new KeyPath("1'"),
+                DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(nbXplorerNetworkProvider.NetworkType),
+                CoinType = nbXplorerNetworkProvider.NetworkType ==  NetworkType.Mainnet ? new KeyPath("2'") : new KeyPath("1'"),
                 //https://github.com/pooler/electrum-ltc/blob/0d6989a9d2fb2edbea421c116e49d1015c7c5a91/electrum_ltc/constants.py
-                ElectrumMapping = NetworkType == NetworkType.Mainnet
+                ElectrumMapping = nbXplorerNetworkProvider.NetworkType ==  NetworkType.Mainnet
                     ? new Dictionary<uint, DerivationType>()
                     {
                         {0x0488b21eU, DerivationType.Legacy },
@@ -44,7 +41,7 @@ namespace BTCPayServer
                         {0x044a5262U, DerivationType.SegwitP2SH },
                         {0x045f1cf6U, DerivationType.Segwit }
                     }
-            });
+            };
         }
     }
 }

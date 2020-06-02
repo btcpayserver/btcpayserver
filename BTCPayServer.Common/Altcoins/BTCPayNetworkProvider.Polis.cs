@@ -1,22 +1,18 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using NBitcoin;
 using NBXplorer;
 
 namespace BTCPayServer
 {
-    public partial class BTCPayNetworkProvider
+    public partial class AltcoinBTCPayNetworkProvider
     {
-        public void InitPolis()
+        public BTCPayNetworkBase InitPolis(NBXplorerNetworkProvider nbXplorerNetworkProvider)
         {
-            var nbxplorerNetwork = NBXplorerNetworkProvider.GetFromCryptoCode("POLIS");
-            Add(new BTCPayNetwork()
+            var nbxplorerNetwork = nbXplorerNetworkProvider.GetFromCryptoCode("POLIS");
+            return new BTCPayNetwork()
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
                 DisplayName = "Polis",
-                BlockExplorerLink = NetworkType == NetworkType.Mainnet ? "https://blockbook.polispay.org/tx/{0}" : "https://blockbook.polispay.org/tx/{0}",
+                BlockExplorerLink = nbXplorerNetworkProvider.NetworkType == NetworkType.Mainnet ? "https://blockbook.polispay.org/tx/{0}" : "https://blockbook.polispay.org/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "polis",
                 DefaultRateRules = new[]
@@ -25,9 +21,9 @@ namespace BTCPayServer
                                 "POLIS_BTC = polispay(POLIS_BTC)"
                 },
                 CryptoImagePath = "imlegacy/polis.png",
-                DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),
-                CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("1997'") : new KeyPath("1'")
-            });
+                DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(nbXplorerNetworkProvider.NetworkType),
+                CoinType = nbXplorerNetworkProvider.NetworkType == NetworkType.Mainnet ? new KeyPath("1997'") : new KeyPath("1'")
+            };
         }
     }
 }

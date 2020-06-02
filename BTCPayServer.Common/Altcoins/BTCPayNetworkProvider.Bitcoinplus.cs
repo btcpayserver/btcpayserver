@@ -1,33 +1,30 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using NBitcoin;
+﻿using NBitcoin;
 using NBXplorer;
 
 namespace BTCPayServer
 {
-    public partial class BTCPayNetworkProvider
+    public partial class AltcoinBTCPayNetworkProvider
     {
-        public void InitBitcoinplus()
+        public BTCPayNetworkBase InitBitcoinplus(NBXplorerNetworkProvider nbXplorerNetworkProvider)
         {
-            var nbxplorerNetwork = NBXplorerNetworkProvider.GetFromCryptoCode("XBC");
-            Add(new BTCPayNetwork()
+            var nbxplorerNetwork = nbXplorerNetworkProvider.GetFromCryptoCode("XBC");
+            return new BTCPayNetwork()
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
                 DisplayName = "Bitcoinplus",
-                BlockExplorerLink = NetworkType == NetworkType.Mainnet ? "https://chainz.cryptoid.info/xbc/tx.dws?{0}" : "https://chainz.cryptoid.info/xbc/tx.dws?{0}",
+                BlockExplorerLink =
+                    nbXplorerNetworkProvider.NetworkType == NetworkType.Mainnet
+                        ? "https://chainz.cryptoid.info/xbc/tx.dws?{0}"
+                        : "https://chainz.cryptoid.info/xbc/tx.dws?{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "bitcoinplus",
-                DefaultRateRules = new[]
-                {
-                                "XBC_X = XBC_BTC * BTC_X",
-                                "XBC_BTC = cryptopia(XBC_BTC)"
-                },
+                DefaultRateRules = new[] {"XBC_X = XBC_BTC * BTC_X", "XBC_BTC = cryptopia(XBC_BTC)"},
                 CryptoImagePath = "imlegacy/bitcoinplus.png",
-                DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),
-                CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("65'") : new KeyPath("1'")
-            });
+                DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(nbXplorerNetworkProvider.NetworkType),
+                CoinType = nbXplorerNetworkProvider.NetworkType == NetworkType.Mainnet
+                    ? new KeyPath("65'")
+                    : new KeyPath("1'")
+            };
         }
     }
 }

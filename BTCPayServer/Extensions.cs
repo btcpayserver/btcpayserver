@@ -33,6 +33,7 @@ using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using NBXplorer.DerivationStrategy;
 using System.Net;
+using BTCPayServer.Contracts.BTCPayServer;
 using BTCPayServer.Lightning;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
@@ -393,10 +394,12 @@ namespace BTCPayServer
 
         public static IServiceCollection ConfigureBTCPayServer(this IServiceCollection services, IConfiguration conf)
         {
-            services.Configure<BTCPayServerOptions>(o =>
-            {
-                o.LoadArgs(conf);
-            });
+            services.AddSingleton<IBTCPayNetworkProvider, BitcoinBTCPayNetworkProvider>();
+            services.AddSingleton<IBTCPayNetworkProvider, AltcoinBTCPayNetworkProvider>();
+            services.AddOptions<BTCPayServerOptions>()
+                .Configure<IEnumerable<IBTCPayNetworkProvider>>(
+                    (o, s) =>
+                        o.LoadArgs(s, conf));
             return services;
         }
 

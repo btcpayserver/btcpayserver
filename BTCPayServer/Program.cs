@@ -38,8 +38,6 @@ namespace BTCPayServer
                 var conf = new DefaultConfiguration() { Logger = logger }.CreateConfiguration(args);
                 if (conf == null)
                     return;
-                Logs.Configure(loggerFactory);
-                new BTCPayServerOptions().LoadArgs(conf);
                 Logs.Configure(null);
                 /////
 

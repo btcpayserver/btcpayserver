@@ -10,7 +10,6 @@ namespace BTCPayServer
     {
         public IEnumerable<BTCPayNetworkBase> GetNetworks(NetworkType networkType)
         {
-            
             var networks = new List<BTCPayNetworkBase>();
             var nbXplorerNetworkProvider = new NBXplorerNetworkProvider(networkType);
             networks.AddRange(new[]
@@ -29,7 +28,8 @@ namespace BTCPayServer
                 InitPolis(nbXplorerNetworkProvider), 
             });
             networks.AddRange(InitLiquidAssets(nbXplorerNetworkProvider));
-
+            networks = networks.Where(networks =>
+                networks is BTCPayNetwork btcPayNetwork && btcPayNetwork.NBitcoinNetwork != null).ToList();
             // Assume that electrum mappings are same as BTC if not specified
             foreach (var network in networks.OfType<BTCPayNetwork>())
             {

@@ -202,7 +202,7 @@ namespace BTCPayServer.Tests
         {
 #pragma warning disable CS0618
             var dummy = new Key().PubKey.GetAddress(ScriptPubKeyType.Legacy, Network.RegTest).ToString();
-            var networkProvider = new BTCPayNetworkProvider(NetworkType.Regtest);
+            var networkProvider = TestUtils.CreateBTCPayNetworkProvider(NetworkType.Regtest);
             var paymentMethodHandlerDictionary = new PaymentMethodHandlerDictionary(new IPaymentMethodHandler[]
             {
                 new BitcoinLikePaymentHandler(null, networkProvider, null, null, null),
@@ -317,7 +317,7 @@ namespace BTCPayServer.Tests
         [Trait("Fast", "Fast")]
         public void CanCalculateCryptoDue()
         {
-            var networkProvider = new BTCPayNetworkProvider(NetworkType.Regtest);
+            var networkProvider = TestUtils.CreateBTCPayNetworkProvider(NetworkType.Regtest);
             var paymentMethodHandlerDictionary = new PaymentMethodHandlerDictionary(new IPaymentMethodHandler[]
             {
                 new BitcoinLikePaymentHandler(null, networkProvider, null, null, null),
@@ -505,7 +505,7 @@ namespace BTCPayServer.Tests
         [Trait("Fast", "Fast")]
         public void CanAcceptInvoiceWithTolerance()
         {
-            var networkProvider = new BTCPayNetworkProvider(NetworkType.Regtest);
+            var networkProvider = TestUtils.CreateBTCPayNetworkProvider(NetworkType.Regtest);
             var paymentMethodHandlerDictionary = new PaymentMethodHandlerDictionary(new IPaymentMethodHandler[]
             {
                 new BitcoinLikePaymentHandler(null, networkProvider, null, null, null),
@@ -642,7 +642,7 @@ namespace BTCPayServer.Tests
         [Trait("Fast", "Fast")]
         public async Task CanEnumerateTorServices()
         {
-            var tor = new TorServices(new BTCPayNetworkProvider(NetworkType.Regtest),
+            var tor = new TorServices(TestUtils.CreateBTCPayNetworkProvider(NetworkType.Regtest),
                 new BTCPayServerOptions() {TorrcFile = TestUtils.GetTestDataFullPath("Tor/torrc")});
             await tor.Refresh();
 
@@ -889,7 +889,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public void CanSolveTheDogesRatesOnKraken()
         {
-            var provider = new BTCPayNetworkProvider(NetworkType.Mainnet);
+            var provider = TestUtils.CreateBTCPayNetworkProvider(NetworkType.Mainnet);
             var factory = CreateBTCPayRateFactory();
             var fetcher = new RateFetcher(factory);
 
@@ -1914,7 +1914,7 @@ namespace BTCPayServer.Tests
         [Trait("Fast", "Fast")]
         public void HasCurrencyDataForNetworks()
         {
-            var btcPayNetworkProvider = new BTCPayNetworkProvider(NetworkType.Regtest);
+            var btcPayNetworkProvider = TestUtils.CreateBTCPayNetworkProvider(NetworkType.Regtest);
             foreach (var network in btcPayNetworkProvider.GetAll())
             {
                 var cd = CurrencyNameTable.Instance.GetCurrencyData(network.CryptoCode, false);
@@ -1949,9 +1949,9 @@ namespace BTCPayServer.Tests
         [Trait("Fast", "Fast")]
         public void CanParseDerivationScheme()
         {
-            var testnetNetworkProvider = new BTCPayNetworkProvider(NetworkType.Testnet);
-            var regtestNetworkProvider = new BTCPayNetworkProvider(NetworkType.Regtest);
-            var mainnetNetworkProvider = new BTCPayNetworkProvider(NetworkType.Mainnet);
+            var testnetNetworkProvider = TestUtils.CreateBTCPayNetworkProvider(NetworkType.Testnet);
+            var regtestNetworkProvider = TestUtils.CreateBTCPayNetworkProvider(NetworkType.Regtest);
+            var mainnetNetworkProvider = TestUtils.CreateBTCPayNetworkProvider(NetworkType.Mainnet);
             var testnetParser = new DerivationSchemeParser(testnetNetworkProvider.GetNetwork<BTCPayNetwork>("BTC"));
             var mainnetParser = new DerivationSchemeParser(mainnetNetworkProvider.GetNetwork<BTCPayNetwork>("BTC"));
             NBXplorer.DerivationStrategy.DerivationStrategyBase result;
@@ -3253,7 +3253,7 @@ normal:
         [Trait("Integration", "Integration")]
         public void CanGetRateCryptoCurrenciesByDefault()
         {
-            var provider = new BTCPayNetworkProvider(NetworkType.Mainnet);
+            var provider = TestUtils.CreateBTCPayNetworkProvider(NetworkType.Mainnet);
             var factory = CreateBTCPayRateFactory();
             var fetcher = new RateFetcher(factory);
             var pairs =
@@ -3458,7 +3458,7 @@ normal:
         [Trait("Fast", "Fast")]
         public void ParseDerivationSchemeSettings()
         {
-            var mainnet = new BTCPayNetworkProvider(NetworkType.Mainnet).GetNetwork<BTCPayNetwork>("BTC");
+            var mainnet = TestUtils.CreateBTCPayNetworkProvider(NetworkType.Mainnet).GetNetwork<BTCPayNetwork>("BTC");
             var root = new Mnemonic(
                     "usage fever hen zero slide mammal silent heavy donate budget pulse say brain thank sausage brand craft about save attract muffin advance illegal cabbage")
                 .DeriveExtKey();
@@ -3476,7 +3476,7 @@ normal:
             Assert.Equal(root.Derive(new KeyPath("m/49'/0'/0'")).Neuter().PubKey.WitHash.ScriptPubKey.Hash.ScriptPubKey,
                 settings.AccountDerivation.GetDerivation().ScriptPubKey);
 
-            var testnet = new BTCPayNetworkProvider(NetworkType.Testnet).GetNetwork<BTCPayNetwork>("BTC");
+            var testnet = TestUtils.CreateBTCPayNetworkProvider(NetworkType.Testnet).GetNetwork<BTCPayNetwork>("BTC");
 
             // Should be legacy
             Assert.True(DerivationSchemeSettings.TryParseFromElectrumWallet(

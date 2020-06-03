@@ -52,16 +52,14 @@ namespace BTCPayServer.Tests
         public void LoadSubChainsAlways()
         {
             var options = new BTCPayServerOptions();
-            options.LoadArgs(new []{ new AltcoinBTCPayNetworkProvider()},new ConfigurationRoot(new List<IConfigurationProvider>()
-            {
-                new MemoryConfigurationProvider(new MemoryConfigurationSource()
+            options.LoadArgs(new[] {new AltcoinBTCPayNetworkProvider()},
+                new ConfigurationRoot(new List<IConfigurationProvider>()
                 {
-                    InitialData = new[]
+                    new MemoryConfigurationProvider(new MemoryConfigurationSource()
                     {
-                        new KeyValuePair<string, string>("chains", "usdt"), 
-                    }
-                })
-            }));
+                        InitialData = new[] {new KeyValuePair<string, string>("chains", "usdt"),}
+                    })
+                }));
             
             Assert.NotNull(options.NetworkProvider.GetNetwork("LBTC"));
             Assert.NotNull(options.NetworkProvider.GetNetwork("USDT"));

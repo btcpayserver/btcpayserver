@@ -8,7 +8,9 @@ using Microsoft.AspNetCore.Http;
 using Xunit.Sdk;
 using System.Linq;
 using System.Net.Http;
+using BTCPayServer.Contracts.BTCPayServer;
 using Microsoft.Extensions.DependencyInjection;
+using NBitcoin;
 using Xunit;
 
 namespace BTCPayServer.Tests
@@ -120,5 +122,15 @@ namespace BTCPayServer.Tests
             services.AddHttpClient();
             return services.BuildServiceProvider().GetRequiredService<IHttpClientFactory>();
         }
+
+        public static BTCPayNetworkProvider CreateBTCPayNetworkProvider(NetworkType networkType)
+        {
+            return new BTCPayNetworkProvider(new IBTCPayNetworkProvider[]
+            {
+                new BitcoinBTCPayNetworkProvider(), 
+                new AltcoinBTCPayNetworkProvider()
+            }, networkType);
+        ;
+    }
     }
 }

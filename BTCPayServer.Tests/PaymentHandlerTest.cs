@@ -31,7 +31,7 @@ namespace BTCPayServer.Tests
             Logs.LogProvider = new XUnitLogProvider(helper);
             
             var dummy = new Key().PubKey.GetAddress(ScriptPubKeyType.Legacy, Network.RegTest).ToString();
-            var networkProvider = new BTCPayNetworkProvider(NetworkType.Regtest);
+            var networkProvider = TestUtils.CreateBTCPayNetworkProvider(NetworkType.Regtest);
 
             currencyPairRateResult = new Dictionary<CurrencyPair, Task<RateResult>>();
             

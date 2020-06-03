@@ -45,6 +45,8 @@ namespace BTCPayServer.Data
         public DbSet<RefundAddressesData> RefundAddresses { get; set; }
         public DbSet<PaymentData> Payments { get; set; }
         public DbSet<PaymentRequestData> PaymentRequests { get; set; }
+        public DbSet<PullPaymentData> PullPayments { get; set; }
+        public DbSet<PayoutData> Payouts { get; set; }
         public DbSet<WalletData> Wallets { get; set; }
         public DbSet<WalletTransactionData> WalletTransactions { get; set; }
         public DbSet<StoreData> Stores { get; set; }
@@ -204,6 +206,9 @@ namespace BTCPayServer.Data
             builder.Entity<WalletTransactionData>()
                 .HasOne(o => o.WalletData)
                 .WithMany(w => w.WalletTransactions).OnDelete(DeleteBehavior.Cascade);
+
+            PullPaymentData.OnModelCreating(builder);
+            PayoutData.OnModelCreating(builder);
 
             if (Database.IsSqlite() && !_designTime)
             {

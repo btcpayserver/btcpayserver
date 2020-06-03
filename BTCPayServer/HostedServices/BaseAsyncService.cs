@@ -57,6 +57,8 @@ namespace BTCPayServer.HostedServices
             }
         }
 
+        public CancellationToken CancellationToken => _Cts.Token;
+
         public virtual async Task StopAsync(CancellationToken cancellationToken)
         {
             if (_Cts != null)

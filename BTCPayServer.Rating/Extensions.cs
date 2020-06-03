@@ -4,6 +4,10 @@ namespace BTCPayServer.Rating
 {
     public static class Extensions
     {
+        public static decimal RoundToSignificant(this decimal value, int divisibility)
+        {
+            return RoundToSignificant(value, ref divisibility);
+        }
         public static decimal RoundToSignificant(this decimal value, ref int divisibility)
         {
             if (value != 0m)

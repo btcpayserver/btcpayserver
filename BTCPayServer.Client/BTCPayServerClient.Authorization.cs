@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
 
 namespace BTCPayServer.Client
 {

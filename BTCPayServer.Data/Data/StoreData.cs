@@ -15,6 +15,8 @@ namespace BTCPayServer.Data
 
         public List<PaymentRequestData> PaymentRequests { get; set; }
 
+        public List<PullPaymentData> PullPayments { get; set; }
+
         public List<InvoiceData> Invoices { get; set; }
 
         [Obsolete("Use GetDerivationStrategies instead")]

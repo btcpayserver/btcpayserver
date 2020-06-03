@@ -19,7 +19,7 @@
 <div class="row">
    
     <div class="@(!Model.InputSelection && Model.Outputs.Count==1? "col-lg-6 transaction-output-form": "col-lg-8")">
-        <form method="post">
+        <form method="post" asp-action="WalletSend" asp-route-walletId="@this.Context.GetRouteValue("walletId")">
             <input type="hidden" asp-for="InputSelection" />
             <input type="hidden" asp-for="Divisibility" />
             <input type="hidden" asp-for="NBXSeedAvailable" />

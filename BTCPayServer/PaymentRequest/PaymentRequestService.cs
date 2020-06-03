@@ -78,7 +78,6 @@ namespace BTCPayServer.PaymentRequest
             }
 
             var blob = pr.GetBlob();
-            var rateRules = pr.StoreData.GetStoreBlob().GetRateRules(_BtcPayNetworkProvider);
 
             var invoices = await _PaymentRequestRepository.GetInvoicesForPaymentRequest(id);
 

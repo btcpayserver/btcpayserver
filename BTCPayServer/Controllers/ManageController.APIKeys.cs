@@ -317,6 +317,7 @@ namespace BTCPayServer.Controllers
             var isAdmin = (await _authorizationService.AuthorizeAsync(User, Policies.CanModifyServerSettings))
                 .Succeeded;
             viewModel.PermissionValues ??= Policies.AllPolicies
+                .Where(p => AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions.ContainsKey(p))
                 .Select(s => new AddApiKeyViewModel.PermissionValueItem()
                 {
                     Permission = s, 

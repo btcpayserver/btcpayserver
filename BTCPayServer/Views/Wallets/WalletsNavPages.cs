@@ -11,6 +11,8 @@ namespace BTCPayServer.Views.Wallets
         Transactions,
         Rescan,
         PSBT,
+        PullPayments,
+        Payouts,
         Settings,
         Receive
     }

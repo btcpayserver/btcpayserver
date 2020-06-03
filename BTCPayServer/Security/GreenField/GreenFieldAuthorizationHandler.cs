@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Routing;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -32,13 +33,12 @@ namespace BTCPayServer.Security.GreenField
         {
             if (context.User.Identity.AuthenticationType != GreenFieldConstants.AuthenticationType)
                 return;
-
+            var userid = _userManager.GetUserId(context.User);
             bool success = false;
             switch (requirement.Policy)
             {
                 case { } policy when Policies.IsStorePolicy(policy):
                     var storeId = _HttpContext.GetImplicitStoreId();
-                    var userid = _userManager.GetUserId(context.User);
                     // Specific store action
                     if (storeId != null)
                     {
@@ -49,7 +49,7 @@ namespace BTCPayServer.Security.GreenField
                             var store = await _storeRepository.FindStore((string)storeId, userid);
                             if (store == null)
                                 break;
-                            if(Policies.IsStoreModifyPolicy(policy))
+                            if (Policies.IsStoreModifyPolicy(policy))
                             {
                                 if (store.Role != StoreRoles.Owner)
                                     break;

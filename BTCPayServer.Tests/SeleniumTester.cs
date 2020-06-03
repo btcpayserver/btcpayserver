@@ -102,6 +102,7 @@ namespace BTCPayServer.Tests
         public string RegisterNewUser(bool isAdmin = false)
         {
             var usr = RandomUtils.GetUInt256().ToString().Substring(64 - 20) + "@a.com";
+            Logs.Tester.LogInformation($"User: {usr} with password 123456");
             Driver.FindElement(By.Id("Email")).SendKeys(usr);
             Driver.FindElement(By.Id("Password")).SendKeys("123456");
             Driver.FindElement(By.Id("ConfirmPassword")).SendKeys("123456");
@@ -119,10 +120,10 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.Id("CreateStore")).Click();
             Driver.FindElement(By.Id("Name")).SendKeys(usr);
             Driver.FindElement(By.Id("Create")).Click();
-
-            return (usr, Driver.FindElement(By.Id("Id")).GetAttribute("value"));
+            StoreId = Driver.FindElement(By.Id("Id")).GetAttribute("value");
+            return (usr, StoreId);
         }
-        
+        public string StoreId { get; set; }
 
         public Mnemonic GenerateWallet(string cryptoCode = "BTC", string seed = "", bool importkeys = false, bool privkeys = false, ScriptPubKeyType format = ScriptPubKeyType.Segwit)
         {
@@ -141,9 +142,10 @@ namespace BTCPayServer.Tests
             {
                 seed = Driver.FindElements(By.ClassName("alert-success")).First().FindElement(By.TagName("code")).Text;
             }
+            WalletId = new WalletId(StoreId, cryptoCode);
             return new Mnemonic(seed);
         }
-
+        public WalletId WalletId { get; set; }
         public void AddDerivationScheme(string cryptoCode = "BTC", string derivationScheme = "xpub661MyMwAqRbcGABgHMUXDzPzH1tU7eZaAaJQXhDXsSxsqyQzQeU6kznNfSuAyqAK9UaWSaZaMFdNiY5BCF4zBPAzSnwfUAwUhwttuAKwfRX-[legacy]")
         {
             Driver.FindElement(By.Id($"Modify{cryptoCode}")).ForceClick();
@@ -317,8 +319,9 @@ namespace BTCPayServer.Tests
             return id;
         }
 
-        public async Task FundStoreWallet(WalletId walletId, int coins = 1, decimal denomination = 1m)
+        public async Task FundStoreWallet(WalletId walletId = null, int coins = 1, decimal denomination = 1m)
         {
+            walletId ??= WalletId;
             GoToWallet(walletId, WalletsNavPages.Receive);
             Driver.FindElement(By.Id("generateButton")).Click();
             var addressStr = Driver.FindElement(By.Id("vue-address")).GetProperty("value");
@@ -372,8 +375,9 @@ namespace BTCPayServer.Tests
 
         }
 
-        public void GoToWallet(WalletId walletId, WalletsNavPages navPages = WalletsNavPages.Send)
+        public void GoToWallet(WalletId walletId = null, WalletsNavPages navPages = WalletsNavPages.Send)
         {
+            walletId ??= WalletId;
             Driver.Navigate().GoToUrl(new Uri(Server.PayTester.ServerUri, $"wallets/{walletId}"));
             if (navPages != WalletsNavPages.Transactions)
             {

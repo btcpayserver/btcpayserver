@@ -12,6 +12,7 @@ using Newtonsoft.Json;
 using BTCPayServer.Models;
 using BTCPayServer.Configuration;
 using System.Net.WebSockets;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 
 namespace BTCPayServer.Hosting
@@ -20,10 +21,13 @@ namespace BTCPayServer.Hosting
     {
         RequestDelegate _Next;
         BTCPayServerOptions _Options;
+        BTCPayServerEnvironment _Env;
 
         public BTCPayMiddleware(RequestDelegate next,
-            BTCPayServerOptions options)
+            BTCPayServerOptions options,
+            BTCPayServerEnvironment env)
         {
+            _Env = env ?? throw new ArgumentNullException(nameof(env));
             _Next = next ?? throw new ArgumentNullException(nameof(next));
             _Options = options ?? throw new ArgumentNullException(nameof(options));
         }
@@ -55,6 +59,12 @@ namespace BTCPayServer.Hosting
                 {
                     await _Next(httpContext);
                     return;
+                }
+
+                if (!httpContext.Request.IsOnion() && (httpContext.Request.Headers["Accept"].ToString().StartsWith("text/html", StringComparison.InvariantCulture)))
+                {
+                    var onionLocation = _Env.OnionUrl + httpContext.Request.Path;
+                    httpContext.Response.SetHeader("Onion-Location", onionLocation);
                 }
             }
             catch (WebSocketException)

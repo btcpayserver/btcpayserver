@@ -3607,6 +3607,36 @@ normal:
             }
         }
 
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async void CheckOnionlocationForNonOnionHtmlRequests()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                await tester.StartAsync();
+
+                var url = tester.PayTester.ServerUri.AbsoluteUri;
+                HttpClient client = new HttpClient();
+
+                // check onion location is present for HTML page request
+                using var htmlRequest = new HttpRequestMessage(HttpMethod.Get, new Uri(url));
+                htmlRequest.Headers.TryAddWithoutValidation("Accept", "text/html,*/*");
+
+                var htmlResponse = await client.SendAsync(htmlRequest);
+                htmlResponse.EnsureSuccessStatusCode();
+                Assert.True(htmlResponse.Headers.TryGetValues("Onion-Location", out var onionLocation));
+                Assert.StartsWith("http://wsaxew3qa5ljfuenfebmaf3m5ykgatct3p6zjrqwoouj3foererde3id.onion", onionLocation.FirstOrDefault() ?? "no-onion-location-header");
+
+                // no onion location for other mime types
+                using var otherRequest = new HttpRequestMessage(HttpMethod.Get, new Uri(url));
+                otherRequest.Headers.TryAddWithoutValidation("Accept", "*/*");
+
+                var otherResponse = await client.SendAsync(otherRequest);
+                otherResponse.EnsureSuccessStatusCode();
+                Assert.False(otherResponse.Headers.Contains("Onion-Location"));
+            }
+        }
+
         private static bool IsMapped(Invoice invoice, ApplicationDbContext ctx)
         {
             var h = BitcoinAddress.Create(invoice.BitcoinAddress, Network.RegTest).ScriptPubKey.Hash.ToString();

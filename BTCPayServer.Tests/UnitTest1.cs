@@ -3614,15 +3614,13 @@ normal:
             using (var tester = ServerTester.Create())
             {
                 await tester.StartAsync();
-
                 var url = tester.PayTester.ServerUri.AbsoluteUri;
-                HttpClient client = new HttpClient();
 
                 // check onion location is present for HTML page request
                 using var htmlRequest = new HttpRequestMessage(HttpMethod.Get, new Uri(url));
                 htmlRequest.Headers.TryAddWithoutValidation("Accept", "text/html,*/*");
 
-                var htmlResponse = await client.SendAsync(htmlRequest);
+                var htmlResponse = await tester.PayTester.HttpClient.SendAsync(htmlRequest);
                 htmlResponse.EnsureSuccessStatusCode();
                 Assert.True(htmlResponse.Headers.TryGetValues("Onion-Location", out var onionLocation));
                 Assert.StartsWith("http://wsaxew3qa5ljfuenfebmaf3m5ykgatct3p6zjrqwoouj3foererde3id.onion", onionLocation.FirstOrDefault() ?? "no-onion-location-header");
@@ -3631,7 +3629,7 @@ normal:
                 using var otherRequest = new HttpRequestMessage(HttpMethod.Get, new Uri(url));
                 otherRequest.Headers.TryAddWithoutValidation("Accept", "*/*");
 
-                var otherResponse = await client.SendAsync(otherRequest);
+                var otherResponse = await tester.PayTester.HttpClient.SendAsync(otherRequest);
                 otherResponse.EnsureSuccessStatusCode();
                 Assert.False(otherResponse.Headers.Contains("Onion-Location"));
             }

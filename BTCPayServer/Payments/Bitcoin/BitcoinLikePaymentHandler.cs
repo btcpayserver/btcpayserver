@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -170,7 +170,7 @@ namespace BTCPayServer.Payments.Bitcoin
                 var nodeSupport = _dashboard?.Get(network.CryptoCode)?.Status?.BitcoinStatus?.Capabilities
                     ?.CanSupportTransactionCheck is true;
                 onchainMethod.PayjoinEnabled &= supportedPaymentMethod.IsHotWallet && nodeSupport;
-                if (!isHotwallet)
+                if (!supportedPaymentMethod.IsHotWallet)
                     logs.Write($"{prefix} Payjoin should have been enabled, but your store is not a hotwallet");
                 if (!nodeSupport)
                     logs.Write($"{prefix} Payjoin should have been enabled, but your version of NBXplorer or full node does not support it.");

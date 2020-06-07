@@ -282,7 +282,7 @@ services:
         debuglevel=debug
         trickledelay=1000
     ports:
-      - "53280:8080"
+      - "35531:8080"
     expose:
       - "9735"
     volumes:
@@ -312,7 +312,7 @@ services:
         debuglevel=debug
         trickledelay=1000
     ports:
-      - "53281:8080"
+      - "35532:8080"
     expose:
       - "8080"
       - "10009"

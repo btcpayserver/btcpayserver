@@ -33,7 +33,7 @@ namespace BTCPayServer.Client
             _btcpayHost = btcpayHost;
             _httpClient = httpClient ?? new HttpClient();
         }
-        
+
         public BTCPayServerClient(Uri btcpayHost, string username, string password, HttpClient httpClient = null)
         {
             _apiKey = APIKey;
@@ -58,7 +58,7 @@ namespace BTCPayServer.Client
             Dictionary<string, object> queryPayload = null,
             HttpMethod method = null)
         {
-            UriBuilder uriBuilder = new UriBuilder(_btcpayHost) {Path = path};
+            UriBuilder uriBuilder = new UriBuilder(_btcpayHost) { Path = path };
             if (queryPayload != null && queryPayload.Any())
             {
                 AppendPayloadToQuery(uriBuilder, queryPayload);

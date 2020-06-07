@@ -25,7 +25,7 @@ namespace BTCPayServer.Controllers.GreenField
             _apiKeyRepository = apiKeyRepository;
             _userManager = userManager;
         }
-    
+
         [HttpGet("~/api/v1/api-keys/current")]
         public async Task<ActionResult<ApiKeyData>> GetKey()
         {

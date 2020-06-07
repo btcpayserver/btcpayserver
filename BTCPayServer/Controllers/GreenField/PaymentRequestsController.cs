@@ -33,7 +33,7 @@ namespace BTCPayServer.Controllers.GreenField
         public async Task<ActionResult<IEnumerable<PaymentRequestData>>> GetPaymentRequests(string storeId)
         {
             var prs = await _paymentRequestRepository.FindPaymentRequests(
-                new PaymentRequestQuery() {StoreId = storeId, IncludeArchived = false});
+                new PaymentRequestQuery() { StoreId = storeId, IncludeArchived = false });
             return Ok(prs.Items.Select(FromModel));
         }
 
@@ -42,7 +42,7 @@ namespace BTCPayServer.Controllers.GreenField
         public async Task<ActionResult<PaymentRequestData>> GetPaymentRequest(string storeId, string paymentRequestId)
         {
             var pr = await _paymentRequestRepository.FindPaymentRequests(
-                new PaymentRequestQuery() {StoreId = storeId, Ids = new[] {paymentRequestId}});
+                new PaymentRequestQuery() { StoreId = storeId, Ids = new[] { paymentRequestId } });
 
             if (pr.Total == 0)
             {
@@ -58,7 +58,7 @@ namespace BTCPayServer.Controllers.GreenField
         public async Task<ActionResult> ArchivePaymentRequest(string storeId, string paymentRequestId)
         {
             var pr = await _paymentRequestRepository.FindPaymentRequests(
-                new PaymentRequestQuery() {StoreId = storeId, Ids = new[] {paymentRequestId}, IncludeArchived = false});
+                new PaymentRequestQuery() { StoreId = storeId, Ids = new[] { paymentRequestId }, IncludeArchived = false });
             if (pr.Total == 0)
             {
                 return NotFound();
@@ -106,7 +106,7 @@ namespace BTCPayServer.Controllers.GreenField
             }
 
             var pr = await _paymentRequestRepository.FindPaymentRequests(
-                new PaymentRequestQuery() {StoreId = storeId, Ids = new[] {paymentRequestId}});
+                new PaymentRequestQuery() { StoreId = storeId, Ids = new[] { paymentRequestId } });
             if (pr.Total == 0)
             {
                 return NotFound();

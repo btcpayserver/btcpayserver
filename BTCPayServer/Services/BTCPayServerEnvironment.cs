@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -69,7 +69,7 @@ namespace BTCPayServer.Services
             }
         }
 
-        public HttpContext Context => httpContext.HttpContext;    
+        public HttpContext Context => httpContext.HttpContext;
 
         public override string ToString()
         {

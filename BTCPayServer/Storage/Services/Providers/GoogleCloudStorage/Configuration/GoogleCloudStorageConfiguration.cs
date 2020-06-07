@@ -5,7 +5,7 @@ namespace BTCPayServer.Storage.Services.Providers.GoogleCloudStorage.Configurati
 {
     public class GoogleCloudStorageConfiguration : GoogleProviderOptions, IBaseStorageConfiguration
     {
-        public string JsonCredentials{ get; set; } 
+        public string JsonCredentials { get; set; }
         public string ContainerName { get; set; }
     }
 }

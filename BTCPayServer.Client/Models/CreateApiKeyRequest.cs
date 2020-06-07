@@ -1,4 +1,4 @@
-﻿using BTCPayServer.Client.JsonConverters;
+using BTCPayServer.Client.JsonConverters;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.Client.Models

@@ -1,4 +1,4 @@
-﻿using BTCPayServer.Models;
+using BTCPayServer.Models;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;

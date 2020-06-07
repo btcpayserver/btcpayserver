@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -49,7 +49,7 @@ namespace BTCPayServer.Client
         {
             return policy.StartsWith("btcpay.store", StringComparison.OrdinalIgnoreCase);
         }
-        
+
         public static bool IsServerPolicy(string policy)
         {
             return policy.StartsWith("btcpay.server", StringComparison.OrdinalIgnoreCase);
@@ -146,7 +146,7 @@ namespace BTCPayServer.Client
             if (this.Policy == subpolicy)
                 return true;
             switch (subpolicy)
-            {   
+            {
                 case Policies.CanViewStoreSettings when this.Policy == Policies.CanModifyStoreSettings:
                 case Policies.CanCreateInvoice when this.Policy == Policies.CanModifyStoreSettings:
                 case Policies.CanViewProfile when this.Policy == Policies.CanModifyProfile:

@@ -1,4 +1,4 @@
-﻿using BTCPayServer.Data;
+using BTCPayServer.Data;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -67,7 +67,7 @@ namespace BTCPayServer.Services
         {
             return JsonConvert.SerializeObject(obj);
         }
-        
+
         public async Task<T> WaitSettingsChanged<T>(CancellationToken cancellationToken = default)
         {
             return (await _EventAggregator.WaitNext<SettingsChanged<T>>(cancellationToken)).Settings;

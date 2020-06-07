@@ -1,4 +1,4 @@
-﻿using BTCPayServer.Client;
+using BTCPayServer.Client;
 using Microsoft.AspNetCore.Authorization;
 
 namespace BTCPayServer.Security

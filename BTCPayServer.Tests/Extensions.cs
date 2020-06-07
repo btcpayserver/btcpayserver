@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -38,7 +38,7 @@ namespace BTCPayServer.Tests
             {
                 StringBuilder builder = new StringBuilder();
                 builder.AppendLine();
-                foreach (var logKind in new []{ LogType.Browser, LogType.Client, LogType.Driver, LogType.Server })
+                foreach (var logKind in new[] { LogType.Browser, LogType.Client, LogType.Driver, LogType.Server })
                 {
                     try
                     {

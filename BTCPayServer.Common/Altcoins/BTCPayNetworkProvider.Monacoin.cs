@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -19,7 +19,7 @@ namespace BTCPayServer
                 BlockExplorerLink = NetworkType == NetworkType.Mainnet ? "https://mona.insight.monaco-ex.org/insight/tx/{0}" : "https://testnet-mona.insight.monaco-ex.org/insight/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "monacoin",
-                DefaultRateRules = new[] 
+                DefaultRateRules = new[]
                 {
                                 "MONA_X = MONA_BTC * BTC_X",
                                 "MONA_BTC = bittrex(MONA_BTC)"

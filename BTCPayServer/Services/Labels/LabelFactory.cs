@@ -78,7 +78,7 @@ namespace BTCPayServer.Services.Labels
                 }
             }
 
-            return new Label() {RawValue = value, Value = value, Color = color};
+            return new Label() { RawValue = value, Value = value, Color = color };
         }
     }
 }

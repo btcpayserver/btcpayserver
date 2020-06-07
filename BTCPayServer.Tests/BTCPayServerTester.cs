@@ -1,4 +1,4 @@
-﻿using BTCPayServer.Configuration;
+using BTCPayServer.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Linq;
@@ -95,7 +95,7 @@ namespace BTCPayServer.Tests
         public bool MockRates { get; set; } = true;
         public string SocksEndpoint { get; set; }
 
-        public HashSet<string> Chains { get; set; } = new HashSet<string>(){"BTC"};
+        public HashSet<string> Chains { get; set; } = new HashSet<string>() { "BTC" };
         public bool UseLightning { get; set; }
         public bool AllowAdminRegistration { get; set; } = true;
         public bool DisableRegistration { get; set; } = false;
@@ -142,7 +142,7 @@ namespace BTCPayServer.Tests
             }
             if (AllowAdminRegistration)
                 config.AppendLine("allow-admin-registration=1");
-           
+
             config.AppendLine($"torrcfile={TestUtils.GetTestDataFullPath("Tor/torrc")}");
             config.AppendLine($"socksendpoint={SocksEndpoint}");
             config.AppendLine($"debuglog=debug.log");
@@ -225,12 +225,12 @@ namespace BTCPayServer.Tests
                 var bittrex = new MockRateProvider();
                 bittrex.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("DOGE_BTC"), new BidAsk(0.004m)));
                 rateProvider.Providers.Add("bittrex", bittrex);
-                
-                
+
+
                 var bitfinex = new MockRateProvider();
                 bitfinex.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("UST_BTC"), new BidAsk(0.000136m)));
                 rateProvider.Providers.Add("bitfinex", bitfinex);
-                
+
                 var bitpay = new MockRateProvider();
                 bitpay.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("ETB_BTC"), new BidAsk(0.1m)));
                 rateProvider.Providers.Add("bitpay", bitpay);

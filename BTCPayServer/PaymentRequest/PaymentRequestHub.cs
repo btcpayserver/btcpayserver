@@ -56,10 +56,10 @@ namespace BTCPayServer.PaymentRequest
             switch (result)
             {
                 case OkObjectResult okObjectResult:
-                    await Clients.Caller.SendCoreAsync(InvoiceCreated, new[] {okObjectResult.Value.ToString()});
+                    await Clients.Caller.SendCoreAsync(InvoiceCreated, new[] { okObjectResult.Value.ToString() });
                     break;
                 case ObjectResult objectResult:
-                    await Clients.Caller.SendCoreAsync(InvoiceError, new[] {objectResult.Value});
+                    await Clients.Caller.SendCoreAsync(InvoiceError, new[] { objectResult.Value });
                     break;
                 default:
                     await Clients.Caller.SendCoreAsync(InvoiceError, System.Array.Empty<object>());
@@ -77,7 +77,7 @@ namespace BTCPayServer.PaymentRequest
                 case OkObjectResult okObjectResult:
                     await Clients.Group(Context.Items["pr-id"].ToString()).SendCoreAsync(InvoiceCancelled, System.Array.Empty<object>());
                     break;
-                    
+
                 default:
                     await Clients.Caller.SendCoreAsync(CancelInvoiceError, System.Array.Empty<object>());
                     break;
@@ -124,7 +124,7 @@ namespace BTCPayServer.PaymentRequest
             Logs.PayServer.LogInformation("Starting payment request expiration watcher");
             var (total, items) = await _PaymentRequestRepository.FindPaymentRequests(new PaymentRequestQuery()
             {
-                Status = new[] {Client.Models.PaymentRequestData.PaymentRequestStatus.Pending}
+                Status = new[] { Client.Models.PaymentRequestData.PaymentRequestStatus.Pending }
             }, cancellationToken);
 
             Logs.PayServer.LogInformation($"{total} pending payment requests being checked since last run");
@@ -173,7 +173,7 @@ namespace BTCPayServer.PaymentRequest
                 await InfoUpdated(updated.PaymentRequestId);
 
                 var expiry = updated.Data.GetBlob().ExpiryDate;
-                if (updated.Data.Status == 
+                if (updated.Data.Status ==
                     PaymentRequestData.PaymentRequestStatus.Pending &&
                     expiry.HasValue)
                 {
@@ -202,7 +202,7 @@ namespace BTCPayServer.PaymentRequest
             if (req != null)
             {
                 await _HubContext.Clients.Group(paymentRequestId)
-                    .SendCoreAsync(PaymentRequestHub.InfoUpdated, new object[] {req});
+                    .SendCoreAsync(PaymentRequestHub.InfoUpdated, new object[] { req });
             }
         }
     }

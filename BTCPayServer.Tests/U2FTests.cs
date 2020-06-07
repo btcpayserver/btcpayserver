@@ -22,7 +22,7 @@ namespace BTCPayServer.Tests
 
         public U2FTests(ITestOutputHelper helper)
         {
-            Logs.Tester = new XUnitLog(helper) {Name = "Tests"};
+            Logs.Tester = new XUnitLog(helper) { Name = "Tests" };
             Logs.LogProvider = new XUnitLogProvider(helper);
         }
 
@@ -47,7 +47,8 @@ namespace BTCPayServer.Tests
                 Assert
                     .IsType<RedirectToActionResult>(await accountController.Login(new LoginViewModel()
                     {
-                        Email = user.RegisterDetails.Email, Password = user.RegisterDetails.Password
+                        Email = user.RegisterDetails.Email,
+                        Password = user.RegisterDetails.Password
                     }));
 
                 Assert.Empty(Assert.IsType<U2FAuthenticationViewModel>(Assert
@@ -79,7 +80,8 @@ namespace BTCPayServer.Tests
                 var secondaryLoginViewModel = Assert.IsType<SecondaryLoginViewModel>(Assert
                     .IsType<ViewResult>(await accountController.Login(new LoginViewModel()
                     {
-                        Email = user.RegisterDetails.Email, Password = user.RegisterDetails.Password
+                        Email = user.RegisterDetails.Email,
+                        Password = user.RegisterDetails.Password
                     })).Model);
                 Assert.NotNull(secondaryLoginViewModel.LoginWithU2FViewModel);
                 Assert.Single(secondaryLoginViewModel.LoginWithU2FViewModel.Challenges);

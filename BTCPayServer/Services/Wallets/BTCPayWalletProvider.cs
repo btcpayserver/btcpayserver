@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -23,7 +23,7 @@ namespace BTCPayServer.Services.Wallets
             _NetworkProvider = networkProvider;
             _Options = memoryCacheOption;
 
-            foreach(var network in networkProvider.GetAll().OfType<BTCPayNetwork>())
+            foreach (var network in networkProvider.GetAll().OfType<BTCPayNetwork>())
             {
                 var explorerClient = _Client.GetExplorerClient(network.CryptoCode);
                 if (explorerClient == null)

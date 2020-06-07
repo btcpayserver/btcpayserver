@@ -24,7 +24,7 @@ namespace BTCPayServer.Tests
         public const int TestTimeout = 60_000;
         public ChangellyTests(ITestOutputHelper helper)
         {
-            Logs.Tester = new XUnitLog(helper) {Name = "Tests"};
+            Logs.Tester = new XUnitLog(helper) { Name = "Tests" };
             Logs.LogProvider = new XUnitLogProvider(helper);
         }
 

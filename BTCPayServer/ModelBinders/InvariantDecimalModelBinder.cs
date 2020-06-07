@@ -1,4 +1,4 @@
-﻿// Copied and adjusted from https://github.com/aspnet/Mvc/blob/master/src/Microsoft.AspNetCore.Mvc.Core/ModelBinding/Binders/DecimalModelBinder.cs
+// Copied and adjusted from https://github.com/aspnet/Mvc/blob/master/src/Microsoft.AspNetCore.Mvc.Core/ModelBinding/Binders/DecimalModelBinder.cs
 using System;
 using System.Globalization;
 using System.Runtime.ExceptionServices;

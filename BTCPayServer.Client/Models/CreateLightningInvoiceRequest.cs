@@ -12,6 +12,6 @@ namespace BTCPayServer.Client.Models
         public string Description { get; set; }
         public TimeSpan Expiry { get; set; }
         public bool PrivateRouteHints { get; set; }
-        
+
     }
 }

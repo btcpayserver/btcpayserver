@@ -50,42 +50,43 @@ namespace BTCPayServer.HostedServices
                     }).Where(tuple => tuple.Data != null && tuple.Items.Any(item =>
                                           item.Inventory.HasValue &&
                                           updateAppInventory.Items.ContainsKey(item.Id)));
-                    foreach (var valueTuple in apps)
+                foreach (var valueTuple in apps)
+                {
+                    foreach (var item1 in valueTuple.Items.Where(item =>
+                        updateAppInventory.Items.ContainsKey(item.Id)))
                     {
-                        foreach (var item1 in valueTuple.Items.Where(item =>
-                            updateAppInventory.Items.ContainsKey(item.Id)))
+                        if (updateAppInventory.Deduct)
                         {
-                            if (updateAppInventory.Deduct)
-                            {
-                                item1.Inventory -= updateAppInventory.Items[item1.Id];
-                            }
-                            else
-                            {
-                                item1.Inventory += updateAppInventory.Items[item1.Id];
-                            }
+                            item1.Inventory -= updateAppInventory.Items[item1.Id];
                         }
-
-                        switch (Enum.Parse<AppType>(valueTuple.Data.AppType))
+                        else
                         {
-                            case AppType.PointOfSale:
-
-                                ((AppsController.PointOfSaleSettings)valueTuple.Settings).Template =
-                                    _appService.SerializeTemplate(valueTuple.Items);
-                                break;
-                            case AppType.Crowdfund:
-                                ((CrowdfundSettings)valueTuple.Settings).PerksTemplate =
-                                    _appService.SerializeTemplate(valueTuple.Items);
-                                break;
-                            default:
-                                throw new InvalidOperationException();
+                            item1.Inventory += updateAppInventory.Items[item1.Id];
                         }
-
-                        valueTuple.Data.SetSettings(valueTuple.Settings);
-                        await _appService.UpdateOrCreateApp(valueTuple.Data);
                     }
-                
-                
-            }else if (evt is InvoiceEvent invoiceEvent)
+
+                    switch (Enum.Parse<AppType>(valueTuple.Data.AppType))
+                    {
+                        case AppType.PointOfSale:
+
+                            ((AppsController.PointOfSaleSettings)valueTuple.Settings).Template =
+                                _appService.SerializeTemplate(valueTuple.Items);
+                            break;
+                        case AppType.Crowdfund:
+                            ((CrowdfundSettings)valueTuple.Settings).PerksTemplate =
+                                _appService.SerializeTemplate(valueTuple.Items);
+                            break;
+                        default:
+                            throw new InvalidOperationException();
+                    }
+
+                    valueTuple.Data.SetSettings(valueTuple.Settings);
+                    await _appService.UpdateOrCreateApp(valueTuple.Data);
+                }
+
+
+            }
+            else if (evt is InvoiceEvent invoiceEvent)
             {
                 Dictionary<string, int> cartItems = null;
                 bool deduct;
@@ -119,7 +120,7 @@ namespace BTCPayServer.HostedServices
                     {
                         items.TryAdd(invoiceEvent.Invoice.ProductInformation.ItemCode, 1);
                     }
-                    
+
                     _eventAggregator.Publish(new UpdateAppInventory()
                     {
                         Deduct = deduct,

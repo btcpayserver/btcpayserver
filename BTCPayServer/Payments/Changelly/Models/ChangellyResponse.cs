@@ -2,7 +2,7 @@ using Newtonsoft.Json;
 
 namespace BTCPayServer.Payments.Changelly.Models
 {
-    
+
     public class ChangellyResponse<T>
     {
         [JsonProperty("jsonrpc")]

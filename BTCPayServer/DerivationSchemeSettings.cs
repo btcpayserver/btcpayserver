@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -56,7 +56,7 @@ namespace BTCPayServer
                 return false;
             }
         }
-        
+
         public static bool TryParseFromElectrumWallet(string coldcardExport, BTCPayNetwork network, out DerivationSchemeSettings settings)
         {
             settings = null;

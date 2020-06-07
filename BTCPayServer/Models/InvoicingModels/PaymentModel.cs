@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -44,7 +44,7 @@ namespace BTCPayServer.Models.InvoicingModels
         public string Status { get; set; }
         public string MerchantRefLink { get; set; }
         public int MaxTimeSeconds { get; set; }
-        
+
         public string StoreName { get; set; }
         public string ItemDesc { get; set; }
         public string TimeLeft { get; set; }
@@ -71,7 +71,7 @@ namespace BTCPayServer.Models.InvoicingModels
         public string PeerInfo { get; set; }
         public string ChangellyMerchantId { get; set; }
         public decimal? ChangellyAmountDue { get; set; }
-        
+
         public bool CoinSwitchEnabled { get; set; }
         public string CoinSwitchMode { get; set; }
         public string CoinSwitchMerchantId { get; set; }

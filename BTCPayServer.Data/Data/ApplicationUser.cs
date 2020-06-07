@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -26,7 +26,7 @@ namespace BTCPayServer.Data
             get;
             set;
         }
-        
+
         public List<U2FDevice> U2FDevices { get; set; }
         public List<APIKeyData> APIKeys { get; set; }
     }

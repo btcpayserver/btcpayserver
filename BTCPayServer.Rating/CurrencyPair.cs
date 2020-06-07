@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using BTCPayServer.Services.Rates;
 
 namespace BTCPayServer.Rating
@@ -43,11 +43,11 @@ namespace BTCPayServer.Rating
                 if (currencyPair.Length < 6 || currencyPair.Length > 10)
                     return false;
                 if (currencyPair.Length == 6)
-                { 
-                    value = new CurrencyPair(currencyPair.Substring(0,3), currencyPair.Substring(3, 3));
+                {
+                    value = new CurrencyPair(currencyPair.Substring(0, 3), currencyPair.Substring(3, 3));
                     return true;
                 }
-               
+
                 for (int i = 3; i < 5; i++)
                 {
                     var potentialCryptoName = currencyPair.Substring(0, i);

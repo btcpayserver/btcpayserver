@@ -87,7 +87,7 @@ namespace BTCPayServer.Tests
             Logs.Tester.LogInformation(this.Driver.PageSource);
             Assert.True(false, $"Should have shown {severity} message");
             return null;
-         }
+        }
 
         public static readonly TimeSpan ImplicitWait = TimeSpan.FromSeconds(10);
         public string Link(string relativeLink)
@@ -122,7 +122,7 @@ namespace BTCPayServer.Tests
 
             return (usr, Driver.FindElement(By.Id("Id")).GetAttribute("value"));
         }
-        
+
 
         public Mnemonic GenerateWallet(string cryptoCode = "BTC", string seed = "", bool importkeys = false, bool privkeys = false, ScriptPubKeyType format = ScriptPubKeyType.Segwit)
         {
@@ -278,8 +278,8 @@ namespace BTCPayServer.Tests
         {
             Driver.FindElement(By.Id("Invoices")).Click();
         }
-        
-        public void GoToProfile(ManageNavPages navPages =  ManageNavPages.Index)
+
+        public void GoToProfile(ManageNavPages navPages = ManageNavPages.Index)
         {
             Driver.FindElement(By.Id("MySettings")).Click();
             if (navPages != ManageNavPages.Index)
@@ -328,14 +328,14 @@ namespace BTCPayServer.Tests
                 await Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(denomination));
             }
         }
-        
+
         public void PayInvoice(WalletId walletId, string invoiceId)
         {
             GoToInvoiceCheckout(invoiceId);
             var bip21 = Driver.FindElement(By.ClassName("payment__details__instruction__open-wallet__btn"))
                 .GetAttribute("href");
             Assert.Contains($"{PayjoinClient.BIP21EndpointKey}", bip21);
-               
+
             GoToWallet(walletId, WalletsNavPages.Send);
             Driver.FindElement(By.Id("bip21parse")).Click();
             Driver.SwitchTo().Alert().SendKeys(bip21);
@@ -347,7 +347,7 @@ namespace BTCPayServer.Tests
         }
 
 
-        
+
 
         private void CheckForJSErrors()
         {

@@ -5,7 +5,7 @@ namespace BTCPayServer.Client
 {
     public partial class BTCPayServerClient
     {
-    
+
         public static Uri GenerateAuthorizeUri(Uri btcpayHost, string[] permissions, bool strict = true,
             bool selectiveStores = false)
         {

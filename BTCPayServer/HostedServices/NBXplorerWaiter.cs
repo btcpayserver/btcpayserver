@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
@@ -43,7 +43,7 @@ namespace BTCPayServer.HostedServices
 
         public bool IsFullySynched(string cryptoCode, out NBXplorerSummary summary)
         {
-            return _Summaries.TryGetValue(cryptoCode.ToUpperInvariant(), out summary) && 
+            return _Summaries.TryGetValue(cryptoCode.ToUpperInvariant(), out summary) &&
                    summary.Status?.IsFullySynched is true;
         }
         public NBXplorerSummary Get(string cryptoCode)
@@ -183,12 +183,12 @@ namespace BTCPayServer.HostedServices
             }
 
 
-            if(status == null && error == null)
+            if (status == null && error == null)
                 error = $"{_Network.CryptoCode}: NBXplorer does not support this cryptocurrency";
 
-            if(status != null && error == null)
+            if (status != null && error == null)
             {
-                if(status.NetworkType != _Network.NBitcoinNetwork.NetworkType)
+                if (status.NetworkType != _Network.NBitcoinNetwork.NetworkType)
                     error = $"{_Network.CryptoCode}: NBXplorer is on a different ChainType (actual: {status.NetworkType}, expected: {_Network.NBitcoinNetwork.NetworkType})";
             }
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -26,8 +26,8 @@ namespace BTCPayServer.Services
         [Display(Name = "Allow non-admins to create hot wallets for their stores")]
         public bool AllowHotWalletForAll { get; set; }
         [Display(Name = "Allow non-admins to import their hot wallets to the node wallet")]
-        public bool AllowHotWalletRPCImportForAll  { get; set; }
-        
+        public bool AllowHotWalletRPCImportForAll { get; set; }
+
         [Display(Name = "Display app on website root")]
         public string RootAppId { get; set; }
         public AppType? RootAppType { get; set; }
@@ -36,9 +36,15 @@ namespace BTCPayServer.Services
 
         public class DomainToAppMappingItem
         {
-            [Display(Name = "Domain")][Required][HostName] public string Domain { get; set; }
-            [Display(Name = "App")][Required]  public string AppId { get; set; }
+            [Display(Name = "Domain")] 
+            [Required] 
+            [HostName] 
+            public string Domain { get; set; }
             
+            [Display(Name = "App")] 
+            [Required] 
+            public string AppId { get; set; }
+
             public AppType AppType { get; set; }
         }
     }

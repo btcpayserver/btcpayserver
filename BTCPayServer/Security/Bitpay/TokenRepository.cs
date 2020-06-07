@@ -1,4 +1,4 @@
-﻿using BTCPayServer.Data;
+using BTCPayServer.Data;
 using DBriize;
 using NBitcoin;
 using NBitcoin.DataEncoders;
@@ -86,7 +86,7 @@ namespace BTCPayServer.Security.Bitpay
 
             using (var ctx = _Factory.CreateContext())
             {
-                ctx.ApiKeys.RemoveRange(keys.Select(s => new APIKeyData() {Id = s}));
+                ctx.ApiKeys.RemoveRange(keys.Select(s => new APIKeyData() { Id = s }));
                 await ctx.SaveChangesAsync();
             }
         }
@@ -95,7 +95,7 @@ namespace BTCPayServer.Security.Bitpay
         {
             using (var ctx = _Factory.CreateContext())
             {
-                return await ctx.ApiKeys.Where(o => o.StoreId == storeId && o.Type== APIKeyType.Legacy).Select(c => c.Id).ToArrayAsync();
+                return await ctx.ApiKeys.Where(o => o.StoreId == storeId && o.Type == APIKeyType.Legacy).Select(c => c.Id).ToArrayAsync();
             }
         }
 

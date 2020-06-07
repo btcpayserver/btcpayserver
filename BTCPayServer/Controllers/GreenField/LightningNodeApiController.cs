@@ -105,7 +105,7 @@ namespace BTCPayServer.Controllers.GreenField
             }
         }
 
-        
+
         public virtual async Task<IActionResult> OpenChannel(string cryptoCode, OpenLightningChannelRequest request)
         {
             var lightningClient = await GetLightningClient(cryptoCode, true);
@@ -147,7 +147,9 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 var response = await lightningClient.OpenChannel(new Lightning.OpenChannelRequest()
                 {
-                    ChannelAmount = request.ChannelAmount, FeeRate = request.FeeRate, NodeInfo = nodeInfo
+                    ChannelAmount = request.ChannelAmount,
+                    FeeRate = request.FeeRate,
+                    NodeInfo = nodeInfo
                 });
                 if (response.Result == OpenChannelResult.Ok)
                 {
@@ -211,7 +213,7 @@ namespace BTCPayServer.Controllers.GreenField
         public virtual async Task<IActionResult> GetInvoice(string cryptoCode, string id)
         {
             var lightningClient = await GetLightningClient(cryptoCode, false);
-            
+
             if (lightningClient == null)
             {
                 return NotFound();
@@ -235,7 +237,7 @@ namespace BTCPayServer.Controllers.GreenField
         public virtual async Task<IActionResult> CreateInvoice(string cryptoCode, CreateLightningInvoiceRequest request)
         {
             var lightningClient = await GetLightningClient(cryptoCode, false);
-            
+
             if (lightningClient == null)
             {
                 return NotFound();
@@ -299,7 +301,8 @@ namespace BTCPayServer.Controllers.GreenField
         private bool TryGetNodeInfo(ConnectToNodeRequest request, out NodeInfo nodeInfo)
         {
             nodeInfo = null;
-            if (!string.IsNullOrEmpty(request.NodeInfo)) return NodeInfo.TryParse(request.NodeInfo, out nodeInfo);
+            if (!string.IsNullOrEmpty(request.NodeInfo))
+                return NodeInfo.TryParse(request.NodeInfo, out nodeInfo);
             try
             {
                 nodeInfo = new NodeInfo(new PubKey(request.NodeId), request.NodeHost, request.NodePort);

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -40,7 +40,7 @@ namespace BTCPayServer.Controllers
         {
             var invoice = (await _InvoiceRepository.GetInvoices(new InvoiceQuery()
             {
-                InvoiceId = new[] {invoiceId},
+                InvoiceId = new[] { invoiceId },
                 UserId = GetUserId(),
                 IncludeAddresses = true,
                 IncludeEvents = true,
@@ -102,7 +102,7 @@ namespace BTCPayServer.Controllers
                 var accounting = data.Calculate();
                 var paymentMethodId = data.GetId();
                 var cryptoPayment = new InvoiceDetailsModel.CryptoPayment();
-                
+
                 cryptoPayment.PaymentMethodId = paymentMethodId;
                 cryptoPayment.PaymentMethod = paymentMethodId.ToPrettyString();
                 cryptoPayment.Due = _CurrencyNameTable.DisplayFormatCurrency(accounting.Due.ToDecimal(MoneyUnit.BTC), paymentMethodId.CryptoCode);
@@ -123,7 +123,11 @@ namespace BTCPayServer.Controllers
         {
             var invoice = (await _InvoiceRepository.GetInvoices(new InvoiceQuery()
             {
-                InvoiceId = new[] {invoiceId}, UserId = GetUserId(), IncludeAddresses = true, IncludeEvents = true, IncludeArchived = true,
+                InvoiceId = new[] { invoiceId },
+                UserId = GetUserId(),
+                IncludeAddresses = true,
+                IncludeEvents = true,
+                IncludeArchived = true,
             })).FirstOrDefault();
             if (invoice == null)
                 return NotFound();
@@ -133,9 +137,9 @@ namespace BTCPayServer.Controllers
                 Severity = StatusMessageModel.StatusSeverity.Success,
                 Message = invoice.Archived ? "The invoice has been unarchived and will appear in the invoice list by default again." : "The invoice has been archived and will no longer appear in the invoice list by default."
             });
-            return RedirectToAction(nameof(invoice), new {invoiceId});
+            return RedirectToAction(nameof(invoice), new { invoiceId });
         }
-        
+
         [HttpGet]
         [Route("i/{invoiceId}")]
         [Route("i/{invoiceId}/{paymentMethodId}")]
@@ -249,7 +253,7 @@ namespace BTCPayServer.Controllers
                 : (decimal?)null;
 
             var paymentMethodHandler = _paymentMethodHandlerDictionary[paymentMethodId];
-            
+
             var divisibility = _CurrencyNameTable.GetNumberFormatInfo(paymentMethod.GetId().CryptoCode, false)?.CurrencyDecimalDigits;
 
             var model = new PaymentModel()
@@ -388,7 +392,7 @@ namespace BTCPayServer.Controllers
                         break;
                 }
             }
-            catch(WebSocketException) { }
+            catch (WebSocketException) { }
             finally
             {
                 leases.Dispose();
@@ -596,7 +600,7 @@ namespace BTCPayServer.Controllers
         {
             var invoice = (await _InvoiceRepository.GetInvoices(new InvoiceQuery()
             {
-                InvoiceId = new[] {invoiceId},
+                InvoiceId = new[] { invoiceId },
                 UserId = GetUserId()
             })).FirstOrDefault();
             var model = new InvoiceStateChangeModel();

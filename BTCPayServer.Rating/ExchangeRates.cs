@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
@@ -11,7 +11,7 @@ namespace BTCPayServer.Rating
         Dictionary<string, ExchangeRate> _AllRates = new Dictionary<string, ExchangeRate>();
         public ExchangeRates()
         {
-            
+
         }
 
         public ExchangeRates(string exchangeName, IEnumerable<PairRate> rates)
@@ -70,7 +70,7 @@ namespace BTCPayServer.Rating
             if (ByExchange.TryGetValue(exchangeName, out var rates))
             {
                 var rate = rates.FirstOrDefault(r => r.CurrencyPair == currencyPair);
-                if(rate != null)
+                if (rate != null)
                 {
                     rate.BidAsk = bidAsk;
                 }

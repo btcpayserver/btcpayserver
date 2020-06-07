@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using NBXplorer;
 using System.Collections.Generic;
 using System.Linq;

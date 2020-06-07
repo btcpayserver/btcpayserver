@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -29,7 +29,7 @@ namespace BTCPayServer.ModelBinders
                 return Task.CompletedTask;
             }
 
-            if(WalletId.TryParse(key, out var walletId))
+            if (WalletId.TryParse(key, out var walletId))
             {
                 bindingContext.Result = ModelBindingResult.Success(walletId);
             }

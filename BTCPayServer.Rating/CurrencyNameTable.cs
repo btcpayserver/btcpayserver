@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using NBitcoin;
 using System.Collections.Generic;
 using System.IO;
@@ -83,7 +83,7 @@ namespace BTCPayServer.Services.Rates
 
                     foreach (var curr in _Currencies.Where(pair => pair.Value.Crypto))
                     {
-                        AddCurrency(_CurrencyProviders, curr.Key, curr.Value.Divisibility, curr.Value.Symbol?? curr.Value.Code);
+                        AddCurrency(_CurrencyProviders, curr.Key, curr.Value.Divisibility, curr.Value.Symbol ?? curr.Value.Code);
                     }
                 }
                 return _CurrencyProviders.TryGet(currency.ToUpperInvariant());

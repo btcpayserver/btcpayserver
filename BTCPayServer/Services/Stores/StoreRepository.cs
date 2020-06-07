@@ -1,4 +1,4 @@
-﻿using BTCPayServer.Data;
+using BTCPayServer.Data;
 using BTCPayServer.Models;
 using NBitcoin;
 using NBitcoin.DataEncoders;
@@ -27,7 +27,7 @@ namespace BTCPayServer.Services.Stores
                 return null;
             using (var ctx = _ContextFactory.CreateContext())
             {
-                var result =  await ctx.FindAsync<StoreData>(storeId).ConfigureAwait(false);
+                var result = await ctx.FindAsync<StoreData>(storeId).ConfigureAwait(false);
                 return result;
             }
         }
@@ -183,8 +183,8 @@ namespace BTCPayServer.Services.Stores
 
         public async Task<StoreData> CreateStore(string ownerId, string name)
         {
-            var store = new StoreData() {StoreName = name};
-            await CreateStore(ownerId,store);
+            var store = new StoreData() { StoreName = name };
+            await CreateStore(ownerId, store);
             return store;
         }
 

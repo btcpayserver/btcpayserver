@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -36,7 +36,7 @@ namespace BTCPayServer.Services
         public override string ToString()
         {
             StringBuilder builder = new StringBuilder();
-            foreach(var serviceDir in ServiceDirectories)
+            foreach (var serviceDir in ServiceDirectories)
             {
                 builder.AppendLine(serviceDir.ToString());
                 foreach (var port in serviceDir.ServicePorts)

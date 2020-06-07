@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -40,16 +40,16 @@ namespace BTCPayServer.Storage.Services
             var settings = await _SettingsRepository.GetSettingAsync<StorageSettings>();
             var provider = GetProvider(settings);
             var storedFile = await _FileRepository.GetFile(fileId);
-            return storedFile == null ? null: await provider.GetFileUrl(baseUri, storedFile, settings);
+            return storedFile == null ? null : await provider.GetFileUrl(baseUri, storedFile, settings);
         }
-        
+
         public async Task<string> GetTemporaryFileUrl(Uri baseUri, string fileId, DateTimeOffset expiry,
             bool isDownload)
         {
             var settings = await _SettingsRepository.GetSettingAsync<StorageSettings>();
             var provider = GetProvider(settings);
             var storedFile = await _FileRepository.GetFile(fileId);
-            return storedFile == null ? null: await provider.GetTemporaryFileUrl(baseUri, storedFile, settings,expiry,isDownload);
+            return storedFile == null ? null : await provider.GetTemporaryFileUrl(baseUri, storedFile, settings, expiry, isDownload);
         }
 
         public async Task RemoveFile(string fileId, string userId)

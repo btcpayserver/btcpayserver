@@ -61,14 +61,14 @@ namespace BTCPayServer.Client.Models
         [JsonExtensionData]
         public IDictionary<string, JToken> AdditionalData { get; set; }
     }
-    
+
     public enum NetworkFeeMode
     {
         MultiplePaymentsOnly,
         Always,
         Never
     }
-    
+
     public enum SpeedPolicy
     {
         HighSpeed = 0,

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -36,7 +36,7 @@ namespace BTCPayServer.Models.StoreViewModels
         public KeyPath RootKeyPath { get; set; }
 
         [Display(Name = "Electrum Wallet File")]
-        public IFormFile ElectrumWalletFile{ get; set; }
+        public IFormFile ElectrumWalletFile { get; set; }
         public string Config { get; set; }
         public string Source { get; set; }
         public string DerivationSchemeFormat { get; set; }

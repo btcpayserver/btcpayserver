@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
@@ -163,7 +163,7 @@ namespace BTCPayServer.Payments.Bitcoin
                                         var paymentData = new BitcoinLikePaymentData(address,
                                             output.matchedOutput.Value, output.outPoint,
                                             evt.TransactionData.Transaction.RBF);
-                                        
+
                                         var alreadyExist = invoice.GetAllBitcoinPaymentData().Where(c => c.GetPaymentId() == paymentData.GetPaymentId()).Any();
                                         if (!alreadyExist)
                                         {
@@ -293,7 +293,7 @@ namespace BTCPayServer.Payments.Bitcoin
                     payment.Accounted = accounted;
                     updated = true;
                 }
-                
+
                 foreach (var prevout in tx.Transaction.Inputs.Select(o => o.PrevOut))
                 {
                     paymentEntitiesByPrevOut.TryAdd(prevout, payment);
@@ -350,7 +350,7 @@ namespace BTCPayServer.Payments.Bitcoin
                     continue;
                 var cryptoId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
                 var paymentMethod = invoice.GetPaymentMethod(cryptoId).GetPaymentMethodDetails() as BitcoinLikeOnChainPaymentMethod;
-                
+
                 if (!invoice.Support(cryptoId))
                     continue;
 
@@ -369,7 +369,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
                     var paymentData = new BitcoinLikePaymentData(address, coin.Value, coin.OutPoint,
                         transaction.Transaction.RBF);
-                    
+
                     var payment = await _InvoiceRepository.AddPayment(invoice.Id, coin.Timestamp, paymentData, network).ConfigureAwait(false);
                     alreadyAccounted.Add(coin.OutPoint);
                     if (payment != null)

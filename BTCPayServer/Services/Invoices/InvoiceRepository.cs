@@ -78,7 +78,7 @@ retry:
         {
             using (var db = _ContextFactory.CreateContext())
             {
-                return  (await db.AddressInvoices
+                return (await db.AddressInvoices
                     .Include(a => a.InvoiceData.Payments)
                     .Include(a => a.InvoiceData.RefundAddresses)
 #pragma warning disable CS0618
@@ -403,7 +403,7 @@ retry:
             using (var context = _ContextFactory.CreateContext())
             {
                 var invoiceData = await context.FindAsync<InvoiceData>(invoiceId).ConfigureAwait(false);
-                if (invoiceData == null || invoiceData.Archived == archived )
+                if (invoiceData == null || invoiceData.Archived == archived)
                     return;
                 invoiceData.Archived = archived;
                 await context.SaveChangesAsync().ConfigureAwait(false);
@@ -531,13 +531,13 @@ retry:
             {
                 query = query.Where(i => !i.Archived);
             }
-            
+
             if (queryObject.InvoiceId != null && queryObject.InvoiceId.Length > 0)
             {
                 var statusSet = queryObject.InvoiceId.ToHashSet().ToArray();
                 query = query.Where(i => statusSet.Contains(i.Id));
             }
-            
+
             if (queryObject.StoreId != null && queryObject.StoreId.Length > 0)
             {
                 var stores = queryObject.StoreId.ToHashSet().ToArray();

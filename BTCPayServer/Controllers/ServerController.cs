@@ -1,4 +1,4 @@
-﻿using BTCPayServer.Configuration;
+using BTCPayServer.Configuration;
 using Microsoft.Extensions.Logging;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Models;
@@ -348,14 +348,14 @@ namespace BTCPayServer.Controllers
             var user = userId == null ? null : await _UserManager.FindByIdAsync(userId);
             if (user == null)
                 return NotFound();
-            
+
             var files = await _StoredFileRepository.GetFiles(new StoredFileRepository.FilesQuery()
             {
-                UserIds = new[] {userId},
+                UserIds = new[] { userId },
             });
 
             await Task.WhenAll(files.Select(file => _FileService.RemoveFile(file.Id, userId)));
-            
+
             await _UserManager.DeleteAsync(user);
             await _StoreRepository.CleanUnreachableStores();
             TempData[WellKnownTempData.SuccessMessage] = "User deleted";
@@ -538,7 +538,7 @@ namespace BTCPayServer.Controllers
         }
 
 
-        
+
         [Route("server/services/{serviceName}/{cryptoCode?}")]
         public async Task<IActionResult> Service(string serviceName, string cryptoCode, bool showQR = false, uint? nonce = null)
         {
@@ -553,7 +553,7 @@ namespace BTCPayServer.Controllers
 
             try
             {
-                
+
                 if (service.Type == ExternalServiceTypes.P2P)
                 {
                     return View("P2PService", new LightningWalletServices()
@@ -779,7 +779,7 @@ namespace BTCPayServer.Controllers
             else if (service.Type == ExternalServiceTypes.LNDRest || service.Type == ExternalServiceTypes.CLightningRest)
             {
                 var restconf = new LNDRestConfiguration();
-                restconf.Type = service.Type  == ExternalServiceTypes.LNDRest? "lnd-rest": "clightning-rest";
+                restconf.Type = service.Type == ExternalServiceTypes.LNDRest ? "lnd-rest" : "clightning-rest";
                 restconf.Uri = connectionString.Server.AbsoluteUri;
                 confs.Configurations.Add(restconf);
             }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -16,6 +16,6 @@ namespace BTCPayServer.Filters
         {
             context.HttpContext.Response.SetHeaderOnStarting("X-XSS-Protection", "1; mode=block");
         }
-        
+
     }
 }

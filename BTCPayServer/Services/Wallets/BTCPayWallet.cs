@@ -1,4 +1,4 @@
-﻿using NBitcoin;
+using NBitcoin;
 using Microsoft.Extensions.Logging;
 using NBXplorer;
 using NBXplorer.DerivationStrategy;
@@ -41,7 +41,7 @@ namespace BTCPayServer.Services.Wallets
     {
         private ExplorerClient _Client;
         private IMemoryCache _MemoryCache;
-        public BTCPayWallet(ExplorerClient client, IMemoryCache memoryCache, BTCPayNetwork network, 
+        public BTCPayWallet(ExplorerClient client, IMemoryCache memoryCache, BTCPayNetwork network,
             ApplicationDbContextFactory dbContextFactory)
         {
             if (client == null)
@@ -116,8 +116,8 @@ namespace BTCPayServer.Services.Wallets
                     tx = new TransactionResult()
                     {
                         Confirmations = -1,
-                        TransactionHash =  offchainTx.GetHash(),
-                        Transaction =  offchainTx
+                        TransactionHash = offchainTx.GetHash(),
+                        Transaction = offchainTx
                     };
             }
             return tx;

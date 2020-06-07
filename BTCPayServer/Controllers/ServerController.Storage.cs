@@ -81,7 +81,7 @@ namespace BTCPayServer.Controllers
             {
                 ModelState.AddModelError(nameof(viewModel.TimeAmount), "Time must be at least 1");
             }
-            
+
             if (!ModelState.IsValid)
             {
                 return View(viewModel);
@@ -98,7 +98,7 @@ namespace BTCPayServer.Controllers
             switch (viewModel.TimeType)
             {
                 case CreateTemporaryFileUrlViewModel.TmpFileTimeType.Seconds:
-                    expiry =expiry.AddSeconds(viewModel.TimeAmount);
+                    expiry = expiry.AddSeconds(viewModel.TimeAmount);
                     break;
                 case CreateTemporaryFileUrlViewModel.TmpFileTimeType.Minutes:
                     expiry = expiry.AddMinutes(viewModel.TimeAmount);
@@ -228,7 +228,7 @@ namespace BTCPayServer.Controllers
                         _ = await SaveStorageProvider(new FileSystemStorageConfiguration(),
                             BTCPayServer.Storage.Models.StorageProvider.FileSystem);
                     }
-                    
+
                     return View(nameof(EditFileSystemStorageProvider),
                         fileProviderService.GetProviderConfiguration(data));
             }

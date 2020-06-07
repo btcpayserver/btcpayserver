@@ -72,10 +72,10 @@ namespace BTCPayServer.Services.PaymentRequests
                 return await context.PaymentRequests.Include(x => x.StoreData)
                     .AnyAsync(data =>
                         data.Id == paymentRequestId &&
-                        (data.StoreData != null &&  data.StoreData.UserStores.Any(u => u.ApplicationUserId == userId)));
+                        (data.StoreData != null && data.StoreData.UserStores.Any(u => u.ApplicationUserId == userId)));
             }
         }
-        
+
         public async Task UpdatePaymentRequestStatus(string paymentRequestId, Client.Models.PaymentRequestData.PaymentRequestStatus status, CancellationToken cancellationToken = default)
         {
             using (var context = _ContextFactory.CreateContext())
@@ -96,7 +96,7 @@ namespace BTCPayServer.Services.PaymentRequests
 
                 if (!query.IncludeArchived)
                 {
-                    queryable = queryable.Where(data =>  !data.Archived);
+                    queryable = queryable.Where(data => !data.Archived);
                 }
                 if (!string.IsNullOrEmpty(query.StoreId))
                 {
@@ -109,13 +109,13 @@ namespace BTCPayServer.Services.PaymentRequests
                     queryable = queryable.Where(data =>
                         query.Status.Contains(data.Status));
                 }
-                
+
                 if (query.Ids != null && query.Ids.Any())
                 {
                     queryable = queryable.Where(data =>
                         query.Ids.Contains(data.Id));
                 }
-                
+
                 if (!string.IsNullOrEmpty(query.UserId))
                 {
                     queryable = queryable.Where(i =>
@@ -147,7 +147,7 @@ namespace BTCPayServer.Services.PaymentRequests
                 invoiceQuery = new InvoiceQuery();
             }
 
-            invoiceQuery.OrderId = new[] {GetOrderIdForPaymentRequest(paymentRequestId)};
+            invoiceQuery.OrderId = new[] { GetOrderIdForPaymentRequest(paymentRequestId) };
             return await _InvoiceRepository.GetInvoices(invoiceQuery);
         }
 
@@ -186,8 +186,8 @@ namespace BTCPayServer.Services.PaymentRequests
     public class PaymentRequestQuery
     {
         public string StoreId { get; set; }
-        public bool IncludeArchived { get; set; } = true;        
-        public Client.Models.PaymentRequestData.PaymentRequestStatus[] Status{ get; set; }
+        public bool IncludeArchived { get; set; } = true;
+        public Client.Models.PaymentRequestData.PaymentRequestStatus[] Status { get; set; }
         public string UserId { get; set; }
         public int? Skip { get; set; }
         public int? Count { get; set; }

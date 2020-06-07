@@ -1,4 +1,4 @@
-﻿using NBitcoin;
+using NBitcoin;
 using System.Linq;
 using Newtonsoft.Json;
 using System;
@@ -174,7 +174,7 @@ namespace BTCPayServer.Services.Invoices
                                                   .Where(t => t.StartsWith(suffix, StringComparison.InvariantCulture))
                                                   .Select(t => t.Substring(suffix.Length)).ToArray();
         }
-        
+
         [Obsolete("Use GetDerivationStrategies instead")]
         public string DerivationStrategy
         {
@@ -454,7 +454,7 @@ namespace BTCPayServer.Services.Invoices
                         ReceivedDate = entity.ReceivedTime.DateTime
                     };
                 }).ToList();
-                
+
 
                 if (paymentId.PaymentType == PaymentTypes.LightningLike)
                 {
@@ -494,7 +494,7 @@ namespace BTCPayServer.Services.Invoices
                     }
 #pragma warning restore 618
                 }
-                
+
                 dto.CryptoInfo.Add(cryptoInfo);
                 dto.PaymentCodes.Add(paymentId.ToString(), cryptoInfo.PaymentUrls);
                 dto.PaymentSubtotals.Add(paymentId.ToString(), subtotalPrice.Satoshi);
@@ -867,7 +867,7 @@ namespace BTCPayServer.Services.Invoices
                 .Select(_ =>
                 {
                     var txFee = _.GetValue(paymentMethods, GetId(), _.NetworkFee, precision);
-                    paid += _.GetValue(paymentMethods, GetId(), null,  precision);
+                    paid += _.GetValue(paymentMethods, GetId(), null, precision);
                     if (!paidEnough)
                     {
                         totalDue += txFee;
@@ -922,7 +922,7 @@ namespace BTCPayServer.Services.Invoices
         [JsonIgnore]
         public BTCPayNetworkBase Network { get; set; }
         public int Version { get; set; }
-        
+
         [Obsolete("Use ReceivedTime instead")]
         [JsonProperty("receivedTime", DefaultValueHandling = DefaultValueHandling.Ignore)]
         // Old invoices were storing the received time in second
@@ -1008,7 +1008,7 @@ namespace BTCPayServer.Services.Invoices
             }
             else
             {
-                paymentData = GetPaymentMethodId().PaymentType.DeserializePaymentData(Network,CryptoPaymentData);
+                paymentData = GetPaymentMethodId().PaymentType.DeserializePaymentData(Network, CryptoPaymentData);
                 paymentData.Network = Network;
                 if (paymentData is BitcoinLikePaymentData bitcoin)
                 {
@@ -1030,13 +1030,13 @@ namespace BTCPayServer.Services.Invoices
                 ///
             }
             CryptoPaymentDataType = cryptoPaymentData.GetPaymentType().ToString();
-            CryptoPaymentData = GetPaymentMethodId().PaymentType.SerializePaymentData(Network,cryptoPaymentData);
+            CryptoPaymentData = GetPaymentMethodId().PaymentType.SerializePaymentData(Network, cryptoPaymentData);
 #pragma warning restore CS0618
             return this;
         }
         internal decimal GetValue(PaymentMethodDictionary paymentMethods, PaymentMethodId paymentMethodId, decimal? value, int precision)
         {
-            
+
             value = value ?? this.GetCryptoPaymentData().GetValue();
             var to = paymentMethodId;
             var from = this.GetPaymentMethodId();

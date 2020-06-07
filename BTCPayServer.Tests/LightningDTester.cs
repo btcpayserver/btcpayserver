@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,6 +18,6 @@ namespace BTCPayServer.Tests
 
         public CLightningClient RPC { get; }
         public string P2PHost { get; }
-        
+
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
@@ -89,7 +89,7 @@ namespace BTCPayServer
             }
 
             var log = evt.ToString();
-            if(!String.IsNullOrEmpty(log))
+            if (!String.IsNullOrEmpty(log))
                 Logs.Events.LogInformation(log);
             foreach (var sub in actionList)
             {

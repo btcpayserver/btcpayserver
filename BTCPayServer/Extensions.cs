@@ -1,4 +1,4 @@
-﻿using BTCPayServer.Configuration;
+using BTCPayServer.Configuration;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -51,7 +51,7 @@ namespace BTCPayServer
                                   connectionString.BaseUri.DnsSafeHost == internalDomain ||
                                   (internalDomain == "127.0.0.1" || internalDomain == "localhost");
         }
-        
+
         public static IQueryable<TEntity> Where<TEntity>(this Microsoft.EntityFrameworkCore.DbSet<TEntity> obj, System.Linq.Expressions.Expression<Func<TEntity, bool>> predicate) where TEntity : class
         {
             return System.Linq.Queryable.Where(obj, predicate);
@@ -147,7 +147,7 @@ namespace BTCPayServer
             await Task.WhenAll(transactions).ConfigureAwait(false);
             return transactions.Select(t => t.Result).Where(t => t != null).ToDictionary(o => o.Transaction.GetHash());
         }
-        
+
         public static async Task<PSBT> UpdatePSBT(this ExplorerClientProvider explorerClientProvider, DerivationSchemeSettings derivationSchemeSettings, PSBT psbt)
         {
             var result = await explorerClientProvider.GetExplorerClient(psbt.Network.NetworkSet.CryptoCode).UpdatePSBTAsync(new UpdatePSBTRequest()
@@ -160,7 +160,7 @@ namespace BTCPayServer
             derivationSchemeSettings.RebaseKeyPaths(result.PSBT);
             return result.PSBT;
         }
-        
+
         public static string WithTrailingSlash(this string str)
         {
             if (str.EndsWith("/", StringComparison.InvariantCulture))
@@ -232,7 +232,7 @@ namespace BTCPayServer
                    server.EndsWith(".lan", StringComparison.OrdinalIgnoreCase) ||
                    server.IndexOf('.', StringComparison.OrdinalIgnoreCase) == -1;
             }
-            if(IPAddress.TryParse(server, out var ip))
+            if (IPAddress.TryParse(server, out var ip))
             {
                 return ip.IsLocal() || ip.IsRFC1918();
             }
@@ -281,7 +281,7 @@ namespace BTCPayServer
                 return false;
             return request.Host.Host.EndsWith(".onion", StringComparison.OrdinalIgnoreCase);
         }
-        
+
         public static bool IsOnion(this Uri uri)
         {
             if (uri == null || !uri.IsAbsoluteUri)
@@ -347,7 +347,7 @@ namespace BTCPayServer
         /// <returns></returns>
         public static string GetRelativePathOrAbsolute(this HttpRequest request, string path)
         {
-            if (!Uri.TryCreate(path, UriKind.RelativeOrAbsolute, out var uri) || 
+            if (!Uri.TryCreate(path, UriKind.RelativeOrAbsolute, out var uri) ||
                 uri.IsAbsoluteUri)
                 return path;
 
@@ -456,15 +456,18 @@ namespace BTCPayServer
             var res = JsonConvert.SerializeObject(o, Formatting.None, jsonSettings);
             return res;
         }
-        
+
         public static string TrimEnd(this string input, string suffixToRemove,
-            StringComparison comparisonType) {
+            StringComparison comparisonType)
+        {
 
             if (input != null && suffixToRemove != null
-                              && input.EndsWith(suffixToRemove, comparisonType)) {
+                              && input.EndsWith(suffixToRemove, comparisonType))
+            {
                 return input.Substring(0, input.Length - suffixToRemove.Length);
             }
-            else return input;
+            else
+                return input;
         }
     }
 }

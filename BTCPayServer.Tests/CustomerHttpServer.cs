@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting;
 using System.Linq;
 using System;
 using System.Collections.Generic;
@@ -21,7 +21,7 @@ namespace BTCPayServer.Tests
         CancellationTokenSource _Closed = new CancellationTokenSource();
         Channel<JObject> _Requests = Channel.CreateUnbounded<JObject>();
         public CustomServer()
-        { 
+        {
             var port = Utils.FreeTcpPort();
             _Host = new WebHostBuilder()
                 .Configure(app =>
@@ -50,7 +50,7 @@ namespace BTCPayServer.Tests
                 try
                 {
                     JObject req = null;
-                    while(!await _Requests.Reader.WaitToReadAsync(cancellation.Token) || 
+                    while (!await _Requests.Reader.WaitToReadAsync(cancellation.Token) ||
                         !_Requests.Reader.TryRead(out req))
                     {
 

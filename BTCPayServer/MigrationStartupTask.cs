@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
@@ -99,7 +99,7 @@ namespace BTCPayServer
             using (CancellationTokenSource timeout = new CancellationTokenSource(10_000))
             using (CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, cancellationToken))
             {
-            retry:
+retry:
                 try
                 {
                     await _DBContextFactory.CreateContext().Database.MigrateAsync();

@@ -17,7 +17,7 @@ namespace BTCPayServer.Payments.PayJoin
             services.AddSingleton<PayjoinClient>();
             services.AddTransient<Socks5HttpClientHandler>();
             services.AddHttpClient(PayjoinClient.PayjoinOnionNamedClient)
-                .ConfigureHttpClient(h => h.DefaultRequestHeaders.ConnectionClose = true )
+                .ConfigureHttpClient(h => h.DefaultRequestHeaders.ConnectionClose = true)
                 .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();
         }
     }

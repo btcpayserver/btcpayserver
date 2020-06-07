@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -25,7 +25,7 @@ namespace BTCPayServer.Services.Mails
         {
             get; set;
         }
-        
+
         public string Password
         {
             get; set;

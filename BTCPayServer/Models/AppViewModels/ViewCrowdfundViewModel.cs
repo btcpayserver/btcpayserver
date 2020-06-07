@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -40,7 +40,7 @@ namespace BTCPayServer.Models.AppViewModels
         public Dictionary<string, int> PerkCount { get; set; }
 
         public CurrencyData CurrencyData { get; set; }
-        
+
         public class CrowdfundInfo
         {
             public int TotalContributors { get; set; }

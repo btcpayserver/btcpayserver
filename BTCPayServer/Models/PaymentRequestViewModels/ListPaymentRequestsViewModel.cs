@@ -69,13 +69,13 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
         public SelectList Stores { get; set; }
         [EmailAddress]
         public string Email { get; set; }
-        
+
         [MaxLength(500)]
         [Display(Name = "Custom bootstrap CSS file")]
         public string CustomCSSLink { get; set; }
 
         [Display(Name = "Custom CSS Code")]
-        public string EmbeddedCSS { get; set; }        
+        public string EmbeddedCSS { get; set; }
         [Display(Name = "Allow payee to create invoices in their own denomination")]
         public bool AllowCustomPaymentAmounts { get; set; }
     }

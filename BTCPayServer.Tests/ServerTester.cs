@@ -1,4 +1,4 @@
-﻿using BTCPayServer.Controllers;
+using BTCPayServer.Controllers;
 using System.Linq;
 using BTCPayServer.Models.AccountViewModels;
 using Microsoft.AspNetCore.Http;
@@ -186,7 +186,7 @@ namespace BTCPayServer.Tests
         {
             get; set;
         }
-        
+
         public RPCClient LBTCExplorerNode { get; set; }
 
         public ExplorerClient ExplorerClient

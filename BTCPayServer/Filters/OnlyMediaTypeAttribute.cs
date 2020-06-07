@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.ActionConstraints;
+using Microsoft.AspNetCore.Mvc.ActionConstraints;
 using Microsoft.Extensions.Primitives;
 using System;
 using System.Linq;

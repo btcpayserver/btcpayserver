@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -26,7 +26,7 @@ namespace BTCPayServer.Controllers
             Macaroons macaroons = new Macaroons();
             if (!Directory.Exists(directoryPath))
                 throw new DirectoryNotFoundException("Macaroons directory not found");
-            foreach(var file in Directory.GetFiles(directoryPath, "*.macaroon"))
+            foreach (var file in Directory.GetFiles(directoryPath, "*.macaroon"))
             {
                 try
                 {

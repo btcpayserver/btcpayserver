@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
@@ -14,7 +14,7 @@ namespace BTCPayServer.Tests.Mocks
 
         public MockRateProvider()
         {
-            
+
         }
         public Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
         {

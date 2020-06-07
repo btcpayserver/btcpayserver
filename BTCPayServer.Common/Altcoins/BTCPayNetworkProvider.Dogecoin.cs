@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -19,7 +19,7 @@ namespace BTCPayServer
                 BlockExplorerLink = NetworkType == NetworkType.Mainnet ? "https://dogechain.info/tx/{0}" : "https://dogechain.info/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "dogecoin",
-                DefaultRateRules = new[] 
+                DefaultRateRules = new[]
                 {
                                 "DOGE_X = DOGE_BTC * BTC_X",
                                 "DOGE_BTC = bittrex(DOGE_BTC)"

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -32,7 +32,7 @@ namespace BTCPayServer.Models.ServerViewModels
                 return null;
             }
         }
-        public WellKnownService[] KnownServices { get; set; } = new []
+        public WellKnownService[] KnownServices { get; set; } = new[]
         {
             new WellKnownService("noip", "https://dynupdate.no-ip.com/nic/update"),
             new WellKnownService("dyndns", "https://members.dyndns.org/v3/update"),

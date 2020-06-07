@@ -1,4 +1,4 @@
-﻿using BTCPayServer.Filters;
+using BTCPayServer.Filters;
 using BTCPayServer.Models;
 using BTCPayServer.Security;
 using BTCPayServer.Security.Bitpay;

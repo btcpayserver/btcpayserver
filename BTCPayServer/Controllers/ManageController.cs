@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -51,8 +51,8 @@ namespace BTCPayServer.Controllers
           UrlEncoder urlEncoder,
           BTCPayWalletProvider walletProvider,
           StoreRepository storeRepository,
-          IWebHostEnvironment env, 
-          U2FService  u2FService,
+          IWebHostEnvironment env,
+          U2FService u2FService,
           BTCPayServerEnvironment btcPayServerEnvironment,
           APIKeyRepository apiKeyRepository,
           IAuthorizationService authorizationService,

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -43,7 +43,7 @@ namespace BTCPayServer.Services.Apps
             Subscribe<AppsController.AppUpdated>();
         }
 
-        protected override  async Task ProcessEvent(object evt, CancellationToken cancellationToken)
+        protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
         {
             if (evt is InvoiceEvent invoiceEvent)
             {

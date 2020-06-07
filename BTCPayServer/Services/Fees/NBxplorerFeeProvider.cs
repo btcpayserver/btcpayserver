@@ -1,4 +1,4 @@
-﻿using NBitcoin;
+using NBitcoin;
 using NBXplorer;
 using NBXplorer.Models;
 using System;

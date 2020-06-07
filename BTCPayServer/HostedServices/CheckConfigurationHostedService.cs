@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
@@ -36,7 +36,7 @@ namespace BTCPayServer.HostedServices
         async Task TestConnection()
         {
             TimeSpan nextWait = TimeSpan.FromSeconds(10);
-            retry:
+retry:
             var canUseSSH = false;
             if (_options.SSHSettings != null)
             {

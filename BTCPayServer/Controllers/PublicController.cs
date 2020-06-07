@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -34,7 +34,7 @@ namespace BTCPayServer.Controllers
         {
             return await PayButtonHandle(model, CancellationToken.None);
         }
-        
+
         [HttpPost]
         [Route("api/v1/invoices")]
         [IgnoreAntiforgeryToken]
@@ -50,7 +50,7 @@ namespace BTCPayServer.Controllers
                 if (!storeBlob.AnyoneCanInvoice)
                     ModelState.AddModelError("Store", "Store has not enabled Pay Button");
             }
-            
+
             if (model == null || model.Price <= 0)
                 ModelState.AddModelError("Price", "Price must be greater than 0");
 
@@ -77,7 +77,7 @@ namespace BTCPayServer.Controllers
                 ModelState.AddModelError("Store", e.Message);
                 return View();
             }
-            
+
             if (model.JsonResponse)
             {
                 return Json(new

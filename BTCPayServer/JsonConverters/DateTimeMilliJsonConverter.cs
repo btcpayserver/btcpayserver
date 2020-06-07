@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -16,7 +16,7 @@ namespace BTCPayServer.JsonConverters
                    typeof(DateTimeOffset).GetTypeInfo().IsAssignableFrom(objectType.GetTypeInfo()) ||
                    typeof(DateTimeOffset?).GetTypeInfo().IsAssignableFrom(objectType.GetTypeInfo());
         }
-        
+
         static DateTimeOffset unixRef = new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero);
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
@@ -33,7 +33,7 @@ namespace BTCPayServer.JsonConverters
         private DateTimeOffset UnixTimeToDateTime(ulong value)
         {
             var v = (long)value;
-            if(v < 0)
+            if (v < 0)
                 throw new FormatException("Invalid datetime (less than 1/1/1970)");
             return unixRef + TimeSpan.FromMilliseconds((long)v);
         }
@@ -41,7 +41,7 @@ namespace BTCPayServer.JsonConverters
         {
             var date = ((DateTimeOffset)time).ToUniversalTime();
             long v = (long)(date - unixRef).TotalMilliseconds;
-            if(v < 0)
+            if (v < 0)
                 throw new FormatException("Invalid datetime (less than 1/1/1970)");
             return v;
         }
@@ -59,6 +59,6 @@ namespace BTCPayServer.JsonConverters
             writer.WriteValue(DateTimeToUnixTime(time));
         }
 
-       
+
     }
 }

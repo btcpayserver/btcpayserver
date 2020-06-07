@@ -68,7 +68,7 @@ namespace BTCPayServer.Tests
                 var superApiKey = s.AssertHappyMessage().FindElement(By.TagName("code")).Text;
 
                 //this api key has access to everything
-                await TestApiAgainstAccessToken(superApiKey, tester, user, Policies.CanModifyServerSettings,Policies.CanModifyStoreSettings, Policies.CanViewProfile);
+                await TestApiAgainstAccessToken(superApiKey, tester, user, Policies.CanModifyServerSettings, Policies.CanModifyStoreSettings, Policies.CanViewProfile);
 
 
                 s.Driver.FindElement(By.Id("AddApiKey")).Click();

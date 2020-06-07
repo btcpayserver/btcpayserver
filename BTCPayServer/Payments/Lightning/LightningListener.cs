@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
@@ -44,7 +44,7 @@ namespace BTCPayServer.Payments.Lightning
 
         async Task CheckingInvoice(CancellationToken cancellation)
         {
-            while(await _CheckInvoices.Reader.WaitToReadAsync(cancellation) && 
+            while (await _CheckInvoices.Reader.WaitToReadAsync(cancellation) &&
                         _CheckInvoices.Reader.TryRead(out var invoiceId))
             {
                 try
@@ -52,7 +52,7 @@ namespace BTCPayServer.Payments.Lightning
                     foreach (var listenedInvoice in (await GetListenedInvoices(invoiceId)).Where(i => !i.IsExpired()))
                     {
                         var instanceListenerKey = (listenedInvoice.Network.CryptoCode, listenedInvoice.SupportedPaymentMethod.GetLightningUrl().ToString());
-                        if (!_InstanceListeners.TryGetValue(instanceListenerKey, out var instanceListener) || 
+                        if (!_InstanceListeners.TryGetValue(instanceListenerKey, out var instanceListener) ||
                             !instanceListener.IsListening)
                         {
                             instanceListener = instanceListener ?? new LightningInstanceListener(_InvoiceRepository, _Aggregator, listenedInvoice.SupportedPaymentMethod, lightningClientFactory, listenedInvoice.Network);
@@ -171,7 +171,7 @@ namespace BTCPayServer.Payments.Lightning
         }
 
         CancellationTokenSource _Cts = new CancellationTokenSource();
-        
+
         HashSet<string> _InvoiceIds = new HashSet<string>();
         private Timer _ListenPoller;
 
@@ -229,7 +229,7 @@ namespace BTCPayServer.Payments.Lightning
         {
             var client = _lightningClientFactory.Create(supportedPaymentMethod.GetLightningUrl(), network);
             LightningInvoice lightningInvoice = await client.GetInvoice(listenedInvoice.PaymentMethodDetails.InvoiceId);
-            if (lightningInvoice?.Status is LightningInvoiceStatus.Paid && 
+            if (lightningInvoice?.Status is LightningInvoiceStatus.Paid &&
                 await AddPayment(lightningInvoice, listenedInvoice.InvoiceId))
             {
                 Logs.PayServer.LogInformation($"{supportedPaymentMethod.CryptoCode} (Lightning): Payment detected via polling on {listenedInvoice.InvoiceId}");

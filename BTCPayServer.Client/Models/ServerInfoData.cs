@@ -8,12 +8,12 @@ namespace BTCPayServer.Client.Models
         /// the BTCPay Server version
         /// </summary>
         public string Version { get; set; }
-        
+
         /// <summary>
         /// the Tor hostname
         /// </summary>
         public string Onion { get; set; }
-        
+
         /// <summary>
         /// the payment methods this server supports
         /// </summary>

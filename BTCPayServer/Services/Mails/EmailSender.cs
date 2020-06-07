@@ -1,4 +1,4 @@
-﻿using BTCPayServer.Logging;
+using BTCPayServer.Logging;
 using NBitcoin;
 using Microsoft.Extensions.Logging;
 using System;
@@ -39,7 +39,7 @@ namespace BTCPayServer.Services.Mails
                         smtp.SendAsyncCancel();
                     }
                 }
-           }, TimeSpan.Zero);
+            }, TimeSpan.Zero);
         }
 
         public abstract Task<EmailSettings> GetEmailSettings();

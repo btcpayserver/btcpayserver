@@ -1,4 +1,4 @@
-﻿using BTCPayServer.Configuration;
+using BTCPayServer.Configuration;
 using BTCPayServer.Logging;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
@@ -18,7 +18,7 @@ using System.Threading;
 using Serilog;
 using System.Runtime.CompilerServices;
 
-[assembly:InternalsVisibleTo("BTCPayServer.Tests")]
+[assembly: InternalsVisibleTo("BTCPayServer.Tests")]
 namespace BTCPayServer
 {
     class Program
@@ -73,7 +73,7 @@ namespace BTCPayServer
             finally
             {
                 processor.Dispose();
-                if(host == null)
+                if (host == null)
                     Logs.Configuration.LogError("Configuration error");
                 if (host != null)
                     host.Dispose();

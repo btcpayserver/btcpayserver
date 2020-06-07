@@ -20,6 +20,6 @@ namespace BTCPayServer.Data
         public Client.Models.PaymentRequestData.PaymentRequestStatus Status { get; set; }
 
         public byte[] Blob { get; set; }
-        
+
     }
 }

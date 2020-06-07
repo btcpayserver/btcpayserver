@@ -25,12 +25,12 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
 
         public string[] GetSearchTerms()
         {
-            return new[] {TransactionId};
+            return new[] { TransactionId };
         }
 
         public decimal GetValue()
         {
-           return MoneroMoney.Convert(Amount);
+            return MoneroMoney.Convert(Amount);
         }
 
         public bool PaymentCompleted(PaymentEntity entity)

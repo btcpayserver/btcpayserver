@@ -1,4 +1,4 @@
-﻿using NBXplorer;
+using NBXplorer;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -180,7 +180,7 @@ namespace BTCPayServer.HostedServices
         {
             if (invoiceId == null)
                 throw new ArgumentNullException(nameof(invoiceId));
-            
+
             if (!_WatchRequests.Writer.TryWrite(invoiceId))
             {
                 Logs.PayServer.LogWarning($"Failed to write invoice {invoiceId} into WatchRequests channel");
@@ -334,7 +334,7 @@ namespace BTCPayServer.HostedServices
                             // we want to extend invoice monitoring until we reach max confirmations on all onchain payment methods
                             if (confirmationCount < network.MaxTrackedConfirmation)
                                 extendInvoiceMonitoring = true;
-                            
+
                             return payment;
                         }
                     }

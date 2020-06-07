@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Validation;
@@ -29,8 +29,8 @@ namespace BTCPayServer.Models.AppViewModels
         public string Example2 { get; internal set; }
         public string ExampleCallback { get; internal set; }
         public string InvoiceUrl { get; internal set; }
-        
-        [Display(Name = "Callback Notification Url")] 
+
+        [Display(Name = "Callback Notification Url")]
         [Uri]
         public string NotificationUrl { get; set; }
 
@@ -63,7 +63,7 @@ namespace BTCPayServer.Models.AppViewModels
         public string SearchTerm { get; set; }
 
         public SelectList RedirectAutomaticallySelectList =>
-            new SelectList(new List< SelectListItem>()
+            new SelectList(new List<SelectListItem>()
             {
                 new SelectListItem()
                 {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -19,7 +19,7 @@ namespace BTCPayServer
         public Script HintScriptPubKey { get; set; }
 
         Dictionary<uint, string[]> ElectrumMapping = new Dictionary<uint, string[]>();
-        
+
         public DerivationSchemeParser(BTCPayNetwork expectedNetwork)
         {
             if (expectedNetwork == null)
@@ -30,7 +30,7 @@ namespace BTCPayServer
 
         public DerivationStrategyBase ParseElectrum(string str)
         {
-            
+
             if (str == null)
                 throw new ArgumentNullException(nameof(str));
             str = str.Trim();

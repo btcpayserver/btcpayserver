@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Hosting;
 
@@ -201,7 +201,7 @@ namespace BTCPayServer.Hosting
                     ctx.Context.Response.Headers[HeaderNames.CacheControl] = "public,max-age=" + durationInSeconds;
                 }
             });
-            
+
             app.UseProviderStorage(options);
             app.UseAuthentication();
             app.UseAuthorization();

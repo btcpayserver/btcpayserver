@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -47,7 +47,7 @@ namespace BTCPayServer.Tests
             Assert.IsType<T>(obj);
             return (T)obj;
         }
-        
+
         public static FormFile GetFormFile(string filename, string content)
         {
             File.WriteAllText(filename, content);

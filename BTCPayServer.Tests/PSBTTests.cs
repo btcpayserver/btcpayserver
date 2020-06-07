@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Text;
@@ -79,9 +79,9 @@ namespace BTCPayServer.Tests
                 {
                     SigningContext = new SigningContextModel()
                     {
-                        PSBT = AssertRedirectedPSBT( await walletController.WalletPSBT(walletId, vmPSBT, "broadcast"), nameof(walletController.WalletPSBTReady))
+                        PSBT = AssertRedirectedPSBT(await walletController.WalletPSBT(walletId, vmPSBT, "broadcast"), nameof(walletController.WalletPSBTReady))
                     }
-                } ).AssertViewModelAsync<WalletPSBTReadyViewModel>();
+                }).AssertViewModelAsync<WalletPSBTReadyViewModel>();
                 Assert.NotEmpty(vmPSBT2.Inputs.Where(i => i.Error != null));
                 Assert.Equal(vmPSBT.PSBT, vmPSBT2.SigningContext.PSBT);
 
@@ -94,7 +94,7 @@ namespace BTCPayServer.Tests
                     {
                         PSBT = AssertRedirectedPSBT(await walletController.WalletPSBT(walletId, vmPSBT, "broadcast"), nameof(walletController.WalletPSBTReady))
                     }
-                } ).AssertViewModelAsync<WalletPSBTReadyViewModel>();
+                }).AssertViewModelAsync<WalletPSBTReadyViewModel>();
                 Assert.Equal(2 + 1, psbtReady.Destinations.Count); // The fee is a destination
                 Assert.Contains(psbtReady.Destinations, d => d.Destination == sendDestination && !d.Positive);
                 Assert.Contains(psbtReady.Destinations, d => d.Positive);

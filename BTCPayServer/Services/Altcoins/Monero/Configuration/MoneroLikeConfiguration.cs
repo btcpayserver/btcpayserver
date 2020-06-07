@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace BTCPayServer.Services.Altcoins.Monero.Configuration

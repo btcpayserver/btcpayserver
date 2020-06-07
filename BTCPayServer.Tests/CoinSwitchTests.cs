@@ -14,7 +14,7 @@ namespace BTCPayServer.Tests
     {
         public CoinSwitchTests(ITestOutputHelper helper)
         {
-            Logs.Tester = new XUnitLog(helper) {Name = "Tests"};
+            Logs.Tester = new XUnitLog(helper) { Name = "Tests" };
             Logs.LogProvider = new XUnitLogProvider(helper);
         }
 
@@ -86,6 +86,6 @@ namespace BTCPayServer.Tests
                 Assert.False(store.GetStoreBlob().CoinSwitchSettings.Enabled);
             }
         }
-   
+
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -31,7 +31,7 @@ namespace BTCPayServer
             cryptoCodes = cryptoCodes.Select(c => c.ToUpperInvariant()).ToArray();
             foreach (var network in unfiltered._Networks)
             {
-                if(cryptoCodes.Contains(network.Key))
+                if (cryptoCodes.Contains(network.Key))
                 {
                     _Networks.Add(network.Key, network.Value);
                 }
@@ -64,7 +64,7 @@ namespace BTCPayServer
             // Assume that electrum mappings are same as BTC if not specified
             foreach (var network in _Networks.Values.OfType<BTCPayNetwork>())
             {
-                if(network.ElectrumMapping.Count == 0)
+                if (network.ElectrumMapping.Count == 0)
                 {
                     network.ElectrumMapping = GetNetwork<BTCPayNetwork>("BTC").ElectrumMapping;
                     if (!network.NBitcoinNetwork.Consensus.SupportSegwit)
@@ -119,11 +119,11 @@ namespace BTCPayServer
         {
             return GetNetwork<BTCPayNetworkBase>(cryptoCode.ToUpperInvariant());
         }
-        public T GetNetwork<T>(string cryptoCode) where T: BTCPayNetworkBase
+        public T GetNetwork<T>(string cryptoCode) where T : BTCPayNetworkBase
         {
             if (cryptoCode == null)
                 throw new ArgumentNullException(nameof(cryptoCode));
-            if(!_Networks.TryGetValue(cryptoCode.ToUpperInvariant(), out BTCPayNetworkBase network))
+            if (!_Networks.TryGetValue(cryptoCode.ToUpperInvariant(), out BTCPayNetworkBase network))
             {
                 if (cryptoCode == "XBT")
                     return GetNetwork<T>("BTC");

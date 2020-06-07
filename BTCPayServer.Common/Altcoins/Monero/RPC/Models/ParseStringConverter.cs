@@ -10,7 +10,8 @@ namespace BTCPayServer.Services.Altcoins.Monero.RPC.Models
 
         public override object ReadJson(JsonReader reader, Type t, object existingValue, JsonSerializer serializer)
         {
-            if (reader.TokenType == JsonToken.Null) return null;
+            if (reader.TokenType == JsonToken.Null)
+                return null;
             var value = serializer.Deserialize<string>(reader);
             long l;
             if (Int64.TryParse(value, out l))

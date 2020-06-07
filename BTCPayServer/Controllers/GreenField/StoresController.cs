@@ -29,10 +29,10 @@ namespace BTCPayServer.Controllers.GreenField
         [HttpGet("~/api/v1/stores")]
         public ActionResult<IEnumerable<Client.Models.StoreData>> GetStores()
         {
-           var stores = HttpContext.GetStoresData();
-           return Ok(stores.Select(FromModel));
+            var stores = HttpContext.GetStoresData();
+            return Ok(stores.Select(FromModel));
         }
-        
+
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}")]
         public ActionResult<Client.Models.StoreData> GetStore(string storeId)
@@ -44,7 +44,7 @@ namespace BTCPayServer.Controllers.GreenField
             }
             return Ok(FromModel(store));
         }
-        
+
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpDelete("~/api/v1/stores/{storeId}")]
         public async Task<IActionResult> RemoveStore(string storeId)
@@ -63,7 +63,7 @@ namespace BTCPayServer.Controllers.GreenField
             await _storeRepository.RemoveStore(storeId, _userManager.GetUserId(User));
             return Ok();
         }
-        
+
         [HttpPost("~/api/v1/stores")]
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> CreateStore(CreateStoreRequest request)
@@ -79,7 +79,7 @@ namespace BTCPayServer.Controllers.GreenField
             await _storeRepository.CreateStore(_userManager.GetUserId(User), store);
             return Ok(FromModel(store));
         }
-        
+
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPut("~/api/v1/stores/{storeId}")]
         public async Task<IActionResult> UpdateStore(string storeId, UpdateStoreRequest request)
@@ -105,7 +105,7 @@ namespace BTCPayServer.Controllers.GreenField
             var storeBlob = data.GetStoreBlob();
             return new Client.Models.StoreData()
             {
-                Id = data.Id, 
+                Id = data.Id,
                 Name = data.StoreName,
                 Website = data.StoreWebsite,
                 SpeedPolicy = data.SpeedPolicy,
@@ -179,23 +179,23 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 return BadRequest();
             }
-            
+
             if (string.IsNullOrEmpty(request.Name))
                 ModelState.AddModelError(nameof(request.Name), "Name is missing");
-            else if(request.Name.Length < 1 || request.Name.Length > 50)
+            else if (request.Name.Length < 1 || request.Name.Length > 50)
                 ModelState.AddModelError(nameof(request.Name), "Name can only be between 1 and 50 characters");
             if (!string.IsNullOrEmpty(request.Website) && !Uri.TryCreate(request.Website, UriKind.Absolute, out _))
             {
                 ModelState.AddModelError(nameof(request.Website), "Website is not a valid url");
             }
-            if(request.InvoiceExpiration < TimeSpan.FromMinutes(1) && request.InvoiceExpiration > TimeSpan.FromMinutes(60 * 24 * 24))
+            if (request.InvoiceExpiration < TimeSpan.FromMinutes(1) && request.InvoiceExpiration > TimeSpan.FromMinutes(60 * 24 * 24))
                 ModelState.AddModelError(nameof(request.InvoiceExpiration), "InvoiceExpiration can only be between 1 and 34560 mins");
-            if(request.MonitoringExpiration < TimeSpan.FromMinutes(10) && request.MonitoringExpiration > TimeSpan.FromMinutes(60 * 24 * 24))
+            if (request.MonitoringExpiration < TimeSpan.FromMinutes(10) && request.MonitoringExpiration > TimeSpan.FromMinutes(60 * 24 * 24))
                 ModelState.AddModelError(nameof(request.MonitoringExpiration), "InvoiceExpiration can only be between 10 and 34560 mins");
-            if(request.PaymentTolerance < 0 && request.PaymentTolerance > 100)
+            if (request.PaymentTolerance < 0 && request.PaymentTolerance > 100)
                 ModelState.AddModelError(nameof(request.PaymentTolerance), "PaymentTolerance can only be between 0 and 100 percent");
-
-            return !ModelState.IsValid ? this.GetValidationResponse() : null;
+            
+            return !ModelState.IsValid ? BadRequest(new ValidationProblemDetails(ModelState)) : null;
         }
     }
 }

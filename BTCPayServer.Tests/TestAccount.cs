@@ -77,8 +77,8 @@ namespace BTCPayServer.Tests
                         return p;
                     }).GroupBy(permission => permission.Policy).Select(p =>
                     {
-                        var stores = p.Where(permission => !string.IsNullOrEmpty(permission.StoreId))
-                            .Select(permission => permission.StoreId).ToList();
+                        var stores = p.Where(permission => !string.IsNullOrEmpty(permission.Scope))
+                            .Select(permission => permission.Scope).ToList();
                         return new ManageController.AddApiKeyViewModel.PermissionValueItem()
                         {
                             Permission = p.Key,

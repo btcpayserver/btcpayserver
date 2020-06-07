@@ -62,16 +62,21 @@ namespace BTCPayServer.Controllers.GreenField
 
         [AllowAnonymous]
         [HttpPost("~/api/v1/users")]
-        public async Task<ActionResult<ApplicationUserData>> CreateUser(CreateApplicationUserRequest request, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> CreateUser(CreateApplicationUserRequest request, CancellationToken cancellationToken = default)
         {
             if (request?.Email is null)
-                return BadRequest(CreateValidationProblem(nameof(request.Email), "Email is missing"));
-            if (!Validation.EmailValidator.IsEmail(request.Email))
+                ModelState.AddModelError(nameof(request.Email), "Email is missing");
+            if (!string.IsNullOrEmpty(request?.Email) && !Validation.EmailValidator.IsEmail(request.Email))
             {
-                return BadRequest(CreateValidationProblem(nameof(request.Email), "Invalid email"));
+                ModelState.AddModelError(nameof(request.Email), "Invalid email");
             }
             if (request?.Password is null)
-                return BadRequest(CreateValidationProblem(nameof(request.Password), "Password is missing"));
+                ModelState.AddModelError(nameof(request.Password), "Password is missing");
+
+            if (!ModelState.IsValid)
+            {
+                return this.GetValidationResponse();
+            }
             var anyAdmin = (await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin)).Any();
             var policies = await _settingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
             var isAuth = User.Identity.AuthenticationType == GreenFieldConstants.AuthenticationType;
@@ -113,7 +118,7 @@ namespace BTCPayServer.Controllers.GreenField
                 {
                     ModelState.AddModelError(nameof(request.Password), error.Description);
                 }
-                return BadRequest(new ValidationProblemDetails(ModelState));
+                return this.GetValidationResponse();
             }
             if (!isAdmin)
             {
@@ -127,7 +132,7 @@ namespace BTCPayServer.Controllers.GreenField
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
-                return BadRequest(new ValidationProblemDetails(ModelState));
+                return this.GetValidationResponse();
             }
 
             if (request.IsAdministrator is true)
@@ -150,13 +155,6 @@ namespace BTCPayServer.Controllers.GreenField
             }
             _eventAggregator.Publish(new UserRegisteredEvent() {RequestUri = Request.GetAbsoluteRootUri(), User = user, Admin = request.IsAdministrator is true });
             return CreatedAtAction(string.Empty, user);
-        }
-
-        private ValidationProblemDetails CreateValidationProblem(string propertyName, string errorMessage)
-        {
-            var modelState = new ModelStateDictionary();
-            modelState.AddModelError(propertyName, errorMessage);
-            return new ValidationProblemDetails(modelState);
         }
 
         private static ApplicationUserData FromModel(ApplicationUser data)

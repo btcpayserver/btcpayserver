@@ -47,7 +47,7 @@ namespace BTCPayServer.Controllers.GreenField
         
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpDelete("~/api/v1/stores/{storeId}")]
-        public async Task<ActionResult> RemoveStore(string storeId)
+        public async Task<IActionResult> RemoveStore(string storeId)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
@@ -57,8 +57,8 @@ namespace BTCPayServer.Controllers.GreenField
 
             if (!_storeRepository.CanDeleteStores())
             {
-                ModelState.AddModelError(string.Empty, "BTCPay Server is using a database server that does not allow you to remove stores.");
-                return BadRequest(new ValidationProblemDetails(ModelState));
+                return this.GetGeneralErrorResponse(
+                    "BTCPay Server is using a database server that does not allow you to remove stores.");
             }
             await _storeRepository.RemoveStore(storeId, _userManager.GetUserId(User));
             return Ok();
@@ -194,8 +194,8 @@ namespace BTCPayServer.Controllers.GreenField
                 ModelState.AddModelError(nameof(request.MonitoringExpiration), "InvoiceExpiration can only be between 10 and 34560 mins");
             if(request.PaymentTolerance < 0 && request.PaymentTolerance > 100)
                 ModelState.AddModelError(nameof(request.PaymentTolerance), "PaymentTolerance can only be between 0 and 100 percent");
-            
-            return !ModelState.IsValid ? BadRequest(new ValidationProblemDetails(ModelState)) : null;
+
+            return !ModelState.IsValid ? this.GetValidationResponse() : null;
         }
     }
 }

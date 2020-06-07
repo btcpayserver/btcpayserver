@@ -30,7 +30,7 @@
                             }
                         }
                     },
-                    "400": {
+                    "422": {
                         "description": "A list of errors that occurred",
                         "content": {
                             "application/json": {
@@ -40,8 +40,21 @@
                             }
                         }
                     },
+                    "400": {
+                        "description": "An error occurred",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
                     "403": {
                         "description": "If you are authenticated but forbidden"
+                    },
+                    "404": {
+                        "description": "The lightning node configuration was not found"
                     }
                 },
                 "security": [
@@ -77,8 +90,8 @@
                     "200": {
                         "description": "Successfully connected"
                     },
-                    "400": {
-                        "description": "A list of errors that occurred when attempting to connect to the lightning node",
+                    "422": {
+                        "description": "A list of errors that occurred",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -87,8 +100,21 @@
                             }
                         }
                     },
+                    "400": {
+                        "description": "An error occurred",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
                     "403": {
                         "description": "If you are authenticated but forbidden"
+                    },
+                    "404": {
+                        "description": "The lightning node configuration was not found"
                     }
                 },
                 "requestBody": {
@@ -145,17 +171,20 @@
                         }
                     },
                     "400": {
-                        "description": "A list of errors that occurred",
+                        "description": "An error occurred",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                    "$ref": "#/components/schemas/ProblemDetails"
                                 }
                             }
                         }
                     },
                     "403": {
                         "description": "If you are authenticated but forbidden"
+                    },
+                    "404": {
+                        "description": "The lightning node configuration was not found"
                     }
                 },
                 "security": [
@@ -189,8 +218,8 @@
                     "200": {
                         "description": "Successfully opened"
                     },
-                    "400": {
-                        "description": "A list of errors that occurred when attempting to connect to the lightning node",
+                    "422": {
+                        "description": "A list of errors that occurred",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -199,8 +228,21 @@
                             }
                         }
                     },
+                    "400": {
+                        "description": "An error occurred",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
                     "403": {
                         "description": "If you are authenticated but forbidden"
+                    },
+                    "404": {
+                        "description": "The lightning node configuration was not found"
                     }
                 },
                 "requestBody": {
@@ -253,18 +295,11 @@
                             }
                         }
                     },
-                    "400": {
-                        "description": "A list of errors that occurred",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ValidationProblemDetails"
-                                }
-                            }
-                        }
-                    },
                     "403": {
                         "description": "If you are authenticated but forbidden"
+                    },
+                    "404": {
+                        "description": "The lightning node configuration was not found"
                     }
                 },
                 "security": [
@@ -316,18 +351,11 @@
                             }
                         }
                     },
-                    "400": {
-                        "description": "A list of errors that occurred",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ValidationProblemDetails"
-                                }
-                            }
-                        }
-                    },
                     "403": {
                         "description": "If you are authenticated but forbidden"
+                    },
+                    "404": {
+                        "description": "The lightning node configuration or the specified invoice was not found "
                     }
                 },
                 "security": [
@@ -363,8 +391,8 @@
                     "200": {
                         "description": "Successfully paid"
                     },
-                    "400": {
-                        "description": "A list of errors that occurred when attempting to pay the lightning invoice",
+                    "422": {
+                        "description": "A list of errors that occurred",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -373,8 +401,21 @@
                             }
                         }
                     },
+                    "400": {
+                        "description": "An error occurred",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
                     "403": {
                         "description": "If you are authenticated but forbidden"
+                    },
+                    "404": {
+                        "description": "The lightning node configuration was not found"
                     }
                 },
                 "requestBody": {
@@ -427,8 +468,8 @@
                             }
                         }
                     },
-                    "400": {
-                        "description": "A list of errors that occurred when attempting to create the lightning invoice",
+                    "422": {
+                        "description": "A list of errors that occurred",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -437,8 +478,21 @@
                             }
                         }
                     },
+                    "400": {
+                        "description": "An error occurred",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
                     "403": {
                         "description": "If you are authenticated but forbidden"
+                    },
+                    "404": {
+                        "description": "The lightning node configuration was not found"
                     }
                 },
                 "requestBody": {

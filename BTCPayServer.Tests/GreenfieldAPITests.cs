@@ -105,13 +105,13 @@ namespace BTCPayServer.Tests
                 tester.PayTester.DisableRegistration = true;
                 await tester.StartAsync();
                 var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
-                await AssertHttpError(400,
+                await AssertHttpError(422,
                     async () => await unauthClient.CreateUser(new CreateApplicationUserRequest()));
-                await AssertHttpError(400,
+                await AssertHttpError(422,
                     async () => await unauthClient.CreateUser(
                         new CreateApplicationUserRequest() {Email = "test@gmail.com"}));
                 // Pass too simple
-                await AssertHttpError(400,
+                await AssertHttpError(422,
                     async () => await unauthClient.CreateUser(
                         new CreateApplicationUserRequest() {Email = "test3@gmail.com", Password = "a"}));
 
@@ -123,7 +123,7 @@ namespace BTCPayServer.Tests
                     new CreateApplicationUserRequest() {Email = "test2@gmail.com", Password = "abceudhqw"});
 
                 // Duplicate email
-                await AssertHttpError(400,
+                await AssertHttpError(422,
                     async () => await unauthClient.CreateUser(
                         new CreateApplicationUserRequest() {Email = "test2@gmail.com", Password = "abceudhqw"}));
 
@@ -375,16 +375,16 @@ namespace BTCPayServer.Tests
                 //create payment request
 
                 //validation errors
-                await AssertHttpError(400, async () =>
+                await AssertHttpError(422, async () =>
                 {
                     await client.CreatePaymentRequest(user.StoreId, new CreatePaymentRequestRequest() {Title = "A"});
                 });
-                await AssertHttpError(400, async () =>
+                await AssertHttpError(422, async () =>
                 {
                     await client.CreatePaymentRequest(user.StoreId,
                         new CreatePaymentRequestRequest() {Title = "A", Currency = "BTC", Amount = 0});
                 });
-                await AssertHttpError(400, async () =>
+                await AssertHttpError(422, async () =>
                 {
                     await client.CreatePaymentRequest(user.StoreId,
                         new CreatePaymentRequestRequest() {Title = "A", Currency = "helloinvalid", Amount = 1});

@@ -44,8 +44,7 @@ namespace BTCPayServer.Controllers.GreenField
             }
             catch (Exception e)
             {
-                ModelState.AddModelError(string.Empty, e.Message);
-                return BadRequest(new ValidationProblemDetails(ModelState));
+                return this.GetExceptionResponse(e);
             }
         }
 
@@ -73,8 +72,7 @@ namespace BTCPayServer.Controllers.GreenField
             }
             catch (Exception e)
             {
-                ModelState.AddModelError(string.Empty, e.Message);
-                return BadRequest(new ValidationProblemDetails(ModelState));
+                return this.GetExceptionResponse(e);
             }
 
             return Ok();
@@ -103,8 +101,7 @@ namespace BTCPayServer.Controllers.GreenField
             }
             catch (Exception e)
             {
-                ModelState.AddModelError(string.Empty, e.Message);
-                return BadRequest(new ValidationProblemDetails(ModelState));
+                return this.GetExceptionResponse(e);
             }
         }
 
@@ -157,13 +154,11 @@ namespace BTCPayServer.Controllers.GreenField
                     return Ok();
                 }
 
-                ModelState.AddModelError(string.Empty, response.Result.ToString());
-                return BadRequest(new ValidationProblemDetails(ModelState));
+                return this.GetGeneralErrorResponse(response.Result.ToString());
             }
             catch (Exception e)
             {
-                ModelState.AddModelError(string.Empty, e.Message);
-                return BadRequest(new ValidationProblemDetails(ModelState));
+                return this.GetExceptionResponse(e);
             }
         }
 
@@ -193,7 +188,7 @@ namespace BTCPayServer.Controllers.GreenField
             }
             catch (Exception)
             {
-                ModelState.AddModelError(nameof(lightningInvoice), "The BOLT11 invoice was invalid.");
+                ModelState.AddModelError(nameof(lightningInvoice.Invoice), "The BOLT11 invoice was invalid.");
             }
 
             if (CheckValidation(out var errorActionResult))
@@ -204,17 +199,13 @@ namespace BTCPayServer.Controllers.GreenField
             var result = await lightningClient.Pay(lightningInvoice.Invoice);
             switch (result.Result)
             {
-                case PayResult.Ok:
-                    return Ok();
                 case PayResult.CouldNotFindRoute:
-                    ModelState.AddModelError(nameof(lightningInvoice.Invoice), "Could not find route");
-                    break;
+                    return this.GetGeneralErrorResponse("Could not find route");
                 case PayResult.Error:
-                    ModelState.AddModelError(nameof(lightningInvoice.Invoice), result.ErrorDetail);
-                    break;
+                    return this.GetGeneralErrorResponse(result.ErrorDetail);
             }
 
-            return BadRequest(new ValidationProblemDetails(ModelState));
+            return Ok();
         }
 
         public virtual async Task<IActionResult> GetInvoice(string cryptoCode, string id)
@@ -237,8 +228,7 @@ namespace BTCPayServer.Controllers.GreenField
             }
             catch (Exception e)
             {
-                ModelState.AddModelError(string.Empty, e.Message);
-                return BadRequest(new ValidationProblemDetails(ModelState));
+                return this.GetExceptionResponse(e);
             }
         }
 
@@ -269,8 +259,7 @@ namespace BTCPayServer.Controllers.GreenField
             }
             catch (Exception e)
             {
-                ModelState.AddModelError(string.Empty, e.Message);
-                return BadRequest(new ValidationProblemDetails(ModelState));
+                return this.GetExceptionResponse(e);
             }
         }
 
@@ -292,7 +281,7 @@ namespace BTCPayServer.Controllers.GreenField
         {
             if (!ModelState.IsValid)
             {
-                result = BadRequest(new ValidationProblemDetails(ModelState));
+                result = this.GetValidationResponse();
                 return true;
             }
 

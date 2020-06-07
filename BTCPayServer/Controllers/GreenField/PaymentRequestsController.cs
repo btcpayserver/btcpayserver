@@ -137,7 +137,7 @@ namespace BTCPayServer.Controllers.GreenField
             if (!string.IsNullOrEmpty(data.CustomCSSLink) && data.CustomCSSLink.Length > 500)
                 ModelState.AddModelError(nameof(data.CustomCSSLink), "CustomCSSLink is 500 chars max");
 
-            return !ModelState.IsValid ? BadRequest(new ValidationProblemDetails(ModelState)) : null;
+            return !ModelState.IsValid ? this.GetValidationResponse() :null;
         }
 
         private static Client.Models.PaymentRequestData FromModel(PaymentRequestData data)

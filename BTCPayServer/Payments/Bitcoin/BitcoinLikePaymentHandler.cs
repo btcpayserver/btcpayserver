@@ -169,8 +169,7 @@ namespace BTCPayServer.Payments.Bitcoin
                 var prefix = $"{supportedPaymentMethod.PaymentId.ToPrettyString()}:";
                 var nodeSupport = _dashboard?.Get(network.CryptoCode)?.Status?.BitcoinStatus?.Capabilities
                     ?.CanSupportTransactionCheck is true;
-                bool isHotwallet = supportedPaymentMethod.Source == "NBXplorer";
-                onchainMethod.PayjoinEnabled &= isHotwallet && nodeSupport;
+                onchainMethod.PayjoinEnabled &= supportedPaymentMethod.IsHotWallet && nodeSupport;
                 if (!isHotwallet)
                     logs.Write($"{prefix} Payjoin should have been enabled, but your store is not a hotwallet");
                 if (!nodeSupport)

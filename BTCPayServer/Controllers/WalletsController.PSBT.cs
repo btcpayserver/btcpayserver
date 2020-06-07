@@ -475,11 +475,14 @@ namespace BTCPayServer.Controllers
                     if (await CanUseHotWallet())
                     {
                         var derivationScheme = GetDerivationSchemeSettings(walletId);
-                        var extKey = await ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode)
-                            .GetMetadataAsync<string>(derivationScheme.AccountDerivation,
-                                WellknownMetadataKeys.MasterHDKey);
-                        return SignWithSeed(walletId,
-                            new SignWithSeedViewModel() {SeedOrKey = extKey, SigningContext = signingContext });
+                        if (derivationScheme.IsHotWallet)
+                        {
+                            var extKey = await ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode)
+                                .GetMetadataAsync<string>(derivationScheme.AccountDerivation,
+                                    WellknownMetadataKeys.MasterHDKey);
+                            return SignWithSeed(walletId,
+                                new SignWithSeedViewModel() { SeedOrKey = extKey, SigningContext = signingContext });
+                        }
                     }
                     TempData.SetStatusMessageModel(new StatusMessageModel()
                     {

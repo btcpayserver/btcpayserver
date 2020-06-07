@@ -128,10 +128,10 @@ namespace BTCPayServer.Controllers
                 else if (wanted?.Any()??false)
                 {
                     if (vm.SelectiveStores && Policies.IsStorePolicy(permissionValue.Permission) &&
-                        wanted.Any(permission => !string.IsNullOrEmpty(permission.StoreId)))
+                        wanted.Any(permission => !string.IsNullOrEmpty(permission.Scope)))
                     {
                         permissionValue.StoreMode = AddApiKeyViewModel.ApiKeyStoreMode.Specific;
-                        permissionValue.SpecificStores = wanted.Select(permission => permission.StoreId).ToList();
+                        permissionValue.SpecificStores = wanted.Select(permission => permission.Scope).ToList();
                     }
                     else
                     {

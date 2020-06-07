@@ -192,7 +192,7 @@ namespace BTCPayServer.Tests
             var canModifyAllStores = Permission.Create(Policies.CanModifyStoreSettings, null);
             var canModifyServer = Permission.Create(Policies.CanModifyServerSettings, null);
             var unrestricted = Permission.Create(Policies.Unrestricted, null);
-            var selectiveStorePermissions = permissions.Where(p => p.StoreId != null && p.Policy == Policies.CanModifyStoreSettings);
+            var selectiveStorePermissions = permissions.Where(p => p.Scope != null && p.Policy == Policies.CanModifyStoreSettings);
             if (permissions.Contains(canModifyAllStores) || selectiveStorePermissions.Any())
             {
                 var resultStores =
@@ -202,11 +202,11 @@ namespace BTCPayServer.Tests
                 foreach (var selectiveStorePermission in selectiveStorePermissions)
                 {
                     Assert.True(await TestApiAgainstAccessToken<bool>(accessToken,
-                        $"{TestApiPath}/me/stores/{selectiveStorePermission.StoreId}/can-edit",
+                        $"{TestApiPath}/me/stores/{selectiveStorePermission.Scope}/can-edit",
                         tester.PayTester.HttpClient));
 
                     Assert.Contains(resultStores,
-                        data => data.Id.Equals(selectiveStorePermission.StoreId, StringComparison.InvariantCultureIgnoreCase));
+                        data => data.Id.Equals(selectiveStorePermission.Scope, StringComparison.InvariantCultureIgnoreCase));
                 }
 
                 bool shouldBeAuthorized = false;

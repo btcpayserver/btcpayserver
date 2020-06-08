@@ -30,28 +30,8 @@
                             }
                         }
                     },
-                    "422": {
-                        "description": "A list of errors that occurred",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ValidationProblemDetails"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "An error occurred",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ProblemDetails"
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "If you are authenticated but forbidden"
+                    "503": {
+                        "description": "Unable to access the lightning node"
                     },
                     "404": {
                         "description": "The lightning node configuration was not found"
@@ -91,7 +71,7 @@
                         "description": "Successfully connected"
                     },
                     "422": {
-                        "description": "A list of errors that occurred",
+                        "description": "Unable to validate the request",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -101,7 +81,7 @@
                         }
                     },
                     "400": {
-                        "description": "An error occurred",
+                        "description": "Wellknown error codes are: `could-not-connect`",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -110,8 +90,8 @@
                             }
                         }
                     },
-                    "403": {
-                        "description": "If you are authenticated but forbidden"
+                    "503": {
+                        "description": "Unable to access the lightning node"
                     },
                     "404": {
                         "description": "The lightning node configuration was not found"
@@ -170,19 +150,6 @@
                             }
                         }
                     },
-                    "400": {
-                        "description": "An error occurred",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ProblemDetails"
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "If you are authenticated but forbidden"
-                    },
                     "404": {
                         "description": "The lightning node configuration was not found"
                     }
@@ -219,7 +186,7 @@
                         "description": "Successfully opened"
                     },
                     "422": {
-                        "description": "A list of errors that occurred",
+                        "description": "Unable to validate the request",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -229,7 +196,7 @@
                         }
                     },
                     "400": {
-                        "description": "An error occurred",
+                        "description": "Wellknown error codes are: `channel-already-exists`, `cannot-afford-funding`, `need-more-confirmations`, `peer-not-connected`",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -237,9 +204,6 @@
                                 }
                             }
                         }
-                    },
-                    "403": {
-                        "description": "If you are authenticated but forbidden"
                     },
                     "404": {
                         "description": "The lightning node configuration was not found"
@@ -266,7 +230,7 @@
             }
         },
         "/api/v1/server/lightning/{cryptoCode}/address": {
-            "get": {
+            "post": {
                 "tags": [
                     "Lightning (Internal Node)"
                 ],
@@ -290,13 +254,14 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "description": "A bitcoin address belonging to the lightning node"
                                 }
                             }
                         }
                     },
-                    "403": {
-                        "description": "If you are authenticated but forbidden"
+                    "503": {
+                        "description": "Unable to access the lightning node"
                     },
                     "404": {
                         "description": "The lightning node configuration was not found"
@@ -351,8 +316,8 @@
                             }
                         }
                     },
-                    "403": {
-                        "description": "If you are authenticated but forbidden"
+                    "503": {
+                        "description": "Unable to access the lightning node"
                     },
                     "404": {
                         "description": "The lightning node configuration or the specified invoice was not found "
@@ -392,7 +357,7 @@
                         "description": "Successfully paid"
                     },
                     "422": {
-                        "description": "A list of errors that occurred",
+                        "description": "Unable to validate the request",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -402,7 +367,7 @@
                         }
                     },
                     "400": {
-                        "description": "An error occurred",
+                        "description": "Wellknown error codes are: `could-not-find-route`, `generic-error`",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -411,8 +376,8 @@
                             }
                         }
                     },
-                    "403": {
-                        "description": "If you are authenticated but forbidden"
+                    "503": {
+                        "description": "Unable to access the lightning node"
                     },
                     "404": {
                         "description": "The lightning node configuration was not found"
@@ -468,28 +433,8 @@
                             }
                         }
                     },
-                    "422": {
-                        "description": "A list of errors that occurred",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ValidationProblemDetails"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "An error occurred",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ProblemDetails"
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "If you are authenticated but forbidden"
+                    "503": {
+                        "description": "Unable to access the lightning node"
                     },
                     "404": {
                         "description": "The lightning node configuration was not found"
@@ -500,7 +445,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/PayLightningInvoiceRequest"
+                                "$ref": "#/components/schemas/CreateLightningInvoiceRequest"
                             }
                         }
                     }

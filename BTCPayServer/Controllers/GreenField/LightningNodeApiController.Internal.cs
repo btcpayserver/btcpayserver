@@ -13,6 +13,7 @@ namespace BTCPayServer.Controllers.GreenField
 {
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+    [LightningUnavailableExceptionFilter]
     public class InternalLightningNodeApiController : LightningNodeApiController
     {
         private readonly BTCPayServerOptions _btcPayServerOptions;
@@ -64,7 +65,7 @@ namespace BTCPayServer.Controllers.GreenField
 
         [Authorize(Policy = Policies.CanUseInternalLightningNode,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpGet("~/api/v1/server/lightning/{cryptoCode}/address")]
+        [HttpPost("~/api/v1/server/lightning/{cryptoCode}/address")]
         public override Task<IActionResult> GetDepositAddress(string cryptoCode)
         {
             return base.GetDepositAddress(cryptoCode);

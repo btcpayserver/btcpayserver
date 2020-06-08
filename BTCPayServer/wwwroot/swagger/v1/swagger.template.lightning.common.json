@@ -2,68 +2,40 @@
     "components": {
         "schemas": {
             "ConnectToNodeRequest": {
-                "oneOf": [
-                    {
-                        "type": "object",
-                        "additionalProperties": false,
-                        "properties": {
-                            "nodeInfo": {
-                                "type": "string",
-                                "nullable": true
-                            }
-                        }
-                    },
-                    {
-                        "type": "object",
-                        "additionalProperties": false,
-                        "properties": {
-                            "nodeId": {
-                                "type": "string",
-                                "nullable": true
-                            },
-                            "nodeHost": {
-                                "type": "string",
-                                "nullable": true
-                            },
-                            "nodePort": {
-                                "type": "integer",
-                                "format": "int32"
-                            }
-                        }
-                    }
-                ]
-            },
-            "CreateLightningInvoiceRequest": {
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
-                    "amount": {
+                    "nodeURI": {
+                        "type": "string",
                         "nullable": true,
-                        "oneOf": [
-                            {
-                                "$ref": "#/components/schemas/LightMoney"
-                            }
-                        ]
-                    },
-                    "description": {
-                        "type": "string",
-                        "nullable": true
-                    },
-                    "expiry": {
-                        "type": "string",
-                        "format": "time-span"
-                    },
-                    "privateRouteHints": {
-                        "type": "boolean",
-                        "nullable": true
+                        "description": "Node URI in the form `pubkey@endpoint[:port]`"
                     }
                 }
             },
-            "LightMoney": {
-                "type": "string",
-                "format": "int64",
-                "description": "a number amount wrapped in a string, represented in millistatoshi (00000000001BTC = 1 mSAT)",
-                "additionalProperties": false
+            "CreateLightningInvoiceRequest": {
+                "type": "object",
+                "properties": {
+                    "amount": {
+                        "type": "string",
+                        "description": "Amount wrapped in a string, represented in a millistatoshi string. (1000 millisatoshi = 1 satoshi)",
+                        "nullable": false
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Description of the invoice in the BOLT11"
+                    },
+                    "expiry": {
+                        "type": "integer",
+                        "description": "Expiration time in seconds"
+                    },
+                    "privateRouteHints": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "default": false,
+                        "description": "True if the invoice should include private route hints"
+                    }
+                }
             },
             "LightningChannelData": {
                 "type": "object",
@@ -71,29 +43,26 @@
                 "properties": {
                     "remoteNode": {
                         "type": "string",
-                        "nullable": true
+                        "nullable": false,
+                        "description": "The public key of the node (Node ID)"
                     },
                     "isPublic": {
-                        "type": "boolean"
+                        "type": "boolean",
+                        "description": "Whether the node is public"
                     },
                     "isActive": {
-                        "type": "boolean"
+                        "type": "boolean",
+                        "description": "Whether the node is online"
                     },
                     "capacity": {
-                        "nullable": true,
-                        "oneOf": [
-                            {
-                                "$ref": "#/components/schemas/LightMoney"
-                            }
-                        ]
+                        "type": "string",
+                        "description": "The capacity of the channel in millisatoshi",
+                        "nullable": false
                     },
                     "localBalance": {
-                        "nullable": true,
-                        "oneOf": [
-                            {
-                                "$ref": "#/components/schemas/LightMoney"
-                            }
-                        ]
+                        "type": "string",
+                        "description": "The local balance of the channel in millisatoshi",
+                        "nullable": false
                     },
                     "channelPoint": {
                         "type": "string",
@@ -107,39 +76,32 @@
                 "properties": {
                     "id": {
                         "type": "string",
-                        "nullable": true
+                        "description": "The invoice's ID"
                     },
                     "status": {
                         "$ref": "#/components/schemas/LightningInvoiceStatus"
                     },
-                    "bolT11": {
+                    "BOLT11": {
                         "type": "string",
-                        "nullable": true
+                        "description": "The BOLT11 representation of the invoice",
+                        "nullable": false
                     },
                     "paidAt": {
-                        "type": "string",
-                        "format": "date-time",
+                        "type": "integer",
+                        "description": "The unix timestamp when the invoice got paid",
                         "nullable": true
                     },
                     "expiresAt": {
-                        "type": "string",
-                        "format": "date-time"
+                        "type": "integer",
+                        "description": "The unix timestamp when the invoice expires"
                     },
                     "amount": {
-                        "nullable": true,
-                        "oneOf": [
-                            {
-                                "$ref": "#/components/schemas/LightMoney"
-                            }
-                        ]
+                        "type": "string",
+                        "description": "The amount of the invoice in millisatoshi"
                     },
                     "amountReceived": {
-                        "nullable": true,
-                        "oneOf": [
-                            {
-                                "$ref": "#/components/schemas/LightMoney"
-                            }
-                        ]
+                        "type": "string",
+                        "description": "The amount received in millisatoshi"
                     }
                 }
             },
@@ -159,28 +121,26 @@
             },
             "LightningNodeInformationData": {
                 "type": "object",
-                "additionalProperties": false,
                 "properties": {
-                    "nodeInfoList": {
+                    "nodeURIs": {
                         "type": "array",
-                        "nullable": true,
+                        "description": "Node URIs to connect to this node in the form `pubkey@endpoint[:port]`",
                         "items": {
                             "type": "string"
                         }
                     },
                     "blockHeight": {
                         "type": "integer",
-                        "format": "int32"
+                        "description": "The block height of the lightning node"
                     }
                 }
             },
             "PayLightningInvoiceRequest": {
                 "type": "object",
-                "additionalProperties": false,
                 "properties": {
-                    "invoice": {
+                    "BOLT11": {
                         "type": "string",
-                        "nullable": true
+                        "description": "The BOLT11 of the invoice to pay"
                     }
                 }
             },
@@ -188,48 +148,19 @@
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
-                    "node": {
-                        "nullable": true,
-                        "oneOf": [
-                            {
-                                "$ref": "#/components/schemas/ConnectToNodeRequest"
-                            }
-                        ]
+                    "nodeURI": {
+                        "type": "string",
+                        "description": "Node URI in the form `pubkey@endpoint[:port]`"
                     },
                     "channelAmount": {
-                        "nullable": true,
-                        "oneOf": [
-                            {
-                                "$ref": "#/components/schemas/Money"
-                            }
-                        ]
+                        "type": "string",
+                        "description": "The amount to fund (in satoshi)"
                     },
                     "feeRate": {
-                        "nullable": true,
-                        "oneOf": [
-                            {
-                                "$ref": "#/components/schemas/FeeRate"
-                            }
-                        ]
+                        "type": "number",
+                        "description": "The amount to fund (in satoshi per byte)"
                     }
                 }
-            },
-            "Money": {
-                "type": "string",
-                "format": "int64",
-                "description": "a number amount wrapped in a string, represented in satoshi (00000001BTC = 1 sat)"
-            },
-            "FeeRate": {
-                "oneOf": [
-                    {
-                        "type": "integer",
-                        "format": "int64"
-                    },
-                    {
-                        "type": "number",
-                        "format": "float"
-                    }
-                ]
             }
         }
     }

@@ -9,7 +9,8 @@ namespace BTCPayServer.Client.Models
 {
     public class LightningNodeInformationData
     {
-        public IEnumerable<string> NodeInfoList { get; set; }
+        [JsonProperty("nodeURIs", ItemConverterType = typeof(NodeUriJsonConverter))]
+        public NodeInfo[] NodeURIs { get; set; }
         public int BlockHeight { get; set; }
     }
 
@@ -21,10 +22,10 @@ namespace BTCPayServer.Client.Models
 
         public bool IsActive { get; set; }
 
-        [JsonProperty(ItemConverterType = typeof(LightMoneyJsonConverter))]
+        [JsonConverter(typeof(LightMoneyJsonConverter))]
         public LightMoney Capacity { get; set; }
 
-        [JsonProperty(ItemConverterType = typeof(LightMoneyJsonConverter))]
+        [JsonConverter(typeof(LightMoneyJsonConverter))]
         public LightMoney LocalBalance { get; set; }
 
         public string ChannelPoint { get; set; }

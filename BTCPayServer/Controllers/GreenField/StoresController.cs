@@ -57,7 +57,7 @@ namespace BTCPayServer.Controllers.GreenField
 
             if (!_storeRepository.CanDeleteStores())
             {
-                return this.GetGeneralErrorResponse(
+                return this.CreateAPIError("unsupported",
                     "BTCPay Server is using a database server that does not allow you to remove stores.");
             }
             await _storeRepository.RemoveStore(storeId, _userManager.GetUserId(User));
@@ -195,7 +195,7 @@ namespace BTCPayServer.Controllers.GreenField
             if(request.PaymentTolerance < 0 && request.PaymentTolerance > 100)
                 ModelState.AddModelError(nameof(request.PaymentTolerance), "PaymentTolerance can only be between 0 and 100 percent");
 
-            return !ModelState.IsValid ? this.GetValidationResponse() : null;
+            return !ModelState.IsValid ? this.CreateValidationError(ModelState) : null;
         }
     }
 }

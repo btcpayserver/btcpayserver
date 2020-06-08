@@ -26,7 +26,7 @@ namespace BTCPayServer.Client
         {
             var response = await _httpClient.SendAsync(
                 CreateHttpRequest($"api/v1/stores/{storeId}", method: HttpMethod.Delete), token);
-            HandleResponse(response);
+            await HandleResponse(response);
         }
         
         public virtual async Task<StoreData> CreateStore(CreateStoreRequest request, CancellationToken token = default)

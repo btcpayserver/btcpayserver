@@ -51,7 +51,7 @@ namespace BTCPayServer
                     derivationSchemeSettings.AccountOriginal = null; // Saving this would be confusing for user, as xpub of electrum is legacy derivation, but for btcpay, it is segwit derivation
                 return true;
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 return false;
             }

@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using NicolasDorier.RateLimits;
 using BTCPayServer.Client;
+using System.Reflection;
 
 namespace BTCPayServer.Controllers.GreenField
 {
@@ -75,7 +76,7 @@ namespace BTCPayServer.Controllers.GreenField
 
             if (!ModelState.IsValid)
             {
-                return this.GetValidationResponse();
+                return this.CreateValidationError(ModelState);
             }
             var anyAdmin = (await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin)).Any();
             var policies = await _settingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
@@ -118,7 +119,7 @@ namespace BTCPayServer.Controllers.GreenField
                 {
                     ModelState.AddModelError(nameof(request.Password), error.Description);
                 }
-                return this.GetValidationResponse();
+                return this.CreateValidationError(ModelState);
             }
             if (!isAdmin)
             {
@@ -130,9 +131,12 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 foreach (var error in identityResult.Errors)
                 {
-                    ModelState.AddModelError(string.Empty, error.Description);
+                    if (error.Code == "DuplicateUserName")
+                        ModelState.AddModelError(nameof(request.Email), error.Description);
+                    else
+                        ModelState.AddModelError(string.Empty, error.Description);
                 }
-                return this.GetValidationResponse();
+                return this.CreateValidationError(ModelState);
             }
 
             if (request.IsAdministrator is true)

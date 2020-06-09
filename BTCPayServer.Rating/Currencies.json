@@ -1267,17 +1267,17 @@
         "crypto": true
     },
     {
-        "name": "Satoshis",
-        "code": "SATS",
-        "divisibility": 0,
-        "symbol": "Sats",
-        "crypto": true
-    },
-    {
         "name": "CHC",
         "code": "CHC",
         "divisibility": 8,
         "symbol": null,
+        "crypto": true
+    },
+    {
+        "name": "Satoshis",
+        "code": "SATS",
+        "divisibility": 0,
+        "symbol": "Sats",
         "crypto": true
     }
 ]

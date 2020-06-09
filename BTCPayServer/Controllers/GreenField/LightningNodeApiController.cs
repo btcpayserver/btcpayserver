@@ -5,12 +5,30 @@ using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
+using BTCPayServer.Payments.Changelly.Models;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using NBitcoin;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Controllers.GreenField
 {
+    public class LightningUnavailableExceptionFilter : Attribute, IExceptionFilter
+    {
+        public void OnException(ExceptionContext context)
+        {
+            if (context.Exception is NBitcoin.JsonConverters.JsonObjectException jsonObject)
+            {
+                context.Result = new ObjectResult(new GreenfieldValidationError(jsonObject.Path, jsonObject.Message));
+            }
+            else
+            {
+                context.Result = new StatusCodeResult(503);
+            }
+            context.ExceptionHandled = true;
+        }
+    }
     public abstract class LightningNodeApiController : Controller
     {
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
@@ -32,20 +50,12 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 return NotFound();
             }
-
-            try
+            var info = await lightningClient.GetInfo();
+            return Ok(new LightningNodeInformationData()
             {
-                var info = await lightningClient.GetInfo();
-                return Ok(new LightningNodeInformationData()
-                {
-                    BlockHeight = info.BlockHeight,
-                    NodeInfoList = info.NodeInfoList.Select(nodeInfo => nodeInfo.ToString())
-                });
-            }
-            catch (Exception e)
-            {
-                return this.GetExceptionResponse(e);
-            }
+                BlockHeight = info.BlockHeight,
+                NodeURIs = info.NodeInfoList.Select(nodeInfo => nodeInfo).ToArray()
+            });
         }
 
         public virtual async Task<IActionResult> ConnectToNode(string cryptoCode, ConnectToNodeRequest request)
@@ -56,23 +66,23 @@ namespace BTCPayServer.Controllers.GreenField
                 return NotFound();
             }
 
-            if (TryGetNodeInfo(request, out var nodeInfo))
+            if (request?.NodeURI is null)
             {
-                ModelState.AddModelError(nameof(request.NodeId), "A valid node info was not provided to connect to");
+                ModelState.AddModelError(nameof(request.NodeURI), "A valid node info was not provided to connect to");
             }
 
-            if (CheckValidation(out var errorActionResult))
+            if (!ModelState.IsValid)
             {
-                return errorActionResult;
+                return this.CreateValidationError(ModelState);
             }
 
-            try
+            var result = await lightningClient.ConnectTo(request.NodeURI);
+            switch (result)
             {
-                await lightningClient.ConnectTo(nodeInfo);
-            }
-            catch (Exception e)
-            {
-                return this.GetExceptionResponse(e);
+                case ConnectionResult.Ok:
+                    return Ok();
+                case ConnectionResult.CouldNotConnect:
+                    return this.CreateAPIError("could-not-connect", "Could not connect to the remote node");
             }
 
             return Ok();
@@ -86,26 +96,19 @@ namespace BTCPayServer.Controllers.GreenField
                 return NotFound();
             }
 
-            try
+            var channels = await lightningClient.ListChannels();
+            return Ok(channels.Select(channel => new LightningChannelData()
             {
-                var channels = await lightningClient.ListChannels();
-                return Ok(channels.Select(channel => new LightningChannelData()
-                {
-                    Capacity = channel.Capacity,
-                    ChannelPoint = channel.ChannelPoint.ToString(),
-                    IsActive = channel.IsActive,
-                    IsPublic = channel.IsPublic,
-                    LocalBalance = channel.LocalBalance,
-                    RemoteNode = channel.RemoteNode.ToString()
-                }));
-            }
-            catch (Exception e)
-            {
-                return this.GetExceptionResponse(e);
-            }
+                Capacity = channel.Capacity,
+                ChannelPoint = channel.ChannelPoint.ToString(),
+                IsActive = channel.IsActive,
+                IsPublic = channel.IsPublic,
+                LocalBalance = channel.LocalBalance,
+                RemoteNode = channel.RemoteNode.ToString()
+            }));
         }
 
-        
+
         public virtual async Task<IActionResult> OpenChannel(string cryptoCode, OpenLightningChannelRequest request)
         {
             var lightningClient = await GetLightningClient(cryptoCode, true);
@@ -114,9 +117,9 @@ namespace BTCPayServer.Controllers.GreenField
                 return NotFound();
             }
 
-            if (TryGetNodeInfo(request.Node, out var nodeInfo))
+            if (request?.NodeURI is null)
             {
-                ModelState.AddModelError(nameof(request.Node),
+                ModelState.AddModelError(nameof(request.NodeURI),
                     "A valid node info was not provided to open a channel with");
             }
 
@@ -138,28 +141,43 @@ namespace BTCPayServer.Controllers.GreenField
                 ModelState.AddModelError(nameof(request.FeeRate), "FeeRate must be more than 0");
             }
 
-            if (CheckValidation(out var errorActionResult))
+            if (ModelState.IsValid)
             {
-                return errorActionResult;
+                return this.CreateValidationError(ModelState);
             }
 
-            try
+            var response = await lightningClient.OpenChannel(new Lightning.OpenChannelRequest()
             {
-                var response = await lightningClient.OpenChannel(new Lightning.OpenChannelRequest()
-                {
-                    ChannelAmount = request.ChannelAmount, FeeRate = request.FeeRate, NodeInfo = nodeInfo
-                });
-                if (response.Result == OpenChannelResult.Ok)
-                {
+                ChannelAmount = request.ChannelAmount,
+                FeeRate = request.FeeRate,
+                NodeInfo = request.NodeURI
+            });
+
+            string errorCode, errorMessage;
+            switch (response.Result)
+            {
+                case OpenChannelResult.Ok:
                     return Ok();
-                }
-
-                return this.GetGeneralErrorResponse(response.Result.ToString());
+                case OpenChannelResult.AlreadyExists:
+                    errorCode = "channel-already-exists";
+                    errorMessage = "The channel already exists";
+                    break;
+                case OpenChannelResult.CannotAffordFunding:
+                    errorCode = "cannot-afford-funding";
+                    errorMessage = "Not enough money to open a channel";
+                    break;
+                case OpenChannelResult.NeedMoreConf:
+                    errorCode = "need-more-confirmations";
+                    errorMessage = "Need to wait for more confirmations";
+                    break;
+                case OpenChannelResult.PeerNotConnected:
+                    errorCode = "peer-not-connected";
+                    errorMessage = "Not connected to peer";
+                    break;
+                default:
+                    throw new NotSupportedException("Unknown OpenChannelResult");
             }
-            catch (Exception e)
-            {
-                return this.GetExceptionResponse(e);
-            }
+            return this.CreateAPIError(errorCode, errorMessage);
         }
 
         public virtual async Task<IActionResult> GetDepositAddress(string cryptoCode)
@@ -170,7 +188,7 @@ namespace BTCPayServer.Controllers.GreenField
                 return NotFound();
             }
 
-            return Ok((await lightningClient.GetDepositAddress()).ToString());
+            return Ok(new JValue((await lightningClient.GetDepositAddress()).ToString()));
         }
 
         public virtual async Task<IActionResult> PayInvoice(string cryptoCode, PayLightningInvoiceRequest lightningInvoice)
@@ -182,85 +200,78 @@ namespace BTCPayServer.Controllers.GreenField
                 return NotFound();
             }
 
-            try
+            if (lightningInvoice?.BOLT11 is null ||
+                !BOLT11PaymentRequest.TryParse(lightningInvoice.BOLT11, out _, network.NBitcoinNetwork))
             {
-                BOLT11PaymentRequest.TryParse(lightningInvoice.Invoice, out var bolt11PaymentRequest, network.NBitcoinNetwork);
-            }
-            catch (Exception)
-            {
-                ModelState.AddModelError(nameof(lightningInvoice.Invoice), "The BOLT11 invoice was invalid.");
+                ModelState.AddModelError(nameof(lightningInvoice.BOLT11), "The BOLT11 invoice was invalid.");
             }
 
-            if (CheckValidation(out var errorActionResult))
+            if (!ModelState.IsValid)
             {
-                return errorActionResult;
+                return this.CreateValidationError(ModelState);
             }
 
-            var result = await lightningClient.Pay(lightningInvoice.Invoice);
+            var result = await lightningClient.Pay(lightningInvoice.BOLT11);
             switch (result.Result)
             {
                 case PayResult.CouldNotFindRoute:
-                    return this.GetGeneralErrorResponse("Could not find route");
+                    return this.CreateAPIError("could-not-find-route", "Impossible to find a route to the peer");
                 case PayResult.Error:
-                    return this.GetGeneralErrorResponse(result.ErrorDetail);
+                    return this.CreateAPIError("generic-error", result.ErrorDetail);
+                case PayResult.Ok:
+                    return Ok();
+                default:
+                    throw new NotSupportedException("Unsupported Payresult");
             }
-
-            return Ok();
         }
 
         public virtual async Task<IActionResult> GetInvoice(string cryptoCode, string id)
         {
             var lightningClient = await GetLightningClient(cryptoCode, false);
-            
+
             if (lightningClient == null)
             {
                 return NotFound();
             }
 
-            try
+            var inv = await lightningClient.GetInvoice(id);
+            if (inv == null)
             {
-                var inv = await lightningClient.GetInvoice(id);
-                if (inv == null)
-                {
-                    return NotFound();
-                }
-                return Ok(ToModel(inv));
+                return NotFound();
             }
-            catch (Exception e)
-            {
-                return this.GetExceptionResponse(e);
-            }
+            return Ok(ToModel(inv));
         }
 
         public virtual async Task<IActionResult> CreateInvoice(string cryptoCode, CreateLightningInvoiceRequest request)
         {
             var lightningClient = await GetLightningClient(cryptoCode, false);
-            
+
             if (lightningClient == null)
             {
                 return NotFound();
             }
 
-            if (CheckValidation(out var errorActionResult))
+            if (request.Amount < LightMoney.Zero)
             {
-                return errorActionResult;
+                ModelState.AddModelError(nameof(request.Amount), "Amount should be more or equals to 0");
             }
 
-            try
+            if (request.Expiry <= TimeSpan.Zero)
             {
-                var invoice = await lightningClient.CreateInvoice(
-                    new CreateInvoiceParams(request.Amount, request.Description, request.Expiry)
-                    {
-                        PrivateRouteHints = request.PrivateRouteHints
-                    },
-                    CancellationToken.None);
+                ModelState.AddModelError(nameof(request.Expiry), "Expiry should be more than 0");
+            }
 
-                return Ok(ToModel(invoice));
-            }
-            catch (Exception e)
+            if (!ModelState.IsValid)
             {
-                return this.GetExceptionResponse(e);
+                return this.CreateValidationError(ModelState);
             }
+            var invoice = await lightningClient.CreateInvoice(
+                new CreateInvoiceParams(request.Amount, request.Description, request.Expiry)
+                {
+                    PrivateRouteHints = request.PrivateRouteHints
+                },
+                CancellationToken.None);
+            return Ok(ToModel(invoice));
         }
 
         private LightningInvoiceData ToModel(LightningInvoice invoice)
@@ -277,38 +288,10 @@ namespace BTCPayServer.Controllers.GreenField
             };
         }
 
-        private bool CheckValidation(out IActionResult result)
-        {
-            if (!ModelState.IsValid)
-            {
-                result = this.GetValidationResponse();
-                return true;
-            }
-
-            result = null;
-            return false;
-        }
-
         protected bool CanUseInternalLightning(bool doingAdminThings)
         {
             return (_btcPayServerEnvironment.IsDevelopping || User.IsInRole(Roles.ServerAdmin) ||
                     (_cssThemeManager.AllowLightningInternalNodeForAll && !doingAdminThings));
-        }
-
-
-        private bool TryGetNodeInfo(ConnectToNodeRequest request, out NodeInfo nodeInfo)
-        {
-            nodeInfo = null;
-            if (!string.IsNullOrEmpty(request.NodeInfo)) return NodeInfo.TryParse(request.NodeInfo, out nodeInfo);
-            try
-            {
-                nodeInfo = new NodeInfo(new PubKey(request.NodeId), request.NodeHost, request.NodePort);
-                return true;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
         }
 
         protected abstract Task<ILightningClient> GetLightningClient(string cryptoCode, bool doingAdminThings);

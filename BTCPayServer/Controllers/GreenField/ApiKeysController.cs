@@ -42,7 +42,7 @@ namespace BTCPayServer.Controllers.GreenField
         public async Task<ActionResult<ApiKeyData>> CreateKey(CreateApiKeyRequest request)
         {
             if (request is null)
-                return BadRequest();
+                return NotFound();
             var key = new APIKeyData()
             {
                 Id = Encoders.Hex.EncodeData(RandomUtils.GetBytes(20)),
@@ -74,7 +74,7 @@ namespace BTCPayServer.Controllers.GreenField
         public async Task<IActionResult> RevokeKey(string apikey)
         {
             if (string.IsNullOrEmpty(apikey))
-                return BadRequest();
+                return NotFound();
             if (await _apiKeyRepository.Remove(apikey, _userManager.GetUserId(User)))
                 return Ok();
             else

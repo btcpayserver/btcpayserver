@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Lightning;
 
 namespace BTCPayServer.Client
 {
@@ -26,7 +27,7 @@ namespace BTCPayServer.Client
             var response = await _httpClient.SendAsync(
                 CreateHttpRequest($"api/v1/stores/{storeId}/lightning/{cryptoCode}/connect", bodyPayload: request,
                     method: HttpMethod.Post), token);
-            HandleResponse(response);
+            await HandleResponse(response);
         }
 
         public async Task<IEnumerable<LightningChannelData>> GetLightningNodeChannels(string storeId, string cryptoCode,
@@ -62,9 +63,9 @@ namespace BTCPayServer.Client
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
             var response = await _httpClient.SendAsync(
-                CreateHttpRequest($"api/v1/stores/{storeId}/lightning/{cryptoCode}/pay", bodyPayload: request,
+                CreateHttpRequest($"api/v1/stores/{storeId}/lightning/{cryptoCode}/invoices/pay", bodyPayload: request,
                     method: HttpMethod.Post), token);
-            HandleResponse(response);
+            await HandleResponse(response);
         }
 
         public async Task<LightningInvoiceData> GetLightningInvoice(string storeId, string cryptoCode,

@@ -14,57 +14,38 @@
     "components": {
         "schemas": {
             "ValidationProblemDetails": {
-                "allOf": [
-                    {
-                        "$ref": "#/components/schemas/ProblemDetails"
-                    },
-                    {
-                        "type": "object",
-                        "additionalProperties": false,
-                        "properties": {
-                            "errors": {
-                                "type": "object",
-                                "nullable": true,
-                                "additionalProperties": {
-                                    "type": "array",
-                                    "items": {
-                                        "type": "string"
-                                    }
-                                }
-                            }
+                "type": "array",
+                "description": "An array of validation errors of the request",
+                "items": {
+                    "type": "object",
+                    "description": "A specific validation error on a json property",
+                    "properties": {
+                        "path": {
+                            "type": "string",
+                            "nullable": false,
+                            "description": "The json path of the property which failed validation"
+                        },
+                        "message": {
+                            "type": "string",
+                            "nullable": false,
+                            "description": "User friendly error message about the validation"
                         }
                     }
-                ]
+                }
             },
             "ProblemDetails": {
                 "type": "object",
-                "additionalProperties": false,
+                "description": "Description of an error happening during processing of the request",
                 "properties": {
-                    "type": {
+                    "code": {
                         "type": "string",
-                        "nullable": true
+                        "nullable": false,
+                        "description": "An error code describing the error"
                     },
-                    "title": {
+                    "message": {
                         "type": "string",
-                        "nullable": true
-                    },
-                    "status": {
-                        "type": "integer",
-                        "format": "int32",
-                        "nullable": true
-                    },
-                    "detail": {
-                        "type": "string",
-                        "nullable": true
-                    },
-                    "instance": {
-                        "type": "string",
-                        "nullable": true
-                    },
-                    "extensions": {
-                        "type": "object",
-                        "nullable": true,
-                        "additionalProperties": {}
+                        "nullable": false,
+                        "description": "User friendly error message about the error"
                     }
                 }
             }

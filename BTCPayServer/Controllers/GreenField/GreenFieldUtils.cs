@@ -1,26 +1,29 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using BTCPayServer.Client.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace BTCPayServer.Controllers.GreenField
 {
     public static class GreenFieldUtils
     {
-        public static IActionResult GetValidationResponse(this ControllerBase controller)
+        public static IActionResult CreateValidationError(this ControllerBase controller, ModelStateDictionary modelState)
         {
-            return controller.UnprocessableEntity( new ValidationProblemDetails(controller.ModelState));
-        }
-        public static IActionResult GetExceptionResponse(this ControllerBase controller, Exception e)
-        {
-            return GetGeneralErrorResponse(controller, e.Message);
-        }
-        
-        public static IActionResult GetGeneralErrorResponse(this ControllerBase controller, string error)
-        {
-            return controller.BadRequest( new ProblemDetails()
+            List<GreenfieldValidationError> errors = new List<GreenfieldValidationError>();
+            foreach (var error in modelState)
             {
-                Detail = error
-            });
+                foreach (var errorMessage in error.Value.Errors)
+                {
+                    errors.Add(new GreenfieldValidationError(error.Key, errorMessage.ErrorMessage));
+                }
+            }
+            return controller.UnprocessableEntity(errors.ToArray());
         }
-        
+        public static IActionResult CreateAPIError(this ControllerBase controller, string errorCode, string errorMessage)
+        {
+            return controller.BadRequest(new GreenfieldAPIError(errorCode, errorMessage));
+        }
     }
 }

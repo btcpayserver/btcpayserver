@@ -1,10 +1,24 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using BTCPayServer.Client.JsonConverters;
+using BTCPayServer.Lightning;
+using Newtonsoft.Json;
+
 namespace BTCPayServer.Client.Models
 {
     public class ConnectToNodeRequest
     {
-        public string NodeInfo { get; set; }
-        public string NodeId { get; set; }
-        public string NodeHost { get; set; }
-        public int NodePort { get; set; }
+        public ConnectToNodeRequest()
+        {
+
+        }
+        public ConnectToNodeRequest(NodeInfo nodeInfo)
+        {
+            NodeURI = nodeInfo;
+        }
+        [JsonConverter(typeof(NodeUriJsonConverter))]
+        [JsonProperty("nodeURI")]
+        public NodeInfo NodeURI { get; set; }
     }
 }

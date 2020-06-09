@@ -10,19 +10,21 @@ namespace BTCPayServer.Client.Models
     {
         public string Id { get; set; }
 
-        [JsonProperty(ItemConverterType = typeof(StringEnumConverter))]
+        [JsonConverter(typeof(StringEnumConverter))]
         public LightningInvoiceStatus Status { get; set; }
 
+        [JsonProperty("BOLT11")]
         public string BOLT11 { get; set; }
 
+        [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
         public DateTimeOffset? PaidAt { get; set; }
-
+        [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
         public DateTimeOffset ExpiresAt { get; set; }
 
-        [JsonProperty(ItemConverterType = typeof(LightMoneyJsonConverter))]
+        [JsonConverter(typeof(LightMoneyJsonConverter))]
         public LightMoney Amount { get; set; }
 
-        [JsonProperty(ItemConverterType = typeof(LightMoneyJsonConverter))]
+        [JsonConverter(typeof(LightMoneyJsonConverter))]
         public LightMoney AmountReceived { get; set; }
     }
 }

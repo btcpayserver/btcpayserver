@@ -43,14 +43,25 @@ namespace BTCPayServer.Client
             _httpClient = httpClient ?? new HttpClient();
         }
 
-        protected void HandleResponse(HttpResponseMessage message)
+        protected async Task HandleResponse(HttpResponseMessage message)
         {
+            if (message.StatusCode == System.Net.HttpStatusCode.UnprocessableEntity)
+            {
+                var err = JsonConvert.DeserializeObject<Models.GreenfieldValidationError[]>(await message.Content.ReadAsStringAsync()); ;
+                throw new GreenFieldValidationException(err);
+            }
+            else if (message.StatusCode == System.Net.HttpStatusCode.BadRequest)
+            {
+                var err = JsonConvert.DeserializeObject<Models.GreenfieldAPIError>(await message.Content.ReadAsStringAsync());
+                throw new GreenFieldAPIException(err);
+            }
+                
             message.EnsureSuccessStatusCode();
         }
 
         protected async Task<T> HandleResponse<T>(HttpResponseMessage message)
         {
-            HandleResponse(message);
+            await HandleResponse(message);
             return JsonConvert.DeserializeObject<T>(await message.Content.ReadAsStringAsync());
         }
 

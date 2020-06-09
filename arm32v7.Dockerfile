@@ -1,5 +1,6 @@
 # This is a manifest image, will pull the image with the same arch as the builder machine
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1.202 AS builder
+ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
 RUN apt-get update \
 	&& apt-get install -qq --no-install-recommends qemu qemu-user-static qemu-user binfmt-support
 
@@ -32,6 +33,7 @@ ENV LANG en_US.UTF-8
 WORKDIR /datadir
 WORKDIR /app
 ENV BTCPAY_DATADIR=/datadir
+ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
 VOLUME /datadir
 
 COPY --from=builder "/app" .

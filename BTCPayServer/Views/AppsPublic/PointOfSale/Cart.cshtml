@@ -249,7 +249,7 @@
                         </div>
                         <div class="card-footer pt-0 bg-transparent border-0">
 
-                            <span class="text-muted small">@String.Format(Model.ButtonText, @item.Price.Formatted)</span>
+                            <span class="text-muted small">@Model.ButtonText.Replace("{0}",item.Price.Formatted).Replace("{Price}",item.Price.Formatted)</span>
                              @if (item.Inventory.HasValue)
                              {
 

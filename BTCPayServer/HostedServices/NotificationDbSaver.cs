@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Events.Notifications;
+using BTCPayServer.Models.NotificationViewModels;
 using Microsoft.AspNetCore.Identity;
 
 namespace BTCPayServer.HostedServices
@@ -64,15 +65,37 @@ namespace BTCPayServer.HostedServices
             _db = db;
         }
 
-        public int GetNotificationCount(ClaimsPrincipal user)
+        public NotificationSummaryViewModel GetSummaryNotifications(ClaimsPrincipal user)
         {
+            var resp = new NotificationSummaryViewModel();
             var claimWithId = user.Claims.SingleOrDefault(a => a.Type == ClaimTypes.NameIdentifier);
 
             // TODO: Soft caching in order not to pound database too much
-            var count = _db.Notifications
+            resp.UnseenCount = _db.Notifications
                 .Where(a => a.ApplicationUserId == claimWithId.Value && !a.Seen)
                 .Count();
-            return count;
+
+            if (resp.UnseenCount > 0)
+            {
+                resp.Last5 = _db.Notifications
+                    .Where(a => a.ApplicationUserId == claimWithId.Value && !a.Seen)
+                    .OrderByDescending(a => a.Created)
+                    .Take(5)
+                    .Select(a => a.ViewModel())
+                    .ToList();
+            }
+            else
+            {
+                resp.Last5 = new List<NotificationViewModel>();
+            }
+
+            return resp;
         }
+    }
+
+    public class NotificationSummaryViewModel
+    {
+        public int UnseenCount { get; set; }
+        public List<NotificationViewModel> Last5 { get; set; }
     }
 }

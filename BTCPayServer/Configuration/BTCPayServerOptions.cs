@@ -43,7 +43,7 @@ namespace BTCPayServer.Configuration
             private set;
         }
         public EndPoint SocksEndpoint { get; set; }
-        
+        public Uri SocksHttpProxy { get; set; }
         public List<NBXplorerConnectionSetting> NBXplorerConnectionSettings
         {
             get;
@@ -171,7 +171,11 @@ namespace BTCPayServer.Configuration
                     throw new ConfigException("Invalid value for socksendpoint");
                 SocksEndpoint = endpoint;
             }
-            
+            var socksuri = conf.GetOrDefault<Uri>("sockshttpproxy", null);
+            if (socksuri != null)
+            {
+                SocksHttpProxy = socksuri;
+            }
 
             var sshSettings = ParseSSHConfiguration(conf);
             if ((!string.IsNullOrEmpty(sshSettings.Password) || !string.IsNullOrEmpty(sshSettings.KeyFile)) && !string.IsNullOrEmpty(sshSettings.Server))

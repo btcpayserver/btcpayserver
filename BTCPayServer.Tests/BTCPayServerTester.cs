@@ -147,6 +147,10 @@ namespace BTCPayServer.Tests
             config.AppendLine($"socksendpoint={SocksEndpoint}");
             config.AppendLine($"debuglog=debug.log");
 
+            if (SocksHTTPProxy is string v)
+            {
+                config.AppendLine($"sockshttpproxy={v}");
+            }
 
             if (!string.IsNullOrEmpty(SSHPassword) && string.IsNullOrEmpty(SSHKeyFile))
                 config.AppendLine($"sshpassword={SSHPassword}");
@@ -291,6 +295,8 @@ namespace BTCPayServer.Tests
         public string SSHPassword { get; internal set; }
         public string SSHKeyFile { get; internal set; }
         public string SSHConnection { get; set; }
+        public string SocksHTTPProxy { get; set; }
+
         public T GetController<T>(string userId = null, string storeId = null, bool isAdmin = false) where T : Controller
         {
             var context = new DefaultHttpContext();

@@ -989,12 +989,16 @@ namespace BTCPayServer.Tests
         }
 
 
-        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
-        public async Task CanUseTorClient()
+        [Theory(Timeout = TestTimeout)]
+        [Xunit.InlineData(true)]
+        [Xunit.InlineData(false)]
+        public async Task CanUseTorClient(bool useInternalTorSocksProxy)
         {
             using (var tester = ServerTester.Create())
             {
+                if (useInternalTorSocksProxy)
+                    tester.PayTester.SocksHTTPProxy = null;
                 await tester.StartAsync();
                 var proxy = tester.PayTester.GetService<Socks5HttpProxyServer>();
                 void AssertConnectionDropped()

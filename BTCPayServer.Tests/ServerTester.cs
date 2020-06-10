@@ -56,6 +56,7 @@ namespace BTCPayServer.Tests
                 // TODO: The fact that we use same conn string as development database can cause huge problems with tests
                 // since in dev we already can have some users / stores registered, while on CI database is being initalized
                 // for the first time and first registered user gets admin status by default
+                SocksHTTPProxy = GetEnvironment("TESTS_SOCKSHTTP", "http://127.0.0.1:8118/"),
                 Postgres = GetEnvironment("TESTS_POSTGRES", "User ID=postgres;Host=127.0.0.1;Port=39372;Database=btcpayserver"),
                 MySQL = GetEnvironment("TESTS_MYSQL", "User ID=root;Host=127.0.0.1;Port=33036;Database=btcpayserver")
             };

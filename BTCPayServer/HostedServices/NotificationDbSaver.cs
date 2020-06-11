@@ -74,26 +74,28 @@ namespace BTCPayServer.HostedServices
     public class NotificationManager
     {
         private readonly ApplicationDbContext _db;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public NotificationManager(ApplicationDbContext db)
+        public NotificationManager(ApplicationDbContext db, UserManager<ApplicationUser> userManager)
         {
             _db = db;
+            _userManager = userManager;
         }
 
         public NotificationSummaryViewModel GetSummaryNotifications(ClaimsPrincipal user)
         {
             var resp = new NotificationSummaryViewModel();
-            var claimWithId = user.Claims.SingleOrDefault(a => a.Type == ClaimTypes.NameIdentifier);
+            var userId = _userManager.GetUserId(user);
 
             // TODO: Soft caching in order not to pound database too much
             resp.UnseenCount = _db.Notifications
-                .Where(a => a.ApplicationUserId == claimWithId.Value && !a.Seen)
+                .Where(a => a.ApplicationUserId == userId && !a.Seen)
                 .Count();
 
             if (resp.UnseenCount > 0)
             {
                 resp.Last5 = _db.Notifications
-                    .Where(a => a.ApplicationUserId == claimWithId.Value && !a.Seen)
+                    .Where(a => a.ApplicationUserId == userId && !a.Seen)
                     .OrderByDescending(a => a.Created)
                     .Take(5)
                     .Select(a => a.ViewModel())

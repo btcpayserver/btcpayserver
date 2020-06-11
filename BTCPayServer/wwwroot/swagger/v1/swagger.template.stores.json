@@ -71,7 +71,7 @@
                     "403": {
                         "description": "If you are authenticated but forbidden to add new stores"
                     }
-                },                
+                },
                 "security": [
                     {
                         "API Key": [
@@ -371,7 +371,7 @@
                     "payJoinEnabled": {
                         "type": "boolean",
                         "default": false,
-                        "description": "If true, payjoin will be proposed in the checkout page if possible. ([More information](https://docs.btcpayserver.org/Payjoin/#btcpay-server-payjoin-guide))"
+                        "description": "If true, payjoin will be proposed in the checkout page if possible. ([More information](https://docs.btcpayserver.org/Payjoin/))"
                     },
                     "lightningPrivateRouteHints": {
                         "type": "boolean",

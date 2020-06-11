@@ -28,15 +28,30 @@ namespace BTCPayServer.HostedServices
 
         protected override void SubscribeToEvents()
         {
-            Subscribe<NewVersionNotification>();
+            SubscribeAllChildrenOfNotificationEventBase();
             base.SubscribeToEvents();
         }
 
+        // subscribe all children of NotificationEventBase
+        public void SubscribeAllChildrenOfNotificationEventBase()
+        {
+            var method = this.GetType().GetMethod(nameof(SubscribeHelper));
+            var notificationTypes = this.GetType().Assembly.GetTypes().Where(a => typeof(NotificationEventBase).IsAssignableFrom(a));
+            foreach (var notif in notificationTypes)
+            {
+                var generic = method.MakeGenericMethod(notif);
+                generic.Invoke(this, null);
+            }
+        }
+
+        // we need publicly accessible method for reflection invoke
+        public void SubscribeHelper<T>() => base.Subscribe<T>();
+
         protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
         {
-            if (evt is NewVersionNotification)
+            if (evt is NotificationEventBase)
             {
-                var data = (evt as NewVersionNotification).ToData();
+                var data = (evt as NotificationEventBase).ToData();
 
                 var admins = await _UserManager.GetUsersInRoleAsync(Roles.ServerAdmin);
 

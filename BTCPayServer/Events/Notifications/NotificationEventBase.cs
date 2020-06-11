@@ -7,7 +7,7 @@ using BTCPayServer.Data;
 using ExchangeSharp;
 using Newtonsoft.Json;
 
-namespace BTCPayServer.Events
+namespace BTCPayServer.Events.Notifications
 {
     public abstract class NotificationEventBase
     {

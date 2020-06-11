@@ -2,7 +2,6 @@
 @inject UserManager<ApplicationUser> UserManager
 @inject RoleManager<IdentityRole> RoleManager
 @inject BTCPayServer.Services.BTCPayServerEnvironment env
-@inject BTCPayServer.HostedServices.NBXplorerDashboard dashboard
 @inject BTCPayServer.HostedServices.CssThemeManager themeManager
 @inject BTCPayServer.HostedServices.NotificationManager notificationManager
 
@@ -153,10 +152,7 @@
         </footer>
     }
 
-    @if (!dashboard.IsFullySynched())
-    {
-        <partial name="SyncModal" />
-    }
+    <partial name="LayoutPartials/SyncModal" />
 
     @RenderSection("Scripts", required: false)
 

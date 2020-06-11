@@ -50,7 +50,7 @@ hr.light {
   }
 }
 
-#mainNav .navbar-nav > li.nav-item > a.nav-link {
+#mainNav .navbar-nav > li.nav-item  a.nav-link {
   font-size: 13px;
   font-weight: bold;
   text-transform: uppercase;
@@ -58,15 +58,19 @@ hr.light {
   border: 2px solid transparent;
 }
 
-#mainNav .navbar-nav > li.nav-item > a.nav-link:focus,
-#mainNav .navbar-nav > li.nav-item > a.nav-link:hover {
+#mainNav .navbar-nav > li.nav-item a.nav-link:focus,
+#mainNav .navbar-nav > li.nav-item a.nav-link:hover {
   color: var(--btcpay-header-color-link-accent, var(--btcpay-color-white));
 }
 
-#mainNav .navbar-nav > li.nav-item > a.nav-link.active,
-#mainNav .navbar-nav > li.nav-item > a.nav-link.active:focus,
-#mainNav .navbar-nav > li.nav-item > a.nav-link.active:hover {
+#mainNav .navbar-nav > li.nav-item a.nav-link.active,
+#mainNav .navbar-nav > li.nav-item a.nav-link.active:focus,
+#mainNav .navbar-nav > li.nav-item a.nav-link.active:hover {
   color: var(--btcpay-header-color-link-active, var(--btcpay-color-white));
+}
+
+#mainNav .navbar-nav > li.nav-item.dropdown .dropdown-item:hover{
+    background-color: transparent;
 }
 
 header.masthead {

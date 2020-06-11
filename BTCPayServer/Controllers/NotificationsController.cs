@@ -60,21 +60,6 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Delete(string id)
-        {
-            // TODO: Refactor
-            var claimWithId = User.Claims.SingleOrDefault(a => a.Type == ClaimTypes.NameIdentifier);
-            if (claimWithId == null)
-                return RedirectToAction("Index", "Home");
-
-            var notif = _db.Notifications.SingleOrDefault(a => a.Id == id && a.ApplicationUserId == claimWithId.Value);
-            _db.Notifications.Remove(notif);
-            await _db.SaveChangesAsync();
-
-            return RedirectToAction(nameof(Index));
-        }
-
         [HttpPost]
         public async Task<IActionResult> FlipRead(string id)
         {
@@ -86,6 +71,36 @@ namespace BTCPayServer.Controllers
             var notif = _db.Notifications.SingleOrDefault(a => a.Id == id && a.ApplicationUserId == claimWithId.Value);
             notif.Seen = !notif.Seen;
             await _db.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> MassAction(string command, string csvGuids)
+        {
+            List<string> parsedGuids = null;
+            try
+            {
+                parsedGuids = csvGuids.Split(',').ToList();
+            }
+            catch { }
+
+            if (parsedGuids != null)
+            {
+                if (command == "delete")
+                {
+                    // TODO: Refactor
+                    var claimWithId = User.Claims.SingleOrDefault(a => a.Type == ClaimTypes.NameIdentifier);
+                    if (claimWithId == null)
+                        return RedirectToAction("Index", "Home");
+
+                    var toRemove = _db.Notifications.Where(a => a.ApplicationUserId == claimWithId.Value && parsedGuids.Contains(a.Id));
+                    _db.Notifications.RemoveRange(toRemove);
+                    await _db.SaveChangesAsync();
+
+                    return RedirectToAction(nameof(Index));
+                }
+            }
 
             return RedirectToAction(nameof(Index));
         }

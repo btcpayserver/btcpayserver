@@ -23,7 +23,16 @@
         </div>
         <div class="row button-row">
             <div class="col-lg-6">
-                <a asp-action="Generate" class="btn btn-primary" role="button" id="Generate"><span class="fa fa-plus"></span> Generate Test Notification</a>
+                <span class="dropdown" style="display:none;" id="MassAction">
+                    <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Actions
+                    </button>
+                    <form method="post" asp-action="MassAction" class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        @Html.Hidden("csvGuids")
+                        <button type="submit" class="dropdown-item" name="command" value="delete"><i class="fa fa-trash-o"></i> Delete</button>
+                    </form>
+                </span>
+                <a class="btn btn-primary" role="button" asp-action="Generate" id="Generate"><span class="fa fa-plus"></span> Generate Test Notification</a>
             </div>
         </div>
         <div class="row">
@@ -76,5 +85,25 @@
 
         $.post("/Notifications/FlipRead/" + $(sender).parent().data("guid"), function (data) {
         });
+    }
+
+    $(function () {
+        $(".selector").change(updateSelectors);
+        updateSelectors();
+    });
+
+    function updateSelectors() {
+        var count = $(".selector:checked").length;
+        if (count > 0) {
+            $("#MassAction").children().eq(0).text("Batch Action (" + count + ")");
+            $("#MassAction").show();
+            var csvGuids = [];
+            $(".selector:checked").each(function () {
+                csvGuids.push($(this).data("guid"));
+            });
+            $("#csvGuids").val(csvGuids.join(","));
+        } else {
+            $("#MassAction").hide();
+        }
     }
 </script>

@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using BTCPayServer.Data;
+﻿using BTCPayServer.Data;
 using BTCPayServer.Models.NotificationViewModels;
-using ExchangeSharp;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.Events.Notifications
@@ -16,7 +10,7 @@ namespace BTCPayServer.Events.Notifications
 
         public override NotificationViewModel ToViewModel(NotificationData data)
         {
-            var casted = JsonConvert.DeserializeObject<NewVersionNotification>(data.Blob.ToStringFromUTF8());
+            var casted = JsonConvert.DeserializeObject<NewVersionNotification>(ZipUtils.Unzip(data.Blob));
             var obj = new NotificationViewModel
             {
                 Id = data.Id,

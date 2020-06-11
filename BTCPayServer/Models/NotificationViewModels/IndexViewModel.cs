@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Events.Notifications;
-using ExchangeSharp;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.Models.NotificationViewModels

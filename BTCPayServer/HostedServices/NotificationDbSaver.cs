@@ -94,12 +94,25 @@ namespace BTCPayServer.HostedServices
 
             if (resp.UnseenCount > 0)
             {
-                resp.Last5 = _db.Notifications
-                    .Where(a => a.ApplicationUserId == userId && !a.Seen)
-                    .OrderByDescending(a => a.Created)
-                    .Take(5)
-                    .Select(a => a.ViewModel())
-                    .ToList();
+                try
+                {
+                    resp.Last5 = _db.Notifications
+                        .Where(a => a.ApplicationUserId == userId && !a.Seen)
+                        .OrderByDescending(a => a.Created)
+                        .Take(5)
+                        .Select(a => a.ViewModel())
+                        .ToList();
+                }
+                catch (System.IO.InvalidDataException iex)
+                {
+                    // invalid notifications that are not pkuzipable, burn them all
+                    var notif = _db.Notifications.Where(a => a.ApplicationUserId == userId);
+                    _db.Notifications.RemoveRange(notif);
+                    _db.SaveChanges();
+
+                    resp.UnseenCount = 0;
+                    resp.Last5 = new List<NotificationViewModel>();
+                }
             }
             else
             {

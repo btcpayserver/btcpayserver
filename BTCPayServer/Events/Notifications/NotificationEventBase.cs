@@ -1,7 +1,6 @@
 ﻿using System;
 using BTCPayServer.Data;
 using BTCPayServer.Models.NotificationViewModels;
-using ExchangeSharp;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.Events.Notifications
@@ -18,7 +17,7 @@ namespace BTCPayServer.Events.Notifications
             {
                 Created = DateTimeOffset.UtcNow,
                 NotificationType = NotificationType,
-                Blob = obj.ToBytesUTF8(),
+                Blob = ZipUtils.Zip(obj),
                 Seen = false
             };
             return data;

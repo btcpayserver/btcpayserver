@@ -43,7 +43,7 @@
                             <th width="30px"></th>
                             <th width="165px">Date</th>
                             <th>Message</th>
-                            <th width="70px">&nbsp;</th>
+                            <th width="80px">&nbsp;</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -57,7 +57,7 @@
                                 <td>
                                     @if (!String.IsNullOrEmpty(item.ActionLink))
                                     {
-                                        <a href="@item.ActionLink">Action</a>
+                                        <a href="@item.ActionLink">Action <i class="fa fa-angle-double-right"></i></a>
                                     }
                                     else
                                     {

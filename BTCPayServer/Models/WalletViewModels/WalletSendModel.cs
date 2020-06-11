@@ -44,7 +44,7 @@ namespace BTCPayServer.Models.WalletViewModels
         [Required]
         public decimal? FeeSatoshiPerByte { get; set; }
 
-        [Display(Name = "Make sure no change UTXO is created")]
+        [Display(Name = "Don't create UTXO change")]
         public bool NoChange { get; set; }
         public decimal? Rate { get; set; }
         public int Divisibility { get; set; }

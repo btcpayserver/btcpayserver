@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
+using BTCPayServer.Models.NotificationViewModels;
 using ExchangeSharp;
 using Newtonsoft.Json;
 
@@ -24,5 +25,7 @@ namespace BTCPayServer.Events.Notifications
             };
             return data;
         }
+
+        public abstract NotificationViewModel ToViewModel(NotificationData data);
     }
 }

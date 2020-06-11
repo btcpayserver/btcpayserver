@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
@@ -29,22 +30,12 @@ namespace BTCPayServer.Models.NotificationViewModels
     {
         public static NotificationViewModel ViewModel(this NotificationData data)
         {
-            if (data.NotificationType == nameof(NewVersionNotification))
-            {
-                var casted = JsonConvert.DeserializeObject<NewVersionNotification>(data.Blob.ToStringFromUTF8());
-                var obj = new NotificationViewModel
-                {
-                    Id = data.Id,
-                    Created = data.Created,
-                    Body = $"New version {casted.Version} released!",
-                    ActionLink = "https://github.com/btcpayserver/btcpayserver/releases/tag/v" + casted.Version,
-                    Seen = data.Seen
-                };
+            var baseType = typeof(NotificationEventBase);
 
-                return obj;
-            }
+            var typeName = baseType.FullName.Replace(nameof(NotificationEventBase), data.NotificationType, StringComparison.OrdinalIgnoreCase);
+            var instance = Activator.CreateInstance(baseType.Assembly.GetType(typeName)) as NotificationEventBase;
 
-            return null;
+            return instance.ToViewModel(data);
         }
     }
 }

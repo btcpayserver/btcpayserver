@@ -32,9 +32,7 @@ namespace BTCPayServer.Controllers
         [HttpGet]
         public async Task<IActionResult> Index(int skip = 0, int count = 50, int timezoneOffset = 0)
         {
-            // TODO: Refactor
-            var claimWithId = User.Claims.SingleOrDefault(a => a.Type == ClaimTypes.NameIdentifier);
-            if (claimWithId == null)
+            if (!validUserClaim(out var claimWithId))
                 return RedirectToAction("Index", "Home");
 
             var userId = claimWithId.Value;
@@ -63,14 +61,12 @@ namespace BTCPayServer.Controllers
         [HttpPost]
         public async Task<IActionResult> FlipRead(string id)
         {
-            // TODO: Refactor
-            var claimWithId = User.Claims.SingleOrDefault(a => a.Type == ClaimTypes.NameIdentifier);
-            if (claimWithId == null)
-                return RedirectToAction("Index", "Home");
-
-            var notif = _db.Notifications.SingleOrDefault(a => a.Id == id && a.ApplicationUserId == claimWithId.Value);
-            notif.Seen = !notif.Seen;
-            await _db.SaveChangesAsync();
+            if (validUserClaim(out var claimWithId))
+            {
+                var notif = _db.Notifications.Single(a => a.Id == id && a.ApplicationUserId == claimWithId.Value);
+                notif.Seen = !notif.Seen;
+                await _db.SaveChangesAsync();
+            }
 
             return RedirectToAction(nameof(Index));
         }
@@ -87,13 +83,8 @@ namespace BTCPayServer.Controllers
 
             if (parsedGuids != null)
             {
-                if (command == "delete")
+                if (command == "delete" && validUserClaim(out var claimWithId))
                 {
-                    // TODO: Refactor
-                    var claimWithId = User.Claims.SingleOrDefault(a => a.Type == ClaimTypes.NameIdentifier);
-                    if (claimWithId == null)
-                        return RedirectToAction("Index", "Home");
-
                     var toRemove = _db.Notifications.Where(a => a.ApplicationUserId == claimWithId.Value && parsedGuids.Contains(a.Id));
                     _db.Notifications.RemoveRange(toRemove);
                     await _db.SaveChangesAsync();
@@ -103,6 +94,12 @@ namespace BTCPayServer.Controllers
             }
 
             return RedirectToAction(nameof(Index));
+        }
+
+        private bool validUserClaim(out Claim claimWithId)
+        {
+            claimWithId = User.Claims.SingleOrDefault(a => a.Type == ClaimTypes.NameIdentifier);
+            return claimWithId != null;
         }
     }
 }

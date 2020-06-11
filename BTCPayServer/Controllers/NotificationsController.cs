@@ -75,7 +75,7 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        [HttpGet]
+        [HttpPost]
         public async Task<IActionResult> FlipRead(string id)
         {
             // TODO: Refactor

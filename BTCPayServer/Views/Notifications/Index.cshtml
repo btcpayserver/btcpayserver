@@ -40,9 +40,8 @@
                     <tbody>
                         @foreach (var item in Model.Items)
                         {
-                            @* TODO: Click on td to mark notification read through JavaScript magic *@
                             @* TODO: Multiselect akin to Gmail *@
-                            <tr>
+                            <tr onclick="rowseen(this)" data-guid="@item.Id">
                                 <td class="cursor-pointer @(item.Seen ? "": "font-weight-bold")">@item.Created.ToBrowserDate()</td>
                                 <td class="cursor-pointer @(item.Seen ? "": "font-weight-bold")">@item.Body</td>
                                 <td>
@@ -56,15 +55,6 @@
                                     }
                                 </td>
                                 <td>
-                                    @if (item.Seen)
-                                    {
-                                        <a asp-action="FlipRead" asp-route-id="@item.Id"><span class="fa fa-envelope-o" title="Mark Unread"></span></a>
-                                    }
-                                    else
-                                    {
-                                        <a asp-action="FlipRead" asp-route-id="@item.Id"><span class="fa fa-envelope-open-o" title="Mark Read"></span></a>
-                                    }
-                                    &nbsp;
                                     <a asp-action="Delete" asp-route-id="@item.Id" onclick="return confirm('Are you sure you want to delete this notification');"><span class="fa fa-trash-o" title="Delete"></span></a>
                                 </td>
                             </tr>
@@ -80,3 +70,14 @@
         </div>
     </div>
 </section>
+
+<script type="text/javascript">
+    function rowseen(sender) {
+        var weightClassName = "font-weight-bold";
+        $(sender).children().eq(0).toggleClass(weightClassName);
+        $(sender).children().eq(1).toggleClass(weightClassName);
+
+        $.post("/Notifications/FlipRead/" + $(sender).data("guid"), function (data) {
+        });
+    }
+</script>

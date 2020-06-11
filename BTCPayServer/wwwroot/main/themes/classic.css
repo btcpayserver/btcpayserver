@@ -114,3 +114,6 @@
 .removetopborder tr:first-child td {
   border-top: none;
 }
+#mainNav .dropdown-menu.bg-light{
+    background-color: var(--btcpay-brand-tertiary) !important;
+}

@@ -1,0 +1,35 @@
+﻿@inject BTCPayServer.HostedServices.NotificationManager notificationManager
+
+@{
+    var notificationModel = notificationManager.GetSummaryNotifications(User);
+}
+
+@if (notificationModel.UnseenCount > 0)
+{
+    <li class="nav-item dropdown">
+        <a class="nav-link js-scroll-trigger" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" id="Notifications">
+            <i class="fa fa-bell"></i>
+        </a>
+        <span class="alerts-badge badge badge-pill badge-danger">@notificationModel.UnseenCount</span>
+        <div class="dropdown-menu dropdown-menu-right text-center" aria-labelledby="navbarDropdown">
+            @foreach (var notif in notificationModel.Last5)
+            {
+                <a href="@(notif.ActionLink)" class="dropdown-item border-bottom">
+                    <div class="text-left" style="width: 200px; white-space:normal;">
+                        @notif.Body
+                    </div>
+                    <div class="text-left">
+                        <small class="text-muted">@notif.Created.ToBrowserDate()</small>
+                    </div>
+                </a>
+            }
+            <a class="dropdown-item text-info" asp-controller="Notifications" asp-action="Index">See All</a>
+        </div>
+    </li>
+}
+else
+{
+    <li class="nav-item">
+        <a asp-controller="Notifications" asp-action="Index" title="Notifications" class="nav-link js-scroll-trigger" id="Notifications"><i class="fa fa-bell"></i></a>
+    </li>
+}

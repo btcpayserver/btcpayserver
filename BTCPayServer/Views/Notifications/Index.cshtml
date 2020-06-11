@@ -65,7 +65,7 @@
                                         <a asp-action="FlipRead" asp-route-id="@item.Id"><span class="fa fa-envelope-open-o" title="Mark Read"></span></a>
                                     }
                                     &nbsp;
-                                    <a asp-action="Delete" asp-route-id="@item.Id"><span class="fa fa-trash-o" title="Delete"></span></a>
+                                    <a asp-action="Delete" asp-route-id="@item.Id" onclick="return confirm('Are you sure you want to delete this notification');"><span class="fa fa-trash-o" title="Delete"></span></a>
                                 </td>
                             </tr>
                         }

@@ -246,10 +246,12 @@ namespace BTCPayServer.Migrations
             modelBuilder.Entity("BTCPayServer.Data.NotificationData", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasMaxLength(36);
 
                     b.Property<string>("ApplicationUserId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasMaxLength(50);
 
                     b.Property<byte[]>("Blob")
                         .HasColumnType("BLOB");
@@ -258,7 +260,8 @@ namespace BTCPayServer.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("NotificationType")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasMaxLength(100);
 
                     b.Property<bool>("Seen")
                         .HasColumnType("INTEGER");

@@ -192,7 +192,7 @@ namespace BTCPayServer.Controllers
             {
                 StringBuilder errors = new StringBuilder();
                 if (!store.GetSupportedPaymentMethods(_NetworkProvider).Any())
-                    errors.AppendLine("Warning: No wallet has been linked to your BTCPay Store. See the following link for more information on how to connect your store and wallet. (https://docs.btcpayserver.org/getting-started/connectwallet)");
+                    errors.AppendLine("Warning: No wallet has been linked to your BTCPay Store. See the following link for more information on how to connect your store and wallet. (https://docs.btcpayserver.org/WalletSetup/)");
                 foreach (var error in logs.ToList())
                 {
                     errors.AppendLine(error.ToString());

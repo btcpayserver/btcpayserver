@@ -180,6 +180,13 @@
                                 </a>
                             </div>
                         </div>
+                        
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input asp-for="AlwaysIncludeNonWitnessUTXO" class="form-check-input"/>
+                                <label asp-for="AlwaysIncludeNonWitnessUTXO" class="form-check-label"></label>
+                            </div>
+                        </div>    
                         @if (Model.SupportRBF)
                         {
                             <div class="form-group">

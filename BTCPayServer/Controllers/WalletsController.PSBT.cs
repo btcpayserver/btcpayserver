@@ -45,6 +45,8 @@ namespace BTCPayServer.Controllers
                 if (sendModel.AllowFeeBump is WalletSendModel.ThreeStateBool.No)
                     psbtRequest.RBF = false;
             }
+
+            psbtRequest.AlwaysIncludeNonWitnessUTXO = sendModel.AlwaysIncludeNonWitnessUTXO;
            
             psbtRequest.FeePreference = new FeePreference();
             if (sendModel.FeeSatoshiPerByte is decimal v &&

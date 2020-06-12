@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 
 using Microsoft.AspNetCore.Builder;
 using System;
+using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
 using BTCPayServer.Filters;
 using BTCPayServer.Models;
@@ -15,15 +16,25 @@ using BTCPayServer.Logging;
 using Microsoft.Extensions.Configuration;
 using BTCPayServer.Configuration;
 using System.IO;
+using System.Linq;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using BTCPayServer.Security;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Net.Http.Headers;
 using System.Net;
+using System.Threading.Tasks;
 using BTCPayServer.JsonConverters;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Storage;
+using BTCPayServerDockerConfigurator;
+using BTCPayServerDockerConfigurator.Controllers;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.Routing.Patterns;
+using Microsoft.Extensions.Primitives;
+using NBXplorer;
 
 namespace BTCPayServer.Hosting
 {
@@ -55,6 +66,7 @@ namespace BTCPayServer.Hosting
                 .AddDefaultTokenProviders();
 
             services.AddBTCPayServer(Configuration);
+            
             services.AddProviderStorage();
             services.AddSession();
             services.AddSignalR();
@@ -87,7 +99,8 @@ namespace BTCPayServer.Hosting
 #if RAZOR_RUNTIME_COMPILE
             .AddRazorRuntimeCompilation()
 #endif
-            .AddControllersAsServices();
+            .AddControllersAsServices()
+            .AddConfigurator(services, Configuration);
             services.TryAddScoped<ContentSecurityPolicies>();
             services.Configure<IdentityOptions>(options =>
             {
@@ -213,9 +226,82 @@ namespace BTCPayServer.Hosting
             {
                 AppHub.Register(endpoints);
                 PaymentRequestHub.Register(endpoints);
-                endpoints.MapControllers();
                 endpoints.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
+                var x = new X( endpoints.DataSources.SelectMany(source =>source.Endpoints).ToList(), new Y(endpoints.DataSources.Select(source =>  source.GetChangeToken() ).ToList()));
+                endpoints.DataSources.Clear();
+                //
+                //
+                // endpoints.MapControllerRoute("configurator", "configurator/{action}", new
+                // {
+                //     controller = "Configurator"
+                // });
+                endpoints.DataSources.Add(x);
+                
+                
             });
         }
+    }
+
+    class X : EndpointDataSource
+    {
+        private readonly Y _changeToken;
+        private readonly List<Endpoint> _endpoints;
+
+        public X(List<Endpoint> endpoints, Y changeToken  )
+        {
+            _changeToken = changeToken;
+            var configEndpoints = endpoints.Where(endpoint => endpoint.Metadata.Any(o =>
+                o is ControllerActionDescriptor actionDescriptor && actionDescriptor.ControllerTypeInfo.Namespace ==
+                typeof(ConfiguratorController).Namespace)).ToList();
+            _endpoints = endpoints.Where(endpoint => !configEndpoints.Contains(endpoint)).ToList();
+            _endpoints.AddRange(configEndpoints.Select(endpoint =>
+            {
+                if (endpoint is RouteEndpoint routeEndpoint)
+                {
+                    var builder = new RouteEndpointBuilder(context => Task.CompletedTask,
+                        RoutePatternFactory.Parse($"configurator/{routeEndpoint.RoutePattern.RawText}"),
+                        routeEndpoint.Order);
+                    return builder.Build();
+
+                }
+
+                return endpoint;
+            }));
+        }
+        public override IChangeToken GetChangeToken()
+        {
+            return _changeToken;
+        }
+
+        public override IReadOnlyList<Endpoint> Endpoints
+        {
+            get
+            {
+                return _endpoints;
+            }
+        }
+    }
+    
+    class Y: IChangeToken
+    {
+        private readonly IEnumerable<IChangeToken> _changeTokens;
+
+        public Y(IEnumerable<IChangeToken> changeTokens)
+        {
+            _changeTokens = changeTokens;
+        }
+        public IDisposable RegisterChangeCallback(Action<object> callback, object state)
+        {
+            var result = new CompositeDisposable();
+            foreach (IChangeToken changeToken in _changeTokens)
+            {
+                result.Add(changeToken.RegisterChangeCallback(callback, state));
+            }
+            return result;
+        }
+
+        public bool HasChanged { get; }
+        public bool ActiveChangeCallbacks { get; }
+
     }
 }

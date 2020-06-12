@@ -10,8 +10,10 @@ using BTCPayServer.Controllers;
 using BTCPayServer.Events;
 using BTCPayServer.JsonConverters;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Stores;
 using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitpayClient;
 using Newtonsoft.Json;
@@ -251,6 +253,14 @@ namespace BTCPayServer.Tests
                 var scopedClient =
                     await user.CreateClient(Permission.Create(Policies.CanViewStoreSettings, user.StoreId).ToString());
                 Assert.Single(await scopedClient.GetStores());
+
+
+                // We strip the user's Owner right, so the key should not work
+                using var ctx = tester.PayTester.GetService<Data.ApplicationDbContextFactory>().CreateContext();
+                var storeEntity = await ctx.UserStore.SingleAsync(u => u.ApplicationUserId == user.UserId && u.StoreDataId == newStore.Id);
+                storeEntity.Role = "Guest";
+                await ctx.SaveChangesAsync();
+                await AssertHttpError(403, async () => await client.UpdateStore(newStore.Id, new UpdateStoreRequest() { Name = "B" }));
             }
         }
 

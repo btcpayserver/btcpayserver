@@ -49,7 +49,11 @@ namespace BTCPayServer.Client
         {
             return policy.StartsWith("btcpay.store", StringComparison.OrdinalIgnoreCase);
         }
-        
+        public static bool IsStoreModifyPolicy(string policy)
+        {
+            return policy.StartsWith("btcpay.store.canmodify", StringComparison.OrdinalIgnoreCase);
+        }
+
         public static bool IsServerPolicy(string policy)
         {
             return policy.StartsWith("btcpay.server", StringComparison.OrdinalIgnoreCase);

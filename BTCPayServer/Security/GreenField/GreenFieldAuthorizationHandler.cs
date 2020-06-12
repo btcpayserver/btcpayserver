@@ -49,6 +49,11 @@ namespace BTCPayServer.Security.GreenField
                             var store = await _storeRepository.FindStore((string)storeId, userid);
                             if (store == null)
                                 break;
+                            if(Policies.IsStoreModifyPolicy(policy))
+                            {
+                                if (store.Role != StoreRoles.Owner)
+                                    break;
+                            }
                             success = true;
                             _HttpContext.SetStoreData(store);
                         }

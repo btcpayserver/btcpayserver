@@ -593,6 +593,7 @@ namespace BTCPayServer.Controllers
                     case ExternalServiceTypes.Charge:
                         return LightningChargeServices(service, connectionString, showQR);
                     case ExternalServiceTypes.RTL:
+                    case ExternalServiceTypes.ThunderHub:
                     case ExternalServiceTypes.Spark:
                         if (connectionString.AccessKey == null)
                         {
@@ -602,7 +603,10 @@ namespace BTCPayServer.Controllers
                         LightningWalletServices vm = new LightningWalletServices();
                         vm.ShowQR = showQR;
                         vm.WalletName = service.DisplayName;
-                        vm.ServiceLink = $"{connectionString.Server}?access-key={connectionString.AccessKey}";
+                        string tokenParam = "access-key";
+                        if (service.Type == ExternalServiceTypes.ThunderHub)
+                            tokenParam = "token";
+                        vm.ServiceLink = $"{connectionString.Server}?{tokenParam}={connectionString.AccessKey}";
                         return View("LightningWalletServices", vm);
                     case ExternalServiceTypes.CLightningRest:
                         return LndServices(service, connectionString, nonce, "CLightningRestServices");

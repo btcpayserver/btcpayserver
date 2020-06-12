@@ -78,7 +78,7 @@ namespace BTCPayServer.Configuration
                 }
             }
 
-            if (new []{ExternalServiceTypes.Charge, ExternalServiceTypes.RTL,  ExternalServiceTypes.Spark, ExternalServiceTypes.Configurator}.Contains(serviceType))
+            if (new []{ExternalServiceTypes.Charge, ExternalServiceTypes.RTL, ExternalServiceTypes.ThunderHub, ExternalServiceTypes.Spark, ExternalServiceTypes.Configurator}.Contains(serviceType))
             {
                 // Read access key from cookie file
                 if (connectionString.CookieFilePath != null)
@@ -95,7 +95,7 @@ namespace BTCPayServer.Configuration
                     {
                         throw new System.IO.FileNotFoundException("Cookie file path not found", ex);
                     }
-                    if (serviceType == ExternalServiceTypes.RTL || serviceType == ExternalServiceTypes.Configurator)
+                    if (serviceType == ExternalServiceTypes.RTL || serviceType == ExternalServiceTypes.Configurator || serviceType == ExternalServiceTypes.ThunderHub)
                     {
                         connectionString.AccessKey = cookieFileContent;
                     }

@@ -80,6 +80,7 @@ namespace BTCPayServer.HostedServices
                     PaymentTotals = dto.PaymentTotals,
                     AmountPaid = dto.AmountPaid,
                     ExchangeRates = dto.ExchangeRates,
+                    OrderId = dto.OrderId
                 },
                 Event = new InvoicePaymentNotificationEvent()
                 {

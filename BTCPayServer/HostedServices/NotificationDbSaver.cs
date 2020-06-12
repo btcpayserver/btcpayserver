@@ -2,14 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
-using BTCPayServer.Events;
 using BTCPayServer.Events.Notifications;
 using BTCPayServer.Models.NotificationViewModels;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace BTCPayServer.HostedServices
 {
@@ -47,50 +46,65 @@ namespace BTCPayServer.HostedServices
 
     public class NotificationManager
     {
-        private readonly ApplicationDbContext _db;
+        private readonly ApplicationDbContextFactory _factory;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public NotificationManager(ApplicationDbContext db, UserManager<ApplicationUser> userManager)
+        public NotificationManager(ApplicationDbContextFactory factory, UserManager<ApplicationUser> userManager)
         {
-            _db = db;
+            _factory = factory;
             _userManager = userManager;
         }
 
+        private static MemoryCache _cache = new MemoryCache(new MemoryCacheOptions());
+        private const int _cacheExpiryMs = 5000;
         public NotificationSummaryViewModel GetSummaryNotifications(ClaimsPrincipal user)
         {
-            var resp = new NotificationSummaryViewModel();
             var userId = _userManager.GetUserId(user);
 
-            // TODO: Soft caching in order not to pound database too much
-            resp.UnseenCount = _db.Notifications
-                .Where(a => a.ApplicationUserId == userId && !a.Seen)
-                .Count();
+            if (_cache.TryGetValue<NotificationSummaryViewModel>(userId, out var obj))
+                return obj;
+            
+            var resp = fetchNotificationsFromDb(userId);
+            _cache.Set(userId, resp, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMilliseconds(_cacheExpiryMs)));
 
-            if (resp.UnseenCount > 0)
+            return resp;
+        }
+
+        private NotificationSummaryViewModel fetchNotificationsFromDb(string userId)
+        {
+            var resp = new NotificationSummaryViewModel();
+            using (var _db = _factory.CreateContext())
             {
-                try
-                {
-                    resp.Last5 = _db.Notifications
-                        .Where(a => a.ApplicationUserId == userId && !a.Seen)
-                        .OrderByDescending(a => a.Created)
-                        .Take(5)
-                        .Select(a => a.ViewModel())
-                        .ToList();
-                }
-                catch (System.IO.InvalidDataException iex)
-                {
-                    // invalid notifications that are not pkuzipable, burn them all
-                    var notif = _db.Notifications.Where(a => a.ApplicationUserId == userId);
-                    _db.Notifications.RemoveRange(notif);
-                    _db.SaveChanges();
+                resp.UnseenCount = _db.Notifications
+                    .Where(a => a.ApplicationUserId == userId && !a.Seen)
+                    .Count();
 
-                    resp.UnseenCount = 0;
+                if (resp.UnseenCount > 0)
+                {
+                    try
+                    {
+                        resp.Last5 = _db.Notifications
+                            .Where(a => a.ApplicationUserId == userId && !a.Seen)
+                            .OrderByDescending(a => a.Created)
+                            .Take(5)
+                            .Select(a => a.ViewModel())
+                            .ToList();
+                    }
+                    catch (System.IO.InvalidDataException iex)
+                    {
+                        // invalid notifications that are not pkuzipable, burn them all
+                        var notif = _db.Notifications.Where(a => a.ApplicationUserId == userId);
+                        _db.Notifications.RemoveRange(notif);
+                        _db.SaveChanges();
+
+                        resp.UnseenCount = 0;
+                        resp.Last5 = new List<NotificationViewModel>();
+                    }
+                }
+                else
+                {
                     resp.Last5 = new List<NotificationViewModel>();
                 }
-            }
-            else
-            {
-                resp.Last5 = new List<NotificationViewModel>();
             }
 
             return resp;

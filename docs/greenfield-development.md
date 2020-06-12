@@ -1,3 +1,4 @@
+
 # GreenField API Development Documentation
 ## Adding new API endpoints
 
@@ -11,8 +12,22 @@
   * `PATCH` - Update partially
   * `DELETE` - Delete or Archive
 * When returning an error response, we should differentiate from 2 possible scenarios:
-  * Model validation - an error on the request was found - [Status Code 422](https://httpstatuses.com/422) with the model [ValidationProblemDetails](https://docs.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.mvc.validationproblemdetails?view=aspnetcore-3.1).
-  * Generic request error - an error resulting from the business logic unable to handle the specified request - [Status Code 400](https://httpstatuses.com/400) with the model [ProblemDetails](https://docs.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.mvc.problemdetails?view=aspnetcore-3.1).
+  * Model validation - an error or errors on the request was found - [Status Code 422](https://httpstatuses.com/422) with the model:
+	```json
+	[
+	  {
+	    "path": "prop-name",
+	    "message": "human readable message"
+	  }
+	]
+	```
+  * Generic request error - an error resulting from the business logic unable to handle the specified request - [Status Code 400](https://httpstatuses.com/400) with the model:
+	```json
+	{
+	  "code": "unique-error-code",
+	  "message":"a human readable message"
+	}
+	```
 
 ## Updating existing API endpoints
 

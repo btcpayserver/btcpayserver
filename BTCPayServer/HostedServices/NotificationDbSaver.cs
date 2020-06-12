@@ -15,58 +15,32 @@ namespace BTCPayServer.HostedServices
 {
     public class NotificationDbSaver : EventHostedServiceBase
     {
-        private readonly UserManager<ApplicationUser> _UserManager;
         private readonly ApplicationDbContextFactory _ContextFactory;
 
-        public NotificationDbSaver(UserManager<ApplicationUser> userManager,
-                    ApplicationDbContextFactory contextFactory,
+        public NotificationDbSaver(ApplicationDbContextFactory contextFactory,
                     EventAggregator eventAggregator) : base(eventAggregator)
         {
-            _UserManager = userManager;
             _ContextFactory = contextFactory;
         }
 
         protected override void SubscribeToEvents()
         {
-            SubscribeAllChildrenOfNotificationEventBase();
+            Subscribe<NotificationEvent>();
             base.SubscribeToEvents();
         }
 
-        // subscribe all children of NotificationEventBase
-        public void SubscribeAllChildrenOfNotificationEventBase()
-        {
-            var method = this.GetType().GetMethod(nameof(SubscribeHelper));
-            var notificationTypes = this.GetType().Assembly.GetTypes().Where(a => typeof(NotificationEventBase).IsAssignableFrom(a));
-            foreach (var notif in notificationTypes)
-            {
-                var generic = method.MakeGenericMethod(notif);
-                generic.Invoke(this, null);
-            }
-        }
-
-        // we need publicly accessible method for reflection invoke
-        public void SubscribeHelper<T>() => base.Subscribe<T>();
-
         protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
         {
-            if (evt is NotificationEventBase)
+            var casted = evt as NotificationEvent;
+            using (var db = _ContextFactory.CreateContext())
             {
-                var data = (evt as NotificationEventBase).ToData();
-
-                var admins = await _UserManager.GetUsersInRoleAsync(Roles.ServerAdmin);
-
-                using (var db = _ContextFactory.CreateContext())
+                foreach (var uid in casted.ApplicationUserIds)
                 {
-                    foreach (var admin in admins)
-                    {
-                        data.Id = Guid.NewGuid().ToString();
-                        data.ApplicationUserId = admin.Id;
-
-                        db.Notifications.Add(data);
-                    }
-
-                    await db.SaveChangesAsync();
+                    var data = casted.Notification.ToData(uid);
+                    db.Notifications.Add(data);
                 }
+
+                await db.SaveChangesAsync();
             }
         }
     }

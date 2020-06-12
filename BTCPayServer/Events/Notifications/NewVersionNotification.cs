@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 
 namespace BTCPayServer.Events.Notifications
 {
-    internal class NewVersionNotification : NotificationEventBase
+    internal class NewVersionNotification : NotificationBase
     {
         public string Version { get; set; }
 

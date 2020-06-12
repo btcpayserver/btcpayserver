@@ -29,10 +29,10 @@ namespace BTCPayServer.Models.NotificationViewModels
     {
         public static NotificationViewModel ViewModel(this NotificationData data)
         {
-            var baseType = typeof(NotificationEventBase);
+            var baseType = typeof(NotificationBase);
 
-            var typeName = baseType.FullName.Replace(nameof(NotificationEventBase), data.NotificationType, StringComparison.OrdinalIgnoreCase);
-            var instance = Activator.CreateInstance(baseType.Assembly.GetType(typeName)) as NotificationEventBase;
+            var typeName = baseType.FullName.Replace(nameof(NotificationBase), data.NotificationType, StringComparison.OrdinalIgnoreCase);
+            var instance = Activator.CreateInstance(baseType.Assembly.GetType(typeName)) as NotificationBase;
 
             return instance.ToViewModel(data);
         }

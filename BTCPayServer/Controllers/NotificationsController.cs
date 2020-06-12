@@ -22,13 +22,13 @@ namespace BTCPayServer.Controllers
     public class NotificationsController : Controller
     {
         private readonly ApplicationDbContext _db;
-        private readonly EventAggregator _eventAggregator;
+        private readonly NotificationSender _notificationSender;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public NotificationsController(ApplicationDbContext db, EventAggregator eventAggregator, UserManager<ApplicationUser> userManager)
+        public NotificationsController(ApplicationDbContext db, NotificationSender notificationSender, UserManager<ApplicationUser> userManager)
         {
             _db = db;
-            _eventAggregator = eventAggregator;
+            _notificationSender = notificationSender;
             _userManager = userManager;
         }
 
@@ -54,7 +54,7 @@ namespace BTCPayServer.Controllers
         [HttpGet]
         public async Task<IActionResult> Generate()
         {
-            _eventAggregator.NoticeNewVersion("1.0.4.4");
+            await _notificationSender.NoticeNewVersionAsync("1.0.4.4");
             // waiting for event handler to catch up
             await Task.Delay(1000);
             return RedirectToAction(nameof(Index));

@@ -75,6 +75,11 @@ namespace BTCPayServer.Controllers
             catch (BitpayHttpException e)
             {
                 ModelState.AddModelError("Store", e.Message);
+                if (model.JsonResponse)
+                {
+                    return BadRequest(ModelState);
+                }
+
                 return View();
             }
             

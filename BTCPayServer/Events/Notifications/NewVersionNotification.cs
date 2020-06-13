@@ -6,6 +6,8 @@ namespace BTCPayServer.Events.Notifications
 {
     internal class NewVersionNotification : NotificationBase
     {
+        internal override string NotificationType => "NewVersionNotification";
+
         public string Version { get; set; }
 
         public override NotificationViewModel ToViewModel(NotificationData data)

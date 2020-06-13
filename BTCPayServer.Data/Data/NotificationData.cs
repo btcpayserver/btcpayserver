@@ -26,7 +26,7 @@ namespace BTCPayServer.Data
             builder.Entity<NotificationData>()
                 .HasOne(o => o.ApplicationUser)
                 .WithMany(n => n.Notifications)
-                .HasForeignKey(k => k.ApplicationUserId);
+                .HasForeignKey(k => k.ApplicationUserId).OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

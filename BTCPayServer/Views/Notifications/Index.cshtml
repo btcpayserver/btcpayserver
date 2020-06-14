@@ -19,60 +19,66 @@
                 <hr class="primary">
             </div>
         </div>
-        <div class="row button-row">
-            <div class="col-lg-6">
-                <span class="dropdown" style="display:none;" id="MassAction">
-                    <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        Actions
-                    </button>
-                    <form method="post" asp-action="MassAction" class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                        @Html.Hidden("csvGuids")
-                        <button type="submit" class="dropdown-item" name="command" value="delete"><i class="fa fa-trash-o"></i> Delete</button>
-                    </form>
-                </span>
-                <a class="btn btn-primary" role="button" asp-action="Generate" id="Generate"><span class="fa fa-plus"></span> Generate Test Notification</a>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-lg-12">
-                <table class="table table-sm table-responsive-md">
-                    <thead>
-                        <tr>
-                            <th width="30px"></th>
-                            <th width="165px">Date</th>
-                            <th>Message</th>
-                            <th width="80px">&nbsp;</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in Model.Items)
-                        {
-                            @* TODO: Multiselect akin to Gmail *@
-                            <tr data-guid="@item.Id">
-                                <td><input type="checkbox" class="selector" data-guid="@item.Id" /></td>
-                                <td onclick="rowseen(this)" class="cursor-pointer @(item.Seen ? "": "font-weight-bold")">@item.Created.ToBrowserDate()</td>
-                                <td onclick="rowseen(this)" class="cursor-pointer @(item.Seen ? "": "font-weight-bold")">@item.Body</td>
-                                <td>
-                                    @if (!String.IsNullOrEmpty(item.ActionLink))
-                                    {
-                                        <a href="@item.ActionLink">Action <i class="fa fa-angle-double-right"></i></a>
-                                    }
-                                    else
-                                    {
-                                        <span>&nbsp;</span>
-                                    }
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
 
-                <nav aria-label="...">
-                    <ul class="pagination">
-                    </ul>
-                </nav>
+        <form method="post" asp-action="MassAction">
+
+            <div class="row button-row">
+                <div class="col-lg-6">
+                    <span class="dropdown" style="display:none;" id="MassAction">
+                        <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Actions
+                        </button>
+                        <div class="dropdown-menu">
+                            <button type="submit" class="dropdown-item" name="command" value="delete"><i class="fa fa-trash-o"></i> Delete</button>
+                        </div>
+                    </span>
+                    <a class="btn btn-primary" role="button" asp-action="Generate" id="Generate"><span class="fa fa-plus"></span> Generate Test Notification</a>
+                </div>
             </div>
-        </div>
+            <div class="row">
+                <div class="col-lg-12">
+                    <table class="table table-sm table-responsive-md">
+                        <thead>
+                            <tr>
+                                <th width="30px"></th>
+                                <th width="165px">Date</th>
+                                <th>Message</th>
+                                <th width="80px">&nbsp;</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Items)
+                            {
+                                <tr data-guid="@item.Id">
+                                    <td>
+                                        <input name="selectedItems" type="checkbox" class="selector" value="@item.Id" /> 
+                                    </td>
+                                    <td onclick="rowseen(this)" class="cursor-pointer @(item.Seen ? "": "font-weight-bold")">@item.Created.ToBrowserDate()</td>
+                                    <td onclick="rowseen(this)" class="cursor-pointer @(item.Seen ? "": "font-weight-bold")">@item.Body</td>
+                                    <td>
+                                        @if (!String.IsNullOrEmpty(item.ActionLink))
+                                        {
+                                            <a href="@item.ActionLink">Action <i class="fa fa-angle-double-right"></i></a>
+                                        }
+                                        else
+                                        {
+                                            <span>&nbsp;</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+
+                    <nav aria-label="...">
+                        <ul class="pagination">
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+
+        </form>
+
     </div>
 </section>
 
@@ -95,11 +101,6 @@
         if (count > 0) {
             $("#MassAction").children().eq(0).text("Batch Action (" + count + ")");
             $("#MassAction").show();
-            var csvGuids = [];
-            $(".selector:checked").each(function () {
-                csvGuids.push($(this).data("guid"));
-            });
-            $("#csvGuids").val(csvGuids.join(","));
         } else {
             $("#MassAction").hide();
         }

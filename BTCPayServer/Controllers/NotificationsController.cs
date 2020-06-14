@@ -74,20 +74,13 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> MassAction(string command, string csvGuids)
+        public async Task<IActionResult> MassAction(string command, string[] selectedItems)
         {
-            List<string> parsedGuids = null;
-            try
-            {
-                parsedGuids = csvGuids.Split(',').ToList();
-            }
-            catch { }
-
-            if (parsedGuids != null)
+            if (selectedItems != null)
             {
                 if (command == "delete" && validUserClaim(out var userId))
                 {
-                    var toRemove = _db.Notifications.Where(a => a.ApplicationUserId == userId && parsedGuids.Contains(a.Id));
+                    var toRemove = _db.Notifications.Where(a => a.ApplicationUserId == userId && selectedItems.Contains(a.Id));
                     _db.Notifications.RemoveRange(toRemove);
                     await _db.SaveChangesAsync();
 

@@ -51,6 +51,8 @@ namespace BTCPayServer.Models.WalletViewModels
         public string Fiat { get; set; }
         public string RateError { get; set; }
         public bool SupportRBF { get; set; }
+        [Display(Name = "Always include non-witness UTXO if available")]
+        public bool AlwaysIncludeNonWitnessUTXO  { get; set; }
         [Display(Name = "Allow fee increase (RBF)")]
         public ThreeStateBool AllowFeeBump { get; set; }
 

@@ -179,7 +179,16 @@
                                     <span class="fa fa-question-circle-o" title="More information..."></span>
                                 </a>
                             </div>
-                        </div>
+                        </div>                        
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input asp-for="AlwaysIncludeNonWitnessUTXO" class="form-check-input"/>
+                                <label asp-for="AlwaysIncludeNonWitnessUTXO" class="form-check-label"></label>
+                                <a href="https://medium.com/@jmacato/wasabi-wallets-advisory-for-trezor-users-7d942c727f92" target="_blank">
+                                    <span class="fa fa-question-circle-o" title="More information..."></span>
+                                </a>
+                            </div>
+                        </div>    
                         @if (Model.SupportRBF)
                         {
                             <div class="form-group">

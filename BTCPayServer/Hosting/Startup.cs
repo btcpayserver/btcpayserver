@@ -27,7 +27,6 @@ using BTCPayServer.JsonConverters;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Storage;
-using BTCPayServerDockerConfigurator;
 using BTCPayServerDockerConfigurator.Controllers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Controllers;
@@ -71,36 +70,35 @@ namespace BTCPayServer.Hosting
             services.AddSession();
             services.AddSignalR();
             services.AddMvc(o =>
-            {
-                o.Filters.Add(new XFrameOptionsAttribute("DENY"));
-                o.Filters.Add(new XContentTypeOptionsAttribute("nosniff"));
-                o.Filters.Add(new XXSSProtectionAttribute());
-                o.Filters.Add(new ReferrerPolicyAttribute("same-origin"));
-                //o.Filters.Add(new ContentSecurityPolicyAttribute()
-                //{
-                //    FontSrc = "'self' https://fonts.gstatic.com/",
-                //    ImgSrc = "'self' data:",
-                //    DefaultSrc = "'none'",
-                //    StyleSrc = "'self' 'unsafe-inline'",
-                //    ScriptSrc = "'self' 'unsafe-inline'"
-                //});
-            })
-            .ConfigureApiBehaviorOptions(options =>
-            {
-                var builtInFactory = options.InvalidModelStateResponseFactory;
-
-                options.InvalidModelStateResponseFactory = context =>
                 {
-                    context.HttpContext.Response.StatusCode = (int)HttpStatusCode.UnprocessableEntity;
-                    return builtInFactory(context);
-                };
-            })
-            .AddNewtonsoftJson()
+                    o.Filters.Add(new XFrameOptionsAttribute("DENY"));
+                    o.Filters.Add(new XContentTypeOptionsAttribute("nosniff"));
+                    o.Filters.Add(new XXSSProtectionAttribute());
+                    o.Filters.Add(new ReferrerPolicyAttribute("same-origin"));
+                    //o.Filters.Add(new ContentSecurityPolicyAttribute()
+                    //{
+                    //    FontSrc = "'self' https://fonts.gstatic.com/",
+                    //    ImgSrc = "'self' data:",
+                    //    DefaultSrc = "'none'",
+                    //    StyleSrc = "'self' 'unsafe-inline'",
+                    //    ScriptSrc = "'self' 'unsafe-inline'"
+                    //});
+                })
+                .ConfigureApiBehaviorOptions(options =>
+                {
+                    var builtInFactory = options.InvalidModelStateResponseFactory;
+
+                    options.InvalidModelStateResponseFactory = context =>
+                    {
+                        context.HttpContext.Response.StatusCode = (int)HttpStatusCode.UnprocessableEntity;
+                        return builtInFactory(context);
+                    };
+                })
+                .AddNewtonsoftJson()
 #if RAZOR_RUNTIME_COMPILE
-            .AddRazorRuntimeCompilation()
+                .AddRazorRuntimeCompilation()
 #endif
-            .AddControllersAsServices()
-            .AddConfigurator(services, Configuration);
+                .AddControllersAsServices();
             services.TryAddScoped<ContentSecurityPolicies>();
             services.Configure<IdentityOptions>(options =>
             {
@@ -254,19 +252,19 @@ namespace BTCPayServer.Hosting
                 o is ControllerActionDescriptor actionDescriptor && actionDescriptor.ControllerTypeInfo.Namespace ==
                 typeof(ConfiguratorController).Namespace)).ToList();
             _endpoints = endpoints.Where(endpoint => !configEndpoints.Contains(endpoint)).ToList();
-            _endpoints.AddRange(configEndpoints.Select(endpoint =>
-            {
-                if (endpoint is RouteEndpoint routeEndpoint)
-                {
-                    var builder = new RouteEndpointBuilder(context => Task.CompletedTask,
-                        RoutePatternFactory.Parse($"configurator/{routeEndpoint.RoutePattern.RawText}"),
-                        routeEndpoint.Order);
-                    return builder.Build();
-
-                }
-
-                return endpoint;
-            }));
+            // _endpoints.AddRange(configEndpoints.Select(endpoint =>
+            // {
+            //     if (endpoint is RouteEndpoint routeEndpoint)
+            //     {
+            //         var builder = new RouteEndpointBuilder(context => Task.CompletedTask,
+            //             RoutePatternFactory.Parse($"configurator/{routeEndpoint.RoutePattern.RawText}"),
+            //             routeEndpoint.Order);
+            //         return builder.Build();
+            //
+            //     }
+            //
+            //     return endpoint;
+            // }));
         }
         public override IChangeToken GetChangeToken()
         {

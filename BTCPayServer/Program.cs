@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Hosting.Server.Features;
 using System.Threading;
 using Serilog;
 using System.Runtime.CompilerServices;
+using Microsoft.Extensions.Hosting;
 
 [assembly:InternalsVisibleTo("BTCPayServer.Tests")]
 namespace BTCPayServer
@@ -32,6 +33,7 @@ namespace BTCPayServer
             using var loggerFactory = new LoggerFactory();
             loggerFactory.AddProvider(loggerProvider);
             var logger = loggerFactory.CreateLogger("Configuration");
+            IHost configurator = null;
             try
             {
                 // This is the only way that LoadArgs can print to console. Because LoadArgs is called by the HostBuilder before Logs.Configure is called
@@ -59,9 +61,16 @@ namespace BTCPayServer
                     .Build();
                 host.StartWithTasksAsync().GetAwaiter().GetResult();
                 var urls = host.ServerFeatures.Get<IServerAddressesFeature>().Addresses;
+                configurator = BTCPayServerDockerConfigurator.Program.CreateHostBuilder(args).Build();
+                configurator.Run();
                 foreach (var url in urls)
                 {
                     logger.LogInformation("Listening on " + url);
+                    
+                }
+                foreach (var url in urls)
+                {
+                    logger.LogInformation("configurator Listening on " + url);
                 }
                 host.WaitForShutdown();
             }
@@ -75,8 +84,8 @@ namespace BTCPayServer
                 processor.Dispose();
                 if(host == null)
                     Logs.Configuration.LogError("Configuration error");
-                if (host != null)
-                    host.Dispose();
+                host?.Dispose();
+                configurator?.Dispose();
                 Serilog.Log.CloseAndFlush();
                 loggerProvider.Dispose();
             }

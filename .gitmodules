@@ -1,0 +1,3 @@
+[submodule "btcpayserver-configurator"]
+	path = btcpayserver-configurator
+	url = https://github.com/btcpayserver/btcpayserver-configurator.git

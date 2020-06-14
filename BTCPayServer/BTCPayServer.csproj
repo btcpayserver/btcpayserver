@@ -124,7 +124,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\BTCPayServerDockerConfigurator\BTCPayServerDockerConfigurator\BTCPayServerDockerConfigurator.csproj" />
+	  <ProjectReference Include="..\btcpayserver-configurator\BTCPayServerDockerConfigurator\BTCPayServerDockerConfigurator.csproj" />
 	  <ProjectReference Include="..\BTCPayServer.Client\BTCPayServer.Client.csproj" />
 	  <ProjectReference Include="..\BTCPayServer.Data\BTCPayServer.Data.csproj" />
 	  <ProjectReference Include="..\BTCPayServer.Rating\BTCPayServer.Rating.csproj" />

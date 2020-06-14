@@ -130,11 +130,11 @@
                             <td style="text-align:center;">
                                 @if(scheme.Enabled)
                                 {
-                                    <span class="fa fa-check"></span>
+                                    <span class="text-success fa fa-check"></span>
                                 }
                                 else
                                 {
-                                    <span class="fa fa-times"></span>
+                                    <span class="text-danger fa fa-times"></span>
                                 }
                             </td>
                             <td style="text-align:right">
@@ -181,11 +181,11 @@
                             <td style="text-align:center;">
                                 @if(scheme.Enabled)
                                 {
-                                    <span class="fa fa-check"></span>
+                                    <span class="text-success fa fa-check"></span>
                                 }
                                 else
                                 {
-                                    <span class="fa fa-times"></span>
+                                    <span class="text-danger fa fa-times"></span>
                                 }
                             </td>
                             <td style="text-align:right"><a asp-action="AddLightningNode" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@this.Context.GetRouteValue("storeId")" id="@($"Modify-Lightning{scheme.CryptoCode}")">Modify</a></td>
@@ -221,11 +221,11 @@
                         <td  class="text-center">
                             @if (scheme.Enabled)
                             {
-                                <span class="fa fa-check"></span>
+                                <span class="text-success fa fa-check"></span>
                             }
                             else
                             {
-                                <span class="fa fa-times"></span>
+                                <span class="text-danger fa fa-times"></span>
                             }
                         </td>
                         <td class="text-right"><a asp-action="@scheme.Action" id='Modify-@scheme.Provider' asp-route-storeId="@this.Context.GetRouteValue("storeId")">Modify</a></td>

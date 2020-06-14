@@ -69,11 +69,11 @@
                                 <tr>
                                     @if (result.Error)
                                     {
-                                        <th class="small"><span class="fa fa-times" style="color:red;"></span> @result.CurrencyPair</th>
+                                        <th class="small"><span class="text-danger fa fa-times"></span> @result.CurrencyPair</th>
                                     }
                                     else
                                     {
-                                        <th class="small"><span class="fa fa-check" style="color:green;"></span> @result.CurrencyPair</th>
+                                        <th class="small"><span class="text-success fa fa-check"></span> @result.CurrencyPair</th>
                                     }
                                     <td class="small">@result.Rule</td>
                                 </tr>

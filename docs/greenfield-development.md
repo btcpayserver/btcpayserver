@@ -4,7 +4,7 @@
 
 * Always document all endpoints and model schemas in swagger. OpenAPI 3.0 is used as a specification, in JSON formatting, and is written manually. The specification is split to a file per controller and then merged by the server through a controller action at  `/swagger/v1/swagger.json`.
 * All `JsonConverter` usage should be registered through attributes within the model itself.
-* `decimal` and `long` and other similar types should be serialized to a string and able to deserialize from the original type and a string.
+* `decimal` and `long` and other similar types, if there is a need for decimal precision or has the possibility of an overflow issue, should be serialized to a string and able to deserialize from the original type and a string.
 * Ensure that the correct security permissions are set on the endpoint. Create a new permission if none of the existing ones are suitable.
 * Use HTTP methods according to REST principles when possible. This means:
   * `POST` - Create or custom action

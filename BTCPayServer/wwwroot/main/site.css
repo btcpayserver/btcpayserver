@@ -168,3 +168,9 @@ pre {
 .list-group-item a {
   color: inherit;
 }
+
+.alerts-badge {
+  position: absolute;
+  margin-top: -36px;
+  margin-left: 16px;
+}

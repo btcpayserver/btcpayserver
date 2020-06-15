@@ -11,15 +11,15 @@ namespace BTCPayServer.Data
     {
         public ApplicationDbContext CreateDbContext(string[] args)
         {
-            
+
             var builder = new DbContextOptionsBuilder<ApplicationDbContext>();
- 
+
             builder.UseSqlite("Data Source=temp.db");
- 
+
             return new ApplicationDbContext(builder.Options, true);
         }
     }
-    
+
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         private readonly bool _designTime;
@@ -37,90 +37,27 @@ namespace BTCPayServer.Data
 
         public DbSet<PlannedTransaction> PlannedTransactions { get; set; }
         public DbSet<PayjoinLock> PayjoinLocks { get; set; }
-
-        public DbSet<AppData> Apps
-        {
-            get; set;
-        }
-
-        public DbSet<InvoiceEventData> InvoiceEvents
-        {
-            get; set;
-        }
-
+        public DbSet<AppData> Apps { get; set; }
+        public DbSet<InvoiceEventData> InvoiceEvents { get; set; }
         public DbSet<OffchainTransactionData> OffchainTransactions { get; set; }
-
-        public DbSet<HistoricalAddressInvoiceData> HistoricalAddressInvoices
-        {
-            get; set;
-        }
-
-        public DbSet<PendingInvoiceData> PendingInvoices
-        {
-            get; set;
-        }
-        public DbSet<RefundAddressesData> RefundAddresses
-        {
-            get; set;
-        }
-
-        public DbSet<PaymentData> Payments
-        {
-            get; set;
-        }
-        
-        public DbSet<PaymentRequestData> PaymentRequests
-        {
-            get; set;
-        }
-
+        public DbSet<HistoricalAddressInvoiceData> HistoricalAddressInvoices { get; set; }
+        public DbSet<PendingInvoiceData> PendingInvoices { get; set; }
+        public DbSet<RefundAddressesData> RefundAddresses { get; set; }
+        public DbSet<PaymentData> Payments { get; set; }
+        public DbSet<PaymentRequestData> PaymentRequests { get; set; }
         public DbSet<WalletData> Wallets { get; set; }
         public DbSet<WalletTransactionData> WalletTransactions { get; set; }
+        public DbSet<StoreData> Stores { get; set; }
+        public DbSet<UserStore> UserStore { get; set; }
+        public DbSet<AddressInvoiceData> AddressInvoices { get; set; }
+        public DbSet<SettingData> Settings { get; set; }
+        public DbSet<PairingCodeData> PairingCodes { get; set; }
+        public DbSet<PairedSINData> PairedSINData { get; set; }
+        public DbSet<APIKeyData> ApiKeys { get; set; }
+        public DbSet<StoredFile> Files { get; set; }
+        public DbSet<U2FDevice> U2FDevices { get; set; }
+        public DbSet<NotificationData> Notifications { get; set; }
 
-        public DbSet<StoreData> Stores
-        {
-            get; set;
-        }
-
-        public DbSet<UserStore> UserStore
-        {
-            get; set;
-        }
-
-        public DbSet<AddressInvoiceData> AddressInvoices
-        {
-            get; set;
-        }
-
-        public DbSet<SettingData> Settings
-        {
-            get; set;
-        }
-
-
-        public DbSet<PairingCodeData> PairingCodes
-        {
-            get; set;
-        }
-
-        public DbSet<PairedSINData> PairedSINData
-        {
-            get; set;
-        }
-
-        public DbSet<APIKeyData> ApiKeys
-        {
-            get; set;
-        } 
-        
-        public DbSet<StoredFile> Files
-        {
-            get; set;
-        }
-       
-
-        public DbSet<U2FDevice> U2FDevices { get; set; }   
-        
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             var isConfigured = optionsBuilder.Options.Extensions.OfType<RelationalOptionsExtension>().Any();
@@ -131,6 +68,9 @@ namespace BTCPayServer.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+            NotificationData.OnModelCreating(builder);
+
+
             builder.Entity<InvoiceData>()
                 .HasOne(o => o.StoreData)
                 .WithMany(a => a.Invoices).OnDelete(DeleteBehavior.Cascade);
@@ -164,12 +104,12 @@ namespace BTCPayServer.Data
                    .HasOne(o => o.StoreData)
                    .WithMany(i => i.APIKeys)
                    .HasForeignKey(i => i.StoreId).OnDelete(DeleteBehavior.Cascade);
-            
+
             builder.Entity<APIKeyData>()
                 .HasOne(o => o.User)
                 .WithMany(i => i.APIKeys)
                 .HasForeignKey(i => i.UserId).OnDelete(DeleteBehavior.Cascade);
-            
+
             builder.Entity<APIKeyData>()
                 .HasIndex(o => o.StoreId);
 
@@ -240,8 +180,8 @@ namespace BTCPayServer.Data
                     o.UniqueId
 #pragma warning restore CS0618
                 });
-            
-            
+
+
             builder.Entity<PaymentRequestData>()
                 .HasOne(o => o.StoreData)
                 .WithMany(i => i.PaymentRequests)
@@ -264,7 +204,7 @@ namespace BTCPayServer.Data
             builder.Entity<WalletTransactionData>()
                 .HasOne(o => o.WalletData)
                 .WithMany(w => w.WalletTransactions).OnDelete(DeleteBehavior.Cascade);
-            
+
             if (Database.IsSqlite() && !_designTime)
             {
                 // SQLite does not have proper support for DateTimeOffset via Entity Framework Core, see the limitations

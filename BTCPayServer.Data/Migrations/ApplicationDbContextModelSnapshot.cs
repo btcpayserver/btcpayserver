@@ -14,7 +14,7 @@ namespace BTCPayServer.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "3.1.1");
+                .HasAnnotation("ProductVersion", "3.1.4");
 
             modelBuilder.Entity("BTCPayServer.Data.APIKeyData", b =>
                 {
@@ -241,6 +241,36 @@ namespace BTCPayServer.Migrations
                     b.HasKey("InvoiceDataId", "UniqueId");
 
                     b.ToTable("InvoiceEvents");
+                });
+
+            modelBuilder.Entity("BTCPayServer.Data.NotificationData", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("TEXT")
+                        .HasMaxLength(36);
+
+                    b.Property<string>("ApplicationUserId")
+                        .HasColumnType("TEXT")
+                        .HasMaxLength(50);
+
+                    b.Property<byte[]>("Blob")
+                        .HasColumnType("BLOB");
+
+                    b.Property<DateTimeOffset>("Created")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NotificationType")
+                        .HasColumnType("TEXT")
+                        .HasMaxLength(100);
+
+                    b.Property<bool>("Seen")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId");
+
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("BTCPayServer.Data.OffchainTransactionData", b =>
@@ -758,6 +788,14 @@ namespace BTCPayServer.Migrations
                         .HasForeignKey("InvoiceDataId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("BTCPayServer.Data.NotificationData", b =>
+                {
+                    b.HasOne("BTCPayServer.Data.ApplicationUser", "ApplicationUser")
+                        .WithMany("Notifications")
+                        .HasForeignKey("ApplicationUserId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("BTCPayServer.Data.PairedSINData", b =>

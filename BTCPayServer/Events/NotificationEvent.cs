@@ -5,6 +5,6 @@ namespace BTCPayServer.Events
     internal class NotificationEvent
     {
         internal string[] ApplicationUserIds { get; set; }
-        internal NotificationBase Notification { get; set; }
+        internal BaseNotification Notification { get; set; }
     }
 }

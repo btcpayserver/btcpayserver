@@ -5,10 +5,10 @@ using Newtonsoft.Json;
 
 namespace BTCPayServer.Services.Notifications.Blobs
 {
-    // Make sure to keep all NotificationEventBase classes in same namespace
+    // Make sure to keep all Blob Notification classes in same namespace
     // because of dependent initialization and parsing to view models logic
     // IndexViewModel.cs#32
-    internal abstract class NotificationBase
+    internal abstract class BaseNotification
     {
         internal virtual string NotificationType { get { return GetType().Name; } }
 

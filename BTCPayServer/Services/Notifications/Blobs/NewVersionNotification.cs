@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 
 namespace BTCPayServer.Services.Notifications.Blobs
 {
-    internal class NewVersionNotification : NotificationBase
+    internal class NewVersionNotification : BaseNotification
     {
         internal override string NotificationType => "NewVersionNotification";
 

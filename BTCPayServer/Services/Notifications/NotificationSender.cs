@@ -1,9 +1,11 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
+using BTCPayServer.Events;
+using BTCPayServer.Services.Notifications.Blobs;
 using Microsoft.AspNetCore.Identity;
 
-namespace BTCPayServer.Events.Notifications
+namespace BTCPayServer.Services.Notifications
 {
     public class NotificationSender
     {

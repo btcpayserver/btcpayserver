@@ -5,7 +5,7 @@ using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
-using BTCPayServer.Events.Notifications;
+using BTCPayServer.Events;
 using BTCPayServer.Models.NotificationViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Caching.Memory;

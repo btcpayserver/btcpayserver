@@ -3,7 +3,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Models.NotificationViewModels;
 using Newtonsoft.Json;
 
-namespace BTCPayServer.Events.Notifications
+namespace BTCPayServer.Services.Notifications.Blobs
 {
     // Make sure to keep all NotificationEventBase classes in same namespace
     // because of dependent initialization and parsing to view models logic

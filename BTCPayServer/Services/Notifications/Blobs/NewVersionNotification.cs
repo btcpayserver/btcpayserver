@@ -2,7 +2,7 @@
 using BTCPayServer.Models.NotificationViewModels;
 using Newtonsoft.Json;
 
-namespace BTCPayServer.Events.Notifications
+namespace BTCPayServer.Services.Notifications.Blobs
 {
     internal class NewVersionNotification : NotificationBase
     {

@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using BTCPayServer.Services.Notifications.Blobs;
 
-namespace BTCPayServer.Events.Notifications
+namespace BTCPayServer.Events
 {
     internal class NotificationEvent
     {

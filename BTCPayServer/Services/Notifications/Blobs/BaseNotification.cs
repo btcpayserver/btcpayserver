@@ -19,6 +19,7 @@ namespace BTCPayServer.Services.Notifications.Blobs
             var data = new NotificationData
             {
                 Id = Guid.NewGuid().ToString(),
+                Created = DateTimeOffset.UtcNow,
                 ApplicationUserId = applicationUserId,
                 NotificationType = NotificationType,
                 Blob = ZipUtils.Zip(obj),

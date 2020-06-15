@@ -1219,8 +1219,12 @@ namespace BTCPayServer.Tests
                 Assert.True(vm.Items.Count == 1);
 
                 var fn = vm.Items.First();
+                var now = DateTimeOffset.UtcNow;
+                Assert.True(fn.Created >= now.AddSeconds(-3));
+                Assert.True(fn.Created <= now);
                 Assert.Equal($"New version {newVersion} released!", fn.Body);
                 Assert.Equal($"https://github.com/btcpayserver/btcpayserver/releases/tag/v{newVersion}", fn.ActionLink);
+                Assert.False(fn.Seen);
             }
         }
 

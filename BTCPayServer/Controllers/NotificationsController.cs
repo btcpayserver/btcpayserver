@@ -40,12 +40,15 @@ namespace BTCPayServer.Controllers
 
             var model = new IndexViewModel()
             {
+                Skip = skip,
+                Count = count,
                 Items = _db.Notifications
                     .OrderByDescending(a => a.Created)
                     .Skip(skip).Take(count)
                     .Where(a => a.ApplicationUserId == userId)
                     .Select(a => a.ViewModel())
-                    .ToList()
+                    .ToList(),
+                Total = _db.Notifications.Where(a => a.ApplicationUserId == userId).Count()
             };
 
             return View(model);

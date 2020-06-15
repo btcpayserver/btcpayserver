@@ -9,12 +9,13 @@ namespace BTCPayServer.Services.Notifications
 {
     public class NotificationSender
     {
+        private readonly ApplicationDbContextFactory _contextFactory;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly EventAggregator _eventAggregator;
-        private readonly ApplicationDbContextFactory _ContextFactory;
 
-        public NotificationSender(UserManager<ApplicationUser> userManager, EventAggregator eventAggregator)
+        public NotificationSender(ApplicationDbContextFactory contextFactory, UserManager<ApplicationUser> userManager, EventAggregator eventAggregator)
         {
+            _contextFactory = contextFactory;
             _userManager = userManager;
             _eventAggregator = eventAggregator;
         }
@@ -28,7 +29,7 @@ namespace BTCPayServer.Services.Notifications
             {
                 Version = version
             };
-            using (var db = _ContextFactory.CreateContext())
+            using (var db = _contextFactory.CreateContext())
             {
                 foreach (var uid in adminUids)
                 {

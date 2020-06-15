@@ -64,13 +64,13 @@ namespace BTCPayServer.HostedServices
             if (_cache.TryGetValue<NotificationSummaryViewModel>(userId, out var obj))
                 return obj;
             
-            var resp = fetchNotificationsFromDb(userId);
+            var resp = FetchNotificationsFromDb(userId);
             _cache.Set(userId, resp, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMilliseconds(_cacheExpiryMs)));
 
             return resp;
         }
 
-        private NotificationSummaryViewModel fetchNotificationsFromDb(string userId)
+        private NotificationSummaryViewModel FetchNotificationsFromDb(string userId)
         {
             var resp = new NotificationSummaryViewModel();
             using (var _db = _factory.CreateContext())
@@ -90,7 +90,7 @@ namespace BTCPayServer.HostedServices
                             .Select(a => a.ViewModel())
                             .ToList();
                     }
-                    catch (System.IO.InvalidDataException iex)
+                    catch (System.IO.InvalidDataException)
                     {
                         // invalid notifications that are not pkuzipable, burn them all
                         var notif = _db.Notifications.Where(a => a.ApplicationUserId == userId);

@@ -35,7 +35,7 @@ namespace BTCPayServer.Controllers
         [HttpGet]
         public async Task<IActionResult> Index(int skip = 0, int count = 50, int timezoneOffset = 0)
         {
-            if (!validUserClaim(out var userId))
+            if (!ValidUserClaim(out var userId))
                 return RedirectToAction("Index", "Home");
 
             var model = new IndexViewModel()
@@ -63,7 +63,7 @@ namespace BTCPayServer.Controllers
         [HttpPost]
         public async Task<IActionResult> FlipRead(string id)
         {
-            if (validUserClaim(out var userId))
+            if (ValidUserClaim(out var userId))
             {
                 var notif = _db.Notifications.Single(a => a.Id == id && a.ApplicationUserId == userId);
                 notif.Seen = !notif.Seen;
@@ -78,7 +78,7 @@ namespace BTCPayServer.Controllers
         {
             if (selectedItems != null)
             {
-                if (command == "delete" && validUserClaim(out var userId))
+                if (command == "delete" && ValidUserClaim(out var userId))
                 {
                     var toRemove = _db.Notifications.Where(a => a.ApplicationUserId == userId && selectedItems.Contains(a.Id));
                     _db.Notifications.RemoveRange(toRemove);
@@ -91,7 +91,7 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        private bool validUserClaim(out string userId)
+        private bool ValidUserClaim(out string userId)
         {
             userId = _userManager.GetUserId(User);
             return userId != null;

@@ -27,6 +27,6 @@ namespace BTCPayServer.Services.Notifications.Blobs
             return data;
         }
 
-        public abstract void FillViewModel(NotificationViewModel data);
+        public abstract void FillViewModel(ref NotificationViewModel data);
     }
 }

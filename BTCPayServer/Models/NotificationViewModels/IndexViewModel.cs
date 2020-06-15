@@ -36,9 +36,8 @@ namespace BTCPayServer.Models.NotificationViewModels
 
             var fullTypeName = baseType.FullName.Replace(nameof(BaseNotification), data.NotificationType, StringComparison.OrdinalIgnoreCase);
             var parsedType = baseType.Assembly.GetType(fullTypeName);
-            var instance = Activator.CreateInstance(parsedType) as BaseNotification;
 
-            var casted = JsonConvert.DeserializeObject(ZipUtils.Unzip(data.Blob), parsedType);
+            var casted = (BaseNotification)JsonConvert.DeserializeObject(ZipUtils.Unzip(data.Blob), parsedType);
             var obj = new NotificationViewModel
             {
                 Id = data.Id,
@@ -46,7 +45,7 @@ namespace BTCPayServer.Models.NotificationViewModels
                 Seen = data.Seen
             };
 
-            instance.FillViewModel(obj);
+            casted.FillViewModel(ref obj);
 
             return obj;
         }

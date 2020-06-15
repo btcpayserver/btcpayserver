@@ -201,7 +201,6 @@ namespace BTCPayServer.Hosting
 
             services.AddSingleton<ChangellyClientProvider>();
 
-            services.AddSingleton<IHostedService, NotificationDbSaver>();
             services.AddSingleton<NotificationManager>();
             services.AddScoped<NotificationSender>();
 

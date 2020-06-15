@@ -11,6 +11,7 @@ namespace BTCPayServer.Services.Notifications
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly EventAggregator _eventAggregator;
+        private readonly ApplicationDbContextFactory _ContextFactory;
 
         public NotificationSender(UserManager<ApplicationUser> userManager, EventAggregator eventAggregator)
         {
@@ -22,16 +23,28 @@ namespace BTCPayServer.Services.Notifications
         {
             var admins = await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin);
             var adminUids = admins.Select(a => a.Id).ToArray();
-            var evt = new NotificationEvent
+
+            var notif = new NewVersionNotification
+            {
+                Version = version
+            };
+            using (var db = _ContextFactory.CreateContext())
+            {
+                foreach (var uid in adminUids)
+                {
+                    var data = notif.ToData(uid);
+                    db.Notifications.Add(data);
+                }
+
+                await db.SaveChangesAsync();
+            }
+
+            // propagate notification
+            _eventAggregator.Publish(new NotificationEvent
             {
                 ApplicationUserIds = adminUids,
-                Notification = new NewVersionNotification
-                {
-                    Version = version
-                }
-            };
-
-            _eventAggregator.Publish(evt);
+                Notification = notif
+            });
         }
     }
 }

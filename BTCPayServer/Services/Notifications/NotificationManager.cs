@@ -2,48 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
-using System.Threading;
+using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
-using BTCPayServer.Events;
 using BTCPayServer.Models.NotificationViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Caching.Memory;
 
-namespace BTCPayServer.HostedServices
+namespace BTCPayServer.Services.Notifications
 {
-    public class NotificationDbSaver : EventHostedServiceBase
-    {
-        private readonly ApplicationDbContextFactory _ContextFactory;
-
-        public NotificationDbSaver(ApplicationDbContextFactory contextFactory,
-                    EventAggregator eventAggregator) : base(eventAggregator)
-        {
-            _ContextFactory = contextFactory;
-        }
-
-        protected override void SubscribeToEvents()
-        {
-            Subscribe<NotificationEvent>();
-            base.SubscribeToEvents();
-        }
-
-        protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
-        {
-            var casted = (NotificationEvent)evt;
-            using (var db = _ContextFactory.CreateContext())
-            {
-                foreach (var uid in casted.ApplicationUserIds)
-                {
-                    var data = casted.Notification.ToData(uid);
-                    db.Notifications.Add(data);
-                }
-
-                await db.SaveChangesAsync();
-            }
-        }
-    }
-
     public class NotificationManager
     {
         private readonly ApplicationDbContextFactory _factory;
@@ -64,7 +31,7 @@ namespace BTCPayServer.HostedServices
 
             if (_memoryCache.TryGetValue<NotificationSummaryViewModel>(userId, out var obj))
                 return obj;
-            
+
             var resp = FetchNotificationsFromDb(userId);
             _memoryCache.Set(userId, resp, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMilliseconds(_cacheExpiryMs)));
 

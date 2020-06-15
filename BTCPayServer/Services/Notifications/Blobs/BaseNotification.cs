@@ -10,6 +10,6 @@ namespace BTCPayServer.Services.Notifications.Blobs
     // IndexViewModel.cs#32
     public abstract class BaseNotification
     {
-        public abstract void FillViewModel(ref NotificationViewModel data);
+        public abstract void FillViewModel(NotificationViewModel data);
     }
 }

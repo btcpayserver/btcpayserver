@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
@@ -24,6 +26,10 @@ namespace BTCPayServer.Services.Notifications
 
         public async Task SendNotification(NotificationScope scope, BaseNotification notification)
         {
+            if (scope == null)
+                throw new ArgumentNullException(nameof(scope));
+            if (notification == null)
+                throw new ArgumentNullException(nameof(notification));
             var users = await GetUsers(scope);
             using (var db = _contextFactory.CreateContext())
             {
@@ -35,7 +41,7 @@ namespace BTCPayServer.Services.Notifications
                         Id = Guid.NewGuid().ToString(),
                         Created = DateTimeOffset.UtcNow,
                         ApplicationUserId = uid,
-                        NotificationType = notification.NotificationType,
+                        NotificationType = GetNotificationTypeString(notification.GetType()),
                         Blob = ZipUtils.Zip(obj),
                         Seen = false
                     };
@@ -44,6 +50,14 @@ namespace BTCPayServer.Services.Notifications
 
                 await db.SaveChangesAsync();
             }
+        }
+
+        private string GetNotificationTypeString(Type type)
+        {
+            var str =  type.GetCustomAttribute<NotificationAttribute>()?.NotificationType;
+            if (str is null)
+                throw new NotSupportedException($"{type} is not a notification");
+            return str;
         }
 
         private async Task<string[]> GetUsers(NotificationScope scope)

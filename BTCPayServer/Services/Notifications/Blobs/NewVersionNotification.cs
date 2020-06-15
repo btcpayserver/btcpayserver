@@ -4,9 +4,9 @@ using Newtonsoft.Json;
 
 namespace BTCPayServer.Services.Notifications.Blobs
 {
+    [Notification("newversion")]
     internal class NewVersionNotification : BaseNotification
     {
-        internal override string NotificationType => "NewVersionNotification";
         public NewVersionNotification()
         {
 
@@ -17,7 +17,7 @@ namespace BTCPayServer.Services.Notifications.Blobs
         }
         public string Version { get; set; }
 
-        public override void FillViewModel(ref NotificationViewModel vm)
+        public override void FillViewModel(NotificationViewModel vm)
         {
             vm.Body = $"New version {Version} released!";
             vm.ActionLink = $"https://github.com/btcpayserver/btcpayserver/releases/tag/v{Version}";

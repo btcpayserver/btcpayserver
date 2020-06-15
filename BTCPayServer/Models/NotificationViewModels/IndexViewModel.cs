@@ -30,22 +30,26 @@ namespace BTCPayServer.Models.NotificationViewModels
 
     public static class NotificationViewModelExt
     {
-        public static NotificationViewModel ViewModel(this NotificationData data)
+        static Dictionary<string, Type> _NotificationTypes;
+        static NotificationViewModelExt()
         {
-            var baseType = typeof(BaseNotification);
+            _NotificationTypes = Assembly.GetExecutingAssembly()
+                    .GetTypes()
+                    .Select(t => (t, NotificationType: t.GetCustomAttribute<NotificationAttribute>()?.NotificationType))
+                    .Where(t => t.NotificationType is string)
+                    .ToDictionary(o => o.NotificationType, o => o.t);
+        }
 
-            var fullTypeName = baseType.FullName.Replace(nameof(BaseNotification), data.NotificationType, StringComparison.OrdinalIgnoreCase);
-            var parsedType = baseType.Assembly.GetType(fullTypeName);
-
-            var casted = (BaseNotification)JsonConvert.DeserializeObject(ZipUtils.Unzip(data.Blob), parsedType);
+        public static NotificationViewModel ToViewModel(this NotificationData data)
+        {
+            var casted = (BaseNotification)JsonConvert.DeserializeObject(ZipUtils.Unzip(data.Blob), _NotificationTypes[data.NotificationType]);
             var obj = new NotificationViewModel
             {
                 Id = data.Id,
                 Created = data.Created,
                 Seen = data.Seen
             };
-
-            casted.FillViewModel(ref obj);
+            casted.FillViewModel(obj);
 
             return obj;
         }

@@ -47,7 +47,7 @@ namespace BTCPayServer.Controllers
                     .OrderByDescending(a => a.Created)
                     .Skip(skip).Take(count)
                     .Where(a => a.ApplicationUserId == userId)
-                    .Select(a => a.ViewModel())
+                    .Select(a => a.ToViewModel())
                     .ToList(),
                 Total = _db.Notifications.Where(a => a.ApplicationUserId == userId).Count()
             };

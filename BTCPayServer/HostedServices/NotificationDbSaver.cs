@@ -30,7 +30,7 @@ namespace BTCPayServer.HostedServices
 
         protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
         {
-            var casted = evt as NotificationEvent;
+            var casted = (NotificationEvent)evt;
             using (var db = _ContextFactory.CreateContext())
             {
                 foreach (var uid in casted.ApplicationUserIds)

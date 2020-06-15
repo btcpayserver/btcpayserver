@@ -40,7 +40,12 @@
                         <thead>
                             <tr>
                                 <th width="30px"></th>
-                                <th width="165px">Date</th>
+                                <th width="190px">
+                                    Date
+                                    <a href="javascript:switchTimeFormat()">
+                                        <span class="fa fa-clock-o" title="Switch date format"></span>
+                                    </a>
+                                </th>
                                 <th>Message</th>
                                 <th width="80px">&nbsp;</th>
                             </tr>
@@ -52,8 +57,14 @@
                                     <td>
                                         <input name="selectedItems" type="checkbox" class="selector" value="@item.Id" />
                                     </td>
-                                    <td onclick="rowseen(this)" class="cursor-pointer @(item.Seen ? "": "font-weight-bold")">@item.Created.ToBrowserDate()</td>
-                                    <td onclick="rowseen(this)" class="cursor-pointer @(item.Seen ? "": "font-weight-bold")">@item.Body</td>
+                                    <td onclick="rowseen(this)" class="cursor-pointer @(item.Seen ? "": "font-weight-bold")">
+                                        <span class="switchTimeFormat" data-switch="@item.Created.ToTimeAgo()">
+                                            @item.Created.ToBrowserDate()
+                                        </span>
+                                    </td>
+                                    <td onclick="rowseen(this)" class="cursor-pointer @(item.Seen ? "": "font-weight-bold")">
+                                        @item.Body
+                                    </td>
                                     <td>
                                         @if (!String.IsNullOrEmpty(item.ActionLink))
                                         {

@@ -10,6 +10,7 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Models.NotificationViewModels;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Notifications;
+using BTCPayServer.Services.Notifications.Blobs;
 using Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -57,9 +58,7 @@ namespace BTCPayServer.Controllers
         [HttpGet]
         public async Task<IActionResult> Generate(string version)
         {
-            await _notificationSender.NoticeNewVersionAsync(version);
-            // waiting for event handler to catch up
-            await Task.Delay(500);
+            await _notificationSender.SendNotification(new AdminScope(), new NewVersionNotification(version));
             return RedirectToAction(nameof(Index));
         }
 

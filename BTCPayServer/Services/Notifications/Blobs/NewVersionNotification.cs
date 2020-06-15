@@ -7,7 +7,14 @@ namespace BTCPayServer.Services.Notifications.Blobs
     internal class NewVersionNotification : BaseNotification
     {
         internal override string NotificationType => "NewVersionNotification";
+        public NewVersionNotification()
+        {
 
+        }
+        public NewVersionNotification(string version)
+        {
+            Version = version;
+        }
         public string Version { get; set; }
 
         public override void FillViewModel(ref NotificationViewModel vm)

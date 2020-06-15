@@ -9,6 +9,7 @@ using BTCPayServer.Filters;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Models.NotificationViewModels;
 using BTCPayServer.Security;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
 using Google;
@@ -22,12 +23,14 @@ namespace BTCPayServer.Controllers
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public class NotificationsController : Controller
     {
+        private readonly BTCPayServerEnvironment _env;
         private readonly ApplicationDbContext _db;
         private readonly NotificationSender _notificationSender;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public NotificationsController(ApplicationDbContext db, NotificationSender notificationSender, UserManager<ApplicationUser> userManager)
+        public NotificationsController(BTCPayServerEnvironment env, ApplicationDbContext db, NotificationSender notificationSender, UserManager<ApplicationUser> userManager)
         {
+            _env = env;
             _db = db;
             _notificationSender = notificationSender;
             _userManager = userManager;
@@ -58,6 +61,8 @@ namespace BTCPayServer.Controllers
         [HttpGet]
         public async Task<IActionResult> Generate(string version)
         {
+            if (_env.NetworkType != NBitcoin.NetworkType.Regtest)
+                return NotFound();
             await _notificationSender.SendNotification(new AdminScope(), new NewVersionNotification(version));
             return RedirectToAction(nameof(Index));
         }

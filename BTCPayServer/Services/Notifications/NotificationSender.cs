@@ -35,7 +35,7 @@ namespace BTCPayServer.Services.Notifications
             {
                 foreach (var uid in users)
                 {
-                    var obj = JsonConvert.SerializeObject(this);
+                    var obj = JsonConvert.SerializeObject(notification);
                     var data = new NotificationData
                     {
                         Id = Guid.NewGuid().ToString(),
@@ -66,6 +66,14 @@ namespace BTCPayServer.Services.Notifications
             {
                 var admins = await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin);
                 return admins.Select(a => a.Id).ToArray();
+            }
+            if (scope is StoreScope s)
+            {
+                using var ctx = _contextFactory.CreateContext();
+                return ctx.UserStore
+                            .Where(u => u.StoreDataId == s.StoreId)
+                            .Select(u => u.ApplicationUserId)
+                            .ToArray();
             }
             throw new NotSupportedException("Notification scope not supported");
         }

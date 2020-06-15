@@ -10,19 +10,10 @@ namespace BTCPayServer.Events.Notifications
 
         public string Version { get; set; }
 
-        public override NotificationViewModel ToViewModel(NotificationData data)
+        public override void FillViewModel(NotificationViewModel vm)
         {
-            var casted = JsonConvert.DeserializeObject<NewVersionNotification>(ZipUtils.Unzip(data.Blob));
-            var obj = new NotificationViewModel
-            {
-                Id = data.Id,
-                Created = data.Created,
-                Body = $"New version {casted.Version} released!",
-                ActionLink = "https://github.com/btcpayserver/btcpayserver/releases/tag/v" + casted.Version,
-                Seen = data.Seen
-            };
-
-            return obj;
+            vm.Body = $"New version {Version} released!";
+            vm.ActionLink = $"https://github.com/btcpayserver/btcpayserver/releases/tag/v{Version}";
         }
     }
 }

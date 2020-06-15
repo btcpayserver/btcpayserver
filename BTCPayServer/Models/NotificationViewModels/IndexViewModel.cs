@@ -31,10 +31,21 @@ namespace BTCPayServer.Models.NotificationViewModels
         {
             var baseType = typeof(NotificationBase);
 
-            var typeName = baseType.FullName.Replace(nameof(NotificationBase), data.NotificationType, StringComparison.OrdinalIgnoreCase);
-            var instance = Activator.CreateInstance(baseType.Assembly.GetType(typeName)) as NotificationBase;
+            var fullTypeName = baseType.FullName.Replace(nameof(NotificationBase), data.NotificationType, StringComparison.OrdinalIgnoreCase);
+            var parsedType = baseType.Assembly.GetType(fullTypeName);
+            var instance = Activator.CreateInstance(parsedType) as NotificationBase;
 
-            return instance.ToViewModel(data);
+            var casted = JsonConvert.DeserializeObject(ZipUtils.Unzip(data.Blob), parsedType);
+            var obj = new NotificationViewModel
+            {
+                Id = data.Id,
+                Created = data.Created,
+                Seen = data.Seen
+            };
+
+            instance.FillViewModel(obj);
+
+            return obj;
         }
     }
 }

@@ -27,6 +27,6 @@ namespace BTCPayServer.Events.Notifications
             return data;
         }
 
-        public abstract NotificationViewModel ToViewModel(NotificationData data);
+        public abstract void FillViewModel(NotificationViewModel data);
     }
 }

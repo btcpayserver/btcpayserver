@@ -55,11 +55,11 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Generate()
+        public async Task<IActionResult> Generate(string version)
         {
-            await _notificationSender.NoticeNewVersionAsync("1.0.4.4");
+            await _notificationSender.NoticeNewVersionAsync(version);
             // waiting for event handler to catch up
-            await Task.Delay(1000);
+            await Task.Delay(500);
             return RedirectToAction(nameof(Index));
         }
 

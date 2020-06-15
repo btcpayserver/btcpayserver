@@ -48,24 +48,25 @@ namespace BTCPayServer.HostedServices
     {
         private readonly ApplicationDbContextFactory _factory;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IMemoryCache _memoryCache;
 
-        public NotificationManager(ApplicationDbContextFactory factory, UserManager<ApplicationUser> userManager)
+        public NotificationManager(ApplicationDbContextFactory factory, UserManager<ApplicationUser> userManager, IMemoryCache memoryCache)
         {
             _factory = factory;
             _userManager = userManager;
+            _memoryCache = memoryCache;
         }
 
-        private static MemoryCache _cache = new MemoryCache(new MemoryCacheOptions());
         private const int _cacheExpiryMs = 5000;
         public NotificationSummaryViewModel GetSummaryNotifications(ClaimsPrincipal user)
         {
             var userId = _userManager.GetUserId(user);
 
-            if (_cache.TryGetValue<NotificationSummaryViewModel>(userId, out var obj))
+            if (_memoryCache.TryGetValue<NotificationSummaryViewModel>(userId, out var obj))
                 return obj;
             
             var resp = FetchNotificationsFromDb(userId);
-            _cache.Set(userId, resp, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMilliseconds(_cacheExpiryMs)));
+            _memoryCache.Set(userId, resp, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMilliseconds(_cacheExpiryMs)));
 
             return resp;
         }

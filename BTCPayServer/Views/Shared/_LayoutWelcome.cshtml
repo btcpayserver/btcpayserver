@@ -102,7 +102,7 @@
                 <div class="col-md-7 order-md-1 order-2">
                     <hr class="primary ml-0" style="margin:30px auto;">
                     <p class="lead-login" style="margin-bottom:69px;">BTCPay Server is a self-hosted, open-source cryptocurrency payment processor. It is secure, private, censorship-resistant and free.</p>
-                    @await Html.PartialAsync("_BTCPaySupporters")
+                    <partial name="_BTCPaySupporters"/>
                 </div>
                 <div class="col-md-5 order-md-2 order-1">
                     @RenderBody()

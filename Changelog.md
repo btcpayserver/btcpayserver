@@ -8,7 +8,7 @@
 * Improve fee selection UI in wallet send screen (@Kukks)
 * Show warning when enabling Payjoin but supported payment methods are not using a hot wallet (@Kukks)
 * Rebuild POS and Crowdfund App Item/Perk editor UI and fix any issues (@Kukks)
-* Adjust Payjoin to the new specification (@NicolasDorier) 
+* Adjust Payjoin to the new specification outlined in BIP78 (@NicolasDorier) 
 * Allow opening the BTCPay wallet natively when clicking a Bitcoin payment link (BIP21)
 * Add Server Info GreenField API (@dennisreimann)
 * Add Payment Requests GreenField API (@Kukks @NicolasDorier)

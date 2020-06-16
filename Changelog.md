@@ -16,7 +16,7 @@
 * Allow setting private route hints for LND invoices (@r0ckstardev)
 * Expand GreenField Store API to have more store properties (@Kukks @NicolasDorier)
 * Make GreenField local docs require authentication (@Kukks)
-* Enhanced privacy when spending from BTCPay wallet (@NicolasDorier)
+* Privacy enhancement: Randomize wallet transaction fingerprint. (@NicolasDorier)
 * Randomize RBF support in BTCPay wallet by default for privacy (@NicolasDorier)
 * Add support for Cobo Vault wallet file import (@Kukks)
 * Split POS app cart and static and support both simultaneously (@dennisreimann)

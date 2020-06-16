@@ -33,7 +33,7 @@
 * Make sure copied notification is positioned correctly on checkout (@chewsta)
 * Fix broken documentation links (@Kukks @dennisreimann @jad0c)
 * Fix POS app item display issues (@bolatovumar)
-* Fix Invocie checkout modal close button theme issues (@bolatovumar)
+* Fix Invoice checkout modal close button theme issues (@bolatovumar)
 * Fix display of replaced transactions in invoice list (@NicolasDorier)
 * Support BitPay invoice creation property "paymentCurrencies" (@Kukks)
 * Update lightning support warning text (@janoside)

@@ -1,9 +1,13 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Services.Notifications.Blobs;
 using Microsoft.AspNetCore.Identity;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Services.Notifications
 {
@@ -20,32 +24,58 @@ namespace BTCPayServer.Services.Notifications
             _eventAggregator = eventAggregator;
         }
 
-        internal async Task NoticeNewVersionAsync(string version)
+        public async Task SendNotification(NotificationScope scope, BaseNotification notification)
         {
-            var admins = await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin);
-            var adminUids = admins.Select(a => a.Id).ToArray();
-
-            var notif = new NewVersionNotification
-            {
-                Version = version
-            };
+            if (scope == null)
+                throw new ArgumentNullException(nameof(scope));
+            if (notification == null)
+                throw new ArgumentNullException(nameof(notification));
+            var users = await GetUsers(scope);
             using (var db = _contextFactory.CreateContext())
             {
-                foreach (var uid in adminUids)
+                foreach (var uid in users)
                 {
-                    var data = notif.ToData(uid);
+                    var obj = JsonConvert.SerializeObject(notification);
+                    var data = new NotificationData
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        Created = DateTimeOffset.UtcNow,
+                        ApplicationUserId = uid,
+                        NotificationType = GetNotificationTypeString(notification.GetType()),
+                        Blob = ZipUtils.Zip(obj),
+                        Seen = false
+                    };
                     db.Notifications.Add(data);
                 }
 
                 await db.SaveChangesAsync();
             }
+        }
 
-            // propagate notification
-            _eventAggregator.Publish(new NotificationEvent
+        private string GetNotificationTypeString(Type type)
+        {
+            var str =  type.GetCustomAttribute<NotificationAttribute>()?.NotificationType;
+            if (str is null)
+                throw new NotSupportedException($"{type} is not a notification");
+            return str;
+        }
+
+        private async Task<string[]> GetUsers(NotificationScope scope)
+        {
+            if (scope is AdminScope)
             {
-                ApplicationUserIds = adminUids,
-                Notification = notif
-            });
+                var admins = await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin);
+                return admins.Select(a => a.Id).ToArray();
+            }
+            if (scope is StoreScope s)
+            {
+                using var ctx = _contextFactory.CreateContext();
+                return ctx.UserStore
+                            .Where(u => u.StoreDataId == s.StoreId)
+                            .Select(u => u.ApplicationUserId)
+                            .ToArray();
+            }
+            throw new NotSupportedException("Notification scope not supported");
         }
     }
 }

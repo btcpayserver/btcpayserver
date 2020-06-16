@@ -55,7 +55,7 @@ namespace BTCPayServer.Services.Notifications
                             .Where(a => a.ApplicationUserId == userId && !a.Seen)
                             .OrderByDescending(a => a.Created)
                             .Take(5)
-                            .Select(a => a.ViewModel())
+                            .Select(a => a.ToViewModel())
                             .ToList();
                     }
                     catch (System.IO.InvalidDataException)

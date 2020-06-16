@@ -9,7 +9,9 @@ using BTCPayServer.Filters;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Models.NotificationViewModels;
 using BTCPayServer.Security;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Notifications;
+using BTCPayServer.Services.Notifications.Blobs;
 using Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -21,12 +23,14 @@ namespace BTCPayServer.Controllers
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public class NotificationsController : Controller
     {
+        private readonly BTCPayServerEnvironment _env;
         private readonly ApplicationDbContext _db;
         private readonly NotificationSender _notificationSender;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public NotificationsController(ApplicationDbContext db, NotificationSender notificationSender, UserManager<ApplicationUser> userManager)
+        public NotificationsController(BTCPayServerEnvironment env, ApplicationDbContext db, NotificationSender notificationSender, UserManager<ApplicationUser> userManager)
         {
+            _env = env;
             _db = db;
             _notificationSender = notificationSender;
             _userManager = userManager;
@@ -46,7 +50,7 @@ namespace BTCPayServer.Controllers
                     .OrderByDescending(a => a.Created)
                     .Skip(skip).Take(count)
                     .Where(a => a.ApplicationUserId == userId)
-                    .Select(a => a.ViewModel())
+                    .Select(a => a.ToViewModel())
                     .ToList(),
                 Total = _db.Notifications.Where(a => a.ApplicationUserId == userId).Count()
             };
@@ -57,9 +61,9 @@ namespace BTCPayServer.Controllers
         [HttpGet]
         public async Task<IActionResult> Generate(string version)
         {
-            await _notificationSender.NoticeNewVersionAsync(version);
-            // waiting for event handler to catch up
-            await Task.Delay(500);
+            if (_env.NetworkType != NBitcoin.NetworkType.Regtest)
+                return NotFound();
+            await _notificationSender.SendNotification(new AdminScope(), new NewVersionNotification(version));
             return RedirectToAction(nameof(Index));
         }
 

@@ -10,7 +10,7 @@
       "name":"Bitcoin",
       "code":"BTC",
       "divisibility":8,
-      "symbol":"Ƀ",
+      "symbol":"₿",
       "crypto":true
    },
    {
@@ -1262,6 +1262,13 @@
    {
       "name":"POLIS",
       "code":"POLIS",
+      "divisibility":8,
+      "symbol":null,
+      "crypto":true
+   },
+   {
+      "name":"CHC",
+      "code":"CHC",
       "divisibility":8,
       "symbol":null,
       "crypto":true

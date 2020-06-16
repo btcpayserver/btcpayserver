@@ -1,5 +1,53 @@
 # Changelog
 
+## 1.0.5.0:
+
+### New Feature and improvements
+
+* Allow invoice and payment requests to be archived (hide from list) (@Kukks)
+* Improve fee selection UI in wallet send screen (@Kukks)
+* Show warning when enabling Payjoin but supported payment methods are not using a hot wallet (@Kukks)
+* Rebuild POS and Crowdfund App Item/Perk editor UI and fix any issues (@Kukks)
+* Adjust Payjoin to the new specification (@NicolasDorier) 
+* Allow opening the BTCPay wallet natively when clicking a Bitcoin payment link (BIP21)
+* Add Server Info GreenField API (@dennisreimann)
+* Add Payment Requests GreenField API (@Kukks @NicolasDorier)
+* Support specifying payment method through apps per item/perk (@Kukks)
+* Allow setting private route hints for LND invoices (@r0ckstardev)
+* Expand GreenField Store API to have more store properties (@Kukks @NicolasDorier)
+* Make GreenField local docs require authentication (@Kukks)
+* Enhanced privacy when spending from BTCPay wallet (@NicolasDorier)
+* Randomize RBF support in BTCPay wallet by default for privacy (@NicolasDorier)
+* Add support for Cobo Vault wallet file import (@Kukks)
+* Split POS app cart and static and support both simulataenously (@dennisreimann)
+* Add Cross-Implementation Lightning Node GreenField API (@Kukks @NicolasDorier)
+* Make GreenField responses and JSON properties consistent (@Kukks @NicolasDorier)
+* Add Tor Onion-Location HTTP header (@dennisreimann) 
+* Rename form items in Wallet Send UI (@pavlenex)
+* Add ThunderHub integration (@NicolasDorier)
+* Add option to attempt to create PSBT with full transaction for inputs to sign for Trezor (@Kukks)
+* Add Notifications feature (@r0ckstardev)
+### Bug fixes
+
+* Do not auto-complete generate wallet form (@Kukks)
+* Make sure copied notification is positioned correctly on checkout (@chewsta)
+* Fix broken documentation links (@Kukks @dennisreimann @jad0c)
+* Fix POS app item display issues (@bolatovumar)
+* Fix Invocie checkout modal close button theme issues (@bolatovumar)
+* Fix display of replaced transactions in invoice list (@NicolasDorier)
+* Support BitPay invoice creation property "paymentCurrencies" (@Kukks)
+* Update lightning support warning text (@janoside)
+* Fix issue with payment requests not expiring (@Kukks)
+* Fix broken Bootstrap theme generator link (@Kukks)
+* Use proper Bitcoin symbol (₿) in UI instead of "BTC" (@Kukks)
+* Ensure you can only sign with hot wallet if you created the hot wallet via seed (@NicolasDorier)
+* Respect JsonResponse option in payment button endpoint even for failures (@Kukks)
+* Opt out of dotnet telemetry in Docker containers (@Kukks)
+* Fix issue with POS app if button text had special formatting (@Kukks)
+* Autofocus 2FA-code input on page load (@dennisreimann)
+* Add Orderid to BitPay IPN format (@Kukks)
+* Require Owner role to the store for modifying store via Greenfield (@NicolasDorier)
+* Fix css styling classes (@woutersamaey)
 ## 1.0.4.4:
 
 ### New Feature

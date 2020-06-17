@@ -658,7 +658,7 @@ namespace BTCPayServer.Controllers
 
             var signingContext = new SigningContextModel()
             {
-                PayJoinEndpointUrl = vm.PayJoinEndpointUrl,
+                PayJoinBIP21 = vm.PayJoinBIP21,
                 EnforceLowR = psbt.Suggestions?.ShouldEnforceLowR,
                 ChangeAddress = psbt.ChangeAddress?.ToString()
             };
@@ -713,8 +713,9 @@ namespace BTCPayServer.Controllers
                             $"Payment {(string.IsNullOrEmpty(uriBuilder.Label) ? string.Empty : $" to {uriBuilder.Label}")} {(string.IsNullOrEmpty(uriBuilder.Message) ? string.Empty : $" for {uriBuilder.Message}")}"
                     });
                 }
-                uriBuilder.UnknowParameters.TryGetValue(PayjoinClient.BIP21EndpointKey, out var vmPayJoinEndpointUrl);
-                vm.PayJoinEndpointUrl = vmPayJoinEndpointUrl;
+
+                if (uriBuilder.TryGetPayjoinEndpoint(out _))
+                    vm.PayJoinBIP21 = uriBuilder.ToString();
             }
             catch
             {
@@ -783,7 +784,7 @@ namespace BTCPayServer.Controllers
                 return;
             redirectVm.Parameters.Add(new KeyValuePair<string, string>("SigningContext.PSBT", signingContext.PSBT));
             redirectVm.Parameters.Add(new KeyValuePair<string, string>("SigningContext.OriginalPSBT", signingContext.OriginalPSBT));
-            redirectVm.Parameters.Add(new KeyValuePair<string, string>("SigningContext.PayJoinEndpointUrl", signingContext.PayJoinEndpointUrl));
+            redirectVm.Parameters.Add(new KeyValuePair<string, string>("SigningContext.PayJoinBIP21", signingContext.PayJoinBIP21));
             redirectVm.Parameters.Add(new KeyValuePair<string, string>("SigningContext.EnforceLowR", signingContext.EnforceLowR?.ToString(CultureInfo.InvariantCulture)));
             redirectVm.Parameters.Add(new KeyValuePair<string, string>("SigningContext.ChangeAddress", signingContext.ChangeAddress));
         }

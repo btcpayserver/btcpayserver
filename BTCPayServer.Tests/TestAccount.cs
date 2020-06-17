@@ -344,7 +344,7 @@ namespace BTCPayServer.Tests
 
         public async Task<PSBT> SubmitPayjoin(Invoice invoice, PSBT psbt, string expectedError = null, bool senderError= false)
         {
-            var endpoint = GetPayjoinEndpoint(invoice, psbt.Network);
+            var endpoint = GetPayjoinBitcoinUrl(invoice, psbt.Network);
             if (endpoint == null)
             {
                 throw new InvalidOperationException("No payjoin endpoint for the invoice");
@@ -394,7 +394,8 @@ namespace BTCPayServer.Tests
         async Task<HttpResponseMessage> SubmitPayjoinCore(string content, Invoice invoice, Network network,
             string expectedError)
         {
-            var endpoint = GetPayjoinEndpoint(invoice, network);
+            var bip21 = GetPayjoinBitcoinUrl(invoice, network);
+            bip21.TryGetPayjoinEndpoint(out var endpoint);
             var response = await parent.PayTester.HttpClient.PostAsync(endpoint,
                 new StringContent(content, Encoding.UTF8, "text/plain"));
             if (expectedError != null)
@@ -421,12 +422,14 @@ namespace BTCPayServer.Tests
             return response;
         }
 
-        public static Uri GetPayjoinEndpoint(Invoice invoice, Network network)
+        public static BitcoinUrlBuilder GetPayjoinBitcoinUrl(Invoice invoice, Network network)
         {
             var parsedBip21 = new BitcoinUrlBuilder(
                 invoice.CryptoInfo.First(c => c.CryptoCode == network.NetworkSet.CryptoCode).PaymentUrls.BIP21,
                 network);
-            return parsedBip21.UnknowParameters.TryGetValue($"{PayjoinClient.BIP21EndpointKey}", out var uri) ? new Uri(uri, UriKind.Absolute) : null;
+            if (!parsedBip21.TryGetPayjoinEndpoint(out var endpoint))
+                return null;
+            return parsedBip21;
         }
     }
 }

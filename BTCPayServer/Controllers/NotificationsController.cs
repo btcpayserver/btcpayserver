@@ -27,13 +27,19 @@ namespace BTCPayServer.Controllers
         private readonly ApplicationDbContext _db;
         private readonly NotificationSender _notificationSender;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly NotificationManager _notificationManager;
 
-        public NotificationsController(BTCPayServerEnvironment env, ApplicationDbContext db, NotificationSender notificationSender, UserManager<ApplicationUser> userManager)
+        public NotificationsController(BTCPayServerEnvironment env,
+            ApplicationDbContext db,
+            NotificationSender notificationSender,
+            UserManager<ApplicationUser> userManager,
+            NotificationManager notificationManager)
         {
             _env = env;
             _db = db;
             _notificationSender = notificationSender;
             _userManager = userManager;
+            _notificationManager = notificationManager;
         }
 
         [HttpGet]
@@ -50,7 +56,7 @@ namespace BTCPayServer.Controllers
                     .OrderByDescending(a => a.Created)
                     .Skip(skip).Take(count)
                     .Where(a => a.ApplicationUserId == userId)
-                    .Select(a => a.ToViewModel())
+                    .Select(a => _notificationManager.ToViewModel(a))
                     .ToList(),
                 Total = _db.Notifications.Where(a => a.ApplicationUserId == userId).Count()
             };

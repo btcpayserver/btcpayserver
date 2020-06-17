@@ -16,15 +16,17 @@ namespace BTCPayServer.Services.Notifications
         private readonly ApplicationDbContextFactory _contextFactory;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly EventAggregator _eventAggregator;
+        private readonly NotificationManager _notificationManager;
 
-        public NotificationSender(ApplicationDbContextFactory contextFactory, UserManager<ApplicationUser> userManager, EventAggregator eventAggregator)
+        public NotificationSender(ApplicationDbContextFactory contextFactory, UserManager<ApplicationUser> userManager, EventAggregator eventAggregator, NotificationManager notificationManager)
         {
             _contextFactory = contextFactory;
             _userManager = userManager;
             _eventAggregator = eventAggregator;
+            _notificationManager = notificationManager;
         }
 
-        public async Task SendNotification(NotificationScope scope, BaseNotification notification)
+        public async Task SendNotification(NotificationScope scope, object notification)
         {
             if (scope == null)
                 throw new ArgumentNullException(nameof(scope));
@@ -41,23 +43,14 @@ namespace BTCPayServer.Services.Notifications
                         Id = Guid.NewGuid().ToString(),
                         Created = DateTimeOffset.UtcNow,
                         ApplicationUserId = uid,
-                        NotificationType = GetNotificationTypeString(notification.GetType()),
+                        NotificationType = _notificationManager.GetHandler(notification.GetType()).NotificationType,
                         Blob = ZipUtils.Zip(obj),
                         Seen = false
                     };
                     db.Notifications.Add(data);
                 }
-
                 await db.SaveChangesAsync();
             }
-        }
-
-        private string GetNotificationTypeString(Type type)
-        {
-            var str =  type.GetCustomAttribute<NotificationAttribute>()?.NotificationType;
-            if (str is null)
-                throw new NotSupportedException($"{type} is not a notification");
-            return str;
         }
 
         private async Task<string[]> GetUsers(NotificationScope scope)

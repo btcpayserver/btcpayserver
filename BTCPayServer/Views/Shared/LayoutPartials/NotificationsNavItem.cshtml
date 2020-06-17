@@ -1,7 +1,7 @@
 ﻿@inject BTCPayServer.Services.Notifications.NotificationManager notificationManager
 
 @{
-    var notificationModel = notificationManager.GetSummaryNotifications(User);
+    var notificationModel = await notificationManager.GetSummaryNotifications(User);
 }
 
 @if (notificationModel.UnseenCount > 0)

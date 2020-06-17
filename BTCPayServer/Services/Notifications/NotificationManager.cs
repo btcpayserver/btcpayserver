@@ -8,6 +8,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Models.NotificationViewModels;
 using Google.Apis.Storage.v1.Data;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
 
@@ -31,20 +32,20 @@ namespace BTCPayServer.Services.Notifications
         }
 
         private const int _cacheExpiryMs = 5000;
-        public NotificationSummaryViewModel GetSummaryNotifications(ClaimsPrincipal user)
+        public async Task<NotificationSummaryViewModel> GetSummaryNotifications(ClaimsPrincipal user)
         {
             var userId = _userManager.GetUserId(user);
 
             if (_memoryCache.TryGetValue<NotificationSummaryViewModel>(userId, out var obj))
                 return obj;
 
-            var resp = FetchNotificationsFromDb(userId);
+            var resp = await FetchNotificationsFromDb(userId);
             _memoryCache.Set(userId, resp, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMilliseconds(_cacheExpiryMs)));
 
             return resp;
         }
 
-        private NotificationSummaryViewModel FetchNotificationsFromDb(string userId)
+        private async Task<NotificationSummaryViewModel> FetchNotificationsFromDb(string userId)
         {
             var resp = new NotificationSummaryViewModel();
             using (var _db = _factory.CreateContext())
@@ -57,10 +58,11 @@ namespace BTCPayServer.Services.Notifications
                 {
                     try
                     {
-                        resp.Last5 = _db.Notifications
+                        resp.Last5 = (await _db.Notifications
                             .Where(a => a.ApplicationUserId == userId && !a.Seen)
                             .OrderByDescending(a => a.Created)
                             .Take(5)
+                            .ToListAsync())
                             .Select(a => ToViewModel(a))
                             .ToList();
                     }

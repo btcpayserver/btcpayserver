@@ -2248,11 +2248,39 @@ namespace BTCPayServer.Tests
                 derivationVM = (DerivationSchemeViewModel)Assert.IsType<ViewResult>(controller
                     .AddDerivationScheme(user.StoreId, derivationVM, "BTC").GetAwaiter().GetResult()).Model;
                 Assert.True(derivationVM.Confirmation);
-
-                // Can we upload coldcard settings? (Should fail, we are giving a mainnet file to a testnet network)
+              
+                
+                //cobo vault file
+                var content = "{\"ExtPubKey\":\"xpub6CEqRFZ7yZxCFXuEWZBAdnC8bdvu9SRHevaoU2SsW9ZmKhrCShmbpGZWwaR15hdLURf8hg47g4TpPGaqEU8hw5LEJCE35AUhne67XNyFGBk\",\"MasterFingerprint\":\"7a7563b5\",\"DerivationPath\":\"M\\/84'\\/0'\\/0'\",\"CoboVaultFirmwareVersion\":\"1.2.0(BTC-Only)\"}";
                 derivationVM = (DerivationSchemeViewModel)Assert
                     .IsType<ViewResult>(await controller.AddDerivationScheme(user.StoreId, "BTC")).Model;
-                string content =
+                derivationVM.WalletFile = TestUtils.GetFormFile("wallet3.json", content);
+                derivationVM.Enabled = true;
+                derivationVM = (DerivationSchemeViewModel)Assert.IsType<ViewResult>(controller
+                    .AddDerivationScheme(user.StoreId, derivationVM, "BTC").GetAwaiter().GetResult()).Model;
+                Assert.True(derivationVM.Confirmation);
+                Assert.IsType<RedirectToActionResult>(controller.AddDerivationScheme(user.StoreId, derivationVM, "BTC")
+                    .GetAwaiter().GetResult());
+                
+                //wasabi wallet file
+                content =
+                    "{\r\n  \"EncryptedSecret\": \"6PYWBQ1zsukowsnTNA57UUx791aBuJusm7E4egXUmF5WGw3tcdG3cmTL57\",\r\n  \"ChainCode\": \"waSIVbn8HaoovoQg/0t8IS1+ZCxGsJRGFT21i06nWnc=\",\r\n  \"MasterFingerprint\": \"7a7563b5\",\r\n  \"ExtPubKey\": \"xpub6CEqRFZ7yZxCFXuEWZBAdnC8bdvu9SRHevaoU2SsW9ZmKhrCShmbpGZWwaR15hdLURf8hg47g4TpPGaqEU8hw5LEJCE35AUhne67XNyFGBk\",\r\n  \"PasswordVerified\": false,\r\n  \"MinGapLimit\": 21,\r\n  \"AccountKeyPath\": \"84'/0'/0'\",\r\n  \"BlockchainState\": {\r\n    \"Network\": \"RegTest\",\r\n    \"Height\": \"0\"\r\n  },\r\n  \"HdPubKeys\": []\r\n}";
+
+                derivationVM = (DerivationSchemeViewModel)Assert
+                    .IsType<ViewResult>(await controller.AddDerivationScheme(user.StoreId, "BTC")).Model;
+                derivationVM.WalletFile = TestUtils.GetFormFile("wallet4.json", content);
+                derivationVM.Enabled = true;
+                derivationVM = (DerivationSchemeViewModel)Assert.IsType<ViewResult>(controller
+                    .AddDerivationScheme(user.StoreId, derivationVM, "BTC").GetAwaiter().GetResult()).Model;
+                Assert.True(derivationVM.Confirmation);
+                Assert.IsType<RedirectToActionResult>(controller.AddDerivationScheme(user.StoreId, derivationVM, "BTC")
+                    .GetAwaiter().GetResult());
+                
+                
+                 // Can we upload coldcard settings? (Should fail, we are giving a mainnet file to a testnet network)
+                derivationVM = (DerivationSchemeViewModel)Assert
+                    .IsType<ViewResult>(await controller.AddDerivationScheme(user.StoreId, "BTC")).Model;
+                content =
                     "{\"keystore\": {\"ckcc_xpub\": \"xpub661MyMwAqRbcGVBsTGeNZN6QGVHmMHLdSA4FteGsRrEriu4pnVZMZWnruFFFXkMnyoBjyHndD3Qwcfz4MPzBUxjSevweNFQx7SAYZATtcDw\", \"xpub\": \"ypub6WWc2gWwHbdnAAyJDnR4SPL1phRh7REqrPBfZeizaQ1EmTshieRXJC3Z5YoU4wkcdKHEjQGkh6AYEzCQC1Kz3DNaWSwdc1pc8416hAjzqyD\", \"label\": \"Coldcard Import 0x60d1af8b\", \"ckcc_xfp\": 1624354699, \"type\": \"hardware\", \"hw_type\": \"coldcard\", \"derivation\": \"m/49'/0'/0'\"}, \"wallet_type\": \"standard\", \"use_encryption\": false, \"seed_version\": 17}";
                 derivationVM.WalletFile = TestUtils.GetFormFile("wallet.json", content);
                 derivationVM = (DerivationSchemeViewModel)Assert.IsType<ViewResult>(controller
@@ -2272,7 +2300,8 @@ namespace BTCPayServer.Tests
                 Assert.True(derivationVM.Confirmation);
                 Assert.IsType<RedirectToActionResult>(controller.AddDerivationScheme(user.StoreId, derivationVM, "BTC")
                     .GetAwaiter().GetResult());
-
+                
+                
                 // Now let's check that no data has been lost in the process
                 var store = tester.PayTester.StoreRepository.FindStore(user.StoreId).GetAwaiter().GetResult();
                 var onchainBTC = store.GetSupportedPaymentMethods(tester.PayTester.Networks)

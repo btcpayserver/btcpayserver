@@ -40,12 +40,12 @@ namespace BTCPayServer
             return strategy != null;
         }
 
-        private static bool TryParseXpub(string xpub, DerivationSchemeParser derivationSchemeParser, ref DerivationSchemeSettings derivationSchemeSettings)
+        private static bool TryParseXpub(string xpub, DerivationSchemeParser derivationSchemeParser, ref DerivationSchemeSettings derivationSchemeSettings, bool electrum = true)
         {
             try
             {
                 derivationSchemeSettings.AccountOriginal = xpub.Trim();
-                derivationSchemeSettings.AccountDerivation = derivationSchemeParser.ParseElectrum(derivationSchemeSettings.AccountOriginal);
+                derivationSchemeSettings.AccountDerivation = electrum ? derivationSchemeParser.ParseElectrum(derivationSchemeSettings.AccountOriginal) : derivationSchemeParser.Parse(derivationSchemeSettings.AccountOriginal);
                 derivationSchemeSettings.AccountKeySettings = new AccountKeySettings[1];
                 derivationSchemeSettings.AccountKeySettings[0] = new AccountKeySettings();
                 derivationSchemeSettings.AccountKeySettings[0].AccountKey = derivationSchemeSettings.AccountDerivation.GetExtPubKeys().Single().GetWif(derivationSchemeParser.Network);
@@ -123,7 +123,7 @@ namespace BTCPayServer
                 result.Source = "WasabiFile";
                 //wasabi format 
                 if (!jobj.ContainsKey("ExtPubKey") ||
-                    !TryParseXpub(jobj["ExtPubKey"].Value<string>(), derivationSchemeParser, ref result))
+                    !TryParseXpub(jobj["ExtPubKey"].Value<string>(), derivationSchemeParser, ref result, false))
                 {
                     return false;
                 }
@@ -131,12 +131,20 @@ namespace BTCPayServer
                 {
                     try
                     {
-                        var mfpString  = jobj.ContainsKey("MasterFingerprint").ToString(CultureInfo.InvariantCulture).Trim();
+                        var mfpString  = jobj["MasterFingerprint"].ToString().Trim();
                         // https://github.com/zkSNACKs/WalletWasabi/pull/1663#issuecomment-508073066
-                        var shouldReverseMfp = jobj.ContainsKey("ColdCardFirmwareVersion") &&
-                                               jobj["ColdCardFirmwareVersion"].ToString() == "2.1.0";
-                        var bytes = Encoders.Hex.DecodeData(mfpString);
-                        result.AccountKeySettings[0].RootFingerprint = shouldReverseMfp ? new HDFingerprint(bytes.Reverse().ToArray()) : new HDFingerprint(bytes);
+                        
+                        if(uint.TryParse(mfpString, out var fingerprint))
+                        {
+                            result.AccountKeySettings[0].RootFingerprint = new HDFingerprint(fingerprint);
+                        }
+                        else
+                        {
+                            var shouldReverseMfp = jobj.ContainsKey("ColdCardFirmwareVersion") &&
+                                                   jobj["ColdCardFirmwareVersion"].ToString() == "2.1.0";
+                            var bytes = Encoders.Hex.DecodeData(mfpString);
+                            result.AccountKeySettings[0].RootFingerprint = shouldReverseMfp ? new HDFingerprint(bytes.Reverse().ToArray()) : new HDFingerprint(bytes);
+                        }
                     }
                     
                     catch { return false; }
@@ -148,6 +156,24 @@ namespace BTCPayServer
                         result.AccountKeySettings[0].AccountKeyPath = new KeyPath(jobj["AccountKeyPath"].Value<string>());
                     }
                     catch { return false; }
+                }
+                if (jobj.ContainsKey("DerivationPath"))
+                {
+                    try
+                    {
+                        result.AccountKeySettings[0].AccountKeyPath = new KeyPath(jobj["DerivationPath"].Value<string>().ToLowerInvariant());
+                    }
+                    catch { return false; }
+                }
+
+                if (jobj.ContainsKey("ColdCardFirmwareVersion"))
+                {
+                    result.Source = "ColdCard";
+                }
+
+                if (jobj.ContainsKey("CoboVaultFirmwareVersion"))
+                {
+                    result.Source = "CoboVault";
                 }
             }
             settings = result;

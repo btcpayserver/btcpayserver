@@ -117,7 +117,7 @@ namespace BTCPayServer.Controllers
                     TempData.SetStatusMessageModel(new StatusMessageModel()
                     {
                         Severity = StatusMessageModel.StatusSeverity.Error,
-                        Message = "Electrum/hardware wallet file was not in the correct format"
+                        Message = "Wallet file was not in the correct format"
                     });
                     vm.Confirmation = false;
                     return View(nameof(AddDerivationScheme),vm);

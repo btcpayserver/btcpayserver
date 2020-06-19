@@ -1,16 +1,15 @@
-﻿@inject SignInManager<ApplicationUser> SignInManager
+﻿@using Microsoft.AspNetCore.Http
+@using Newtonsoft.Json
+@inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
 @inject RoleManager<IdentityRole> RoleManager
+@inject IHttpContextAccessor HttpContextAccessor
 @inject BTCPayServer.Services.BTCPayServerEnvironment env
 @inject BTCPayServer.HostedServices.CssThemeManager themeManager
 
 @{
-    var invoicesRouteParams = new Dictionary<string, string> {
-        { "searchTerm", ViewContext.HttpContext.Request.Query["searchTerm"] },
-        { "skip", ViewContext.HttpContext.Request.Query["skip"] },
-        { "count", ViewContext.HttpContext.Request.Query["count"] },
-        { "timezoneOffset", ViewContext.HttpContext.Request.Query["timezoneOffset"] }
-    };
+    var invoicesLastQuery = (string)(ViewData["InvoicesLastQuery"]) ?? HttpContextAccessor.HttpContext.Request.Cookies["InvoicesLastQuery"] ?? "{}";
+    var invoicesRouteParams = JsonConvert.DeserializeObject<Dictionary<string, string>>(invoicesLastQuery);
 }
 <!DOCTYPE html>
 <html lang="en">

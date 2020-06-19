@@ -1,14 +1,6 @@
 ﻿@model InvoicesModel
 @{
     ViewData["Title"] = "Invoices";
-
-    var detailRouteParams = new Dictionary<string, string>
-    {
-        { "searchTerm", Model.SearchTerm },
-        { "skip", Model.Skip.ToString() },
-        { "count", Model.Count.ToString() },
-        { "timezoneOffset", Model.TimezoneOffset.ToString() }
-    };
 }
 @section HeadScripts {
     <script src="~/modal/btcpay.js" asp-append-version="true"></script>
@@ -276,14 +268,7 @@
                                         </span>
                                     }
                                     &nbsp;
-                                    <a class="invoice-details-link"
-                                       asp-action="Invoice"
-                                       asp-route-invoiceId="@invoice.InvoiceId"
-                                       asp-route-searchTerm="@Model.SearchTerm"
-                                       asp-route-skip="@Model.Skip"
-                                       asp-route-count="@Model.Count"
-                                       asp-route-timezoneOffset="@Model.TimezoneOffset"
-                                    >Details</a>
+                                    <a class="invoice-details-link" asp-action="Invoice" asp-route-invoiceId="@invoice.InvoiceId">Details</a>
                                     &nbsp;
                                     <a href="javascript:void(0);" onclick="detailsToggle(this, '@invoice.InvoiceId')">
                                         <span title="Invoice Details Toggle" class="fa fa-1x fa-angle-double-down"></span>

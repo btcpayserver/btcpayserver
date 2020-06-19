@@ -595,6 +595,18 @@ namespace BTCPayServer.Controllers
                 StoreIds = storeIds,
                 TimezoneOffset = timezoneOffset
             };
+
+            var invoicesLastQuery = new Dictionary<string, string>
+            {
+                { "SearchTerm", searchTerm },
+                { "Skip", skip.ToString(NumberFormatInfo.InvariantInfo) },
+                { "Count", count.ToString(NumberFormatInfo.InvariantInfo) },
+                { "TimezoneOffset", timezoneOffset.ToString(NumberFormatInfo.InvariantInfo) }
+            };
+            var invoicesQueryJson = invoicesLastQuery.ToJson();
+            ViewData["InvoicesLastQuery"] = invoicesQueryJson;
+            HttpContext.Response.Cookies.Append("InvoicesLastQuery", invoicesQueryJson);
+
             InvoiceQuery invoiceQuery = GetInvoiceQuery(searchTerm, timezoneOffset);
             var counting = _InvoiceRepository.GetInvoicesTotal(invoiceQuery);
             invoiceQuery.Count = count;

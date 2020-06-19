@@ -12,6 +12,9 @@ using System.Collections.Concurrent;
 using BTCPayServer.Events;
 using BTCPayServer.Services.Invoices;
 using System.Threading.Channels;
+using BTCPayServer.Services.Notifications;
+using BTCPayServer.Services.Notifications.Blobs;
+using NBitpayClient;
 
 namespace BTCPayServer.HostedServices
 {
@@ -38,15 +41,18 @@ namespace BTCPayServer.HostedServices
         InvoiceRepository _InvoiceRepository;
         EventAggregator _EventAggregator;
         ExplorerClientProvider _ExplorerClientProvider;
+        private readonly NotificationSender _notificationSender;
 
         public InvoiceWatcher(
             InvoiceRepository invoiceRepository,
             EventAggregator eventAggregator,
-            ExplorerClientProvider explorerClientProvider)
+            ExplorerClientProvider explorerClientProvider, 
+            NotificationSender notificationSender)
         {
             _InvoiceRepository = invoiceRepository ?? throw new ArgumentNullException(nameof(invoiceRepository));
             _EventAggregator = eventAggregator ?? throw new ArgumentNullException(nameof(eventAggregator));
             _ExplorerClientProvider = explorerClientProvider;
+            _notificationSender = notificationSender;
         }
         CompositeDisposable leases = new CompositeDisposable();
 
@@ -228,8 +234,13 @@ namespace BTCPayServer.HostedServices
             {
                 Watch(b.InvoiceId);
             }));
-            leases.Add(_EventAggregator.Subscribe<Events.InvoiceEvent>(b =>
+            leases.Add(_EventAggregator.Subscribe<Events.InvoiceEvent>(async b =>
             {
+                if (InvoiceEventNotification.HandlesEvent(b.Name))
+                {
+                    await _notificationSender.SendNotification(new StoreScope(b.Invoice.StoreId),
+                        new InvoiceEventNotification(b.Invoice.Id, b.Name));
+                }
                 if (b.Name == InvoiceEvent.Created)
                 {
                     Watch(b.Invoice.Id);

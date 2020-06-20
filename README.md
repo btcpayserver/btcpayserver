@@ -15,11 +15,11 @@ BTCPay Server is a non-custodial invoicing system which eliminates the involveme
 
 The software is built in C# and conforms to the invoice [API of BitPay](https://bitpay.com/api). It allows for your website to be easily migrated from BitPay and configured as a self-hosted payment processor.
 
-You can run BTCPay Server as a self-hosted solution on your own server, or use a [third-party host](https://github.com/btcpayserver/btcpayserver-doc/blob/master/ThirdPartyHosting.md).
+You can run BTCPay Server as a self-hosted solution on your own server, or use a [third-party host](https://docs.btcpayserver.org/ThirdPartyHosting/).
 
 The self-hosted solution allows you not only to attach an unlimited number of stores and use the Lightning Network but also become the payment processor for others.
 
-Thanks to the [apps](https://github.com/btcpayserver/btcpayserver-doc/blob/master/Apps.md) built on top of it, you can use BTCPay to receive donations, start a crowdfunding campaign or have an in-store Point of Sale.
+Thanks to the [apps](https://docs.btcpayserver.org/Apps/) built on top of it, you can use BTCPay to receive donations, start a crowdfunding campaign or have an in-store Point of Sale.
 
 [![What is BTCPay](https://img.youtube.com/vi/q7xJMno_B3U/sddefault.jpg)](https://www.youtube.com/watch?v=q7xJMno_B3U "What is BTCPay")
 
@@ -48,14 +48,14 @@ Thanks to the [apps](https://github.com/btcpayserver/btcpayserver-doc/blob/maste
 * SegWit support
 * Lightning Network support (LND, c-lightning, Eclair and Ptarmigan)
 * Tor support
-* Opt-in [altcoin](https://github.com/btcpayserver/btcpayserver-doc/blob/master/Altcoins.md) integrations
+* Opt-in [altcoin](https://docs.btcpayserver.org/FAQ/FAQ-Altcoin/) integrations
 * Full compatibility with BitPay API (easy migration)
 * Process payments for others
 * Easy-embeddable Payment buttons
 * Point of sale app
 * Crowdfunding app
 * Payment Requests
-* Internal, full-node reliant wallet with [hardware wallet integration](https://github.com/btcpayserver/btcpayserver-doc/blob/master/Vault.md)
+* Internal, full-node reliant wallet with [hardware wallet integration](https://docs.btcpayserver.org/Vault/)
 
 ## Getting Started
 
@@ -85,7 +85,7 @@ Contributors looking to do something a bit more challenging, before opening a pu
 
 You also have an awesome video of our contributors which explains how to get started.[![Rockstar Dev and Britt Kelly - Btc Pay Server Code Along](https://img.youtube.com/vi/ZePbMPSIvHM/sddefault.jpg)](https://www.youtube.com/embed/VNMnd-dX9Q8)
 
-Here is some info about [how to extend the themes](https://github.com/btcpayserver/btcpayserver-doc/blob/master/Theme.md)
+Here is some info about [how to extend the themes](https://docs.btcpayserver.org/Theme/)
 
 ## How to build
 
@@ -140,7 +140,7 @@ For more information, see the documentation: [How to deploy a BTCPay server inst
 
 ## Supported altcoins
 
-Bitcoin is the only focus of the project and its core developers. However, opt in integrations are present for [several altcoins](https://github.com/btcpayserver/btcpayserver-doc/blob/master/Altcoins.md). Altcoins are maintained by their respective communities.
+Bitcoin is the only focus of the project and its core developers. However, opt in integrations are present for [several altcoins](https://docs.btcpayserver.org/FAQ/FAQ-Altcoin/). Altcoins are maintained by their respective communities.
 
 ## License
 

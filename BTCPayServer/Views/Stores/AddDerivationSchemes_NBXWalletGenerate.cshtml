@@ -32,12 +32,12 @@
                 </div>
                 <div class="form-group">
                     <label asp-for="Passphrase">Passphrase (optional)</label>
-                    <input type="password" asp-for="Passphrase" class="form-control"  autocomplete="off"/>
+                    <input type="text" asp-for="Passphrase" class="form-control"  autocomplete="off"/>
                     <span asp-validation-for="Passphrase" class="text-danger"></span>
                 </div>
                 <div class="form-group">
                     <label for="passphrase_conf">Passphrase confirmation</label>
-                    <input type="password" name="passphrase_conf" class="form-control"/>
+                    <input type="text" name="passphrase_conf" class="form-control"/>
                     <span class="text-danger field-validation-valid" id="passphrase_conf_validation"></span>
                 </div>
                 <div class="form-group">

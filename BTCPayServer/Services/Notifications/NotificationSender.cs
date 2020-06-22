@@ -51,6 +51,10 @@ namespace BTCPayServer.Services.Notifications
                 }
                 await db.SaveChangesAsync();
             }
+            foreach (string user in users)
+            {
+                _notificationManager.InvalidateNotificationCache(user);
+            }
         }
 
         private async Task<string[]> GetUsers(NotificationScope scope)

@@ -18,7 +18,7 @@ namespace BTCPayServer.Models.WalletViewModels
         }
         public string PSBT { get; set; }
         public string OriginalPSBT { get; set; }
-        public string PayJoinEndpointUrl { get; set; }
+        public string PayJoinBIP21 { get; set; }
         public bool? EnforceLowR { get; set; }
         public string ChangeAddress { get; set; }
     }

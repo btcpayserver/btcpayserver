@@ -38,11 +38,17 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Newtonsoft.Json.Linq;
 using BTCPayServer.Payments.Bitcoin;
+using NBitcoin.Payment;
 
 namespace BTCPayServer
 {
     public static class Extensions
     {
+        public static bool TryGetPayjoinEndpoint(this BitcoinUrlBuilder bip21, out Uri endpoint)
+        {
+            endpoint = bip21.UnknowParameters.TryGetValue($"{PayjoinClient.BIP21EndpointKey}", out var uri) ? new Uri(uri, UriKind.Absolute) : null;
+            return endpoint != null;
+        }
         public static bool IsInternalNode(this LightningConnectionString connectionString, LightningConnectionString internalLightning)
         {
             var internalDomain = internalLightning?.BaseUri?.DnsSafeHost;

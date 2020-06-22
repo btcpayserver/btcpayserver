@@ -122,9 +122,10 @@ namespace BTCPayServer.Payments.PayJoin
         [MediaTypeConstraint("text/plain")]
         [RateLimitsFilter(ZoneLimits.PayJoin, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> Submit(string cryptoCode,
-            long maxadditionalfeecontribution = -1,
-            int additionalfeeoutputindex = -1,
+            long? maxadditionalfeecontribution,
+            int? additionalfeeoutputindex,
             decimal minfeerate = -1.0m,
+            bool disableoutputsubstitution = false,
             int v = 1)
         {
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
@@ -192,9 +193,8 @@ namespace BTCPayServer.Payments.PayJoin
                 }
             }
 
-            bool spareChangeCase = psbt.Outputs.Count == 1;
-            FeeRate senderMinFeeRate = !spareChangeCase && minfeerate >= 0.0m ? new FeeRate(minfeerate) : null;
-            Money allowedSenderFeeContribution = Money.Satoshis(!spareChangeCase && maxadditionalfeecontribution >= 0 ? maxadditionalfeecontribution : long.MaxValue);
+            FeeRate senderMinFeeRate = minfeerate >= 0.0m ? new FeeRate(minfeerate) : null;
+            Money allowedSenderFeeContribution = Money.Satoshis(maxadditionalfeecontribution is long t && t >= 0 ? t : 0);
 
             var sendersInputType = psbt.GetInputsScriptPubKeyType();
             if (psbt.CheckSanity() is var errors && errors.Count != 0)
@@ -260,7 +260,7 @@ namespace BTCPayServer.Payments.PayJoin
                     //this should never happen, unless the store owner changed the wallet mid way through an invoice
                     return CreatePayjoinErrorAndLog(503, PayjoinReceiverWellknownErrors.Unavailable, "Our wallet does not support payjoin");
                 }
-                if (sendersInputType is ScriptPubKeyType t && t != receiverInputsType)
+                if (sendersInputType is ScriptPubKeyType t1 && t1 != receiverInputsType)
                 {
                     return CreatePayjoinErrorAndLog(503, PayjoinReceiverWellknownErrors.Unavailable, "We do not have any UTXO available for making a payjoin with the sender's inputs type");
                 }
@@ -341,10 +341,14 @@ namespace BTCPayServer.Payments.PayJoin
             var ourNewOutput = newTx.Outputs[originalPaymentOutput.Index];
             HashSet<TxOut> isOurOutput = new HashSet<TxOut>();
             isOurOutput.Add(ourNewOutput);
-            TxOut preferredFeeBumpOutput = additionalfeeoutputindex >= 0
-                                            && additionalfeeoutputindex < newTx.Outputs.Count
-                                            && !isOurOutput.Contains(newTx.Outputs[additionalfeeoutputindex])
-                                            ? newTx.Outputs[additionalfeeoutputindex] : null;
+            TxOut feeOutput =
+                additionalfeeoutputindex is int feeOutputIndex &&
+                maxadditionalfeecontribution is long v3 &&
+                v3 >= 0 &&
+                feeOutputIndex >= 0
+                && feeOutputIndex < newTx.Outputs.Count
+                && !isOurOutput.Contains(newTx.Outputs[feeOutputIndex])
+                ? newTx.Outputs[feeOutputIndex] : null;
             var rand = new Random();
             int senderInputCount = newTx.Inputs.Count;
             foreach (var selectedUTXO in selectedUTXOs.Select(o => o.Value))
@@ -356,49 +360,6 @@ namespace BTCPayServer.Payments.PayJoin
             ourNewOutput.Value += contributedAmount;
             var minRelayTxFee = this._dashboard.Get(network.CryptoCode).Status.BitcoinStatus?.MinRelayTxFee ??
                                 new FeeRate(1.0m);
-            // Probably receiving some spare change, let's add an output to make
-            // it looks more like a normal transaction
-            if (spareChangeCase)
-            {
-                ctx.Logs.Write($"The payjoin receiver sent only a single output");
-                if (RandomUtils.GetUInt64() % 2 == 0)
-                {
-                    var change = await explorer.GetUnusedAsync(derivationSchemeSettings.AccountDerivation, DerivationFeature.Change);
-                    var randomChangeAmount = RandomUtils.GetUInt64() % (ulong)contributedAmount.Satoshi;
-
-                    // Randomly round the amount to make the payment output look like a change output
-                    var roundMultiple = (ulong)Math.Pow(10, (ulong)Math.Log10(randomChangeAmount));
-                    while (roundMultiple > 1_000UL)
-                    {
-                        if (RandomUtils.GetUInt32() % 2 == 0)
-                        {
-                            roundMultiple = roundMultiple / 10;
-                        }
-                        else
-                        {
-                            randomChangeAmount = (randomChangeAmount / roundMultiple) * roundMultiple;
-                            break;
-                        }
-                    }
-
-                    var fakeChange = newTx.Outputs.CreateNewTxOut(randomChangeAmount, change.ScriptPubKey);
-                    if (fakeChange.IsDust(minRelayTxFee))
-                    {
-                        randomChangeAmount = fakeChange.GetDustThreshold(minRelayTxFee);
-                        fakeChange.Value = randomChangeAmount;
-                    }
-                    if (randomChangeAmount < contributedAmount)
-                    {
-                        ourNewOutput.Value -= fakeChange.Value;
-                        newTx.Outputs.Add(fakeChange);
-                        isOurOutput.Add(fakeChange);
-                        ctx.Logs.Write($"Added a fake change output of {fakeChange.Value} {network.CryptoCode} in the payjoin proposal");
-                    }
-                }
-            }
-
-            Utils.Shuffle(newTx.Inputs, rand);
-            Utils.Shuffle(newTx.Outputs, rand);
 
             // Remove old signatures as they are not valid anymore
             foreach (var input in newTx.Inputs)
@@ -421,6 +382,8 @@ namespace BTCPayServer.Payments.PayJoin
                 // If the user overpaid, taking fee on our output (useful if sender dump a full UTXO for privacy)
                 for (int i = 0; i < newTx.Outputs.Count && additionalFee > Money.Zero && due < Money.Zero; i++)
                 {
+                    if (disableoutputsubstitution)
+                        break;
                     if (isOurOutput.Contains(newTx.Outputs[i]))
                     {
                         var outputContribution = Money.Min(additionalFee, -due);
@@ -434,21 +397,15 @@ namespace BTCPayServer.Payments.PayJoin
                 }
 
                 // The rest, we take from user's change
-                for (int i = 0; i < newTx.Outputs.Count && additionalFee > Money.Zero && allowedSenderFeeContribution > Money.Zero; i++)
+                if (feeOutput != null)
                 {
-                    if (preferredFeeBumpOutput is TxOut &&
-                        preferredFeeBumpOutput != newTx.Outputs[i])
-                        continue;
-                    if (!isOurOutput.Contains(newTx.Outputs[i]))
-                    {
-                        var outputContribution = Money.Min(additionalFee, newTx.Outputs[i].Value);
-                        outputContribution = Money.Min(outputContribution,
-                            newTx.Outputs[i].Value - newTx.Outputs[i].GetDustThreshold(minRelayTxFee));
-                        outputContribution = Money.Min(outputContribution, allowedSenderFeeContribution);
-                        newTx.Outputs[i].Value -= outputContribution;
-                        additionalFee -= outputContribution;
-                        allowedSenderFeeContribution -= outputContribution;
-                    }
+                    var outputContribution = Money.Min(additionalFee, feeOutput.Value);
+                    outputContribution = Money.Min(outputContribution,
+                        feeOutput.Value - feeOutput.GetDustThreshold(minRelayTxFee));
+                    outputContribution = Money.Min(outputContribution, allowedSenderFeeContribution);
+                    feeOutput.Value -= outputContribution;
+                    additionalFee -= outputContribution;
+                    allowedSenderFeeContribution -= outputContribution;
                 }
 
                 if (additionalFee > Money.Zero)

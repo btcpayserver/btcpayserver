@@ -203,12 +203,12 @@
                                 </select>
                             </div>
                         }
-                        @if (!string.IsNullOrEmpty(Model.PayJoinEndpointUrl))
+                        @if (!string.IsNullOrEmpty(Model.PayJoinBIP21))
                         {
                             <div class="form-group">
-                                <label asp-for="PayJoinEndpointUrl" class="control-label"></label>
-                                <input asp-for="PayJoinEndpointUrl" class="form-control" />
-                                <span asp-validation-for="PayJoinEndpointUrl" class="text-danger"></span>
+                                <label asp-for="PayJoinBIP21" class="control-label"></label>
+                                <input asp-for="PayJoinBIP21" class="form-control" />
+                                <span asp-validation-for="PayJoinBIP21" class="text-danger"></span>
                             </div>
                         }
                         <div class="form-group">

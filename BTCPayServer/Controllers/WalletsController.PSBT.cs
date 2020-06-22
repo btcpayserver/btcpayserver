@@ -12,6 +12,7 @@ using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
+using NBitcoin.Payment;
 using NBXplorer;
 using NBXplorer.Models;
 
@@ -153,14 +154,12 @@ namespace BTCPayServer.Controllers
             }
         }
 
-        private async Task<PSBT> GetPayjoinProposedTX(string bpu, PSBT psbt, DerivationSchemeSettings derivationSchemeSettings, BTCPayNetwork btcPayNetwork, CancellationToken cancellationToken)
+        private async Task<PSBT> GetPayjoinProposedTX(BitcoinUrlBuilder bip21, PSBT psbt, DerivationSchemeSettings derivationSchemeSettings, BTCPayNetwork btcPayNetwork, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(bpu) || !Uri.TryCreate(bpu, UriKind.Absolute, out var endpoint))
-                throw new InvalidOperationException("No payjoin url available");
             var cloned = psbt.Clone();
             cloned = cloned.Finalize();
             await _broadcaster.Schedule(DateTimeOffset.UtcNow + TimeSpan.FromMinutes(2.0), cloned.ExtractTransaction(), btcPayNetwork);
-            return await _payjoinClient.RequestPayjoin(endpoint, derivationSchemeSettings, psbt, cancellationToken);
+            return await _payjoinClient.RequestPayjoin(bip21, derivationSchemeSettings, psbt, cancellationToken);
         }
         
         [HttpGet]
@@ -317,7 +316,7 @@ namespace BTCPayServer.Controllers
                     string error = null;
                     try
                     {
-                        var proposedPayjoin = await GetPayjoinProposedTX(vm.SigningContext.PayJoinEndpointUrl, psbt,
+                        var proposedPayjoin = await GetPayjoinProposedTX(new BitcoinUrlBuilder(vm.SigningContext.PayJoinBIP21, network.NBitcoinNetwork), psbt,
                             derivationSchemeSettings, network, cancellationToken);
                         try
                         {

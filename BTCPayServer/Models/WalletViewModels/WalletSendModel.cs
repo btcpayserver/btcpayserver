@@ -57,8 +57,8 @@ namespace BTCPayServer.Models.WalletViewModels
         public ThreeStateBool AllowFeeBump { get; set; }
 
         public bool NBXSeedAvailable { get; set; }
-        [Display(Name = "PayJoin Endpoint Url")]
-        public string PayJoinEndpointUrl { get; set; }
+        [Display(Name = "PayJoin BIP21")]
+        public string PayJoinBIP21 { get; set; }
         public bool InputSelection { get; set; }
         public InputSelectionOption[] InputsAvailable { get; set; }
         

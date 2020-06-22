@@ -142,7 +142,7 @@
                     <partial name="SigningContext" for="SigningContext" />
                     @if (!Model.HasErrors)
                     {
-                        @if (!string.IsNullOrEmpty(Model.SigningContext?.PayJoinEndpointUrl))
+                        @if (!string.IsNullOrEmpty(Model.SigningContext?.PayJoinBIP21))
                         {
                             <button type="submit" class="btn btn-primary" name="command" value="payjoin">Broadcast (Payjoin)</button>
                             <span> or </span>

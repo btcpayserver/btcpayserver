@@ -31,6 +31,7 @@ using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitpayClient;
 using NBXplorer;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using TwentyTwenty.Storage;
 using StoreData = BTCPayServer.Data.StoreData;
@@ -744,7 +745,11 @@ namespace BTCPayServer.Controllers
                 }, store, HttpContext.Request.GetAbsoluteRoot(), cancellationToken: cancellationToken);
 
                 TempData[WellKnownTempData.SuccessMessage] = $"Invoice {result.Data.Id} just created!";
-                return RedirectToAction(nameof(ListInvoices));
+
+                var lastQuery = HttpContext.Request.Cookies["InvoicesLastQuery"] ?? "{}";
+                var routeParams = JsonConvert.DeserializeObject<Dictionary<string, string>>(lastQuery);
+
+                return RedirectToAction(nameof(ListInvoices), routeParams);
             }
             catch (BitpayHttpException ex)
             {

@@ -11,7 +11,7 @@
     <div class="modal-dialog modal-lg" role="document">
         <form class="modal-content" form method="post" enctype="multipart/form-data">
             <div class="modal-header">
-                <h5 class="modal-title" id="electrumimportLabel">Import Electrum/Air-gapped Hardware Wallet</h5>
+                <h5 class="modal-title" id="electrumimportLabel">Import Wallet from file</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -19,14 +19,15 @@
             <div class="modal-body">
                 <p>You may import your air-gapped hardware wallet (such as ColdCard, Cobo Vault) by exporting a file and uploading it here.</p>
                 <ul >
-                    <li>Cobo Vault - <kbd>∙∙∙->Create Watch-Only Wallet in Electrum->export via microSD</kbd></li>
-                    <li>ColdCard - <kbd>Advanced->MicroSD Card->Electrum Wallet</kbd></li>
+                    <li>Cobo Vault - <kbd>Settings->Watch-Only Wallet->Wasabi Wallet/BTCPay->Export Wallet</kbd></li>
+                    <li>ColdCard - <kbd>Advanced->MicroSD Card->Electrum Wallet</kbd> or <kbd>Advanced->MicroSD Card->Wasabi Wallet</kbd></li>
                     <li>Electrum - <kbd>File->Save Copy</kbd></li>
+                    <li>Wasabi - <kbd>Tools->Wallet Manager->Open Wallets Folder</kbd></li>
                 </ul>
                 <div class="form-group">
-                    <label asp-for="ElectrumWalletFile"></label>
+                    <label asp-for="WalletFile"></label>
 
-                    <input type="file" class="form-control-file" asp-for="ElectrumWalletFile" required>
+                    <input type="file" class="form-control-file" asp-for="WalletFile" required>
                 </div>
             </div>
             <div class="modal-footer">

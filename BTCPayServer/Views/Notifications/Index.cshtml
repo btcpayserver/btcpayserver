@@ -49,7 +49,7 @@
                                 </a>
                             </th>
                             <th>Message</th>
-                            <th class="text-right">&nbsp</th>
+                            <th class="text-right">Actions</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -70,7 +70,7 @@
                                 <td class="text-right font-weight-normal">
                                     @if (!String.IsNullOrEmpty(item.ActionLink))
                                     {
-                                        <a href="@item.ActionLink" class="btn btn-link p-0">Action</a>
+                                        <a href="@item.ActionLink" class="btn btn-link p-0">Details</a>
                                         <span class="d-none d-md-inline-block"> - </span>
                                     }
                                     <button onclick="return rowseen(this)" class="btn btn-link p-0 btn-toggle-seen" type="submit" name="command" value="flip-individual:@(item.Id)">

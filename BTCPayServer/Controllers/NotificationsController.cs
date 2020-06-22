@@ -81,14 +81,20 @@ namespace BTCPayServer.Controllers
                 var notif = _db.Notifications.Single(a => a.Id == id && a.ApplicationUserId == userId);
                 notif.Seen = !notif.Seen;
                 await _db.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
             }
 
-            return RedirectToAction(nameof(Index));
+            return BadRequest();
         }
 
         [HttpPost]
         public async Task<IActionResult> MassAction(string command, string[] selectedItems)
         {
+            if (command.StartsWith("flip-individual", StringComparison.InvariantCulture))
+            {
+                var id = command.Split(":")[1];
+                return await FlipRead(id);
+            }
             if (selectedItems != null)
             {
                 if (command == "delete" && ValidUserClaim(out var userId))

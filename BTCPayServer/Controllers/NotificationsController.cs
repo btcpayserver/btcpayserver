@@ -112,6 +112,10 @@ namespace BTCPayServer.Controllers
         [HttpPost]
         public async Task<IActionResult> MassAction(string command, string[] selectedItems)
         {
+            if (!ValidUserClaim(out var userId))
+            {
+                return NotFound();
+            }
             if (command.StartsWith("flip-individual", StringComparison.InvariantCulture))
             {
                 var id = command.Split(":")[1];
@@ -119,14 +123,29 @@ namespace BTCPayServer.Controllers
             }
             if (selectedItems != null)
             {
-                if (command == "delete" && ValidUserClaim(out var userId))
+                var items = _db.Notifications.Where(a => a.ApplicationUserId == userId && selectedItems.Contains(a.Id));
+                switch (command)
                 {
-                    var toRemove = _db.Notifications.Where(a => a.ApplicationUserId == userId && selectedItems.Contains(a.Id));
-                    _db.Notifications.RemoveRange(toRemove);
-                    await _db.SaveChangesAsync();
-                    _notificationManager.InvalidateNotificationCache(userId);
-                    return RedirectToAction(nameof(Index));
+                    case "delete":
+                        _db.Notifications.RemoveRange(items);
+                        
+                        break;
+                    case "mark-seen":
+                        foreach (NotificationData notificationData in items)
+                        {
+                            notificationData.Seen = true;
+                        }
+                        break;
+                    case "mark-unseen":
+                        foreach (NotificationData notificationData in items)
+                        {
+                            notificationData.Seen = false;
+                        }
+                        break;
                 }
+                await _db.SaveChangesAsync();
+                _notificationManager.InvalidateNotificationCache(userId);
+                return RedirectToAction(nameof(Index));
             }
 
             return RedirectToAction(nameof(Index));

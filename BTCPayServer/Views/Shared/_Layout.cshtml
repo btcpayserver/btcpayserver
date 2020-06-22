@@ -3,12 +3,11 @@
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
 @inject RoleManager<IdentityRole> RoleManager
-@inject IHttpContextAccessor HttpContextAccessor
 @inject BTCPayServer.Services.BTCPayServerEnvironment env
 @inject BTCPayServer.HostedServices.CssThemeManager themeManager
 
 @{
-    var invoicesLastQuery = (string)(ViewData["InvoicesLastQuery"]) ?? HttpContextAccessor.HttpContext.Request.Cookies["InvoicesLastQuery"] ?? "{}";
+    var invoicesLastQuery = (string)ViewData["InvoicesLastQuery"] ?? Context.Request.Cookies["InvoicesLastQuery"] ?? "{}";
     var invoicesRouteParams = JsonConvert.DeserializeObject<Dictionary<string, string>>(invoicesLastQuery);
 }
 <!DOCTYPE html>

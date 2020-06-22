@@ -19,6 +19,7 @@
 * Privacy enhancement: Randomize wallet transaction fingerprint. (@NicolasDorier)
 * Randomize RBF support in BTCPay wallet by default for privacy (@NicolasDorier)
 * Add support for Cobo Vault wallet file import (@Kukks)
+* Add support for Wasabi wallet file import (@Kukks)
 * Split POS app cart and static and support both simultaneously (@dennisreimann)
 * Add Cross-Implementation Lightning Node GreenField API (@Kukks @NicolasDorier)
 * Make GreenField responses and JSON properties consistent (@Kukks @NicolasDorier)

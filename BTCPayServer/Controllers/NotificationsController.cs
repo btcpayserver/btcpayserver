@@ -16,6 +16,7 @@ namespace BTCPayServer.Controllers
 {
     [BitpayAPIConstraint(false)]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Route("[controller]/[action]")]
     public class NotificationsController : Controller
     {
         private readonly BTCPayServerEnvironment _env;
@@ -82,6 +83,31 @@ namespace BTCPayServer.Controllers
 
             return BadRequest();
         }
+
+        [HttpGet]
+        public async Task<IActionResult> NotificationPassThrough(string id)
+        {
+            if (ValidUserClaim(out var userId))
+            {
+                var notif = _db.Notifications.Single(a => a.Id == id && a.ApplicationUserId == userId);
+                if (!notif.Seen)
+                {
+                    notif.Seen = !notif.Seen;
+                    await _db.SaveChangesAsync();
+                    _notificationManager.InvalidateNotificationCache(userId);
+                }
+
+                var vm = _notificationManager.ToViewModel(notif);
+                if (string.IsNullOrEmpty(vm.ActionLink))
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+                return Redirect(vm.ActionLink);
+            }
+
+            return NotFound();
+        }
+        
 
         [HttpPost]
         public async Task<IActionResult> MassAction(string command, string[] selectedItems)

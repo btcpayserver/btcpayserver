@@ -82,6 +82,7 @@
                     <nav aria-label="..." class="w-100">
                         @if (Model.Total != 0)
                         {
+                           
                             <ul class="pagination float-left">
                                 <li class="page-item @(Model.Skip == 0 ? "disabled" : null)">
                                     <a class="page-link" tabindex="-1" href="@ListItemsPage(-1, Model.Count)">&laquo;</a>
@@ -160,30 +161,33 @@
     pointer-events: none;
 }
 .seen-text::after {
-    content: "unseen";
-}
-tr.seen td .seen-text::after {
     content: "seen";
 }
+tr.seen td .seen-text::after {
+    content: "unseen";
+}
 tr td {
-    font-weight: normal;
+    font-weight: bold;
 }
 tr.seen td {
-    font-weight: bold;
+    font-weight: normal;
 }
 </style>
 <script type="text/javascript">
     function rowseen(sender) {
         var row = $(sender).parents(".notification-row").toggleClass("loading");
         var guid =   row.data("guid");
-        $.post("/Notifications/FlipRead/" + guid, function (data) {
+        var url = "@Url.Action("FlipRead", "Notifications", new { id ="placeholder"})".replace("placeholder", guid);
+        $.post(url, function (data) {
             row.toggleClass("seen loading");
         });
         return false;
     }
     
-    function toggleRowCheckbox(){
-        $(sender).parents(".notification-row").children(".selector").click();
+    function toggleRowCheckbox(sender){
+        var input  = $(sender).parents(".notification-row").find(".selector");
+        input.prop('checked', !input.prop("checked"));
+        updateSelectors();
     }
 
     $(function () {

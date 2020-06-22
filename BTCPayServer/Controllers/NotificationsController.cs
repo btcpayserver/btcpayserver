@@ -1,18 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
-using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
-using BTCPayServer.HostedServices;
 using BTCPayServer.Models.NotificationViewModels;
 using BTCPayServer.Security;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
-using Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -58,7 +53,7 @@ namespace BTCPayServer.Controllers
                     .Where(a => a.ApplicationUserId == userId)
                     .Select(a => _notificationManager.ToViewModel(a))
                     .ToList(),
-                Total = _db.Notifications.Where(a => a.ApplicationUserId == userId).Count()
+                Total = _db.Notifications.Count(a => a.ApplicationUserId == userId)
             };
 
             return View(model);
@@ -81,6 +76,7 @@ namespace BTCPayServer.Controllers
                 var notif = _db.Notifications.Single(a => a.Id == id && a.ApplicationUserId == userId);
                 notif.Seen = !notif.Seen;
                 await _db.SaveChangesAsync();
+                _notificationManager.InvalidateNotificationCache(userId);
                 return RedirectToAction(nameof(Index));
             }
 
@@ -102,7 +98,7 @@ namespace BTCPayServer.Controllers
                     var toRemove = _db.Notifications.Where(a => a.ApplicationUserId == userId && selectedItems.Contains(a.Id));
                     _db.Notifications.RemoveRange(toRemove);
                     await _db.SaveChangesAsync();
-
+                    _notificationManager.InvalidateNotificationCache(userId);
                     return RedirectToAction(nameof(Index));
                 }
             }

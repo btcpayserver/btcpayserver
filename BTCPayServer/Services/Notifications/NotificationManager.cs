@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
@@ -30,21 +31,31 @@ namespace BTCPayServer.Services.Notifications
             _handlersByNotificationType = handlers.ToDictionary(h => h.NotificationType);
             _handlersByBlobType = handlers.ToDictionary(h => h.NotificationBlobType);
         }
-
+        
         private const int _cacheExpiryMs = 5000;
         public async Task<NotificationSummaryViewModel> GetSummaryNotifications(ClaimsPrincipal user)
         {
             var userId = _userManager.GetUserId(user);
-
-            if (_memoryCache.TryGetValue<NotificationSummaryViewModel>(userId, out var obj))
+            var cacheKey = GetNotificationsCacheId(userId);
+            if (_memoryCache.TryGetValue<NotificationSummaryViewModel>(cacheKey, out var obj))
                 return obj;
 
             var resp = await FetchNotificationsFromDb(userId);
-            _memoryCache.Set(userId, resp, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMilliseconds(_cacheExpiryMs)));
+            _memoryCache.Set(cacheKey, resp, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMilliseconds(_cacheExpiryMs)));
 
             return resp;
         }
 
+        public void InvalidateNotificationCache(string userId)
+        {
+            _memoryCache.Remove(GetNotificationsCacheId(userId));
+        }
+        
+        private static string GetNotificationsCacheId(string userId)
+        {
+            return $"notifications-{userId}";
+        }
+        
         private async Task<NotificationSummaryViewModel> FetchNotificationsFromDb(string userId)
         {
             var resp = new NotificationSummaryViewModel();

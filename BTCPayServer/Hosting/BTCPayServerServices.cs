@@ -222,6 +222,7 @@ namespace BTCPayServer.Hosting
             services.AddScoped<IAuthorizationHandler, CookieAuthorizationHandler>();
             services.AddScoped<IAuthorizationHandler, BitpayAuthorizationHandler>();
             services.AddSingleton<INotificationHandler, NewVersionNotification.Handler>();
+            services.AddSingleton<INotificationHandler, InvoiceEventNotification.Handler>();
 
             services.TryAddSingleton<ExplorerClientProvider>();
             services.TryAddSingleton<Bitpay>(o =>

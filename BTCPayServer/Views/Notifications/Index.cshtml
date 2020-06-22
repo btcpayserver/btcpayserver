@@ -9,7 +9,7 @@
         {
             <div class="row">
                 <div class="col-lg-12 text-center">
-                    <partial name="_StatusMessage" />
+                    <partial name="_StatusMessage"/>
                 </div>
             </div>
         }
@@ -40,51 +40,51 @@
                 <div class="col-lg-12">
                     <table class="table table-sm table-responsive-md">
                         <thead>
-                            <tr>
-                                <th width="30px" class="only-for-js"></th>
-                                <th width="190px">
-                                    Date
-                                    <a href="javascript:switchTimeFormat()">
-                                        <span class="fa fa-clock-o" title="Switch date format"></span>
-                                    </a>
-                                </th>
-                                <th>Message</th>
-                                <th class="text-right">&nbsp</th>
-                            </tr>
+                        <tr>
+                            <th width="30px" class="only-for-js"></th>
+                            <th width="190px">
+                                Date
+                                <a href="javascript:switchTimeFormat()">
+                                    <span class="fa fa-clock-o" title="Switch date format"></span>
+                                </a>
+                            </th>
+                            <th>Message</th>
+                            <th class="text-right">&nbsp</th>
+                        </tr>
                         </thead>
                         <tbody>
-                            @foreach (var item in Model.Items)
-                            {
-                                <tr data-guid="@item.Id" class="notification-row @(item.Seen? "seen" : "")">
-                                    <td class="only-for-js">
-                                        <input name="selectedItems" type="checkbox" class="selector" value="@item.Id" />
-                                    </td>
-                                    <td onclick="toggleRowCheckbox(this)" >
-                                        <span class="switchTimeFormat" data-switch="@item.Created.ToTimeAgo()">
-                                            @item.Created.ToBrowserDate()
-                                        </span>
-                                    </td>
-                                    <td onclick="toggleRowCheckbox(this)">
-                                        @item.Body
-                                    </td>
-                                    <td class="text-right font-weight-normal">
-                                        @if (!String.IsNullOrEmpty(item.ActionLink))
-                                        {
-                                            <a href="@item.ActionLink" class="btn btn-link p-0">Action</a> <span class="d-none d-md-inline-block"> - </span>
-                                        }
-                                        <button onclick="return rowseen(this)"  class="btn btn-link p-0 btn-toggle-seen" type="submit" name="command" value="flip-individual:@(item.Id)">
-                                            <span>Mark&nbsp;</span><span class="seen-text"></span>
-                                        </button>
-                                    </td>
-                                </tr>
-                            }
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr data-guid="@item.Id" class="notification-row @(item.Seen ? "seen" : "")">
+                                <td class="only-for-js">
+                                    <input name="selectedItems" type="checkbox" class="selector" value="@item.Id"/>
+                                </td>
+                                <td onclick="toggleRowCheckbox(this)">
+                                    <span class="switchTimeFormat" data-switch="@item.Created.ToTimeAgo()">
+                                        @item.Created.ToBrowserDate()
+                                    </span>
+                                </td>
+                                <td onclick="toggleRowCheckbox(this)">
+                                    @item.Body
+                                </td>
+                                <td class="text-right font-weight-normal">
+                                    @if (!String.IsNullOrEmpty(item.ActionLink))
+                                    {
+                                        <a href="@item.ActionLink" class="btn btn-link p-0">Action</a>
+                                        <span class="d-none d-md-inline-block"> - </span>
+                                    }
+                                    <button onclick="return rowseen(this)" class="btn btn-link p-0 btn-toggle-seen" type="submit" name="command" value="flip-individual:@(item.Id)">
+                                        <span>Mark&nbsp;</span><span class="seen-text"></span>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
                         </tbody>
                     </table>
 
                     <nav aria-label="..." class="w-100">
                         @if (Model.Total != 0)
                         {
-                           
                             <ul class="pagination float-left">
                                 <li class="page-item @(Model.Skip == 0 ? "disabled" : null)">
                                     <a class="page-link" tabindex="-1" href="@ListItemsPage(-1, Model.Count)">&laquo;</a>
@@ -179,7 +179,7 @@ tr.seen td {
     function rowseen(sender) {
         var row = $(sender).parents(".notification-row").toggleClass("loading");
         var guid =   row.data("guid");
-        var url = "@Url.Action("FlipRead", "Notifications", new { id ="placeholder"})".replace("placeholder", guid);
+        var url = "@Url.Action("FlipRead", "Notifications", new {id = "placeholder"})".replace("placeholder", guid);
         $.post(url, function (data) {
             row.toggleClass("seen loading");
         });

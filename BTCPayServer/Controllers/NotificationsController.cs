@@ -102,12 +102,13 @@ namespace BTCPayServer.Controllers
                 {
                     return RedirectToAction(nameof(Index));
                 }
+
                 return Redirect(vm.ActionLink);
             }
 
             return NotFound();
         }
-        
+
 
         [HttpPost]
         public async Task<IActionResult> MassAction(string command, string[] selectedItems)
@@ -116,11 +117,13 @@ namespace BTCPayServer.Controllers
             {
                 return NotFound();
             }
+
             if (command.StartsWith("flip-individual", StringComparison.InvariantCulture))
             {
                 var id = command.Split(":")[1];
                 return await FlipRead(id);
             }
+
             if (selectedItems != null)
             {
                 var items = _db.Notifications.Where(a => a.ApplicationUserId == userId && selectedItems.Contains(a.Id));
@@ -128,21 +131,24 @@ namespace BTCPayServer.Controllers
                 {
                     case "delete":
                         _db.Notifications.RemoveRange(items);
-                        
+
                         break;
                     case "mark-seen":
                         foreach (NotificationData notificationData in items)
                         {
                             notificationData.Seen = true;
                         }
+
                         break;
                     case "mark-unseen":
                         foreach (NotificationData notificationData in items)
                         {
                             notificationData.Seen = false;
                         }
+
                         break;
                 }
+
                 await _db.SaveChangesAsync();
                 _notificationManager.InvalidateNotificationCache(userId);
                 return RedirectToAction(nameof(Index));

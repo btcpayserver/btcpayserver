@@ -599,8 +599,6 @@ namespace BTCPayServer.Controllers
             var invoicesLastQuery = new Dictionary<string, string>
             {
                 { "SearchTerm", searchTerm },
-                { "Skip", skip.ToString(NumberFormatInfo.InvariantInfo) },
-                { "Count", count.ToString(NumberFormatInfo.InvariantInfo) },
                 { "TimezoneOffset", timezoneOffset.ToString(NumberFormatInfo.InvariantInfo) }
             };
             var invoicesQueryJson = invoicesLastQuery.ToJson();

@@ -10022,8 +10022,7 @@ strong {
 }
 
 .hide {
-    left: -100em;
-    position: absolute;
+    display: none;
 }
 
 /* Mobile styles start here
@@ -10213,6 +10212,10 @@ All mobile class names should be prefixed by m- */
 .top-header {
     max-height: 90px;
     transition: all .2s ease-out;
+}
+
+.top-header .close-icon {
+    color: #8f979e;
 }
 
 .exrate {

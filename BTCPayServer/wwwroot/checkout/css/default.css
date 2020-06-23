@@ -10214,6 +10214,10 @@ All mobile class names should be prefixed by m- */
     transition: all .2s ease-out;
 }
 
+.top-header .close-icon {
+    color: #8f979e;
+}
+
 .exrate {
     opacity: 1;
     transition: opacity .2s ease-out;

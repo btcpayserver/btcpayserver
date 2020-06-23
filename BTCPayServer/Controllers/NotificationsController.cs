@@ -66,7 +66,7 @@ namespace BTCPayServer.Controllers
 
 
         [HttpGet]
-        public async Task<IActionResult> SubscribeUpdates()
+        public async Task<IActionResult> SubscribeUpdates(CancellationToken cancellationToken)
         {
             if (!HttpContext.WebSockets.IsWebSocketRequest)
             {
@@ -86,9 +86,9 @@ namespace BTCPayServer.Controllers
                     }
                 });
                
-                while (!HttpContext.RequestAborted.IsCancellationRequested)
+                while (!cancellationToken.IsCancellationRequested)
                 {
-                    await Task.Delay(2000);
+                    await Task.Delay(2000, cancellationToken);
                 }
             }
             finally

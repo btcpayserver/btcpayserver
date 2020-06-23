@@ -6,10 +6,6 @@
 @inject BTCPayServer.Services.BTCPayServerEnvironment env
 @inject BTCPayServer.HostedServices.CssThemeManager themeManager
 
-@{
-    var invoicesLastQuery = Context.GetCookieValue("InvoicesLastQuery");
-    var invoicesRouteParams = JsonConvert.DeserializeObject<Dictionary<string, string>>(invoicesLastQuery);
-}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -78,7 +74,7 @@
                         <li class="nav-item"><a asp-area="" asp-controller="UserStores" asp-action="ListStores" class="nav-link js-scroll-trigger" id="Stores">Stores</a></li>
                         <li class="nav-item"><a asp-area="" asp-controller="Apps" asp-action="ListApps" class="nav-link js-scroll-trigger" id="Apps">Apps</a></li>
                         <li class="nav-item"><a asp-area="" asp-controller="Wallets" asp-action="ListWallets" class="nav-link js-scroll-trigger" id="Wallets">Wallets</a></li>
-                        <li class="nav-item"><a asp-area="" asp-controller="Invoice" asp-action="ListInvoices" asp-all-route-data="invoicesRouteParams" class="nav-link js-scroll-trigger" id="Invoices">Invoices</a></li>
+                        <li class="nav-item"><a asp-area="" asp-controller="Invoice" asp-action="ListInvoices" class="nav-link js-scroll-trigger" id="Invoices">Invoices</a></li>
                         <li class="nav-item"><a asp-area="" asp-controller="PaymentRequest" asp-action="GetPaymentRequests" class="nav-link js-scroll-trigger" id="PaymentRequests">Payment Requests</a></li>
                         <li class="nav-item">
                             <a asp-area="" asp-controller="Manage" asp-action="Index" title="My settings" class="nav-link js-scroll-trigger" id="MySettings"><i class="fa fa-user"></i></a>

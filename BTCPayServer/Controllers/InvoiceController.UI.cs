@@ -37,6 +37,8 @@ namespace BTCPayServer.Controllers
 {
     public partial class InvoiceController
     {
+        private static string _lastQueryCookieName = "InvoicesLastQuery";
+
         [HttpGet]
         [Route("invoices/{invoiceId}")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
@@ -583,8 +585,16 @@ namespace BTCPayServer.Controllers
         [Route("invoices")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [BitpayAPIConstraint(false)]
-        public async Task<IActionResult> ListInvoices(string searchTerm = null, int skip = 0, int count = 50, int timezoneOffset = 0)
+        public async Task<IActionResult> ListInvoices(string searchTerm = null, int skip = 0, int count = 50, int timezoneOffset = 0, bool unfiltered = false)
         {
+            if (!unfiltered)
+            {
+                var queryCookie = HttpContext.GetCookieValue(_lastQueryCookieName);
+                var queryCookieParams = JsonConvert.DeserializeObject<Dictionary<string, string>>(queryCookie);
+                if (searchTerm == null) searchTerm = queryCookieParams["searchTerm"];
+                if (timezoneOffset == 0) timezoneOffset = Int32.Parse(queryCookieParams["timezoneOffset"], NumberFormatInfo.InvariantInfo);
+            }
+
             var fs = new SearchString(searchTerm);
             var storeIds = fs.GetFilterArray("storeid") != null ? fs.GetFilterArray("storeid") : new List<string>().ToArray();
 
@@ -599,11 +609,11 @@ namespace BTCPayServer.Controllers
 
             var invoicesLastQuery = new Dictionary<string, string>
             {
-                { "SearchTerm", searchTerm },
-                { "TimezoneOffset", timezoneOffset.ToString(NumberFormatInfo.InvariantInfo) }
+                { "searchTerm", searchTerm },
+                { "timezoneOffset", timezoneOffset.ToString(NumberFormatInfo.InvariantInfo) }
             };
             var invoicesQueryJson = invoicesLastQuery.ToJson();
-            HttpContext.Response.Cookies.Append("InvoicesLastQuery", invoicesQueryJson);
+            HttpContext.Response.Cookies.Append(_lastQueryCookieName, invoicesQueryJson);
 
             InvoiceQuery invoiceQuery = GetInvoiceQuery(searchTerm, timezoneOffset);
             var counting = _InvoiceRepository.GetInvoicesTotal(invoiceQuery);
@@ -744,10 +754,7 @@ namespace BTCPayServer.Controllers
 
                 TempData[WellKnownTempData.SuccessMessage] = $"Invoice {result.Data.Id} just created!";
 
-                var lastQuery = HttpContext.GetCookieValue("InvoicesLastQuery");
-                var routeParams = JsonConvert.DeserializeObject<Dictionary<string, string>>(lastQuery);
-
-                return RedirectToAction(nameof(ListInvoices), routeParams);
+                return RedirectToAction(nameof(ListInvoices));
             }
             catch (BitpayHttpException ex)
             {

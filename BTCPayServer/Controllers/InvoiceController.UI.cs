@@ -605,7 +605,6 @@ namespace BTCPayServer.Controllers
                 { "TimezoneOffset", timezoneOffset.ToString(NumberFormatInfo.InvariantInfo) }
             };
             var invoicesQueryJson = invoicesLastQuery.ToJson();
-            ViewData["InvoicesLastQuery"] = invoicesQueryJson;
             HttpContext.Response.Cookies.Append("InvoicesLastQuery", invoicesQueryJson);
 
             InvoiceQuery invoiceQuery = GetInvoiceQuery(searchTerm, timezoneOffset);
@@ -747,7 +746,7 @@ namespace BTCPayServer.Controllers
 
                 TempData[WellKnownTempData.SuccessMessage] = $"Invoice {result.Data.Id} just created!";
 
-                var lastQuery = HttpContext.Request.Cookies["InvoicesLastQuery"] ?? "{}";
+                var lastQuery = HttpContext.GetCookieValue("InvoicesLastQuery");
                 var routeParams = JsonConvert.DeserializeObject<Dictionary<string, string>>(lastQuery);
 
                 return RedirectToAction(nameof(ListInvoices), routeParams);

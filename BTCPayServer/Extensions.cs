@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -10,6 +10,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using NBXplorer.DerivationStrategy;
+using System.Net;
+using System.Web;
 using BTCPayServer.Lightning;
 using BTCPayServer.Models;
 using BTCPayServer.Payments;
@@ -428,6 +432,40 @@ namespace BTCPayServer
         public static void SetStoresData(this HttpContext ctx, StoreData[] storeData)
         {
             ctx.Items["BTCPAY.STORESDATA"] = storeData;
+        }
+
+        private static JsonSerializerSettings jsonSettings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
+        public static string ToJson(this object o)
+        {
+            var res = JsonConvert.SerializeObject(o, Formatting.None, jsonSettings);
+            return res;
+        }
+        
+        public static string TrimEnd(this string input, string suffixToRemove,
+            StringComparison comparisonType) {
+
+            if (input != null && suffixToRemove != null
+                              && input.EndsWith(suffixToRemove, comparisonType)) {
+                return input.Substring(0, input.Length - suffixToRemove.Length);
+            }
+            else return input;
+        }
+
+        /// <summary>
+        /// Tries to look up the cookie value in the response, falling back to the request.
+        /// If the cookie cannot be found, it returns the optional default value.
+        /// </summary>
+        /// <param name="ctx"></param>
+        /// <param name="cookieName"></param>
+        /// <param name="defaultValue"></param>
+        /// <returns></returns>
+        public static string GetCookieValue(this HttpContext ctx, string cookieName, string defaultValue = "")
+        {
+            SetCookieHeaderValue responseCookie = null;
+            var cookieHeaders = ctx.Response.GetTypedHeaders().SetCookie;
+            if (cookieHeaders != null) responseCookie = cookieHeaders.FirstOrDefault(x => x.Name == cookieName);
+            if (responseCookie != null) return HttpUtility.UrlDecode(responseCookie.Value.Value);
+            return ctx.Request.Cookies[cookieName] ?? defaultValue;
         }
     }
 }

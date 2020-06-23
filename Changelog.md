@@ -49,6 +49,7 @@
 * Add Orderid to BitPay IPN format (@Kukks)
 * Require Owner role to the store for modifying store via Greenfield (@NicolasDorier)
 * Fix css styling classes (@woutersamaey)
+* Fix checkout high width resolution styling issues (@dennisreimann)
 ## 1.0.4.4:
 
 ### New Feature

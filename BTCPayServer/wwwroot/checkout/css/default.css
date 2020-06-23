@@ -10022,8 +10022,7 @@ strong {
 }
 
 .hide {
-    left: -100em;
-    position: absolute;
+    display: none;
 }
 
 /* Mobile styles start here

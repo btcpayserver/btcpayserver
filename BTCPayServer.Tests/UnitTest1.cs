@@ -85,7 +85,7 @@ namespace BTCPayServer.Tests
             var views = Path.Combine(TestUtils.TryGetSolutionDirectoryInfo().FullName, "BTCPayServer", "Views");
             var viewFiles = Directory.EnumerateFiles(views, "*.cshtml", SearchOption.AllDirectories).ToArray();
             Assert.NotEmpty(viewFiles);
-            Regex regex = new Regex("href=\"(http.*?)[\"#]");
+            Regex regex = new Regex("href=\"(http.*?)\"");
             var httpClient = new HttpClient();
             List<Task> checkLinks = new List<Task>();
             foreach (var file in viewFiles)
@@ -155,15 +155,32 @@ namespace BTCPayServer.Tests
 
         private static async Task AssertLinkNotDead(HttpClient httpClient, string url, string file)
         {
+            var uri = new Uri(url);
+
             try
             {
-                using var request = new HttpRequestMessage(HttpMethod.Get, new Uri(url));
+                using var request = new HttpRequestMessage(HttpMethod.Get, uri);
                 request.Headers.TryAddWithoutValidation("Accept",
                     "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
                 request.Headers.TryAddWithoutValidation("User-Agent",
                     "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:75.0) Gecko/20100101 Firefox/75.0");
-                Assert.Equal(HttpStatusCode.OK, (await httpClient.SendAsync(request)).StatusCode);
+                var response = await httpClient.SendAsync(request);
+                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+                if (uri.Fragment.Length != 0)
+                {
+                    var fragment = uri.Fragment.Substring(1);
+                    var contents = await response.Content.ReadAsStringAsync();
+                    Assert.Matches($"id=\"{fragment}\"", contents);
+                }
+
                 Logs.Tester.LogInformation($"OK: {url} ({file})");
+            }
+            catch (Exception ex) when (ex is MatchesException)
+            {
+                var details = ex.Message;
+                Logs.Tester.LogInformation($"FAILED: {url} ({file}) – anchor not found: {uri.Fragment}");
+
+                throw;
             }
             catch (Exception ex)
             {

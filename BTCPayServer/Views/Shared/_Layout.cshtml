@@ -7,7 +7,7 @@
 @inject BTCPayServer.HostedServices.CssThemeManager themeManager
 
 @{
-    var invoicesLastQuery = (string)ViewData["InvoicesLastQuery"] ?? Context.Request.Cookies["InvoicesLastQuery"] ?? "{}";
+    var invoicesLastQuery = Context.GetCookieValue("InvoicesLastQuery");
     var invoicesRouteParams = JsonConvert.DeserializeObject<Dictionary<string, string>>(invoicesLastQuery);
 }
 <!DOCTYPE html>

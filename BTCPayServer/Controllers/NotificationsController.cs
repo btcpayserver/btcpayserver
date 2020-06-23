@@ -1,18 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
-using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
-using BTCPayServer.HostedServices;
 using BTCPayServer.Models.NotificationViewModels;
 using BTCPayServer.Security;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
-using Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -21,6 +16,7 @@ namespace BTCPayServer.Controllers
 {
     [BitpayAPIConstraint(false)]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Route("[controller]/[action]")]
     public class NotificationsController : Controller
     {
         private readonly BTCPayServerEnvironment _env;
@@ -58,7 +54,7 @@ namespace BTCPayServer.Controllers
                     .Where(a => a.ApplicationUserId == userId)
                     .Select(a => _notificationManager.ToViewModel(a))
                     .ToList(),
-                Total = _db.Notifications.Where(a => a.ApplicationUserId == userId).Count()
+                Total = _db.Notifications.Count(a => a.ApplicationUserId == userId)
             };
 
             return View(model);
@@ -81,24 +77,81 @@ namespace BTCPayServer.Controllers
                 var notif = _db.Notifications.Single(a => a.Id == id && a.ApplicationUserId == userId);
                 notif.Seen = !notif.Seen;
                 await _db.SaveChangesAsync();
+                _notificationManager.InvalidateNotificationCache(userId);
+                return RedirectToAction(nameof(Index));
             }
 
-            return RedirectToAction(nameof(Index));
+            return BadRequest();
         }
+
+        [HttpGet]
+        public async Task<IActionResult> NotificationPassThrough(string id)
+        {
+            if (ValidUserClaim(out var userId))
+            {
+                var notif = _db.Notifications.Single(a => a.Id == id && a.ApplicationUserId == userId);
+                if (!notif.Seen)
+                {
+                    notif.Seen = !notif.Seen;
+                    await _db.SaveChangesAsync();
+                    _notificationManager.InvalidateNotificationCache(userId);
+                }
+
+                var vm = _notificationManager.ToViewModel(notif);
+                if (string.IsNullOrEmpty(vm.ActionLink))
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+
+                return Redirect(vm.ActionLink);
+            }
+
+            return NotFound();
+        }
+
 
         [HttpPost]
         public async Task<IActionResult> MassAction(string command, string[] selectedItems)
         {
+            if (!ValidUserClaim(out var userId))
+            {
+                return NotFound();
+            }
+
+            if (command.StartsWith("flip-individual", StringComparison.InvariantCulture))
+            {
+                var id = command.Split(":")[1];
+                return await FlipRead(id);
+            }
+
             if (selectedItems != null)
             {
-                if (command == "delete" && ValidUserClaim(out var userId))
+                var items = _db.Notifications.Where(a => a.ApplicationUserId == userId && selectedItems.Contains(a.Id));
+                switch (command)
                 {
-                    var toRemove = _db.Notifications.Where(a => a.ApplicationUserId == userId && selectedItems.Contains(a.Id));
-                    _db.Notifications.RemoveRange(toRemove);
-                    await _db.SaveChangesAsync();
+                    case "delete":
+                        _db.Notifications.RemoveRange(items);
 
-                    return RedirectToAction(nameof(Index));
+                        break;
+                    case "mark-seen":
+                        foreach (NotificationData notificationData in items)
+                        {
+                            notificationData.Seen = true;
+                        }
+
+                        break;
+                    case "mark-unseen":
+                        foreach (NotificationData notificationData in items)
+                        {
+                            notificationData.Seen = false;
+                        }
+
+                        break;
                 }
+
+                await _db.SaveChangesAsync();
+                _notificationManager.InvalidateNotificationCache(userId);
+                return RedirectToAction(nameof(Index));
             }
 
             return RedirectToAction(nameof(Index));

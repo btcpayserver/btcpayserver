@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
@@ -14,6 +15,22 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Controllers
 {
+    
+    public class NotificationsDropdown : ViewComponent  
+    {
+        private readonly NotificationManager _notificationManager;
+
+        public NotificationsDropdown(NotificationManager notificationManager)
+        {
+            _notificationManager = notificationManager;
+        }
+        
+        public async Task<IViewComponentResult> InvokeAsync(int noOfEmployee)  
+        {
+            return View(await _notificationManager.GetSummaryNotifications(UserClaimsPrincipal));  
+        }  
+    } 
+    
     [BitpayAPIConstraint(false)]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [Route("[controller]/[action]")]
@@ -24,18 +41,63 @@ namespace BTCPayServer.Controllers
         private readonly NotificationSender _notificationSender;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly NotificationManager _notificationManager;
+        private readonly EventAggregator _eventAggregator;
 
         public NotificationsController(BTCPayServerEnvironment env,
             ApplicationDbContext db,
             NotificationSender notificationSender,
             UserManager<ApplicationUser> userManager,
-            NotificationManager notificationManager)
+            NotificationManager notificationManager, 
+            EventAggregator eventAggregator)
         {
             _env = env;
             _db = db;
             _notificationSender = notificationSender;
             _userManager = userManager;
             _notificationManager = notificationManager;
+            _eventAggregator = eventAggregator;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetNotificationDropdownUI()
+        {
+            return ViewComponent("NotificationsDropdown");
+        }
+
+
+        [HttpGet]
+        public async Task<IActionResult> SubscribeUpdates()
+        {
+            if (!HttpContext.WebSockets.IsWebSocketRequest)
+            {
+                return BadRequest();
+            }
+            var websocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+            var userId = _userManager.GetUserId(User);
+            var websocketHelper = new WebSocketHelper(websocket);
+            IEventAggregatorSubscription subscription = null;
+            try
+            {
+                subscription =  _eventAggregator.Subscribe<UserNotificationsUpdatedEvent>(async evt =>
+                {
+                    if (evt.UserId == userId)
+                    {
+                        await websocketHelper.Send("update");
+                    }
+                });
+               
+                while (!HttpContext.RequestAborted.IsCancellationRequested)
+                {
+                    await Task.Delay(2000);
+                }
+            }
+            finally
+            {
+                subscription?.Dispose();
+                await websocketHelper.DisposeAsync(CancellationToken.None);
+            }
+            
+            return new EmptyResult();
         }
 
         [HttpGet]

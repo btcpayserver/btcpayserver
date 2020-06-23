@@ -20,15 +20,17 @@ namespace BTCPayServer.Services.Notifications
         private readonly ApplicationDbContextFactory _factory;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IMemoryCache _memoryCache;
+        private readonly EventAggregator _eventAggregator;
         private readonly Dictionary<string, INotificationHandler> _handlersByNotificationType;
         private readonly Dictionary<Type, INotificationHandler> _handlersByBlobType;
 
         public NotificationManager(ApplicationDbContextFactory factory, UserManager<ApplicationUser> userManager,
-            IMemoryCache memoryCache, IEnumerable<INotificationHandler> handlers)
+            IMemoryCache memoryCache, IEnumerable<INotificationHandler> handlers, EventAggregator eventAggregator)
         {
             _factory = factory;
             _userManager = userManager;
             _memoryCache = memoryCache;
+            _eventAggregator = eventAggregator;
             _handlersByNotificationType = handlers.ToDictionary(h => h.NotificationType);
             _handlersByBlobType = handlers.ToDictionary(h => h.NotificationBlobType);
         }
@@ -52,6 +54,8 @@ namespace BTCPayServer.Services.Notifications
         public void InvalidateNotificationCache(string userId)
         {
             _memoryCache.Remove(GetNotificationsCacheId(userId));
+            
+            _eventAggregator.Publish(new UserNotificationsUpdatedEvent() {UserId = userId});
         }
 
         private static string GetNotificationsCacheId(string userId)

@@ -37,7 +37,10 @@ namespace BTCPayServer.Services.Notifications.Blobs
                 NotificationViewModel vm)
             {
                 var baseStr = $"Invoice {notification.InvoiceId.Substring(0, 5)}..";
-                vm.Body = $"{baseStr} {TextMapping[notification.Event]}";
+                if (TextMapping.ContainsKey(notification.Event))
+                {
+                    vm.Body = $"{baseStr} {TextMapping[notification.Event]}";
+                }
                 vm.ActionLink = _linkGenerator.GetPathByAction(nameof(InvoiceController.Invoice),
                     "Invoice",
                     new {invoiceId = notification.InvoiceId}, _options.RootPath);

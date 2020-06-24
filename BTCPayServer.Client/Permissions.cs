@@ -19,6 +19,7 @@ namespace BTCPayServer.Client
         public const string CanModifyProfile = "btcpay.user.canmodifyprofile";
         public const string CanViewProfile = "btcpay.user.canviewprofile";
         public const string CanCreateUser = "btcpay.server.cancreateuser";
+        public const string CanManagePullPayments = "btcpay.store.canmanagepullpayments";
         public const string Unrestricted = "unrestricted";
         public static IEnumerable<string> AllPolicies
         {
@@ -38,6 +39,7 @@ namespace BTCPayServer.Client
                 yield return CanCreateLightningInvoiceInternalNode;
                 yield return CanUseLightningNodeInStore;
                 yield return CanCreateLightningInvoiceInStore;
+                yield return CanManagePullPayments;
             }
         }
         public static bool IsValidPolicy(string policy)
@@ -53,7 +55,6 @@ namespace BTCPayServer.Client
         {
             return policy.StartsWith("btcpay.store.canmodify", StringComparison.OrdinalIgnoreCase);
         }
-
         public static bool IsServerPolicy(string policy)
         {
             return policy.StartsWith("btcpay.server", StringComparison.OrdinalIgnoreCase);

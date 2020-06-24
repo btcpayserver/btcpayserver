@@ -48,11 +48,17 @@ using BTCPayServer.Security.GreenField;
 using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Hosting
 {
     public static class BTCPayServerServices
     {
+        public static IServiceCollection RegisterJsonConverter(this IServiceCollection services, Func<BTCPayNetwork, JsonConverter> create)
+        {
+            services.AddSingleton<IJsonConverterRegistration, JsonConverterRegistration>((s) => new JsonConverterRegistration(create));
+            return services;
+        }
         public static IServiceCollection AddBTCPayServer(this IServiceCollection services, IConfiguration configuration)
         {
 			services.AddSingleton<MvcNewtonsoftJsonOptions>(o =>  o.GetRequiredService<IOptions<MvcNewtonsoftJsonOptions>>().Value);
@@ -66,6 +72,10 @@ namespace BTCPayServer.Hosting
             {
                 httpClient.Timeout = Timeout.InfiniteTimeSpan;
             });
+
+            services.AddSingleton<BTCPayNetworkJsonSerializerSettings>();
+            services.RegisterJsonConverter(n => new ClaimDestinationJsonConverter(n));
+
             services.AddPayJoinServices();
             services.AddMoneroLike();
             services.TryAddSingleton<SettingsRepository>();
@@ -189,7 +199,10 @@ namespace BTCPayServer.Hosting
 
             services.AddSingleton<HostedServices.CheckConfigurationHostedService>();
             services.AddSingleton<IHostedService, HostedServices.CheckConfigurationHostedService>(o => o.GetRequiredService<CheckConfigurationHostedService>());
-            
+
+            services.AddSingleton<HostedServices.PullPaymentHostedService>();
+            services.AddSingleton<IHostedService, HostedServices.PullPaymentHostedService>(o => o.GetRequiredService<PullPaymentHostedService>());
+
             services.AddSingleton<BitcoinLikePaymentHandler>();
             services.AddSingleton<IPaymentMethodHandler>(provider => provider.GetService<BitcoinLikePaymentHandler>());
             services.AddSingleton<IHostedService, NBXplorerListener>();
@@ -223,6 +236,7 @@ namespace BTCPayServer.Hosting
             services.AddScoped<IAuthorizationHandler, BitpayAuthorizationHandler>();
             services.AddSingleton<INotificationHandler, NewVersionNotification.Handler>();
             services.AddSingleton<INotificationHandler, InvoiceEventNotification.Handler>();
+            services.AddSingleton<INotificationHandler, PayoutNotification.Handler>();
 
             services.TryAddSingleton<ExplorerClientProvider>();
             services.TryAddSingleton<Bitpay>(o =>

@@ -53,6 +53,9 @@ namespace BTCPayServer.Controllers
         private readonly DelayedTransactionBroadcaster _broadcaster;
         private readonly PayjoinClient _payjoinClient;
         private readonly LabelFactory _labelFactory;
+        private readonly ApplicationDbContextFactory _dbContextFactory;
+        private readonly BTCPayNetworkJsonSerializerSettings _jsonSerializerSettings;
+        private readonly PullPaymentHostedService _pullPaymentService;
 
         public RateFetcher RateFetcher { get; }
 
@@ -74,7 +77,10 @@ namespace BTCPayServer.Controllers
                                  SettingsRepository settingsRepository,
                                  DelayedTransactionBroadcaster broadcaster,
                                  PayjoinClient payjoinClient,
-                                 LabelFactory labelFactory)
+                                 LabelFactory labelFactory,
+                                 ApplicationDbContextFactory dbContextFactory,
+                                 BTCPayNetworkJsonSerializerSettings jsonSerializerSettings,
+                                 HostedServices.PullPaymentHostedService pullPaymentService)
         {
             _currencyTable = currencyTable;
             Repository = repo;
@@ -94,6 +100,9 @@ namespace BTCPayServer.Controllers
             _broadcaster = broadcaster;
             _payjoinClient = payjoinClient;
             _labelFactory = labelFactory;
+            _dbContextFactory = dbContextFactory;
+            _jsonSerializerSettings = jsonSerializerSettings;
+            _pullPaymentService = pullPaymentService;
         }
 
         // Borrowed from https://github.com/ManageIQ/guides/blob/master/labels.md

@@ -19,6 +19,7 @@ using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Tests.Logging;
 using BTCPayServer.Views.Wallets;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
@@ -644,7 +645,7 @@ namespace BTCPayServer.Tests
                             Assert.Equal("paid", invoice.Status);
                         });
                     }
-                    
+
                     psbt.Finalize();
                     var broadcasted = await tester.PayTester.GetService<ExplorerClientProvider>().GetExplorerClient("BTC").BroadcastAsync(psbt.ExtractTransaction(), true);
                     if (vector.OriginalTxBroadcasted)
@@ -706,12 +707,12 @@ namespace BTCPayServer.Tests
                 await RunVector(true);
 
                 var originalSenderUser = senderUser;
-                retry:
-                // Additional fee is 96 , minrelaytx is 294
-                // We pay correctly, fees partially taken from what is overpaid
-                // We paid 510, the receiver pay 10 sat
-                // The send pay remaining 86 sat from his pocket
-                // So total paid by sender should be 86 + 510 + 200 so we should get 1090 - (86 + 510 + 200) == 294 back)
+retry:
+// Additional fee is 96 , minrelaytx is 294
+// We pay correctly, fees partially taken from what is overpaid
+// We paid 510, the receiver pay 10 sat
+// The send pay remaining 86 sat from his pocket
+// So total paid by sender should be 86 + 510 + 200 so we should get 1090 - (86 + 510 + 200) == 294 back)
                 Logs.Tester.LogInformation($"Check if we can take fee on overpaid utxo{(senderUser == receiverUser ? " (to self)" : "")}");
                 vector = (SpentCoin: Money.Satoshis(1090), InvoiceAmount: Money.Satoshis(500), Paid: Money.Satoshis(510), Fee: Money.Satoshis(200), InvoicePaid: true, ExpectedError: null as string, OriginalTxBroadcasted: false);
                 proposedPSBT = await RunVector();

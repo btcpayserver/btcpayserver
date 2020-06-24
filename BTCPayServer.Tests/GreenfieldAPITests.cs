@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection.Metadata;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
@@ -205,6 +206,198 @@ namespace BTCPayServer.Tests
                         Email = "admin8@gmail.com", Password = "afewfoiewiou", IsAdministrator = true
                     }));
             }
+        }
+
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public async Task CanUsePullPaymentViaAPI()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                await tester.StartAsync();
+                var acc = tester.NewAccount();
+                acc.Register();
+                acc.CreateStore();
+                var storeId = (await acc.RegisterDerivationSchemeAsync("BTC", importKeysToNBX: true)).StoreId;
+                var client = await acc.CreateClient();
+                var result = await client.CreatePullPayment(storeId, new Client.Models.CreatePullPaymentRequest()
+                {
+                    Name = "Test",
+                    Amount = 12.3m,
+                    Currency = "BTC",
+                    PaymentMethods = new[] { "BTC" }
+                });
+
+                void VerifyResult()
+                {
+                    Assert.Equal("Test", result.Name);
+                    Assert.Null(result.Period);
+                    // If it contains ? it means that we are resolving an unknown route with the link generator
+                    Assert.DoesNotContain("?", result.ViewLink);
+                    Assert.False(result.Archived);
+                    Assert.Equal("BTC", result.Currency);
+                    Assert.Equal(12.3m, result.Amount);
+                }
+                VerifyResult();
+
+                var unauthenticated = new BTCPayServerClient(tester.PayTester.ServerUri);
+                result = await unauthenticated.GetPullPayment(result.Id);
+                VerifyResult();
+                await AssertHttpError(404, async () => await unauthenticated.GetPullPayment("lol"));
+                // Can't list pull payments unauthenticated
+                await AssertHttpError(401, async () => await unauthenticated.GetPullPayments(storeId));
+
+                var pullPayments = await client.GetPullPayments(storeId);
+                result = Assert.Single(pullPayments);
+                VerifyResult();
+
+                Thread.Sleep(1000);
+                var test2 = await client.CreatePullPayment(storeId, new Client.Models.CreatePullPaymentRequest()
+                {
+                    Name = "Test 2",
+                    Amount = 12.3m,
+                    Currency = "BTC",
+                    PaymentMethods = new[] { "BTC" }
+                });
+
+                Logs.Tester.LogInformation("Can't archive without knowing the walletId");
+                await Assert.ThrowsAsync<HttpRequestException>(async () => await client.ArchivePullPayment("lol", result.Id));
+                Logs.Tester.LogInformation("Can't archive without permission");
+                await Assert.ThrowsAsync<HttpRequestException>(async () => await unauthenticated.ArchivePullPayment(storeId, result.Id));
+                await client.ArchivePullPayment(storeId, result.Id);
+                result = await unauthenticated.GetPullPayment(result.Id);
+                Assert.True(result.Archived);
+                var pps = await client.GetPullPayments(storeId);
+                result = Assert.Single(pps);
+                Assert.Equal("Test 2", result.Name);
+                pps = await client.GetPullPayments(storeId, true);
+                Assert.Equal(2, pps.Length);
+                Assert.Equal("Test 2", pps[0].Name);
+                Assert.Equal("Test", pps[1].Name);
+
+                var payouts = await unauthenticated.GetPayouts(pps[0].Id);
+                Assert.Empty(payouts);
+
+                var destination = (await tester.ExplorerNode.GetNewAddressAsync()).ToString();
+                await this.AssertAPIError("overdraft", async () => await unauthenticated.CreatePayout(pps[0].Id, new CreatePayoutRequest()
+                {
+                    Destination = destination,
+                    Amount = 1_000_000m,
+                    PaymentMethod = "BTC",
+                }));
+
+                await this.AssertAPIError("archived", async () => await unauthenticated.CreatePayout(pps[1].Id, new CreatePayoutRequest()
+                {
+                    Destination = destination,
+                    PaymentMethod = "BTC"
+                }));
+
+                var payout = await unauthenticated.CreatePayout(pps[0].Id, new CreatePayoutRequest()
+                {
+                    Destination = destination,
+                    PaymentMethod = "BTC"
+                });
+
+                payouts = await unauthenticated.GetPayouts(pps[0].Id);
+                var payout2 = Assert.Single(payouts);
+                Assert.Equal(payout.Amount, payout2.Amount);
+                Assert.Equal(payout.Id, payout2.Id);
+                Assert.Equal(destination, payout2.Destination);
+                Assert.Equal(PayoutState.AwaitingPayment, payout.State);
+
+
+                Logs.Tester.LogInformation("Can't overdraft");
+                await this.AssertAPIError("overdraft", async () => await unauthenticated.CreatePayout(pps[0].Id, new CreatePayoutRequest()
+                {
+                    Destination = destination,
+                    Amount = 0.00001m,
+                    PaymentMethod = "BTC"
+                }));
+
+                Logs.Tester.LogInformation("Can't create too low payout");
+                await this.AssertAPIError("amount-too-low", async () => await unauthenticated.CreatePayout(pps[0].Id, new CreatePayoutRequest()
+                {
+                    Destination = destination,
+                    PaymentMethod = "BTC"
+                }));
+
+                Logs.Tester.LogInformation("Can archive payout");
+                await client.CancelPayout(storeId, payout.Id);
+                payouts = await unauthenticated.GetPayouts(pps[0].Id);
+                Assert.Empty(payouts);
+
+                payouts = await client.GetPayouts(pps[0].Id, true);
+                payout = Assert.Single(payouts);
+                Assert.Equal(PayoutState.Cancelled, payout.State);
+
+                Logs.Tester.LogInformation("Can't create too low payout (below dust)");
+                await this.AssertAPIError("amount-too-low", async () => await unauthenticated.CreatePayout(pps[0].Id, new CreatePayoutRequest()
+                {
+                    Amount = Money.Satoshis(100).ToDecimal(MoneyUnit.BTC),
+                    Destination = destination,
+                    PaymentMethod = "BTC"
+                }));
+
+                Logs.Tester.LogInformation("Can create payout after cancelling");
+                await unauthenticated.CreatePayout(pps[0].Id, new CreatePayoutRequest()
+                {
+                    Destination = destination,
+                    PaymentMethod = "BTC"
+                });
+
+                var start = RoundSeconds(DateTimeOffset.Now + TimeSpan.FromDays(7.0));
+                var inFuture = await client.CreatePullPayment(storeId, new Client.Models.CreatePullPaymentRequest()
+                {
+                    Name = "Starts in the future",
+                    Amount = 12.3m,
+                    StartsAt = start,
+                    Currency = "BTC",
+                    PaymentMethods = new[] { "BTC" }
+                });
+                Assert.Equal(start, inFuture.StartsAt);
+                Assert.Null(inFuture.ExpiresAt);
+                await this.AssertAPIError("not-started", async () => await unauthenticated.CreatePayout(inFuture.Id, new CreatePayoutRequest()
+                {
+                    Amount = 1.0m,
+                    Destination = destination,
+                    PaymentMethod = "BTC"
+                }));
+
+                var expires = RoundSeconds(DateTimeOffset.Now - TimeSpan.FromDays(7.0));
+                var inPast = await client.CreatePullPayment(storeId, new Client.Models.CreatePullPaymentRequest()
+                {
+                    Name = "Will expires",
+                    Amount = 12.3m,
+                    ExpiresAt = expires,
+                    Currency = "BTC",
+                    PaymentMethods = new[] { "BTC" }
+                });
+                await this.AssertAPIError("expired", async () => await unauthenticated.CreatePayout(inPast.Id, new CreatePayoutRequest()
+                {
+                    Amount = 1.0m,
+                    Destination = destination,
+                    PaymentMethod = "BTC"
+                }));
+
+                await this.AssertValidationError(new[] { "ExpiresAt" }, async () => await client.CreatePullPayment(storeId, new Client.Models.CreatePullPaymentRequest()
+                {
+                    Name = "Test 2",
+                    Amount = 12.3m,
+                    StartsAt = DateTimeOffset.UtcNow,
+                    ExpiresAt = DateTimeOffset.UtcNow - TimeSpan.FromDays(1)
+                }));
+            }
+        }
+
+        private DateTimeOffset RoundSeconds(DateTimeOffset dateTimeOffset)
+        {
+            return new DateTimeOffset(dateTimeOffset.Year, dateTimeOffset.Month, dateTimeOffset.Day, dateTimeOffset.Hour, dateTimeOffset.Minute, dateTimeOffset.Second, dateTimeOffset.Offset);
+        }
+
+        private async Task AssertAPIError(string expectedError, Func<Task> act)
+        {
+            var err = await Assert.ThrowsAsync<GreenFieldAPIException>(async () => await act());
+            Assert.Equal(expectedError, err.APIError.Code);
         }
 
         [Fact(Timeout = TestTimeout)]

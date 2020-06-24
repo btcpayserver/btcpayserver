@@ -38,7 +38,7 @@ namespace BTCPayServer.Client.JsonConverters
         {
             if (value is TimeSpan s)
             {
-                writer.WriteValue((int)s.TotalSeconds);
+                writer.WriteValue((long)s.TotalSeconds);
             }
         }
     }

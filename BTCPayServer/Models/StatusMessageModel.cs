@@ -9,7 +9,6 @@ namespace BTCPayServer.Models
         public StatusMessageModel()
         {
         }
-
         public string Message { get; set; }
         public string Html { get; set; }
         public StatusSeverity Severity { get; set; }

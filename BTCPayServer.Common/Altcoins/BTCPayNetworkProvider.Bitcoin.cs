@@ -31,13 +31,13 @@ namespace BTCPayServer
                     {
                         {0x0488b21eU, DerivationType.Legacy }, // xpub
                         {0x049d7cb2U, DerivationType.SegwitP2SH }, // ypub
-                        {0x4b24746U, DerivationType.Segwit }, //zpub
+                        {0x04b24746U, DerivationType.Segwit }, //zpub
                     }
                     : new Dictionary<uint, DerivationType>()
                     {
-                        {0x043587cfU, DerivationType.Legacy},
-                        {0x044a5262U, DerivationType.SegwitP2SH},
-                        {0x045f1cf6U, DerivationType.Segwit}
+                        {0x043587cfU, DerivationType.Legacy}, // tpub
+                        {0x044a5262U, DerivationType.SegwitP2SH}, // upub
+                        {0x045f1cf6U, DerivationType.Segwit} // vpub
                     }
             });
         }

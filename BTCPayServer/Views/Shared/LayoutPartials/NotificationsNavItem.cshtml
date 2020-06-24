@@ -1,35 +1,27 @@
-﻿@inject BTCPayServer.Services.Notifications.NotificationManager notificationManager
+﻿<div></div>
+@await Component.InvokeAsync("NotificationsDropdown")
+<script>
 
-@{
-    var notificationModel = await notificationManager.GetSummaryNotifications(User);
+var supportsWebSockets = 'WebSocket' in window && window.WebSocket.CLOSING === 2;
+
+if (supportsWebSockets) {
+    var ws_uri = "@Url.Action("SubscribeUpdates", "Notifications", new {}, Context.Request.Scheme)".replace("http", "ws");
+    var newDataEndpoint = "@Url.Action("GetNotificationDropdownUI", "Notifications", new {}, Context.Request.Scheme)";
+
+    try {
+        socket = new WebSocket(ws_uri);
+        socket.onmessage = function (e) {
+            $.get(newDataEndpoint, function(data){
+                $("#notifications-nav-item").replaceWith($(data));
+           });
+        };
+        socket.onerror = function (e) {
+            console.error("Error while connecting to websocket for notifications (callback)", e);
+        };
+    }
+    catch (e) {
+        console.error("Error while connecting to websocket for notifications", e);
+    }
 }
 
-@if (notificationModel.UnseenCount > 0)
-{
-    <li class="nav-item dropdown">
-        <a class="nav-link js-scroll-trigger" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" id="Notifications">
-            <i class="fa fa-bell"></i>
-        </a>
-        <span class="alerts-badge badge badge-pill badge-danger">@notificationModel.UnseenCount</span>
-        <div class="dropdown-menu dropdown-menu-right text-center" aria-labelledby="navbarDropdown">
-            @foreach (var notif in notificationModel.Last5)
-            {
-                <a asp-action="NotificationPassThrough" asp-controller="Notifications"  asp-route-id="@notif.Id" class="dropdown-item border-bottom">
-                    <div class="text-left" style="width: 200px; white-space:normal;">
-                        @notif.Body
-                    </div>
-                    <div class="text-left">
-                        <small class="text-muted">@notif.Created.ToTimeAgo()</small>
-                    </div>
-                </a>
-            }
-            <a class="dropdown-item text-info" asp-controller="Notifications" asp-action="Index">See All</a>
-        </div>
-    </li>
-}
-else
-{
-    <li class="nav-item">
-        <a asp-controller="Notifications" asp-action="Index" title="Notifications" class="nav-link js-scroll-trigger" id="Notifications"><i class="fa fa-bell"></i></a>
-    </li>
-}
+</script>

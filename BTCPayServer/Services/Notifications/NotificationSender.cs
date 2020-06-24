@@ -1,28 +1,26 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
-using BTCPayServer.Events;
-using BTCPayServer.Services.Notifications.Blobs;
 using Microsoft.AspNetCore.Identity;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.Services.Notifications
 {
+    public class UserNotificationsUpdatedEvent
+    {
+        public string UserId { get; set; }
+    }
     public class NotificationSender
     {
         private readonly ApplicationDbContextFactory _contextFactory;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly EventAggregator _eventAggregator;
         private readonly NotificationManager _notificationManager;
 
-        public NotificationSender(ApplicationDbContextFactory contextFactory, UserManager<ApplicationUser> userManager, EventAggregator eventAggregator, NotificationManager notificationManager)
+        public NotificationSender(ApplicationDbContextFactory contextFactory, UserManager<ApplicationUser> userManager,NotificationManager notificationManager)
         {
             _contextFactory = contextFactory;
             _userManager = userManager;
-            _eventAggregator = eventAggregator;
             _notificationManager = notificationManager;
         }
 

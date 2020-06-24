@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Globalization;
 using System.Linq;
 using System.Net.Mime;
@@ -20,13 +21,18 @@ using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Invoices.Export;
+using DBriize.Utils;
+using Google.Cloud.Storage.V1;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitpayClient;
 using NBXplorer;
 using Newtonsoft.Json.Linq;
+using TwentyTwenty.Storage;
 using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers
@@ -75,9 +81,9 @@ namespace BTCPayServer.Controllers
                 StatusException = invoice.ExceptionStatus,
                 Events = invoice.Events,
                 PosData = PosDataParser.ParsePosData(invoice.PosData),
-                Archived = invoice.Archived
+                Archived = invoice.Archived,
+                CanRefund = CanRefund(invoice.GetInvoiceState()),
             };
-
             model.Addresses = invoice.HistoricalAddresses.Select(h =>
                 new InvoiceDetailsModel.AddressModel
                 {
@@ -92,6 +98,153 @@ namespace BTCPayServer.Controllers
 
             return View(model);
         }
+
+        bool CanRefund(InvoiceState invoiceState)
+        {
+            return invoiceState.Status == InvoiceStatus.Confirmed ||
+                invoiceState.Status == InvoiceStatus.Complete ||
+                ((invoiceState.Status == InvoiceStatus.Expired || invoiceState.Status == InvoiceStatus.Invalid) && 
+                (invoiceState.ExceptionStatus == InvoiceExceptionStatus.PaidLate ||
+                invoiceState.ExceptionStatus == InvoiceExceptionStatus.PaidOver ||
+                invoiceState.ExceptionStatus == InvoiceExceptionStatus.PaidPartial));
+        }
+
+        [HttpGet]
+        [Route("invoices/{invoiceId}/refund")]
+        [AllowAnonymous]
+        public async Task<IActionResult> Refund(string invoiceId, CancellationToken cancellationToken)
+        {
+            using var ctx = _dbContextFactory.CreateContext();
+            ctx.ChangeTracker.QueryTrackingBehavior = Microsoft.EntityFrameworkCore.QueryTrackingBehavior.NoTracking;
+            var invoice = await ctx.Invoices.Include(i => i.Payments)
+                                            .Include(i => i.CurrentRefund)
+                                            .Include(i => i.CurrentRefund.PullPaymentData)
+                                            .Where(i => i.Id == invoiceId)
+                                            .FirstOrDefaultAsync();
+            if (invoice is null)
+                return NotFound();
+            if (invoice.CurrentRefund?.PullPaymentDataId is null && GetUserId() is null)
+                return NotFound();
+            if (!CanRefund(invoice.GetInvoiceState()))
+                return NotFound();
+            if (invoice.CurrentRefund?.PullPaymentDataId is string ppId && !invoice.CurrentRefund.PullPaymentData.Archived)
+            {
+                // TODO: Having dedicated UI later on
+                return RedirectToAction(nameof(PullPaymentController.ViewPullPayment),
+                                "PullPayment",
+                                new { pullPaymentId = ppId });
+            }
+            else
+            {
+                var paymentMethods = invoice.GetBlob(_NetworkProvider).GetPaymentMethods();
+                var options = invoice.GetBlob(_NetworkProvider).GetPaymentMethods()
+                    .Select(o => o.GetId())
+                    .Select(o => o.CryptoCode)
+                    .Where(o => _NetworkProvider.GetNetwork<BTCPayNetwork>(o) is BTCPayNetwork n && !n.ReadonlyWallet)
+                    .Distinct()
+                    .OrderBy(o => o)
+                    .Select(o => new PaymentMethodId(o, PaymentTypes.BTCLike))
+                    .ToList();
+                var defaultRefund = invoice.Payments.Select(p => p.GetBlob(_NetworkProvider))
+                                                .Select(p => p.GetPaymentMethodId().CryptoCode)
+                                                .FirstOrDefault();
+                // TODO: What if no option?
+                var refund = new RefundModel();
+                refund.Title = "Select a payment method";
+                refund.AvailablePaymentMethods = new SelectList(options, nameof(PaymentMethodId.CryptoCode), nameof(PaymentMethodId.CryptoCode));
+                refund.SelectedPaymentMethod = defaultRefund ?? options.Select(o => o.CryptoCode).First();
+
+                // Nothing to select, skip to next
+                if (refund.AvailablePaymentMethods.Count() == 1)
+                {
+                    return await Refund(invoiceId, refund, cancellationToken);
+                }
+                return View(refund);
+            }
+        }
+        [HttpPost]
+        [Route("invoices/{invoiceId}/refund")]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        public async Task<IActionResult> Refund(string invoiceId, RefundModel model, CancellationToken cancellationToken)
+        {
+            model.RefundStep = RefundSteps.SelectRate;
+            using var ctx = _dbContextFactory.CreateContext();
+            var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
+            if (invoice is null)
+                return NotFound();
+            var store = await _StoreRepository.FindStore(invoice.StoreId, GetUserId());
+            if (store is null)
+                return NotFound();
+            if (!CanRefund(invoice.GetInvoiceState()))
+                return NotFound();
+            var paymentMethodId = new PaymentMethodId(model.SelectedPaymentMethod, PaymentTypes.BTCLike);
+            var cdCurrency = _CurrencyNameTable.GetCurrencyData(invoice.ProductInformation.Currency, true);
+            var paymentMethodDivisibility = _CurrencyNameTable.GetCurrencyData(paymentMethodId.CryptoCode, false)?.Divisibility ?? 8;
+            if (model.SelectedRefundOption is null)
+            {
+                model.Title = "What to refund?";
+                var paymentMethod = invoice.GetPaymentMethods()[paymentMethodId];
+                var paidCurrency = Math.Round(paymentMethod.Calculate().Paid.ToDecimal(MoneyUnit.BTC) * paymentMethod.Rate, cdCurrency.Divisibility);
+                model.CryptoAmountThen = Math.Round(paidCurrency / paymentMethod.Rate, paymentMethodDivisibility);
+                model.RateThenText = _CurrencyNameTable.DisplayFormatCurrency(model.CryptoAmountThen, paymentMethodId.CryptoCode, true);
+                var rules = store.GetStoreBlob().GetRateRules(_NetworkProvider);
+                var rateResult = await _RateProvider.FetchRate(new Rating.CurrencyPair(paymentMethodId.CryptoCode, invoice.ProductInformation.Currency), rules, cancellationToken);
+                //TODO: What if fetching rate failed?
+                if (rateResult.BidAsk is null)
+                {
+                    ModelState.AddModelError(nameof(model.SelectedRefundOption), $"Impossible to fetch rate: {rateResult.EvaluatedRule}");
+                    return View(model);
+                }
+                model.CryptoAmountNow = Math.Round(paidCurrency / rateResult.BidAsk.Bid, paymentMethodDivisibility);
+                model.CurrentRateText = _CurrencyNameTable.DisplayFormatCurrency(model.CryptoAmountNow, paymentMethodId.CryptoCode, true);
+                model.FiatAmount = paidCurrency;
+                model.FiatText = _CurrencyNameTable.DisplayFormatCurrency(model.FiatAmount, invoice.ProductInformation.Currency, true);
+                return View(model);
+            }
+            else
+            {
+                var createPullPayment = new HostedServices.CreatePullPayment();
+                createPullPayment.Name = $"Refund {invoice.Id}";
+                createPullPayment.PaymentMethodIds = new[] { paymentMethodId };
+                createPullPayment.StoreId = invoice.StoreId;
+                switch (model.SelectedRefundOption)
+                {
+                    case "RateThen":
+                        createPullPayment.Currency = paymentMethodId.CryptoCode;
+                        createPullPayment.Amount = model.CryptoAmountThen;
+                        break;
+                    case "CurrentRate":
+                        createPullPayment.Currency = paymentMethodId.CryptoCode;
+                        createPullPayment.Amount = model.CryptoAmountNow;
+                        break;
+                    case "Fiat":
+                        createPullPayment.Currency = invoice.ProductInformation.Currency;
+                        createPullPayment.Amount = model.FiatAmount;
+                        break;
+                    default:
+                        ModelState.AddModelError(nameof(model.SelectedRefundOption), "Invalid choice");
+                        return View(model);
+                }
+                var ppId = await _paymentHostedService.CreatePullPayment(createPullPayment);
+                this.TempData.SetStatusMessageModel(new StatusMessageModel()
+                {
+                    Html = "Share this page with a customer so they can claim a refund <br />Once claimed you need to initiate a refund from Wallet > Payouts",
+                    Severity = StatusMessageModel.StatusSeverity.Success
+                });
+                (await ctx.Invoices.FindAsync(invoice.Id)).CurrentRefundId = ppId;
+                ctx.Refunds.Add(new RefundData()
+                {
+                    InvoiceDataId = invoice.Id,
+                    PullPaymentDataId = ppId
+                });
+                await ctx.SaveChangesAsync();
+                // TODO: Having dedicated UI later on
+                return RedirectToAction(nameof(PullPaymentController.ViewPullPayment),
+                                "PullPayment",
+                                new { pullPaymentId = ppId });
+            }
+        }
+
         private InvoiceDetailsModel InvoicePopulatePayments(InvoiceEntity invoice)
         {
             var model = new InvoiceDetailsModel();

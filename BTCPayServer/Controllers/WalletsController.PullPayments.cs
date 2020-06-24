@@ -62,6 +62,10 @@ namespace BTCPayServer.Controllers
             {
                 ModelState.AddModelError(nameof(model.Name), "The name should be maximum 50 characters.");
             }
+            var paymentMethodId = walletId.GetPaymentMethodId();
+            var n = this.NetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
+            if (n is null || paymentMethodId.PaymentType != PaymentTypes.BTCLike || n.ReadonlyWallet)
+                ModelState.AddModelError(nameof(model.Name), "Pull payments are not supported with this wallet");
             if (!ModelState.IsValid)
                 return View(model);
             await _pullPaymentService.CreatePullPayment(new HostedServices.CreatePullPayment()
@@ -70,7 +74,7 @@ namespace BTCPayServer.Controllers
                 Amount = model.Amount,
                 Currency = model.Currency,
                 StoreId = walletId.StoreId,
-                PaymentMethodIds = new[] { walletId.GetPaymentMethodId() }
+                PaymentMethodIds = new[] { paymentMethodId }
             });
             this.TempData.SetStatusMessageModel(new StatusMessageModel()
             {

@@ -34,6 +34,10 @@ namespace BTCPayServer.Data
         {
             get; set;
         }
+        public DbSet<RefundData> Refunds
+        {
+            get; set;
+        }
 
         public DbSet<PlannedTransaction> PlannedTransactions { get; set; }
         public DbSet<PayjoinLock> PayjoinLocks { get; set; }
@@ -201,6 +205,7 @@ namespace BTCPayServer.Data
 
             PullPaymentData.OnModelCreating(builder);
             PayoutData.OnModelCreating(builder);
+            RefundData.OnModelCreating(builder);
 
             if (Database.IsSqlite() && !_designTime)
             {

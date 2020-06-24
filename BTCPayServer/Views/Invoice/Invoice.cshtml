@@ -26,15 +26,23 @@
                 <div class="d-flex justify-content-between">
                     <h2>@ViewData["Title"]</h2>
                     <form asp-action="ToggleArchive" asp-route-invoiceId="@Model.Id" method="post">
-                        <button type="submit" class="@(Model.Archived ? "btn badge badge-warning" : "btn btn-link")" id="btn-archive-toggle">
-                                @if (Model.Archived)
-                                {
-                                    <span data-toggle="tooltip" title="Unarchive this invoice">Archived <i class=" ml-1 fa fa-close" ></i></span>
-                                }
-                                else
-                                {
-                                    <span data-toggle="tooltip" title="Archive this invoice so that it does not appear in the invoice list by default">Archive</span>
-                                }
+                        @if (Model.CanRefund)
+                        {
+                            <a id="refundlink" class="btn btn-success" asp-action="Refund" asp-route-invoiceId="@this.Context.GetRouteValue("invoiceId")">Issue refund <span class="fa fa-undo"></span></a>
+                        }
+                        else
+                        {
+                            <button href="#" class="btn btn-secondary" data-toggle="tooltip" title="You can only issue refunds on invoices with confirmed payments" disabled>Issue refund <span class="fa fa-undo"></span></button>
+                        }
+                        <button type="submit" class="@(Model.Archived ? "btn btn btn-warning" : "btn btn-danger")" id="btn-archive-toggle">
+                            @if (Model.Archived)
+                            {
+                                <span data-toggle="tooltip" title="Unarchive this invoice">Archived <i class=" ml-1 fa fa-close"></i></span>
+                            }
+                            else
+                            {
+                                <span data-toggle="tooltip" title="Archive this invoice so that it does not appear in the invoice list by default">Archive <i class=" ml-1 fa fa-archive"></i></span>
+                            }
                         </button>
                     </form>
                 </div>

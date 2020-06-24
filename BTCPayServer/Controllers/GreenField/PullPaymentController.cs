@@ -106,6 +106,14 @@ namespace BTCPayServer.Controllers.GreenField
             if (request.PaymentMethods is string[] paymentMethodsStr)
             {
                 paymentMethods = paymentMethodsStr.Select(p => new PaymentMethodId(p, PaymentTypes.BTCLike)).ToArray();
+                foreach (var p in paymentMethods)
+                {
+                    var n = _networkProvider.GetNetwork<BTCPayNetwork>(p.CryptoCode);
+                    if (n is null)
+                        ModelState.AddModelError(nameof(request.PaymentMethods), "Invalid payment method");
+                    if (n.ReadonlyWallet)
+                        ModelState.AddModelError(nameof(request.PaymentMethods), "Invalid payment method (We do not support the crypto currency for refund)");
+                }
                 if (paymentMethods.Any(p => _networkProvider.GetNetwork<BTCPayNetwork>(p.CryptoCode) is null))
                     ModelState.AddModelError(nameof(request.PaymentMethods), "Invalid payment method");
             }

@@ -307,6 +307,65 @@
                     "schema": { "type": "string" }
                 }
             ],
+            "post": {
+                "description": "Approve a payout",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "revision": {
+                                        "type": "integer",
+                                        "description": "The revision number of the payout being modified"
+                                    },
+                                    "rateRule": {
+                                        "type": "string",
+                                        "nullable": true,
+                                        "example": "kraken(BTC_USD)",
+                                        "description": "The rate rule to calculate the rate of the payout. This can also be a fixed decimal. (if null or unspecified, will use the same rate setting as the store's settings)"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The payout has been approved, transitioning to `AwaitingPayment` state.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PayoutData"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unable to validate the request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Wellknown error codes are: `rate-unavailable`, `invalid-state`, `amount-too-low`, `old-revision`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "The payout is not found"
+                    }
+                }
+            },
             "delete": {
                 "description": "Cancel the payout",
                 "responses": {
@@ -350,6 +409,10 @@
                         "type": "string",
                         "description": "The id of the payout"
                     },
+                    "revision": {
+                        "type": "integer",
+                        "description": "The revision number of the payout. This revision number is incremented when the payout amount or destination is modified before the approval."
+                    },
                     "pullPaymentId": {
                         "type": "string",
                         "description": "The id of the pull payment this payout belongs to"
@@ -367,7 +430,7 @@
                         "type": "string",
                         "format": "decimal",
                         "example": "10399.18",
-                        "description": "The amount of the payout in the currency of the pull payment (eg. USD). In this current release, `amount` is the same as `paymentMethodAmount`."
+                        "description": "The amount of the payout in the currency of the pull payment (eg. USD)."
                     },
                     "paymentMethod": {
                         "type": "string",
@@ -377,20 +440,23 @@
                     "paymentMethodAmount": {
                         "type": "string",
                         "format": "decimal",
+                        "nullable": true,
                         "example": "1.12300000",
-                        "description": "The amount of the payout in the currency of the payment method (eg. BTC). In this current release, `paymentMethodAmount` is the same as `amount`."
+                        "description": "The amount of the payout in the currency of the payment method (eg. BTC). This is only available from the `AwaitingPayment` state."
                     },
                     "state": {
                         "type": "string",
                         "example": "AwaitingPayment",
-                        "description": "The state of the payout (`AwaitingPayment`, `InProgress`, `Completed`, `Cancelled`)",
+                        "description": "The state of the payout (`AwaitingApproval`, `AwaitingPayment`, `InProgress`, `Completed`, `Cancelled`)",
                         "x-enumNames": [
+                            "AwaitingApproval",
                             "AwaitingPayment",
                             "InProgress",
                             "Completed",
                             "Cancelled"
                         ],
                         "enum": [
+                            "AwaitingApproval",
                             "AwaitingPayment",
                             "InProgress",
                             "Completed",

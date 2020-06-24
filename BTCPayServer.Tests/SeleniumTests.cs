@@ -738,7 +738,7 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("ClaimedAmount")).Clear();
                 s.Driver.FindElement(By.Id("ClaimedAmount")).SendKeys("20" + Keys.Enter);
                 s.AssertHappyMessage();
-                Assert.Contains("AwaitingPayment", s.Driver.PageSource);
+                Assert.Contains("AwaitingApproval", s.Driver.PageSource);
 
                 var viewPullPaymentUrl = s.Driver.Url;
                 // This one should have nothing

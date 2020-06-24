@@ -494,6 +494,12 @@ namespace BTCPayServer.Rating
         private SyntaxNode expression;
         FlattenExpressionRewriter flatten;
 
+        public static RateRule CreateFromExpression(string expression, CurrencyPair currencyPair)
+        {
+            var ex = RateRules.CreateExpression(expression);
+            RateRules.TryParse("", out var rules);
+            return new RateRule(rules, currencyPair, ex);
+        }
         public RateRule(RateRules parent, CurrencyPair currencyPair, SyntaxNode candidate)
         {
             _CurrencyPair = currencyPair;

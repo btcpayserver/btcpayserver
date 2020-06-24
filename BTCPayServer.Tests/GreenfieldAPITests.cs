@@ -303,8 +303,8 @@ namespace BTCPayServer.Tests
                 Assert.Equal(payout.Amount, payout2.Amount);
                 Assert.Equal(payout.Id, payout2.Id);
                 Assert.Equal(destination, payout2.Destination);
-                Assert.Equal(PayoutState.AwaitingPayment, payout.State);
-
+                Assert.Equal(PayoutState.AwaitingApproval, payout.State);
+                Assert.Null(payout.PaymentMethodAmount);
 
                 Logs.Tester.LogInformation("Can't overdraft");
                 await this.AssertAPIError("overdraft", async () => await unauthenticated.CreatePayout(pps[0].Id, new CreatePayoutRequest()
@@ -330,16 +330,8 @@ namespace BTCPayServer.Tests
                 payout = Assert.Single(payouts);
                 Assert.Equal(PayoutState.Cancelled, payout.State);
 
-                Logs.Tester.LogInformation("Can't create too low payout (below dust)");
-                await this.AssertAPIError("amount-too-low", async () => await unauthenticated.CreatePayout(pps[0].Id, new CreatePayoutRequest()
-                {
-                    Amount = Money.Satoshis(100).ToDecimal(MoneyUnit.BTC),
-                    Destination = destination,
-                    PaymentMethod = "BTC"
-                }));
-
                 Logs.Tester.LogInformation("Can create payout after cancelling");
-                await unauthenticated.CreatePayout(pps[0].Id, new CreatePayoutRequest()
+                payout = await unauthenticated.CreatePayout(pps[0].Id, new CreatePayoutRequest()
                 {
                     Destination = destination,
                     PaymentMethod = "BTC"
@@ -385,6 +377,43 @@ namespace BTCPayServer.Tests
                     Amount = 12.3m,
                     StartsAt = DateTimeOffset.UtcNow,
                     ExpiresAt = DateTimeOffset.UtcNow - TimeSpan.FromDays(1)
+                }));
+
+
+                Logs.Tester.LogInformation("Create a pull payment with USD");
+                var pp  = await client.CreatePullPayment(storeId, new Client.Models.CreatePullPaymentRequest()
+                {
+                    Name = "Test USD",
+                    Amount = 5000m,
+                    Currency = "USD",
+                    PaymentMethods = new[] { "BTC" }
+                });
+
+                destination = (await tester.ExplorerNode.GetNewAddressAsync()).ToString();
+                Logs.Tester.LogInformation("Try to pay it in BTC");
+                payout = await unauthenticated.CreatePayout(pp.Id, new CreatePayoutRequest()
+                {
+                    Destination = destination,
+                    PaymentMethod = "BTC"
+                });
+                await this.AssertAPIError("old-revision", async () => await client.ApprovePayout(storeId, payout.Id, new ApprovePayoutRequest()
+                {
+                    Revision = -1
+                }));
+                await this.AssertAPIError("rate-unavailable", async () => await client.ApprovePayout(storeId, payout.Id, new ApprovePayoutRequest()
+                {
+                    RateRule = "DONOTEXIST(BTC_USD)"
+                }));
+                payout = await client.ApprovePayout(storeId, payout.Id, new ApprovePayoutRequest()
+                {
+                    Revision = payout.Revision
+                });
+                Assert.Equal(PayoutState.AwaitingPayment, payout.State);
+                Assert.NotNull(payout.PaymentMethodAmount);
+                Assert.Equal(1.0m, payout.PaymentMethodAmount); // 1 BTC == 5000 USD in tests
+                await this.AssertAPIError("invalid-state", async () => await client.ApprovePayout(storeId, payout.Id, new ApprovePayoutRequest()
+                {
+                    Revision = payout.Revision
                 }));
             }
         }

@@ -22,6 +22,10 @@ using Microsoft.Extensions.Internal;
 using NBitcoin.Payment;
 using NBitcoin;
 using BTCPayServer.Payments;
+using Microsoft.Extensions.Primitives;
+using System.Threading;
+using BTCPayServer.HostedServices;
+using TwentyTwenty.Storage;
 
 namespace BTCPayServer.Controllers
 {
@@ -45,6 +49,7 @@ namespace BTCPayServer.Controllers
             WalletId walletId, NewPullPaymentModel model)
         {
             model.Name ??= string.Empty;
+            model.Currency = model.Currency.ToUpperInvariant().Trim();
             if (_currencyTable.GetCurrencyData(model.Currency, false) is null)
             {
                 ModelState.AddModelError(nameof(model.Currency), "Invalid currency");
@@ -63,9 +68,9 @@ namespace BTCPayServer.Controllers
             {
                 Name = model.Name,
                 Amount = model.Amount,
-                Currency = walletId.CryptoCode,
+                Currency = model.Currency,
                 StoreId = walletId.StoreId,
-                PaymentMethodIds = new[] { new PaymentMethodId(walletId.CryptoCode, PaymentTypes.BTCLike) }
+                PaymentMethodIds = new[] { walletId.GetPaymentMethodId() }
             });
             this.TempData.SetStatusMessageModel(new StatusMessageModel()
             {
@@ -90,7 +95,7 @@ namespace BTCPayServer.Controllers
                                       {
                                           PullPayment = o,
                                           Awaiting = o.Payouts
-                                                        .Where(p => p.State == PayoutState.AwaitingPayment),
+                                                        .Where(p => p.State == PayoutState.AwaitingPayment || p.State == PayoutState.AwaitingApproval),
                                           Completed = o.Payouts
                                                         .Where(p => p.State == PayoutState.Completed || p.State == PayoutState.InProgress)
                                       })
@@ -169,7 +174,7 @@ namespace BTCPayServer.Controllers
         [Route("{walletId}/payouts")]
         public async Task<IActionResult> PayoutsPost(
             [ModelBinder(typeof(WalletIdModelBinder))]
-            WalletId walletId, PayoutsModel vm)
+            WalletId walletId, PayoutsModel vm, CancellationToken cancellationToken)
         {
             if (vm is null)
                 return NotFound();
@@ -192,10 +197,56 @@ namespace BTCPayServer.Controllers
             if (vm.Command == "pay")
             {
                 using var ctx = this._dbContextFactory.CreateContext();
-                var payouts = await ctx.Payouts
+                ctx.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
+                var payouts = (await ctx.Payouts
+                    .Include(p => p.PullPaymentData)
+                    .Include(p => p.PullPaymentData.StoreData)
                     .Where(p => payoutIds.Contains(p.Id))
                     .Where(p => p.PullPaymentData.StoreId == storeId && !p.PullPaymentData.Archived)
-                    .ToListAsync();
+                    .ToListAsync())
+                    .Where(p => p.GetPaymentMethodId() == walletId.GetPaymentMethodId())
+                    .ToList();
+
+                for (int i = 0; i < payouts.Count; i ++)
+                {
+                    var payout = payouts[i];
+                    if (payout.State != PayoutState.AwaitingApproval)
+                        continue;
+                    var rateResult = await _pullPaymentService.GetRate(payout, null, cancellationToken);
+                    if (rateResult.BidAsk == null)
+                    {
+                        this.TempData.SetStatusMessageModel(new StatusMessageModel()
+                        {
+                            Message = $"Rate unavailable: {rateResult.EvaluatedRule}",
+                            Severity = StatusMessageModel.StatusSeverity.Error
+                        });
+                        return RedirectToAction(nameof(Payouts), new
+                        {
+                            walletId = walletId.ToString(),
+                            pullPaymentId = vm.PullPaymentId
+                        });
+                    }
+                    var approveResult = await _pullPaymentService.Approve(new HostedServices.PullPaymentHostedService.PayoutApproval()
+                    {
+                        PayoutId = payout.Id,
+                        Revision = payout.GetBlob(_jsonSerializerSettings).Revision,
+                        Rate = rateResult.BidAsk.Ask
+                    });
+                    if (approveResult != HostedServices.PullPaymentHostedService.PayoutApproval.Result.Ok)
+                    {
+                        this.TempData.SetStatusMessageModel(new StatusMessageModel()
+                        {
+                            Message = PullPaymentHostedService.PayoutApproval.GetErrorMessage(approveResult),
+                            Severity = StatusMessageModel.StatusSeverity.Error
+                        });
+                        return RedirectToAction(nameof(Payouts), new
+                        {
+                            walletId = walletId.ToString(),
+                            pullPaymentId = vm.PullPaymentId
+                        });
+                    }
+                    payouts[i] = await ctx.Payouts.FindAsync(payouts[i].Id);
+                }
                 var walletSend = (WalletSendModel)((ViewResult)(await this.WalletSend(walletId))).Model;
                 walletSend.Outputs.Clear();
                 foreach (var payout in payouts)
@@ -205,7 +256,7 @@ namespace BTCPayServer.Controllers
                         continue;
                     var output = new WalletSendModel.TransactionOutput()
                     {
-                        Amount = blob.Amount,
+                        Amount = blob.CryptoAmount,
                         DestinationAddress = blob.Destination.Address.ToString()
                     };
                     walletSend.Outputs.Add(output);
@@ -268,7 +319,7 @@ namespace BTCPayServer.Controllers
                 m.PayoutId = item.Payout.Id;
                 m.Amount = _currencyTable.DisplayFormatCurrency(payoutBlob.Amount, ppBlob.Currency);
                 m.Destination = payoutBlob.Destination.Address.ToString();
-                if (item.Payout.State == PayoutState.AwaitingPayment)
+                if (item.Payout.State == PayoutState.AwaitingPayment || item.Payout.State == PayoutState.AwaitingApproval)
                 {
                     vm.WaitingForApproval.Add(m);
                 }

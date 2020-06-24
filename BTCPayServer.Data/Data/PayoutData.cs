@@ -56,6 +56,7 @@ namespace BTCPayServer.Data
 
     public enum PayoutState
     {
+        AwaitingApproval,
         AwaitingPayment,
         InProgress,
         Completed,

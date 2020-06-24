@@ -9,6 +9,7 @@ namespace BTCPayServer.Client.Models
 {
     public enum PayoutState
     {
+        AwaitingApproval,
         AwaitingPayment,
         InProgress,
         Completed,
@@ -25,8 +26,9 @@ namespace BTCPayServer.Client.Models
         [JsonConverter(typeof(DecimalStringJsonConverter))]
         public decimal Amount { get; set; }
         [JsonConverter(typeof(DecimalStringJsonConverter))]
-        public decimal PaymentMethodAmount { get; set; }
+        public decimal? PaymentMethodAmount { get; set; }
         [JsonConverter(typeof(StringEnumConverter))]
         public PayoutState State { get; set; }
+        public int Revision { get; set; }
     }
 }

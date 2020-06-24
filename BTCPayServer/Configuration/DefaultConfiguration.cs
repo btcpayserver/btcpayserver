@@ -44,6 +44,7 @@ namespace BTCPayServer.Configuration
             app.Option("--sshtrustedfingerprints", "SSH Host public key fingerprint or sha256 (default: empty, it will allow untrusted connections)", CommandOptionType.SingleValue);
             app.Option("--torrcfile", "Path to torrc file containing hidden services directories (default: empty)", CommandOptionType.SingleValue);
             app.Option("--socksendpoint", "Socks endpoint to connect to onion urls (default: empty)", CommandOptionType.SingleValue);
+            app.Option("--sockshttpproxy", "Socks v5 HTTP proxy, this is currently used only for sending payjoin to tor endpoints. You can get a socks http proxy with the HTTPTunnelPort setting on Tor 0.3.2.x. (default: empty)", CommandOptionType.SingleValue);
             app.Option("--debuglog", "A rolling log file for debug messages.", CommandOptionType.SingleValue);
             app.Option("--debugloglevel", "The severity you log (default:information)", CommandOptionType.SingleValue);
             app.Option("--disable-registration", "Disables new user registrations (default:true)", CommandOptionType.SingleValue);

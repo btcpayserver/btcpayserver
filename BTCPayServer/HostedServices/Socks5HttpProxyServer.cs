@@ -62,23 +62,32 @@ namespace BTCPayServer.HostedServices
         {
             if (_opts.SocksEndpoint is null || _ServerContext != null)
                 return Task.CompletedTask;
-            _Cts = new CancellationTokenSource();
-            var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            socket.Bind(new IPEndPoint(IPAddress.Loopback, 0));
-            Port = ((IPEndPoint)(socket.LocalEndPoint)).Port;
-            Uri = new Uri($"http://127.0.0.1:{Port}");
-            socket.Listen(5);
-            _ServerContext = new ServerContext()
+            if (_opts.SocksHttpProxy is Uri uri)
             {
-                SocksEndpoint = _opts.SocksEndpoint,
-                ServerSocket = socket,
-                CancellationToken = _Cts.Token,
-                ConnectionCount = 0
-            };
-            socket.BeginAccept(Accept, _ServerContext);
-            Logs.PayServer.LogInformation($"Internal Socks HTTP Proxy listening at {Uri}");
-            return Task.CompletedTask;
+                Logs.PayServer.LogInformation($"sockshttpproxy is set, we will be using a socks http proxy at {uri.AbsoluteUri}");
+                return Task.CompletedTask;
+            }
+            else
+            {
+                Logs.PayServer.LogInformation($"sockshttpproxy is not set, we will be using an internal socks http proxy");
+                _Cts = new CancellationTokenSource();
+                var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                socket.Bind(new IPEndPoint(IPAddress.Loopback, 0));
+                Port = ((IPEndPoint)(socket.LocalEndPoint)).Port;
+                Uri = new Uri($"http://127.0.0.1:{Port}");
+                socket.Listen(5);
+                _ServerContext = new ServerContext()
+                {
+                    SocksEndpoint = _opts.SocksEndpoint,
+                    ServerSocket = socket,
+                    CancellationToken = _Cts.Token,
+                    ConnectionCount = 0
+                };
+                socket.BeginAccept(Accept, _ServerContext);
+                Logs.PayServer.LogInformation($"Internal Socks HTTP Proxy listening at {Uri}");
+                return Task.CompletedTask;
+            }
         }
 
         public int Port { get; private set; }

@@ -36,11 +36,6 @@ namespace BTCPayServer.Data
             get; set;
         }
 
-        public List<RefundAddressesData> RefundAddresses
-        {
-            get; set;
-        }
-
         public List<HistoricalAddressInvoiceData> HistoricalAddressInvoices
         {
             get; set;

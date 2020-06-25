@@ -80,7 +80,6 @@ retry:
             {
                 return  (await db.AddressInvoices
                     .Include(a => a.InvoiceData.Payments)
-                    .Include(a => a.InvoiceData.RefundAddresses)
 #pragma warning disable CS0618
                     .Where(a => addresses.Contains(a.Address))
 #pragma warning restore CS0618
@@ -440,8 +439,7 @@ retry:
                 IQueryable<Data.InvoiceData> query =
                     context
                     .Invoices
-                    .Include(o => o.Payments)
-                    .Include(o => o.RefundAddresses);
+                    .Include(o => o.Payments);
                 if (inludeAddressData)
                     query = query.Include(o => o.HistoricalAddressInvoices).Include(o => o.AddressInvoices);
                 query = query.Where(i => i.Id == id);
@@ -494,7 +492,7 @@ retry:
             entity.ExceptionStatus = state.ExceptionStatus;
             entity.Status = state.Status;
             entity.RefundMail = invoice.CustomerEmail;
-            entity.Refundable = invoice.RefundAddresses.Count != 0;
+            entity.Refundable = false;
             if (invoice.HistoricalAddressInvoices != null)
             {
                 entity.HistoricalAddresses = invoice.HistoricalAddressInvoices.ToArray();
@@ -621,8 +619,7 @@ retry:
             using (var context = _ContextFactory.CreateContext())
             {
                 var query = GetInvoiceQuery(context, queryObject);
-                query = query.Include(o => o.Payments)
-                    .Include(o => o.RefundAddresses);
+                query = query.Include(o => o.Payments);
                 if (queryObject.IncludeAddresses)
                     query = query.Include(o => o.HistoricalAddressInvoices).Include(o => o.AddressInvoices);
                 if (queryObject.IncludeEvents)
@@ -654,31 +651,6 @@ retry:
                     break;
             }
             return status;
-        }
-
-        public async Task AddRefundsAsync(string invoiceId, TxOut[] outputs, BTCPayNetwork network)
-        {
-            if (outputs.Length == 0)
-                return;
-            outputs = outputs.Take(10).ToArray();
-            using (var context = _ContextFactory.CreateContext())
-            {
-                int i = 0;
-                foreach (var output in outputs)
-                {
-                    context.RefundAddresses.Add(new RefundAddressesData()
-                    {
-                        Id = invoiceId + "-" + i,
-                        InvoiceDataId = invoiceId,
-                        Blob = ToBytes(output, network)
-                    });
-                    i++;
-                }
-                await context.SaveChangesAsync().ConfigureAwait(false);
-            }
-
-            var addresses = outputs.Select(o => o.ScriptPubKey.GetDestinationAddress(network.NBitcoinNetwork)).Where(a => a != null).ToArray();
-            AddToTextSearch(invoiceId, addresses.Select(a => a.ToString()).ToArray());
         }
 
         /// <summary>

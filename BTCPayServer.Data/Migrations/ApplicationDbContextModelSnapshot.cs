@@ -509,24 +509,6 @@ namespace BTCPayServer.Migrations
                     b.ToTable("PullPayments");
                 });
 
-            modelBuilder.Entity("BTCPayServer.Data.RefundAddressesData", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("TEXT");
-
-                    b.Property<byte[]>("Blob")
-                        .HasColumnType("BLOB");
-
-                    b.Property<string>("InvoiceDataId")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("InvoiceDataId");
-
-                    b.ToTable("RefundAddresses");
-                });
-
             modelBuilder.Entity("BTCPayServer.Data.SettingData", b =>
                 {
                     b.Property<string>("Id")
@@ -919,14 +901,6 @@ namespace BTCPayServer.Migrations
                     b.HasOne("BTCPayServer.Data.StoreData", "StoreData")
                         .WithMany("PullPayments")
                         .HasForeignKey("StoreId")
-                        .OnDelete(DeleteBehavior.Cascade);
-                });
-
-            modelBuilder.Entity("BTCPayServer.Data.RefundAddressesData", b =>
-                {
-                    b.HasOne("BTCPayServer.Data.InvoiceData", "InvoiceData")
-                        .WithMany("RefundAddresses")
-                        .HasForeignKey("InvoiceDataId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 

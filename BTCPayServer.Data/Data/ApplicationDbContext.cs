@@ -42,7 +42,6 @@ namespace BTCPayServer.Data
         public DbSet<OffchainTransactionData> OffchainTransactions { get; set; }
         public DbSet<HistoricalAddressInvoiceData> HistoricalAddressInvoices { get; set; }
         public DbSet<PendingInvoiceData> PendingInvoices { get; set; }
-        public DbSet<RefundAddressesData> RefundAddresses { get; set; }
         public DbSet<PaymentData> Payments { get; set; }
         public DbSet<PaymentRequestData> PaymentRequests { get; set; }
         public DbSet<PullPaymentData> PullPayments { get; set; }
@@ -84,13 +83,6 @@ namespace BTCPayServer.Data
                    .WithMany(i => i.Payments).OnDelete(DeleteBehavior.Cascade);
             builder.Entity<PaymentData>()
                    .HasIndex(o => o.InvoiceDataId);
-
-
-            builder.Entity<RefundAddressesData>()
-                   .HasOne(o => o.InvoiceData)
-                   .WithMany(i => i.RefundAddresses).OnDelete(DeleteBehavior.Cascade);
-            builder.Entity<RefundAddressesData>()
-                .HasIndex(o => o.InvoiceDataId);
 
             builder.Entity<UserStore>()
                    .HasOne(o => o.StoreData)

@@ -41,7 +41,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
     <PackageReference Include="System.IO.Pipelines" Version="4.7.2" />
-    <PackageReference Include="NBitpayClient" Version="1.0.0.39" />	  
+    <PackageReference Include="NBitpayClient" Version="1.0.0.39" />
     <PackageReference Include="DBriize" Version="1.0.1.3" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="NicolasDorier.CommandLine" Version="1.0.0.2" />

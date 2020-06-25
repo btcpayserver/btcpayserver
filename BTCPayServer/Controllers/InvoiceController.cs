@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
 using BTCPayServer.Models;
 using BTCPayServer.Payments;
@@ -41,6 +42,8 @@ namespace BTCPayServer.Controllers
         EventAggregator _EventAggregator;
         BTCPayNetworkProvider _NetworkProvider;
         private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
+        private readonly ApplicationDbContextFactory _dbContextFactory;
+        private readonly PullPaymentHostedService _paymentHostedService;
         IServiceProvider _ServiceProvider;
         public InvoiceController(
             IServiceProvider serviceProvider,
@@ -52,7 +55,9 @@ namespace BTCPayServer.Controllers
             EventAggregator eventAggregator,
             ContentSecurityPolicies csp,
             BTCPayNetworkProvider networkProvider,
-            PaymentMethodHandlerDictionary paymentMethodHandlerDictionary)
+            PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
+            ApplicationDbContextFactory dbContextFactory,
+            PullPaymentHostedService paymentHostedService)
         {
             _ServiceProvider = serviceProvider;
             _CurrencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
@@ -63,6 +68,8 @@ namespace BTCPayServer.Controllers
             _EventAggregator = eventAggregator;
             _NetworkProvider = networkProvider;
             _paymentMethodHandlerDictionary = paymentMethodHandlerDictionary;
+            _dbContextFactory = dbContextFactory;
+            _paymentHostedService = paymentHostedService;
             _CSP = csp;
         }
 

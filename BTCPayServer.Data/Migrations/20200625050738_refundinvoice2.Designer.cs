@@ -3,14 +3,16 @@ using System;
 using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BTCPayServer.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20200625050738_refundinvoice2")]
+    partial class refundinvoice2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -199,9 +201,6 @@ namespace BTCPayServer.Migrations
                     b.Property<DateTimeOffset>("Created")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("CurrentRefundId")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("CustomerEmail")
                         .HasColumnType("TEXT");
 
@@ -214,6 +213,9 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("OrderId")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("PullPaymentDataId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Status")
                         .HasColumnType("TEXT");
 
@@ -222,9 +224,9 @@ namespace BTCPayServer.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("StoreDataId");
+                    b.HasIndex("PullPaymentDataId");
 
-                    b.HasIndex("Id", "CurrentRefundId");
+                    b.HasIndex("StoreDataId");
 
                     b.ToTable("Invoices");
                 });
@@ -852,14 +854,14 @@ namespace BTCPayServer.Migrations
 
             modelBuilder.Entity("BTCPayServer.Data.InvoiceData", b =>
                 {
+                    b.HasOne("BTCPayServer.Data.PullPaymentData", "PullPaymentData")
+                        .WithMany()
+                        .HasForeignKey("PullPaymentDataId");
+
                     b.HasOne("BTCPayServer.Data.StoreData", "StoreData")
                         .WithMany("Invoices")
                         .HasForeignKey("StoreDataId")
                         .OnDelete(DeleteBehavior.Cascade);
-
-                    b.HasOne("BTCPayServer.Data.RefundData", "CurrentRefund")
-                        .WithMany()
-                        .HasForeignKey("Id", "CurrentRefundId");
                 });
 
             modelBuilder.Entity("BTCPayServer.Data.InvoiceEventData", b =>

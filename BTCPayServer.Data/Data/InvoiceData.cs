@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Data
 {
@@ -25,7 +27,6 @@ namespace BTCPayServer.Data
         {
             get; set;
         }
-
         public List<PaymentData> Payments
         {
             get; set;
@@ -74,8 +75,16 @@ namespace BTCPayServer.Data
         {
             get; set;
         }
-
         public bool Archived { get; set; }
         public List<PendingInvoiceData> PendingInvoices { get; set; }
+        public List<RefundData> Refunds { get; set; }
+        public string CurrentRefundId { get; set; }
+        [ForeignKey("Id,CurrentRefundId")]
+        public RefundData CurrentRefund { get; set; }
+        internal static void OnModelCreating(ModelBuilder builder)
+        {
+            builder.Entity<InvoiceData>()
+                .HasOne(o => o.CurrentRefund);
+        }
     }
 }

@@ -8,6 +8,7 @@ using BTCPayServer.Client.JsonConverters;
 using BTCPayServer.JsonConverters;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.NewtonsoftJson;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;
@@ -22,9 +23,14 @@ namespace BTCPayServer.Data
 {
     public static class PullPaymentsExtensions
     {
-        public static async Task<PayoutData> GetPayout(this DbSet<PayoutData> payouts, string payoutId, string storeId)
+        public static async Task<PayoutData> GetPayout(this DbSet<PayoutData> payouts, string payoutId, string storeId, bool includePullPayment = false, bool includeStore = false)
         {
-            var payout = await payouts.Where(p => p.Id == payoutId &&
+            IQueryable<PayoutData> query = payouts;
+            if (includePullPayment)
+                query = query.Include(p => p.PullPaymentData);
+            if (includeStore)
+                query = query.Include(p => p.PullPaymentData.StoreData);
+            var payout = await query.Where(p => p.Id == payoutId &&
                                                   p.PullPaymentData.StoreId == storeId).FirstOrDefaultAsync();
             if (payout is null)
                 return null;
@@ -152,9 +158,10 @@ namespace BTCPayServer.Data
         [JsonConverter(typeof(DecimalStringJsonConverter))]
         public decimal Amount { get; set; }
         [JsonConverter(typeof(DecimalStringJsonConverter))]
-        public decimal CryptoAmount { get; set; }
+        public decimal? CryptoAmount { get; set; }
         public int MinimumConfirmation { get; set; } = 1;
         public IClaimDestination Destination { get; set; }
+        public int Revision { get; set; }
     }
     public class ClaimDestinationJsonConverter : JsonConverter<IClaimDestination>
     {

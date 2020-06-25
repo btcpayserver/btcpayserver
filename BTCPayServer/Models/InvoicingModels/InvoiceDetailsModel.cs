@@ -128,5 +128,6 @@ namespace BTCPayServer.Models.InvoicingModels
         public Dictionary<string, object> PosData { get; set; }
         public List<PaymentEntity> Payments { get; set; }
         public bool Archived { get; set; }
+        public bool CanRefund { get; set; }
     }
 }

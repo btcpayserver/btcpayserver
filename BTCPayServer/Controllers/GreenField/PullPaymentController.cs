@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer;
 using BTCPayServer.Client;
@@ -81,13 +82,12 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 ModelState.AddModelError(nameof(request.Name), "The name should be maximum 50 characters.");
             }
-            BTCPayNetwork network = null;
             if (request.Currency is String currency)
             {
-                network = _networkProvider.GetNetwork<BTCPayNetwork>(currency);
-                if (network is null)
+                request.Currency = currency.ToUpperInvariant().Trim();
+                if (_currencyNameTable.GetCurrencyData(request.Currency, false) is null)
                 {
-                    ModelState.AddModelError(nameof(request.Currency), $"Only crypto currencies are supported this field. (More will be supported soon)");
+                    ModelState.AddModelError(nameof(request.Currency), "Invalid currency");
                 }
             }
             else
@@ -102,12 +102,20 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 ModelState.AddModelError(nameof(request.Period), $"The period should be positive");
             }
-            if (request.PaymentMethods is string[] paymentMethods)
+            PaymentMethodId[] paymentMethods = null;
+            if (request.PaymentMethods is string[] paymentMethodsStr)
             {
-                if (paymentMethods.Length != 1 && paymentMethods[0] != request.Currency)
+                paymentMethods = paymentMethodsStr.Select(p => new PaymentMethodId(p, PaymentTypes.BTCLike)).ToArray();
+                foreach (var p in paymentMethods)
                 {
-                    ModelState.AddModelError(nameof(request.PaymentMethods), "We expect this array to only contains the same element as the `currency` field. (More will be supported soon)");
+                    var n = _networkProvider.GetNetwork<BTCPayNetwork>(p.CryptoCode);
+                    if (n is null)
+                        ModelState.AddModelError(nameof(request.PaymentMethods), "Invalid payment method");
+                    if (n.ReadonlyWallet)
+                        ModelState.AddModelError(nameof(request.PaymentMethods), "Invalid payment method (We do not support the crypto currency for refund)");
                 }
+                if (paymentMethods.Any(p => _networkProvider.GetNetwork<BTCPayNetwork>(p.CryptoCode) is null))
+                    ModelState.AddModelError(nameof(request.PaymentMethods), "Invalid payment method");
             }
             else
             {
@@ -122,9 +130,9 @@ namespace BTCPayServer.Controllers.GreenField
                 Period = request.Period,
                 Name = request.Name,
                 Amount = request.Amount,
-                Currency = network.CryptoCode,
+                Currency = request.Currency,
                 StoreId = storeId,
-                PaymentMethodIds = new[] { new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike) }
+                PaymentMethodIds = paymentMethods
             });
             var pp = await _pullPaymentService.GetPullPayment(ppId);
             return this.Ok(CreatePullPaymentData(pp));
@@ -193,7 +201,9 @@ namespace BTCPayServer.Controllers.GreenField
                 Date = p.Date,
                 Amount = blob.Amount,
                 PaymentMethodAmount = blob.CryptoAmount,
+                Revision = blob.Revision,
                 State = p.State == Data.PayoutState.AwaitingPayment ? Client.Models.PayoutState.AwaitingPayment :
+                                            p.State == Data.PayoutState.AwaitingApproval ? Client.Models.PayoutState.AwaitingApproval :
                                             p.State == Data.PayoutState.Cancelled ? Client.Models.PayoutState.Cancelled :
                                             p.State == Data.PayoutState.Completed ? Client.Models.PayoutState.Completed :
                                             p.State == Data.PayoutState.InProgress ? Client.Models.PayoutState.InProgress :
@@ -289,6 +299,62 @@ namespace BTCPayServer.Controllers.GreenField
                 return NotFound();
             await _pullPaymentService.Cancel(new PullPaymentHostedService.CancelRequest(new[] { payoutId }));
             return Ok();
+        }
+
+        [HttpPost("~/api/v1/stores/{storeId}/payouts/{payoutId}")]
+        [Authorize(Policy = Policies.CanManagePullPayments, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> ApprovePayout(string storeId, string payoutId, ApprovePayoutRequest approvePayoutRequest, CancellationToken cancellationToken = default)
+        {
+            using var ctx = _dbContextFactory.CreateContext();
+            ctx.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
+            var revision = approvePayoutRequest?.Revision;
+            if (revision is null)
+            {
+                ModelState.AddModelError(nameof(approvePayoutRequest.Revision), "The `revision` property is required");
+            }
+            if (!ModelState.IsValid)
+                return this.CreateValidationError(ModelState);
+            var payout = await ctx.Payouts.GetPayout(payoutId, storeId, true, true);
+            if (payout is null)
+                return NotFound();
+            RateResult rateResult = null;
+            try
+            {
+                rateResult = await _pullPaymentService.GetRate(payout, approvePayoutRequest?.RateRule, cancellationToken);
+                if (rateResult.BidAsk == null)
+                {
+                    return this.CreateAPIError("rate-unavailable", $"Rate unavailable: {rateResult.EvaluatedRule}");
+                }
+            }
+            catch (FormatException)
+            {
+                ModelState.AddModelError(nameof(approvePayoutRequest.RateRule), "Invalid RateRule");
+                return this.CreateValidationError(ModelState);
+            }
+            var ppBlob = payout.PullPaymentData.GetBlob();
+            var cd = _currencyNameTable.GetCurrencyData(ppBlob.Currency, false);
+            var result = await _pullPaymentService.Approve(new PullPaymentHostedService.PayoutApproval()
+            {
+                PayoutId = payoutId,
+                Revision = revision.Value,
+                Rate = rateResult.BidAsk.Ask
+            });
+            var errorMessage = PullPaymentHostedService.PayoutApproval.GetErrorMessage(result);
+            switch (result)
+            {
+                case PullPaymentHostedService.PayoutApproval.Result.Ok:
+                    return Ok(ToModel(await ctx.Payouts.GetPayout(payoutId, storeId, true), cd));
+                case PullPaymentHostedService.PayoutApproval.Result.InvalidState:
+                    return this.CreateAPIError("invalid-state", errorMessage);
+                case PullPaymentHostedService.PayoutApproval.Result.TooLowAmount:
+                    return this.CreateAPIError("amount-too-low", errorMessage);
+                case PullPaymentHostedService.PayoutApproval.Result.OldRevision:
+                    return this.CreateAPIError("old-revision", errorMessage);
+                case PullPaymentHostedService.PayoutApproval.Result.NotFound:
+                    return NotFound();
+                default:
+                    throw new NotSupportedException();
+            }
         }
     }
 }

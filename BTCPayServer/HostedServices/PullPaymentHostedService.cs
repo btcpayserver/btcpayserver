@@ -10,6 +10,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Logging;
 using BTCPayServer.Payments;
+using BTCPayServer.Rating;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
@@ -24,7 +25,9 @@ using NBitcoin.DataEncoders;
 using NBitcoin.Payment;
 using NBitcoin.RPC;
 using NBXplorer;
+using Org.BouncyCastle.Bcpg.OpenPgp;
 using Serilog.Configuration;
+using SQLitePCL;
 
 namespace BTCPayServer.HostedServices
 {
@@ -59,7 +62,40 @@ namespace BTCPayServer.HostedServices
             public string[] PayoutIds { get; set; }
             internal TaskCompletionSource<bool> Completion { get; set; }
         }
+        public class PayoutApproval
+        {
+            public enum Result
+            {
+                Ok,
+                NotFound,
+                InvalidState,
+                TooLowAmount,
+                OldRevision
+            }
+            public string PayoutId { get; set; }
+            public int Revision { get; set; }
+            public decimal Rate { get; set; }
+            internal TaskCompletionSource<Result> Completion { get; set; }
 
+            public static string GetErrorMessage(Result result)
+            {
+                switch (result)
+                {
+                    case PullPaymentHostedService.PayoutApproval.Result.Ok:
+                        return "Ok";
+                    case PullPaymentHostedService.PayoutApproval.Result.InvalidState:
+                        return "The payout is not in a state that can be approved";
+                    case PullPaymentHostedService.PayoutApproval.Result.TooLowAmount:
+                        return "The crypto amount is too small.";
+                    case PullPaymentHostedService.PayoutApproval.Result.OldRevision:
+                        return "The crypto amount is too small.";
+                    case PullPaymentHostedService.PayoutApproval.Result.NotFound:
+                        return "The payout is not found";
+                    default:
+                        throw new NotSupportedException();
+                }
+            }
+        }
         public async Task<string> CreatePullPayment(CreatePullPayment create)
         {
             if (create == null)
@@ -120,7 +156,8 @@ namespace BTCPayServer.HostedServices
             EventAggregator eventAggregator,
             ExplorerClientProvider explorerClientProvider,
             BTCPayNetworkProvider networkProvider,
-            NotificationSender notificationSender)
+            NotificationSender notificationSender,
+            RateFetcher rateFetcher)
         {
             _dbContextFactory = dbContextFactory;
             _jsonSerializerSettings = jsonSerializerSettings;
@@ -129,6 +166,7 @@ namespace BTCPayServer.HostedServices
             _explorerClientProvider = explorerClientProvider;
             _networkProvider = networkProvider;
             _notificationSender = notificationSender;
+            _rateFetcher = rateFetcher;
         }
 
         Channel<object> _Channel;
@@ -139,6 +177,7 @@ namespace BTCPayServer.HostedServices
         private readonly ExplorerClientProvider _explorerClientProvider;
         private readonly BTCPayNetworkProvider _networkProvider;
         private readonly NotificationSender _notificationSender;
+        private readonly RateFetcher _rateFetcher;
 
         internal override Task[] InitializeTasks()
         {
@@ -157,6 +196,11 @@ namespace BTCPayServer.HostedServices
                     await HandleCreatePayout(req);
                 }
 
+                if (o is PayoutApproval approv)
+                {
+                    await HandleApproval(approv);
+                }
+
                 if (o is NewOnChainTransactionEvent newTransaction)
                 {
                     await UpdatePayoutsAwaitingForPayment(newTransaction);
@@ -169,6 +213,82 @@ namespace BTCPayServer.HostedServices
                 {
                     await UpdatePayoutsInProgress();
                 }
+            }
+        }
+
+        public Task<RateResult> GetRate(PayoutData payout, string explicitRateRule, CancellationToken cancellationToken)
+        {
+            var ppBlob = payout.PullPaymentData.GetBlob();
+            var currencyPair = new Rating.CurrencyPair(payout.GetPaymentMethodId().CryptoCode, ppBlob.Currency);
+            Rating.RateRule rule = null;
+            try
+            {
+                if (explicitRateRule is null)
+                {
+                    var storeBlob = payout.PullPaymentData.StoreData.GetStoreBlob();
+                    var rules = storeBlob.GetRateRules(_networkProvider);
+                    rules.Spread = 0.0m;
+                    rule = rules.GetRuleFor(currencyPair);
+                }
+                else
+                {
+                    rule = Rating.RateRule.CreateFromExpression(explicitRateRule, currencyPair);
+                }
+            }
+            catch (Exception)
+            {
+                throw new FormatException("Invalid RateRule");
+            }
+            return _rateFetcher.FetchRate(rule, cancellationToken);
+        }
+        public Task<PayoutApproval.Result> Approve(PayoutApproval approval)
+        {
+            approval.Completion = new TaskCompletionSource<PayoutApproval.Result>(TaskCreationOptions.RunContinuationsAsynchronously);
+            if (!_Channel.Writer.TryWrite(approval))
+                throw new ObjectDisposedException(nameof(PullPaymentHostedService));
+            return approval.Completion.Task;
+        }
+        private async Task HandleApproval(PayoutApproval req)
+        {
+            try
+            {
+                using var ctx = _dbContextFactory.CreateContext();
+                var payout = await ctx.Payouts.Include(p => p.PullPaymentData).Where(p => p.Id == req.PayoutId).FirstOrDefaultAsync();
+                if (payout is null)
+                {
+                    req.Completion.SetResult(PayoutApproval.Result.NotFound);
+                    return;
+                }
+                if (payout.State != PayoutState.AwaitingApproval)
+                {
+                    req.Completion.SetResult(PayoutApproval.Result.InvalidState);
+                    return;
+                }
+                var payoutBlob = payout.GetBlob(this._jsonSerializerSettings);
+                if (payoutBlob.Revision != req.Revision)
+                {
+                    req.Completion.SetResult(PayoutApproval.Result.OldRevision);
+                    return;
+                }
+                payout.State = PayoutState.AwaitingPayment;
+                var paymentMethod = PaymentMethodId.Parse(payout.PaymentMethodId);
+                if (paymentMethod.CryptoCode == payout.PullPaymentData.GetBlob().Currency)
+                    req.Rate = 1.0m;
+                var cryptoAmount = Money.Coins(payoutBlob.Amount / req.Rate);
+                Money mininumCryptoAmount = GetMinimumCryptoAmount(paymentMethod, payoutBlob.Destination.Address.ScriptPubKey);
+                if (cryptoAmount < mininumCryptoAmount)
+                {
+                    req.Completion.TrySetResult(PayoutApproval.Result.TooLowAmount);
+                    return;
+                }
+                payoutBlob.CryptoAmount = cryptoAmount.ToDecimal(MoneyUnit.BTC);
+                payout.SetBlob(payoutBlob, this._jsonSerializerSettings);
+                await ctx.SaveChangesAsync();
+                req.Completion.SetResult(PayoutApproval.Result.Ok);
+            }
+            catch(Exception ex)
+            {
+                req.Completion.TrySetException(ex);
             }
         }
 
@@ -221,7 +341,7 @@ namespace BTCPayServer.HostedServices
                 {
                     Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(20)),
                     Date = now,
-                    State = PayoutState.AwaitingPayment,
+                    State = PayoutState.AwaitingApproval,
                     PullPaymentDataId = req.ClaimRequest.PullPaymentId,
                     PaymentMethodId = req.ClaimRequest.PaymentMethodId.ToString(),
                     Destination = GetDestination(req.ClaimRequest.Destination.Address.ScriptPubKey)
@@ -231,18 +351,9 @@ namespace BTCPayServer.HostedServices
                     req.Completion.TrySetResult(new ClaimRequest.ClaimResponse(ClaimRequest.ClaimResult.AmountTooLow));
                     return;
                 }
-                var cryptoAmount = Money.Coins(claimed);
-                Money mininumCryptoAmount = GetMinimumCryptoAmount(req.ClaimRequest.PaymentMethodId, req.ClaimRequest.Destination.Address.ScriptPubKey);
-                if (cryptoAmount < mininumCryptoAmount)
-                {
-                    req.Completion.TrySetResult(new ClaimRequest.ClaimResponse(ClaimRequest.ClaimResult.AmountTooLow));
-                    return;
-                }
                 var payoutBlob = new PayoutBlob()
                 {
                     Amount = claimed,
-                    // To fix, we should evaluate based on exchange rate
-                    CryptoAmount = cryptoAmount.ToDecimal(MoneyUnit.BTC),
                     Destination = req.ClaimRequest.Destination
                 };
                 payout.SetBlob(payoutBlob, _jsonSerializerSettings);
@@ -447,7 +558,8 @@ namespace BTCPayServer.HostedServices
             CancellationToken.ThrowIfCancellationRequested();
             var cts = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             cancelRequest.Completion = cts;
-            _Channel.Writer.TryWrite(cancelRequest);
+            if(!_Channel.Writer.TryWrite(cancelRequest))
+                throw new ObjectDisposedException(nameof(PullPaymentHostedService));
             return cts.Task;
         }
 
@@ -455,7 +567,8 @@ namespace BTCPayServer.HostedServices
         {
             CancellationToken.ThrowIfCancellationRequested();
             var cts = new TaskCompletionSource<ClaimRequest.ClaimResponse>(TaskCreationOptions.RunContinuationsAsynchronously);
-            _Channel.Writer.TryWrite(new PayoutRequest(cts, request));
+            if(!_Channel.Writer.TryWrite(new PayoutRequest(cts, request)))
+                throw new ObjectDisposedException(nameof(PullPaymentHostedService));
             return cts.Task;
         }
 

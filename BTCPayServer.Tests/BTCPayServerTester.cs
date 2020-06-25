@@ -207,7 +207,7 @@ namespace BTCPayServer.Tests
                 var rateProvider = (RateProviderFactory)_Host.Services.GetService(typeof(RateProviderFactory));
                 rateProvider.Providers.Clear();
 
-                var coinAverageMock = new MockRateProvider();
+                coinAverageMock = new MockRateProvider();
                 coinAverageMock.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("BTC_USD"), new BidAsk(5000m)));
                 coinAverageMock.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("BTC_CAD"), new BidAsk(4500m)));
                 coinAverageMock.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("BTC_LTC"), new BidAsk(162m)));
@@ -241,7 +241,7 @@ namespace BTCPayServer.Tests
             await WaitSiteIsOperational();
             Logs.Tester.LogInformation("Site is now operational");
         }
-
+        MockRateProvider coinAverageMock;
         private async Task WaitSiteIsOperational()
         {
             _ = HttpClient.GetAsync("/").ConfigureAwait(false);
@@ -330,6 +330,13 @@ namespace BTCPayServer.Tests
         {
             if (_Host != null)
                 _Host.Dispose();
+        }
+
+        public void ChangeRate(string pair, BidAsk bidAsk)
+        {
+            var p = CurrencyPair.Parse(pair);
+            var index = coinAverageMock.ExchangeRates.FindIndex(o => o.CurrencyPair == p);
+            coinAverageMock.ExchangeRates[index] = new PairRate(p, bidAsk);
         }
     }
 }

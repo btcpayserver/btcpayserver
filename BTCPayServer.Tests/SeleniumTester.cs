@@ -384,5 +384,18 @@ namespace BTCPayServer.Tests
                 Driver.FindElement(By.Id($"Wallet{navPages}")).Click();
             }
         }
+
+        public void GoToInvoice(string id)
+        {
+            GoToInvoices();
+            foreach(var el in Driver.FindElements(By.ClassName("invoice-details-link")))
+            {
+                if (el.GetAttribute("href").Contains(id, StringComparison.OrdinalIgnoreCase))
+                {
+                    el.Click();
+                    break;
+                }
+            }
+        }
     }
 }

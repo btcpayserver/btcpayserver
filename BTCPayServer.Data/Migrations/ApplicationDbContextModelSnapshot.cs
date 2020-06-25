@@ -255,6 +255,7 @@ namespace BTCPayServer.Migrations
                         .HasMaxLength(36);
 
                     b.Property<string>("ApplicationUserId")
+                        .IsRequired()
                         .HasColumnType("TEXT")
                         .HasMaxLength(50);
 
@@ -265,6 +266,7 @@ namespace BTCPayServer.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("NotificationType")
+                        .IsRequired()
                         .HasColumnType("TEXT")
                         .HasMaxLength(100);
 
@@ -876,7 +878,8 @@ namespace BTCPayServer.Migrations
                     b.HasOne("BTCPayServer.Data.ApplicationUser", "ApplicationUser")
                         .WithMany("Notifications")
                         .HasForeignKey("ApplicationUserId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("BTCPayServer.Data.PairedSINData", b =>

@@ -14,9 +14,11 @@ namespace BTCPayServer.Data
         public string Id { get; set; }
         public DateTimeOffset Created { get; set; }
         [MaxLength(50)]
+        [Required]
         public string ApplicationUserId { get; set; }
         public ApplicationUser ApplicationUser { get; set; }
         [MaxLength(100)]
+        [Required]
         public string NotificationType { get; set; }
         public bool Seen { get; set; }
         public byte[] Blob { get; set; }

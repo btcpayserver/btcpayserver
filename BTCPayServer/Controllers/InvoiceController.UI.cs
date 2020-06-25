@@ -6,6 +6,7 @@ using System.Net.Mime;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
@@ -592,7 +593,7 @@ namespace BTCPayServer.Controllers
             {
                 var storedParams = cookieValue.ToLowerInvariant().Trim('?')
                     .Split("&", StringSplitOptions.RemoveEmptyEntries)
-                    .ToDictionary(s => s.Split("=")[0], s => s.Split("=")[1]);
+                    .ToDictionary(s => s.Split("=")[0], s => HttpUtility.HtmlDecode(s.Split("=")[1]));
 
                 if (storedParams.ContainsKey(nameof(searchTerm).ToLowerInvariant()))
                 {

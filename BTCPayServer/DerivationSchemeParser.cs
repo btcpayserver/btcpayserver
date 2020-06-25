@@ -17,8 +17,6 @@ namespace BTCPayServer
         public Network Network => BtcPayNetwork.NBitcoinNetwork;
 
         public Script HintScriptPubKey { get; set; }
-
-        Dictionary<uint, string[]> ElectrumMapping = new Dictionary<uint, string[]>();
         
         public DerivationSchemeParser(BTCPayNetwork expectedNetwork)
         {
@@ -42,7 +40,7 @@ namespace BTCPayServer
             var standardPrefix = Utils.ToBytes(0x0488b21eU, false);
             for (int ii = 0; ii < 4; ii++)
                 data[ii] = standardPrefix[ii];
-            var extPubKey = new BitcoinExtPubKey(Network.GetBase58CheckEncoder().EncodeData(data), Network.Main).ToNetwork(Network);
+            var extPubKey = new BitcoinExtPubKey(Network.GetBase58CheckEncoder().EncodeData(data), Network.NetworkSet.Mainnet).ToNetwork(Network);
             if (!BtcPayNetwork.ElectrumMapping.TryGetValue(prefix, out var type))
             {
                 throw new FormatException();
@@ -119,7 +117,7 @@ namespace BTCPayServer
                     var standardPrefix = Utils.ToBytes(0x0488b21eU, false);
                     for (int ii = 0; ii < 4; ii++)
                         data[ii] = standardPrefix[ii];
-                    var derivationScheme = new BitcoinExtPubKey(Network.GetBase58CheckEncoder().EncodeData(data), Network.Main).ToNetwork(Network).ToString();
+                    var derivationScheme = new BitcoinExtPubKey(Network.GetBase58CheckEncoder().EncodeData(data), Network.NetworkSet.Mainnet).ToNetwork(Network).ToString();
 
                     if (BtcPayNetwork.ElectrumMapping.TryGetValue(prefix, out var type))
                     {

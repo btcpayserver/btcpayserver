@@ -450,22 +450,5 @@ namespace BTCPayServer
             }
             else return input;
         }
-
-        /// <summary>
-        /// Tries to look up the cookie value in the response, falling back to the request.
-        /// If the cookie cannot be found, it returns the optional default value.
-        /// </summary>
-        /// <param name="ctx"></param>
-        /// <param name="cookieName"></param>
-        /// <param name="defaultValue"></param>
-        /// <returns></returns>
-        public static string GetCookieValue(this HttpContext ctx, string cookieName, string defaultValue = "")
-        {
-            SetCookieHeaderValue responseCookie = null;
-            var cookieHeaders = ctx.Response.GetTypedHeaders().SetCookie;
-            if (cookieHeaders != null) responseCookie = cookieHeaders.FirstOrDefault(x => x.Name == cookieName);
-            if (responseCookie != null) return HttpUtility.UrlDecode(responseCookie.Value.Value);
-            return ctx.Request.Cookies[cookieName] ?? defaultValue;
-        }
     }
 }

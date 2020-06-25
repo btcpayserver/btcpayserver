@@ -13,7 +13,6 @@ using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using NBXplorer.DerivationStrategy;
 using System.Net;
-using System.Web;
 using BTCPayServer.Lightning;
 using BTCPayServer.Models;
 using BTCPayServer.Payments;

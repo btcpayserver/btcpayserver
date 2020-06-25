@@ -592,7 +592,7 @@ namespace BTCPayServer.Controllers
             {
                 var storedParams = cookieValue.ToLowerInvariant().Trim('?')
                     .Split("&", StringSplitOptions.RemoveEmptyEntries)
-                    .ToDictionary(s => s.Split("=")[0], s => HttpUtility.HtmlDecode(s.Split("=")[1]));
+                    .ToDictionary(s => s.Split("=")[0], s => HttpUtility.UrlDecode(s.Split("=")[1]));
 
                 if (storedParams.ContainsKey(nameof(searchTerm).ToLowerInvariant()))
                 {
@@ -626,8 +626,7 @@ namespace BTCPayServer.Controllers
                 StoreIds = storeIds,
                 TimezoneOffset = timezoneOffset
             };
-
-
+            
             InvoiceQuery invoiceQuery = GetInvoiceQuery(searchTerm, timezoneOffset);
             var counting = _InvoiceRepository.GetInvoicesTotal(invoiceQuery);
             invoiceQuery.Count = count;

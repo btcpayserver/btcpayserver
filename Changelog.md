@@ -28,6 +28,8 @@
 * Add ThunderHub integration (@NicolasDorier)
 * Add option to attempt to create PSBT with full transaction for inputs to sign for Trezor (@Kukks)
 * Add Notifications feature (@r0ckstardev)
+* Add Pull Payments feature (@NicolasDorier)
+* Add Refund feature (@NicolasDorier)
 ### Bug fixes
 
 * Do not auto-complete generate wallet form (@Kukks)

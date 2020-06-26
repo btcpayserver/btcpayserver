@@ -1285,7 +1285,7 @@ namespace BTCPayServer.Tests
                 var resp = await ctrl.Generate(newVersion);
 
                 var vm = Assert.IsType<Models.NotificationViewModels.IndexViewModel>(
-                    Assert.IsType<ViewResult>(ctrl.Index().Result).Model);
+                    Assert.IsType<ViewResult>(ctrl.Index()).Model);
 
                 Assert.True(vm.Skip == 0);
                 Assert.True(vm.Count == 50);

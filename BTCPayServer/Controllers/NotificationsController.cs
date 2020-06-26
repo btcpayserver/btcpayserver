@@ -59,7 +59,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetNotificationDropdownUI()
+        public IActionResult GetNotificationDropdownUI()
         {
             return ViewComponent("NotificationsDropdown");
         }
@@ -105,7 +105,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index(int skip = 0, int count = 50, int timezoneOffset = 0)
+        public IActionResult Index(int skip = 0, int count = 50, int timezoneOffset = 0)
         {
             if (!ValidUserClaim(out var userId))
                 return RedirectToAction("Index", "Home");

@@ -161,7 +161,7 @@ namespace BTCPayServer
             {
                 return new BitcoinExtPubKey(network.GetBase58CheckEncoder().EncodeData(data), network.NetworkSet.Mainnet).ToNetwork(network);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 return new BitcoinExtPubKey(network.GetBase58CheckEncoder().EncodeData(data), Network.Main).ToNetwork(network);
             }

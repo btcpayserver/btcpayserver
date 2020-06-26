@@ -3,7 +3,9 @@
 ## 1.0.5.0:
 
 ### New Feature and improvements
-
+* Add Notifications feature (@r0ckstardev)
+* Add Pull Payments feature (@NicolasDorier)
+* Add Refund feature (@NicolasDorier
 * Allow invoice and payment requests to be archived (hide from list) (@Kukks)
 * Improve fee selection UI in wallet send screen (@Kukks)
 * Show warning when enabling Payjoin but supported payment methods are not using a hot wallet (@Kukks)
@@ -27,9 +29,6 @@
 * Rename form items in Wallet Send UI (@pavlenex)
 * Add ThunderHub integration (@NicolasDorier)
 * Add option to attempt to create PSBT with full transaction for inputs to sign for Trezor (@Kukks)
-* Add Notifications feature (@r0ckstardev)
-* Add Pull Payments feature (@NicolasDorier)
-* Add Refund feature (@NicolasDorier)
 ### Bug fixes
 
 * Do not auto-complete generate wallet form (@Kukks)

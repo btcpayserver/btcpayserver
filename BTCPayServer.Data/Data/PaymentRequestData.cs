@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using BTCPayServer.Client.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Data
 {
@@ -20,6 +21,18 @@ namespace BTCPayServer.Data
         public Client.Models.PaymentRequestData.PaymentRequestStatus Status { get; set; }
 
         public byte[] Blob { get; set; }
-        
+
+        internal static void OnModelCreating(ModelBuilder builder)
+        {
+            builder.Entity<PaymentRequestData>()
+                .HasOne(o => o.StoreData)
+                .WithMany(i => i.PaymentRequests)
+                .OnDelete(DeleteBehavior.Cascade);
+            builder.Entity<PaymentRequestData>()
+                .Property(e => e.Created)
+                .HasDefaultValue(new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero));
+            builder.Entity<PaymentRequestData>()
+                .HasIndex(o => o.Status);
+        }
     }
 }

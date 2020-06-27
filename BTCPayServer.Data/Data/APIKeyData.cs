@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Data
 {
@@ -27,6 +28,22 @@ namespace BTCPayServer.Data
         public StoreData StoreData { get; set; }
         public ApplicationUser User { get; set; }
         public string Label { get; set; }
+
+        internal static void OnModelCreating(ModelBuilder builder)
+        {
+            builder.Entity<APIKeyData>()
+                   .HasOne(o => o.StoreData)
+                   .WithMany(i => i.APIKeys)
+                   .HasForeignKey(i => i.StoreId).OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<APIKeyData>()
+                .HasOne(o => o.User)
+                .WithMany(i => i.APIKeys)
+                .HasForeignKey(i => i.UserId).OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<APIKeyData>()
+                .HasIndex(o => o.StoreId);
+        }
     }
 
     public class APIKeyBlob

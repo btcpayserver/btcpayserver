@@ -18,6 +18,8 @@ namespace BTCPayServer.Client
         private readonly string _password;
         private readonly HttpClient _httpClient;
 
+        public Uri Host => _btcpayHost;
+
         public string APIKey => _apiKey;
 
         public BTCPayServerClient(Uri btcpayHost, HttpClient httpClient = null)

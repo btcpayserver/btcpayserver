@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using BTCPayServer.Security.GreenField;
 using NBitcoin.DataEncoders;
 using NBitcoin;
+using Org.BouncyCastle.Ocsp;
 
 namespace BTCPayServer.Controllers.GreenField
 {
@@ -39,10 +40,15 @@ namespace BTCPayServer.Controllers.GreenField
 
         [HttpPost("~/api/v1/api-keys")]
         [Authorize(Policy = Policies.Unrestricted, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        public async Task<ActionResult<ApiKeyData>> CreateKey(CreateApiKeyRequest request)
+        public async Task<IActionResult> CreateKey(CreateApiKeyRequest request)
         {
             if (request is null)
                 return NotFound();
+            if (request.Permissions is null || request.Permissions.Length == 0)
+            {
+                ModelState.AddModelError(nameof(request.Permissions), "One or more permissions are required");
+                return this.CreateValidationError(ModelState);
+            }
             var key = new APIKeyData()
             {
                 Id = Encoders.Hex.EncodeData(RandomUtils.GetBytes(20)),

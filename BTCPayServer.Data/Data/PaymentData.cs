@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Data
 {
@@ -28,6 +29,15 @@ namespace BTCPayServer.Data
         public bool Accounted
         {
             get; set;
+        }
+
+        internal static void OnModelCreating(ModelBuilder builder)
+        {
+            builder.Entity<PaymentData>()
+                   .HasOne(o => o.InvoiceData)
+                   .WithMany(i => i.Payments).OnDelete(DeleteBehavior.Cascade);
+            builder.Entity<PaymentData>()
+                   .HasIndex(o => o.InvoiceDataId);
         }
     }
 }

@@ -45,6 +45,7 @@ namespace BTCPayServer.Controllers
         {
             if (appType.HasValue && !string.IsNullOrEmpty(appId))
             {
+                this.HttpContext.Response.Headers.Remove("Onion-Location");
                 switch (appType.Value)
                 {
                     case AppType.Crowdfund:

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.5.2:
+
+### Bug fixes
+* Do not include the Onion-Location header for custom domains mapping (@NicolasDorier)
+* Fix warning message when using SQLite (@NicolasDorier)
+* Create store could be called with a scoped store's modify apikey (@NicolasDorier)
+* Crowdfunding app used with a custom domain were showing blank page (@NicolasDorier)
+
 ## 1.0.5.1:
 
 ### Bug fixes

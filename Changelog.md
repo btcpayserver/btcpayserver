@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.5.1:
+
+### Bug fixes
+* Point of sales app used with a custom domain were showing blank page (@NicolasDorier)
+
 ## 1.0.5.0:
 
 ### New Feature and improvements

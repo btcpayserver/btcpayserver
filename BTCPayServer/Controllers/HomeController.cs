@@ -56,7 +56,7 @@ namespace BTCPayServer.Controllers
                         var res = await controller.ViewCrowdfund(appId, null) as ViewResult;
                         if (res != null)
                         {
-                            res.ViewName = "/Views/AppsPublic/ViewCrowdfund.cshtml";
+                            res.ViewName = $"/Views/{res.ViewName}.cshtml";
                             return res; // return 
                         }
 
@@ -72,7 +72,7 @@ namespace BTCPayServer.Controllers
                         var res = await controller.ViewPointOfSale(appId) as ViewResult;
                         if (res != null)
                         {
-                            res.ViewName = "/Views/AppsPublic/ViewPointOfSale.cshtml";
+                            res.ViewName = $"/Views/{res.ViewName}.cshtml";
                             return res; // return 
                         }
 

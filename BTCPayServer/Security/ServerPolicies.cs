@@ -11,6 +11,7 @@ namespace BTCPayServer.Security
             {
                 options.AddPolicy(p);
             }
+            options.AddPolicy(Policies.CanModifyStoreSettingsUnscoped);
             options.AddPolicy(CanGetRates.Key);
             return options;
         }

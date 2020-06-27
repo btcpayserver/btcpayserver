@@ -65,7 +65,7 @@ namespace BTCPayServer.Controllers.GreenField
         }
         
         [HttpPost("~/api/v1/stores")]
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [Authorize(Policy = Policies.CanModifyStoreSettingsUnscoped, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> CreateStore(CreateStoreRequest request)
         {
             var validationResult = Validate(request);

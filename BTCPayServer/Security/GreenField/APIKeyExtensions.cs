@@ -46,14 +46,19 @@ namespace BTCPayServer.Security.GreenField
                     c.Type.Equals(GreenFieldConstants.ClaimTypes.Permission, StringComparison.InvariantCultureIgnoreCase))
                 .Select(claim => claim.Value).ToArray();
         }
-
         public static bool HasPermission(this AuthorizationHandlerContext context, Permission permission)
+        {
+            return HasPermission(context, permission, false);
+        }
+        public static bool HasPermission(this AuthorizationHandlerContext context, Permission permission, bool requireUnscoped)
         {
             foreach (var claim in context.User.Claims.Where(c =>
                 c.Type.Equals(GreenFieldConstants.ClaimTypes.Permission, StringComparison.InvariantCultureIgnoreCase)))
             {
                 if (Permission.TryParse(claim.Value, out var claimPermission))
                 {
+                    if (requireUnscoped && claimPermission.Scope is string)
+                        continue;
                     if (claimPermission.Contains(permission))
                     {
                         return true;

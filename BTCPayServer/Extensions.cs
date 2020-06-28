@@ -45,32 +45,6 @@ namespace BTCPayServer
 {
     public static class Extensions
     {
-        public static InvoiceEntity GetBlob(this Data.InvoiceData invoiceData, BTCPayNetworkProvider networks)
-        {
-            var entity = NBitcoin.JsonConverters.Serializer.ToObject<InvoiceEntity>(ZipUtils.Unzip(invoiceData.Blob), null);
-            entity.Networks = networks;
-            return entity;
-        }
-        public static PaymentEntity GetBlob(this Data.PaymentData paymentData, BTCPayNetworkProvider networks)
-        {
-            var unziped = ZipUtils.Unzip(paymentData.Blob);
-            var cryptoCode = "BTC";
-            if (JObject.Parse(unziped).TryGetValue("cryptoCode", out var v) && v.Type == JTokenType.String)
-                cryptoCode = v.Value<string>();
-            var network = networks.GetNetwork<BTCPayNetworkBase>(cryptoCode);
-            PaymentEntity paymentEntity = null;
-            if (network == null)
-            {
-                paymentEntity = NBitcoin.JsonConverters.Serializer.ToObject<PaymentEntity>(unziped, null);
-            }
-            else
-            {
-                paymentEntity = network.ToObject<PaymentEntity>(unziped);
-            }
-            paymentEntity.Network = network;
-            paymentEntity.Accounted = paymentData.Accounted;
-            return paymentEntity;
-        }
 
         public static bool TryGetPayjoinEndpoint(this BitcoinUrlBuilder bip21, out Uri endpoint)
         {
@@ -482,23 +456,6 @@ namespace BTCPayServer
         public static void SetStoresData(this HttpContext ctx, StoreData[] storeData)
         {
             ctx.Items["BTCPAY.STORESDATA"] = storeData;
-        }
-
-        private static JsonSerializerSettings jsonSettings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
-        public static string ToJson(this object o)
-        {
-            var res = JsonConvert.SerializeObject(o, Formatting.None, jsonSettings);
-            return res;
-        }
-        
-        public static string TrimEnd(this string input, string suffixToRemove,
-            StringComparison comparisonType) {
-
-            if (input != null && suffixToRemove != null
-                              && input.EndsWith(suffixToRemove, comparisonType)) {
-                return input.Substring(0, input.Length - suffixToRemove.Length);
-            }
-            else return input;
         }
     }
 }

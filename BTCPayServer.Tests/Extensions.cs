@@ -4,6 +4,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using OpenQA.Selenium;
 using Xunit;
 
@@ -11,6 +13,12 @@ namespace BTCPayServer.Tests
 {
     public static class Extensions
     {
+        private static JsonSerializerSettings jsonSettings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
+        public static string ToJson(this object o)
+        {
+            var res = JsonConvert.SerializeObject(o, Formatting.None, jsonSettings);
+            return res;
+        }
         public static void ScrollTo(this IWebDriver driver, By by)
         {
             var element = driver.FindElement(by);

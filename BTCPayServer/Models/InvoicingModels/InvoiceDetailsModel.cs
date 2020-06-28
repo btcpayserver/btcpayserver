@@ -31,7 +31,7 @@ namespace BTCPayServer.Models.InvoicingModels
         public string Crypto { get; set; }
         public string BOLT11 { get; set; }
     }
-    
+
     public class InvoiceDetailsModel
     {
         public class CryptoPayment

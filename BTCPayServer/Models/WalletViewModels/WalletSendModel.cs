@@ -37,7 +37,7 @@ namespace BTCPayServer.Models.WalletViewModels
         public decimal CurrentBalance { get; set; }
 
         public string CryptoCode { get; set; }
-       
+
         public List<FeeRateOption> RecommendedSatoshiPerByte { get; set; }
 
         [Display(Name = "Fee rate (satoshi per byte)")]
@@ -52,7 +52,7 @@ namespace BTCPayServer.Models.WalletViewModels
         public string RateError { get; set; }
         public bool SupportRBF { get; set; }
         [Display(Name = "Always include non-witness UTXO if available")]
-        public bool AlwaysIncludeNonWitnessUTXO  { get; set; }
+        public bool AlwaysIncludeNonWitnessUTXO { get; set; }
         [Display(Name = "Allow fee increase (RBF)")]
         public ThreeStateBool AllowFeeBump { get; set; }
 
@@ -61,7 +61,7 @@ namespace BTCPayServer.Models.WalletViewModels
         public string PayJoinBIP21 { get; set; }
         public bool InputSelection { get; set; }
         public InputSelectionOption[] InputsAvailable { get; set; }
-        
+
         [Display(Name = "UTXOs to spend from")]
         public IEnumerable<string> SelectedInputs { get; set; }
 
@@ -69,7 +69,7 @@ namespace BTCPayServer.Models.WalletViewModels
         {
             public IEnumerable<Label> Labels { get; set; }
             public string Comment { get; set; }
-            public decimal Amount  { get; set; }
+            public decimal Amount { get; set; }
             public string Outpoint { get; set; }
             public string Link { get; set; }
         }

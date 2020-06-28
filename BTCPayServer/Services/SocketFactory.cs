@@ -6,8 +6,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Configuration;
 using NBitcoin;
-using NBitcoin.Protocol.Connectors;
 using NBitcoin.Protocol;
+using NBitcoin.Protocol.Connectors;
 
 namespace BTCPayServer.Services
 {

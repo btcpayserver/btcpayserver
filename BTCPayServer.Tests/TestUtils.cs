@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using Xunit.Sdk;
-using System.Linq;
-using System.Net.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
+using Xunit.Sdk;
 
 namespace BTCPayServer.Tests
 {
@@ -47,7 +47,7 @@ namespace BTCPayServer.Tests
             Assert.IsType<T>(obj);
             return (T)obj;
         }
-        
+
         public static FormFile GetFormFile(string filename, string content)
         {
             File.WriteAllText(filename, content);

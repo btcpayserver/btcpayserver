@@ -42,7 +42,7 @@ namespace BTCPayServer.Payments.PayJoin
                 ctx.PayjoinLocks.Remove(new PayjoinLock()
                 {
                     Id = outPoint.ToString()
-                });   
+                });
             }
             try
             {
@@ -64,7 +64,7 @@ namespace BTCPayServer.Payments.PayJoin
                     // Random flag so it does not lock same id
                     // as the lock utxo
                     Id = "K-" + outPoint.ToString()
-                });   
+                });
             }
             try
             {

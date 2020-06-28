@@ -46,7 +46,7 @@ namespace BTCPayServer.Tests
             {
                 StringBuilder builder = new StringBuilder();
                 builder.AppendLine();
-                foreach (var logKind in new []{ LogType.Browser, LogType.Client, LogType.Driver, LogType.Server })
+                foreach (var logKind in new[] { LogType.Browser, LogType.Client, LogType.Driver, LogType.Server })
                 {
                     try
                     {

@@ -16,7 +16,7 @@ namespace BTCPayServer.Storage
         public StorageController(FileService fileService, BTCPayServerOptions serverOptions)
         {
             _FileService = fileService;
-            _dir =FileSystemFileProviderService.GetTempStorageDir(serverOptions);
+            _dir = FileSystemFileProviderService.GetTempStorageDir(serverOptions);
         }
 
         [HttpGet("{fileId}")]

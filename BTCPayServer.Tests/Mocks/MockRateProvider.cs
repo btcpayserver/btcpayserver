@@ -14,7 +14,7 @@ namespace BTCPayServer.Tests.Mocks
 
         public MockRateProvider()
         {
-            
+
         }
         public Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
         {

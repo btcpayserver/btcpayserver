@@ -1,24 +1,24 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using System.Reflection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using System.Net.Http;
+using System.Reflection;
 using System.Text;
 using System.Threading;
-using NBitpayClient;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
-using System.Collections.Concurrent;
-using Microsoft.Extensions.Hosting;
+using System.Threading.Tasks;
 using BTCPayServer.Events;
-using NBXplorer;
-using BTCPayServer.Services.Invoices;
 using BTCPayServer.Payments;
-using BTCPayServer.Services.Mails;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Mails;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using NBitpayClient;
+using NBXplorer;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.HostedServices
 {

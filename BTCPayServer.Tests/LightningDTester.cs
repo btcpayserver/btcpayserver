@@ -18,6 +18,6 @@ namespace BTCPayServer.Tests
 
         public CLightningClient RPC { get; }
         public string P2PHost { get; }
-        
+
     }
 }

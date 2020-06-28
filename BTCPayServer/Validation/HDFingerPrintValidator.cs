@@ -17,7 +17,7 @@ namespace BTCPayServer.Validation
             {
                 return ValidationResult.Success;
             }
-            
+
             try
             {
                 new HDFingerprint(Encoders.Hex.DecodeData(str));

@@ -157,8 +157,8 @@ namespace BTCPayServer.Controllers
             {
                 return RedirectToAction(nameof(TwoFactorAuthentication));
             }
-            
-            var model = new GenerateRecoveryCodesViewModel {RecoveryCodes = recoveryCodes};
+
+            var model = new GenerateRecoveryCodesViewModel { RecoveryCodes = recoveryCodes };
             return View(model);
         }
 

@@ -25,9 +25,9 @@ namespace BTCPayServer.Controllers.GreenField
         private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
 
         public GreenFieldServerInfoController(
-            BTCPayServerEnvironment env, 
-            NBXplorerDashboard dashBoard, 
-            StoreRepository storeRepository, 
+            BTCPayServerEnvironment env,
+            NBXplorerDashboard dashBoard,
+            StoreRepository storeRepository,
             UserManager<ApplicationUser> userManager,
             BTCPayNetworkProvider networkProvider,
             PaymentMethodHandlerDictionary paymentMethodHandlerDictionary)
@@ -39,7 +39,7 @@ namespace BTCPayServer.Controllers.GreenField
             _networkProvider = networkProvider;
             _paymentMethodHandlerDictionary = paymentMethodHandlerDictionary;
         }
-        
+
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/server/info")]
         public async Task<ActionResult> ServerInfo()
@@ -58,7 +58,7 @@ namespace BTCPayServer.Controllers.GreenField
                         Headers = s.Headers,
                         Blocks = s.Blocks,
                         VerificationProgress = s.VerificationProgress
-                    }: null,
+                    } : null,
                     ChainHeight = summary.Status.ChainHeight,
                     SyncHeight = summary.Status.SyncHeight
                 });

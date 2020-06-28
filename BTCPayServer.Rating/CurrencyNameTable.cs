@@ -1,12 +1,12 @@
 ﻿using System;
-using NBitcoin;
 using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
-using System.Linq;
-using System.Text;
 using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Text;
 using BTCPayServer.Rating;
+using NBitcoin;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.Services.Rates
@@ -83,7 +83,7 @@ namespace BTCPayServer.Services.Rates
 
                     foreach (var curr in _Currencies.Where(pair => pair.Value.Crypto))
                     {
-                        AddCurrency(_CurrencyProviders, curr.Key, curr.Value.Divisibility, curr.Value.Symbol?? curr.Value.Code);
+                        AddCurrency(_CurrencyProviders, curr.Key, curr.Value.Divisibility, curr.Value.Symbol ?? curr.Value.Code);
                     }
                 }
                 return _CurrencyProviders.TryGet(currency.ToUpperInvariant());

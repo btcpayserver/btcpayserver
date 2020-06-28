@@ -1,43 +1,43 @@
-﻿using BTCPayServer.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using System.Linq;
-using BTCPayServer.HostedServices;
-using BTCPayServer.Hosting;
-using BTCPayServer.Payments;
-using BTCPayServer.Payments.Lightning;
-using BTCPayServer.Rating;
-using BTCPayServer.Security;
-using BTCPayServer.Services.Invoices;
-using BTCPayServer.Services.Rates;
-using BTCPayServer.Services.Stores;
-using BTCPayServer.Tests.Logging;
-using BTCPayServer.Tests.Mocks;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Controllers;
-using Microsoft.AspNetCore.Mvc.Routing;
-using Microsoft.Extensions.Logging;
-using NBitcoin;
-using NBXplorer;
-using NBXplorer.DerivationStrategy;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Security.Claims;
 using System.Security.Principal;
 using System.Text;
 using System.Threading;
-using Xunit;
-using BTCPayServer.Services;
-using System.Net.Http;
-using Microsoft.AspNetCore.Hosting.Server.Features;
 using System.Threading.Tasks;
+using BTCPayServer.Configuration;
+using BTCPayServer.HostedServices;
+using BTCPayServer.Hosting;
+using BTCPayServer.Payments;
+using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Rating;
+using BTCPayServer.Security;
+using BTCPayServer.Services;
+using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Rates;
+using BTCPayServer.Services.Stores;
+using BTCPayServer.Tests.Logging;
+using BTCPayServer.Tests.Mocks;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.AspNetCore.Mvc.Routing;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
+using NBitcoin;
+using NBXplorer;
+using NBXplorer.DerivationStrategy;
+using Xunit;
 using AuthenticationSchemes = BTCPayServer.Security.AuthenticationSchemes;
 
 namespace BTCPayServer.Tests
@@ -95,7 +95,7 @@ namespace BTCPayServer.Tests
         public bool MockRates { get; set; } = true;
         public string SocksEndpoint { get; set; }
 
-        public HashSet<string> Chains { get; set; } = new HashSet<string>(){"BTC"};
+        public HashSet<string> Chains { get; set; } = new HashSet<string>() { "BTC" };
         public bool UseLightning { get; set; }
         public bool AllowAdminRegistration { get; set; } = true;
         public bool DisableRegistration { get; set; } = false;
@@ -142,7 +142,7 @@ namespace BTCPayServer.Tests
             }
             if (AllowAdminRegistration)
                 config.AppendLine("allow-admin-registration=1");
-           
+
             config.AppendLine($"torrcfile={TestUtils.GetTestDataFullPath("Tor/torrc")}");
             config.AppendLine($"socksendpoint={SocksEndpoint}");
             config.AppendLine($"debuglog=debug.log");
@@ -225,12 +225,12 @@ namespace BTCPayServer.Tests
                 var bittrex = new MockRateProvider();
                 bittrex.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("DOGE_BTC"), new BidAsk(0.004m)));
                 rateProvider.Providers.Add("bittrex", bittrex);
-                
-                
+
+
                 var bitfinex = new MockRateProvider();
                 bitfinex.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("UST_BTC"), new BidAsk(0.000136m)));
                 rateProvider.Providers.Add("bitfinex", bitfinex);
-                
+
                 var bitpay = new MockRateProvider();
                 bitpay.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("ETB_BTC"), new BidAsk(0.1m)));
                 rateProvider.Providers.Add("bitpay", bitpay);

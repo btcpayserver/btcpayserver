@@ -1,15 +1,15 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using BTCPayServer.Services.Rates;
 using Microsoft.Extensions.Configuration;
 using NBitcoin.DataEncoders;
 using Newtonsoft.Json.Linq;
 using Xunit;
-using System.IO;
-using BTCPayServer.Services.Rates;
 
 namespace BTCPayServer.Tests
 {
@@ -38,7 +38,7 @@ namespace BTCPayServer.Tests
             {
                 bool isSourceLang = l == "en";
                 var j = await client.GetTransifexAsync($"https://www.transifex.com/api/2/project/btcpayserver/resource/enjson/translation/{l}/");
-                if(!isSourceLang)
+                if (!isSourceLang)
                 {
                     while (sourceLang == null)
                         await Task.Delay(10);
@@ -68,7 +68,7 @@ namespace BTCPayServer.Tests
                 }
                 else
                 {
-                    if(jobj["InvoiceExpired_Body_3"].Value<string>() == sourceLang["InvoiceExpired_Body_3"].Value<string>())
+                    if (jobj["InvoiceExpired_Body_3"].Value<string>() == sourceLang["InvoiceExpired_Body_3"].Value<string>())
                     {
                         jobj["InvoiceExpired_Body_3"] = string.Empty;
                     }

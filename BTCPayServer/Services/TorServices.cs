@@ -1,11 +1,11 @@
 ﻿using System;
-using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Configuration;
 using BTCPayServer.Logging;
+using Microsoft.Extensions.Logging;
 
 namespace BTCPayServer.Services
 {

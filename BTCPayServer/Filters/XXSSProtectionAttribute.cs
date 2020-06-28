@@ -16,6 +16,6 @@ namespace BTCPayServer.Filters
         {
             context.HttpContext.Response.SetHeaderOnStarting("X-XSS-Protection", "1; mode=block");
         }
-        
+
     }
 }

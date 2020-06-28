@@ -27,7 +27,8 @@ namespace BTCPayServer.Payments.Lightning
             return 0.0m;
         }
 
-        public decimal GetFeeRate() {
+        public decimal GetFeeRate()
+        {
             return 0.0m;
         }
 

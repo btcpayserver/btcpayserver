@@ -107,7 +107,7 @@ namespace BTCPayServer.Controllers
             if (app == null)
                 return NotFound();
             var settings = app.GetSettings<PointOfSaleSettings>();
-            settings.DefaultView = settings.EnableShoppingCart? PosViewType.Cart : settings.DefaultView;
+            settings.DefaultView = settings.EnableShoppingCart ? PosViewType.Cart : settings.DefaultView;
             if (string.IsNullOrEmpty(choiceKey) && !settings.ShowCustomAmount && settings.DefaultView != PosViewType.Cart)
             {
                 return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId, viewType = viewType });
@@ -138,7 +138,7 @@ namespace BTCPayServer.Controllers
                 if (choice?.PaymentMethods?.Any() is true)
                 {
                     paymentMethods = choice?.PaymentMethods.ToDictionary(s => s,
-                        s => new InvoiceSupportedTransactionCurrency() {Enabled = true});
+                        s => new InvoiceSupportedTransactionCurrency() { Enabled = true });
                 }
             }
             else
@@ -147,13 +147,13 @@ namespace BTCPayServer.Controllers
                     return NotFound();
                 price = amount;
                 title = settings.Title;
-                
+
                 //if cart IS enabled and we detect posdata that matches the cart system's, check inventory for the items
                 if (!string.IsNullOrEmpty(posData) &&
                     settings.DefaultView == PosViewType.Cart &&
                     AppService.TryParsePosCartItems(posData, out var cartItems))
                 {
-                        
+
                     var choices = _AppService.Parse(settings.Template, settings.Currency);
                     foreach (var cartItem in cartItems)
                     {
@@ -166,9 +166,9 @@ namespace BTCPayServer.Controllers
                             switch (itemChoice.Inventory)
                             {
                                 case int i when i <= 0:
-                                    return RedirectToAction(nameof(ViewPointOfSale), new {appId});
+                                    return RedirectToAction(nameof(ViewPointOfSale), new { appId });
                                 case int inventory when inventory < cartItem.Value:
-                                    return RedirectToAction(nameof(ViewPointOfSale), new {appId});
+                                    return RedirectToAction(nameof(ViewPointOfSale), new { appId });
                             }
                         }
                     }
@@ -200,8 +200,8 @@ namespace BTCPayServer.Controllers
             }
             catch (BitpayHttpException e)
             {
-                TempData.SetStatusMessageModel(new StatusMessageModel() 
-                { 
+                TempData.SetStatusMessageModel(new StatusMessageModel()
+                {
                     Html = e.Message.Replace("\n", "<br />", StringComparison.OrdinalIgnoreCase),
                     Severity = StatusMessageModel.StatusSeverity.Error,
                     AllowDismiss = true
@@ -293,8 +293,8 @@ namespace BTCPayServer.Controllers
                 price = choice.Price.Value;
                 if (request.Amount > price)
                     price = request.Amount;
-                
-                
+
+
                 if (choice.Inventory.HasValue)
                 {
                     if (choice.Inventory <= 0)
@@ -302,12 +302,12 @@ namespace BTCPayServer.Controllers
                         return NotFound("Option was out of stock");
                     }
                 }
-                
+
 
                 if (choice?.PaymentMethods?.Any() is true)
                 {
                     paymentMethods = choice?.PaymentMethods.ToDictionary(s => s,
-                        s => new InvoiceSupportedTransactionCurrency() {Enabled = true});
+                        s => new InvoiceSupportedTransactionCurrency() { Enabled = true });
                 }
             }
 
@@ -320,21 +320,21 @@ namespace BTCPayServer.Controllers
             try
             {
                 var invoice = await _InvoiceController.CreateInvoiceCore(new CreateInvoiceRequest()
-                    {
-                        OrderId = AppService.GetCrowdfundOrderId(appId),
-                        Currency = settings.TargetCurrency,
-                        ItemCode = request.ChoiceKey ?? string.Empty,
-                        ItemDesc = title,
-                        BuyerEmail = request.Email,
-                        Price = price,
-                        NotificationURL = settings.NotificationUrl,
-                        FullNotifications = true,
-                        ExtendedNotifications = true,
-                        SupportedTransactionCurrencies = paymentMethods,
-                        RedirectURL = request.RedirectUrl ?? 
-                                     new Uri(new Uri( new Uri(HttpContext.Request.GetAbsoluteRoot()),  _BtcPayServerOptions.RootPath), $"apps/{appId}/crowdfund").ToString()
-                    }, store, HttpContext.Request.GetAbsoluteRoot(),
-                    new List<string> {AppService.GetAppInternalTag(appId)},
+                {
+                    OrderId = AppService.GetCrowdfundOrderId(appId),
+                    Currency = settings.TargetCurrency,
+                    ItemCode = request.ChoiceKey ?? string.Empty,
+                    ItemDesc = title,
+                    BuyerEmail = request.Email,
+                    Price = price,
+                    NotificationURL = settings.NotificationUrl,
+                    FullNotifications = true,
+                    ExtendedNotifications = true,
+                    SupportedTransactionCurrencies = paymentMethods,
+                    RedirectURL = request.RedirectUrl ??
+                                     new Uri(new Uri(new Uri(HttpContext.Request.GetAbsoluteRoot()), _BtcPayServerOptions.RootPath), $"apps/{appId}/crowdfund").ToString()
+                }, store, HttpContext.Request.GetAbsoluteRoot(),
+                    new List<string> { AppService.GetAppInternalTag(appId) },
                     cancellationToken: cancellationToken);
                 if (request.RedirectToCheckout)
                 {

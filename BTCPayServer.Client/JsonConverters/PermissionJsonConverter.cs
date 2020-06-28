@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Reflection;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
-using Newtonsoft.Json;
 using NBitcoin.JsonConverters;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Client.JsonConverters
 {

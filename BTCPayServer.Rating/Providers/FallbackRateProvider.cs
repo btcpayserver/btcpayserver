@@ -29,7 +29,7 @@ namespace BTCPayServer.Services.Rates
                 {
                     throw;
                 }
-                catch(Exception ex) { Exceptions.Add(ex); }
+                catch (Exception ex) { Exceptions.Add(ex); }
             }
             return Array.Empty<PairRate>();
         }

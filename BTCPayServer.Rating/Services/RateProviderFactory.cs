@@ -141,7 +141,7 @@ namespace BTCPayServer.Services.Rates
             }
         }
 
-        private IRateProvider AddExchangeSharpProviders<T>(string providerName) where T: ExchangeAPI, new()
+        private IRateProvider AddExchangeSharpProviders<T>(string providerName) where T : ExchangeAPI, new()
         {
             var provider = new ExchangeSharpRateProvider<T>(_httpClientFactory.CreateClient($"EXCHANGE_{providerName}".ToUpperInvariant()), true);
             Providers.Add(providerName, provider);

@@ -1,17 +1,17 @@
 ﻿using System;
-using NBitcoin;
-using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Logging;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Rates;
 using Microsoft.Extensions.Hosting;
-using BTCPayServer.Logging;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Text;
+using Microsoft.Extensions.Logging;
+using NBitcoin;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.HostedServices

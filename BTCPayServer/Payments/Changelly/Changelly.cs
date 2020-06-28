@@ -18,7 +18,7 @@ namespace BTCPayServer.Payments.Changelly
         private readonly string _apisecret;
         private readonly HttpClient _httpClient;
 
-        public Changelly(HttpClient httpClient,  string apiKey, string apiSecret, string apiUrl)
+        public Changelly(HttpClient httpClient, string apiKey, string apiSecret, string apiUrl)
         {
             _apisecret = apiSecret;
             _httpClient = httpClient;
@@ -40,22 +40,22 @@ namespace BTCPayServer.Payments.Changelly
 
         private async Task<ChangellyResponse<T>> PostToApi<T>(string message)
         {
-                using var hmac = new HMACSHA512(Encoding.UTF8.GetBytes(_apisecret));
-                var hashMessage = hmac.ComputeHash(Encoding.UTF8.GetBytes(message));
-                var sign = ToHexString(hashMessage);
+            using var hmac = new HMACSHA512(Encoding.UTF8.GetBytes(_apisecret));
+            var hashMessage = hmac.ComputeHash(Encoding.UTF8.GetBytes(message));
+            var sign = ToHexString(hashMessage);
 
-                using var request = new HttpRequestMessage(HttpMethod.Post, "");
-                request.Headers.Add("sign", sign);
-                request.Content = new StringContent(message, Encoding.UTF8, "application/json");
+            using var request = new HttpRequestMessage(HttpMethod.Post, "");
+            request.Headers.Add("sign", sign);
+            request.Content = new StringContent(message, Encoding.UTF8, "application/json");
 
-                var result = await _httpClient.SendAsync(request);
+            var result = await _httpClient.SendAsync(request);
 
-                if (!result.IsSuccessStatusCode)
-                    throw new ChangellyException(result.ReasonPhrase);
-                var content =
-                    await result.Content.ReadAsStringAsync();
-                return JObject.Parse(content).ToObject<ChangellyResponse<T>>();
-            
+            if (!result.IsSuccessStatusCode)
+                throw new ChangellyException(result.ReasonPhrase);
+            var content =
+                await result.Content.ReadAsStringAsync();
+            return JObject.Parse(content).ToObject<ChangellyResponse<T>>();
+
         }
 
         public virtual async Task<IEnumerable<CurrencyFull>> GetCurrenciesFull()
@@ -76,10 +76,10 @@ namespace BTCPayServer.Payments.Changelly
             string toCurrency,
             decimal amount)
         {
-                var message =
-                    $"{{\"id\": \"test\",\"jsonrpc\": \"2.0\",\"method\": \"getExchangeAmount\",\"params\":{{\"from\": \"{fromCurrency}\",\"to\": \"{toCurrency}\",\"amount\": \"{amount}\"}}}}";
+            var message =
+                $"{{\"id\": \"test\",\"jsonrpc\": \"2.0\",\"method\": \"getExchangeAmount\",\"params\":{{\"from\": \"{fromCurrency}\",\"to\": \"{toCurrency}\",\"amount\": \"{amount}\"}}}}";
 
-                var result = await PostToApi<string>(message);
+            var result = await PostToApi<string>(message);
 
             return Convert.ToDecimal(result.Result, CultureInfo.InvariantCulture);
         }

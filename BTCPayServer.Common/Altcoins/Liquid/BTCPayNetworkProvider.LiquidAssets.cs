@@ -29,7 +29,7 @@ namespace BTCPayServer
                 SupportRBF = true,
                 SupportLightning = false
             });
-            
+
             Add(new ElementsBTCPayNetwork()
             {
                 CryptoCode = "ETB",
@@ -37,7 +37,7 @@ namespace BTCPayServer
                 ShowSyncSummary = false,
                 DefaultRateRules = new[]
                 {
-                    
+
                     "ETB_X = ETB_BTC * BTC_X",
                     "ETB_BTC = bitpay(ETB_BTC)"
                 },
@@ -53,14 +53,14 @@ namespace BTCPayServer
                 SupportRBF = true,
                 SupportLightning = false
             });
-            
-              Add(new ElementsBTCPayNetwork()
+
+            Add(new ElementsBTCPayNetwork()
             {
                 CryptoCode = "LCAD",
                 NetworkCryptoCode = "LBTC",
                 ShowSyncSummary = false,
                 DefaultRateRules = new[]
-                {
+              {
                     "LCAD_CAD = 1",
                     "LCAD_X = CAD_BTC * BTC_X",
                     "LCAD_BTC = bylls(CAD_BTC)",

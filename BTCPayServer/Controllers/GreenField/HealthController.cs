@@ -1,5 +1,5 @@
-using BTCPayServer.HostedServices;
 using BTCPayServer.Client.Models;
+using BTCPayServer.HostedServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

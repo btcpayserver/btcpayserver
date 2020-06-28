@@ -1,6 +1,22 @@
-﻿using BTCPayServer.Controllers;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Runtime.CompilerServices;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using BTCPayServer.Controllers;
+using BTCPayServer.Lightning;
+using BTCPayServer.Lightning.CLightning;
 using BTCPayServer.Models.AccountViewModels;
+using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Services;
+using BTCPayServer.Tests.Lnd;
+using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
@@ -8,28 +24,12 @@ using NBitcoin.RPC;
 using NBitpayClient;
 using NBXplorer;
 using NBXplorer.Models;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Net.Http;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-using System.Threading;
-using System.Globalization;
-using BTCPayServer.Tests.Lnd;
-using BTCPayServer.Payments.Lightning;
-using BTCPayServer.Lightning.CLightning;
-using BTCPayServer.Lightning;
-using BTCPayServer.Services;
-using BTCPayServer.Tests.Logging;
 
 namespace BTCPayServer.Tests
 {
     public class ServerTester : IDisposable
     {
-        public static ServerTester Create([CallerMemberNameAttribute]string scope = null, bool newDb = false)
+        public static ServerTester Create([CallerMemberNameAttribute] string scope = null, bool newDb = false)
         {
             return new ServerTester(scope, newDb);
         }
@@ -186,7 +186,7 @@ namespace BTCPayServer.Tests
         {
             get; set;
         }
-        
+
         public RPCClient LBTCExplorerNode { get; set; }
 
         public ExplorerClient ExplorerClient

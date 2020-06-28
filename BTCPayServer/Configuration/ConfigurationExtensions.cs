@@ -1,10 +1,10 @@
-﻿using Microsoft.Extensions.Configuration;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Primitives;
 using NBitcoin;
 
@@ -58,7 +58,7 @@ namespace BTCPayServer.Configuration
                 throw new NotSupportedException("Configuration value does not support time " + typeof(T).Name);
             }
         }
-        
+
         public static string GetDataDir(this IConfiguration configuration)
         {
             var networkType = DefaultConfiguration.GetNetworkType(configuration);

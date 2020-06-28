@@ -6,7 +6,7 @@ namespace BTCPayServer.Payments.CoinSwitch
         public string Mode { get; set; }
         public bool Enabled { get; set; }
         public decimal AmountMarkupPercentage { get; set; }
-        
+
         public bool IsConfigured()
         {
             return

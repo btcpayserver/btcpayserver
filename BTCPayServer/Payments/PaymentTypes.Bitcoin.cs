@@ -23,22 +23,22 @@ namespace BTCPayServer.Payments
 
         public override CryptoPaymentData DeserializePaymentData(BTCPayNetworkBase network, string str)
         {
-            return ((BTCPayNetwork) network).ToObject<BitcoinLikePaymentData>(str);
+            return ((BTCPayNetwork)network).ToObject<BitcoinLikePaymentData>(str);
         }
 
         public override string SerializePaymentData(BTCPayNetworkBase network, CryptoPaymentData paymentData)
         {
-            return ((BTCPayNetwork) network).ToString(paymentData);
+            return ((BTCPayNetwork)network).ToString(paymentData);
         }
 
         public override IPaymentMethodDetails DeserializePaymentMethodDetails(BTCPayNetworkBase network, string str)
         {
-            return ((BTCPayNetwork) network).ToObject<BitcoinLikeOnChainPaymentMethod>(str);
+            return ((BTCPayNetwork)network).ToObject<BitcoinLikeOnChainPaymentMethod>(str);
         }
 
         public override string SerializePaymentMethodDetails(BTCPayNetworkBase network, IPaymentMethodDetails details)
         {
-            return ((BTCPayNetwork) network).ToString((BitcoinLikeOnChainPaymentMethod)details);
+            return ((BTCPayNetwork)network).ToString((BitcoinLikeOnChainPaymentMethod)details);
         }
 
         public override ISupportedPaymentMethod DeserializeSupportedPaymentMethod(BTCPayNetworkBase network, JToken value)

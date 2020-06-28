@@ -1,13 +1,13 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Migrations;
-using JetBrains.Annotations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Migrations.Operations;
-using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace BTCPayServer.Data
 {
@@ -45,7 +45,7 @@ namespace BTCPayServer.Data
 
         class CustomNpgsqlMigrationsSqlGenerator : NpgsqlMigrationsSqlGenerator
         {
-            public CustomNpgsqlMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies dependencies,  IMigrationsAnnotationProvider annotations, Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure.Internal.INpgsqlOptions opts) : base(dependencies, annotations, opts)
+            public CustomNpgsqlMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies dependencies, IMigrationsAnnotationProvider annotations, Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure.Internal.INpgsqlOptions opts) : base(dependencies, annotations, opts)
             {
             }
 

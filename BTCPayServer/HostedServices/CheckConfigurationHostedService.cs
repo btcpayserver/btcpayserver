@@ -1,15 +1,15 @@
 ﻿using System;
-using Microsoft.Extensions.Logging;
-using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using BTCPayServer.Data;
-using BTCPayServer.Services;
-using Microsoft.Extensions.Hosting;
 using System.Threading;
+using System.Threading.Tasks;
 using BTCPayServer.Configuration;
+using BTCPayServer.Data;
 using BTCPayServer.Logging;
+using BTCPayServer.Services;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using NBitcoin.DataEncoders;
 
 namespace BTCPayServer.HostedServices
@@ -36,7 +36,7 @@ namespace BTCPayServer.HostedServices
         async Task TestConnection()
         {
             TimeSpan nextWait = TimeSpan.FromSeconds(10);
-            retry:
+retry:
             var canUseSSH = false;
             if (_options.SSHSettings != null)
             {

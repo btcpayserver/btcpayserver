@@ -15,8 +15,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Controllers
 {
-    
-    public class NotificationsDropdown : ViewComponent  
+
+    public class NotificationsDropdown : ViewComponent
     {
         private readonly NotificationManager _notificationManager;
 
@@ -24,13 +24,13 @@ namespace BTCPayServer.Controllers
         {
             _notificationManager = notificationManager;
         }
-        
-        public async Task<IViewComponentResult> InvokeAsync(int noOfEmployee)  
+
+        public async Task<IViewComponentResult> InvokeAsync(int noOfEmployee)
         {
-            return View(await _notificationManager.GetSummaryNotifications(UserClaimsPrincipal));  
-        }  
-    } 
-    
+            return View(await _notificationManager.GetSummaryNotifications(UserClaimsPrincipal));
+        }
+    }
+
     [BitpayAPIConstraint(false)]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [Route("[controller]/[action]")]
@@ -47,7 +47,7 @@ namespace BTCPayServer.Controllers
             ApplicationDbContext db,
             NotificationSender notificationSender,
             UserManager<ApplicationUser> userManager,
-            NotificationManager notificationManager, 
+            NotificationManager notificationManager,
             EventAggregator eventAggregator)
         {
             _env = env;
@@ -91,7 +91,7 @@ namespace BTCPayServer.Controllers
                     await Task.Delay(2000, cancellationToken);
                 }
             }
-            catch(TaskCanceledException)
+            catch (TaskCanceledException)
             {
                 // ignored
             }
@@ -100,7 +100,7 @@ namespace BTCPayServer.Controllers
                 subscription?.Dispose();
                 await websocketHelper.DisposeAsync(CancellationToken.None);
             }
-            
+
             return new EmptyResult();
         }
 

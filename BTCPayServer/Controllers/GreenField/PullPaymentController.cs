@@ -221,7 +221,7 @@ namespace BTCPayServer.Controllers.GreenField
             if (request is null)
                 return NotFound();
 
-            var network = request?.PaymentMethod is string paymentMethod ? 
+            var network = request?.PaymentMethod is string paymentMethod ?
                             this._networkProvider.GetNetwork<BTCPayNetwork>(paymentMethod) : null;
             if (network is null)
             {

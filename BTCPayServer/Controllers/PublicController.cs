@@ -4,13 +4,13 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
+using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
-using BTCPayServer.Data;
 
 namespace BTCPayServer.Controllers
 {
@@ -34,12 +34,12 @@ namespace BTCPayServer.Controllers
         {
             return await PayButtonHandle(model, CancellationToken.None);
         }
-        
+
         [HttpPost]
         [Route("api/v1/invoices")]
         [IgnoreAntiforgeryToken]
         [EnableCors(CorsPolicies.All)]
-        public async Task<IActionResult> PayButtonHandle([FromForm]PayButtonViewModel model, CancellationToken cancellationToken)
+        public async Task<IActionResult> PayButtonHandle([FromForm] PayButtonViewModel model, CancellationToken cancellationToken)
         {
             var store = await _StoreRepository.FindStore(model.StoreId);
             if (store == null)
@@ -50,7 +50,7 @@ namespace BTCPayServer.Controllers
                 if (!storeBlob.AnyoneCanInvoice)
                     ModelState.AddModelError("Store", "Store has not enabled Pay Button");
             }
-            
+
             if (model == null || model.Price <= 0)
                 ModelState.AddModelError("Price", "Price must be greater than 0");
 
@@ -82,7 +82,7 @@ namespace BTCPayServer.Controllers
 
                 return View();
             }
-            
+
             if (model.JsonResponse)
             {
                 return Json(new

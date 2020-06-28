@@ -28,7 +28,7 @@ namespace BTCPayServer
                     throw new NotSupportedException("IMoney type not supported");
             }
         }
-        
+
         public static decimal Convert(long sats, int divisibility = 8)
         {
             var amt = sats.ToString(CultureInfo.InvariantCulture).PadLeft(divisibility, '0');

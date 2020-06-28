@@ -1,28 +1,28 @@
 ﻿using System;
-using Microsoft.Extensions.Logging;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer;
+using BTCPayServer.Controllers;
+using BTCPayServer.Events;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
+using BTCPayServer.Payments;
+using BTCPayServer.Payments.PayJoin;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
-using NBXplorer;
-using System.Collections.Concurrent;
-using BTCPayServer.Controllers;
-using NBXplorer.DerivationStrategy;
-using BTCPayServer.Events;
-using BTCPayServer.Services;
-using BTCPayServer.Services.Wallets;
+using Microsoft.Extensions.Logging;
 using NBitcoin;
-using NBXplorer.Models;
-using BTCPayServer.Payments;
-using BTCPayServer.HostedServices;
-using BTCPayServer.Payments.PayJoin;
 using NBitcoin.Altcoins.Elements;
 using NBitcoin.RPC;
-using BTCPayServer;
+using NBXplorer;
+using NBXplorer.DerivationStrategy;
+using NBXplorer.Models;
 
 namespace BTCPayServer.Payments.Bitcoin
 {
@@ -163,7 +163,7 @@ namespace BTCPayServer.Payments.Bitcoin
                                         var paymentData = new BitcoinLikePaymentData(address,
                                             output.matchedOutput.Value, output.outPoint,
                                             evt.TransactionData.Transaction.RBF);
-                                        
+
                                         var alreadyExist = invoice.GetAllBitcoinPaymentData().Where(c => c.GetPaymentId() == paymentData.GetPaymentId()).Any();
                                         if (!alreadyExist)
                                         {
@@ -293,7 +293,7 @@ namespace BTCPayServer.Payments.Bitcoin
                     payment.Accounted = accounted;
                     updated = true;
                 }
-                
+
                 foreach (var prevout in tx.Transaction.Inputs.Select(o => o.PrevOut))
                 {
                     paymentEntitiesByPrevOut.TryAdd(prevout, payment);
@@ -350,7 +350,7 @@ namespace BTCPayServer.Payments.Bitcoin
                     continue;
                 var cryptoId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
                 var paymentMethod = invoice.GetPaymentMethod(cryptoId).GetPaymentMethodDetails() as BitcoinLikeOnChainPaymentMethod;
-                
+
                 if (!invoice.Support(cryptoId))
                     continue;
 
@@ -369,7 +369,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
                     var paymentData = new BitcoinLikePaymentData(address, coin.Value, coin.OutPoint,
                         transaction.Transaction.RBF);
-                    
+
                     var payment = await _InvoiceRepository.AddPayment(invoice.Id, coin.Timestamp, paymentData, network).ConfigureAwait(false);
                     alreadyAccounted.Add(coin.OutPoint);
                     if (payment != null)

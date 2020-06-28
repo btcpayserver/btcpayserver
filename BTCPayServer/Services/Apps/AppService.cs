@@ -244,7 +244,7 @@ namespace BTCPayServer.Services.Apps
                     .ToArrayAsync();
             }
         }
-        
+
         public async Task<List<AppData>> GetApps(string[] appIds, bool includeStore = false)
         {
             using (var ctx = _ContextFactory.CreateContext())
@@ -333,9 +333,9 @@ namespace BTCPayServer.Services.Apps
                                  Formatted = Currencies.FormatCurrency(cc.Value.Value, currency)
                              }).Single(),
                     Custom = c.GetDetailString("custom") == "true",
-                    Inventory = string.IsNullOrEmpty(c.GetDetailString("inventory")) ?(int?) null:  int.Parse(c.GetDetailString("inventory"), CultureInfo.InvariantCulture),
+                    Inventory = string.IsNullOrEmpty(c.GetDetailString("inventory")) ? (int?)null : int.Parse(c.GetDetailString("inventory"), CultureInfo.InvariantCulture),
                     PaymentMethods = c.GetDetailStringList("payment_methods")
-                    
+
                 })
                 .ToArray();
         }
@@ -380,7 +380,7 @@ namespace BTCPayServer.Services.Apps
                                  paymentMethodContribution.PaymentMehtodId = pay.GetPaymentMethodId();
                                  paymentMethodContribution.Value = pay.GetCryptoPaymentData().GetValue() - pay.NetworkFee;
                                  var rate = p.GetPaymentMethod(paymentMethodContribution.PaymentMehtodId).Rate;
-                                 paymentMethodContribution.CurrencyValue =  rate * paymentMethodContribution.Value;
+                                 paymentMethodContribution.CurrencyValue = rate * paymentMethodContribution.Value;
                                  return paymentMethodContribution;
                              })
                              .ToArray();
@@ -415,11 +415,11 @@ namespace BTCPayServer.Services.Apps
             }
             public string[] GetDetailStringList(string field)
             {
-                if (!Value.Children.ContainsKey(field) || !( Value.Children[field] is YamlSequenceNode sequenceNode))
+                if (!Value.Children.ContainsKey(field) || !(Value.Children[field] is YamlSequenceNode sequenceNode))
                 {
                     return null;
                 }
-                return sequenceNode.Children.Select(node => (node as YamlScalarNode)?.Value).Where( s => s!= null).ToArray();
+                return sequenceNode.Children.Select(node => (node as YamlScalarNode)?.Value).Where(s => s != null).ToArray();
             }
         }
         private class PosScalar
@@ -466,7 +466,7 @@ namespace BTCPayServer.Services.Apps
                 await ctx.SaveChangesAsync();
             }
         }
-        
+
         private static bool TryParseJson(string json, out JObject result)
         {
             result = null;
@@ -485,10 +485,11 @@ namespace BTCPayServer.Services.Apps
         {
             cartItems = null;
             if (!TryParseJson(posData, out var posDataObj) ||
-                !posDataObj.TryGetValue("cart", out var cartObject)) return false;
+                !posDataObj.TryGetValue("cart", out var cartObject))
+                return false;
             cartItems = cartObject.Select(token => (JObject)token)
                 .ToDictionary(o => o.GetValue("id", StringComparison.InvariantCulture).ToString(),
-                    o => int.Parse(o.GetValue("count", StringComparison.InvariantCulture).ToString(), CultureInfo.InvariantCulture ));
+                    o => int.Parse(o.GetValue("count", StringComparison.InvariantCulture).ToString(), CultureInfo.InvariantCulture));
             return true;
         }
     }

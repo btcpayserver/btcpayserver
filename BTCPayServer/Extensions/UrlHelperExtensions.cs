@@ -9,8 +9,8 @@ namespace Microsoft.AspNetCore.Mvc
     {
         public static string EmailConfirmationLink(this LinkGenerator urlHelper, string userId, string code, string scheme, HostString host, string pathbase)
         {
-            return urlHelper.GetUriByAction( nameof(AccountController.ConfirmEmail), "Account",
-                new {userId, code}, scheme, host, pathbase);
+            return urlHelper.GetUriByAction(nameof(AccountController.ConfirmEmail), "Account",
+                new { userId, code }, scheme, host, pathbase);
         }
 
         public static string ResetPasswordCallbackLink(this IUrlHelper urlHelper, string userId, string code, string scheme)
@@ -22,21 +22,21 @@ namespace Microsoft.AspNetCore.Mvc
                 protocol: scheme);
         }
 
-        public static string PaymentRequestLink(this LinkGenerator urlHelper, string paymentRequestId,  string scheme, HostString host, string pathbase)
+        public static string PaymentRequestLink(this LinkGenerator urlHelper, string paymentRequestId, string scheme, HostString host, string pathbase)
         {
             return urlHelper.GetUriByAction(
                 action: nameof(PaymentRequestController.ViewPaymentRequest),
                 controller: "PaymentRequest",
-                values: new { id = paymentRequestId},
+                values: new { id = paymentRequestId },
                 scheme, host, pathbase);
         }
 
-        public static string InvoiceLink(this LinkGenerator urlHelper, string invoiceId,  string scheme, HostString host, string pathbase)
+        public static string InvoiceLink(this LinkGenerator urlHelper, string invoiceId, string scheme, HostString host, string pathbase)
         {
             return urlHelper.GetUriByAction(
                 action: nameof(InvoiceController.Invoice),
                 controller: "Invoice",
-                values: new { invoiceId = invoiceId},
+                values: new { invoiceId = invoiceId },
                 scheme, host, pathbase);
         }
     }

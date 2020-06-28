@@ -1,26 +1,26 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
+using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Models.ManageViewModels;
+using BTCPayServer.Security;
+using BTCPayServer.Security.GreenField;
 using BTCPayServer.Services;
-using Microsoft.AspNetCore.Hosting;
+using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
-using BTCPayServer.Services.Mails;
-using System.Globalization;
-using BTCPayServer.Security;
 using BTCPayServer.U2F;
-using BTCPayServer.Data;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
-using BTCPayServer.Security.GreenField;
+using Microsoft.Extensions.Logging;
 
 namespace BTCPayServer.Controllers
 {
@@ -51,8 +51,8 @@ namespace BTCPayServer.Controllers
           UrlEncoder urlEncoder,
           BTCPayWalletProvider walletProvider,
           StoreRepository storeRepository,
-          IWebHostEnvironment env, 
-          U2FService  u2FService,
+          IWebHostEnvironment env,
+          U2FService u2FService,
           BTCPayServerEnvironment btcPayServerEnvironment,
           APIKeyRepository apiKeyRepository,
           IAuthorizationService authorizationService,

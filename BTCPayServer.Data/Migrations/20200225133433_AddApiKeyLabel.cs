@@ -8,7 +8,7 @@ namespace BTCPayServer.Migrations
     [Migration("20200225133433_AddApiKeyLabel")]
     public partial class AddApiKeyLabel : Migration
     {
-        
+
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(

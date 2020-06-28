@@ -12,4 +12,4 @@ namespace BTCPayServer.Security
             return builder;
         }
     }
-} 
+}

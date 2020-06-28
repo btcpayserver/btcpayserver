@@ -1,8 +1,8 @@
-﻿using BTCPayServer.Validation;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.Validation;
 
 namespace BTCPayServer.Models.StoreViewModels
 {
@@ -17,7 +17,7 @@ namespace BTCPayServer.Models.StoreViewModels
             public bool Enabled { get; set; }
             public bool Collapsed { get; set; }
         }
-        
+
         public class AdditionalPaymentMethod
         {
             public string Provider { get; set; }
@@ -87,9 +87,9 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Description template of the lightning invoice")]
         public string LightningDescriptionTemplate { get; set; }
-        
+
         [Display(Name = "Enable Payjoin/P2EP")]
-        public bool  PayJoinEnabled { get; set; }
+        public bool PayJoinEnabled { get; set; }
 
         public class LightningNode
         {

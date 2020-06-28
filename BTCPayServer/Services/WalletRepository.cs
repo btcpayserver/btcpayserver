@@ -89,7 +89,7 @@ namespace BTCPayServer.Services
                     {
                         await ctx.SaveChangesAsync();
                     }
-                    catch(DbUpdateException) // the Wallet does not exists in the DB
+                    catch (DbUpdateException) // the Wallet does not exists in the DB
                     {
                         await SetWalletInfo(walletId, new WalletBlobInfo());
                         await ctx.SaveChangesAsync();

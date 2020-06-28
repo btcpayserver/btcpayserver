@@ -1,24 +1,24 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using BTCPayServer.Models;
-using NBitcoin.Payment;
-using System.Net.Http;
-using Newtonsoft.Json.Linq;
-using NBitcoin;
-using Newtonsoft.Json;
-using BTCPayServer.Services;
-using BTCPayServer.HostedServices;
-using BTCPayServer.Services.Apps;
-using Microsoft.AspNetCore.Identity;
-using BTCPayServer.Data;
-using Microsoft.Extensions.FileProviders;
 using System.IO;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Authorization;
+using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
+using BTCPayServer.Data;
+using BTCPayServer.HostedServices;
+using BTCPayServer.Models;
 using BTCPayServer.Security;
+using BTCPayServer.Services;
+using BTCPayServer.Services.Apps;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.FileProviders;
+using NBitcoin;
+using NBitcoin.Payment;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Controllers
 {
@@ -28,9 +28,9 @@ namespace BTCPayServer.Controllers
         private readonly IFileProvider _fileProvider;
 
         public IHttpClientFactory HttpClientFactory { get; }
-        SignInManager<ApplicationUser> SignInManager { get;  }
+        SignInManager<ApplicationUser> SignInManager { get; }
 
-        public HomeController(IHttpClientFactory httpClientFactory, 
+        public HomeController(IHttpClientFactory httpClientFactory,
                               CssThemeManager cachedServerSettings,
                               IWebHostEnvironment webHostEnvironment,
                               SignInManager<ApplicationUser> signInManager)
@@ -49,36 +49,36 @@ namespace BTCPayServer.Controllers
                 switch (appType.Value)
                 {
                     case AppType.Crowdfund:
-                    {
-                        var serviceProvider = HttpContext.RequestServices;
-                        var controller = (AppsPublicController)serviceProvider.GetService(typeof(AppsPublicController));
-                        controller.Url = Url;
-                        controller.ControllerContext = ControllerContext;
-                        var res = await controller.ViewCrowdfund(appId, null) as ViewResult;
-                        if (res != null)
                         {
-                            res.ViewName = $"/Views/AppsPublic/ViewCrowdfund.cshtml";
-                            return res; // return 
-                        }
+                            var serviceProvider = HttpContext.RequestServices;
+                            var controller = (AppsPublicController)serviceProvider.GetService(typeof(AppsPublicController));
+                            controller.Url = Url;
+                            controller.ControllerContext = ControllerContext;
+                            var res = await controller.ViewCrowdfund(appId, null) as ViewResult;
+                            if (res != null)
+                            {
+                                res.ViewName = $"/Views/AppsPublic/ViewCrowdfund.cshtml";
+                                return res; // return 
+                            }
 
-                        break;
-                    }
+                            break;
+                        }
 
                     case AppType.PointOfSale:
-                    {
-                        var serviceProvider = HttpContext.RequestServices;
-                        var controller = (AppsPublicController)serviceProvider.GetService(typeof(AppsPublicController));
-                        controller.Url = Url;
-                        controller.ControllerContext = ControllerContext;
-                        var res = await controller.ViewPointOfSale(appId) as ViewResult;
-                        if (res != null)
                         {
-                            res.ViewName = $"/Views/AppsPublic/{res.ViewName}.cshtml";
-                            return res; // return 
-                        }
+                            var serviceProvider = HttpContext.RequestServices;
+                            var controller = (AppsPublicController)serviceProvider.GetService(typeof(AppsPublicController));
+                            controller.Url = Url;
+                            controller.ControllerContext = ControllerContext;
+                            var res = await controller.ViewPointOfSale(appId) as ViewResult;
+                            if (res != null)
+                            {
+                                res.ViewName = $"/Views/AppsPublic/{res.ViewName}.cshtml";
+                                return res; // return 
+                            }
 
-                        break;
-                    }
+                            break;
+                        }
                 }
             }
             return null;
@@ -94,10 +94,10 @@ namespace BTCPayServer.Controllers
                 item.Domain.Equals(Request.Host.Host, StringComparison.InvariantCultureIgnoreCase));
             if (matchedDomainMapping != null)
             {
-                return await GoToApp(matchedDomainMapping.AppId, matchedDomainMapping.AppType) ?? GoToHome(); 
+                return await GoToApp(matchedDomainMapping.AppId, matchedDomainMapping.AppType) ?? GoToHome();
             }
 
-            return await GoToApp(_cachedServerSettings.RootAppId, _cachedServerSettings.RootAppType) ?? GoToHome(); 
+            return await GoToApp(_cachedServerSettings.RootAppId, _cachedServerSettings.RootAppType) ?? GoToHome();
         }
 
         private IActionResult GoToHome()
@@ -115,7 +115,7 @@ namespace BTCPayServer.Controllers
         }
 
         [Route("swagger/v1/swagger.json")]
-        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie+","+ AuthenticationSchemes.Greenfield)]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie + "," + AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> Swagger()
         {
             JObject json = new JObject();

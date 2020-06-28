@@ -1117,7 +1117,7 @@ namespace BTCPayServer
         public static MultiValueDictionary<TKey, TValue> ToMultiValueDictionary<TInput, TKey, TValue>(this IEnumerable<TInput> collection, Func<TInput, TKey> keySelector, Func<TInput, TValue> valueSelector)
         {
             var dictionary = new MultiValueDictionary<TKey, TValue>();
-            foreach(var item in collection)
+            foreach (var item in collection)
             {
                 dictionary.Add(keySelector(item), valueSelector(item));
             }

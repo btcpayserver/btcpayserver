@@ -1,12 +1,12 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Payments.Changelly;
 using BTCPayServer.Rating;
 using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Mvc;
-using BTCPayServer.Data;
 
 namespace BTCPayServer.Controllers
 {
@@ -33,9 +33,9 @@ namespace BTCPayServer.Controllers
         {
             try
             {
-                
+
                 var client = await TryGetChangellyClient(storeId);
-                
+
                 return Ok(await client.GetCurrenciesFull());
             }
             catch (Exception e)
@@ -61,7 +61,7 @@ namespace BTCPayServer.Controllers
                 {
                     return await HandleCalculateFiatAmount(fromCurrency, toCurrency, toCurrencyAmount, cancellationToken);
                 }
-                
+
                 var callCounter = 0;
                 var baseRate = await client.GetExchangeAmount(fromCurrency, toCurrency, 1);
                 var currentAmount = ChangellyCalculationHelper.ComputeBaseAmount(baseRate, toCurrencyAmount);
@@ -97,7 +97,7 @@ namespace BTCPayServer.Controllers
 
         private async Task<Changelly> TryGetChangellyClient(string storeId)
         {
-            var store = IsTest? null: HttpContext.GetStoreData();
+            var store = IsTest ? null : HttpContext.GetStoreData();
             storeId = storeId ?? store?.Id;
 
             return await _changellyClientProvider.TryGetChangellyClient(storeId, store);
@@ -109,13 +109,14 @@ namespace BTCPayServer.Controllers
             var store = HttpContext.GetStoreData();
             var rules = store.GetStoreBlob().GetRateRules(_btcPayNetworkProvider);
             var rate = await _RateProviderFactory.FetchRate(new CurrencyPair(toCurrency, fromCurrency), rules, cancellationToken);
-            if (rate.BidAsk == null) return BadRequest();
+            if (rate.BidAsk == null)
+                return BadRequest();
             var flatRate = rate.BidAsk.Center;
             return Ok(flatRate * toCurrencyAmount);
         }
 
         public bool IsTest { get; set; } = false;
     }
-    
-    
+
+
 }

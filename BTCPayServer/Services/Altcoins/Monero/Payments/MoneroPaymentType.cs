@@ -6,12 +6,12 @@ using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services.Altcoins.Monero.Payments
 {
-    public class MoneroPaymentType: PaymentType
+    public class MoneroPaymentType : PaymentType
     {
         public static MoneroPaymentType Instance { get; } = new MoneroPaymentType();
         public override string ToPrettyString() => "On-Chain";
 
-        public override string GetId()=> "MoneroLike";
+        public override string GetId() => "MoneroLike";
 
 
         public override CryptoPaymentData DeserializePaymentData(BTCPayNetworkBase network, string str)
@@ -44,6 +44,6 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
             return string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink, txId);
         }
 
-        public override string InvoiceViewPaymentPartialName { get; }= "Monero/ViewMoneroLikePaymentData";
+        public override string InvoiceViewPaymentPartialName { get; } = "Monero/ViewMoneroLikePaymentData";
     }
 }

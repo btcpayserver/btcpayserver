@@ -127,8 +127,8 @@ namespace BTCPayServer.Controllers
             }
             var appData = new AppData
             {
-                StoreDataId = selectedStore, 
-                Name = vm.Name, 
+                StoreDataId = selectedStore,
+                Name = vm.Name,
                 AppType = appType.ToString()
             };
             await _AppService.UpdateOrCreateApp(appData);
@@ -166,7 +166,7 @@ namespace BTCPayServer.Controllers
             return _AppService.GetAppDataIfOwner(GetUserId(), appId, type);
         }
 
-        
+
         private string GetUserId()
         {
             return _UserManager.GetUserId(User);

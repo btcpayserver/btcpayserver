@@ -11,7 +11,7 @@ namespace BTCPayServer.Client.JsonConverters
         {
             if (reader.TokenType == JsonToken.String)
             {
-                return new Money( long.Parse((string) reader.Value));
+                return new Money(long.Parse((string)reader.Value));
             }
             return base.ReadJson(reader, objectType, existingValue, serializer);
         }

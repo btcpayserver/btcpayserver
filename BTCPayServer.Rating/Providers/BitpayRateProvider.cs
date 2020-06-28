@@ -1,11 +1,11 @@
-﻿using System.Linq;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Rating;
-using System.Threading;
-using System.Net.Http;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services.Rates

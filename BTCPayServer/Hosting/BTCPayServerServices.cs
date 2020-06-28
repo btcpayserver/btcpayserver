@@ -1,31 +1,11 @@
-﻿using BTCPayServer.Configuration;
-using BTCPayServer.Services.Altcoins.Monero;
-using Microsoft.Extensions.Logging;
-using System;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.AspNetCore.Http;
-using NBitpayClient;
-using NBitcoin;
-using BTCPayServer.Data;
-using Microsoft.EntityFrameworkCore;
+﻿using System;
 using System.IO;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.Hosting;
-using BTCPayServer.Services;
-using BTCPayServer.Services.Invoices;
-using BTCPayServer.Services.Rates;
-using BTCPayServer.Services.Stores;
-using BTCPayServer.Services.Fees;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Options;
-using BTCPayServer.Controllers;
-using BTCPayServer.Services.Mails;
 using System.Threading;
-using BTCPayServer.Services.Wallets;
-using BTCPayServer.Logging;
+using BTCPayServer.Configuration;
+using BTCPayServer.Controllers;
+using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
+using BTCPayServer.Logging;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
@@ -33,22 +13,42 @@ using BTCPayServer.Payments.Changelly;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Payments.PayJoin;
 using BTCPayServer.Security;
-using BTCPayServer.Services.PaymentRequests;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
-using NBXplorer.DerivationStrategy;
-using NicolasDorier.RateLimits;
-using Npgsql;
+using BTCPayServer.Security.Bitpay;
+using BTCPayServer.Security.GreenField;
+using BTCPayServer.Services;
+using BTCPayServer.Services.Altcoins.Monero;
 using BTCPayServer.Services.Apps;
+using BTCPayServer.Services.Fees;
+using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Labels;
+using BTCPayServer.Services.Mails;
+using BTCPayServer.Services.Notifications;
+using BTCPayServer.Services.Notifications.Blobs;
+using BTCPayServer.Services.PaymentRequests;
+using BTCPayServer.Services.Rates;
+using BTCPayServer.Services.Stores;
+using BTCPayServer.Services.Wallets;
 using BTCPayServer.U2F;
 using BundlerMinifier.TagHelpers;
 using Microsoft.AspNetCore.Authorization;
-using BTCPayServer.Security.Bitpay;
-using Serilog;
-using BTCPayServer.Security.GreenField;
-using BTCPayServer.Services.Labels;
-using BTCPayServer.Services.Notifications;
-using BTCPayServer.Services.Notifications.Blobs;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using NBitcoin;
+using NBitpayClient;
+using NBXplorer.DerivationStrategy;
 using Newtonsoft.Json;
+using NicolasDorier.RateLimits;
+using Npgsql;
+using Serilog;
 
 namespace BTCPayServer.Hosting
 {
@@ -61,7 +61,7 @@ namespace BTCPayServer.Hosting
         }
         public static IServiceCollection AddBTCPayServer(this IServiceCollection services, IConfiguration configuration)
         {
-			services.AddSingleton<MvcNewtonsoftJsonOptions>(o =>  o.GetRequiredService<IOptions<MvcNewtonsoftJsonOptions>>().Value);
+            services.AddSingleton<MvcNewtonsoftJsonOptions>(o => o.GetRequiredService<IOptions<MvcNewtonsoftJsonOptions>>().Value);
             services.AddDbContext<ApplicationDbContext>((provider, o) =>
             {
                 var factory = provider.GetRequiredService<ApplicationDbContextFactory>();
@@ -102,7 +102,7 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<EventAggregator>();
             services.TryAddSingleton<PaymentRequestService>();
             services.TryAddSingleton<U2FService>();
-            services.TryAddSingleton<ApplicationDbContextFactory>(o => 
+            services.TryAddSingleton<ApplicationDbContextFactory>(o =>
             {
                 var opts = o.GetRequiredService<BTCPayServerOptions>();
                 ApplicationDbContextFactory dbContext = null;
@@ -111,7 +111,7 @@ namespace BTCPayServer.Hosting
                     Logs.Configuration.LogInformation($"Postgres DB used ({opts.PostgresConnectionString})");
                     dbContext = new ApplicationDbContextFactory(DatabaseType.Postgres, opts.PostgresConnectionString);
                 }
-                else if(!String.IsNullOrEmpty(opts.MySQLConnectionString))
+                else if (!String.IsNullOrEmpty(opts.MySQLConnectionString))
                 {
                     Logs.Configuration.LogInformation($"MySQL DB used ({opts.MySQLConnectionString})");
                     Logs.Configuration.LogWarning("MySQL is not widely tested and should be considered experimental, we advise you to use postgres instead.");
@@ -124,11 +124,11 @@ namespace BTCPayServer.Hosting
                     Logs.Configuration.LogWarning("SQLite is not widely tested and should be considered experimental, we advise you to use postgres instead.");
                     dbContext = new ApplicationDbContextFactory(DatabaseType.Sqlite, connStr);
                 }
-                 
+
                 return dbContext;
             });
 
-            services.TryAddSingleton<BTCPayNetworkProvider>(o => 
+            services.TryAddSingleton<BTCPayNetworkProvider>(o =>
             {
                 var opts = o.GetRequiredService<BTCPayServerOptions>();
                 return opts.NetworkProvider;
@@ -190,7 +190,8 @@ namespace BTCPayServer.Hosting
             });
 
             services.AddSingleton<CssThemeManager>();
-            services.Configure<MvcOptions>((o) => {
+            services.Configure<MvcOptions>((o) =>
+            {
                 o.Filters.Add(new ContentSecurityPolicyCssThemeManager());
                 o.ModelMetadataDetailsProviders.Add(new SuppressChildValidationMetadataProvider(typeof(WalletId)));
                 o.ModelMetadataDetailsProviders.Add(new SuppressChildValidationMetadataProvider(typeof(DerivationStrategyBase)));
@@ -256,7 +257,7 @@ namespace BTCPayServer.Hosting
             services.AddTransient<PaymentRequestController>();
             // Add application services.
             services.AddSingleton<EmailSenderFactory>();
-            
+
             services.AddAPIKeyAuthentication();
             services.AddBtcPayServerAuthenticationSchemes();
             services.AddAuthorization(o => o.AddBTCPayPolicies());
@@ -320,7 +321,7 @@ namespace BTCPayServer.Hosting
         public static IApplicationBuilder UsePayServer(this IApplicationBuilder app)
         {
             app.UseMiddleware<BTCPayMiddleware>();
-            return app; 
+            return app;
         }
         public static IApplicationBuilder UseHeadersOverride(this IApplicationBuilder app)
         {

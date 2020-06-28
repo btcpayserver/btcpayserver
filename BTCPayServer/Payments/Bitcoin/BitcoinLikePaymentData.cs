@@ -21,7 +21,7 @@ namespace BTCPayServer.Payments.Bitcoin
         {
 
         }
-        
+
         public BitcoinLikePaymentData(BitcoinAddress address, IMoney value, OutPoint outpoint, bool rbf)
         {
             Address = address;
@@ -52,7 +52,7 @@ namespace BTCPayServer.Payments.Bitcoin
                 return Address?.ScriptPubKey ?? Output.ScriptPubKey;
             }
         }
-        
+
         /// <summary>
         /// This is set to true if the payment was created before CryptoPaymentData existed in BTCPayServer
         /// </summary>
@@ -101,7 +101,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
         public BitcoinAddress GetDestination()
         {
-            return Address?? Output.ScriptPubKey.GetDestinationAddress(((BTCPayNetwork)Network).NBitcoinNetwork);
+            return Address ?? Output.ScriptPubKey.GetDestinationAddress(((BTCPayNetwork)Network).NBitcoinNetwork);
         }
 
         string CryptoPaymentData.GetDestination()

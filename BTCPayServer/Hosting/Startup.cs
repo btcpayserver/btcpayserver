@@ -1,29 +1,28 @@
-﻿using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.DataProtection;
-using Microsoft.Extensions.Hosting;
-
-using Microsoft.AspNetCore.Builder;
-using System;
-using Microsoft.Extensions.DependencyInjection;
-using BTCPayServer.Filters;
-using BTCPayServer.Models;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.HttpOverrides;
-using BTCPayServer.Data;
-using Microsoft.Extensions.Logging;
-using BTCPayServer.Logging;
-using Microsoft.Extensions.Configuration;
-using BTCPayServer.Configuration;
+﻿using System;
 using System.IO;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using BTCPayServer.Security;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.Net.Http.Headers;
 using System.Net;
+using BTCPayServer.Configuration;
+using BTCPayServer.Data;
+using BTCPayServer.Filters;
 using BTCPayServer.JsonConverters;
+using BTCPayServer.Logging;
+using BTCPayServer.Models;
 using BTCPayServer.PaymentRequest;
+using BTCPayServer.Security;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Storage;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Net.Http.Headers;
 
 namespace BTCPayServer.Hosting
 {
@@ -201,7 +200,7 @@ namespace BTCPayServer.Hosting
                     ctx.Context.Response.Headers[HeaderNames.CacheControl] = "public,max-age=" + durationInSeconds;
                 }
             });
-            
+
             app.UseProviderStorage(options);
             app.UseAuthentication();
             app.UseAuthorization();

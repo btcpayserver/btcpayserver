@@ -70,7 +70,7 @@ namespace BTCPayServer.Controllers.GreenField
         {
             return base.GetDepositAddress(cryptoCode);
         }
-        
+
         [Authorize(Policy = Policies.CanUseInternalLightningNode,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/server/lightning/{cryptoCode}/invoices/{id}")]

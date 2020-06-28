@@ -1,13 +1,13 @@
 ﻿using System;
-using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using ExchangeSharp;
-using System.Threading;
+using Microsoft.Extensions.Logging;
 
 namespace BTCPayServer.Services.Rates
 {

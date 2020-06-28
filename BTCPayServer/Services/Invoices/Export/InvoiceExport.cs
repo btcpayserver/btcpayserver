@@ -69,7 +69,7 @@ namespace BTCPayServer.Services.Invoices.Export
 
                 var pmethod = invoice.GetPaymentMethod(payment.GetPaymentMethodId());
                 var paidAfterNetworkFees = pdata.GetValue() - payment.NetworkFee;
-                invoiceDue -=  paidAfterNetworkFees * pmethod.Rate;
+                invoiceDue -= paidAfterNetworkFees * pmethod.Rate;
 
                 var target = new ExportInvoiceHolder
                 {

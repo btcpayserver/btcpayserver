@@ -1,16 +1,16 @@
 ﻿using System;
-using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Data;
+using BTCPayServer.Lightning;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
-using Microsoft.AspNetCore.Mvc;
 using BTCPayServer.Payments.Lightning;
-using System.Net;
-using BTCPayServer.Data;
-using System.Threading;
-using BTCPayServer.Lightning;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace BTCPayServer.Controllers
 {
@@ -85,7 +85,7 @@ namespace BTCPayServer.Controllers
                     return View(vm);
                 }
 
-                if(connectionString.ConnectionType == LightningConnectionType.LndGRPC)
+                if (connectionString.ConnectionType == LightningConnectionType.LndGRPC)
                 {
                     ModelState.AddModelError(nameof(vm.ConnectionString), $"BTCPay does not support gRPC connections");
                     return View(vm);
@@ -102,19 +102,19 @@ namespace BTCPayServer.Controllers
                     }
                 }
 
-                if(connectionString.MacaroonFilePath != null)
+                if (connectionString.MacaroonFilePath != null)
                 {
-                    if(!CanUseInternalLightning())
+                    if (!CanUseInternalLightning())
                     {
                         ModelState.AddModelError(nameof(vm.ConnectionString), "You are not authorized to use macaroonfilepath");
                         return View(vm);
                     }
-                    if(!System.IO.File.Exists(connectionString.MacaroonFilePath))
+                    if (!System.IO.File.Exists(connectionString.MacaroonFilePath))
                     {
                         ModelState.AddModelError(nameof(vm.ConnectionString), "The macaroonfilepath file does not exist");
                         return View(vm);
                     }
-                    if(!System.IO.Path.IsPathRooted(connectionString.MacaroonFilePath))
+                    if (!System.IO.Path.IsPathRooted(connectionString.MacaroonFilePath))
                     {
                         ModelState.AddModelError(nameof(vm.ConnectionString), "The macaroonfilepath should be fully rooted");
                         return View(vm);

@@ -36,7 +36,7 @@ namespace BTCPayServer.Models.StoreViewModels
         public KeyPath RootKeyPath { get; set; }
 
         [Display(Name = "Electrum/Hardware Wallet File")]
-        public IFormFile WalletFile{ get; set; }
+        public IFormFile WalletFile { get; set; }
         public string Config { get; set; }
         public string Source { get; set; }
         public string DerivationSchemeFormat { get; set; }

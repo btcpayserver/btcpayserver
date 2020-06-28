@@ -24,7 +24,7 @@ namespace BTCPayServer.Filters
                 context.Result = new NotFoundResult();
                 return;
             }
-            await next();   
+            await next();
         }
     }
 }

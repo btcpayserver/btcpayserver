@@ -1,19 +1,19 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Primitives;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Linq;
-using System.Threading.Tasks;
 using System.IO;
-using BTCPayServer.Logging;
-using Newtonsoft.Json;
-using BTCPayServer.Models;
-using BTCPayServer.Configuration;
+using System.Linq;
 using System.Net.WebSockets;
+using System.Text;
+using System.Threading.Tasks;
+using BTCPayServer.Configuration;
+using BTCPayServer.Logging;
+using BTCPayServer.Models;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Primitives;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Hosting
 {

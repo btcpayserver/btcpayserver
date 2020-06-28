@@ -149,13 +149,13 @@ namespace BTCPayServer.Migrations
                 column: "PullPaymentDataId");
 
             if (this.SupportAddForeignKey(this.ActiveProvider))
-            migrationBuilder.AddForeignKey(
-                name: "FK_Invoices_Refunds_Id_CurrentRefundId",
-                table: "Invoices",
-                columns: new[] { "Id", "CurrentRefundId" },
-                principalTable: "Refunds",
-                principalColumns: new[] { "InvoiceDataId", "PullPaymentDataId" },
-                onDelete: ReferentialAction.Restrict);
+                migrationBuilder.AddForeignKey(
+                    name: "FK_Invoices_Refunds_Id_CurrentRefundId",
+                    table: "Invoices",
+                    columns: new[] { "Id", "CurrentRefundId" },
+                    principalTable: "Refunds",
+                    principalColumns: new[] { "InvoiceDataId", "PullPaymentDataId" },
+                    onDelete: ReferentialAction.Restrict);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

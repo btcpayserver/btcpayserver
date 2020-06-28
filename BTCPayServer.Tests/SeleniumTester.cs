@@ -1,31 +1,31 @@
 using System;
-using BTCPayServer;
-using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
-using System.Runtime.CompilerServices;
-using System.Text;
-using NBitcoin;
-using OpenQA.Selenium;
-using OpenQA.Selenium.Chrome;
-using Xunit;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Reflection;
-using BTCPayServer.Tests.Logging;
+using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer;
 using BTCPayServer.Lightning;
 using BTCPayServer.Lightning.CLightning;
 using BTCPayServer.Models;
 using BTCPayServer.Services;
+using BTCPayServer.Tests.Logging;
 using BTCPayServer.Views.Manage;
 using BTCPayServer.Views.Stores;
 using BTCPayServer.Views.Wallets;
+using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Interactions;
+using Xunit;
 
 namespace BTCPayServer.Tests
 {
@@ -87,7 +87,7 @@ namespace BTCPayServer.Tests
             Logs.Tester.LogInformation(this.Driver.PageSource);
             Assert.True(false, $"Should have shown {severity} message");
             return null;
-         }
+        }
 
         public static readonly TimeSpan ImplicitWait = TimeSpan.FromSeconds(10);
         public string Link(string relativeLink)
@@ -280,8 +280,8 @@ namespace BTCPayServer.Tests
         {
             Driver.FindElement(By.Id("Invoices")).Click();
         }
-        
-        public void GoToProfile(ManageNavPages navPages =  ManageNavPages.Index)
+
+        public void GoToProfile(ManageNavPages navPages = ManageNavPages.Index)
         {
             Driver.FindElement(By.Id("MySettings")).Click();
             if (navPages != ManageNavPages.Index)
@@ -331,14 +331,14 @@ namespace BTCPayServer.Tests
                 await Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(denomination));
             }
         }
-        
+
         public void PayInvoice(WalletId walletId, string invoiceId)
         {
             GoToInvoiceCheckout(invoiceId);
             var bip21 = Driver.FindElement(By.ClassName("payment__details__instruction__open-wallet__btn"))
                 .GetAttribute("href");
             Assert.Contains($"{PayjoinClient.BIP21EndpointKey}", bip21);
-               
+
             GoToWallet(walletId, WalletsNavPages.Send);
             Driver.FindElement(By.Id("bip21parse")).Click();
             Driver.SwitchTo().Alert().SendKeys(bip21);
@@ -350,7 +350,7 @@ namespace BTCPayServer.Tests
         }
 
 
-        
+
 
         private void CheckForJSErrors()
         {
@@ -388,7 +388,7 @@ namespace BTCPayServer.Tests
         public void GoToInvoice(string id)
         {
             GoToInvoices();
-            foreach(var el in Driver.FindElements(By.ClassName("invoice-details-link")))
+            foreach (var el in Driver.FindElements(By.ClassName("invoice-details-link")))
             {
                 if (el.GetAttribute("href").Contains(id, StringComparison.OrdinalIgnoreCase))
                 {

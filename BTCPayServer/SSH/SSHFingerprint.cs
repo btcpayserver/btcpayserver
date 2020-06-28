@@ -72,7 +72,7 @@ namespace BTCPayServer.SSH
                     _Original = _Original.Substring(0, _Original.Length - 1);
             }
             else
-                throw new ArgumentException(paramName:nameof(hash), message: "Invalid length, expected 16 or 32");
+                throw new ArgumentException(paramName: nameof(hash), message: "Invalid length, expected 16 or 32");
         }
 
         byte[] _ShortFingerprint;

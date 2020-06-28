@@ -32,7 +32,7 @@ namespace BTCPayServer.Services.Notifications.Blobs
                 // {InvoiceEvent.ReceivedPayment, "received a payment."},
                 {InvoiceEvent.Confirmed, "was confirmed paid."}
             };
-            
+
             protected override void FillViewModel(InvoiceEventNotification notification,
                 NotificationViewModel vm)
             {
@@ -43,7 +43,7 @@ namespace BTCPayServer.Services.Notifications.Blobs
                 }
                 vm.ActionLink = _linkGenerator.GetPathByAction(nameof(InvoiceController.Invoice),
                     "Invoice",
-                    new {invoiceId = notification.InvoiceId}, _options.RootPath);
+                    new { invoiceId = notification.InvoiceId }, _options.RootPath);
             }
         }
 

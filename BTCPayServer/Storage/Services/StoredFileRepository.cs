@@ -19,7 +19,7 @@ namespace BTCPayServer.Storage.Services
 
         public async Task<StoredFile> GetFile(string fileId)
         {
-            var filesResult = await GetFiles(new FilesQuery() {Id = new string[] {fileId}});
+            var filesResult = await GetFiles(new FilesQuery() { Id = new string[] { fileId } });
             return filesResult.FirstOrDefault();
         }
 

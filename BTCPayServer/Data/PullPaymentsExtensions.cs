@@ -72,7 +72,7 @@ namespace BTCPayServer.Data
         {
             var bytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(blob, serializers.GetSerializer(data.GetPaymentMethodId().CryptoCode)));
             // We only update the property if the bytes actually changed, this prevent from hammering the DB too much
-            if (data.Proof is null  || bytes.Length != data.Proof.Length || !bytes.SequenceEqual(data.Proof))
+            if (data.Proof is null || bytes.Length != data.Proof.Length || !bytes.SequenceEqual(data.Proof))
             {
                 data.Proof = bytes;
             }

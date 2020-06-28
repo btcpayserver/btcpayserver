@@ -1,21 +1,21 @@
-﻿using BTCPayServer.Models;
-using Microsoft.AspNetCore.Mvc;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Linq;
-using System.Threading.Tasks;
-using BTCPayServer.Filters;
-using BTCPayServer.Services.Rates;
-using BTCPayServer.Services.Stores;
-using BTCPayServer.Rating;
-using Newtonsoft.Json;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Cors;
+using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using BTCPayServer.Data;
+using BTCPayServer.Filters;
+using BTCPayServer.Models;
+using BTCPayServer.Rating;
 using BTCPayServer.Security;
 using BTCPayServer.Security.Bitpay;
+using BTCPayServer.Services.Rates;
+using BTCPayServer.Services.Stores;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Controllers
 {

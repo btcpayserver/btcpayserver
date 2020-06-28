@@ -90,7 +90,7 @@ namespace BTCPayServer
                         }
                     });
                 }
-                catch(Exception ex) { tcs.TrySetException(ex); }
+                catch (Exception ex) { tcs.TrySetException(ex); }
             })
             { IsBackground = true }.Start();
             return tcs.Task;
@@ -110,7 +110,7 @@ namespace BTCPayServer
         {
             if (sshClient == null)
                 throw new ArgumentNullException(nameof(sshClient));
-            
+
             TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             new Thread(() =>
             {

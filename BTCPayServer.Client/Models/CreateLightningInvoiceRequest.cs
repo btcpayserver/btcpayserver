@@ -24,6 +24,6 @@ namespace BTCPayServer.Client.Models
         [JsonConverter(typeof(JsonConverters.TimeSpanJsonConverter))]
         public TimeSpan Expiry { get; set; }
         public bool PrivateRouteHints { get; set; }
-        
+
     }
 }

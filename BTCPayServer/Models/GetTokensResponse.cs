@@ -1,15 +1,15 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.Linq;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using NBitcoin.DataEncoders;
-using Microsoft.AspNetCore.Http;
-using System.IO;
 using BTCPayServer.Security.Bitpay;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using NBitcoin.DataEncoders;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Models
 {

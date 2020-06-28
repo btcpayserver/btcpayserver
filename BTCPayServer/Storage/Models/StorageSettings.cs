@@ -8,7 +8,7 @@ namespace BTCPayServer.Storage.Models
     {
         public StorageProvider Provider { get; set; }
         public string ConfigurationStr { get; set; }
-        
+
         [NotMapped]
         public JObject Configuration
         {

@@ -13,7 +13,7 @@ namespace BTCPayServer.Models.ServerViewModels
             public string Name { get; set; }
             public string Email { get; set; }
         }
-        
+
         public int Skip { get; set; }
         public int Count { get; set; }
         public int Total { get; set; }

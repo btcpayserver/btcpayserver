@@ -1,8 +1,8 @@
-﻿using BTCPayServer.Data;
+﻿using System;
+using System.Collections.Generic;
+using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
-using System;
-using System.Collections.Generic;
 
 namespace BTCPayServer.Migrations
 {

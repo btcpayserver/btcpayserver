@@ -54,8 +54,8 @@ namespace BTCPayServer.Services.Notifications
         public void InvalidateNotificationCache(string userId)
         {
             _memoryCache.Remove(GetNotificationsCacheId(userId));
-            
-            _eventAggregator.Publish(new UserNotificationsUpdatedEvent() {UserId = userId});
+
+            _eventAggregator.Publish(new UserNotificationsUpdatedEvent() { UserId = userId });
         }
 
         private static string GetNotificationsCacheId(string userId)
@@ -108,7 +108,7 @@ namespace BTCPayServer.Services.Notifications
         {
             var handler = GetHandler(data.NotificationType);
             var notification = JsonConvert.DeserializeObject(ZipUtils.Unzip(data.Blob), handler.NotificationBlobType);
-            var obj = new NotificationViewModel {Id = data.Id, Created = data.Created, Seen = data.Seen};
+            var obj = new NotificationViewModel { Id = data.Id, Created = data.Created, Seen = data.Seen };
             handler.FillViewModel(notification, obj);
             return obj;
         }

@@ -93,7 +93,7 @@ namespace BTCPayServer.Controllers
                 });
                 return RedirectToAction("APIKeys");
             }
-        
+
             permissions ??= Array.Empty<string>();
 
             var parsedPermissions = Permission.ToPermissions(permissions).GroupBy(permission => permission.Policy);
@@ -106,13 +106,13 @@ namespace BTCPayServer.Controllers
                 Permissions = string.Join(';', parsedPermissions.SelectMany(grouping => grouping.Select(permission => permission.ToString())))
             });
             AdjustVMForAuthorization(vm);
-            
+
             return View(vm);
         }
 
         private void AdjustVMForAuthorization(AuthorizeApiKeysViewModel vm)
         {
-             var parsedPermissions = Permission.ToPermissions(vm.Permissions.Split(';')).GroupBy(permission => permission.Policy);
+            var parsedPermissions = Permission.ToPermissions(vm.Permissions.Split(';')).GroupBy(permission => permission.Policy);
 
             for (var index = vm.PermissionValues.Count - 1; index >= 0; index--)
             {
@@ -120,12 +120,12 @@ namespace BTCPayServer.Controllers
                 var wanted = parsedPermissions?.SingleOrDefault(permission =>
                     permission.Key.Equals(permissionValue.Permission,
                         StringComparison.InvariantCultureIgnoreCase));
-                if (vm.Strict && !(wanted?.Any()??false))
+                if (vm.Strict && !(wanted?.Any() ?? false))
                 {
                     vm.PermissionValues.RemoveAt(index);
                     continue;
                 }
-                else if (wanted?.Any()??false)
+                else if (wanted?.Any() ?? false)
                 {
                     if (vm.SelectiveStores && Policies.IsStorePolicy(permissionValue.Permission) &&
                         wanted.Any(permission => !string.IsNullOrEmpty(permission.Scope)))
@@ -147,15 +147,15 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> AuthorizeAPIKey([FromForm] AuthorizeApiKeysViewModel viewModel)
         {
             await SetViewModelValues(viewModel);
-            
+
             AdjustVMForAuthorization(viewModel);
             var ar = HandleCommands(viewModel);
-        
+
             if (ar != null)
             {
                 return ar;
             }
-        
+
             for (int i = 0; i < viewModel.PermissionValues.Count; i++)
             {
                 if (viewModel.PermissionValues[i].Forbidden && viewModel.Strict)
@@ -173,13 +173,13 @@ namespace BTCPayServer.Controllers
                         $"The permission '{viewModel.PermissionValues[i].Title}' cannot be store specific for this application.");
                 }
             }
-            
-            
+
+
             if (!ModelState.IsValid)
             {
                 return View(viewModel);
             }
-        
+
             switch (viewModel.Command.ToLowerInvariant())
             {
                 case "no":
@@ -238,12 +238,12 @@ namespace BTCPayServer.Controllers
             var permissionValueItem = viewModel.PermissionValues.Single(item => item.Permission == permission);
             var command = parts[1];
             var storeIndex = parts.Length == 3 ? parts[2] : null;
-            
+
             ModelState.Clear();
             switch (command)
             {
                 case "change-store-mode":
-                    
+
                     permissionValueItem.StoreMode = permissionValueItem.StoreMode == AddApiKeyViewModel.ApiKeyStoreMode.Specific
                         ? AddApiKeyViewModel.ApiKeyStoreMode.AllStores
                         : AddApiKeyViewModel.ApiKeyStoreMode.Specific;
@@ -259,14 +259,14 @@ namespace BTCPayServer.Controllers
                     return View(viewModel);
 
                 case "remove-store":
-                {
-                    if (storeIndex != null)
-                        permissionValueItem.SpecificStores.RemoveAt(int.Parse(storeIndex,
-                            CultureInfo.InvariantCulture));
-                    return View(viewModel);
-                }
+                    {
+                        if (storeIndex != null)
+                            permissionValueItem.SpecificStores.RemoveAt(int.Parse(storeIndex,
+                                CultureInfo.InvariantCulture));
+                        return View(viewModel);
+                    }
             }
-            
+
             return null;
         }
 
@@ -303,11 +303,11 @@ namespace BTCPayServer.Controllers
                         permissions.AddRange(p.SpecificStores.Select(s => Permission.Create(p.Permission, s)));
                     }
                 }
-                else if (p.Value &&  Permission.TryCreatePermission(p.Permission, null, out var pp))
+                else if (p.Value && Permission.TryCreatePermission(p.Permission, null, out var pp))
                     permissions.Add(pp);
             }
 
-            
+
             return permissions.Distinct();
         }
 
@@ -320,8 +320,8 @@ namespace BTCPayServer.Controllers
                 .Where(p => AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions.ContainsKey(p))
                 .Select(s => new AddApiKeyViewModel.PermissionValueItem()
                 {
-                    Permission = s, 
-                    Value = false, 
+                    Permission = s,
+                    Value = false,
                     Forbidden = Policies.IsServerPolicy(s) && !isAdmin
                 }).ToList();
 
@@ -380,14 +380,14 @@ namespace BTCPayServer.Controllers
                 {
                     get
                     {
-                        return PermissionDescriptions[$"{Permission}{(StoreMode == ApiKeyStoreMode.Specific? ":": "")}"].Title;
+                        return PermissionDescriptions[$"{Permission}{(StoreMode == ApiKeyStoreMode.Specific ? ":" : "")}"].Title;
                     }
                 }
                 public string Description
                 {
                     get
                     {
-                        return PermissionDescriptions[$"{Permission}{(StoreMode == ApiKeyStoreMode.Specific? ":": "")}"].Description;
+                        return PermissionDescriptions[$"{Permission}{(StoreMode == ApiKeyStoreMode.Specific ? ":" : "")}"].Description;
                     }
                 }
                 public string Permission { get; set; }

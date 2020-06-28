@@ -18,7 +18,7 @@ namespace BTCPayServer.Tests
             var url = serverTester.GetEnvironment(environmentName, defaultValue);
             Client = (ChargeClient)LightningClientFactory.CreateClient(url, network);
             P2PHost = _Parent.GetEnvironment(environmentName + "_HOST", defaultHost);
-        }        
+        }
         public ChargeClient Client { get; set; }
         public string P2PHost { get; }
     }

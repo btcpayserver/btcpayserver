@@ -46,7 +46,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.RPC
                 Convert.ToBase64String(Encoding.Default.GetBytes($"{_username}:{_password}")));
 
             var rawResult = await _httpClient.SendAsync(httpRequest, cts);
-            
+
             var rawJson = await rawResult.Content.ReadAsStringAsync();
             rawResult.EnsureSuccessStatusCode();
             JsonRpcResult<TResponse> response;
@@ -68,7 +68,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.RPC
                     Error = response.Error
                 };
             }
-            
+
             return response.Result;
         }
 
@@ -92,7 +92,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.RPC
         }
         internal class JsonRpcResult<T>
         {
-            
+
 
             [JsonProperty("result")] public T Result { get; set; }
             [JsonProperty("error")] public JsonRpcResultError Error { get; set; }

@@ -68,6 +68,6 @@ namespace BTCPayServer.Models.StoreViewModels
         public bool LightningPrivateRouteHints { get; set; }
 
         [Display(Name = "Redirect invoice to redirect url automatically after paid")]
-        public bool  RedirectAutomatically { get; set; }
+        public bool RedirectAutomatically { get; set; }
     }
 }

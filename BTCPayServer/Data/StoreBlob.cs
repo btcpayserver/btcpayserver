@@ -2,16 +2,16 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using BTCPayServer.Payments;
+using System.Text;
+using BTCPayServer.Client.Models;
 using BTCPayServer.JsonConverters;
+using BTCPayServer.Payments;
 using BTCPayServer.Payments.Changelly;
 using BTCPayServer.Payments.CoinSwitch;
 using BTCPayServer.Rating;
 using BTCPayServer.Services.Mails;
-using Newtonsoft.Json;
-using System.Text;
-using BTCPayServer.Client.Models;
 using BTCPayServer.Services.Rates;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Data
 {

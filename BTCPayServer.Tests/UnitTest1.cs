@@ -1,70 +1,70 @@
-﻿using BTCPayServer.Tests.Logging;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Runtime.CompilerServices;
+using System.Security;
+using System.Security.Claims;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
+using BTCPayServer.Client;
+using BTCPayServer.Client.Models;
+using BTCPayServer.Configuration;
+using BTCPayServer.Controllers;
+using BTCPayServer.Data;
+using BTCPayServer.Events;
+using BTCPayServer.HostedServices;
+using BTCPayServer.Lightning;
+using BTCPayServer.Models;
+using BTCPayServer.Models.AccountViewModels;
+using BTCPayServer.Models.AppViewModels;
+using BTCPayServer.Models.InvoicingModels;
+using BTCPayServer.Models.ServerViewModels;
+using BTCPayServer.Models.StoreViewModels;
+using BTCPayServer.Models.WalletViewModels;
+using BTCPayServer.Payments;
+using BTCPayServer.Payments.Bitcoin;
+using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Rating;
+using BTCPayServer.Security;
+using BTCPayServer.Security.Bitpay;
+using BTCPayServer.Services;
+using BTCPayServer.Services.Apps;
+using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Rates;
+using BTCPayServer.Services.Stores;
+using BTCPayServer.Tests.Logging;
+using BTCPayServer.U2F.Models;
+using BTCPayServer.Validation;
+using ExchangeSharp;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitcoin.Payment;
 using NBitpayClient;
-using System;
-using System.Threading;
+using NBitpayClient.Extensions;
+using NBXplorer.DerivationStrategy;
+using NBXplorer.Models;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Schema;
+using TwentyTwenty.Storage;
 using Xunit;
 using Xunit.Abstractions;
 using Xunit.Sdk;
-using BTCPayServer.Services.Invoices;
-using Newtonsoft.Json;
-using System.IO;
-using Newtonsoft.Json.Linq;
-using BTCPayServer.Controllers;
-using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
-using BTCPayServer.Data;
-using Microsoft.EntityFrameworkCore;
-using BTCPayServer.Services.Rates;
-using Microsoft.Extensions.Caching.Memory;
-using System.Collections.Generic;
-using BTCPayServer.Models.StoreViewModels;
-using System.Threading.Tasks;
-using System.Globalization;
-using BTCPayServer.Payments;
-using BTCPayServer.Payments.Bitcoin;
-using BTCPayServer.HostedServices;
-using BTCPayServer.Payments.Lightning;
-using BTCPayServer.Models.AppViewModels;
-using BTCPayServer.Services.Apps;
-using BTCPayServer.Services.Stores;
-using System.Net.Http;
-using System.Text;
-using BTCPayServer.Models;
-using BTCPayServer.Rating;
-using BTCPayServer.Validation;
-using ExchangeSharp;
-using System.Security.Cryptography.X509Certificates;
-using BTCPayServer.Lightning;
-using BTCPayServer.Models.WalletViewModels;
-using System.Security.Claims;
-using BTCPayServer.Models.InvoicingModels;
-using BTCPayServer.Models.ServerViewModels;
-using BTCPayServer.Security;
-using NBXplorer.Models;
-using RatesViewModel = BTCPayServer.Models.StoreViewModels.RatesViewModel;
-using NBitpayClient.Extensions;
-using BTCPayServer.Services;
-using System.Text.RegularExpressions;
-using BTCPayServer.Events;
-using BTCPayServer.Configuration;
-using System.Security;
-using System.Runtime.CompilerServices;
-using System.Net;
-using BTCPayServer.Models.AccountViewModels;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
-using NBXplorer.DerivationStrategy;
-using BTCPayServer.U2F.Models;
-using BTCPayServer.Security.Bitpay;
 using MemoryCache = Microsoft.Extensions.Caching.Memory.MemoryCache;
-using Newtonsoft.Json.Schema;
-using BTCPayServer.Client;
-using BTCPayServer.Client.Models;
-using TwentyTwenty.Storage;
+using RatesViewModel = BTCPayServer.Models.StoreViewModels.RatesViewModel;
 
 namespace BTCPayServer.Tests
 {
@@ -2322,8 +2322,8 @@ namespace BTCPayServer.Tests
                 derivationVM = (DerivationSchemeViewModel)Assert.IsType<ViewResult>(controller
                     .AddDerivationScheme(user.StoreId, derivationVM, "BTC").GetAwaiter().GetResult()).Model;
                 Assert.True(derivationVM.Confirmation);
-              
-                
+
+
                 //cobo vault file
                 var content = "{\"ExtPubKey\":\"xpub6CEqRFZ7yZxCFXuEWZBAdnC8bdvu9SRHevaoU2SsW9ZmKhrCShmbpGZWwaR15hdLURf8hg47g4TpPGaqEU8hw5LEJCE35AUhne67XNyFGBk\",\"MasterFingerprint\":\"7a7563b5\",\"DerivationPath\":\"M\\/84'\\/0'\\/0'\",\"CoboVaultFirmwareVersion\":\"1.2.0(BTC-Only)\"}";
                 derivationVM = (DerivationSchemeViewModel)Assert
@@ -2335,7 +2335,7 @@ namespace BTCPayServer.Tests
                 Assert.True(derivationVM.Confirmation);
                 Assert.IsType<RedirectToActionResult>(controller.AddDerivationScheme(user.StoreId, derivationVM, "BTC")
                     .GetAwaiter().GetResult());
-                
+
                 //wasabi wallet file
                 content =
                     "{\r\n  \"EncryptedSecret\": \"6PYWBQ1zsukowsnTNA57UUx791aBuJusm7E4egXUmF5WGw3tcdG3cmTL57\",\r\n  \"ChainCode\": \"waSIVbn8HaoovoQg/0t8IS1+ZCxGsJRGFT21i06nWnc=\",\r\n  \"MasterFingerprint\": \"7a7563b5\",\r\n  \"ExtPubKey\": \"xpub6CEqRFZ7yZxCFXuEWZBAdnC8bdvu9SRHevaoU2SsW9ZmKhrCShmbpGZWwaR15hdLURf8hg47g4TpPGaqEU8hw5LEJCE35AUhne67XNyFGBk\",\r\n  \"PasswordVerified\": false,\r\n  \"MinGapLimit\": 21,\r\n  \"AccountKeyPath\": \"84'/0'/0'\",\r\n  \"BlockchainState\": {\r\n    \"Network\": \"RegTest\",\r\n    \"Height\": \"0\"\r\n  },\r\n  \"HdPubKeys\": []\r\n}";
@@ -2349,9 +2349,9 @@ namespace BTCPayServer.Tests
                 Assert.True(derivationVM.Confirmation);
                 Assert.IsType<RedirectToActionResult>(controller.AddDerivationScheme(user.StoreId, derivationVM, "BTC")
                     .GetAwaiter().GetResult());
-                
-                
-                 // Can we upload coldcard settings? (Should fail, we are giving a mainnet file to a testnet network)
+
+
+                // Can we upload coldcard settings? (Should fail, we are giving a mainnet file to a testnet network)
                 derivationVM = (DerivationSchemeViewModel)Assert
                     .IsType<ViewResult>(await controller.AddDerivationScheme(user.StoreId, "BTC")).Model;
                 content =
@@ -2374,8 +2374,8 @@ namespace BTCPayServer.Tests
                 Assert.True(derivationVM.Confirmation);
                 Assert.IsType<RedirectToActionResult>(controller.AddDerivationScheme(user.StoreId, derivationVM, "BTC")
                     .GetAwaiter().GetResult());
-                
-                
+
+
                 // Now let's check that no data has been lost in the process
                 var store = tester.PayTester.StoreRepository.FindStore(user.StoreId).GetAwaiter().GetResult();
                 var onchainBTC = store.GetSupportedPaymentMethods(tester.PayTester.Networks)

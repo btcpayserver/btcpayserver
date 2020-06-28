@@ -114,12 +114,12 @@ namespace BTCPayServer.HostedServices
 
         public static (string color, string label) InvoiceLabelTemplate(string invoice)
         {
-            return ("#cedc21", JObject.FromObject(new {value = "invoice", id = invoice}).ToString());
+            return ("#cedc21", JObject.FromObject(new { value = "invoice", id = invoice }).ToString());
         }
 
         public static (string color, string label) PayjoinExposedLabelTemplate(string invoice)
         {
-            return ("#51b13e", JObject.FromObject(new {value = "pj-exposed", id = invoice}).ToString());
+            return ("#51b13e", JObject.FromObject(new { value = "pj-exposed", id = invoice }).ToString());
         }
 
         public WalletId WalletId { get; set; }

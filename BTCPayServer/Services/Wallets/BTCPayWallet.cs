@@ -1,19 +1,19 @@
-﻿using NBitcoin;
-using Microsoft.Extensions.Logging;
-using NBXplorer;
-using NBXplorer.DerivationStrategy;
-using System;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Text;
 using System.Linq;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
-using System.Threading;
-using NBXplorer.Models;
-using Microsoft.Extensions.Caching.Memory;
 using BTCPayServer.Logging;
-using System.Collections.Concurrent;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
+using NBitcoin;
+using NBXplorer;
+using NBXplorer.DerivationStrategy;
+using NBXplorer.Models;
 
 namespace BTCPayServer.Services.Wallets
 {
@@ -41,7 +41,7 @@ namespace BTCPayServer.Services.Wallets
     {
         private ExplorerClient _Client;
         private IMemoryCache _MemoryCache;
-        public BTCPayWallet(ExplorerClient client, IMemoryCache memoryCache, BTCPayNetwork network, 
+        public BTCPayWallet(ExplorerClient client, IMemoryCache memoryCache, BTCPayNetwork network,
             ApplicationDbContextFactory dbContextFactory)
         {
             if (client == null)
@@ -116,8 +116,8 @@ namespace BTCPayServer.Services.Wallets
                     tx = new TransactionResult()
                     {
                         Confirmations = -1,
-                        TransactionHash =  offchainTx.GetHash(),
-                        Transaction =  offchainTx
+                        TransactionHash = offchainTx.GetHash(),
+                        Transaction = offchainTx
                     };
             }
             return tx;

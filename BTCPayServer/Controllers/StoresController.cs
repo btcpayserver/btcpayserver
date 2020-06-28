@@ -226,10 +226,11 @@ namespace BTCPayServer.Controllers
         {
             if (command == "scripting-on")
             {
-                return RedirectToAction(nameof(ShowRateRules), new {scripting = true,storeId = model.StoreId});
-            }else if (command == "scripting-off")
+                return RedirectToAction(nameof(ShowRateRules), new { scripting = true, storeId = model.StoreId });
+            }
+            else if (command == "scripting-off")
             {
-                return RedirectToAction(nameof(ShowRateRules), new {scripting = false, storeId = model.StoreId});
+                return RedirectToAction(nameof(ShowRateRules), new { scripting = false, storeId = model.StoreId });
             }
 
             var exchanges = GetSupportedExchanges();
@@ -505,13 +506,13 @@ namespace BTCPayServer.Controllers
 
             foreach (var paymentMethodId in _paymentMethodHandlerDictionary.Distinct().SelectMany(handler => handler.GetSupportedPaymentMethods()))
             {
-                 switch (paymentMethodId.PaymentType)
+                switch (paymentMethodId.PaymentType)
                 {
                     case BitcoinPaymentType _:
                         var strategy = derivationByCryptoCode.TryGet(paymentMethodId.CryptoCode);
                         var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
                         var value = strategy?.ToPrettyString() ?? string.Empty;
-                        
+
                         vm.DerivationSchemes.Add(new StoreViewModel.DerivationScheme()
                         {
                             Crypto = paymentMethodId.CryptoCode,
@@ -531,7 +532,7 @@ namespace BTCPayServer.Controllers
                             Enabled = !excludeFilters.Match(paymentMethodId) && lightning?.GetLightningUrl() != null
                         });
                         break;
-                }   
+                }
             }
 
             var changellyEnabled = storeBlob.ChangellySettings != null && storeBlob.ChangellySettings.Enabled;
@@ -550,7 +551,7 @@ namespace BTCPayServer.Controllers
                 Provider = "CoinSwitch"
             });
         }
-        
+
 
         [HttpPost]
         [Route("{storeId}")]
@@ -590,7 +591,7 @@ namespace BTCPayServer.Controllers
             if (needUpdate)
             {
                 await _Repo.UpdateStore(CurrentStore);
-                
+
                 TempData[WellKnownTempData.SuccessMessage] = "Store successfully updated";
 
                 if (payjoinChanged && blob.PayJoinEnabled)
@@ -711,7 +712,7 @@ namespace BTCPayServer.Controllers
                 TempData[WellKnownTempData.ErrorMessage] = "Failure to revoke this token";
             else
                 TempData[WellKnownTempData.SuccessMessage] = "Token revoked";
-            return RedirectToAction(nameof(ListTokens), new { storeId = token.StoreId});
+            return RedirectToAction(nameof(ListTokens), new { storeId = token.StoreId });
         }
 
         [HttpGet]
@@ -818,7 +819,7 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("{storeId}/tokens/apikey")]
-        public async Task<IActionResult> GenerateAPIKey(string storeId, string command="")
+        public async Task<IActionResult> GenerateAPIKey(string storeId, string command = "")
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
@@ -833,7 +834,7 @@ namespace BTCPayServer.Controllers
                 await _TokenRepository.GenerateLegacyAPIKey(CurrentStore.Id);
                 TempData[WellKnownTempData.SuccessMessage] = "API Key re-generated";
             }
-            
+
             return RedirectToAction(nameof(ListTokens), new
             {
                 storeId

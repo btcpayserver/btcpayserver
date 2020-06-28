@@ -1,7 +1,8 @@
-using Microsoft.Extensions.Logging;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
@@ -14,9 +15,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.Extensions.Logging;
 using NicolasDorier.RateLimits;
-using BTCPayServer.Client;
-using System.Reflection;
 
 namespace BTCPayServer.Controllers.GreenField
 {
@@ -157,7 +157,7 @@ namespace BTCPayServer.Controllers.GreenField
                     }
                 }
             }
-            _eventAggregator.Publish(new UserRegisteredEvent() {RequestUri = Request.GetAbsoluteRootUri(), User = user, Admin = request.IsAdministrator is true });
+            _eventAggregator.Publish(new UserRegisteredEvent() { RequestUri = Request.GetAbsoluteRootUri(), User = user, Admin = request.IsAdministrator is true });
             return CreatedAtAction(string.Empty, user);
         }
 

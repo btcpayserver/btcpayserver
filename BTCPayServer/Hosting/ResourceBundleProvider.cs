@@ -6,9 +6,9 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using BundlerMinifier.TagHelpers;
-using Newtonsoft.Json.Serialization;
 using Microsoft.AspNetCore.Hosting;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 
 namespace BTCPayServer.Hosting
 {

@@ -1,11 +1,11 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using System.Text;
 using BTCPayServer.Rating;
-using Xunit;
-using System.Globalization;
 using Newtonsoft.Json;
+using Xunit;
 
 namespace BTCPayServer.Tests
 {

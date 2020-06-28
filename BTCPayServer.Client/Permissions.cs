@@ -152,7 +152,7 @@ namespace BTCPayServer.Client
             if (this.Policy == subpolicy)
                 return true;
             switch (subpolicy)
-            {   
+            {
                 case Policies.CanViewStoreSettings when this.Policy == Policies.CanModifyStoreSettings:
                 case Policies.CanCreateInvoice when this.Policy == Policies.CanModifyStoreSettings:
                 case Policies.CanViewProfile when this.Policy == Policies.CanModifyProfile:

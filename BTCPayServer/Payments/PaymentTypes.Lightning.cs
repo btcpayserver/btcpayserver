@@ -21,12 +21,12 @@ namespace BTCPayServer.Payments
         public override string GetId() => "LightningLike";
         public override CryptoPaymentData DeserializePaymentData(BTCPayNetworkBase network, string str)
         {
-            return ((BTCPayNetwork) network).ToObject<LightningLikePaymentData>(str);
+            return ((BTCPayNetwork)network).ToObject<LightningLikePaymentData>(str);
         }
 
         public override string SerializePaymentData(BTCPayNetworkBase network, CryptoPaymentData paymentData)
         {
-            return ((BTCPayNetwork) network).ToString(paymentData);
+            return ((BTCPayNetwork)network).ToString(paymentData);
         }
 
         public override IPaymentMethodDetails DeserializePaymentMethodDetails(BTCPayNetworkBase network, string str)

@@ -1,6 +1,4 @@
 ﻿using System;
-using NBitcoin;
-using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -9,6 +7,8 @@ using System.Threading.Tasks;
 using BTCPayServer.Logging;
 using BTCPayServer.Services;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using NBitcoin;
 using NicolasDorier.RateLimits;
 
 namespace BTCPayServer.HostedServices

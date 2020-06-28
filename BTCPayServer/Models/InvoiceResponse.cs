@@ -1,9 +1,9 @@
-﻿using NBitcoin;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using NBitcoin;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Models
 {
@@ -45,7 +45,7 @@ namespace BTCPayServer.Models
         {
             get; set;
         }
-        
+
         //"url":"https://test.bitpay.com/invoice?id=9saCHtp1zyPcNoi3rDdBu8"
         [JsonProperty("url")]
         public string Url
@@ -123,8 +123,8 @@ namespace BTCPayServer.Models
         public string ItemDesc
         {
             get; set;
-        }       
-        
+        }
+
         [JsonProperty("itemCode")]
         public string ItemCode
         {

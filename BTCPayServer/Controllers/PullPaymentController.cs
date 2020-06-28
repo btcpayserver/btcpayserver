@@ -74,16 +74,16 @@ namespace BTCPayServer.Controllers
                 LastUpdated = DateTime.Now,
                 Payouts = payouts
                           .Select(entity => new ViewPullPaymentModel.PayoutLine()
-                {
-                    Id = entity.Entity.Id,
-                    Amount = entity.Blob.Amount,
-                    AmountFormatted = _currencyNameTable.FormatCurrency(entity.Blob.Amount, blob.Currency),
-                    Currency = blob.Currency,
-                    Status = entity.Entity.State.ToString(),
-                    Destination = entity.Blob.Destination.Address.ToString(),
-                    Link = GetTransactionLink(_networkProvider.GetNetwork<BTCPayNetwork>(entity.Entity.GetPaymentMethodId().CryptoCode), entity.TransactionId),
-                    TransactionId = entity.TransactionId
-                }).ToList()
+                          {
+                              Id = entity.Entity.Id,
+                              Amount = entity.Blob.Amount,
+                              AmountFormatted = _currencyNameTable.FormatCurrency(entity.Blob.Amount, blob.Currency),
+                              Currency = blob.Currency,
+                              Status = entity.Entity.State.ToString(),
+                              Destination = entity.Blob.Destination.Address.ToString(),
+                              Link = GetTransactionLink(_networkProvider.GetNetwork<BTCPayNetwork>(entity.Entity.GetPaymentMethodId().CryptoCode), entity.TransactionId),
+                              TransactionId = entity.TransactionId
+                          }).ToList()
             };
             vm.IsPending &= vm.AmountDue > 0.0m;
             return View(nameof(ViewPullPayment), vm);

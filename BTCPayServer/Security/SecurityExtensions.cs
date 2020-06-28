@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Linq;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 
 namespace BTCPayServer.Security
 {

@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 using System.Text;
-using NBXplorer;
-using NBitcoin;
-using Microsoft.AspNetCore.Http;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
+using NBitcoin;
+using NBXplorer;
 
 namespace BTCPayServer.Services
 {
@@ -69,7 +69,7 @@ namespace BTCPayServer.Services
             }
         }
 
-        public HttpContext Context => httpContext.HttpContext;    
+        public HttpContext Context => httpContext.HttpContext;
 
         public override string ToString()
         {

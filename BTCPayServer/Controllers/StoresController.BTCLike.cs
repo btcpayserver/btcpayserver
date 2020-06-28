@@ -1,5 +1,4 @@
 ﻿using System;
-using Microsoft.AspNetCore.Authorization;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -9,22 +8,23 @@ using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
+using BTCPayServer.Logging;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using BTCPayServer.Logging;
-using Microsoft.Extensions.Logging;
-using BTCPayServer.Client;
 
 namespace BTCPayServer.Controllers
 {
@@ -70,7 +70,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost]
-        [Route("{storeId}/derivations/{cryptoCode}")]        
+        [Route("{storeId}/derivations/{cryptoCode}")]
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> AddDerivationScheme(string storeId, [FromForm] DerivationSchemeViewModel vm,
             string cryptoCode)
@@ -106,7 +106,7 @@ namespace BTCPayServer.Controllers
                         Message = "Config file was not in the correct format"
                     });
                     vm.Confirmation = false;
-                    return View(nameof(AddDerivationScheme),vm);
+                    return View(nameof(AddDerivationScheme), vm);
                 }
             }
 
@@ -120,7 +120,7 @@ namespace BTCPayServer.Controllers
                         Message = "Wallet file was not in the correct format"
                     });
                     vm.Confirmation = false;
-                    return View(nameof(AddDerivationScheme),vm);
+                    return View(nameof(AddDerivationScheme), vm);
                 }
             }
             else
@@ -156,7 +156,7 @@ namespace BTCPayServer.Controllers
                 {
                     ModelState.AddModelError(nameof(vm.DerivationScheme), "Invalid Derivation Scheme");
                     vm.Confirmation = false;
-                    return View(nameof(AddDerivationScheme),vm);
+                    return View(nameof(AddDerivationScheme), vm);
                 }
             }
 
@@ -202,7 +202,7 @@ namespace BTCPayServer.Controllers
                 {
                     WalletId = new WalletId(storeId, cryptoCode)
                 });
-                    
+
                 if (willBeExcluded != wasExcluded)
                 {
                     var label = willBeExcluded ? "disabled" : "enabled";
@@ -277,9 +277,9 @@ namespace BTCPayServer.Controllers
                     Severity = StatusMessageModel.StatusSeverity.Error,
                     Html = $"There was an error generating your wallet: {e.Message}"
                 });
-                return RedirectToAction(nameof(AddDerivationScheme), new {storeId, cryptoCode});
+                return RedirectToAction(nameof(AddDerivationScheme), new { storeId, cryptoCode });
             }
-            
+
             if (response == null)
             {
                 TempData.SetStatusMessageModel(new StatusMessageModel()
@@ -287,7 +287,7 @@ namespace BTCPayServer.Controllers
                     Severity = StatusMessageModel.StatusSeverity.Error,
                     Html = "There was an error generating your wallet. Is your node available?"
                 });
-                return RedirectToAction(nameof(AddDerivationScheme), new {storeId, cryptoCode});
+                return RedirectToAction(nameof(AddDerivationScheme), new { storeId, cryptoCode });
             }
 
             var store = HttpContext.GetStoreData();
@@ -347,7 +347,7 @@ namespace BTCPayServer.Controllers
             }
         }
 
-        private IActionResult 
+        private IActionResult
             ShowAddresses(DerivationSchemeViewModel vm, DerivationSchemeSettings strategy)
         {
             vm.DerivationScheme = strategy.AccountDerivation.ToString();
@@ -369,7 +369,7 @@ namespace BTCPayServer.Controllers
             }
             vm.Confirmation = true;
             ModelState.Remove(nameof(vm.Config)); // Remove the cached value
-            return View(nameof(AddDerivationScheme),vm);
+            return View(nameof(AddDerivationScheme), vm);
         }
     }
 }

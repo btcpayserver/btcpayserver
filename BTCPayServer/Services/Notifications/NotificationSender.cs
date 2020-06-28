@@ -17,7 +17,7 @@ namespace BTCPayServer.Services.Notifications
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly NotificationManager _notificationManager;
 
-        public NotificationSender(ApplicationDbContextFactory contextFactory, UserManager<ApplicationUser> userManager,NotificationManager notificationManager)
+        public NotificationSender(ApplicationDbContextFactory contextFactory, UserManager<ApplicationUser> userManager, NotificationManager notificationManager)
         {
             _contextFactory = contextFactory;
             _userManager = userManager;

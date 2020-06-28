@@ -1,12 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Amazon.S3.Model;
+using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Filters;
 using BTCPayServer.HostedServices;
+using BTCPayServer.Logging;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
@@ -15,17 +19,13 @@ using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
+using NBitcoin.Crypto;
+using NBitcoin.DataEncoders;
 using NBXplorer;
+using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json.Linq;
 using NicolasDorier.RateLimits;
-using NBXplorer.DerivationStrategy;
-using System.Diagnostics.CodeAnalysis;
-using BTCPayServer.Data;
-using NBitcoin.DataEncoders;
-using Amazon.S3.Model;
-using BTCPayServer.Logging;
-using NBitcoin.Crypto;
 
 namespace BTCPayServer.Payments.PayJoin
 {

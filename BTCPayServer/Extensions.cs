@@ -1,45 +1,45 @@
-﻿using BTCPayServer.Configuration;
-using Microsoft.AspNetCore.Html;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.WebSockets;
+using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
-using NBitcoin;
-using System.Threading.Tasks;
-using NBXplorer;
-using NBXplorer.Models;
-using System.Linq;
 using System.Threading;
-using BTCPayServer.Services.Wallets;
-using System.IO;
-using BTCPayServer.Logging;
-using Microsoft.Extensions.Logging;
-using System.Net.WebSockets;
-using BTCPayServer.Services.Invoices;
-using NBitpayClient;
-using BTCPayServer.Payments;
-using Microsoft.AspNetCore.Identity;
-using BTCPayServer.Models;
-using System.Security.Claims;
-using System.Globalization;
-using BTCPayServer.Services;
+using System.Threading.Tasks;
+using BTCPayServer.Configuration;
 using BTCPayServer.Data;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using NBXplorer.DerivationStrategy;
-using System.Net;
 using BTCPayServer.Lightning;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.ViewFeatures;
-using Newtonsoft.Json.Linq;
+using BTCPayServer.Logging;
+using BTCPayServer.Models;
+using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
-using NBitcoin.Payment;
+using BTCPayServer.Services;
+using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Wallets;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Html;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using NBitcoin;
+using NBitcoin.Payment;
+using NBitpayClient;
+using NBXplorer;
+using NBXplorer.DerivationStrategy;
+using NBXplorer.Models;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 
 namespace BTCPayServer
 {
@@ -59,7 +59,7 @@ namespace BTCPayServer
                                   connectionString.BaseUri.DnsSafeHost == internalDomain ||
                                   (internalDomain == "127.0.0.1" || internalDomain == "localhost");
         }
-        
+
         public static IQueryable<TEntity> Where<TEntity>(this Microsoft.EntityFrameworkCore.DbSet<TEntity> obj, System.Linq.Expressions.Expression<Func<TEntity, bool>> predicate) where TEntity : class
         {
             return System.Linq.Queryable.Where(obj, predicate);
@@ -71,7 +71,7 @@ namespace BTCPayServer
                 return value;
             return value.Length <= maxLength ? value : value.Substring(0, maxLength);
         }
-      
+
         public static string PrettyPrint(this TimeSpan expiration)
         {
             StringBuilder builder = new StringBuilder();
@@ -139,7 +139,7 @@ namespace BTCPayServer
             await Task.WhenAll(transactions).ConfigureAwait(false);
             return transactions.Select(t => t.Result).Where(t => t != null).ToDictionary(o => o.Transaction.GetHash());
         }
-        
+
         public static async Task<PSBT> UpdatePSBT(this ExplorerClientProvider explorerClientProvider, DerivationSchemeSettings derivationSchemeSettings, PSBT psbt)
         {
             var result = await explorerClientProvider.GetExplorerClient(psbt.Network.NetworkSet.CryptoCode).UpdatePSBTAsync(new UpdatePSBTRequest()
@@ -152,7 +152,7 @@ namespace BTCPayServer
             derivationSchemeSettings.RebaseKeyPaths(result.PSBT);
             return result.PSBT;
         }
-        
+
         public static string WithTrailingSlash(this string str)
         {
             if (str.EndsWith("/", StringComparison.InvariantCulture))
@@ -224,7 +224,7 @@ namespace BTCPayServer
                    server.EndsWith(".lan", StringComparison.OrdinalIgnoreCase) ||
                    server.IndexOf('.', StringComparison.OrdinalIgnoreCase) == -1;
             }
-            if(IPAddress.TryParse(server, out var ip))
+            if (IPAddress.TryParse(server, out var ip))
             {
                 return ip.IsLocal() || ip.IsRFC1918();
             }
@@ -273,7 +273,7 @@ namespace BTCPayServer
                 return false;
             return request.Host.Host.EndsWith(".onion", StringComparison.OrdinalIgnoreCase);
         }
-        
+
         public static bool IsOnion(this Uri uri)
         {
             if (uri == null || !uri.IsAbsoluteUri)
@@ -339,7 +339,7 @@ namespace BTCPayServer
         /// <returns></returns>
         public static string GetRelativePathOrAbsolute(this HttpRequest request, string path)
         {
-            if (!Uri.TryCreate(path, UriKind.RelativeOrAbsolute, out var uri) || 
+            if (!Uri.TryCreate(path, UriKind.RelativeOrAbsolute, out var uri) ||
                 uri.IsAbsoluteUri)
                 return path;
 

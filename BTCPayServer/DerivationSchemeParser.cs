@@ -17,7 +17,7 @@ namespace BTCPayServer
         public Network Network => BtcPayNetwork.NBitcoinNetwork;
 
         public Script HintScriptPubKey { get; set; }
-        
+
         public DerivationSchemeParser(BTCPayNetwork expectedNetwork)
         {
             if (expectedNetwork == null)
@@ -28,7 +28,7 @@ namespace BTCPayServer
 
         public DerivationStrategyBase ParseElectrum(string str)
         {
-            
+
             if (str == null)
                 throw new ArgumentNullException(nameof(str));
             str = str.Trim();
@@ -117,7 +117,7 @@ namespace BTCPayServer
                     var standardPrefix = Utils.ToBytes(0x0488b21eU, false);
                     for (int ii = 0; ii < 4; ii++)
                         data[ii] = standardPrefix[ii];
-                    
+
                     var derivationScheme = GetBitcoinExtPubKeyByNetwork(Network, data).ToString();
 
                     if (BtcPayNetwork.ElectrumMapping.TryGetValue(prefix, out var type))

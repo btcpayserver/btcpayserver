@@ -81,7 +81,7 @@ namespace BTCPayServer.Security
         {
             StringBuilder value = new StringBuilder();
             bool firstGroup = true;
-            foreach(var group in Rules.GroupBy(r => r.Name))
+            foreach (var group in Rules.GroupBy(r => r.Name))
             {
                 if (!firstGroup)
                 {
@@ -93,7 +93,7 @@ namespace BTCPayServer.Security
                 {
                     values.Add(v.Value);
                 }
-                foreach(var i in authorized)
+                foreach (var i in authorized)
                 {
                     values.Add(i);
                 }

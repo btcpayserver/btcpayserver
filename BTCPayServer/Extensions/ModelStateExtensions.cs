@@ -7,9 +7,9 @@ namespace BTCPayServer
 {
     public static class ModelStateExtensions
     {
-        
-        public static void AddModelError<TModel, TProperty>(this TModel source,        
-            Expression<Func<TModel, TProperty>> ex, 
+
+        public static void AddModelError<TModel, TProperty>(this TModel source,
+            Expression<Func<TModel, TProperty>> ex,
             string message,
             Controller controller)
         {

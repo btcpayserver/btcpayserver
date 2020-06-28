@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace BTCPayServer.Services.Altcoins.Monero.Services
 {
-    public class MoneroLikeSummaryUpdaterHostedService: IHostedService
+    public class MoneroLikeSummaryUpdaterHostedService : IHostedService
     {
         private readonly MoneroRPCProvider _MoneroRpcProvider;
         private readonly MoneroLikeConfiguration _moneroLikeConfiguration;
@@ -27,7 +27,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
             }
             return Task.CompletedTask;
         }
-        
+
         private async Task StartLoop(CancellationToken cancellation, string cryptoCode)
         {
             Logs.PayServer.LogInformation($"Starting listening Monero-like daemons ({cryptoCode})");

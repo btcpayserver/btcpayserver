@@ -78,7 +78,7 @@ namespace BTCPayServer.Configuration
                 }
             }
 
-            if (new []{ExternalServiceTypes.Charge, ExternalServiceTypes.RTL, ExternalServiceTypes.ThunderHub, ExternalServiceTypes.Spark, ExternalServiceTypes.Configurator}.Contains(serviceType))
+            if (new[] { ExternalServiceTypes.Charge, ExternalServiceTypes.RTL, ExternalServiceTypes.ThunderHub, ExternalServiceTypes.Spark, ExternalServiceTypes.Configurator }.Contains(serviceType))
             {
                 // Read access key from cookie file
                 if (connectionString.CookieFilePath != null)
@@ -154,7 +154,7 @@ namespace BTCPayServer.Configuration
             error = null;
             result = null;
             var resultTemp = new ExternalConnectionString();
-            foreach(var kv in str.Split(';')
+            foreach (var kv in str.Split(';')
                         .Select(part => part.Split('='))
                         .Where(kv => kv.Length == 2))
             {
@@ -182,7 +182,7 @@ namespace BTCPayServer.Configuration
                             error = "Duplicated cookiefile attribute";
                             return false;
                         }
-                            
+
                         resultTemp.CookieFilePath = kv[1];
                         break;
                     case "macaroondirectorypath":

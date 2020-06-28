@@ -286,7 +286,7 @@ namespace BTCPayServer.HostedServices
                 await ctx.SaveChangesAsync();
                 req.Completion.SetResult(PayoutApproval.Result.Ok);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 req.Completion.TrySetException(ex);
             }
@@ -558,7 +558,7 @@ namespace BTCPayServer.HostedServices
             CancellationToken.ThrowIfCancellationRequested();
             var cts = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             cancelRequest.Completion = cts;
-            if(!_Channel.Writer.TryWrite(cancelRequest))
+            if (!_Channel.Writer.TryWrite(cancelRequest))
                 throw new ObjectDisposedException(nameof(PullPaymentHostedService));
             return cts.Task;
         }
@@ -567,7 +567,7 @@ namespace BTCPayServer.HostedServices
         {
             CancellationToken.ThrowIfCancellationRequested();
             var cts = new TaskCompletionSource<ClaimRequest.ClaimResponse>(TaskCreationOptions.RunContinuationsAsynchronously);
-            if(!_Channel.Writer.TryWrite(new PayoutRequest(cts, request)))
+            if (!_Channel.Writer.TryWrite(new PayoutRequest(cts, request)))
                 throw new ObjectDisposedException(nameof(PullPaymentHostedService));
             return cts.Task;
         }

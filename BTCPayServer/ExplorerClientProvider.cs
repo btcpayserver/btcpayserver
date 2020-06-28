@@ -1,13 +1,13 @@
 ﻿using System;
-using System.Net.Http;
-using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Configuration;
-using BTCPayServer.Logging;
-using NBXplorer;
 using BTCPayServer.HostedServices;
+using BTCPayServer.Logging;
+using Microsoft.Extensions.Logging;
+using NBXplorer;
 
 namespace BTCPayServer
 {
@@ -48,7 +48,7 @@ namespace BTCPayServer
                 Logs.Configuration.LogWarning($"{explorer.CryptoCode}: Not using cookie authentication");
                 explorer.SetNoAuth();
             }
-            if(!explorer.SetCookieAuth(cookieFile))
+            if (!explorer.SetCookieAuth(cookieFile))
             {
                 Logs.Configuration.LogWarning($"{explorer.CryptoCode}: Using cookie auth against NBXplorer, but {cookieFile} is not found");
             }

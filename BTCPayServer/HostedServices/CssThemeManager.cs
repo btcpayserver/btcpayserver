@@ -1,19 +1,19 @@
 ﻿using System;
-using Microsoft.Extensions.Logging;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Events;
 using BTCPayServer.Logging;
+using BTCPayServer.Security;
+using BTCPayServer.Services;
+using BTCPayServer.Services.Apps;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using NBXplorer;
 using NBXplorer.Models;
-using System.Collections.Concurrent;
-using BTCPayServer.Events;
-using BTCPayServer.Services;
-using Microsoft.AspNetCore.Mvc.Filters;
-using BTCPayServer.Security;
-using BTCPayServer.Services.Apps;
 
 namespace BTCPayServer.HostedServices
 {
@@ -108,7 +108,7 @@ namespace BTCPayServer.HostedServices
             var policies = context.HttpContext.RequestServices.GetService(typeof(ContentSecurityPolicies)) as ContentSecurityPolicies;
             if (manager != null && policies != null)
             {
-                if(manager.CreativeStartUri != null && Uri.TryCreate(manager.CreativeStartUri, UriKind.Absolute, out var uri))
+                if (manager.CreativeStartUri != null && Uri.TryCreate(manager.CreativeStartUri, UriKind.Absolute, out var uri))
                 {
                     policies.Clear();
                 }

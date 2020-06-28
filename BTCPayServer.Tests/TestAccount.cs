@@ -1,35 +1,35 @@
-﻿using BTCPayServer.Controllers;
-using System.Linq;
-using BTCPayServer.Models.AccountViewModels;
-using BTCPayServer.Models.StoreViewModels;
-using BTCPayServer.Services.Invoices;
-using Microsoft.AspNetCore.Mvc;
-using NBitcoin;
-using NBitpayClient;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Amazon.S3.Model;
-using Xunit;
-using NBXplorer.DerivationStrategy;
-using BTCPayServer.Payments;
-using BTCPayServer.Payments.Lightning;
-using BTCPayServer.Tests.Logging;
-using BTCPayServer.Lightning;
-using BTCPayServer.Lightning.CLightning;
-using BTCPayServer.Data;
-using Microsoft.AspNetCore.Identity;
-using NBXplorer.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Controllers;
+using BTCPayServer.Data;
 using BTCPayServer.Events;
+using BTCPayServer.Lightning;
+using BTCPayServer.Lightning.CLightning;
+using BTCPayServer.Models.AccountViewModels;
+using BTCPayServer.Models.StoreViewModels;
+using BTCPayServer.Payments;
+using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
+using BTCPayServer.Tests.Logging;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using NBitcoin;
 using NBitcoin.Payment;
+using NBitpayClient;
+using NBXplorer.DerivationStrategy;
+using NBXplorer.Models;
 using Newtonsoft.Json.Linq;
+using Xunit;
 
 namespace BTCPayServer.Tests
 {
@@ -83,7 +83,7 @@ namespace BTCPayServer.Tests
                         {
                             Permission = p.Key,
                             Forbidden = false,
-                            StoreMode = stores.Any()?  ManageController.AddApiKeyViewModel.ApiKeyStoreMode.Specific: ManageController.AddApiKeyViewModel.ApiKeyStoreMode.AllStores,
+                            StoreMode = stores.Any() ? ManageController.AddApiKeyViewModel.ApiKeyStoreMode.Specific : ManageController.AddApiKeyViewModel.ApiKeyStoreMode.AllStores,
                             SpecificStores = stores,
                             Value = true
                         };
@@ -158,7 +158,7 @@ namespace BTCPayServer.Tests
                 await RegisterAsync();
             }
             var store = this.GetController<UserStoresController>();
-            await store.CreateStore(new CreateStoreViewModel() {Name = "Test Store"});
+            await store.CreateStore(new CreateStoreViewModel() { Name = "Test Store" });
             StoreId = store.CreatedStoreId;
             parent.Stores.Add(StoreId);
         }
@@ -289,7 +289,7 @@ namespace BTCPayServer.Tests
                 throw new NotSupportedException(connectionType.ToString());
 
             await storeController.AddLightningNode(StoreId,
-                new LightningNodeViewModel() {ConnectionString = connectionString, SkipPortTest = true}, "save", "BTC");
+                new LightningNodeViewModel() { ConnectionString = connectionString, SkipPortTest = true }, "save", "BTC");
             if (storeController.ModelState.ErrorCount != 0)
                 Assert.False(true, storeController.ModelState.FirstOrDefault().Value.Errors[0].ErrorMessage);
         }
@@ -304,7 +304,7 @@ namespace BTCPayServer.Tests
                 await cashCow.SendToAddressAsync(address, value);
             });
             int i = 0;
-            while (i <30)
+            while (i < 30)
             {
                 var result = (await btcPayWallet.GetUnspentCoins(DerivationScheme))
                     .FirstOrDefault(c => c.ScriptPubKey == address.ScriptPubKey)?.Coin;
@@ -336,13 +336,14 @@ namespace BTCPayServer.Tests
                 .GetExplorerClient(psbt.Network.NetworkSet.CryptoCode);
             psbt = (await explorerClient.UpdatePSBTAsync(new UpdatePSBTRequest()
             {
-                DerivationScheme = DerivationScheme, PSBT = psbt
+                DerivationScheme = DerivationScheme,
+                PSBT = psbt
             })).PSBT;
             return psbt.SignAll(this.DerivationScheme, GenerateWalletResponseV.AccountHDKey,
                 GenerateWalletResponseV.AccountKeyPath);
         }
 
-        public async Task<PSBT> SubmitPayjoin(Invoice invoice, PSBT psbt, string expectedError = null, bool senderError= false)
+        public async Task<PSBT> SubmitPayjoin(Invoice invoice, PSBT psbt, string expectedError = null, bool senderError = false)
         {
             var endpoint = GetPayjoinBitcoinUrl(invoice, psbt.Network);
             if (endpoint == null)

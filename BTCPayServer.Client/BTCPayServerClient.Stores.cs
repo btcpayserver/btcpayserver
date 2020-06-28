@@ -21,14 +21,14 @@ namespace BTCPayServer.Client
                 CreateHttpRequest($"api/v1/stores/{storeId}"), token);
             return await HandleResponse<StoreData>(response);
         }
-        
+
         public virtual async Task RemoveStore(string storeId, CancellationToken token = default)
         {
             var response = await _httpClient.SendAsync(
                 CreateHttpRequest($"api/v1/stores/{storeId}", method: HttpMethod.Delete), token);
             await HandleResponse(response);
         }
-        
+
         public virtual async Task<StoreData> CreateStore(CreateStoreRequest request, CancellationToken token = default)
         {
             if (request == null)
@@ -36,7 +36,7 @@ namespace BTCPayServer.Client
             var response = await _httpClient.SendAsync(CreateHttpRequest("api/v1/stores", bodyPayload: request, method: HttpMethod.Post), token);
             return await HandleResponse<StoreData>(response);
         }
-        
+
         public virtual async Task<StoreData> UpdateStore(string storeId, UpdateStoreRequest request, CancellationToken token = default)
         {
             if (request == null)

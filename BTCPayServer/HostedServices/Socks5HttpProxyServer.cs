@@ -18,7 +18,7 @@ using NBitcoin.Socks;
 
 namespace BTCPayServer.HostedServices
 {
-    
+
     /// <summary>
     /// This is a very simple Socks HTTP proxy, that can be used through HttpClient.WebProxy
     /// However, it only supports a single request/response, so the client must specify Connection: close to not
@@ -101,7 +101,7 @@ namespace BTCPayServer.HostedServices
                 Dispose(clientSocket);
                 return;
             }
-            var toSocksProxy  = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            var toSocksProxy = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             var connectionCts = CancellationTokenSource.CreateLinkedTokenSource(ctx.CancellationToken);
             toSocksProxy.BeginConnect(ctx.SocksEndpoint, ConnectToSocks, new ProxyConnection()
             {
@@ -109,7 +109,7 @@ namespace BTCPayServer.HostedServices
                 ClientSocket = clientSocket,
                 SocksSocket = toSocksProxy,
                 CancellationToken = connectionCts.Token,
-                CancellationTokenSource = connectionCts 
+                CancellationTokenSource = connectionCts
             });
             try
             {
@@ -146,7 +146,7 @@ namespace BTCPayServer.HostedServices
                     Interlocked.Decrement(ref connection.ServerContext.ConnectionCount);
                 }, TaskScheduler.Default);
         }
-        
+
         public int ConnectionCount => _ServerContext is ServerContext s ? s.ConnectionCount : 0;
         private static async Task ReadPipeAsync(Socket socksSocket, Socket clientSocket, PipeReader reader, CancellationToken cancellationToken)
         {
@@ -162,8 +162,8 @@ namespace BTCPayServer.HostedServices
 
                 if (!handshaked)
                 {
-                    nextchunk:
-                    // Look for a EOL in the buffer
+nextchunk:
+// Look for a EOL in the buffer
                     position = buffer.PositionOf((byte)'\n');
                     if (position == null)
                         goto readnext;
@@ -184,8 +184,8 @@ namespace BTCPayServer.HostedServices
                         goto handshake;
                     else
                         goto nextchunk;
-                    
-                    handshake:
+
+handshake:
                     var split = firstHeader.Split(' ');
                     if (split.Length != 3)
                         break;
@@ -226,7 +226,7 @@ namespace BTCPayServer.HostedServices
                             await SendAsync(socksSocket, $"{firstHeader}\r\n", cancellationToken);
                             foreach (ReadOnlyMemory<byte> segment in buffer)
                             {
-                                await socksSocket.SendAsync(segment, SocketFlags.None, cancellationToken);   
+                                await socksSocket.SendAsync(segment, SocketFlags.None, cancellationToken);
                             }
                             buffer = buffer.Slice(buffer.End);
                         }
@@ -234,22 +234,22 @@ namespace BTCPayServer.HostedServices
                     }
                     catch (SocksException e) when (e.SocksErrorCode == SocksErrorCode.HostUnreachable || e.SocksErrorCode == SocksErrorCode.HostUnreachable)
                     {
-                        await SendAsync(clientSocket , $"{httpVersion} 502 Bad Gateway\r\nContent-Length: 0\r\n\r\n", cancellationToken);
+                        await SendAsync(clientSocket, $"{httpVersion} 502 Bad Gateway\r\nContent-Length: 0\r\n\r\n", cancellationToken);
                         goto done;
                     }
                     catch (SocksException e)
                     {
-                        await SendAsync(clientSocket , $"{httpVersion} 500 Internal Server Error\r\nContent-Length: 0\r\nX-Proxy-Error-Type: Socks {e.SocksErrorCode}\r\n\r\n", cancellationToken);
+                        await SendAsync(clientSocket, $"{httpVersion} 500 Internal Server Error\r\nContent-Length: 0\r\nX-Proxy-Error-Type: Socks {e.SocksErrorCode}\r\n\r\n", cancellationToken);
                         goto done;
                     }
                     catch (SocketException e)
                     {
-                        await SendAsync(clientSocket , $"{httpVersion} 500 Internal Server Error\r\nContent-Length: 0\r\nX-Proxy-Error-Type: Socket {e.SocketErrorCode}\r\n\r\n", cancellationToken);
+                        await SendAsync(clientSocket, $"{httpVersion} 500 Internal Server Error\r\nContent-Length: 0\r\nX-Proxy-Error-Type: Socket {e.SocketErrorCode}\r\n\r\n", cancellationToken);
                         goto done;
                     }
                     catch
                     {
-                        await SendAsync(clientSocket , $"{httpVersion} 500 Internal Server Error\r\n\r\n", cancellationToken);
+                        await SendAsync(clientSocket, $"{httpVersion} 500 Internal Server Error\r\n\r\n", cancellationToken);
                         goto done;
                     }
                 }
@@ -257,13 +257,13 @@ namespace BTCPayServer.HostedServices
                 {
                     foreach (ReadOnlyMemory<byte> segment in buffer)
                     {
-                        await socksSocket.SendAsync(segment, SocketFlags.None, cancellationToken);   
+                        await socksSocket.SendAsync(segment, SocketFlags.None, cancellationToken);
                     }
                     buffer = buffer.Slice(buffer.End);
                 }
-                
-                readnext:
-                // Tell the PipeReader how much of the buffer we have consumed
+
+readnext:
+// Tell the PipeReader how much of the buffer we have consumed
                 reader.AdvanceTo(buffer.Start, buffer.End);
                 // Stop reading if there's no more data coming
                 if (result.IsCompleted)
@@ -272,8 +272,8 @@ namespace BTCPayServer.HostedServices
                 }
             }
 
-            done:
-            // Mark the PipeReader as complete
+done:
+// Mark the PipeReader as complete
             reader.Complete();
         }
 

@@ -2,10 +2,10 @@ using System;
 using System.Linq;
 using BTCPayServer.Configuration;
 using BTCPayServer.Contracts;
+using BTCPayServer.Payments;
 using BTCPayServer.Services.Altcoins.Monero.Configuration;
 using BTCPayServer.Services.Altcoins.Monero.Payments;
 using BTCPayServer.Services.Altcoins.Monero.Services;
-using BTCPayServer.Payments;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -22,12 +22,12 @@ namespace BTCPayServer.Services.Altcoins.Monero
             serviceCollection.AddHostedService<MoneroListener>();
             serviceCollection.AddSingleton<MoneroLikePaymentMethodHandler>();
             serviceCollection.AddSingleton<IPaymentMethodHandler>(provider => provider.GetService<MoneroLikePaymentMethodHandler>());
-            serviceCollection.AddSingleton<IStoreNavExtension,MoneroStoreNavExtension>();
-            
+            serviceCollection.AddSingleton<IStoreNavExtension, MoneroStoreNavExtension>();
+
             return serviceCollection;
         }
-        
-        private  static MoneroLikeConfiguration ConfigureMoneroLikeConfiguration(this IServiceProvider serviceProvider)
+
+        private static MoneroLikeConfiguration ConfigureMoneroLikeConfiguration(this IServiceProvider serviceProvider)
         {
             var configuration = serviceProvider.GetService<IConfiguration>();
             var btcPayNetworkProvider = serviceProvider.GetService<BTCPayNetworkProvider>();
@@ -51,11 +51,11 @@ namespace BTCPayServer.Services.Altcoins.Monero
                 var walletDaemonWalletDirectory =
                     configuration.GetOrDefault<string>(
                         $"{moneroLikeSpecificBtcPayNetwork.CryptoCode}_wallet_daemon_walletdir", null);
-                if (daemonUri == null || walletDaemonUri == null )
+                if (daemonUri == null || walletDaemonUri == null)
                 {
                     throw new ConfigException($"{moneroLikeSpecificBtcPayNetwork.CryptoCode} is misconfigured");
                 }
-                
+
                 result.MoneroLikeConfigurationItems.Add(moneroLikeSpecificBtcPayNetwork.CryptoCode, new MoneroLikeConfigurationItem()
                 {
                     DaemonRpcUri = daemonUri,

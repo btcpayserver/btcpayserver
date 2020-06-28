@@ -33,7 +33,7 @@ namespace BTCPayServer.Controllers
             _Repo = storeRepository;
             _NetworkProvider = networkProvider;
             _UserManager = userManager;
-        }        
+        }
 
         [HttpGet]
         [Route("create")]

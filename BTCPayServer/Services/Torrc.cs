@@ -36,7 +36,7 @@ namespace BTCPayServer.Services
         public override string ToString()
         {
             StringBuilder builder = new StringBuilder();
-            foreach(var serviceDir in ServiceDirectories)
+            foreach (var serviceDir in ServiceDirectories)
             {
                 builder.AppendLine(serviceDir.ToString());
                 foreach (var port in serviceDir.ServicePorts)

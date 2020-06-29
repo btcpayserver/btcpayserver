@@ -12,7 +12,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.Memory;
 using NBitcoin;
 using NBitcoin.Payment;
-using NBitcoin.RPC;
 using NBitpayClient;
 using Xunit;
 using Xunit.Abstractions;

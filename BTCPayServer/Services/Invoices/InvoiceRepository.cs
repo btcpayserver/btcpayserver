@@ -12,7 +12,6 @@ using DBriize;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Newtonsoft.Json.Linq;
 using Encoders = NBitcoin.DataEncoders.Encoders;
 
 namespace BTCPayServer.Services.Invoices
@@ -30,9 +29,9 @@ namespace BTCPayServer.Services.Invoices
             }
         }
 
-        private ApplicationDbContextFactory _ContextFactory;
+        private readonly ApplicationDbContextFactory _ContextFactory;
         private readonly BTCPayNetworkProvider _Networks;
-        private CustomThreadPool _IndexerThread;
+        private readonly CustomThreadPool _IndexerThread;
 
         public InvoiceRepository(ApplicationDbContextFactory contextFactory, string dbreezePath,
             BTCPayNetworkProvider networks)

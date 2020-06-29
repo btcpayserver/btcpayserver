@@ -5,8 +5,6 @@ using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Storage.Models;
 using BTCPayServer.Storage.Services.Providers.FileSystemStorage.Configuration;
-using ExchangeSharp;
-using Microsoft.AspNetCore.Hosting;
 using Newtonsoft.Json;
 using TwentyTwenty.Storage;
 using TwentyTwenty.Storage.Local;

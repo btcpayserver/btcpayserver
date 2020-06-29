@@ -1,7 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
-using BTCPayServer.Client.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Data

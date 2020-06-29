@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBitcoin.DataEncoders;
-using Org.BouncyCastle.Ocsp;
 
 namespace BTCPayServer.Controllers.GreenField
 {

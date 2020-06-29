@@ -43,7 +43,7 @@ namespace BTCPayServer.Tests
             return true;
         }
 
-        Stack<string> _Directories = new Stack<string>();
+        readonly Stack<string> _Directories = new Stack<string>();
         public void PushDirectory()
         {
             _Directories.Push(_CurrentDirectory);

@@ -9,7 +9,7 @@ namespace BTCPayServer.Services.Mails
 {
     public abstract class EmailSender : IEmailSender
     {
-        IBackgroundJobClient _JobClient;
+        readonly IBackgroundJobClient _JobClient;
 
         public EmailSender(IBackgroundJobClient jobClient)
         {

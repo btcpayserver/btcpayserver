@@ -1,6 +1,3 @@
-using System.Collections.Generic;
-using BTCPayServer.Client;
-
 namespace BTCPayServer.Security.GreenField
 {
     public static class GreenFieldConstants

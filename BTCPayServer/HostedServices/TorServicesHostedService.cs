@@ -1,10 +1,7 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Configuration;
 using BTCPayServer.Services;
-using Microsoft.Extensions.Hosting;
 
 namespace BTCPayServer.HostedServices
 {

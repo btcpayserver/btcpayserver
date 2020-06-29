@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Client.Models;
-using BTCPayServer.Data;
 using BTCPayServer.Validation;
 
 namespace BTCPayServer.Models.StoreViewModels

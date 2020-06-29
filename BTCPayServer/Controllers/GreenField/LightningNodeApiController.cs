@@ -5,11 +5,9 @@ using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
-using BTCPayServer.Payments.Changelly.Models;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using NBitcoin;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Controllers.GreenField

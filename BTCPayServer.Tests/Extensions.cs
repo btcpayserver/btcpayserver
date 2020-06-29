@@ -13,7 +13,7 @@ namespace BTCPayServer.Tests
 {
     public static class Extensions
     {
-        private static JsonSerializerSettings jsonSettings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
+        private static readonly JsonSerializerSettings jsonSettings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
         public static string ToJson(this object o)
         {
             var res = JsonConvert.SerializeObject(o, Formatting.None, jsonSettings);

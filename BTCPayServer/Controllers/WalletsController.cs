@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Net.WebSockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
@@ -59,7 +57,7 @@ namespace BTCPayServer.Controllers
 
         public RateFetcher RateFetcher { get; }
 
-        CurrencyNameTable _currencyTable;
+        readonly CurrencyNameTable _currencyTable;
         public WalletsController(StoreRepository repo,
                                  WalletRepository walletRepository,
                                  CurrencyNameTable currencyTable,
@@ -106,7 +104,7 @@ namespace BTCPayServer.Controllers
         }
 
         // Borrowed from https://github.com/ManageIQ/guides/blob/master/labels.md
-        string[] LabelColorScheme = new string[]
+        readonly string[] LabelColorScheme = new string[]
         {
             "#fbca04",
             "#0e8a16",

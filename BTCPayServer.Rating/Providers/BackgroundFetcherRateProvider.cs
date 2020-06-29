@@ -80,7 +80,7 @@ namespace BTCPayServer.Services.Rates
             }
         }
 
-        IRateProvider _Inner;
+        readonly IRateProvider _Inner;
         public IRateProvider Inner => _Inner;
 
         public BackgroundFetcherRateProvider(IRateProvider inner)

@@ -1,9 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Microsoft.AspNetCore.Mvc.ActionConstraints;
-using Microsoft.Extensions.Primitives;
 
 namespace BTCPayServer.Filters
 {

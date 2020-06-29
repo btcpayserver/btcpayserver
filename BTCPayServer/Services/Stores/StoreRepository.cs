@@ -4,8 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Migrations;
-using BTCPayServer.Models;
-using BTCPayServer.Services.Invoices;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitcoin.DataEncoders;
@@ -14,7 +12,7 @@ namespace BTCPayServer.Services.Stores
 {
     public class StoreRepository
     {
-        private ApplicationDbContextFactory _ContextFactory;
+        private readonly ApplicationDbContextFactory _ContextFactory;
 
         public StoreRepository(ApplicationDbContextFactory contextFactory)
         {

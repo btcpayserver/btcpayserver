@@ -18,7 +18,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
         public ImmutableDictionary<string, JsonRpcClient> DaemonRpcClients;
         public ImmutableDictionary<string, JsonRpcClient> WalletRpcClients;
 
-        private ConcurrentDictionary<string, MoneroLikeSummary> _summaries =
+        private readonly ConcurrentDictionary<string, MoneroLikeSummary> _summaries =
             new ConcurrentDictionary<string, MoneroLikeSummary>();
 
         public ConcurrentDictionary<string, MoneroLikeSummary> Summaries => _summaries;

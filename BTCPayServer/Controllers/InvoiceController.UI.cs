@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Globalization;
 using System.Linq;
 using System.Net.Mime;
@@ -22,7 +21,6 @@ using BTCPayServer.Security;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Invoices.Export;
 using DBriize.Utils;
-using Google.Cloud.Storage.V1;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -32,7 +30,6 @@ using NBitcoin;
 using NBitpayClient;
 using NBXplorer;
 using Newtonsoft.Json.Linq;
-using TwentyTwenty.Storage;
 using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers
@@ -554,7 +551,7 @@ namespace BTCPayServer.Controllers
             return new EmptyResult();
         }
 
-        ArraySegment<Byte> DummyBuffer = new ArraySegment<Byte>(new Byte[1]);
+        readonly ArraySegment<Byte> DummyBuffer = new ArraySegment<Byte>(new Byte[1]);
         private async Task NotifySocket(WebSocket webSocket, string invoiceId, string expectedId)
         {
             if (invoiceId != expectedId || webSocket.State != WebSocketState.Open)

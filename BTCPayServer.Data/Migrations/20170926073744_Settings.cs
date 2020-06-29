@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;

@@ -1,32 +1,25 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Mail;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using BTCPayServer.Client;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
-using BTCPayServer.Lightning;
 using BTCPayServer.Logging;
 using BTCPayServer.Models;
 using BTCPayServer.Models.ServerViewModels;
-using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Mails;
-using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Storage.Models;
 using BTCPayServer.Storage.Services;
 using BTCPayServer.Storage.Services.Providers;
-using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -43,13 +36,13 @@ namespace BTCPayServer.Controllers
                AuthenticationSchemes = BTCPayServer.Security.AuthenticationSchemes.Cookie)]
     public partial class ServerController : Controller
     {
-        private UserManager<ApplicationUser> _UserManager;
-        SettingsRepository _SettingsRepository;
+        private readonly UserManager<ApplicationUser> _UserManager;
+        readonly SettingsRepository _SettingsRepository;
         private readonly NBXplorerDashboard _dashBoard;
-        private StoreRepository _StoreRepository;
-        LightningConfigurationProvider _LnConfigProvider;
+        private readonly StoreRepository _StoreRepository;
+        readonly LightningConfigurationProvider _LnConfigProvider;
         private readonly TorServices _torServices;
-        private BTCPayServerOptions _Options;
+        private readonly BTCPayServerOptions _Options;
         private readonly AppService _AppService;
         private readonly CheckConfigurationHostedService _sshState;
         private readonly StoredFileRepository _StoredFileRepository;

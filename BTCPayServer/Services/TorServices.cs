@@ -12,7 +12,7 @@ namespace BTCPayServer.Services
     public class TorServices
     {
         private readonly BTCPayNetworkProvider _networks;
-        BTCPayServerOptions _Options;
+        readonly BTCPayServerOptions _Options;
         public TorServices(BTCPayServer.BTCPayNetworkProvider networks, BTCPayServerOptions options)
         {
             _networks = networks;

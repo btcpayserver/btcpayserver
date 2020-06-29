@@ -6,11 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Rating;
 using ExchangeSharp;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
-using MemoryCache = Microsoft.Extensions.Caching.Memory.MemoryCache;
 
 namespace BTCPayServer.Services.Rates
 {

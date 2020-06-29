@@ -1,4 +1,4 @@
-﻿namespace BTCPayServer.Storage.Models
+namespace BTCPayServer.Storage.Models
 {
     public enum StorageProvider
     {

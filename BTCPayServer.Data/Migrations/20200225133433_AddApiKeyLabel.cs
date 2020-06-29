@@ -1,4 +1,4 @@
-﻿using BTCPayServer.Data;
+using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 

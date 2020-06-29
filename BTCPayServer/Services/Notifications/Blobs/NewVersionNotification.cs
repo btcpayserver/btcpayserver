@@ -1,4 +1,4 @@
-﻿using BTCPayServer.Data;
+using BTCPayServer.Data;
 using BTCPayServer.Models.NotificationViewModels;
 using Newtonsoft.Json;
 

@@ -1,4 +1,4 @@
-﻿
+
 using BTCPayServer.Controllers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;

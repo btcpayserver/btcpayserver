@@ -8,6 +8,7 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using NBXplorer.Models;
@@ -15,6 +16,7 @@ using NBXplorer.Models;
 namespace BTCPayServer.Controllers.GreenField
 {
     [ApiController]
+    [EnableCors(CorsPolicies.All)]
     public class GreenFieldServerInfoController : Controller
     {
         private readonly BTCPayServerEnvironment _env;

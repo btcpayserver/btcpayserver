@@ -1,8 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Components.Web;
 using NBitcoin;
 using Newtonsoft.Json;
 
@@ -43,7 +41,7 @@ namespace BTCPayServer.Services
             }
         }
 
-        Dictionary<string, JsonSerializerSettings> _Serializers = new Dictionary<string, JsonSerializerSettings>();
+        readonly Dictionary<string, JsonSerializerSettings> _Serializers = new Dictionary<string, JsonSerializerSettings>();
 
         public JsonSerializerSettings GetSerializer(Network network)
         {

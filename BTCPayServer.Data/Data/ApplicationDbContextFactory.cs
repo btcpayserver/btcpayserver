@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using JetBrains.Annotations;
+using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -19,8 +15,8 @@ namespace BTCPayServer.Data
     }
     public class ApplicationDbContextFactory
     {
-        string _ConnectionString;
-        DatabaseType _Type;
+        readonly string _ConnectionString;
+        readonly DatabaseType _Type;
         public ApplicationDbContextFactory(DatabaseType type, string connectionString)
         {
             _ConnectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));

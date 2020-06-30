@@ -1,16 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using BTCPayServer.Lightning;
 using BTCPayServer.Lightning.Charge;
-using BTCPayServer.Payments.Lightning;
 using NBitcoin;
 
 namespace BTCPayServer.Tests
 {
     public class ChargeTester
     {
-        private ServerTester _Parent;
+        private readonly ServerTester _Parent;
 
         public ChargeTester(ServerTester serverTester, string environmentName, string defaultValue, string defaultHost, Network network)
         {

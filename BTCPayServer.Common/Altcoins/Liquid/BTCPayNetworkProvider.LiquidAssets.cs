@@ -1,4 +1,4 @@
-﻿using NBitcoin;
+using NBitcoin;
 
 namespace BTCPayServer
 {

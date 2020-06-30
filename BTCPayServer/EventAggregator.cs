@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -17,8 +17,8 @@ namespace BTCPayServer
     {
         class Subscription : IEventAggregatorSubscription
         {
-            private EventAggregator aggregator;
-            Type t;
+            private readonly EventAggregator aggregator;
+            readonly Type t;
             public Subscription(EventAggregator aggregator, Type t)
             {
                 this.aggregator = aggregator;
@@ -126,7 +126,7 @@ namespace BTCPayServer
             return subscription;
         }
 
-        Dictionary<Type, Dictionary<Subscription, Action<object>>> _Subscriptions = new Dictionary<Type, Dictionary<Subscription, Action<object>>>();
+        readonly Dictionary<Type, Dictionary<Subscription, Action<object>>> _Subscriptions = new Dictionary<Type, Dictionary<Subscription, Action<object>>>();
 
         public IEventAggregatorSubscription Subscribe<T, TReturn>(Func<T, TReturn> subscription)
         {

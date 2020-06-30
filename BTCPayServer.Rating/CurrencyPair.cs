@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using BTCPayServer.Services.Rates;
 
 namespace BTCPayServer.Rating

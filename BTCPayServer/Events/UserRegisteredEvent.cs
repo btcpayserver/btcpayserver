@@ -1,6 +1,5 @@
 using System;
 using BTCPayServer.Data;
-using Microsoft.AspNetCore.Http;
 
 namespace BTCPayServer.Events
 {

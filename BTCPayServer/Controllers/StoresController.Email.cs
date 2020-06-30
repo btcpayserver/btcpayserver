@@ -1,10 +1,8 @@
-﻿using System;
+using System;
 using System.Net.Mail;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Models.ServerViewModels;
-using BTCPayServer.Models.StoreViewModels;
-using BTCPayServer.Payments.Changelly;
 using BTCPayServer.Services.Mails;
 using Microsoft.AspNetCore.Mvc;
 

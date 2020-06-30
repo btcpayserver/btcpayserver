@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server.Features;
-using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -17,9 +14,9 @@ namespace BTCPayServer.Tests
 {
     public class CustomServer : IDisposable
     {
-        IWebHost _Host = null;
-        CancellationTokenSource _Closed = new CancellationTokenSource();
-        Channel<JObject> _Requests = Channel.CreateUnbounded<JObject>();
+        readonly IWebHost _Host = null;
+        readonly CancellationTokenSource _Closed = new CancellationTokenSource();
+        readonly Channel<JObject> _Requests = Channel.CreateUnbounded<JObject>();
         public CustomServer()
         {
             var port = Utils.FreeTcpPort();

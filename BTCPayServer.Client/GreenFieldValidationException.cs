@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Runtime.Serialization;
+using System;
 using System.Text;
 using BTCPayServer.Client.Models;
 

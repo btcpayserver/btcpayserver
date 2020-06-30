@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -43,7 +40,7 @@ namespace BTCPayServer.Logging
 
     public class FuncLoggerFactory : ILoggerFactory
     {
-        private Func<string, ILogger> createLogger;
+        private readonly Func<string, ILogger> createLogger;
         public FuncLoggerFactory(Func<string, ILogger> createLogger)
         {
             this.createLogger = createLogger;

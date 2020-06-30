@@ -1,7 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 
@@ -9,9 +8,9 @@ namespace BTCPayServer.Services.Wallets
 {
     public class BTCPayWalletProvider
     {
-        private ExplorerClientProvider _Client;
-        BTCPayNetworkProvider _NetworkProvider;
-        IOptions<MemoryCacheOptions> _Options;
+        private readonly ExplorerClientProvider _Client;
+        readonly BTCPayNetworkProvider _NetworkProvider;
+        readonly IOptions<MemoryCacheOptions> _Options;
         public BTCPayWalletProvider(ExplorerClientProvider client,
                                     IOptions<MemoryCacheOptions> memoryCacheOption,
                                     Data.ApplicationDbContextFactory dbContextFactory,
@@ -32,7 +31,7 @@ namespace BTCPayServer.Services.Wallets
             }
         }
 
-        Dictionary<string, BTCPayWallet> _Wallets = new Dictionary<string, BTCPayWallet>();
+        readonly Dictionary<string, BTCPayWallet> _Wallets = new Dictionary<string, BTCPayWallet>();
 
         public BTCPayWallet GetWallet(BTCPayNetworkBase network)
         {

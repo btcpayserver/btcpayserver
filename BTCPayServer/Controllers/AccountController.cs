@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.Globalization;
-using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
@@ -19,10 +16,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using NicolasDorier.RateLimits;
 using U2F.Core.Exceptions;
 
@@ -35,14 +29,14 @@ namespace BTCPayServer.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly EmailSenderFactory _EmailSenderFactory;
-        StoreRepository storeRepository;
-        RoleManager<IdentityRole> _RoleManager;
-        SettingsRepository _SettingsRepository;
-        Configuration.BTCPayServerOptions _Options;
+        readonly StoreRepository storeRepository;
+        readonly RoleManager<IdentityRole> _RoleManager;
+        readonly SettingsRepository _SettingsRepository;
+        readonly Configuration.BTCPayServerOptions _Options;
         private readonly BTCPayServerEnvironment _btcPayServerEnvironment;
         public U2FService _u2FService;
         private readonly EventAggregator _eventAggregator;
-        ILogger _logger;
+        readonly ILogger _logger;
 
         public AccountController(
             UserManager<ApplicationUser> userManager,

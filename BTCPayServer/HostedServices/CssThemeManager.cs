@@ -1,19 +1,10 @@
-﻿using System;
-using System.Collections.Concurrent;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Events;
-using BTCPayServer.Logging;
 using BTCPayServer.Security;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using NBXplorer;
-using NBXplorer.Models;
 
 namespace BTCPayServer.HostedServices
 {
@@ -130,8 +121,8 @@ namespace BTCPayServer.HostedServices
 
     public class CssThemeManagerHostedService : BaseAsyncService
     {
-        private SettingsRepository _SettingsRepository;
-        private CssThemeManager _CssThemeManager;
+        private readonly SettingsRepository _SettingsRepository;
+        private readonly CssThemeManager _CssThemeManager;
 
         public CssThemeManagerHostedService(SettingsRepository settingsRepository, CssThemeManager cssThemeManager)
         {

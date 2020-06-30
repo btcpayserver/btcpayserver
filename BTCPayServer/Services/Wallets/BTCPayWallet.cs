@@ -1,8 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
@@ -39,8 +38,8 @@ namespace BTCPayServer.Services.Wallets
     }
     public class BTCPayWallet
     {
-        private ExplorerClient _Client;
-        private IMemoryCache _MemoryCache;
+        private readonly ExplorerClient _Client;
+        private readonly IMemoryCache _MemoryCache;
         public BTCPayWallet(ExplorerClient client, IMemoryCache memoryCache, BTCPayNetwork network,
             ApplicationDbContextFactory dbContextFactory)
         {
@@ -155,7 +154,8 @@ namespace BTCPayServer.Services.Wallets
             _MemoryCache.Remove("CACHEDBALANCE_" + strategy.ToString());
             _FetchingUTXOs.TryRemove(strategy.ToString(), out var unused);
         }
-        ConcurrentDictionary<string, TaskCompletionSource<UTXOChanges>> _FetchingUTXOs = new ConcurrentDictionary<string, TaskCompletionSource<UTXOChanges>>();
+
+        readonly ConcurrentDictionary<string, TaskCompletionSource<UTXOChanges>> _FetchingUTXOs = new ConcurrentDictionary<string, TaskCompletionSource<UTXOChanges>>();
 
         private async Task<UTXOChanges> GetUTXOChanges(DerivationStrategyBase strategy, CancellationToken cancellation)
         {

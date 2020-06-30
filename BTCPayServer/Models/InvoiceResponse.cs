@@ -1,7 +1,5 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Text;
-using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -18,10 +16,10 @@ namespace BTCPayServer.Models
         {
             var v = (long)reader.Value;
             Check(v);
-            return unixRef + TimeSpan.FromMilliseconds((long)v);
+            return unixRef + TimeSpan.FromMilliseconds(v);
         }
 
-        static DateTimeOffset unixRef = new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        static readonly DateTimeOffset unixRef = new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero);
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
             var date = ((DateTimeOffset)value).ToUniversalTime();

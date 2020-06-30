@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,7 +20,8 @@ namespace BTCPayServer.Services.Rates
         {
             _Helper = new ExchangeKrakenAPI();
         }
-        ExchangeKrakenAPI _Helper;
+
+        readonly ExchangeKrakenAPI _Helper;
         public HttpClient HttpClient
         {
             get
@@ -34,10 +35,10 @@ namespace BTCPayServer.Services.Rates
         }
 
         HttpClient _LocalClient;
-        static HttpClient _Client = new HttpClient();
+        static readonly HttpClient _Client = new HttpClient();
 
         // ExchangeSymbolToGlobalSymbol throws exception which would kill perf
-        ConcurrentDictionary<string, string> notFoundSymbols = new ConcurrentDictionary<string, string>(new Dictionary<string, string>()
+        readonly ConcurrentDictionary<string, string> notFoundSymbols = new ConcurrentDictionary<string, string>(new Dictionary<string, string>()
         {
             {"ADAXBT","ADAXBT"},
             { "BSVUSD","BSVUSD"},
@@ -70,9 +71,7 @@ namespace BTCPayServer.Services.Rates
         });
         string[] _Symbols = Array.Empty<string>();
         DateTimeOffset? _LastSymbolUpdate = null;
-
-
-        Dictionary<string, string> _TickerMapping = new Dictionary<string, string>()
+        readonly Dictionary<string, string> _TickerMapping = new Dictionary<string, string>()
         {
             { "XXDG", "DOGE" },
             { "XXBT", "BTC" },

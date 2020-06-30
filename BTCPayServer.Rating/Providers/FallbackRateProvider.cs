@@ -1,6 +1,5 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Rating;
@@ -9,7 +8,7 @@ namespace BTCPayServer.Services.Rates
 {
     public class FallbackRateProvider : IRateProvider
     {
-        IRateProvider[] _Providers;
+        readonly IRateProvider[] _Providers;
         public FallbackRateProvider(IRateProvider[] providers)
         {
             if (providers == null)

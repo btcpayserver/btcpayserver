@@ -1,16 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.Globalization;
-using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using BTCPayServer.Services.Rates;
 
 namespace BTCPayServer
 {
     public class CurrencyValue
     {
-        static Regex _Regex = new Regex("^([0-9]+(\\.[0-9]+)?)\\s*([a-zA-Z]+)$");
+        static readonly Regex _Regex = new Regex("^([0-9]+(\\.[0-9]+)?)\\s*([a-zA-Z]+)$");
         public static bool TryParse(string str, out CurrencyValue value)
         {
             value = null;

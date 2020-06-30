@@ -1,5 +1,4 @@
 using System;
-using System.Security.Cryptography;
 using BTCPayServer.Lightning;
 using BTCPayServer.Lightning.JsonConverters;
 using Newtonsoft.Json;

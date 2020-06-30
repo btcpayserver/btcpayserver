@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Channels;
@@ -21,7 +21,7 @@ namespace BTCPayServer.HostedServices
             _EventAggregator = eventAggregator;
         }
 
-        Channel<object> _Events = Channel.CreateUnbounded<object>();
+        readonly Channel<object> _Events = Channel.CreateUnbounded<object>();
         public async Task ProcessEvents(CancellationToken cancellationToken)
         {
             while (await _Events.Reader.WaitToReadAsync(cancellationToken))

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using NBitcoin;
+using System;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 

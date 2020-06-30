@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using Xunit.Abstractions;
@@ -13,7 +12,7 @@ namespace BTCPayServer.Tests.Logging
 
     public class XUnitLogProvider : ILoggerProvider
     {
-        ITestOutputHelper _Helper;
+        readonly ITestOutputHelper _Helper;
         public XUnitLogProvider(ITestOutputHelper helper)
         {
             _Helper = helper;
@@ -30,7 +29,7 @@ namespace BTCPayServer.Tests.Logging
     }
     public class XUnitLog : ILog, ILogger, IDisposable
     {
-        ITestOutputHelper _Helper;
+        readonly ITestOutputHelper _Helper;
         public XUnitLog(ITestOutputHelper helper)
         {
             _Helper = helper;

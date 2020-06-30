@@ -1,8 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Threading.Tasks;
 using BTCPayServer.Configuration;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
@@ -13,11 +12,12 @@ namespace BTCPayServer
 {
     public class ExplorerClientProvider
     {
-        BTCPayNetworkProvider _NetworkProviders;
-        BTCPayServerOptions _Options;
+        readonly BTCPayNetworkProvider _NetworkProviders;
+        readonly BTCPayServerOptions _Options;
 
         public BTCPayNetworkProvider NetworkProviders => _NetworkProviders;
-        NBXplorerDashboard _Dashboard;
+
+        readonly NBXplorerDashboard _Dashboard;
         public ExplorerClientProvider(IHttpClientFactory httpClientFactory, BTCPayNetworkProvider networkProviders, BTCPayServerOptions options, NBXplorerDashboard dashboard)
         {
             _Dashboard = dashboard;
@@ -55,7 +55,7 @@ namespace BTCPayServer
             return explorer;
         }
 
-        Dictionary<string, ExplorerClient> _Clients = new Dictionary<string, ExplorerClient>();
+        readonly Dictionary<string, ExplorerClient> _Clients = new Dictionary<string, ExplorerClient>();
 
         public ExplorerClient GetExplorerClient(string cryptoCode)
         {

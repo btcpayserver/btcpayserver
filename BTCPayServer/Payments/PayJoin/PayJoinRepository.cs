@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
-using NBXplorer.Models;
 
 namespace BTCPayServer.Payments.PayJoin
 {

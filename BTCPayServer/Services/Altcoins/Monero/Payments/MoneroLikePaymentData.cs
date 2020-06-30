@@ -1,5 +1,4 @@
 using BTCPayServer.Client.Models;
-using BTCPayServer.Data;
 using BTCPayServer.Payments;
 using BTCPayServer.Services.Altcoins.Monero.Utils;
 using BTCPayServer.Services.Invoices;

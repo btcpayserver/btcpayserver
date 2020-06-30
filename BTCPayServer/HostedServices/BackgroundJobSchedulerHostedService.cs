@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -9,7 +9,6 @@ using BTCPayServer.Services;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using NicolasDorier.RateLimits;
 
 namespace BTCPayServer.HostedServices
 {
@@ -87,8 +86,8 @@ namespace BTCPayServer.HostedServices
             }
         }
 
-        private Channel<BackgroundJob> _Jobs = Channel.CreateUnbounded<BackgroundJob>();
-        HashSet<Task> _Processing = new HashSet<Task>();
+        private readonly Channel<BackgroundJob> _Jobs = Channel.CreateUnbounded<BackgroundJob>();
+        readonly HashSet<Task> _Processing = new HashSet<Task>();
         public void Schedule(Func<CancellationToken, Task> act, TimeSpan scheduledIn)
         {
             _Jobs.Writer.TryWrite(new BackgroundJob(act, scheduledIn, Delay));

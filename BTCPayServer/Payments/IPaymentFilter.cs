@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace BTCPayServer.Payments
 {
@@ -71,7 +69,7 @@ namespace BTCPayServer.Payments
         }
         class PredicateFilter : IPaymentFilter
         {
-            private Func<PaymentMethodId, bool> predicate;
+            private readonly Func<PaymentMethodId, bool> predicate;
 
             public PredicateFilter(Func<PaymentMethodId, bool> predicate)
             {

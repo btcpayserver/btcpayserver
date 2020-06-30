@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.Globalization;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 
@@ -75,8 +72,8 @@ namespace BTCPayServer.SSH
                 throw new ArgumentException(paramName: nameof(hash), message: "Invalid length, expected 16 or 32");
         }
 
-        byte[] _ShortFingerprint;
-        byte[] _FullHash;
+        readonly byte[] _ShortFingerprint;
+        readonly byte[] _FullHash;
 
         public bool Match(byte[] shortFingerprint, byte[] hostKey)
         {
@@ -89,7 +86,7 @@ namespace BTCPayServer.SSH
             return Utils.ArrayEqual(_FullHash, NBitcoin.Crypto.Hashes.SHA256(hostKey));
         }
 
-        string _Original;
+        readonly string _Original;
         public override string ToString()
         {
             return _Original;

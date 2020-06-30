@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using BTCPayServer.Data;
-using BTCPayServer.Filters;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Services.Stores;
@@ -23,8 +20,8 @@ namespace BTCPayServer.Controllers
             _StoreRepository = storeRepository;
         }
 
-        private InvoiceController _InvoiceController;
-        private StoreRepository _StoreRepository;
+        private readonly InvoiceController _InvoiceController;
+        private readonly StoreRepository _StoreRepository;
 
         [HttpGet]
         [IgnoreAntiforgeryToken]

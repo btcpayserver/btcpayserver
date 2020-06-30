@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
@@ -9,13 +8,9 @@ using BTCPayServer.Security;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Rates;
-using Ganss.XSS;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using NBitcoin;
-using NBitcoin.DataEncoders;
 
 namespace BTCPayServer.Controllers
 {
@@ -42,13 +37,13 @@ namespace BTCPayServer.Controllers
             _AppService = AppService;
         }
 
-        private UserManager<ApplicationUser> _UserManager;
-        private ApplicationDbContextFactory _ContextFactory;
+        private readonly UserManager<ApplicationUser> _UserManager;
+        private readonly ApplicationDbContextFactory _ContextFactory;
         private readonly EventAggregator _EventAggregator;
-        private BTCPayNetworkProvider _NetworkProvider;
+        private readonly BTCPayNetworkProvider _NetworkProvider;
         private readonly CurrencyNameTable _currencies;
         private readonly EmailSenderFactory _emailSenderFactory;
-        private AppService _AppService;
+        private readonly AppService _AppService;
 
         public string CreatedAppId { get; set; }
 

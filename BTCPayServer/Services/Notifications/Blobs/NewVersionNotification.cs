@@ -1,6 +1,4 @@
-﻿using BTCPayServer.Data;
 using BTCPayServer.Models.NotificationViewModels;
-using Newtonsoft.Json;
 
 namespace BTCPayServer.Services.Notifications.Blobs
 {

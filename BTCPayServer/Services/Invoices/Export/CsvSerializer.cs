@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections;
+using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -16,7 +13,7 @@ namespace BTCPayServer.Services.Invoices.Export
     /// </summary>
     public class CsvSerializer<T> where T : class, new()
     {
-        private List<PropertyInfo> _properties;
+        private readonly List<PropertyInfo> _properties;
 
         public bool IgnoreEmptyLines { get; set; } = true;
         public bool IgnoreReferenceTypesExceptString { get; set; } = true;

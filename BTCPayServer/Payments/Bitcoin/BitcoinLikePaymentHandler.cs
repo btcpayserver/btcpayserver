@@ -20,11 +20,11 @@ namespace BTCPayServer.Payments.Bitcoin
 {
     public class BitcoinLikePaymentHandler : PaymentMethodHandlerBase<DerivationSchemeSettings, BTCPayNetwork>
     {
-        ExplorerClientProvider _ExplorerProvider;
+        readonly ExplorerClientProvider _ExplorerProvider;
         private readonly BTCPayNetworkProvider _networkProvider;
-        private IFeeProviderFactory _FeeRateProviderFactory;
+        private readonly IFeeProviderFactory _FeeRateProviderFactory;
         private readonly NBXplorerDashboard _dashboard;
-        private Services.Wallets.BTCPayWalletProvider _WalletProvider;
+        private readonly Services.Wallets.BTCPayWalletProvider _WalletProvider;
 
         public BitcoinLikePaymentHandler(ExplorerClientProvider provider,
             BTCPayNetworkProvider networkProvider,

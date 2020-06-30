@@ -1,4 +1,3 @@
-using System;
 using System.Threading.Tasks;
 using BTCPayServer.Models;
 using BTCPayServer.U2F.Models;

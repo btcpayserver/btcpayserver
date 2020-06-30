@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // From https://github.com/dotnet/corefxlab/blob/master/src/System.Collections.Generic.MultiValueDictionary/System/Collections/Generic/MultiValueDictionary.cs
 using System;
@@ -34,7 +34,7 @@ namespace BTCPayServer
         /// <summary>
         /// The private dictionary that this class effectively wraps around
         /// </summary>
-        private Dictionary<TKey, InnerCollectionView> dictionary;
+        private readonly Dictionary<TKey, InnerCollectionView> dictionary;
 
         /// <summary>
         /// The function to construct a new <see cref="ICollection{TValue}"/>
@@ -900,8 +900,8 @@ namespace BTCPayServer
         private class Enumerator :
             IEnumerator<KeyValuePair<TKey, IReadOnlyCollection<TValue>>>
         {
-            private MultiValueDictionary<TKey, TValue> multiValueDictionary;
-            private int version;
+            private readonly MultiValueDictionary<TKey, TValue> multiValueDictionary;
+            private readonly int version;
             private KeyValuePair<TKey, IReadOnlyCollection<TValue>> current;
             private Dictionary<TKey, InnerCollectionView>.Enumerator enumerator;
             private enum EnumerationState { BeforeFirst, During, AfterLast };
@@ -1002,8 +1002,8 @@ namespace BTCPayServer
             ICollection<TValue>,
             IReadOnlyCollection<TValue>
         {
-            private TKey key;
-            private ICollection<TValue> collection;
+            private readonly TKey key;
+            private readonly ICollection<TValue> collection;
 
             #region Private Concrete API
             /*======================================================================

@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System;
 using BTCPayServer.Client.Models;
-using BTCPayServer.Services.Invoices;
-using BTCPayServer.Services.Wallets;
 using NBitcoin;
-using NBXplorer.JsonConverters;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.Payments.Bitcoin

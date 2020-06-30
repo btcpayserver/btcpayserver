@@ -1,7 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace BTCPayServer.Logging
 {
@@ -17,7 +16,7 @@ namespace BTCPayServer.Logging
     }
     public class InvoiceLogs
     {
-        List<InvoiceLog> _InvoiceLogs = new List<InvoiceLog>();
+        readonly List<InvoiceLog> _InvoiceLogs = new List<InvoiceLog>();
         public void Write(string data)
         {
             lock (_InvoiceLogs)

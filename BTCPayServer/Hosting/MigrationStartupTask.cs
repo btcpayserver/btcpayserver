@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,16 +10,15 @@ using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Npgsql;
 
 namespace BTCPayServer.Hosting
 {
     public class MigrationStartupTask : IStartupTask
     {
-        private ApplicationDbContextFactory _DBContextFactory;
-        private StoreRepository _StoreRepository;
-        private BTCPayNetworkProvider _NetworkProvider;
-        private SettingsRepository _Settings;
+        private readonly ApplicationDbContextFactory _DBContextFactory;
+        private readonly StoreRepository _StoreRepository;
+        private readonly BTCPayNetworkProvider _NetworkProvider;
+        private readonly SettingsRepository _Settings;
         private readonly UserManager<ApplicationUser> _userManager;
         public MigrationStartupTask(
             BTCPayNetworkProvider networkProvider,

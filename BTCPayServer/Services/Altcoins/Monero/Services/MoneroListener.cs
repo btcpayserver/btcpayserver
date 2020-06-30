@@ -26,8 +26,8 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
         private readonly MoneroLikeConfiguration _MoneroLikeConfiguration;
         private readonly BTCPayNetworkProvider _networkProvider;
         private readonly ILogger<MoneroListener> _logger;
-        private CompositeDisposable leases = new CompositeDisposable();
-        private Queue<Func<CancellationToken, Task>> taskQueue = new Queue<Func<CancellationToken, Task>>();
+        private readonly CompositeDisposable leases = new CompositeDisposable();
+        private readonly Queue<Func<CancellationToken, Task>> taskQueue = new Queue<Func<CancellationToken, Task>>();
         private CancellationTokenSource _Cts;
 
         public MoneroListener(InvoiceRepository invoiceRepository,

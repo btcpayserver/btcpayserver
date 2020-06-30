@@ -1,8 +1,7 @@
-﻿using System;
+using System;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using NBitcoin;
 using NBXplorer.DerivationStrategy;
 
 namespace BTCPayServer.ModelBinders

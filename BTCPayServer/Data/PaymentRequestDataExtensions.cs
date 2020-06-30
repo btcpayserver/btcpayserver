@@ -1,4 +1,4 @@
-﻿using BTCPayServer.Client.Models;
+using BTCPayServer.Client.Models;
 using NBXplorer;
 using Newtonsoft.Json.Linq;
 

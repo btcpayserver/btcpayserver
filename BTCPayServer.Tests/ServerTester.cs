@@ -1,29 +1,18 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Controllers;
 using BTCPayServer.Lightning;
-using BTCPayServer.Lightning.CLightning;
-using BTCPayServer.Models.AccountViewModels;
-using BTCPayServer.Payments.Lightning;
-using BTCPayServer.Services;
 using BTCPayServer.Tests.Lnd;
 using BTCPayServer.Tests.Logging;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBitcoin.RPC;
 using NBitpayClient;
 using NBXplorer;
-using NBXplorer.Models;
 
 namespace BTCPayServer.Tests
 {
@@ -34,7 +23,7 @@ namespace BTCPayServer.Tests
             return new ServerTester(scope, newDb);
         }
 
-        string _Directory;
+        readonly string _Directory;
         public ServerTester(string scope, bool newDb)
         {
             _Directory = scope;
@@ -196,7 +185,7 @@ namespace BTCPayServer.Tests
         public ExplorerClient LTCExplorerClient { get; set; }
         public ExplorerClient LBTCExplorerClient { get; set; }
 
-        HttpClient _Http = new HttpClient();
+        readonly HttpClient _Http = new HttpClient();
 
         public BTCPayServerTester PayTester
         {

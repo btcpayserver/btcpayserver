@@ -18,9 +18,9 @@ namespace BTCPayServer.Tests
     [Trait("Fast", "Fast")]
     public class PaymentHandlerTest
     {
-        private BitcoinLikePaymentHandler handlerBTC;
-        private LightningLikePaymentHandler handlerLN;
-        private Dictionary<CurrencyPair, Task<RateResult>> currencyPairRateResult;
+        private readonly BitcoinLikePaymentHandler handlerBTC;
+        private readonly LightningLikePaymentHandler handlerLN;
+        private readonly Dictionary<CurrencyPair, Task<RateResult>> currencyPairRateResult;
 
         public PaymentHandlerTest(ITestOutputHelper helper)
         {

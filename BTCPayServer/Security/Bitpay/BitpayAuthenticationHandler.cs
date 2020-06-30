@@ -1,14 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
-using BTCPayServer.Data;
-using BTCPayServer.Logging;
-using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
@@ -17,17 +13,15 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBitcoin.DataEncoders;
-using NBitpayClient;
 using NBitpayClient.Extensions;
-using Newtonsoft.Json.Linq;
 
 
 namespace BTCPayServer.Security.Bitpay
 {
     public class BitpayAuthenticationHandler : AuthenticationHandler<BitpayAuthenticationOptions>
     {
-        StoreRepository _StoreRepository;
-        TokenRepository _TokenRepository;
+        readonly StoreRepository _StoreRepository;
+        readonly TokenRepository _TokenRepository;
         public BitpayAuthenticationHandler(
             TokenRepository tokenRepository,
             StoreRepository storeRepository,

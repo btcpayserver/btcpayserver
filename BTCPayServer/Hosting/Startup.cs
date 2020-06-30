@@ -1,12 +1,10 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Net;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
-using BTCPayServer.JsonConverters;
 using BTCPayServer.Logging;
-using BTCPayServer.Models;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Apps;
@@ -34,7 +32,8 @@ namespace BTCPayServer.Hosting
             _Env = env;
             LoggerFactory = loggerFactory;
         }
-        IWebHostEnvironment _Env;
+
+        readonly IWebHostEnvironment _Env;
         public IConfiguration Configuration
         {
             get; set;

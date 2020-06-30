@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -27,7 +27,7 @@ namespace BTCPayServer.Services.Rates
             _Currencies = LoadCurrency().ToDictionary(k => k.Code);
         }
 
-        static Dictionary<string, IFormatProvider> _CurrencyProviders = new Dictionary<string, IFormatProvider>();
+        static readonly Dictionary<string, IFormatProvider> _CurrencyProviders = new Dictionary<string, IFormatProvider>();
 
         public string FormatCurrency(string price, string currency)
         {
@@ -130,7 +130,7 @@ namespace BTCPayServer.Services.Rates
                 return value.ToString("C", provider) + $" ({currency})";
         }
 
-        Dictionary<string, CurrencyData> _Currencies;
+        readonly Dictionary<string, CurrencyData> _Currencies;
 
         static CurrencyData[] LoadCurrency()
         {

@@ -1,13 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Payments.Changelly.Models;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SshNet.Security.Cryptography;
 

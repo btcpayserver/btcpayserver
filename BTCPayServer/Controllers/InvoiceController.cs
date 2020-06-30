@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -18,11 +18,9 @@ using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
-using BTCPayServer.Services.Wallets;
 using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using NBitcoin;
 using NBitpayClient;
 using Newtonsoft.Json;
 using CreateInvoiceRequest = BTCPayServer.Models.CreateInvoiceRequest;
@@ -33,18 +31,18 @@ namespace BTCPayServer.Controllers
     [Filters.BitpayAPIConstraint(false)]
     public partial class InvoiceController : Controller
     {
-        InvoiceRepository _InvoiceRepository;
-        ContentSecurityPolicies _CSP;
-        RateFetcher _RateProvider;
-        StoreRepository _StoreRepository;
-        UserManager<ApplicationUser> _UserManager;
-        private CurrencyNameTable _CurrencyNameTable;
-        EventAggregator _EventAggregator;
-        BTCPayNetworkProvider _NetworkProvider;
+        readonly InvoiceRepository _InvoiceRepository;
+        readonly ContentSecurityPolicies _CSP;
+        readonly RateFetcher _RateProvider;
+        readonly StoreRepository _StoreRepository;
+        readonly UserManager<ApplicationUser> _UserManager;
+        private readonly CurrencyNameTable _CurrencyNameTable;
+        readonly EventAggregator _EventAggregator;
+        readonly BTCPayNetworkProvider _NetworkProvider;
         private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
         private readonly ApplicationDbContextFactory _dbContextFactory;
         private readonly PullPaymentHostedService _paymentHostedService;
-        IServiceProvider _ServiceProvider;
+        readonly IServiceProvider _ServiceProvider;
         public InvoiceController(
             IServiceProvider serviceProvider,
             InvoiceRepository invoiceRepository,

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -13,7 +13,7 @@ namespace BTCPayServer.Logging
 {
     public class CustomConsoleLogProvider : ILoggerProvider
     {
-        ConsoleLoggerProcessor _Processor;
+        readonly ConsoleLoggerProcessor _Processor;
         public CustomConsoleLogProvider(ConsoleLoggerProcessor processor)
         {
             _Processor = processor;

@@ -1,13 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Net;
 using System.Net.Http;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ExchangeSharp;
-using Microsoft.Extensions.Logging;
 
 namespace BTCPayServer.Services.Rates
 {
@@ -132,7 +129,7 @@ namespace BTCPayServer.Services.Rates
                 }
             }
             public Dictionary<string, IReadOnlyList<string>> Headers { get; }
-            static IReadOnlyList<string> Empty = new List<string>().AsReadOnly();
+            static readonly IReadOnlyList<string> Empty = new List<string>().AsReadOnly();
             public IReadOnlyList<string> GetHeader(string name)
             {
                 Headers.TryGetValue(name, out var list);

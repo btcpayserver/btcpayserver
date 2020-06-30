@@ -1,12 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Logging;
 using BTCPayServer.Services.Invoices;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using NBitcoin.JsonConverters;
 using NBitpayClient;
 using NBXplorer;
 

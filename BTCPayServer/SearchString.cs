@@ -1,15 +1,13 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace BTCPayServer
 {
     public class SearchString
     {
-        string _OriginalString;
+        readonly string _OriginalString;
         public SearchString(string str)
         {
             str = str ?? string.Empty;

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -30,10 +30,11 @@ namespace BTCPayServer.Controllers
                 return HttpContext.GetStoreData();
             }
         }
-        RateFetcher _RateProviderFactory;
-        BTCPayNetworkProvider _NetworkProvider;
-        CurrencyNameTable _CurrencyNameTable;
-        StoreRepository _StoreRepo;
+
+        readonly RateFetcher _RateProviderFactory;
+        readonly BTCPayNetworkProvider _NetworkProvider;
+        readonly CurrencyNameTable _CurrencyNameTable;
+        readonly StoreRepository _StoreRepo;
 
         public TokenRepository TokenRepository { get; }
 

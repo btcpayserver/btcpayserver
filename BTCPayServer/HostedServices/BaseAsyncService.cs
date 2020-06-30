@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+using System;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Logging;
-using BTCPayServer.Services;
-using BTCPayServer.Services.Rates;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 

@@ -1,21 +1,19 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 using BundlerMinifier.TagHelpers;
 using Microsoft.AspNetCore.Hosting;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
 
 namespace BTCPayServer.Hosting
 {
     public class ResourceBundleProvider : IBundleProvider
     {
-        BundleProvider _InnerProvider;
-        Lazy<Dictionary<string, Bundle>> _BundlesByName;
+        readonly BundleProvider _InnerProvider;
+        readonly Lazy<Dictionary<string, Bundle>> _BundlesByName;
         public ResourceBundleProvider(IWebHostEnvironment hosting, BundleOptions options)
         {
             if (options.UseBundles)

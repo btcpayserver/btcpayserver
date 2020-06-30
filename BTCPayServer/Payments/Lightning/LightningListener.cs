@@ -1,8 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -20,14 +19,14 @@ namespace BTCPayServer.Payments.Lightning
 {
     public class LightningListener : IHostedService
     {
-        EventAggregator _Aggregator;
-        InvoiceRepository _InvoiceRepository;
+        readonly EventAggregator _Aggregator;
+        readonly InvoiceRepository _InvoiceRepository;
         private readonly IMemoryCache _memoryCache;
-        BTCPayNetworkProvider _NetworkProvider;
+        readonly BTCPayNetworkProvider _NetworkProvider;
         private readonly LightningClientFactoryService lightningClientFactory;
-        Channel<string> _CheckInvoices = Channel.CreateUnbounded<string>();
+        readonly Channel<string> _CheckInvoices = Channel.CreateUnbounded<string>();
         Task _CheckingInvoice;
-        Dictionary<(string, string), LightningInstanceListener> _InstanceListeners = new Dictionary<(string, string), LightningInstanceListener>();
+        readonly Dictionary<(string, string), LightningInstanceListener> _InstanceListeners = new Dictionary<(string, string), LightningInstanceListener>();
 
         public LightningListener(EventAggregator aggregator,
                               InvoiceRepository invoiceRepository,
@@ -124,10 +123,8 @@ namespace BTCPayServer.Payments.Lightning
             });
         }
 
-        ConcurrentDictionary<string, LightningInstanceListener> _ListeningInstances = new ConcurrentDictionary<string, LightningInstanceListener>();
-
-
-        CompositeDisposable leases = new CompositeDisposable();
+        readonly ConcurrentDictionary<string, LightningInstanceListener> _ListeningInstances = new ConcurrentDictionary<string, LightningInstanceListener>();
+        readonly CompositeDisposable leases = new CompositeDisposable();
         public Task StartAsync(CancellationToken cancellationToken)
         {
             leases.Add(_Aggregator.Subscribe<Events.InvoiceEvent>(inv =>
@@ -170,9 +167,8 @@ namespace BTCPayServer.Payments.Lightning
             }
         }
 
-        CancellationTokenSource _Cts = new CancellationTokenSource();
-
-        HashSet<string> _InvoiceIds = new HashSet<string>();
+        readonly CancellationTokenSource _Cts = new CancellationTokenSource();
+        readonly HashSet<string> _InvoiceIds = new HashSet<string>();
         private Timer _ListenPoller;
 
         public async Task StopAsync(CancellationToken cancellationToken)
@@ -202,7 +198,7 @@ namespace BTCPayServer.Payments.Lightning
 
     public class LightningInstanceListener
     {
-        private LightningSupportedPaymentMethod supportedPaymentMethod;
+        private readonly LightningSupportedPaymentMethod supportedPaymentMethod;
         private readonly InvoiceRepository invoiceRepository;
         private readonly EventAggregator _eventAggregator;
         private readonly BTCPayNetwork network;
@@ -319,7 +315,7 @@ namespace BTCPayServer.Payments.Lightning
         }
 
         bool _ErrorAlreadyLogged = false;
-        ConcurrentDictionary<string, ListenedInvoice> _ListenedInvoices = new ConcurrentDictionary<string, ListenedInvoice>();
+        readonly ConcurrentDictionary<string, ListenedInvoice> _ListenedInvoices = new ConcurrentDictionary<string, ListenedInvoice>();
 
         public async Task<bool> AddPayment(LightningInvoice notification, string invoiceId)
         {

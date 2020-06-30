@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
@@ -8,7 +8,7 @@ namespace BTCPayServer.Rating
 {
     public class ExchangeRates : IEnumerable<ExchangeRate>
     {
-        Dictionary<string, ExchangeRate> _AllRates = new Dictionary<string, ExchangeRate>();
+        readonly Dictionary<string, ExchangeRate> _AllRates = new Dictionary<string, ExchangeRate>();
         public ExchangeRates()
         {
 
@@ -28,7 +28,8 @@ namespace BTCPayServer.Rating
                 Add(rate);
             }
         }
-        List<ExchangeRate> _Rates = new List<ExchangeRate>();
+
+        readonly List<ExchangeRate> _Rates = new List<ExchangeRate>();
         public MultiValueDictionary<string, ExchangeRate> ByExchange
         {
             get;

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+using System;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
@@ -29,10 +27,8 @@ namespace BTCPayServer
 
         const int ORIGINAL_BUFFER_SIZE = 1024 * 5;
         const int MAX_BUFFER_SIZE = 1024 * 1024 * 5;
-
-        ArraySegment<byte> _Buffer;
-
-        UTF8Encoding UTF8 = new UTF8Encoding(false, true);
+        readonly ArraySegment<byte> _Buffer;
+        readonly UTF8Encoding UTF8 = new UTF8Encoding(false, true);
         public async Task<string> NextMessageAsync(CancellationToken cancellation)
         {
             var buffer = _Buffer;

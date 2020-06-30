@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
-using DBriize;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query;
 using NBitcoin;
 using NBitcoin.DataEncoders;
-using Newtonsoft.Json;
 
 namespace BTCPayServer.Security.Bitpay
 {
@@ -23,7 +18,7 @@ namespace BTCPayServer.Security.Bitpay
 
     public class TokenRepository
     {
-        ApplicationDbContextFactory _Factory;
+        readonly ApplicationDbContextFactory _Factory;
         public TokenRepository(ApplicationDbContextFactory dbFactory)
         {
             if (dbFactory == null)

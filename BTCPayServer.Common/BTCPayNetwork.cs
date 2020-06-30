@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using NBitcoin;
 using NBXplorer;
 using NBXplorer.Models;
-using Newtonsoft.Json;
 
 namespace BTCPayServer
 {
@@ -33,7 +31,7 @@ namespace BTCPayServer
             }
         }
 
-        static Dictionary<NetworkType, BTCPayDefaultSettings> _Settings;
+        static readonly Dictionary<NetworkType, BTCPayDefaultSettings> _Settings;
 
         public static BTCPayDefaultSettings GetDefaultSettings(NetworkType chainType)
         {

@@ -1,6 +1,5 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -8,8 +7,6 @@ using System.Net;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Security;
-using System.Security.Claims;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -33,37 +30,29 @@ using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Rating;
-using BTCPayServer.Security;
 using BTCPayServer.Security.Bitpay;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
-using BTCPayServer.Services.Stores;
 using BTCPayServer.Tests.Logging;
 using BTCPayServer.U2F.Models;
 using BTCPayServer.Validation;
 using ExchangeSharp;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitcoin.Payment;
 using NBitpayClient;
-using NBitpayClient.Extensions;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Schema;
-using TwentyTwenty.Storage;
 using Xunit;
 using Xunit.Abstractions;
 using Xunit.Sdk;
-using MemoryCache = Microsoft.Extensions.Caching.Memory.MemoryCache;
 using RatesViewModel = BTCPayServer.Models.StoreViewModels.RatesViewModel;
 
 namespace BTCPayServer.Tests
@@ -605,7 +594,7 @@ namespace BTCPayServer.Tests
                 // Pays 75%
                 var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, tester.ExplorerNode.Network);
                 tester.ExplorerNode.SendToAddress(invoiceAddress,
-                    Money.Satoshis((decimal)invoice.BtcDue.Satoshi * 0.75m));
+                    Money.Satoshis(invoice.BtcDue.Satoshi * 0.75m));
 
                 TestUtils.Eventually(() =>
                 {

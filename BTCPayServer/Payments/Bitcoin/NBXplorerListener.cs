@@ -1,24 +1,19 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer;
-using BTCPayServer.Controllers;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
-using BTCPayServer.Payments;
 using BTCPayServer.Payments.PayJoin;
-using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Wallets;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using NBitcoin.Altcoins.Elements;
 using NBitcoin.RPC;
 using NBXplorer;
 using NBXplorer.DerivationStrategy;
@@ -31,14 +26,14 @@ namespace BTCPayServer.Payments.Bitcoin
     /// </summary>
     public class NBXplorerListener : IHostedService
     {
-        EventAggregator _Aggregator;
+        readonly EventAggregator _Aggregator;
         private readonly PayJoinRepository _payJoinRepository;
-        ExplorerClientProvider _ExplorerClients;
-        IHostApplicationLifetime _Lifetime;
-        InvoiceRepository _InvoiceRepository;
+        readonly ExplorerClientProvider _ExplorerClients;
+        readonly IHostApplicationLifetime _Lifetime;
+        readonly InvoiceRepository _InvoiceRepository;
         private TaskCompletionSource<bool> _RunningTask;
         private CancellationTokenSource _Cts;
-        BTCPayWalletProvider _Wallets;
+        readonly BTCPayWalletProvider _Wallets;
         public NBXplorerListener(ExplorerClientProvider explorerClients,
                                 BTCPayWalletProvider wallets,
                                 InvoiceRepository invoiceRepository,
@@ -55,8 +50,8 @@ namespace BTCPayServer.Payments.Bitcoin
             _Lifetime = lifetime;
         }
 
-        CompositeDisposable leases = new CompositeDisposable();
-        ConcurrentDictionary<string, WebsocketNotificationSession> _SessionsByCryptoCode = new ConcurrentDictionary<string, WebsocketNotificationSession>();
+        readonly CompositeDisposable leases = new CompositeDisposable();
+        readonly ConcurrentDictionary<string, WebsocketNotificationSession> _SessionsByCryptoCode = new ConcurrentDictionary<string, WebsocketNotificationSession>();
         private Timer _ListenPoller;
 
         TimeSpan _PollInterval;

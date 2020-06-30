@@ -1,47 +1,33 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
-using BTCPayServer.Filters;
-using BTCPayServer.Models;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Payments;
-using BTCPayServer.Rating;
-using BTCPayServer.Security;
-using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using ExchangeSharp;
 using Ganss.XSS;
-using Microsoft.AspNetCore.Cors;
-using Microsoft.AspNetCore.Http.Extensions;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitcoin.DataEncoders;
-using NBitpayClient;
 using Newtonsoft.Json.Linq;
 using NUglify.Helpers;
 using YamlDotNet.RepresentationModel;
 using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
-using static BTCPayServer.Controllers.AppsController;
 using static BTCPayServer.Models.AppViewModels.ViewCrowdfundViewModel;
 
 namespace BTCPayServer.Services.Apps
 {
     public class AppService
     {
-        ApplicationDbContextFactory _ContextFactory;
+        readonly ApplicationDbContextFactory _ContextFactory;
         private readonly InvoiceRepository _InvoiceRepository;
-        CurrencyNameTable _Currencies;
+        readonly CurrencyNameTable _Currencies;
         private readonly StoreRepository _storeRepository;
         private readonly HtmlSanitizer _HtmlSanitizer;
         public CurrencyNameTable Currencies => _Currencies;

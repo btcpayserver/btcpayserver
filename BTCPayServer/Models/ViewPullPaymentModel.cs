@@ -1,10 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using AngleSharp.Dom;
 using BTCPayServer.Data;
-using BTCPayServer.Payments;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Views;
 

@@ -1,13 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Dynamic;
 using System.Globalization;
 using System.Linq;
-using System.Net.WebSockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Amazon.Runtime.Internal.Util;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.ModelBinders;
@@ -15,17 +11,10 @@ using BTCPayServer.Models;
 using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Rating;
-using BTCPayServer.Services.Rates;
 using BTCPayServer.Views;
-using ExchangeSharp;
-using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Internal;
-using Microsoft.Extensions.Primitives;
 using NBitcoin;
-using NBitcoin.Payment;
-using TwentyTwenty.Storage;
 
 namespace BTCPayServer.Controllers
 {

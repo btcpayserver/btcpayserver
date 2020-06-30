@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,8 +16,8 @@ namespace BTCPayServer.Controllers
     [Authorize(Policies.CanCreateInvoice, AuthenticationSchemes = AuthenticationSchemes.Bitpay)]
     public class InvoiceControllerAPI : Controller
     {
-        private InvoiceController _InvoiceController;
-        private InvoiceRepository _InvoiceRepository;
+        private readonly InvoiceController _InvoiceController;
+        private readonly InvoiceRepository _InvoiceRepository;
 
         public InvoiceControllerAPI(InvoiceController invoiceController,
                                     InvoiceRepository invoiceRepository)

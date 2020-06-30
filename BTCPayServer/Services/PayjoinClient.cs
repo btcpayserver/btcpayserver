@@ -1,22 +1,15 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Logging;
-using BTCPayServer.Payments.Changelly.Models;
-using Google.Apis.Http;
-using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.Payment;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using NUglify.Helpers;
-using TwentyTwenty.Storage;
 using IHttpClientFactory = System.Net.Http.IHttpClientFactory;
 
 namespace BTCPayServer.Services
@@ -77,7 +70,7 @@ namespace BTCPayServer.Services
         public const string BIP21EndpointKey = "pj";
 
         private readonly ExplorerClientProvider _explorerClientProvider;
-        private IHttpClientFactory _httpClientFactory;
+        private readonly IHttpClientFactory _httpClientFactory;
 
         public PayjoinClient(ExplorerClientProvider explorerClientProvider, IHttpClientFactory httpClientFactory)
         {
@@ -406,7 +399,7 @@ namespace BTCPayServer.Services
                 return null;
             return t.EnumValue;
         }
-        static string UnknownError = "Unknown error from the receiver";
+        static readonly string UnknownError = "Unknown error from the receiver";
         public static string GetMessage(string errorCode)
         {
             return Get().FirstOrDefault(o => o.ErrorCode == errorCode).Message ?? UnknownError;

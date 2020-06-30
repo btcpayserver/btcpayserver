@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using BTCPayServer.Data;
-using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace BTCPayServer.Services.Notifications
 {

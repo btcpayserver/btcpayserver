@@ -1,21 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
-using BTCPayServer.ModelBinders;
 using BTCPayServer.Models;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
 
 namespace BTCPayServer.Controllers
 {

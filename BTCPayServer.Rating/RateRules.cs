@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -95,8 +95,8 @@ namespace BTCPayServer.Rating
             }
         }
 
-        SyntaxNode root;
-        RuleList ruleList;
+        readonly SyntaxNode root;
+        readonly RuleList ruleList;
 
         decimal _Spread;
         private const string ImplicitSatsRule = "SATS_X = SATS_BTC * BTC_X;\nSATS_BTC = 0.00000001;\n";
@@ -401,8 +401,8 @@ namespace BTCPayServer.Rating
         }
         class FlattenExpressionRewriter : CSharpSyntaxRewriter
         {
-            RateRules parent;
-            CurrencyPair pair;
+            readonly RateRules parent;
+            readonly CurrencyPair pair;
             int nested = 0;
             public FlattenExpressionRewriter(RateRules parent, CurrencyPair pair)
             {
@@ -491,8 +491,8 @@ namespace BTCPayServer.Rating
                 };
             }
         }
-        private SyntaxNode expression;
-        FlattenExpressionRewriter flatten;
+        private readonly SyntaxNode expression;
+        readonly FlattenExpressionRewriter flatten;
 
         public static RateRule CreateFromExpression(string expression, CurrencyPair currencyPair)
         {

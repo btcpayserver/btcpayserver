@@ -1,9 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.JsonConverters;
@@ -14,8 +12,6 @@ using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitpayClient;
 using NBXplorer;
-using NBXplorer.DerivationStrategy;
-using NBXplorer.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -623,11 +619,11 @@ namespace BTCPayServer.Services.Invoices
     }
     public class InvoiceState
     {
-        static Dictionary<string, InvoiceStatus> _StringToInvoiceStatus;
-        static Dictionary<InvoiceStatus, string> _InvoiceStatusToString;
+        static readonly Dictionary<string, InvoiceStatus> _StringToInvoiceStatus;
+        static readonly Dictionary<InvoiceStatus, string> _InvoiceStatusToString;
 
-        static Dictionary<string, InvoiceExceptionStatus> _StringToExceptionStatus;
-        static Dictionary<InvoiceExceptionStatus, string> _ExceptionStatusToString;
+        static readonly Dictionary<string, InvoiceExceptionStatus> _StringToExceptionStatus;
+        static readonly Dictionary<InvoiceExceptionStatus, string> _ExceptionStatusToString;
 
         static InvoiceState()
         {

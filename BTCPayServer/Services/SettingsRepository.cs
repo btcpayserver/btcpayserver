@@ -1,4 +1,3 @@
-﻿using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
@@ -10,7 +9,7 @@ namespace BTCPayServer.Services
 {
     public class SettingsRepository
     {
-        private ApplicationDbContextFactory _ContextFactory;
+        private readonly ApplicationDbContextFactory _ContextFactory;
         private readonly EventAggregator _EventAggregator;
 
         public SettingsRepository(ApplicationDbContextFactory contextFactory, EventAggregator eventAggregator)

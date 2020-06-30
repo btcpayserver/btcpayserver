@@ -1,13 +1,5 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using BTCPayServer.Data;
-using BTCPayServer.Events;
-using BTCPayServer.Services.Notifications.Blobs;
-using Newtonsoft.Json;
 
 namespace BTCPayServer.Models.NotificationViewModels
 {

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading.Tasks;
 using BTCPayServer.Controllers;
 using BTCPayServer.Models;
@@ -11,10 +10,8 @@ using BTCPayServer.Storage.Services.Providers.FileSystemStorage.Configuration;
 using BTCPayServer.Storage.ViewModels;
 using BTCPayServer.Tests.Logging;
 using DBriize.Utils;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.Resources;
 using Xunit;
 using Xunit.Abstractions;
 

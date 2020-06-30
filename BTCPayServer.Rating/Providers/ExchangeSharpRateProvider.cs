@@ -1,9 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,7 +12,7 @@ namespace BTCPayServer.Services.Rates
 {
     public class ExchangeSharpRateProvider<T> : IRateProvider where T : ExchangeAPI, new()
     {
-        HttpClient _httpClient;
+        readonly HttpClient _httpClient;
         public ExchangeSharpRateProvider(HttpClient httpClient, bool reverseCurrencyPair = false)
         {
             if (httpClient == null)
@@ -48,7 +46,7 @@ namespace BTCPayServer.Services.Rates
         }
 
         // ExchangeSymbolToGlobalSymbol throws exception which would kill perf
-        ConcurrentDictionary<string, string> notFoundSymbols = new ConcurrentDictionary<string, string>();
+        readonly ConcurrentDictionary<string, string> notFoundSymbols = new ConcurrentDictionary<string, string>();
         private async Task<PairRate> CreateExchangeRate(T exchangeAPI, KeyValuePair<string, ExchangeTicker> ticker)
         {
             if (notFoundSymbols.TryGetValue(ticker.Key, out _))

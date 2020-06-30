@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Concurrent;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Rating;
-using ExchangeSharp;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Options;
 using static BTCPayServer.Services.Rates.RateProviderFactory;
 
 namespace BTCPayServer.Services.Rates

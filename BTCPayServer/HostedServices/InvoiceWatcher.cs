@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -13,7 +12,6 @@ using BTCPayServer.Services.Notifications.Blobs;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using NBitpayClient;
 using NBXplorer;
 
 namespace BTCPayServer.HostedServices
@@ -38,9 +36,9 @@ namespace BTCPayServer.HostedServices
             public bool Dirty => _Dirty;
         }
 
-        InvoiceRepository _InvoiceRepository;
-        EventAggregator _EventAggregator;
-        ExplorerClientProvider _ExplorerClientProvider;
+        readonly InvoiceRepository _InvoiceRepository;
+        readonly EventAggregator _EventAggregator;
+        readonly ExplorerClientProvider _ExplorerClientProvider;
         private readonly NotificationSender _notificationSender;
 
         public InvoiceWatcher(
@@ -54,7 +52,8 @@ namespace BTCPayServer.HostedServices
             _ExplorerClientProvider = explorerClientProvider;
             _notificationSender = notificationSender;
         }
-        CompositeDisposable leases = new CompositeDisposable();
+
+        readonly CompositeDisposable leases = new CompositeDisposable();
 
 
         private async Task UpdateInvoice(UpdateInvoiceContext context)
@@ -219,7 +218,7 @@ namespace BTCPayServer.HostedServices
 
         }
 
-        Channel<string> _WatchRequests = Channel.CreateUnbounded<string>();
+        readonly Channel<string> _WatchRequests = Channel.CreateUnbounded<string>();
 
         Task _Loop;
         CancellationTokenSource _Cts;

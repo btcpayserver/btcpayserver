@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net.Mail;
 using System.Threading.Tasks;
 using BTCPayServer.Logging;
@@ -9,7 +9,7 @@ namespace BTCPayServer.Services.Mails
 {
     public abstract class EmailSender : IEmailSender
     {
-        IBackgroundJobClient _JobClient;
+        readonly IBackgroundJobClient _JobClient;
 
         public EmailSender(IBackgroundJobClient jobClient)
         {

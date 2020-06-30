@@ -6,13 +6,11 @@ using System.Threading.Tasks;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
-using BTCPayServer.Security;
 using BTCPayServer.Security.GreenField;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBitcoin.DataEncoders;
-using YamlDotNet.Core.Tokens;
 
 namespace BTCPayServer.Controllers
 {

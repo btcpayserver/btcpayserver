@@ -157,7 +157,7 @@ namespace BTCPayServer.Controllers
                                 await handler.TestConnection(info, cts.Token);
                             }
                         }
-                        TempData[WellKnownTempData.SuccessMessage] = $"Connection to the lightning node succeeded ({info})";
+                        TempData[WellKnownTempData.SuccessMessage] = $"Connection to the lightning node succeeded. Your node address: {info}";
                     }
                     catch (Exception ex)
                     {

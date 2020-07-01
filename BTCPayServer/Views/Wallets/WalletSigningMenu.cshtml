@@ -1,0 +1,20 @@
+@model (string CryptoCode, bool NBXSeedAvailable)
+
+
+<div class="dropdown">
+    <button class="btn btn-primary dropdown-toggle" type="button" id="SendMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        Sign with...
+    </button>
+    <div class="dropdown-menu" aria-labelledby="SendMenu">
+        @if (Model.CryptoCode == "BTC")
+        {
+        <button name="command" type="submit" class="dropdown-item" value="vault">... a hardware wallet</button>
+        }
+        <button name="command" type="submit" class="dropdown-item" value="seed">... an HD private key or mnemonic seed</button>
+        <button name="command" type="submit" class="dropdown-item" value="analyze-psbt">... a wallet supporting PSBT</button>
+        @if (Model.NBXSeedAvailable)
+        {
+            <button id="spendWithNBxplorer" name="command" type="submit" class="dropdown-item" value="nbx-seed">... the hot wallet</button>
+        }
+    </div>
+</div>

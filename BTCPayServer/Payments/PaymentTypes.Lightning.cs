@@ -1,7 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services.Invoices;
 using Newtonsoft.Json;
@@ -19,15 +15,24 @@ namespace BTCPayServer.Payments
 
         public override string ToPrettyString() => "Off-Chain";
         public override string GetId() => "LightningLike";
-
-        public override CryptoPaymentData DeserializePaymentData(string str)
+        public override CryptoPaymentData DeserializePaymentData(BTCPayNetworkBase network, string str)
         {
-            return JsonConvert.DeserializeObject<Payments.Lightning.LightningLikePaymentData>(str);
+            return ((BTCPayNetwork)network).ToObject<LightningLikePaymentData>(str);
         }
 
-        public override IPaymentMethodDetails DeserializePaymentMethodDetails(string str)
+        public override string SerializePaymentData(BTCPayNetworkBase network, CryptoPaymentData paymentData)
+        {
+            return ((BTCPayNetwork)network).ToString(paymentData);
+        }
+
+        public override IPaymentMethodDetails DeserializePaymentMethodDetails(BTCPayNetworkBase network, string str)
         {
             return JsonConvert.DeserializeObject<Payments.Lightning.LightningLikePaymentMethodDetails>(str);
+        }
+
+        public override string SerializePaymentMethodDetails(BTCPayNetworkBase network, IPaymentMethodDetails details)
+        {
+            return JsonConvert.SerializeObject(details);
         }
 
         public override ISupportedPaymentMethod DeserializeSupportedPaymentMethod(BTCPayNetworkBase network, JToken value)

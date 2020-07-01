@@ -1,0 +1,167 @@
+{
+    "components": {
+        "schemas": {
+            "ConnectToNodeRequest": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "nodeURI": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Node URI in the form `pubkey@endpoint[:port]`"
+                    }
+                }
+            },
+            "CreateLightningInvoiceRequest": {
+                "type": "object",
+                "properties": {
+                    "amount": {
+                        "type": "string",
+                        "description": "Amount wrapped in a string, represented in a millistatoshi string. (1000 millisatoshi = 1 satoshi)",
+                        "nullable": false
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Description of the invoice in the BOLT11"
+                    },
+                    "expiry": {
+                        "type": "integer",
+                        "description": "Expiration time in seconds"
+                    },
+                    "privateRouteHints": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "default": false,
+                        "description": "True if the invoice should include private route hints"
+                    }
+                }
+            },
+            "LightningChannelData": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "remoteNode": {
+                        "type": "string",
+                        "nullable": false,
+                        "description": "The public key of the node (Node ID)"
+                    },
+                    "isPublic": {
+                        "type": "boolean",
+                        "description": "Whether the node is public"
+                    },
+                    "isActive": {
+                        "type": "boolean",
+                        "description": "Whether the node is online"
+                    },
+                    "capacity": {
+                        "type": "string",
+                        "description": "The capacity of the channel in millisatoshi",
+                        "nullable": false
+                    },
+                    "localBalance": {
+                        "type": "string",
+                        "description": "The local balance of the channel in millisatoshi",
+                        "nullable": false
+                    },
+                    "channelPoint": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                }
+            },
+            "LightningInvoiceData": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "The invoice's ID"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/LightningInvoiceStatus"
+                    },
+                    "BOLT11": {
+                        "type": "string",
+                        "description": "The BOLT11 representation of the invoice",
+                        "nullable": false
+                    },
+                    "paidAt": {
+                        "type": "integer",
+                        "description": "The unix timestamp when the invoice got paid",
+                        "nullable": true
+                    },
+                    "expiresAt": {
+                        "type": "integer",
+                        "description": "The unix timestamp when the invoice expires"
+                    },
+                    "amount": {
+                        "type": "string",
+                        "description": "The amount of the invoice in millisatoshi"
+                    },
+                    "amountReceived": {
+                        "type": "string",
+                        "description": "The amount received in millisatoshi"
+                    }
+                }
+            },
+            "LightningInvoiceStatus": {
+                "type": "string",
+                "description": "",
+                "x-enumNames": [
+                    "Unpaid",
+                    "Paid",
+                    "Expired"
+                ],
+                "enum": [
+                    "Unpaid",
+                    "Paid",
+                    "Expired"
+                ]
+            },
+            "LightningNodeInformationData": {
+                "type": "object",
+                "properties": {
+                    "nodeURIs": {
+                        "type": "array",
+                        "description": "Node URIs to connect to this node in the form `pubkey@endpoint[:port]`",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "blockHeight": {
+                        "type": "integer",
+                        "description": "The block height of the lightning node"
+                    }
+                }
+            },
+            "PayLightningInvoiceRequest": {
+                "type": "object",
+                "properties": {
+                    "BOLT11": {
+                        "type": "string",
+                        "description": "The BOLT11 of the invoice to pay"
+                    }
+                }
+            },
+            "OpenLightningChannelRequest": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "nodeURI": {
+                        "type": "string",
+                        "description": "Node URI in the form `pubkey@endpoint[:port]`"
+                    },
+                    "channelAmount": {
+                        "type": "string",
+                        "description": "The amount to fund (in satoshi)"
+                    },
+                    "feeRate": {
+                        "type": "number",
+                        "description": "The amount to fund (in satoshi per byte)"
+                    }
+                }
+            }
+        }
+    }
+}

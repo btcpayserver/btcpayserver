@@ -1,7 +1,7 @@
 {
   "NOTICE_WARN": "THIS CODE HAS BEEN AUTOMATICALLY GENERATED FROM TRANSIFEX, IF YOU WISH TO HELP TRANSLATION COME ON THE SLACK http://slack.btcpayserver.org TO REQUEST PERMISSION TO https://www.transifex.com/btcpayserver/btcpayserver/",
   "code": "bs-BA",
-  "currentLanguage": "Engleski",
+  "currentLanguage": "Bosanski",
   "lang": "Jezik",
   "Awaiting Payment...": "Čekam uplatu...",
   "Pay with": "Plati sa",
@@ -23,7 +23,7 @@
   "Address": "Adresa",
   "Copied": "Kopirano",
   "ConversionTab_BodyTop": "Možete uplatiti {{btcDue}} {{cryptoCode}} koristeći altcoine koji nisu prikazani kao prodržani od strane prodavača.",
-  "ConversionTab_BodyDesc": "Koristite servis treće strane. Molimo vas da imate na umu da mi nemamo kontrolu kako drugi provajderi proslijeđuju vaša sredstva. Predračun će biti markiran kao plaćen nakon što su sredstva primljena na {{cryptoCode}} Blockchain.",
+  "ConversionTab_BodyDesc": "Koristite servis 3. strane. Molimo vas da imate na umu da mi nemamo kontrolu kako drugi provajderi proslijeđuju vaša sredstva. Predračun će biti markiran kao plaćen nakon što su sredstva primljena na {{cryptoCode}} Blockchain.",
   "ConversionTab_CalculateAmount_Error": "Ponovi",
   "ConversionTab_LoadCurrencies_Error": "Ponovi",
   "ConversionTab_Lightning": "Nepostojeći provider plaćanja za Lightning mrežu.",
@@ -47,6 +47,6 @@
   "Pay with CoinSwitch": "Plati sa CoinSwitch",
   "Pay with Changelly": "Plati sa Changelly",
   "Close": "Zatvori",
-  "NotPaid_ExtraTransaction": "The invoice hasn't been paid in full. Please send another transaction to cover amount Due.",
-  "Recommended_Fee": "Recommended fee: {{feeRate}} sat/byte"
+  "NotPaid_ExtraTransaction": "Račun nije plaćen u cijelosti. Pošaljite još jednu transakciju kako biste pokrili iznos koji dospijeva.",
+  "Recommended_Fee": "Preporučena naknada: {{feeRate}} sat / bajt"
 }

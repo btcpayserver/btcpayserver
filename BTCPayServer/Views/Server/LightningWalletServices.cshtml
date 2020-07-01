@@ -66,14 +66,15 @@
 
     @if (Model.ShowQR)
     {
-        <script type="text/javascript" src="~/js/qrcode.js"></script>
+        <script type="text/javascript" src="~/js/qrcode.js" asp-append-version="true"></script>
         <script type="text/javascript">
         new QRCode(document.getElementById("qrCode"),
             {
                 text: @Safe.Json(Model.ServiceLink),
                 width: 200,
                 height: 200,
-                useSVG: true
+                useSVG: true,
+                correctLevel : QRCode.CorrectLevel.M
             });
         </script>
     }

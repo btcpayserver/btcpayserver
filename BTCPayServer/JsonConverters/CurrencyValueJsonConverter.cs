@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System;
 using System.Reflection;
-using Newtonsoft.Json;
 using NBitcoin.JsonConverters;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.JsonConverters
 {
@@ -31,7 +28,7 @@ namespace BTCPayServer.JsonConverters
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            if(value != null)
+            if (value != null)
                 writer.WriteValue(value.ToString());
         }
     }

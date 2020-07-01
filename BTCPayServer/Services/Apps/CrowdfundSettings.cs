@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System;
 
 namespace BTCPayServer.Services.Apps
 {
@@ -82,8 +79,6 @@ namespace BTCPayServer.Services.Apps
             "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/unstoppable.wav",
             "//github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/QuakeSounds/whickedsick.wav"
         };
-
-        public string NotificationEmail { get; set; }
     }
     public enum CrowdfundResetEvery
     {

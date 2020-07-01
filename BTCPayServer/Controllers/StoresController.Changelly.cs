@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
@@ -26,15 +26,14 @@ namespace BTCPayServer.Controllers
         {
 
             var existing = store.GetStoreBlob().ChangellySettings;
-            if (existing == null) return;
+            if (existing == null)
+                return;
             vm.ApiKey = existing.ApiKey;
             vm.ApiSecret = existing.ApiSecret;
             vm.ApiUrl = existing.ApiUrl;
             vm.ChangellyMerchantId = existing.ChangellyMerchantId;
             vm.Enabled = existing.Enabled;
             vm.AmountMarkupPercentage = existing.AmountMarkupPercentage;
-            vm.ShowFiat = existing.ShowFiat;
-
         }
 
         [HttpPost]
@@ -60,10 +59,9 @@ namespace BTCPayServer.Controllers
                 ApiUrl = vm.ApiUrl,
                 ChangellyMerchantId = vm.ChangellyMerchantId,
                 Enabled = vm.Enabled,
-                AmountMarkupPercentage = vm.AmountMarkupPercentage,
-                ShowFiat = vm.ShowFiat
+                AmountMarkupPercentage = vm.AmountMarkupPercentage
             };
-            
+
             switch (command)
             {
                 case "save":
@@ -73,8 +71,10 @@ namespace BTCPayServer.Controllers
                     await _Repo.UpdateStore(store);
                     TempData[WellKnownTempData.SuccessMessage] = "Changelly settings modified";
                     _changellyClientProvider.InvalidateClient(storeId);
-                    return RedirectToAction(nameof(UpdateStore), new {
-                        storeId});
+                    return RedirectToAction(nameof(UpdateStore), new
+                    {
+                        storeId
+                    });
                 case "test":
                     try
                     {

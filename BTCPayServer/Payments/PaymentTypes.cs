@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System;
 using BTCPayServer.Services.Altcoins.Monero.Payments;
 using BTCPayServer.Services.Invoices;
 using Newtonsoft.Json.Linq;
@@ -60,10 +57,11 @@ namespace BTCPayServer.Payments
         }
 
         public abstract string GetId();
-        public abstract CryptoPaymentData DeserializePaymentData(string str);
-        public abstract IPaymentMethodDetails DeserializePaymentMethodDetails(string str);
+        public abstract CryptoPaymentData DeserializePaymentData(BTCPayNetworkBase network, string str);
+        public abstract string SerializePaymentData(BTCPayNetworkBase network, CryptoPaymentData paymentData);
+        public abstract IPaymentMethodDetails DeserializePaymentMethodDetails(BTCPayNetworkBase network, string str);
+        public abstract string SerializePaymentMethodDetails(BTCPayNetworkBase network, IPaymentMethodDetails details);
         public abstract ISupportedPaymentMethod DeserializeSupportedPaymentMethod(BTCPayNetworkBase network, JToken value);
-
         public abstract string GetTransactionLink(BTCPayNetworkBase network, string txId);
         public abstract string InvoiceViewPaymentPartialName { get; }
     }

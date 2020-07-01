@@ -16,15 +16,33 @@
         <form method="post">
             <div class="form-group">
                 <label asp-for="CustomLogo"></label>
-                <a href="https://docs.btcpayserver.org/development/theme#checkout-page-theme" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                <a href="https://docs.btcpayserver.org/Theme/#checkout-page-themes" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
                 <input asp-for="CustomLogo" class="form-control" />
                 <span asp-validation-for="CustomLogo" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="CustomCSS"></label>
-                <a href="https://docs.btcpayserver.org/development/theme#checkout-page-theme" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                <a href="https://docs.btcpayserver.org/Theme/#checkout-page-themes" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
                 <input asp-for="CustomCSS" class="form-control" />
                 <span asp-validation-for="CustomCSS" class="text-danger"></span>
+                <p class="form-text text-muted">
+                    Bundled Themes:
+                    <a href="#" onclick="return setTheme(1);">Legacy</a>
+                    | <a href="#" onclick="return setTheme(2);">Dark</a>
+                    @* | <a href="#" onclick="return setTheme(0);">Default</a>*@
+                </p>
+                <script type="text/javascript">
+                    function setTheme(themeChoice) {
+                        if (themeChoice === 1) { // reserving 0 for potential clear down the road
+                            $('#CustomCSS').val('/checkout/css/themes/legacy.css');
+                        } else if (themeChoice == 2) {
+                            $('#CustomCSS').val('/checkout/css/themes/dark.css');
+                        } else {
+                            $('#CustomCSS').val('');
+                        }
+                        return false;
+                    }
+                </script>
             </div>
             <div class="form-group">
                 <label asp-for="HtmlTitle"></label>
@@ -63,6 +81,12 @@
                     <label asp-for="LightningAmountInSatoshi" class="form-check-label"></label>
                     <span asp-validation-for="LightningAmountInSatoshi" class="text-danger"></span>
                 </div>
+                <div class="form-check">
+                    <input asp-for="LightningPrivateRouteHints" type="checkbox" class="form-check-input" />
+                    <label asp-for="LightningPrivateRouteHints" class="form-check-label"></label>
+                    <span asp-validation-for="LightningPrivateRouteHints" class="text-danger"></span>
+                </div>
+
                 <div class="form-check">
                     <input asp-for="RedirectAutomatically" type="checkbox" class="form-check-input" />
                     <label asp-for="RedirectAutomatically" class="form-check-label"></label>

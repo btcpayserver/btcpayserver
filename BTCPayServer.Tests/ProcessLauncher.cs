@@ -1,9 +1,9 @@
-﻿using BTCPayServer.Tests.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using BTCPayServer.Tests.Logging;
 using Xunit;
 
 namespace BTCPayServer.Tests
@@ -43,7 +43,7 @@ namespace BTCPayServer.Tests
             return true;
         }
 
-        Stack<string> _Directories = new Stack<string>();
+        readonly Stack<string> _Directories = new Stack<string>();
         public void PushDirectory()
         {
             _Directories.Push(_CurrentDirectory);

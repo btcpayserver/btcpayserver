@@ -1,0 +1,135 @@
+/* based on https://github.com/btcpayserver/btcpayserver-doc/blob/master/Theme.md#blockstream */
+
+html {
+    background-color: #353535;
+}
+
+.modal.page {
+    background-color: #353535;
+}
+
+/* centering for new default design */
+.top-header .header__iconcentered {
+    display: inline-block;
+    vertical-align: middle;
+    position: relative;
+    width: 100px;
+    height: 50px;
+    margin: 10px auto 0px;
+}
+
+.header__iconcentered__img {
+    display: block;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    background: url(dark-logo.svg) no-repeat;
+    background-size: 92.5px 40px;
+    width: 92.5px;
+    height: 40px;
+    padding-left: 92.5px; /* Must be equal to width */
+}
+/* eof */
+
+.top-header {
+    background-color: #292929;
+}
+
+.invoice {
+    background-color: #333333; /* messes up bottom border radius */
+}
+
+.vex.vex-theme-btcpay .vex-content {
+    color: #fff;
+    background-color: #333;
+}
+
+.vex.vex-theme-btcpay .vex-content .vexmenuitem {
+    border-bottom-color: #8f979e;
+}
+
+.vex.vex-theme-btcpay .vex-content .vexmenuitem:hover {
+    background-color: #292929;
+}
+
+.vex.vex-theme-btcpay .vex-content a {
+    color: inherit;
+}
+
+.expired__body,
+.success-message {
+    color: #fff;
+}
+
+line-items .line-items__item {
+    color: #8D8D8F;
+}
+
+.currency-selection {
+    background-color: #292929;
+    border-bottom: 1px solid #565d6e;
+    color: #fff;
+}
+
+.payment__currencies {
+    background-color: #191919;
+}
+
+    .payment__currencies:hover {
+        background-color: #111316;
+    }
+
+line-items {
+    background-color: #292929;
+    color: #565d6e !important;
+    border-top: 1px solid #565d6e !important;
+}
+
+.buyerTotalLine {
+    border-top: 1px solid #202224;
+    background-color: #292929;
+    color: #fff;
+}
+
+.payment-tabs {
+    background-color: #292929;
+    color: #fff;
+    border-top: 1px solid #565d6e;
+}
+
+.payment-tabs__tab.active {
+    background-color: #333333;
+    color: #fff;
+}
+
+
+canvas {
+    border: 5px solid #fff;
+}
+
+#prettydropdown-DefaultLang ul {
+    color: #818a91 !important;
+    background-color: #191919;
+}
+
+    #prettydropdown-DefaultLang ul.active li:hover {
+        color: #fff !important;
+        background-color: #111316;
+    }
+
+.manual__step-one__header {
+    color: #ffffff;
+}
+
+.manual__step-one__instructions {
+    color: #ffffff;
+}
+
+
+.content-faded, .manual__step-one__instructions, .manual__step-two__instructions {
+    color: #fff;
+}
+
+
+.recommended-fee {
+    color: #fff;
+}

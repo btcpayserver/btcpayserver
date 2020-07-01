@@ -16,14 +16,14 @@
                            v-validate="'required|decimal|min_value:0'" :class="{'is-invalid': errors.has('price') }">
                     <small class="text-danger">{{ errors.first('price') }}</small>
                 </div>
-                <div class="form-group col-md-4">
+                <div class="form-group col-md-4"  v-if="!srvModel.appIdEndpoint">
                     <label>&nbsp;</label>
                     <input name="currency" type="text" class="form-control"
                            v-model="srvModel.currency" v-on:change="inputChanges"
                            :class="{'is-invalid': errors.has('currency') }">
                 </div>
             </div>
-            <div class="form-group">
+            <div class="form-group"  v-if="!srvModel.appIdEndpoint">
                 <label>Checkout Description</label>
                 <input name="checkoutDesc" type="text" class="form-control" placeholder="(optional)"
                        v-model="srvModel.checkoutDesc" v-on:change="inputChanges">
@@ -36,7 +36,7 @@
         </div>
         <div class="col-lg-5">
             <br />
-            Define parameters that define the purchase: price, currency and then optional description of purchase.
+            Set parameters that define the purchase: price, currency and an optional description of purchase.
             <br /><br />
             Generated HTML will be displayed at the bottom of this page and all you need is to paste that HTML into your final page.
             Clicking on the button will redirect customer to checkout.
@@ -47,15 +47,31 @@
     <br />
     <div class="row">
         <div class="col-lg-7">
+            <div class="form-group"  v-if="!srvModel.appIdEndpoint">
+                <label>
+                    <input type="checkbox" v-model="srvModel.useModal" v-on:change="inputChanges" class="form-check-inline"/>Use Modal
+                </label>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" v-model="buttonInlineTextMode" v-on:change="inputChanges" class="form-check-inline"/> Customize text in button
+                </label>
+            </div>
+            <div class="form-group" v-show="buttonInlineTextMode">
+                <label>Pay Button Text</label>
+                <input name="payButtonText" type="text" class="form-control" id="inputAddress"
+                       v-model="srvModel.payButtonText" v-on:change="inputChanges">
+            </div>
             <div class="form-group">
                 <label>Pay Button Image Url</label>
                 <input name="payButtonImageUrl" type="text" class="form-control" id="inputAddress"
                        v-model="srvModel.payButtonImageUrl" v-on:change="inputChanges"
-                       v-validate="'required|url'" :class="{'is-invalid': errors.has('payButtonImageUrl') }">
+                       v-validate="{ required: this.imageUrlRequired, url: {require_tld:false} }"
+                       :class="{'is-invalid': errors.has('payButtonImageUrl') }">
                 <small class="text-danger">{{ errors.first('payButtonImageUrl') }}</small>
             </div>
             <div class="form-group">
-                <label>Button Size</label>
+                <label>Image Size</label>
                 <div style="vertical-align:top; font-size:12px; display:flex;">
                     <button class="btn text-nowrap" style="width:146px;height:40px;margin-right:40px;"
                             v-on:click="inputChanges($event, 0)" v-bind:class="{'btn-primary': (srvModel.buttonSize == 0) }">
@@ -74,15 +90,15 @@
             <div class="form-group">
                 <label>Button Type</label>
                 <div>
-                    <input type="radio" name="button-type" id="btn-fixed" value="0" v-model="srvModel.buttonType" v-on:change="inputChanges" checked />
+                    <input type="radio" name="button-type" id="btn-fixed" value="0" v-model="srvModel.buttonType" v-on:change="inputChanges" checked/>
                     <label for="btn-fixed">Fixed amount</label>
                 </div>
                 <div>
-                    <input type="radio" name="button-type" id="btn-custom" value="1" v-model="srvModel.buttonType" v-on:change="inputChanges" />
+                    <input type="radio" name="button-type" id="btn-custom" value="1" v-model="srvModel.buttonType" v-on:change="inputChanges"/>
                     <label for="btn-custom">Custom amount</label>
                 </div>
                 <div>
-                    <input type="radio" name="button-type" id="btn-slider" value="2" v-model="srvModel.buttonType" v-on:change="inputChanges" />
+                    <input type="radio" name="button-type" id="btn-slider" value="2" v-model="srvModel.buttonType" v-on:change="inputChanges"/>
                     <label for="btn-slider">Slider</label>
                 </div>
             </div>
@@ -122,15 +138,15 @@
                     <small class="text-danger">{{ errors.first('simpleInput') }}</small>
                 </div>
                 <div class="form-check">
-                   <input name="fitButtonInline"
-                          id="fitButtonInline"
-                          type="checkbox"
-                          class="form-check-input"
-                          v-model="srvModel.fitButtonInline"
-                          v-on:change="inputChanges"
-                          :class="{'is-invalid': errors.has('fitButtonInline') }">
-                   <label class="form-check-label" for="fitButtonInline">Fit button inline</label>
-                   <small class="text-danger">{{ errors.first('fitButtonInline') }}</small>
+                    <input name="fitButtonInline"
+                           id="fitButtonInline"
+                           type="checkbox"
+                           class="form-check-input"
+                           v-model="srvModel.fitButtonInline"
+                           v-on:change="inputChanges"
+                           :class="{'is-invalid': errors.has('fitButtonInline') }">
+                    <label class="form-check-label" for="fitButtonInline">Fit button inline</label>
+                    <small class="text-danger">{{ errors.first('fitButtonInline') }}</small>
                 </div>
             </div>
         </div>
@@ -151,7 +167,7 @@
                        v-validate="'url'" :class="{'is-invalid': errors.has('serverIpn') }">
                 <small class="text-danger">{{ errors.first('serverIpn') }}</small>
             </div>
-            <div class="form-group">
+            <div class="form-group"  v-if="!srvModel.appIdEndpoint">
                 <label>Send Email Notifications to</label>
                 <input name="notifyEmail" type="text" class="form-control" placeholder="(optional)"
                        v-model="srvModel.notifyEmail" v-on:change="inputChanges"
@@ -169,15 +185,15 @@
         </div>
         <div class="col-lg-5">
             <br />
-            These parameters allow you to influence process after purchase. <i>Server IPN</i> is location we'll query with details.
-            We can also deliver email notification to specified address.
+            These parameters allow you to influence the process after purchase. <i>Server IPN</i> is the URL to which we'll post purchase data.
+            We can also deliver an email notification to a specified address.
             <br /><br />
-            Finally <i>Browser Redirect</i> defines where BTCPayServer will redirect customer after purchase is completed.
+            Finally, <i>Browser Redirect</i> defines where BTCPayServer will redirect the customer after purchase is completed.
         </div>
     </div>
      <h3>Advanced</h3>
         <br />
-        <div class="row">
+        <div class="row" v-if="!srvModel.appIdEndpoint">
             <div class="col-lg-7">
                 <div class="form-group">
                     <label>Checkout Additional Query String</label>
@@ -189,7 +205,31 @@
             </div>
             <div class="col-lg-5">
                 <br />
-                This parameter allows you to specify additional query string paramters that should be appended to the checkout page once the invoice is created. For example, <kbd>lang=da-DK</kbd> would load the checkout page in Danish by default.
+                This parameter allows you to specify additional query string parameters that should be appended to the checkout page once the invoice is created. For example, <kbd>lang=da-DK</kbd> would load the checkout page in Danish by default.
+
+            </div>
+        </div>  
+         <div class="row">
+            <div class="col-lg-7">
+                <div class="form-group">
+                    <label>Use App as endpoint</label>
+                    <select v-model="srvModel.appIdEndpoint" v-on:change="inputChanges" class="form-control">
+                        <option value="">Use default pay button endpoint</option>
+                        <option  v-for="app in srvModel.apps" v-bind:value="app.id" >{{app.appName}} ({{app.appType}})</option>
+                    </select>
+                    <small class="text-danger">{{ errors.first('appIdEndpoint') }}</small>
+                </div>
+                <div class="form-group" v-if="srvModel.appIdEndpoint">
+                    <label>App Item/Perk</label>
+                    <input name="appChoiceKey" type="text" class="form-control" placeholder="(optional)"
+                           v-model="srvModel.appChoiceKey" v-on:change="inputChanges"
+                           :class="{'is-invalid': errors.has('appChoiceKey') }">
+                    <small class="text-danger">{{ errors.first('appChoiceKey') }}</small>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <br />
+                This allows you to link this pay button to an app instead. Some features are disabled due to the different endpoint capabilities. You can set which perk/item this button should be targeting. 
 
             </div>
         </div>
@@ -214,15 +254,15 @@
 </div>
 
 @section HeadScripts {
-    <link rel="stylesheet" href="~/vendor/highlightjs/default.min.css">
-    <script src="~/vendor/highlightjs/highlight.min.js"></script>
+    <link rel="stylesheet" href="~/vendor/highlightjs/default.min.css" asp-append-version="true">
+    <script src="~/vendor/highlightjs/highlight.min.js" asp-append-version="true"></script>
 
-    <script src="~/vendor/vuejs/vue.js"></script>
-    <script src="~/vendor/vuejs-vee-validate/vee-validate.js"></script>
+    <script src="~/vendor/vuejs/vue.js" asp-append-version="true"></script>
+    <script src="~/vendor/vuejs-vee-validate/vee-validate.js" asp-append-version="true"></script>
 
-    <script src="~/vendor/clipboard.js/clipboard.js"></script>
+    <script src="~/vendor/clipboard.js/clipboard.js" asp-append-version="true"></script>
 
-    <script src="~/paybutton/paybutton.js"></script>
+    <script src="~/paybutton/paybutton.js" asp-append-version="true"></script>
 }
 
 @section Scripts {
@@ -232,13 +272,33 @@
         var payButtonCtrl = new Vue({
             el: '#payButtonCtrl',
             data: {
-                srvModel: srvModel
+                srvModel: srvModel,
+                originalButtonImageUrl: srvModel.payButtonImageUrl,
+                buttonInlineTextMode: false
+            },
+            computed: {
+                imageUrlRequired: function(){
+                    return !this.buttonInlineTextMode;
+                }
             },
             methods: {
                 inputChanges: function (event, buttonSize) {
                     inputChanges(event, buttonSize);
                 }
-            }
+                
+            },
+            watch: {
+                buttonInlineTextMode: function (checked) {
+                  if(!checked){
+                      this.srvModel.payButtonText = "";
+                      this.srvModel.payButtonImageUrl = this.originalButtonImageUrl;
+                  }else {
+                      this.srvModel.payButtonText = "Pay with";
+                      this.srvModel.payButtonImageUrl = this.srvModel.urlRoot + "img/logo.svg";
+                  }
+                  this.inputChanges();
+                }
+              }
         });
     </script>
 }
@@ -262,7 +322,10 @@
         .btcpay-form--block select {
             margin-bottom: 10px;
         }
-        .btcpay-form .btcpay-custom {
+        .btcpay-form .btcpay-custom-container{
+            text-align: center;
+        }
+         .btcpay-custom {
             display: flex;
             align-items: center;
             justify-content: center;

@@ -10,10 +10,8 @@ using BTCPayServer.Storage.Services.Providers.AzureBlobStorage;
 using BTCPayServer.Storage.Services.Providers.AzureBlobStorage.Configuration;
 using BTCPayServer.Storage.Services.Providers.FileSystemStorage;
 using BTCPayServer.Storage.Services.Providers.FileSystemStorage.Configuration;
-#if NETCOREAPP21
 using BTCPayServer.Storage.Services.Providers.GoogleCloudStorage;
 using BTCPayServer.Storage.Services.Providers.GoogleCloudStorage.Configuration;
-#endif
 using BTCPayServer.Storage.Services.Providers.Models;
 using BTCPayServer.Storage.ViewModels;
 using BTCPayServer.Views;
@@ -83,7 +81,7 @@ namespace BTCPayServer.Controllers
             {
                 ModelState.AddModelError(nameof(viewModel.TimeAmount), "Time must be at least 1");
             }
-            
+
             if (!ModelState.IsValid)
             {
                 return View(viewModel);
@@ -100,7 +98,7 @@ namespace BTCPayServer.Controllers
             switch (viewModel.TimeType)
             {
                 case CreateTemporaryFileUrlViewModel.TmpFileTimeType.Seconds:
-                    expiry =expiry.AddSeconds(viewModel.TimeAmount);
+                    expiry = expiry.AddSeconds(viewModel.TimeAmount);
                     break;
                 case CreateTemporaryFileUrlViewModel.TmpFileTimeType.Minutes:
                     expiry = expiry.AddMinutes(viewModel.TimeAmount);
@@ -221,18 +219,16 @@ namespace BTCPayServer.Controllers
                 case AmazonS3FileProviderService fileProviderService:
                     return View(nameof(EditAmazonS3StorageProvider),
                         fileProviderService.GetProviderConfiguration(data));
-#if NETCOREAPP21
                 case GoogleCloudStorageFileProviderService fileProviderService:
                     return View(nameof(EditGoogleCloudStorageStorageProvider),
                         fileProviderService.GetProviderConfiguration(data));
-#endif
                 case FileSystemFileProviderService fileProviderService:
                     if (data.Provider != BTCPayServer.Storage.Models.StorageProvider.FileSystem)
                     {
                         _ = await SaveStorageProvider(new FileSystemStorageConfiguration(),
                             BTCPayServer.Storage.Models.StorageProvider.FileSystem);
                     }
-                    
+
                     return View(nameof(EditFileSystemStorageProvider),
                         fileProviderService.GetProviderConfiguration(data));
             }
@@ -252,14 +248,14 @@ namespace BTCPayServer.Controllers
         {
             return await SaveStorageProvider(viewModel, BTCPayServer.Storage.Models.StorageProvider.AmazonS3);
         }
-#if NETCOREAPP21
+
         [HttpPost("server/storage/GoogleCloudStorage")]
         public async Task<IActionResult> EditGoogleCloudStorageStorageProvider(
             GoogleCloudStorageConfiguration viewModel)
         {
             return await SaveStorageProvider(viewModel, BTCPayServer.Storage.Models.StorageProvider.GoogleCloudStorage);
         }
-#endif
+
         [HttpPost("server/storage/FileSystem")]
         public async Task<IActionResult> EditFileSystemStorageProvider(FileSystemStorageConfiguration viewModel)
         {

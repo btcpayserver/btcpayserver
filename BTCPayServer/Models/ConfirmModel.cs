@@ -1,8 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
 namespace BTCPayServer.Models
 {
     public class ConfirmModel
@@ -29,5 +24,6 @@ namespace BTCPayServer.Models
             get; set;
         }
         public string ButtonClass { get; set; } = "btn-danger";
+        public string ActionUrl { get; set; }
     }
 }

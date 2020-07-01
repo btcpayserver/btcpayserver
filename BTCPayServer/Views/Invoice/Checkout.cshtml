@@ -15,13 +15,13 @@
     <META NAME="robots" CONTENT="noindex,nofollow">
     <title>@Model.HtmlTitle</title>
 
-    <bundle name="wwwroot/bundles/checkout-bundle.min.css" />
+    <bundle name="wwwroot/bundles/checkout-bundle.min.css" asp-append-version="true" />
 
     <script type="text/javascript">
         var initialSrvModel = @Safe.Json(Model);
     </script>
 
-    <bundle name="wwwroot/bundles/checkout-bundle.min.js" />
+    <bundle name="wwwroot/bundles/checkout-bundle.min.js" asp-append-version="true" />
     <script>vex.defaultOptions.className = 'vex-theme-btcpay'</script>
 
     @if (!string.IsNullOrEmpty(Model.CustomCSSLink))
@@ -106,8 +106,8 @@
                             }
                         </script>
                     </div>
-                    <div style="margin-top: 10px; text-align: center;" class="form-text small text-muted">
-                        <span>Powered by <a target="_blank" href="https://github.com/btcpayserver/btcpayserver">BTCPay Server</a></span>
+                    <div class="powered__by__btcpayserver">
+                        Powered by <a target="_blank" href="https://github.com/btcpayserver/btcpayserver">BTCPay Server</a>
                     </div>
                 </div>
             </div>
@@ -184,7 +184,7 @@
                 return !this.showEmailForm && !this.invoiceUnpayable && !this.invoicePaid;
             },
             showEmailForm: function(){
-                return this.srvModel.requiresRefundEmail && (!this.srvModel.customerEmail || !this.validateEmail(this.srvModel.customerEmail)) && !this.invoiceUnpayable && !this.invoicePaid;
+                return this.srvModel.requiresRefundEmail && (!this.srvModel.customerEmail || !this.validateEmail(this.srvModel.customerEmail)) && !this.invoiceUnpayable;
             },
             showRecommendedFee: function(){
                 return  this.srvModel.showRecommendedFee && this.srvModel.feeRate != 0;

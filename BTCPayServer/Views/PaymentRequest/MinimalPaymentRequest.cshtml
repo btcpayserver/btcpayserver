@@ -102,7 +102,7 @@
                                             }
                                         }
                                     }
-                                    @if (Model.IsPending)
+                                    @if (Model.IsPending && !Model.Archived)
                                     {
                                         <tr>
                                             <td colspan="4" class="text-center">
@@ -145,6 +145,13 @@
                                                         </form>
                                                     }
                                                 }
+                                            </td>
+                                        </tr>
+                                    }else if (Model.Archived)
+                                    {
+                                        <tr>
+                                            <td colspan="4" class="text-center">
+                                                    <button type="button" class="btn btn-secondary" disabled>Archived</button>
                                             </td>
                                         </tr>
                                     }

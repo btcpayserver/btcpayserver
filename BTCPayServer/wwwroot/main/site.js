@@ -6,7 +6,18 @@
         var dateString = localDate.toLocaleDateString() + " " + localDate.toLocaleTimeString();
         $(this).text(dateString);
     });
-
+    
+    
+    function updateTimeAgo(){
+        var timeagoElements = $("[data-timeago-unixms]");
+        timeagoElements.each(function () {
+            var elem = $(this);
+            elem.text(moment(elem.data("timeago-unixms")).fromNow());
+        });
+        setTimeout(updateTimeAgo, 1000);
+    }
+    updateTimeAgo();
+    
     // intializing date time pickers throughts website
     $(".flatdtpicker").each(function () {
         var element = $(this);
@@ -49,8 +60,7 @@
         });
     });
 
-
-    $(".only-for-js").show();
+    $('[data-toggle="tooltip"]').tooltip();
 
     function handleInputGroupClearButtonDisplay(element) {
         var inputs = $(element).parents(".input-group").find("input");

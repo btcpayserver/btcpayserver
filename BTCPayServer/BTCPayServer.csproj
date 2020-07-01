@@ -1,12 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
   <Import Project="../Build/Version.csproj" Condition="Exists('../Build/Version.csproj')" />
   <Import Project="../Build/Common.csproj" />
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug' And '$(RazorCompileOnBuild)' != 'true'">
+    <RazorCompileOnBuild>false</RazorCompileOnBuild>
+    <DefineConstants>$(DefineConstants);RAZOR_RUNTIME_COMPILE</DefineConstants>
+  </PropertyGroup>
   <PropertyGroup>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Build\**" />
-    <Compile Remove="Storage\Services\Providers\GoogleCloudStorage\**" Condition="'$(TargetFramework)' != 'netcoreapp2.1'" />
     <Compile Remove="wwwroot\bundles\jqueryvalidate\**" />
     <Compile Remove="wwwroot\vendor\jquery-nice-select\**" />
     <Content Remove="Build\**" />
@@ -24,56 +27,47 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="bundleconfig.json" />
-    <EmbeddedResource Include="Currencies.txt" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="BTCPayServer.Hwi" Version="1.1.3" />
-    <PackageReference Include="BTCPayServer.Lightning.All" Version="1.1.5" />
-    <PackageReference Include="BuildBundlerMinifier" Version="3.1.430" />
-    <PackageReference Include="BundlerMinifier.Core" Version="3.1.430" />
-    <PackageReference Include="BundlerMinifier.TagHelpers" Version="3.1.430" />
+    <PackageReference Include="BTCPayServer.Lightning.All" Version="1.2.0" />
+    <PackageReference Include="BuildBundlerMinifier" Version="3.2.435" />
+    <PackageReference Include="BundlerMinifier.Core" Version="3.2.435" />
+    <PackageReference Include="BundlerMinifier.TagHelpers" Version="3.2.435" />
     <PackageReference Include="HtmlSanitizer" Version="4.0.217" />
-    <PackageReference Include="LedgerWallet" Version="2.0.0.5" />
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.2" />
-    <PackageReference Include="Microsoft.NetCore.Analyzers" Version="2.6.2">
+    <PackageReference Include="Microsoft.NetCore.Analyzers" Version="2.9.8">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NBitpayClient" Version="1.0.0.34" />	  
+    <PackageReference Include="System.IO.Pipelines" Version="4.7.2" />
+    <PackageReference Include="NBitpayClient" Version="1.0.0.39" />
     <PackageReference Include="DBriize" Version="1.0.1.3" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="NicolasDorier.CommandLine" Version="1.0.0.2" />
     <PackageReference Include="NicolasDorier.CommandLine.Configuration" Version="1.0.0.3" />
-    <PackageReference Include="NicolasDorier.RateLimits" Version="1.0.0.9" />
+    <PackageReference Include="NicolasDorier.RateLimits" Version="1.1.0" />
     <PackageReference Include="NicolasDorier.StandardConfiguration" Version="1.0.0.18" />
-    <PackageReference Include="Serilog" Version="2.7.1" />
-    <PackageReference Include="Serilog.AspNetCore" Version="2.1.1" />
-    <PackageReference Include="Serilog.Sinks.File" Version="4.0.0" />
+    <PackageReference Include="Serilog" Version="2.9.0" />
+    <PackageReference Include="Serilog.AspNetCore" Version="3.2.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="4.1.0" />
     <PackageReference Include="SSH.NET" Version="2016.1.0" />
-    <PackageReference Include="Text.Analyzers" Version="2.6.2">
+    <PackageReference Include="Text.Analyzers" Version="2.6.4">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
   </ItemGroup>
 
 	<ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.9" AllowExplicitVersion="true" Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
-    <PackageReference Include="TwentyTwenty.Storage" Version="2.11.2" />
-    <PackageReference Include="TwentyTwenty.Storage.Amazon" Version="2.11.2" />
-    <PackageReference Include="TwentyTwenty.Storage.Azure" Version="2.11.2" />
-    <PackageReference Include="TwentyTwenty.Storage.Google" Version="2.11.2" Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
-    <PackageReference Include="TwentyTwenty.Storage.Local" Version="2.11.2" />
+    <PackageReference Include="TwentyTwenty.Storage" Version="2.12.1" />
+    <PackageReference Include="TwentyTwenty.Storage.Amazon" Version="2.12.1" />
+    <PackageReference Include="TwentyTwenty.Storage.Azure" Version="2.12.1" />
+    <PackageReference Include="TwentyTwenty.Storage.Google" Version="2.12.1" />
+    <PackageReference Include="TwentyTwenty.Storage.Local" Version="2.12.1" />
     <PackageReference Include="U2F.Core" Version="1.0.4" />
-		<PackageReference Include="YamlDotNet" Version="5.2.1" />
-    <PackageReference Include="OpenIddict" Version="3.0.0-alpha1.19515.63" />
-    <PackageReference Include="OpenIddict.Server.AspNetCore" Version="3.0.0-alpha1.19515.63"></PackageReference>
-    <PackageReference Include="OpenIddict.Validation.AspNetCore" Version="3.0.0-alpha1.19515.63"></PackageReference>
-	</ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' != 'netcoreapp2.1'">
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.0.0"></PackageReference>
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="3.0.0" />
+		<PackageReference Include="YamlDotNet" Version="8.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="3.1.1" Condition="'$(RazorCompileOnBuild)' != 'true'" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.1" />
   </ItemGroup>
 
 	<ItemGroup>
@@ -126,9 +120,11 @@
 	  <Folder Include="wwwroot\vendor\highlightjs\" />
 	  <Folder Include="wwwroot\vendor\summernote" />
 	  <Folder Include="wwwroot\vendor\u2f" />
+	  <Folder Include="wwwroot\vendor\vue-qrcode-reader" />
 	</ItemGroup>
 
 	<ItemGroup>
+	  <ProjectReference Include="..\BTCPayServer.Client\BTCPayServer.Client.csproj" />
 	  <ProjectReference Include="..\BTCPayServer.Data\BTCPayServer.Data.csproj" />
 	  <ProjectReference Include="..\BTCPayServer.Rating\BTCPayServer.Rating.csproj" />
 	  <ProjectReference Include="..\BTCPayServer.Common\BTCPayServer.Common.csproj" />
@@ -190,6 +186,12 @@
 	  <Content Update="Views\Wallets\ListWallets.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
+	  <Content Update="Views\Wallets\NewPullPayment.cshtml">
+	    <Pack>$(IncludeRazorContentInPack)</Pack>
+	  </Content>
+	  <Content Update="Views\Wallets\Payouts.cshtml">
+	    <Pack>$(IncludeRazorContentInPack)</Pack>
+	  </Content>
 	  <Content Update="Views\Wallets\WalletPSBTCombine.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
@@ -205,14 +207,12 @@
 	  <Content Update="Views\Wallets\WalletSendVault.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
-	  <Content Update="Views\Wallets\WalletSendLedger.cshtml">
+	  <Content Update="Views\Wallets\PullPayments.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
 	  <Content Update="Views\Wallets\WalletTransactions.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
-    <Content Remove="Views\Server\EditGoogleCloudStorageStorageProvider.cshtml" Condition="'$(TargetFramework)' != 'netcoreapp2.1'">
-    </Content>
 	  <Content Update="Views\Wallets\_Nav.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
@@ -223,4 +223,11 @@
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
 	</ItemGroup>
+
+	<ItemGroup>
+	  <_ContentIncludedByDefault Remove="Views\Authorization\Authorize.cshtml" />
+	  <_ContentIncludedByDefault Remove="Views\Components\NotificationsDropdown\Default.cshtml" />
+	</ItemGroup>
+
+	<ProjectExtensions><VisualStudio><UserProperties wwwroot_4swagger_4v1_4swagger_1template_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" wwwroot_4swagger_4v1_4swagger_1template_1pull-payments_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" wwwroot_4swagger_4v1_4swagger_1template_1serverinfo_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" wwwroot_4swagger_4v1_4swagger_1template_1stores_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" /></VisualStudio></ProjectExtensions>
 </Project>

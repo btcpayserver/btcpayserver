@@ -1,0 +1,226 @@
+@model WalletSendModel
+
+<div id="coin-selection-app" v-cloak>
+    <ul class="list-group">
+        <li class="list-group-item list-group-item-heading d-flex justify-content-between align-items-center">
+            <h3>Coin selection</h3>
+            <span class="text-muted text-right" >
+                <span>{{selectedItems.length}} selected</span>
+                <span v-show="selectedItems.length > 0" >&nbsp({{selectedAmount}} @Model.CryptoCode) </span><br/>
+                <span>{{items.length}} total UTXOs (@Model.CurrentBalance @Model.CryptoCode)</span>
+            </span>
+        </li>
+        <li class="list-group-item">
+            <div class="input-group">
+                <input type="text" v-model="filter" class="form-control" placeholder="Filter by transaction id, amount, label, comment.."/>
+                <div class="input-group-append" v-show="filter">
+                    <button type="button" class="btn btn-primary" title="Clear" v-on:click="filter=''">
+                        <span class=" fa fa-times"></span>
+                    </button>
+                </div>
+            </div>
+        </li>
+        <li class="list-group-item d-flex justify-content-between align-items-center cursor-pointer"
+            v-for="item of filteredItems"
+            :key="item.outpoint"
+            v-bind:class="{ 'list-group-item-secondary': item.selected }"
+            v-on:click="toggleItem($event, item, !item.selected)">
+            <div class="d-flex justify-content-between align-items-center w-100">
+                <input class="mr-2"
+                    type="checkbox"
+                    v-bind:id="item.outpoint"
+                    v-bind:value="item.outpoint"
+                    v-bind:checked="item.selected">
+                <label
+                    class="flex-1 d-inline-block text-truncate mb-0"
+                    v-bind:for="item.outpoint">
+                    <a
+                        v-tooltip="item.outpoint"
+                        v-bind:href="item.link"
+                        target="_blank">
+                        {{item.outpoint}}
+                    </a>
+                </label>
+                <div>
+                    <span v-if="item.comment" data-toggle="tooltip" v-tooltip="item.comment" class="badge badge-info badge-pill" style="font-style: italic">i</span>
+                    <span
+                        v-if="item.labels"
+                        class="badge badge-primary badge-pill ml-2"
+                        v-for="label of item.labels"
+                        v-bind:style="{ 'background-color': label.color}"
+                        key="label.value">
+
+                        <span v-if="!label.link" data-toggle="tooltip" v-tooltip="label.tooltip">
+                            {{label.value}}
+                        </span>
+
+                        <a :href="label.link" target="_blank"v-if="label.link" data-toggle="tooltip" v-tooltip="label.tooltip">
+                            {{label.value}}
+                            <i class="fa fa-info-circle"></i>
+
+                        </a>
+                    </span>
+                </div>
+                <span class="text-muted ml-2">{{item.amount}}</span>
+            </div>
+        </li>
+        <li class="list-group-item">
+            <ul class="pagination float-left">
+                <li class="page-item" v-bind:class="{'disabled' : pageStart == 0}">
+                    <a class="page-link" tabindex="-1" href="#" v-on:click="page = page -1">«</a>
+                </li>
+                <li class="page-item disabled">
+                    <span class="page-link">
+                        Showing {{pageStart+1}}-{{pageEnd}} of {{currentItems.length}}
+                    </span>
+                </li>
+                <li class="page-item" v-bind:class="{'disabled' : pageEnd>= currentItems.length}">
+                    <a class="page-link" href="#" v-on:click="page = page +1">»</a>
+                </li>
+            </ul>
+
+            <a href="#" v-on:click="showSelectedOnly = !showSelectedOnly" class="btn btn-link" v-bind:class="{'disabled' : selectedInputs.length === 0}">
+                <template v-if="showSelectedOnly">Show all</template>
+                <template v-else>Show selected only</template>
+            </a>
+        </li>
+    </ul>
+</div>
+
+<script>
+$(function() {
+
+    Vue.directive('tooltip', function(el, binding) {
+        $(el).tooltip({
+            title: binding.value,
+            placement: binding.arg || "auto",
+            trigger: 'hover'
+        });
+    });
+
+    function roundNumber(number, decimals) {
+        var newnumber = new Number(number + '').toFixed(parseInt(decimals));
+        return parseFloat(newnumber);
+    }
+
+    new Vue({
+        el: '#coin-selection-app',
+        data: {
+            filter: "",
+            items: @Safe.Json(Model.InputsAvailable),
+            selectedInputs: $("#SelectedInputs").val(),
+            page: 0,
+            pageSize: 10,
+            showSelectedOnly: false
+        },
+        watch: {
+            filter: function() {
+                this.page = 0;
+                this.handle();
+            },
+            showSelectedOnly: function() {
+                this.handle();
+            },
+            selectedInputs: function() {
+                this.handle();
+            }
+        },
+        computed: {
+            currentItems: function() {
+                return this.showSelectedOnly ? this.selectedItems : this.items;
+            },
+            pageStart: function() {
+                return this.page == 0 ? 0 : this.page * this.pageSize;
+            },
+            pageEnd: function() {
+                var result = this.pageStart + this.pageSize;
+                if (result > this.currentItems.length) {
+                    result = this.currentItems.length;
+                }
+                return result;
+            },
+            filteredItems: function() {
+                var result = [];
+                if (!this.filter) {
+                    var self = this;
+                    result = this.currentItems.map(function(currentItem) {
+                        return {...currentItem, selected: self.selectedInputs.indexOf(currentItem.outpoint) != -1
+                        }
+                    });
+                } else {
+                    var f = this.filter.toLowerCase();
+                    for (var i = 0; i < this.currentItems.length; i++) {
+                        var currentItem = this.currentItems[i];
+                        if (currentItem.outpoint.indexOf(f) != -1 ||
+                            currentItem.amount.toString().indexOf(f) != -1 ||
+                            (currentItem.comment && currentItem.comment.toLowerCase().indexOf(f) != -1) ||
+                            (currentItem.labels && currentItem.labels.filter(function(l) {
+                                return l.value.toLowerCase().indexOf(f) != -1
+                            }).length > 0)) {
+                            result.push({...currentItem, selected: this.selectedInputs.indexOf(currentItem.outpoint) != -1
+                            });
+                        }
+                    }
+                }
+                return result.slice(this.pageStart, this.pageEnd);
+            },
+            selectedItems: function() {
+                var result = [];
+                for (var i = 0; i < this.items.length; i++) {
+                    var currentItem = this.items[i];
+
+                    if (this.selectedInputs.indexOf(currentItem.outpoint) != -1) {
+                        result.push(currentItem);
+                    }
+                }
+                return result;
+            },
+            selectedAmount: function() {
+                var result = 0;
+                for (let i = 0; i < this.selectedItems.length; i++) {
+                    result += this.selectedItems[i].amount;
+                }
+                return roundNumber(result, 12);
+            }
+        },
+        mounted: function() {
+            var self = this;
+            self.selectedInputs = $("#SelectedInputs").val();
+            $(".crypto-balance-link").text(this.selectedAmount);
+            $("#SelectedInputs").on("input change", function() {
+                self.selectedInputs = $("#SelectedInputs").val();
+            });
+        },
+        methods: {
+            handle: function() {
+                if (this.selectedInputs.length == 0) {
+                    this.showSelectedOnly = false;
+                }
+                if (this.currentItems.length < this.pageEnd) {
+                    this.page = 0;
+                }
+            },
+            toggleItem: function(evt, item, toggle) {
+                if (evt.target.tagName == "A") {
+                    return;
+                }
+                var res = $("#SelectedInputs").val();
+                if (toggle) {
+                    res.push(item.outpoint);
+
+                } else {
+                    res.splice(this.selectedInputs.indexOf(item.outpoint), 1);
+                }
+
+                $("select option").each(function() {
+                    var selected = res.indexOf($(this).attr("value")) !== -1;
+                    $(this).attr("selected", selected ? "selected" : null);
+                });
+
+                this.selectedInputs = res;
+                $(".crypto-balance-link").text(this.selectedAmount);
+            }
+        }
+    });
+});
+</script>

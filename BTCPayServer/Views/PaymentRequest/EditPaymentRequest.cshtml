@@ -61,7 +61,7 @@
                     </div>
                     <div class="form-group">
                         <label asp-for="Email" class="control-label"></label>
-                        <input type="email" asp-for="Email" class="form-control"></input>
+                        <input type="email" asp-for="Email" class="form-control" />
                         <span asp-validation-for="Email" class="text-danger"></span>
                     </div>
                     <div class="form-group">
@@ -85,7 +85,7 @@
                     </div>
                     <div class="form-group">
                         <label asp-for="CustomCSSLink" class="control-label"></label>
-                        <a href="https://docs.btcpayserver.org/development/theme#bootstrap-themes" target="_blank">
+                        <a href="https://docs.btcpayserver.org/Theme/#2-bootstrap-themes" target="_blank">
                             <span class="fa fa-question-circle-o" title="More information..."></span>
                         </a>
                         <input asp-for="CustomCSSLink" class="form-control" />
@@ -100,14 +100,25 @@
                         <button type="submit" class="btn btn-primary" id="SaveButton">Save</button>
                         @if (!string.IsNullOrEmpty(Model.Id))
                         {
-                            <a class="btn btn-secondary" target="_blank" asp-action="ViewPaymentRequest" id="@Model.Id" name="ViewAppButton">View</a>
+                            <a class="btn btn-secondary" target="_blank" asp-action="ViewPaymentRequest" asp-route-id="@this.Context.GetRouteValue("id")" id="@Model.Id" name="ViewAppButton">View</a>
                             <a class="btn btn-secondary"
                                target="_blank"
                                asp-action="ListInvoices"
                                asp-controller="Invoice"
                                asp-route-searchterm="@($"orderid:{PaymentRequestRepository.GetOrderIdForPaymentRequest(Model.Id)}")">Invoices</a>
-                            <a class="btn btn-secondary" asp-action="ClonePaymentRequest" id="@Model.Id">Clone</a>
+                            <a class="btn btn-secondary" asp-route-id="@this.Context.GetRouteValue("id")" asp-action="ClonePaymentRequest" id="@Model.Id">Clone</a>
+                            @if (!Model.Archived)
+                            {                                
+                                <a class="btn btn-secondary" data-toggle="tooltip" title="Archive this payment request so that it does not appear in the payment request list by default" asp-route-id="@this.Context.GetRouteValue("id")"  asp-controller="PaymentRequest"  asp-action="TogglePaymentRequestArchival">Archive</a>
+                                                       
+                            }
+                            else
+                            {
+                                <a class="btn btn-secondary" data-toggle="tooltip" title="Unarchive this payment request" asp-route-id="@this.Context.GetRouteValue("id")" asp-controller="PaymentRequest" asp-action="TogglePaymentRequestArchival"  >Unarchive</a>
+                           
+                            }
                         }
+                       
                         <a class="btn btn-secondary" target="_blank" asp-action="GetPaymentRequests">Back to list</a>
                     </div>
                 </form>
@@ -116,7 +127,7 @@
     </div>
 </section>
 @section Scripts {
-    <script src="~/vendor/moment/moment.js"></script>
-    <bundle name="wwwroot/bundles/payment-request-admin-bundle.min.js"></bundle>
-    <bundle name="wwwroot/bundles/payment-request-admin-bundle.min.css"></bundle>
+    <script src="~/vendor/moment/moment.js" asp-append-version="true"></script>
+    <bundle name="wwwroot/bundles/payment-request-admin-bundle.min.js" asp-append-version="true"></bundle>
+    <bundle name="wwwroot/bundles/payment-request-admin-bundle.min.css" asp-append-version="true"></bundle>
 }

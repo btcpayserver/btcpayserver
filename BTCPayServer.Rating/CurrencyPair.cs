@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System;
+using BTCPayServer.Services.Rates;
 
 namespace BTCPayServer.Rating
 {
     public class CurrencyPair
     {
-        static readonly BTCPayNetworkProvider _NetworkProvider = new BTCPayNetworkProvider(NBitcoin.NetworkType.Mainnet);
         public CurrencyPair(string left, string right)
         {
             if (right == null)
@@ -46,17 +43,18 @@ namespace BTCPayServer.Rating
                 if (currencyPair.Length < 6 || currencyPair.Length > 10)
                     return false;
                 if (currencyPair.Length == 6)
-                { 
-                    value = new CurrencyPair(currencyPair.Substring(0,3), currencyPair.Substring(3, 3));
+                {
+                    value = new CurrencyPair(currencyPair.Substring(0, 3), currencyPair.Substring(3, 3));
                     return true;
                 }
+
                 for (int i = 3; i < 5; i++)
                 {
                     var potentialCryptoName = currencyPair.Substring(0, i);
-                    var network = _NetworkProvider.GetNetwork<BTCPayNetworkBase>(potentialCryptoName);
-                    if (network != null)
+                    var currency = CurrencyNameTable.Instance.GetCurrencyData(potentialCryptoName, false);
+                    if (currency != null)
                     {
-                        value = new CurrencyPair(network.CryptoCode, currencyPair.Substring(i));
+                        value = new CurrencyPair(currency.Code, currencyPair.Substring(i));
                         return true;
                     }
                 }

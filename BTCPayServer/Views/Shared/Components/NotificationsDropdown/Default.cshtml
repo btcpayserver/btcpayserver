@@ -1,0 +1,33 @@
+@model BTCPayServer.Services.Notifications.NotificationSummaryViewModel
+
+@if (Model.UnseenCount > 0)
+{
+    <li class="nav-item dropdown" id="notifications-nav-item">
+        <a class="nav-link js-scroll-trigger" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" id="Notifications">
+            <i class="fa fa-bell"></i>
+        </a>
+        <span class="alerts-badge badge badge-pill badge-danger">@Model.UnseenCount</span>
+        <div class="dropdown-menu dropdown-menu-right text-center notification-items" aria-labelledby="navbarDropdown">
+            @foreach (var notif in Model.Last5)
+            {
+                <a asp-action="NotificationPassThrough" asp-controller="Notifications" asp-route-id="@notif.Id" class="dropdown-item border-bottom">
+                    <div class="text-left" style="width: 200px; white-space:normal;">
+                        @notif.Body
+                    </div>
+                    <div class="text-left">
+                        <small class="text-muted" data-timeago-unixms="@notif.Created.ToUnixTimeMilliseconds()">@notif.Created.ToTimeAgo()</small>
+                    </div>
+                </a>
+            }
+            <a class="dropdown-item text-info" asp-controller="Notifications" asp-action="Index">See All</a>
+        </div>
+    </li>
+}
+else
+{
+    <li class="nav-item" id="notifications-nav-item">
+        <a asp-controller="Notifications" asp-action="Index" title="Notifications" class="nav-link js-scroll-trigger" id="Notifications">
+            <i class="fa fa-bell"></i>
+        </a>
+    </li>
+}

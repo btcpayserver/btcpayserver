@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,7 +9,7 @@ namespace BTCPayServer.Services
 {
     public class WalletRepository
     {
-        private ApplicationDbContextFactory _ContextFactory;
+        private readonly ApplicationDbContextFactory _ContextFactory;
 
         public WalletRepository(ApplicationDbContextFactory contextFactory)
         {
@@ -85,7 +85,15 @@ namespace BTCPayServer.Services
                 catch (DbUpdateException) // Does not exists
                 {
                     entity.State = EntityState.Added;
-                    await ctx.SaveChangesAsync();
+                    try
+                    {
+                        await ctx.SaveChangesAsync();
+                    }
+                    catch (DbUpdateException) // the Wallet does not exists in the DB
+                    {
+                        await SetWalletInfo(walletId, new WalletBlobInfo());
+                        await ctx.SaveChangesAsync();
+                    }
                 }
             }
         }

@@ -2,7 +2,7 @@
 @{
     ViewData["Title"] = "Register";
     var useBasicLayout = ViewData["UseBasicLayout"] is true;
-    Layout = useBasicLayout ? "../Shared/_Layout.cshtml" : "_WelcomeLayout.cshtml";
+    Layout = useBasicLayout ? "_Layout" : "_LayoutWelcome";
 }
 @if (TempData.HasStatusMessage())
 {

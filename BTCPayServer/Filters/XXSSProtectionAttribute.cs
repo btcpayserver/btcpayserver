@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System;
 using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace BTCPayServer.Filters
@@ -16,6 +13,6 @@ namespace BTCPayServer.Filters
         {
             context.HttpContext.Response.SetHeaderOnStarting("X-XSS-Protection", "1; mode=block");
         }
-        
+
     }
 }

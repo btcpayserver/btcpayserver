@@ -1,0 +1,56 @@
+@namespace BTCPayServer.Client
+@model BTCPayServer.Controllers.ManageController.ApiKeysViewModel
+@{
+    ViewData.SetActivePageAndTitle(ManageNavPages.APIKeys, "Manage your API Keys");
+}
+
+<partial name="_StatusMessage"/>
+<h4>API Keys</h4>
+<table class="table table-lg">
+    <thead>
+    <tr>
+        <th>Label</th>
+        <th>Key</th>
+        <th>Permissions</th>
+        <th class="text-right">Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var keyData in Model.ApiKeyDatas)
+    {
+        <tr>
+            <td>@keyData.Label</td>
+            <td>@keyData.Id</td>
+            <td>
+                @{
+                    var permissions = keyData.GetBlob().Permissions;
+                }
+                @if (!permissions.Any())
+                {
+                    <span>No permissions</span>
+                }
+                else
+                {
+                    <span>@string.Join(", ", Permission.ToPermissions(permissions).Select(c => c.ToString()).Distinct().ToArray())</span>
+                }
+            </td>
+            <td class="text-right">
+                <a asp-action="RemoveAPIKey" asp-route-id="@keyData.Id" asp-controller="Manage">Remove</a>
+            </td>
+        </tr>
+    }
+    @if (!Model.ApiKeyDatas.Any())
+    {
+        <tr>
+            <td colspan="4" class="text-center h5 py-2">
+                No API keys
+            </td>
+        </tr>
+    }
+    <tr class="bg-gray">
+        <td colspan="4">
+            <a class="btn btn-primary" asp-action="AddApiKey" id="AddApiKey">Generate new key</a>
+        </td>
+    </tr>
+    </tbody>
+</table>

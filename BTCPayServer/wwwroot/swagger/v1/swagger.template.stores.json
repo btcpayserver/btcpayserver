@@ -1,0 +1,420 @@
+{
+    "paths": {
+        "/api/v1/stores": {
+            "get": {
+                "tags": [
+                    "Stores"
+                ],
+                "summary": "Get stores",
+                "description": "View information about the available stores",
+                "operationId": "Stores_GetStores",
+                "responses": {
+                    "200": {
+                        "description": "list of stores",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StoreDataList"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canviewstoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Stores"
+                ],
+                "summary": "Create a new store",
+                "description": "Create a new store",
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreBaseData"
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "responses": {
+                    "200": {
+                        "description": "Information about the new store",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StoreData"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when creating the store",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to add new stores"
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}": {
+            "get": {
+                "tags": [
+                    "Stores"
+                ],
+                "summary": "Get store",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "View information about the specified store",
+                "operationId": "Stores_GetStore",
+                "responses": {
+                    "200": {
+                        "description": "specified store",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StoreData"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store"
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canviewstoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Stores"
+                ],
+                "summary": "Update store",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to update",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "Update the specified store",
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreData"
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "operationId": "Stores_UpdateStore",
+                "responses": {
+                    "200": {
+                        "description": "updated specified store",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StoreData"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when updating the store",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to update the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store"
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Stores"
+                ],
+                "summary": "Remove Store",
+                "description": "Removes the specified store. If there is another user with access, only your access will be removed.",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to remove",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The store has been removed"
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when removing the store",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to remove the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store"
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "StoreDataList": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/StoreData"
+                }
+            },
+            "StoreData": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/StoreBaseData"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string",
+                                "description": "The id of the store",
+                                "nullable": false
+                            }
+                        }
+                    }
+                ]
+            },
+            "StoreBaseData": {
+                "type": "object",
+                "x-abstract": true,
+                "additionalProperties": false,
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "The name of the store"
+                    },
+                    "website": {
+                        "type": "string",
+                        "description": "The absolute url of the store",
+                        "format": "url"
+                    },
+                    "invoiceExpiration": {
+                        "type": "integer",
+                        "format": "int32",
+                        "default": 900,
+                        "minimum": 60,
+                        "maximum": 2073600,
+                        "description": "The time after which an invoice is considered expired if not paid. The value will be rounded down to a minute."
+                    },
+                    "monitoringExpiration": {
+                        "type": "integer",
+                        "format": "int32",
+                        "default": 3600,
+                        "minimum": 600,
+                        "maximum": 2073600,
+                        "description": "The time after which an invoice which has been paid but not confirmed will be considered invalid. The value will be rounded down to a minute."
+                    },
+                    "speedPolicy": {
+                        "$ref": "#/components/schemas/SpeedPolicy"
+                    },
+                    "lightningDescriptionTemplate": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "The BOLT11 description of the lightning invoice in the checkout. You can use placeholders '{StoreName}', '{ItemDescription}' and '{OrderId}'."
+                    },
+                    "paymentTolerance": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0.0,
+                        "maximum": 100.0,
+                        "default": 0.0,
+                        "description": "Consider an invoice fully paid, even if the payment is missing 'x' % of the full amount."
+                    },
+                    "anyoneCanCreateInvoice": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "If true, then no authentication is needed to create invoices on this store."
+                    },
+                    "showRecommendedFee": {
+                        "type": "boolean",
+                        "default": true
+                    },
+                    "recommendedFeeBlockTarget": {
+                        "type": "integer",
+                        "format": "int32",
+                        "default": 1,
+                        "description": "The fee rate recommendation in the checkout page for the on-chain payment to be confirmed after 'x' blocks."
+                    },
+                    "defaultLang": {
+                        "type": "string",
+                        "default": "en",
+                        "description": "The default language to use in the checkout page. (The different translations available are listed [here](https://github.com/btcpayserver/btcpayserver/tree/master/BTCPayServer/wwwroot/locales)"
+                    },
+                    "lightningAmountInSatoshi": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "If true, lightning payment methods show amount in satoshi in the checkout page."
+                    },
+                    "customLogo": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "URL to a logo to include in the checkout page."
+                    },
+                    "customCSS": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "URL to a CSS stylesheet to include in the checkout page"
+                    },
+                    "htmlTitle": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "The HTML title of the checkout page (when you over the tab in your browser)"
+                    },
+                    "redirectAutomatically": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "After successfull payment, should the checkout page redirect the user automatically to the redirect URL of the invoice?"
+                    },
+                    "requiresRefundEmail": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "If true, the checkout page will ask to enter an email address before accessing payment information."
+                    },
+                    "networkFeeMode": {
+                        "$ref": "#/components/schemas/NetworkFeeMode"
+                    },
+                    "payJoinEnabled": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "If true, payjoin will be proposed in the checkout page if possible. ([More information](https://docs.btcpayserver.org/Payjoin/))"
+                    },
+                    "lightningPrivateRouteHints": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Should private route hints be included in the lightning payment of the checkout page."
+                    }
+                }
+            },
+            "SpeedPolicy": {
+                "type": "string",
+                "description": "",
+                "x-enumNames": [
+                    "HighSpeed",
+                    "MediumSpeed",
+                    "LowSpeed",
+                    "LowMediumSpeed"
+                ],
+                "enum": [
+                    "HighSpeed",
+                    "MediumSpeed",
+                    "LowSpeed",
+                    "LowMediumSpeed"
+                ]
+            },
+            "NetworkFeeMode": {
+                "type": "string",
+                "description": "Check whether network fee should be added to the invoice if on-chain payment is used. ([More information](https://docs.btcpayserver.org/FAQ/FAQ-Stores/#add-network-fee-to-invoice-vary-with-mining-fees))",
+                "x-enumNames": [
+                    "MultiplePaymentsOnly",
+                    "Always",
+                    "Never"
+                ],
+                "enum": [
+                    "MultiplePaymentsOnly",
+                    "Always",
+                    "Never"
+                ]
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Stores"
+        }
+    ]
+}

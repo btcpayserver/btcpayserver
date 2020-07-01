@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Data
 {
@@ -25,18 +25,12 @@ namespace BTCPayServer.Data
         {
             get; set;
         }
-
         public List<PaymentData> Payments
         {
             get; set;
         }
 
         public List<InvoiceEventData> Events
-        {
-            get; set;
-        }
-
-        public List<RefundAddressesData> RefundAddresses
         {
             get; set;
         }
@@ -79,6 +73,20 @@ namespace BTCPayServer.Data
         {
             get; set;
         }
+        public bool Archived { get; set; }
         public List<PendingInvoiceData> PendingInvoices { get; set; }
+        public List<RefundData> Refunds { get; set; }
+        public string CurrentRefundId { get; set; }
+        [ForeignKey("Id,CurrentRefundId")]
+        public RefundData CurrentRefund { get; set; }
+        internal static void OnModelCreating(ModelBuilder builder)
+        {
+            builder.Entity<InvoiceData>()
+                .HasOne(o => o.StoreData)
+                .WithMany(a => a.Invoices).OnDelete(DeleteBehavior.Cascade);
+            builder.Entity<InvoiceData>().HasIndex(o => o.StoreDataId);
+            builder.Entity<InvoiceData>()
+                .HasOne(o => o.CurrentRefund);
+        }
     }
 }

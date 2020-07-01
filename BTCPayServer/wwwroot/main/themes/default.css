@@ -1,0 +1,138 @@
+:root {
+  /* General color definitions */
+  --btcpay-brand-primary: #51b13e;
+  --btcpay-brand-secondary: #CEDC21;
+  --btcpay-brand-tertiary: #1e7a44;
+  --btcpay-brand-dark: #0F3B21;
+
+  /* Color definitions for specific purposes - map the general colors or define additional ones */
+  --btcpay-color-white: #fff;
+  --btcpay-color-black: #000;
+
+  --btcpay-color-neutral-100: #f8f9fa;
+  --btcpay-color-neutral-200: #e9ecef;
+  --btcpay-color-neutral-300: #dee2e6;
+  --btcpay-color-neutral-400: #ced4da;
+  --btcpay-color-neutral-500: #8f979e;
+  --btcpay-color-neutral-600: #6c757d;
+  --btcpay-color-neutral-700: #495057;
+  --btcpay-color-neutral-800: #343a40;
+  --btcpay-color-neutral-900: #292929;
+
+  --btcpay-color-primary: var(--btcpay-brand-primary);
+  --btcpay-color-primary-accent: var(--btcpay-brand-tertiary);
+  --btcpay-color-primary-backdrop: #D2E5CF;
+  --btcpay-color-primary-text: var(--btcpay-color-neutral-900);
+  --btcpay-color-secondary: var(--btcpay-color-neutral-500);
+  --btcpay-color-secondary-accent: var(--btcpay-color-neutral-700);
+  --btcpay-color-secondary-backdrop: var(--btcpay-color-neutral-400);
+  --btcpay-color-secondary-text: var(--btcpay-color-neutral-700);
+  --btcpay-color-success: #247e12;
+  --btcpay-color-success-accent: var(--btcpay-brand-tertiary);
+  --btcpay-color-success-backdrop: #389725;
+  --btcpay-color-success-text: var(--btcpay-color-white);
+  --btcpay-color-info: #17a2b8;
+  --btcpay-color-info-accent: #117a8b;
+  --btcpay-color-info-backdrop: #C8E7ED;
+  --btcpay-color-info-text: var(--btcpay-color-info-accent);
+  --btcpay-color-warning: #ffc107;
+  --btcpay-color-warning-accent: #d39e00;
+  --btcpay-color-warning-backdrop: #ffc107;
+  --btcpay-color-warning-text: var(--btcpay-color-neutral-900);
+  --btcpay-color-danger: #c12c1a;
+  --btcpay-color-danger-accent: #a71705;
+  --btcpay-color-danger-backdrop: #E85442;
+  --btcpay-color-danger-text: var(--btcpay-color-white);
+  --btcpay-color-light: var(--btcpay-color-neutral-200);
+  --btcpay-color-light-accent: var(--btcpay-color-neutral-400);
+  --btcpay-color-light-backdrop: var(--btcpay-color-neutral-200);
+  --btcpay-color-light-text: var(--btcpay-color-neutral-800);
+  --btcpay-color-dark: var(--btcpay-color-neutral-800);
+  --btcpay-color-dark-accent: var(--btcpay-color-black);
+  --btcpay-color-dark-backdrop: var(--btcpay-color-neutral-800);
+  --btcpay-color-dark-text: var(--btcpay-color-neutral-200);
+
+  /* Color definitions for specific sections - try to reuse colors defined above */
+  --btcpay-body-bg: var(--btcpay-color-neutral-100);
+  --btcpay-bg-dark: var(--btcpay-brand-dark);
+  --btcpay-bg-tile: var(--btcpay-color-white);
+  --btcpay-bg-cta: var(--btcpay-brand-dark);
+
+  --btcpay-body-color: var(--btcpay-color-neutral-900);
+  --btcpay-body-color-link: var(--btcpay-color-primary);
+  --btcpay-body-color-link-accent: var(--btcpay-color-primary);
+
+  --btcpay-header-bg: var(--btcpay-color-white);
+  --btcpay-header-color: var(--btcpay-body-color);
+  --btcpay-header-color-link: var(--btcpay-body-color);
+  --btcpay-header-color-link-accent: var(--btcpay-body-color);
+
+  --btcpay-footer-bg: var(--btcpay-brand-dark);
+  --btcpay-footer-color: var(--btcpay-color-neutral-400);
+
+  --btcpay-font-size-base: 14px;
+  --btcpay-font-family-head: 'Open Sans', 'Helvetica Neue', Arial, sans-serif;
+  --btcpay-font-family-base: 'Open Sans', 'Helvetica Neue', Arial, sans-serif;
+  --btcpay-font-family-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+/* Bootstrap modifications */
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+  font-weight: 600;
+}
+
+.bg-dark {
+  background-color: var(--btcpay-bg-dark) !important;
+}
+
+.onion {
+  filter: invert();
+}
+
+.table-sm {
+  width: calc(100% + 1rem);
+  margin: 1.5rem -.5rem;
+  border-radius: 4px;
+  border-collapse: separate !important;
+  border-spacing: 0px !important;
+}
+
+.table-sm thead > tr {
+  height: 40px;
+}
+
+.table-sm thead th {
+  border-bottom: none;
+  border-top: none;
+  font-size: 1.0rem;
+}
+
+.table-sm th,
+.table-sm td {
+  padding: .5rem;
+}
+
+.table-sm tbody tr:hover {
+  background-color: var(--btcpay-color-neutral-100);
+}
+
+.removetopborder tr:first-child th,
+.removetopborder tr:first-child td {
+  border-top: none;
+}
+
+#mainNav {
+  background: var(--btcpay-header-bg);
+}
+
+header.masthead::before,
+.service-box img {
+  filter: hue-rotate(318deg);
+}
+
+@media (min-width: 992px) {
+    #mainNav .navbar-nav > li.nav-item > a.nav-link:focus,
+    #mainNav .navbar-nav > li.nav-item > a.nav-link:hover {
+        border-bottom-color: var(--btcpay-header-color-link-accent);
+    }
+}

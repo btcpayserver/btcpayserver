@@ -1,7 +1,5 @@
-﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using NBitcoin;
@@ -13,6 +11,8 @@ namespace BTCPayServer.Models.WalletViewModels
         public string CryptoCode { get; set; }
         public string Decoded { get; set; }
         string _FileName;
+        public bool NBXSeedAvailable { get; set; }
+
         public string FileName
         {
             get

@@ -1,16 +1,9 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Hosting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
-#if NETCOREAPP21
-using IWebHostEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
-using Microsoft.AspNetCore.Hosting.Internal;
-#else
-using Microsoft.AspNetCore.Hosting;
-#endif
 
 namespace BTCPayServer.Services
 {
@@ -34,11 +27,7 @@ namespace BTCPayServer.Services
 
         public LanguageService(IWebHostEnvironment environment)
         {
-#if NETCOREAPP21
-            var path = (environment as HostingEnvironment)?.WebRootPath;
-#else
             var path = environment.WebRootPath;
-#endif
             path = Path.Combine(path, "locales");
             var files = Directory.GetFiles(path, "*.json");
             var result = new List<Language>();

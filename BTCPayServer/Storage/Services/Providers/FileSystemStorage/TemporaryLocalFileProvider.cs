@@ -21,8 +21,8 @@ namespace BTCPayServer.Storage.Services.Providers.FileSystemStorage
         }
         public IFileInfo GetFileInfo(string tmpFileId)
         {
-            tmpFileId =tmpFileId.TrimStart('/', '\\');
-            var path = Path.Combine(_root.FullName,tmpFileId) ;
+            tmpFileId = tmpFileId.TrimStart('/', '\\');
+            var path = Path.Combine(_root.FullName, tmpFileId);
             if (!File.Exists(path))
             {
                 return new NotFoundFileInfo(tmpFileId);

@@ -28,7 +28,7 @@ var vaultui = (function () {
         vaultLoading: new VaultFeedback("?", "Checking BTCPayServer Vault is running...", "vault-feedback1", "vault-loading"),
         vaultDenied: new VaultFeedback("failed", "The user declined access to the vault.", "vault-feedback1", "vault-denied"),
         vaultGranted: new VaultFeedback("ok", "Access to vault granted by owner.", "vault-feedback1", "vault-granted"),
-        noVault: new VaultFeedback("failed", "BTCPayServer Vault does not seems running, you can download it on <a target=\"_blank\" href=\"https://github.com/btcpayserver/BTCPayServer.Vault/releases/latest\">Github</a>.", "vault-feedback1", "no-vault"),
+        noVault: new VaultFeedback("failed", "BTCPayServer Vault does not seem to be running, you can download it on <a target=\"_blank\" href=\"https://github.com/btcpayserver/BTCPayServer.Vault/releases/latest\">Github</a>.", "vault-feedback1", "no-vault"),
         noWebsockets: new VaultFeedback("failed", "Web sockets are not supported by the browser.", "vault-feedback1", "no-websocket"),
         errorWebsockets: new VaultFeedback("failed", "Error of the websocket while connecting to the backend.", "vault-feedback1", "error-websocket"),
         bridgeConnected: new VaultFeedback("ok", "BTCPayServer successfully connected to the vault.", "vault-feedback1", "bridge-connected"),
@@ -42,7 +42,6 @@ var vaultui = (function () {
         unexpectedError: new VaultFeedback("failed", "An unexpected error happened. ({{0}})", "vault-feedback3", "unknown-error"),
         invalidNetwork: new VaultFeedback("failed", "The device is targetting a different chain.", "vault-feedback3", "invalid-network"),
         needPin: new VaultFeedback("?", "Enter the pin.", "vault-feedback3", "need-pin"),
-        needPinOnDevice: new VaultFeedback("?", "Please, enter the pin on the device.", "vault-feedback3", "need-pin-on-device"),
         incorrectPin: new VaultFeedback("failed", "Incorrect pin code.", "vault-feedback3", "incorrect-pin"),
         invalidPasswordConfirmation: new VaultFeedback("failed", "Invalid password confirmation.", "vault-feedback3", "invalid-password-confirm"),
         wrongWallet: new VaultFeedback("failed", "This device can't sign the transaction. (Wrong device, wrong passphrase or wrong device fingerprint in your wallet settings)", "vault-feedback3", "wrong-wallet"),
@@ -50,6 +49,7 @@ var vaultui = (function () {
         needPassphrase: new VaultFeedback("?", "Enter the passphrase.", "vault-feedback3", "need-passphrase"),
         needPassphraseOnDevice: new VaultFeedback("?", "Please, enter the passphrase on the device.", "vault-feedback3", "need-passphrase-on-device"),
         signingTransaction: new VaultFeedback("?", "Please review and confirm the transaction on your device...", "vault-feedback3", "ask-signing"),
+        reviewAddress: new VaultFeedback("?", "Please review the address on your device...", "vault-feedback3", "ask-signing"),
         signingRejected: new VaultFeedback("failed", "The user refused to sign the transaction", "vault-feedback3", "user-reject"),
     };
 
@@ -130,15 +130,10 @@ var vaultui = (function () {
                     if (await self.askForPassphrase())
                         return true;
                 }
-                if (json.error === "need-pin-on-device" || json.error === "need-passphrase-on-device") {
+                if (json.error === "need-passphrase-on-device") {
                     handled = true;
-                    if (json.error === "need-pin-on-device") {
-                        show(VaultFeedbacks.needPinOnDevice);
-                    } else {
-                        show(VaultFeedbacks.needPassphraseOnDevice);
-                    }
-                    await self.waitClickContinue();
-                    self.bridge.socket.send("refresh-device");
+                    show(VaultFeedbacks.needPassphraseOnDevice);
+                    self.bridge.socket.send("ask-passphrase");
                     var json = await self.bridge.waitBackendMessage();
                     if (json.hasOwnProperty("error")) {
                         showError(json);
@@ -181,6 +176,20 @@ var vaultui = (function () {
             }
             return true;
         };
+        this.askForDisplayAddress = async function (rootedKeyPath) {
+            if (!await self.ensureConnectedToBackend())
+                return false;
+            show(VaultFeedbacks.reviewAddress);
+            self.bridge.socket.send("display-address");
+            self.bridge.socket.send(rootedKeyPath);
+            var json = await self.bridge.waitBackendMessage();
+            if (json.hasOwnProperty("error")) {
+                if (await needRetry(json))
+                    return await self.askForDisplayAddress(rootedKeyPath);
+                return false;
+            }
+            return true;
+        }
         this.askForDevice = async function () {
             if (!await self.ensureConnectedToBackend())
                 return false;
@@ -236,23 +245,6 @@ var vaultui = (function () {
                         addressType: $("select[name=\"addressType\"]").val(),
                         accountNumber: parseInt($("select[name=\"accountNumber\"]").val())
                     });
-                });
-            });
-        };
-
-
-        /**
-         * @returns {Promise}
-         */
-        this.waitClickContinue = function () {
-            $("#vault-confirm").css("display", "block");
-            $("#vault-confirm").text("Continue");
-            return new Promise(function (resolve, reject) {
-                $("#vault-confirm").click(async function (e) {
-                    e.preventDefault();
-                    $("#vault-confirm").css("display", "none");
-                    $(this).unbind();
-                    resolve("");
                 });
             });
         };

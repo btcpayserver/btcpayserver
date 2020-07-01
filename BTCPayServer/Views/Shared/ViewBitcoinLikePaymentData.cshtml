@@ -4,6 +4,7 @@
 @model IEnumerable<BTCPayServer.Services.Invoices.PaymentEntity>
 
 @{
+    PayjoinInformation payjoinIformation = null;
     var onchainPayments = Model.Where(entity => entity.GetPaymentMethodId().PaymentType == BitcoinPaymentType.Instance).Select(payment =>
     {
         var m = new OnchainPaymentViewModel();
@@ -21,11 +22,21 @@
         {
             m.Confirmations = confirmationCount.ToString(CultureInfo.InvariantCulture);
         }
-
+        if (onChainPaymentData?.PayjoinInformation is PayjoinInformation pj)
+        {
+            payjoinIformation = pj;
+            m.AdditionalInformation = "Original transaction";
+        }
+        if (payjoinIformation is PayjoinInformation &&
+            payjoinIformation.CoinjoinTransactionHash == onChainPaymentData?.Outpoint.Hash)
+        {
+            m.AdditionalInformation = "Payjoin transaction";
+        }
         m.TransactionId = onChainPaymentData.Outpoint.Hash.ToString();
         m.ReceivedTime = payment.ReceivedTime;
         m.TransactionLink = string.Format(CultureInfo.InvariantCulture, payment.Network.BlockExplorerLink, m.TransactionId);
         m.Replaced = !payment.Accounted;
+        m.CryptoPaymentData = onChainPaymentData;
         return m;
     });
 }
@@ -40,6 +51,7 @@
                 <tr>
                     <th>Crypto</th>
                     <th>Deposit address</th>
+                    <th>Amount</th>
                     <th>Transaction Id</th>
                     <th class="text-right">Confirmations</th>
                 </tr>
@@ -47,9 +59,10 @@
                 <tbody>
                 @foreach (var payment in onchainPayments)
                 {
-                    <tr class="@(payment.Replaced ? "linethrough" : "")" >
+                    <tr style="@(payment.Replaced ? "text-decoration: line-through" : "")">
                         <td>@payment.Crypto</td>
                         <td>@payment.DepositAddress</td>
+                        <td class="payment-value">@payment.CryptoPaymentData.GetValue() @Safe.Raw(payment.AdditionalInformation is string i ? $"<br/>({i})" : string.Empty)</td>
                         <td>
                             <div class="wraptextAuto">
                                 <a href="@payment.TransactionLink" target="_blank">

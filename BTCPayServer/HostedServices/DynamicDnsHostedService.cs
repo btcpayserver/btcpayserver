@@ -1,12 +1,10 @@
-﻿using System;
-using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
-using System.Linq;
+using System;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Logging;
 using BTCPayServer.Services;
+using Microsoft.Extensions.Logging;
 
 namespace BTCPayServer.HostedServices
 {
@@ -29,7 +27,7 @@ namespace BTCPayServer.HostedServices
             };
         }
 
-        TimeSpan Period = TimeSpan.FromMinutes(60);
+        readonly TimeSpan Period = TimeSpan.FromMinutes(60);
         async Task UpdateRecord()
         {
             using (var timeout = CancellationTokenSource.CreateLinkedTokenSource(Cancellation))

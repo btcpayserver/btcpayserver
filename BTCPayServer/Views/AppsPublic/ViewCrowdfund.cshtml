@@ -24,36 +24,36 @@
         <script type="text/javascript">
             var srvModel = @Safe.Json(Model);
         </script>
-        <bundle name="wwwroot/bundles/crowdfund-bundle-1.min.js"></bundle>
-        <bundle name="wwwroot/bundles/crowdfund-bundle-2.min.js"></bundle>
+        <bundle name="wwwroot/bundles/crowdfund-bundle-1.min.js" asp-append-version="true"></bundle>
+        <bundle name="wwwroot/bundles/crowdfund-bundle-2.min.js" asp-append-version="true"></bundle>
         @*We need to make sure btcpay.js is not bundled, else it will not work if there is a RootPath*@
-        <script src="~/modal/btcpay.js"></script>
+        <script src="~/modal/btcpay.js" asp-append-version="true"></script>
     }
 
-    <bundle name="wwwroot/bundles/crowdfund-bundle.min.css"></bundle>
+    <bundle name="wwwroot/bundles/crowdfund-bundle.min.css" asp-append-version="true"></bundle>
     @if (!string.IsNullOrEmpty(Model.EmbeddedCSS))
     {
-            @Safe.Raw($"<style>{Model.EmbeddedCSS}</style>");
+        @Safe.Raw($"<style>{Model.EmbeddedCSS}</style>");
     }
 
 </head>
 <body>
-@if (Context.Request.Query.ContainsKey("simple"))
-{
-    @await Html.PartialAsync("/Views/AppsPublic/Crowdfund/MinimalCrowdfund.cshtml", Model)
-}
-else
-{
-    <noscript>
-        @await Html.PartialAsync("/Views/AppsPublic/Crowdfund/MinimalCrowdfund.cshtml", Model)
-    </noscript>
-
-    if (Model.AnimationsEnabled)
+    @if (Context.Request.Query.ContainsKey("simple"))
     {
-        <canvas id="fireworks"></canvas>
+        @await Html.PartialAsync("/Views/AppsPublic/Crowdfund/MinimalCrowdfund.cshtml", Model)
     }
-    @await Html.PartialAsync("/Views/AppsPublic/Crowdfund/VueCrowdfund.cshtml", Model)
-}
+    else
+    {
+        <noscript>
+            @await Html.PartialAsync("/Views/AppsPublic/Crowdfund/MinimalCrowdfund.cshtml", Model)
+        </noscript>
+
+        if (Model.AnimationsEnabled)
+        {
+            <canvas id="fireworks"></canvas>
+        }
+        @await Html.PartialAsync("/Views/AppsPublic/Crowdfund/VueCrowdfund.cshtml", Model)
+    }
 
 </body>
 </html>

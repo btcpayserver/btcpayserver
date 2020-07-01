@@ -1,13 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Migrations;
-using JetBrains.Annotations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Migrations.Operations;
-using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace BTCPayServer.Data
 {
@@ -19,8 +15,8 @@ namespace BTCPayServer.Data
     }
     public class ApplicationDbContextFactory
     {
-        string _ConnectionString;
-        DatabaseType _Type;
+        readonly string _ConnectionString;
+        readonly DatabaseType _Type;
         public ApplicationDbContextFactory(DatabaseType type, string connectionString)
         {
             _ConnectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
@@ -45,11 +41,7 @@ namespace BTCPayServer.Data
 
         class CustomNpgsqlMigrationsSqlGenerator : NpgsqlMigrationsSqlGenerator
         {
-#if NETCOREAPP21
-            public CustomNpgsqlMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies dependencies) : base(dependencies)
-#else
-            public CustomNpgsqlMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies dependencies,  IMigrationsAnnotationProvider annotations, Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure.Internal.INpgsqlOptions opts) : base(dependencies, annotations, opts)
-#endif
+            public CustomNpgsqlMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies dependencies, IMigrationsAnnotationProvider annotations, Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure.Internal.INpgsqlOptions opts) : base(dependencies, annotations, opts)
             {
             }
 

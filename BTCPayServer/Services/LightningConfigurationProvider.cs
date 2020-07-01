@@ -1,16 +1,13 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using NBitcoin;
-using NBitcoin.DataEncoders;
 
 namespace BTCPayServer.Services
 {
     public class LightningConfigurationProvider
     {
-        ConcurrentDictionary<ulong, (DateTimeOffset expiration, LightningConfigurations config)> _Map = new ConcurrentDictionary<ulong, (DateTimeOffset expiration, LightningConfigurations config)>();
+        readonly ConcurrentDictionary<ulong, (DateTimeOffset expiration, LightningConfigurations config)> _Map = new ConcurrentDictionary<ulong, (DateTimeOffset expiration, LightningConfigurations config)>();
         public ulong KeepConfig(ulong secret, LightningConfigurations configuration)
         {
             CleanExpired();

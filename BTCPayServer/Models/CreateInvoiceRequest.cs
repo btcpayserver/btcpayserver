@@ -1,12 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using NBitcoin;
-using NBitcoin.JsonConverters;
 using NBitpayClient;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Models
 {
@@ -82,5 +77,9 @@ namespace BTCPayServer.Models
 
         [JsonProperty(PropertyName = "redirectAutomatically", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public bool? RedirectAutomatically { get; set; }
+
+        //Bitpay compatibility: create invoice in btcpay uses this instead of supportedTransactionCurrencies
+        [JsonProperty(PropertyName = "paymentCurrencies", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public IEnumerable<string> PaymentCurrencies { get; set; }
     }
 }

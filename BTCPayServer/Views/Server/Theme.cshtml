@@ -18,6 +18,8 @@
             <div class="form-group">
                 <label asp-for="ThemeCssUri"></label>
                 <select asp-for="ThemeCssUri" class="form-control">
+                    <option value="/main/themes/default.css">Default (Light)</option>
+                    <option value="/main/themes/default-dark.css">Default (Dark)</option>
                     <option value="/main/themes/classic.css">Classic</option>
                     <option value="/main/themes/casa.css">Casa</option>
                 </select>
@@ -25,18 +27,18 @@
             </div>
             <div class="form-group mb-5">
                 <label asp-for="CustomThemeCssUri"></label>
-                <a href="https://docs.btcpayserver.org/development/theme#custom-themes" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                <a href="https://docs.btcpayserver.org/Theme/#1-custom-themes" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
                 <input asp-for="CustomThemeCssUri" class="form-control" />
                 <span asp-validation-for="CustomThemeCssUri" class="text-danger"></span>
             </div>
             <h4>Bootstrap theme</h4>
             <div class="form-group">
                 <label asp-for="BootstrapCssUri"></label>
-                <a href="https://docs.btcpayserver.org/development/theme#bootstrap-themes" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                <a href="https://docs.btcpayserver.org/Theme/#2-bootstrap-themes" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
                 <input asp-for="BootstrapCssUri" class="form-control" />
                 <span asp-validation-for="BootstrapCssUri" class="text-danger"></span>
                 <p class="form-text text-muted">
-                    <a href="https://bootstrap.build/app/v4.0/" target="_blank">Build your own theme</a>
+                    <a href="https://pikock.github.io/bootstrap-magic/app/index.html" target="_blank">Build your own theme</a>
                     or <a href="https://bootswatch.com/" target="_blank">pick one already made</a>
                 </p>
             </div>

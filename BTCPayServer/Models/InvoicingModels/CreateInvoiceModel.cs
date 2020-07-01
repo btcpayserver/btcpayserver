@@ -1,11 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
-using BTCPayServer.Validation;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+using BTCPayServer.Validation;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BTCPayServer.Models.InvoicingModels
 {
@@ -15,6 +13,7 @@ namespace BTCPayServer.Models.InvoicingModels
         {
             Currency = "USD";
         }
+
         [Required]
         public decimal? Amount
         {
@@ -28,11 +27,13 @@ namespace BTCPayServer.Models.InvoicingModels
         }
 
         [Required]
+        [DisplayName("Store Id")]
         public string StoreId
         {
             get; set;
         }
 
+        [DisplayName("Order Id")]
         public string OrderId
         {
             get; set;
@@ -51,14 +52,8 @@ namespace BTCPayServer.Models.InvoicingModels
         }
 
         [EmailAddress]
+        [DisplayName("Buyer Email")]
         public string BuyerEmail
-        {
-            get; set;
-        }
-
-        [EmailAddress]
-        [DisplayName("Notification Email")]
-        public string NotificationEmail
         {
             get; set;
         }
@@ -72,22 +67,19 @@ namespace BTCPayServer.Models.InvoicingModels
 
         public SelectList Stores
         {
-            get;
-            set;
+            get; set;
         }
 
         [DisplayName("Supported Transaction Currencies")]
         public List<string> SupportedTransactionCurrencies
         {
-            get;
-            set;
+            get; set;
         }
 
         [DisplayName("Available Payment Methods")]
         public SelectList AvailablePaymentMethods
         {
-            get;
-            set;
+            get; set;
         }
     }
 }

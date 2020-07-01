@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
+using BTCPayServer.Logging;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Rating;
 using BTCPayServer.Services.Invoices;
@@ -25,7 +26,7 @@ namespace BTCPayServer.Payments
         /// <param name="network"></param>
         /// <param name="preparePaymentObject"></param>
         /// <returns></returns>
-        Task<IPaymentMethodDetails> CreatePaymentMethodDetails(ISupportedPaymentMethod supportedPaymentMethod,
+        Task<IPaymentMethodDetails> CreatePaymentMethodDetails(InvoiceLogs logs, ISupportedPaymentMethod supportedPaymentMethod,
             PaymentMethod paymentMethod, StoreData store, BTCPayNetworkBase network, object preparePaymentObject);
 
         /// <summary>
@@ -53,7 +54,7 @@ namespace BTCPayServer.Payments
         where TSupportedPaymentMethod : ISupportedPaymentMethod
         where TBTCPayNetwork : BTCPayNetworkBase
     {
-        Task<IPaymentMethodDetails> CreatePaymentMethodDetails(TSupportedPaymentMethod supportedPaymentMethod,
+        Task<IPaymentMethodDetails> CreatePaymentMethodDetails(InvoiceLogs logs, TSupportedPaymentMethod supportedPaymentMethod,
             PaymentMethod paymentMethod, StoreData store, TBTCPayNetwork network, object preparePaymentObject);
     }
 
@@ -65,6 +66,7 @@ namespace BTCPayServer.Payments
         public abstract PaymentType PaymentType { get; }
 
         public abstract Task<IPaymentMethodDetails> CreatePaymentMethodDetails(
+            InvoiceLogs logs,
             TSupportedPaymentMethod supportedPaymentMethod,
             PaymentMethod paymentMethod, StoreData store, TBTCPayNetwork network, object preparePaymentObject);
 
@@ -99,12 +101,12 @@ namespace BTCPayServer.Payments
             return null;
         }
 
-        public Task<IPaymentMethodDetails> CreatePaymentMethodDetails(ISupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod,
+        public Task<IPaymentMethodDetails> CreatePaymentMethodDetails(InvoiceLogs logs, ISupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod,
             StoreData store, BTCPayNetworkBase network, object preparePaymentObject)
         {
             if (supportedPaymentMethod is TSupportedPaymentMethod method && network is TBTCPayNetwork correctNetwork)
             {
-                return CreatePaymentMethodDetails(method, paymentMethod, store, correctNetwork, preparePaymentObject);
+                return CreatePaymentMethodDetails(logs, method, paymentMethod, store, correctNetwork, preparePaymentObject);
             }
 
             throw new NotSupportedException("Invalid supportedPaymentMethod");

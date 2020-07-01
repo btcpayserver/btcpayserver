@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments.CoinSwitch;
@@ -24,7 +24,8 @@ namespace BTCPayServer.Controllers
         {
 
             var existing = store.GetStoreBlob().CoinSwitchSettings;
-            if (existing == null) return;
+            if (existing == null)
+                return;
             vm.MerchantId = existing.MerchantId;
             vm.Enabled = existing.Enabled;
             vm.Mode = existing.Mode;
@@ -49,12 +50,12 @@ namespace BTCPayServer.Controllers
 
             var coinSwitchSettings = new CoinSwitchSettings()
             {
-                MerchantId =  vm.MerchantId,
+                MerchantId = vm.MerchantId,
                 Enabled = vm.Enabled,
                 Mode = vm.Mode,
                 AmountMarkupPercentage = vm.AmountMarkupPercentage
             };
-            
+
             switch (command)
             {
                 case "save":
@@ -63,8 +64,10 @@ namespace BTCPayServer.Controllers
                     store.SetStoreBlob(storeBlob);
                     await _Repo.UpdateStore(store);
                     TempData[WellKnownTempData.SuccessMessage] = "CoinSwitch settings modified";
-                    return RedirectToAction(nameof(UpdateStore), new {
-                        storeId});
+                    return RedirectToAction(nameof(UpdateStore), new
+                    {
+                        storeId
+                    });
 
                 default:
                     return View(vm);

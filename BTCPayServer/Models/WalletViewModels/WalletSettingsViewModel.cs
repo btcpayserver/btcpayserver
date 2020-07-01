@@ -1,8 +1,5 @@
-﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace BTCPayServer.Models.WalletViewModels
 {
@@ -16,6 +13,9 @@ namespace BTCPayServer.Models.WalletViewModels
         public bool IsMultiSig => AccountKeys.Count > 1;
 
         public List<WalletSettingsAccountKeyViewModel> AccountKeys { get; set; } = new List<WalletSettingsAccountKeyViewModel>();
+        public bool NBXSeedAvailable { get; set; }
+        public string StoreName { get; set; }
+        public string UriScheme { get; set; }
     }
 
     public class WalletSettingsAccountKeyViewModel

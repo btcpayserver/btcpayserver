@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.Data
@@ -36,6 +34,15 @@ namespace BTCPayServer.Data
         public void SetSettings(object value)
         {
             Settings = value == null ? null : JsonConvert.SerializeObject(value);
+        }
+
+        internal static void OnModelCreating(ModelBuilder builder)
+        {
+            builder.Entity<AppData>()
+                       .HasOne(o => o.StoreData)
+                       .WithMany(i => i.Apps).OnDelete(DeleteBehavior.Cascade);
+            builder.Entity<AppData>()
+                    .HasOne(a => a.StoreData);
         }
     }
 }

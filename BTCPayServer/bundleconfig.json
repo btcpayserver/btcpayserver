@@ -37,7 +37,7 @@
         "inputFiles": [
             "wwwroot/vendor/font-awesome/css/font-awesome.css",
             "wwwroot/vendor/vex/css/vex.css",
-            "wwwroot/checkout/**/*.css",
+            "wwwroot/checkout/*/*.css",
             "wwwroot/vendor/jquery-prettydropdowns/prettydropdowns.css"
         ]
     },
@@ -99,11 +99,11 @@
     {
         "outputFileName": "wwwroot/bundles/crowdfund-admin-bundle.min.js",
         "inputFiles": [
+            "wwwroot/vendor/vuejs/vue.min.js",
+            "wwwroot/vendor/babel-polyfill/polyfill.min.js",
             "wwwroot/vendor/highlightjs/highlight.min.js",
             "wwwroot/vendor/summernote/summernote-bs4.js",
-            "wwwroot/crowdfund-admin/main.js",
-            "wwwroot/products/js/products.js",
-            "wwwroot/products/js/products.jquery.js"
+            "wwwroot/crowdfund-admin/main.js"
         ]
     },
     {
@@ -116,11 +116,11 @@
     {
         "outputFileName": "wwwroot/bundles/pos-admin-bundle.min.js",
         "inputFiles": [
+            "wwwroot/vendor/vuejs/vue.min.js",
+            "wwwroot/vendor/babel-polyfill/polyfill.min.js",
             "wwwroot/vendor/highlightjs/highlight.min.js",
             "wwwroot/vendor/summernote/summernote-bs4.js",
-            "wwwroot/pos-admin/main.js",
-            "wwwroot/products/js/products.js",
-            "wwwroot/products/js/products.jquery.js"
+            "wwwroot/pos-admin/main.js"
         ]
     },
     {
@@ -179,5 +179,17 @@
             "wwwroot/vendor/bootstrap-vue/bootstrap-vue.css",
             "wwwroot/payment-request/**/*.css"
         ]
-    }
+    },
+    {
+        "outputFileName": "wwwroot/bundles/wallet-send-bundle.min.js",
+        "inputFiles": [
+            "wwwroot/vendor/vuejs/vue.min.js",
+            "wwwroot/vendor/babel-polyfill/polyfill.min.js",
+            "wwwroot/vendor/vue-qrcode-reader/vue-qrcode-reader.browser.js",
+            "wwwroot/js/wallet/**/*.js"
+        ],
+        "minify": {
+            "enabled": false
+        }
+    }  
 ]

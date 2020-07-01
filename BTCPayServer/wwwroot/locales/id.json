@@ -37,7 +37,7 @@
   "Invoice ID": "Nomor tagihan",
   "Order ID": "Nomor pesanan",
   "Return to StoreName": "Dikembalikan ke {{storeName}}",
-  "This invoice has been paid": "Tagihan ini sudah dibayarkan",
+  "This invoice has been paid": "Tagihan ini sudah dibayar",
   "This invoice has been archived": "Tagihan ini sudah disimpan",
   "Archived_Body": "Silakan hubungi toko untuk informasi pesanan atau bantuan",
   "BOLT 11 Invoice": "Tagihan BOLT 11",
@@ -48,5 +48,5 @@
   "Pay with Changelly": "Bayar dengan Changelly",
   "Close": "Tutup",
   "NotPaid_ExtraTransaction": "Tagihan ini belum dibayarkan sepenuhnya. Dimohon untuk membayarkan sisa pembayaran anda.",
-  "Recommended_Fee": "Recommended fee: {{feeRate}} sat/byte"
+  "Recommended_Fee": "Biaya yang disarankan: {{feeRate}} sat/byte"
 }

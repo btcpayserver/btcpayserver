@@ -1,0 +1,209 @@
+﻿@model BTCPayServer.Models.NotificationViewModels.IndexViewModel
+@{
+    ViewData["Title"] = "Notifications";
+}
+
+<section>
+    <div class="container">
+        @if (TempData.HasStatusMessage())
+        {
+            <div class="row">
+                <div class="col-lg-12 text-center">
+                    <partial name="_StatusMessage"/>
+                </div>
+            </div>
+        }
+        <div class="row">
+            <div class="col-lg-12 section-heading">
+                <h2>@ViewData["Title"]</h2>
+                <hr class="primary">
+            </div>
+        </div>
+
+        <form method="post" asp-action="MassAction">
+
+            <div class="row button-row">
+                <div class="col-lg-6">
+                    <span class="dropdown" style="display:none;" id="MassAction">
+                        <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Actions
+                        </button>
+                        <div class="dropdown-menu">
+                            <button type="submit" class="dropdown-item" name="command" value="mark-seen"><i class="fa fa-eye"></i> Mark seen</button>
+                            <button type="submit" class="dropdown-item" name="command" value="mark-unseen"><i class="fa fa-eye-slash"></i> Mark unseen</button>
+                            <button type="submit" class="dropdown-item" name="command" value="delete"><i class="fa fa-trash-o"></i> Delete</button>
+                        </div>
+                    </span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-12">
+                    <table class="table table-sm table-responsive-md">
+                        <thead>
+                        <tr>
+                            <th width="30px" class="only-for-js"></th>
+                            <th width="190px">
+                                Date
+                                <a href="javascript:switchTimeFormat()">
+                                    <span class="fa fa-clock-o" title="Switch date format"></span>
+                                </a>
+                            </th>
+                            <th>Message</th>
+                            <th class="text-right">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr data-guid="@item.Id" class="notification-row @(item.Seen ? "seen" : "")">
+                                <td class="only-for-js">
+                                    <input name="selectedItems" type="checkbox" class="selector" value="@item.Id"/>
+                                </td>
+                                <td onclick="toggleRowCheckbox(this)">
+                                    <span class="switchTimeFormat" data-switch="@item.Created.ToTimeAgo()">
+                                        @item.Created.ToBrowserDate()
+                                    </span>
+                                </td>
+                                <td onclick="toggleRowCheckbox(this)">
+                                    @item.Body
+                                </td>
+                                <td class="text-right font-weight-normal">
+                                    @if (!String.IsNullOrEmpty(item.ActionLink))
+                                    {
+                                        <a href="@item.ActionLink" class="btn btn-link p-0">Details</a>
+                                        <span class="d-none d-md-inline-block"> - </span>
+                                    }
+                                    <button onclick="return rowseen(this)" class="btn btn-link p-0 btn-toggle-seen" type="submit" name="command" value="flip-individual:@(item.Id)">
+                                        <span>Mark&nbsp;</span><span class="seen-text"></span>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+
+                    <nav aria-label="..." class="w-100">
+                        @if (Model.Total != 0)
+                        {
+                            <ul class="pagination float-left">
+                                <li class="page-item @(Model.Skip == 0 ? "disabled" : null)">
+                                    <a class="page-link" tabindex="-1" href="@ListItemsPage(-1, Model.Count)">&laquo;</a>
+                                </li>
+                                <li class="page-item disabled">
+                                    @if (Model.Total <= Model.Count)
+                                    {
+                                        <span class="page-link">
+                                            1–@Model.Items.Count
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="page-link">
+                                            @(Model.Skip + 1)–@(Model.Skip + Model.Items.Count), Total: @Model.Total
+                                        </span>
+                                    }
+                                </li>
+                                <li class="page-item @(Model.Total > (Model.Skip + Model.Items.Count) ? null : "disabled")">
+                                    <a class="page-link" href="@ListItemsPage(1, Model.Count)">&raquo;</a>
+                                </li>
+                            </ul>
+                        }
+                        <ul class="pagination float-right">
+                            <li class="page-item disabled">
+                                <span class="page-link">Page Size:</span>
+                            </li>
+                            <li class="page-item @(Model.Count == 50 ? "active" : null)">
+                                <a class="page-link" href="@ListItemsPage(0, 50)">50</a>
+                            </li>
+                            <li class="page-item @(Model.Count == 100 ? "active" : null)">
+                                <a class="page-link" href="@ListItemsPage(0, 100)">100</a>
+                            </li>
+                            <li class="page-item @(Model.Count == 250 ? "active" : null)">
+                                <a class="page-link" href="@ListItemsPage(0, 250)">250</a>
+                            </li>
+                            <li class="page-item @(Model.Count == 500 ? "active" : null)">
+                                <a class="page-link" href="@ListItemsPage(0, 500)">500</a>
+                            </li>
+                        </ul>
+                    </nav>
+                    @{
+                        string ListItemsPage(int prevNext, int count)
+                        {
+                            var skip = Model.Skip;
+                            if (prevNext == -1)
+                            {
+                                skip = Math.Max(0, Model.Skip - Model.Count);
+                            }
+                            else if (prevNext == 1)
+                            {
+                                skip = Model.Skip + count;
+                            }
+
+                            var act = Url.Action("Index", new
+                            {
+                                skip = skip,
+                                count = count,
+                            });
+
+                            return act;
+                        }
+                    }
+
+                </div>
+            </div>
+
+        </form>
+
+    </div>
+</section>
+
+<style>
+.notification-row.loading {
+    cursor: wait;
+    pointer-events: none;
+}
+.seen-text::after {
+    content: "seen";
+}
+tr.seen td .seen-text::after {
+    content: "unseen";
+}
+tr td {
+    font-weight: bold;
+}
+tr.seen td {
+    font-weight: normal;
+}
+</style>
+<script type="text/javascript">
+    function rowseen(sender) {
+        var row = $(sender).parents(".notification-row").toggleClass("loading");
+        var guid =   row.data("guid");
+        var url = "@Url.Action("FlipRead", "Notifications", new {id = "placeholder"})".replace("placeholder", guid);
+        $.post(url, function (data) {
+            row.toggleClass("seen loading");
+        });
+        return false;
+    }
+    
+    function toggleRowCheckbox(sender){
+        var input  = $(sender).parents(".notification-row").find(".selector");
+        input.prop('checked', !input.prop("checked"));
+        updateSelectors();
+    }
+
+    $(function () {
+        $(".selector").change(updateSelectors);
+        updateSelectors();
+    });
+
+    function updateSelectors() {
+        var count = $(".selector:checked").length;
+        if (count > 0) {
+            $("#MassAction").children().eq(0).text("Batch Action (" + count + ")");
+            $("#MassAction").show();
+        } else {
+            $("#MassAction").hide();
+        }
+    }
+</script>

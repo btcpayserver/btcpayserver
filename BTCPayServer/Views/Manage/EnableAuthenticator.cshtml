@@ -9,7 +9,6 @@
         <li>
             <p>
                 Download a two-factor authenticator app like Microsoft Authenticator for
-                <a href="https://go.microsoft.com/fwlink/?Linkid=825071">Windows Phone</a>,
                 <a href="https://go.microsoft.com/fwlink/?Linkid=825072">Android</a> and
                 <a href="https://go.microsoft.com/fwlink/?Linkid=825073">iOS</a> or
                 Google Authenticator for
@@ -49,14 +48,15 @@
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
-    <script type="text/javascript" src="~/js/qrcode.js"></script>
+    <script type="text/javascript" src="~/js/qrcode.js" asp-append-version="true"></script>
     <script type="text/javascript">
         new QRCode(document.getElementById("qrCode"),
             {
                 text: @Safe.Json(Model.AuthenticatorUri),
                 width: 200,
                 height: 200,
-                useSVG: true
+                useSVG: true,
+                correctLevel : QRCode.CorrectLevel.M
             });
         $("#qrCode > img").css({ "margin": "auto" });
     </script>

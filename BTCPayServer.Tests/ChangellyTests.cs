@@ -1,7 +1,5 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
@@ -10,10 +8,8 @@ using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments.Changelly;
 using BTCPayServer.Payments.Changelly.Models;
 using BTCPayServer.Services.Rates;
-using BTCPayServer.Services.Stores;
 using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -24,7 +20,7 @@ namespace BTCPayServer.Tests
         public const int TestTimeout = 60_000;
         public ChangellyTests(ITestOutputHelper helper)
         {
-            Logs.Tester = new XUnitLog(helper) {Name = "Tests"};
+            Logs.Tester = new XUnitLog(helper) { Name = "Tests" };
             Logs.LogProvider = new XUnitLogProvider(helper);
         }
 
@@ -182,7 +178,7 @@ namespace BTCPayServer.Tests
 
                 var factory = UnitTest1.CreateBTCPayRateFactory();
                 var fetcher = new RateFetcher(factory);
-                var httpClientFactory = new MockHttpClientFactory();
+                var httpClientFactory = TestUtils.CreateHttpFactory();
                 var changellyController = new ChangellyController(
                     new ChangellyClientProvider(tester.PayTester.StoreRepository, httpClientFactory),
                     tester.NetworkProvider, fetcher);
@@ -213,7 +209,7 @@ namespace BTCPayServer.Tests
 
                 var factory = UnitTest1.CreateBTCPayRateFactory();
                 var fetcher = new RateFetcher(factory);
-                var httpClientFactory = new MockHttpClientFactory();
+                var httpClientFactory = TestUtils.CreateHttpFactory();
                 var changellyController = new ChangellyController(
                     new ChangellyClientProvider(tester.PayTester.StoreRepository, httpClientFactory),
                     tester.NetworkProvider, fetcher);
@@ -241,14 +237,6 @@ namespace BTCPayServer.Tests
             Assert.Equal(1, ChangellyCalculationHelper.ComputeCorrectAmount(0.5m, 1, 2));
             Assert.Equal(0.25m, ChangellyCalculationHelper.ComputeCorrectAmount(0.5m, 1, 0.5m));
             Assert.Equal(20, ChangellyCalculationHelper.ComputeCorrectAmount(10, 1, 2));
-        }
-    }
-
-    public class MockHttpClientFactory : IHttpClientFactory
-    {
-        public HttpClient CreateClient(string name)
-        {
-            return new HttpClient();
         }
     }
 }

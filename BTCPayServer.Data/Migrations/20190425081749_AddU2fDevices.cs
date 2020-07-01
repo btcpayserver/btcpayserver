@@ -1,4 +1,3 @@
-﻿using System;
 using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -11,6 +10,7 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            int? maxLength = this.IsMySql(migrationBuilder.ActiveProvider) ? (int?)255 : null;
             if (this.SupportDropColumn(migrationBuilder.ActiveProvider))
             {
                 migrationBuilder.DropColumn(
@@ -22,13 +22,13 @@ namespace BTCPayServer.Migrations
                 name: "U2FDevices",
                 columns: table => new
                 {
-                    Id = table.Column<string>(nullable: false),
+                    Id = table.Column<string>(nullable: false, maxLength: maxLength),
                     Name = table.Column<string>(nullable: true),
                     KeyHandle = table.Column<byte[]>(nullable: false),
                     PublicKey = table.Column<byte[]>(nullable: false),
                     AttestationCert = table.Column<byte[]>(nullable: false),
                     Counter = table.Column<int>(nullable: false),
-                    ApplicationUserId = table.Column<string>(nullable: true)
+                    ApplicationUserId = table.Column<string>(nullable: true, maxLength: maxLength)
                 },
                 constraints: table =>
                 {

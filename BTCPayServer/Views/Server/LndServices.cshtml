@@ -29,13 +29,13 @@
             <div class="row">
                 <div class="col-lg-3 ml-auto text-center">
                     <a href="https://www.pebble.indiesquare.me/" target="_blank">
-                        <img src="~/img/pebblewallet.jpg" height="100" />
+                        <img src="~/img/pebblewallet.jpg" height="100" asp-append-version="true" />
                     </a>
                     <p><a href="https://www.pebble.indiesquare.me/" target="_blank">Pebble</a></p>
                 </div>
                 <div class="col-lg-3 ml-auto text-center">
                     <a href="https://zap.jackmallers.com/" target="_blank">
-                        <img src="~/img/zapwallet.jpg" height="100" />
+                        <img src="~/img/zapwallet.jpg" height="100" asp-append-version="true" />
                     </a>
                     <p><a href="https://zap.jackmallers.com/" target="_blank">Zap</a></p>
                 </div>
@@ -52,13 +52,13 @@
             <div class="row">
                 <div class="col-lg-3 ml-auto text-center">
                     <a href="https://lightningjoule.com/" target="_blank">
-                        <img src="~/img/joule.png" height="100" />
+                        <img src="~/img/joule.png" height="100" asp-append-version="true" />
                     </a>
                     <p><a href="https://lightningjoule.com/" target="_blank">Joule</a></p>
                 </div>
                 <div class="col-lg-3 ml-auto text-center">
                     <a href="https://github.com/ZeusLN/zeus" target="_blank">
-                        <img src="~/img/zeus.jpg" height="100" />
+                        <img src="~/img/zeus.jpg" height="100" asp-append-version="true" />
                     </a>
                     <p><a href="https://github.com/ZeusLN/zeus" target="_blank">Zeus</a></p>
                 </div>
@@ -180,14 +180,15 @@
 
     @if(Model.QRCode != null)
     {
-        <script type="text/javascript" src="~/js/qrcode.js"></script>
+        <script type="text/javascript" src="~/js/qrcode.js" asp-append-version="true"></script>
         <script type="text/javascript">
         new QRCode(document.getElementById("qrCode"),
             {
                 text: @Safe.Json(Model.QRCode),
                 width: 200,
                 height: 200,
-                useSVG: true
+                useSVG: true,
+                correctLevel : QRCode.CorrectLevel.M
             });
         </script>
     }

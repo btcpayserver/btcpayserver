@@ -1,20 +1,18 @@
-﻿using BTCPayServer.Data;
-using BTCPayServer.Models;
-using NBitcoin;
-using NBitcoin.DataEncoders;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using BTCPayServer.Services.Invoices;
+using BTCPayServer.Data;
 using BTCPayServer.Migrations;
 using Microsoft.EntityFrameworkCore;
+using NBitcoin;
+using NBitcoin.DataEncoders;
 
 namespace BTCPayServer.Services.Stores
 {
     public class StoreRepository
     {
-        private ApplicationDbContextFactory _ContextFactory;
+        private readonly ApplicationDbContextFactory _ContextFactory;
 
         public StoreRepository(ApplicationDbContextFactory contextFactory)
         {
@@ -27,7 +25,7 @@ namespace BTCPayServer.Services.Stores
                 return null;
             using (var ctx = _ContextFactory.CreateContext())
             {
-                var result =  await ctx.FindAsync<StoreData>(storeId).ConfigureAwait(false);
+                var result = await ctx.FindAsync<StoreData>(storeId).ConfigureAwait(false);
                 return result;
             }
         }
@@ -78,12 +76,12 @@ namespace BTCPayServer.Services.Stores
             }
         }
 
-        public async Task<StoreData[]> GetStoresByUserId(string userId)
+        public async Task<StoreData[]> GetStoresByUserId(string userId, IEnumerable<string> storeIds = null)
         {
             using (var ctx = _ContextFactory.CreateContext())
             {
                 return (await ctx.UserStore
-                    .Where(u => u.ApplicationUserId == userId)
+                    .Where(u => u.ApplicationUserId == userId && (storeIds == null || storeIds.Contains(u.StoreDataId)))
                     .Select(u => new { u.StoreData, u.Role })
                     .ToArrayAsync())
                     .Select(u =>
@@ -118,7 +116,7 @@ namespace BTCPayServer.Services.Stores
             {
                 if (!ctx.Database.SupportDropForeignKey())
                     return;
-                foreach (var store in await ctx.Stores.Where(s => s.UserStores.Where(u => u.Role == StoreRoles.Owner).Count() == 0).ToArrayAsync())
+                foreach (var store in await ctx.Stores.Where(s => !s.UserStores.Where(u => u.Role == StoreRoles.Owner).Any()).ToArrayAsync())
                 {
                     ctx.Stores.Remove(store);
                 }
@@ -145,7 +143,7 @@ namespace BTCPayServer.Services.Stores
             {
                 if (ctx.Database.SupportDropForeignKey())
                 {
-                    if (await ctx.UserStore.Where(u => u.StoreDataId == storeId && u.Role == StoreRoles.Owner).CountAsync() == 0)
+                    if (!await ctx.UserStore.Where(u => u.StoreDataId == storeId && u.Role == StoreRoles.Owner).AnyAsync())
                     {
                         var store = await ctx.Stores.FindAsync(storeId);
                         if (store != null)
@@ -158,31 +156,34 @@ namespace BTCPayServer.Services.Stores
             }
         }
 
-        public async Task<StoreData> CreateStore(string ownerId, string name)
+        public async Task CreateStore(string ownerId, StoreData storeData)
         {
-            if (string.IsNullOrEmpty(name))
-                throw new ArgumentException("name should not be empty", nameof(name));
+            if (!string.IsNullOrEmpty(storeData.Id))
+                throw new ArgumentException("id should be empty", nameof(storeData.StoreName));
+            if (string.IsNullOrEmpty(storeData.StoreName))
+                throw new ArgumentException("name should not be empty", nameof(storeData.StoreName));
             if (ownerId == null)
                 throw new ArgumentNullException(nameof(ownerId));
             using (var ctx = _ContextFactory.CreateContext())
             {
-                StoreData store = new StoreData
-                {
-                    Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(32)),
-                    StoreName = name,
-                    SpeedPolicy = SpeedPolicy.MediumSpeed
-                };
+                storeData.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(32));
                 var userStore = new UserStore
                 {
-                    StoreDataId = store.Id,
+                    StoreDataId = storeData.Id,
                     ApplicationUserId = ownerId,
-                    Role = "Owner"
+                    Role = StoreRoles.Owner
                 };
-                ctx.Add(store);
+                ctx.Add(storeData);
                 ctx.Add(userStore);
-                await ctx.SaveChangesAsync().ConfigureAwait(false);
-                return store;
+                await ctx.SaveChangesAsync();
             }
+        }
+
+        public async Task<StoreData> CreateStore(string ownerId, string name)
+        {
+            var store = new StoreData() { StoreName = name };
+            await CreateStore(ownerId, store);
+            return store;
         }
 
         public async Task RemoveStore(string storeId, string userId)

@@ -1,15 +1,10 @@
-﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Stores;
-using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.Extensions.Primitives;
 
 namespace BTCPayServer.Security
 {
@@ -35,7 +30,7 @@ namespace BTCPayServer.Security
             var isAdmin = context.User.IsInRole(Roles.ServerAdmin);
             switch (requirement.Policy)
             {
-                case Policies.CanModifyServerSettings.Key:
+                case Policies.CanModifyServerSettings:
                     if (isAdmin)
                         context.Succeed(requirement);
                     return;
@@ -50,17 +45,17 @@ namespace BTCPayServer.Security
                 return;
 
 
-            var store = await _storeRepository.FindStore((string)storeId, userid);
+            var store = await _storeRepository.FindStore(storeId, userid);
             if (store == null)
                 return;
             bool success = false;
             switch (requirement.Policy)
             {
-                case Policies.CanModifyStoreSettings.Key:
+                case Policies.CanModifyStoreSettings:
                     if (store.Role == StoreRoles.Owner || isAdmin)
                         success = true;
                     break;
-                case Policies.CanCreateInvoice.Key:
+                case Policies.CanCreateInvoice:
                     if (store.Role == StoreRoles.Owner ||
                         store.Role == StoreRoles.Guest ||
                         isAdmin ||

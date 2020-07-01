@@ -1,46 +1,33 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
-using BTCPayServer.Filters;
-using BTCPayServer.Models;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Payments;
-using BTCPayServer.Rating;
-using BTCPayServer.Security;
-using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using ExchangeSharp;
 using Ganss.XSS;
-using Microsoft.AspNetCore.Cors;
-using Microsoft.AspNetCore.Http.Extensions;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitcoin.DataEncoders;
-using NBitpayClient;
 using Newtonsoft.Json.Linq;
+using NUglify.Helpers;
 using YamlDotNet.RepresentationModel;
 using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
-using static BTCPayServer.Controllers.AppsController;
 using static BTCPayServer.Models.AppViewModels.ViewCrowdfundViewModel;
 
 namespace BTCPayServer.Services.Apps
 {
     public class AppService
     {
-        ApplicationDbContextFactory _ContextFactory;
+        readonly ApplicationDbContextFactory _ContextFactory;
         private readonly InvoiceRepository _InvoiceRepository;
-        CurrencyNameTable _Currencies;
+        readonly CurrencyNameTable _Currencies;
         private readonly StoreRepository _storeRepository;
         private readonly HtmlSanitizer _HtmlSanitizer;
         public CurrencyNameTable Currencies => _Currencies;
@@ -153,6 +140,11 @@ namespace BTCPayServer.Services.Apps
                 Sounds = settings.Sounds,
                 AnimationColors = settings.AnimationColors,
                 CurrencyData = _Currencies.GetCurrencyData(settings.TargetCurrency, true),
+                CurrencyDataPayments = currentPayments.Select(pair => pair.Key)
+                    .Concat(pendingPayments.Select(pair => pair.Key))
+                    .Select(id => _Currencies.GetCurrencyData(id.CryptoCode, true))
+                    .DistinctBy(data => data.Code)
+                    .ToDictionary(data => data.Code, data => data),
                 Info = new ViewCrowdfundViewModel.CrowdfundInfo()
                 {
                     TotalContributors = paidInvoices.Length,
@@ -216,12 +208,14 @@ namespace BTCPayServer.Services.Apps
             }
         }
 
-        public async Task<ListAppsViewModel.ListAppViewModel[]> GetAllApps(string userId, bool allowNoUser = false)
+        public async Task<ListAppsViewModel.ListAppViewModel[]> GetAllApps(string userId, bool allowNoUser = false, string storeId = null)
         {
             using (var ctx = _ContextFactory.CreateContext())
             {
                 return await ctx.UserStore
-                    .Where(us => (allowNoUser && string.IsNullOrEmpty(userId)) || us.ApplicationUserId == userId)
+                    .Where(us =>
+                        ((allowNoUser && string.IsNullOrEmpty(userId)) || us.ApplicationUserId == userId) &&
+                        (storeId == null || us.StoreDataId == storeId))
                     .Join(ctx.Apps, us => us.StoreDataId, app => app.StoreDataId,
                         (us, app) =>
                             new ListAppsViewModel.ListAppViewModel()
@@ -236,7 +230,7 @@ namespace BTCPayServer.Services.Apps
                     .ToArrayAsync();
             }
         }
-        
+
         public async Task<List<AppData>> GetApps(string[] appIds, bool includeStore = false)
         {
             using (var ctx = _ContextFactory.CreateContext())
@@ -304,7 +298,7 @@ namespace BTCPayServer.Services.Apps
         {
             if (string.IsNullOrWhiteSpace(template))
                 return Array.Empty<ViewPointOfSaleViewModel.Item>();
-            var input = new StringReader(template);
+            using var input = new StringReader(template);
             YamlStream stream = new YamlStream();
             stream.Load(input);
             var root = (YamlMappingNode)stream.Documents[0].RootNode;
@@ -325,7 +319,9 @@ namespace BTCPayServer.Services.Apps
                                  Formatted = Currencies.FormatCurrency(cc.Value.Value, currency)
                              }).Single(),
                     Custom = c.GetDetailString("custom") == "true",
-                    Inventory = string.IsNullOrEmpty(c.GetDetailString("inventory")) ?(int?) null:  int.Parse(c.GetDetailString("inventory"), CultureInfo.InvariantCulture)
+                    Inventory = string.IsNullOrEmpty(c.GetDetailString("inventory")) ? (int?)null : int.Parse(c.GetDetailString("inventory"), CultureInfo.InvariantCulture),
+                    PaymentMethods = c.GetDetailStringList("payment_methods")
+
                 })
                 .ToArray();
         }
@@ -370,7 +366,7 @@ namespace BTCPayServer.Services.Apps
                                  paymentMethodContribution.PaymentMehtodId = pay.GetPaymentMethodId();
                                  paymentMethodContribution.Value = pay.GetCryptoPaymentData().GetValue() - pay.NetworkFee;
                                  var rate = p.GetPaymentMethod(paymentMethodContribution.PaymentMehtodId).Rate;
-                                 paymentMethodContribution.CurrencyValue =  rate * paymentMethodContribution.Value;
+                                 paymentMethodContribution.CurrencyValue = rate * paymentMethodContribution.Value;
                                  return paymentMethodContribution;
                              })
                              .ToArray();
@@ -402,6 +398,14 @@ namespace BTCPayServer.Services.Apps
             public string GetDetailString(string field)
             {
                 return GetDetail(field).FirstOrDefault()?.Value?.Value;
+            }
+            public string[] GetDetailStringList(string field)
+            {
+                if (!Value.Children.ContainsKey(field) || !(Value.Children[field] is YamlSequenceNode sequenceNode))
+                {
+                    return null;
+                }
+                return sequenceNode.Children.Select(node => (node as YamlScalarNode)?.Value).Where(s => s != null).ToArray();
             }
         }
         private class PosScalar
@@ -448,7 +452,7 @@ namespace BTCPayServer.Services.Apps
                 await ctx.SaveChangesAsync();
             }
         }
-        
+
         private static bool TryParseJson(string json, out JObject result)
         {
             result = null;
@@ -467,10 +471,11 @@ namespace BTCPayServer.Services.Apps
         {
             cartItems = null;
             if (!TryParseJson(posData, out var posDataObj) ||
-                !posDataObj.TryGetValue("cart", out var cartObject)) return false;
+                !posDataObj.TryGetValue("cart", out var cartObject))
+                return false;
             cartItems = cartObject.Select(token => (JObject)token)
                 .ToDictionary(o => o.GetValue("id", StringComparison.InvariantCulture).ToString(),
-                    o => int.Parse(o.GetValue("count", StringComparison.InvariantCulture).ToString(), CultureInfo.InvariantCulture ));
+                    o => int.Parse(o.GetValue("count", StringComparison.InvariantCulture).ToString(), CultureInfo.InvariantCulture));
             return true;
         }
     }

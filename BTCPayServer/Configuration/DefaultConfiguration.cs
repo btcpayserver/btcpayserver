@@ -1,16 +1,10 @@
-﻿using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Microsoft.Extensions.Logging;
 using System.Net;
-using System.Threading.Tasks;
-using NBitcoin;
 using System.Text;
 using CommandLine;
-using NBXplorer;
+using Microsoft.Extensions.Configuration;
+using NBitcoin;
 
 namespace BTCPayServer.Configuration
 {

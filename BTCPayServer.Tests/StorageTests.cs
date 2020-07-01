@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading.Tasks;
 using BTCPayServer.Controllers;
 using BTCPayServer.Models;
@@ -11,10 +10,8 @@ using BTCPayServer.Storage.Services.Providers.FileSystemStorage.Configuration;
 using BTCPayServer.Storage.ViewModels;
 using BTCPayServer.Tests.Logging;
 using DBriize.Utils;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.Resources;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -24,7 +21,7 @@ namespace BTCPayServer.Tests
     {
         public StorageTests(ITestOutputHelper helper)
         {
-            Logs.Tester = new XUnitLog(helper) {Name = "Tests"};
+            Logs.Tester = new XUnitLog(helper) { Name = "Tests" };
             Logs.LogProvider = new XUnitLogProvider(helper);
         }
 
@@ -127,7 +124,7 @@ namespace BTCPayServer.Tests
                     .Model);
                 Assert.IsType<ViewResult>(
                     await controller.EditFileSystemStorageProvider(fileSystemStorageConfiguration));
-                
+
                 var shouldBeRedirectingToLocalStorageConfigPage =
                     Assert.IsType<RedirectToActionResult>(await controller.Storage());
                 Assert.Equal(nameof(StorageProvider), shouldBeRedirectingToLocalStorageConfigPage.ActionName);
@@ -172,14 +169,14 @@ namespace BTCPayServer.Tests
                         .IsType<ViewResult>(
                             await controller.StorageProvider(StorageProvider.AzureBlobStorage.ToString()))
                         .Model).ConnectionString);
-                
-                
+
+
 
                 await CanUploadRemoveFiles(controller);
             }
         }
-        
-        
+
+
         private async Task CanUploadRemoveFiles(ServerController controller)
         {
             var fileContent = "content";
@@ -196,12 +193,12 @@ namespace BTCPayServer.Tests
             Assert.Equal(fileId, viewFilesViewModel.SelectedFileId);
             Assert.NotEmpty(viewFilesViewModel.DirectFileUrl);
 
-            
+
             //verify file is available and the same
             var net = new System.Net.WebClient();
             var data = await net.DownloadStringTaskAsync(new Uri(viewFilesViewModel.DirectFileUrl));
             Assert.Equal(fileContent, data);
-            
+
             //create a temporary link to file
             var tmpLinkGenerate = Assert.IsType<RedirectToActionResult>(await controller.CreateTemporaryFileUrl(fileId,
                 new ServerController.CreateTemporaryFileUrlViewModel()
@@ -229,7 +226,7 @@ namespace BTCPayServer.Tests
             Assert.NotNull(statusMessageModel);
 
             Assert.Equal(StatusMessageModel.StatusSeverity.Success, statusMessageModel.Severity);
-            
+
             //attempt to fetch deleted file
             viewFilesViewModel =
                 Assert.IsType<ViewFilesViewModel>(Assert.IsType<ViewResult>(await controller.Files(fileId)).Model);
@@ -237,11 +234,11 @@ namespace BTCPayServer.Tests
             Assert.Null(viewFilesViewModel.DirectFileUrl);
             Assert.Null(viewFilesViewModel.SelectedFileId);
         }
-        
-        
-        
 
-      
+
+
+
+
 
         private static string GetFromSecrets(string key)
         {

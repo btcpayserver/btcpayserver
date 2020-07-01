@@ -1,15 +1,17 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using BTCPayServer.Payments;
+using System.Text;
+using BTCPayServer.Client.Models;
 using BTCPayServer.JsonConverters;
+using BTCPayServer.Payments;
 using BTCPayServer.Payments.Changelly;
 using BTCPayServer.Payments.CoinSwitch;
 using BTCPayServer.Rating;
 using BTCPayServer.Services.Mails;
+using BTCPayServer.Services.Rates;
 using Newtonsoft.Json;
-using System.Text;
 
 namespace BTCPayServer.Data
 {
@@ -91,10 +93,10 @@ namespace BTCPayServer.Data
         [JsonConverter(typeof(CurrencyValueJsonConverter))]
         public CurrencyValue LightningMaxValue { get; set; }
         public bool LightningAmountInSatoshi { get; set; }
+        public bool LightningPrivateRouteHints { get; set; }
 
-        public string CustomLogo { get; set; }
-        
         public string CustomCSS { get; set; }
+        public string CustomLogo { get; set; }
         public string HtmlTitle { get; set; }
 
         public bool RateScripting { get; set; }
@@ -156,7 +158,7 @@ namespace BTCPayServer.Data
                 }
             }
 
-            var preferredExchange = string.IsNullOrEmpty(PreferredExchange) ? "coinaverage" : PreferredExchange;
+            var preferredExchange = string.IsNullOrEmpty(PreferredExchange) ? CoinGeckoRateProvider.CoinGeckoName : PreferredExchange;
             builder.AppendLine($"X_X = {preferredExchange}(X_X);");
 
             BTCPayServer.Rating.RateRules.TryParse(builder.ToString(), out var rules);
@@ -172,6 +174,7 @@ namespace BTCPayServer.Data
 
         public EmailSettings EmailSettings { get; set; }
         public bool RedirectAutomatically { get; set; }
+        public bool PayJoinEnabled { get; set; }
 
         public IPaymentFilter GetExcludedPaymentMethods()
         {

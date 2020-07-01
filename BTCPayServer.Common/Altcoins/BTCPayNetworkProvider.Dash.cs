@@ -1,4 +1,4 @@
-﻿using NBitcoin;
+using NBitcoin;
 
 namespace BTCPayServer
 {
@@ -15,7 +15,6 @@ namespace BTCPayServer
                 BlockExplorerLink = NetworkType == NetworkType.Mainnet
                     ? "https://insight.dash.org/insight/tx/{0}"
                     : "https://testnet-insight.dashevo.org/insight/tx/{0}",
-                NBitcoinNetwork = nbxplorerNetwork.NBitcoinNetwork,
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "dash",
                 DefaultRateRules = new[]

@@ -1,4 +1,3 @@
-using System;
 using System.Threading.Tasks;
 using BTCPayServer.Configuration;
 using BTCPayServer.Storage.Services;
@@ -11,12 +10,12 @@ namespace BTCPayServer.Storage
     public class StorageController : Controller
     {
         private readonly FileService _FileService;
-        private string _dir;
+        private readonly string _dir;
 
         public StorageController(FileService fileService, BTCPayServerOptions serverOptions)
         {
             _FileService = fileService;
-            _dir =FileSystemFileProviderService.GetTempStorageDir(serverOptions);
+            _dir = FileSystemFileProviderService.GetTempStorageDir(serverOptions);
         }
 
         [HttpGet("{fileId}")]

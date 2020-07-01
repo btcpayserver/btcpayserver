@@ -1,26 +1,26 @@
-﻿using BTCPayServer.Models;
-using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Linq;
-using System.Threading.Tasks;
-using BTCPayServer.Filters;
-using BTCPayServer.Services.Rates;
-using BTCPayServer.Services.Stores;
-using BTCPayServer.Rating;
-using Newtonsoft.Json;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Cors;
+using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using BTCPayServer.Data;
+using BTCPayServer.Filters;
+using BTCPayServer.Models;
+using BTCPayServer.Rating;
 using BTCPayServer.Security;
 using BTCPayServer.Security.Bitpay;
+using BTCPayServer.Services.Rates;
+using BTCPayServer.Services.Stores;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Controllers
 {
     [EnableCors(CorsPolicies.All)]
-    [Authorize(Policy = Policies.CanGetRates.Key, AuthenticationSchemes = Security.AuthenticationSchemes.Bitpay)]
+    [Authorize(Policy = ServerPolicies.CanGetRates.Key, AuthenticationSchemes = Security.AuthenticationSchemes.Bitpay)]
     public class RateController : Controller
     {
         public StoreData CurrentStore
@@ -30,10 +30,11 @@ namespace BTCPayServer.Controllers
                 return HttpContext.GetStoreData();
             }
         }
-        RateFetcher _RateProviderFactory;
-        BTCPayNetworkProvider _NetworkProvider;
-        CurrencyNameTable _CurrencyNameTable;
-        StoreRepository _StoreRepo;
+
+        readonly RateFetcher _RateProviderFactory;
+        readonly BTCPayNetworkProvider _NetworkProvider;
+        readonly CurrencyNameTable _CurrencyNameTable;
+        readonly StoreRepository _StoreRepo;
 
         public TokenRepository TokenRepository { get; }
 

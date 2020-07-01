@@ -13,27 +13,27 @@
             <p>This feature is disabled</p>
             @if (Model.IsFullySync)
             {
-                <p><span class="fa fa-check-circle" style="color:green;"></span> <span>The full node is synched</span></p>
+                <p><span class="text-success fa fa-check-circle"></span> <span>The full node is synched</span></p>
             }
             else
             {
-                <p><span class="fa fa-times-circle" style="color:red;"></span> <span>The full node is not synched</span></p>
+                <p><span class="text-danger fa fa-times-circle"></span> <span>The full node is not synched</span></p>
             }
             @if (Model.IsServerAdmin)
             {
-                <p><span class="fa fa-check-circle" style="color:green;"></span> <span>You are server administrator</span></p>
+                <p><span class="text-success fa fa-check-circle"></span> <span>You are server administrator</span></p>
             }
             else
             {
-                <p><span class="fa fa-times-circle" style="color:red;"></span> <span>You are not server administrator</span></p>
+                <p><span class="text-danger fa fa-times-circle"></span> <span>You are not server administrator</span></p>
             }
             @if (Model.IsSupportedByCurrency)
             {
-                <p><span class="fa fa-check-circle" style="color:green;"></span> <span>This full node support rescan of the UTXO set</span></p>
+                <p><span class="text-success fa fa-check-circle"></span> <span>This full node support rescan of the UTXO set</span></p>
             }
             else
             {
-                <p><span class="fa fa-times-circle" style="color:red;"></span> <span>This full node do not support rescan of the UTXO set</span></p>
+                <p><span class="text-danger fa fa-times-circle"></span> <span>This full node do not support rescan of the UTXO set</span></p>
             }
         </div>
     </div>

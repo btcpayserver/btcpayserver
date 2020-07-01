@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using NBitcoin;
 
@@ -7,9 +6,10 @@ namespace BTCPayServer.Models.WalletViewModels
 {
     public class SignWithSeedViewModel
     {
+        public SigningContextModel SigningContext { get; set; } = new SigningContextModel();
+
         [Required]
-        public string PSBT { get; set; }
-        [Required][Display(Name = "BIP39 Seed (12/24 word mnemonic phrase) or HD private key (xprv...)")]
+        [Display(Name = "BIP39 Seed (12/24 word mnemonic phrase) or HD private key (xprv...)")]
         public string SeedOrKey { get; set; }
 
         [Display(Name = "Optional seed passphrase")]

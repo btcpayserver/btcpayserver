@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Concurrent;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Rating;
-using ExchangeSharp;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Options;
 using static BTCPayServer.Services.Rates.RateProviderFactory;
 
 namespace BTCPayServer.Services.Rates
@@ -70,6 +65,24 @@ namespace BTCPayServer.Services.Rates
             return fetchingRates;
         }
 
+        public Task<RateResult> FetchRate(RateRule rateRule, CancellationToken cancellationToken)
+        {
+            if (rateRule == null)
+                throw new ArgumentNullException(nameof(rateRule));
+            var fetchingExchanges = new Dictionary<string, Task<QueryRateResult>>();
+            var dependentQueries = new List<Task<QueryRateResult>>();
+            foreach (var requiredExchange in rateRule.ExchangeRates)
+            {
+                if (!fetchingExchanges.TryGetValue(requiredExchange.Exchange, out var fetching))
+                {
+                    fetching = _rateProviderFactory.QueryRates(requiredExchange.Exchange, cancellationToken);
+                    fetchingExchanges.Add(requiredExchange.Exchange, fetching);
+                }
+                dependentQueries.Add(fetching);
+            }
+            return GetRuleValue(dependentQueries, rateRule);
+        }
+
         private async Task<RateResult> GetRuleValue(List<Task<QueryRateResult>> dependentQueries, RateRule rateRule)
         {
             var result = new RateResult();
@@ -79,9 +92,9 @@ namespace BTCPayServer.Services.Rates
                 result.Latency = query.Latency;
                 if (query.Exception != null)
                     result.ExchangeExceptions.Add(query.Exception);
-                foreach (var rule in query.ExchangeRates)
+                foreach (var rule in query.PairRates)
                 {
-                    rateRule.ExchangeRates.SetRate(rule.Exchange, rule.CurrencyPair, rule.BidAsk);
+                    rateRule.ExchangeRates.SetRate(query.Exchange, rule.CurrencyPair, rule.BidAsk);
                 }
             }
             rateRule.Reevaluate();

@@ -1,20 +1,33 @@
-﻿@using Microsoft.AspNetCore.Mvc.ModelBinding
+﻿@addTagHelper *, BundlerMinifier.TagHelpers
+@using Microsoft.AspNetCore.Mvc.ModelBinding
+@using BTCPayServer.Views
 @model WalletSendModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData["Title"] = "Manage wallet";
     ViewData.SetActivePageAndTitle(WalletsNavPages.Send);
 }
-
+@if (TempData.HasStatusMessage())
+{
+    <div class="row">
+        <div class="col-md-10 text-center">
+            <partial name="_StatusMessage" />
+        </div>
+    </div>
+}
+<partial name="WalletCameraScanner"/>
 <div class="row">
-    <div class="@(Model.Outputs.Count==1? "col-lg-6 transaction-output-form": "col-lg-8")">
-        <form method="post">
+   
+    <div class="@(!Model.InputSelection && Model.Outputs.Count==1? "col-lg-6 transaction-output-form": "col-lg-8")">
+        <form method="post" asp-action="WalletSend" asp-route-walletId="@this.Context.GetRouteValue("walletId")">
+            <input type="hidden" asp-for="InputSelection" />
             <input type="hidden" asp-for="Divisibility" />
+            <input type="hidden" asp-for="NBXSeedAvailable" />
             <input type="hidden" asp-for="Fiat" />
             <input type="hidden" asp-for="Rate" />
             <input type="hidden" asp-for="CurrentBalance" />
-            <input type="hidden" asp-for="RecommendedSatoshiPerByte" />
             <input type="hidden" asp-for="CryptoCode" />
+            <input type="hidden" name="BIP21" id="BIP21" />
             <ul class="text-danger">
                 @foreach (var errors in ViewData.ModelState.Where(pair => pair.Key == string.Empty && pair.Value.ValidationState == ModelValidationState.Invalid))
                 {
@@ -25,6 +38,22 @@
                     }
                 }
             </ul>
+
+            @if (Model.InputSelection)
+            {
+                <div class="form-group hide-when-js">
+                    <label asp-for="SelectedInputs"></label>
+                    <select multiple="multiple" asp-for="SelectedInputs" class="form-control">
+                        @foreach (var input in Model.InputsAvailable)
+                        {
+                            <option value="@input.Outpoint" class="text-truncate" asp-selected="@(Model.SelectedInputs?.Contains(input.Outpoint)??false)">(@input.Amount) @input.Outpoint</option>
+                        }
+                    </select>
+                </div>
+                <partial name="CoinSelection" />
+                <br>
+            }
+
             @if (Model.Outputs.Count == 1)
             {
                 <div class="form-group">
@@ -43,7 +72,7 @@
                     <span asp-validation-for="Outputs[0].Amount" class="text-danger"></span>
                     <p class="form-text text-muted crypto-info">
                         Your current balance is
-                        <button type="button" class="crypto-balance-link btn btn-link p-0">@Model.CurrentBalance</button> <span>@Model.CryptoCode</span>.
+                        <button type="button" class="crypto-balance-link btn btn-link p-0 align-baseline">@Model.CurrentBalance</button> <span>@Model.CryptoCode</span>.
                     </p>
                 </div>
             }
@@ -73,7 +102,7 @@
                                         </div>
                                         <p class="form-text text-muted crypto-info">
                                             Your current balance is
-                                            <button type="button" class="crypto-balance-link btn btn-link p-0">@Model.CurrentBalance</button> <span>@Model.CryptoCode</span>.
+                                            <button type="button" class="crypto-balance-link btn btn-link p-0 align-baseline">@Model.CurrentBalance</button> <span>@Model.CryptoCode</span>.
                                         </p>
                                         <span asp-validation-for="Outputs[index].Amount" class="text-danger"></span>
                                     </div>
@@ -101,11 +130,29 @@
             <div class="form-group">
                 <label asp-for="FeeSatoshiPerByte"></label>
                 <input asp-for="FeeSatoshiPerByte" type="number" step="any" class="form-control" />
+                <span asp-validation-for="FeeSatoshiPerByte" class="text-danger"></span>
                 <span id="FeeRate-Error" class="text-danger"></span>
-                <p class="form-text text-muted crypto-info">
-                    The recommended value is
-                    <button type="button" id="crypto-fee-link" class="btn btn-link p-0">@Model.RecommendedSatoshiPerByte</button> satoshi per byte.
-                </p>
+                @if (Model.RecommendedSatoshiPerByte.Any())
+                {
+                    <div class="text-left mt-1" >
+                        <span class="text-muted">
+                            Confirm in the next
+                        </span>
+                        <div class="btn-group btn-group-toggle feerate-options" data-toggle="buttons">
+
+                            @for (var index = 0; index < Model.RecommendedSatoshiPerByte.Count; index++)
+                            {
+                                var feeRateOption = Model.RecommendedSatoshiPerByte[index];
+                                <button type="button" class="btn btn-sm btn-outline-primary crypto-fee-link" value="@feeRateOption.FeeRate" data-toggle="tooltip" title="@feeRateOption.FeeRate sat/b">
+                                    @feeRateOption.Target.TimeString()
+
+                                </button>
+                                <input type="hidden" asp-for="RecommendedSatoshiPerByte[index].Target" />
+                                <input type="hidden" asp-for="RecommendedSatoshiPerByte[index].FeeRate" />
+                            }
+                        </div>
+                    </div>
+                }
             </div>
             @if (Model.Outputs.Count == 1)
             {
@@ -117,55 +164,72 @@
                     </div>
                 </div>
             }
+
             <div class="card">
-                <button class="btn btn-light collapsed" type="button" data-toggle="collapse" data-target="#accordian-advanced" aria-expanded="false" aria-controls="accordian-advanced">
+                <button id="advancedSettings" class="btn btn-light collapsed" type="button" data-toggle="collapse" data-target="#accordian-advanced" aria-expanded="false" aria-controls="accordian-advanced">
                     Advanced settings
                 </button>
                 <div id="accordian-advanced" class="collapse" aria-labelledby="accordian-advanced-header" data-parent="#accordian-advanced">
                     <div class="card-body">
-                        <div class="form-check">
-                            <input asp-for="NoChange" class="form-check-input" />
-                            <label asp-for="NoChange" class="form-check-label"></label>
-                            <a href="https://docs.btcpayserver.org/features/wallet#make-sure-no-change-utxo-is-created-expert-mode" target="_blank">
-                                <span class="fa fa-question-circle-o" title="More information..."></span>
-                            </a>
-                        </div>
-                        @if (Model.SupportRBF)
-                        {
+                        <div class="form-group">
                             <div class="form-check">
-                                <input asp-for="DisableRBF" class="form-check-input" />
-                                <label asp-for="DisableRBF" class="form-check-label"></label>
-                                <a href="https://bitcoin.org/en/glossary/rbf" target="_blank">
+                                <input asp-for="NoChange" class="form-check-input" />
+                                <label asp-for="NoChange" class="form-check-label"></label>
+                                <a href="https://docs.btcpayserver.org/Wallet/#dont-create-utxo-change" target="_blank">
                                     <span class="fa fa-question-circle-o" title="More information..."></span>
                                 </a>
                             </div>
+                        </div>                        
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input asp-for="AlwaysIncludeNonWitnessUTXO" class="form-check-input"/>
+                                <label asp-for="AlwaysIncludeNonWitnessUTXO" class="form-check-label"></label>
+                                <a href="https://medium.com/@@jmacato/wasabi-wallets-advisory-for-trezor-users-7d942c727f92" target="_blank">
+                                    <span class="fa fa-question-circle-o" title="More information..."></span>
+                                </a>
+                            </div>
+                        </div>    
+                        @if (Model.SupportRBF)
+                        {
+                            <div class="form-group">
+                                <label asp-for="AllowFeeBump"></label>
+                                <a href="https://bitcoinops.org/en/rbf-in-the-wild/" target="_blank">
+                                    <span class="fa fa-question-circle-o" title="More information..."></span>
+                                </a>
+                                <select asp-for="AllowFeeBump" class="form-control">
+                                    <option value="Maybe">Randomize for higher privacy</option>
+                                    <option value="Yes">Yes</option>
+                                    <option value="No">No</option>
+                                </select>
+                            </div>
                         }
+                        @if (!string.IsNullOrEmpty(Model.PayJoinBIP21))
+                        {
+                            <div class="form-group">
+                                <label asp-for="PayJoinBIP21" class="control-label"></label>
+                                <input asp-for="PayJoinBIP21" class="form-control" />
+                                <span asp-validation-for="PayJoinBIP21" class="text-danger"></span>
+                            </div>
+                        }
+                        <div class="form-group">
+                            <button id="toggleInputSelection" type="submit" name="command" value="toggle-input-selection" class="btn btn-sm btn-secondary">Toggle coin selection</button>
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="form-group d-flex mt-2">
-                <div class="dropdown">
-                    <button class="btn btn-primary dropdown-toggle" type="button" id="SendMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        Sign with...
-                    </button>
-                    <div class="dropdown-menu" aria-labelledby="SendMenu">
-                        <button name="command" type="submit" class="dropdown-item" value="ledger">... your Ledger Wallet device</button>
-                        <button name="command" type="submit" class="dropdown-item" value="seed">... an HD private key or mnemonic seed</button>
-                        <button name="command" type="submit" class="dropdown-item" value="analyze-psbt">... a wallet supporting PSBT</button>
-                        @if (Model.CryptoCode == "BTC") {
-                            <button name="command" type="submit" class="dropdown-item" value="vault">... the vault (preview)</button>
-                        }
-                    </div>
-                </div>
-                <button type="submit" name="command" value="add-output" class="ml-1 btn btn-secondary">Add another destination </button>
+               <partial name="WalletSigningMenu" model="@((Model.CryptoCode, Model.NBXSeedAvailable))"/>
+                <button type="submit" name="command" value="add-output" class="ml-1 btn btn-secondary">Add another destination</button>
+                <button type="button" id="bip21parse" class="ml-1 btn btn-secondary" title="Paste BIP21/Address"><i class="fa fa-paste"></i></button>
+                <button type="button" id="scanqrcode" class="ml-1 btn btn-secondary only-for-js" data-toggle="modal" data-target="#scanModal" title="Scan BIP21/Address with camera"><i class="fa fa-camera"></i></button>
             </div>
         </form>
     </div>
 </div>
 
-@section Scripts
+@section HeadScripts
 {
-    <script src="~/js/WalletSend.js" type="text/javascript" defer="defer"></script>
+    <bundle name="wwwroot/bundles/wallet-send-bundle.min.js" asp-append-version="true"></bundle>
     <style>
         .remove-destination-btn{
             font-size: 1.5rem;

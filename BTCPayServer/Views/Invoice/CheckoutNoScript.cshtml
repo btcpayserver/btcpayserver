@@ -34,7 +34,7 @@
                     {
                         <li style="height: 32px; line-height: 32px;">
                             <a href="/invoice-noscript?id=@Model.InvoiceId&paymentMethodId=@crypto.PaymentMethodId">
-                            <img alt="@crypto.PaymentMethodName" src="@crypto.CryptoImage" style="vertical-align:middle; height:24px; text-decoration:none; margin-top: -3px;" /></a>
+                            <img alt="@crypto.PaymentMethodName" src="@crypto.CryptoImage" style="vertical-align:middle; height:24px; text-decoration:none; margin-top: -3px;" asp-append-version="true" /></a>
                             <a href="/invoice-noscript?id=@Model.InvoiceId&paymentMethodId=@crypto.PaymentMethodId" style="padding-top: 2px;">
                                 @crypto.PaymentMethodName
                                 @(crypto.IsLightning ? Html.Raw("&#9889;") : null)

@@ -1,99 +1,132 @@
 ﻿@model LightningNodeViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePageAndTitle(StoreNavPages.Index, "Add lightning node (Experimental)");
+    ViewData.SetActivePageAndTitle(StoreNavPages.Index, "Add lightning node");
 }
 
 <partial name="_StatusMessage" />
 
-<div class="alert alert-warning alert-dismissible" role="alert">
-    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+<div class="alert alert-warning alert-dismissible mb-5" role="alert">
+    <h4 class="alert-heading">Warning</h4>
     <p>
-        <span>Before you proceed, please understand that Lightning Network is still in the experimental stage. Do not put the money you can't afford to lose. There is a high risk of you losing the money.</span>
+        <span>Before you proceed, please understand that the Lightning Network is still considered experimental and is under active development.</span>
     </p>
-    <p>
-        Take time to familiarize yourself with the risk. There's no backup lightning keys automatically done by BTCPayServer. Your keys are in a hot-wallet. This means :
-    </p>
-    <ul>
-        <li>Most of BTCPay Server deployments run on a pruned node, which, while working, is not officially supported by lightning network implementations.</li>
-        <li>If you erase your BTCPay Server virtual machine - you lose all the funds.</li>
-        <li>If your server gets hacked - a hacker can take all of your funds by accessing your keys.</li>
-        <li>If there is a bug in a lightning network implementation - you might lose all the funds.</li>
-        <li>You approve being #reckless and being the sole responsible party for your loss.</li>
-        <li>You approve to keep on your lightning node only what you can afford to lose.</li>
+    <p><strong>Do not add money that you can't afford to lose - there's a high risk of loss of funds.</strong></p>
+    <p class="mb-2">Take time to familiarize yourself with the risks, some of which are:</p>
+    <ul class="mb-4">
+        <li>Most BTCPay Server deployments run on a pruned node which, while working, is not officially supported by lightning network implementations.</li>
+        <li>
+            Lightning keys are NOT automatically backed up by BTCPay Server. Your keys are in a hot-wallet. This means:
+            <ul>
+                <li>If you erase your BTCPay Server virtual machine: you lose all the funds.</li>
+                <li>If your server gets hacked: a hacker can take all of your funds by accessing your keys.</li>
+                <li>If there is a bug in a lightning network implementation: you could lose all the funds.</li>
+            </ul>
+        </li>
     </ul>
+    <hr>
+    <p class="mb-2">To proceed, please ensure that:</p>
+    <ul>
+        <li>You accept being #reckless and being the sole responsible party for any loss of funds.</li>
+        <li>You agree to keep on your lightning node only what you can afford to lose.</li>
+    </ul>
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
 </div>
 
 <div class="row">
-    <div class="col-md-10">
+    <div class="col">
+        <h3 class="mb-3">Lightning Node Connection</h3>
         <form method="post">
             <div class="form-group">
-                <p>This connection string encapsulates the necessary information BTCPay needs to connect to your lightning node, we currently support:</p>
+                <p class="mb-2">The connection string encapsulates the configuration for connecting to your lightning node. BTCPay Server currently supports:</p>
                 <ul>
-                    <li><code>clightning</code> via TCP or unix domain socket connection</li>
-                    <li><code>lightning charge</code> via HTTPS</li>
-                    <li><code>lnd</code> via the REST proxy</li>
+                    <li class="mb-2">
+                        <strong>c-lightning</strong> via TCP or unix domain socket connection:
+                        <ul>
+                            <li>
+                                <code><b>type=</b>clightning;<b>server=</b>unix://root/.lightning/lightning-rpc</code>
+                            </li>
+                            <li>
+                                <code><b>type=</b>clightning;<b>server=</b>tcp://1.1.1.1:27743/</code>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="mb-2">
+                        <strong>Lightning Charge</strong> via HTTPS:
+                        <ul>
+                            <li>
+                                <code><b>type=</b>charge;<b>server=</b>https://charge:8080/;<b>api-token=</b>myapitoken...</code>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="mb-2">
+                        <strong>Eclair</strong> via HTTPS:
+                        <ul>
+                            <li>
+                                <code><b>type=</b>eclair;<b>server=</b>https://eclair:8080/;<b>password=</b>eclairpassword...</code>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="mb-2">
+                        <strong>LND</strong> via the REST proxy:
+                        <ul>
+                            <li>
+                                <code><b>type=</b>lnd-rest;<b>server=</b>https://mylnd:8080/;<b>macaroon=</b>abef263adfe...</code>
+                            </li>
+                            <li>
+                                <code><b>type=</b>lnd-rest;<b>server=</b>https://mylnd:8080/;<b>macaroon=</b>abef263adfe...;<b>certthumbprint=</b>abef263adfe...</code>
+                            </li>
+                            <li>
+                                <code><b>type=</b>lnd-rest;<b>server=</b>http://mylnd:8080/;<b>macaroonfilepath=</b>/root/.lnd/admin.macaroon;<b>allowinsecure=</b>true</code>
+                            </li>
+                        </ul>
+                        <a class="d-inline-block my-2 text-secondary text-decoration-none" data-toggle="collapse" href="#lnd-notes" role="button" aria-expanded="false" aria-controls="lnd-notes">
+                            <span class="fa fa-question-circle-o" title="More information..."></span> More information on the LND settings
+                        </a>
+                        <div class="collapse" id="lnd-notes">
+                            <div class="card card-body">
+                                <p>For the macaroon options you need to provide the <code>admin.macaroon</code>.</p>
+                                <p>The path to the LND data directory may vary, the following example assume <code>/root/.lnd</code>.</p>
+                                <p class="mb-2">The <code>macaroon</code> parameter expects the HEX value, it can be obtained using this command:</p>
+                                <pre class="mb-4">xxd -plain /root/.lnd/data/chain/bitcoin/mainnet/admin.macaroon | tr -d '\n'</pre>
+                                <p>You can omit <code>certthumbprint</code> if the certificate is trusted by your machine.</p>
+                                <p class="mb-2">The <code>certthumbprint</code> can be obtained using this command:</p>
+                                <pre class="mb-4">openssl x509 -noout -fingerprint -sha256 -in /root/.lnd/tls.cert | sed -e 's/.*=//;s/://g'</pre>
+                                <p class="mb-0">If your LND REST server is using HTTP or HTTPS with an untrusted certificate, you can set <code>allowinsecure=true</code> as a fallback.</p>
+                            </div>
+                        </div>
+                    </li>
                 </ul>
-                <table class="table table-sm table-responsive-md">
-                    <thead>
-                        <tr>
-                            <th>Examples</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-
-                        <tr>
-                            <th class="small"><b>type=</b>clightning;<b>server=</b>unix://root/.lightning/lightning-rpc</th>
-                        </tr>
-                        <tr>
-                            <th class="small"><b>type=</b>clightning;<b>server=</b>tcp://1.1.1.1:27743/</th>
-                        </tr>
-                        <tr>
-                            <th class="small"><b>type=</b>lnd-rest;<b>server=</b>http://mylnd:8080/;<b>macaroonfilepath=</b>/root/.lnd/admin.macaroon;<b>allowinsecure=</b>true</th>
-                        </tr>
-                        <tr>
-                            <th class="small"><b>type=</b>lnd-rest;<b>server=</b>https://mylnd:8080/;<b>macaroon=</b>abef263adfe...</th>
-                        </tr>
-                        <tr>
-                            <th class="small"><b>type=</b>lnd-rest;<b>server=</b>https://mylnd:8080/;<b>macaroon=</b>abef263adfe...;<b>certthumbprint=</b>abef263adfe...</th>
-                        </tr>
-                        <tr>
-                            <th class="small"><b>type=</b>charge;<b>server=</b>https://charge:8080/;<b>api-token=</b>myapitoken...</th>
-                        </tr>
-                        <tr>
-                            <th class="small"><b>type=</b>eclair;<b>server=</b>https://eclair:8080/;<b>password=</b>eclairpassword...</th>
-                        </tr>
-                    </tbody>
-                </table>
-                <p>Note that the <code>certthumbprint</code> to connect to your LND node can be obtained through this command line:</p>
-                <p><pre><code>openssl x509 -noout -fingerprint -sha256 -inform pem -in /root/.lnd/tls.cert | sed -e 's/.*=//' -e 's/://g'</code></pre></p>
-                <p>You can omit <code>certthumbprint</code> if you the certificate is trusted by your machine</p>
-                <p>You can set <code>allowinsecure</code> to <code>true</code> if your LND REST server is using HTTP or HTTPS with an untrusted certificate which you don't know the <code>certthumbprint</code></p>
             </div>
+
             <div class="form-group">
                 <label asp-for="ConnectionString"></label>
-                <input id="lightningurl" asp-for="ConnectionString" class="form-control" />
+                <input asp-for="ConnectionString" class="form-control"/>
                 <span asp-validation-for="ConnectionString" class="text-danger"></span>
                 @if (Model.InternalLightningNode != null)
                 {
                     <p class="form-text text-muted">
-                        You can use the internal lightning node by <a href="#" id="internal-ln-node-setter" onclick="$('#lightningurl').val('@Model.InternalLightningNode'); return false;">clicking here</a>
+                        Use the internal lightning node of this BTCPay Server instance by
+                        <a href="#" id="internal-ln-node-setter" onclick="$('#ConnectionString').val('@Model.InternalLightningNode');return false;">clicking here</a>.
                     </p>
                 }
             </div>
-            <div class="form-group">
-                <label asp-for="Enabled"></label>
-                <input asp-for="Enabled" type="checkbox" class="form-check" />
+            <div class="form-group form-check">
+                <input asp-for="Enabled" type="checkbox" class="form-check-input"/>
+                <label asp-for="Enabled" class="form-check-label"></label>
             </div>
             <button id="save" name="command" type="submit" value="save" class="btn btn-primary">Submit</button>
-            <button name="command" type="submit" value="test" class="btn btn-secondary">Test connection</button>
-            <a 
-                class="btn btn-secondary"
-                asp-controller="PublicLightningNodeInfo" 
-               asp-action="ShowLightningNodeInfo" 
-               asp-route-cryptoCode="@Model.CryptoCode" 
-               asp-route-storeId="@Model.StoreId"
-               target="_blank">
+            <button name="command" type="submit" value="test" class="btn btn-secondary mr-3">Test connection</button>
+            <a
+                class="text-secondary"
+                asp-controller="PublicLightningNodeInfo"
+                asp-action="ShowLightningNodeInfo"
+                asp-route-cryptoCode="@Model.CryptoCode"
+                asp-route-storeId="@Model.StoreId"
+                target="_blank">
+                <span class="fa fa-info-circle" title="More information..."></span>
                 Open Public Node Info Page
             </a>
         </form>

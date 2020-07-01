@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using BTCPayServer.Payments.CoinSwitch;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BTCPayServer.Models.StoreViewModels
@@ -12,7 +11,7 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Integration Mode")]
         public string Mode { get; set; } = "inline";
-        
+
         [Required]
         [Range(0, 100)]
         [Display(Name =

@@ -1,3 +1,4 @@
+@using BTCPayServer.Services
 @model BTCPayServer.Models.InvoicingModels.PaymentModel
 
 <script type="text/x-template" id="bitcoin-lightning-method-checkout-template">
@@ -21,20 +22,20 @@
             </div>
             <div class="payment__scan">
                 <img v-bind:src="srvModel.cryptoImage" class="qr_currency_icon" v-if="scanDisplayQr"/>
-                <qrcode v-bind:value="scanDisplayQr" :options="{ width: 256, margin: 0, color: {dark:'#000', light:'#f5f5f7'} }" tag="svg" v-if="scanDisplayQr"></qrcode>
+                <qrcode v-bind:value="scanDisplayQr" :options="{ width: 256, margin: 1, color: {dark:'#000', light:'#f5f5f7'} }" tag="svg" v-if="scanDisplayQr"></qrcode>
                 <div class="payment__spinner qr_currency_icon" style="padding-right: 20px;">
                     <partial name="Checkout-Spinner"/>
                 </div>
             </div>
             <div class="payment__details__instruction__open-wallet" v-if="srvModel.invoiceBitcoinUrl">
-                <a class="payment__details__instruction__open-wallet__btn action-button" v-bind:href="srvModel.invoiceBitcoinUrl">
+                <a class="payment__details__instruction__open-wallet__btn action-button" target="_top" v-bind:href="srvModel.invoiceBitcoinUrl">
                     <span>{{$t("Open in wallet")}}</span>
                 </a>
             </div>
         </div>
         <div class="bp-view payment manual-flow" id="copy" v-bind:class="{ 'active': currentTab == 'copy'}">
             <div class="manual__step-two__instructions">
-                <span i18n="">{{$t("CompletePay_Body", srvModel)}}</span>
+                <span v-html="$t('CompletePay_Body', srvModel)"></span>
             </div>
             <div class="copyLabelPopup">
                 <span>{{$t("Copied")}}</span>
@@ -64,11 +65,20 @@
                     </div>
                 </div>
                 <div class="separatorGem"></div>
-                <div class="copySectionBox">
+                <div class="copySectionBox bottomBorder">
                     <label>{{$t("Address")}}</label>
                     <div class="inputWithIcon _copyInput">
                         <input type="text" class="checkoutTextbox" v-bind:value="srvModel.btcAddress" readonly="readonly"/>
                         <img v-bind:src="srvModel.cryptoImage"/>
+                    </div>
+                </div>
+                <div class="separatorGem"></div>
+                <div class="copySectionBox" :title="$t(hasPayjoin? 'BIP21 payment link' : 'BIP21 payment link with payjoin support') " >
+                    <label>{{$t("Payment link")}}</label>
+                    <div class="inputWithIcon _copyInput">
+                        <input type="text" class="checkoutTextbox" v-bind:value="srvModel.invoiceBitcoinUrl" readonly="readonly"/>
+                        <img v-bind:src="srvModel.cryptoImage" v-if="hasPayjoin"/>
+                        <i class="fa fa-user-secret" v-else/>
                     </div>
                 </div>
             </nav>
@@ -171,7 +181,7 @@
 
         @if (Model.ShowRecommendedFee) {
             <div id="recommended-fee" class="recommended-fee" v-bind:class="{ hide: !srvModel.feeRate }">
-                <span>{{$t("Recommended_Fee", srvModel)}}</span>
+                <span v-html="$t('Recommended_Fee', srvModel)"></span>
             </div>
         }
     </div>          
@@ -217,6 +227,9 @@
                 }
             },
             computed: {
+                hasPayjoin: function(){
+                    return this.srvModel.invoiceBitcoinUrl.indexOf('@PayjoinClient.BIP21EndpointKey=') === -1;
+                },
                 coinswitchAmountDue: function() {
                     return this.srvModel.coinSwitchAmountMarkupPercentage
                         ? this.srvModel.btcDue * (1 + (this.srvModel.coinSwitchAmountMarkupPercentage / 100))
@@ -278,7 +291,7 @@
         function copyElement(trigger, popupLeftModifier, popupTopModifier) {
             var elm = $(trigger);
             var position = elm.offset();
-            position.top -= popupLeftModifier;
+            position.top -= popupLeftModifier + $(window).scrollTop();
             position.left += (elm.width() / 2) - popupTopModifier;
             $(".copyLabelPopup").css(position).addClass("copied");
             elm.removeClass("copy-cursor").addClass("clipboardCopied");

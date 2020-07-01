@@ -1,18 +1,25 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace BTCPayServer.Rating
 {
     public class ExchangeRates : IEnumerable<ExchangeRate>
     {
-        Dictionary<string, ExchangeRate> _AllRates = new Dictionary<string, ExchangeRate>();
+        readonly Dictionary<string, ExchangeRate> _AllRates = new Dictionary<string, ExchangeRate>();
         public ExchangeRates()
         {
 
+        }
+
+        public ExchangeRates(string exchangeName, IEnumerable<PairRate> rates)
+        {
+            foreach (var rate in rates)
+            {
+                Add(new ExchangeRate(exchangeName, rate.CurrencyPair, rate.BidAsk));
+            }
         }
         public ExchangeRates(IEnumerable<ExchangeRate> rates)
         {
@@ -21,7 +28,8 @@ namespace BTCPayServer.Rating
                 Add(rate);
             }
         }
-        List<ExchangeRate> _Rates = new List<ExchangeRate>();
+
+        readonly List<ExchangeRate> _Rates = new List<ExchangeRate>();
         public MultiValueDictionary<string, ExchangeRate> ByExchange
         {
             get;
@@ -63,7 +71,7 @@ namespace BTCPayServer.Rating
             if (ByExchange.TryGetValue(exchangeName, out var rates))
             {
                 var rate = rates.FirstOrDefault(r => r.CurrencyPair == currencyPair);
-                if(rate != null)
+                if (rate != null)
                 {
                     rate.BidAsk = bidAsk;
                 }
@@ -217,6 +225,26 @@ namespace BTCPayServer.Rating
             if (Bid == Ask)
                 return Bid.ToString(CultureInfo.InvariantCulture);
             return $"({Bid.ToString(CultureInfo.InvariantCulture)} , {Ask.ToString(CultureInfo.InvariantCulture)})";
+        }
+    }
+
+    public class PairRate
+    {
+        public PairRate(CurrencyPair currencyPair, BidAsk bidAsk)
+        {
+            if (currencyPair == null)
+                throw new ArgumentNullException(nameof(currencyPair));
+            if (bidAsk == null)
+                throw new ArgumentNullException(nameof(bidAsk));
+            this.CurrencyPair = currencyPair;
+            this.BidAsk = bidAsk;
+        }
+        public CurrencyPair CurrencyPair { get; }
+        public BidAsk BidAsk { get; }
+
+        public override string ToString()
+        {
+            return $"{CurrencyPair} == {BidAsk}";
         }
     }
     public class ExchangeRate

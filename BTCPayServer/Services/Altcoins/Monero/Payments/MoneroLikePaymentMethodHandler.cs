@@ -4,14 +4,14 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
-using BTCPayServer.Lightning;
+using BTCPayServer.Logging;
 using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
+using BTCPayServer.Payments;
+using BTCPayServer.Rating;
 using BTCPayServer.Services.Altcoins.Monero.RPC.Models;
 using BTCPayServer.Services.Altcoins.Monero.Services;
 using BTCPayServer.Services.Altcoins.Monero.Utils;
-using BTCPayServer.Payments;
-using BTCPayServer.Rating;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using NBitcoin;
@@ -30,14 +30,15 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
         }
         public override PaymentType PaymentType => MoneroPaymentType.Instance;
 
-        public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(MoneroSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod,
+        public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(InvoiceLogs logs, MoneroSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod,
             StoreData store, MoneroLikeSpecificBtcPayNetwork network, object preparePaymentObject)
         {
-            
+
             if (!_moneroRpcProvider.IsAvailable(network.CryptoCode))
                 throw new PaymentMethodUnavailableException($"Node or wallet not available");
             var invoice = paymentMethod.ParentEntity;
-            if (!(preparePaymentObject is Prepare moneroPrepare)) throw new ArgumentException();
+            if (!(preparePaymentObject is Prepare moneroPrepare))
+                throw new ArgumentException();
             var feeRatePerKb = await moneroPrepare.GetFeeRate;
             var address = await moneroPrepare.ReserveAddress(invoice.Id);
 
@@ -55,16 +56,16 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
         public override object PreparePayment(MoneroSupportedPaymentMethod supportedPaymentMethod, StoreData store,
             BTCPayNetworkBase network)
         {
-            
-            var walletClient = _moneroRpcProvider.WalletRpcClients [supportedPaymentMethod.CryptoCode];
-            var daemonClient = _moneroRpcProvider.DaemonRpcClients [supportedPaymentMethod.CryptoCode];
+
+            var walletClient = _moneroRpcProvider.WalletRpcClients[supportedPaymentMethod.CryptoCode];
+            var daemonClient = _moneroRpcProvider.DaemonRpcClients[supportedPaymentMethod.CryptoCode];
             return new Prepare()
             {
                 GetFeeRate = daemonClient.SendCommandAsync<GetFeeEstimateRequest, GetFeeEstimateResponse>("get_fee_estimate", new GetFeeEstimateRequest()),
-                ReserveAddress = s =>  walletClient. SendCommandAsync<CreateAddressRequest, CreateAddressResponse>("create_address", new CreateAddressRequest() {Label = $"btcpay invoice #{s}", AccountIndex = supportedPaymentMethod.AccountIndex })
+                ReserveAddress = s => walletClient.SendCommandAsync<CreateAddressRequest, CreateAddressResponse>("create_address", new CreateAddressRequest() { Label = $"btcpay invoice #{s}", AccountIndex = supportedPaymentMethod.AccountIndex })
             };
         }
-        
+
         class Prepare
         {
             public Task<GetFeeEstimateResponse> GetFeeRate;
@@ -76,17 +77,17 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
             var paymentMethodId = new PaymentMethodId(model.CryptoCode, PaymentType);
 
             var client = _moneroRpcProvider.WalletRpcClients[model.CryptoCode];
-            
+
             var cryptoInfo = invoiceResponse.CryptoInfo.First(o => o.GetpaymentMethodId() == paymentMethodId);
             var network = _networkProvider.GetNetwork<MoneroLikeSpecificBtcPayNetwork>(model.CryptoCode);
             model.IsLightning = false;
             model.PaymentMethodName = GetPaymentMethodName(network);
             model.CryptoImage = GetCryptoImage(network);
             model.InvoiceBitcoinUrl = client.SendCommandAsync<MakeUriRequest, MakeUriResponse>("make_uri", new MakeUriRequest()
-                {
-                    Address = cryptoInfo.Address,
-                    Amount = MoneroMoney.Convert(decimal.Parse(cryptoInfo.Due, CultureInfo.InvariantCulture))
-                }).GetAwaiter()
+            {
+                Address = cryptoInfo.Address,
+                Amount = MoneroMoney.Convert(decimal.Parse(cryptoInfo.Due, CultureInfo.InvariantCulture))
+            }).GetAwaiter()
                 .GetResult().Uri;
             model.InvoiceBitcoinUrlQR = model.InvoiceBitcoinUrl;
         }

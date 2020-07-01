@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Controllers;
@@ -46,7 +45,7 @@ namespace BTCPayServer.Configuration
             }
             connectionString.Server = serviceUri;
 
-            if (serviceType == ExternalServiceTypes.LNDGRPC || serviceType == ExternalServiceTypes.LNDRest)
+            if (serviceType == ExternalServiceTypes.LNDGRPC || serviceType == ExternalServiceTypes.LNDRest || serviceType == ExternalServiceTypes.CLightningRest)
             {
                 // Read the MacaroonDirectory
                 if (connectionString.MacaroonDirectoryPath != null)
@@ -77,7 +76,7 @@ namespace BTCPayServer.Configuration
                 }
             }
 
-            if (serviceType == ExternalServiceTypes.Charge || serviceType == ExternalServiceTypes.RTL || serviceType == ExternalServiceTypes.Spark)
+            if (new[] { ExternalServiceTypes.Charge, ExternalServiceTypes.RTL, ExternalServiceTypes.ThunderHub, ExternalServiceTypes.Spark, ExternalServiceTypes.Configurator }.Contains(serviceType))
             {
                 // Read access key from cookie file
                 if (connectionString.CookieFilePath != null)
@@ -94,7 +93,7 @@ namespace BTCPayServer.Configuration
                     {
                         throw new System.IO.FileNotFoundException("Cookie file path not found", ex);
                     }
-                    if (serviceType == ExternalServiceTypes.RTL)
+                    if (serviceType == ExternalServiceTypes.RTL || serviceType == ExternalServiceTypes.Configurator || serviceType == ExternalServiceTypes.ThunderHub)
                     {
                         connectionString.AccessKey = cookieFileContent;
                     }
@@ -144,9 +143,7 @@ namespace BTCPayServer.Configuration
         }
         public bool? IsOnion()
         {
-            if (this.Server == null || !this.Server.IsAbsoluteUri)
-                return null;
-            return this.Server.DnsSafeHost.EndsWith(".onion", StringComparison.OrdinalIgnoreCase);
+            return Server?.IsOnion();
         }
         public static bool TryParse(string str, out ExternalConnectionString result, out string error)
         {
@@ -155,7 +152,7 @@ namespace BTCPayServer.Configuration
             error = null;
             result = null;
             var resultTemp = new ExternalConnectionString();
-            foreach(var kv in str.Split(';')
+            foreach (var kv in str.Split(';')
                         .Select(part => part.Split('='))
                         .Where(kv => kv.Length == 2))
             {
@@ -183,7 +180,7 @@ namespace BTCPayServer.Configuration
                             error = "Duplicated cookiefile attribute";
                             return false;
                         }
-                            
+
                         resultTemp.CookieFilePath = kv[1];
                         break;
                     case "macaroondirectorypath":

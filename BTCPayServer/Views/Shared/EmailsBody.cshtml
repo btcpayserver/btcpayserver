@@ -18,7 +18,9 @@
             <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                 <a class="dropdown-item" href="" data-Server="smtp.gmail.com" data-Port="587" data-EnableSSL="true">Gmail.com</a>
                 <a class="dropdown-item" href="" data-Server="mail.yahoo.com" data-Port="587" data-EnableSSL="true">Yahoo.com</a>
+                <a class="dropdown-item" href="" data-Server="smtp.mailgun.org" data-Port="587" data-EnableSSL="true">Mailgun</a>
                 <a class="dropdown-item" href="" data-Server="smtp.office365.com" data-Port="587" data-EnableSSL="true">Office365</a>
+                <a class="dropdown-item" href="" data-Server="smtp.sendgrid.net" data-Port="587" data-EnableSSL="true">SendGrid</a>
             </div>
         </div>
         <p></p>
@@ -106,7 +108,7 @@ $(document).ready(function(){
                 <label asp-for="TestEmail"></label>
                 <input asp-for="TestEmail" class="form-control"/>
                 <small class="form-text text-muted">
-                    If you want to test your settings, enter an email address here and click "Send Test Email". Your settings won't be saved, only a test email will be sent. After a successful test, you can click "Save".
+                    If you want to test your settings, enter an email address here and click "Send Test Email." Your settings won't be saved, only a test email will be sent. After a successful test, you can click "Save".
                 </small>
                 <span asp-validation-for="TestEmail" class="text-danger"></span>
             </div>

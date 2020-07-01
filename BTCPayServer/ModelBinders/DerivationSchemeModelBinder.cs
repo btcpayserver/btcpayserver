@@ -1,8 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
-using NBitcoin;
-using System.Reflection;
 using System;
+using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using NBXplorer.DerivationStrategy;
 
 namespace BTCPayServer.ModelBinders
@@ -41,7 +40,7 @@ namespace BTCPayServer.ModelBinders
             var network = networkProvider.GetNetwork<BTCPayNetwork>(cryptoCode ?? "BTC");
             try
             {
-                var data = new DerivationStrategyFactory(network.NBitcoinNetwork).Parse(key);
+                var data = network.NBXplorerNetwork.DerivationStrategyFactory.Parse(key);
                 if (!bindingContext.ModelType.IsInstanceOfType(data))
                 {
                     throw new FormatException("Invalid destination type");

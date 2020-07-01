@@ -1,18 +1,18 @@
-﻿using System;
-using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Configuration;
 using BTCPayServer.Logging;
+using Microsoft.Extensions.Logging;
 
 namespace BTCPayServer.Services
 {
     public class TorServices
     {
         private readonly BTCPayNetworkProvider _networks;
-        BTCPayServerOptions _Options;
+        readonly BTCPayServerOptions _Options;
         public TorServices(BTCPayServer.BTCPayNetworkProvider networks, BTCPayServerOptions options)
         {
             _networks = networks;

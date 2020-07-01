@@ -6,6 +6,7 @@
 
 @section HeadScripts {
     <style type="text/css">
+
         .hw-fields {
             display: none;
         }
@@ -18,13 +19,45 @@
         <div asp-validation-summary="All" class="text-danger"></div>
     </div>
 </div>
+<div class="modal fade" id="btcpayservervault" tabindex="-1" role="dialog" aria-labelledby="btcpayservervault" aria-hidden="true">
+
+</div>
+<partial name="VaultElements" />
 <div class="row">
     <div class="col-md-8">
+        <div id="WebsocketPath" style="display:none;">@Url.Action("VaultBridgeConnection", "Vault", new { cryptoCode = Model.CryptoCode })</div>
         @if (!Model.Confirmation)
         {
             <partial name="AddDerivationSchemes_HardwareWalletDialogs" model="@Model" />
         }
-        <form method="post">
+        else
+        {
+            <template id="btcpayservervault_template">
+                <div class="modal-dialog" role="document">
+                    <form class="modal-content"  method="post" enctype="multipart/form-data">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Address verification</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Confirm on the device that you see address <b id="displayedAddress"></b></p>
+                            <div class="form-group">
+                                <div id="vaultPlaceholder"></div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button id="vault-confirm" class="btn btn-primary" style="display:none;"></button>
+                        </div>
+                    </form>
+                </div>
+            </template>
+        }
+        <form method="post" asp-action="AddDerivationScheme" 
+              asp-route-cryptoCode="@Model.CryptoCode"
+              asp-route-storeId="@this.Context.GetRouteValue("storeId")">
 
             <input id="Config" asp-for="Config" type="hidden" />
 
@@ -44,14 +77,18 @@
 
                     <div class="dropdown mt-2 text-right">
                         <div class="btn-group">
-                            <button class="btn btn-link dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <button class="btn btn-link dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="import-from-btn">
                                 Import from...
                             </button>
                             <div class="dropdown-menu  dropdown-menu-right">
-                                <button class="dropdown-item" type="button">... Coldcard (air gap)</button>
-                                <button class="dropdown-item check-for-ledger" type="button">... Ledger Wallet</button>
-                                @if (Model.CryptoCode == "BTC") {
-                                <button class="dropdown-item check-for-vault" type="button">... the vault (preview)</button>
+                                @if (Model.CryptoCode == "BTC")
+                                {
+                                    <button class="dropdown-item check-for-vault" type="button">... a hardware wallet</button>
+                                }
+                                <button class="dropdown-item" type="button" data-toggle="modal" data-target="#electrumimport">... a wallet file (Electrum, Wasabi, Cobo Vault, ColdCard)</button>
+                                @if (Model.CanUseHotWallet)
+                                {
+                                    <button class="dropdown-item" data-toggle="modal" data-target="#nbxplorergeneratewallet" type="button" id="nbxplorergeneratewalletbtn">... a new/existing seed.</button>
                                 }
                             </div>
                         </div>
@@ -133,6 +170,10 @@
                             <tr>
                                 <th>Key path</th>
                                 <th>Address</th>
+                                @if (Model.Source == "Vault")
+                                {
+                                    <th>Actions</th>
+                                }
                             </tr>
                         </thead>
                         <tbody>
@@ -141,6 +182,10 @@
                                 <tr>
                                     <td>@sample.KeyPath</td>
                                     <td>@sample.Address</td>
+                                    @if (Model.Source == "Vault")
+                                    {
+                                        <td><a class="showaddress" href="#" onclick='showAddress(@Safe.Json(sample.RootedKeyPath.ToString()), @Safe.Json(sample.Address)); return false;'>Show on device</a></td>
+                                    }
                                 </tr>
                             }
                         </tbody>
@@ -163,10 +208,9 @@
 </div>
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
-    <script src="~/js/ledgerwebsocket.js" type="text/javascript" defer="defer"></script>
-    <script src="~/js/StoreAddDerivationScheme.js" type="text/javascript" defer="defer"></script>
-    <script src="~/js/vaultbridge.js" type="text/javascript" defer="defer"></script>
-    <script src="~/js/vaultbridge.ui.js" type="text/javascript" defer="defer"></script>
+    <script src="~/js/StoreAddDerivationScheme.js" type="text/javascript" defer="defer" asp-append-version="true"></script>
+    <script src="~/js/vaultbridge.js" type="text/javascript" defer="defer" asp-append-version="true"></script>
+    <script src="~/js/vaultbridge.ui.js" type="text/javascript" defer="defer" asp-append-version="true"></script>
     <script>
         window.coinName = "@Model.Network.DisplayName.ToLowerInvariant()";
     </script>

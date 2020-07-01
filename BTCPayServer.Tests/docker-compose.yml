@@ -27,6 +27,7 @@ services:
       TESTS_SSHCONNECTION: "root@sshd:22"
       TESTS_SSHPASSWORD: ""
       TESTS_SSHKEYFILE: ""
+      TESTS_SOCKSENDPOINT: "tor:9050"
     expose:
       - "80"
     links:
@@ -51,6 +52,7 @@ services:
       - customer_lnd
       - merchant_lnd
       - sshd
+      - tor
 
   sshd:
     build:
@@ -64,7 +66,7 @@ services:
         - "sshd_datadir:/root/.ssh"
 
   devlnd: 
-    image: btcpayserver/bitcoin:0.18.0
+    image: btcpayserver/bitcoin:0.19.0.1
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_EXTRA_ARGS: |
@@ -76,7 +78,7 @@ services:
       - customer_lnd
       - merchant_lnd
   nbxplorer:
-    image: nicolasdorier/nbxplorer:2.1.2
+    image: nicolasdorier/nbxplorer:2.1.34
     restart: unless-stopped
     ports:
       - "32838:32838"
@@ -84,7 +86,7 @@ services:
       - "32838"
     environment:
       NBXPLORER_NETWORK: regtest
-      NBXPLORER_CHAINS: "btc,ltc"
+      NBXPLORER_CHAINS: "btc,ltc,lbtc"
       NBXPLORER_BTCRPCURL: http://bitcoind:43782/
       NBXPLORER_BTCNODEENDPOINT: bitcoind:39388
       NBXPLORER_BTCRPCUSER: ceiwHEbqWI83
@@ -93,17 +95,24 @@ services:
       NBXPLORER_LTCNODEENDPOINT: litecoind:39388
       NBXPLORER_LTCRPCUSER: ceiwHEbqWI83
       NBXPLORER_LTCRPCPASSWORD: DwubwWsoo3
+      NBXPLORER_LBTCRPCURL: "http://elementsd-liquid:19332/"
+      NBXPLORER_LBTCNODEENDPOINT: "elementsd-liquid:19444"
+      NBXPLORER_LBTCRPCUSER: "liquid"
+      NBXPLORER_LBTCRPCPASSWORD: "liquid"
       NBXPLORER_BIND: 0.0.0.0:32838
+      NBXPLORER_MINGAPSIZE: 5
+      NBXPLORER_MAXGAPSIZE: 10
       NBXPLORER_VERBOSE: 1
       NBXPLORER_NOAUTH: 1
     links:
       - bitcoind
       - litecoind
+      - elementsd-liquid
 
 
   bitcoind:
     restart: unless-stopped
-    image: btcpayserver/bitcoin:0.18.0
+    image: btcpayserver/bitcoin:0.19.0.1
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_EXTRA_ARGS: |-
@@ -118,6 +127,7 @@ services:
         deprecatedrpc=signrawtransaction
     ports: 
       - "43782:43782"
+      - "39388:39388"
     expose:
       - "43782" # RPC
       - "39388" # P2P
@@ -127,7 +137,7 @@ services:
       - "bitcoin_datadir:/data"
 
   customer_lightningd:
-    image: btcpayserver/lightning:v0.7.3-dev
+    image: btcpayserver/lightning:v0.8.2-dev
     stop_signal: SIGKILL
     restart: unless-stopped
     environment: 
@@ -154,7 +164,7 @@ services:
       - bitcoind
 
   lightning-charged:
-    image: shesek/lightning-charge:0.4.11-standalone
+    image: shesek/lightning-charge:0.4.19-standalone
     restart: unless-stopped
     environment:
       NETWORK: regtest
@@ -174,7 +184,7 @@ services:
       - merchant_lightningd
 
   merchant_lightningd:
-    image: btcpayserver/lightning:v0.7.3-dev
+    image: btcpayserver/lightning:v0.8.2-dev
     stop_signal: SIGKILL
     environment: 
       EXPOSE_TCP: "true"
@@ -215,6 +225,34 @@ services:
     expose:
       - "43782" # RPC
       - "39388" # P2P
+          
+  elementsd-liquid:
+      restart: always
+      container_name: btcpayserver_elementsd_liquid
+      image: btcpayserver/elements:0.18.1.7
+      environment:
+          ELEMENTS_CHAIN: elementsregtest
+          ELEMENTS_EXTRA_ARGS: |
+              mainchainrpcport=43782
+              mainchainrpchost=bitcoind
+              mainchainrpcuser=liquid
+              mainchainrpcpassword=liquid
+              rpcport=19332
+              rpcbind=0.0.0.0:19332
+              rpcauth=liquid:c8bf1a8961d97f224cb21224aaa8235d$$402f4a8907683d057b8c58a42940b6e54d1638322a42986ae28ebb844e603ae6
+              port=19444
+              whitelist=0.0.0.0/0
+              validatepegin=0
+              initialfreecoins=210000000000000
+              con_dyna_deploy_start=99999999999
+      expose:
+          - "19332"
+          - "19444"
+      ports:
+          - "19332:19332"
+          - "19444:19444"
+      volumes:
+          - "elementsd_liquid_datadir:/data"
 
   postgres:
     image:  postgres:9.6.5
@@ -224,7 +262,7 @@ services:
       - "5432"
 
   merchant_lnd:
-    image: btcpayserver/lnd:v0.7.1-beta-withseed
+    image: btcpayserver/lnd:v0.10.1-beta
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
@@ -244,7 +282,7 @@ services:
         debuglevel=debug
         trickledelay=1000
     ports:
-      - "53280:8080"
+      - "35531:8080"
     expose:
       - "9735"
     volumes:
@@ -254,7 +292,7 @@ services:
       - bitcoind
 
   customer_lnd:
-    image: btcpayserver/lnd:v0.7.1-beta-withseed
+    image: btcpayserver/lnd:v0.10.1-beta
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
@@ -274,7 +312,7 @@ services:
         debuglevel=debug
         trickledelay=1000
     ports:
-      - "53281:8080"
+      - "35532:8080"
     expose:
       - "8080"
       - "10009"
@@ -284,11 +322,30 @@ services:
     links:
       - bitcoind
 
+  tor:
+    restart: unless-stopped
+    image: btcpayserver/tor:0.4.1.5
+    container_name: tor
+    environment:
+        TOR_PASSWORD: btcpayserver
+    ports:
+        - "9050:9050" # SOCKS
+        - "9051:9051" # Tor Control
+    volumes:
+        - "tor_datadir:/home/tor/.tor"
+        - "torrcdir:/usr/local/etc/tor"
+        - "tor_servicesdir:/var/lib/tor/hidden_services"
+
+
 volumes:
     sshd_datadir:
     bitcoin_datadir:
+    elementsd_liquid_datadir:
     customer_lightningd_datadir:
     merchant_lightningd_datadir:
     lightning_charge_datadir:
     customer_lnd_datadir:
     merchant_lnd_datadir:
+    tor_datadir:
+    torrcdir:
+    tor_servicesdir:

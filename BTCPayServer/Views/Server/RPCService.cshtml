@@ -38,7 +38,7 @@
         <div class="row">
             <div class="col-lg-3 ml-auto text-center">
                 <a href="https://apps.apple.com/us/app/fully-noded/id1436425586" target="_blank">
-                    <img src="~/img/fullynoded.png" height="100" />
+                    <img src="~/img/fullynoded.png" height="100" asp-append-version="true" />
                 </a>
                 <p><a href="https://apps.apple.com/us/app/fully-noded/id1436425586" target="_blank">Fully Noded</a></p>
             </div>
@@ -91,14 +91,15 @@
 
     @if (Model.ShowQR)
     {
-        <script type="text/javascript" src="~/js/qrcode.js"></script>
+        <script type="text/javascript" src="~/js/qrcode.js" asp-append-version="true"></script>
         <script type="text/javascript">
         new QRCode(document.getElementById("qrCode"),
             {
                 text: @Safe.Json(Model.ServiceLink),
                 width: 200,
                 height: 200,
-                useSVG: true
+                useSVG: true,
+                correctLevel : QRCode.CorrectLevel.M
             });
         </script>
     }

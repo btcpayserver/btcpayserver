@@ -5,24 +5,7 @@
     ViewData["Title"] = "Update Crowdfund";
 }
 <section>
-    <div class="modal" id="product-modal" tabindex="-1" role="dialog">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Contribution Perks Management</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="button" class="js-product-save btn btn-primary">Save Changes</button>
-                </div>
-            </div>
-        </div>
-    </div>
+
     <div class="container">
         <div class="row">
             <div class="col-lg-12 section-heading">
@@ -109,14 +92,7 @@
                         </div>
                         <span asp-validation-for="EndDate" class="text-danger"></span>
                     </div>
-                    <div class="form-group">
-                        <label class="control-label">Contribution Perks</label>
-                        <div class="mb-3">
-                            <a class="js-product-add btn btn-secondary" href="#" data-toggle="modal" data-target="#product-modal"><i class="fa fa-plus fa-fw"></i> Add Perk</a>
-                        </div>
-                        <div class="js-products bg-light row p-3">
-                        </div>
-                    </div>
+                    <partial name="TemplateEditor" model="@(nameof(Model.PerksTemplate), "Perks" )"/>
                     <div class="form-group">
                         <label asp-for="PerksTemplate" class="control-label"></label>
                         <textarea asp-for="PerksTemplate" rows="10" cols="40" class="js-product-template form-control"></textarea>
@@ -124,7 +100,7 @@
                     </div>
                     <div class="form-group">
                         <label asp-for="CustomCSSLink" class="control-label"></label>
-                        <a href="https://docs.btcpayserver.org/development/theme#bootstrap-themes" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                        <a href="https://docs.btcpayserver.org/Theme/#2-bootstrap-themes" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
                         <input asp-for="CustomCSSLink" class="form-control" />
                         <span asp-validation-for="CustomCSSLink" class="text-danger"></span>
                     </div>
@@ -142,15 +118,6 @@
                         <label asp-for="NotificationUrl" class="control-label"></label>
                         <input asp-for="NotificationUrl" class="form-control" />
                         <span asp-validation-for="NotificationUrl" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="NotificationEmail" class="control-label"></label>
-                        @if (Model.NotificationEmailWarning)
-                        {
-                            <partial name="NotificationEmailWarning" model="@Model.StoreId" />
-                        }
-                        <input type="email" asp-for="NotificationEmail" class="form-control" />
-                        <span asp-validation-for="NotificationEmail" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <div class="form-check">
@@ -213,15 +180,25 @@
                         <input asp-for="DisqusShortname" class="form-control" />
                         <span asp-validation-for="DisqusShortname" class="text-danger"></span>
                     </div>
-                    <input type="hidden" asp-for="NotificationEmailWarning" />
                     <div class="form-group">
-                        <button name="command" type="submit" class="btn btn-primary" value="save" id="SaveSettings">Save settings</button>
-                        <a class="btn btn-secondary" target="_blank" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
-                        @if ((Model.Description != null) && (Model.Title != null) && (Model.TargetCurrency != null))
+                        <button type="submit" class="btn btn-primary" id="SaveSettings">Save Settings</button>
+                        <div class="btn-group">
+                            <a class="btn btn-outline-primary" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
+                            <a class="btn btn-outline-primary" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm"
+                               target="viewinvoices_@Model.AppId"><span class="fa fa-external-link"></span></a>
+                        </div>
+                        @if (Model.ModelWithMinimumData)
                         {
-                        <button name="command" type="submit" value="viewapp" class="btn btn-secondary" id="ViewApp">View App</button>
+                            <div class="btn-group">
+                                <a class="btn btn-outline-primary" asp-action="ViewCrowdfund" asp-controller="AppsPublic" asp-route-appId="@Model.AppId" id="ViewApp">View App</a>
+                                <a class="btn btn-outline-primary" asp-action="ViewCrowdfund" asp-controller="AppsPublic" asp-route-appId="@Model.AppId"
+                                   target="viewapp_@Model.AppId"><span class="fa fa-external-link"></span></a>
+                            </div>
                         }
-                        <a class="btn btn-secondary" target="_blank" asp-action="ListApps">Back to the app list</a>
+                        <div class="btn-group">
+                            <a class="btn btn-outline-primary" asp-action="ListApps">Back to the app list</a>
+                            <a class="btn btn-outline-primary" asp-action="ListApps" target="viewapp_@Model.AppId"><span class="fa fa-external-link"></span></a>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -229,65 +206,7 @@
     </div>
 </section>
 @section Scripts {
-    <script src="~/vendor/moment/moment.js"></script>
-    <bundle name="wwwroot/bundles/crowdfund-admin-bundle.min.js"></bundle>
-    <bundle name="wwwroot/bundles/crowdfund-admin-bundle.min.css"></bundle>
-    <script id="template-product-item" type="text/template">
-        <div class="col-sm-4 col-md-3 mb-3">
-            <div class="card">
-                {image}
-                <div class="card-body">
-                    <h6 class="card-title">{title}</h6>
-                    <a href="#" class="js-product-edit btn btn-primary" data-toggle="modal" data-target="#product-modal">Edit</a>
-                    <a href="#" class="js-product-remove btn btn-danger"><i class="fa fa-trash"></i></a>
-                </div>
-            </div>
-        </div>
-    </script>
-    <script id="template-product-content" type="text/template">
-        <div class="mb-3">
-            <input class="js-product-id" type="hidden" name="id" value="{id}">
-            <input class="js-product-index" type="hidden" name="index" value="{index}">
-            <div class="form-row">
-                <div class="col-sm-6">
-                    <label>Title</label>*
-                    <input type="text" class="js-product-title form-control mb-2" value="{title}" autofocus />
-                </div>
-                <div class="col-sm-3">
-                    <label>Price</label>*
-                    <input
-                        class="js-product-price form-control mb-2"
-                        inputmode="numeric"
-                        pattern="\d*"
-                        step="any"
-                        type="number"
-                        value="{price}" />
-                </div>
-                <div class="col-sm-3">
-                    <label>Custom price</label>
-                    <select class="js-product-custom form-control">
-                        {custom}
-                    </select>
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="col">
-                    <label>Image</label>
-                    <input type="text" class="js-product-image form-control mb-2" value="{image}" />
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="col">
-                    <label>Description</label>
-                    <textarea rows="3" cols="40" class="js-product-description form-control mb-2">{description}</textarea>
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="col">
-                    <label>Inventory (leave blank to not use inventory feature)</label>
-                    <input type="number" step="1" class="js-product-inventory form-control mb-2" value="{inventory}"/>
-                </div>
-            </div>
-        </div>
-    </script>
+    <script src="~/vendor/moment/moment.js" asp-append-version="true"></script>
+    <bundle name="wwwroot/bundles/crowdfund-admin-bundle.min.js" asp-append-version="true"></bundle>
+    <bundle name="wwwroot/bundles/crowdfund-admin-bundle.min.css" asp-append-version="true"></bundle>
 }

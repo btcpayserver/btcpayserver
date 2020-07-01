@@ -1,19 +1,10 @@
-﻿using System;
-using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Logging;
-using Microsoft.Extensions.Hosting;
-using NBXplorer;
-using NBXplorer.Models;
-using System.Collections.Concurrent;
-using BTCPayServer.Events;
-using BTCPayServer.Services;
-using Microsoft.AspNetCore.Mvc.Filters;
 using BTCPayServer.Security;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
+using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace BTCPayServer.HostedServices
 {
@@ -22,7 +13,7 @@ namespace BTCPayServer.HostedServices
         public void Update(ThemeSettings data)
         {
             if (String.IsNullOrWhiteSpace(data.ThemeCssUri))
-                _themeUri = "/main/themes/classic.css";
+                _themeUri = "/main/themes/default.css";
             else
                 _themeUri = data.ThemeCssUri;
 
@@ -108,7 +99,7 @@ namespace BTCPayServer.HostedServices
             var policies = context.HttpContext.RequestServices.GetService(typeof(ContentSecurityPolicies)) as ContentSecurityPolicies;
             if (manager != null && policies != null)
             {
-                if(manager.CreativeStartUri != null && Uri.TryCreate(manager.CreativeStartUri, UriKind.Absolute, out var uri))
+                if (manager.CreativeStartUri != null && Uri.TryCreate(manager.CreativeStartUri, UriKind.Absolute, out var uri))
                 {
                     policies.Clear();
                 }
@@ -130,8 +121,8 @@ namespace BTCPayServer.HostedServices
 
     public class CssThemeManagerHostedService : BaseAsyncService
     {
-        private SettingsRepository _SettingsRepository;
-        private CssThemeManager _CssThemeManager;
+        private readonly SettingsRepository _SettingsRepository;
+        private readonly CssThemeManager _CssThemeManager;
 
         public CssThemeManagerHostedService(SettingsRepository settingsRepository, CssThemeManager cssThemeManager)
         {

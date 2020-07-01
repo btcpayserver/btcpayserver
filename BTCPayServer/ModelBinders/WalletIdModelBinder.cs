@@ -1,6 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -29,7 +26,7 @@ namespace BTCPayServer.ModelBinders
                 return Task.CompletedTask;
             }
 
-            if(WalletId.TryParse(key, out var walletId))
+            if (WalletId.TryParse(key, out var walletId))
             {
                 bindingContext.Result = ModelBindingResult.Success(walletId);
             }

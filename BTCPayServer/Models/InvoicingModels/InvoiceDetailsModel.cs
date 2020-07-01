@@ -1,9 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using BTCPayServer.Data;
 using BTCPayServer.Payments;
+using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services.Invoices;
 using NBitcoin;
 using Newtonsoft.Json;
@@ -21,6 +19,8 @@ namespace BTCPayServer.Models.InvoicingModels
         public string TransactionLink { get; set; }
 
         public bool Replaced { get; set; }
+        public BitcoinLikePaymentData CryptoPaymentData { get; set; }
+        public string AdditionalInformation { get; set; }
     }
 
     public class OffChainPaymentViewModel
@@ -28,7 +28,7 @@ namespace BTCPayServer.Models.InvoicingModels
         public string Crypto { get; set; }
         public string BOLT11 { get; set; }
     }
-    
+
     public class InvoiceDetailsModel
     {
         public class CryptoPayment
@@ -124,5 +124,7 @@ namespace BTCPayServer.Models.InvoicingModels
         public string NotificationEmail { get; internal set; }
         public Dictionary<string, object> PosData { get; set; }
         public List<PaymentEntity> Payments { get; set; }
+        public bool Archived { get; set; }
+        public bool CanRefund { get; set; }
     }
 }

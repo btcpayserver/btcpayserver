@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System;
+using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Data
 {
@@ -45,6 +43,12 @@ namespace BTCPayServer.Data
         {
             get;
             set;
+        }
+
+        internal static void OnModelCreating(ModelBuilder builder)
+        {
+            builder.Entity<PairingCodeData>()
+                .HasKey(o => o.Id);
         }
     }
 }

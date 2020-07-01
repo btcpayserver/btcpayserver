@@ -1,13 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
 using System.Text;
-using System.Threading.Tasks;
 using BTCPayServer.Payments;
-using BTCPayServer.Security;
 using BTCPayServer.Services.Rates;
-using NBitcoin;
 using NBXplorer;
 using Newtonsoft.Json.Linq;
 
@@ -45,12 +41,12 @@ namespace BTCPayServer.Data
         }
 #pragma warning restore CS0618
 
-        
+
         public static StoreBlob GetStoreBlob(this StoreData storeData)
         {
             var result = storeData.StoreBlob == null ? new StoreBlob() : new Serializer(null).ToObject<StoreBlob>(Encoding.UTF8.GetString(storeData.StoreBlob));
             if (result.PreferredExchange == null)
-                result.PreferredExchange = CoinAverageRateProvider.CoinAverageName;
+                result.PreferredExchange = CoinGeckoRateProvider.CoinGeckoName;
             return result;
         }
 
@@ -66,6 +62,8 @@ namespace BTCPayServer.Data
 
         public static IEnumerable<ISupportedPaymentMethod> GetSupportedPaymentMethods(this StoreData storeData, BTCPayNetworkProvider networks)
         {
+            if (storeData == null)
+                throw new ArgumentNullException(nameof(storeData));
             networks = networks.UnfilteredNetworks;
 #pragma warning disable CS0618
             bool btcReturned = false;

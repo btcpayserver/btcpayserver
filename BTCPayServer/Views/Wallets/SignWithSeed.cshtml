@@ -27,7 +27,7 @@
     <div class="col-md-10">
         <div asp-validation-summary="All" class="text-danger"></div>
         <form method="post" asp-action="SignWithSeed" asp-route-walletId="@this.Context.GetRouteValue("walletId")">
-            <input type="hidden" asp-for="PSBT" />
+            <partial name="SigningContext" for="SigningContext" />
             <div class="form-group">
                 <label asp-for="SeedOrKey"></label>
                 <input asp-for="SeedOrKey" class="form-control" />

@@ -1,14 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
 using System;
-using System.Collections.Generic;
-using System.Text;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Routing;
 
 namespace BTCPayServer.Tests.Mocks
 {
     public class UrlHelperMock : IUrlHelper
     {
-        Uri _BaseUrl;
+        readonly Uri _BaseUrl;
         public UrlHelperMock(Uri baseUrl)
         {
             _BaseUrl = baseUrl;

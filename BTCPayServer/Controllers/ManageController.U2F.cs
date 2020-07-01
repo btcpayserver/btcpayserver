@@ -1,8 +1,8 @@
-using System;
 using System.Threading.Tasks;
 using BTCPayServer.Models;
 using BTCPayServer.U2F.Models;
 using Microsoft.AspNetCore.Mvc;
+using U2F.Core.Exceptions;
 
 namespace BTCPayServer.Controllers
 {
@@ -65,7 +65,7 @@ namespace BTCPayServer.Controllers
                     return RedirectToAction("U2FAuthentication");
                 }
             }
-            catch (Exception e)
+            catch (U2fException e)
             {
                 errorMessage = e.Message;
             }

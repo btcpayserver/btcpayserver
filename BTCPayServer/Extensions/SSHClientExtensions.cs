@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.SSH;
@@ -90,7 +88,7 @@ namespace BTCPayServer
                         }
                     });
                 }
-                catch(Exception ex) { tcs.TrySetException(ex); }
+                catch (Exception ex) { tcs.TrySetException(ex); }
             })
             { IsBackground = true }.Start();
             return tcs.Task;
@@ -110,7 +108,7 @@ namespace BTCPayServer
         {
             if (sshClient == null)
                 throw new ArgumentNullException(nameof(sshClient));
-            
+
             TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             new Thread(() =>
             {

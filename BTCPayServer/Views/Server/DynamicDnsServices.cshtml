@@ -16,7 +16,7 @@
                     This is recommended if you are hosting BTCPayServer at home and wish to have a clearnet HTTPS address to access your server.
                 </span>
             </p>
-            <p>Note that you need to properly configure your NAT and BTCPayServer install to get HTTPS certificate. Check the documentation for <a href="https://docs.btcpayserver.org/features/dynamicdns" target="_blank">more information</a>.</p>
+            <p>Note that you need to properly configure your NAT and BTCPayServer install to get HTTPS certificate. Check the documentation for <a href="https://docs.btcpayserver.org/DynamicDNS/" target="_blank">more information</a>.</p>
         </div>
         <form method="post" asp-action="DynamicDnsService">
             <button id="AddDynamicDNS" class="btn btn-primary" type="submit"><span class="fa fa-plus"></span> Add Dynamic DNS</button>
@@ -39,11 +39,11 @@
                         <td style="text-align:center;">
                                 @if(service.Settings.Enabled)
                                 {
-                                    <span class="fa fa-check"></span>
+                                    <span class="text-success fa fa-check"></span>
                                 }
                                 else
                                 {
-                                    <span class="fa fa-times"></span>
+                                    <span class="text-danger fa fa-times"></span>
                                 }
                         </td>
                         <td  style="text-align:right"><a asp-action="DynamicDnsService" asp-route-hostname="@service.Settings.Hostname">Edit</a> <span> - </span> <a asp-action="DeleteDynamicDnsService" asp-route-hostname="@service.Settings.Hostname">Remove</a></td>

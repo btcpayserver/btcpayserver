@@ -61,8 +61,9 @@ namespace BTCPayServer.Payments.Changelly
                 throw new ChangellyException("Changelly not enabled for this store");
             }
 
-            var changelly = new Changelly(_httpClientFactory.CreateClient("Changelly"), changellySettings.ApiKey, changellySettings.ApiSecret,
-                changellySettings.ApiUrl, changellySettings.ShowFiat);
+            var changelly = new Changelly(_httpClientFactory.CreateClient("Changelly"), changellySettings.ApiKey,
+                changellySettings.ApiSecret,
+                changellySettings.ApiUrl);
             _clientCache.AddOrReplace(storeId, changelly);
             return changelly;
         }

@@ -1,9 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Threading.Tasks;
-using BTCPayServer.Lightning;
 using Microsoft.Extensions.Configuration;
 
 namespace BTCPayServer.Configuration
@@ -35,17 +33,34 @@ namespace BTCPayServer.Configuration
             Load(configuration, cryptoCode, "rtl", ExternalServiceTypes.RTL, "Invalid setting {0}, " + Environment.NewLine +
                                 $"Valid example: 'server=https://btcpay.example.com/rtl/btc/;cookiefile=/etc/clightning_bitcoin_rtl/.cookie'" + Environment.NewLine +
                                 "Error: {1}",
-                                "LND (Ride the Lightning server)");
+                                "Ride the Lightning server");
+            Load(configuration, cryptoCode, "thunderhub", ExternalServiceTypes.ThunderHub, "Invalid setting {0}, " + Environment.NewLine +
+                                $"Valid example: 'server=https://btcpay.example.com/thub/;cookiefile=/etc/clightning_bitcoin_rtl/.cookie'" + Environment.NewLine +
+                                "Error: {1}",
+                                "ThunderHub");
+            Load(configuration, cryptoCode, "clightningrest", ExternalServiceTypes.CLightningRest, "Invalid setting {0}, " + Environment.NewLine +
+                                $"Valid example: 'server=https://btcpay.example.com/clightning-rest/btc/;cookiefile=/etc/clightning_bitcoin_rtl/.cookie'" + Environment.NewLine +
+                                "Error: {1}",
+                                "C-Lightning REST");
             Load(configuration, cryptoCode, "charge", ExternalServiceTypes.Charge, "Invalid setting {0}, " + Environment.NewLine +
                                 $"lightning charge server: 'type=charge;server=https://charge.example.com;api-token=2abdf302...'" + Environment.NewLine +
                                 $"lightning charge server: 'type=charge;server=https://charge.example.com;cookiefilepath=/root/.charge/.cookie'" + Environment.NewLine +
                                 "Error: {1}",
                                 "C-Lightning (Charge server)");
+
+        }
+
+        public void LoadNonCryptoServices(IConfiguration configuration)
+        {
+            Load(configuration, null, "configurator", ExternalServiceTypes.Configurator, "Invalid setting {0}, " + Environment.NewLine +
+                                                                                   $"configurator: 'cookiefilepathfile=/etc/configurator/cookie'" + Environment.NewLine +
+                                                                                   "Error: {1}",
+                "Configurator");
         }
 
         void Load(IConfiguration configuration, string cryptoCode, string serviceName, ExternalServiceTypes type, string errorMessage, string displayName)
         {
-            var setting = $"{cryptoCode}.external.{serviceName}";
+            var setting = $"{(!string.IsNullOrEmpty(cryptoCode) ? $"{cryptoCode}." : string.Empty)}external.{serviceName}";
             var connStr = configuration.GetOrDefault<string>(setting, string.Empty);
             if (connStr.Length != 0)
             {
@@ -65,8 +80,11 @@ namespace BTCPayServer.Configuration
 
         public ExternalService GetService(string serviceName, string cryptoCode)
         {
-            return this.FirstOrDefault(o => o.CryptoCode.Equals(cryptoCode, StringComparison.OrdinalIgnoreCase) &&
-                                                                                    o.ServiceName.Equals(serviceName, StringComparison.OrdinalIgnoreCase));
+            return this.FirstOrDefault(o =>
+                (cryptoCode == null && o.CryptoCode == null) ||
+                (o.CryptoCode != null && o.CryptoCode.Equals(cryptoCode, StringComparison.OrdinalIgnoreCase))
+                &&
+                o.ServiceName.Equals(serviceName, StringComparison.OrdinalIgnoreCase));
         }
     }
 
@@ -86,8 +104,11 @@ namespace BTCPayServer.Configuration
         LNDSeedBackup,
         Spark,
         RTL,
+        ThunderHub,
         Charge,
         P2P,
-        RPC
+        RPC,
+        Configurator,
+        CLightningRest
     }
 }

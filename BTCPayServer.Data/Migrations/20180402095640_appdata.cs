@@ -1,8 +1,7 @@
-﻿using BTCPayServer.Data;
+using System;
+using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
-using System;
-using System.Collections.Generic;
 
 namespace BTCPayServer.Migrations
 {
@@ -12,16 +11,17 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            int? maxLength = this.IsMySql(migrationBuilder.ActiveProvider) ? (int?)255 : null;
             migrationBuilder.CreateTable(
                 name: "Apps",
                 columns: table => new
                 {
-                    Id = table.Column<string>(nullable: false),
+                    Id = table.Column<string>(nullable: false, maxLength: maxLength),
                     AppType = table.Column<string>(nullable: true),
                     Created = table.Column<DateTimeOffset>(nullable: false),
                     Name = table.Column<string>(nullable: true),
                     Settings = table.Column<string>(nullable: true),
-                    StoreDataId = table.Column<string>(nullable: true)
+                    StoreDataId = table.Column<string>(nullable: true, maxLength: maxLength)
                 },
                 constraints: table =>
                 {

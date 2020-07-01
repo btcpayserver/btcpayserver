@@ -13,16 +13,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <link rel="apple-touch-icon" href="~/img/icons/icon-512x512.png">
-    <link rel="apple-touch-startup-image" href="~/img/splash.png">
+    <link rel="apple-touch-icon" href="~/img/icons/icon-512x512.png" asp-append-version="true">
+    <link rel="apple-touch-startup-image" href="~/img/splash.png" asp-append-version="true">
 
     <link rel="manifest" href="~/manifest.json">
 
-    <link href="@this.Context.Request.GetRelativePathOrAbsolute(themeManager.BootstrapUri)" rel="stylesheet" />
-    <link href="@this.Context.Request.GetRelativePathOrAbsolute(themeManager.ThemeUri)" rel="stylesheet" />
-    <link href="~/vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" />
+    <link href="@this.Context.Request.GetRelativePathOrAbsolute(themeManager.BootstrapUri)" rel="stylesheet" asp-append-version="true" />
+    <link href="@this.Context.Request.GetRelativePathOrAbsolute(themeManager.ThemeUri)" rel="stylesheet" asp-append-version="true" />
+    <link href="~/vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" asp-append-version="true" />
 
-    <bundle name="wwwroot/bundles/lightning-node-info-bundle.min.js" />
+    <bundle name="wwwroot/bundles/lightning-node-info-bundle.min.js" asp-append-version="true" />
     <script type="text/javascript">
         var srvModel = @Safe.Json(Model);
 
@@ -132,7 +132,7 @@
                     <div class="card-body m-sm-0 p-sm-0" v-if="srvModel.available">
                         <div class="qr-container mb-2">
                             <img v-bind:src="srvModel.cryptoImage" class="qr-icon" />
-                            <qrcode v-bind:value="srvModel.nodeInfo" :options="{ width: 256, margin: 0, color: {dark:'#000', light:'#fff'} }" tag="svg">
+                            <qrcode v-bind:value="srvModel.nodeInfo" :options="{ width: 256, margin: 1, color: {dark:'#000', light:'#f5f5f7'} }" tag="svg">
                             </qrcode>
                         </div>
                         <div class="input-group copy" data-clipboard-target="#vue-peer-info">

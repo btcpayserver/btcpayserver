@@ -1,18 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Stores;
-using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using NBXplorer.DerivationStrategy;
 
 namespace BTCPayServer.Controllers
 {
@@ -21,9 +15,9 @@ namespace BTCPayServer.Controllers
     [AutoValidateAntiforgeryToken]
     public partial class UserStoresController : Controller
     {
-        private StoreRepository _Repo;
-        private BTCPayNetworkProvider _NetworkProvider;
-        private UserManager<ApplicationUser> _UserManager;
+        private readonly StoreRepository _Repo;
+        private readonly BTCPayNetworkProvider _NetworkProvider;
+        private readonly UserManager<ApplicationUser> _UserManager;
 
         public UserStoresController(
             UserManager<ApplicationUser> userManager,
@@ -33,7 +27,7 @@ namespace BTCPayServer.Controllers
             _Repo = storeRepository;
             _NetworkProvider = networkProvider;
             _UserManager = userManager;
-        }        
+        }
 
         [HttpGet]
         [Route("create")]

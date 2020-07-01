@@ -1,8 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace BTCPayServer.Security
 {
@@ -66,7 +65,8 @@ namespace BTCPayServer.Security
         {
 
         }
-        HashSet<ConsentSecurityPolicy> _Policies = new HashSet<ConsentSecurityPolicy>();
+
+        readonly HashSet<ConsentSecurityPolicy> _Policies = new HashSet<ConsentSecurityPolicy>();
         public void Add(ConsentSecurityPolicy policy)
         {
             if (_Policies.Any(p => p.Name == policy.Name && p.Value == policy.Name))
@@ -81,7 +81,7 @@ namespace BTCPayServer.Security
         {
             StringBuilder value = new StringBuilder();
             bool firstGroup = true;
-            foreach(var group in Rules.GroupBy(r => r.Name))
+            foreach (var group in Rules.GroupBy(r => r.Name))
             {
                 if (!firstGroup)
                 {
@@ -93,7 +93,7 @@ namespace BTCPayServer.Security
                 {
                     values.Add(v.Value);
                 }
-                foreach(var i in authorized)
+                foreach (var i in authorized)
                 {
                     values.Add(i);
                 }
@@ -109,7 +109,7 @@ namespace BTCPayServer.Security
             _Policies.Clear();
         }
 
-        HashSet<string> authorized = new HashSet<string>();
+        readonly HashSet<string> authorized = new HashSet<string>();
         internal void AddAllAuthorized(string v)
         {
             authorized.Add(v);

@@ -1,8 +1,7 @@
-﻿using System;
-using System.Linq;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Text;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,7 +15,7 @@ namespace BTCPayServer.Tests
             public TaskCompletionSource<bool> CTS;
         }
 
-        List<WaitObj> waits = new List<WaitObj>();
+        readonly List<WaitObj> waits = new List<WaitObj>();
         DateTimeOffset _Now = new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero);
         public async Task Wait(TimeSpan delay, CancellationToken cancellation)
         {

@@ -2,17 +2,15 @@ using System;
 using System.Threading.Tasks;
 using BTCPayServer.Controllers;
 using BTCPayServer.Models.AppViewModels;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
-#if !NETCOREAPP21
 using Microsoft.AspNetCore.Routing;
-using Microsoft.AspNetCore.Builder;
-#endif
+using Microsoft.AspNetCore.SignalR;
 
 namespace BTCPayServer.Services.Apps
 {
-    public class AppHub: Hub
+    public class AppHub : Hub
     {
         public const string InvoiceCreated = "InvoiceCreated";
         public const string PaymentReceived = "PaymentReceived";
@@ -38,31 +36,31 @@ namespace BTCPayServer.Services.Apps
 
         public async Task CreateInvoice(ContributeToCrowdfund model)
         {
-               model.RedirectToCheckout = false;
-               _AppsPublicController.ControllerContext.HttpContext = Context.GetHttpContext();
-               try
-               {
+            model.RedirectToCheckout = false;
+            _AppsPublicController.ControllerContext.HttpContext = Context.GetHttpContext();
+            try
+            {
 
-                   var result =
-                       await _AppsPublicController.ContributeToCrowdfund(Context.Items["app"].ToString(), model, Context.ConnectionAborted);
-                   switch (result)
-                   {
-                       case OkObjectResult okObjectResult:
-                           await Clients.Caller.SendCoreAsync(InvoiceCreated, new[] {okObjectResult.Value.ToString()});
-                           break;
-                       case ObjectResult objectResult:
-                           await Clients.Caller.SendCoreAsync(InvoiceError, new[] {objectResult.Value});
-                           break;
-                       default:
-                           await Clients.Caller.SendCoreAsync(InvoiceError, System.Array.Empty<object>());
-                           break;
-                   }
-               }
-               catch (Exception)
-               {
-                   await Clients.Caller.SendCoreAsync(InvoiceError, System.Array.Empty<object>());
+                var result =
+                    await _AppsPublicController.ContributeToCrowdfund(Context.Items["app"].ToString(), model, Context.ConnectionAborted);
+                switch (result)
+                {
+                    case OkObjectResult okObjectResult:
+                        await Clients.Caller.SendCoreAsync(InvoiceCreated, new[] { okObjectResult.Value.ToString() });
+                        break;
+                    case ObjectResult objectResult:
+                        await Clients.Caller.SendCoreAsync(InvoiceError, new[] { objectResult.Value });
+                        break;
+                    default:
+                        await Clients.Caller.SendCoreAsync(InvoiceError, System.Array.Empty<object>());
+                        break;
+                }
+            }
+            catch (Exception)
+            {
+                await Clients.Caller.SendCoreAsync(InvoiceError, System.Array.Empty<object>());
 
-               }
+            }
 
         }
 
@@ -70,11 +68,8 @@ namespace BTCPayServer.Services.Apps
         {
             return request.GetRelativePathOrAbsolute("/apps/hub");
         }
-#if NETCOREAPP21
-        public static void Register(HubRouteBuilder route)
-#else
+
         public static void Register(IEndpointRouteBuilder route)
-#endif
         {
             route.MapHub<AppHub>("/apps/hub");
         }

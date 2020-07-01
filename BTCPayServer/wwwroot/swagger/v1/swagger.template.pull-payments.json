@@ -1,0 +1,508 @@
+{
+    "paths": {
+        "/api/v1/stores/{storeId}/pull-payments": {
+            "parameters": [
+                {
+                    "name": "storeId",
+                    "in": "path",
+                    "required": true,
+                    "description": "The store ID",
+                    "schema": { "type": "string" }
+                }
+            ],
+            "get": {
+                "summary": "Get store's pull payments",
+                "parameters": [
+                    {
+                        "name": "includeArchived",
+                        "in": "query",
+                        "required": false,
+                        "description": "Whether this should list archived pull payments",
+                        "schema": {
+                            "type": "boolean",
+                            "default": false
+                        }
+                    }
+                ],
+                "description": "Get the pull payments of a store",
+                "responses": {
+                    "200": {
+                        "description": "List of pull payments",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PullPaymentDataList"
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [ "Pull payments (Management)" ],
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canmanagepullpayments"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "post": {
+                "summary": "Create a new pull payment",
+                "description": "A pull payment allows its receiver to ask for payouts up to `amount` of `currency` every `period`.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "description": "The name of the pull payment",
+                                        "nullable": true
+                                    },
+                                    "amount": {
+                                        "type": "string",
+                                        "format": "decimal",
+                                        "example": "0.1",
+                                        "description": "The amount in `currency` of this pull payment as a decimal string"
+                                    },
+                                    "currency": {
+                                        "type": "string",
+                                        "example": "BTC",
+                                        "description": "The currency of the amount. In this current release, this parameter must be set to a cryptoCode like (`BTC`)."
+                                    },
+                                    "period": {
+                                        "type": "integer",
+                                        "format": "decimal",
+                                        "example": 604800,
+                                        "nullable": true,
+                                        "description": "The length of each period in seconds."
+                                    },
+                                    "startsAt": {
+                                        "type": "integer",
+                                        "example": 1592312018,
+                                        "nullable": true,
+                                        "description": "The unix timestamp when this pull payment is effective. Starts now if null or unspecified."
+                                    },
+                                    "expiresAt": {
+                                        "type": "integer",
+                                        "example": 1593129600,
+                                        "nullable": true,
+                                        "description": "The unix timestamp when this pull payment is expired. Never expires if null or unspecified."
+                                    },
+                                    "paymentMethods": {
+                                        "type": "array",
+                                        "description": "The list of supported payment methods supported. In this current release, this must be set to an array with a single entry equals to `currency` (eg. `[ \"BTC\" ]`)",
+                                        "items": {
+                                            "type": "string",
+                                            "example": "BTC"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The create pull payment",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PullPaymentData"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unable to validate the request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [ "Pull payments (Management)" ],
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canmanagepullpayments"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/pull-payments/{pullPaymentId}": {
+            "parameters": [
+                {
+                    "name": "pullPaymentId",
+                    "in": "path",
+                    "required": true,
+                    "description": "The ID of the pull payment",
+                    "schema": { "type": "string" }
+                }
+            ],
+            "get": {
+                "description": "Get a pull payment",
+                "responses": {
+                    "200": {
+                        "description": "Information about the pull payment",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PullPaymentData"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Pull payment not found"
+                    }
+                },
+                "tags": [ "Pull payments (Public)" ],
+                "security": []
+            }
+        },
+        "/api/v1/stores/{storeId}/pull-payments/{pullPaymentId}": {
+            "parameters": [
+                {
+                    "name": "storeId",
+                    "in": "path",
+                    "required": true,
+                    "description": "The ID of the store",
+                    "schema": { "type": "string" }
+                },
+                {
+                    "name": "pullPaymentId",
+                    "in": "path",
+                    "required": true,
+                    "description": "The ID of the pull payment",
+                    "schema": { "type": "string" }
+                }
+            ],
+            "delete": {
+                "summary": "Archive a pull payment",
+                "description": "Archive this pull payment (Will cancel all payouts awaiting for payment)",
+                "responses": {
+                    "200": {
+                        "description": "The pull payment has been archived"
+                    },
+                    "404": {
+                        "description": "The pull payment has not been found, or does not belong to this store"
+                    }
+                },
+                "tags": [ "Pull payments (Management)" ],
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canmanagepullpayments"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/pull-payments/{pullPaymentId}/payouts": {
+            "parameters": [
+                {
+                    "name": "pullPaymentId",
+                    "in": "path",
+                    "required": true,
+                    "description": "The ID of the pull payment",
+                    "schema": { "type": "string" }
+                }
+            ],
+            "get": {
+                "description": "Get payouts",
+                "parameters": [
+                    {
+                        "name": "includeCancelled",
+                        "in": "query",
+                        "required": false,
+                        "description": "Whether this should list cancelled payouts",
+                        "schema": {
+                            "type": "boolean",
+                            "default": false
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The payouts of the pull payment",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PayoutDataList"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Pull payment not found"
+                    }
+                },
+                "tags": [ "Pull payments (Public)" ],
+                "security": []
+            },
+            "post": {
+                "description": "Create a new payout",
+                "responses": {
+                    "200": {
+                        "description": "A new payout has been created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PayoutData"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Pull payment not found"
+                    },
+                    "422": {
+                        "description": "Unable to validate the request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Wellknown error codes are: `duplicate-destination`, `expired`, `not-started`, `archived`, `overdraft`, `amount-too-low`, `payment-method-not-supported`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [ "Pull payments (Public)" ],
+                "security": []
+            }
+        },
+        "/api/v1/stores/{storeId}/payouts/{payoutId}": {
+            "parameters": [
+                {
+                    "name": "storeId",
+                    "in": "path",
+                    "required": true,
+                    "description": "The ID of the store",
+                    "schema": { "type": "string" }
+                },
+                {
+                    "name": "payoutId",
+                    "in": "path",
+                    "required": true,
+                    "description": "The ID of the payout",
+                    "schema": { "type": "string" }
+                }
+            ],
+            "post": {
+                "description": "Approve a payout",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "revision": {
+                                        "type": "integer",
+                                        "description": "The revision number of the payout being modified"
+                                    },
+                                    "rateRule": {
+                                        "type": "string",
+                                        "nullable": true,
+                                        "example": "kraken(BTC_USD)",
+                                        "description": "The rate rule to calculate the rate of the payout. This can also be a fixed decimal. (if null or unspecified, will use the same rate setting as the store's settings)"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The payout has been approved, transitioning to `AwaitingPayment` state.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PayoutData"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unable to validate the request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Wellknown error codes are: `rate-unavailable`, `invalid-state`, `amount-too-low`, `old-revision`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "The payout is not found"
+                    }
+                }
+            },
+            "delete": {
+                "description": "Cancel the payout",
+                "responses": {
+                    "200": {
+                        "description": "The payout has been cancelled"
+                    },
+                    "404": {
+                        "description": "The payout is not found"
+                    }
+                },
+                "tags": [ "Pull payments (Management)" ],
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canmanagepullpayments"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "PullPaymentDataList": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/PullPaymentData"
+                }
+            },
+            "PayoutDataList": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/PayoutData"
+                }
+            },
+            "PayoutData": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "The id of the payout"
+                    },
+                    "revision": {
+                        "type": "integer",
+                        "description": "The revision number of the payout. This revision number is incremented when the payout amount or destination is modified before the approval."
+                    },
+                    "pullPaymentId": {
+                        "type": "string",
+                        "description": "The id of the pull payment this payout belongs to"
+                    },
+                    "date": {
+                        "type": "string",
+                        "description": "The creation date of the payout as a unix timestamp"
+                    },
+                    "destination": {
+                        "type": "string",
+                        "example": "1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2",
+                        "description": "The destination of the payout (can be an address or a BIP21 url)"
+                    },
+                    "amount": {
+                        "type": "string",
+                        "format": "decimal",
+                        "example": "10399.18",
+                        "description": "The amount of the payout in the currency of the pull payment (eg. USD)."
+                    },
+                    "paymentMethod": {
+                        "type": "string",
+                        "example": "BTC",
+                        "description": "The payment method of the payout"
+                    },
+                    "paymentMethodAmount": {
+                        "type": "string",
+                        "format": "decimal",
+                        "nullable": true,
+                        "example": "1.12300000",
+                        "description": "The amount of the payout in the currency of the payment method (eg. BTC). This is only available from the `AwaitingPayment` state."
+                    },
+                    "state": {
+                        "type": "string",
+                        "example": "AwaitingPayment",
+                        "description": "The state of the payout (`AwaitingApproval`, `AwaitingPayment`, `InProgress`, `Completed`, `Cancelled`)",
+                        "x-enumNames": [
+                            "AwaitingApproval",
+                            "AwaitingPayment",
+                            "InProgress",
+                            "Completed",
+                            "Cancelled"
+                        ],
+                        "enum": [
+                            "AwaitingApproval",
+                            "AwaitingPayment",
+                            "InProgress",
+                            "Completed",
+                            "Cancelled"
+                        ]
+                    }
+                }
+            },
+            "PullPaymentData": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "Id of the pull payment"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Payment method of of the pull payment"
+                    },
+                    "currency": {
+                        "type": "string",
+                        "example": "BTC",
+                        "description": "The currency of the pull payment's amount"
+                    },
+                    "amount": {
+                        "type": "string",
+                        "format": "decimal",
+                        "example": "1.12000000",
+                        "description": "The amount in the currency of this pull payment as a decimal string"
+                    },
+                    "period": {
+                        "type": "integer",
+                        "example": 604800,
+                        "nullable": true,
+                        "description": "The length of each period in seconds"
+                    },
+                    "archived": {
+                        "type": "boolean",
+                        "description": "Whether this pull payment is archived"
+                    },
+                    "viewLink": {
+                        "type": "string",
+                        "description": "The link to a page to claim payouts to this pull payment"
+                    }
+                }
+            }
+        }
+    }
+}

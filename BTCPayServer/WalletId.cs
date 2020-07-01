@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+using System;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+using BTCPayServer.Payments;
 
 namespace BTCPayServer
 {
@@ -35,7 +33,10 @@ namespace BTCPayServer
         public string StoreId { get; set; }
         public string CryptoCode { get; set; }
 
-
+        public PaymentMethodId GetPaymentMethodId()
+        {
+            return new PaymentMethodId(CryptoCode, PaymentTypes.BTCLike);
+        }
         public override bool Equals(object obj)
         {
             WalletId item = obj as WalletId;

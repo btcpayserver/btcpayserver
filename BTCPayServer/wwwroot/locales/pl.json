@@ -48,5 +48,5 @@
   "Pay with Changelly": "Zapłać z Changelly",
   "Close": "Zamknij",
   "NotPaid_ExtraTransaction": "Faktura nie została w pełni opłacona. Proszę wyślij dodatkową transakcje z resztą brakujących środków.",
-  "Recommended_Fee": "Recommended fee: {{feeRate}} sat/byte"
+  "Recommended_Fee": "Zalecana opłata transakcyjna: {{feeRate}} sat/byte"
 }

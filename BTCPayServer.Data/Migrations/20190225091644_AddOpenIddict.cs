@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -11,6 +11,7 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            int? maxLength = this.IsMySql(migrationBuilder.ActiveProvider) ? (int?)255 : null;
             migrationBuilder.CreateTable(
                 name: "OpenIddictApplications",
                 columns: table => new
@@ -20,13 +21,13 @@ namespace BTCPayServer.Migrations
                     ConcurrencyToken = table.Column<string>(maxLength: 50, nullable: true),
                     ConsentType = table.Column<string>(nullable: true),
                     DisplayName = table.Column<string>(nullable: true),
-                    Id = table.Column<string>(nullable: false),
+                    Id = table.Column<string>(nullable: false, maxLength: maxLength),
                     Permissions = table.Column<string>(nullable: true),
                     PostLogoutRedirectUris = table.Column<string>(nullable: true),
                     Properties = table.Column<string>(nullable: true),
                     RedirectUris = table.Column<string>(nullable: true),
                     Type = table.Column<string>(maxLength: 25, nullable: false),
-                    ApplicationUserId = table.Column<string>(nullable: true)
+                    ApplicationUserId = table.Column<string>(nullable: true, maxLength: maxLength)
                 },
                 constraints: table =>
                 {
@@ -46,7 +47,7 @@ namespace BTCPayServer.Migrations
                     ConcurrencyToken = table.Column<string>(maxLength: 50, nullable: true),
                     Description = table.Column<string>(nullable: true),
                     DisplayName = table.Column<string>(nullable: true),
-                    Id = table.Column<string>(nullable: false),
+                    Id = table.Column<string>(nullable: false, maxLength: maxLength),
                     Name = table.Column<string>(maxLength: 200, nullable: false),
                     Properties = table.Column<string>(nullable: true),
                     Resources = table.Column<string>(nullable: true)
@@ -60,9 +61,9 @@ namespace BTCPayServer.Migrations
                 name: "OpenIddictAuthorizations",
                 columns: table => new
                 {
-                    ApplicationId = table.Column<string>(nullable: true),
+                    ApplicationId = table.Column<string>(nullable: true, maxLength: maxLength),
                     ConcurrencyToken = table.Column<string>(maxLength: 50, nullable: true),
-                    Id = table.Column<string>(nullable: false),
+                    Id = table.Column<string>(nullable: false, maxLength: maxLength),
                     Properties = table.Column<string>(nullable: true),
                     Scopes = table.Column<string>(nullable: true),
                     Status = table.Column<string>(maxLength: 25, nullable: false),
@@ -84,12 +85,12 @@ namespace BTCPayServer.Migrations
                 name: "OpenIddictTokens",
                 columns: table => new
                 {
-                    ApplicationId = table.Column<string>(nullable: true),
-                    AuthorizationId = table.Column<string>(nullable: true),
+                    ApplicationId = table.Column<string>(nullable: true, maxLength: maxLength),
+                    AuthorizationId = table.Column<string>(nullable: true, maxLength: maxLength),
                     ConcurrencyToken = table.Column<string>(maxLength: 50, nullable: true),
                     CreationDate = table.Column<DateTimeOffset>(nullable: true),
                     ExpirationDate = table.Column<DateTimeOffset>(nullable: true),
-                    Id = table.Column<string>(nullable: false),
+                    Id = table.Column<string>(nullable: false, maxLength: maxLength),
                     Payload = table.Column<string>(nullable: true),
                     Properties = table.Column<string>(nullable: true),
                     ReferenceId = table.Column<string>(maxLength: 100, nullable: true),

@@ -1,6 +1,5 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,12 +8,12 @@ namespace BTCPayServer
 {
     public class CustomThreadPool : IDisposable
     {
-        CancellationTokenSource _Cancel = new CancellationTokenSource();
-        TaskCompletionSource<bool> _Exited;
+        readonly CancellationTokenSource _Cancel = new CancellationTokenSource();
+        readonly TaskCompletionSource<bool> _Exited;
         int _ExitedCount = 0;
-        Thread[] _Threads;
+        readonly Thread[] _Threads;
         Exception _UnhandledException;
-        BlockingCollection<(Action, TaskCompletionSource<object>)> _Actions = new BlockingCollection<(Action, TaskCompletionSource<object>)>(new ConcurrentQueue<(Action, TaskCompletionSource<object>)>());
+        readonly BlockingCollection<(Action, TaskCompletionSource<object>)> _Actions = new BlockingCollection<(Action, TaskCompletionSource<object>)>(new ConcurrentQueue<(Action, TaskCompletionSource<object>)>());
 
         public CustomThreadPool(int threadCount, string threadName)
         {

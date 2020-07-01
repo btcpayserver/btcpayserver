@@ -12,6 +12,7 @@
 <head>
     <title>@Model.Title</title>
     <meta charset="utf-8" />
+    <meta name="robots" content="noindex, nofollow">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.BootstrapUri)" rel="stylesheet" />
@@ -25,13 +26,13 @@
         <script type="text/javascript">
             var srvModel = @Safe.Json(Model);
         </script>
-        <bundle name="wwwroot/bundles/payment-request-bundle-1.min.js"></bundle>
-        <bundle name="wwwroot/bundles/payment-request-bundle-2.min.js"></bundle>
+        <bundle name="wwwroot/bundles/payment-request-bundle-1.min.js" asp-append-version="true"></bundle>
+        <bundle name="wwwroot/bundles/payment-request-bundle-2.min.js" asp-append-version="true"></bundle>
         @*We need to make sure btcpay.js is not bundled, else it will not work if there is a RootPath*@
-        <script src="~/modal/btcpay.js"></script>
+        <script src="~/modal/btcpay.js" asp-append-version="true"></script>
     }
 
-    <bundle name="wwwroot/bundles/payment-request-bundle.min.css"></bundle>
+    <bundle name="wwwroot/bundles/payment-request-bundle.min.css" asp-append-version="true"></bundle>
 
     @Safe.Raw(Model.EmbeddedCSS)
 </head>
@@ -89,9 +90,9 @@ else
                                     class="w-100 px-3 pt-4 pb-3"
                                 ></div>
                             </div>
-                            <div class="col-sm-12 col-md-12 col-lg-6 pt-2">
+                            <div class="col-sm-12 col-md-12 col-lg-6">
                                 <div class="table-responsive">
-                                    <table class="table border-top-0 ">
+                                    <table class="table table-light border-top-0 ">
                                         <thead>
                                         <tr>
                                             <th class="border-top-0" scope="col">Invoice #</th>
@@ -105,13 +106,13 @@ else
                                             <td colspan="4" class="text-center">No payments made yet</td>
                                         </tr>
                                         <template v-else v-for="invoice of srvModel.invoices" :key="invoice.id">
-                                            <tr class="bg-light">
+                                            <tr>
                                                 <td scope="row">{{invoice.id}}</td>
                                                 <td>{{invoice.amountFormatted}}</td>
                                                 <td>{{moment(invoice.expiryDate).format('L HH:mm')}}</td>
                                                 <td>{{invoice.status}}</td>
                                             </tr>
-                                            <tr class="bg-light" v-if="invoice.payments && invoice.payments.length > 0">
+                                            <tr v-if="invoice.payments && invoice.payments.length > 0">
                                                 <td colspan="4" class=" px-2 py-1 border-top-0">
 
                                                     <div class="table-responsive">
@@ -143,7 +144,12 @@ else
                                                 </td>
                                             </tr>
                                         </template>
-                                        <tr v-if="!ended && (srvModel.amountDue) > 0" class="d-print-none">
+                                        <tr v-if="srvModel.archived">
+                                            <td colspan="4" class="text-center">
+                                                <button type="button" class="btn btn-secondary" disabled>Archived</button>
+                                            </td>
+                                        </tr> 
+                                        <tr v-else-if="!ended && (srvModel.amountDue) > 0" class="d-print-none">
                                             <td colspan="4" class="text-center">
 
                                                 <template v-if="srvModel.allowCustomPaymentAmounts && !srvModel.anyPendingInvoice">

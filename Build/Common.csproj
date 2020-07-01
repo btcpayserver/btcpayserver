@@ -1,11 +1,8 @@
 <Project>
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <TargetFramework Condition="'$(TargetFrameworkOverride)' != ''">$(TargetFrameworkOverride)</TargetFramework>
-    <NoWarn>NU1701,CA1816,CA1308,CA1810,CA2208</NoWarn>
-    <LangVersion>7.3</LangVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)' == 'netcoreapp2.1'">
-    <DefineConstants>$(DefineConstants);NETCOREAPP21</DefineConstants>
+    <NoWarn>NU1701,CA1816,CA1308,CA1810,CA2208,CA1303,CA2000</NoWarn>
+    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
 </Project>

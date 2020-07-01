@@ -1,9 +1,11 @@
-﻿using System;
+using System;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using OpenQA.Selenium;
 using Xunit;
 
@@ -11,6 +13,12 @@ namespace BTCPayServer.Tests
 {
     public static class Extensions
     {
+        private static readonly JsonSerializerSettings jsonSettings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
+        public static string ToJson(this object o)
+        {
+            var res = JsonConvert.SerializeObject(o, Formatting.None, jsonSettings);
+            return res;
+        }
         public static void ScrollTo(this IWebDriver driver, By by)
         {
             var element = driver.FindElement(by);
@@ -38,7 +46,7 @@ namespace BTCPayServer.Tests
             {
                 StringBuilder builder = new StringBuilder();
                 builder.AppendLine();
-                foreach (var logKind in new []{ LogType.Browser, LogType.Client, LogType.Driver, LogType.Server })
+                foreach (var logKind in new[] { LogType.Browser, LogType.Client, LogType.Driver, LogType.Server })
                 {
                     try
                     {
@@ -87,6 +95,10 @@ namespace BTCPayServer.Tests
                     var webElement = driver.FindElement(by);
                     if (!webElement.Displayed)
                         return;
+                }
+                catch (NoSuchWindowException)
+                {
+                    return;
                 }
                 catch (NoSuchElementException)
                 {

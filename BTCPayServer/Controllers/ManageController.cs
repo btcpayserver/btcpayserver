@@ -1,27 +1,21 @@
-﻿using System;
-using System.Linq;
-using System.Text;
+using System;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using BTCPayServer.Models;
+using BTCPayServer.Data;
 using BTCPayServer.Models.ManageViewModels;
+using BTCPayServer.Security;
+using BTCPayServer.Security.GreenField;
 using BTCPayServer.Services;
-using Microsoft.AspNetCore.Hosting;
+using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
-using BTCPayServer.Services.Mails;
-using System.Globalization;
-using BTCPayServer.Security;
 using BTCPayServer.U2F;
-using BTCPayServer.Data;
-#if NETCOREAPP21
-using IWebHostEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
-#endif
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Logging;
 
 namespace BTCPayServer.Controllers
 {
@@ -34,10 +28,13 @@ namespace BTCPayServer.Controllers
         private readonly EmailSenderFactory _EmailSenderFactory;
         private readonly ILogger _logger;
         private readonly UrlEncoder _urlEncoder;
-        IWebHostEnvironment _Env;
-        private readonly U2FService _u2FService;
+        readonly IWebHostEnvironment _Env;
+        public U2FService _u2FService;
         private readonly BTCPayServerEnvironment _btcPayServerEnvironment;
-        StoreRepository _StoreRepository;
+        private readonly APIKeyRepository _apiKeyRepository;
+        private readonly IAuthorizationService _authorizationService;
+        private readonly LinkGenerator _linkGenerator;
+        readonly StoreRepository _StoreRepository;
 
 
 
@@ -49,9 +46,13 @@ namespace BTCPayServer.Controllers
           UrlEncoder urlEncoder,
           BTCPayWalletProvider walletProvider,
           StoreRepository storeRepository,
-          IWebHostEnvironment env, 
-          U2FService  u2FService,
-          BTCPayServerEnvironment btcPayServerEnvironment)
+          IWebHostEnvironment env,
+          U2FService u2FService,
+          BTCPayServerEnvironment btcPayServerEnvironment,
+          APIKeyRepository apiKeyRepository,
+          IAuthorizationService authorizationService,
+          LinkGenerator linkGenerator
+          )
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -61,6 +62,9 @@ namespace BTCPayServer.Controllers
             _Env = env;
             _u2FService = u2FService;
             _btcPayServerEnvironment = btcPayServerEnvironment;
+            _apiKeyRepository = apiKeyRepository;
+            _authorizationService = authorizationService;
+            _linkGenerator = linkGenerator;
             _StoreRepository = storeRepository;
         }
 
@@ -140,7 +144,7 @@ namespace BTCPayServer.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return View(model);
+                return View(nameof(Index), model);
             }
 
             var user = await _userManager.GetUserAsync(User);
@@ -150,7 +154,7 @@ namespace BTCPayServer.Controllers
             }
 
             var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            var callbackUrl = Url.EmailConfirmationLink(user.Id, code, Request.Scheme);
+            var callbackUrl = _linkGenerator.EmailConfirmationLink(user.Id, code, Request.Scheme, Request.Host, Request.PathBase);
             var email = user.Email;
             _EmailSenderFactory.GetEmailSender().SendEmailConfirmation(email, callbackUrl);
             TempData[WellKnownTempData.SuccessMessage] = "Verification email sent. Please check your email.";

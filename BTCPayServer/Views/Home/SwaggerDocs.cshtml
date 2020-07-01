@@ -1,0 +1,27 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BTCPay Server Greenfield API</title>
+    <!-- needed for adaptive design -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700" rel="stylesheet">
+
+    <!--
+    ReDoc doesn't change outer page styles
+    -->
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+    <redoc spec-url="@Url.ActionLink("Swagger")"></redoc>
+    <script src="https://cdn.jsdelivr.net/npm/redoc@2.0.0-rc.24/bundles/redoc.standalone.js" integrity="sha384-ZO+OTQZMsYIcoraCBa8iJW/5b2O8K1ujHmRfOwSvpVBlHUeKq5t3/kh1p8JQJ99X" crossorigin="anonymous"></script>
+</body>
+</html>

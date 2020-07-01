@@ -38,13 +38,13 @@
         <div class="row">
             <div class="col-lg-3 ml-auto text-center">
                 <a href="https://play.google.com/store/apps/details?id=com.greenaddress.greenbits_android_wallet" target="_blank">
-                    <img src="~/img/GreenWallet.png" height="100" />
+                    <img src="~/img/GreenWallet.png" height="100" asp-append-version="true" />
                 </a>
                 <p><a href="https://play.google.com/store/apps/details?id=com.greenaddress.greenbits_android_wallet" target="_blank">Blockstream Green Wallet</a></p>
             </div>
             <div class="col-lg-3 mr-auto text-center">
                 <a href="https://www.wasabiwallet.io/" target="_blank">
-                    <img src="~/img/wasabi.png" height="100" />
+                    <img src="~/img/wasabi.png" height="100" asp-append-version="true" />
                 </a>
                 <p><a href="https://www.wasabiwallet.io/" target="_blank">Wasabi Wallet</a> <a href="https://www.reddit.com/r/WasabiWallet/comments/aqlyia/how_to_connect_wasabi_wallet_to_my_own_full/" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a></p>
             </div>
@@ -94,14 +94,15 @@
 
     @if (Model.ShowQR)
     {
-        <script type="text/javascript" src="~/js/qrcode.js"></script>
+        <script type="text/javascript" src="~/js/qrcode.js" asp-append-version="true"></script>
         <script type="text/javascript">
         new QRCode(document.getElementById("qrCode"),
             {
                 text: @Safe.Json(Model.ServiceLink),
                 width: 200,
                 height: 200,
-                useSVG: true
+                useSVG: true,
+                correctLevel : QRCode.CorrectLevel.M
             });
         </script>
     }

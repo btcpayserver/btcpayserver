@@ -9,8 +9,9 @@
     <!-- Bootstrap -->
     <link href="main/bootstrap/bootstrap.css" rel="stylesheet" />
     <link href="main/bootstrap4-creativestart/creative.css" rel="stylesheet" />
+    <link href="main/site.css" rel="stylesheet" />
     <script>
-        const theme = window.location.search.replace('?theme=','') || 'classic';
+        const theme = window.location.search.replace('?theme=','') || 'default';
         document.write(`<link href="main/themes/${theme}.css" rel="stylesheet" />`)
     </script>
 
@@ -19,11 +20,11 @@
     <script src="bundles/main-bundle.min.js"></script>
 </head>
 <body>
-    <nav class="navbar sticky-top navbar-dark bg-dark navbar-expand-lg mb-3">
+    <nav id="mainNav" class="navbar navbar-expand-lg sticky-top">
         <div class="container">
             <a class="navbar-brand" href="#">Bootstrap 4 Kitchen Sink</a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
+                <svg class="navbar-toggler-icon" viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'><path stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/></svg>
             </button>
 
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
@@ -39,7 +40,7 @@
         <div class="row">
             <div class="col">
                 <div class="alert alert-info" role="alert">
-                    Note: this is intended to be used as a quick overview/reference. Visit <a href="https://getbootstrap.com/docs/">https://getbootstrap.com/docs/</a> for full documentation!
+                    Note: this is intended to be used as a quick overview/reference. Visit <a href="https://getbootstrap.com/docs/" class="alert-link">https://getbootstrap.com/docs/</a> for full documentation!
                 </div>
 
                 <h1>Headings</h1><br><h1>h1. Bootstrap heading</h1><br>
@@ -512,12 +513,6 @@ To edit settings, press <kbd><kbd>ctrl</kbd> + <kbd>,</kbd></kbd>
 <div class="alert alert-info" role="alert">
   A simple info alert—check it out!
 </div>
-<div class="alert alert-light" role="alert">
-  A simple light alert—check it out!
-</div>
-<div class="alert alert-dark" role="alert">
-  A simple dark alert—check it out!
-</div>
 
 <br><br><hr><br><br>
 
@@ -538,12 +533,6 @@ To edit settings, press <kbd><kbd>ctrl</kbd> + <kbd>,</kbd></kbd>
 </div>
 <div class="alert alert-info" role="alert">
   A simple info alert with <a href="#" class="alert-link">an example link</a>. Give it a click if you like.
-</div>
-<div class="alert alert-light" role="alert">
-  A simple light alert with <a href="#" class="alert-link">an example link</a>. Give it a click if you like.
-</div>
-<div class="alert alert-dark" role="alert">
-  A simple dark alert with <a href="#" class="alert-link">an example link</a>. Give it a click if you like.
 </div>
 
 <br><br><hr><br><br>
@@ -638,8 +627,6 @@ To edit settings, press <kbd><kbd>ctrl</kbd> + <kbd>,</kbd></kbd>
 <button type="button" class="btn btn-outline-danger">Danger</button>
 <button type="button" class="btn btn-outline-warning">Warning</button>
 <button type="button" class="btn btn-outline-info">Info</button>
-<button type="button" class="btn btn-outline-light">Light</button>
-<button type="button" class="btn btn-outline-dark">Dark</button>
 
 <br><br><hr><br><br>
 
@@ -780,20 +767,6 @@ To edit settings, press <kbd><kbd>ctrl</kbd> + <kbd>,</kbd></kbd>
   <div class="card-header">Header</div>
   <div class="card-body">
     <h5 class="card-title">Info card title</h5>
-    <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-  </div>
-</div>
-<div class="card bg-light mb-3" style="max-width: 18rem;">
-  <div class="card-header">Header</div>
-  <div class="card-body">
-    <h5 class="card-title">Light card title</h5>
-    <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-  </div>
-</div>
-<div class="card text-white bg-dark mb-3" style="max-width: 18rem;">
-  <div class="card-header">Header</div>
-  <div class="card-body">
-    <h5 class="card-title">Dark card title</h5>
     <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
   </div>
 </div>
@@ -1820,15 +1793,19 @@ sagittis lacus vel augue laoreet rutrum faucibus.">
 <h1>Progress</h1><br><div class="progress">
   <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
 </div>
+<br>
 <div class="progress">
   <div class="progress-bar" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
 </div>
+<br>
 <div class="progress">
   <div class="progress-bar" role="progressbar" style="width: 50%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
 </div>
+<br>
 <div class="progress">
   <div class="progress-bar" role="progressbar" style="width: 75%" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
 </div>
+<br>
 <div class="progress">
   <div class="progress-bar" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
 </div>
@@ -1853,12 +1830,15 @@ sagittis lacus vel augue laoreet rutrum faucibus.">
 <h1>Progress > Backgrounds</h1><br><div class="progress">
   <div class="progress-bar bg-success" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
 </div>
+<br>
 <div class="progress">
   <div class="progress-bar bg-info" role="progressbar" style="width: 50%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
 </div>
+<br>
 <div class="progress">
   <div class="progress-bar bg-warning" role="progressbar" style="width: 75%" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
 </div>
+<br>
 <div class="progress">
   <div class="progress-bar bg-danger" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
 </div>
@@ -1876,15 +1856,19 @@ sagittis lacus vel augue laoreet rutrum faucibus.">
 <h1>Progress > Striped</h1><br><div class="progress">
   <div class="progress-bar progress-bar-striped" role="progressbar" style="width: 10%" aria-valuenow="10" aria-valuemin="0" aria-valuemax="100"></div>
 </div>
+<br>
 <div class="progress">
   <div class="progress-bar progress-bar-striped bg-success" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
 </div>
+<br>
 <div class="progress">
   <div class="progress-bar progress-bar-striped bg-info" role="progressbar" style="width: 50%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
 </div>
+<br>
 <div class="progress">
   <div class="progress-bar progress-bar-striped bg-warning" role="progressbar" style="width: 75%" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
 </div>
+<br>
 <div class="progress">
   <div class="progress-bar progress-bar-striped bg-danger" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
 </div>
@@ -1977,13 +1961,8 @@ $(function () {
 <p class="text-danger">.text-danger</p>
 <p class="text-warning">.text-warning</p>
 <p class="text-info">.text-info</p>
-<p class="text-light bg-dark">.text-light</p>
-<p class="text-dark">.text-dark</p>
 <p class="text-body">.text-body</p>
 <p class="text-muted">.text-muted</p>
-<p class="text-white bg-dark">.text-white</p>
-<p class="text-black-50">.text-black-50</p>
-<p class="text-white-50 bg-dark">.text-white-50</p>
 
 <br><br><hr><br><br>
 
@@ -1993,23 +1972,17 @@ $(function () {
 <p><a href="#" class="text-danger">Danger link</a></p>
 <p><a href="#" class="text-warning">Warning link</a></p>
 <p><a href="#" class="text-info">Info link</a></p>
-<p><a href="#" class="text-light bg-dark">Light link</a></p>
-<p><a href="#" class="text-dark">Dark link</a></p>
 <p><a href="#" class="text-muted">Muted link</a></p>
-<p><a href="#" class="text-white bg-dark">White link</a></p>
 
 <br><br><hr><br><br>
 
-<h1>Colors > Background color</h1><br><div class="p-3 mb-2 bg-primary text-white">.bg-primary</div>
+<h1>Colors > Background color</h1><br>
+<div class="p-3 mb-2 bg-primary text-white">.bg-primary</div>
 <div class="p-3 mb-2 bg-secondary text-white">.bg-secondary</div>
 <div class="p-3 mb-2 bg-success text-white">.bg-success</div>
 <div class="p-3 mb-2 bg-danger text-white">.bg-danger</div>
-<div class="p-3 mb-2 bg-warning text-dark">.bg-warning</div>
+<div class="p-3 mb-2 bg-warning text-white">.bg-warning</div>
 <div class="p-3 mb-2 bg-info text-white">.bg-info</div>
-<div class="p-3 mb-2 bg-light text-dark">.bg-light</div>
-<div class="p-3 mb-2 bg-dark text-white">.bg-dark</div>
-<div class="p-3 mb-2 bg-white text-dark">.bg-white</div>
-<div class="p-3 mb-2 bg-transparent text-dark">.bg-transparent</div>
 
 <br><br><hr><br><br>
 
@@ -2038,17 +2011,15 @@ $(function () {
 
 <br><br><hr><br><br>
 
-<h1>Shadows</h1><br><div class="shadow-none p-3 mb-5 bg-light rounded">No shadow</div>
-<div class="shadow-sm p-3 mb-5 bg-white rounded">Small shadow</div>
-<div class="shadow p-3 mb-5 bg-white rounded">Regular shadow</div>
-<div class="shadow-lg p-3 mb-5 bg-white rounded">Larger shadow</div>
-
-<br><br><hr><br><br>
-
-<h1>Sizing</h1><br><div class="w-25 p-3" style="background-color: #eee;">Width 25%</div>
+<h1>Sizing</h1><br>
+<div class="w-25 p-3" style="background-color: #eee;">Width 25%</div>
+<br>
 <div class="w-50 p-3" style="background-color: #eee;">Width 50%</div>
+<br>
 <div class="w-75 p-3" style="background-color: #eee;">Width 75%</div>
+<br>
 <div class="w-100 p-3" style="background-color: #eee;">Width 100%</div>
+<br>
 <div class="w-auto p-3" style="background-color: #eee;">Width auto</div>
 
 <br><br><hr><br><br>
@@ -2157,12 +2128,8 @@ $(function () {
 
 <br><br><hr><br><br>
 
-
-
-                <hr>
-
                 <div class="alert alert-info" role="alert">
-                Note: this is intended to be used as a quick overview/reference. Visit <a href="https://getbootstrap.com/docs/">https://getbootstrap.com/docs/</a> for full documentation!
+                Note: this is intended to be used as a quick overview/reference. Visit <a href="https://getbootstrap.com/docs/" class="alert-link">https://getbootstrap.com/docs/</a> for full documentation!
                 </div>
             </div>
         </div>

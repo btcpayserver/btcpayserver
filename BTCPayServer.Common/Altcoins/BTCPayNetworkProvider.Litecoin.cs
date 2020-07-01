@@ -1,7 +1,4 @@
-﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using NBitcoin;
 using NBXplorer;
 
@@ -19,9 +16,13 @@ namespace BTCPayServer
                 BlockExplorerLink = NetworkType == NetworkType.Mainnet
                     ? "https://live.blockcypher.com/ltc/tx/{0}/"
                     : "http://explorer.litecointools.com/tx/{0}",
-                NBitcoinNetwork = nbxplorerNetwork.NBitcoinNetwork,
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "litecoin",
+                DefaultRateRules = new[]
+                {
+                    "LTC_X = LTC_BTC * BTC_X",
+                    "LTC_BTC = coingecko(LTC_BTC)"
+                },
                 CryptoImagePath = "imlegacy/litecoin.svg",
                 LightningImagePath = "imlegacy/litecoin-lightning.svg",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),

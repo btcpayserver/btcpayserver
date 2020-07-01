@@ -1,13 +1,9 @@
-#if !NETCOREAPP21
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
 using System.IO;
 using System.Text;
-using System.Collections;
-using System.Collections.Generic;
-using Newtonsoft.Json;
 
 
 namespace Microsoft.Extensions.Logging.Console.Internal
@@ -129,7 +125,7 @@ namespace Microsoft.Extensions.Logging.Console.Internal
         }
     }
 
-	internal class AnsiSystemConsole : IAnsiSystemConsole
+    internal class AnsiSystemConsole : IAnsiSystemConsole
     {
         private readonly TextWriter _textWriter;
 
@@ -152,13 +148,13 @@ namespace Microsoft.Extensions.Logging.Console
     {
         void Write(string message);
     }
-	public interface IConsole
+    public interface IConsole
     {
         void Write(string message, ConsoleColor? background, ConsoleColor? foreground);
         void WriteLine(string message, ConsoleColor? background, ConsoleColor? foreground);
         void Flush();
     }
-	internal class WindowsLogConsole : IConsole
+    internal class WindowsLogConsole : IConsole
     {
         private readonly TextWriter _textWriter;
 
@@ -235,25 +231,3 @@ namespace Microsoft.Extensions.Logging.Abstractions.Internal
         }
     }
 }
-
-
-#else
-using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
-
-namespace Microsoft.AspNetCore.Mvc
-{
-    /// <summary>
-    /// Provides programmatic configuration for JSON formatters using Newtonsoft.JSON.
-    /// </summary>
-    public class MvcNewtonsoftJsonOptions
-    {
-		IOptions<MvcJsonOptions> jsonOptions;
-		public MvcNewtonsoftJsonOptions(IOptions<MvcJsonOptions> jsonOptions)
-		{
-			this.jsonOptions = jsonOptions;
-		}
-		public JsonSerializerSettings SerializerSettings => this.jsonOptions.Value.SerializerSettings;
-	}
-}
-#endif

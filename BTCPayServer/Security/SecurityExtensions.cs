@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.Linq;
-using Microsoft.AspNetCore.Routing;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
-using OpenIddict.Abstractions;
-using BTCPayServer.Data;
-using BTCPayServer.Services.Stores;
-using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Routing;
 
 namespace BTCPayServer.Security
 {
@@ -16,7 +10,7 @@ namespace BTCPayServer.Security
     {
         public static bool HasScopes(this AuthorizationHandlerContext context, params string[] scopes)
         {
-            return scopes.All(s => context.User.HasClaim(c => c.Type == OpenIddictConstants.Claims.Scope && c.Value.Split(' ').Contains(s)));
+            return scopes.All(s => context.User.HasClaim(c => c.Type.Equals("scope", StringComparison.InvariantCultureIgnoreCase) && c.Value.Split(' ').Contains(s)));
         }
         public static string GetImplicitStoreId(this HttpContext httpContext)
         {

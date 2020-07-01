@@ -1,35 +1,26 @@
-﻿using Microsoft.AspNetCore.Hosting;
-#if NETCOREAPP21
-using IWebHostEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
-#else
-using Microsoft.Extensions.Hosting;
-#endif
-using OpenIddict.Validation.AspNetCore;
-using OpenIddict.Abstractions;
-using Microsoft.AspNetCore.Builder;
 using System;
-using Microsoft.Extensions.DependencyInjection;
-using BTCPayServer.Filters;
-using BTCPayServer.Models;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.HttpOverrides;
-using BTCPayServer.Data;
-using Microsoft.Extensions.Logging;
-using BTCPayServer.Logging;
-using Microsoft.Extensions.Configuration;
-using BTCPayServer.Configuration;
 using System.IO;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using BTCPayServer.Security;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
-using OpenIddict.EntityFrameworkCore.Models;
 using System.Net;
-using BTCPayServer.Security.OpenId;
+using BTCPayServer.Configuration;
+using BTCPayServer.Data;
+using BTCPayServer.Filters;
+using BTCPayServer.Logging;
 using BTCPayServer.PaymentRequest;
+using BTCPayServer.Security;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Storage;
-using Microsoft.Extensions.Options;
-using OpenIddict.Core;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Net.Http.Headers;
 
 namespace BTCPayServer.Hosting
 {
@@ -41,7 +32,8 @@ namespace BTCPayServer.Hosting
             _Env = env;
             LoggerFactory = loggerFactory;
         }
-        IWebHostEnvironment _Env;
+
+        readonly IWebHostEnvironment _Env;
         public IConfiguration Configuration
         {
             get; set;
@@ -53,11 +45,12 @@ namespace BTCPayServer.Hosting
             Logs.Configure(LoggerFactory);
             services.ConfigureBTCPayServer(Configuration);
             services.AddMemoryCache();
+            services.AddDataProtection()
+                .SetApplicationName("BTCPay Server")
+                .PersistKeysToFileSystem(GetDataDir());
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
-
-            ConfigureOpenIddict(services);
 
             services.AddBTCPayServer(Configuration);
             services.AddProviderStorage();
@@ -78,8 +71,19 @@ namespace BTCPayServer.Hosting
                 //    ScriptSrc = "'self' 'unsafe-inline'"
                 //});
             })
-#if !NETCOREAPP21
+            .ConfigureApiBehaviorOptions(options =>
+            {
+                var builtInFactory = options.InvalidModelStateResponseFactory;
+
+                options.InvalidModelStateResponseFactory = context =>
+                {
+                    context.HttpContext.Response.StatusCode = (int)HttpStatusCode.UnprocessableEntity;
+                    return builtInFactory(context);
+                };
+            })
             .AddNewtonsoftJson()
+#if RAZOR_RUNTIME_COMPILE
+            .AddRazorRuntimeCompilation()
 #endif
             .AddControllersAsServices();
             services.TryAddScoped<ContentSecurityPolicies>();
@@ -94,12 +98,6 @@ namespace BTCPayServer.Hosting
                 options.Lockout.MaxFailedAccessAttempts = 5;
                 options.Lockout.AllowedForNewUsers = true;
                 options.Password.RequireUppercase = false;
-                // Configure Identity to use the same JWT claims as OpenIddict instead
-                // of the legacy WS-Federation claims it uses by default (ClaimTypes),
-                // which saves you from doing the mapping in your authorization controller.
-                options.ClaimsIdentity.UserNameClaimType = OpenIddictConstants.Claims.Name;
-                options.ClaimsIdentity.UserIdClaimType = OpenIddictConstants.Claims.Subject;
-                options.ClaimsIdentity.RoleClaimType = OpenIddictConstants.Claims.Role;
             });
             // If the HTTPS certificate path is not set this logic will NOT be used and the default Kestrel binding logic will be.
             string httpsCertificateFilePath = Configuration.GetOrDefault<string>("HttpsCertificateFilePath", null);
@@ -142,63 +140,6 @@ namespace BTCPayServer.Hosting
                 });
             }
         }
-
-        private void ConfigureOpenIddict(IServiceCollection services)
-        {
-            // Register the OpenIddict services.
-            services.AddOpenIddict()
-                .AddCore(options =>
-                {
-                    // Configure OpenIddict to use the Entity Framework Core stores and entities.
-                    options.UseEntityFrameworkCore()
-                        .UseDbContext<ApplicationDbContext>()
-                        .ReplaceDefaultEntities<BTCPayOpenIdClient, BTCPayOpenIdAuthorization, OpenIddictScope<string>,
-                            BTCPayOpenIdToken, string>();
-                })
-                .AddServer(options =>
-                {
-                    options.UseAspNetCore()
-                        .EnableStatusCodePagesIntegration()
-                        .EnableAuthorizationEndpointPassthrough()
-                        .EnableLogoutEndpointPassthrough()
-                        .EnableTokenEndpointPassthrough()
-                        .EnableRequestCaching()
-                        .DisableTransportSecurityRequirement();
-
-                    // Enable the token endpoint (required to use the password flow).
-                    options.SetTokenEndpointUris("/connect/token");
-                    options.SetAuthorizationEndpointUris("/connect/authorize");
-                    options.SetLogoutEndpointUris("/connect/logout");
-
-                    //we do not care about these granular controls for now
-                    options.IgnoreScopePermissions();
-                    options.IgnoreEndpointPermissions();
-                    // Allow client applications various flows
-                    options.AllowImplicitFlow();
-                    options.AllowClientCredentialsFlow();
-                    options.AllowRefreshTokenFlow();
-                    options.AllowPasswordFlow();
-                    options.AllowAuthorizationCodeFlow();
-                    options.UseRollingTokens();
-
-                    options.RegisterScopes(
-                        OpenIddictConstants.Scopes.OpenId,
-                        BTCPayScopes.StoreManagement,
-                        BTCPayScopes.ServerManagement
-                    );
-                    options.AddEventHandler(PasswordGrantTypeEventHandler.Descriptor);
-                    options.AddEventHandler(OpenIdGrantHandlerCheckCanSignIn.Descriptor);
-                    options.AddEventHandler(ClientCredentialsGrantTypeEventHandler.Descriptor);
-                    options.AddEventHandler(LogoutEventHandler.Descriptor);
-                    options.ConfigureSigningKey(Configuration);
-                })
-                .AddValidation(options =>
-                {
-                    options.UseLocalServer();
-                    options.UseAspNetCore();
-                });
-        }
-
         public void Configure(
             IApplicationBuilder app,
             IWebHostEnvironment env,
@@ -219,6 +160,10 @@ namespace BTCPayServer.Hosting
                 });
             }
         }
+        private DirectoryInfo GetDataDir()
+        {
+            return new DirectoryInfo(Configuration.GetDataDir(DefaultConfiguration.GetNetworkType(Configuration)));
+        }
 
         private static void ConfigureCore(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider prov, ILoggerFactory loggerFactory, BTCPayServerOptions options)
         {
@@ -236,36 +181,32 @@ namespace BTCPayServer.Hosting
             forwardingOptions.KnownProxies.Clear();
             forwardingOptions.ForwardedHeaders = ForwardedHeaders.All;
             app.UseForwardedHeaders(forwardingOptions);
+
+
+            app.UseStatusCodePagesWithReExecute("/Error/Handle", "?statusCode={0}");
+
             app.UsePayServer();
-#if !NETCOREAPP21
             app.UseRouting();
-#endif
             app.UseCors();
 
-            app.UseStaticFiles();
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                OnPrepareResponse = ctx =>
+                {
+                    // Cache static assets for one year, set asp-append-version="true" on references to update on change.
+                    // https://andrewlock.net/adding-cache-control-headers-to-static-files-in-asp-net-core/
+                    const int durationInSeconds = 60 * 60 * 24 * 365;
+                    ctx.Context.Response.Headers[HeaderNames.CacheControl] = "public,max-age=" + durationInSeconds;
+                }
+            });
+
             app.UseProviderStorage(options);
             app.UseAuthentication();
-#if !NETCOREAPP21
             app.UseAuthorization();
-#endif
             app.UseSession();
-#if NETCOREAPP21
-            app.UseSignalR(route =>
-            {
-                AppHub.Register(route);
-                PaymentRequestHub.Register(route);
-            });
-#endif
+
             app.UseWebSockets();
-            app.UseStatusCodePages();
-#if NETCOREAPP21
-            app.UseMvc(routes =>
-            {
-                routes.MapRoute(
-                    name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
-            });
-#else
+
             app.UseEndpoints(endpoints =>
             {
                 AppHub.Register(endpoints);
@@ -273,7 +214,6 @@ namespace BTCPayServer.Hosting
                 endpoints.MapControllers();
                 endpoints.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
             });
-#endif
         }
     }
 }

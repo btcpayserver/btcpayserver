@@ -1,12 +1,12 @@
+using System.Threading.Tasks;
 using BTCPayServer.Controllers;
+using BTCPayServer.Data;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments.CoinSwitch;
 using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Mvc;
 using Xunit;
 using Xunit.Abstractions;
-using BTCPayServer.Data;
-using System.Threading.Tasks;
 
 namespace BTCPayServer.Tests
 {
@@ -14,7 +14,7 @@ namespace BTCPayServer.Tests
     {
         public CoinSwitchTests(ITestOutputHelper helper)
         {
-            Logs.Tester = new XUnitLog(helper) {Name = "Tests"};
+            Logs.Tester = new XUnitLog(helper) { Name = "Tests" };
             Logs.LogProvider = new XUnitLogProvider(helper);
         }
 
@@ -86,6 +86,6 @@ namespace BTCPayServer.Tests
                 Assert.False(store.GetStoreBlob().CoinSwitchSettings.Enabled);
             }
         }
-   
+
     }
 }

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
-using BTCPayServer.Storage.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Storage.Services
@@ -19,7 +18,7 @@ namespace BTCPayServer.Storage.Services
 
         public async Task<StoredFile> GetFile(string fileId)
         {
-            var filesResult = await GetFiles(new FilesQuery() {Id = new string[] {fileId}});
+            var filesResult = await GetFiles(new FilesQuery() { Id = new string[] { fileId } });
             return filesResult.FirstOrDefault();
         }
 

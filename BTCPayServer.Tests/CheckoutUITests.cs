@@ -1,14 +1,12 @@
 using System;
 using System.Linq;
-using System.Net.Http;
-using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Lightning;
+using BTCPayServer.Payments;
 using BTCPayServer.Tests.Logging;
 using BTCPayServer.Views.Stores;
-using NBitpayClient;
+using NBitcoin;
 using OpenQA.Selenium;
-using OpenQA.Selenium.Interactions;
 using OpenQA.Selenium.Support.UI;
 using Xunit;
 using Xunit.Abstractions;
@@ -69,7 +67,7 @@ namespace BTCPayServer.Tests
                 }
                 catch { }
 
-                s.Driver.AssertElementNotFound(By.Id("emailAddressFormInput"));                
+                s.Driver.AssertElementNotFound(By.Id("emailAddressFormInput"));
                 s.Driver.Navigate().Refresh();
                 s.Driver.AssertElementNotFound(By.Id("emailAddressFormInput"));
             }
@@ -90,7 +88,7 @@ namespace BTCPayServer.Tests
                 s.GoToInvoiceCheckout(invoiceId);
                 Assert.True(s.Driver.FindElement(By.Id("DefaultLang")).FindElements(By.TagName("option")).Count > 1);
                 var payWithTextEnglish = s.Driver.FindElement(By.Id("pay-with-text")).Text;
-                
+
                 var prettyDropdown = s.Driver.FindElement(By.Id("prettydropdown-DefaultLang"));
                 prettyDropdown.Click();
                 await Task.Delay(200);
@@ -98,24 +96,28 @@ namespace BTCPayServer.Tests
                 await Task.Delay(1000);
                 Assert.NotEqual(payWithTextEnglish, s.Driver.FindElement(By.Id("pay-with-text")).Text);
                 s.Driver.Navigate().GoToUrl(s.Driver.Url + "?lang=da-DK");
-                
+
                 Assert.NotEqual(payWithTextEnglish, s.Driver.FindElement(By.Id("pay-with-text")).Text);
-                
+
                 s.Driver.Quit();
             }
         }
-        
+
         [Fact(Timeout = TestTimeout)]
+        [Trait("Altcoins", "Altcoins")]
+        [Trait("Lightning", "Lightning")]
         public async Task CanUsePaymentMethodDropdown()
         {
             using (var s = SeleniumTester.Create())
             {
+                s.Server.ActivateLTC();
+                s.Server.ActivateLightning();
                 await s.StartAsync();
                 s.GoToRegister();
                 s.RegisterNewUser();
                 var store = s.CreateNewStore();
                 s.AddDerivationScheme("BTC");
-                
+
                 //check that there is no dropdown since only one payment method is set
                 var invoiceId = s.CreateInvoice(store.storeName, 10, "USD", "a@g.com");
                 s.GoToInvoiceCheckout(invoiceId);
@@ -123,37 +125,38 @@ namespace BTCPayServer.Tests
                 s.GoToHome();
                 s.GoToStore(store.storeId);
                 s.AddDerivationScheme("LTC");
-                s.AddLightningNode("BTC",LightningConnectionType.CLightning);
+                s.AddLightningNode("BTC", LightningConnectionType.CLightning);
                 //there should be three now
                 invoiceId = s.CreateInvoice(store.storeName, 10, "USD", "a@g.com");
                 s.GoToInvoiceCheckout(invoiceId);
-                var currencyDropdownButton =  s.Driver.FindElement(By.ClassName("payment__currencies"));
+                var currencyDropdownButton = s.Driver.WaitForElement(By.ClassName("payment__currencies"));
                 Assert.Contains("BTC", currencyDropdownButton.Text);
                 currencyDropdownButton.Click();
-                
+
                 var elements = s.Driver.FindElement(By.ClassName("vex-content")).FindElements(By.ClassName("vexmenuitem"));
                 Assert.Equal(3, elements.Count);
                 elements.Single(element => element.Text.Contains("LTC")).Click();
-                Thread.Sleep(1000);
-                currencyDropdownButton =  s.Driver.FindElement(By.ClassName("payment__currencies"));
+                currencyDropdownButton = s.Driver.WaitForElement(By.ClassName("payment__currencies"));
                 Assert.Contains("LTC", currencyDropdownButton.Text);
                 currencyDropdownButton.Click();
 
                 elements = s.Driver.FindElement(By.ClassName("vex-content")).FindElements(By.ClassName("vexmenuitem"));
                 elements.Single(element => element.Text.Contains("Lightning")).Click();
-                currencyDropdownButton = s.Driver.FindElement(By.ClassName("payment__currencies"));
 
+                currencyDropdownButton = s.Driver.WaitForElement(By.ClassName("payment__currencies"));
                 Assert.Contains("Lightning", currencyDropdownButton.Text);
-                
+
                 s.Driver.Quit();
             }
         }
-        
+
         [Fact(Timeout = TestTimeout)]
+        [Trait("Lightning", "Lightning")]
         public async Task CanUseLightningSatsFeature()
         {
             using (var s = SeleniumTester.Create())
             {
+                s.Server.ActivateLightning();
                 await s.StartAsync();
                 s.GoToRegister();
                 s.RegisterNewUser();
@@ -162,13 +165,78 @@ namespace BTCPayServer.Tests
                 s.GoToStore(store.storeId, StoreNavPages.Checkout);
                 s.SetCheckbox(s, "LightningAmountInSatoshi", true);
                 var command = s.Driver.FindElement(By.Name("command"));
-               
+
                 command.ForceClick();
                 var invoiceId = s.CreateInvoice(store.storeName, 10, "USD", "a@g.com");
                 s.GoToInvoiceCheckout(invoiceId);
                 Assert.Contains("Sats", s.Driver.FindElement(By.ClassName("payment__currencies_noborder")).Text);
-                
+
             }
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        public async Task CanUseJSModal()
+        {
+            using (var s = SeleniumTester.Create())
+            {
+                await s.StartAsync();
+                s.GoToRegister();
+                s.RegisterNewUser();
+                var store = s.CreateNewStore();
+                s.GoToStore(store.storeId);
+                s.AddDerivationScheme();
+                var invoiceId = s.CreateInvoice(store.storeId, 0.001m, "BTC", "a@x.com");
+                var invoice = await s.Server.PayTester.InvoiceRepository.GetInvoice(invoiceId);
+                s.Driver.Navigate()
+                    .GoToUrl(new Uri(s.Server.PayTester.ServerUri, $"tests/index.html?invoice={invoiceId}"));
+                TestUtils.Eventually(() =>
+                {
+                    Assert.True(s.Driver.FindElement(By.Name("btcpay")).Displayed);
+                });
+                await s.Server.ExplorerNode.SendToAddressAsync(BitcoinAddress.Create(invoice
+                        .GetPaymentMethod(new PaymentMethodId("BTC", PaymentTypes.BTCLike))
+                        .GetPaymentMethodDetails().GetPaymentDestination(), Network.RegTest),
+                    new Money(0.001m, MoneyUnit.BTC));
+
+                IWebElement closebutton = null;
+                TestUtils.Eventually(() =>
+                {
+                    var frameElement = s.Driver.FindElement(By.Name("btcpay"));
+                    var iframe = s.Driver.SwitchTo().Frame(frameElement);
+                    closebutton = iframe.FindElement(By.ClassName("close-action"));
+                    Assert.True(closebutton.Displayed);
+                });
+                closebutton.Click();
+                s.Driver.AssertElementNotFound(By.Name("btcpay"));
+                Assert.Equal(s.Driver.Url,
+                    new Uri(s.Server.PayTester.ServerUri, $"tests/index.html?invoice={invoiceId}").ToString());
+            }
+        }
+    }
+
+    public static class SeleniumExtensions
+    {
+        /// <summary>
+        /// Utility method to wait until timeout for element to be present (optionally displayed)
+        /// </summary>
+        /// <param name="context">Wait context</param>
+        /// <param name="by">How we search for element</param>
+        /// <param name="displayed">Flag to wait for element to be displayed or just present</param>
+        /// <param name="timeout">How long to wait for element to be present/displayed</param>
+        /// <returns>Element we were waiting for</returns>
+        public static IWebElement WaitForElement(this IWebDriver context, By by, bool displayed = true, uint timeout = 3)
+        {
+            var wait = new DefaultWait<IWebDriver>(context);
+            wait.Timeout = TimeSpan.FromSeconds(timeout);
+            wait.IgnoreExceptionTypes(typeof(NoSuchElementException));
+            return wait.Until(ctx =>
+            {
+                var elem = ctx.FindElement(by);
+                if (displayed && !elem.Displayed)
+                    return null;
+
+                return elem;
+            });
         }
     }
 }

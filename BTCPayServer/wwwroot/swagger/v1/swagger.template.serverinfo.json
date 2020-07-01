@@ -1,0 +1,116 @@
+{
+    "paths": {
+        "/api/v1/server/info": {
+            "get": {
+                "tags": [
+                    "ServerInfo"
+                ],
+                "summary": "Get server info",
+                "description": "Information about the server, chains and sync states",
+                "operationId": "ServerInfo_GetServerInfo",
+                "responses": {
+                    "200": {
+                        "description": "Server information",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApplicationServerInfoData"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [],
+                        "Basic": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "ApplicationServerInfoData": {
+                "type": "object",
+                "properties": {
+                    "version": {
+                        "type": "string",
+                        "description": "BTCPay Server version"
+                    },
+                    "onion": {
+                        "type": "string",
+                        "description": "The Tor hostname"
+                    },
+                    "supportedPaymentMethods": {
+                        "type": "array",
+                        "description": "The payment methods this server supports",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "fullySynched": {
+                        "type": "boolean",
+                        "description": "True if the instance is fully synchronized, according to NBXplorer"
+                    },
+                    "syncStatus": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ApplicationServerInfoSyncStatusData"
+                        }
+                    }
+                }
+            },
+            "ApplicationServerInfoNodeStatusData": {
+                "type": "object",
+                "nullable": true,
+                "description": "Detailed sync status of the internal full node",
+                "properties": {
+                    "headers": {
+                        "type": "integer",
+                        "description": "The height of the chain of header of the internal full node"
+                    },
+                    "blocks": {
+                        "type": "integer",
+                        "description": "The height of the latest validated block of the internal full node"
+                    },
+                    "verificationProgress": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0.0,
+                        "maximum": 1.0,
+                        "description": "The current synchronization progress"
+                    }
+                }
+            },
+            "ApplicationServerInfoSyncStatusData": {
+                "type": "object",
+                "description": "Detailed sync status",
+                "properties": {
+                    "cryptoCode": {
+                        "type": "string",
+                        "description": "The CryptoCode of the crypto currency (eg. BTC)"
+                    },
+                    "nodeInformation": {
+                        "$ref": "#/components/schemas/ApplicationServerInfoNodeStatusData"
+                    },
+                    "chainHeight": {
+                        "type": "integer",
+                        "description": "The height of the chain of header of the internal indexer"
+                    },
+                    "syncHeight": {
+                        "type": "number",
+                        "format": "integer",
+                        "nullable": true,
+                        "description": "The height of the latest indexed block of the internal indexer"
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "ServerInfo"
+        }
+    ]
+}

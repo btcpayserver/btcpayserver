@@ -1,5 +1,8 @@
 using System;
+using System.Globalization;
+using System.Linq;
 using NBitcoin;
+using NBXplorer;
 
 namespace BTCPayServer
 {
@@ -11,19 +14,49 @@ namespace BTCPayServer
             {
                 case Money money:
                     return money.ToDecimal(MoneyUnit.BTC);
-//                case MoneyBag mb:
-//                    return mb.Select(money => money.GetValue(network)).Sum();
-//                case AssetMoney assetMoney:
-//                    if (network is ElementsBTCPayNetwork elementsBTCPayNetwork)
-//                    {
-//                        return elementsBTCPayNetwork.AssetId == assetMoney.AssetId
-//                            ? new Money(assetMoney.Quantity)
-//                            : Money.Zero;
-//                    }
-//                    throw new NotSupportedException("IMoney type not supported");
+                case MoneyBag mb:
+                    return mb.Select(money => money.GetValue(network)).Sum();
+                case AssetMoney assetMoney:
+                    if (network is ElementsBTCPayNetwork elementsBTCPayNetwork)
+                    {
+                        return elementsBTCPayNetwork.AssetId == assetMoney.AssetId
+                            ? Convert(assetMoney.Quantity, elementsBTCPayNetwork.Divisibility)
+                            : 0;
+                    }
+                    throw new NotSupportedException("IMoney type not supported");
                 default:
                     throw new NotSupportedException("IMoney type not supported");
             }
+        }
+
+        public static decimal Convert(long sats, int divisibility = 8)
+        {
+            var amt = sats.ToString(CultureInfo.InvariantCulture).PadLeft(divisibility, '0');
+            amt = amt.Length == divisibility ? $"0.{amt}" : amt.Insert(amt.Length - divisibility, ".");
+
+            return decimal.Parse(amt, CultureInfo.InvariantCulture);
+        }
+        public static string ShowMoney(this IMoney money, BTCPayNetwork network)
+        {
+            return money.GetValue(network).ShowMoney(network.Divisibility);
+        }
+
+        public static string ShowMoney(this Money money, int? divisibility)
+        {
+            return !divisibility.HasValue
+                ? money.ToString()
+                : money.ToDecimal(MoneyUnit.BTC).ShowMoney(divisibility.Value);
+        }
+
+        public static string ShowMoney(this decimal d, int divisibility)
+        {
+            return d.ToString(GetDecimalFormat(divisibility), CultureInfo.InvariantCulture);
+        }
+
+        private static string GetDecimalFormat(int divisibility)
+        {
+            var res = $"0{(divisibility > 0 ? "." : string.Empty)}";
+            return res.PadRight(divisibility + res.Length, '0');
         }
     }
 }

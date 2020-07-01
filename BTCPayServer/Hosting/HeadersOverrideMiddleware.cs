@@ -1,17 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+using System;
 using System.Threading.Tasks;
+using BTCPayServer.Configuration;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
-using BTCPayServer.Configuration;
 
 namespace BTCPayServer.Hosting
 {
     public class HeadersOverrideMiddleware
     {
-        RequestDelegate _Next;
-        string overrideXForwardedProto;
+        readonly RequestDelegate _Next;
+        readonly string overrideXForwardedProto;
         public HeadersOverrideMiddleware(RequestDelegate next,
             IConfiguration options)
         {

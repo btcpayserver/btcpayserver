@@ -18,7 +18,7 @@
             <div class="col-lg-12 section-heading">
                 <h2>@ViewData["Title"]</h2>
                 <hr class="primary">
-                <p>Connect and manage wallets. <a href="https://docs.btcpayserver.org/features/wallet" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a></p>
+                <p>Connect and manage wallets. <a href="https://docs.btcpayserver.org/Wallet/" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a></p>
             </div>
         </div>
 
@@ -30,7 +30,7 @@
                             <th>Store Name</th>
                             <th>Crypto Code</th>
                             <th>Balance</th>
-                            <th style="text-align:right">Actions</th>
+                            <th class="text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -47,7 +47,7 @@
                                 }
                                 <td>@wallet.CryptoCode</td>
                                 <td>@wallet.Balance</td>
-                                <td style="text-align:right">
+                                <td class="text-right">
                                     <a asp-action="WalletTransactions" asp-route-walletId="@wallet.Id">Manage</a>
                                 </td>
                             </tr>

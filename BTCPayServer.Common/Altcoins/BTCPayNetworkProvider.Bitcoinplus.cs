@@ -1,7 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using NBitcoin;
 using NBXplorer;
 
@@ -17,7 +13,6 @@ namespace BTCPayServer
                 CryptoCode = nbxplorerNetwork.CryptoCode,
                 DisplayName = "Bitcoinplus",
                 BlockExplorerLink = NetworkType == NetworkType.Mainnet ? "https://chainz.cryptoid.info/xbc/tx.dws?{0}" : "https://chainz.cryptoid.info/xbc/tx.dws?{0}",
-                NBitcoinNetwork = nbxplorerNetwork.NBitcoinNetwork,
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "bitcoinplus",
                 DefaultRateRules = new[]

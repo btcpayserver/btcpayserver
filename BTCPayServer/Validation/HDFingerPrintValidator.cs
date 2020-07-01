@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 
@@ -17,7 +13,7 @@ namespace BTCPayServer.Validation
             {
                 return ValidationResult.Success;
             }
-            
+
             try
             {
                 new HDFingerprint(Encoders.Hex.DecodeData(str));

@@ -21,10 +21,10 @@ namespace BTCPayServer.Storage
         {
             serviceCollection.AddSingleton<StoredFileRepository>();
             serviceCollection.AddSingleton<FileService>();
-//            serviceCollection.AddSingleton<IStorageProviderService, AmazonS3FileProviderService>();
+            //            serviceCollection.AddSingleton<IStorageProviderService, AmazonS3FileProviderService>();
             serviceCollection.AddSingleton<IStorageProviderService, AzureBlobStorageFileProviderService>();
             serviceCollection.AddSingleton<IStorageProviderService, FileSystemFileProviderService>();
-//            serviceCollection.AddSingleton<IStorageProviderService, GoogleCloudStorageFileProviderService>();
+            //            serviceCollection.AddSingleton<IStorageProviderService, GoogleCloudStorageFileProviderService>();
         }
 
         public static void UseProviderStorage(this IApplicationBuilder builder, BTCPayServerOptions options)

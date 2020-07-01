@@ -1,29 +1,29 @@
-﻿using Microsoft.AspNetCore.Http;
+using System;
+using System.Linq;
+using System.Net.WebSockets;
+using System.Threading.Tasks;
+using BTCPayServer.Configuration;
+using BTCPayServer.Logging;
+using BTCPayServer.Models;
+using BTCPayServer.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Linq;
-using System.Threading.Tasks;
-using System.IO;
-using BTCPayServer.Logging;
 using Newtonsoft.Json;
-using BTCPayServer.Models;
-using BTCPayServer.Configuration;
-using System.Net.WebSockets;
-using BTCPayServer.Services.Stores;
 
 namespace BTCPayServer.Hosting
 {
     public class BTCPayMiddleware
     {
-        RequestDelegate _Next;
-        BTCPayServerOptions _Options;
+        readonly RequestDelegate _Next;
+        readonly BTCPayServerOptions _Options;
+        readonly BTCPayServerEnvironment _Env;
 
         public BTCPayMiddleware(RequestDelegate next,
-            BTCPayServerOptions options)
+            BTCPayServerOptions options,
+            BTCPayServerEnvironment env)
         {
+            _Env = env ?? throw new ArgumentNullException(nameof(env));
             _Next = next ?? throw new ArgumentNullException(nameof(next));
             _Options = options ?? throw new ArgumentNullException(nameof(options));
         }
@@ -56,16 +56,24 @@ namespace BTCPayServer.Hosting
                     await _Next(httpContext);
                     return;
                 }
+
+                if (!httpContext.Request.IsOnion() && (httpContext.Request.Headers["Accept"].ToString().StartsWith("text/html", StringComparison.InvariantCulture)))
+                {
+                    var onionLocation = _Env.OnionUrl + httpContext.Request.Path;
+                    httpContext.Response.SetHeader("Onion-Location", onionLocation);
+                }
             }
             catch (WebSocketException)
             { }
             catch (UnauthorizedAccessException ex)
             {
                 await HandleBitpayHttpException(httpContext, new BitpayHttpException(401, ex.Message));
+                return;
             }
             catch (BitpayHttpException ex)
             {
                 await HandleBitpayHttpException(httpContext, ex);
+                return;
             }
             catch (Exception ex)
             {
@@ -133,13 +141,9 @@ namespace BTCPayServer.Hosting
         private static async Task HandleBitpayHttpException(HttpContext httpContext, BitpayHttpException ex)
         {
             httpContext.Response.StatusCode = ex.StatusCode;
-            using (var writer = new StreamWriter(httpContext.Response.Body, new UTF8Encoding(false), 1024, true))
-            {
-                httpContext.Response.ContentType = "application/json";
-                var result = JsonConvert.SerializeObject(new BitpayErrorsModel(ex));
-                writer.Write(result);
-                await writer.FlushAsync();
-            }
+            httpContext.Response.ContentType = "application/json";
+            var result = JsonConvert.SerializeObject(new BitpayErrorsModel(ex));
+            await httpContext.Response.WriteAsync(result);
         }
     }
 }

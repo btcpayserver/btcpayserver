@@ -1,0 +1,83 @@
+﻿@model NewPullPaymentModel
+@{
+    Layout = "../Shared/_NavLayout.cshtml";
+    ViewData["Title"] = "Manage pull payments";
+    ViewData.SetActivePageAndTitle(WalletsNavPages.PullPayments);
+}
+<style type="text/css">
+    .smMaxWidth {
+        max-width: 200px;
+    }
+
+    @@media (min-width: 768px) {
+        .smMaxWidth {
+            max-width: 400px;
+        }
+    }
+
+    .unconf > * {
+        opacity: 0.5;
+    }
+
+    .switchTimeFormat {
+        display: block;
+        max-width: 150px;
+        width: 150px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    .transactionLabel:not(:last-child) {
+        margin-bottom: 4px;
+    }
+
+    .removeTransactionLabelForm {
+        display: inline;
+        position: absolute;
+        right: 4px;
+    }
+
+        .removeTransactionLabelForm button {
+            color: #212529;
+            cursor: pointer;
+            display: inline;
+            padding: 0;
+            background-color: transparent;
+            border: 0;
+        }
+</style>
+@if (TempData.HasStatusMessage())
+{
+    <div class="row">
+        <div class="col-md-12 text-center">
+            <partial name="_StatusMessage" />
+        </div>
+    </div>
+}
+<div class="row">
+    <div class="col-md-6">
+        <form method="post"
+              asp-route-walletId="@this.Context.GetRouteValue("walletId")"
+              asp-action="NewPullPayment">
+            <div class="form-group">
+                <label asp-for="Name" class="control-label"></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Amount" class="control-label"></label>
+                <input asp-for="Amount" class="form-control" />
+                <span asp-validation-for="Amount" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Currency" class="control-label"></label>
+                <input asp-for="Currency" class="form-control" />
+                <span asp-validation-for="Currency" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" id="Create" />
+            </div>
+        </form>
+    </div>
+</div>

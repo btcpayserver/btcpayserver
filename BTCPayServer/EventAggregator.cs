@@ -1,10 +1,10 @@
-﻿using System;
-using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Logging;
-using System.Threading;
+using Microsoft.Extensions.Logging;
 
 namespace BTCPayServer
 {
@@ -17,8 +17,8 @@ namespace BTCPayServer
     {
         class Subscription : IEventAggregatorSubscription
         {
-            private EventAggregator aggregator;
-            Type t;
+            private readonly EventAggregator aggregator;
+            readonly Type t;
             public Subscription(EventAggregator aggregator, Type t)
             {
                 this.aggregator = aggregator;
@@ -63,8 +63,8 @@ namespace BTCPayServer
         public async Task<T> WaitNext<T>(Func<T, bool> predicate, CancellationToken cancellation = default(CancellationToken))
         {
             TaskCompletionSource<T> tcs = new TaskCompletionSource<T>();
-            var subscription = Subscribe<T>((a, b) => { if (predicate(b)) { tcs.TrySetResult(b); a.Unsubscribe(); } });
-            using (cancellation.Register(() => { tcs.TrySetCanceled(); subscription.Unsubscribe(); }))
+            using var subscription = Subscribe<T>((a, b) => { if (predicate(b)) { tcs.TrySetResult(b); a.Unsubscribe(); } });
+            using (cancellation.Register(() => { tcs.TrySetCanceled(); }))
             {
                 return await tcs.Task.ConfigureAwait(false);
             }
@@ -89,7 +89,7 @@ namespace BTCPayServer
             }
 
             var log = evt.ToString();
-            if(!String.IsNullOrEmpty(log))
+            if (!String.IsNullOrEmpty(log))
                 Logs.Events.LogInformation(log);
             foreach (var sub in actionList)
             {
@@ -126,7 +126,7 @@ namespace BTCPayServer
             return subscription;
         }
 
-        Dictionary<Type, Dictionary<Subscription, Action<object>>> _Subscriptions = new Dictionary<Type, Dictionary<Subscription, Action<object>>>();
+        readonly Dictionary<Type, Dictionary<Subscription, Action<object>>> _Subscriptions = new Dictionary<Type, Dictionary<Subscription, Action<object>>>();
 
         public IEventAggregatorSubscription Subscribe<T, TReturn>(Func<T, TReturn> subscription)
         {

@@ -47,6 +47,6 @@
   "Pay with CoinSwitch": "Πληρώστε με CoinSwitch",
   "Pay with Changelly": "Πληρώστε με Changelly",
   "Close": "Κλείσιμο",
-  "NotPaid_ExtraTransaction": "The invoice hasn't been paid in full. Please send another transaction to cover amount Due.",
-  "Recommended_Fee": "Recommended fee: {{feeRate}} sat/byte"
+  "NotPaid_ExtraTransaction": "Το τιμολόγιο δεν έχει πληρωθεί πλήρως. Στείλτε άλλη συναλλαγή για να καλύψετε το οφειλόμενο ποσό.",
+  "Recommended_Fee": "Προτεινόμενη χρέωση: {{feeRate}} sat/byte"
 }

@@ -1,8 +1,6 @@
-﻿using BTCPayServer.Data;
+using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
-using System;
-using System.Collections.Generic;
 
 namespace BTCPayServer.Migrations
 {
@@ -12,6 +10,7 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            int? maxLength = this.IsMySql(migrationBuilder.ActiveProvider) ? (int?)255 : null;
             migrationBuilder.AddColumn<string>(
                 name: "CryptoCode",
                 table: "HistoricalAddressInvoices",

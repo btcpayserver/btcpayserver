@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System;
+using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Data
 {
@@ -32,6 +30,18 @@ namespace BTCPayServer.Data
         public string SIN
         {
             get; set;
+        }
+
+        internal static void OnModelCreating(ModelBuilder builder)
+        {
+            builder.Entity<PairedSINData>()
+                   .HasOne(o => o.StoreData)
+                   .WithMany(i => i.PairedSINs).OnDelete(DeleteBehavior.Cascade);
+            builder.Entity<PairedSINData>(b =>
+            {
+                b.HasIndex(o => o.SIN);
+                b.HasIndex(o => o.StoreDataId);
+            });
         }
     }
 }

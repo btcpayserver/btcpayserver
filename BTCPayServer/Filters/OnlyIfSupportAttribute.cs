@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+using System;
 using System.Threading.Tasks;
 using BTCPayServer.Configuration;
 using Microsoft.AspNetCore.Mvc;
@@ -24,7 +22,7 @@ namespace BTCPayServer.Filters
                 context.Result = new NotFoundResult();
                 return;
             }
-            await next();   
+            await next();
         }
     }
 }

@@ -6,11 +6,6 @@
     <META NAME="robots" CONTENT="noindex,nofollow">
 }
 <style type="text/css">
-
-    .linethrough {
-        text-decoration: line-through;
-    }
-
     .firstCol {
         width: 140px;
     }
@@ -28,7 +23,29 @@
 
         <div class="row">
             <div class="col-lg-12 section-heading">
-                <h2>@ViewData["Title"]</h2>
+                <div class="d-flex justify-content-between">
+                    <h2>@ViewData["Title"]</h2>
+                    <form asp-action="ToggleArchive" asp-route-invoiceId="@Model.Id" method="post">
+                        @if (Model.CanRefund)
+                        {
+                            <a id="refundlink" class="btn btn-success" asp-action="Refund" asp-route-invoiceId="@this.Context.GetRouteValue("invoiceId")">Issue refund <span class="fa fa-undo"></span></a>
+                        }
+                        else
+                        {
+                            <button href="#" class="btn btn-secondary" data-toggle="tooltip" title="You can only issue refunds on invoices with confirmed payments" disabled>Issue refund <span class="fa fa-undo"></span></button>
+                        }
+                        <button type="submit" class="@(Model.Archived ? "btn btn btn-warning" : "btn btn-danger")" id="btn-archive-toggle">
+                            @if (Model.Archived)
+                            {
+                                <span data-toggle="tooltip" title="Unarchive this invoice">Archived <i class=" ml-1 fa fa-close"></i></span>
+                            }
+                            else
+                            {
+                                <span data-toggle="tooltip" title="Archive this invoice so that it does not appear in the invoice list by default">Archive <i class=" ml-1 fa fa-archive"></i></span>
+                            }
+                        </button>
+                    </form>
+                </div>
                 <hr class="primary">
             </div>
         </div>
@@ -76,10 +93,6 @@
                     <tr>
                         <th>Total fiat due</th>
                         <td>@Model.Fiat</td>
-                    </tr>
-                    <tr>
-                        <th>Notification Email</th>
-                        <td>@Model.NotificationEmail</td>
                     </tr>
                     <tr>
                         <th>Notification Url</th>
@@ -187,7 +200,8 @@
             </div>
         }
 
-        <partial name="InvoicePaymentsPartial" model="Model" />
+        <partial name="ListInvoicesPaymentsPartial" model="(Model, false)" />
+
 
         <div class="row">
             <div class="col-md-12">

@@ -1,0 +1,132 @@
+@using BTCPayServer.Client
+@using BTCPayServer.Controllers
+@using BTCPayServer.Security.GreenField
+@model ManageController.AddApiKeyViewModel
+
+@{
+    ViewData.SetActivePageAndTitle(ManageNavPages.APIKeys, "Add API Key");
+}
+
+<h4>@ViewData["Title"]</h4>
+<partial name="_StatusMessage"/>
+<p>
+    Generate a new api key to use BTCPay through its API.
+</p>
+<div class="row">
+    <div class="col-md-12">
+        <form method="post" asp-action="AddApiKey" class="list-group">
+            <div asp-validation-summary="All" class="text-danger"></div>
+
+            <div class="list-group-item ">
+                <div class="form-group">
+                    <label asp-for="Label"></label>
+                    <input asp-for="Label" class="form-control"/>
+                    <span asp-validation-for="Label" class="text-danger"></span>
+                </div>
+            </div>
+
+            @for (int i = 0; i < Model.PermissionValues.Count; i++)
+            {
+                @if (!Model.PermissionValues[i].Forbidden)
+                {
+                    <input type="hidden" asp-for="PermissionValues[i].Permission"/>
+                    @if (Policies.IsStorePolicy(Model.PermissionValues[i].Permission))
+                    {
+                        <input type="hidden"  asp-for="PermissionValues[i].StoreMode" value="@Model.PermissionValues[i].StoreMode"/> 
+                        @if (Model.PermissionValues[i].StoreMode == ManageController.AddApiKeyViewModel.ApiKeyStoreMode.AllStores)
+                        {
+                            <div class="list-group-item form-group">
+                                <div class="form-check">
+                                    <input id="@Model.PermissionValues[i].Permission" type="checkbox" asp-for="PermissionValues[i].Value" class="form-check-input"/>
+                                    <label for="@Model.PermissionValues[i].Permission" class="h5 form-check-label">@Model.PermissionValues[i].Title</label>
+
+                                    <button type="submit" class="btn btn-link" name="command" value="@($"{Model.PermissionValues[i].Permission}:change-store-mode")">select specific stores...</button>
+                                    <span asp-validation-for="PermissionValues[i].Value" class="text-danger"></span>
+                                    <span class="form-text text-muted">@Model.PermissionValues[i].Description</span>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="list-group-item ">
+                                <h5 class="mb-1">@Model.PermissionValues[i].Title</h5>
+                                <span class="form-text text-muted">@Model.PermissionValues[i].Description</span>
+                                <button type="submit" class="btn btn-link" name="command" value="@($"{Model.PermissionValues[i].Permission}:change-store-mode")">Give permission to all stores instead</button>
+                            </div>
+                            @if (!Model.Stores.Any())
+                            {
+                                <div class="list-group-item alert-warning">
+                                    You currently have no stores configured.
+                                </div>
+                            }
+                            @for (var index = 0; index < Model.PermissionValues[i].SpecificStores.Count; index++)
+                            {
+                                <div class="list-group-item transaction-output-form p-0 pl-lg-2">
+                                    <div class="row">
+                                        <div class="col-sm-12 col-md-12 col-lg-10  py-2 ">
+                                            <div class="form-group my-0">
+                                                @if (Model.PermissionValues[i].SpecificStores[index] == null)
+                                                {
+                                                    <select asp-for="PermissionValues[i].SpecificStores[index]" class="form-control" asp-items="@(new SelectList(Model.Stores.Where(data => !Model.PermissionValues[i].SpecificStores.Contains(data.Id)), nameof(StoreData.Id), nameof(StoreData.StoreName)))"></select>
+                                                }
+                                                else
+                                                {
+                                                    var store = Model.Stores.SingleOrDefault(data => data.Id == Model.PermissionValues[i].SpecificStores[index]);
+                                                    <select asp-for="PermissionValues[i].SpecificStores[index]" class="form-control" asp-items="@(new SelectList(new[] {store}, nameof(StoreData.Id), nameof(StoreData.StoreName), store.Id))"></select>
+                                                }
+
+                                                <span asp-validation-for="PermissionValues[i].SpecificStores[index]" class="text-danger"></span>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-12 col-md-12 col-lg-2 pull-right">
+                                            <button type="submit" title="Remove Store Permission" name="command" value="@($"{Model.PermissionValues[i].Permission}:remove-store:{index}")"
+                                                    class="d-block d-lg-none d-xl-none btn btn-danger mb-2 ml-2">
+                                                Remove
+                                            </button>
+                                            <button type="submit" title="Remove Store Permission" name="command" value="@($"{Model.PermissionValues[i].Permission}:remove-store:{index}")"
+                                                    class="d-none d-lg-block remove-btn text-decoration-none h-100 align-middle btn text-danger btn-link fa fa-times rounded-0 pull-right">
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            @if (Model.PermissionValues[i].SpecificStores.Count < Model.Stores.Length)
+                            {
+                                <div class="list-group-item">
+                                    <button type="submit" name="command" value="@($"{Model.PermissionValues[i].Permission}:add-store")" class="ml-1 btn btn-secondary">Add another store </button>
+                                </div>
+                            }
+                        }
+                    }
+                    else
+                    {
+                        <div class="list-group-item form-group">
+                            <div class="form-check">
+                                <input id="@Model.PermissionValues[i].Permission" type="checkbox" asp-for="PermissionValues[i].Value" class="form-check-input"/>
+                                <label for="@Model.PermissionValues[i].Permission" class="h5 form-check-label">@Model.PermissionValues[i].Title</label>
+                                <span asp-validation-for="PermissionValues[i].Value" class="text-danger"></span>
+                                <span class="form-text text-muted">@Model.PermissionValues[i].Description</span>
+                            </div>
+                        </div>
+                    }
+                }
+            }
+            <button type="submit" class="btn btn-primary" id="Generate">Generate API Key</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+
+    <style>
+        .remove-btn {
+            font-size: 1.5rem;
+            border-radius: 0;
+        }
+
+            .remove-btn:hover {
+                background-color: #CCCCCC;
+            }
+    </style>
+}

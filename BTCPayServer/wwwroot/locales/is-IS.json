@@ -33,7 +33,7 @@
   "What happened?": "Hvað gerðist?",
   "InvoiceExpired_Body_1": "Þessi reikningur er útrunnin. Reikningurinn er aðeins gildur í {{maxTimeMinutes}} mínútur. \nÞú getur farið aftur á {{storeName}} ef þú vilt reyna aftur.",
   "InvoiceExpired_Body_2": "Ef þú reyndir að senda greiðslu, þá hefur hún ekki verið samþykkt.",
-  "InvoiceExpired_Body_3": "",
+  "InvoiceExpired_Body_3": "Ef greiðslan fæst of seint munum við annað hvort afgreiða pöntunina eða hafa samband við þig varðandi endurgreiðslu...",
   "Invoice ID": "Innheimtu ID",
   "Order ID": "Pöntun ID",
   "Return to StoreName": "Fara aftur á {{storeName}}",
@@ -45,8 +45,8 @@
   "txCount": "{{count}} reikningur",
   "txCount_plural": "{{count}} reikningar",
   "Pay with CoinSwitch": "Borga með Coinswitch",
-  "Pay with Changelly": "Borgar með Changelly",
+  "Pay with Changelly": "Borga með Changelly",
   "Close": "Loka",
-  "NotPaid_ExtraTransaction": "The invoice hasn't been paid in full. Please send another transaction to cover amount Due.",
-  "Recommended_Fee": "Recommended fee: {{feeRate}} sat/byte"
+  "NotPaid_ExtraTransaction": "Reikningurinn hefur ekki verið greiddur að fullu. Vinsamlegast greiddu restina.",
+  "Recommended_Fee": "Ráðlögð þóknun: {{feeRate}} sat/bæti"
 }

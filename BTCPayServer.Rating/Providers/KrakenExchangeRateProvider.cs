@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,13 +14,14 @@ using Newtonsoft.Json.Linq;
 namespace BTCPayServer.Services.Rates
 {
     // Make sure that only one request is sent to kraken in general
-    public class KrakenExchangeRateProvider : IRateProvider, IHasExchangeName
+    public class KrakenExchangeRateProvider : IRateProvider
     {
         public KrakenExchangeRateProvider()
         {
             _Helper = new ExchangeKrakenAPI();
         }
-        ExchangeKrakenAPI _Helper;
+
+        readonly ExchangeKrakenAPI _Helper;
         public HttpClient HttpClient
         {
             get
@@ -33,13 +34,11 @@ namespace BTCPayServer.Services.Rates
             }
         }
 
-        public string ExchangeName => "kraken";
-
         HttpClient _LocalClient;
-        static HttpClient _Client = new HttpClient();
+        static readonly HttpClient _Client = new HttpClient();
 
         // ExchangeSymbolToGlobalSymbol throws exception which would kill perf
-        ConcurrentDictionary<string, string> notFoundSymbols = new ConcurrentDictionary<string, string>(new Dictionary<string, string>()
+        readonly ConcurrentDictionary<string, string> notFoundSymbols = new ConcurrentDictionary<string, string>(new Dictionary<string, string>()
         {
             {"ADAXBT","ADAXBT"},
             { "BSVUSD","BSVUSD"},
@@ -72,9 +71,7 @@ namespace BTCPayServer.Services.Rates
         });
         string[] _Symbols = Array.Empty<string>();
         DateTimeOffset? _LastSymbolUpdate = null;
-
-
-        Dictionary<string, string> _TickerMapping = new Dictionary<string, string>()
+        readonly Dictionary<string, string> _TickerMapping = new Dictionary<string, string>()
         {
             { "XXDG", "DOGE" },
             { "XXBT", "BTC" },
@@ -87,9 +84,9 @@ namespace BTCPayServer.Services.Rates
             { "ZGBP", "GBP" }
         };
 
-        public async Task<ExchangeRates> GetRatesAsync(CancellationToken cancellationToken)
+        public async Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
         {
-            var result = new ExchangeRates();
+            var result = new List<PairRate>();
             var symbols = await GetSymbolsAsync(cancellationToken);
             var normalizedPairsList = symbols.Where(s => !notFoundSymbols.ContainsKey(s)).Select(s => _Helper.NormalizeMarketSymbol(s)).ToList();
             var csvPairsList = string.Join(",", normalizedPairsList);
@@ -117,7 +114,7 @@ namespace BTCPayServer.Services.Rates
                             global = await _Helper.ExchangeMarketSymbolToGlobalMarketSymbolAsync(symbol);
                         }
                         if (CurrencyPair.TryParse(global, out var pair))
-                            result.Add(new ExchangeRate("kraken", pair.Inverse(), new BidAsk(ticker.Bid, ticker.Ask)));
+                            result.Add(new PairRate(pair.Inverse(), new BidAsk(ticker.Bid, ticker.Ask)));
                         else
                             notFoundSymbols.TryAdd(symbol, symbol);
                     }
@@ -127,7 +124,7 @@ namespace BTCPayServer.Services.Rates
                     }
                 }
             }
-            return result;
+            return result.ToArray();
         }
 
         private static ExchangeTicker ConvertToExchangeTicker(string symbol, JToken ticker)

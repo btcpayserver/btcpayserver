@@ -55,6 +55,7 @@ hr.light {
   font-weight: bold;
   text-transform: uppercase;
   color: var(--btcpay-header-color-link, var(--btcpay-color-neutral-100));
+  border: 2px solid transparent;
 }
 
 #mainNav .navbar-nav > li.nav-item > a.nav-link:focus,

@@ -1,52 +1,57 @@
-﻿using BTCPayServer.Configuration;
-using Microsoft.AspNetCore.Html;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Text.Encodings.Web;
-using NBitcoin;
-using System.Threading.Tasks;
-using NBXplorer;
-using NBXplorer.Models;
-using System.Linq;
-using System.Threading;
-using BTCPayServer.Services.Wallets;
-using System.IO;
-using BTCPayServer.Logging;
-using Microsoft.Extensions.Logging;
-using System.Net.WebSockets;
-using BTCPayServer.Services.Invoices;
-using NBitpayClient;
-using BTCPayServer.Payments;
-using Microsoft.AspNetCore.Identity;
-using BTCPayServer.Models;
-using System.Security.Claims;
 using System.Globalization;
-using BTCPayServer.Services;
-using BTCPayServer.Data;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using NBXplorer.DerivationStrategy;
+using System.Linq;
 using System.Net;
-using Microsoft.AspNetCore.Hosting;
+using System.Net.WebSockets;
+using System.Security.Claims;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using BTCPayServer.Configuration;
+using BTCPayServer.Data;
+using BTCPayServer.Lightning;
+using BTCPayServer.Models;
+using BTCPayServer.Payments;
+using BTCPayServer.Payments.Bitcoin;
+using BTCPayServer.Services;
+using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Wallets;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using NBitcoin;
+using NBitcoin.Payment;
+using NBitpayClient;
+using NBXplorer.DerivationStrategy;
+using NBXplorer.Models;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer
 {
     public static class Extensions
     {
-#if !NETCOREAPP21
+
+        public static bool TryGetPayjoinEndpoint(this BitcoinUrlBuilder bip21, out Uri endpoint)
+        {
+            endpoint = bip21.UnknowParameters.TryGetValue($"{PayjoinClient.BIP21EndpointKey}", out var uri) ? new Uri(uri, UriKind.Absolute) : null;
+            return endpoint != null;
+        }
+        public static bool IsInternalNode(this LightningConnectionString connectionString, LightningConnectionString internalLightning)
+        {
+            var internalDomain = internalLightning?.BaseUri?.DnsSafeHost;
+
+            return connectionString.ConnectionType == LightningConnectionType.CLightning ||
+                                  connectionString.BaseUri.DnsSafeHost == internalDomain ||
+                                  (internalDomain == "127.0.0.1" || internalDomain == "localhost");
+        }
+
         public static IQueryable<TEntity> Where<TEntity>(this Microsoft.EntityFrameworkCore.DbSet<TEntity> obj, System.Linq.Expressions.Expression<Func<TEntity, bool>> predicate) where TEntity : class
         {
             return System.Linq.Queryable.Where(obj, predicate);
         }
-#endif
 
         public static string Truncate(this string value, int maxLength)
         {
@@ -54,23 +59,7 @@ namespace BTCPayServer
                 return value;
             return value.Length <= maxLength ? value : value.Substring(0, maxLength);
         }
-        public static IServiceCollection AddStartupTask<T>(this IServiceCollection services)
-            where T : class, IStartupTask
-            => services.AddTransient<IStartupTask, T>();
-        public static async Task StartWithTasksAsync(this IWebHost webHost, CancellationToken cancellationToken = default)
-        {
-            // Load all tasks from DI
-            var startupTasks = webHost.Services.GetServices<IStartupTask>();
 
-            // Execute all the tasks
-            foreach (var startupTask in startupTasks)
-            {
-                await startupTask.ExecuteAsync(cancellationToken).ConfigureAwait(false);
-            }
-
-            // Start the tasks as normal
-            await webHost.StartAsync(cancellationToken).ConfigureAwait(false);
-        }
         public static string PrettyPrint(this TimeSpan expiration)
         {
             StringBuilder builder = new StringBuilder();
@@ -94,23 +83,6 @@ namespace BTCPayServer
             }
             return value;
         }
-        public static decimal RoundToSignificant(this decimal value, ref int divisibility)
-        {
-            if (value != 0m)
-            {
-                while (true)
-                {
-                    var rounded = decimal.Round(value, divisibility, MidpointRounding.AwayFromZero);
-                    if ((Math.Abs(rounded - value) / value) < 0.001m)
-                    {
-                        value = rounded;
-                        break;
-                    }
-                    divisibility++;
-                }
-            }
-            return value;
-        }
 
         public static bool HasStatusMessage(this ITempDataDictionary tempData)
         {
@@ -128,23 +100,47 @@ namespace BTCPayServer
             {
                 if (webSocket.State == WebSocketState.Open)
                 {
-                    CancellationTokenSource cts = new CancellationTokenSource();
-                    cts.CancelAfter(5000);
-                    await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", cts.Token);
+                    using (CancellationTokenSource cts = new CancellationTokenSource())
+                    {
+                        cts.CancelAfter(5000);
+                        await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", cts.Token);
+                    }
                 }
             }
             catch { }
             finally { try { webSocket.Dispose(); } catch { } }
         }
-        public static async Task<Dictionary<uint256, TransactionResult>> GetTransactions(this BTCPayWallet client, uint256[] hashes, CancellationToken cts = default(CancellationToken))
+
+        public static IEnumerable<BitcoinLikePaymentData> GetAllBitcoinPaymentData(this InvoiceEntity invoice)
+        {
+            return invoice.GetPayments()
+                    .Where(p => p.GetPaymentMethodId().PaymentType == PaymentTypes.BTCLike)
+                    .Select(p => (BitcoinLikePaymentData)p.GetCryptoPaymentData());
+        }
+
+        public static async Task<Dictionary<uint256, TransactionResult>> GetTransactions(this BTCPayWallet client, uint256[] hashes, bool includeOffchain = false, CancellationToken cts = default(CancellationToken))
         {
             hashes = hashes.Distinct().ToArray();
             var transactions = hashes
-                                        .Select(async o => await client.GetTransactionAsync(o, cts))
+                                        .Select(async o => await client.GetTransactionAsync(o, includeOffchain, cts))
                                         .ToArray();
             await Task.WhenAll(transactions).ConfigureAwait(false);
             return transactions.Select(t => t.Result).Where(t => t != null).ToDictionary(o => o.Transaction.GetHash());
         }
+
+        public static async Task<PSBT> UpdatePSBT(this ExplorerClientProvider explorerClientProvider, DerivationSchemeSettings derivationSchemeSettings, PSBT psbt)
+        {
+            var result = await explorerClientProvider.GetExplorerClient(psbt.Network.NetworkSet.CryptoCode).UpdatePSBTAsync(new UpdatePSBTRequest()
+            {
+                PSBT = psbt,
+                DerivationScheme = derivationSchemeSettings.AccountDerivation
+            });
+            if (result == null)
+                return null;
+            derivationSchemeSettings.RebaseKeyPaths(result.PSBT);
+            return result.PSBT;
+        }
+
         public static string WithTrailingSlash(this string str)
         {
             if (str.EndsWith("/", StringComparison.InvariantCulture))
@@ -186,11 +182,19 @@ namespace BTCPayServer
 
         public static bool IsSegwit(this DerivationStrategyBase derivationStrategyBase)
         {
-            if (IsSegwitCore(derivationStrategyBase))
-                return true;
-            return (derivationStrategyBase is P2SHDerivationStrategy p2shStrat && IsSegwitCore(p2shStrat.Inner));
+            return ScriptPubKeyType(derivationStrategyBase) != NBitcoin.ScriptPubKeyType.Legacy;
         }
+        public static ScriptPubKeyType ScriptPubKeyType(this DerivationStrategyBase derivationStrategyBase)
+        {
+            if (IsSegwitCore(derivationStrategyBase))
+            {
+                return NBitcoin.ScriptPubKeyType.Segwit;
+            }
 
+            return (derivationStrategyBase is P2SHDerivationStrategy p2shStrat && IsSegwitCore(p2shStrat.Inner))
+                ? NBitcoin.ScriptPubKeyType.SegwitP2SH
+                : NBitcoin.ScriptPubKeyType.Legacy;
+        }
         private static bool IsSegwitCore(DerivationStrategyBase derivationStrategyBase)
         {
             return (derivationStrategyBase is P2WSHDerivationStrategy) ||
@@ -208,7 +212,7 @@ namespace BTCPayServer
                    server.EndsWith(".lan", StringComparison.OrdinalIgnoreCase) ||
                    server.IndexOf('.', StringComparison.OrdinalIgnoreCase) == -1;
             }
-            if(IPAddress.TryParse(server, out var ip))
+            if (IPAddress.TryParse(server, out var ip))
             {
                 return ip.IsLocal() || ip.IsRFC1918();
             }
@@ -257,6 +261,14 @@ namespace BTCPayServer
                 return false;
             return request.Host.Host.EndsWith(".onion", StringComparison.OrdinalIgnoreCase);
         }
+
+        public static bool IsOnion(this Uri uri)
+        {
+            if (uri == null || !uri.IsAbsoluteUri)
+                return false;
+            return uri.DnsSafeHost.EndsWith(".onion", StringComparison.OrdinalIgnoreCase);
+        }
+
 
         public static string GetAbsoluteRoot(this HttpRequest request)
         {
@@ -315,7 +327,7 @@ namespace BTCPayServer
         /// <returns></returns>
         public static string GetRelativePathOrAbsolute(this HttpRequest request, string path)
         {
-            if (!Uri.TryCreate(path, UriKind.RelativeOrAbsolute, out var uri) || 
+            if (!Uri.TryCreate(path, UriKind.RelativeOrAbsolute, out var uri) ||
                 uri.IsAbsoluteUri)
                 return path;
 
@@ -409,21 +421,13 @@ namespace BTCPayServer
             ctx.Items["BTCPAY.STOREDATA"] = storeData;
         }
 
-        private static JsonSerializerSettings jsonSettings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
-        public static string ToJson(this object o)
+        public static StoreData[] GetStoresData(this HttpContext ctx)
         {
-            var res = JsonConvert.SerializeObject(o, Formatting.None, jsonSettings);
-            return res;
+            return ctx.Items.TryGet("BTCPAY.STORESDATA") as StoreData[];
         }
-        
-        public static string TrimEnd(this string input, string suffixToRemove,
-            StringComparison comparisonType) {
-
-            if (input != null && suffixToRemove != null
-                              && input.EndsWith(suffixToRemove, comparisonType)) {
-                return input.Substring(0, input.Length - suffixToRemove.Length);
-            }
-            else return input;
+        public static void SetStoresData(this HttpContext ctx, StoreData[] storeData)
+        {
+            ctx.Items["BTCPAY.STORESDATA"] = storeData;
         }
     }
 }

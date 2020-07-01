@@ -1,7 +1,7 @@
-﻿using BTCPayServer.Validation;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using BTCPayServer.Data;
+using BTCPayServer.Client.Models;
+using BTCPayServer.Validation;
 
 namespace BTCPayServer.Models.StoreViewModels
 {
@@ -12,9 +12,11 @@ namespace BTCPayServer.Models.StoreViewModels
             public string Crypto { get; set; }
             public string Value { get; set; }
             public WalletId WalletId { get; set; }
+            public bool WalletSupported { get; set; }
             public bool Enabled { get; set; }
+            public bool Collapsed { get; set; }
         }
-        
+
         public class AdditionalPaymentMethod
         {
             public string Provider { get; set; }
@@ -77,13 +79,16 @@ namespace BTCPayServer.Models.StoreViewModels
         }
 
         [Display(Name = "Add additional fee (network fee) to invoice...")]
-        public Data.NetworkFeeMode NetworkFeeMode
+        public NetworkFeeMode NetworkFeeMode
         {
             get; set;
         }
 
         [Display(Name = "Description template of the lightning invoice")]
         public string LightningDescriptionTemplate { get; set; }
+
+        [Display(Name = "Enable Payjoin/P2EP")]
+        public bool PayJoinEnabled { get; set; }
 
         public class LightningNode
         {

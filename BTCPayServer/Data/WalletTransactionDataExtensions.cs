@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Data
 {
@@ -17,7 +15,15 @@ namespace BTCPayServer.Data
             var blobInfo = JsonConvert.DeserializeObject<WalletTransactionInfo>(ZipUtils.Unzip(walletTransactionData.Blob));
             if (!string.IsNullOrEmpty(walletTransactionData.Labels))
             {
-                blobInfo.Labels.AddRange(walletTransactionData.Labels.Split(',', StringSplitOptions.RemoveEmptyEntries));
+                if (walletTransactionData.Labels.StartsWith('['))
+                {
+                    blobInfo.Labels.AddRange(JArray.Parse(walletTransactionData.Labels).Values<string>());
+                }
+                else
+                {
+                    blobInfo.Labels.AddRange(walletTransactionData.Labels.Split(',',
+                        StringSplitOptions.RemoveEmptyEntries));
+                }
             }
             return blobInfo;
         }
@@ -29,9 +35,8 @@ namespace BTCPayServer.Data
                 walletTransactionData.Blob = Array.Empty<byte>();
                 return;
             }
-            if (blobInfo.Labels.Any(l => l.Contains(',', StringComparison.OrdinalIgnoreCase)))
-                throw new ArgumentException(paramName: nameof(blobInfo), message: "Labels must not contains ','");
-            walletTransactionData.Labels = String.Join(',', blobInfo.Labels);
+
+            walletTransactionData.Labels = JArray.FromObject(blobInfo.Labels).ToString();
             walletTransactionData.Blob = ZipUtils.Zip(JsonConvert.SerializeObject(blobInfo));
         }
     }

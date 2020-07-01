@@ -1,0 +1,400 @@
+@model (string templateId, string title)
+<style>
+        .card-deck {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-gap: .5rem;
+        }
+        .card-deck .card{
+            max-width:480px;
+        }
+        .card-img-top{
+            min-height:247px; background-repeat: no-repeat; background-size:contain; background-position: top;
+        }
+</style>
+
+<div id="template-editor-app" v-cloak>
+    <div class="form-group">
+        <label class="control-label mb-3">@Model.title </label>
+        @if (ViewContext.ViewData.ModelState.TryGetValue(Model.templateId, out var errors))
+        {
+            foreach (var error in errors.Errors)
+            {
+                <br/>
+                <span class="text-danger">@error.ErrorMessage</span>
+            }
+        }
+        
+        <div class="bg-light card">
+            <div class="card-body " v-bind:class="{ 'card-deck': items.length > 0}">
+                <div v-for="(item, index) of items" class="card my-2 card-wrapper template-item mr-0 ml-0" v-bind:key="item.id">
+                    <div v-if="anyImages" class="card-img-top border-bottom" v-bind:style="getImage(item)"></div>
+                    <div class="card-body">
+                        <h6 class="card-title" v-html="item.title"></h6>
+                        <button type="button" class="btn btn-primary" v-on:click="editItem(index)">Edit</button>
+                        <button type="button" class="btn btn-danger" v-on:click="removeItem(index)">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <div v-if="!items || items.length === 0" class="col-12 text-center">
+                    No items.<br/>
+                    <button type="button" class="btn btn-link" v-on:click="editItem(-1)" id="btn-add-first">
+                        Add your first item
+                    </button>
+                </div>
+            </div>
+            <div class="card-footer text-left">
+                <button type="button" class="btn btn-secondary" v-on:click="editItem(-1)" id="btn-add">
+                    <i class="fa fa-plus fa-fw"></i> Add
+                </button>
+                <button type="button" class="btn btn-secondary ml-2" v-on:click="toggleTemplateElement()">
+                    Toggle raw editor
+                </button>
+            </div>
+        </div>
+        <div class="modal" id="product-modal" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" v-if="editingItem">{{editingItem.index>=0? "Edit" : "Create"}} item</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close" ref="close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body" v-if="editingItem">
+                        <div class="mb-3">
+                            <span class="text-danger row m-2" v-for="error of errors">{{error}}</span>
+                            <div class="form-row">
+                                <div class="col-sm-6">
+                                    <label>Title</label>*
+                                    <input type="text" required pattern="[^\*#]+" class="form-control mb-2" v-model="editingItem.title" autofocus ref="txtTitle" />
+                                </div>
+                                <div class="col-sm-3">
+                                    <label>Price</label>*
+                                    <input class="form-control mb-2"
+                                           inputmode="numeric"
+                                           pattern="\d*"
+                                           step="any"
+                                           min="0"
+                                           type="number"
+                                           required
+                                           v-model="editingItem.price" ref="txtPrice"/>
+                                </div>
+                                <div class="col-sm-3">
+                                    <label>Custom price</label>
+                                    <select class="form-control" v-model="editingItem.custom">
+                                        <option v-bind:value="false">No</option>
+                                        <option v-bind:value="true">Yes</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="col">
+                                    <label>Image</label>
+                                    <input type="text" class="form-control mb-2" pattern="[^\*#]+"  v-model="editingItem.image" ref="txtImage"/>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="col">
+                                    <label>Description</label>
+                                    <textarea rows="3" cols="40" class="form-control mb-2" v-model="editingItem.description" ref="txtDescription"></textarea>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="col">
+                                    <label>Inventory (leave blank to not use inventory feature)</label>
+                                    <input type="number" min="0" step="1" class="form-control mb-2" v-model="editingItem.inventory" ref="txtInventory" />
+                                </div>
+                                
+                            </div>
+                            <div class="form-row">
+                                <div class="col">
+                                    <label>Id (leave blank to generate from title)</label>
+                                    <input type="text" required pattern="[^\*#]+"  class="form-control mb-2" v-model="editingItem.id" ref="txtId"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal" v-on:click="clearEditingItem()">Close</button>
+                        <button type="button" class="btn btn-primary" v-on:click="saveEditingItem()">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(function() {
+    new Vue({
+        el: '#template-editor-app',
+        data: {
+            errors: [],
+            items: [],
+            editingItem: null,
+            elementId: "@Model.templateId"
+        },
+        computed: {
+            anyImages: function(){
+                return !!this.items.find(function(i){ return !!i.image;});
+            }
+        },
+        mounted: function() {
+            this.loadYml();
+            this.getInputElement().on("input change", this.loadYml.bind(this));            
+            this.getModalElement().on("hide.bs.modal", this.clearEditingItem.bind(this));
+            this.toggleTemplateElement();
+        },
+        methods: {
+            toggleTemplateElement: function(){
+                this.getInputElement().parent().toggle();
+            },
+            getImage: function(item){
+                return {
+                    "background-image" : "url('"+(this.unEscapeKey(item.image) || "/img/img-placeholder.svg") +"')",
+                    "opacity": item.image? 1: 0.5
+                }
+            },
+            getInputElement : function(){ return $("#"+this.elementId); },
+            getModalElement : function(){ return $("#product-modal"); },
+            loadYml: function(){
+                var result = [];
+                var template = this.getInputElement().val().trim();
+    
+                var lines = [];
+                var items = template.split("\n");
+                for (var i = 0; i < items.length; i++) {
+                    if(items[i] === ""){
+                        continue;
+                    }
+                    if(items[i].startsWith("  ")){
+                        lines[lines.length-1]+=items[i] + "\n";
+                    }else{
+                       
+                        lines.push(items[i] + "\n");
+                    }
+                }            
+            
+                // Split products from the template
+                for (var kl in lines) {
+                    var line = lines[kl],
+                        product = line.split("\n"),
+                        id, price, title, description, image = null,
+                        custom, inventory=null, paymentMethods = [];
+            
+                    var goingThroughMethods = false;
+                    for (var kp in product) {
+                        var productProperty = product[kp].trim();
+            
+                        if (kp == 0) {
+                            id = productProperty.replace(":", "");
+                        }
+                        if(productProperty.startsWith("-") && goingThroughMethods){
+                            paymentMethods.push(productProperty.substr(1));
+                        }else{
+                            goingThroughMethods = false;
+                        }
+            
+                        if (productProperty.indexOf('price:') !== -1) {
+                            price = parseFloat(productProperty.replace('price:', '').trim()).noExponents();
+                        }
+                        if (productProperty.indexOf('title:') !== -1) {
+                            title = productProperty.replace('title:', '').trim();
+                        }
+                        if (productProperty.indexOf('description:') !== -1) {
+                            description =productProperty.replace('description:', '').trim();
+                        }
+                        if (productProperty.indexOf('image:') !== -1) {
+                            image = productProperty.replace('image:', '').trim();
+                        }
+                        if (productProperty.indexOf('custom:') !== -1) {
+                            custom =productProperty.replace('custom:', '').trim();
+                        }
+                        if (productProperty.indexOf('inventory:') !== -1) {
+                            inventory = parseInt(productProperty.replace('inventory:', '').trim(),10);
+                        }
+                        if (productProperty.indexOf('payment_methods:') !== -1) {
+                            goingThroughMethods = true;
+                        }
+                    }
+            
+                    if (price != null || title != null) {
+                        // Add product to the list
+                        result.push({
+                            id: id,
+                            title: title,
+                            price: price,
+                            image: image || null,
+                            description: description || '',
+                            custom: Boolean(custom),
+                            inventory: isNaN(inventory)? null: inventory,
+                            paymentMethods: paymentMethods
+                        });
+                    }                    
+                }
+                this.items = result;
+            },
+            toYml: function(){
+                    var template = '';
+                    // Construct template from the product list
+                    for (var key in this.items) {
+                        var product = this.items[key],
+                            id = product.id,
+                            title = product.title,
+                            price = product.price? product.price : 0,
+                            image = product.image,
+                            description = product.description,
+                            custom = product.custom,
+                            inventory = product.inventory,
+                            paymentMethods = product.paymentMethods;
+
+                        template += id + ':\n' +
+                        '  price: ' + parseFloat(price).noExponents() + '\n' +
+                        '  title: ' + title + '\n';
+
+                        if (description) {
+                            template += '  description: ' + description + '\n';
+                        }
+                        if (image) {
+                            template += '  image: ' + image + '\n';
+                        }
+                        if (custom) {
+                            template += '  custom: true\n';
+                        }
+                        if(paymentMethods != null && paymentMethods.length > 0){
+                            template+= '  payment_methods:\n';
+                            for (var method of paymentMethods){
+                                template+= '    - '+method+'\n';
+                            }
+                        }                       
+                        template += '\n';
+                    }
+                    this.getInputElement().val(template);
+            },
+            editItem: function(index){
+                this.errors = [];
+                if(index < 0){
+                    this.editingItem = {index:-1, id:"", title: "", price: 0, image: "", description: "", custom: false, inventory: null, paymentMethods: []};
+                }else{
+                    this.editingItem = {...this.items[index], index};
+                }
+                
+                this.editingItem = this.unEscape(this.editingItem);
+                this.getModalElement().modal("show");
+            },
+            removeItem: function(index){
+                this.items.splice(index,1);
+                this.toYml();
+            },
+            clearEditingItem: function(){
+                this.editingItem = null;
+                this.errors = [];
+            },
+            validate: function(){
+                this.errors = [];
+                if (this.editingItem.id) {
+                    var matchedId = this.items.findIndex((x)=> { return this.unEscapeKey(x.id) === this.editingItem.id;});
+                    if( matchedId>= 0 && matchedId != this.editingItem.index)
+                        this.errors.push("You cannot have multiple items with the same id");
+                    
+                    if (!this.$refs.txtId.checkValidity()) {
+                        this.errors.push("Id is required and cannot have * or #");
+                    }
+                    if(this.editingItem.id.startsWith("- ")){
+                        this.errors.push("Id cannot start with \"- \"");
+                    }else if(this.editingItem.id.trim() == ""){
+                        this.errors.push("Id is required");
+                    }                   
+                }   
+                
+                if (this.editingItem.description.indexOf("*") >= 0 || this.editingItem.description.indexOf("#") >= 0) {
+                    this.errors.push("Description cannot have * or #");
+                }
+                if(this.editingItem.description.startsWith("- ")){
+                    this.errors.push("Description cannot start with \"- \"");
+                }
+                if (!this.$refs.txtImage.checkValidity()) {
+                    this.errors.push("Image cannot have * or #");
+                }
+                if(this.editingItem.image.startsWith("- ")){
+                    this.errors.push("Image cannot start with \"- \"");
+                }
+                
+                if (!this.$refs.txtPrice.checkValidity()) {
+                    this.errors.push("Price must be a valid number");
+                }
+                if (!this.$refs.txtTitle.checkValidity()) {
+                    this.errors.push("Title is required and cannot have * or #");
+                }else if(this.editingItem.title.startsWith("- ")){
+                    this.errors.push("Title cannot start with \"- \"");
+                }else if(this.editingItem.title.trim() == ""){
+                    this.errors.push("Title is required");
+                }                
+                if (!this.$refs.txtInventory.checkValidity()) {
+                    this.errors.push("Inventory must be blank or a a valid number (>=0)");
+                }
+                return this.errors.length === 0;
+            },
+            saveEditingItem: function(){
+                if(!this.editingItem.id){
+                    this.editingItem.id = this.editingItem.title.toLowerCase().trim();
+                    this.$nextTick(this.saveEditingItem.bind(this));
+                    return;
+                }
+                if(!this.validate()){
+                    return;
+                }
+                this.editingItem = this.escape(this.editingItem);
+                
+                if(this.editingItem.index < 0){
+                    this.items.push(this.editingItem);
+                }else{
+                    this.items.splice(this.editingItem.index,1,this.editingItem);
+                }
+                this.toYml();
+                this.getModalElement().modal("hide");
+            },
+            escape: function(item) {
+                for(var k in item){
+                    if(k !== "paymentMethods" && k!=="id"){
+                        item[k] = $('<div/>').text(item[k]).html();
+                    }
+                }
+                return item;
+            },
+            unEscape: function(item){
+                for(var k in item){
+                    if(k !== "paymentMethods" && k!=="id"){
+                        item[k] = this.unEscapeKey(item[k]);
+                    }
+                }
+                return item;
+            },
+            unEscapeKey : function(k){
+                return $('<div/>').html(k).text();
+            }
+        }
+    });
+});
+
+Number.prototype.noExponents= function(){
+    var data= String(this).split(/[eE]/);
+    if(data.length== 1) return data[0];
+
+    var  z= '', sign= this<0? '-':'',
+        str= data[0].replace('.', ''),
+        mag= Number(data[1])+ 1;
+
+    if(mag<0){
+        z= sign + '0.';
+        while(mag++) z += '0';
+        return z + str.replace(/^\-/,'');
+    }
+    mag -= str.length;
+    while(mag--) z += '0';
+    return str + z;
+};
+
+</script>

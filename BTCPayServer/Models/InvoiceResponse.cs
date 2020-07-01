@@ -1,9 +1,7 @@
-﻿using NBitcoin;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Text;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Models
 {
@@ -18,10 +16,10 @@ namespace BTCPayServer.Models
         {
             var v = (long)reader.Value;
             Check(v);
-            return unixRef + TimeSpan.FromMilliseconds((long)v);
+            return unixRef + TimeSpan.FromMilliseconds(v);
         }
 
-        static DateTimeOffset unixRef = new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        static readonly DateTimeOffset unixRef = new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero);
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
             var date = ((DateTimeOffset)value).ToUniversalTime();
@@ -45,7 +43,7 @@ namespace BTCPayServer.Models
         {
             get; set;
         }
-        
+
         //"url":"https://test.bitpay.com/invoice?id=9saCHtp1zyPcNoi3rDdBu8"
         [JsonProperty("url")]
         public string Url
@@ -123,8 +121,8 @@ namespace BTCPayServer.Models
         public string ItemDesc
         {
             get; set;
-        }       
-        
+        }
+
         [JsonProperty("itemCode")]
         public string ItemCode
         {
@@ -244,10 +242,10 @@ namespace BTCPayServer.Models
         }
 
         [JsonProperty("paymentSubtotals")]
-        public Dictionary<string, long> PaymentSubtotals { get; set; }
+        public Dictionary<string, decimal> PaymentSubtotals { get; set; }
 
         [JsonProperty("paymentTotals")]
-        public Dictionary<string, long> PaymentTotals { get; set; }
+        public Dictionary<string, decimal> PaymentTotals { get; set; }
 
         [JsonProperty("amountPaid", DefaultValueHandling = DefaultValueHandling.Include)]
         public long AmountPaid { get; set; }

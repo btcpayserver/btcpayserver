@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Client;
 using BTCPayServer.Filters;
 using BTCPayServer.Models;
 using BTCPayServer.Security;
@@ -12,17 +13,17 @@ using Microsoft.AspNetCore.Mvc;
 namespace BTCPayServer.Controllers
 {
     [BitpayAPIConstraint]
-    [Authorize(Policies.CanCreateInvoice.Key, AuthenticationSchemes = AuthenticationSchemes.Bitpay)]
+    [Authorize(Policies.CanCreateInvoice, AuthenticationSchemes = AuthenticationSchemes.Bitpay)]
     public class InvoiceControllerAPI : Controller
     {
-        private InvoiceController _InvoiceController;
-        private InvoiceRepository _InvoiceRepository;
+        private readonly InvoiceController _InvoiceController;
+        private readonly InvoiceRepository _InvoiceRepository;
 
         public InvoiceControllerAPI(InvoiceController invoiceController,
-                                    InvoiceRepository invoceRepository)
+                                    InvoiceRepository invoiceRepository)
         {
             _InvoiceController = invoiceController;
-            _InvoiceRepository = invoceRepository;
+            _InvoiceRepository = invoiceRepository;
         }
 
         [HttpPost]
@@ -41,7 +42,7 @@ namespace BTCPayServer.Controllers
         {
             var invoice = (await _InvoiceRepository.GetInvoices(new InvoiceQuery()
             {
-                InvoiceId = new[] {id},
+                InvoiceId = new[] { id },
                 StoreId = new[] { HttpContext.GetStoreData().Id }
             })).FirstOrDefault();
             if (invoice == null)
@@ -69,8 +70,8 @@ namespace BTCPayServer.Controllers
                 Skip = offset,
                 EndDate = dateEnd,
                 StartDate = dateStart,
-                OrderId =  orderId == null ? null : new[] { orderId },
-                ItemCode =  itemCode == null ? null : new[] { itemCode },
+                OrderId = orderId == null ? null : new[] { orderId },
+                ItemCode = itemCode == null ? null : new[] { itemCode },
                 Status = status == null ? null : new[] { status },
                 StoreId = new[] { this.HttpContext.GetStoreData().Id }
             };

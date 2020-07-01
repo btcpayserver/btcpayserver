@@ -1,11 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using NBitcoin;
-using NBitcoin.DataEncoders;
-using NBXplorer;
 using NBXplorer.DerivationStrategy;
 
 namespace BTCPayServer
@@ -18,8 +14,6 @@ namespace BTCPayServer
 
         public Script HintScriptPubKey { get; set; }
 
-        Dictionary<uint, string[]> ElectrumMapping = new Dictionary<uint, string[]>();
-        
         public DerivationSchemeParser(BTCPayNetwork expectedNetwork)
         {
             if (expectedNetwork == null)
@@ -30,7 +24,7 @@ namespace BTCPayServer
 
         public DerivationStrategyBase ParseElectrum(string str)
         {
-            
+
             if (str == null)
                 throw new ArgumentNullException(nameof(str));
             str = str.Trim();
@@ -42,17 +36,17 @@ namespace BTCPayServer
             var standardPrefix = Utils.ToBytes(0x0488b21eU, false);
             for (int ii = 0; ii < 4; ii++)
                 data[ii] = standardPrefix[ii];
-            var extPubKey = new BitcoinExtPubKey(Network.GetBase58CheckEncoder().EncodeData(data), Network.Main).ToNetwork(Network);
+            var extPubKey = GetBitcoinExtPubKeyByNetwork(Network, data);
             if (!BtcPayNetwork.ElectrumMapping.TryGetValue(prefix, out var type))
             {
                 throw new FormatException();
             }
             if (type == DerivationType.Segwit)
-                return new DirectDerivationStrategy(extPubKey) { Segwit = true };
+                return new DirectDerivationStrategy(extPubKey, true);
             if (type == DerivationType.Legacy)
-                return new DirectDerivationStrategy(extPubKey) { Segwit = false };
+                return new DirectDerivationStrategy(extPubKey, false);
             if (type == DerivationType.SegwitP2SH)
-                return new DerivationStrategyFactory(Network).Parse(extPubKey.ToString() + "-[p2sh]");
+                return BtcPayNetwork.NBXplorerNetwork.DerivationStrategyFactory.Parse(extPubKey.ToString() + "-[p2sh]");
             throw new FormatException();
         }
 
@@ -79,11 +73,14 @@ namespace BTCPayServer
             }
 
             if (!Network.Consensus.SupportSegwit)
+            {
                 hintedLabels.Add("legacy");
+                str = str.Replace("-[p2sh]", string.Empty, StringComparison.OrdinalIgnoreCase);
+            }
 
             try
             {
-                var result = new DerivationStrategyFactory(Network).Parse(str);
+                var result = BtcPayNetwork.NBXplorerNetwork.DerivationStrategyFactory.Parse(str);
                 return FindMatch(hintedLabels, result);
             }
             catch
@@ -116,7 +113,8 @@ namespace BTCPayServer
                     var standardPrefix = Utils.ToBytes(0x0488b21eU, false);
                     for (int ii = 0; ii < 4; ii++)
                         data[ii] = standardPrefix[ii];
-                    var derivationScheme = new BitcoinExtPubKey(Network.GetBase58CheckEncoder().EncodeData(data), Network.Main).ToNetwork(Network).ToString();
+
+                    var derivationScheme = GetBitcoinExtPubKeyByNetwork(Network, data).ToString();
 
                     if (BtcPayNetwork.ElectrumMapping.TryGetValue(prefix, out var type))
                     {
@@ -150,12 +148,23 @@ namespace BTCPayServer
                 str = $"{str}-[{label}]";
             }
 
-            return FindMatch(hintedLabels, new DerivationStrategyFactory(Network).Parse(str));
+            return FindMatch(hintedLabels, BtcPayNetwork.NBXplorerNetwork.DerivationStrategyFactory.Parse(str));
+        }
+
+        public static BitcoinExtPubKey GetBitcoinExtPubKeyByNetwork(Network network, byte[] data)
+        {
+            try
+            {
+                return new BitcoinExtPubKey(network.GetBase58CheckEncoder().EncodeData(data), network.NetworkSet.Mainnet).ToNetwork(network);
+            }
+            catch (Exception)
+            {
+                return new BitcoinExtPubKey(network.GetBase58CheckEncoder().EncodeData(data), Network.Main).ToNetwork(network);
+            }
         }
 
         private DerivationStrategyBase FindMatch(HashSet<string> hintLabels, DerivationStrategyBase result)
         {
-            var facto = new DerivationStrategyFactory(Network);
             var firstKeyPath = new KeyPath("0/0");
             if (HintScriptPubKey == null)
                 return result;
@@ -169,7 +178,7 @@ namespace BTCPayServer
             resultNoLabels = string.Join('-', resultNoLabels.Split('-').Where(p => !IsLabel(p)));
             foreach (var labels in ItemCombinations(hintLabels.ToList()))
             {
-                var hinted = facto.Parse(resultNoLabels + '-' + string.Join('-', labels.Select(l => $"[{l}]").ToArray()));
+                var hinted = BtcPayNetwork.NBXplorerNetwork.DerivationStrategyFactory.Parse(resultNoLabels + '-' + string.Join('-', labels.Select(l => $"[{l}]").ToArray()));
                 if (HintScriptPubKey == hinted.GetDerivation(firstKeyPath).ScriptPubKey)
                     return hinted;
             }

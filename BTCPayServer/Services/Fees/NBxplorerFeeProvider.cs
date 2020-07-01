@@ -1,10 +1,8 @@
-﻿using NBitcoin;
+using System;
+using System.Threading.Tasks;
+using NBitcoin;
 using NBXplorer;
 using NBXplorer.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace BTCPayServer.Services.Fees
 {
@@ -34,8 +32,9 @@ namespace BTCPayServer.Services.Fees
             _Factory = parent;
             _ExplorerClient = explorerClient;
         }
-        NBXplorerFeeProviderFactory _Factory;
-        ExplorerClient _ExplorerClient;
+
+        readonly NBXplorerFeeProviderFactory _Factory;
+        readonly ExplorerClient _ExplorerClient;
         public async Task<FeeRate> GetFeeRateAsync(int blockTarget = 20)
         {
             try

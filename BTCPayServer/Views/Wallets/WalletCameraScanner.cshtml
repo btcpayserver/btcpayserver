@@ -1,0 +1,51 @@
+@model WalletSendModel
+
+<link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true" />
+<div id="wallet-camera-app" v-cloak class="only-for-js">
+    <div class="modal fade" data-backdrop="static" id="scanModal">
+
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+
+                <div class="modal-body p-0" v-if="loaded" v-bind:class="{'alert-danger': errorMessage}">
+                    <div class="p-2" style="position: absolute; right: 0; top: 0; width: 100%; z-index:5">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close" v-on:click="close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <qrcode-drop-zone v-on:decode="onDecode" v-on:init="logErrors">
+                        <qrcode-stream v-on:decode="onDecode" v-on:init="onInit" v-bind:camera="camera" v-bind:track="paint">
+                            <div v-if="data || errorMessage" class="pending-action">
+                                
+                                <div class="text-danger p-2" v-if="errorMessage">{{errorMessage}}</div>
+                                <span class="text-muted">{{data}}</span>
+                                <div class="w-100 btn-group">
+                                    <button v-if="data" type="button" class="btn btn-primary" data-dismiss="modal" v-on:click="submitData">Submit</button>
+                                    <button type="button" class="btn btn-secondary" v-on:click="retry">Retry</button>
+                                    <button type="button" class="btn btn-danger" data-dismiss="modal" v-on:click="close">Cancel</button>
+                                </div>
+                            </div>
+                        </qrcode-stream>
+                    </qrcode-drop-zone>
+                    <qrcode-capture v-if="noStreamApiSupport" v-on:decode="onDecode" v-bind:camera="camera"/>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+    .pending-action {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        
+        background-color: rgba(255, 255, 255, .8);
+        text-align: center;
+        font-size: 1.4rem;
+        padding: 10px;
+        word-wrap: break-word;        
+        display: flex;
+        flex-flow: column nowrap;
+        justify-content: center;
+    }
+</style>

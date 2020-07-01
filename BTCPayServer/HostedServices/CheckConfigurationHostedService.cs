@@ -1,16 +1,10 @@
-﻿using System;
-using Microsoft.Extensions.Logging;
-using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using BTCPayServer.Data;
-using BTCPayServer.Services;
-using Microsoft.Extensions.Hosting;
+using System;
 using System.Threading;
+using System.Threading.Tasks;
 using BTCPayServer.Configuration;
 using BTCPayServer.Logging;
-using NBitcoin.DataEncoders;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace BTCPayServer.HostedServices
 {
@@ -18,7 +12,7 @@ namespace BTCPayServer.HostedServices
     {
         private readonly BTCPayServerOptions _options;
         Task _testingConnection;
-        CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+        readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         public CheckConfigurationHostedService(BTCPayServerOptions options)
         {
@@ -36,7 +30,7 @@ namespace BTCPayServer.HostedServices
         async Task TestConnection()
         {
             TimeSpan nextWait = TimeSpan.FromSeconds(10);
-            retry:
+retry:
             var canUseSSH = false;
             if (_options.SSHSettings != null)
             {

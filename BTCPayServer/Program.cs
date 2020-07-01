@@ -1,24 +1,14 @@
-﻿using BTCPayServer.Configuration;
-using BTCPayServer.Logging;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Logging;
-using System;
-using BTCPayServer.Hosting;
-using NBitcoin;
-using Microsoft.Extensions.DependencyInjection;
-using System.Runtime.InteropServices;
-using System.Linq;
-using System.Diagnostics;
 using System.IO;
 using System.Net;
-using System.Collections.Generic;
-using System.Collections;
-using Microsoft.AspNetCore.Hosting.Server.Features;
-using System.Threading;
-using Serilog;
 using System.Runtime.CompilerServices;
+using BTCPayServer.Configuration;
+using BTCPayServer.Hosting;
+using BTCPayServer.Logging;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.Extensions.Logging;
 
-[assembly:InternalsVisibleTo("BTCPayServer.Tests")]
+[assembly: InternalsVisibleTo("BTCPayServer.Tests")]
 namespace BTCPayServer
 {
     class Program
@@ -29,7 +19,7 @@ namespace BTCPayServer
             IWebHost host = null;
             var processor = new ConsoleLoggerProcessor();
             CustomConsoleLogProvider loggerProvider = new CustomConsoleLogProvider(processor);
-            var loggerFactory = new LoggerFactory();
+            using var loggerFactory = new LoggerFactory();
             loggerFactory.AddProvider(loggerProvider);
             var logger = loggerFactory.CreateLogger("Configuration");
             try
@@ -53,7 +43,6 @@ namespace BTCPayServer
                         l.AddFilter("Microsoft", LogLevel.Error);
                         l.AddFilter("System.Net.Http.HttpClient", LogLevel.Critical);
                         l.AddFilter("Microsoft.AspNetCore.Antiforgery.Internal", LogLevel.Critical);
-                        l.AddFilter("OpenIddict.Server.OpenIddictServerProvider", LogLevel.Error);
                         l.AddProvider(new CustomConsoleLogProvider(processor));
                     })
                     .UseStartup<Startup>()
@@ -74,7 +63,7 @@ namespace BTCPayServer
             finally
             {
                 processor.Dispose();
-                if(host == null)
+                if (host == null)
                     Logs.Configuration.LogError("Configuration error");
                 if (host != null)
                     host.Dispose();

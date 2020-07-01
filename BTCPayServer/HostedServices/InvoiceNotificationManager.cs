@@ -1,30 +1,26 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using System.Reflection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
-using NBitpayClient;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
-using System.Collections.Concurrent;
-using Microsoft.Extensions.Hosting;
+using System.Threading.Tasks;
 using BTCPayServer.Events;
-using NBXplorer;
-using BTCPayServer.Services.Invoices;
 using BTCPayServer.Payments;
-using BTCPayServer.Services.Mails;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Mails;
+using Microsoft.Extensions.Hosting;
+using NBitpayClient;
+using NBXplorer;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.HostedServices
 {
     public class InvoiceNotificationManager : IHostedService
     {
-        HttpClient _Client;
+        readonly HttpClient _Client;
 
         public class ScheduledJob
         {
@@ -39,9 +35,9 @@ namespace BTCPayServer.HostedServices
             }
         }
 
-        IBackgroundJobClient _JobClient;
-        EventAggregator _EventAggregator;
-        InvoiceRepository _InvoiceRepository;
+        readonly IBackgroundJobClient _JobClient;
+        readonly EventAggregator _EventAggregator;
+        readonly InvoiceRepository _InvoiceRepository;
         private readonly EmailSenderFactory _EmailSenderFactory;
 
         public InvoiceNotificationManager(
@@ -80,6 +76,7 @@ namespace BTCPayServer.HostedServices
                     PaymentTotals = dto.PaymentTotals,
                     AmountPaid = dto.AmountPaid,
                     ExchangeRates = dto.ExchangeRates,
+                    OrderId = dto.OrderId
                 },
                 Event = new InvoicePaymentNotificationEvent()
                 {
@@ -118,8 +115,6 @@ namespace BTCPayServer.HostedServices
 #pragma warning restore CS0618
             }
 
-            CancellationTokenSource cts = new CancellationTokenSource(10000);
-
             if (!String.IsNullOrEmpty(invoice.NotificationEmail))
             {
                 var emailBody = NBitcoin.JsonConverters.Serializer.ToString(notification);
@@ -130,6 +125,7 @@ namespace BTCPayServer.HostedServices
                     emailBody);
 
             }
+
             if (invoice.NotificationURL != null)
             {
                 var invoiceStr = NBitcoin.JsonConverters.Serializer.ToString(new ScheduledJob() { TryCount = 0, Notification = notification });
@@ -206,7 +202,7 @@ namespace BTCPayServer.HostedServices
             public string NotificationURL { get; set; }
         }
 
-        Encoding UTF8 = new UTF8Encoding(false);
+        readonly Encoding UTF8 = new UTF8Encoding(false);
         private async Task<HttpResponseMessage> SendNotification(InvoicePaymentNotificationEventWrapper notification, CancellationToken cancellationToken)
         {
             var request = new HttpRequestMessage();
@@ -239,7 +235,7 @@ namespace BTCPayServer.HostedServices
             return response;
         }
 
-        Dictionary<string, Task> _SendingRequestsByInvoiceId = new Dictionary<string, Task>();
+        readonly Dictionary<string, Task> _SendingRequestsByInvoiceId = new Dictionary<string, Task>();
 
 
         /// <summary>
@@ -297,9 +293,8 @@ namespace BTCPayServer.HostedServices
             return await sending;
         }
 
-        int MaxTry = 6;
-
-        CompositeDisposable leases = new CompositeDisposable();
+        readonly int MaxTry = 6;
+        readonly CompositeDisposable leases = new CompositeDisposable();
         public Task StartAsync(CancellationToken cancellationToken)
         {
             leases.Add(_EventAggregator.Subscribe<InvoiceEvent>(async e =>

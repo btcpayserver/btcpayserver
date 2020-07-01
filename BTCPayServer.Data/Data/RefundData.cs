@@ -1,27 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Data
 {
-    public class RefundAddressesData
+    public class RefundData
     {
-        public string Id
+        [Required]
+        public string InvoiceDataId { get; set; }
+        [Required]
+        public string PullPaymentDataId { get; set; }
+        public PullPaymentData PullPaymentData { get; set; }
+        public InvoiceData InvoiceData { get; set; }
+
+        internal static void OnModelCreating(ModelBuilder builder)
         {
-            get; set;
-        }
-        public string InvoiceDataId
-        {
-            get; set;
-        }
-        public InvoiceData InvoiceData
-        {
-            get; set;
-        }
-        public byte[] Blob
-        {
-            get; set;
+            builder.Entity<RefundData>()
+                .HasKey(nameof(InvoiceDataId), nameof(PullPaymentDataId));
+            builder.Entity<RefundData>()
+                .HasOne(o => o.InvoiceData)
+                .WithMany(o => o.Refunds)
+                .HasForeignKey(o => o.InvoiceDataId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

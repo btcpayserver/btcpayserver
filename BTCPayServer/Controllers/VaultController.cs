@@ -1,27 +1,18 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Net.WebSockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Hwi;
 using BTCPayServer.ModelBinders;
-using BTCPayServer.Models;
-using BTCPayServer.Models.StoreViewModels;
-using BTCPayServer.Payments;
-using BTCPayServer.Security;
-using BTCPayServer.Services;
-using LedgerWallet;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBXplorer.DerivationStrategy;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Controllers
@@ -64,7 +55,6 @@ namespace BTCPayServer.Controllers
                 HwiEnumerateEntry deviceEntry = null;
                 HDFingerprint? fingerprint = null;
                 string password = null;
-                bool pinProvided = false;
                 var websocketHelper = new WebSocketHelper(websocket);
 
                 async Task<bool> RequireDeviceUnlocking()
@@ -79,40 +69,23 @@ namespace BTCPayServer.Controllers
                         await websocketHelper.Send("{ \"error\": \"need-initialized\"}", cancellationToken);
                         return true;
                     }
-                    if ((deviceEntry.Code is HwiErrorCode.DeviceNotReady || deviceEntry.NeedsPinSent is true)
-                        && !pinProvided)
-                    {
-                        if (!IsTrezorT(deviceEntry))
-                        {
-                            await websocketHelper.Send("{ \"error\": \"need-pin\"}", cancellationToken);
-                            return true;
-                        }
-                        else
-                        {
-                            try
-                            {
-                                // On trezor T this will prompt the password! (https://github.com/bitcoin-core/HWI/issues/283)
-                                _ = device.GetXPubAsync(new KeyPath("44'"), cancellationToken);
-                            }
-                            catch (HwiException ex) when (ex.ErrorCode == HwiErrorCode.DeviceAlreadyUnlocked)
-                            {
-                                pinProvided = true;
-                            }
-                            await websocketHelper.Send("{ \"error\": \"need-passphrase-on-device\"}", cancellationToken);
-                            return true;
-                        }
-                    }
-                    if ((deviceEntry.Code is HwiErrorCode.DeviceNotReady || deviceEntry.NeedsPassphraseSent is true) && password == null)
+                    if (deviceEntry.Code is HwiErrorCode.DeviceNotReady)
                     {
                         if (IsTrezorT(deviceEntry))
                         {
                             await websocketHelper.Send("{ \"error\": \"need-passphrase-on-device\"}", cancellationToken);
+                            return true;
                         }
-                        else
+                        else if (deviceEntry.NeedsPinSent is true)
+                        {
+                            await websocketHelper.Send("{ \"error\": \"need-pin\"}", cancellationToken);
+                            return true;
+                        }
+                        else if (deviceEntry.NeedsPassphraseSent is true && password is null)
                         {
                             await websocketHelper.Send("{ \"error\": \"need-passphrase\"}", cancellationToken);
+                            return true;
                         }
-                        return true;
                     }
                     return false;
                 }
@@ -145,7 +118,7 @@ namespace BTCPayServer.Controllers
                                 }
                                 await websocketHelper.Send("{ \"info\": \"ready\"}", cancellationToken);
                                 o = JObject.Parse(await websocketHelper.NextMessageAsync(cancellationToken));
-                                var authorization = await _authorizationService.AuthorizeAsync(User, Policies.CanModifyStoreSettings.Key);
+                                var authorization = await _authorizationService.AuthorizeAsync(User, Policies.CanModifyStoreSettings);
                                 if (!authorization.Succeeded)
                                 {
                                     await websocketHelper.Send("{ \"error\": \"not-authorized\"}", cancellationToken);
@@ -186,6 +159,15 @@ namespace BTCPayServer.Controllers
                                 o.Add("psbt", psbt.ToBase64());
                                 await websocketHelper.Send(o.ToString(), cancellationToken);
                                 break;
+                            case "display-address":
+                                if (await RequireDeviceUnlocking())
+                                {
+                                    continue;
+                                }
+                                var k = RootedKeyPath.Parse(await websocketHelper.NextMessageAsync(cancellationToken));
+                                await device.DisplayAddressAsync(GetScriptPubKeyType(k), k.KeyPath, cancellationToken);
+                                await websocketHelper.Send("{ \"info\": \"ok\"}", cancellationToken);
+                                break;
                             case "ask-pin":
                                 if (device == null)
                                 {
@@ -198,7 +180,6 @@ namespace BTCPayServer.Controllers
                                 }
                                 catch (HwiException ex) when (ex.ErrorCode == HwiErrorCode.DeviceAlreadyUnlocked)
                                 {
-                                    pinProvided = true;
                                     await websocketHelper.Send("{ \"error\": \"device-already-unlocked\"}", cancellationToken);
                                     continue;
                                 }
@@ -206,15 +187,13 @@ namespace BTCPayServer.Controllers
                                 var pin = int.Parse(await websocketHelper.NextMessageAsync(cancellationToken), CultureInfo.InvariantCulture);
                                 if (await device.SendPinAsync(pin, cancellationToken))
                                 {
-                                    pinProvided = true;
-                                    await websocketHelper.Send("{ \"info\": \"the pin is correct\"}", cancellationToken);
+                                    goto askdevice;
                                 }
                                 else
                                 {
                                     await websocketHelper.Send("{ \"error\": \"incorrect-pin\"}", cancellationToken);
                                     continue;
                                 }
-                                break;
                             case "ask-xpub":
                                 if (await RequireDeviceUnlocking())
                                 {
@@ -279,15 +258,25 @@ namespace BTCPayServer.Controllers
                                 result.Add(new JProperty("keyPath", keyPath.ToString()));
                                 await websocketHelper.Send(result.ToString(), cancellationToken);
                                 break;
-                            case "refresh-device":
+                            case "ask-passphrase":
+                                if (command == "ask-passphrase")
+                                {
+                                    if (deviceEntry == null)
+                                    {
+                                        await websocketHelper.Send("{ \"error\": \"need-device\"}", cancellationToken);
+                                        continue;
+                                    }
+                                    // The make the trezor T ask for password
+                                    await device.GetXPubAsync(new KeyPath("44'"), cancellationToken);
+                                }
+                                goto askdevice;
                             case "ask-device":
-                                DeviceSelector deviceSelector = (command == "refresh-device" && deviceEntry != null ? deviceEntry.DeviceSelector : null);
+askdevice:
                                 password = null;
-                                pinProvided = false;
                                 deviceEntry = null;
                                 device = null;
                                 var entries = (await hwi.EnumerateEntriesAsync(cancellationToken)).ToList();
-                                deviceEntry = entries.Where(h => deviceSelector == null || SameSelector(deviceSelector, h.DeviceSelector)).FirstOrDefault();
+                                deviceEntry = entries.FirstOrDefault();
                                 if (deviceEntry == null)
                                 {
                                     await websocketHelper.Send("{ \"error\": \"no-device\"}", cancellationToken);
@@ -332,6 +321,18 @@ namespace BTCPayServer.Controllers
                 }
             }
             return new EmptyResult();
+        }
+
+        private ScriptPubKeyType GetScriptPubKeyType(RootedKeyPath keyPath)
+        {
+            var path = keyPath.KeyPath.ToString();
+            if (path.StartsWith("84'", StringComparison.OrdinalIgnoreCase))
+                return ScriptPubKeyType.Segwit;
+            if (path.StartsWith("49'", StringComparison.OrdinalIgnoreCase))
+                return ScriptPubKeyType.SegwitP2SH;
+            if (path.StartsWith("44'", StringComparison.OrdinalIgnoreCase))
+                return ScriptPubKeyType.Legacy;
+            throw new NotSupportedException("Unsupported keypath");
         }
 
         private bool SameSelector(DeviceSelector a, DeviceSelector b)

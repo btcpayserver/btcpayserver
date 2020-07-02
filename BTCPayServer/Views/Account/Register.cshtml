@@ -1,8 +1,11 @@
 ﻿@model RegisterViewModel
+@inject BTCPayServer.Services.BTCPayServerEnvironment env
 @{
     ViewData["Title"] = "Register";
+    ViewData["Headline"] = "Welcome to your BTCPay Server";
+
     var useBasicLayout = ViewData["UseBasicLayout"] is true;
-    Layout = useBasicLayout ? "_Layout" : "_LayoutWelcome";
+    Layout = useBasicLayout ? "_Layout" : "_LayoutSimple";
 }
 @if (TempData.HasStatusMessage())
 {
@@ -12,6 +15,10 @@
         </div>
     </div>
 }
+
+<p class="lead-login">
+    BTCPay Server is a self-hosted, open-source cryptocurrency payment processor. It is secure, private, censorship-resistant and free.
+</p>
 
 <!-- We want to center the dialog box in case we are not using the Welcome layout -->
 <div class="modal-dialog @(useBasicLayout ? "modal-dialog-centered" : "")">
@@ -73,3 +80,16 @@
             <div class="modal-footer"><span>Already have an account? <a id="Login" asp-action="Login" asp-route-returnurl="@ViewData["ReturnUrl"]">Login</a></span></div>
     </div>
 </div>
+
+@if (!useBasicLayout && env.OnionUrl != null)
+{
+    <div class="input-group form-group">
+        <div class="input-group-prepend">
+            <a href="@env.OnionUrl" class="input-group-text">
+                <span class="input-group-addon"></span>
+                <img src="~/img/icons/Onion_Color.svg" height="16" asp-append-version="true" />
+            </a>
+        </div>
+        <input class="form-control" onClick="this.select();" type="text" style="font-size:0.75em;" value="@env.OnionUrl" readonly>
+    </div>
+}

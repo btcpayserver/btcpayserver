@@ -1,7 +1,6 @@
 ﻿@{
     Layout = null;
 }
-@inject BTCPayServer.Services.BTCPayServerEnvironment env
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -31,7 +30,6 @@
             .col-head {
                 text-align: left;
                 flex-direction: row;
-                justify-content: start;
             }
         }
 
@@ -95,32 +93,17 @@
             <div class="row">
                 <div class="col-12 col-head">
                     <a asp-controller="Home" asp-action="Index"><img src="~/img/btcpay-logo.svg" alt="BTCPay Server" class="head-logo" asp-append-version="true" /></a>
-                    <h1 class="lead-title text-uppercase">Welcome to your BTCPay Server</h1>
+                    <h1 class="lead-title text-uppercase">@ViewData["Headline"]</h1>
                 </div>
             </div>
-            <div class="row">
-                <div class="col-md-7 order-md-1 order-2">
-                    <hr class="primary ml-0" style="margin:30px auto;">
-                    <p class="lead-login" style="margin-bottom:69px;">BTCPay Server is a self-hosted, open-source cryptocurrency payment processor. It is secure, private, censorship-resistant and free.</p>
-                    <partial name="_BTCPaySupporters"/>
-                </div>
-                <div class="col-md-5 order-md-2 order-1">
-                    @RenderBody()
 
-                    @if (env.OnionUrl != null)
-                    {
-                        <div class="input-group form-group">
-                            <div class="input-group-prepend">
-                                <a href="@env.OnionUrl" class="input-group-text">
-                                    <span class="input-group-addon"></span>
-                                    <img src="~/img/icons/Onion_Color.svg" height="16" asp-append-version="true" />
-                                </a>
-                            </div>
-                            <input class="form-control" onClick="this.select();" type="text" style="font-size:0.75em;" value="@env.OnionUrl" readonly>
-                        </div>
-                    }
-                </div>
-            </div>
+            <hr class="primary" style="display:block;margin:20px auto;" />
+
+            @RenderBody()
+
+            <hr class="primary" style="display:block;margin:20px auto;" />
+
+            <partial name="_BTCPaySupporters"/>
         </div>
     </section>
     @await Html.PartialAsync("_ValidationScriptsPartial")

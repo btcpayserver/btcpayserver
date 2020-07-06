@@ -23,16 +23,16 @@ namespace BTCPayServer.Data
                 var start = p.Start;
                 if (p.End is DateTimeOffset end)
                 {
-                    return payouts.Where(p => p.Date >= start && p.Date < end);
+                    return request.Where(p => p.Date >= start && p.Date < end);
                 }
                 else
                 {
-                    return payouts.Where(p => p.Date >= start);
+                    return request.Where(p => p.Date >= start);
                 }
             }
             else
             {
-                return payouts.Where(p => false);
+                return request.Where(p => false);
             }
         }
     }

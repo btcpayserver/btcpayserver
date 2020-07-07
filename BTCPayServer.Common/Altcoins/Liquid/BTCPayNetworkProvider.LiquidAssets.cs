@@ -14,7 +14,7 @@ namespace BTCPayServer
                 ShowSyncSummary = false,
                 DefaultRateRules = new[]
                 {
-                    "USDT_UST = 1",
+                    "USDT_USD = 1",
                     "USDT_X = USDT_BTC * BTC_X",
                     "USDT_BTC = bitfinex(UST_BTC)",
                 },
@@ -37,7 +37,6 @@ namespace BTCPayServer
                 ShowSyncSummary = false,
                 DefaultRateRules = new[]
                 {
-
                     "ETB_X = ETB_BTC * BTC_X",
                     "ETB_BTC = bitpay(ETB_BTC)"
                 },

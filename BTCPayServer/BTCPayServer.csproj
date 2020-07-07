@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
   <Import Project="../Build/Version.csproj" Condition="Exists('../Build/Version.csproj')" />
   <Import Project="../Build/Common.csproj" />
   <PropertyGroup Condition="'$(Configuration)' == 'Debug' And '$(RazorCompileOnBuild)' != 'true'">
@@ -7,6 +7,61 @@
   </PropertyGroup>
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(RunConfiguration)' == 'Docker-Regtest' ">
+    <StartAction>Project</StartAction>
+    <EnvironmentVariables>
+      <Variable name="BTCPAY_NETWORK" value="regtest" />
+      <Variable name="BTCPAY_LAUNCHSETTINGS" value="true" />
+      <Variable name="BTCPAY_BUNDLEJSCSS" value="false" />
+      <Variable name="BTCPAY_LTCEXPLORERURL" value="http://127.0.0.1:32838/" />
+      <Variable name="BTCPAY_BTCLIGHTNING" value="type=clightning;server=tcp://127.0.0.1:30993" />
+      <Variable name="BTCPAY_BTCEXTERNALLNDGRPC" value="type=lnd-grpc;server=https://lnd:lnd@127.0.0.1:53280/;allowinsecure=true" />
+      <Variable name="BTCPAY_BTCEXTERNALLNDREST" value="type=lnd-rest;server=https://lnd:lnd@127.0.0.1:53280/lnd-rest/btc/;allowinsecure=true;macaroonfilepath=D:\admin.macaroon" />
+      <Variable name="BTCPAY_BTCEXTERNALLNDSEEDBACKUP" value="../BTCPayServer.Tests/TestData/LndSeedBackup/walletunlock.json" />
+      <Variable name="BTCPAY_BTCEXPLORERURL" value="http://127.0.0.1:32838/" />
+      <Variable name="BTCPAY_ALLOW-ADMIN-REGISTRATION" value="true" />
+      <Variable name="BTCPAY_DISABLE-REGISTRATION" value="false" />
+      <Variable name="ASPNETCORE_ENVIRONMENT" value="Development" />
+      <Variable name="BTCPAY_CHAINS" value="btc,ltc" />
+      <Variable name="BTCPAY_POSTGRES" value="User ID=postgres;Host=127.0.0.1;Port=39372;Database=btcpayserver" />
+      <Variable name="BTCPAY_DEBUGLOG" value="debug.log" />
+      <Variable name="BTCPAY_TORRCFILE" value="../BTCPayServer.Tests/TestData/Tor/torrc" />
+      <Variable name="BTCPAY_SOCKSENDPOINT" value="localhost:9050" />
+    </EnvironmentVariables>
+    <ApplicationURL>http://127.0.0.1:14142/</ApplicationURL>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(RunConfiguration)' == 'Docker-Regtest-https' ">
+    <StartAction>Project</StartAction>
+    <EnvironmentVariables>
+      <Variable name="BTCPAY_NETWORK" value="regtest" />
+      <Variable name="BTCPAY_LAUNCHSETTINGS" value="true" />
+      <Variable name="BTCPAY_PORT" value="14142" />
+      <Variable name="BTCPAY_HttpsUseDefaultCertificate" value="true" />
+      <Variable name="BTCPAY_BUNDLEJSCSS" value="false" />
+      <Variable name="BTCPAY_LTCEXPLORERURL" value="http://127.0.0.1:32838/" />
+      <Variable name="BTCPAY_LBTCEXPLORERURL" value="http://127.0.0.1:32838/" />
+      <Variable name="BTCPAY_BTCLIGHTNING" value="type=clightning;server=tcp://127.0.0.1:30993" />
+      <Variable name="BTCPAY_BTCEXTERNALLNDGRPC" value="type=lnd-grpc;server=https://lnd:lnd@127.0.0.1:53280/;allowinsecure=true" />
+      <Variable name="BTCPAY_BTCEXTERNALLNDREST" value="type=lnd-rest;server=https://lnd:lnd@127.0.0.1:53280/lnd-rest/btc/;allowinsecure=true" />
+      <Variable name="BTCPAY_BTCEXTERNALLNDSEEDBACKUP" value="../BTCPayServer.Tests/TestData/LndSeedBackup/walletunlock.json" />
+      <Variable name="BTCPAY_BTCEXTERNALSPARK" value="server=/spark/btc/;cookiefile=fake" />
+      <Variable name="BTCPAY_BTCEXTERNALCHARGE" value="server=https://127.0.0.1:53280/mycharge/btc/;cookiefilepath=fake" />
+      <Variable name="BTCPAY_EXTERNALCONFIGURATOR" value="passwordfile=testpwd;server=/configurator" />
+      <Variable name="BTCPAY_BTCEXPLORERURL" value="http://127.0.0.1:32838/" />
+      <Variable name="BTCPAY_ALLOW-ADMIN-REGISTRATION" value="true" />
+      <Variable name="BTCPAY_DISABLE-REGISTRATION" value="false" />
+      <Variable name="ASPNETCORE_ENVIRONMENT" value="Development" />
+      <Variable name="BTCPAY_CHAINS" value="btc,ltc,lbtc" />
+      <Variable name="BTCPAY_POSTGRES" value="User ID=postgres;Host=127.0.0.1;Port=39372;Database=btcpayserver" />
+      <Variable name="BTCPAY_EXTERNALSERVICES" value="totoservice:totolink;" />
+      <Variable name="BTCPAY_SSHCONNECTION" value="root@127.0.0.1:21622" />
+      <Variable name="BTCPAY_SSHPASSWORD" value="opD3i2282D" />
+      <Variable name="BTCPAY_DEBUGLOG" value="debug.log" />
+      <Variable name="BTCPAY_TORRCFILE" value="../BTCPayServer.Tests/TestData/Tor/torrc" />
+      <Variable name="BTCPAY_SOCKSENDPOINT" value="localhost:9050" />
+    </EnvironmentVariables>
+    <ApplicationURL>https://localhost:14142/</ApplicationURL>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Build\**" />
@@ -21,6 +76,7 @@
     <None Remove="Build\**" />
     <None Remove="wwwroot\bundles\jqueryvalidate\**" />
     <None Remove="wwwroot\vendor\jquery-nice-select\**" />
+    <Content Remove="Properties\launchSettings.json" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Currencies.txt" />

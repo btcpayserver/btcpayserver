@@ -1,17 +1,17 @@
 @model BTCPayServer.U2F.Models.U2FAuthenticationViewModel
 @{
-    ViewData.SetActivePageAndTitle(ManageNavPages.U2F, "Manage your registered U2F devices");
+    ViewData.SetActivePageAndTitle(ManageNavPages.U2F, "Registered U2F devices");
 }
 
 <partial name="_StatusMessage" />
-<h4>Registered U2F Devices</h4>
+
 <form asp-action="AddU2FDevice" method="get">
-    <table class="table table-lg">
+    <table class="table table-lg mb-4">
         <thead>
-        <tr>
-            <th >Name</th>
-            <th class="text-right">Actions</th>
-        </tr>
+            <tr>
+                <th>Name</th>
+                <th class="text-right">Actions</th>
+            </tr>
         </thead>
         <tbody>
         @foreach (var device in Model.Devices)
@@ -19,8 +19,7 @@
             <tr>
                 <td>@device.Name</td>
                 <td class="text-right" >
-                        <a asp-action="RemoveU2FDevice" asp-route-id="@device.Id">Remove</a>
-               
+                    <a asp-action="RemoveU2FDevice" asp-route-id="@device.Id">Remove</a>
                 </td>
             </tr>
         }
@@ -32,16 +31,16 @@
                 </td>
             </tr>
         }
-        <tr class="bg-gray">
-            <td>
-                <input type="text" class="form-control" name="Name" placeholder="New Device Name"/>
-            </td>
-            <td>
-                <div class="pull-right">
-                    <button type="submit" class="btn btn-primary">Add New Device</button>
-                </div>
-            </td>
-        </tr>
+
         </tbody>
     </table>
+    <div class="form-inline">
+        <div class="form-group">
+            <input type="text" class="form-control" name="Name" placeholder="New Device Name"/>
+            <button type="submit" class="btn btn-primary ml-2">
+                <span class="fa fa-plus"></span>
+                Add New Device
+            </button>
+        </div>
+    </div>
 </form>

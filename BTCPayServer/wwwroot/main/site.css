@@ -47,6 +47,10 @@ a {
     transition-property: background, color;
 }
 
+ol {
+   padding-left: 1.125em;
+}
+
 ul {
     padding-left: 1em;
 }

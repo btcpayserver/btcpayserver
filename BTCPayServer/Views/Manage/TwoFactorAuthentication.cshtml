@@ -8,39 +8,53 @@
     if(Model.RecoveryCodesLeft == 0)
     {
         <div class="alert alert-danger">
-            <strong>You have no recovery codes left.</strong>
-            <p>You must <a asp-action="GenerateRecoveryCodes" class="alert-link">generate a new set of recovery codes</a> before you can log in with a recovery code.</p>
+            <h4 class="alert-heading mb-3">
+                <span class="fa fa-warning"></span>
+                You have no recovery codes left.
+            </h4>
+            <p class="mb-0">You must <a asp-action="GenerateRecoveryCodes" class="alert-link">generate a new set of recovery codes</a> before you can log in with a recovery code.</p>
         </div>
     }
     else if(Model.RecoveryCodesLeft == 1)
     {
         <div class="alert alert-danger">
-            <strong>You have 1 recovery code left.</strong>
-            <p>You can <a asp-action="GenerateRecoveryCodes" class="alert-link">generate a new set of recovery codes</a>.</p>
+            <h4 class="alert-heading mb-3">
+                <span class="fa fa-warning"></span>
+                You have 1 recovery code left.
+            </h4>
+            <p class="mb-0">You can <a asp-action="GenerateRecoveryCodes" class="alert-link">generate a new set of recovery codes</a>.</p>
         </div>
     }
     else if(Model.RecoveryCodesLeft <= 3)
     {
         <div class="alert alert-warning">
-            <strong>You have @Model.RecoveryCodesLeft recovery codes left.</strong>
-            <p>You should <a asp-action="GenerateRecoveryCodes" class="alert-link">generate a new set of recovery codes</a>.</p>
+            <h4 class="alert-heading mb-3">
+                <span class="fa fa-warning"></span>
+                You have @Model.RecoveryCodesLeft recovery codes left.
+            </h4>
+            <p class="mb-0">You should <a asp-action="GenerateRecoveryCodes" class="alert-link">generate a new set of recovery codes</a>.</p>
         </div>
     }
-
-    <a asp-action="Disable2faWarning" class="btn btn-primary">Disable 2FA</a>
-    <a asp-action="GenerateRecoveryCodes" class="btn btn-primary">Reset recovery codes</a>
+    <h5>Your current 2FA</h5>
+    <ul>
+        <li><a asp-action="Disable2faWarning">Disable 2FA</a></li>
+        <li><a asp-action="GenerateRecoveryCodes">Reset recovery codes</a></li>
+    </ul>
 }
 
 <h5 class="mt-4">Authenticator app</h5>
-@if(!Model.HasAuthenticator)
-{
-    <a asp-action="EnableAuthenticator" class="btn btn-primary">Add authenticator app</a>
-}
-else
-{
-    <a asp-action="EnableAuthenticator" class="btn btn-primary">Configure authenticator app</a>
-    <a asp-action="ResetAuthenticatorWarning" class="btn btn-primary">Reset authenticator key</a>
-}
+<ul>
+
+    @if(!Model.HasAuthenticator)
+    {
+        <li><a asp-action="EnableAuthenticator">Add authenticator app</a></li>
+    }
+    else
+    {
+        <li><a asp-action="EnableAuthenticator">Configure authenticator app</a></li>
+        <li><a asp-action="ResetAuthenticatorWarning">Reset authenticator key</a></li>
+    }
+</ul>
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")

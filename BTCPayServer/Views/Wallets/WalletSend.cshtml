@@ -18,7 +18,7 @@
 <partial name="WalletCameraScanner"/>
 <div class="row">
    
-    <div class="@(!Model.InputSelection && Model.Outputs.Count==1? "col-lg-6 transaction-output-form": "col-lg-8")">
+    <div class="@(!Model.InputSelection && Model.Outputs.Count==1? "col-lg-7 transaction-output-form": "col-lg-8")">
         <form method="post" asp-action="WalletSend" asp-route-walletId="@this.Context.GetRouteValue("walletId")">
             <input type="hidden" asp-for="InputSelection" />
             <input type="hidden" asp-for="Divisibility" />
@@ -58,7 +58,7 @@
             {
                 <div class="form-group">
                     <label asp-for="Outputs[0].DestinationAddress"></label>
-                    <input asp-for="Outputs[0].DestinationAddress" class="form-control" />
+                    <input asp-for="Outputs[0].DestinationAddress" class="form-control text-monospace" />
                     <span asp-validation-for="Outputs[0].DestinationAddress" class="text-danger"></span>
                 </div>
                 <div class="form-group">

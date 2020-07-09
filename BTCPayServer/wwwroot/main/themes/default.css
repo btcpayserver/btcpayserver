@@ -58,6 +58,9 @@
   --btcpay-bg-tile: var(--btcpay-color-white);
   --btcpay-bg-cta: var(--btcpay-brand-dark);
 
+  --btcpay-border-color-light: var(--btcpay-color-neutral-200);
+  --btcpay-border-color-medium: var(--btcpay-color-neutral-300);
+
   --btcpay-body-color: var(--btcpay-color-neutral-900);
   --btcpay-body-color-link: var(--btcpay-color-primary);
   --btcpay-body-color-link-accent: var(--btcpay-color-primary);
@@ -74,6 +77,9 @@
   --btcpay-font-family-head: 'Open Sans', 'Helvetica Neue', Arial, sans-serif;
   --btcpay-font-family-base: 'Open Sans', 'Helvetica Neue', Arial, sans-serif;
   --btcpay-font-family-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --btcpay-font-weight-normal: 400;
+  --btcpay-font-weight-semibold: 600;
+  --btcpay-font-weight-bold: 700;
 }
 
 /* Bootstrap modifications */
@@ -102,14 +108,20 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
 }
 
 .table-sm thead th {
-  border-bottom: none;
+  border-bottom: 2px solid var(--btcpay-border-color-medium);
   border-top: none;
   font-size: 1.0rem;
+  color: var(--btcpay-color-secondary);
+  font-weight: var(--btcpay-font-weight-semibold);
 }
 
 .table-sm th,
 .table-sm td {
   padding: .5rem;
+}
+
+.table-sm tbody tr:first-child td {
+  border-top: none;
 }
 
 .table-sm tbody tr:hover {

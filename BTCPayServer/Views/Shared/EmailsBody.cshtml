@@ -59,9 +59,9 @@ $(document).ready(function(){
 });
 </script>
 
-<div class="row">
-    <div class="col-md-6">
-        <form method="post" autocomplete="off">
+<form method="post" autocomplete="off">
+    <div class="row">
+        <div class="col-md-6">
             <div class="form-group">
                 <label asp-for="Settings.Server"></label>
                 <input asp-for="Settings.Server" class="form-control"/>
@@ -104,19 +104,29 @@ $(document).ready(function(){
                     <label asp-for="Settings.EnableSSL" class="form-check-label"></label>
                 </div>
             </div>
+            <button type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
+        </div>
+    </div>
+
+    <hr class="mt-5 mb-4" />
+
+    <div class="row">
+        <div class="col-md-6">
             <div class="form-group">
+                <p class="form-text text-muted">
+                    If you want to test your settings, enter an email address here and click "Send Test Email".
+                    <strong>Your settings won't be saved</strong>, only a test email will be sent.
+                    <br/>
+                    After a successful test, you can click "Save".
+                </p>
                 <label asp-for="TestEmail"></label>
                 <input asp-for="TestEmail" class="form-control"/>
-                <small class="form-text text-muted">
-                    If you want to test your settings, enter an email address here and click "Send Test Email." Your settings won't be saved, only a test email will be sent. After a successful test, you can click "Save".
-                </small>
                 <span asp-validation-for="TestEmail" class="text-danger"></span>
             </div>
-            <button type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
-            <button type="submit" class="btn btn-primary" name="command" value="Test">Send Test Email</button>
-        </form>
+            <button type="submit" class="btn btn-secondary" name="command" value="Test">Send Test Email</button>
+        </div>
     </div>
-</div>
+</form>
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")

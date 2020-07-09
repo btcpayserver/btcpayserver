@@ -3,50 +3,47 @@
     ViewData.SetActivePageAndTitle(ServerNavPages.Maintenance);
 }
 
-
 <partial name="_StatusMessage" />
-<div class="row">
 
-    <div class="col-md-8">
-        <form method="post">
+<form method="post">
+    <div class="row mb-5">
+        <div class="col-lg-9 col-xl-8">
             <div class="form-group">
                 <h5>Change domain name</h5>
                 <span>You can change the domain name of your server by following <a href="https://docs.btcpayserver.org/ChangeDomain" target="_blank">this guide</a></span>
             </div>
 
             <div class="form-group">
-                <div class="input-group">
-                    <input asp-for="DNSDomain" class="form-control" />
-                    <span class="input-group-btn">
-                        <button name="command" type="submit" class="btn btn-primary" value="changedomain" title="Change domain" disabled="@(Model.CanUseSSH ? null : "disabled")">
-                            <span class="fa fa-check"></span> Confirm
-                        </button>
-                    </span>
+                <div class="form-inline">
+                    <input asp-for="DNSDomain" class="form-control flex-fill" disabled="@(Model.CanUseSSH ? null : "disabled")" />
+                    <button name="command" type="submit" class="btn btn-primary mt-2 mt-sm-0 ml-sm-2" value="changedomain" title="Change domain" disabled="@(Model.CanUseSSH ? null : "disabled")">
+                        <span class="fa fa-check"></span> Confirm
+                    </button>
                 </div>
                 <span asp-validation-for="DNSDomain" class="text-danger"></span>
             </div>
-
-            <div class="form-group">
-                <h5>Update</h5>
-                <span>Click here to update your server</span>
-            </div>
+        </div>
+    </div>
+    <div class="row mb-5">
+        <div class="col-lg-9 col-xl-8">
+            <h5>Update</h5>
+            <p class="text-secondary mb-2">Update to the latest version of BTCPay server.</p>
             <div class="form-group">
                 <div class="input-group">
                     <button name="command" type="submit" class="btn btn-primary" value="update" disabled="@(Model.CanUseSSH ? null : "disabled")">Update</button>
                 </div>
             </div>
-            <div class="form-group">
-                <h5>Clean</h5>
-                <span>Click here to delete unused docker images present on your system</span>
-            </div>
+
+            <h5 class="mt-5">Clean</h5>
+            <p class="text-secondary mb-2">Delete unused docker images present on your system.</p>
             <div class="form-group">
                 <div class="input-group">
-                    <button name="command" type="submit" class="btn btn-primary" value="clean" disabled="@(Model.CanUseSSH ? null : "disabled")">Clean</button>
+                    <button name="command" type="submit" class="btn btn-secondary" value="clean" disabled="@(Model.CanUseSSH ? null : "disabled")">Clean</button>
                 </div>
             </div>
-        </form>
+        </div>
     </div>
-</div>
+</form>
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")

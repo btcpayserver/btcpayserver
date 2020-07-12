@@ -69,7 +69,7 @@
                     </th>
                     <th scope="col">Name</th>
                     <th scope="col">Refunded</th>
-                    <th scope="col">Actions</th>
+                    <th scope="col" class="text-right">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -88,7 +88,7 @@
                                 </div>
                             </div>
                         </td>
-                        <td>
+                        <td class="text-right">
                             <a asp-action="ViewPullPayment"
                                asp-controller="PullPayment"
                                asp-route-pullPaymentId="@pp.Id">View</a> | <a class="pp-payout" asp-action="Payouts"

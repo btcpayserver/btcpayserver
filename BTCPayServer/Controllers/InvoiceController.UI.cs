@@ -590,7 +590,10 @@ namespace BTCPayServer.Controllers
         {
             if (!String.IsNullOrEmpty(searchTerm))
             {
-                var qs = $"searchTerm={searchTerm}&timezoneOffset={timezoneOffset}";
+                var qs = $"searchTerm={searchTerm}";
+                if (timezoneOffset != 0)
+                    qs += $"&timezoneOffset={timezoneOffset}";
+
                 Response.Cookies.Append(INVOICES_LAST_QUERY, qs);
             }
             else

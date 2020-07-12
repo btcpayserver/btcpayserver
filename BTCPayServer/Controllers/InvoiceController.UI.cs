@@ -38,8 +38,6 @@ namespace BTCPayServer.Controllers
 {
     public partial class InvoiceController
     {
-        private static string _lastQueryCookieName = "InvoicesLastQuery";
-
         [HttpGet]
         [Route("invoices/{invoiceId}")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
@@ -582,38 +580,22 @@ namespace BTCPayServer.Controllers
             return Ok("{}");
         }
 
+
+        public const string INVOICES_LAST_QUERY = "InvoicesLastQuery";
         [HttpGet]
         [Route("invoices")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [BitpayAPIConstraint(false)]
-        public async Task<IActionResult> ListInvoices(string searchTerm = null, int skip = 0, int count = 50, int timezoneOffset = 0, bool unfiltered = false)
+        public async Task<IActionResult> ListInvoices(string searchTerm = null, int skip = 0, int count = 50, int timezoneOffset = 0)
         {
-            if (!unfiltered && searchTerm == null && timezoneOffset == 0 &&
-                Request.Cookies.TryGetValue(_lastQueryCookieName, out var cookieValue))
+            if (!String.IsNullOrEmpty(searchTerm))
             {
-                var storedParams = cookieValue.ToLowerInvariant().Trim('?')
-                    .Split("&", StringSplitOptions.RemoveEmptyEntries)
-                    .ToDictionary(s => s.Split("=")[0], s => HttpUtility.UrlDecode(s.Split("=")[1]));
-
-                if (storedParams.ContainsKey(nameof(searchTerm).ToLowerInvariant()))
-                {
-                    searchTerm = storedParams[nameof(searchTerm).ToLowerInvariant()];
-                }
-
-                if (storedParams.ContainsKey(nameof(timezoneOffset).ToLowerInvariant()))
-                {
-                    timezoneOffset = int.Parse(storedParams[nameof(timezoneOffset).ToLowerInvariant()],
-                        CultureInfo.InvariantCulture);
-                }
+                var qs = $"searchTerm={searchTerm}&timezoneOffset={timezoneOffset}";
+                Response.Cookies.Append(INVOICES_LAST_QUERY, qs);
             }
-            else if (unfiltered && Request.Cookies.ContainsKey(_lastQueryCookieName))
+            else
             {
-                Response.Cookies.Delete(_lastQueryCookieName);
-            }
-            else if (!unfiltered)
-            {
-                Response.Cookies.Delete(_lastQueryCookieName);
-                HttpContext.Response.Cookies.Append(_lastQueryCookieName, Request.QueryString.ToString());
+                Response.Cookies.Delete(INVOICES_LAST_QUERY);
             }
 
             var fs = new SearchString(searchTerm);
@@ -627,7 +609,7 @@ namespace BTCPayServer.Controllers
                 StoreIds = storeIds,
                 TimezoneOffset = timezoneOffset
             };
-            
+
             InvoiceQuery invoiceQuery = GetInvoiceQuery(searchTerm, timezoneOffset);
             var counting = _InvoiceRepository.GetInvoicesTotal(invoiceQuery);
             invoiceQuery.Count = count;

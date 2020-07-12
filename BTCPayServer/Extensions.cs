@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -12,7 +12,6 @@ using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using NBXplorer.DerivationStrategy;
-using System.Net;
 using BTCPayServer.Lightning;
 using BTCPayServer.Models;
 using BTCPayServer.Payments;
@@ -31,6 +30,7 @@ using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 
 namespace BTCPayServer
 {

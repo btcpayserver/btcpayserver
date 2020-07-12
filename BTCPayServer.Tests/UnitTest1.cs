@@ -124,16 +124,18 @@ namespace BTCPayServer.Tests
             List<Task> checkLinks = new List<Task>();
             var text = await File.ReadAllTextAsync(file);
 
+            // not allowing to be hit from circleci
             var urlBlacklist = new string[]
             {
-                "https://www.btse.com", // not allowing to be hit from circleci
-                "https://www.bitpay.com" // not allowing to be hit from circleci
+                "https://www.btse.com",
+                "https://www.bitpay.com",
+                "https://www.okcoin.com"
             };
 
             foreach (var match in regex.Matches(text).OfType<Match>())
             {
                 var url = match.Groups[1].Value;
-                if (urlBlacklist.Any(a => a.StartsWith(url.ToLowerInvariant())))
+                if (urlBlacklist.Any(a => url.ToLowerInvariant().StartsWith(a)))
                     continue;
 
                 checkLinks.Add(AssertLinkNotDead(httpClient, url, file));

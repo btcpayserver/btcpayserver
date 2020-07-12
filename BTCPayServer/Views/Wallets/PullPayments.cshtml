@@ -91,9 +91,9 @@
                         <td class="text-right">
                             <a asp-action="ViewPullPayment"
                                asp-controller="PullPayment"
-                               asp-route-pullPaymentId="@pp.Id">View</a> | <a class="pp-payout" asp-action="Payouts"
+                               asp-route-pullPaymentId="@pp.Id">View</a> - <a class="pp-payout" asp-action="Payouts"
                                                                              asp-route-walletId="@this.Context.GetRouteValue("walletId")"
-                                                                             asp-route-pullPaymentId="@pp.Id">Payouts</a> | <a asp-action="ArchivePullPayment"
+                                                                             asp-route-pullPaymentId="@pp.Id">Payouts</a> - <a asp-action="ArchivePullPayment"
                                                                                                                                asp-route-walletId="@this.Context.GetRouteValue("walletId")"
                                                                                                                                asp-route-pullPaymentId="@pp.Id">Archive</a>
                         </td>

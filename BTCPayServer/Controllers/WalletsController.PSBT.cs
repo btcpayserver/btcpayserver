@@ -314,6 +314,13 @@ namespace BTCPayServer.Controllers
                     string error = null;
                     try
                     {
+                        if (!string.IsNullOrEmpty(vm.SigningContext.OriginalPSBT) &&
+                            !string.IsNullOrEmpty(vm.SigningContext.PSBT))
+                        {
+                            //if a hw device signed, we are sent back to the ready page with updated psbt data for final verification. If they are happy, they will click to broadcast with payjoin which brings us here.
+                            return await WalletPSBTReady(walletId, vm, "broadcast");   
+                        }
+                        
                         var proposedPayjoin = await GetPayjoinProposedTX(new BitcoinUrlBuilder(vm.SigningContext.PayJoinBIP21, network.NBitcoinNetwork), psbt,
                             derivationSchemeSettings, network, cancellationToken);
                         try

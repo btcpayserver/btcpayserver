@@ -17,25 +17,13 @@
         </div>
     </div>
 }
-<div class="row">
-    <div class="col-lg-12">
-        <p>
-            Pull payments are a way to allow a receiver of your payment the ability to "pull it" from your wallet at a convenient time.
-            For example, if the receiver of your payment is a freelancer, you allow the freelancer to pull funds from the wallet, at his convenience and within limits, as he completes the job.
-
-            This decreases the need of communication required between you and the freelancer.
-        </p>
-    </div>
-</div>
 
 <div class="row button-row">
-    <div class="col">
-        
-    </div>
-    <div class="col text-right">
+    <div class="col-lg-12">
         <a asp-action="NewPullPayment"
            asp-route-walletId="@this.Context.GetRouteValue("walletId")"
            class="btn btn-primary" role="button" id="NewPullPayment"><span class="fa fa-plus"></span> Create a new pull payment</a>
+        <a href="https://docs.btcpayserver.org/PullPayments/" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
     </div>
 </div>
 
@@ -64,21 +52,21 @@
         <table class="table table-sm table-responsive-lg">
             <thead class="thead-inverse">
                 <tr>
-                    <th style="min-width: 90px;" class="col-md-auto">
+                    <th scope="col">
                         Start
                     </th>
-                    <th style="max-width: 90px;" class="text-left">Name</th>
-                    <th class="text-left">Refunded</th>
-                    <th class="text-right">Actions</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Refunded</th>
+                    <th scope="col" class="text-right">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var pp in Model.PullPayments)
                 {
                     <tr>
-                        <td class="col-2"><span>@pp.StartDate.ToBrowserDate()</span></td>
-                        <td class="col-2"><span>@pp.Name</span></td>
-                        <td class="col-4">
+                        <td>@pp.StartDate.ToBrowserDate()</td>
+                        <td>@pp.Name</td>
+                        <td class="align-middle">
                             <div class="progress ppProgress" data-pp="@pp.Id" data-toggle="tooltip" data-html="true">
                                 <div class="progress-bar" role="progressbar" aria-valuenow="@pp.Progress.CompletedPercent"
                                      aria-valuemin="0" aria-valuemax="100" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width:@(pp.Progress.CompletedPercent)%;">
@@ -88,12 +76,12 @@
                                 </div>
                             </div>
                         </td>
-                        <td class="text-right col-3">
+                        <td class="text-right">
                             <a asp-action="ViewPullPayment"
                                asp-controller="PullPayment"
-                               asp-route-pullPaymentId="@pp.Id">View</a>| <a class="pp-payout" asp-action="Payouts"
+                               asp-route-pullPaymentId="@pp.Id">View</a> - <a class="pp-payout" asp-action="Payouts"
                                                                              asp-route-walletId="@this.Context.GetRouteValue("walletId")"
-                                                                             asp-route-pullPaymentId="@pp.Id">Payouts</a> | <a asp-action="ArchivePullPayment"
+                                                                             asp-route-pullPaymentId="@pp.Id">Payouts</a> - <a asp-action="ArchivePullPayment"
                                                                                                                                asp-route-walletId="@this.Context.GetRouteValue("walletId")"
                                                                                                                                asp-route-pullPaymentId="@pp.Id">Archive</a>
                         </td>

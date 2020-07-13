@@ -4,7 +4,7 @@
 
 @if (parsedModel != null)
 {
-    <div class="alert alert-@parsedModel.SeverityCSS @(parsedModel.AllowDismiss? "alert-dismissible":"" )" role="alert">
+    <div class="alert alert-@parsedModel.SeverityCSS @(parsedModel.AllowDismiss? "alert-dismissible":"" ) mb-5" role="alert">
         @if (parsedModel.AllowDismiss)
         {
             <button type="button" class="close" data-dismiss="alert" aria-label="Close">

@@ -3398,6 +3398,12 @@ normal:
                         e => e.CurrencyPair == new CurrencyPair("BTC", "POLIS") &&
                              e.BidAsk.Bid > 1.0m); // 1BTC will always be more than 1 POLIS
                 }
+                else if (result.ExpectedName == "argoneum")
+                {
+                    Assert.Contains(exchangeRates.ByExchange[result.ExpectedName],
+                        e => e.CurrencyPair == new CurrencyPair("BTC", "AGM") &&
+                             e.BidAsk.Bid > 1.0m); // 1 BTC will always be more than 1 AGM
+                }
                 else
                 {
                     // This check if the currency pair is using right currency pair

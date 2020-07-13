@@ -5,7 +5,7 @@
 }
 
 <partial name="_StatusMessage"/>
-<h4>API Keys</h4>
+
 <table class="table table-lg">
     <thead>
     <tr>
@@ -20,18 +20,23 @@
     {
         <tr>
             <td>@keyData.Label</td>
-            <td>@keyData.Id</td>
+            <td><code>@keyData.Id</code></td>
             <td>
                 @{
                     var permissions = keyData.GetBlob().Permissions;
                 }
                 @if (!permissions.Any())
                 {
-                    <span>No permissions</span>
+                    <span class="text-warning">No permissions</span>
                 }
                 else
                 {
-                    <span>@string.Join(", ", Permission.ToPermissions(permissions).Select(c => c.ToString()).Distinct().ToArray())</span>
+                    <ul>
+                        @foreach (var permission in Permission.ToPermissions(permissions).Select(c => c.ToString()).Distinct().ToArray())
+                        {
+                            <li>@permission</li>
+                        }
+                    </ul>
                 }
             </td>
             <td class="text-right">
@@ -47,10 +52,9 @@
             </td>
         </tr>
     }
-    <tr class="bg-gray">
-        <td colspan="4">
-            <a class="btn btn-primary" asp-action="AddApiKey" id="AddApiKey">Generate new key</a>
-        </td>
-    </tr>
     </tbody>
 </table>
+<a class="btn btn-primary" asp-action="AddApiKey" id="AddApiKey">
+    <span class="fa fa-plus"></span>
+    Generate new key
+</a>

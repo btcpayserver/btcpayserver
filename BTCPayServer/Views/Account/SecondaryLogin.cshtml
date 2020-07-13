@@ -7,15 +7,9 @@
     <div class="container">
         @if (Model.LoginWith2FaViewModel != null && Model.LoginWithU2FViewModel != null)
         {
-            <div class="row">
-                <div class="col-lg-12 section-heading">
-                    <h2>@ViewData["Title"]</h2>
-                    <hr class="primary">
-
-                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                </div>
-            </div>
-        }else if (Model.LoginWith2FaViewModel == null && Model.LoginWithU2FViewModel == null)
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        }
+        else if (Model.LoginWith2FaViewModel == null && Model.LoginWithU2FViewModel == null)
         {
             <div class="row">
                 <div class="col-lg-12 section-heading">

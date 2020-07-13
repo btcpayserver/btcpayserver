@@ -31,8 +31,9 @@
                 <h4 class="modal-title">Sign In</h4>
                 @if (env.OnionUrl != null)
                 {
-                    <a href="@env.OnionUrl">
-                        <img src="~/img/icons/Onion.svg" height="24" asp-append-version="true" />
+                    <a href="@env.OnionUrl" target="_onion" class="btn btn-onion d-inline-flex align-items-center" data-clipboard="@env.OnionUrl">
+                        <img src="~/img/icons/Onion_Color.svg" height="24" class="mr-2" asp-append-version="true" />
+                        Copy Tor URL
                     </a>
                 }
             </div>

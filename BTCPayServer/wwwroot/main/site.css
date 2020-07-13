@@ -194,3 +194,8 @@ pre {
     height: 1px;
     background: none;
 }
+
+[class*="field-validation"]:not(:empty) {
+    display: inline-block;
+    margin-top: .5rem;
+}

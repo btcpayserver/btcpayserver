@@ -39,11 +39,22 @@ namespace BTCPayServer.Security.GreenField
 
             if (authHeader == null || !authHeader.StartsWith("Basic ", StringComparison.OrdinalIgnoreCase))
                 return AuthenticateResult.NoResult();
-            var encodedUsernamePassword = authHeader.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries)[1]?.Trim();
-            var decodedUsernamePassword =
-                Encoding.UTF8.GetString(Convert.FromBase64String(encodedUsernamePassword)).Split(':');
-            var username = decodedUsernamePassword[0];
-            var password = decodedUsernamePassword[1];
+            string password;
+            string username;
+            try
+            {
+                var encodedUsernamePassword =
+                    authHeader.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries)[1]?.Trim();
+                var decodedUsernamePassword =
+                    Encoding.UTF8.GetString(Convert.FromBase64String(encodedUsernamePassword)).Split(':');
+                username = decodedUsernamePassword[0];
+                password = decodedUsernamePassword[1];
+            }
+            catch (Exception)
+            {
+                return AuthenticateResult.Fail(
+                    "Basic authentication header was not in a correct format. (username:password encoded in base64)");
+            }
 
             var result = await _signInManager.PasswordSignInAsync(username, password, true, true);
             if (!result.Succeeded)

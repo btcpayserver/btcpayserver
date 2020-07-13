@@ -19,6 +19,9 @@ namespace BTCPayServer.Models
         {
             get; set;
         }
+
+        public bool DescriptionHtml { get; set; } = false;
+
         public string Action
         {
             get; set;

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
+using BTCPayServer.Models;
 using BTCPayServer.Models.ManageViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -26,7 +27,6 @@ namespace BTCPayServer.Controllers
 
             var model = new TwoFactorAuthenticationViewModel
             {
-                HasAuthenticator = await _userManager.GetAuthenticatorKeyAsync(user) != null,
                 Is2faEnabled = user.TwoFactorEnabled,
                 RecoveryCodesLeft = await _userManager.CountRecoveryCodesAsync(user),
             };
@@ -49,11 +49,19 @@ namespace BTCPayServer.Controllers
                     $"Unexpected error occurred disabling 2FA for user with ID '{user.Id}'.");
             }
 
-            return View(nameof(Disable2fa));
+            return View("Confirm",
+                new ConfirmModel()
+                {
+                    Title = $"Disable two-factor authentication (2FA)",
+                    DescriptionHtml = true,
+                    Description =
+                        $"Disabling 2FA does not change the keys used in authenticator apps. If you wish to change the key used in an authenticator app you should <a href=\"{Url.Action(nameof(ResetAuthenticatorWarning))}\"> reset your authenticator keys</a>.",
+                    Action = "Disable 2FA",
+                    ActionUrl = Url.ActionLink(nameof(Disable2fa))
+                });
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Disable2fa()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -105,7 +113,8 @@ namespace BTCPayServer.Controllers
             }
 
             // Strip spaces and hypens
-            var verificationCode = model.Code.Replace(" ", string.Empty, StringComparison.OrdinalIgnoreCase).Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase);
+            var verificationCode = model.Code.Replace(" ", string.Empty, StringComparison.OrdinalIgnoreCase)
+                .Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase);
 
             var is2faTokenValid = await _userManager.VerifyTwoFactorTokenAsync(
                 user, _userManager.Options.Tokens.AuthenticatorTokenProvider, verificationCode);
@@ -122,17 +131,24 @@ namespace BTCPayServer.Controllers
             var recoveryCodes = await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 10);
             TempData[RecoveryCodesKey] = recoveryCodes.ToArray();
 
-            return RedirectToAction(nameof(GenerateRecoveryCodes));
+            return RedirectToAction(nameof(GenerateRecoveryCodes), new {confirm = false});
         }
 
         [HttpGet]
         public IActionResult ResetAuthenticatorWarning()
         {
-            return View(nameof(ResetAuthenticator));
+            return View("Confirm",
+                new ConfirmModel()
+                {
+                    Title = $"Reset authenticator key",
+                    Description =
+                        $"This process disables 2FA until you verify your authenticator app and will also reset your 2FA recovery codes.{Environment.NewLine}If you do not complete your authenticator app configuration you may lose access to your account.",
+                    Action = "Reset",
+                    ActionUrl = Url.ActionLink(nameof(ResetAuthenticator))
+                });
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ResetAuthenticator()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -149,15 +165,39 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
-        public IActionResult GenerateRecoveryCodes()
+        public async Task<IActionResult> GenerateRecoveryCodes(bool confirm = true)
+        {
+            if (!confirm)
+            {
+                return await GenerateRecoveryCodes();
+            }
+
+            return View("Confirm",
+                new ConfirmModel()
+                {
+                    Title = $"Are you sure you want to generate new recovery codes?",
+                    Description = "Your existing recovery codes will no longer be valid!",
+                    Action = "Generate",
+                    ActionUrl = Url.ActionLink(nameof(GenerateRecoveryCodes))
+                });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GenerateRecoveryCodes()
         {
             var recoveryCodes = (string[])TempData[RecoveryCodesKey];
             if (recoveryCodes == null)
             {
-                return RedirectToAction(nameof(TwoFactorAuthentication));
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null)
+                {
+                    throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+                }
+
+                recoveryCodes = (await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 10)).ToArray();
             }
 
-            var model = new GenerateRecoveryCodesViewModel { RecoveryCodes = recoveryCodes };
+            var model = new GenerateRecoveryCodesViewModel {RecoveryCodes = recoveryCodes};
             return View(model);
         }
 

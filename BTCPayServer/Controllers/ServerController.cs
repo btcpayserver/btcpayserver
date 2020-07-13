@@ -307,14 +307,14 @@ namespace BTCPayServer.Controllers
 
         [Route("server/users/new")]
         [HttpGet]
-        public IActionResult NewUser()
+        public IActionResult CreateUser()
         {
             ViewData["AllowIsAdmin"] = _Options.AllowAdminRegistration;
 
             return View();
         }
 
-        [Route("server/users")]
+        [Route("server/users/new")]
         [HttpPost]
         public async Task<IActionResult> CreateUser(RegisterViewModel model)
         {
@@ -337,7 +337,7 @@ namespace BTCPayServer.Controllers
             }
 
             // If we got this far, something failed, redisplay form
-            return View("NewUser", model);
+            return View(model);
         }
 
         [Route("server/users/{userId}/delete")]

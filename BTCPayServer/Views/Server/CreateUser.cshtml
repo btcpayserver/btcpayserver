@@ -30,9 +30,9 @@
 
             @if (ViewData["AllowIsAdmin"] is true)
             {
-                <div class="form-group">
-                    <label asp-for="IsAdmin"></label>
-                    <input asp-for="IsAdmin" type="checkbox" class="form-check-inline"/>
+                <div class="form-group form-check">
+                    <input asp-for="IsAdmin" type="checkbox" class="form-check-input"/>
+                    <label asp-for="IsAdmin" class="form-check-label"></label>
                     <span asp-validation-for="IsAdmin" class="text-danger"></span>
                 </div>
             }

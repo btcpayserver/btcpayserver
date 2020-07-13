@@ -62,15 +62,17 @@
                         <div class="form-group">
                             <button type="submit" class="btn btn-primary btn-block btn-lg" id="LoginButton">Sign in</button>
                         </div>
-                        <p class="hint-text"><a asp-action="ForgotPassword">Forgot your password?</a></p>
+                        <p class="text-right mt-4 mb-2">
+                            <a asp-action="ForgotPassword" class="text-secondary">Forgot your password?</a>
+                        </p>
                     </fieldset>
                 </form>
             </div>
             @if (themeManager.ShowRegister)
             {
                 <div class="modal-footer">
-                    <div>Don't have an account?</div>
-                    <a id="Register" class="btn btn-secondary ml-2" asp-action="Register" asp-route-returnurl="@ViewData["ReturnUrl"]">Sign Up</a>
+                    Don't have an account?
+                    <a id="Register" class="btn btn-secondary ml-3" asp-action="Register" asp-route-returnurl="@ViewData["ReturnUrl"]">Sign Up</a>
                 </div>
             }
         </div>

@@ -75,9 +75,9 @@
                         </div>
                         @if (ViewData["AllowIsAdmin"] is true)
                         {
-                            <div class="form-group">
-                                <label asp-for="IsAdmin"></label>
-                                <input asp-for="IsAdmin" type="checkbox" class="form-check-inline"/>
+                            <div class="form-group form-check">
+                                <input asp-for="IsAdmin" type="checkbox" class="form-check-input"/>
+                                <label asp-for="IsAdmin" class="form-check-label"></label>
                                 <span asp-validation-for="IsAdmin" class="text-danger"></span>
                             </div>
                         }
@@ -87,7 +87,10 @@
                     </fieldset>
                 </form>
             </div>
-            <div class="modal-footer"><span>Already have an account? <a id="Login" asp-action="Login" asp-route-returnurl="@ViewData["ReturnUrl"]">Login</a></span></div>
+            <div class="modal-footer">
+                Already have an account?
+                <a id="Login" class="btn btn-secondary ml-3" asp-action="Login" asp-route-returnurl="@ViewData["ReturnUrl"]">Login</a>
+            </div>
         </div>
     </div>
 </div>

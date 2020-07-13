@@ -41,7 +41,14 @@
                 "description": "View information about the current API key",
                 "responses": {
                     "200": {
-                        "description": "The key has been deleted"
+                        "description": "Information about the current api key",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiKeyData"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [

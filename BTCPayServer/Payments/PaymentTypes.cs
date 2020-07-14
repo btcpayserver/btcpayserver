@@ -1,4 +1,5 @@
 using System;
+using BTCPayServer.Services.Altcoins.Ethereum.Payments;
 using BTCPayServer.Services.Altcoins.Monero.Payments;
 using BTCPayServer.Services.Invoices;
 using Newtonsoft.Json.Linq;
@@ -33,6 +34,9 @@ namespace BTCPayServer.Payments
                     break;
                 case "monerolike":
                     type = MoneroPaymentType.Instance;
+                    break;
+                case "ethereumlike":
+                    type = EthereumPaymentType.Instance;;
                     break;
                 default:
                     type = null;

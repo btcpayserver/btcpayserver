@@ -121,21 +121,21 @@ workflows:
               ignore: /.*/
             # only act on version tags v1.0.0.88 or v1.0.2-1
             # OR feature tags like vlndseedbackup
+            # OR features on specific versions like v1.0.0.88-lndseedbackup-1
             tags:
-                
-              only: /(v[1-9]+(\.[0-9]+)*(-[0-9]+)?)|(v[a-z]+)/
+                only: /(v[1-9]+(\.[0-9]+)*(-[a-z0-9-]+)?)|(v[a-z0-9-]+)/
       - arm32v7:
           filters:
             branches:
               ignore: /.*/
             tags:
-              only: /(v[1-9]+(\.[0-9]+)*(-[0-9]+)?)|(v[a-z]+)/
+                only: /(v[1-9]+(\.[0-9]+)*(-[a-z0-9-]+)?)|(v[a-z0-9-]+)/
       - arm64v8:
           filters:
             branches:
               ignore: /.*/
             tags:
-              only: /(v[1-9]+(\.[0-9]+)*(-[0-9]+)?)|(v[a-z]+)/
+              only: /(v[1-9]+(\.[0-9]+)*(-[a-z0-9-]+)?)|(v[a-z0-9-]+)/
       - multiarch:
           requires:
             - amd64
@@ -145,4 +145,4 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /(v[1-9]+(\.[0-9]+)*(-[0-9]+)?)|(v[a-z]+)/
+                only: /(v[1-9]+(\.[0-9]+)*(-[a-z0-9-]+)?)|(v[a-z0-9-]+)/

@@ -20,6 +20,7 @@ using BTCPayServer.Services.Altcoins.Monero;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Fees;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Altcoins.Ethereum;
 using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Notifications;
@@ -76,6 +77,7 @@ namespace BTCPayServer.Hosting
 
             services.AddPayJoinServices();
             services.AddMoneroLike();
+            services.AddEthereumLike();
             services.TryAddSingleton<SettingsRepository>();
             services.TryAddSingleton<LabelFactory>();
             services.TryAddSingleton<TorServices>();

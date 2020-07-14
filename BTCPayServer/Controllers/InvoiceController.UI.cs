@@ -438,8 +438,8 @@ namespace BTCPayServer.Controllers
                 HtmlTitle = storeBlob.HtmlTitle ?? "BTCPay Invoice",
                 CryptoImage = Request.GetRelativePathOrAbsolute(paymentMethodHandler.GetCryptoImage(paymentMethodId)),
                 BtcAddress = paymentMethodDetails.GetPaymentDestination(),
-                BtcDue = accounting.Due.ShowMoney(divisibility),
-                OrderAmount = (accounting.TotalDue - accounting.NetworkFee).ShowMoney(divisibility),
+                BtcDue = accounting.Due.ShowMoney(network.ShowTrailingZeroDecimals? divisibility: null),
+                OrderAmount = (accounting.TotalDue - accounting.NetworkFee).ShowMoney(network.ShowTrailingZeroDecimals? divisibility: null),
                 OrderAmountFiat = OrderAmountFromInvoice(network.CryptoCode, invoice.ProductInformation),
                 CustomerEmail = invoice.RefundMail,
                 RequiresRefundEmail = storeBlob.RequiresRefundEmail,
@@ -455,7 +455,7 @@ namespace BTCPayServer.Controllers
                 StoreName = store.StoreName,
                 PeerInfo = (paymentMethodDetails as LightningLikePaymentMethodDetails)?.NodeInfo,
                 TxCount = accounting.TxRequired,
-                BtcPaid = accounting.Paid.ShowMoney(divisibility),
+                BtcPaid = accounting.Paid.ShowMoney(network.ShowTrailingZeroDecimals? divisibility: null),
 #pragma warning disable CS0618 // Type or member is obsolete
                 Status = invoice.StatusString,
 #pragma warning restore CS0618 // Type or member is obsolete

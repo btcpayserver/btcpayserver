@@ -1,7 +1,9 @@
-﻿@using BTCPayServer.Services.Altcoins.Monero.Services
+@using BTCPayServer.Services.Altcoins.Ethereum.Services
+@using BTCPayServer.Services.Altcoins.Monero.Services
 @inject BTCPayServer.HostedServices.NBXplorerDashboard dashboard
+@inject EthereumService EthereumService
 @inject MoneroRPCProvider MoneroRpcProvider
-@if (!dashboard.IsFullySynched() || !MoneroRpcProvider.Summaries.All(pair => pair.Value.WalletAvailable))
+@if (!dashboard.IsFullySynched() || !EthereumService.IsAllAvailable() || !MoneroRpcProvider.Summaries.All(pair => pair.Value.WalletAvailable))
 {
     <!-- Modal -->
     <div id="modalDialog" class="modal-dialog animated bounceInRight"
@@ -14,7 +16,7 @@
                 <h4 class="modal-title">Your nodes are synching...</h4>
                 <button type="button" class="close" onclick="dismissSyncModal()">&times;</button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body" style="max-height: 400px; overflow-y: scroll;">
                 <p>
                     Your node is synching the entire blockchain and validating the consensus rules...
                 </p>
@@ -79,6 +81,7 @@
                 }
                 
                 <partial name="Monero/MoneroSyncSummary"/>
+                <partial name="Ethereum/ETHSyncSummary"/>
                 <p>
                     <a href="https://www.youtube.com/watch?v=OrYDehC-8TU" target="_blank">Watch this video</a> to understand the importance of blockchain synchronization.
                 </p>

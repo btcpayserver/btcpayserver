@@ -40,6 +40,10 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Nethereum.ABI" Version="3.8.0" />
+    <PackageReference Include="Nethereum.HdWallet" Version="3.8.0" />
+    <PackageReference Include="Nethereum.StandardTokenEIP20" Version="3.8.0" />
+    <PackageReference Include="Nethereum.Web3" Version="3.8.0" />
     <PackageReference Include="System.IO.Pipelines" Version="4.7.2" />
     <PackageReference Include="NBitpayClient" Version="1.0.0.39" />
     <PackageReference Include="DBriize" Version="1.0.1.3" />

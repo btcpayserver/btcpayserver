@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.0.5.3:
+
+### Bug fixes
+* Payouts list incorrectly filtered if more than two pull payments (@arc3x)
+* Make it possible to refund invoice in the invalid state (@NicolasDorier)
+* Sane error message from the server if Basic authentication is not properly encoded in base64 (@Kukks)
+* Fix typos in pull payments (@Zaxounette)
+
+### New features and improvements
+* Enable CORS on greenfield API (@Kukks)
+* UI cleanup in the account section (@dennisreimann see #1721)
+* Improve information structure in the store's lightning page (@dennisreimann see #1706)
+* Various code cleanup (@rockstardev)
+* Set noindex, nofollow on the payment request page and pull payment page (@RiccardoMasutti)
+* Improve "Send" screen address field UX (@bolatovumar #1723)
+* Fix appearance of table in pull payments page (@bolatovumar #1732 and #1733)
+* Improve service settings,  email settings, improve users list, U2F, 2FA, login view and maintenance page (@dennisreimann #1727)
+* Update translation for Deutsch and አማርኛ (Peter Battermann and @lbtil)
+
+
 ## 1.0.5.2:
 
 ### Bug fixes
@@ -15,7 +35,7 @@
 
 ## 1.0.5.0:
 
-### New Feature and improvements
+### New Features and improvements
 * Add Notifications feature (@r0ckstardev)
 * Add Pull Payments feature (@NicolasDorier)
 * Add Refund feature (@NicolasDorier

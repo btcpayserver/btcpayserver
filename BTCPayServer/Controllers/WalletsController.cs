@@ -782,6 +782,12 @@ namespace BTCPayServer.Controllers
                 }
             };
             AddSigningContext(redirectVm, vm.SigningContext);
+            if (!string.IsNullOrEmpty(vm.SigningContext.OriginalPSBT) &&
+                !string.IsNullOrEmpty(vm.SigningContext.PSBT))
+            {
+                //if a hw device signed a payjoin, we want it broadcast instantly
+                redirectVm.Parameters.Add(new KeyValuePair<string, string>("command", "broadcast"));  
+            }
             return View("PostRedirect", redirectVm);
         }
 

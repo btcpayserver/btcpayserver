@@ -9,6 +9,8 @@
 * Fix typos in pull payments (@Zaxounette)
 
 ### New features and improvements
+* Make payjoin works with hardware wallets (@Kukks)
+* Better design for 2FA config screens (@Kukks #1735)
 * Enable CORS on greenfield API (@Kukks)
 * UI cleanup in the account section (@dennisreimann see #1721)
 * Improve information structure in the store's lightning page (@dennisreimann see #1706)

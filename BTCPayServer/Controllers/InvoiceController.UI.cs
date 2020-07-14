@@ -100,10 +100,11 @@ namespace BTCPayServer.Controllers
         {
             return invoiceState.Status == InvoiceStatus.Confirmed ||
                 invoiceState.Status == InvoiceStatus.Complete ||
-                ((invoiceState.Status == InvoiceStatus.Expired || invoiceState.Status == InvoiceStatus.Invalid) &&
+                (invoiceState.Status == InvoiceStatus.Expired &&
                 (invoiceState.ExceptionStatus == InvoiceExceptionStatus.PaidLate ||
                 invoiceState.ExceptionStatus == InvoiceExceptionStatus.PaidOver ||
-                invoiceState.ExceptionStatus == InvoiceExceptionStatus.PaidPartial));
+                invoiceState.ExceptionStatus == InvoiceExceptionStatus.PaidPartial)) ||
+                invoiceState.Status == InvoiceStatus.Invalid;
         }
 
         [HttpGet]

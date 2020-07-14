@@ -9,7 +9,9 @@
 * Fix typos in pull payments (@Zaxounette)
 
 ### New features and improvements
-* Make payjoin works with hardware wallets (@Kukks)
+* Add download PSBT button in the PSBT's screen of the wallet (@Kukks)
+* Upload PSBT button now support both, a file with base64 PSBT in it, or the raw bytes (@Kukks)
+* Make payjoin works with hardware wallets, need latest release of BTCPayServer Vault (@Kukks)
 * Better design for 2FA config screens (@Kukks #1735)
 * Enable CORS on greenfield API (@Kukks)
 * UI cleanup in the account section (@dennisreimann see #1721)

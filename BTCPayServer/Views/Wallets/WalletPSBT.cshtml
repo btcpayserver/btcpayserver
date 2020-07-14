@@ -33,16 +33,18 @@
                     <input type="hidden" asp-for="NBXSeedAvailable" />
                     <input type="hidden" asp-for="PSBT" />
                     <input type="hidden" asp-for="FileName" />
-
-                    <partial name="WalletSigningMenu" model="@((Model.CryptoCode, Model.NBXSeedAvailable))" />
-                    <div class="dropdown d-inline-block">
-                        <button class="btn btn-secondary dropdown-toggle" type="button" id="OtherActions" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            Other actions...
-                        </button>
-                        <div class="dropdown-menu" aria-labelledby="OtherActions">
-                            <button name="command" type="submit" class="dropdown-item" value="broadcast">Review</button>
-                            <button name="command" type="submit" class="dropdown-item" value="update">Update</button>
-                            <button name="command" type="submit" class="dropdown-item" value="combine">Combine</button>
+                    <div  class="d-flex">
+                        <partial name="WalletSigningMenu" model="@((Model.CryptoCode, Model.NBXSeedAvailable))"/>
+                        <div class="ml-2 dropdown">
+                            <button class="btn btn-secondary dropdown-toggle" type="button" id="OtherActions" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Other actions...
+                            </button>
+                            <div class="dropdown-menu" aria-labelledby="OtherActions">
+                                <button name="command" type="submit" class="dropdown-item" value="broadcast">Review</button>
+                                <button name="command" type="submit" class="dropdown-item" value="update">Update</button>
+                                <button name="command" type="submit" class="dropdown-item" value="combine">Combine</button>
+                                <button name="command" type="submit" class="dropdown-item" value="save-psbt">Download</button>
+                            </div>
                         </div>
                     </div>
                 </form>

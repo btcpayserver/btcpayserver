@@ -42,3 +42,6 @@
 .table-sm tbody tr:hover {
   background-color: var(--btcpay-color-neutral-950);
 }
+.list-group-item-action {
+    color: var(--btcpay-body-color);
+}

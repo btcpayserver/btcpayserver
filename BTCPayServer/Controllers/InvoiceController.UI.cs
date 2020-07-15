@@ -291,6 +291,24 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(invoice), new { invoiceId });
         }
 
+        [HttpPost]
+        public async Task<IActionResult> MassAction(string command, string[] selectedItems)
+        {
+            if (selectedItems != null)
+            {
+                switch (command)
+                {
+                    case "archive":
+                        await _InvoiceRepository.MassArchive(selectedItems);
+                        TempData[WellKnownTempData.SuccessMessage] = $"{selectedItems.Length} invoice(s) archived.";
+
+                        break;
+                }
+            }
+
+            return RedirectToAction(nameof(ListInvoices));
+        }
+
         [HttpGet]
         [Route("i/{invoiceId}")]
         [Route("i/{invoiceId}/{paymentMethodId}")]

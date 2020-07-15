@@ -39,9 +39,12 @@
   filter: none;
 }
 
+.list-group-item-action,
+.list-group-item-action:hover {
+  color: var(--btcpay-body-color);
+}
+
+.list-group-item-action:hover,
 .table-sm tbody tr:hover {
   background-color: var(--btcpay-color-neutral-950);
-}
-.list-group-item-action {
-    color: var(--btcpay-body-color);
 }

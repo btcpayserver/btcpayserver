@@ -124,8 +124,9 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
   border-top: none;
 }
 
+.list-group-item-action:hover,
 .table-sm tbody tr:hover {
-  background-color: var(--btcpay-color-neutral-100);
+  background-color: var(--btcpay-color-white);
 }
 
 .removetopborder tr:first-child th,

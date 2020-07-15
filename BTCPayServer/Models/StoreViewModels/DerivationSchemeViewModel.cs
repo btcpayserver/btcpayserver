@@ -11,6 +11,8 @@ namespace BTCPayServer.Models.StoreViewModels
         public DerivationSchemeViewModel()
         {
         }
+
+        [Display(Name = "Derivation scheme")]
         public string DerivationScheme
         {
             get; set;
@@ -31,7 +33,7 @@ namespace BTCPayServer.Models.StoreViewModels
 
         public KeyPath RootKeyPath { get; set; }
 
-        [Display(Name = "Electrum/Hardware Wallet File")]
+        [Display(Name = "Wallet File")]
         public IFormFile WalletFile { get; set; }
         public string Config { get; set; }
         public string Source { get; set; }

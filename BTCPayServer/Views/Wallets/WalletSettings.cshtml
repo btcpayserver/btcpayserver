@@ -14,14 +14,8 @@
 }
 
 <div class="row">
-    <div class="col-md-10">
-        <p>
-            Additional information about your wallet
-        </p>
-    </div>
-</div>
-<div class="row">
     <div class="col-md-6">
+        <h4>Additional wallet information</h4>
         <form method="post" asp-action="WalletSettings">
             <input type="hidden" asp-for="StoreName"/>
             <input type="hidden" asp-for="UriScheme"/>
@@ -45,8 +39,9 @@
             }
             @for (int i = 0; i < Model.AccountKeys.Count; i++)
             {
-                <hr/>
-                <h5>Account key @i</h5>
+                <hr class="my-4"/>
+
+                <h4>Account key @i</h4>
                 <div class="form-group">
                     <label asp-for="@Model.AccountKeys[i].AccountKey"></label>
                     <input asp-for="@Model.AccountKeys[i].AccountKey" class="form-control" readonly/>

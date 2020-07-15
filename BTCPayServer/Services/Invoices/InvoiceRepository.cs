@@ -403,6 +403,24 @@ retry:
             }
         }
 
+        public async Task MassArchive(string[] invoiceIds)
+        {
+            using (var context = _ContextFactory.CreateContext())
+            {
+                var items = context.Invoices.Where(a => invoiceIds.Contains(a.Id));
+                if (items == null) {
+                    return;
+                }
+
+                foreach (InvoiceData invoice in items)
+                {
+                    invoice.Archived = true;
+                }
+                
+                await context.SaveChangesAsync();
+            }
+        }
+
         public async Task ToggleInvoiceArchival(string invoiceId, bool archived)
         {
             using (var context = _ContextFactory.CreateContext())

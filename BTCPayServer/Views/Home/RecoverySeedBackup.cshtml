@@ -35,7 +35,7 @@
             </div>
         </div>
 
-        <ol class="my-5 d-flex flex-wrap justify-content-center align-items-center p-0" style="max-width:800px">
+        <ol id="recovery-phrase" data-mnemonic="@Model.Mnemonic" class="my-5 d-flex flex-wrap justify-content-center align-items-center p-0" style="max-width:800px">
             @foreach (var word in Model.Words)
             {
                 <li class="ml-4 p-3 text-secondary" style="flex: 0 1 11em">
@@ -52,7 +52,7 @@
         <form id="recoveryConfirmation" action="@Model.ReturnUrl" class="d-flex align-items-center justify-content-center" style="padding-bottom: 80px">
             <label class="form-check-label lead order-2" for="confirm">I have saved my recovery phrase in a secure location</label>
             <input type="checkbox" class="mr-3 order-1" id="confirm">
-            <button type="submit" class="btn btn-primary btn-lg px-5 order-3">Done</button>
+            <button type="submit" class="btn btn-primary btn-lg px-5 order-3" id="submit">Done</button>
             <button type="submit" class="btn btn-primary btn-lg px-5 order-3" disabled>Done</button>
         </form>
     </div>

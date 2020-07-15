@@ -669,8 +669,10 @@ namespace BTCPayServer.Tests
 
                 s.Driver.FindElement(By.Id("SettingsMenu")).ForceClick();
                 s.Driver.FindElement(By.CssSelector("button[value=view-seed]")).Click();
+                // Seed backup page
                 s.AssertHappyMessage();
-                Assert.Equal(mnemonic.ToString(), s.Driver.FindElements(By.ClassName("alert-success")).First().FindElement(By.TagName("code")).Text);
+                var recoveryPhrase = s.Driver.FindElements(By.Id("recovery-phrase")).First().GetAttribute("data-mnemonic");
+                Assert.Equal(mnemonic.ToString(), recoveryPhrase);
             }
         }
         void SetTransactionOutput(SeleniumTester s, int index, BitcoinAddress dest, decimal amount, bool subtract = false)

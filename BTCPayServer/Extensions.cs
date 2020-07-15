@@ -12,12 +12,14 @@ using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Lightning;
 using BTCPayServer.Models;
+using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -428,6 +430,24 @@ namespace BTCPayServer
         public static void SetStoresData(this HttpContext ctx, StoreData[] storeData)
         {
             ctx.Items["BTCPAY.STORESDATA"] = storeData;
+        }
+
+        public static IActionResult RedirectToRecoverySeedBackup(this Controller controller, RecoverySeedBackupViewModel vm)
+        {
+            var redirectVm = new PostRedirectViewModel()
+            {
+                AspController = "Home",
+                AspAction = "RecoverySeedBackup",
+                Parameters =
+                {
+                    new KeyValuePair<string, string>("cryptoCode", vm.CryptoCode),
+                    new KeyValuePair<string, string>("mnemonic", vm.Mnemonic),
+                    new KeyValuePair<string, string>("passphrase", vm.Passphrase),
+                    new KeyValuePair<string, string>("isStored", vm.IsStored ? "true" : "false"),
+                    new KeyValuePair<string, string>("returnUrl", vm.ReturnUrl)
+                }
+            };
+            return controller.View("PostRedirect", redirectVm);
         }
     }
 }

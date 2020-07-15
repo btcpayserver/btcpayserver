@@ -1,0 +1,59 @@
+@model RecoverySeedBackupViewModel
+@{
+    Layout = "_LayoutSimple";
+    ViewData["Title"] = "Save your recovery phrase";
+}
+
+<div class="row justify-content-md-center">
+    <div class="col-md-9 col-lg-8">
+        <partial name="_StatusMessage" />
+
+        <h1 class="text-center text-primary mb-5">@ViewData["Title"]</h1>
+
+        <div class="row">
+            <div class="col-12 col-sm-2 d-flex align-items-center justify-content-center">
+                <span class="fa fa-warning align-self-center p-3" style="font-size:3.5em;"></span>
+            </div>
+            <div class="col-12 col-sm-10 lead">
+                <p>
+                    The words below are called your recovery phrase.
+                    Please save these words securely.
+                    They will allow you to recover your wallet.
+                </p>
+                @if (!Model.IsStored)
+                {
+                    <p class="mt-3 mb-3">The recovery phrase will only be shown before being wiped from the server.</p>
+                }
+                <p class="mt-3 mb-0">
+                    Do not photograph or store this in a non air-gapped digital format.
+                    Anyone with access to your recovery phrase can steal your funds.
+                </p>
+                @if (!string.IsNullOrEmpty(Model.Passphrase))
+                {
+                    <p class="mt-3 mb-0">Please make also sure to store your passphrase.</p>
+                }
+            </div>
+        </div>
+
+        <ol class="my-5 d-flex flex-wrap justify-content-center align-items-center p-0" style="max-width:800px">
+            @foreach (var word in Model.Words)
+            {
+                <li class="ml-4 p-3 text-secondary" style="flex: 0 1 11em">
+                    <span class="text-dark h5">@word</span>
+                </li>
+            }
+        </ol>
+        <style>
+            form#recoveryConfirmation button { position: absolute; bottom:0; left:50%; width:200px; margin-left:-100px; }
+            form#recoveryConfirmation button:not([disabled]) { display: none; }
+            form#recoveryConfirmation input:checked ~ button[disabled] { display: none; }
+            form#recoveryConfirmation input:checked + button:not([disabled]) { display: inline-block; }
+        </style>
+        <form id="recoveryConfirmation" action="@Model.ReturnUrl" class="d-flex align-items-center justify-content-center" style="padding-bottom: 80px">
+            <label class="form-check-label lead order-2" for="confirm">I have saved my recovery phrase in a secure location</label>
+            <input type="checkbox" class="mr-3 order-1" id="confirm">
+            <button type="submit" class="btn btn-primary btn-lg px-5 order-3">Done</button>
+            <button type="submit" class="btn btn-primary btn-lg px-5 order-3" disabled>Done</button>
+        </form>
+    </div>
+</div>

@@ -669,8 +669,8 @@ namespace BTCPayServer.Tests
 
                 s.Driver.FindElement(By.Id("SettingsMenu")).ForceClick();
                 s.Driver.FindElement(By.CssSelector("button[value=view-seed]")).Click();
+
                 // Seed backup page
-                s.AssertHappyMessage();
                 var recoveryPhrase = s.Driver.FindElements(By.Id("recovery-phrase")).First().GetAttribute("data-mnemonic");
                 Assert.Equal(mnemonic.ToString(), recoveryPhrase);
             }

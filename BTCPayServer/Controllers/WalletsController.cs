@@ -1145,11 +1145,6 @@ namespace BTCPayServer.Controllers
                 }
                 else
                 {
-                    TempData.SetStatusMessageModel(new StatusMessageModel()
-                    {
-                        Severity = StatusMessageModel.StatusSeverity.Success,
-                        Html = $"Please store your seed securely!"
-                    });
                     var recoveryVm = new RecoverySeedBackupViewModel()
                     {
                         CryptoCode = walletId.CryptoCode,

@@ -45,318 +45,344 @@
             </div>
         </div>
 
-        <div class="row button-row">
-            <div class="col-lg-6">
-                <a asp-action="CreateInvoice" class="btn btn-primary" role="button" id="CreateNewInvoice"><span class="fa fa-plus"></span> Create a new invoice</a>
-                <a class="btn btn-primary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    Export
-                </a>
-                <a href="https://docs.btcpayserver.org/Accounting/" target="_blank">
-                    <span class="fa fa-question-circle-o" title="More information..."></span>
-                </a>
-                <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-                    <a asp-action="Export" asp-route-timezoneoffset="0" asp-route-format="csv" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item export-link" target="_blank">CSV</a>
-                    <a asp-action="Export" asp-route-timezoneoffset="0" asp-route-format="json" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item export-link" target="_blank">JSON</a>
-                </div>
-            </div>
-            <div class="col-lg-6">
-                <div class="form-group">
-                    <form asp-action="ListInvoices" method="get" style="float:right;">
-                        <input type="hidden" asp-for="Count" />
-                        <div class="input-group">
-                            <input asp-for="TimezoneOffset" type="hidden" />
-                            <input asp-for="SearchTerm" class="form-control" style="width:300px;" />
-                            <div class="input-group-append">
-                                <button type="submit" class="btn btn-primary" title="Search invoice">
-                                    <span class="fa fa-search"></span> Search
-                                </button>
-                                <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    <span class="sr-only">Toggle Dropdown</span>
-                                </button>
+        <form asp-action="ListInvoices" method="get" style="float:right;">
+            <input type="hidden" asp-for="Count" />
+            <div class="input-group">
+                <input asp-for="TimezoneOffset" type="hidden" />
+                <input asp-for="SearchTerm" class="form-control" style="width:300px;" />
+                <div class="input-group-append">
+                    <button type="submit" class="btn btn-primary" title="Search invoice">
+                        <span class="fa fa-search"></span> Search
+                    </button>
+                    <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <span class="sr-only">Toggle Dropdown</span>
+                    </button>
 
-                                @{
-                                    var storeIds = string.Join(
-                                        "",
-                                        Model.StoreIds.Select(storeId => $",storeid:{storeId}")
-                                    );
-                                }
-
-                                <div class="dropdown-menu dropdown-menu-right">
-                                    <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=status%3Ainvalid@{@storeIds}">Invalid Invoices</a>
-                                    <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=status%3Apaid%2Cstatus%3Aconfirmed%2Cstatus%3Acomplete@{@storeIds}">Paid Invoices</a>
-                                    <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=exceptionstatus%3ApaidLate@{@storeIds}s">Paid Late Invoices</a>
-                                    <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=exceptionstatus%3ApaidPartial@{@storeIds}">Paid Partial Invoices</a>
-                                    <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=exceptionstatus%3ApaidOver@{@storeIds}">Paid Over Invoices</a>
-                                    <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=unusual%3Atrue@{@storeIds}">Unusual Invoices</a>
-                                    <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=includearchived%3Atrue@{@storeIds}">Archived Invoices</a>
-                                    <div role="separator" class="dropdown-divider"></div>
-                                    <a class="dropdown-item last24" href="/invoices?Count=@Model.Count&timezoneoffset=0&SearchTerm=startDate%3Alast24@{@storeIds}">Last 24 hours</a>
-                                    <a class="dropdown-item last72" href="/invoices?Count=@Model.Count&timezoneoffset=0&SearchTerm=startDate%3Alast72@{@storeIds}">Last 3 days</a>
-                                    <a class="dropdown-item last168" href="/invoices?Count=@Model.Count&timezoneoffset=0&SearchTerm=startDate%3Alast168@{@storeIds}">Last 7 days</a>
-                                    <button type="button" class="dropdown-item" data-toggle="modal" data-target="#customRangeModal" data-backdrop="static">Custom Range</button>
-                                    <div role="separator" class="dropdown-divider"></div>
-                                    <a class="dropdown-item" href="/invoices">Unfiltered</a>
-                                </div>
-                            </div>
-                        </div>
-                        <span asp-validation-for="SearchTerm" class="text-danger"></span>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        @* Custom Range Modal *@
-        <div class="modal fade" id="customRangeModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 550px;">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLongTitle">Filter invoices by Custom Range</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="form-group row">
-                            <label for="dtpStartDate" class="col-sm-3 col-form-label">Start Date</label>
-                            <div class="col-sm-9">
-                                <div class="input-group">
-                                    <input id="dtpStartDate" class="form-control flatdtpicker" type="datetime-local"
-                                           data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
-                                           placeholder="Start Date" />
-                                    <div class="input-group-append">
-                                        <button type="button" class="btn btn-primary input-group-clear" title="Clear">
-                                            <span class=" fa fa-times"></span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group row">
-                            <label class="col-sm-3 col-form-label">End Date</label>
-                            <div class="col-sm-9">
-                                <div class="input-group">
-                                    <input id="dtpEndDate" class="form-control flatdtpicker" type="datetime-local"
-                                           data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
-                                           placeholder="End Date" />
-                                    <div class="input-group-append">
-                                        <button type="button" class="btn btn-primary input-group-clear" title="Clear">
-                                            <span class=" fa fa-times"></span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button id="btnCustomRangeDate" type="button" class="btn btn-primary">Filter</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <script type="text/javascript">
-            $('#btnCustomRangeDate').on('click', function (sender) {
-                var filterString = "";
-
-                var dtpStartDate = $("#dtpStartDate").val();
-                if (dtpStartDate !== null && dtpStartDate !== "") {
-                    filterString = "startDate%3A" + dtpStartDate;
-                }
-
-                var dtpEndDate = $("#dtpEndDate").val();
-                if (dtpEndDate !== null && dtpEndDate !== "") {
-                    if (filterString !== "") {
-                        filterString += ",";
+                    @{
+                        var storeIds = string.Join(
+                            "",
+                            Model.StoreIds.Select(storeId => $",storeid:{storeId}")
+                        );
                     }
-                    filterString += "endDate%3A" + dtpEndDate;
-                }
 
-                if (filterString !== "") {
-                    var redirectUri = "/invoices?Count=" + $("#Count").val() +
-                        "&timezoneoffset=" + $("#TimezoneOffset").val() +
-                        "&SearchTerm=" + filterString;
+                    <div class="dropdown-menu dropdown-menu-right">
+                        <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=status%3Ainvalid@{@storeIds}">Invalid Invoices</a>
+                        <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=status%3Apaid%2Cstatus%3Aconfirmed%2Cstatus%3Acomplete@{@storeIds}">Paid Invoices</a>
+                        <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=exceptionstatus%3ApaidLate@{@storeIds}s">Paid Late Invoices</a>
+                        <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=exceptionstatus%3ApaidPartial@{@storeIds}">Paid Partial Invoices</a>
+                        <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=exceptionstatus%3ApaidOver@{@storeIds}">Paid Over Invoices</a>
+                        <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=unusual%3Atrue@{@storeIds}">Unusual Invoices</a>
+                        <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=includearchived%3Atrue@{@storeIds}">Archived Invoices</a>
+                        <div role="separator" class="dropdown-divider"></div>
+                        <a class="dropdown-item last24" href="/invoices?Count=@Model.Count&timezoneoffset=0&SearchTerm=startDate%3Alast24@{@storeIds}">Last 24 hours</a>
+                        <a class="dropdown-item last72" href="/invoices?Count=@Model.Count&timezoneoffset=0&SearchTerm=startDate%3Alast72@{@storeIds}">Last 3 days</a>
+                        <a class="dropdown-item last168" href="/invoices?Count=@Model.Count&timezoneoffset=0&SearchTerm=startDate%3Alast168@{@storeIds}">Last 7 days</a>
+                        <button type="button" class="dropdown-item" data-toggle="modal" data-target="#customRangeModal" data-backdrop="static">Custom Range</button>
+                        <div role="separator" class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="/invoices">Unfiltered</a>
+                    </div>
+                </div>
+            </div>
+            <span asp-validation-for="SearchTerm" class="text-danger"></span>
+        </form>
 
-                    window.location.href = redirectUri;
-                } else {
-                    $("#dtpStartDate").next().trigger("focus");
-                }
-            })
-        </script>
-        @* Custom Range Modal *@
+        <form method="post" id="MassAction" asp-action="MassAction">
+            <div class="row button-row">
+                <div class="col-lg-24">
+                    <a asp-action="CreateInvoice" class="btn btn-primary" role="button" id="CreateNewInvoice"><span class="fa fa-plus"></span> Create a new invoice</a>
 
-        <div class="row">
-            <div class="col-lg-12">
-                <table class="table table-sm table-responsive-md">
-                    <thead>
-                        <tr>
-                            <th style="min-width: 90px;" class="col-md-auto">
-                                Date
-                                <a href="javascript:switchTimeFormat()">
-                                    <span class="fa fa-clock-o" title="Switch date format"></span>
-                                </a>
-                            </th>
-                            <th style="max-width: 180px;">OrderId</th>
-                            <th>InvoiceId</th>
-                            <th style="min-width: 150px;">Status</th>
-                            <th style="text-align:right">Amount</th>
-                            <th style="text-align:right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var invoice in Model.Invoices)
-                        {
-                            <tr>
-                                <td>
-                                    <span class="switchTimeFormat" data-switch="@invoice.Date.ToTimeAgo()">
-                                        @invoice.Date.ToBrowserDate()
-                                    </span>
-                                </td>
-                                <td style="max-width: 180px;">
-                                    @if (invoice.RedirectUrl != string.Empty)
-                                    {
-                                        <a href="@invoice.RedirectUrl" class="wraptext200">@invoice.OrderId</a>
-                                    }
-                                    else
-                                    {
-                                        <span>@invoice.OrderId</span>
-                                    }
-                                </td>
-                                <td>@invoice.InvoiceId</td>
-                                <td>                                
-                                    @if(invoice.Details.Archived)
-                                    {
-                                        <span class="badge badge-warning" >archived</span>
-                                    }
-                                    @if (invoice.CanMarkStatus)
-                                    {
-                                        <div id="pavpill_@invoice.InvoiceId">
-                                            <span class="dropdown-toggle dropdown-toggle-split pavpill pavpil-@invoice.Status.ToString().ToLower()"
-                                                  data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                                @invoice.StatusString
-                                            </span>
-                                            <div class="dropdown-menu pull-right">
-                                                @if (invoice.CanMarkInvalid)
-                                                {
-                                                    <button class="dropdown-item small cursorPointer" onclick="changeInvoiceState(this, '@invoice.InvoiceId', 'invalid')">
-                                                        Mark as invalid <span class="fa fa-times"></span>
-                                                    </button>
-                                                }
-                                                @if (invoice.CanMarkComplete)
-                                                {
-                                                    <button class="dropdown-item small cursorPointer" onclick="changeInvoiceState(this, '@invoice.InvoiceId', 'complete')">
-                                                        Mark as complete <span class="fa fa-check-circle"></span>
-                                                    </button>
-                                                }
-                                            </div>
+                    <span>
+                        <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Actions
+                        </button>
+                        <div class="dropdown-menu">
+                            <button type="submit" asp-action="MassAction" class="dropdown-item" name="command" value="archive"><i class="fa fa-archive"></i> Archive</button>
+                        </div>
+                    </span>
+                    
+                    <span>
+                        <a class="btn btn-primary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Export
+                        </a>
+                        <a href="https://docs.btcpayserver.org/Accounting/" target="_blank">
+                            <span class="fa fa-question-circle-o" title="More information..."></span>
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                            <a asp-action="Export" asp-route-timezoneoffset="0" asp-route-format="csv" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item export-link" target="_blank">CSV</a>
+                            <a asp-action="Export" asp-route-timezoneoffset="0" asp-route-format="json" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item export-link" target="_blank">JSON</a>
+                        </div>
+                    </span>
+                </div>
+            </div>
+
+            @* Custom Range Modal *@
+            <div class="modal fade" id="customRangeModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 550px;">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLongTitle">Filter invoices by Custom Range</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group row">
+                                <label for="dtpStartDate" class="col-sm-3 col-form-label">Start Date</label>
+                                <div class="col-sm-9">
+                                    <div class="input-group">
+                                        <input id="dtpStartDate" class="form-control flatdtpicker" type="datetime-local"
+                                            data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
+                                            placeholder="Start Date" />
+                                        <div class="input-group-append">
+                                            <button type="button" class="btn btn-primary input-group-clear" title="Clear">
+                                                <span class=" fa fa-times"></span>
+                                            </button>
                                         </div>
-                                    }
-                                    else
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">End Date</label>
+                                <div class="col-sm-9">
+                                    <div class="input-group">
+                                        <input id="dtpEndDate" class="form-control flatdtpicker" type="datetime-local"
+                                            data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
+                                            placeholder="End Date" />
+                                        <div class="input-group-append">
+                                            <button type="button" class="btn btn-primary input-group-clear" title="Clear">
+                                                <span class=" fa fa-times"></span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button id="btnCustomRangeDate" type="button" class="btn btn-primary">Filter</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <script type="text/javascript">
+                $('#btnCustomRangeDate').on('click', function (sender) {
+                    var filterString = "";
+
+                    var dtpStartDate = $("#dtpStartDate").val();
+                    if (dtpStartDate !== null && dtpStartDate !== "") {
+                        filterString = "startDate%3A" + dtpStartDate;
+                    }
+
+                    var dtpEndDate = $("#dtpEndDate").val();
+                    if (dtpEndDate !== null && dtpEndDate !== "") {
+                        if (filterString !== "") {
+                            filterString += ",";
+                        }
+                        filterString += "endDate%3A" + dtpEndDate;
+                    }
+
+                    if (filterString !== "") {
+                        var redirectUri = "/invoices?Count=" + $("#Count").val() +
+                            "&timezoneoffset=" + $("#TimezoneOffset").val() +
+                            "&SearchTerm=" + filterString;
+
+                        window.location.href = redirectUri;
+                    } else {
+                        $("#dtpStartDate").next().trigger("focus");
+                    }
+                })
+            </script>
+            @* Custom Range Modal *@
+
+            <script type="text/javascript">
+                function selectAll(e)
+                {
+                    var items = document.getElementsByClassName("selector");
+                    for (var i = 0; i < items.length; i++) {
+                        items[i].checked = e.checked;
+                    }
+                }
+            </script>
+            <div class="row">
+                <div class="col-lg-12">
+                    <table class="table table-sm table-responsive-md">
+                        <thead>
+                            <tr>
+                                <th class="only-for-js">
+                                    @if (Model.Total > 0)
                                     {
-                                        <span class="pavpill pavpil-@invoice.Status.ToString().ToLower()">@invoice.StatusString</span>
+                                        <input id="selectAllCheckbox" type="checkbox" onclick="selectAll(this);" />
                                     }
-                                </td>
-                                <td style="text-align:right">@invoice.AmountCurrency</td>
-                                <td style="text-align:right">
-                                    @if (invoice.ShowCheckout)
+                                </th>
+                                <th style="min-width: 90px;" class="col-md-auto">
+                                    Date
+                                    <a href="javascript:switchTimeFormat()">
+                                        <span class="fa fa-clock-o" title="Switch date format"></span>
+                                    </a>
+                                </th>
+                                <th style="max-width: 180px;">OrderId</th>
+                                <th>InvoiceId</th>
+                                <th style="min-width: 150px;">Status</th>
+                                <th style="text-align:right">Amount</th>
+                                <th style="text-align:right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var invoice in Model.Invoices)
+                            {
+                                <tr>
+                                    <td class="only-for-js">
+                                        <input name="selectedItems" type="checkbox" class="selector" value="@invoice.InvoiceId" />
+                                    </td>
+                                    <td>
+                                        <span class="switchTimeFormat" data-switch="@invoice.Date.ToTimeAgo()">
+                                            @invoice.Date.ToBrowserDate()
+                                        </span>
+                                    </td>
+                                    <td style="max-width: 180px;">
+                                        @if (invoice.RedirectUrl != string.Empty)
+                                        {
+                                            <a href="@invoice.RedirectUrl" class="wraptext200">@invoice.OrderId</a>
+                                        }
+                                        else
+                                        {
+                                            <span>@invoice.OrderId</span>
+                                        }
+                                    </td>
+                                    <td>@invoice.InvoiceId</td>
+                                    <td>                                
+                                        @if(invoice.Details.Archived)
+                                        {
+                                            <span class="badge badge-warning" >archived</span>
+                                        }
+                                        @if (invoice.CanMarkStatus)
+                                        {
+                                            <div id="pavpill_@invoice.InvoiceId">
+                                                <span class="dropdown-toggle dropdown-toggle-split pavpill pavpil-@invoice.Status.ToString().ToLower()"
+                                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                    @invoice.StatusString
+                                                </span>
+                                                <div class="dropdown-menu pull-right">
+                                                    @if (invoice.CanMarkInvalid)
+                                                    {
+                                                        <button class="dropdown-item small cursorPointer" onclick="changeInvoiceState(this, '@invoice.InvoiceId', 'invalid')">
+                                                            Mark as invalid <span class="fa fa-times"></span>
+                                                        </button>
+                                                    }
+                                                    @if (invoice.CanMarkComplete)
+                                                    {
+                                                        <button class="dropdown-item small cursorPointer" onclick="changeInvoiceState(this, '@invoice.InvoiceId', 'complete')">
+                                                            Mark as complete <span class="fa fa-check-circle"></span>
+                                                        </button>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="pavpill pavpil-@invoice.Status.ToString().ToLower()">@invoice.StatusString</span>
+                                        }
+                                    </td>
+                                    <td style="text-align:right">@invoice.AmountCurrency</td>
+                                    <td style="text-align:right">
+                                        @if (invoice.ShowCheckout)
+                                        {
+                                            <span>
+                                                <a asp-action="Checkout" class="invoice-checkout-link" id="invoice-checkout-@invoice.InvoiceId" asp-route-invoiceId="@invoice.InvoiceId">Checkout</a>
+                                                <a href="javascript:btcpay.showInvoice('@invoice.InvoiceId')">[^]</a>
+                                                @if (!invoice.CanMarkStatus)
+                                                {
+                                                    <span>-</span>
+                                                }
+                                            </span>
+                                        }
+                                        &nbsp;
+                                        <a asp-action="Invoice" class="invoice-details-link" asp-route-invoiceId="@invoice.InvoiceId">Details</a>
+                                        <a href="javascript:void(0);" onclick="detailsToggle(this, '@invoice.InvoiceId')">
+                                            <span title="Invoice Details Toggle" class="fa fa-1x fa-angle-double-down"></span>
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr id="invoice_@invoice.InvoiceId" style="display:none;">
+                                    <td colspan="99" class="border-top-0">
+                                        <div style="margin-left: 15px; margin-bottom: 0;">
+                                            @* Leaving this as partial because it abstracts complexity of Invoice Payments *@
+                                            <partial name="ListInvoicesPaymentsPartial" model="(invoice.Details, true)" />
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                    <nav aria-label="..." class="w-100">
+                        @if (Model.Total != 0)
+                        {
+                            <ul class="pagination float-left">
+                                <li class="page-item @(Model.Skip == 0 ? "disabled" : null)">
+                                    <a class="page-link" tabindex="-1" href="@ListInvoicesPage(-1, Model.Count)">&laquo;</a>
+                                </li>
+                                <li class="page-item disabled">
+                                    @if (Model.Total <= Model.Count)
                                     {
-                                        <span>
-                                            <a asp-action="Checkout" class="invoice-checkout-link" id="invoice-checkout-@invoice.InvoiceId" asp-route-invoiceId="@invoice.InvoiceId">Checkout</a>
-                                            <a href="javascript:btcpay.showInvoice('@invoice.InvoiceId')">[^]</a>
-                                            @if (!invoice.CanMarkStatus)
-                                            {
-                                                <span>-</span>
-                                            }
+                                        <span class="page-link">
+                                            1–@Model.Invoices.Count
                                         </span>
                                     }
-                                    &nbsp;
-                                    <a asp-action="Invoice" class="invoice-details-link" asp-route-invoiceId="@invoice.InvoiceId">Details</a>
-                                    @*<span title="Details" class="fa fa-list"></span>*@
-                                    &nbsp;
-                                    <a href="javascript:void(0);" onclick="detailsToggle(this, '@invoice.InvoiceId')">
-                                        <span title="Invoice Details Toggle" class="fa fa-1x fa-angle-double-down"></span>
-                                    </a>
-                                </td>
-                            </tr>
-                            <tr id="invoice_@invoice.InvoiceId" style="display:none;">
-                                <td colspan="99" class="border-top-0">
-                                    <div style="margin-left: 15px; margin-bottom: 0;">
-                                        @* Leaving this as partial because it abstracts complexity of Invoice Payments *@
-                                        <partial name="ListInvoicesPaymentsPartial" model="(invoice.Details, true)" />
-                                    </div>
-                                </td>
-                            </tr>
+                                    else
+                                    {
+                                        <span class="page-link">
+                                            @(Model.Skip + 1)–@(Model.Skip + Model.Invoices.Count), Total: @Model.Total
+                                        </span>
+                                    }
+                                </li>
+                                <li class="page-item @(Model.Total > (Model.Skip + Model.Invoices.Count) ? null : "disabled")">
+                                    <a class="page-link" href="@ListInvoicesPage(1, Model.Count)">&raquo;</a>
+                                </li>
+                            </ul>
                         }
-                    </tbody>
-                </table>
-                <nav aria-label="..." class="w-100">
-                    @if (Model.Total != 0)
-                    {
-                        <ul class="pagination float-left">
-                            <li class="page-item @(Model.Skip == 0 ? "disabled" : null)">
-                                <a class="page-link" tabindex="-1" href="@ListInvoicesPage(-1, Model.Count)">&laquo;</a>
-                            </li>
+                        <ul class="pagination float-right">
                             <li class="page-item disabled">
-                                @if (Model.Total <= Model.Count)
-                                {
-                                    <span class="page-link">
-                                        1–@Model.Invoices.Count
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span class="page-link">
-                                        @(Model.Skip + 1)–@(Model.Skip + Model.Invoices.Count), Total: @Model.Total
-                                    </span>
-                                }
+                                <span class="page-link">Page Size:</span>
                             </li>
-                            <li class="page-item @(Model.Total > (Model.Skip + Model.Invoices.Count) ? null : "disabled")">
-                                <a class="page-link" href="@ListInvoicesPage(1, Model.Count)">&raquo;</a>
+                            <li class="page-item @(Model.Count == 50 ? "active" : null)">
+                                <a class="page-link" href="@ListInvoicesPage(0, 50)">50</a>
+                            </li>
+                            <li class="page-item @(Model.Count == 100 ? "active" : null)">
+                                <a class="page-link" href="@ListInvoicesPage(0, 100)">100</a>
+                            </li>
+                            <li class="page-item @(Model.Count == 250 ? "active" : null)">
+                                <a class="page-link" href="@ListInvoicesPage(0, 250)">250</a>
+                            </li>
+                            <li class="page-item @(Model.Count == 500 ? "active" : null)">
+                                <a class="page-link" href="@ListInvoicesPage(0, 500)">500</a>
                             </li>
                         </ul>
-                    }
-                    <ul class="pagination float-right">
-                        <li class="page-item disabled">
-                            <span class="page-link">Page Size:</span>
-                        </li>
-                        <li class="page-item @(Model.Count == 50 ? "active" : null)">
-                            <a class="page-link" href="@ListInvoicesPage(0, 50)">50</a>
-                        </li>
-                        <li class="page-item @(Model.Count == 100 ? "active" : null)">
-                            <a class="page-link" href="@ListInvoicesPage(0, 100)">100</a>
-                        </li>
-                        <li class="page-item @(Model.Count == 250 ? "active" : null)">
-                            <a class="page-link" href="@ListInvoicesPage(0, 250)">250</a>
-                        </li>
-                        <li class="page-item @(Model.Count == 500 ? "active" : null)">
-                            <a class="page-link" href="@ListInvoicesPage(0, 500)">500</a>
-                        </li>
-                    </ul>
-                </nav>
-                @{
-                    string ListInvoicesPage(int prevNext, int count)
-                    {
-                        var skip = Model.Skip;
-                        if (prevNext == -1)
+                    </nav>
+                    @{
+                        string ListInvoicesPage(int prevNext, int count)
                         {
-                            skip = Math.Max(0, Model.Skip - Model.Count);
-                        }
-                        else if (prevNext == 1)
-                        {
-                            skip = Model.Skip + count;
-                        }
+                            var skip = Model.Skip;
+                            if (prevNext == -1)
+                            {
+                                skip = Math.Max(0, Model.Skip - Model.Count);
+                            }
+                            else if (prevNext == 1)
+                            {
+                                skip = Model.Skip + count;
+                            }
 
-                        var act = Url.Action("ListInvoices", new
-                        {
-                            searchTerm = Model.SearchTerm,
-                            skip = skip,
-                            count = count,
-                        });
+                            var act = Url.Action("ListInvoices", new
+                            {
+                                searchTerm = Model.SearchTerm,
+                                skip = skip,
+                                count = count,
+                            });
 
-                        return act;
+                            return act;
+                        }
                     }
-                }
+                </div>
             </div>
-        </div>
-
+        </form>
     </div>
     <script type="text/javascript">
         $(function () {

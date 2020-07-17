@@ -19,7 +19,16 @@
             <div class="modal-body">
                 <div class="row">
                     <div class="col-lg-12 text-center">
-                        <p>@Model.Description</p>
+                        <p>
+                            @if (Model.DescriptionHtml)
+                            {
+                                @Safe.Raw(Model.Description)
+                            }
+                            else
+                            {
+                                @Model.Description
+                            }
+                        </p>
                     </div>
                 </div>
                 @if (!String.IsNullOrEmpty(Model.Action))

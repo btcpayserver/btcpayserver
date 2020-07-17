@@ -100,10 +100,11 @@ namespace BTCPayServer.Controllers
         {
             return invoiceState.Status == InvoiceStatus.Confirmed ||
                 invoiceState.Status == InvoiceStatus.Complete ||
-                ((invoiceState.Status == InvoiceStatus.Expired || invoiceState.Status == InvoiceStatus.Invalid) &&
+                (invoiceState.Status == InvoiceStatus.Expired &&
                 (invoiceState.ExceptionStatus == InvoiceExceptionStatus.PaidLate ||
                 invoiceState.ExceptionStatus == InvoiceExceptionStatus.PaidOver ||
-                invoiceState.ExceptionStatus == InvoiceExceptionStatus.PaidPartial));
+                invoiceState.ExceptionStatus == InvoiceExceptionStatus.PaidPartial)) ||
+                invoiceState.Status == InvoiceStatus.Invalid;
         }
 
         [HttpGet]
@@ -288,6 +289,24 @@ namespace BTCPayServer.Controllers
                 Message = invoice.Archived ? "The invoice has been unarchived and will appear in the invoice list by default again." : "The invoice has been archived and will no longer appear in the invoice list by default."
             });
             return RedirectToAction(nameof(invoice), new { invoiceId });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> MassAction(string command, string[] selectedItems)
+        {
+            if (selectedItems != null)
+            {
+                switch (command)
+                {
+                    case "archive":
+                        await _InvoiceRepository.MassArchive(selectedItems);
+                        TempData[WellKnownTempData.SuccessMessage] = $"{selectedItems.Length} invoice(s) archived.";
+
+                        break;
+                }
+            }
+
+            return RedirectToAction(nameof(ListInvoices));
         }
 
         [HttpGet]

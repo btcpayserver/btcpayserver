@@ -110,3 +110,7 @@ header.masthead::before,
 .table th {
   border-top: 0;
 }
+
+.list-group-item-action {
+    color: var(--btcpay-body-color);
+}

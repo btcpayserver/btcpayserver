@@ -74,6 +74,17 @@
             }
         }
     }
+
+    $('[data-clipboard]').on('click', function (e) {
+        if (navigator.clipboard) {
+            e.preventDefault();
+            var item = e.currentTarget;
+            var text = item.getAttribute('data-clipboard');
+            navigator.clipboard.writeText(text);
+            item.blur();
+        }
+    });
+
 });
 
 function switchTimeFormat() {

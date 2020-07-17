@@ -1,0 +1,20 @@
+@using BTCPayServer.Services.Altcoins.Monero.Services
+@inject MoneroRPCProvider MoneroRpcProvider
+@inject SignInManager<ApplicationUser> SignInManager;
+
+@if (SignInManager.IsSignedIn(User) && User.IsInRole(Roles.ServerAdmin) && MoneroRpcProvider.Summaries.Any())
+{
+    @foreach (var summary in MoneroRpcProvider.Summaries)
+    {
+        @if (summary.Value != null)
+        {
+            <h4>@summary.Key</h4>
+            <ul >
+                <li >Node available: @Model.Summary.DaemonAvailable</li>
+                <li >Wallet available: @Model.Summary.WalletAvailable (@(Model.WalletFileFound ? "Wallet file present" : "Wallet file not found"))</li>
+                <li >Last updated: @Model.Summary.UpdatedAt</li>
+                <li >Synced: @Model.Summary.Synced (@Model.Summary.CurrentHeight / @Model.Summary.TargetHeight)</li>
+            </ul>
+        }
+    }
+}

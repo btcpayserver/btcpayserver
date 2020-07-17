@@ -128,6 +128,15 @@ namespace BTCPayServer.Tests
                 Assert.Equal(signedPSBT.ToBase64(), psbt);
                 redirect = Assert.IsType<RedirectToActionResult>(await walletController.WalletPSBTReady(walletId, ready, command: "broadcast"));
                 Assert.Equal(nameof(walletController.WalletTransactions), redirect.ActionName);
+
+                //test base64 psbt file
+                Assert.False(string.IsNullOrEmpty(Assert.IsType<WalletPSBTViewModel>(
+                    Assert.IsType<ViewResult>(
+                        await walletController.WalletPSBT(walletId,
+                            new WalletPSBTViewModel()
+                            {
+                                UploadedPSBTFile = TestUtils.GetFormFile("base64", signedPSBT.ToBase64())
+                            })).Model).PSBT));
             }
         }
 

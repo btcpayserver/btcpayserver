@@ -9,9 +9,11 @@ using System.Net.Mail;
 using System.Threading.Tasks;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
+using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
 using BTCPayServer.Models;
+using BTCPayServer.Models.AccountViewModels;
 using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
@@ -303,6 +305,40 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(User), new { userId = userId });
         }
 
+        [Route("server/users/new")]
+        [HttpGet]
+        public IActionResult CreateUser()
+        {
+            ViewData["AllowIsAdmin"] = _Options.AllowAdminRegistration;
+
+            return View();
+        }
+
+        [Route("server/users/new")]
+        [HttpPost]
+        public async Task<IActionResult> CreateUser(RegisterViewModel model)
+        {
+            ViewData["AllowIsAdmin"] = _Options.AllowAdminRegistration;
+
+            if (ModelState.IsValid)
+            {
+                var user = new ApplicationUser { UserName = model.Email, Email = model.Email, RequiresEmailConfirmation = false };
+                var result = await _UserManager.CreateAsync(user, model.Password);
+                if (result.Succeeded)
+                {
+                    TempData[WellKnownTempData.SuccessMessage] = "Account created";
+                    return RedirectToAction(nameof(ListUsers));
+                }
+
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+            }
+
+            // If we got this far, something failed, redisplay form
+            return View(model);
+        }
 
         [Route("server/users/{userId}/delete")]
         public async Task<IActionResult> DeleteUser(string userId)

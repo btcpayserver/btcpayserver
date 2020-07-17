@@ -21,7 +21,6 @@
         </div>
 
         <form method="post" asp-action="MassAction">
-
             <div class="row button-row">
                 <div class="col-lg-6">
                     <span class="dropdown" style="display:none;" id="MassAction">
@@ -41,7 +40,12 @@
                     <table class="table table-sm table-responsive-md">
                         <thead>
                         <tr>
-                            <th width="30px" class="only-for-js"></th>
+                            <th width="30px" class="only-for-js">
+                                @if (Model.Total > 0) 
+                                {
+                                    <input name="selectedItems" type="checkbox" onClick="selectAll(this);" />
+                                }
+                            </th>
                             <th width="190px">
                                 Date
                                 <a href="javascript:switchTimeFormat()">
@@ -189,6 +193,14 @@ tr.seen td {
     function toggleRowCheckbox(sender){
         var input  = $(sender).parents(".notification-row").find(".selector");
         input.prop('checked', !input.prop("checked"));
+        updateSelectors();
+    }
+
+    function selectAll(sender){
+        var inputs  = $(".notification-row").find(".selector");
+        inputs.each(function (index, input) {
+            $(input).prop("checked", !$(input).prop("checked"));
+        });
         updateSelectors();
     }
 

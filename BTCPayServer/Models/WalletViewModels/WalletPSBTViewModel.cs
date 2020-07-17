@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using NBitcoin;
@@ -36,18 +38,20 @@ namespace BTCPayServer.Models.WalletViewModels
             {
                 if (UploadedPSBTFile.Length > 500 * 1024)
                     return null;
-                byte[] bytes = new byte[UploadedPSBTFile.Length];
-                using (var stream = UploadedPSBTFile.OpenReadStream())
-                {
-                    await stream.ReadAsync(bytes, 0, (int)UploadedPSBTFile.Length);
-                }
+
                 try
                 {
+                    byte[] bytes = new byte[UploadedPSBTFile.Length];
+                    await using (var stream = UploadedPSBTFile.OpenReadStream())
+                    {
+                        await stream.ReadAsync(bytes, 0, (int)UploadedPSBTFile.Length);
+                    }
                     return NBitcoin.PSBT.Load(bytes, network);
                 }
-                catch
+                catch (Exception)
                 {
-                    return null;
+                    using var stream = new StreamReader(UploadedPSBTFile.OpenReadStream());
+                    PSBT = await stream.ReadToEndAsync();
                 }
             }
             if (!string.IsNullOrEmpty(PSBT))

@@ -1,6 +1,7 @@
-﻿@inject BTCPayServer.HostedServices.NBXplorerDashboard dashboard
-
-@if (!dashboard.IsFullySynched())
+﻿@using BTCPayServer.Services.Altcoins.Monero.Services
+@inject BTCPayServer.HostedServices.NBXplorerDashboard dashboard
+@inject MoneroRPCProvider MoneroRpcProvider
+@if (!dashboard.IsFullySynched() || !MoneroRpcProvider.Summaries.All(pair => pair.Value.WalletAvailable))
 {
     <!-- Modal -->
     <div id="modalDialog" class="modal-dialog animated bounceInRight"
@@ -76,6 +77,8 @@
                         }
                     }
                 }
+                
+                <partial name="Monero/MoneroSyncSummary"/>
                 <p>
                     <a href="https://www.youtube.com/watch?v=OrYDehC-8TU" target="_blank">Watch this video</a> to understand the importance of blockchain synchronization.
                 </p>

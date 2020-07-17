@@ -1,75 +1,98 @@
 ﻿@model RegisterViewModel
+@inject BTCPayServer.Services.BTCPayServerEnvironment env
 @{
     ViewData["Title"] = "Register";
-    var useBasicLayout = ViewData["UseBasicLayout"] is true;
-    Layout = useBasicLayout ? "_Layout" : "_LayoutWelcome";
-}
-@if (TempData.HasStatusMessage())
-{
-    <div class="row">
-        <div class="col-lg-12 text-center">
-            <partial name="_StatusMessage"/>
-        </div>
-    </div>
+    ViewData["Headline"] = "Welcome to your BTCPay Server";
+    Layout = "_LayoutSimple";
 }
 
-<!-- We want to center the dialog box in case we are not using the Welcome layout -->
-<div class="modal-dialog @(useBasicLayout ? "modal-dialog-centered" : "")">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h4 class="modal-title">Create account</h4>
-        </div>
-        <div class="modal-body">
-            <form asp-route-returnUrl="@ViewData["ReturnUrl"]" asp-route-logon="@ViewData["Logon"]" method="post">
-                <fieldset disabled="@(ViewData.ContainsKey("disabled") ? "disabled" : null)" >
-                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                    <div class="form-group">
-                        <div class="input-group">
-                            <div class="input-group-prepend">
-                                <label for="Email" class="input-group-text">
-                                    <span class="input-group-addon fa fa-user"></span>
-                                </label>
-                            </div>
-                            <input asp-for="Email" class="form-control" placeholder="Email" required="required"/>
-                        </div>
-                        <span asp-validation-for="Email" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
-                        <div class="input-group">
-                            <div class="input-group-prepend">
-                                <label for="Password" class="input-group-text">
-                                    <span class="input-group-addon fa fa-lock"></span>
-                                </label>
-                            </div>
-                            <input asp-for="Password" class="form-control" placeholder="Password" required="required"/>
-                        </div>
-                        <span asp-validation-for="Password" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
-                        <div class="input-group">
-                            <div class="input-group-prepend">
-                                <label for="ConfirmPassword" class="input-group-text">
-                                    <span class="input-group-addon fa fa-lock"></span>
-                                </label>
-                            </div>
-                            <input asp-for="ConfirmPassword" class="form-control" placeholder="Repeat password" required="required"/>
-                        </div>
-                        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
-                    </div>
-                    @if (ViewData["AllowIsAdmin"] is true)
-                    {
+<style>
+    .col-head,
+    .col-account-form {
+        max-width: 40em;
+    }
+</style>
+
+<div class="row justify-content-center">
+    <div class="col col-account-form">
+        @if (TempData.HasStatusMessage())
+        {
+            <partial name="_StatusMessage"/>
+        }
+
+        <p class="lead-login px-3">
+            BTCPay Server is a self-hosted, open-source cryptocurrency payment processor.
+            It is secure, private, censorship-resistant and free.
+        </p>
+
+        <!-- We want to center the dialog box in case we are not using the Welcome layout -->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Create account</h4>
+                @if (env.OnionUrl != null)
+                {
+                    <a href="@env.OnionUrl" target="_onion" class="btn btn-onion d-inline-flex align-items-center" data-clipboard="@env.OnionUrl">
+                        <img src="~/img/icons/Onion_Color.svg" height="24" class="mr-2" asp-append-version="true" />
+                        Copy Tor URL
+                    </a>
+                }
+            </div>
+            <div class="modal-body">
+                <form asp-route-returnUrl="@ViewData["ReturnUrl"]" asp-route-logon="true" method="post">
+                    <fieldset disabled="@(ViewData.ContainsKey("disabled") ? "disabled" : null)" >
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                         <div class="form-group">
-                            <label asp-for="IsAdmin"></label>
-                            <input asp-for="IsAdmin" type="checkbox" class="form-check-inline"/>
-                            <span asp-validation-for="IsAdmin" class="text-danger"></span>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <label for="Email" class="input-group-text">
+                                        <span class="input-group-addon fa fa-user"></span>
+                                    </label>
+                                </div>
+                                <input asp-for="Email" class="form-control" placeholder="Email" required="required"/>
+                            </div>
+                            <span asp-validation-for="Email" class="text-danger"></span>
                         </div>
-                    }
-                    <div class="form-group">
-                        <button type="submit" class="btn btn-primary btn-block btn-lg" id="RegisterButton">Create account</button>
-                    </div>
-                </fieldset>
-            </form>
+                        <div class="form-group">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <label for="Password" class="input-group-text">
+                                        <span class="input-group-addon fa fa-lock"></span>
+                                    </label>
+                                </div>
+                                <input asp-for="Password" class="form-control" placeholder="Password" required="required"/>
+                            </div>
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <label for="ConfirmPassword" class="input-group-text">
+                                        <span class="input-group-addon fa fa-lock"></span>
+                                    </label>
+                                </div>
+                                <input asp-for="ConfirmPassword" class="form-control" placeholder="Repeat password" required="required"/>
+                            </div>
+                            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                        </div>
+                        @if (ViewData["AllowIsAdmin"] is true)
+                        {
+                            <div class="form-group form-check">
+                                <input asp-for="IsAdmin" type="checkbox" class="form-check-input"/>
+                                <label asp-for="IsAdmin" class="form-check-label"></label>
+                                <span asp-validation-for="IsAdmin" class="text-danger"></span>
+                            </div>
+                        }
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary btn-block btn-lg" id="RegisterButton">Create account</button>
+                        </div>
+                    </fieldset>
+                </form>
+            </div>
+            <div class="modal-footer">
+                Already have an account?
+                <a id="Login" class="btn btn-secondary ml-3" asp-action="Login" asp-route-returnurl="@ViewData["ReturnUrl"]">Login</a>
+            </div>
         </div>
-            <div class="modal-footer"><span>Already have an account? <a id="Login" asp-action="Login" asp-route-returnurl="@ViewData["ReturnUrl"]">Login</a></span></div>
     </div>
 </div>
+

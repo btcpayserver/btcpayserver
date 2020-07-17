@@ -1,5 +1,4 @@
 @using System.Globalization
-@using BTCPayServer.Controllers
 @using BTCPayServer.Services.Altcoins.Monero.Payments
 @using BTCPayServer.Services.Altcoins.Monero.UI
 @model IEnumerable<BTCPayServer.Services.Invoices.PaymentEntity>
@@ -11,7 +10,7 @@
         var onChainPaymentData = payment.GetCryptoPaymentData() as MoneroLikePaymentData;
         m.Crypto = payment.GetPaymentMethodId().CryptoCode;
         m.DepositAddress = onChainPaymentData.GetDestination();
-
+        m.Amount = onChainPaymentData.GetValue().ToString(CultureInfo.InvariantCulture);
         var confirmationCount = onChainPaymentData.ConfirmationCount;
         var network = payment.Network as MoneroLikeSpecificBtcPayNetwork;
         if (confirmationCount >= network.MaxTrackedConfirmation)
@@ -40,6 +39,7 @@
                 <tr>
                     <th>Crypto</th>
                     <th>Deposit address</th>
+                    <th>Amount</th>
                     <th>Transaction Id</th>
                     <th class="text-right">Confirmations</th>
                 </tr>
@@ -50,6 +50,7 @@
                     <tr >
                         <td>@payment.Crypto</td>
                         <td>@payment.DepositAddress</td>
+                        <td>@payment.Amount</td>
                         <td>
                             <div class="wraptextAuto">
                                 <a href="@payment.TransactionLink" target="_blank">

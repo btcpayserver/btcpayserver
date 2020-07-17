@@ -2,7 +2,6 @@ namespace BTCPayServer.Models.ManageViewModels
 {
     public class TwoFactorAuthenticationViewModel
     {
-        public bool HasAuthenticator { get; set; }
 
         public int RecoveryCodesLeft { get; set; }
 

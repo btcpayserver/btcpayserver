@@ -399,7 +399,7 @@ namespace BTCPayServer.Controllers
         [HttpGet]
         [AllowAnonymous]
         [RateLimitsFilter(ZoneLimits.Register, Scope = RateLimitsScope.RemoteAddress)]
-        public async Task<IActionResult> Register(string returnUrl = null, bool logon = true, bool useBasicLayout = false)
+        public async Task<IActionResult> Register(string returnUrl = null, bool logon = true)
         {
             if (!CanLoginOrRegister())
             {
@@ -409,9 +409,7 @@ namespace BTCPayServer.Controllers
             if (policies.LockSubscription && !User.IsInRole(Roles.ServerAdmin))
                 return RedirectToAction(nameof(HomeController.Index), "Home");
             ViewData["ReturnUrl"] = returnUrl;
-            ViewData["Logon"] = logon.ToString(CultureInfo.InvariantCulture).ToLowerInvariant();
             ViewData["AllowIsAdmin"] = _Options.AllowAdminRegistration;
-            ViewData["UseBasicLayout"] = useBasicLayout;
             return View();
         }
 

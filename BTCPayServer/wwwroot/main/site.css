@@ -194,3 +194,19 @@ pre {
     height: 1px;
     background: none;
 }
+
+.btn-onion {
+    color: #fff;
+    background-color: #59316B;
+    border-color: #59316B;
+}
+
+.btn-onion:focus,
+.btn-onion.focus {
+    box-shadow: 0 0 0 0.2rem #9065a1;
+}
+
+[class*="field-validation"]:not(:empty) {
+    display: inline-block;
+    margin-top: .5rem;
+}

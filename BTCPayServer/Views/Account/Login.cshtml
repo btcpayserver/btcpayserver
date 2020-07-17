@@ -1,55 +1,81 @@
 ﻿@model LoginViewModel
+@inject BTCPayServer.Services.BTCPayServerEnvironment env
 @inject BTCPayServer.HostedServices.CssThemeManager themeManager
 @{
     ViewData["Title"] = "Log in";
-    Layout = "_LayoutWelcome";
+    ViewData["Headline"] = "Welcome to your BTCPay Server";
+    Layout = "_LayoutSimple";
 }
-@if (TempData.HasStatusMessage())
-{
-    <div class="row">
-        <div class="col-lg-12 text-center">
-            <partial name="_StatusMessage"/>
-        </div>
-    </div>
-}
-<div class="modal-dialog modal-login">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h4 class="modal-title">Sign In</h4>
-        </div>
-        <div class="modal-body">
-            <form asp-route-returnurl="@ViewData["ReturnUrl"]" method="post">
-                <fieldset disabled="@(ViewData.ContainsKey("disabled") ? "disabled" : null)" >
-                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                    <div class="form-group">
-                        <div class="input-group">
-                            <div class="input-group-prepend">
-                                <label for="Email" class="input-group-text"><span class="input-group-addon fa fa-user"></span></label>
-                            </div>
 
-                            <input asp-for="Email" class="form-control" placeholder="Email" required="required" />
-                        </div>
-                        <span asp-validation-for="Email" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
-                        <div class="input-group">
-                            <div class="input-group-prepend">
-                                <label for="Password" class="input-group-text"><span class="input-group-addon fa fa-lock"></span></label>
-                            </div>
-                            <input asp-for="Password" class="form-control" placeholder="Password" required="required" />
-                        </div>
-                        <span asp-validation-for="Password" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
-                        <button type="submit" class="btn btn-primary btn-block btn-lg" id="LoginButton">Sign in</button>
-                    </div>
-                    <p class="hint-text"><a asp-action="ForgotPassword">Forgot your password?</a></p>
-                </fieldset>
-            </form>
-        </div>
-        @if (themeManager.ShowRegister)
+<style>
+    .col-head,
+    .col-account-form {
+        max-width: 40em;
+    }
+</style>
+
+<div class="row justify-content-center">
+    <div class="col col-account-form">
+        @if (TempData.HasStatusMessage())
         {
-            <div class="modal-footer"><span>Don't have an account?&nbsp;<a id="Register" asp-action="Register" asp-route-returnurl="@ViewData["ReturnUrl"]">Create one</a></span></div>
+            <partial name="_StatusMessage"/>
         }
+
+        <p class="lead-login px-3">
+            BTCPay Server is a self-hosted, open-source cryptocurrency payment processor.
+            It is secure, private, censorship-resistant and free.
+        </p>
+
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Sign In</h4>
+                @if (env.OnionUrl != null)
+                {
+                    <a href="@env.OnionUrl" target="_onion" class="btn btn-onion d-inline-flex align-items-center" data-clipboard="@env.OnionUrl">
+                        <img src="~/img/icons/Onion_Color.svg" height="24" class="mr-2" asp-append-version="true" />
+                        Copy Tor URL
+                    </a>
+                }
+            </div>
+            <div class="modal-body">
+                <form asp-route-returnurl="@ViewData["ReturnUrl"]" method="post">
+                    <fieldset disabled="@(ViewData.ContainsKey("disabled") ? "disabled" : null)" >
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <div class="form-group">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <label for="Email" class="input-group-text"><span class="input-group-addon fa fa-user"></span></label>
+                                </div>
+
+                                <input asp-for="Email" class="form-control" placeholder="Email" required="required" />
+                            </div>
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <label for="Password" class="input-group-text"><span class="input-group-addon fa fa-lock"></span></label>
+                                </div>
+                                <input asp-for="Password" class="form-control" placeholder="Password" required="required" />
+                            </div>
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary btn-block btn-lg" id="LoginButton">Sign in</button>
+                        </div>
+                        <p class="text-right mt-4 mb-2">
+                            <a asp-action="ForgotPassword" class="text-secondary">Forgot your password?</a>
+                        </p>
+                    </fieldset>
+                </form>
+            </div>
+            @if (themeManager.ShowRegister)
+            {
+                <div class="modal-footer">
+                    Don't have an account?
+                    <a id="Register" class="btn btn-secondary ml-3" asp-action="Register" asp-route-returnurl="@ViewData["ReturnUrl"]">Sign Up</a>
+                </div>
+            }
+        </div>
     </div>
 </div>

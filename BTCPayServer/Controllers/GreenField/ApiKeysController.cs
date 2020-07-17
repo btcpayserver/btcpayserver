@@ -45,11 +45,7 @@ namespace BTCPayServer.Controllers.GreenField
         {
             if (request is null)
                 return NotFound();
-            if (request.Permissions is null || request.Permissions.Length == 0)
-            {
-                ModelState.AddModelError(nameof(request.Permissions), "One or more permissions are required");
-                return this.CreateValidationError(ModelState);
-            }
+            request.Permissions ??= System.Array.Empty<Permission>();
             var key = new APIKeyData()
             {
                 Id = Encoders.Hex.EncodeData(RandomUtils.GetBytes(20)),

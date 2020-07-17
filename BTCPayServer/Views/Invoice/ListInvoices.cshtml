@@ -1,4 +1,4 @@
-﻿@model InvoicesModel
+@model InvoicesModel
 @{
     ViewData["Title"] = "Invoices";
 }
@@ -79,7 +79,7 @@
                         <a class="dropdown-item last168" href="/invoices?Count=@Model.Count&timezoneoffset=0&SearchTerm=startDate%3Alast168@{@storeIds}">Last 7 days</a>
                         <button type="button" class="dropdown-item" data-toggle="modal" data-target="#customRangeModal" data-backdrop="static">Custom Range</button>
                         <div role="separator" class="dropdown-divider"></div>
-                        <a class="dropdown-item" href="/invoices">Unfiltered</a>
+                        <a class="dropdown-item" href="/invoices?SearchTerm=">Unfiltered</a>
                     </div>
                 </div>
             </div>

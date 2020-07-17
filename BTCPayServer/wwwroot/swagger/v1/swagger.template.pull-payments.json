@@ -364,7 +364,16 @@
                     "404": {
                         "description": "The payout is not found"
                     }
-                }
+                },
+                "tags": [ "Pull payments (Management)" ],
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canmanagepullpayments"
+                        ],
+                        "Basic": []
+                    }
+                ]
             },
             "delete": {
                 "description": "Cancel the payout",

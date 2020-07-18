@@ -39,11 +39,6 @@
   filter: none;
 }
 
-.btn-outline-onion {
-  color: #e6d5ee !important;
-  border-color: #59316B !important;
-}
-
 .btn-outline-onion img {
   filter: contrast(0) brightness(200%) !important;
 }

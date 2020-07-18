@@ -195,24 +195,25 @@ pre {
     background: none;
 }
 
+.account-form {
+    max-width: 36em;
+}
+
 .btn-outline-onion {
-    color: #7D4698;
     background-image: none;
     background-color: transparent;
-    border-color: #e6d5ee;
+    border: 0;
 }
 
 .btn-outline-onion:hover {
     color: #fff;
     background-color: #7D4698;
-    border-color: #7D4698;
 }
 
 .btn-outline-onion:focus,
 .btn-outline-onion.focus {
     color: #fff;
     background-color: #7D4698;
-    border-color: #7D4698;
     box-shadow: 0 0 0 0.2rem #e6d5ee;
 }
 

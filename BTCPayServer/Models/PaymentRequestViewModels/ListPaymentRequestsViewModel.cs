@@ -8,13 +8,8 @@ using PaymentRequestData = BTCPayServer.Data.PaymentRequestData;
 
 namespace BTCPayServer.Models.PaymentRequestViewModels
 {
-    public class ListPaymentRequestsViewModel
+    public class ListPaymentRequestsViewModel : BasePagingViewModel
     {
-        public int Skip { get; set; }
-        public int Count { get; set; }
-        public int Total { get; set; }
-        public string SearchTerm { get; set; }
-        public int? TimezoneOffset { get; set; }
         public List<ViewPaymentRequestViewModel> Items { get; set; }
 
     }

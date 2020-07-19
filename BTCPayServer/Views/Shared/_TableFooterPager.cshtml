@@ -1,0 +1,70 @@
+@model BasePagingViewModel
+
+<nav aria-label="..." class="w-100">
+    @if (Model.Total != 0)
+    {
+        <ul class="pagination float-left">
+            <li class="page-item @(Model.Skip == 0 ? "disabled" : null)">
+                <a class="page-link" tabindex="-1" href="@NavigatePages(-1, Model.Count)">&laquo;</a>
+            </li>
+            <li class="page-item disabled">
+                @if (Model.Total <= Model.Count)
+                {
+                    <span class="page-link">
+                        1–@Model.Total
+                    </span>
+                }
+                else
+                {
+                    <span class="page-link">
+                        @(Model.Skip + 1)–@(Model.Skip + Model.Count), Total: @Model.Total
+                    </span>
+                }
+            </li>
+            <li class="page-item @(Model.Total > (Model.Skip + Model.Count) ? null : "disabled")">
+                <a class="page-link" href="@NavigatePages(1, Model.Count)">&raquo;</a>
+            </li>
+        </ul>
+    }
+    <ul class="pagination float-right">
+        <li class="page-item disabled">
+            <span class="page-link">Page Size:</span>
+        </li>
+        <li class="page-item @(Model.Count == 50 ? "active" : null)">
+            <a class="page-link" href="@NavigatePages(0, 50)">50</a>
+        </li>
+        <li class="page-item @(Model.Count == 100 ? "active" : null)">
+            <a class="page-link" href="@NavigatePages(0, 100)">100</a>
+        </li>
+        <li class="page-item @(Model.Count == 250 ? "active" : null)">
+            <a class="page-link" href="@NavigatePages(0, 250)">250</a>
+        </li>
+        <li class="page-item @(Model.Count == 500 ? "active" : null)">
+            <a class="page-link" href="@NavigatePages(0, 500)">500</a>
+        </li>
+    </ul>
+</nav>
+@{
+    string NavigatePages(int prevNext, int count)
+    {
+        var skip = Model.Skip;
+        if (prevNext == -1)
+        {
+            skip = Math.Max(0, Model.Skip - Model.Count);
+        }
+        else if (prevNext == 1)
+        {
+            skip = Model.Skip + count;
+        }
+
+        var act = Url.Action(null, new
+        {
+            searchTerm = Model.SearchTerm,
+            timezoneOffset = Model.TimezoneOffset,
+            skip = skip,
+            count = count,
+        });
+
+        return act;
+    }
+}

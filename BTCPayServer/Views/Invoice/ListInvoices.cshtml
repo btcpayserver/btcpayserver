@@ -386,8 +386,6 @@
     </div>
     <script type="text/javascript">
         $(function () {
-            var timezoneOffset = new Date().getTimezoneOffset();
-            $("#TimezoneOffset").val(timezoneOffset);
             $(".export-link, a.dropdown-item").each(function () {
                 this.href = this.href.replace("timezoneoffset=0", "timezoneoffset=" + timezoneOffset);
             });

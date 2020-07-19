@@ -603,28 +603,9 @@ namespace BTCPayServer.Controllers
         [Route("invoices")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [BitpayAPIConstraint(false)]
-        public async Task<IActionResult> ListInvoices(string searchTerm = null, int skip = 0, int count = 50, int timezoneOffset = 0)
+        public async Task<IActionResult> ListInvoices(int skip = 0, int count = 50, string searchTerm = null, int? timezoneOffset = null)
         {
-            // If the user enter an empty searchTerm, then the variable will be null and not empty string
-            // but we want searchTerm to be null only if the user is browsing the page via some link
-            // NOT if the user entered some empty search
-            searchTerm = searchTerm is string ? searchTerm :
-                         this.Request.Query.ContainsKey(nameof(searchTerm)) ? string.Empty :
-                         null;
-            if (searchTerm is null)
-            {
-                if (this.Request.Cookies.TryGetValue(ListInvoicesPreference.KEY, out var str))
-                {
-                    var preferences = JsonConvert.DeserializeObject<ListInvoicesPreference>(str);
-                    searchTerm = preferences.SearchTerm;
-                    timezoneOffset = preferences.TimezoneOffset ?? 0;
-                }
-            }
-            else
-            {
-                this.Response.Cookies.Append(ListInvoicesPreference.KEY, 
-                    JsonConvert.SerializeObject(new ListInvoicesPreference(searchTerm, timezoneOffset)));
-            }
+            ListCookiePreference.Parse(this, "ListInvoicesPreference", ref searchTerm, ref timezoneOffset);
 
             var fs = new SearchString(searchTerm);
             var storeIds = fs.GetFilterArray("storeid") != null ? fs.GetFilterArray("storeid") : new List<string>().ToArray();
@@ -637,7 +618,7 @@ namespace BTCPayServer.Controllers
                 StoreIds = storeIds,
                 TimezoneOffset = timezoneOffset
             };
-            InvoiceQuery invoiceQuery = GetInvoiceQuery(searchTerm, timezoneOffset);
+            InvoiceQuery invoiceQuery = GetInvoiceQuery(searchTerm, timezoneOffset ?? 0);
             var counting = _InvoiceRepository.GetInvoicesTotal(invoiceQuery);
             invoiceQuery.Count = count;
             invoiceQuery.Skip = skip;

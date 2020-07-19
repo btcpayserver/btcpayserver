@@ -12,11 +12,11 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
     {
         public int Skip { get; set; }
         public int Count { get; set; }
-
+        public int Total { get; set; }
+        public string SearchTerm { get; set; }
+        public int? TimezoneOffset { get; set; }
         public List<ViewPaymentRequestViewModel> Items { get; set; }
 
-        public int Total { get; set; }
-        public bool IncludeArchived { get; set; }
     }
 
     public class UpdatePaymentRequestViewModel

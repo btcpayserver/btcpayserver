@@ -76,10 +76,11 @@ namespace BTCPayServer.Controllers
             });
             return View(new ListPaymentRequestsViewModel()
             {
-                IncludeArchived = includeArchived,
                 Skip = skip,
                 Count = count,
                 Total = result.Total,
+                SearchTerm = searchTerm,
+                TimezoneOffset = timezoneOffset,
                 Items = result.Items.Select(data => new ViewPaymentRequestViewModel(data)).ToList()
             });
         }

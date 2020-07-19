@@ -91,36 +91,7 @@
                     </tbody>
                 </table>
 
-                <div class="d-flex ">
-
-
-                    <nav aria-label="...">
-                        <ul class="pagination">
-                            <li class="page-item  @(Model.Skip == 0 ? "disabled" : null)">
-                                <a class="page-link" tabindex="-1" href="@Url.Action("GetPaymentRequests", new
-                                                                         {
-                                                                             skip = Math.Max(0, Model.Skip - Model.Count),
-                                                                             count = Model.Count,
-                                                                         })">
-                                    Previous
-                                </a>
-                            </li>
-                            <li class="page-item disabled">
-                                <span class="page-link">@(Model.Skip + 1) to @(Model.Skip + Model.Count) of @Model.Total</span>
-                            </li>
-                            <li class="page-item @(Model.Total > (Model.Skip + Model.Count) ? null : "disabled")">
-                                <a class="page-link" href="@Url.Action("GetPaymentRequests", new
-                                                           {
-                                                               skip = Model.Skip + Model.Count,
-                                                               count = Model.Count,
-                                                           })">
-                                    Next
-                                </a>
-                            </li>
-
-                        </ul>
-                    </nav>
-                </div>
+                <partial name="_TableFooterPager" />
             </div>
         </div>
     </div>

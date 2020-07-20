@@ -27,8 +27,8 @@
 
 <div class="row justify-content-center mb-5">
     <div class="col account-form">
-        <div class="modal-content border-0">
-            <div class="modal-header align-items-center border-0 pb-0">
+        <div class="modal-content border-0 p-3">
+            <div class="modal-header align-items-center border-0 py-2">
                 <h4 class="modal-title">Create account</h4>
                 @if (env.OnionUrl != null)
                 {
@@ -72,8 +72,8 @@
                         </div>
                     </fieldset>
                 </form>
-                <p class="text-center my-2">
-                    <a id="Login" class="ml-1" asp-action="Login" asp-route-returnurl="@ViewData["ReturnUrl"]">Log in</a>
+                <p class="text-center mt-2 mb-0">
+                    <a id="Login" style="font-size:1.15rem" asp-action="Login" asp-route-returnurl="@ViewData["ReturnUrl"]">Log in</a>
                 </p>
             </div>
         </div>

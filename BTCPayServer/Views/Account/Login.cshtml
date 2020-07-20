@@ -3,38 +3,37 @@
 @inject BTCPayServer.HostedServices.CssThemeManager themeManager
 @{
     ViewData["Title"] = "Log in";
-    ViewData["Headline"] = "Welcome to your BTCPay Server";
     Layout = "_LayoutSimple";
 }
 
-<style>
-    .col-head,
-    .col-account-form {
-        max-width: 40em;
-    }
-</style>
+<div class="row justify-content-center mb-2">
+    <div class="col text-center">
+        <a asp-controller="Home" asp-action="Index">
+            <img src="~/img/btcpay-logo.svg" alt="BTCPay Server" class="mb-4" height="70" asp-append-version="true"/>
+        </a>
 
-<div class="row justify-content-center">
-    <div class="col col-account-form">
+        <h1 class="h2 mb-3">Welcome to your BTCPay&nbsp;Server</h1>
+
         @if (TempData.HasStatusMessage())
         {
             <partial name="_StatusMessage"/>
         }
+    </div>
+</div>
 
-        <p class="lead-login px-3">
-            BTCPay Server is a self-hosted, open-source cryptocurrency payment processor.
-            It is secure, private, censorship-resistant and free.
-        </p>
-
-        <div class="modal-content">
-            <div class="modal-header">
+<div class="row justify-content-center mb-5">
+    <div class="col account-form">
+        <div class="modal-content border-0 p-3">
+            <div class="modal-header align-items-center border-0 py-2">
                 <h4 class="modal-title">Sign In</h4>
                 @if (env.OnionUrl != null)
                 {
-                    <a href="@env.OnionUrl" target="_onion" class="btn btn-onion d-inline-flex align-items-center" data-clipboard="@env.OnionUrl">
-                        <img src="~/img/icons/Onion_Color.svg" height="24" class="mr-2" asp-append-version="true" />
-                        Copy Tor URL
-                    </a>
+                    <div class="text-center">
+                        <a href="@env.OnionUrl" target="_onion" class="btn btn-sm btn-outline-onion d-inline-flex align-items-center p-2" data-clipboard="@env.OnionUrl">
+                            <img src="~/img/icons/onion-purple.svg" height="20" class="mr-2" asp-append-version="true" />
+                            Copy Tor URL
+                        </a>
+                    </div>
                 }
             </div>
             <div class="modal-body">
@@ -42,40 +41,36 @@
                     <fieldset disabled="@(ViewData.ContainsKey("disabled") ? "disabled" : null)" >
                         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                         <div class="form-group">
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <label for="Email" class="input-group-text"><span class="input-group-addon fa fa-user"></span></label>
-                                </div>
-
-                                <input asp-for="Email" class="form-control" placeholder="Email" required="required" />
-                            </div>
+                            <label asp-for="Email"></label>
+                            <input asp-for="Email" class="form-control" required />
                             <span asp-validation-for="Email" class="text-danger"></span>
                         </div>
                         <div class="form-group">
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <label for="Password" class="input-group-text"><span class="input-group-addon fa fa-lock"></span></label>
-                                </div>
-                                <input asp-for="Password" class="form-control" placeholder="Password" required="required" />
+                            <div class="d-flex justify-content-between">
+                                <label asp-for="Password"></label>
+                                <a asp-action="ForgotPassword">Forgot password?</a>
                             </div>
+                            <input asp-for="Password" class="form-control" required />
                             <span asp-validation-for="Password" class="text-danger"></span>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group mt-4">
                             <button type="submit" class="btn btn-primary btn-block btn-lg" id="LoginButton">Sign in</button>
                         </div>
-                        <p class="text-right mt-4 mb-2">
-                            <a asp-action="ForgotPassword" class="text-secondary">Forgot your password?</a>
-                        </p>
                     </fieldset>
                 </form>
+                @if (themeManager.ShowRegister)
+                {
+                    <p class="text-center mt-2 mb-0">
+                        <a id="Register" style="font-size:1.15rem" asp-action="Register" asp-route-returnurl="@ViewData["ReturnUrl"]">Create your account</a>
+                    </p>
+                }
             </div>
-            @if (themeManager.ShowRegister)
-            {
-                <div class="modal-footer">
-                    Don't have an account?
-                    <a id="Register" class="btn btn-secondary ml-3" asp-action="Register" asp-route-returnurl="@ViewData["ReturnUrl"]">Sign Up</a>
-                </div>
-            }
         </div>
+    </div>
+</div>
+
+<div class="row justify-content-center mt-5">
+    <div class="col">
+        <partial name="_BTCPaySupporters"/>
     </div>
 </div>

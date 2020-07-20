@@ -195,15 +195,32 @@ pre {
     background: none;
 }
 
-.btn-onion {
-    color: #fff;
-    background-color: #59316B;
-    border-color: #59316B;
+.account-form {
+    max-width: 36em;
 }
 
-.btn-onion:focus,
-.btn-onion.focus {
-    box-shadow: 0 0 0 0.2rem #9065a1;
+.btn-outline-onion {
+    background-image: none;
+    background-color: transparent;
+    border: 0;
+}
+
+.btn-outline-onion:hover {
+    color: #fff;
+    background-color: #7D4698;
+}
+
+.btn-outline-onion:focus,
+.btn-outline-onion.focus {
+    color: #fff;
+    background-color: #7D4698;
+    box-shadow: 0 0 0 0.2rem #e6d5ee;
+}
+
+.btn-outline-onion:hover img,
+.btn-outline-onion:focus img,
+.btn-outline-onion.focus img {
+    filter: contrast(0) brightness(200%);
 }
 
 [class*="field-validation"]:not(:empty) {

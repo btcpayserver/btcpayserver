@@ -39,6 +39,10 @@
   filter: none;
 }
 
+.btn-outline-onion img {
+  filter: contrast(0) brightness(200%) !important;
+}
+
 .list-group-item-action,
 .list-group-item-action:hover {
   color: var(--btcpay-body-color);

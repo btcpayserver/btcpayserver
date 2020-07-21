@@ -60,11 +60,11 @@ namespace BTCPayServer.Controllers
                     {
                         switch (sortOrderColumn)
                         {
-                            case "Name":
+                            case nameof(app.AppName):
                                 return app.AppName;
-                            case "Store":
+                            case nameof(app.StoreName):
                                 return app.StoreName;
-                            case "AppType":
+                            case nameof(app.AppType):
                                 return app.AppType;
                             default:
                                 return app.Id;

@@ -465,7 +465,7 @@ namespace BTCPayServer.Services.Invoices
                 {
                     var minerInfo = new MinerFeeInfo();
                     minerInfo.TotalFee = accounting.NetworkFee.Satoshi;
-                    minerInfo.SatoshiPerBytes = ((BitcoinLikeOnChainPaymentMethod)details).FeeRate
+                    minerInfo.SatoshiPerBytes = ((BitcoinLikeOnChainPaymentMethod) details).FeeRate
                         .GetFee(1).Satoshi;
                     dto.MinerFees.TryAdd(cryptoInfo.CryptoCode, minerInfo);
                     cryptoInfo.PaymentUrls = new InvoicePaymentUrls()

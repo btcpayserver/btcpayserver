@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services.Invoices;
 using NBitcoin;
 using Newtonsoft.Json;
+using BuyerInformation = BTCPayServer.Services.Invoices.BuyerInformation;
+using ProductInformation = BTCPayServer.Services.Invoices.ProductInformation;
 
 namespace BTCPayServer.Models.InvoicingModels
 {

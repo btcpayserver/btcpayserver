@@ -30,6 +30,8 @@ using NBitcoin;
 using NBitpayClient;
 using NBXplorer;
 using Newtonsoft.Json.Linq;
+using CreateInvoiceRequest = BTCPayServer.Models.CreateInvoiceRequest;
+using ProductInformation = BTCPayServer.Services.Invoices.ProductInformation;
 using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers

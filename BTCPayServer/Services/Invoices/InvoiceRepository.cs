@@ -14,6 +14,7 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Newtonsoft.Json;
 using Encoders = NBitcoin.DataEncoders.Encoders;
+using InvoiceData = BTCPayServer.Data.InvoiceData;
 
 namespace BTCPayServer.Services.Invoices
 {

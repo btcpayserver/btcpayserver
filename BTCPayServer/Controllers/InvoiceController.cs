@@ -23,7 +23,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using NBitpayClient;
 using Newtonsoft.Json;
+using BuyerInformation = BTCPayServer.Services.Invoices.BuyerInformation;
 using CreateInvoiceRequest = BTCPayServer.Models.CreateInvoiceRequest;
+using ProductInformation = BTCPayServer.Services.Invoices.ProductInformation;
 using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers
@@ -72,7 +74,16 @@ namespace BTCPayServer.Controllers
         }
 
 
-        internal async Task<DataWrapper<InvoiceResponse>> CreateInvoiceCore(CreateInvoiceRequest invoice, StoreData store, string serverUrl, List<string> additionalTags = null, CancellationToken cancellationToken = default)
+        internal async Task<DataWrapper<InvoiceResponse>> CreateInvoiceCore(CreateInvoiceRequest invoice,
+            StoreData store, string serverUrl, List<string> additionalTags = null,
+            CancellationToken cancellationToken = default)
+        {
+            var entity = await CreateInvoiceCoreRaw(invoice, store, serverUrl, additionalTags, cancellationToken);
+            var resp = entity.EntityToDTO();
+            return new DataWrapper<InvoiceResponse>(resp) {Facade = "pos/invoice"};
+        }
+
+        internal async Task<InvoiceEntity> CreateInvoiceCoreRaw(CreateInvoiceRequest invoice, StoreData store, string serverUrl, List<string> additionalTags = null, CancellationToken cancellationToken = default)
         {
             invoice.Currency = invoice.Currency?.ToUpperInvariant() ?? "USD";
             InvoiceLogs logs = new InvoiceLogs();
@@ -233,8 +244,7 @@ namespace BTCPayServer.Controllers
                 await _InvoiceRepository.AddInvoiceLogs(entity.Id, logs);
             });
             _EventAggregator.Publish(new Events.InvoiceEvent(entity, 1001, InvoiceEvent.Created));
-            var resp = entity.EntityToDTO();
-            return new DataWrapper<InvoiceResponse>(resp) { Facade = "pos/invoice" };
+            return entity;
         }
 
         private Task WhenAllFetched(InvoiceLogs logs, Dictionary<CurrencyPair, Task<RateResult>> fetchingByCurrencyPair)

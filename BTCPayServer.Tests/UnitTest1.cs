@@ -53,6 +53,7 @@ using Newtonsoft.Json.Schema;
 using Xunit;
 using Xunit.Abstractions;
 using Xunit.Sdk;
+using ProductInformation = BTCPayServer.Services.Invoices.ProductInformation;
 using RatesViewModel = BTCPayServer.Models.StoreViewModels.RatesViewModel;
 
 namespace BTCPayServer.Tests

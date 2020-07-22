@@ -130,11 +130,16 @@ namespace BTCPayServer.Tests
             Driver.WaitForElement(By.CssSelector($"#ScriptPubKeyType option[value={format}]")).Click();
             Logs.Tester.LogInformation("Trying to click btn-generate");
             Driver.WaitForElement(By.Id("btn-generate")).ForceClick();
+            // Seed backup page
             AssertHappyMessage();
             if (string.IsNullOrEmpty(seed))
             {
-                seed = Driver.FindElements(By.ClassName("alert-success")).First().FindElement(By.TagName("code")).Text;
+                seed = Driver.FindElements(By.Id("recovery-phrase")).First().GetAttribute("data-mnemonic");
             }
+            // Confirm seed backup
+            Driver.FindElement(By.Id("confirm")).Click();
+            Driver.FindElement(By.Id("submit")).Click();
+
             WalletId = new WalletId(StoreId, cryptoCode);
             return new Mnemonic(seed);
         }

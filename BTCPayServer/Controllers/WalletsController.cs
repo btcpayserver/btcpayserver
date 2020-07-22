@@ -9,6 +9,7 @@ using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.ModelBinders;
 using BTCPayServer.Models;
+using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Security;
@@ -1144,11 +1145,14 @@ namespace BTCPayServer.Controllers
                 }
                 else
                 {
-                    TempData.SetStatusMessageModel(new StatusMessageModel()
+                    var recoveryVm = new RecoverySeedBackupViewModel()
                     {
-                        Severity = StatusMessageModel.StatusSeverity.Success,
-                        Html = $"Please store your seed securely! <br/><code class=\"alert-link\">{seed}</code>"
-                    });
+                        CryptoCode = walletId.CryptoCode,
+                        Mnemonic = seed,
+                        IsStored = true,
+                        ReturnUrl = Url.Action(nameof(WalletSettings), new { walletId })
+                    };
+                    return this.RedirectToRecoverySeedBackup(recoveryVm);
                 }
 
                 return RedirectToAction(nameof(WalletSettings));

@@ -305,8 +305,17 @@ namespace BTCPayServer.Controllers
                 TempData.SetStatusMessageModel(new StatusMessageModel()
                 {
                     Severity = StatusMessageModel.StatusSeverity.Success,
-                    Html = $"Your wallet has been generated. Please store your seed securely! <br/><code class=\"alert-link\">{response.Mnemonic}</code>"
+                    Html = $"<span class='text-centered'>Your wallet has been generated.</span>"
                 });
+                var vm = new RecoverySeedBackupViewModel()
+                {
+                    CryptoCode = cryptoCode,
+                    Mnemonic = response.Mnemonic,
+                    Passphrase = response.Passphrase,
+                    IsStored = request.SavePrivateKeys,
+                    ReturnUrl = Url.Action(nameof(UpdateStore), new { storeId })
+                };
+                return this.RedirectToRecoverySeedBackup(vm);
             }
             else
             {

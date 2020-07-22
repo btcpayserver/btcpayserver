@@ -544,7 +544,6 @@ namespace BTCPayServer.Tests
                 Assert.Equal(receiveAddr, s.Driver.FindElement(By.Id("vue-address")).GetAttribute("value"));
 
                 //send money to addr and ensure it changed
-
                 var sess = await s.Server.ExplorerClient.CreateWebsocketNotificationSessionAsync();
                 sess.ListenAllTrackedSource();
                 var nextEvent = sess.NextEventAsync();
@@ -556,6 +555,7 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.CssSelector("button[value=generate-new-address]")).Click();
                 Assert.NotEqual(receiveAddr, s.Driver.FindElement(By.Id("vue-address")).GetAttribute("value"));
                 receiveAddr = s.Driver.FindElement(By.Id("vue-address")).GetAttribute("value");
+
                 //change the wallet and ensure old address is not there and generating a new one does not result in the prev one
                 s.GoToStore(storeId.storeId);
                 s.GenerateWallet("BTC", "", true, false);
@@ -565,11 +565,9 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.CssSelector("button[value=generate-new-address]")).Click();
                 Assert.NotEqual(receiveAddr, s.Driver.FindElement(By.Id("vue-address")).GetAttribute("value"));
 
-
                 var invoiceId = s.CreateInvoice(storeId.storeName);
                 var invoice = await s.Server.PayTester.InvoiceRepository.GetInvoice(invoiceId);
                 var address = invoice.EntityToDTO().Addresses["BTC"];
-
 
                 //wallet should have been imported to bitcoin core wallet in watch only mode.
                 var result = await s.Server.ExplorerNode.GetAddressInfoAsync(BitcoinAddress.Create(address, Network.RegTest));
@@ -664,13 +662,15 @@ namespace BTCPayServer.Tests
                 Assert.Equal(parsedBip21.Amount.ToString(false), s.Driver.FindElement(By.Id($"Outputs_0__Amount")).GetAttribute("value"));
                 Assert.Equal(parsedBip21.Address.ToString(), s.Driver.FindElement(By.Id($"Outputs_0__DestinationAddress")).GetAttribute("value"));
 
-
                 s.GoToWallet(new WalletId(storeId.storeId, "BTC"), WalletsNavPages.Settings);
 
                 s.Driver.FindElement(By.Id("SettingsMenu")).ForceClick();
                 s.Driver.FindElement(By.CssSelector("button[value=view-seed]")).Click();
-                s.AssertHappyMessage();
-                Assert.Equal(mnemonic.ToString(), s.Driver.FindElements(By.ClassName("alert-success")).First().FindElement(By.TagName("code")).Text);
+
+                // Seed backup page
+                var recoveryPhrase = s.Driver.FindElements(By.Id("recovery-phrase")).First().GetAttribute("data-mnemonic");
+                Assert.Equal(mnemonic.ToString(), recoveryPhrase);
+                Assert.Contains("The recovery phrase will also be stored on a server as a hot wallet.", s.Driver.PageSource);
             }
         }
         void SetTransactionOutput(SeleniumTester s, int index, BitcoinAddress dest, decimal amount, bool subtract = false)

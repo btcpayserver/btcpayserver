@@ -1,12 +1,25 @@
 ﻿@model PostRedirectViewModel
 @{ 
     Layout = null;
+
+    var routeData = Context.GetRouteData();
+    var routeParams = new Dictionary<string, string>();
+    if (routeData != null)
+    {
+        routeParams["walletId"] = routeData.Values["walletId"]?.ToString();
+    }
 }
 
 <html>
 <head></head>
 <body>
-    <form method="post" id="postform" asp-action="@Model.AspAction" asp-controller="@Model.AspController" asp-route-walletId="@this.Context.GetRouteValue("walletId").ToString()">
+    <form
+        method="post"
+        id="postform"
+        asp-action="@Model.AspAction"
+        asp-controller="@Model.AspController"
+        asp-all-route-data="@routeParams"
+    >
         @foreach(var o in Model.Parameters) {
             <input type="hidden" name="@o.Key" value="@o.Value" />
         }

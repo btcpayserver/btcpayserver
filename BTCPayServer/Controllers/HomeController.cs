@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Models;
+using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Apps;
 using Microsoft.AspNetCore.Authorization;
@@ -189,6 +190,13 @@ namespace BTCPayServer.Controllers
                 return View(vm);
             }
             return View(vm);
+        }
+
+        [Route("recovery-seed-backup")]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        public IActionResult RecoverySeedBackup(RecoverySeedBackupViewModel vm)
+        {
+            return View("RecoverySeedBackup", vm);
         }
 
         public IActionResult Error()

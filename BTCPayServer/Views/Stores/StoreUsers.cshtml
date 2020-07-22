@@ -6,11 +6,14 @@
 
 <partial name="_StatusMessage" />
 
+@if (!ViewContext.ModelState.IsValid)
+{
 <div class="row">
     <div class="col-md-6">
         <div asp-validation-summary="All" class="text-danger"></div>
     </div>
 </div>
+}
 <div class="row">
     <div class="col-md-8">
         <div class="form-group">

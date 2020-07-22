@@ -1,8 +1,18 @@
 ﻿@{
-    ViewData["Headline"] = "500 - Internal Server Error";
+    ViewData["Title"] = "500 - Internal Server Error";
 }
 
-<p class="lead-login text-center">
+<div class="row justify-content-center mb-2">
+    <div class="col text-center">
+        <a asp-controller="Home" asp-action="Index">
+            <img src="~/img/btcpay-logo.svg" alt="BTCPay Server" class="mb-4" height="70" asp-append-version="true"/>
+        </a>
+
+        <h1 class="h2 mb-3">@ViewData["Title"]</h1>
+    </div>
+</div>
+
+<p class="lead text-center">
     Whoops, something really went wrong! <a href="https://twitter.com/mrkukks">Mr Kukks</a> is so sorry.
     <br /><br />
     <a href="https://twitter.com/mrkukks" target="_blank">
@@ -13,3 +23,9 @@
     <br /><br />
     <a href="/">Navigate back to home</a>.
 </p>
+
+<div class="row justify-content-center mt-5">
+    <div class="col">
+        <partial name="_BTCPaySupporters"/>
+    </div>
+</div>

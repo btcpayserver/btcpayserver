@@ -1,15 +1,25 @@
 ﻿@using System.Net
 @model int?
 @{
-    ViewData["Headline"] = "Generic Error occurred";
+    ViewData["Title"] = "Generic Error occurred";
     if (Model.HasValue)
     {
         var httpCode = (HttpStatusCode)Model.Value;
-        ViewData["Headline"] = $"{(int)httpCode} - {httpCode.ToString()}";
+        ViewData["Title"] = $"{(int)httpCode} - {httpCode.ToString()}";
     }
 }
 
-<p class="lead-login text-center">
+<div class="row justify-content-center mb-2">
+    <div class="col text-center">
+        <a asp-controller="Home" asp-action="Index">
+            <img src="~/img/btcpay-logo.svg" alt="BTCPay Server" class="mb-4" height="70" asp-append-version="true"/>
+        </a>
+
+        <h1 class="h2 mb-3">@ViewData["Title"]</h1>
+    </div>
+</div>
+
+<p class="lead text-center">
     Generic error occurred, HTTP Code: @Model
     <br /><br />
     Consult server log for more details.
@@ -17,3 +27,9 @@
     <a href="/">Navigate back to home</a>.
     <br /><br />
 </p>
+
+<div class="row justify-content-center mt-5">
+    <div class="col">
+        <partial name="_BTCPaySupporters"/>
+    </div>
+</div>

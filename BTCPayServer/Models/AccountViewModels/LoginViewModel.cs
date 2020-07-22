@@ -6,6 +6,7 @@ namespace BTCPayServer.Models.AccountViewModels
     {
         [Required]
         [EmailAddress]
+        [Display(Name = "Email address")]
         public string Email { get; set; }
 
         [Required]

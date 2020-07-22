@@ -56,7 +56,7 @@ namespace BTCPayServer.Models.StoreViewModels
         public List<AdditionalPaymentMethod> ThirdPartyPaymentMethods { get; set; } =
             new List<AdditionalPaymentMethod>();
 
-        [Display(Name = "Invoice expires if the full amount has not been paid after ... minutes")]
+        [Display(Name = "Invoice expires if the full amount has not been paid after …")]
         [Range(1, 60 * 24 * 24)]
         public int InvoiceExpiration
         {
@@ -64,7 +64,7 @@ namespace BTCPayServer.Models.StoreViewModels
             set;
         }
 
-        [Display(Name = "Payment invalid if transactions fails to confirm ... minutes after invoice expiration")]
+        [Display(Name = "Payment invalid if transactions fails to confirm … after invoice expiration")]
         [Range(10, 60 * 24 * 24)]
         public int MonitoringExpiration
         {
@@ -72,13 +72,13 @@ namespace BTCPayServer.Models.StoreViewModels
             set;
         }
 
-        [Display(Name = "Consider the invoice confirmed when the payment transaction...")]
+        [Display(Name = "Consider the invoice confirmed when the payment transaction …")]
         public SpeedPolicy SpeedPolicy
         {
             get; set;
         }
 
-        [Display(Name = "Add additional fee (network fee) to invoice...")]
+        [Display(Name = "Add additional fee (network fee) to invoice …")]
         public NetworkFeeMode NetworkFeeMode
         {
             get; set;

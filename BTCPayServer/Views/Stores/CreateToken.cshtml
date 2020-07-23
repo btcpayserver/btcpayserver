@@ -12,32 +12,35 @@
         <form method="post">
             <div class="form-group">
                 <label asp-for="Label"></label>
-                @if(ViewBag.HidePublicKey)
+                @if (ViewBag.HidePublicKey)
                 {
                     <small class="text-muted">optional</small>
                 }
                 <input asp-for="Label" class="form-control" />
                 <span asp-validation-for="Label" class="text-danger"></span>
             </div>
-            @if(!ViewBag.HidePublicKey)
+            @if (!ViewBag.HidePublicKey)
             {
                 <div class="form-group">
                     <label asp-for="PublicKey"></label>
                     <small class="text-muted">Keep empty for server-initiated pairing</small>
                     <input asp-for="PublicKey" class="form-control" />
                     <span asp-validation-for="PublicKey" class="text-danger"></span>
-                </div>}
+                </div>
+            }
 
-            @if(ViewBag.ShowStores)
+            @if (ViewBag.ShowStores)
             {
                 <div class="form-group">
                     <label asp-for="StoreId" class="control-label"></label>
                     <select asp-for="StoreId" asp-items="Model.Stores" class="form-control"></select>
                     <span asp-validation-for="StoreId" class="text-danger"></span>
-                </div>}
+                </div>
+            }
             else
             {
-                <input type="hidden" asp-for="StoreId" />}
+                <input type="hidden" asp-for="StoreId" />
+            }
             <div class="form-group">
                 <input id="RequestPairing" type="submit" value="Request pairing" class="btn btn-primary" />
             </div>

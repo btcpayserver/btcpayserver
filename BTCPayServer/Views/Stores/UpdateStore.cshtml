@@ -7,15 +7,20 @@
 
 <partial name="_StatusMessage" />
 
+@if (!ViewContext.ModelState.IsValid)
+{
 <div class="row">
     <div class="col-md-6">
         <div asp-validation-summary="All" class="text-danger"></div>
     </div>
 </div>
+}
+
 <div class="row">
     <div class="col-md-8">
         <form method="post">
             <div class="mb-5">
+                <h4 class="mb-3">General</h4>
                 <div class="form-group">
                     <label asp-for="Id"></label>
                     <input asp-for="Id" readonly class="form-control" />
@@ -30,6 +35,23 @@
                     <input asp-for="StoreWebsite" class="form-control" />
                     <span asp-validation-for="StoreWebsite" class="text-danger"></span>
                 </div>
+
+                <h4 class="mt-5 mb-3">Payment</h4>
+                <div class="form-group">
+                    <div class="form-check">
+                        <input asp-for="AnyoneCanCreateInvoice" type="checkbox" class="form-check-input" />
+                        <label asp-for="AnyoneCanCreateInvoice" class="form-check-label"></label>
+                        <a href="https://docs.btcpayserver.org/FAQ/FAQ-Stores/#allow-anyone-to-create-invoice" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-check">
+                        <input asp-for="PayJoinEnabled" type="checkbox" class="form-check-input"/>
+                        <label asp-for="PayJoinEnabled" class="form-check-label"></label>
+                        <a href="https://docs.btcpayserver.org/Payjoin/" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                        <span asp-validation-for="PayJoinEnabled" class="text-danger"></span>
+                    </div>
+                </div>
                 <div class="form-group">
                     <label asp-for="NetworkFeeMode"></label>
                     <a href="https://docs.btcpayserver.org/FAQ/FAQ-Stores/#add-network-fee-to-invoice-vary-with-mining-fees" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
@@ -40,18 +62,16 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <div class="form-check">
-                        <input asp-for="AnyoneCanCreateInvoice" type="checkbox" class="form-check-input" />
-                        <label asp-for="AnyoneCanCreateInvoice" class="form-check-label"></label>
-                        <a href="https://docs.btcpayserver.org/FAQ/FAQ-Stores/#allow-anyone-to-create-invoice" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
-                    </div>
-                </div>
-                <div class="form-group">
                     <div class="mb-2">
                         <label asp-for="InvoiceExpiration" class="d-inline"></label>
                         <a href="https://docs.btcpayserver.org/FAQ/FAQ-Stores/#invoice-expires-if-the-full-amount-has-not-been-paid-after-minutes" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
                     </div>
-                    <input asp-for="InvoiceExpiration" class="form-control" />
+                    <div class="input-group">
+                        <input asp-for="InvoiceExpiration" class="form-control" style="max-width:10ch;"/>
+                        <div class="input-group-append">
+                            <span class="input-group-text">minutes</span>
+                        </div>
+                    </div>
                     <span asp-validation-for="InvoiceExpiration" class="text-danger"></span>
                 </div>
                 <div class="form-group">
@@ -59,7 +79,12 @@
                         <label asp-for="MonitoringExpiration" class="d-inline"></label>
                         <a href="https://docs.btcpayserver.org/FAQ/FAQ-Stores/#payment-invalid-if-transactions-fails-to-confirm-minutes-after-invoice-expiration" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
                     </div>
-                    <input asp-for="MonitoringExpiration" class="form-control" />
+                    <div class="input-group">
+                        <input asp-for="MonitoringExpiration" class="form-control" style="max-width:10ch;"/>
+                        <div class="input-group-append">
+                            <span class="input-group-text">minutes</span>
+                        </div>
+                    </div>
                     <span asp-validation-for="MonitoringExpiration" class="text-danger"></span>
                 </div>
                 <div class="form-group">
@@ -67,7 +92,12 @@
                         <label asp-for="PaymentTolerance" class="d-inline"></label>
                         <a href="https://docs.btcpayserver.org/FAQ/FAQ-Stores/#consider-the-invoice-paid-even-if-the-paid-amount-is-less-than-expected" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
                     </div>
-                    <input asp-for="PaymentTolerance" class="form-control" />
+                    <div class="input-group">
+                        <input asp-for="PaymentTolerance" class="form-control" style="max-width:10ch;"/>
+                        <div class="input-group-append">
+                            <span class="input-group-text">percent</span>
+                        </div>
+                    </div>
                     <span asp-validation-for="PaymentTolerance" class="text-danger"></span>
                 </div>
                 <div class="form-group">
@@ -75,7 +105,7 @@
                         <label asp-for="SpeedPolicy" class="d-inline"></label>
                         <a href="https://docs.btcpayserver.org/FAQ/FAQ-Stores/#consider-the-invoice-confirmed-when-the-payment-transaction" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
                     </div>
-                    <select asp-for="SpeedPolicy" class="form-control">
+                    <select asp-for="SpeedPolicy" class="form-control w-auto">
                         <option value="0">Is unconfirmed</option>
                         <option value="1">Has at least 1 confirmation</option>
                         <option value="3">Has at least 2 confirmations</option>
@@ -83,15 +113,9 @@
                     </select>
                     <span asp-validation-for="SpeedPolicy" class="text-danger"></span>
                 </div>
-                <div class="form-check mb-5">
-                    <input asp-for="PayJoinEnabled" type="checkbox" class="form-check-input"/>
-                    <label asp-for="PayJoinEnabled" class="form-check-label"></label>
-                    <a href="https://docs.btcpayserver.org/Payjoin/" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
-                    <span asp-validation-for="PayJoinEnabled" class="text-danger"></span>
-                </div>
             </div>
 
-            <h5>Derivation Scheme</h5>
+            <h4 class="mt-5 mb-3">Derivation Scheme</h4>
             <p>The Derivation Scheme represents the destination of the funds received by your invoice on chain.</p>
 
             <table class="table table-sm table-responsive-md mt-0 mb-5">
@@ -108,23 +132,23 @@
                     {
                         <tr class="@(@scheme.Collapsed? "collapsed": "")">
                             <td>@scheme.Crypto</td>
-                            <td title="@scheme.Value" data-toggle="tooltip">
+                            <td title="@scheme.Value" data-toggle="tooltip" class="d-flex">
                                 @if (string.IsNullOrEmpty(scheme.Value))
                                 {
                                     <span class="smMaxWidth">Not set</span>
                                 }
                                 else
                                 {
-                                    <div class="d-inline-flex justify-content-between smMaxWidth">
-                                        <span class="text-truncate ">
-                                            @scheme.Value
-                                        </span>
+                                    <code class="text-truncate" style="max-width:25ch">
+                                        @scheme.Value
+                                    </code>
+                                    <code>
                                         @if (scheme.Value.Length > 20)
                                         {
-                                            var match =Regex.Match(scheme.Value, @"((?:-\[(?:[^\]])+\])+|\S{6})$");
+                                            var match = Regex.Match(scheme.Value, @"((?:-\[(?:[^\]])+\])+|\S{6})$");
                                             @match.Value;
                                         }
-                                    </div>
+                                    </code>
                                 }
                             </td>
                             <td style="text-align:center;">
@@ -156,7 +180,7 @@
                 </tbody>
             </table>
 
-            <h5>Lightning nodes (Experimental)</h5>
+            <h4 class="mt-5 mb-3">Lightning nodes (Experimental)</h4>
             <p>
                 A connection to a lightning charge node is required to generate lightning network enabled invoices.
                 <br />
@@ -179,7 +203,7 @@
                             <td>@scheme.CryptoCode</td>
                             <td class="smMaxWidth text-truncate">@scheme.Address</td>
                             <td style="text-align:center;">
-                                @if(scheme.Enabled)
+                                @if (scheme.Enabled)
                                 {
                                     <span class="text-success fa fa-check"></span>
                                 }
@@ -204,7 +228,7 @@
                 </p>
             </div>
 
-            <h5>Additional Payment methods</h5>
+            <h4 class="mt-5 mb-3">Additional Payment methods</h4>
             <table class="table table-sm table-responsive-md mt-1 mb-5">
                 <thead>
                     <tr>
@@ -234,7 +258,7 @@
                 </tbody>
             </table>
 
-            <h5>Services</h5>
+            <h4 class="mt-5 mb-3">Services</h4>
             <table class="table table-sm table-responsive-md mt-1 mb-5">
                 <thead>
                     <tr>
@@ -252,9 +276,9 @@
                 </tbody>
             </table>
 
-            @if(Model.CanDelete)
+            @if (Model.CanDelete)
             {
-                <h5>Other actions...</h5>
+                <h4 class="mt-5 mb-3">Other actions</h4>
                 <p><a href="#danger-zone" data-toggle="collapse"><b>Click here to see more actions</b></a></p>
                 <div id="danger-zone" class="collapse">
                     <a class="btn btn-outline-danger form-control" asp-action="DeleteStore" asp-route-storeId="@Model.Id">Delete this store</a>

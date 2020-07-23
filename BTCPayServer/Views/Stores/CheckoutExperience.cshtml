@@ -6,24 +6,103 @@
 
 <partial name="_StatusMessage" />
 
+@if (!ViewContext.ModelState.IsValid)
+{
 <div class="row">
     <div class="col-md-6">
         <div asp-validation-summary="All" class="text-danger"></div>
     </div>
 </div>
+}
+
 <div class="row">
     <div class="col-md-8">
         <form method="post">
+            <h4 class="mb-3">Payment</h4>
+            <div class="form-group">
+                <label asp-for="DefaultPaymentMethod"></label>
+                <select asp-for="DefaultPaymentMethod" asp-items="Model.CryptoCurrencies" class="form-control w-auto"></select>
+            </div>
+            <div class="form-group mb-4">
+                <div class="form-check">
+                    <input asp-for="RequiresRefundEmail" type="checkbox" class="form-check-input"/>
+                    <label asp-for="RequiresRefundEmail" class="form-check-label"></label>
+                </div>
+            </div>
+            <div class="form-group mb-4">
+                <label asp-for="OnChainMinValue"></label>
+                <div class="input-group">
+                    <input asp-for="OnChainMinValue" class="form-control" style="max-width: 20ch;"/>
+                    <div class="input-group-append">
+                        <span class="input-group-text">Example: 6.15 USD</span>
+                    </div>
+                </div>
+                <span asp-validation-for="OnChainMinValue" class="text-danger"></span>
+            </div>
+            <div class="form-group mb-4">
+                <label asp-for="LightningMaxValue"></label>
+                <div class="input-group">
+                    <input asp-for="LightningMaxValue" class="form-control" style="max-width: 20ch;"/>
+                    <div class="input-group-append">
+                        <span class="input-group-text">Example: 21.0 USD</span>
+                    </div>
+                </div>
+                <span asp-validation-for="LightningMaxValue" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <div class="form-check">
+                    <input asp-for="LightningAmountInSatoshi" type="checkbox" class="form-check-input"/>
+                    <label asp-for="LightningAmountInSatoshi" class="form-check-label"></label>
+                    <span asp-validation-for="LightningAmountInSatoshi" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="form-check">
+                    <input asp-for="LightningPrivateRouteHints" type="checkbox" class="form-check-input"/>
+                    <label asp-for="LightningPrivateRouteHints" class="form-check-label"></label>
+                    <span asp-validation-for="LightningPrivateRouteHints" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="form-check">
+                    <input asp-for="RedirectAutomatically" type="checkbox" class="form-check-input"/>
+                    <label asp-for="RedirectAutomatically" class="form-check-label"></label>
+                    <span asp-validation-for="RedirectAutomatically" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="form-check">
+                    <input asp-for="ShowRecommendedFee" type="checkbox" class="form-check-input"/>
+                    <label asp-for="ShowRecommendedFee" class="form-check-label"></label>
+                    <p class="form-text text-muted">Fee will be shown for BTC and LTC onchain payments only.</p>
+                </div>
+            </div>
+            <div class="form-group">
+                <label asp-for="RecommendedFeeBlockTarget"></label>
+                <input asp-for="RecommendedFeeBlockTarget" class="form-control" style="width:8ch" />
+                <span asp-validation-for="RecommendedFeeBlockTarget" class="text-danger"></span>
+            </div>
+
+            <h4 class="mt-5 mb-3">Appearance</h4>
+            <div class="form-group">
+                <label asp-for="DefaultLang"></label>
+                <select asp-for="DefaultLang" asp-items="Model.Languages" class="form-control w-auto"></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="HtmlTitle"></label>
+                <input asp-for="HtmlTitle" class="form-control"/>
+                <span asp-validation-for="HtmlTitle" class="text-danger"></span>
+            </div>
             <div class="form-group">
                 <label asp-for="CustomLogo"></label>
                 <a href="https://docs.btcpayserver.org/Theme/#checkout-page-themes" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
-                <input asp-for="CustomLogo" class="form-control" />
+                <input asp-for="CustomLogo" class="form-control"/>
                 <span asp-validation-for="CustomLogo" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="CustomCSS"></label>
                 <a href="https://docs.btcpayserver.org/Theme/#checkout-page-themes" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
-                <input asp-for="CustomCSS" class="form-control" />
+                <input asp-for="CustomCSS" class="form-control"/>
                 <span asp-validation-for="CustomCSS" class="text-danger"></span>
                 <p class="form-text text-muted">
                     Bundled Themes:
@@ -43,65 +122,6 @@
                         return false;
                     }
                 </script>
-            </div>
-            <div class="form-group">
-                <label asp-for="HtmlTitle"></label>
-                <input asp-for="HtmlTitle" class="form-control" />
-                <span asp-validation-for="HtmlTitle" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="DefaultPaymentMethod"></label>
-                <select asp-for="DefaultPaymentMethod" asp-items="Model.CryptoCurrencies" class="form-control"></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="DefaultLang"></label>
-                <select asp-for="DefaultLang" asp-items="Model.Languages" class="form-control"></select>
-            </div>
-            <div class="form-group">
-                <div class="form-check">
-                    <input asp-for="RequiresRefundEmail" type="checkbox" class="form-check-input" />
-                    <label asp-for="RequiresRefundEmail" class="form-check-label"></label>
-                </div>
-            </div>
-            <div class="form-group">
-                <label asp-for="OnChainMinValue"></label>
-                <input asp-for="OnChainMinValue" class="form-control" />
-                <span asp-validation-for="OnChainMinValue" class="text-danger"></span>
-                <p class="form-text text-muted">Example: 5.50 USD</p>
-            </div>
-            <div class="form-group">
-                <label asp-for="LightningMaxValue"></label>
-                <input asp-for="LightningMaxValue" class="form-control" />
-                <span asp-validation-for="LightningMaxValue" class="text-danger"></span>
-                <p class="form-text text-muted">Example: 5.50 USD</p>
-            </div>
-            <div class="form-group">
-                <div class="form-check">
-                    <input asp-for="LightningAmountInSatoshi" type="checkbox" class="form-check-input" />
-                    <label asp-for="LightningAmountInSatoshi" class="form-check-label"></label>
-                    <span asp-validation-for="LightningAmountInSatoshi" class="text-danger"></span>
-                </div>
-                <div class="form-check">
-                    <input asp-for="LightningPrivateRouteHints" type="checkbox" class="form-check-input" />
-                    <label asp-for="LightningPrivateRouteHints" class="form-check-label"></label>
-                    <span asp-validation-for="LightningPrivateRouteHints" class="text-danger"></span>
-                </div>
-
-                <div class="form-check">
-                    <input asp-for="RedirectAutomatically" type="checkbox" class="form-check-input" />
-                    <label asp-for="RedirectAutomatically" class="form-check-label"></label>
-                    <span asp-validation-for="RedirectAutomatically" class="text-danger"></span>
-                </div>
-                <div class="form-check">
-                    <input asp-for="ShowRecommendedFee" type="checkbox" class="form-check-input" />
-                    <label asp-for="ShowRecommendedFee" class="form-check-label"></label>
-                    <p class="form-text text-muted">Fee will be shown for BTC and LTC onchain payments only.</p>
-                </div>
-            </div>
-            <div class="form-group">
-                <label asp-for="RecommendedFeeBlockTarget"></label>
-                <input asp-for="RecommendedFeeBlockTarget" class="form-control" />
-                <span asp-validation-for="RecommendedFeeBlockTarget" class="text-danger"></span>
             </div>
             <button name="command" type="submit" class="btn btn-primary" value="Save">Save</button>
         </form>

@@ -14,11 +14,16 @@
 }
 
 <partial name="_StatusMessage" />
+
+@if (!ViewContext.ModelState.IsValid)
+{
 <div class="row">
     <div class="col-md-6">
         <div asp-validation-summary="All" class="text-danger"></div>
     </div>
 </div>
+}
+
 <div class="modal fade" id="btcpayservervault" tabindex="-1" role="dialog" aria-labelledby="btcpayservervault" aria-hidden="true">
 
 </div>

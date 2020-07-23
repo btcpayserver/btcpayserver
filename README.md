@@ -187,6 +187,8 @@ The BTCPay Server Project is proudly supported by these entities through the [BT
           <span>DG Lab</span>
         </a>
       </td>
+    </tr>
+    <tr>
       <td align="center" valign="middle">
         <a href="https://www.okcoin.com/" target="_blank">
           <img  src="BTCPayServer/wwwroot/img/okcoin.svg" alt="OKCoin" height=100>

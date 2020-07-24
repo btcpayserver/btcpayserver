@@ -428,12 +428,14 @@ retry:
             }
         }
 
-        public async Task ToggleInvoiceArchival(string invoiceId, bool archived)
+        public async Task ToggleInvoiceArchival(string invoiceId, bool archived, string storeId = null)
         {
             using (var context = _ContextFactory.CreateContext())
             {
                 var invoiceData = await context.FindAsync<InvoiceData>(invoiceId).ConfigureAwait(false);
-                if (invoiceData == null || invoiceData.Archived == archived)
+                if (invoiceData == null || invoiceData.Archived == archived ||
+                    (storeId != null &&
+                     invoiceData.StoreDataId.Equals(storeId, StringComparison.InvariantCultureIgnoreCase)))
                     return;
                 invoiceData.Archived = archived;
                 await context.SaveChangesAsync().ConfigureAwait(false);

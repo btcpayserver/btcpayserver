@@ -8,17 +8,9 @@ namespace BTCPayServer.Client.Models
     public class CreateInvoiceRequest
     {
         [JsonProperty(ItemConverterType = typeof(DecimalDoubleStringJsonConverter))]
-        public decimal Amount
-        {
-            get;
-            set;
-        }
+        public decimal Amount { get; set; }
 
-        public string Currency
-        {
-            get;
-            set;
-        }
+        public string Currency { get; set; }
 
         public ProductInformation Metadata { get; set; }
 
@@ -46,67 +38,31 @@ namespace BTCPayServer.Client.Models
         public class BuyerInformation
         {
             [JsonProperty(PropertyName = "buyerName")]
-            public string BuyerName
-            {
-                get;
-                set;
-            }
+            public string BuyerName { get; set; }
 
             [JsonProperty(PropertyName = "buyerEmail")]
-            public string BuyerEmail
-            {
-                get;
-                set;
-            }
+            public string BuyerEmail { get; set; }
 
             [JsonProperty(PropertyName = "buyerCountry")]
-            public string BuyerCountry
-            {
-                get;
-                set;
-            }
+            public string BuyerCountry { get; set; }
 
             [JsonProperty(PropertyName = "buyerZip")]
-            public string BuyerZip
-            {
-                get;
-                set;
-            }
+            public string BuyerZip { get; set; }
 
             [JsonProperty(PropertyName = "buyerState")]
-            public string BuyerState
-            {
-                get;
-                set;
-            }
+            public string BuyerState { get; set; }
 
             [JsonProperty(PropertyName = "buyerCity")]
-            public string BuyerCity
-            {
-                get;
-                set;
-            }
+            public string BuyerCity { get; set; }
 
             [JsonProperty(PropertyName = "buyerAddress2")]
-            public string BuyerAddress2
-            {
-                get;
-                set;
-            }
+            public string BuyerAddress2 { get; set; }
 
             [JsonProperty(PropertyName = "buyerAddress1")]
-            public string BuyerAddress1
-            {
-                get;
-                set;
-            }
+            public string BuyerAddress1 { get; set; }
 
             [JsonProperty(PropertyName = "buyerPhone")]
-            public string BuyerPhone
-            {
-                get;
-                set;
-            }
+            public string BuyerPhone { get; set; }
         }
 
         public class ProductInformation
@@ -114,29 +70,13 @@ namespace BTCPayServer.Client.Models
             public string OrderId { get; set; }
             public string PosData { get; set; }
 
-            public string ItemDesc
-            {
-                get;
-                set;
-            }
+            public string ItemDesc { get; set; }
 
-            public string ItemCode
-            {
-                get;
-                set;
-            }
+            public string ItemCode { get; set; }
 
-            public bool Physical
-            {
-                get;
-                set;
-            }
+            public bool Physical { get; set; }
 
-            public decimal? TaxIncluded
-            {
-                get;
-                set;
-            }
+            public decimal? TaxIncluded { get; set; }
         }
     }
 }

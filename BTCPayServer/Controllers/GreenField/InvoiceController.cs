@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Payments;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Invoices;
@@ -9,7 +10,6 @@ using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using NBitcoin;
 using NBitpayClient;
 using CreateInvoiceRequest = BTCPayServer.Client.Models.CreateInvoiceRequest;
@@ -42,7 +42,11 @@ namespace BTCPayServer.Controllers.GreenField
                 return NotFound();
             }
 
-            var invoices = await _invoiceRepository.GetInvoices(new InvoiceQuery() {StoreId = new[] {store.Id}});
+            var invoices =
+                await _invoiceRepository.GetInvoices(new InvoiceQuery()
+                {
+                    StoreId = new[] {store.Id}, IncludeArchived = false
+                });
 
             return Ok(invoices.Select(ToModel));
         }
@@ -79,13 +83,7 @@ namespace BTCPayServer.Controllers.GreenField
                 return NotFound();
             }
 
-            var invoice = await _invoiceRepository.GetInvoice(invoiceId, true);
-            if (invoice.StoreId != store.Id)
-            {
-                return NotFound();
-            }
-
-            await _invoiceRepository.ToggleInvoiceArchival(invoiceId, true);
+            await _invoiceRepository.ToggleInvoiceArchival(invoiceId, true, storeId);
             return Ok();
         }
 
@@ -143,6 +141,21 @@ namespace BTCPayServer.Controllers.GreenField
             var invoice = await _invoiceController.CreateInvoiceCoreRaw(FromModel(request), store,
                 Request.GetAbsoluteUri(""));
             return Ok(ToModel(invoice));
+        }
+
+        [Authorize(Policy = Policies.CanModifyStoreSettings,
+            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpPost("~/api/v1/stores/{storeId}/invoices/{invoiceId}")]
+        public async Task<IActionResult> UpdateInvoice(string storeId, string invoiceId, UpdateInvoiceRequest request)
+        {
+            var store = HttpContext.GetStoreData();
+            if (store == null)
+            {
+                return NotFound();
+            }
+
+            await _invoiceRepository.ToggleInvoiceArchival(invoiceId, request.Archived, storeId);
+            return await GetInvoice(storeId, invoiceId);
         }
 
         public InvoiceData ToModel(InvoiceEntity entity)

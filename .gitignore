@@ -292,5 +292,7 @@ __pycache__/
 BTCPayServer/wwwroot/bundles/*
 !BTCPayServer/wwwroot/bundles/.gitignore
 
-.vscode/settings.json
+.vscode
+!.vscode/launch.json
+!.vscode/tasks.json
 BTCPayServer/testpwd

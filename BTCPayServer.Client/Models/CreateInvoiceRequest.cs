@@ -7,7 +7,7 @@ namespace BTCPayServer.Client.Models
 {
     public class CreateInvoiceRequest
     {
-        [JsonProperty(ItemConverterType = typeof(DecimalDoubleStringJsonConverter))]
+        [JsonProperty(ItemConverterType = typeof(NumericStringJsonConverter))]
         public decimal Amount { get; set; }
 
         public string Currency { get; set; }
@@ -31,7 +31,7 @@ namespace BTCPayServer.Client.Models
             [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
             public DateTimeOffset? ExpirationTime { get; set; }
 
-            [JsonProperty(ItemConverterType = typeof(DecimalDoubleStringJsonConverter))]
+            [JsonProperty(ItemConverterType = typeof(NumericStringJsonConverter))]
             public double? PaymentTolerance { get; set; }
         }
 

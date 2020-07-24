@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Models.PaymentRequestViewModels;
 using BTCPayServer.Payments;
@@ -9,6 +10,7 @@ using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.PaymentRequests;
 using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.SignalR;
+using PaymentRequestData = BTCPayServer.Data.PaymentRequestData;
 
 namespace BTCPayServer.PaymentRequest
 {

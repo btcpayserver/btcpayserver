@@ -329,7 +329,7 @@ namespace BTCPayServer.Payments.Lightning
             {
                 var invoice = await invoiceRepository.GetInvoice(invoiceId);
                 if (invoice != null)
-                    _eventAggregator.Publish(new InvoiceEvent(invoice, 1002, InvoiceEvent.ReceivedPayment) { Payment = payment });
+                    _eventAggregator.Publish(new InvoiceEvent(invoice, InvoiceEvent.ReceivedPayment) { Payment = payment });
             }
             return payment != null;
         }

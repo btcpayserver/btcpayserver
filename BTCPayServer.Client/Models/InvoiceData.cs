@@ -9,6 +9,10 @@ namespace BTCPayServer.Client.Models
     public class InvoiceData : CreateInvoiceRequest
     {
         public string Id { get; set; }
+        [JsonConverter(typeof(StringEnumConverter))]
+        public InvoiceStatus Status { get; set; }
+        [JsonConverter(typeof(StringEnumConverter))]
+        public InvoiceExceptionStatus ExceptionStatus { get; set; }
         public Dictionary<string, PaymentMethodDataModel> PaymentMethodData { get; set; }
         
         public class PaymentMethodDataModel

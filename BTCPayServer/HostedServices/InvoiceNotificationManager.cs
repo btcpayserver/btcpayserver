@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Events;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;

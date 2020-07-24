@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Payments;
@@ -20,6 +21,7 @@ using NUglify.Helpers;
 using YamlDotNet.RepresentationModel;
 using YamlDotNet.Serialization;
 using static BTCPayServer.Models.AppViewModels.ViewCrowdfundViewModel;
+using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Services.Apps
 {

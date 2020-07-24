@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Invoices;
@@ -154,16 +155,64 @@ namespace BTCPayServer.Controllers.GreenField
                 return NotFound();
             }
 
-            await _invoiceRepository.ToggleInvoiceArchival(invoiceId, request.Archived, storeId);
+            var invoice = await _invoiceRepository.GetInvoice(invoiceId, true);
+            if (invoice.StoreId != store.Id)
+            {
+                return NotFound();
+            }
+
+            if (request.Archived.HasValue)
+            {
+                if (request.Archived.Value && !invoice.Archived)
+                {
+                    ModelState.AddModelError(nameof(request.Archived),
+                        "You can only archive an invoice via HTTP DELETE.");
+                }
+                else if (!request.Archived.Value && invoice.Archived)
+                {
+                    await _invoiceRepository.ToggleInvoiceArchival(invoiceId, false, storeId);
+                }
+            }
+
+            if (request.Status != null)
+            {
+                if (!await _invoiceRepository.MarkInvoiceStatus(invoice.Id, request.Status.Value))
+                {
+                    ModelState.AddModelError(nameof(request.Status),
+                        "Status can only be marked to invalid or complete within certain conditions.");
+                }
+            }
+
+            if (request.Email != null)
+            {
+                if (!EmailValidator.IsEmail(request.Email))
+                {
+                    request.AddModelError(invoiceRequest => invoiceRequest.Email, "Invalid email address",
+                        this);
+                }
+                else if (!string.IsNullOrEmpty(invoice.BuyerInformation.BuyerEmail))
+                {
+                    request.AddModelError(invoiceRequest => invoiceRequest.Email, "Email address already set",
+                        this);
+                }
+
+                await _invoiceRepository.UpdateInvoice(invoice.Id, new UpdateCustomerModel() {Email = request.Email});
+            }
+
+            if (!ModelState.IsValid)
+                return this.CreateValidationError(ModelState);
+
             return await GetInvoice(storeId, invoiceId);
         }
 
-        public InvoiceData ToModel(InvoiceEntity entity)
+        private InvoiceData ToModel(InvoiceEntity entity)
         {
             return new InvoiceData()
             {
                 Amount = entity.ProductInformation.Price,
                 Id = entity.Id,
+                Status = entity.Status,
+                ExceptionStatus = entity.ExceptionStatus,
                 Currency = entity.ProductInformation.Currency,
                 Metadata =
                     new CreateInvoiceRequest.ProductInformation()
@@ -244,7 +293,7 @@ namespace BTCPayServer.Controllers.GreenField
             };
         }
 
-        public Models.CreateInvoiceRequest FromModel(CreateInvoiceRequest entity)
+        private Models.CreateInvoiceRequest FromModel(CreateInvoiceRequest entity)
         {
             return new Models.CreateInvoiceRequest()
             {

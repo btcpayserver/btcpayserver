@@ -604,24 +604,7 @@ namespace BTCPayServer.Services.Invoices
         }
     }
 
-    public enum InvoiceStatus
-    {
-        New,
-        Paid,
-        Expired,
-        Invalid,
-        Complete,
-        Confirmed
-    }
-    public enum InvoiceExceptionStatus
-    {
-        None,
-        PaidLate,
-        PaidPartial,
-        Marked,
-        Invalid,
-        PaidOver
-    }
+
     public class InvoiceState
     {
         static readonly Dictionary<string, InvoiceStatus> _StringToInvoiceStatus;

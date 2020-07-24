@@ -243,7 +243,7 @@ namespace BTCPayServer.Controllers
                 }
                 await _InvoiceRepository.AddInvoiceLogs(entity.Id, logs);
             });
-            _EventAggregator.Publish(new Events.InvoiceEvent(entity, 1001, InvoiceEvent.Created));
+            _EventAggregator.Publish(new Events.InvoiceEvent(entity, InvoiceEvent.Created));
             return entity;
         }
 

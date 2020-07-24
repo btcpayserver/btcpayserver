@@ -1,0 +1,712 @@
+{
+    "paths": {
+        "/api/v1/stores/{storeId}/invoices": {
+            "get": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "Get invoices",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "View information about the existing invoices",
+                "operationId": "Invoices_GetInvoices",
+                "responses": {
+                    "200": {
+                        "description": "list of invoices",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InvoiceDataList"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canviewinvoices"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "Create a new invoice",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "Create a new invoice",
+                "operationId": "Invoices_CreateInvoice",
+                "responses": {
+                    "200": {
+                        "description": "Information about the new invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InvoiceData"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when creating the invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to add new invoices"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateInvoiceRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.cancreateinvoice"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}/invoices/{invoiceId}": {
+            "get": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "Get invoice",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "invoiceId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The invoice to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "View information about the specified invoice",
+                "operationId": "Invoices_GetInvoice",
+                "responses": {
+                    "200": {
+                        "description": "specified invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InvoiceData"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified invoie"
+                    },
+                    "404": {
+                        "description": "The key is not found for this invoice"
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canviewinvoices"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "Archive invoice",
+                "description": "Archives the specified invoice.",
+                "operationId": "Invoices_ArchiveInvoice",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store the invoice belongs to",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "invoiceId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The invoice to remove",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The invoice has been archived"
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when archiving the invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to archive the specified invoice"
+                    },
+                    "404": {
+                        "description": "The key is not found for this invoice"
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "Update invoice",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "invoiceId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The invoice to update",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "Update an invoice",
+                "operationId": "Invoices_UpdateInvoice",
+                "responses": {
+                    "200": {
+                        "description": "The updated invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InvoiceData"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when updating the invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to update the invoice"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateInvoiceRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "InvoiceDataList": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/InvoiceData"
+                }
+            },
+            "UpdateInvoiceRequest": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "archived": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "description": "Unarchive an invoice. You can only archive from the HTTP DELETE endpoint."
+                    },
+                    "status": {
+                        "nullable": true,
+                        "description": "Mark an invoice as completed or invalid.",
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/InvoiceStatusMark"
+                            }
+                        ]
+                    },
+                    "email": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Sets the customer email, if it was not set before."
+                    }
+                }
+            },
+            "InvoiceStatusMark": {
+                "type": "string",
+                "description": "",
+                "x-enumNames": [
+                    "Invalid",
+                    "Complete"
+                ],
+                "enum": [
+                    "Invalid",
+                    "Complete"
+                ]
+            },
+            "InvoiceStatus": {
+                "type": "string",
+                "description": "",
+                "x-enumNames": [
+                    "New",
+                    "Paid",
+                    "Expired",
+                    "Invalid",
+                    "Complete",
+                    "Confirmed"
+                ],
+                "enum": [
+                    "New",
+                    "Paid",
+                    "Expired",
+                    "Invalid",
+                    "Complete",
+                    "Confirmed"
+                ]
+            },
+            "InvoiceExceptionStatus": {
+                "type": "string",
+                "description": "",
+                "x-enumNames": [
+                    "None",
+                    "PaidLate",
+                    "PaidPartial",
+                    "Marked",
+                    "Invalid",
+                    "PaidOver"
+                ],
+                "enum": [
+                    "None",
+                    "PaidLate",
+                    "PaidPartial",
+                    "Marked",
+                    "Invalid",
+                    "PaidOver"
+                ]
+            },
+            "InvoiceData": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/CreateInvoiceRequest"
+                    },
+                    {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                            "id": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "The identifier of the invoice"
+                            },
+                            "status": {
+                                "$ref": "#/components/schemas/InvoiceStatus",
+                                "description": "The status of the invoice"
+                            },
+                            "exceptionStatus": {
+                                "$ref": "#/components/schemas/InvoiceExceptionStatus",
+                                "description": "a secondary status of the invoice"
+                            },
+                            "paymentMethodData": {
+                                "type": "object",
+                                "nullable": false,
+                                "additionalProperties": {
+                                    "$ref": "#/components/schemas/PaymentMethodDataModel"
+                                },
+                                "description": "Activated payment methods details"
+                            }
+                        }
+                    }
+                ]
+            },
+            "PaymentMethodDataModel": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "destination": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "The destination the payment must be made to"
+                    },
+                    "paymentLink": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "A payment link that helps pay to the payment destination"
+                    },
+                    "rate": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The rate between this payment method's currency and the invoice currency"
+                    },
+                    "paymentMethodPaid": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The amount paid by this payment method"
+                    },
+                    "totalPaid": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The total amount paid by all payment methods to the invoice, converted to this payment method's currency"
+                    },
+                    "due": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The total amount left to be paid, converted to this payment method's currency"
+                    },
+                    "amount": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The invoice amount, converted to this payment method's currency"
+                    },
+                    "networkFee": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The added merchant fee to pay for network costs of this payment method."
+                    },
+                    "payments": {
+                        "type": "array",
+                        "nullable": true,
+                        "items": {
+                            "$ref": "#/components/schemas/Payment"
+                        },
+                        "description": "Payments made with this payment method."
+                    }
+                }
+            },
+            "Payment": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "A unique identifier for this payment"
+                    },
+                    "receivedDate": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "The date the payment was recorded"
+                    },
+                    "value": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The value of the payment"
+                    },
+                    "fee": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The fee paid for the payment"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/PaymentStatus",
+                        "description": "The status of the payment"
+                    },
+                    "destination": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "The destination the payment was made to"
+                    }
+                }
+            },
+            "PaymentStatus": {
+                "type": "string",
+                "description": "",
+                "x-enumNames": [
+                    "Invalid",
+                    "AwaitingConfirmation",
+                    "AwaitingCompletion",
+                    "Complete"
+                ],
+                "enum": [
+                    "Invalid",
+                    "AwaitingConfirmation",
+                    "AwaitingCompletion",
+                    "Complete"
+                ]
+            },
+            "CreateInvoiceRequest": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "amount": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The amount of the invoice"
+                    },
+                    "currency": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "The currency the invoice will use"
+                    },
+                    "metadata": {
+                        "nullable": true,
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/ProductInformation"
+                            }
+                        ],
+                        "description": "Additional information around the invoice"
+                    },
+                    "customer": {
+                        "nullable": true,
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/BuyerInformation"
+                            }
+                        ],
+                        "description": "Additional information around the entity the invoice is addressed to"
+                    },
+                    "checkout": {
+                        "nullable": true,
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/CheckoutOptions"
+                            }
+                        ],
+                        "description": "Additional settings to customize the checkout flow"
+                    }
+                }
+            },
+            "ProductInformation": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "orderId": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Can be used by the merchant to assign their own internal ID to an invoice."
+                    },
+                    "posData": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "A passthru variable provided by the merchant and designed to be used by the merchant to correlate the invoice with an order or other object in their system. This passthru variable can be a serialized object, e.g.:"
+                    },
+                    "itemDesc": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Invoice description - will be added as a line item on the checkout page, under the merchant name"
+                    },
+                    "itemCode": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "An item code, for a specific product code that is being paid for. Usually used in conjunction with the POS/Crowdfund apps"
+                    },
+                    "physical": {
+                        "type": "boolean",
+                        "description": "Whether it was a physical purchase"
+                    },
+                    "taxIncluded": {
+                        "type": "string",
+                        "format": "decimal",
+                        "nullable": true,
+                        "description": "How much tax is included in the invoice amount"
+                    }
+                }
+            },
+            "BuyerInformation": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "buyerName": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "buyerEmail": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "buyerCountry": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "buyerZip": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "buyerState": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "buyerCity": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "buyerAddress2": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "buyerAddress1": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "buyerPhone": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                }
+            },
+            "CheckoutOptions": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "speedPolicy": {
+                        "nullable": true,
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/SpeedPolicy"
+                            }
+                        ],
+                        "description": "This is a risk mitigation parameter for the merchant to configure how they want to fulfill orders depending on the number of block confirmations for the transaction made by the consumer on the selected cryptocurrency"
+                    },
+                    "paymentMethods": {
+                        "type": "array",
+                        "nullable": true,
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "A specific set of payment methods to use for this invoice" 
+                    },
+                    "redirectAutomatically": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "description": "Whether to redirect to the redirectUri automatically after the invoice has been paid. Default to the store setting (which is `false` by default)"
+                    },
+                    "redirectUri": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "This is the URL for a return link that is displayed on the receipt, to return the shopper back to your website after a successful purchase. This could be a page specific to the order, or to their account."
+                    },
+                    "webHook": {
+                        "type": "string",
+                        "format": "uri",
+                        "nullable": true,
+                        "description":"A URL to send webhook notification to. Sent when the status changes or a payment is detected"
+                    },
+                    "expirationTime": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "description": "When the invoice expires. By default will use the store settings (which is set to 15 minutes by default)"
+                    },
+                    "paymentTolerance": {
+                        "type": "string",
+                        "format": "double",
+                        "nullable": true,
+                        "minimum": 0,
+                        "maximum": 100,
+                        "description": "A percentage dtermining whether to count the invoice as paid when the invoice is paid within the specified margin of error"
+                    }
+                }
+            },
+            "SpeedPolicy": {
+                "type": "string",
+                "description": "",
+                "x-enumNames": [
+                    "HighSpeed",
+                    "MediumSpeed",
+                    "LowSpeed",
+                    "LowMediumSpeed"
+                ],
+                "enum": [
+                    "HighSpeed",
+                    "MediumSpeed",
+                    "LowSpeed",
+                    "LowMediumSpeed"
+                ]
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Invoices"
+        }
+    ]
+}

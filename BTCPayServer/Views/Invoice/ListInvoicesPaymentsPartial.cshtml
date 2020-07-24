@@ -1,4 +1,5 @@
-﻿@model (InvoiceDetailsModel Invoice, bool ShowAddress) 
+﻿@using BTCPayServer.Client.Models
+@model (InvoiceDetailsModel Invoice, bool ShowAddress) 
 @{ var invoice = Model.Invoice; }
 @inject PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary
 

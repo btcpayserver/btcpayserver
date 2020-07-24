@@ -731,6 +731,97 @@ namespace BTCPayServer.Tests
                  });
             }
         }
+        
+        
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task InvoiceTests()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                await tester.StartAsync();
+                var user = tester.NewAccount();
+                await user.GrantAccessAsync();
+                await user.MakeAdmin();
+                var client = await user.CreateClient(Policies.Unrestricted);
+                var viewOnly = await user.CreateClient(Policies.CanViewInvoices);
+
+                //create
+
+                //validation errors
+                await AssertValidationError(new[] { nameof(CreateInvoiceRequest.Currency), nameof(CreateInvoiceRequest.Amount), $"{nameof(CreateInvoiceRequest.Checkout)}.{nameof(CreateInvoiceRequest.Checkout.PaymentTolerance)}", $"{nameof(CreateInvoiceRequest.Checkout)}.{nameof(CreateInvoiceRequest.Checkout.PaymentMethods)}[0]"  }, async () =>
+                {
+                    await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest() { Amount = -1, Checkout = new CreateInvoiceRequest.CheckoutOptions(){ PaymentTolerance = -2, PaymentMethods = new []{"jasaas_sdsad"}}});
+                });
+                
+                await AssertHttpError(403, async () =>
+                {
+                    await viewOnly.CreateInvoice(user.StoreId,
+                        new CreateInvoiceRequest() { Currency = "helloinvalid", Amount = 1 });
+                });
+                await user.RegisterDerivationSchemeAsync("BTC");
+                var newInvoice = await client.CreateInvoice(user.StoreId,
+                    new CreateInvoiceRequest() { Currency = "USD", Amount = 1, Metadata = new CreateInvoiceRequest.ProductInformation(){ ItemCode = "testitem"}});
+
+                //list 
+                var invoices = await viewOnly.GetInvoices(user.StoreId);
+
+                Assert.NotNull(invoices);
+                Assert.Single(invoices);
+                Assert.Equal(newInvoice.Id, invoices.First().Id);
+
+                //get payment request
+                var invoice = await viewOnly.GetInvoice(user.StoreId, newInvoice.Id);
+                Assert.Equal(newInvoice.Metadata.ItemCode, invoice.Metadata.ItemCode);
+
+                //update
+                await AssertHttpError(403, async () =>
+                {
+                    await viewOnly.UpdateInvoice(user.StoreId, invoice.Id, new UpdateInvoiceRequest()
+                    {
+                        Email = "j@g.com"
+                    });
+                });
+                await client.UpdateInvoice(user.StoreId, invoice.Id, new UpdateInvoiceRequest()
+                {
+                    Email = "j@g.com"
+                });
+                invoice = await viewOnly.GetInvoice(user.StoreId, newInvoice.Id);
+                Assert.Equal(invoice.Customer.BuyerEmail, "j@g.com");
+
+                await AssertValidationError(new[] { nameof(UpdateInvoiceRequest.Email), nameof(UpdateInvoiceRequest.Archived),nameof(UpdateInvoiceRequest.Status) }, async () =>
+                {
+                    await client.UpdateInvoice(user.StoreId, invoice.Id, new UpdateInvoiceRequest()
+                    {
+                        Email = "j@g2.com",
+                        Archived = true,
+                        Status = InvoiceStatus.Complete
+                    });
+                });
+                
+                
+                //archive 
+                await AssertHttpError(403, async () =>
+                {
+                    await viewOnly.ArchiveInvoice(user.StoreId, invoice.Id);
+                });
+
+                await client.ArchiveInvoice(user.StoreId, invoice.Id);
+                Assert.DoesNotContain(invoice.Id,
+                    (await client.GetInvoices(user.StoreId)).Select(data => data.Id));
+                
+                //unarchive
+                await client.UpdateInvoice(user.StoreId, invoice.Id, new UpdateInvoiceRequest()
+                {
+                    Archived = false,
+                });
+                Assert.NotNull(await client.GetInvoice(user.StoreId,invoice.Id));
+              
+            }
+        }
+
+        
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Fast", "Fast")]

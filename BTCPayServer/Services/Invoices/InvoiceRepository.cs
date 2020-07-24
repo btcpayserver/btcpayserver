@@ -438,7 +438,7 @@ retry:
                 var invoiceData = await context.FindAsync<InvoiceData>(invoiceId).ConfigureAwait(false);
                 if (invoiceData == null || invoiceData.Archived == archived ||
                     (storeId != null &&
-                     invoiceData.StoreDataId.Equals(storeId, StringComparison.InvariantCultureIgnoreCase)))
+                     !invoiceData.StoreDataId.Equals(storeId, StringComparison.InvariantCultureIgnoreCase)))
                     return;
                 invoiceData.Archived = archived;
                 await context.SaveChangesAsync().ConfigureAwait(false);
@@ -448,12 +448,13 @@ retry:
         {
             using (var context = _ContextFactory.CreateContext())
             {
-                var invoiceData = await context.FindAsync<Data.InvoiceData>(invoiceId).ConfigureAwait(false);
+                var invoiceData = await GetInvoiceRaw(invoiceId);
                 if (invoiceData == null)
                 {
                     return false;
                 }
 
+                context.Attach(invoiceData);
                 string eventName;
                 switch (status)
                 {
@@ -475,15 +476,23 @@ retry:
                     default:
                         return false;
                 }
-                invoiceData.Status =status.ToString().ToLowerInvariant();
+
+                invoiceData.Status = status.ToString().ToLowerInvariant();
                 invoiceData.ExceptionStatus = InvoiceExceptionStatus.Marked.ToString().ToLowerInvariant();
                 _eventAggregator.Publish(new InvoiceEvent(ToEntity(invoiceData), eventName));
-                await context.SaveChangesAsync().ConfigureAwait(false);
+                await context.SaveChangesAsync();
             }
 
             return true;
         }
+
         public async Task<InvoiceEntity> GetInvoice(string id, bool inludeAddressData = false)
+        {
+            var res = await GetInvoiceRaw(id, inludeAddressData);
+            return res == null ? null : ToEntity(res);
+        }
+
+        private async Task<InvoiceData> GetInvoiceRaw(string id, bool inludeAddressData = false)
         {
             using (var context = _ContextFactory.CreateContext())
             {
@@ -499,7 +508,7 @@ retry:
                 if (invoice == null)
                     return null;
 
-                return ToEntity(invoice);
+                return invoice;
             }
         }
 

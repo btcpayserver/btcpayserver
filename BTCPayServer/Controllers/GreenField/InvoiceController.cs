@@ -214,16 +214,15 @@ namespace BTCPayServer.Controllers.GreenField
                 Status = entity.Status,
                 ExceptionStatus = entity.ExceptionStatus,
                 Currency = entity.ProductInformation.Currency,
-                Metadata =
-                    new CreateInvoiceRequest.ProductInformation()
-                    {
-                        Physical = entity.ProductInformation.Physical,
-                        ItemCode = entity.ProductInformation.ItemCode,
-                        ItemDesc = entity.ProductInformation.ItemDesc,
-                        OrderId = entity.OrderId,
-                        PosData = entity.PosData,
-                        TaxIncluded = entity.ProductInformation.TaxIncluded
-                    },
+                Metadata = new CreateInvoiceRequest.ProductInformation()
+                {
+                    Physical = entity.ProductInformation.Physical,
+                    ItemCode = entity.ProductInformation.ItemCode,
+                    ItemDesc = entity.ProductInformation.ItemDesc,
+                    OrderId = entity.OrderId,
+                    PosData = entity.PosData,
+                    TaxIncluded = entity.ProductInformation.TaxIncluded
+                },
                 Customer = new CreateInvoiceRequest.BuyerInformation()
                 {
                     BuyerAddress1 = entity.BuyerInformation.BuyerAddress1,

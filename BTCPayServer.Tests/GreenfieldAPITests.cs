@@ -1209,8 +1209,61 @@ namespace BTCPayServer.Tests
             Assert.Empty(await viewOnlyClient.GetNotifications(true));
             Assert.Empty(await viewOnlyClient.GetNotifications(false));
         }
+        
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task OnChainPaymentMethodAPITests()
+        {
+            using var tester = ServerTester.Create();
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync(true);
+            var client = await user.CreateClient(Policies.CanModifyStoreSettings);
+            var viewOnlyClient = await user.CreateClient(Policies.CanViewStoreSettings);
+
+            var store = await client.CreateStore(new CreateStoreRequest() {Name = "test store"});
+
+            Assert.Empty(await client.GetStoreOnChainPaymentMethods(store.Id));
+            await AssertHttpError(403, async () =>
+            {
+                await viewOnlyClient.UpdateStoreOnChainPaymentMethod(store.Id, "BTC", new OnChainPaymentMethodData() { });
+            });
+            var xpriv = new Mnemonic("all all all all all all all all all all all all").DeriveExtKey()
+                .Derive(KeyPath.Parse("m/84'/0'/0'"));
+            var xpub = xpriv.Neuter().ToString(Network.RegTest);
+            var firstAddress = xpriv.Derive(KeyPath.Parse("0/0")).Neuter().GetPublicKey().GetAddress(ScriptPubKeyType.Segwit, Network.RegTest).ToString();
+            await AssertHttpError(404, async () =>
+            {
+                await client.PreviewStoreOnChainPaymentMethodAddresses(store.Id, "BTC");
+            });
+            
+            Assert.Equal(firstAddress, (await viewOnlyClient.PreviewProposedStoreOnChainPaymentMethodAddresses(store.Id, "BTC",
+                new OnChainPaymentMethodData() {Default = true, Enabled = true, DerivationScheme = xpub})).Addresses.First().Address);
+            
+            var method = await client.UpdateStoreOnChainPaymentMethod(store.Id, "BTC",
+                new OnChainPaymentMethodData() {Default = true, Enabled = true, DerivationScheme = xpub});
+            
+            Assert.Equal(xpub,method.DerivationScheme);
+            
+            method = await client.GetStoreOnChainPaymentMethod(store.Id, "BTC");
+            
+            Assert.Equal(xpub,method.DerivationScheme);
+            
+            
+            Assert.Equal(firstAddress, (await viewOnlyClient.PreviewStoreOnChainPaymentMethodAddresses(store.Id, "BTC")).Addresses.First().Address);
+            await AssertHttpError(403, async () =>
+            {
+                await viewOnlyClient.RemoveStoreOnChainPaymentMethod(store.Id, "BTC");
+            });
+           await  client.RemoveStoreOnChainPaymentMethod(store.Id, "BTC");
+           await AssertHttpError(404, async () =>
+           {
+               await client.GetStoreOnChainPaymentMethod(store.Id, "BTC");
+           });
+        }
 
 
+        
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Fast", "Fast")]

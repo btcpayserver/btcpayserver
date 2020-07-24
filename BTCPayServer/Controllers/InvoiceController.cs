@@ -138,6 +138,8 @@ namespace BTCPayServer.Controllers
 
             if (invoice.PaymentCurrencies?.Any() is true)
             {
+                invoice.SupportedTransactionCurrencies ??=
+                    new Dictionary<string, InvoiceSupportedTransactionCurrency>();
                 foreach (string paymentCurrency in invoice.PaymentCurrencies)
                 {
                     invoice.SupportedTransactionCurrencies.TryAdd(paymentCurrency,

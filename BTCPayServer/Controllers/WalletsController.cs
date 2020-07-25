@@ -259,7 +259,11 @@ namespace BTCPayServer.Controllers
         [Route("{walletId}/transactions")]
         public async Task<IActionResult> WalletTransactions(
             [ModelBinder(typeof(WalletIdModelBinder))]
-            WalletId walletId, string labelFilter = null)
+            WalletId walletId, 
+            string labelFilter = null,
+            int skip = 0, 
+            int count = 50
+        )
         {
             DerivationSchemeSettings paymentMethod = GetDerivationSchemeSettings(walletId);
             if (paymentMethod == null)
@@ -271,7 +275,12 @@ namespace BTCPayServer.Controllers
             var transactions = await wallet.FetchTransactions(paymentMethod.AccountDerivation);
             var walletBlob = await walletBlobAsync;
             var walletTransactionsInfo = await walletTransactionsInfoAsync;
-            var model = new ListTransactionsViewModel();
+            var model = new ListTransactionsViewModel
+            {
+                Skip = skip,
+                Count = count,
+                Total = 0
+            };
             if (transactions == null)
             {
                 TempData.SetStatusMessageModel(new StatusMessageModel()
@@ -309,7 +318,8 @@ namespace BTCPayServer.Controllers
                         model.Transactions.Add(vm);
                 }
 
-                model.Transactions = model.Transactions.OrderByDescending(t => t.Timestamp).ToList();
+                model.Total = model.Transactions.Count;
+                model.Transactions = model.Transactions.OrderByDescending(t => t.Timestamp).Skip(skip).Take(count).ToList();
             }
 
             return View(model);

@@ -64,7 +64,7 @@ namespace BTCPayServer.Controllers
         [BitpayAPIConstraint(false)]
         public async Task<IActionResult> GetPaymentRequests(int skip = 0, int count = 50, string searchTerm = null, int? timezoneOffset = null)
         {
-            ListCookiePreference.Parse(this, "ListPaymentRequestsPreference", ref searchTerm, ref timezoneOffset);
+            ListCookiePreference.Parse(this, UserPrefCookieKeys.PaymentRequestsQuery, ref searchTerm, ref timezoneOffset);
 
             var includeArchived = new SearchString(searchTerm).GetFilterBool("includearchived") == true;
             var result = await _PaymentRequestRepository.FindPaymentRequests(new PaymentRequestQuery()

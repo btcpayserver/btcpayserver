@@ -8,23 +8,14 @@ using Newtonsoft.Json;
 
 namespace BTCPayServer.Controllers.Logic
 {
+    // Classes here remember users preferences on certain pages and store them in unified blob cookie "UserPreferCookie"
     public class ListCookiePreference
     {
-        public ListCookiePreference() { }
-
-        public ListCookiePreference(string searchTerm, int? timezoneOffset)
-        {
-            SearchTerm = searchTerm;
-            TimezoneOffset = timezoneOffset;
-        }
-
-        public int? TimezoneOffset { get; set; }
-        public string SearchTerm { get; set; }
-
-
-        public static void Parse(ControllerBase ctrl, string key, 
+        public static void Parse(ControllerBase ctrl, UserPrefCookieKeys key,
             ref string searchTerm, ref int? timezoneOffset)
         {
+            var prefCookie = parsePrefCookie(ctrl);
+
             // If the user enter an empty searchTerm, then the variable will be null and not empty string
             // but we want searchTerm to be null only if the user is browsing the page via some link
             // NOT if the user entered some empty search
@@ -33,18 +24,80 @@ namespace BTCPayServer.Controllers.Logic
                          null;
             if (searchTerm is null)
             {
-                if (ctrl.Request.Cookies.TryGetValue(key, out var str))
+                var section = prefCookie.GetSection(key);
+                if (section != null && !String.IsNullOrEmpty(section.SearchTerm))
                 {
-                    var preferences = JsonConvert.DeserializeObject<ListCookiePreference>(str);
-                    searchTerm = preferences.SearchTerm;
-                    timezoneOffset = preferences.TimezoneOffset ?? 0;
+                    searchTerm = section.SearchTerm;
+                    timezoneOffset = section.TimezoneOffset ?? 0;
                 }
             }
             else
             {
-                ctrl.Response.Cookies.Append(key,
-                    JsonConvert.SerializeObject(new ListCookiePreference(searchTerm, timezoneOffset)));
+                prefCookie.SetSection(key, new ListQueryDataHolder(searchTerm, timezoneOffset));
+                ctrl.Response.Cookies.Append(nameof(UserPrefsCookie), JsonConvert.SerializeObject(prefCookie));
             }
         }
+
+        private static UserPrefsCookie parsePrefCookie(ControllerBase ctrl)
+        {
+            var prefCookie = new UserPrefsCookie();
+            ctrl.Request.Cookies.TryGetValue(nameof(UserPrefsCookie), out var strPrefCookie);
+            if (!String.IsNullOrEmpty(strPrefCookie))
+                prefCookie = JsonConvert.DeserializeObject<UserPrefsCookie>(strPrefCookie);
+
+            return prefCookie;
+        }
+    }
+
+    public enum UserPrefCookieKeys
+    {
+        InvoicesQuery, PaymentRequestsQuery
+    }
+
+    public class UserPrefsCookie
+    {
+        public ListQueryDataHolder InvoicesQuery { get; set; }
+
+        public ListQueryDataHolder PaymentRequestsQuery { get; set; }
+
+        internal ListQueryDataHolder GetSection(UserPrefCookieKeys key)
+        {
+            switch (key)
+            {
+                case UserPrefCookieKeys.InvoicesQuery:
+                    return InvoicesQuery;
+                case UserPrefCookieKeys.PaymentRequestsQuery:
+                    return PaymentRequestsQuery;
+            }
+
+            return null;
+        }
+
+        internal void SetSection(UserPrefCookieKeys key, ListQueryDataHolder query)
+        {
+            switch (key)
+            {
+                case UserPrefCookieKeys.InvoicesQuery:
+                    InvoicesQuery = query;
+                    break;
+                case UserPrefCookieKeys.PaymentRequestsQuery:
+                    PaymentRequestsQuery = query;
+                    break;
+            }
+        }
+    }
+
+    public class ListQueryDataHolder
+    {
+        public ListQueryDataHolder() { }
+
+        public ListQueryDataHolder(string searchTerm, int? timezoneOffset)
+        {
+            SearchTerm = searchTerm;
+            TimezoneOffset = timezoneOffset;
+        }
+
+        public int? TimezoneOffset { get; set; }
+        public string SearchTerm { get; set; }
     }
 }

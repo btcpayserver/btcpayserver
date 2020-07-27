@@ -605,7 +605,7 @@ namespace BTCPayServer.Controllers
         [BitpayAPIConstraint(false)]
         public async Task<IActionResult> ListInvoices(int skip = 0, int count = 50, string searchTerm = null, int? timezoneOffset = null)
         {
-            ListCookiePreference.Parse(this, "ListInvoicesPreference", ref searchTerm, ref timezoneOffset);
+            ListCookiePreference.Parse(this, UserPrefCookieKeys.InvoicesQuery, ref searchTerm, ref timezoneOffset);
 
             var fs = new SearchString(searchTerm);
             var storeIds = fs.GetFilterArray("storeid") != null ? fs.GetFilterArray("storeid") : new List<string>().ToArray();

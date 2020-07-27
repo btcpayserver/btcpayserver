@@ -294,3 +294,4 @@ BTCPayServer/wwwroot/bundles/*
 
 .vscode
 BTCPayServer/testpwd
+.DS_Store

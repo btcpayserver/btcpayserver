@@ -521,28 +521,21 @@
                         "format": "decimal",
                         "description": "The amount of the invoice"
                     },
+                    "customerEmail": {
+                        "type": "string",
+                        "format": "email",
+                        "nullable": true,
+                        "description": "The email of the customer. If the store is configured to ask for a refund email, the checkout UI will prompt for one when not provided."
+                    },
                     "currency": {
                         "type": "string",
                         "nullable": true,
                         "description": "The currency the invoice will use"
                     },
                     "metadata": {
+                        "type": "string",
                         "nullable": true,
-                        "oneOf": [
-                            {
-                                "$ref": "#/components/schemas/ProductInformation"
-                            }
-                        ],
-                        "description": "Additional information around the invoice"
-                    },
-                    "customer": {
-                        "nullable": true,
-                        "oneOf": [
-                            {
-                                "$ref": "#/components/schemas/BuyerInformation"
-                            }
-                        ],
-                        "description": "Additional information around the entity the invoice is addressed to"
+                        "description": "Additional information around the invoice that can be supplied.<br/> You can pass a json body with values of `ProductInformation` `BuyerInformation` which will populate the fields to stay compatible with previous workflows (and bitpay invoice api)./>"
                     },
                     "checkout": {
                         "nullable": true,

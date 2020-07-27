@@ -13,6 +13,8 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBitpayClient;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using CreateInvoiceRequest = BTCPayServer.Client.Models.CreateInvoiceRequest;
 using InvoiceData = BTCPayServer.Client.Models.InvoiceData;
 
@@ -121,10 +123,10 @@ namespace BTCPayServer.Controllers.GreenField
                 }
             }
 
-            if (!string.IsNullOrEmpty(request.Customer.BuyerEmail) &&
-                !EmailValidator.IsEmail(request.Customer.BuyerEmail))
+            if (!string.IsNullOrEmpty(request.CustomerEmail) &&
+                !EmailValidator.IsEmail(request.CustomerEmail))
             {
-                request.AddModelError(invoiceRequest => invoiceRequest.Customer.BuyerEmail, "Invalid email address",
+                request.AddModelError(invoiceRequest => invoiceRequest.CustomerEmail, "Invalid email address",
                     this);
             }
 
@@ -226,27 +228,8 @@ namespace BTCPayServer.Controllers.GreenField
                 Status = entity.Status,
                 ExceptionStatus = entity.ExceptionStatus,
                 Currency = entity.ProductInformation.Currency,
-                Metadata = new CreateInvoiceRequest.ProductInformation()
-                {
-                    Physical = entity.ProductInformation.Physical,
-                    ItemCode = entity.ProductInformation.ItemCode,
-                    ItemDesc = entity.ProductInformation.ItemDesc,
-                    OrderId = entity.OrderId,
-                    PosData = entity.PosData,
-                    TaxIncluded = entity.ProductInformation.TaxIncluded
-                },
-                Customer = new CreateInvoiceRequest.BuyerInformation()
-                {
-                    BuyerAddress1 = entity.BuyerInformation.BuyerAddress1,
-                    BuyerAddress2 = entity.BuyerInformation.BuyerAddress2,
-                    BuyerCity = entity.BuyerInformation.BuyerCity,
-                    BuyerCountry = entity.BuyerInformation.BuyerCountry,
-                    BuyerEmail = entity.BuyerInformation.BuyerEmail,
-                    BuyerName = entity.BuyerInformation.BuyerName,
-                    BuyerPhone = entity.BuyerInformation.BuyerPhone,
-                    BuyerState = entity.BuyerInformation.BuyerState,
-                    BuyerZip = entity.BuyerInformation.BuyerZip
-                },
+                Metadata = entity.PosData,
+                CustomerEmail = entity.RefundMail ?? entity.BuyerInformation.BuyerEmail,
                 Checkout = new CreateInvoiceRequest.CheckoutOptions()
                 {
                     ExpirationTime = entity.ExpirationTime,
@@ -306,37 +289,45 @@ namespace BTCPayServer.Controllers.GreenField
 
         private Models.CreateInvoiceRequest FromModel(CreateInvoiceRequest entity)
         {
+            Buyer buyer = null;
+            ProductInformation pi = null;
+            JToken? orderId = null;
+            if (!string.IsNullOrEmpty(entity.Metadata) && entity.Metadata.StartsWith('{'))
+            {
+                //metadata was provided and is json. Let's try and match props
+                try
+                {
+                    buyer = JsonConvert.DeserializeObject<Buyer>(entity.Metadata);
+                    pi = JsonConvert.DeserializeObject<ProductInformation>(entity.Metadata);
+                    JObject.Parse(entity.Metadata).TryGetValue("orderid", StringComparison.InvariantCultureIgnoreCase,
+                        out orderId);
+                }
+                catch
+                {
+                    // ignored
+                }
+            }
             return new Models.CreateInvoiceRequest()
             {
-                Buyer = new Buyer()
-                {
-                    country = entity.Customer.BuyerCountry,
-                    email = entity.Customer.BuyerEmail,
-                    phone = entity.Customer.BuyerPhone,
-                    zip = entity.Customer.BuyerZip,
-                    Address1 = entity.Customer.BuyerAddress1,
-                    Address2 = entity.Customer.BuyerAddress2,
-                    City = entity.Customer.BuyerCity,
-                    Name = entity.Customer.BuyerName,
-                    State = entity.Customer.BuyerState,
-                },
+                Buyer = buyer,
+                BuyerEmail = entity.CustomerEmail,
                 Currency = entity.Currency,
-                Physical = entity.Metadata.Physical,
                 Price = entity.Amount,
                 Refundable = true,
                 ExtendedNotifications = true,
                 FullNotifications = true,
                 RedirectURL = entity.Checkout.RedirectUri,
                 RedirectAutomatically = entity.Checkout.RedirectAutomatically,
-                ItemCode = entity.Metadata.ItemCode,
-                ItemDesc = entity.Metadata.ItemDesc,
                 ExpirationTime = entity.Checkout.ExpirationTime,
                 TransactionSpeed = entity.Checkout.SpeedPolicy?.ToString(),
                 PaymentCurrencies = entity.Checkout.PaymentMethods,
-                TaxIncluded = entity.Metadata.TaxIncluded,
-                OrderId = entity.Metadata.OrderId,
                 NotificationURL = entity.Checkout.RedirectUri,
-                PosData = entity.Metadata.PosData
+                PosData = entity.Metadata,
+                Physical = pi?.Physical??false,
+                ItemCode = pi?.ItemCode,
+                ItemDesc = pi?.ItemDesc,
+                TaxIncluded = pi?.TaxIncluded,
+                OrderId = orderId?.ToString()
             };
         }
     }

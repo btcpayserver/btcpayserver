@@ -9,13 +9,9 @@ namespace BTCPayServer.Client.Models
     {
         [JsonProperty(ItemConverterType = typeof(NumericStringJsonConverter))]
         public decimal Amount { get; set; }
-
         public string Currency { get; set; }
-
-        public ProductInformation Metadata { get; set; }
-
-        public BuyerInformation Customer { get; set; } = new BuyerInformation();
-
+        public string Metadata { get; set; }
+        public string CustomerEmail { get; set; }
         public CheckoutOptions Checkout { get; set; } = new CheckoutOptions();
 
         public class CheckoutOptions
@@ -33,50 +29,6 @@ namespace BTCPayServer.Client.Models
 
             [JsonProperty(ItemConverterType = typeof(NumericStringJsonConverter))]
             public double? PaymentTolerance { get; set; }
-        }
-
-        public class BuyerInformation
-        {
-            [JsonProperty(PropertyName = "buyerName")]
-            public string BuyerName { get; set; }
-
-            [JsonProperty(PropertyName = "buyerEmail")]
-            public string BuyerEmail { get; set; }
-
-            [JsonProperty(PropertyName = "buyerCountry")]
-            public string BuyerCountry { get; set; }
-
-            [JsonProperty(PropertyName = "buyerZip")]
-            public string BuyerZip { get; set; }
-
-            [JsonProperty(PropertyName = "buyerState")]
-            public string BuyerState { get; set; }
-
-            [JsonProperty(PropertyName = "buyerCity")]
-            public string BuyerCity { get; set; }
-
-            [JsonProperty(PropertyName = "buyerAddress2")]
-            public string BuyerAddress2 { get; set; }
-
-            [JsonProperty(PropertyName = "buyerAddress1")]
-            public string BuyerAddress1 { get; set; }
-
-            [JsonProperty(PropertyName = "buyerPhone")]
-            public string BuyerPhone { get; set; }
-        }
-
-        public class ProductInformation
-        {
-            public string OrderId { get; set; }
-            public string PosData { get; set; }
-
-            public string ItemDesc { get; set; }
-
-            public string ItemCode { get; set; }
-
-            public bool Physical { get; set; }
-
-            public decimal? TaxIncluded { get; set; }
         }
     }
 }

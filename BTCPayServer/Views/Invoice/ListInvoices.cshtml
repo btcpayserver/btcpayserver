@@ -74,9 +74,9 @@
                         <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=unusual%3Atrue@{@storeIds}">Unusual Invoices</a>
                         <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=includearchived%3Atrue@{@storeIds}">Archived Invoices</a>
                         <div role="separator" class="dropdown-divider"></div>
-                        <a class="dropdown-item last24" href="/invoices?Count=@Model.Count&timezoneoffset=0&SearchTerm=startDate%3Alast24@{@storeIds}">Last 24 hours</a>
-                        <a class="dropdown-item last72" href="/invoices?Count=@Model.Count&timezoneoffset=0&SearchTerm=startDate%3Alast72@{@storeIds}">Last 3 days</a>
-                        <a class="dropdown-item last168" href="/invoices?Count=@Model.Count&timezoneoffset=0&SearchTerm=startDate%3Alast168@{@storeIds}">Last 7 days</a>
+                        <a class="dropdown-item" href="/invoices?Count=@Model.Count&timezoneoffset=0&SearchTerm=startDate%3A-24h@{@storeIds}">Last 24 hours</a>
+                        <a class="dropdown-item" href="/invoices?Count=@Model.Count&timezoneoffset=0&SearchTerm=startDate%3A-3d@{@storeIds}">Last 3 days</a>
+                        <a class="dropdown-item" href="/invoices?Count=@Model.Count&timezoneoffset=0&SearchTerm=startDate%3A-7d@{@storeIds}">Last 7 days</a>
                         <button type="button" class="dropdown-item" data-toggle="modal" data-target="#customRangeModal" data-backdrop="static">Custom Range</button>
                         <div role="separator" class="dropdown-divider"></div>
                         <a class="dropdown-item" href="/invoices?SearchTerm=">Unfiltered</a>
@@ -324,10 +324,6 @@
             $(".export-link, a.dropdown-item").each(function () {
                 this.href = this.href.replace("timezoneoffset=0", "timezoneoffset=" + timezoneOffset);
             });
-
-            $("a.last24").each(function () { this.href = this.href.replace("last24", getDateStringWithOffset(24)); });
-            $("a.last72").each(function () { this.href = this.href.replace("last72", getDateStringWithOffset(72)); });
-            $("a.last168").each(function () { this.href = this.href.replace("last168", getDateStringWithOffset(168)); });
             
         });
 

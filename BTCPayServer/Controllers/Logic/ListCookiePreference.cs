@@ -43,7 +43,13 @@ namespace BTCPayServer.Controllers.Logic
             var prefCookie = new UserPrefsCookie();
             ctrl.Request.Cookies.TryGetValue(nameof(UserPrefsCookie), out var strPrefCookie);
             if (!String.IsNullOrEmpty(strPrefCookie))
-                prefCookie = JsonConvert.DeserializeObject<UserPrefsCookie>(strPrefCookie);
+            {
+                try
+                {
+                    prefCookie = JsonConvert.DeserializeObject<UserPrefsCookie>(strPrefCookie);
+                }
+                catch { /* ignore cookie deserialization failures */ }
+            }
 
             return prefCookie;
         }

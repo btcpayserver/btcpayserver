@@ -214,12 +214,14 @@
                         "Basic": []
                     }
                 ]
-            },
-            "put": {
+            }
+        },
+        "/api/v1/stores/{storeId}/invoices/{invoiceId}/email": {
+            "post": {
                 "tags": [
                     "Invoices"
                 ],
-                "summary": "Update invoice",
+                "summary": "Add customer email to invoice",
                 "parameters": [
                     {
                         "name": "storeId",
@@ -240,8 +242,8 @@
                         }
                     }
                 ],
-                "description": "Update an invoice",
-                "operationId": "Invoices_UpdateInvoice",
+                "description": "Adds the customer's email to the invoice if it has not been set already.",
+                "operationId": "Invoices_AddCustomerEmail",
                 "responses": {
                     "200": {
                         "description": "The updated invoice",
@@ -272,9 +274,145 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/UpdateInvoiceRequest"
+                                "$ref": "#/components/schemas/AddCustomerEmailRequest"
                             }
                         }
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.cancreateinvoice"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}/invoices/{invoiceId}/status": {
+            "post": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "Mark invoice status",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "invoiceId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The invoice to update",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "Mark an invoice as invalid or completed.",
+                "operationId": "Invoices_MarkInvoiceStatus",
+                "responses": {
+                    "200": {
+                        "description": "The updated invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InvoiceData"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when updating the invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to update the invoice"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/MarkInvoiceStatusRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}/invoices/{invoiceId}/unarchive": {
+            "post": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "Unarchive invoice",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "invoiceId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The invoice to update",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "Unarchive an invoice",
+                "operationId": "Invoices_UnarchiveInvoice",
+                "responses": {
+                    "200": {
+                        "description": "The unarchived invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InvoiceData"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when updating the invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to update the invoice"
                     }
                 },
                 "security": [
@@ -296,27 +434,28 @@
                     "$ref": "#/components/schemas/InvoiceData"
                 }
             },
-            "UpdateInvoiceRequest": {
+            "MarkInvoiceStatusRequest": {
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
-                    "archived": {
-                        "type": "boolean",
-                        "nullable": true,
-                        "description": "Unarchive an invoice. You can only archive from the HTTP DELETE endpoint."
-                    },
                     "status": {
-                        "nullable": true,
+                        "nullable": false,
                         "description": "Mark an invoice as completed or invalid.",
                         "oneOf": [
                             {
                                 "$ref": "#/components/schemas/InvoiceStatusMark"
                             }
                         ]
-                    },
+                    }
+                }
+            },
+            "AddCustomerEmailRequest": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
                     "email": {
                         "type": "string",
-                        "nullable": true,
+                        "nullable": false,
                         "description": "Sets the customer email, if it was not set before."
                     }
                 }
@@ -353,9 +492,9 @@
                     "Confirmed"
                 ]
             },
-            "InvoiceExceptionStatus": {
+            "InvoiceAdditionalStatus": {
                 "type": "string",
-                "description": "",
+                "description": "An additional status that describes why an invoice is in its current status.",
                 "x-enumNames": [
                     "None",
                     "PaidLate",
@@ -391,8 +530,8 @@
                                 "$ref": "#/components/schemas/InvoiceStatus",
                                 "description": "The status of the invoice"
                             },
-                            "exceptionStatus": {
-                                "$ref": "#/components/schemas/InvoiceExceptionStatus",
+                            "additionalStatus": {
+                                "$ref": "#/components/schemas/InvoiceAdditionalStatus",
                                 "description": "a secondary status of the invoice"
                             },
                             "paymentMethodData": {

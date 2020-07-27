@@ -154,14 +154,15 @@ namespace BTCPayServer.Controllers.GreenField
             }
             catch (BitpayHttpException e)
             {
-               return this.CreateAPIError(null, e.Message);
+                return this.CreateAPIError(null, e.Message);
             }
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpPut("~/api/v1/stores/{storeId}/invoices/{invoiceId}")]
-        public async Task<IActionResult> UpdateInvoice(string storeId, string invoiceId, UpdateInvoiceRequest request)
+        [HttpPost("~/api/v1/stores/{storeId}/invoices/{invoiceId}/status")]
+        public async Task<IActionResult> MarkInvoiceStatus(string storeId, string invoiceId,
+            MarkInvoiceStatusRequest request)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
@@ -175,42 +176,10 @@ namespace BTCPayServer.Controllers.GreenField
                 return NotFound();
             }
 
-            if (request.Archived.HasValue)
+            if (!await _invoiceRepository.MarkInvoiceStatus(invoice.Id, request.Status))
             {
-                if (request.Archived.Value && !invoice.Archived)
-                {
-                    ModelState.AddModelError(nameof(request.Archived),
-                        "You can only archive an invoice via HTTP DELETE.");
-                }
-                else if (!request.Archived.Value && invoice.Archived)
-                {
-                    await _invoiceRepository.ToggleInvoiceArchival(invoiceId, false, storeId);
-                }
-            }
-
-            if (request.Status != null)
-            {
-                if (!await _invoiceRepository.MarkInvoiceStatus(invoice.Id, request.Status.Value))
-                {
-                    ModelState.AddModelError(nameof(request.Status),
-                        "Status can only be marked to invalid or complete within certain conditions.");
-                }
-            }
-
-            if (request.Email != null)
-            {
-                if (!EmailValidator.IsEmail(request.Email))
-                {
-                    request.AddModelError(invoiceRequest => invoiceRequest.Email, "Invalid email address",
-                        this);
-                }
-                else if (!string.IsNullOrEmpty(invoice.BuyerInformation.BuyerEmail))
-                {
-                    request.AddModelError(invoiceRequest => invoiceRequest.Email, "Email address already set",
-                        this);
-                }
-
-                await _invoiceRepository.UpdateInvoice(invoice.Id, new UpdateCustomerModel() {Email = request.Email});
+                ModelState.AddModelError(nameof(request.Status),
+                    "Status can only be marked to invalid or complete within certain conditions.");
             }
 
             if (!ModelState.IsValid)
@@ -219,6 +188,74 @@ namespace BTCPayServer.Controllers.GreenField
             return await GetInvoice(storeId, invoiceId);
         }
 
+        [Authorize(Policy = Policies.CanCreateInvoice,
+            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpPost("~/api/v1/stores/{storeId}/invoices/{invoiceId}/email")]
+        public async Task<IActionResult> AddCustomerEmail(string storeId, string invoiceId,
+            AddCustomerEmailRequest request)
+        {
+            var store = HttpContext.GetStoreData();
+            if (store == null)
+            {
+                return NotFound();
+            }
+
+            var invoice = await _invoiceRepository.GetInvoice(invoiceId, true);
+            if (invoice.StoreId != store.Id)
+            {
+                return NotFound();
+            }
+
+            if (!EmailValidator.IsEmail(request.Email))
+            {
+                request.AddModelError(invoiceRequest => invoiceRequest.Email, "Invalid email address",
+                    this);
+            }
+            else if (!string.IsNullOrEmpty(invoice.BuyerInformation.BuyerEmail))
+            {
+                request.AddModelError(invoiceRequest => invoiceRequest.Email, "Email address already set",
+                    this);
+            }
+
+            if (!ModelState.IsValid)
+                return this.CreateValidationError(ModelState);
+
+            await _invoiceRepository.UpdateInvoice(invoice.Id, new UpdateCustomerModel() {Email = request.Email});
+
+            return await GetInvoice(storeId, invoiceId);
+        }
+
+        [Authorize(Policy = Policies.CanModifyStoreSettings,
+            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpPost("~/api/v1/stores/{storeId}/invoices/{invoiceId}/unarchive")]
+        public async Task<IActionResult> UnarchiveInvoice(string storeId, string invoiceId)
+        {
+            var store = HttpContext.GetStoreData();
+            if (store == null)
+            {
+                return NotFound();
+            }
+
+            var invoice = await _invoiceRepository.GetInvoice(invoiceId, true);
+            if (invoice.StoreId != store.Id)
+            {
+                return NotFound();
+            }
+
+            if (!invoice.Archived)
+            {
+                return this.CreateAPIError("already-unarchived", "Invoice is already unarchived");
+            }
+
+
+            if (!ModelState.IsValid)
+                return this.CreateValidationError(ModelState);
+
+            await _invoiceRepository.ToggleInvoiceArchival(invoiceId, false, storeId);
+            return await GetInvoice(storeId, invoiceId);
+        }
+
+
         private InvoiceData ToModel(InvoiceEntity entity)
         {
             return new InvoiceData()
@@ -226,7 +263,7 @@ namespace BTCPayServer.Controllers.GreenField
                 Amount = entity.ProductInformation.Price,
                 Id = entity.Id,
                 Status = entity.Status,
-                ExceptionStatus = entity.ExceptionStatus,
+                AdditionalStatus = entity.ExceptionStatus,
                 Currency = entity.ProductInformation.Currency,
                 Metadata = entity.PosData,
                 CustomerEmail = entity.RefundMail ?? entity.BuyerInformation.BuyerEmail,
@@ -307,6 +344,7 @@ namespace BTCPayServer.Controllers.GreenField
                     // ignored
                 }
             }
+
             return new Models.CreateInvoiceRequest()
             {
                 Buyer = buyer,
@@ -323,7 +361,7 @@ namespace BTCPayServer.Controllers.GreenField
                 PaymentCurrencies = entity.Checkout.PaymentMethods,
                 NotificationURL = entity.Checkout.RedirectUri,
                 PosData = entity.Metadata,
-                Physical = pi?.Physical??false,
+                Physical = pi?.Physical ?? false,
                 ItemCode = pi?.ItemCode,
                 ItemDesc = pi?.ItemDesc,
                 TaxIncluded = pi?.TaxIncluded,

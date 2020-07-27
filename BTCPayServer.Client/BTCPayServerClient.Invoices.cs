@@ -47,14 +47,35 @@ namespace BTCPayServer.Client
             return await HandleResponse<InvoiceData>(response);
         }
 
-        public virtual async Task<InvoiceData> UpdateInvoice(string storeId, string invoiceId,
-            UpdateInvoiceRequest request, CancellationToken token = default)
+        public virtual async Task<InvoiceData> AddCustomerEmailToInvoice(string storeId, string invoiceId,
+            AddCustomerEmailRequest request, CancellationToken token = default)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
             var response = await _httpClient.SendAsync(
-                CreateHttpRequest($"api/v1/stores/{storeId}/invoices/{invoiceId}", bodyPayload: request,
-                    method: HttpMethod.Put), token);
+                CreateHttpRequest($"api/v1/stores/{storeId}/invoices/{invoiceId}/email", bodyPayload: request,
+                    method: HttpMethod.Post), token);
+            return await HandleResponse<InvoiceData>(response);
+        }
+
+        public virtual async Task<InvoiceData> MarkInvoiceStatus(string storeId, string invoiceId,
+            MarkInvoiceStatusRequest request, CancellationToken token = default)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+            if (request.Status!= InvoiceStatus.Complete && request.Status!= InvoiceStatus.Invalid)
+                throw new ArgumentOutOfRangeException(nameof(request.Status), "Status can only be Invalid or Complete");
+            var response = await _httpClient.SendAsync(
+                CreateHttpRequest($"api/v1/stores/{storeId}/invoices/{invoiceId}/status", bodyPayload: request,
+                    method: HttpMethod.Post), token);
+            return await HandleResponse<InvoiceData>(response);
+        }
+
+        public virtual async Task<InvoiceData> UnarchiveInvoice(string storeId, string invoiceId, CancellationToken token = default)
+        {
+            var response = await _httpClient.SendAsync(
+                CreateHttpRequest($"api/v1/stores/{storeId}/invoices/{invoiceId}/unarchive", 
+                    method: HttpMethod.Post), token);
             return await HandleResponse<InvoiceData>(response);
         }
     }

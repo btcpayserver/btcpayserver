@@ -12,7 +12,7 @@ namespace BTCPayServer.Client.Models
         [JsonConverter(typeof(StringEnumConverter))]
         public InvoiceStatus Status { get; set; }
         [JsonConverter(typeof(StringEnumConverter))]
-        public InvoiceExceptionStatus ExceptionStatus { get; set; }
+        public InvoiceExceptionStatus AdditionalStatus { get; set; }
         public Dictionary<string, PaymentMethodDataModel> PaymentMethodData { get; set; }
         
         public class PaymentMethodDataModel

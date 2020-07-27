@@ -762,7 +762,7 @@ namespace BTCPayServer.Tests
                 });
                 await user.RegisterDerivationSchemeAsync("BTC");
                 var newInvoice = await client.CreateInvoice(user.StoreId,
-                    new CreateInvoiceRequest() { Currency = "USD", Amount = 1, Metadata = new CreateInvoiceRequest.ProductInformation(){ ItemCode = "testitem"}});
+                    new CreateInvoiceRequest() { Currency = "USD", Amount = 1, Metadata = "{\"itemCode\": \"testitem\"}"});
 
                 //list 
                 var invoices = await viewOnly.GetInvoices(user.StoreId);
@@ -773,29 +773,34 @@ namespace BTCPayServer.Tests
 
                 //get payment request
                 var invoice = await viewOnly.GetInvoice(user.StoreId, newInvoice.Id);
-                Assert.Equal(newInvoice.Metadata.ItemCode, invoice.Metadata.ItemCode);
+                Assert.Equal(newInvoice.Metadata, invoice.Metadata);
 
                 //update
                 await AssertHttpError(403, async () =>
                 {
-                    await viewOnly.UpdateInvoice(user.StoreId, invoice.Id, new UpdateInvoiceRequest()
+                    await viewOnly.AddCustomerEmailToInvoice(user.StoreId, invoice.Id, new AddCustomerEmailRequest()
                     {
                         Email = "j@g.com"
                     });
                 });
-                await client.UpdateInvoice(user.StoreId, invoice.Id, new UpdateInvoiceRequest()
+                await client.AddCustomerEmailToInvoice(user.StoreId, invoice.Id, new AddCustomerEmailRequest()
                 {
                     Email = "j@g.com"
                 });
                 invoice = await viewOnly.GetInvoice(user.StoreId, newInvoice.Id);
-                Assert.Equal(invoice.Customer.BuyerEmail, "j@g.com");
+                Assert.Equal("j@g.com", invoice.CustomerEmail);
 
-                await AssertValidationError(new[] { nameof(UpdateInvoiceRequest.Email), nameof(UpdateInvoiceRequest.Archived),nameof(UpdateInvoiceRequest.Status) }, async () =>
+                await AssertValidationError(new[] { nameof(AddCustomerEmailRequest.Email) }, async () =>
                 {
-                    await client.UpdateInvoice(user.StoreId, invoice.Id, new UpdateInvoiceRequest()
+                    await client.AddCustomerEmailToInvoice(user.StoreId, invoice.Id, new AddCustomerEmailRequest()
                     {
                         Email = "j@g2.com",
-                        Archived = true,
+                    });
+                });
+                await AssertValidationError(new[] { nameof(MarkInvoiceStatusRequest.Status) }, async () =>
+                {
+                    await client.MarkInvoiceStatus(user.StoreId, invoice.Id, new MarkInvoiceStatusRequest()
+                    {
                         Status = InvoiceStatus.Complete
                     });
                 });
@@ -812,10 +817,7 @@ namespace BTCPayServer.Tests
                     (await client.GetInvoices(user.StoreId)).Select(data => data.Id));
                 
                 //unarchive
-                await client.UpdateInvoice(user.StoreId, invoice.Id, new UpdateInvoiceRequest()
-                {
-                    Archived = false,
-                });
+                await client.UnarchiveInvoice(user.StoreId, invoice.Id);
                 Assert.NotNull(await client.GetInvoice(user.StoreId,invoice.Id));
               
             }

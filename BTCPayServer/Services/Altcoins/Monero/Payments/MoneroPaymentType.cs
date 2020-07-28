@@ -1,3 +1,4 @@
+#if ALTCOINS_RELEASE || DEBUG
 using System.Globalization;
 using BTCPayServer.Payments;
 using BTCPayServer.Services.Invoices;
@@ -47,3 +48,4 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
         public override string InvoiceViewPaymentPartialName { get; } = "Monero/ViewMoneroLikePaymentData";
     }
 }
+#endif

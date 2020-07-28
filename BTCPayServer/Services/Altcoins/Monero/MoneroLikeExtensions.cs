@@ -1,3 +1,4 @@
+#if ALTCOINS_RELEASE || DEBUG
 using System;
 using System.Linq;
 using BTCPayServer.Configuration;
@@ -23,6 +24,7 @@ namespace BTCPayServer.Services.Altcoins.Monero
             serviceCollection.AddSingleton<MoneroLikePaymentMethodHandler>();
             serviceCollection.AddSingleton<IPaymentMethodHandler>(provider => provider.GetService<MoneroLikePaymentMethodHandler>());
             serviceCollection.AddSingleton<IStoreNavExtension, MoneroStoreNavExtension>();
+            serviceCollection.AddSingleton<ISyncSummaryProvider, MoneroSyncSummaryProvider>();
 
             return serviceCollection;
         }
@@ -67,3 +69,4 @@ namespace BTCPayServer.Services.Altcoins.Monero
         }
     }
 }
+#endif

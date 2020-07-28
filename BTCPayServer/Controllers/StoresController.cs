@@ -520,7 +520,9 @@ namespace BTCPayServer.Controllers
                             Value = value,
                             WalletId = new WalletId(store.Id, paymentMethodId.CryptoCode),
                             Enabled = !excludeFilters.Match(paymentMethodId) && strategy != null,
+#if ALTCOINS_RELEASE || DEBUG
                             Collapsed = network is ElementsBTCPayNetwork elementsBTCPayNetwork && elementsBTCPayNetwork.NetworkCryptoCode != elementsBTCPayNetwork.CryptoCode && string.IsNullOrEmpty(value)
+#endif
                         });
                         break;
                     case LightningPaymentType _:

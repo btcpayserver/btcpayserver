@@ -1,3 +1,4 @@
+#if ALTCOINS_RELEASE || DEBUG
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -302,3 +303,4 @@ namespace BTCPayServer.Services.Altcoins.Monero.UI
         }
     }
 }
+#endif

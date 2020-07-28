@@ -8,7 +8,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
-using BTCPayServer.Controllers.Logic;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Filters;
@@ -30,7 +29,6 @@ using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitpayClient;
 using NBXplorer;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using StoreData = BTCPayServer.Data.StoreData;
 
@@ -605,7 +603,7 @@ namespace BTCPayServer.Controllers
         [BitpayAPIConstraint(false)]
         public async Task<IActionResult> ListInvoices(int skip = 0, int count = 50, string searchTerm = null, int? timezoneOffset = null)
         {
-            ListCookiePreference.Parse(this, UserPrefCookieKeys.InvoicesQuery, ref searchTerm, ref timezoneOffset);
+            this.InvoicesQuery(ref searchTerm, ref timezoneOffset);
 
             var fs = new SearchString(searchTerm);
             var storeIds = fs.GetFilterArray("storeid") != null ? fs.GetFilterArray("storeid") : new List<string>().ToArray();

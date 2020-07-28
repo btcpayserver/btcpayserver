@@ -1,19 +1,28 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
-namespace BTCPayServer.Controllers.Logic
+namespace BTCPayServer
 {
-    // Classes here remember users preferences on certain pages and store them in unified blob cookie "UserPreferCookie"
-    public class ListCookiePreference
+    public static class ControllerBaseExtensions
     {
-        public static void Parse(ControllerBase ctrl, UserPrefCookieKeys key,
+        public static void InvoicesQuery(this ControllerBase ctrl, ref string searchTerm, ref int? timezoneOffset)
+        {
+            ListCookiePreference.Parse(ctrl, "InvoicesQuery", ref searchTerm, ref timezoneOffset);
+        }
+        public static void PaymentRequestsQuery(this ControllerBase ctrl, ref string searchTerm, ref int? timezoneOffset)
+        {
+            ListCookiePreference.Parse(ctrl, "PaymentRequestsQuery", ref searchTerm, ref timezoneOffset);
+        }
+    }
+
+    // Classes here remember users preferences on certain pages and store them in unified blob cookie "UserPreferCookie"
+    class ListCookiePreference
+    {
+        internal static void Parse(ControllerBase ctrl, string propName,
             ref string searchTerm, ref int? timezoneOffset)
         {
+            var prop = typeof(UserPrefsCookie).GetProperty(propName);
             var prefCookie = parsePrefCookie(ctrl);
 
             // If the user enter an empty searchTerm, then the variable will be null and not empty string
@@ -24,7 +33,7 @@ namespace BTCPayServer.Controllers.Logic
                          null;
             if (searchTerm is null)
             {
-                var section = prefCookie.GetSection(key);
+                var section = prop.GetValue(prefCookie) as ListQueryDataHolder;
                 if (section != null && !String.IsNullOrEmpty(section.SearchTerm))
                 {
                     searchTerm = section.SearchTerm;
@@ -33,7 +42,7 @@ namespace BTCPayServer.Controllers.Logic
             }
             else
             {
-                prefCookie.SetSection(key, new ListQueryDataHolder(searchTerm, timezoneOffset));
+                prop.SetValue(prefCookie, new ListQueryDataHolder(searchTerm, timezoneOffset));
                 ctrl.Response.Cookies.Append(nameof(UserPrefsCookie), JsonConvert.SerializeObject(prefCookie));
             }
         }
@@ -53,57 +62,26 @@ namespace BTCPayServer.Controllers.Logic
 
             return prefCookie;
         }
-    }
 
-    public enum UserPrefCookieKeys
-    {
-        InvoicesQuery, PaymentRequestsQuery
-    }
-
-    public class UserPrefsCookie
-    {
-        public ListQueryDataHolder InvoicesQuery { get; set; }
-
-        public ListQueryDataHolder PaymentRequestsQuery { get; set; }
-
-        internal ListQueryDataHolder GetSection(UserPrefCookieKeys key)
+        class UserPrefsCookie
         {
-            switch (key)
+            public ListQueryDataHolder InvoicesQuery { get; set; }
+
+            public ListQueryDataHolder PaymentRequestsQuery { get; set; }
+        }
+
+        class ListQueryDataHolder
+        {
+            public ListQueryDataHolder() { }
+
+            public ListQueryDataHolder(string searchTerm, int? timezoneOffset)
             {
-                case UserPrefCookieKeys.InvoicesQuery:
-                    return InvoicesQuery;
-                case UserPrefCookieKeys.PaymentRequestsQuery:
-                    return PaymentRequestsQuery;
+                SearchTerm = searchTerm;
+                TimezoneOffset = timezoneOffset;
             }
 
-            return null;
+            public int? TimezoneOffset { get; set; }
+            public string SearchTerm { get; set; }
         }
-
-        internal void SetSection(UserPrefCookieKeys key, ListQueryDataHolder query)
-        {
-            switch (key)
-            {
-                case UserPrefCookieKeys.InvoicesQuery:
-                    InvoicesQuery = query;
-                    break;
-                case UserPrefCookieKeys.PaymentRequestsQuery:
-                    PaymentRequestsQuery = query;
-                    break;
-            }
-        }
-    }
-
-    public class ListQueryDataHolder
-    {
-        public ListQueryDataHolder() { }
-
-        public ListQueryDataHolder(string searchTerm, int? timezoneOffset)
-        {
-            SearchTerm = searchTerm;
-            TimezoneOffset = timezoneOffset;
-        }
-
-        public int? TimezoneOffset { get; set; }
-        public string SearchTerm { get; set; }
     }
 }

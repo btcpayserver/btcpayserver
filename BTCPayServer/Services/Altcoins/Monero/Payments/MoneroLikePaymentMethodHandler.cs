@@ -1,3 +1,4 @@
+#if ALTCOINS_RELEASE || DEBUG
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -128,3 +129,4 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
         }
     }
 }
+#endif

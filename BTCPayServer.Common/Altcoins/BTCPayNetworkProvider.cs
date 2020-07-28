@@ -45,6 +45,7 @@ namespace BTCPayServer
             _NBXplorerNetworkProvider = new NBXplorerNetworkProvider(networkType);
             NetworkType = networkType;
             InitBitcoin();
+#if ALTCOINS_RELEASE || DEBUG
             InitLiquid();
             InitLiquidAssets();
             InitLitecoin();
@@ -60,6 +61,8 @@ namespace BTCPayServer
             InitPolis();
             InitChaincoin();
             InitArgoneum();
+            InitEthereum();
+            InitERC20();
 
             // Assume that electrum mappings are same as BTC if not specified
             foreach (var network in _Networks.Values.OfType<BTCPayNetwork>())
@@ -80,6 +83,7 @@ namespace BTCPayServer
             // Disabled because of https://twitter.com/Cryptopia_NZ/status/1085084168852291586
             //InitBitcoinplus();
             //InitUfo();
+#endif
         }
 
         /// <summary>

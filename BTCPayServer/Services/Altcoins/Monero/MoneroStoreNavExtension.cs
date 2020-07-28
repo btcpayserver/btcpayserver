@@ -1,3 +1,4 @@
+#if ALTCOINS_RELEASE || DEBUG
 using BTCPayServer.Contracts;
 
 namespace BTCPayServer.Services.Altcoins.Monero
@@ -7,3 +8,4 @@ namespace BTCPayServer.Services.Altcoins.Monero
         public string Partial { get; } = "Monero/StoreNavMoneroExtension";
     }
 }
+#endif

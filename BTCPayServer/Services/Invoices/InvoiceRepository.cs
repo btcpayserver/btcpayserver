@@ -527,7 +527,9 @@ retry:
 
         private IQueryable<Data.InvoiceData> GetInvoiceQuery(ApplicationDbContext context, InvoiceQuery queryObject)
         {
-            IQueryable<Data.InvoiceData> query = context.Invoices;
+            IQueryable<Data.InvoiceData> query = queryObject.UserId is null 
+                ? context.Invoices
+                : context.UserStore.Where(u => u.ApplicationUserId == queryObject.UserId).SelectMany(c => c.StoreData.Invoices);
 
             if (!queryObject.IncludeArchived)
             {
@@ -544,11 +546,6 @@ retry:
             {
                 var stores = queryObject.StoreId.ToHashSet().ToArray();
                 query = query.Where(i => stores.Contains(i.StoreDataId));
-            }
-
-            if (queryObject.UserId != null)
-            {
-                query = query.Where(i => i.StoreData.UserStores.Any(u => u.ApplicationUserId == queryObject.UserId));
             }
 
             if (!string.IsNullOrEmpty(queryObject.TextSearch))
@@ -605,7 +602,6 @@ retry:
 
             if (queryObject.Count != null)
                 query = query.Take(queryObject.Count.Value);
-
             return query;
         }
 
@@ -628,7 +624,6 @@ retry:
                     query = query.Include(o => o.HistoricalAddressInvoices).Include(o => o.AddressInvoices);
                 if (queryObject.IncludeEvents)
                     query = query.Include(o => o.Events);
-
                 var data = await query.ToArrayAsync().ConfigureAwait(false);
                 return data.Select(ToEntity).ToArray();
             }

@@ -1,4 +1,5 @@
-﻿using NBitcoin;
+﻿#if ALTCOINS_RELEASE || DEBUG
+using NBitcoin;
 
 namespace BTCPayServer
 {
@@ -54,3 +55,4 @@ namespace BTCPayServer
         }
     }
 }
+#endif

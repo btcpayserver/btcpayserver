@@ -1,3 +1,4 @@
+#if ALTCOINS_RELEASE || DEBUG
 using System;
 using BTCPayServer.Payments;
 using NBitcoin;
@@ -37,3 +38,4 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Payments
         }
     }
 }
+#endif

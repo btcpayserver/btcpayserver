@@ -1,3 +1,4 @@
+#if ALTCOINS_RELEASE || DEBUG
 using System;
 
 namespace BTCPayServer.Services.Altcoins.Ethereum.UI
@@ -15,3 +16,4 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.UI
         public long Index { get; set; }
     }
 }
+#endif

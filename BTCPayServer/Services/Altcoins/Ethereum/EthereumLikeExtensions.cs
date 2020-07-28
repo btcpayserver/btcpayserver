@@ -1,3 +1,4 @@
+#if ALTCOINS_RELEASE || DEBUG
 using BTCPayServer.Contracts;
 using BTCPayServer.Payments;
 using BTCPayServer.Services.Altcoins.Ethereum.Payments;
@@ -15,8 +16,10 @@ namespace BTCPayServer.Services.Altcoins.Ethereum
             serviceCollection.AddSingleton<IHostedService, EthereumService>(provider => provider.GetService<EthereumService>());
             serviceCollection.AddSingleton<EthereumLikePaymentMethodHandler>();
             serviceCollection.AddSingleton<IPaymentMethodHandler>(provider => provider.GetService<EthereumLikePaymentMethodHandler>());
-            serviceCollection.AddSingleton<IStoreNavExtension,EthereumStoreNavExtension>();
+            serviceCollection.AddSingleton<IStoreNavExtension, EthereumStoreNavExtension>();
+            serviceCollection.AddSingleton<ISyncSummaryProvider, EthereumSyncSummaryProvider>();
             return serviceCollection;
         }
     }
 }
+#endif

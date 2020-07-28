@@ -1,3 +1,4 @@
+#if ALTCOINS_RELEASE || DEBUG
 namespace BTCPayServer
 {
     public class EthereumBTCPayNetwork : BTCPayNetworkBase
@@ -16,3 +17,4 @@ namespace BTCPayServer
         public string SmartContractAddress { get; set; }
     }
 }
+#endif

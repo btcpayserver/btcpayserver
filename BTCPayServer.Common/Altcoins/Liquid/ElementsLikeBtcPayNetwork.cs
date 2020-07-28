@@ -1,3 +1,4 @@
+#if ALTCOINS_RELEASE || DEBUG
 using System.Collections.Generic;
 using System.Linq;
 using NBitcoin;
@@ -58,3 +59,4 @@ namespace BTCPayServer
         }
     }
 }
+#endif

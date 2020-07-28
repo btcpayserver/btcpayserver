@@ -1,3 +1,4 @@
+#if ALTCOINS_RELEASE || DEBUG
 using BTCPayServer.Filters;
 using Microsoft.AspNetCore.Mvc;
 
@@ -36,3 +37,4 @@ namespace BTCPayServer.Services.Altcoins.Monero.RPC
 
     }
 }
+#endif

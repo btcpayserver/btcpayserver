@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿#if ALTCOINS_RELEASE || DEBUG
+using System.ComponentModel.DataAnnotations;
 
 namespace BTCPayServer.Services.Altcoins.Ethereum.Configuration
 {
@@ -26,4 +27,5 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Configuration
         }
     }
 }
+#endif
                                                                                                                                                                   

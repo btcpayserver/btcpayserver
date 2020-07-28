@@ -90,8 +90,10 @@ namespace BTCPayServer.Configuration
 
             var networkProvider = new BTCPayNetworkProvider(NetworkType);
             var filtered = networkProvider.Filter(supportedChains.ToArray());
+#if ALTCOINS_RELEASE || DEBUG
             supportedChains.AddRange(filtered.GetAllElementsSubChains());
             supportedChains.AddRange(filtered.GetAllEthereumSubChains());
+#endif
             NetworkProvider = networkProvider.Filter(supportedChains.ToArray());
             foreach (var chain in supportedChains)
             {

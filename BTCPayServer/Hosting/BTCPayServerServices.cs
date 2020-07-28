@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Threading;
 using BTCPayServer.Configuration;
+using BTCPayServer.Contracts;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
@@ -16,11 +17,9 @@ using BTCPayServer.Security;
 using BTCPayServer.Security.Bitpay;
 using BTCPayServer.Security.GreenField;
 using BTCPayServer.Services;
-using BTCPayServer.Services.Altcoins.Monero;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Fees;
 using BTCPayServer.Services.Invoices;
-using BTCPayServer.Services.Altcoins.Ethereum;
 using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Notifications;
@@ -48,7 +47,10 @@ using NBXplorer.DerivationStrategy;
 using Newtonsoft.Json;
 using NicolasDorier.RateLimits;
 using Serilog;
-
+#if ALTCOINS_RELEASE || DEBUG
+using BTCPayServer.Services.Altcoins.Monero;
+using BTCPayServer.Services.Altcoins.Ethereum;
+#endif
 namespace BTCPayServer.Hosting
 {
     public static class BTCPayServerServices
@@ -76,8 +78,10 @@ namespace BTCPayServer.Hosting
             services.RegisterJsonConverter(n => new ClaimDestinationJsonConverter(n));
 
             services.AddPayJoinServices();
+#if ALTCOINS_RELEASE || DEBUG
             services.AddMoneroLike();
             services.AddEthereumLike();
+#endif
             services.TryAddSingleton<SettingsRepository>();
             services.TryAddSingleton<LabelFactory>();
             services.TryAddSingleton<TorServices>();
@@ -179,6 +183,7 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<LightningConfigurationProvider>();
             services.TryAddSingleton<LanguageService>();
             services.TryAddSingleton<NBXplorerDashboard>();
+            services.TryAddSingleton<ISyncSummaryProvider, NBXSyncSummaryProvider>();
             services.TryAddSingleton<StoreRepository>();
             services.TryAddSingleton<PaymentRequestRepository>();
             services.TryAddSingleton<BTCPayWalletProvider>();

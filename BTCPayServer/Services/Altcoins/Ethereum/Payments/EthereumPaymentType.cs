@@ -1,3 +1,4 @@
+#if ALTCOINS_RELEASE || DEBUG
 using System.Globalization;
 using BTCPayServer.Payments;
 using BTCPayServer.Services.Altcoins.Monero.Payments;
@@ -48,3 +49,4 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Payments
         public override string InvoiceViewPaymentPartialName { get; }= "Ethereum/ViewEthereumLikePaymentData";
     }
 }
+#endif

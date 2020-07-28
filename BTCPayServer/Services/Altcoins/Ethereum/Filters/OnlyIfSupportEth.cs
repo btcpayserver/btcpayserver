@@ -1,3 +1,4 @@
+#if ALTCOINS_RELEASE || DEBUG
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -23,3 +24,4 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Filters
         }
     
 }
+#endif

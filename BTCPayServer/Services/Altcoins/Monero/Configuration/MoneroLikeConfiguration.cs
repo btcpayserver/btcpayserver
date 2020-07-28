@@ -1,3 +1,4 @@
+#if ALTCOINS_RELEASE || DEBUG
 using System;
 using System.Collections.Generic;
 
@@ -16,3 +17,4 @@ namespace BTCPayServer.Services.Altcoins.Monero.Configuration
         public string WalletDirectory { get; set; }
     }
 }
+#endif

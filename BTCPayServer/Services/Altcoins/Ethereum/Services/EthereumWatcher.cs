@@ -1,3 +1,4 @@
+#if ALTCOINS_RELEASE || DEBUG
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -374,3 +375,4 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
         }
     }
 }
+#endif

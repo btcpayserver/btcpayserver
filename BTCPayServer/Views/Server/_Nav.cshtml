@@ -1,10 +1,10 @@
-﻿<div class="nav flex-column nav-pills mb-4">
-    <a class="nav-link @ViewData.IsActivePage(ServerNavPages.Users)" asp-action="ListUsers">Users</a>
-    <a class="nav-link @ViewData.IsActivePage(ServerNavPages.Emails)" asp-action="Emails">Email server</a>
-    <a class="nav-link @ViewData.IsActivePage(ServerNavPages.Policies)" asp-action="Policies">Policies</a>
-    <a class="nav-link @ViewData.IsActivePage(ServerNavPages.Services)" asp-action="Services">Services</a>
-    <a class="nav-link @ViewData.IsActivePage(ServerNavPages.Theme)" asp-action="Theme">Theme</a>
-    <a class="nav-link @ViewData.IsActivePage(ServerNavPages.Maintenance)" asp-action="Maintenance">Maintenance</a>
-    <a class="nav-link @ViewData.IsActivePage(ServerNavPages.Logs)" asp-action="LogsView">Logs</a>
-    <a class="nav-link @ViewData.IsActivePage(ServerNavPages.Files)" asp-action="Files">Files</a>
+<div class="nav flex-column nav-pills mb-4">
+    <a asp-controller="Server" class="nav-link @ViewData.IsActivePage(ServerNavPages.Users)" asp-action="ListUsers">Users</a>
+    <a asp-controller="Server" class="nav-link @ViewData.IsActivePage(ServerNavPages.Emails)" asp-action="Emails">Email server</a>
+    <a asp-controller="Server" class="nav-link @ViewData.IsActivePage(ServerNavPages.Policies)" asp-action="Policies">Policies</a>
+    <a asp-controller="Server" class="nav-link @ViewData.IsActivePage(ServerNavPages.Services)" asp-action="Services">Services</a>
+    <a asp-controller="Server" class="nav-link @ViewData.IsActivePage(ServerNavPages.Theme)" asp-action="Theme">Theme</a>
+    <a asp-controller="Server" class="nav-link @ViewData.IsActivePage(ServerNavPages.Maintenance)" asp-action="Maintenance">Maintenance</a>
+    <a asp-controller="Server" class="nav-link @ViewData.IsActivePage(ServerNavPages.Logs)" asp-action="LogsView">Logs</a>
+    <a asp-controller="Server" class="nav-link @ViewData.IsActivePage(ServerNavPages.Files)" asp-action="Files">Files</a>
 </div>

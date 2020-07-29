@@ -49,8 +49,10 @@ jobs:
             LATEST_TAG=${CIRCLE_TAG:1} #trim v from tag
             #
             sudo docker build --pull -t $DOCKERHUB_REPO:$LATEST_TAG-amd64 -f amd64.Dockerfile .
+            sudo docker build --pull --build-arg CONFIGURATION_NAME=Altcoins-Release -t $DOCKERHUB_REPO:$LATEST_TAG-altcoins-amd64 -f amd64.Dockerfile .
             sudo docker login --username=$DOCKERHUB_USER --password=$DOCKERHUB_PASS
             sudo docker push $DOCKERHUB_REPO:$LATEST_TAG-amd64
+            sudo docker push $DOCKERHUB_REPO:$LATEST_TAG-altcoins-amd64
 
   arm32v7:
     machine:
@@ -63,8 +65,10 @@ jobs:
             LATEST_TAG=${CIRCLE_TAG:1} #trim v from tag
             #
             sudo docker build --pull -t $DOCKERHUB_REPO:$LATEST_TAG-arm32v7 -f arm32v7.Dockerfile .
+            sudo docker build --pull --build-arg CONFIGURATION_NAME=Altcoins-Release -t $DOCKERHUB_REPO:$LATEST_TAG-altcoins-arm32v7 -f arm32v7.Dockerfile .
             sudo docker login --username=$DOCKERHUB_USER --password=$DOCKERHUB_PASS
             sudo docker push $DOCKERHUB_REPO:$LATEST_TAG-arm32v7
+            sudo docker push $DOCKERHUB_REPO:$LATEST_TAG-altcoins-arm32v7
 
   arm64v8:
     machine:
@@ -77,8 +81,10 @@ jobs:
             LATEST_TAG=${CIRCLE_TAG:1} #trim v from tag
             #
             sudo docker build --pull -t $DOCKERHUB_REPO:$LATEST_TAG-arm64v8 -f arm64v8.Dockerfile .
+            sudo docker build --build-arg CONFIGURATION_NAME=Altcoins-Release --pull -t $DOCKERHUB_REPO:$LATEST_TAG-altcoins-arm64v8 -f arm64v8.Dockerfile .
             sudo docker login --username=$DOCKERHUB_USER --password=$DOCKERHUB_PASS
             sudo docker push $DOCKERHUB_REPO:$LATEST_TAG-arm64v8
+            sudo docker push $DOCKERHUB_REPO:$LATEST_TAG-altcoins-arm64v8
 
   multiarch:
     machine:
@@ -99,6 +105,13 @@ jobs:
             sudo docker manifest annotate $DOCKERHUB_REPO:$LATEST_TAG $DOCKERHUB_REPO:$LATEST_TAG-arm32v7 --os linux --arch arm --variant v7
             sudo docker manifest annotate $DOCKERHUB_REPO:$LATEST_TAG $DOCKERHUB_REPO:$LATEST_TAG-arm64v8 --os linux --arch arm64 --variant v8
             sudo docker manifest push $DOCKERHUB_REPO:$LATEST_TAG -p
+            
+            
+            sudo docker manifest create --amend $DOCKERHUB_REPO:$LATEST_TAG-altcoins $DOCKERHUB_REPO:$LATEST_TAG-altcoins-amd64 $DOCKERHUB_REPO:$LATEST_TAG-altcoins-arm32v7 $DOCKERHUB_REPO:$LATEST_TAG-altcoins-arm64v8
+            sudo docker manifest annotate $DOCKERHUB_REPO:$LATEST_TAG-altcoins $DOCKERHUB_REPO:$LATEST_TAG-altcoins-amd64 --os linux --arch amd64
+            sudo docker manifest annotate $DOCKERHUB_REPO:$LATEST_TAG-altcoins $DOCKERHUB_REPO:$LATEST_TAG-altcoins-arm32v7 --os linux --arch arm --variant v7
+            sudo docker manifest annotate $DOCKERHUB_REPO:$LATEST_TAG-altcoins $DOCKERHUB_REPO:$LATEST_TAG-altcoins-arm64v8 --os linux --arch arm64 --variant v8
+            sudo docker manifest push $DOCKERHUB_REPO:$LATEST_TAG-altcoins -p
 
 workflows:
   version: 2

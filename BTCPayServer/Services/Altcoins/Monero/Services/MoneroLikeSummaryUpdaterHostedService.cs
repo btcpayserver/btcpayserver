@@ -1,3 +1,4 @@
+#if ALTCOINS
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -64,3 +65,4 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
         }
     }
 }
+#endif

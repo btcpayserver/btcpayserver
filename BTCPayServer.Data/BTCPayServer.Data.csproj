@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="../Build/Version.csproj" Condition="Exists('../Build/Version.csproj')" />
   <Import Project="../Build/Common.csproj" />
   <ItemGroup>

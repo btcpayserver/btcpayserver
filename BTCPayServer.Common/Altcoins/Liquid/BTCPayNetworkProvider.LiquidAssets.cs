@@ -1,3 +1,4 @@
+#if ALTCOINS
 using NBitcoin;
 
 namespace BTCPayServer
@@ -81,3 +82,4 @@ namespace BTCPayServer
 
 
 }
+#endif

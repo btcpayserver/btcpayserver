@@ -31,6 +31,12 @@ docker-compose down --v
 
 You can run tests on `MySql` database instead of `Postgres` by setting environnement variable `TESTS_DB` equals to `MySql`.
 
+# How to test altcoins
+
+Follow the above instruction except the `docker-compose` command should be `docker-compose -f docker-compose.altcoins.yml`.
+
+This will run monero, ltc and liquid dependencies.
+
 ## How to manually test payments
 
 ### Using the test bitcoin-cli

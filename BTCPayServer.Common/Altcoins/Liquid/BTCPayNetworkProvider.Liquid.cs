@@ -1,3 +1,4 @@
+#if ALTCOINS
 using NBitcoin;
 using NBitcoin.Altcoins;
 using NBitcoin.Altcoins.Elements;
@@ -34,3 +35,4 @@ namespace BTCPayServer
 
 
 }
+#endif

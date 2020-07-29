@@ -61,6 +61,11 @@ namespace BTCPayServer.Tests
     public class AltcoinTests
     {
         public const int TestTimeout = 60_000;
+        public AltcoinTests(ITestOutputHelper helper)
+        {
+            Logs.Tester = new XUnitLog(helper) { Name = "Tests" };
+            Logs.LogProvider = new XUnitLogProvider(helper);
+        }
 
         [Fact]
         [Trait("Integration", "Integration")]

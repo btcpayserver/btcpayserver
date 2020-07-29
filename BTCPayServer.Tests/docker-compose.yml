@@ -9,6 +9,8 @@ services:
     build:
       context: ..
       dockerfile: BTCPayServer.Tests/Dockerfile
+      args:
+        CONFIGURATION_NAME: Release
     environment:
       TESTS_BTCRPCCONNECTION: server=http://bitcoind:43782;ceiwHEbqWI83:DwubwWsoo3
       TESTS_BTCNBXPLORERURL: http://nbxplorer:32838/

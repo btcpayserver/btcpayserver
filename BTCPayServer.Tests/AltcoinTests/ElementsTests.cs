@@ -66,6 +66,7 @@ namespace BTCPayServer.Tests
             Assert.NotNull(options.NetworkProvider.GetNetwork("USDT"));
         }
 
+
         [Fact]
         [Trait("Altcoins", "Altcoins")]
         public async Task ElementsAssetsAreHandledCorrectly()

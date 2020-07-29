@@ -47,7 +47,7 @@ using NBXplorer.DerivationStrategy;
 using Newtonsoft.Json;
 using NicolasDorier.RateLimits;
 using Serilog;
-#if ALTCOINS_RELEASE || DEBUG
+#if ALTCOINS
 using BTCPayServer.Services.Altcoins.Monero;
 #endif
 namespace BTCPayServer.Hosting
@@ -77,7 +77,7 @@ namespace BTCPayServer.Hosting
             services.RegisterJsonConverter(n => new ClaimDestinationJsonConverter(n));
 
             services.AddPayJoinServices();
-#if ALTCOINS_RELEASE || DEBUG
+#if ALTCOINS
             services.AddMoneroLike();
 #endif
             services.TryAddSingleton<SettingsRepository>();

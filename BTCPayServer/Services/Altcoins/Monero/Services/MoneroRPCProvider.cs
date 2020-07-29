@@ -1,4 +1,4 @@
-#if ALTCOINS_RELEASE || DEBUG
+#if ALTCOINS
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Immutable;

@@ -1,4 +1,4 @@
-#if ALTCOINS_RELEASE || DEBUG
+#if ALTCOINS
 using BTCPayServer.Contracts;
 
 namespace BTCPayServer.Services.Altcoins.Monero

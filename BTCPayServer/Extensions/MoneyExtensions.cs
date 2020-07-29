@@ -16,7 +16,7 @@ namespace BTCPayServer
                     return money.ToDecimal(MoneyUnit.BTC);
                 case MoneyBag mb:
                     return mb.Select(money => money.GetValue(network)).Sum();
-#if ALTCOINS_RELEASE || DEBUG
+#if ALTCOINS
                 case AssetMoney assetMoney:
                     if (network is ElementsBTCPayNetwork elementsBTCPayNetwork)
                     {

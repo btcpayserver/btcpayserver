@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
   <Import Project="../Build/Version.csproj" Condition="Exists('../Build/Version.csproj')" />
   <Import Project="../Build/Common.csproj" />
   <PropertyGroup Condition="'$(Configuration)' == 'Debug' And '$(RazorCompileOnBuild)' != 'true'">
@@ -6,11 +6,8 @@
     <DefineConstants>$(DefineConstants);RAZOR_RUNTIME_COMPILE</DefineConstants>
   </PropertyGroup>
 
-
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <Configurations>Debug;Release;Altcoins-Release</Configurations>
-    <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Build\**" />
@@ -36,15 +33,14 @@
   <ItemGroup>
     <EmbeddedResource Include="bundleconfig.json" />
   </ItemGroup>
-  <ItemGroup Condition="'$(Configuration)' == 'Debug' Or '$(Configuration)'=='Altcoins-Release' ">
+  <ItemGroup Condition="'$(Altcoins)' == 'true'">
     <PackageReference Include="Nethereum.ABI" Version="3.8.0" />
     <PackageReference Include="Nethereum.HdWallet" Version="3.8.0" />
     <PackageReference Include="Nethereum.StandardTokenEIP20" Version="3.8.0" />
     <PackageReference Include="Nethereum.Web3" Version="3.8.0" />
-
   </ItemGroup>
 
-  <ItemGroup Condition="'$(Configuration)' == 'Release'">
+  <ItemGroup Condition="'$(Altcoins)' != 'true'">
     <Content Remove="Services\Altcoins\**\*" />
     <Content Remove="Views\EthereumLikeStore\**\*" />
     <Content Remove="Views\MoneroLikeStore\**\*" />

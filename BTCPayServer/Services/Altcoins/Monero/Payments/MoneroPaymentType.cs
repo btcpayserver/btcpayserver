@@ -1,4 +1,4 @@
-#if ALTCOINS_RELEASE || DEBUG
+#if ALTCOINS
 using System.Globalization;
 using BTCPayServer.Payments;
 using BTCPayServer.Services.Invoices;

@@ -45,7 +45,7 @@ namespace BTCPayServer
             _NBXplorerNetworkProvider = new NBXplorerNetworkProvider(networkType);
             NetworkType = networkType;
             InitBitcoin();
-#if ALTCOINS_RELEASE || DEBUG
+#if ALTCOINS
             InitLiquid();
             InitLiquidAssets();
             InitLitecoin();

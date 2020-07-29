@@ -1,4 +1,4 @@
-#if ALTCOINS_RELEASE || DEBUG
+#if ALTCOINS
 using BTCPayServer.Client.Models;
 using BTCPayServer.Payments;
 using BTCPayServer.Services.Altcoins.Monero.Utils;

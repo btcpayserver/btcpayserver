@@ -1,5 +1,5 @@
 using System;
-#if ALTCOINS_RELEASE || DEBUG
+#if ALTCOINS
 using BTCPayServer.Services.Altcoins.Monero.Payments;
 #endif
 using BTCPayServer.Services.Invoices;
@@ -33,7 +33,7 @@ namespace BTCPayServer.Payments
                 case "offchain":
                     type = PaymentTypes.LightningLike;
                     break;
-#if ALTCOINS_RELEASE || DEBUG
+#if ALTCOINS
                 case "monerolike":
                     type = MoneroPaymentType.Instance;
                     break;

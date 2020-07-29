@@ -1,4 +1,4 @@
-#if ALTCOINS_RELEASE || DEBUG
+#if ALTCOINS
 namespace BTCPayServer.Services.Altcoins.Monero.RPC
 {
     public class MoneroEvent

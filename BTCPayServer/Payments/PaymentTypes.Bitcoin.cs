@@ -2,7 +2,9 @@ using System;
 using System.Globalization;
 using System.Linq;
 using BTCPayServer.Payments.Bitcoin;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
+using NBitcoin;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Payments
@@ -64,6 +66,19 @@ namespace BTCPayServer.Payments
             txId = txId.Split('-').First();
             return string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink, txId);
         }
+
+        public override string GetPaymentLink(BTCPayNetworkBase network, IPaymentMethodDetails paymentMethodDetails,
+            Money cryptoInfoDue, string serverUri)
+        {
+            var bip21 =  ((BTCPayNetwork)network).GenerateBIP21(paymentMethodDetails.GetPaymentDestination(), cryptoInfoDue);
+            
+            if ((paymentMethodDetails as BitcoinLikeOnChainPaymentMethod)?.PayjoinEnabled is true)
+            {
+                bip21 += $"&{PayjoinClient.BIP21EndpointKey}={serverUri.WithTrailingSlash()}{network.CryptoCode}/{PayjoinClient.BIP21EndpointKey}";
+            }
+            return bip21;
+        }
+
         public override string InvoiceViewPaymentPartialName { get; } = "ViewBitcoinLikePaymentData";
     }
 }

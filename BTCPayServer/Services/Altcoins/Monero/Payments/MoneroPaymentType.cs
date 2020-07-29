@@ -1,6 +1,7 @@
 using System.Globalization;
 using BTCPayServer.Payments;
 using BTCPayServer.Services.Invoices;
+using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -42,6 +43,12 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
         public override string GetTransactionLink(BTCPayNetworkBase network, string txId)
         {
             return string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink, txId);
+        }
+
+        public override string GetPaymentLink(BTCPayNetworkBase network, IPaymentMethodDetails paymentMethodDetails, Money cryptoInfoDue, string serverUri)
+        {
+            return
+                $"{(network as MoneroLikeSpecificBtcPayNetwork).UriScheme}:{paymentMethodDetails.GetPaymentDestination()}?tx_amount={cryptoInfoDue.ToDecimal(MoneyUnit.BTC)}";
         }
 
         public override string InvoiceViewPaymentPartialName { get; } = "Monero/ViewMoneroLikePaymentData";

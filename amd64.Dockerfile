@@ -1,6 +1,5 @@
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1.202 AS builder
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
-ARG CONFIGURATION_NAME=Release
 WORKDIR /source
 COPY nuget.config nuget.config
 COPY Build/Common.csproj Build/Common.csproj
@@ -16,6 +15,7 @@ COPY BTCPayServer.Data/. BTCPayServer.Data/.
 COPY BTCPayServer.Client/. BTCPayServer.Client/.
 COPY BTCPayServer/. BTCPayServer/.
 COPY Build/Version.csproj Build/Version.csproj
+ARG CONFIGURATION_NAME=Release
 RUN cd BTCPayServer && dotnet publish --output /app/ --configuration ${CONFIGURATION_NAME}
 
 FROM mcr.microsoft.com/dotnet/core/aspnet:3.1.4-buster-slim

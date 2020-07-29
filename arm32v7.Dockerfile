@@ -1,7 +1,6 @@
 # This is a manifest image, will pull the image with the same arch as the builder machine
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1.202 AS builder
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
-ARG CONFIGURATION_NAME=Release
 RUN apt-get update \
 	&& apt-get install -qq --no-install-recommends qemu qemu-user-static qemu-user binfmt-support
 
@@ -20,6 +19,7 @@ COPY BTCPayServer.Data/. BTCPayServer.Data/.
 COPY BTCPayServer.Client/. BTCPayServer.Client/.
 COPY BTCPayServer/. BTCPayServer/.
 COPY Build/Version.csproj Build/Version.csproj
+ARG CONFIGURATION_NAME=Release
 RUN cd BTCPayServer && dotnet publish --output /app/ --configuration ${CONFIGURATION_NAME}
 
 # Force the builder machine to take make an arm runtime image. This is fine as long as the builder does not run any program

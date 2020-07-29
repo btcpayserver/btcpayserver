@@ -75,20 +75,15 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
         public override void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse, StoreBlob storeBlob)
         {
             var paymentMethodId = new PaymentMethodId(model.CryptoCode, PaymentType);
-
-            var client = _moneroRpcProvider.WalletRpcClients[model.CryptoCode];
-
             var cryptoInfo = invoiceResponse.CryptoInfo.First(o => o.GetpaymentMethodId() == paymentMethodId);
             var network = _networkProvider.GetNetwork<MoneroLikeSpecificBtcPayNetwork>(model.CryptoCode);
             model.IsLightning = false;
             model.PaymentMethodName = GetPaymentMethodName(network);
             model.CryptoImage = GetCryptoImage(network);
-            model.InvoiceBitcoinUrl = client.SendCommandAsync<MakeUriRequest, MakeUriResponse>("make_uri", new MakeUriRequest()
+            model.InvoiceBitcoinUrl = MoneroPaymentType.Instance.GetPaymentLink(network, new MoneroLikeOnChainPaymentMethodDetails()
             {
-                Address = cryptoInfo.Address,
-                Amount = MoneroMoney.Convert(decimal.Parse(cryptoInfo.Due, CultureInfo.InvariantCulture))
-            }).GetAwaiter()
-                .GetResult().Uri;
+                DepositAddress = cryptoInfo.Address
+            }, cryptoInfo.Due, null);
             model.InvoiceBitcoinUrlQR = model.InvoiceBitcoinUrl;
         }
         public override string GetCryptoImage(PaymentMethodId paymentMethodId)

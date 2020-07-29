@@ -14,7 +14,7 @@ namespace BTCPayServer.Client.Models
         public string Id { get; set; }
         public string Name { get; set; }
         public string Currency { get; set; }
-        [JsonConverter(typeof(DecimalStringJsonConverter))]
+        [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal Amount { get; set; }
         [JsonConverter(typeof(TimeSpanJsonConverter))]
         public TimeSpan? Period { get; set; }

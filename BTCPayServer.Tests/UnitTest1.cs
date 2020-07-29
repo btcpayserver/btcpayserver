@@ -67,6 +67,90 @@ namespace BTCPayServer.Tests
             Logs.LogProvider = new XUnitLogProvider(helper);
         }
 
+        class DockerImage
+        {
+            public string User { get; private set; }
+            public string Name { get; private set; }
+            public string Tag { get; private set; }
+
+            public string Source { get; set; }
+
+            public static DockerImage Parse(string str)
+            {
+                //${BTCPAY_IMAGE: -btcpayserver / btcpayserver:1.0.3.21}
+                var variableMatch = Regex.Match(str, @"\$\{[^-]+-([^\}]+)\}");
+                if (variableMatch.Success)
+                {
+                    str = variableMatch.Groups[1].Value;
+                }
+                DockerImage img = new DockerImage();
+                var match = Regex.Match(str, "([^/]*/)?([^:]+):?(.*)");
+                if (!match.Success)
+                    throw new FormatException();
+                img.User = match.Groups[1].Length == 0 ? string.Empty : match.Groups[1].Value.Substring(0, match.Groups[1].Value.Length - 1);
+                img.Name = match.Groups[2].Value;
+                img.Tag = match.Groups[3].Value;
+                if (img.Tag == string.Empty)
+                    img.Tag = "latest";
+                return img;
+            }
+            public override string ToString()
+            {
+                return ToString(true);
+            }
+            public string ToString(bool includeTag)
+            {
+                StringBuilder builder = new StringBuilder();
+                if (!String.IsNullOrWhiteSpace(User))
+                    builder.Append($"{User}/");
+                builder.Append($"{Name}");
+                if (includeTag)
+                {
+                    if (!String.IsNullOrWhiteSpace(Tag))
+                        builder.Append($":{Tag}");
+                }
+                return builder.ToString();
+            }
+        }
+
+
+        /// <summary>
+        /// This test check that we don't forget to bump one image in both docker-compose.altcoins.yml and docker-compose.yml
+        /// </summary>
+        [Fact]
+        [Trait("Fast", "Fast")]
+        public void CheckDockerComposeUpToDate()
+        {
+            var compose1 = File.ReadAllText(Path.Combine(TestUtils.TryGetSolutionDirectoryInfo().FullName, "BTCPayServer.Tests", "docker-compose.yml"));
+            var compose2 = File.ReadAllText(Path.Combine(TestUtils.TryGetSolutionDirectoryInfo().FullName, "BTCPayServer.Tests", "docker-compose.altcoins.yml"));
+
+            List<DockerImage> GetImages(string content)
+            {
+                List<DockerImage> images = new List<DockerImage>();
+                foreach (var line in content.Split(new[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    var l = line.Trim();
+                    if (l.StartsWith("image:", StringComparison.OrdinalIgnoreCase))
+                    {
+                        images.Add(DockerImage.Parse(l.Substring("image:".Length).Trim()));
+                    }
+                }
+                return images;
+            }
+
+            var img1 = GetImages(compose1);
+            var img2 = GetImages(compose2);
+            var groups = img1.Concat(img2).GroupBy(g => g.Name);
+            foreach (var g in groups)
+            {
+                var tags = new HashSet<String>(g.Select(o => o.Tag));
+                if (tags.Count != 1)
+                {
+                    Assert.False(true, $"All docker images '{g.Key}' in docker-compose.yml and docker-compose.altcoins.yml should have the same tags. (Found {string.Join(',', tags)})");
+                }
+            }
+        }
+
         [Fact]
         [Trait("Fast", "Fast")]
         public async Task CheckNoDeadLink()

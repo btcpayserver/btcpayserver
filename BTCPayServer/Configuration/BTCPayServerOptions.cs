@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Serilog.Events;
+using TwentyTwenty.Storage;
 
 namespace BTCPayServer.Configuration
 {
@@ -92,6 +93,11 @@ namespace BTCPayServer.Configuration
             var filtered = networkProvider.Filter(supportedChains.ToArray());
 #if ALTCOINS
             supportedChains.AddRange(filtered.GetAllElementsSubChains());
+#endif
+#if !ALTCOINS
+            var onlyBTC = supportedChains.Count == 1 && supportedChains.First() == "BTC";
+            if (!onlyBTC)
+                throw new ConfigException($"This build of BTCPay Server does not support altcoins");
 #endif
             NetworkProvider = networkProvider.Filter(supportedChains.ToArray());
             foreach (var chain in supportedChains)

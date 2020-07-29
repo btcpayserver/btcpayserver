@@ -853,5 +853,183 @@ normal:
                              s.CryptoCode));
             }
         }
+
+        [Fact]
+        [Trait("Fast", "Fast")]
+        [Trait("Altcoins", "Altcoins")]
+        public void CanCalculateCryptoDue2()
+        {
+#pragma warning disable CS0618
+            var dummy = new Key().PubKey.GetAddress(ScriptPubKeyType.Legacy, Network.RegTest).ToString();
+            var networkProvider = new BTCPayNetworkProvider(NetworkType.Regtest);
+            var paymentMethodHandlerDictionary = new PaymentMethodHandlerDictionary(new IPaymentMethodHandler[]
+            {
+                new BitcoinLikePaymentHandler(null, networkProvider, null, null, null),
+                new LightningLikePaymentHandler(null, null, networkProvider, null),
+            });
+            var networkBTC = networkProvider.GetNetwork("BTC");
+            var networkLTC = networkProvider.GetNetwork("LTC");
+            InvoiceEntity invoiceEntity = new InvoiceEntity();
+            invoiceEntity.Networks = networkProvider;
+            invoiceEntity.Payments = new System.Collections.Generic.List<PaymentEntity>();
+            invoiceEntity.ProductInformation = new ProductInformation() { Price = 100 };
+            PaymentMethodDictionary paymentMethods = new PaymentMethodDictionary();
+            paymentMethods.Add(new PaymentMethod() { Network = networkBTC, CryptoCode = "BTC", Rate = 10513.44m, }
+                .SetPaymentMethodDetails(
+                    new BTCPayServer.Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod()
+                    {
+                        NextNetworkFee = Money.Coins(0.00000100m),
+                        DepositAddress = dummy
+                    }));
+            paymentMethods.Add(new PaymentMethod() { Network = networkLTC, CryptoCode = "LTC", Rate = 216.79m }
+                .SetPaymentMethodDetails(
+                    new BTCPayServer.Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod()
+                    {
+                        NextNetworkFee = Money.Coins(0.00010000m),
+                        DepositAddress = dummy
+                    }));
+            invoiceEntity.SetPaymentMethods(paymentMethods);
+
+            var btc = invoiceEntity.GetPaymentMethod(new PaymentMethodId("BTC", PaymentTypes.BTCLike));
+            var accounting = btc.Calculate();
+
+            invoiceEntity.Payments.Add(
+                new PaymentEntity()
+                {
+                    Accounted = true,
+                    CryptoCode = "BTC",
+                    NetworkFee = 0.00000100m,
+                    Network = networkProvider.GetNetwork("BTC"),
+                }
+                    .SetCryptoPaymentData(new BitcoinLikePaymentData()
+                    {
+                        Network = networkProvider.GetNetwork("BTC"),
+                        Output = new TxOut() { Value = Money.Coins(0.00151263m) }
+                    }));
+            accounting = btc.Calculate();
+            invoiceEntity.Payments.Add(
+                new PaymentEntity()
+                {
+                    Accounted = true,
+                    CryptoCode = "BTC",
+                    NetworkFee = 0.00000100m,
+                    Network = networkProvider.GetNetwork("BTC")
+                }
+                    .SetCryptoPaymentData(new BitcoinLikePaymentData()
+                    {
+                        Network = networkProvider.GetNetwork("BTC"),
+                        Output = new TxOut() { Value = accounting.Due }
+                    }));
+            accounting = btc.Calculate();
+            Assert.Equal(Money.Zero, accounting.Due);
+            Assert.Equal(Money.Zero, accounting.DueUncapped);
+
+            var ltc = invoiceEntity.GetPaymentMethod(new PaymentMethodId("LTC", PaymentTypes.BTCLike));
+            accounting = ltc.Calculate();
+
+            Assert.Equal(Money.Zero, accounting.Due);
+            // LTC might have over paid due to BTC paying above what it should (round 1 satoshi up)
+            Assert.True(accounting.DueUncapped < Money.Zero);
+
+            var paymentMethod = InvoiceWatcher.GetNearestClearedPayment(paymentMethods, out var accounting2);
+            Assert.Equal(btc.CryptoCode, paymentMethod.CryptoCode);
+#pragma warning restore CS0618
+        }
+
+        [Fact]
+        [Trait("Fast", "Fast")]
+        [Trait("Altcoins", "Altcoins")]
+        public void CanParseDerivationScheme()
+        {
+            var testnetNetworkProvider = new BTCPayNetworkProvider(NetworkType.Testnet);
+            var regtestNetworkProvider = new BTCPayNetworkProvider(NetworkType.Regtest);
+            var mainnetNetworkProvider = new BTCPayNetworkProvider(NetworkType.Mainnet);
+            var testnetParser = new DerivationSchemeParser(testnetNetworkProvider.GetNetwork<BTCPayNetwork>("BTC"));
+            var mainnetParser = new DerivationSchemeParser(mainnetNetworkProvider.GetNetwork<BTCPayNetwork>("BTC"));
+            NBXplorer.DerivationStrategy.DerivationStrategyBase result;
+            //  Passing electrum stuff
+            // Passing a native segwit from mainnet to a testnet parser, means the testnet parser will try to convert it into segwit
+            result = testnetParser.Parse(
+                "zpub6nL6PUGurpU3DfPDSZaRS6WshpbNc9ctCFFzrCn54cssnheM31SZJZUcFHKtjJJNhAueMbh6ptFMfy1aeiMQJr3RJ4DDt1hAPx7sMTKV48t");
+            Assert.Equal(
+                "tpubD93CJNkmGjLXnsBqE2zGDqfEh1Q8iJ8wueordy3SeWt1RngbbuxXCsqASuVWFywmfoCwUE1rSfNJbaH4cBNcbp8WcyZgPiiRSTazLGL8U9w",
+                result.ToString());
+            result = mainnetParser.Parse(
+                "zpub6nL6PUGurpU3DfPDSZaRS6WshpbNc9ctCFFzrCn54cssnheM31SZJZUcFHKtjJJNhAueMbh6ptFMfy1aeiMQJr3RJ4DDt1hAPx7sMTKV48t");
+            Assert.Equal(
+                "xpub68fZn8w5ZTP5X4zymr1B1vKsMtJUiudtN2DZHQzJJc87gW1tXh7S4SALCsQijUzXstg2reVyuZYFuPnTDKXNiNgDZNpNiC4BrVzaaGEaRHj",
+                result.ToString());
+            // P2SH
+            result = testnetParser.Parse(
+                "upub57Wa4MvRPNyAipy1MCpERxcFpHR2ZatyikppkyeWkoRL6QJvLVMo39jYdcaJVxyvBURyRVmErBEA5oGicKBgk1j72GAXSPFH5tUDoGZ8nEu");
+            Assert.Equal(
+                "tpubD6NzVbkrYhZ4YWjDJUACG9E8fJx2NqNY1iynTiPKEjJrzzRKAgha3nNnwGXr2BtvCJKJHW4nmG7rRqc2AGGy2AECgt16seMyV2FZivUmaJg-[p2sh]",
+                result.ToString());
+
+            result = mainnetParser.Parse(
+                "ypub6QqdH2c5z79681jUgdxjGJzGW9zpL4ryPCuhtZE4GpvrJoZqM823XQN6iSQeVbbbp2uCRQ9UgpeMcwiyV6qjvxTWVcxDn2XEAnioMUwsrQ5");
+            Assert.Equal(
+                "xpub661MyMwAqRbcGiYMrHB74DtmLBrNPSsUU6PV7ALAtpYyFhkc6TrUuLhxhET4VgwgQPnPfvYvEAHojf7QmQRj8imudHFoC7hju4f9xxri8wR-[p2sh]",
+                result.ToString());
+
+            // if prefix not recognize, assume it is segwit
+            result = testnetParser.Parse(
+                "xpub661MyMwAqRbcGeVGU5e5KBcau1HHEUGf9Wr7k4FyLa8yRPNQrrVa7Ndrgg8Afbe2UYXMSL6tJBFd2JewwWASsePPLjkcJFL1tTVEs3UQ23X");
+            Assert.Equal(
+                "tpubD6NzVbkrYhZ4YSg7vGdAX6wxE8NwDrmih9SR6cK7gUtsAg37w5LfFpJgviCxC6bGGT4G3uckqH5fiV9ZLN1gm5qgQLVuymzFUR5ed7U7ksu",
+                result.ToString());
+            ////////////////
+
+            var tpub =
+                "tpubD6NzVbkrYhZ4Wc65tjhmcKdWFauAo7bGLRTxvggygkNyp6SMGutJp7iociwsinU33jyNBp1J9j2hJH5yQsayfiS3LEU2ZqXodAcnaygra8o";
+
+            result = testnetParser.Parse(tpub);
+            Assert.Equal(tpub, result.ToString());
+            testnetParser.HintScriptPubKey = BitcoinAddress
+                .Create("tb1q4s33amqm8l7a07zdxcunqnn3gcsjcfz3xc573l", testnetParser.Network).ScriptPubKey;
+            result = testnetParser.Parse(tpub);
+            Assert.Equal(tpub, result.ToString());
+
+            testnetParser.HintScriptPubKey = BitcoinAddress
+                .Create("2N2humNio3YTApSfY6VztQ9hQwDnhDvaqFQ", testnetParser.Network).ScriptPubKey;
+            result = testnetParser.Parse(tpub);
+            Assert.Equal($"{tpub}-[p2sh]", result.ToString());
+
+            testnetParser.HintScriptPubKey = BitcoinAddress
+                .Create("mwD8bHS65cdgUf6rZUUSoVhi3wNQFu1Nfi", testnetParser.Network).ScriptPubKey;
+            result = testnetParser.Parse(tpub);
+            Assert.Equal($"{tpub}-[legacy]", result.ToString());
+
+            testnetParser.HintScriptPubKey = BitcoinAddress
+                .Create("2N2humNio3YTApSfY6VztQ9hQwDnhDvaqFQ", testnetParser.Network).ScriptPubKey;
+            result = testnetParser.Parse($"{tpub}-[legacy]");
+            Assert.Equal($"{tpub}-[p2sh]", result.ToString());
+
+            result = testnetParser.Parse(tpub);
+            Assert.Equal($"{tpub}-[p2sh]", result.ToString());
+
+            var regtestParser = new DerivationSchemeParser(regtestNetworkProvider.GetNetwork<BTCPayNetwork>("BTC"));
+            var parsed =
+                regtestParser.Parse(
+                    "xpub6DG1rMYXiQtCc6CfdLFD9CtxqhzzRh7j6Sq6EdE9abgYy3cfDRrniLLv2AdwqHL1exiLnnKR5XXcaoiiexf3Y9R6J6rxkJtqJHzNzMW9QMZ-[p2sh]");
+            Assert.Equal(
+                "tpubDDdeNbNDRgqestPX5XEJM8ELAq6eR5cne5RPbBHHvWSSiLHNHehsrn1kGCijMnHFSsFFQMqHcdMfGzDL3pWHRasPMhcGRqZ4tFankQ3i4ok-[p2sh]",
+                parsed.ToString());
+
+            // Let's make sure we can't generate segwit with dogecoin
+            regtestParser = new DerivationSchemeParser(regtestNetworkProvider.GetNetwork<BTCPayNetwork>("DOGE"));
+            parsed = regtestParser.Parse(
+                "xpub6DG1rMYXiQtCc6CfdLFD9CtxqhzzRh7j6Sq6EdE9abgYy3cfDRrniLLv2AdwqHL1exiLnnKR5XXcaoiiexf3Y9R6J6rxkJtqJHzNzMW9QMZ-[p2sh]");
+            Assert.Equal(
+                "tpubDDdeNbNDRgqestPX5XEJM8ELAq6eR5cne5RPbBHHvWSSiLHNHehsrn1kGCijMnHFSsFFQMqHcdMfGzDL3pWHRasPMhcGRqZ4tFankQ3i4ok-[legacy]",
+                parsed.ToString());
+
+            regtestParser = new DerivationSchemeParser(regtestNetworkProvider.GetNetwork<BTCPayNetwork>("DOGE"));
+            parsed = regtestParser.Parse(
+                "tpubDDdeNbNDRgqestPX5XEJM8ELAq6eR5cne5RPbBHHvWSSiLHNHehsrn1kGCijMnHFSsFFQMqHcdMfGzDL3pWHRasPMhcGRqZ4tFankQ3i4ok-[p2sh]");
+            Assert.Equal(
+                "tpubDDdeNbNDRgqestPX5XEJM8ELAq6eR5cne5RPbBHHvWSSiLHNHehsrn1kGCijMnHFSsFFQMqHcdMfGzDL3pWHRasPMhcGRqZ4tFankQ3i4ok-[legacy]",
+                parsed.ToString());
+        }
     }
 }

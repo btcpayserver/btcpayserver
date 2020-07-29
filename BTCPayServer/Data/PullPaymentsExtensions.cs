@@ -149,9 +149,9 @@ namespace BTCPayServer.Data
     }
     public class PayoutBlob
     {
-        [JsonConverter(typeof(DecimalStringJsonConverter))]
+        [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal Amount { get; set; }
-        [JsonConverter(typeof(DecimalStringJsonConverter))]
+        [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal? CryptoAmount { get; set; }
         public int MinimumConfirmation { get; set; } = 1;
         public IClaimDestination Destination { get; set; }
@@ -190,9 +190,9 @@ namespace BTCPayServer.Data
         public string Name { get; set; }
         public string Currency { get; set; }
         public int Divisibility { get; set; }
-        [JsonConverter(typeof(DecimalStringJsonConverter))]
+        [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal Limit { get; set; }
-        [JsonConverter(typeof(DecimalStringJsonConverter))]
+        [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal MinimumClaim { get; set; }
         public PullPaymentView View { get; set; } = new PullPaymentView();
         [JsonConverter(typeof(TimeSpanJsonConverter))]

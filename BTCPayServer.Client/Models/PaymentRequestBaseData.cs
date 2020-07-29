@@ -8,7 +8,7 @@ namespace BTCPayServer.Client.Models
 {
     public class PaymentRequestBaseData
     {
-        [JsonProperty(ItemConverterType = typeof(DecimalStringJsonConverter))]
+        [JsonProperty(ItemConverterType = typeof(NumericStringJsonConverter))]
         public decimal Amount { get; set; }
         public string Currency { get; set; }
         public DateTime? ExpiryDate { get; set; }

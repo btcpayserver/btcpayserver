@@ -172,6 +172,7 @@ namespace BTCPayServer.Hosting
                 htmlSanitizer.RemovingStyle += (sender, args) => { args.Cancel = true; };
                 htmlSanitizer.AllowedAttributes.Add("class");
                 htmlSanitizer.AllowedTags.Add("iframe");
+                htmlSanitizer.AllowedTags.Add("style");
                 htmlSanitizer.AllowedTags.Remove("img");
                 htmlSanitizer.AllowedAttributes.Add("webkitallowfullscreen");
                 htmlSanitizer.AllowedAttributes.Add("allowfullscreen");

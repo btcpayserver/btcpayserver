@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using BTCPayServer.Services.Rates;
+using CsvHelper.Configuration;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.Services.Invoices.Export
@@ -42,10 +44,15 @@ namespace BTCPayServer.Services.Invoices.Export
 
         private string processCsv(List<ExportInvoiceHolder> invoices)
         {
-            var serializer = new CsvSerializer<ExportInvoiceHolder>();
-            var csv = serializer.Serialize(invoices);
-
-            return csv;
+            using StringWriter writer = new StringWriter();
+            using var csvWriter = new CsvHelper.CsvWriter(writer, new CsvConfiguration(CultureInfo.InvariantCulture), true);
+            csvWriter.WriteHeader<ExportInvoiceHolder>();
+            foreach (var invoice in invoices)
+            {
+                csvWriter.WriteRecord(invoice);
+            }
+            csvWriter.Flush();
+            return writer.ToString();
         }
 
         private IEnumerable<ExportInvoiceHolder> convertFromDb(InvoiceEntity invoice)

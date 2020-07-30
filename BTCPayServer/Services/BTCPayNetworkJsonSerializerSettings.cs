@@ -26,7 +26,7 @@ namespace BTCPayServer.Services
     {
         public BTCPayNetworkJsonSerializerSettings(BTCPayNetworkProvider networkProvider, IEnumerable<IJsonConverterRegistration> jsonSerializers)
         {
-            foreach (var network in networkProvider.UnfilteredNetworks.GetAll().OfType<BTCPayNetwork>())
+            foreach (var network in networkProvider.GetAll().OfType<BTCPayNetwork>())
             {
                 var serializer = new JsonSerializerSettings();
                 foreach (var jsonSerializer in jsonSerializers)

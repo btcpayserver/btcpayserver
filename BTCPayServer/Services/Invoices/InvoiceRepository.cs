@@ -45,7 +45,7 @@ retry:
             catch when (retryCount++ < 5) { goto retry; }
             _IndexerThread = new CustomThreadPool(1, "Invoice Indexer");
             _ContextFactory = contextFactory;
-            _Networks = networks.UnfilteredNetworks;
+            _Networks = networks;
         }
 
         public InvoiceEntity CreateNewInvoice()

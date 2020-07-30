@@ -10,7 +10,7 @@ namespace BTCPayServer
         {
             var elementsBased = networkProvider.GetAll().OfType<ElementsBTCPayNetwork>();
             var parentChains = elementsBased.Select(network => network.NetworkCryptoCode.ToUpperInvariant()).Distinct();
-            return networkProvider.UnfilteredNetworks.GetAll().OfType<ElementsBTCPayNetwork>()
+            return networkProvider.GetAll().OfType<ElementsBTCPayNetwork>()
                 .Where(network => parentChains.Contains(network.NetworkCryptoCode)).Select(network => network.CryptoCode.ToUpperInvariant());
         }
     }

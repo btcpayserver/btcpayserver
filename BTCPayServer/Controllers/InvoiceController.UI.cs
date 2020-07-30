@@ -601,25 +601,19 @@ namespace BTCPayServer.Controllers
         [Route("invoices")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [BitpayAPIConstraint(false)]
-        public async Task<IActionResult> ListInvoices(int skip = 0, int count = 50, string searchTerm = null, int? timezoneOffset = null)
+        public async Task<IActionResult> ListInvoices(InvoicesModel model = null)
         {
-            this.InvoicesQuery(ref searchTerm, ref timezoneOffset);
+            model = this.ParseListQuery(model ?? new InvoicesModel());
 
-            var fs = new SearchString(searchTerm);
+            var fs = new SearchString(model.SearchTerm);
             var storeIds = fs.GetFilterArray("storeid") != null ? fs.GetFilterArray("storeid") : new List<string>().ToArray();
 
-            var model = new InvoicesModel
-            {
-                SearchTerm = searchTerm,
-                Skip = skip,
-                Count = count,
-                StoreIds = storeIds,
-                TimezoneOffset = timezoneOffset
-            };
-            InvoiceQuery invoiceQuery = GetInvoiceQuery(searchTerm, timezoneOffset ?? 0);
+            model.StoreIds = storeIds;
+
+            InvoiceQuery invoiceQuery = GetInvoiceQuery(model.SearchTerm, model.TimezoneOffset ?? 0);
             var counting = _InvoiceRepository.GetInvoicesTotal(invoiceQuery);
-            invoiceQuery.Count = count;
-            invoiceQuery.Skip = skip;
+            invoiceQuery.Count = model.Count;
+            invoiceQuery.Skip = model.Skip;
             var list = await _InvoiceRepository.GetInvoices(invoiceQuery);
 
             foreach (var invoice in list)

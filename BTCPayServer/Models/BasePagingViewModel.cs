@@ -1,16 +1,13 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
 
 namespace BTCPayServer.Models
 {
-    public class BasePagingViewModel
+    public abstract class BasePagingViewModel
     {
-        public int Skip { get; set; }
-        public int Count { get; set; }
+        public int Skip { get; set; } = 0;
+        public int Count { get; set; } = 50;
         public int Total { get; set; }
+        [DisplayFormat(ConvertEmptyStringToNull = false)]
         public string SearchTerm { get; set; }
         public int? TimezoneOffset { get; set; }
     }

@@ -1,33 +1,37 @@
 using System;
+using System.Reflection;
+using BTCPayServer.Models;
+using BTCPayServer.Models.InvoicingModels;
+using BTCPayServer.Models.PaymentRequestViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
 namespace BTCPayServer
 {
-    public static class ControllerBaseExtensions
-    {
-        public static void InvoicesQuery(this ControllerBase ctrl, ref string searchTerm, ref int? timezoneOffset)
-        {
-            ListCookiePreference.Parse(ctrl, "InvoicesQuery", ref searchTerm, ref timezoneOffset);
-        }
-        public static void PaymentRequestsQuery(this ControllerBase ctrl, ref string searchTerm, ref int? timezoneOffset)
-        {
-            ListCookiePreference.Parse(ctrl, "PaymentRequestsQuery", ref searchTerm, ref timezoneOffset);
-        }
-    }
-
     // Classes here remember users preferences on certain pages and store them in unified blob cookie "UserPreferCookie"
-    class ListCookiePreference
+    public static class ControllerBaseExtension
     {
-        internal static void Parse(ControllerBase ctrl, string propName,
-            ref string searchTerm, ref int? timezoneOffset)
+        public static T ParseListQuery<T>(this ControllerBase ctrl, T model) where T : BasePagingViewModel
         {
-            var prop = typeof(UserPrefsCookie).GetProperty(propName);
+            PropertyInfo prop;
+            if (model is InvoicesModel)
+                prop = typeof(UserPrefsCookie).GetProperty(nameof(UserPrefsCookie.InvoicesQuery));
+            else if (model is ListPaymentRequestsViewModel)
+                prop = typeof(UserPrefsCookie).GetProperty(nameof(UserPrefsCookie.PaymentRequestsQuery));
+            else
+                throw new Exception("Unsupported BasePagingViewModel for cookie user preferences saving");
+
+            return ProcessParse(ctrl, model, prop);
+        }
+
+        private static T ProcessParse<T>(ControllerBase ctrl, T model, PropertyInfo prop) where T : BasePagingViewModel
+        {
             var prefCookie = parsePrefCookie(ctrl);
 
             // If the user enter an empty searchTerm, then the variable will be null and not empty string
             // but we want searchTerm to be null only if the user is browsing the page via some link
             // NOT if the user entered some empty search
+            var searchTerm = model.SearchTerm;
             searchTerm = searchTerm is string ? searchTerm :
                          ctrl.Request.Query.ContainsKey(nameof(searchTerm)) ? string.Empty :
                          null;
@@ -36,15 +40,17 @@ namespace BTCPayServer
                 var section = prop.GetValue(prefCookie) as ListQueryDataHolder;
                 if (section != null && !String.IsNullOrEmpty(section.SearchTerm))
                 {
-                    searchTerm = section.SearchTerm;
-                    timezoneOffset = section.TimezoneOffset ?? 0;
+                    model.SearchTerm = section.SearchTerm;
+                    model.TimezoneOffset = section.TimezoneOffset ?? 0;
                 }
             }
             else
             {
-                prop.SetValue(prefCookie, new ListQueryDataHolder(searchTerm, timezoneOffset));
+                prop.SetValue(prefCookie, new ListQueryDataHolder(model.SearchTerm, model.TimezoneOffset));
                 ctrl.Response.Cookies.Append(nameof(UserPrefsCookie), JsonConvert.SerializeObject(prefCookie));
             }
+
+            return model;
         }
 
         private static UserPrefsCookie parsePrefCookie(ControllerBase ctrl)

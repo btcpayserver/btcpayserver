@@ -1,41 +1,7 @@
-# How to be started for development
+# Tooling
 
-BTCPay Server tests depend on having a proper environment running with Postgres, Bitcoind, NBxplorer configured.
-You can however use the [`BTCPayServer.Tests/docker-compose.yml`](https://github.com/btcpayserver/btcpayserver/blob/master/BTCPayServer.Tests/docker-compose.yml) to get it running.
-
-In addition, when you run a debug session of BTCPay (Hitting F5 on Visual Studio Code or Visual Studio 2017), it will run the launch profile called `Docker-Regtest`. This launch profile depends on this `docker-compose` running.
-
-This is running a bitcoind instance on regtest, a private bitcoin blockchain for testing on which you can generate blocks yourself.
-
-```sh
-docker-compose up dev
-```
-
-You can run the tests while it is running through your favorite IDE, or with
-
-```sh
-dotnet test
-```
-
-Once you want to stop
-
-```sh
-docker-compose down
-```
-
-If you want to stop, and remove all existing data
-
-```sh
-docker-compose down --v
-```
-
-You can run tests on `MySql` database instead of `Postgres` by setting environnement variable `TESTS_DB` equals to `MySql`.
-
-# How to test altcoins
-
-Follow the above instruction except the `docker-compose` command should be `docker-compose -f docker-compose.altcoins.yml`.
-
-This will run monero, ltc and liquid dependencies.
+This README describe some useful tooling that you may need during development and testing.
+To learn how to get started with your local development environment, read [our documentation](https://docs.btcpayserver.org/LocalDevelopment/).
 
 ## How to manually test payments
 

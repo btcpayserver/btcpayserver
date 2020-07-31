@@ -239,7 +239,10 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IBackgroundJobClient, BackgroundJobClient>();
             services.AddScoped<IAuthorizationHandler, CookieAuthorizationHandler>();
             services.AddScoped<IAuthorizationHandler, BitpayAuthorizationHandler>();
+
+            services.AddSingleton<IHostedService, NewVersionCheckerHostedService>();
             services.AddSingleton<INotificationHandler, NewVersionNotification.Handler>();
+
             services.AddSingleton<INotificationHandler, InvoiceEventNotification.Handler>();
             services.AddSingleton<INotificationHandler, PayoutNotification.Handler>();
 

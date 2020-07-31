@@ -27,10 +27,16 @@ namespace BTCPayServer.HostedServices
 
         internal override Task[] InitializeTasks()
         {
-            return new Task[] { CreateLoopTask(CheckForNewVersion) };
+            return new Task[] { CreateLoopTask(LoopVersionCheck) };
         }
 
-        protected async Task CheckForNewVersion()
+        protected async Task LoopVersionCheck()
+        {
+            await ProcessVersionCheck();
+            await Task.Delay(TimeSpan.FromDays(1), Cancellation);
+        }
+
+        public async Task ProcessVersionCheck()
         {
             var policies = await _settingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
             if (policies.CheckForNewVersions && !_env.IsDeveloping)
@@ -48,44 +54,42 @@ namespace BTCPayServer.HostedServices
                     }
                 }
             }
+        }
+    }
 
-            await Task.Delay(TimeSpan.FromDays(1));
+    public class NewVersionCheckerDataHolder
+    {
+        public string LastVersion { get; set; }
+    }
+
+    public interface IVersionFetcher
+    {
+        Task<string> Fetch(CancellationToken cancellation);
+    }
+
+    public class GithubVersionFetcher : IVersionFetcher
+    {
+        private readonly HttpClient _httpClient;
+        public GithubVersionFetcher()
+        {
+            _httpClient = new HttpClient();
+            _httpClient.DefaultRequestHeaders.Add("Accept", "application/vnd.github.v3+json");
+            _httpClient.DefaultRequestHeaders.Add("User-Agent", "BTCPayServer/NewVersionChecker");
         }
 
-        public class NewVersionCheckerDataHolder
+        public async Task<string> Fetch(CancellationToken cancellation)
         {
-            public string LastVersion { get; set; }
-        }
+            const string url = "https://api.github.com/repos/btcpayserver/btcpayserver/releases/latest";
+            var resp = await _httpClient.GetAsync(url, cancellation);
 
-        public interface IVersionFetcher
-        {
-            Task<string> Fetch(CancellationToken cancellation);
-        }
-
-        public class GithubVersionFetcher : IVersionFetcher
-        {
-            private readonly HttpClient _httpClient;
-            public GithubVersionFetcher()
+            if (resp.IsSuccessStatusCode)
             {
-                _httpClient = new HttpClient();
-                _httpClient.DefaultRequestHeaders.Add("Accept", "application/vnd.github.v3+json");
-                _httpClient.DefaultRequestHeaders.Add("User-Agent", "BTCPayServer/NewVersionChecker");
+                var jobj = await resp.Content.ReadAsAsync<JObject>(cancellation);
+                var tag = jobj["name"].ToString();
+                return tag;
             }
 
-            public async Task<string> Fetch(CancellationToken cancellation)
-            {
-                const string url = "https://api.github.com/repos/btcpayserver/btcpayserver/releases/latest";
-                var resp = await _httpClient.GetAsync(url, cancellation);
-
-                if (resp.IsSuccessStatusCode)
-                {
-                    var jobj = await resp.Content.ReadAsAsync<JObject>(cancellation);
-                    var tag = jobj["name"].ToString();
-                    return tag;
-                }
-
-                return null;
-            }
+            return null;
         }
     }
 }

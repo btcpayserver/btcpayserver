@@ -3130,7 +3130,6 @@ namespace BTCPayServer.Tests
 
                 var envMock = tester.PayTester.GetService<BTCPayServerEnvironment>();
                 // modifying environment to simulate production
-                envMock.NetworkType = NetworkType.Mainnet;
                 envMock.Environment.EnvironmentName = "Production";
 
                 var notificationSender = tester.PayTester.GetService<Services.Notifications.NotificationSender>();

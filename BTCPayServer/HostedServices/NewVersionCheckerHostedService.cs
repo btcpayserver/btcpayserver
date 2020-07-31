@@ -39,7 +39,7 @@ namespace BTCPayServer.HostedServices
         public async Task ProcessVersionCheck()
         {
             var policies = await _settingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
-            if (policies.CheckForNewVersions && !_env.IsDeveloping)
+            if (policies.CheckForNewVersions)
             {
                 var tag = await _versionFetcher.Fetch(Cancellation);
                 if (tag != null && tag != _env.Version)
@@ -67,14 +67,19 @@ namespace BTCPayServer.HostedServices
         Task<string> Fetch(CancellationToken cancellation);
     }
 
-    public class GithubVersionFetcher : IVersionFetcher
+    public class GithubVersionFetcher : IVersionFetcher, IDisposable
     {
         private readonly HttpClient _httpClient;
-        public GithubVersionFetcher()
+        public GithubVersionFetcher(IHttpClientFactory httpClientFactory)
         {
-            _httpClient = new HttpClient();
+            _httpClient = httpClientFactory.CreateClient(nameof(GithubVersionFetcher));
             _httpClient.DefaultRequestHeaders.Add("Accept", "application/vnd.github.v3+json");
             _httpClient.DefaultRequestHeaders.Add("User-Agent", "BTCPayServer/NewVersionChecker");
+        }
+
+        public void Dispose()
+        {
+            _httpClient.Dispose();
         }
 
         public async Task<string> Fetch(CancellationToken cancellation)

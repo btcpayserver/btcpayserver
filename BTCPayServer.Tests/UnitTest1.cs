@@ -3128,13 +3128,10 @@ namespace BTCPayServer.Tests
                 var settings = tester.PayTester.GetService<SettingsRepository>();
                 await settings.UpdateSetting<PoliciesSettings>(new PoliciesSettings() { CheckForNewVersions = true });
 
-                var envMock = tester.PayTester.GetService<BTCPayServerEnvironment>();
-                // modifying environment to simulate production
-                envMock.Environment.EnvironmentName = "Production";
+                var mockEnv = tester.PayTester.GetService<BTCPayServerEnvironment>();
+                var mockSender = tester.PayTester.GetService<Services.Notifications.NotificationSender>();
 
-                var notificationSender = tester.PayTester.GetService<Services.Notifications.NotificationSender>();
-
-                var svc = new NewVersionCheckerHostedService(settings, envMock, notificationSender, new MockVersionFetcher());
+                var svc = new NewVersionCheckerHostedService(settings, mockEnv, mockSender, new MockVersionFetcher());
                 await svc.ProcessVersionCheck();
 
                 // since last version present in database was null, it should've been updated with version mock returned

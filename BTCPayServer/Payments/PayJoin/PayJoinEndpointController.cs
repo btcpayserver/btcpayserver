@@ -502,7 +502,7 @@ namespace BTCPayServer.Payments.PayJoin
         {
             var o = new JObject();
             o.Add(new JProperty("errorCode", PayjoinReceiverHelper.GetErrorCode(error)));
-            if (string.IsNullOrEmpty(debug) || !_env.IsDevelopping)
+            if (string.IsNullOrEmpty(debug) || !_env.IsDeveloping)
             {
                 o.Add(new JProperty("message", PayjoinReceiverHelper.GetMessage(error)));
             }

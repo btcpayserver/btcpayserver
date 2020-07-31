@@ -626,7 +626,7 @@ namespace BTCPayServer.Controllers
 
         private bool CanLoginOrRegister()
         {
-            return _btcPayServerEnvironment.IsDevelopping || _btcPayServerEnvironment.IsSecure;
+            return _btcPayServerEnvironment.IsDeveloping || _btcPayServerEnvironment.IsSecure;
         }
 
         private void SetInsecureFlags()

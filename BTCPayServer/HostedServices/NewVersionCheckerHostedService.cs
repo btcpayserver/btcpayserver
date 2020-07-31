@@ -33,7 +33,7 @@ namespace BTCPayServer.HostedServices
         protected async Task CheckForNewVersion()
         {
             var policies = await _settingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
-            if (policies.CheckForNewVersions && !_env.IsDevelopping)
+            if (policies.CheckForNewVersions && !_env.IsDeveloping)
             {
                 var tag = await _versionFetcher.Fetch(Cancellation);
                 if (tag != null && tag != _env.Version)

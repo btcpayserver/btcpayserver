@@ -172,7 +172,7 @@ namespace BTCPayServer.Controllers
 
         private bool CanUseInternalLightning()
         {
-            return (_BTCPayEnv.IsDevelopping || User.IsInRole(Roles.ServerAdmin) || _CssThemeManager.AllowLightningInternalNodeForAll);
+            return (_BTCPayEnv.IsDeveloping || User.IsInRole(Roles.ServerAdmin) || _CssThemeManager.AllowLightningInternalNodeForAll);
         }
     }
 }

@@ -54,7 +54,7 @@ namespace BTCPayServer.Services
         }
         public bool AltcoinsVersion { get; set; }
 
-        public bool IsDevelopping
+        public bool IsDeveloping
         {
             get
             {

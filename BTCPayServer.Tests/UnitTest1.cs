@@ -1357,7 +1357,7 @@ namespace BTCPayServer.Tests
         {
             var result =
                 (Models.InvoicingModels.InvoicesModel)((ViewResult)acc.GetController<InvoiceController>()
-                    .ListInvoices(filter).Result).Model;
+                    .ListInvoices(new InvoicesModel { SearchTerm = filter }).Result).Model;
             Assert.Equal(expected, result.Invoices.Any(i => i.InvoiceId == invoiceId));
         }
 

@@ -1,4 +1,9 @@
-﻿$(function () {
+$(function () {
+    // initialize timezone offset value if field is present in page
+    var timezoneOffset = new Date().getTimezoneOffset();
+    $("#TimezoneOffset").val(timezoneOffset);
+
+    // localize all elements that have localizeDate class
     $(".localizeDate").each(function (index) {
         var serverDate = $(this).text();
         var localDate = new Date(serverDate);

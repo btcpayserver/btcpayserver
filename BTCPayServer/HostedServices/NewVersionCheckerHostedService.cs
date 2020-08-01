@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Configuration;
 using BTCPayServer.Logging;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Notifications;
@@ -80,18 +81,20 @@ namespace BTCPayServer.HostedServices
     public class GithubVersionFetcher : IVersionFetcher
     {
         private readonly HttpClient _httpClient;
-        public GithubVersionFetcher(IHttpClientFactory httpClientFactory)
+        private readonly Uri _updateurl;
+        public GithubVersionFetcher(IHttpClientFactory httpClientFactory, BTCPayServerOptions options)
         {
             _httpClient = httpClientFactory.CreateClient(nameof(GithubVersionFetcher));
             _httpClient.DefaultRequestHeaders.Add("Accept", "application/vnd.github.v3+json");
             _httpClient.DefaultRequestHeaders.Add("User-Agent", "BTCPayServer/NewVersionChecker");
+
+            _updateurl = options.UpdateUrl;
         }
 
         private static readonly Regex _releaseVersionTag = new Regex("^(v[1-9]+(\\.[0-9]+)*(-[0-9]+)?)$");
         public async Task<string> Fetch(CancellationToken cancellation)
         {
-            const string url = "https://api.github.com/repos/btcpayserver/btcpayserver/releases/latest";
-            using (var resp = await _httpClient.GetAsync(url, cancellation))
+            using (var resp = await _httpClient.GetAsync(_updateurl, cancellation))
             {
                 var strResp = await resp.Content.ReadAsStringAsync();
                 if (resp.IsSuccessStatusCode)
@@ -105,7 +108,7 @@ namespace BTCPayServer.HostedServices
                 else
                 {
                     Logs.Events.LogWarning($"Unsuccessful status code returned during new version check. " +
-                        $"Url: {url}, HTTP Code: {resp.StatusCode}, Response Body: {strResp}");
+                        $"Url: {_updateurl}, HTTP Code: {resp.StatusCode}, Response Body: {strResp}");
                 }
             }
 

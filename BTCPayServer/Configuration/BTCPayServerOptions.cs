@@ -176,6 +176,8 @@ namespace BTCPayServer.Configuration
                 SocksEndpoint = endpoint;
             }
 
+            UpdateCheck = conf.GetOrDefault<bool>("updatecheck", false);
+            UpdateUrl = conf.GetOrDefault<Uri>("updateurl", new Uri("https://api.github.com/repos/btcpayserver/btcpayserver/releases/latest"));
 
             var sshSettings = ParseSSHConfiguration(conf);
             if ((!string.IsNullOrEmpty(sshSettings.Password) || !string.IsNullOrEmpty(sshSettings.KeyFile)) && !string.IsNullOrEmpty(sshSettings.Server))
@@ -301,5 +303,7 @@ namespace BTCPayServer.Configuration
             set;
         }
         public string TorrcFile { get; set; }
+        public bool UpdateCheck { get; set; }
+        public Uri UpdateUrl { get; set; }
     }
 }

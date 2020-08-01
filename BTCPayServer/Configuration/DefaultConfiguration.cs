@@ -38,6 +38,8 @@ namespace BTCPayServer.Configuration
             app.Option("--sshtrustedfingerprints", "SSH Host public key fingerprint or sha256 (default: empty, it will allow untrusted connections)", CommandOptionType.SingleValue);
             app.Option("--torrcfile", "Path to torrc file containing hidden services directories (default: empty)", CommandOptionType.SingleValue);
             app.Option("--socksendpoint", "Socks endpoint to connect to onion urls (default: empty)", CommandOptionType.SingleValue);
+            app.Option("--updatecheck", $"Enabling once a day check for new releases (default: false)", CommandOptionType.SingleValue);
+            app.Option("--updateurl", $"Url location used for updatecheck (default: https://api.github.com/repos/btcpayserver/btcpayserver/releases/latest)", CommandOptionType.SingleValue);
             app.Option("--debuglog", "A rolling log file for debug messages.", CommandOptionType.SingleValue);
             app.Option("--debugloglevel", "The severity you log (default:information)", CommandOptionType.SingleValue);
             app.Option("--disable-registration", "Disables new user registrations (default:true)", CommandOptionType.SingleValue);

@@ -19,7 +19,9 @@
         "BTCPAY_POSTGRES": "User ID=postgres;Host=127.0.0.1;Port=39372;Database=btcpayserver",
         "BTCPAY_DEBUGLOG": "debug.log",
         "BTCPAY_TORRCFILE": "../BTCPayServer.Tests/TestData/Tor/torrc",
-        "BTCPAY_SOCKSENDPOINT": "localhost:9050"
+        "BTCPAY_SOCKSENDPOINT": "localhost:9050",
+        "BTCPAY_UPDATECHECK": "false",
+        "BTCPAY_UPDATEURL": ""
       },
       "applicationUrl": "http://127.0.0.1:14142/"
     },

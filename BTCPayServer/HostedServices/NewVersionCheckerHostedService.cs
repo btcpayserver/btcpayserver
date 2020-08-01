@@ -2,9 +2,11 @@ using System;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Logging;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.HostedServices
@@ -32,7 +34,14 @@ namespace BTCPayServer.HostedServices
 
         protected async Task LoopVersionCheck()
         {
-            await ProcessVersionCheck();
+            try
+            {
+                await ProcessVersionCheck();
+            }
+            catch (Exception ex)
+            {
+                Logs.Events.LogError(ex, "Error while performing new version check");
+            }
             await Task.Delay(TimeSpan.FromDays(1), Cancellation);
         }
 
@@ -85,13 +94,20 @@ namespace BTCPayServer.HostedServices
         public async Task<string> Fetch(CancellationToken cancellation)
         {
             const string url = "https://api.github.com/repos/btcpayserver/btcpayserver/releases/latest";
-            var resp = await _httpClient.GetAsync(url, cancellation);
-
-            if (resp.IsSuccessStatusCode)
+            using (var resp = await _httpClient.GetAsync(url, cancellation))
             {
-                var jobj = await resp.Content.ReadAsAsync<JObject>(cancellation);
-                var tag = jobj["name"].ToString();
-                return tag;
+                var strResp = await resp.Content.ReadAsStringAsync();
+                if (resp.IsSuccessStatusCode)
+                {
+                    var jobj = new JObject(strResp);
+                    var tag = jobj["name"].ToString();
+                    return tag;
+                }
+                else
+                {
+                    Logs.Events.LogWarning($"Unsuccessful status code returned during new version check. " +
+                        $"Url: {url}, HTTP Code: {resp.StatusCode}, Response Body: {strResp}");
+                }
             }
 
             return null;

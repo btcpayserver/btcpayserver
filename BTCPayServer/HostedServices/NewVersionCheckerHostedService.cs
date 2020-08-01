@@ -1,5 +1,6 @@
 using System;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Logging;
@@ -76,7 +77,7 @@ namespace BTCPayServer.HostedServices
         Task<string> Fetch(CancellationToken cancellation);
     }
 
-    public class GithubVersionFetcher : IVersionFetcher, IDisposable
+    public class GithubVersionFetcher : IVersionFetcher
     {
         private readonly HttpClient _httpClient;
         public GithubVersionFetcher(IHttpClientFactory httpClientFactory)
@@ -86,11 +87,7 @@ namespace BTCPayServer.HostedServices
             _httpClient.DefaultRequestHeaders.Add("User-Agent", "BTCPayServer/NewVersionChecker");
         }
 
-        public void Dispose()
-        {
-            _httpClient.Dispose();
-        }
-
+        private static readonly Regex _releaseVersionTag = new Regex("^(v[1-9]+(\\.[0-9]+)*(-[0-9]+)?)$");
         public async Task<string> Fetch(CancellationToken cancellation)
         {
             const string url = "https://api.github.com/repos/btcpayserver/btcpayserver/releases/latest";
@@ -99,9 +96,11 @@ namespace BTCPayServer.HostedServices
                 var strResp = await resp.Content.ReadAsStringAsync();
                 if (resp.IsSuccessStatusCode)
                 {
-                    var jobj = new JObject(strResp);
-                    var tag = jobj["name"].ToString();
-                    return tag;
+                    var jobj = JObject.Parse(strResp);
+                    var tag = jobj["tag_name"].ToString();
+
+                    var isReleaseVersionTag = _releaseVersionTag.IsMatch(tag);
+                    return isReleaseVersionTag ? tag : null;
                 }
                 else
                 {

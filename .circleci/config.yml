@@ -7,7 +7,7 @@ jobs:
       - checkout
       - run:
           command: |
-            cd .circleci && ./run-tests.sh "Fast=Fast"
+            cd .circleci && ./run-tests.sh "Fast=Fast" && ./can-build.sh
   selenium_tests:
     machine:
         enabled: true

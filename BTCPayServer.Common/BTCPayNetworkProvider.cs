@@ -22,7 +22,6 @@ namespace BTCPayServer
 
         BTCPayNetworkProvider(BTCPayNetworkProvider unfiltered, string[] cryptoCodes)
         {
-            UnfilteredNetworks = unfiltered.UnfilteredNetworks ?? unfiltered;
             NetworkType = unfiltered.NetworkType;
             _NBXplorerNetworkProvider = new NBXplorerNetworkProvider(unfiltered.NetworkType);
             _Networks = new Dictionary<string, BTCPayNetworkBase>();
@@ -36,15 +35,14 @@ namespace BTCPayServer
             }
         }
 
-        public BTCPayNetworkProvider UnfilteredNetworks { get; }
 
         public NetworkType NetworkType { get; private set; }
         public BTCPayNetworkProvider(NetworkType networkType)
         {
-            UnfilteredNetworks = this;
             _NBXplorerNetworkProvider = new NBXplorerNetworkProvider(networkType);
             NetworkType = networkType;
             InitBitcoin();
+#if ALTCOINS
             InitLiquid();
             InitLiquidAssets();
             InitLitecoin();
@@ -81,6 +79,7 @@ namespace BTCPayServer
             // Disabled because of https://twitter.com/Cryptopia_NZ/status/1085084168852291586
             //InitBitcoinplus();
             //InitUfo();
+#endif
         }
 
         /// <summary>

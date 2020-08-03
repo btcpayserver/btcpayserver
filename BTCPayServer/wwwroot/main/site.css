@@ -199,6 +199,16 @@ pre {
     max-width: 36em;
 }
 
+.content-wrapper {
+    padding: 50px 0;
+}
+
+@media screen and (min-width: 768px) {
+    .content-wrapper {
+        padding: 75px 0;
+    }
+}
+
 .btn-outline-onion {
     background-image: none;
     background-color: transparent;

@@ -51,9 +51,11 @@
             </div>
             <pre><code class="json">@Model.Decoded</code></pre>
         }
-        <h3>PSBT to decode</h3>
+        <h4 class="mb-3">Decode PSBT</h4>
+        <p>You can decode a PSBT by either pasting its content or by uploading the file.</p>
         <form class="form-group" method="post" asp-action="WalletPSBT" asp-route-walletId="@this.Context.GetRouteValue("walletId")" enctype="multipart/form-data">
             <div class="form-group">
+                <label asp-for="PSBT"></label>
                 <textarea class="form-control" rows="5" asp-for="PSBT"></textarea>
                 <span asp-validation-for="PSBT" class="text-danger"></span>
             </div>

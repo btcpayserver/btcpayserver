@@ -6,22 +6,13 @@
 }
 @if (TempData.HasStatusMessage())
 {
-    <div class="row">
-        <div class="col-md-10 text-center">
-            <partial name="_StatusMessage" />
-        </div>
-    </div>
+    <partial name="_StatusMessage" />
 }
 
+<h4 class="mb-3">Additional wallet information</h4>
+
 <div class="row">
-    <div class="col-md-10">
-        <p>
-            Additional information about your wallet
-        </p>
-    </div>
-</div>
-<div class="row">
-    <div class="col-md-6">
+    <div class="col-md-8 col-lg-6">
         <form method="post" asp-action="WalletSettings">
             <input type="hidden" asp-for="StoreName"/>
             <input type="hidden" asp-for="UriScheme"/>
@@ -45,35 +36,38 @@
             }
             @for (int i = 0; i < Model.AccountKeys.Count; i++)
             {
-                <hr/>
-                <h5>Account key @i</h5>
+                <hr class="my-4"/>
+
+                <h4 class="mb-3">Account key @i</h4>
                 <div class="form-group">
                     <label asp-for="@Model.AccountKeys[i].AccountKey"></label>
                     <input asp-for="@Model.AccountKeys[i].AccountKey" class="form-control" readonly/>
                     <span asp-validation-for="@Model.AccountKeys[i].AccountKey" class="text-danger"></span>
                 </div>
-                <div class="form-group">
-                    <label asp-for="@Model.AccountKeys[i].MasterFingerprint"></label>
-                    <input asp-for="@Model.AccountKeys[i].MasterFingerprint" class="form-control"/>
-                    <span asp-validation-for="@Model.AccountKeys[i].MasterFingerprint" class="text-danger"></span>
-                </div>
-                <div class="form-group">
-                    <label asp-for="@Model.AccountKeys[i].AccountKeyPath"></label>
-                    <input asp-for="@Model.AccountKeys[i].AccountKeyPath" class="form-control"/>
-                    <span asp-validation-for="@Model.AccountKeys[i].AccountKeyPath" class="text-danger"></span>
+                <div class="form-row">
+                    <div class="form-group col-auto">
+                        <label asp-for="@Model.AccountKeys[i].MasterFingerprint"></label>
+                        <input asp-for="@Model.AccountKeys[i].MasterFingerprint" class="form-control" style="max-width:16ch;"/>
+                        <span asp-validation-for="@Model.AccountKeys[i].MasterFingerprint" class="text-danger"></span>
+                    </div>
+                    <div class="form-group col-auto">
+                        <label asp-for="@Model.AccountKeys[i].AccountKeyPath"></label>
+                        <input asp-for="@Model.AccountKeys[i].AccountKeyPath" class="form-control" style="max-width:16ch;" />
+                        <span asp-validation-for="@Model.AccountKeys[i].AccountKeyPath" class="text-danger"></span>
+                    </div>
                 </div>
                 @if (Model.IsMultiSig)
                 {
-                    <div class="form-group">
-                        <label asp-for="SelectedSigningKey"></label>
-                        <input asp-for="SelectedSigningKey" type="radio" value="@Model.AccountKeys[i].AccountKey"/>
+                    <div class="form-check form-check-inline">
+                        <input asp-for="SelectedSigningKey" class="form-check-input" type="radio" value="@Model.AccountKeys[i].AccountKey"/>
+                        <label asp-for="SelectedSigningKey" class="form-check-label"></label>
                     </div>
                 }
             }
-            <div class="form-group d-flex mt-2">
-                <button name="command" type="submit" class="btn btn-primary" value="save">Save</button>
+            <div class="form-group d-flex mt-3">
+                <button name="command" type="submit" class="btn btn-primary mr-2" value="save">Save</button>
                 <div class="dropdown">
-                    <button class="ml-1 btn btn-secondary dropdown-toggle" type="button" id="SettingsMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <button class="btn btn-secondary dropdown-toggle" type="button" id="SettingsMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         Other actions...
                     </button>
                     <div class="dropdown-menu" aria-labelledby="SendMenu">
@@ -82,7 +76,6 @@
                         {
                             <button name="command" type="submit" class="dropdown-item" value="view-seed">View seed</button>
                         }
-
                         @if (Model.UriScheme == "bitcoin")
                         {
                             <button type="button" class="dropdown-item register-wallet" data-storename="@Model.StoreName" data-scheme="@Model.UriScheme" data-url="@Url.Action("WalletSend", "Wallets", new {walletId = Context.GetRouteValue("walletId"), bip21 = "%s"})">Open this bitcoin wallet on payment links</button>

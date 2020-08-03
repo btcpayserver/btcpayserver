@@ -26,6 +26,7 @@ namespace BTCPayServer.Models.WalletViewModels
                 _FileName = value;
             }
         }
+        [Display(Name = "PSBT content")]
         public string PSBT { get; set; }
         public List<string> Errors { get; set; } = new List<string>();
 

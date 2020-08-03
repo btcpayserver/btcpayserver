@@ -14,7 +14,7 @@
     </div>
 }
 <div class="row no-gutters">
-    <div class="col-lg-7  mx-auto my-auto ">
+    <div class="col-lg-8 mx-auto my-auto">
         <form method="post" asp-action="WalletReceive" class="card text-center">
             <div class="card-body">
                 @if (string.IsNullOrEmpty(Model.Address))
@@ -25,7 +25,7 @@
                 }
                 else
                 {
-                    <h3 class="card-title mb-4">Next available @Model.CryptoCode address</h3>
+                    <h3 class="card-title mb-4">Next available @Model.CryptoCode&nbsp;address</h3>
                     <noscript>
                         <div class="card-body m-sm-0 p-sm-0">
                             <div class="input-group">
@@ -34,9 +34,13 @@
                                     <span class="input-group-text fa fa-copy"> </span>
                                 </div>
                             </div>
-                            <div>
-                                <button type="submit" name="command" value="unreserve-current-address" class="btn btn-link">Unreserve this address</button>
-                                <button type="submit" name="command" value="generate-new-address" class="btn btn-link">Generate another address</button>
+                            <div class="row mt-4">
+                                <div class="col-12 col-sm-6">
+                                    <button type="submit" name="command" value="generate-new-address" class="btn btn-primary w-100">Generate another address</button>
+                                </div>
+                                <div class="col-12 col-sm-6 mt-4 mt-sm-0">
+                                    <button type="submit" name="command" value="unreserve-current-address" class="btn btn-secondary w-100">Unreserve this address</button>
+                                </div>
                             </div>
                         </div>
                     </noscript>
@@ -52,9 +56,13 @@
                                 <span class="input-group-text fa fa-copy"> </span>
                             </div>
                         </div>
-                        <div>
-                            <button type="submit" name="command" value="unreserve-current-address" class="btn btn-link">Unreserve this address</button>
-                            <button type="submit" name="command" value="generate-new-address" class="btn btn-link">Generate another address</button>
+                        <div class="row mt-4">
+                            <div class="col-12 col-sm-6">
+                                <button type="submit" name="command" value="generate-new-address" class="btn btn-primary w-100">Generate another address</button>
+                            </div>
+                            <div class="col-12 col-sm-6 mt-4 mt-sm-0">
+                                <button type="submit" name="command" value="unreserve-current-address" class="btn btn-secondary w-100">Unreserve this address</button>
+                            </div>
                         </div>
                     </div>
                 }

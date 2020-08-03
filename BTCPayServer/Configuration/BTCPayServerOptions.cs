@@ -176,6 +176,7 @@ namespace BTCPayServer.Configuration
                 SocksEndpoint = endpoint;
             }
 
+            UpdateUrl = conf.GetOrDefault<Uri>("updateurl", null);
 
             var sshSettings = ParseSSHConfiguration(conf);
             if ((!string.IsNullOrEmpty(sshSettings.Password) || !string.IsNullOrEmpty(sshSettings.KeyFile)) && !string.IsNullOrEmpty(sshSettings.Server))
@@ -301,5 +302,6 @@ namespace BTCPayServer.Configuration
             set;
         }
         public string TorrcFile { get; set; }
+        public Uri UpdateUrl { get; set; }
     }
 }

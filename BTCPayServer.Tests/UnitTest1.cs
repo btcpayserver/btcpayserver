@@ -3103,5 +3103,61 @@ namespace BTCPayServer.Tests
                     .GetResult())
                 .Where(i => i.GetAddress() == h).Any();
         }
+
+
+        class MockVersionFetcher : IVersionFetcher
+        {
+            public const string MOCK_NEW_VERSION = "9.9.9.9";
+            public Task<string> Fetch(CancellationToken cancellation)
+            {
+                return Task.FromResult(MOCK_NEW_VERSION);
+            }
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CanCheckForNewVersion()
+        {
+            using (var tester = ServerTester.Create(newDb: true))
+            {
+                await tester.StartAsync();
+
+                var acc = tester.NewAccount();
+                acc.GrantAccess(true);
+
+                var settings = tester.PayTester.GetService<SettingsRepository>();
+                await settings.UpdateSetting<PoliciesSettings>(new PoliciesSettings() { CheckForNewVersions = true });
+
+                var mockEnv = tester.PayTester.GetService<BTCPayServerEnvironment>();
+                var mockSender = tester.PayTester.GetService<Services.Notifications.NotificationSender>();
+
+                var svc = new NewVersionCheckerHostedService(settings, mockEnv, mockSender, new MockVersionFetcher());
+                await svc.ProcessVersionCheck();
+
+                // since last version present in database was null, it should've been updated with version mock returned
+                var lastVersion = await settings.GetSettingAsync<NewVersionCheckerDataHolder>();
+                Assert.Equal(MockVersionFetcher.MOCK_NEW_VERSION, lastVersion.LastVersion);
+
+                // we should also have notification in UI
+                var ctrl = acc.GetController<NotificationsController>();
+                var newVersion = MockVersionFetcher.MOCK_NEW_VERSION;
+
+                var vm = Assert.IsType<Models.NotificationViewModels.IndexViewModel>(
+                    Assert.IsType<ViewResult>(ctrl.Index()).Model);
+
+                Assert.True(vm.Skip == 0);
+                Assert.True(vm.Count == 50);
+                Assert.True(vm.Total == 1);
+                Assert.True(vm.Items.Count == 1);
+
+                var fn = vm.Items.First();
+                var now = DateTimeOffset.UtcNow;
+                Assert.True(fn.Created >= now.AddSeconds(-3));
+                Assert.True(fn.Created <= now);
+                Assert.Equal($"New version {newVersion} released!", fn.Body);
+                Assert.Equal($"https://github.com/btcpayserver/btcpayserver/releases/tag/v{newVersion}", fn.ActionLink);
+                Assert.False(fn.Seen);
+            }
+        }
     }
 }

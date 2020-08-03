@@ -45,11 +45,11 @@
             </div>
         </div>
 
-        <form asp-action="ListInvoices" method="get" class="pull-right">
+        <form asp-action="ListInvoices" method="get" class="pull-right mb-3 col-sm-12 col-md-7 col-lg-6">
             <input type="hidden" asp-for="Count" />
-            <div class="input-group">
+            <div class="input-group ">
                 <input asp-for="TimezoneOffset" type="hidden" />
-                <input asp-for="SearchTerm" class="form-control" style="width:300px;" />
+                <input asp-for="SearchTerm" class="form-control"/>
                 <div class="input-group-append">
                     <button type="submit" class="btn btn-primary" title="Search invoice">
                         <span class="fa fa-search"></span> Search
@@ -87,12 +87,12 @@
         </form>
 
         <form method="post" id="MassAction" asp-action="MassAction">
-            <div class="row button-row">
-                <div class="col-lg-12 pl-0">
-                    <a asp-action="CreateInvoice" class="btn btn-primary" role="button" id="CreateNewInvoice"><span class="fa fa-plus"></span> Create a new invoice</a>
+            <div class="row button-row col-sm-12 col-md-5 col-lg-6">
+                <div>
+                    <a asp-action="CreateInvoice" class="btn btn-primary mb-1" role="button" id="CreateNewInvoice"><span class="fa fa-plus"></span> Create a new invoice</a>
 
-                    <span>
-                        <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <span >
+                        <button class="btn btn-primary dropdown-toggle  mb-1" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             Actions
                         </button>
                         <div class="dropdown-menu">
@@ -101,7 +101,7 @@
                     </span>
                     
                     <span>
-                        <a class="btn btn-primary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <a class="btn btn-primary dropdown-toggle  mb-1" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             Export
                         </a>
                         <a href="https://docs.btcpayserver.org/Accounting/" target="_blank">
@@ -114,7 +114,7 @@
                     </span>
                 </div>
             </div>
-
+            <br/>
             @* Custom Range Modal *@
             <div class="modal fade" id="customRangeModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 550px;">

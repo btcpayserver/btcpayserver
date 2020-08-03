@@ -104,53 +104,6 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
-        [Trait("Altcoins", "Altcoins")]
-        [Trait("Lightning", "Lightning")]
-        public async Task CanUsePaymentMethodDropdown()
-        {
-            using (var s = SeleniumTester.Create())
-            {
-                s.Server.ActivateLTC();
-                s.Server.ActivateLightning();
-                await s.StartAsync();
-                s.GoToRegister();
-                s.RegisterNewUser();
-                var store = s.CreateNewStore();
-                s.AddDerivationScheme("BTC");
-
-                //check that there is no dropdown since only one payment method is set
-                var invoiceId = s.CreateInvoice(store.storeName, 10, "USD", "a@g.com");
-                s.GoToInvoiceCheckout(invoiceId);
-                s.Driver.FindElement(By.ClassName("payment__currencies_noborder"));
-                s.GoToHome();
-                s.GoToStore(store.storeId);
-                s.AddDerivationScheme("LTC");
-                s.AddLightningNode("BTC", LightningConnectionType.CLightning);
-                //there should be three now
-                invoiceId = s.CreateInvoice(store.storeName, 10, "USD", "a@g.com");
-                s.GoToInvoiceCheckout(invoiceId);
-                var currencyDropdownButton = s.Driver.WaitForElement(By.ClassName("payment__currencies"));
-                Assert.Contains("BTC", currencyDropdownButton.Text);
-                currencyDropdownButton.Click();
-
-                var elements = s.Driver.FindElement(By.ClassName("vex-content")).FindElements(By.ClassName("vexmenuitem"));
-                Assert.Equal(3, elements.Count);
-                elements.Single(element => element.Text.Contains("LTC")).Click();
-                currencyDropdownButton = s.Driver.WaitForElement(By.ClassName("payment__currencies"));
-                Assert.Contains("LTC", currencyDropdownButton.Text);
-                currencyDropdownButton.Click();
-
-                elements = s.Driver.FindElement(By.ClassName("vex-content")).FindElements(By.ClassName("vexmenuitem"));
-                elements.Single(element => element.Text.Contains("Lightning")).Click();
-
-                currencyDropdownButton = s.Driver.WaitForElement(By.ClassName("payment__currencies"));
-                Assert.Contains("Lightning", currencyDropdownButton.Text);
-
-                s.Driver.Quit();
-            }
-        }
-
-        [Fact(Timeout = TestTimeout)]
         [Trait("Lightning", "Lightning")]
         public async Task CanUseLightningSatsFeature()
         {

@@ -5,4 +5,29 @@
     <NoWarn>NU1701,CA1816,CA1308,CA1810,CA2208,CA1303,CA2000</NoWarn>
     <LangVersion>8.0</LangVersion>
   </PropertyGroup>
+
+  <PropertyGroup>
+    <Configurations>Debug;Release;Altcoins-Release;Altcoins-Debug</Configurations>
+    <Platforms>AnyCPU</Platforms>
+  </PropertyGroup>
+
+  <!-- Default similar to Debug/Release -->
+  <PropertyGroup Condition=" '$(Configuration)' == 'Altcoins-Release' ">
+    <Optimize Condition=" '$(Optimize)' == '' ">true</Optimize>
+    <Altcoins>true</Altcoins>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Altcoins-Debug'">
+    <DefineConstants>$(DefineConstants);DEBUG</DefineConstants>
+    <Altcoins>true</Altcoins>
+  </PropertyGroup>
+  <!-- -->
+
+  <PropertyGroup Condition="( '$(Configuration)' == 'Debug' Or '$(Configuration)' == 'Altcoins-Debug') And '$(RazorCompileOnBuild)' != 'true'">
+    <RazorCompileOnBuild>false</RazorCompileOnBuild>
+    <DefineConstants>$(DefineConstants);RAZOR_RUNTIME_COMPILE</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Altcoins)' == 'true'">
+    <DefineConstants>$(DefineConstants);ALTCOINS</DefineConstants>
+  </PropertyGroup>
 </Project>

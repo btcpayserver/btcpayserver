@@ -2,7 +2,7 @@
 @model NBXplorer.Models.GenerateWalletRequest
 <div class="modal fade" id="nbxplorergeneratewallet" tabindex="-1" role="dialog" aria-labelledby="nbxplorergeneratewallet" aria-hidden="true">
     <div class="modal-dialog" role="document">
-        <form id="generate-wallet-form" class="modal-content" form method="post" onsubmit="return validatePassphraseConf();" 
+        <form id="generate-wallet-form" class="modal-content" method="post" onsubmit="return validatePassphraseConf();"
               asp-action="GenerateNBXWallet" 
               asp-route-storeId="@this.Context.GetRouteValue("storeId")"
               asp-route-cryptoCode="@this.Context.GetRouteValue("cryptoCode")"
@@ -27,7 +27,8 @@
                     <input type="text" asp-for="ExistingMnemonic" class="form-control" autocomplete="off"/>
                     <span asp-validation-for="ExistingMnemonic" class="text-danger"></span>
                     <small class="form-text text-muted">
-                        You can choose to import an existing mnemonic seed phrase. If you leave blank, we will generate one for you.
+                        You can choose to import an existing mnemonic seed phrase.<br/>
+                        If you leave it blank, we will generate one for you.
                     </small>
                 </div>
                 <div class="form-group">
@@ -37,7 +38,7 @@
                 </div>
                 <div class="form-group">
                     <label for="passphrase_conf">Passphrase confirmation</label>
-                    <input type="text" name="passphrase_conf" class="form-control"/>
+                    <input type="text" name="passphrase_conf" id="passphrase_conf" class="form-control"/>
                     <span class="text-danger field-validation-valid" id="passphrase_conf_validation"></span>
                 </div>
                 <div class="form-group">
@@ -60,9 +61,9 @@
                     <span asp-validation-for="AccountNumber" class="text-danger"></span>
                 </div>
 
-                <div class="form-group">
-                    <input type="checkbox" class="form-check-inline" asp-for="SavePrivateKeys"/>
-                    <label asp-for="SavePrivateKeys">Is hot wallet</label>
+                <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" asp-for="SavePrivateKeys"/>
+                    <label asp-for="SavePrivateKeys" class="form-check-label">Is hot wallet</label>
                     <span asp-validation-for="SavePrivateKeys" class="text-danger"></span>
                     <small class="form-text text-danger">
                         If checked, each private key associated with an address generated will be stored as metadata in NBXplorer. While convenient, this means that anyone with access to your server will have access to your private keys and will be able to steal your funds.
@@ -70,9 +71,9 @@
                 </div>
                 @if (ViewData["CanUseRPCImport"] is true)
                 {
-                    <div class="form-group">
-                        <input type="checkbox" class="form-check-inline" asp-for="ImportKeysToRPC"/>
-                        <label asp-for="ImportKeysToRPC">Import keys to RPC</label>
+                    <div class="form-group form-check">
+                        <input type="checkbox" class="form-check-input" asp-for="ImportKeysToRPC"/>
+                        <label asp-for="ImportKeysToRPC" class="form-check-label">Import keys to RPC</label>
                         <span asp-validation-for="ImportKeysToRPC" class="text-danger"></span>
                         <small class="form-text text-muted">
                             If checked, each address generated will be imported into the node wallet so that you can view your balance through your node. When this is enabled alongside <code>Is hot wallet</code>, you're also able to use the node wallet to spend (this works pretty well in conjunction with apps such as FullyNoded).
@@ -81,7 +82,7 @@
                 }
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                 <button type="submit" class="btn btn-primary" id="btn-generate">Generate</button>
             </div>
         </form>

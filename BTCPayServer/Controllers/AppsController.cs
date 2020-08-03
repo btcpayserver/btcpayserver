@@ -47,9 +47,42 @@ namespace BTCPayServer.Controllers
 
         public string CreatedAppId { get; set; }
 
-        public async Task<IActionResult> ListApps()
+        public async Task<IActionResult> ListApps(
+            string sortOrder = null,
+            string sortOrderColumn = null
+        )
         {
             var apps = await _AppService.GetAllApps(GetUserId());
+
+            if (sortOrder != null && sortOrderColumn != null) 
+            {
+                apps = apps.OrderByDescending(app => 
+                    {
+                        switch (sortOrderColumn)
+                        {
+                            case nameof(app.AppName):
+                                return app.AppName;
+                            case nameof(app.StoreName):
+                                return app.StoreName;
+                            case nameof(app.AppType):
+                                return app.AppType;
+                            default:
+                                return app.Id;
+                        }
+                    }).ToArray();
+
+                switch (sortOrder)
+                {
+                    case "desc":
+                        ViewData[$"{sortOrderColumn}SortOrder"] = "asc";
+                        break;
+                    case "asc":
+                        apps = apps.Reverse().ToArray();
+                        ViewData[$"{sortOrderColumn}SortOrder"] = "desc";
+                        break;
+                }
+            }
+            
             return View(new ListAppsViewModel()
             {
                 Apps = apps

@@ -1,9 +1,12 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="../Build/Version.csproj" Condition="Exists('../Build/Version.csproj')" />
   <Import Project="../Build/Common.csproj" />
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="NBXplorer.Client" Version="3.0.16" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Altcoins)' != 'true'">
+    <Compile Remove="Altcoins\**\*.cs"></Compile>
   </ItemGroup>
 </Project>

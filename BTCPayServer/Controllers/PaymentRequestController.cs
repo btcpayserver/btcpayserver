@@ -61,23 +61,22 @@ namespace BTCPayServer.Controllers
         [HttpGet]
         [Route("")]
         [BitpayAPIConstraint(false)]
-        public async Task<IActionResult> GetPaymentRequests(int skip = 0, int count = 50, bool includeArchived = false)
+        public async Task<IActionResult> GetPaymentRequests(ListPaymentRequestsViewModel model = null)
         {
+            model = this.ParseListQuery(model ?? new ListPaymentRequestsViewModel());
+
+            var includeArchived = new SearchString(model.SearchTerm).GetFilterBool("includearchived") == true;
             var result = await _PaymentRequestRepository.FindPaymentRequests(new PaymentRequestQuery()
             {
                 UserId = GetUserId(),
-                Skip = skip,
-                Count = count,
+                Skip = model.Skip,
+                Count = model.Count,
                 IncludeArchived = includeArchived
             });
-            return View(new ListPaymentRequestsViewModel()
-            {
-                IncludeArchived = includeArchived,
-                Skip = skip,
-                Count = count,
-                Total = result.Total,
-                Items = result.Items.Select(data => new ViewPaymentRequestViewModel(data)).ToList()
-            });
+
+            model.Total = result.Total;
+            model.Items = result.Items.Select(data => new ViewPaymentRequestViewModel(data)).ToList();
+            return View(model);
         }
 
         [HttpGet]

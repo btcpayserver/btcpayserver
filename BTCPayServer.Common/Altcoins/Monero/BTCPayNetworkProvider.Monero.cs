@@ -20,7 +20,8 @@ namespace BTCPayServer
                     "XMR_X = XMR_BTC * BTC_X",
                     "XMR_BTC = kraken(XMR_BTC)"
                 },
-                CryptoImagePath = "/imlegacy/monero.svg"
+                CryptoImagePath = "/imlegacy/monero.svg",
+                UriScheme = "monero"
             });
         }
     }

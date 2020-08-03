@@ -58,6 +58,16 @@ namespace BTCPayServer
                 return null;
 
             var val = Filters[key].First();
+
+            // handle special string values
+            if (val == "-24h")
+                return DateTimeOffset.UtcNow.AddHours(-24).AddMinutes(timezoneOffset);
+            else if (val == "-3d")
+                return DateTimeOffset.UtcNow.AddDays(-3).AddMinutes(timezoneOffset);
+            else if (val == "-7d")
+                return DateTimeOffset.UtcNow.AddDays(-7).AddMinutes(timezoneOffset);
+
+            // default parsing logic
             var success = DateTimeOffset.TryParse(val, null as IFormatProvider, DateTimeStyles.AssumeUniversal, out var r);
             if (success)
             {

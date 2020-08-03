@@ -1,7 +1,7 @@
 @model WalletSendModel
 
 <div id="coin-selection-app" v-cloak>
-    <ul class="list-group">
+    <ul class="list-group mb-4">
         <li class="list-group-item list-group-item-heading d-flex justify-content-between align-items-center">
             <h3>Coin selection</h3>
             <span class="text-muted text-right" >
@@ -57,14 +57,13 @@
                         <a :href="label.link" target="_blank"v-if="label.link" data-toggle="tooltip" v-tooltip="label.tooltip">
                             {{label.value}}
                             <i class="fa fa-info-circle"></i>
-
                         </a>
                     </span>
                 </div>
                 <span class="text-muted ml-2">{{item.amount}}</span>
             </div>
         </li>
-        <li class="list-group-item">
+        <li class="list-group-item d-flex align-items-center justify-content-between">
             <ul class="pagination float-left">
                 <li class="page-item" v-bind:class="{'disabled' : pageStart == 0}">
                     <a class="page-link" tabindex="-1" href="#" v-on:click="page = page -1">«</a>
@@ -79,7 +78,7 @@
                 </li>
             </ul>
 
-            <a href="#" v-on:click="showSelectedOnly = !showSelectedOnly" class="btn btn-link" v-bind:class="{'disabled' : selectedInputs.length === 0}">
+            <a href="#" v-on:click="showSelectedOnly = !showSelectedOnly" class="btn btn-secondary" v-bind:class="{'disabled' : selectedInputs.length === 0}">
                 <template v-if="showSelectedOnly">Show all</template>
                 <template v-else>Show selected only</template>
             </a>
@@ -89,7 +88,6 @@
 
 <script>
 $(function() {
-
     Vue.directive('tooltip', function(el, binding) {
         $(el).tooltip({
             title: binding.value,

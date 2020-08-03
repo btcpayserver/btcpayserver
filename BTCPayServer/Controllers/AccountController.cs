@@ -443,13 +443,8 @@ namespace BTCPayServer.Controllers
                         var settings = await _SettingsRepository.GetSettingAsync<ThemeSettings>();
                         settings.FirstRun = false;
                         await _SettingsRepository.UpdateSetting<ThemeSettings>(settings);
-                        if (_Options.DisableRegistration)
-                        {
-                            // Once the admin user has been created lock subsequent user registrations (needs to be disabled for unit tests that require multiple users).
-                            Logs.PayServer.LogInformation("First admin created, disabling subscription (disable-registration is set to true)");
-                            policies.LockSubscription = true;
-                            await _SettingsRepository.UpdateSetting(policies);
-                        }
+
+                        await _SettingsRepository.FirstAdminRegistered(policies, _Options.UpdateUrl != null, _Options.DisableRegistration);
                         RegisteredAdmin = true;
                     }
 
@@ -626,7 +621,7 @@ namespace BTCPayServer.Controllers
 
         private bool CanLoginOrRegister()
         {
-            return _btcPayServerEnvironment.IsDevelopping || _btcPayServerEnvironment.IsSecure;
+            return _btcPayServerEnvironment.IsDeveloping || _btcPayServerEnvironment.IsSecure;
         }
 
         private void SetInsecureFlags()

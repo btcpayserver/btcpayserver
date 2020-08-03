@@ -45,11 +45,11 @@
             </div>
         </div>
 
-        <form asp-action="ListInvoices" method="get" style="float:right;">
+        <form asp-action="ListInvoices" method="get" class="pull-right mb-3 col-sm-12 col-md-7 col-lg-6">
             <input type="hidden" asp-for="Count" />
-            <div class="input-group">
+            <div class="input-group ">
                 <input asp-for="TimezoneOffset" type="hidden" />
-                <input asp-for="SearchTerm" class="form-control" style="width:300px;" />
+                <input asp-for="SearchTerm" class="form-control"/>
                 <div class="input-group-append">
                     <button type="submit" class="btn btn-primary" title="Search invoice">
                         <span class="fa fa-search"></span> Search
@@ -74,9 +74,9 @@
                         <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=unusual%3Atrue@{@storeIds}">Unusual Invoices</a>
                         <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=includearchived%3Atrue@{@storeIds}">Archived Invoices</a>
                         <div role="separator" class="dropdown-divider"></div>
-                        <a class="dropdown-item last24" href="/invoices?Count=@Model.Count&timezoneoffset=0&SearchTerm=startDate%3Alast24@{@storeIds}">Last 24 hours</a>
-                        <a class="dropdown-item last72" href="/invoices?Count=@Model.Count&timezoneoffset=0&SearchTerm=startDate%3Alast72@{@storeIds}">Last 3 days</a>
-                        <a class="dropdown-item last168" href="/invoices?Count=@Model.Count&timezoneoffset=0&SearchTerm=startDate%3Alast168@{@storeIds}">Last 7 days</a>
+                        <a class="dropdown-item" href="/invoices?Count=@Model.Count&timezoneoffset=0&SearchTerm=startDate%3A-24h@{@storeIds}">Last 24 hours</a>
+                        <a class="dropdown-item" href="/invoices?Count=@Model.Count&timezoneoffset=0&SearchTerm=startDate%3A-3d@{@storeIds}">Last 3 days</a>
+                        <a class="dropdown-item" href="/invoices?Count=@Model.Count&timezoneoffset=0&SearchTerm=startDate%3A-7d@{@storeIds}">Last 7 days</a>
                         <button type="button" class="dropdown-item" data-toggle="modal" data-target="#customRangeModal" data-backdrop="static">Custom Range</button>
                         <div role="separator" class="dropdown-divider"></div>
                         <a class="dropdown-item" href="/invoices?SearchTerm=">Unfiltered</a>
@@ -87,12 +87,12 @@
         </form>
 
         <form method="post" id="MassAction" asp-action="MassAction">
-            <div class="row button-row">
-                <div class="col-lg-24">
-                    <a asp-action="CreateInvoice" class="btn btn-primary" role="button" id="CreateNewInvoice"><span class="fa fa-plus"></span> Create a new invoice</a>
+            <div class="row button-row col-sm-12 col-md-5 col-lg-6">
+                <div>
+                    <a asp-action="CreateInvoice" class="btn btn-primary mb-1" role="button" id="CreateNewInvoice"><span class="fa fa-plus"></span> Create a new invoice</a>
 
-                    <span>
-                        <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <span >
+                        <button class="btn btn-primary dropdown-toggle  mb-1" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             Actions
                         </button>
                         <div class="dropdown-menu">
@@ -101,7 +101,7 @@
                     </span>
                     
                     <span>
-                        <a class="btn btn-primary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <a class="btn btn-primary dropdown-toggle  mb-1" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             Export
                         </a>
                         <a href="https://docs.btcpayserver.org/Accounting/" target="_blank">
@@ -114,7 +114,7 @@
                     </span>
                 </div>
             </div>
-
+            <br/>
             @* Custom Range Modal *@
             <div class="modal fade" id="customRangeModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 550px;">
@@ -313,73 +313,7 @@
                             }
                         </tbody>
                     </table>
-                    <nav aria-label="..." class="w-100">
-                        @if (Model.Total != 0)
-                        {
-                            <ul class="pagination float-left">
-                                <li class="page-item @(Model.Skip == 0 ? "disabled" : null)">
-                                    <a class="page-link" tabindex="-1" href="@ListInvoicesPage(-1, Model.Count)">&laquo;</a>
-                                </li>
-                                <li class="page-item disabled">
-                                    @if (Model.Total <= Model.Count)
-                                    {
-                                        <span class="page-link">
-                                            1–@Model.Invoices.Count
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <span class="page-link">
-                                            @(Model.Skip + 1)–@(Model.Skip + Model.Invoices.Count), Total: @Model.Total
-                                        </span>
-                                    }
-                                </li>
-                                <li class="page-item @(Model.Total > (Model.Skip + Model.Invoices.Count) ? null : "disabled")">
-                                    <a class="page-link" href="@ListInvoicesPage(1, Model.Count)">&raquo;</a>
-                                </li>
-                            </ul>
-                        }
-                        <ul class="pagination float-right">
-                            <li class="page-item disabled">
-                                <span class="page-link">Page Size:</span>
-                            </li>
-                            <li class="page-item @(Model.Count == 50 ? "active" : null)">
-                                <a class="page-link" href="@ListInvoicesPage(0, 50)">50</a>
-                            </li>
-                            <li class="page-item @(Model.Count == 100 ? "active" : null)">
-                                <a class="page-link" href="@ListInvoicesPage(0, 100)">100</a>
-                            </li>
-                            <li class="page-item @(Model.Count == 250 ? "active" : null)">
-                                <a class="page-link" href="@ListInvoicesPage(0, 250)">250</a>
-                            </li>
-                            <li class="page-item @(Model.Count == 500 ? "active" : null)">
-                                <a class="page-link" href="@ListInvoicesPage(0, 500)">500</a>
-                            </li>
-                        </ul>
-                    </nav>
-                    @{
-                        string ListInvoicesPage(int prevNext, int count)
-                        {
-                            var skip = Model.Skip;
-                            if (prevNext == -1)
-                            {
-                                skip = Math.Max(0, Model.Skip - Model.Count);
-                            }
-                            else if (prevNext == 1)
-                            {
-                                skip = Model.Skip + count;
-                            }
-
-                            var act = Url.Action("ListInvoices", new
-                            {
-                                searchTerm = Model.SearchTerm,
-                                skip = skip,
-                                count = count,
-                            });
-
-                            return act;
-                        }
-                    }
+                    <partial name="_TableFooterPager" />
                 </div>
             </div>
         </form>
@@ -387,14 +321,9 @@
     <script type="text/javascript">
         $(function () {
             var timezoneOffset = new Date().getTimezoneOffset();
-            $("#TimezoneOffset").val(timezoneOffset);
             $(".export-link, a.dropdown-item").each(function () {
                 this.href = this.href.replace("timezoneoffset=0", "timezoneoffset=" + timezoneOffset);
             });
-
-            $("a.last24").each(function () { this.href = this.href.replace("last24", getDateStringWithOffset(24)); });
-            $("a.last72").each(function () { this.href = this.href.replace("last72", getDateStringWithOffset(72)); });
-            $("a.last168").each(function () { this.href = this.href.replace("last168", getDateStringWithOffset(168)); });
             
         });
 

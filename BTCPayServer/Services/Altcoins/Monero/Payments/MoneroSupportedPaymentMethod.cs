@@ -1,3 +1,4 @@
+#if ALTCOINS
 using BTCPayServer.Payments;
 
 namespace BTCPayServer.Services.Altcoins.Monero.Payments
@@ -10,3 +11,4 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
         public PaymentMethodId PaymentId => new PaymentMethodId(CryptoCode, MoneroPaymentType.Instance);
     }
 }
+#endif

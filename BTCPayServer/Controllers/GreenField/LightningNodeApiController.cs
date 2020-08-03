@@ -288,7 +288,7 @@ namespace BTCPayServer.Controllers.GreenField
 
         protected bool CanUseInternalLightning(bool doingAdminThings)
         {
-            return (_btcPayServerEnvironment.IsDevelopping || User.IsInRole(Roles.ServerAdmin) ||
+            return (_btcPayServerEnvironment.IsDeveloping || User.IsInRole(Roles.ServerAdmin) ||
                     (_cssThemeManager.AllowLightningInternalNodeForAll && !doingAdminThings));
         }
 

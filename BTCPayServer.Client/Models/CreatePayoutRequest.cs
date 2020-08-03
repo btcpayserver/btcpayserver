@@ -6,7 +6,7 @@ namespace BTCPayServer.Client.Models
     public class CreatePayoutRequest
     {
         public string Destination { get; set; }
-        [JsonConverter(typeof(DecimalStringJsonConverter))]
+        [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal? Amount { get; set; }
         public string PaymentMethod { get; set; }
     }

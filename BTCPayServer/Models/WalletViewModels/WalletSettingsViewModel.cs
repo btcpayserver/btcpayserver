@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace BTCPayServer.Models.WalletViewModels
@@ -6,6 +7,7 @@ namespace BTCPayServer.Models.WalletViewModels
     public class WalletSettingsViewModel
     {
         public string Label { get; set; }
+        [DisplayName("Derivation scheme")]
         public string DerivationScheme { get; set; }
         public string DerivationSchemeInput { get; set; }
         [Display(Name = "Is signing key")]
@@ -20,9 +22,12 @@ namespace BTCPayServer.Models.WalletViewModels
 
     public class WalletSettingsAccountKeyViewModel
     {
+        [DisplayName("Account key")]
         public string AccountKey { get; set; }
+        [DisplayName("Master fingerprint")]
         [Validation.HDFingerPrintValidator]
         public string MasterFingerprint { get; set; }
+        [DisplayName("Account key path")]
         [Validation.KeyPathValidator]
         public string AccountKeyPath { get; set; }
     }

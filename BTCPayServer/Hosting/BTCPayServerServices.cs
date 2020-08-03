@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Threading;
 using BTCPayServer.Configuration;
+using BTCPayServer.Contracts;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
@@ -16,7 +17,6 @@ using BTCPayServer.Security;
 using BTCPayServer.Security.Bitpay;
 using BTCPayServer.Security.GreenField;
 using BTCPayServer.Services;
-using BTCPayServer.Services.Altcoins.Monero;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Fees;
 using BTCPayServer.Services.Invoices;
@@ -47,7 +47,9 @@ using NBXplorer.DerivationStrategy;
 using Newtonsoft.Json;
 using NicolasDorier.RateLimits;
 using Serilog;
-
+#if ALTCOINS
+using BTCPayServer.Services.Altcoins.Monero;
+#endif
 namespace BTCPayServer.Hosting
 {
     public static class BTCPayServerServices
@@ -75,7 +77,9 @@ namespace BTCPayServer.Hosting
             services.RegisterJsonConverter(n => new ClaimDestinationJsonConverter(n));
 
             services.AddPayJoinServices();
+#if ALTCOINS
             services.AddMoneroLike();
+#endif
             services.TryAddSingleton<SettingsRepository>();
             services.TryAddSingleton<LabelFactory>();
             services.TryAddSingleton<TorServices>();
@@ -168,6 +172,7 @@ namespace BTCPayServer.Hosting
                 htmlSanitizer.RemovingStyle += (sender, args) => { args.Cancel = true; };
                 htmlSanitizer.AllowedAttributes.Add("class");
                 htmlSanitizer.AllowedTags.Add("iframe");
+                htmlSanitizer.AllowedTags.Add("style");
                 htmlSanitizer.AllowedTags.Remove("img");
                 htmlSanitizer.AllowedAttributes.Add("webkitallowfullscreen");
                 htmlSanitizer.AllowedAttributes.Add("allowfullscreen");
@@ -177,6 +182,7 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<LightningConfigurationProvider>();
             services.TryAddSingleton<LanguageService>();
             services.TryAddSingleton<NBXplorerDashboard>();
+            services.TryAddSingleton<ISyncSummaryProvider, NBXSyncSummaryProvider>();
             services.TryAddSingleton<StoreRepository>();
             services.TryAddSingleton<PaymentRequestRepository>();
             services.TryAddSingleton<BTCPayWalletProvider>();
@@ -233,7 +239,11 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IBackgroundJobClient, BackgroundJobClient>();
             services.AddScoped<IAuthorizationHandler, CookieAuthorizationHandler>();
             services.AddScoped<IAuthorizationHandler, BitpayAuthorizationHandler>();
+
+            services.AddSingleton<IVersionFetcher, GithubVersionFetcher>();
+            services.AddSingleton<IHostedService, NewVersionCheckerHostedService>();
             services.AddSingleton<INotificationHandler, NewVersionNotification.Handler>();
+
             services.AddSingleton<INotificationHandler, InvoiceEventNotification.Handler>();
             services.AddSingleton<INotificationHandler, PayoutNotification.Handler>();
 
@@ -278,7 +288,7 @@ namespace BTCPayServer.Hosting
             {
                 var btcPayEnv = provider.GetService<BTCPayServerEnvironment>();
                 var rateLimits = new RateLimitService();
-                if (btcPayEnv.IsDevelopping)
+                if (btcPayEnv.IsDeveloping)
                 {
                     rateLimits.SetZone($"zone={ZoneLimits.Login} rate=1000r/min burst=100 nodelay");
                     rateLimits.SetZone($"zone={ZoneLimits.Register} rate=1000r/min burst=100 nodelay");

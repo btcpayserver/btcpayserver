@@ -65,7 +65,7 @@ After successful deployment, make sure to check our [getting started](https://do
 
 ## Documentation
 
-Please check out our [official website](https://btcpayserver.org/), our [complete documentation](https://github.com/btcpayserver/btcpayserver-doc) and [FAQ](https://docs.btcpayserver.org/FAQ/) for more details.
+Please check out our [official website](https://btcpayserver.org/), our [complete documentation](https://docs.btcpayserver.org/) and [FAQ](https://docs.btcpayserver.org/FAQ/) for more details.
 
 If you have trouble using BTCPay, consider joining [communities listed on official website](https://btcpayserver.org/#communityCTA) to get help from BTCPay community members. Only file [Github issue](https://github.com/btcpayserver/btcpayserver/issues) for technical issues you can't resolve through other channels or feature requests you've validated with other members of community.
 
@@ -79,13 +79,14 @@ If you're a developer looking to help, but you're not sure where to begin, check
 
 Contributors looking to do something a bit more challenging, before opening a pull request, please [create an issue](https://github.com/btcpayserver/btcpayserver/issues/new/choose) or join [our community chat](https://chat.btcpayserver.org/) to get early feedback, discuss best ways to tackle the problem and to ensure there is no work duplication.
 
-- [Setting up development environment on Windows](https://www.youtube.com/watch?v=ZePbMPSIvHM)
-- [Setting up development environment Linux (Ubuntu)](https://www.youtube.com/watch?v=j486T_Rk-yw&t)
-- [Setting up development environment MacOS](https://www.youtube.com/watch?v=GWR_CcMsEV0)
+* [Setting up development environment on Windows](https://www.youtube.com/watch?v=ZePbMPSIvHM)
+* [Setting up development environment Linux (Ubuntu)](https://www.youtube.com/watch?v=j486T_Rk-yw&t)
+* [Setting up development environment MacOS](https://www.youtube.com/watch?v=GWR_CcMsEV0)
 
-You also have an awesome video of our contributors which explains how to get started.[![Rockstar Dev and Britt Kelly - Btc Pay Server Code Along](https://img.youtube.com/vi/ZePbMPSIvHM/sddefault.jpg)](https://www.youtube.com/embed/VNMnd-dX9Q8)
+You also have an awesome video of our contributors which explains how to get started.
+[![Rockstar Dev and Britt Kelly - BTCPay Server Code Along](https://img.youtube.com/vi/ZePbMPSIvHM/sddefault.jpg)](https://www.youtube.com/embed/VNMnd-dX9Q8)
 
-Here is some info about [how to extend the themes](https://docs.btcpayserver.org/Theme/)
+Here is some info about [how to extend the themes](https://docs.btcpayserver.org/Theme/).
 
 ## How to build
 
@@ -94,12 +95,14 @@ While the documentation advises to use docker-compose, you may want to build BTC
 First install .NET Core SDK v3.1 as specified by [Microsoft website](https://dotnet.microsoft.com/download/dotnet-core/3.1).
 
 On Powershell:
-```
+
+```powershell
 .\build.ps1
 ```
 
 On linux:
-```
+
+```sh
 ./build.sh
 ```
 
@@ -108,12 +111,14 @@ On linux:
 Use the `run` scripts to run BTCPayServer, this example shows how to print the available command line arguments of BTCPayServer.
 
 On Powershell:
-```
+
+```powershell
 .\run.ps1 --help
 ```
 
 On linux:
-```
+
+```sh
 ./run.sh --help
 ```
 
@@ -121,7 +126,7 @@ On linux:
 
 If you want to debug, use Visual Studio Code or Visual Studio 2019.
 
-You need to run the development time docker-compose as described [in the test guide](BTCPayServer.Tests/README.md).
+You need to run the development time docker-compose as described [in the test guide](./BTCPayServer.Tests/README.md).
 
 You can then run the debugger by using the Launch Profile `Docker-Regtest` on either Visual Studio Code or Visual Studio 2017.
 
@@ -136,7 +141,8 @@ Then use the `Docker-Regtest-https` debug profile.
 
 ## Other dependencies
 
-For more information, see the documentation: [How to deploy a BTCPay server instance](https://github.com/btcpayserver/btcpayserver-doc/#deployment).
+For more information, see the documentation:
+[How to deploy a BTCPay server instance](https://docs.btcpayserver.org/Deployment/).
 
 ## Supported altcoins
 
@@ -181,6 +187,8 @@ The BTCPay Server Project is proudly supported by these entities through the [BT
           <span>DG Lab</span>
         </a>
       </td>
+    </tr>
+    <tr>
       <td align="center" valign="middle">
         <a href="https://www.okcoin.com/" target="_blank">
           <img  src="BTCPayServer/wwwroot/img/okcoin.svg" alt="OKCoin" height=100>

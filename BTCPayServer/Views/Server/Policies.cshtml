@@ -42,6 +42,11 @@
             <label asp-for="AllowHotWalletRPCImportForAll" class="form-check-label"></label>
             <span asp-validation-for="AllowHotWalletRPCImportForAll" class="text-danger"></span>
         </div>
+        <div class="form-check">
+            <input asp-for="CheckForNewVersions" type="checkbox" class="form-check-input" />
+            <label asp-for="CheckForNewVersions" class="form-check-label"></label>
+            <span asp-validation-for="CheckForNewVersions" class="text-danger"></span>
+        </div>
     </div>
     <div class="form-group">
         <label asp-for="RootAppId"></label>

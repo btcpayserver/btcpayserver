@@ -22,6 +22,12 @@ namespace BTCPayServer.Services
 #else
 			Build = "Release";
 #endif
+#if ALTCOINS
+            AltcoinsVersion = true;
+#else
+            AltcoinsVersion = false;
+#endif
+
             Environment = env;
             NetworkType = provider.NetworkType;
             this.torServices = torServices;
@@ -46,8 +52,9 @@ namespace BTCPayServer.Services
         {
             get; set;
         }
+        public bool AltcoinsVersion { get; set; }
 
-        public bool IsDevelopping
+        public bool IsDeveloping
         {
             get
             {
@@ -72,6 +79,8 @@ namespace BTCPayServer.Services
         {
             StringBuilder txt = new StringBuilder();
             txt.Append($"@Copyright BTCPayServer v{Version}");
+            if (AltcoinsVersion)
+                txt.Append($" (altcoins)");
             if (!Environment.IsProduction() || !Build.Equals("Release", StringComparison.OrdinalIgnoreCase))
             {
                 txt.Append($" Environment: {Environment.EnvironmentName} Build: {Build}");

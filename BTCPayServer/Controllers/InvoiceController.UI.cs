@@ -29,7 +29,6 @@ using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitpayClient;
 using NBXplorer;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using StoreData = BTCPayServer.Data.StoreData;
 
@@ -598,55 +597,23 @@ namespace BTCPayServer.Controllers
             return Ok("{}");
         }
 
-        public class InvoicePreference
-        {
-            public int? TimezoneOffset { get; set; }
-            public string SearchTerm { get; set; }
-        }
-
         [HttpGet]
         [Route("invoices")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [BitpayAPIConstraint(false)]
-        public async Task<IActionResult> ListInvoices(string searchTerm = null, int skip = 0, int count = 50, int? timezoneOffset = null)
+        public async Task<IActionResult> ListInvoices(InvoicesModel model = null)
         {
-            // If the user enter an empty searchTerm, then the variable will be null and not empty string
-            // but we want searchTerm to be null only if the user is browsing the page via some link
-            // NOT if the user entered some empty search
-            searchTerm = searchTerm is string ? searchTerm :
-                         this.Request.Query.ContainsKey(nameof(searchTerm)) ? string.Empty :
-                         null;
-            if (searchTerm is null)
-            {
-                if (this.Request.Cookies.TryGetValue("ListInvoicePreferences", out var str))
-                {
-                    var preferences = JsonConvert.DeserializeObject<InvoicePreference>(str);
-                    searchTerm = preferences.SearchTerm;
-                    timezoneOffset = timezoneOffset is int v ? v : preferences.TimezoneOffset;
-                }
-            }
-            else
-            {
-                var preferences = new InvoicePreference();
-                preferences.SearchTerm = searchTerm;
-                preferences.TimezoneOffset = timezoneOffset;
-                this.Response.Cookies.Append("ListInvoicePreferences", JsonConvert.SerializeObject(preferences));
-            }
-            var fs = new SearchString(searchTerm);
+            model = this.ParseListQuery(model ?? new InvoicesModel());
+
+            var fs = new SearchString(model.SearchTerm);
             var storeIds = fs.GetFilterArray("storeid") != null ? fs.GetFilterArray("storeid") : new List<string>().ToArray();
 
-            var model = new InvoicesModel
-            {
-                SearchTerm = searchTerm,
-                Skip = skip,
-                Count = count,
-                StoreIds = storeIds,
-                TimezoneOffset = timezoneOffset
-            };
-            InvoiceQuery invoiceQuery = GetInvoiceQuery(searchTerm, timezoneOffset ?? 0);
+            model.StoreIds = storeIds;
+
+            InvoiceQuery invoiceQuery = GetInvoiceQuery(model.SearchTerm, model.TimezoneOffset ?? 0);
             var counting = _InvoiceRepository.GetInvoicesTotal(invoiceQuery);
-            invoiceQuery.Count = count;
-            invoiceQuery.Skip = skip;
+            invoiceQuery.Count = model.Count;
+            invoiceQuery.Skip = model.Skip;
             var list = await _InvoiceRepository.GetInvoices(invoiceQuery);
 
             foreach (var invoice in list)

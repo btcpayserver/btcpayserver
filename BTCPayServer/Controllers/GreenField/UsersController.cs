@@ -148,13 +148,7 @@ namespace BTCPayServer.Controllers.GreenField
                 await _userManager.AddToRoleAsync(user, Roles.ServerAdmin);
                 if (!anyAdmin)
                 {
-                    if (_options.DisableRegistration)
-                    {
-                        // automatically lock subscriptions now that we have our first admin
-                        Logs.PayServer.LogInformation("First admin created, disabling subscription (disable-registration is set to true)");
-                        policies.LockSubscription = true;
-                        await _settingsRepository.UpdateSetting(policies);
-                    }
+                    await _settingsRepository.FirstAdminRegistered(policies, _options.UpdateUrl != null, _options.DisableRegistration);
                 }
             }
             _eventAggregator.Publish(new UserRegisteredEvent() { RequestUri = Request.GetAbsoluteRootUri(), User = user, Admin = request.IsAdministrator is true });

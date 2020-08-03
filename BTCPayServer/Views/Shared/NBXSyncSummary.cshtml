@@ -1,0 +1,60 @@
+@inject BTCPayServer.HostedServices.NBXplorerDashboard dashboard;
+@foreach (var line in dashboard.GetAll().Where(summary => summary.Network.ShowSyncSummary))
+{
+    <h4>@line.Network.CryptoCode</h4>
+    @if (line.Status == null)
+    {
+        <ul>
+            <li>The node is offline</li>
+            @if (line.Error != null)
+            {
+                <li>Last error: @line.Error</li>
+            }
+        </ul>
+    }
+    else
+    {
+        <ul>
+            <li>NBXplorer headers height: @line.Status.ChainHeight</li>
+            @if (line.Status.BitcoinStatus == null)
+            {
+                if (line.State == BTCPayServer.HostedServices.NBXplorerState.Synching)
+                {
+                    <li>The node is starting...</li>
+                }
+                else
+                {
+                    <li>The node is offline</li>
+                    @if (line.Error != null)
+                    {
+                        <li>Last error: @line.Error</li>
+                    }
+                }
+            }
+            else if (line.Status.BitcoinStatus.IsSynched)
+            {
+                <li>The node is synchronized (Height: @line.Status.BitcoinStatus.Headers)</li>
+                @if (line.Status.BitcoinStatus.IsSynched &&
+                     line.Status.SyncHeight.HasValue &&
+                     line.Status.SyncHeight.Value < line.Status.BitcoinStatus.Headers)
+                {
+                    <li>NBXplorer is synchronizing... (Height: @line.Status.SyncHeight.Value)</li>
+                }
+            }
+            else
+            {
+                <li>Node headers height: @line.Status.BitcoinStatus.Headers</li>
+                <li>Validated blocks: @line.Status.BitcoinStatus.Blocks</li>
+            }
+        </ul>
+        @if (!line.Status.IsFullySynched && line.Status.BitcoinStatus != null)
+        {
+            <div class="progress">
+                <div class="progress-bar" role="progressbar" aria-valuenow="@((int) (line.Status.BitcoinStatus.VerificationProgress * 100))"
+                     aria-valuemin="0" aria-valuemax="100" style="width:@((int) (line.Status.BitcoinStatus.VerificationProgress * 100))%">
+                    @((int) (line.Status.BitcoinStatus.VerificationProgress * 100))%
+                </div>
+            </div>
+        }
+    }
+}

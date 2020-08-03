@@ -9,7 +9,7 @@
 
 <div class="modal fade" id="electrumimport" tabindex="-1" role="dialog" aria-labelledby="electrumimport" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
-        <form class="modal-content" form method="post" enctype="multipart/form-data">
+        <form class="modal-content" method="post" enctype="multipart/form-data">
             <div class="modal-header">
                 <h5 class="modal-title" id="electrumimportLabel">Import Wallet from file</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -17,21 +17,43 @@
                 </button>
             </div>
             <div class="modal-body">
-                <p>You may import your air-gapped hardware wallet (such as ColdCard, Cobo Vault) by exporting a file and uploading it here.</p>
-                <ul >
-                    <li>Cobo Vault - <kbd>Settings->Watch-Only Wallet->Wasabi Wallet/BTCPay->Export Wallet</kbd></li>
-                    <li>ColdCard - <kbd>Advanced->MicroSD Card->Electrum Wallet</kbd> or <kbd>Advanced->MicroSD Card->Wasabi Wallet</kbd></li>
-                    <li>Electrum - <kbd>File->Save Copy</kbd></li>
-                    <li>Wasabi - <kbd>Tools->Wallet Manager->Open Wallets Folder</kbd></li>
-                </ul>
+                <p>Import your air-gapped hardware wallet by exporting a file and uploading it here.</p>
+                <table class="table table-sm table-responsive-md">
+                    <thead>
+                        <tr>
+                            <th>Wallet</th>
+                            <th>Instructions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Cobo Vault</td>
+                            <td><kbd>Settings ❯ Watch-Only Wallet ❯ BTCPay ❯ Export Wallet</kbd></td>
+                        </tr>
+                        <tr>
+                            <td>ColdCard</td>
+                            <td>
+                                <kbd>Advanced ❯ MicroSD Card ❯ Electrum Wallet</kbd> or
+                                <kbd>Advanced ❯ MicroSD Card ❯ Wasabi Wallet</kbd>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Electrum</td>
+                            <td><kbd>File ❯ Save Copy</kbd></td>
+                        </tr>
+                        <tr>
+                            <td>Wasabi</td>
+                            <td><kbd>Tools ❯ Wallet Manager ❯ Open Wallets Folder</kbd></td>
+                        </tr>
+                    </tbody>
+                </table>
                 <div class="form-group">
                     <label asp-for="WalletFile"></label>
-
                     <input type="file" class="form-control-file" asp-for="WalletFile" required>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                 <button type="submit" class="btn btn-primary">Submit</button>
             </div>
         </form>
@@ -73,7 +95,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                 <button id="vault-confirm" class="btn btn-primary" style="display:none;"></button>
             </div>
         </form>

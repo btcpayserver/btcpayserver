@@ -21,9 +21,9 @@ namespace BTCPayServer.Client.Models
         public string PullPaymentId { get; set; }
         public string Destination { get; set; }
         public string PaymentMethod { get; set; }
-        [JsonConverter(typeof(DecimalStringJsonConverter))]
+        [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal Amount { get; set; }
-        [JsonConverter(typeof(DecimalStringJsonConverter))]
+        [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal? PaymentMethodAmount { get; set; }
         [JsonConverter(typeof(StringEnumConverter))]
         public PayoutState State { get; set; }

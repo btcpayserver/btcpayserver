@@ -64,7 +64,6 @@ namespace BTCPayServer.Data
         {
             if (storeData == null)
                 throw new ArgumentNullException(nameof(storeData));
-            networks = networks.UnfilteredNetworks;
 #pragma warning disable CS0618
             bool btcReturned = false;
 

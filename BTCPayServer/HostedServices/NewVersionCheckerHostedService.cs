@@ -94,6 +94,9 @@ namespace BTCPayServer.HostedServices
         private static readonly Regex _releaseVersionTag = new Regex("^(v[1-9]+(\\.[0-9]+)*(-[0-9]+)?)$");
         public async Task<string> Fetch(CancellationToken cancellation)
         {
+            if (_updateurl == null)
+                return null;
+
             using (var resp = await _httpClient.GetAsync(_updateurl, cancellation))
             {
                 var strResp = await resp.Content.ReadAsStringAsync();

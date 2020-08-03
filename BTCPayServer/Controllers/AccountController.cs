@@ -444,7 +444,7 @@ namespace BTCPayServer.Controllers
                         settings.FirstRun = false;
                         await _SettingsRepository.UpdateSetting<ThemeSettings>(settings);
 
-                        await _SettingsRepository.FirstAdminRegistered(policies, _Options.UpdateCheck, _Options.DisableRegistration);
+                        await _SettingsRepository.FirstAdminRegistered(policies, _Options.UpdateUrl != null, _Options.DisableRegistration);
                         RegisteredAdmin = true;
                     }
 

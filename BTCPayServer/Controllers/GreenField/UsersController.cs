@@ -148,7 +148,7 @@ namespace BTCPayServer.Controllers.GreenField
                 await _userManager.AddToRoleAsync(user, Roles.ServerAdmin);
                 if (!anyAdmin)
                 {
-                    await _settingsRepository.FirstAdminRegistered(policies, _options.UpdateCheck, _options.DisableRegistration);
+                    await _settingsRepository.FirstAdminRegistered(policies, _options.UpdateUrl != null, _options.DisableRegistration);
                 }
             }
             _eventAggregator.Publish(new UserRegisteredEvent() { RequestUri = Request.GetAbsoluteRootUri(), User = user, Admin = request.IsAdministrator is true });

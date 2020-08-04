@@ -1,12 +1,22 @@
-﻿<div></div>
+@inject LinkGenerator linkGenerator
+
+<div></div>
 @await Component.InvokeAsync("NotificationsDropdown")
-<script>
+<script type="text/javascript">
 
 var supportsWebSockets = 'WebSocket' in window && window.WebSocket.CLOSING === 2;
 
-if (supportsWebSockets) {
-    var ws_uri = "@Url.Action("SubscribeUpdates", "Notifications", new {}, Context.Request.Scheme)".replace("http", "ws");
-    var newDataEndpoint = "@Url.Action("GetNotificationDropdownUI", "Notifications", new {}, Context.Request.Scheme)";
+    if (supportsWebSockets) {
+
+    var loc = window.location, ws_uri;
+    if (loc.protocol === "https:") {
+        ws_uri = "wss:";
+    } else {
+        ws_uri = "ws:";
+    }
+    ws_uri += "//" + loc.host;
+    ws_uri += "@linkGenerator.GetPathByAction("SubscribeUpdates", "Notifications")";
+    var newDataEndpoint = "@linkGenerator.GetPathByAction("GetNotificationDropdownUI", "Notifications")";
 
     try {
         socket = new WebSocket(ws_uri);

@@ -36,12 +36,6 @@ namespace BTCPayServer.Security.GreenField
                     {
                         queryable = queryable.Where(data => query.UserId.Contains(data.UserId));
                     }
-
-                    if (query.ApplicationIdentifier != null && query.ApplicationIdentifier.Any())
-                    {
-                        queryable = queryable.Where(data =>
-                            query.ApplicationIdentifier.Contains(data.ApplicationIdentifier));
-                    }
                 }
 
                 return await queryable.ToListAsync();

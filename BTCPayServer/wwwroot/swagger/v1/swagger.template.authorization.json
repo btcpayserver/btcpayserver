@@ -54,6 +54,27 @@
                             "nullable": true
                         },
                         "x-position": 4
+                    },
+                    {
+                        "name": "redirect",
+                        "description": "The url to redirect to after the user consents, with the query parameters appended to it: permissions, user-id, api-key. If not specified, user is redirected to their API Key list.",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "url",
+                            "nullable": true
+                        },
+                        "x-position": 5
+                    },
+                    {
+                        "name": "applicationIdentifier",
+                        "description": "If specified, BTCPay Server will check if there is an existing API key associated with the user that also has this application identifier, redirect host AND the permissions required match(takes selectiveStores and strict into account). `applicationIdentifier` is ignored if redirect is not specified.",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "x-position": 6
                     }
                 ],
                 "responses": {
@@ -63,6 +84,9 @@
                             "text/html": {
                             }
                         }
+                    },
+                    "307": {
+                        "description": "Redirects to the specified url in `redirect` with query string values for `key` (the api key created or matched), `permissions` (the permissions the user consented to), and `user` (the id of the user that consented) upon consent"
                     }
                 },
                 "security": []

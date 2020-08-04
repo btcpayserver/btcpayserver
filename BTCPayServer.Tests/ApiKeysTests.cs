@@ -117,10 +117,13 @@ namespace BTCPayServer.Tests
                 //permissions
                 //strict
                 //selectiveStores
+                //redirect
+                //appidentifier
+                var appidentifier = "testapp";
                 var authUrl = BTCPayServerClient.GenerateAuthorizeUri(tester.PayTester.ServerUri,
-                    new[] { Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings }).ToString();
+                    new[] { Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings }, applicationDetails: (appidentifier, new Uri("https://local.local/callback"))).ToString();
                 s.Driver.Navigate().GoToUrl(authUrl);
-                s.Driver.PageSource.Contains("kukksappname");
+                Assert.True(s.Driver.PageSource.Contains(appidentifier));
                 Assert.Equal("hidden", s.Driver.FindElement(By.Id("btcpay.store.canmodifystoresettings")).GetAttribute("type").ToLowerInvariant());
                 Assert.Equal("true", s.Driver.FindElement(By.Id("btcpay.store.canmodifystoresettings")).GetAttribute("value").ToLowerInvariant());
                 Assert.Equal("hidden", s.Driver.FindElement(By.Id("btcpay.server.canmodifyserversettings")).GetAttribute("type").ToLowerInvariant());
@@ -138,7 +141,7 @@ namespace BTCPayServer.Tests
                     (await apiKeyRepo.GetKey(results.Single(pair => pair.Key == "key").Value)).GetBlob().Permissions);
 
                 authUrl = BTCPayServerClient.GenerateAuthorizeUri(tester.PayTester.ServerUri,
-                    new[] { Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings }, false, true).ToString();
+                    new[] { Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings }, false, true,  applicationDetails: (null, new Uri("https://local.local/callback"))).ToString();
 
                 s.Driver.Navigate().GoToUrl(authUrl);
                 Assert.DoesNotContain("kukksappname", s.Driver.PageSource);
@@ -158,6 +161,26 @@ namespace BTCPayServer.Tests
 
                 await TestApiAgainstAccessToken(results.Single(pair => pair.Key == "key").Value, tester, user,
                     (await apiKeyRepo.GetKey(results.Single(pair => pair.Key == "key").Value)).GetBlob().Permissions);
+                
+                
+                //let's test the app identifier system
+                authUrl = BTCPayServerClient.GenerateAuthorizeUri(tester.PayTester.ServerUri,
+                    new[] { Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings }, false, true, (appidentifier, new Uri("https://local.local/callback"))).ToString();
+
+
+                //if it's the same, go to the confirm page
+                s.Driver.Navigate().GoToUrl(authUrl);
+                s.Driver.FindElement(By.Id("continue")).Click();
+                url = s.Driver.Url;
+                Assert.StartsWith("https://local.local/callback", url);
+                
+                //same app but different redirect = nono
+                authUrl = BTCPayServerClient.GenerateAuthorizeUri(tester.PayTester.ServerUri,
+                    new[] { Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings }, false, true, (appidentifier, new Uri("https://international.local/callback"))).ToString();
+                
+                s.Driver.Navigate().GoToUrl(authUrl);
+                url = s.Driver.Url;
+                Assert.False(url.StartsWith("https://international.com/callback"));
 
             }
         }

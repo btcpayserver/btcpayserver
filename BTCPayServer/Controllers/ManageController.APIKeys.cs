@@ -80,18 +80,6 @@ namespace BTCPayServer.Controllers
             return View("AddApiKey", await SetViewModelValues(new AddApiKeyViewModel()));
         }
         
-        /// <param name="permissions">The permissions to request</param>
-        /// <param name="applicationName">The name of your application</param>
-        /// <param name="redirect">The URl to redirect to after the user consents, with the query paramters appended to it: permissions, user-id, api-key. If not specified, user is redirect to their API Key list.</param>
-        /// <param name="strict">If permissions are specified, and strict is set to false, it will allow the user to reject some of permissions the application is requesting.</param>
-        /// <param name="selectiveStores">If the application is requesting the CanModifyStoreSettings permission and selectiveStores is set to true, this allows the user to only grant permissions to selected stores under the user's control.</param>
-        /// <param name="applicationIdentifier">If specified, BTCPay will check if there is an existing API key stored associated with the user that also has this application identifer, redirect host AND the permissions required match(takes selectiveStores and strict into account). applicationIdentifier is ignored if redirect is not specified.</param>
-        // [OpenApiTags("Authorization")]
-        // [OpenApiOperation("Authorize User",
-        //     "Redirect the browser to this endpoint to request the user to generate an api-key with specific permissions")]
-        // [SwaggerResponse(StatusCodes.Status307TemporaryRedirect, null,
-        //     Description = "Redirects to the specified url with query string values for api-key, permissions, and user-id upon consent")]
-        // [IncludeInOpenApiDocs]
         [HttpGet("~/api-keys/authorize")]
         public async Task<IActionResult> AuthorizeAPIKey( string[] permissions, string applicationName = null, Uri redirect = null,
             bool strict = true, bool selectiveStores = false, string applicationIdentifier = null)
@@ -165,16 +153,16 @@ namespace BTCPayServer.Controllers
                             continue;
                         }
                         
-                       //we have a key that is sufficient, redirect to a page to confirm that it's ok to provide this key to the app.
-                       return View("Confirm",
-                           new ConfirmModel()
-                           {
-                               Title = $"Are you sure about exposing your API Key to {redirect}?",
-                               Description = $"You've previously generated this API Key ({key.Id}) specifically for {applicationName}",
-                               ActionUrl = GetRedirectToApplicationUrl(redirect, key),
-                               ButtonClass = "btn-secondary",
-                               Action = "Confirm"
-                           });
+                        //we have a key that is sufficient, redirect to a page to confirm that it's ok to provide this key to the app.
+                        return View("Confirm",
+                            new ConfirmModel()
+                            {
+                                Title = $"Are you sure about exposing your API Key to {applicationName??applicationIdentifier}?",
+                                Description = $"You've previously generated this API Key ({key.Id}) specifically for {applicationName??applicationIdentifier} with the url {redirect}. ",
+                                ActionUrl = GetRedirectToApplicationUrl(redirect, key),
+                                ButtonClass = "btn-secondary",
+                                Action = "Confirm"
+                            });
                     }
                 }
             }
@@ -258,7 +246,6 @@ namespace BTCPayServer.Controllers
                 }
             }
 
-
             if (!ModelState.IsValid)
             {
                 return View(viewModel);
@@ -269,7 +256,7 @@ namespace BTCPayServer.Controllers
                 case "no":
                     return RedirectToAction("APIKeys");
                 case "yes":
-                    var key = await CreateKey(viewModel, viewModel.ApplicationIdentifier);
+                    var key = await CreateKey(viewModel, (viewModel.ApplicationIdentifier, viewModel.RedirectUrl.Authority));
 
                     if (viewModel.RedirectUrl != null)
                     {
@@ -293,7 +280,7 @@ namespace BTCPayServer.Controllers
             var permissions = key.GetBlob().Permissions;
             uri.AppendPayloadToQuery(new Dictionary<string, object>()
             {
-                {"api-key", key.Id}, {"permissions",permissions}, {"user-id", key.UserId}
+                {"key", key.Id}, {"permissions",permissions}, {"user", key.UserId}
             });
             //uri builder has bug around string[] params
             return uri.Uri.ToStringInvariant().Replace("permissions=System.String%5B%5D",
@@ -374,7 +361,7 @@ namespace BTCPayServer.Controllers
             return null;
         }
 
-        private async Task<APIKeyData> CreateKey(AddApiKeyViewModel viewModel, string appIdentifier = null)
+        private async Task<APIKeyData> CreateKey(AddApiKeyViewModel viewModel, (string appIdentifier, string appAuthority) app = default)
         {
             var key = new APIKeyData()
             {
@@ -382,11 +369,12 @@ namespace BTCPayServer.Controllers
                 Type = APIKeyType.Permanent,
                 UserId = _userManager.GetUserId(User),
                 Label = viewModel.Label,
-                ApplicationIdentifier = appIdentifier
             };
             key.SetBlob(new APIKeyBlob()
             {
-                Permissions = GetPermissionsFromViewModel(viewModel).Select(p => p.ToString()).Distinct().ToArray()
+                Permissions = GetPermissionsFromViewModel(viewModel).Select(p => p.ToString()).Distinct().ToArray(),
+                ApplicationAuthority = app.appAuthority,
+                ApplicationIdentifier = app.appIdentifier
             });
             await _apiKeyRepository.CreateKey(key);
             return key;

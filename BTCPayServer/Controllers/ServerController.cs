@@ -285,14 +285,15 @@ namespace BTCPayServer.Controllers
                 return NotFound();
 
             var admins = await _UserManager.GetUsersInRoleAsync(Roles.ServerAdmin);
-            if (!viewModel.IsAdmin && admins.Count == 1)
+            var roles = await _UserManager.GetRolesAsync(user);
+            var wasAdmin = IsAdmin(roles);
+            if (!viewModel.IsAdmin && admins.Count == 1 && wasAdmin)
             {
                 TempData[WellKnownTempData.ErrorMessage] = "This is the only Admin, so their role can't be removed until another Admin is added.";
                 return View(viewModel); // return
             }
 
-            var roles = await _UserManager.GetRolesAsync(user);
-            if (viewModel.IsAdmin != IsAdmin(roles))
+            if (viewModel.IsAdmin != wasAdmin)
             {
                 if (viewModel.IsAdmin)
                     await _UserManager.AddToRoleAsync(user, Roles.ServerAdmin);

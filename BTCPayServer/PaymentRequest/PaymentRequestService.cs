@@ -80,7 +80,8 @@ namespace BTCPayServer.PaymentRequest
 
             var paymentStats = _AppService.GetContributionsByPaymentMethodId(blob.Currency, invoices, true);
             var amountDue = blob.Amount - paymentStats.TotalCurrency;
-            var pendingInvoice = invoices.SingleOrDefault(entity => entity.Status == InvoiceStatus.New);
+            var pendingInvoice = invoices.OrderByDescending(entity => entity.InvoiceTime)
+                .FirstOrDefault(entity => entity.Status == InvoiceStatus.New);
 
             return new ViewPaymentRequestViewModel(pr)
             {

@@ -3,9 +3,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Controllers;
 using BTCPayServer.Models.PaymentRequestViewModels;
+using BTCPayServer.PaymentRequest;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.PaymentRequests;
 using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using NBitcoin;
 using NBitpayClient;
 using Xunit;
 using Xunit.Abstractions;
@@ -16,7 +20,7 @@ namespace BTCPayServer.Tests
     {
         public PaymentRequestTests(ITestOutputHelper helper)
         {
-            Logs.Tester = new XUnitLog(helper) { Name = "Tests" };
+            Logs.Tester = new XUnitLog(helper) {Name = "Tests"};
             Logs.LogProvider = new XUnitLogProvider(helper);
         }
 
@@ -46,8 +50,8 @@ namespace BTCPayServer.Tests
                     Description = "description"
                 };
                 var id = (Assert
-                    .IsType<RedirectToActionResult>(await paymentRequestController.EditPaymentRequest(null, request)).RouteValues.Values.First().ToString());
-
+                    .IsType<RedirectToActionResult>(await paymentRequestController.EditPaymentRequest(null, request))
+                    .RouteValues.Values.First().ToString());
 
 
                 //permission guard for guests editing 
@@ -57,7 +61,9 @@ namespace BTCPayServer.Tests
                 request.Title = "update";
                 Assert.IsType<RedirectToActionResult>(await paymentRequestController.EditPaymentRequest(id, request));
 
-                Assert.Equal(request.Title, Assert.IsType<ViewPaymentRequestViewModel>(Assert.IsType<ViewResult>(await paymentRequestController.ViewPaymentRequest(id)).Model).Title);
+                Assert.Equal(request.Title,
+                    Assert.IsType<ViewPaymentRequestViewModel>(Assert
+                        .IsType<ViewResult>(await paymentRequestController.ViewPaymentRequest(id)).Model).Title);
 
                 Assert.False(string.IsNullOrEmpty(id));
 
@@ -68,16 +74,24 @@ namespace BTCPayServer.Tests
 
                 Assert
                     .IsType<RedirectToActionResult>(await paymentRequestController.TogglePaymentRequestArchival(id));
-                Assert.True(Assert.IsType<ViewPaymentRequestViewModel>(Assert.IsType<ViewResult>(await paymentRequestController.ViewPaymentRequest(id)).Model).Archived);
+                Assert.True(Assert
+                    .IsType<ViewPaymentRequestViewModel>(Assert
+                        .IsType<ViewResult>(await paymentRequestController.ViewPaymentRequest(id)).Model).Archived);
 
-                Assert.Empty(Assert.IsType<ListPaymentRequestsViewModel>(Assert.IsType<ViewResult>(await paymentRequestController.GetPaymentRequests()).Model).Items);
+                Assert.Empty(Assert
+                    .IsType<ListPaymentRequestsViewModel>(Assert
+                        .IsType<ViewResult>(await paymentRequestController.GetPaymentRequests()).Model).Items);
                 //unarchive
                 Assert
                     .IsType<RedirectToActionResult>(await paymentRequestController.TogglePaymentRequestArchival(id));
 
-                Assert.False(Assert.IsType<ViewPaymentRequestViewModel>(Assert.IsType<ViewResult>(await paymentRequestController.ViewPaymentRequest(id)).Model).Archived);
+                Assert.False(Assert
+                    .IsType<ViewPaymentRequestViewModel>(Assert
+                        .IsType<ViewResult>(await paymentRequestController.ViewPaymentRequest(id)).Model).Archived);
 
-                Assert.Single(Assert.IsType<ListPaymentRequestsViewModel>(Assert.IsType<ViewResult>(await paymentRequestController.GetPaymentRequests()).Model).Items);
+                Assert.Single(Assert
+                    .IsType<ListPaymentRequestsViewModel>(Assert
+                        .IsType<ViewResult>(await paymentRequestController.GetPaymentRequests()).Model).Items);
             }
         }
 
@@ -94,7 +108,8 @@ namespace BTCPayServer.Tests
 
                 var paymentRequestController = user.GetController<PaymentRequestController>();
 
-                Assert.IsType<NotFoundResult>(await paymentRequestController.PayPaymentRequest(Guid.NewGuid().ToString()));
+                Assert.IsType<NotFoundResult>(
+                    await paymentRequestController.PayPaymentRequest(Guid.NewGuid().ToString()));
 
 
                 var request = new UpdatePaymentRequestViewModel()
@@ -110,15 +125,18 @@ namespace BTCPayServer.Tests
                     .RouteValues.First();
 
                 var invoiceId = Assert
-                    .IsType<OkObjectResult>(await paymentRequestController.PayPaymentRequest(response.Value.ToString(), false)).Value
+                    .IsType<OkObjectResult>(
+                        await paymentRequestController.PayPaymentRequest(response.Value.ToString(), false)).Value
                     .ToString();
 
                 var actionResult = Assert
-                    .IsType<RedirectToActionResult>(await paymentRequestController.PayPaymentRequest(response.Value.ToString()));
+                    .IsType<RedirectToActionResult>(
+                        await paymentRequestController.PayPaymentRequest(response.Value.ToString()));
 
                 Assert.Equal("Checkout", actionResult.ActionName);
                 Assert.Equal("Invoice", actionResult.ControllerName);
-                Assert.Contains(actionResult.RouteValues, pair => pair.Key == "Id" && pair.Value.ToString() == invoiceId);
+                Assert.Contains(actionResult.RouteValues,
+                    pair => pair.Key == "Id" && pair.Value.ToString() == invoiceId);
 
                 var invoice = user.BitPay.GetInvoice(invoiceId, Facade.Merchant);
                 Assert.Equal(1, invoice.Price);
@@ -138,8 +156,8 @@ namespace BTCPayServer.Tests
                     .RouteValues.First();
 
                 Assert
-                    .IsType<BadRequestObjectResult>(await paymentRequestController.PayPaymentRequest(response.Value.ToString(), false));
-
+                    .IsType<BadRequestObjectResult>(
+                        await paymentRequestController.PayPaymentRequest(response.Value.ToString(), false));
             }
         }
 
@@ -156,10 +174,8 @@ namespace BTCPayServer.Tests
 
                 var paymentRequestController = user.GetController<PaymentRequestController>();
 
-
                 Assert.IsType<NotFoundResult>(await
                     paymentRequestController.CancelUnpaidPendingInvoice(Guid.NewGuid().ToString(), false));
-
 
                 var request = new UpdatePaymentRequestViewModel()
                 {
@@ -176,15 +192,18 @@ namespace BTCPayServer.Tests
                 var paymentRequestId = response.Value.ToString();
 
                 var invoiceId = Assert
-                    .IsType<OkObjectResult>(await paymentRequestController.PayPaymentRequest(paymentRequestId, false)).Value
+                    .IsType<OkObjectResult>(await paymentRequestController.PayPaymentRequest(paymentRequestId, false))
+                    .Value
                     .ToString();
 
                 var actionResult = Assert
-                    .IsType<RedirectToActionResult>(await paymentRequestController.PayPaymentRequest(response.Value.ToString()));
+                    .IsType<RedirectToActionResult>(
+                        await paymentRequestController.PayPaymentRequest(response.Value.ToString()));
 
                 Assert.Equal("Checkout", actionResult.ActionName);
                 Assert.Equal("Invoice", actionResult.ControllerName);
-                Assert.Contains(actionResult.RouteValues, pair => pair.Key == "Id" && pair.Value.ToString() == invoiceId);
+                Assert.Contains(actionResult.RouteValues,
+                    pair => pair.Key == "Id" && pair.Value.ToString() == invoiceId);
 
                 var invoice = user.BitPay.GetInvoice(invoiceId, Facade.Merchant);
                 Assert.Equal(InvoiceState.ToString(InvoiceStatus.New), invoice.Status);
@@ -194,11 +213,24 @@ namespace BTCPayServer.Tests
                 invoice = user.BitPay.GetInvoice(invoiceId, Facade.Merchant);
                 Assert.Equal(InvoiceState.ToString(InvoiceStatus.Invalid), invoice.Status);
 
-
                 Assert.IsType<BadRequestObjectResult>(await
                     paymentRequestController.CancelUnpaidPendingInvoice(paymentRequestId, false));
 
+                invoiceId = Assert
+                    .IsType<OkObjectResult>(await paymentRequestController.PayPaymentRequest(paymentRequestId, false))
+                    .Value
+                    .ToString();
 
+                invoice = user.BitPay.GetInvoice(invoiceId, Facade.Merchant);
+
+                //a hack to generate invoices for the payment request is to manually create an invocie with an order id that matches:
+                user.BitPay.CreateInvoice(new Invoice(1, "USD")
+                {
+                    OrderId = PaymentRequestRepository.GetOrderIdForPaymentRequest(paymentRequestId)
+                });
+                //shouldnt crash
+                await paymentRequestController.ViewPaymentRequest(paymentRequestId);
+                await paymentRequestController.CancelUnpaidPendingInvoice(paymentRequestId);
             }
         }
     }

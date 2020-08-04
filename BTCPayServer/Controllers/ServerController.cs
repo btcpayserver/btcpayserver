@@ -572,15 +572,14 @@ namespace BTCPayServer.Controllers
         [Route("server/services/{serviceName}/{cryptoCode?}")]
         public async Task<IActionResult> Service(string serviceName, string cryptoCode, bool showQR = false, uint? nonce = null)
         {
-            if (!string.IsNullOrEmpty(cryptoCode) && !_dashBoard.IsFullySynched(cryptoCode, out _))
+            var service = GetService(serviceName, cryptoCode);
+            if (service == null)
+                return NotFound();
+            if (!string.IsNullOrEmpty(cryptoCode) && !_dashBoard.IsFullySynched(cryptoCode, out _) && service.Type != ExternalServiceTypes.RPC)
             {
                 TempData[WellKnownTempData.ErrorMessage] = $"{cryptoCode} is not fully synched";
                 return RedirectToAction(nameof(Services));
             }
-            var service = GetService(serviceName, cryptoCode);
-            if (service == null)
-                return NotFound();
-
             try
             {
 

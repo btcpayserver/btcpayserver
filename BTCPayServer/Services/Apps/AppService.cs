@@ -182,7 +182,7 @@ namespace BTCPayServer.Services.Apps
             });
 
             // Old invoices may have invoices which were not tagged
-            invoices = invoices.Where(inv => inv.Version < InvoiceEntity.InternalTagSupport_Version ||
+            invoices = invoices.Where(inv => appData.TagAllInvoices ||  inv.Version < InvoiceEntity.InternalTagSupport_Version ||
                                              inv.InternalTags.Contains(GetAppInternalTag(appData.Id))).ToArray();
             return invoices;
         }

@@ -108,7 +108,7 @@ namespace BTCPayServer.Controllers
 
             permissions ??= Array.Empty<string>();
 
-            var parsedPermissions = Permission.ToPermissions(permissions).GroupBy(permission => permission.Policy);
+            var requestPermissions = Permission.ToPermissions(permissions);
             if (!string.IsNullOrEmpty(applicationIdentifier) && redirect != null)
             {
                 //check if there is an app identifier that matches and belongs to the current user
@@ -128,21 +128,43 @@ namespace BTCPayServer.Controllers
                             continue;
                         }
                         //matched the identifier and authority, but we need to check if what the app is requesting in terms of permissions is enough
-                        var alreadyPresentPermissions = Permission.ToPermissions(blob.Permissions);
+                        var alreadyPresentPermissions = Permission.ToPermissions(blob.Permissions).GroupBy(permission => permission.Policy);
+                        var fail = false;
+                        foreach (var permission in requestPermissions.GroupBy(permission => permission.Policy))
+                        {
+                            var presentPermission =
+                                alreadyPresentPermissions.SingleOrDefault(grouping => permission.Key == grouping.Key);
+                            if (strict && presentPermission == null)
+                            {
+                                fail = true;
+                                break;
+                            }
+                            
+                            if(Policies.IsStorePolicy(permission.Key))
+                            {
+                                if (!selectiveStores && permission.Any(permission1 => !string.IsNullOrEmpty(permission1.Scope)))
+                                {
+                                    
+                                    TempData.SetStatusMessageModel(new StatusMessageModel()
+                                    {
+                                        Severity = StatusMessageModel.StatusSeverity.Error,
+                                        Message = "Cannot request specific store permission when selectiveStores is not enable"
+                                    });
+                                    return RedirectToAction("APIKeys");
+                                }else if (!selectiveStores && presentPermission.Any(permission1 =>
+                                    !string.IsNullOrEmpty(permission1.Scope)))
+                                {
+                                    fail = true;
+                                    break;
+                                }
+                            }
+                        }
 
-                        var selectiveStorePermissions =
-                            alreadyPresentPermissions.Where(permission => !string.IsNullOrEmpty(permission.Scope));
-                       //if application is requesting the store management permission without the selective option but the existing key only has selective stores, skip
-                       if(parsedPermissions)
-                       if (permissions.Contains(APIKeyConstants.Permissions.StoreManagement) && !selectiveStores && selectiveStorePermissions.Any())
-                       {
-                           continue;
-                       }
-
-                       if (strict && permissions.Any(s => !blob.Permissions.Contains(s)))
-                       {
-                           continue;
-                       }
+                        if (fail)
+                        {
+                            continue;
+                        }
+                        
                        //we have a key that is sufficient, redirect to a page to confirm that it's ok to provide this key to the app.
                        return View("Confirm",
                            new ConfirmModel()
@@ -164,7 +186,7 @@ namespace BTCPayServer.Controllers
                 ApplicationName = applicationName,
                 SelectiveStores = selectiveStores,
                 Strict = strict,
-                Permissions = string.Join(';', parsedPermissions.SelectMany(grouping => grouping.Select(permission => permission.ToString()))),
+                Permissions = string.Join(';', requestPermissions),
                 ApplicationIdentifier = applicationIdentifier
             });
             AdjustVMForAuthorization(vm);

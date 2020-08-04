@@ -8,6 +8,7 @@ using BTCPayServer.JsonConverters;
 using BTCPayServer.Models;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
+using Microsoft.AspNetCore.Http.Extensions;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitpayClient;
@@ -299,8 +300,8 @@ namespace BTCPayServer.Services.Invoices
 
         private Uri FillPlaceholdersUri(string v)
         {
-            var uriStr = (v ?? string.Empty).Replace("{OrderId}", OrderId ?? "", StringComparison.OrdinalIgnoreCase)
-                                     .Replace("{InvoiceId}", Id ?? "", StringComparison.OrdinalIgnoreCase);
+            var uriStr = (v ?? string.Empty).Replace("{OrderId}", System.Web.HttpUtility.UrlEncode(OrderId) ?? "", StringComparison.OrdinalIgnoreCase)
+                                     .Replace("{InvoiceId}", System.Web.HttpUtility.UrlEncode(Id) ?? "", StringComparison.OrdinalIgnoreCase);
             if (Uri.TryCreate(uriStr, UriKind.Absolute, out var uri) && (uri.Scheme == "http" || uri.Scheme == "https"))
                 return uri;
             return null;

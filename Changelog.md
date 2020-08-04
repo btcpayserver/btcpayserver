@@ -3,7 +3,7 @@
 ## 1.0.5.4:
 
 ### New features and improvements
-* BTCPayServer has now two different build Bitcoin-Only and Altcoins. See more [in our blog post](PUTBLOGPOSTLINK) (@xpayserver)
+* BTCPayServer has now two different build Bitcoin-Only and Altcoins. See more [in our blog post](https://blog.btcpayserver.org/btcpay-server-1-0-5-4) (@xpayserver)
 * Wallet UI improvement #1763 @dennisreinmann
 * Improve pull payment view #1764 @dennisreimann
 * Login/Register view UI improvements #1752 @dennisreinmann
@@ -11,7 +11,8 @@
 * Improve the UX when creating a new seed #1745 @dennisreinmann
 * Allow selection of all notifications at once in notification list #1751 @bolatovumar
 * Add filtering to Payment Requests @rockstardev
-* Last filter used in payment requests and invoice list are now saved in user's preferences (cookie) @rockstardev
+* Last filter used in payment requests and invoice list are now saved in user's preferences (cookie) #1775 #1498 @rockstardev
+* Notification when new version of btcpayserver is available. $1420 @rockstardev
 * Can sort apps list by store name, name or app type #1753 @bolatovumar
 * Improve query performance when listing invoices @NicolasDorier
 * Add margin to Delete store #1773 @bolatovumar
@@ -28,7 +29,6 @@
 ### Bug fixes
 * Fix: In the PoS app, embedded CSS was ignored. @NicolasDorier
 * Fix error when modifying user who does not have admin right. #1793 @NicolasDorier
-* Notification when new version of btcpayserver is available. @rockstardev
 * Fix null instance on invoice when using paymentCurrencies #1766 @Kukks
 * Fix: Sluggish scrolling in pages having a rich text editor @dennisreimann
 * Fix: Crash in payment request if there is several invoice in "new" state @Kukks

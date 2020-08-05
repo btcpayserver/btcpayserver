@@ -1160,6 +1160,7 @@ namespace BTCPayServer.Controllers
                         CryptoCode = walletId.CryptoCode,
                         Mnemonic = seed,
                         IsStored = true,
+                        RequireConfirm = false,
                         ReturnUrl = Url.Action(nameof(WalletSettings), new { walletId })
                     };
                     return this.RedirectToRecoverySeedBackup(recoveryVm);

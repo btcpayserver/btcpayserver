@@ -445,6 +445,7 @@ namespace BTCPayServer
                     new KeyValuePair<string, string>("mnemonic", vm.Mnemonic),
                     new KeyValuePair<string, string>("passphrase", vm.Passphrase),
                     new KeyValuePair<string, string>("isStored", vm.IsStored ? "true" : "false"),
+                    new KeyValuePair<string, string>("requireConfirm", vm.RequireConfirm ? "true" : "false"),
                     new KeyValuePair<string, string>("returnUrl", vm.ReturnUrl)
                 }
             };

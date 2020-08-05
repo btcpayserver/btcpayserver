@@ -664,6 +664,7 @@ namespace BTCPayServer.Tests
                 Assert.Equal(parsedBip21.Address.ToString(), s.Driver.FindElement(By.Id($"Outputs_0__DestinationAddress")).GetAttribute("value"));
 
                 s.GoToWallet(new WalletId(storeId.storeId, "BTC"), WalletsNavPages.Settings);
+                var walletUrl = s.Driver.Url;
 
                 s.Driver.FindElement(By.Id("SettingsMenu")).ForceClick();
                 s.Driver.FindElement(By.CssSelector("button[value=view-seed]")).Click();
@@ -671,7 +672,12 @@ namespace BTCPayServer.Tests
                 // Seed backup page
                 var recoveryPhrase = s.Driver.FindElements(By.Id("recovery-phrase")).First().GetAttribute("data-mnemonic");
                 Assert.Equal(mnemonic.ToString(), recoveryPhrase);
-                Assert.Contains("The recovery phrase will also be stored on a server as a hot wallet.", s.Driver.PageSource);
+                Assert.Contains("The recovery phrase will also be stored on the server as a hot wallet.", s.Driver.PageSource);
+
+                // No confirmation, just a link to return to the wallet
+                Assert.Empty(s.Driver.FindElements(By.Id("confirm")));
+                s.Driver.FindElement(By.Id("proceed")).Click();
+                Assert.Equal(walletUrl, s.Driver.Url);
             }
         }
         void SetTransactionOutput(SeleniumTester s, int index, BitcoinAddress dest, decimal amount, bool subtract = false)

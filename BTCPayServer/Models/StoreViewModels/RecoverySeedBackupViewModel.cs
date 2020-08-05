@@ -10,8 +10,9 @@ namespace BTCPayServer.Models.StoreViewModels
         public string CryptoCode { get; set; }
         public string Mnemonic { get; set; }
         public string Passphrase { get; set; }
-        public bool IsStored { get; set; }
         public string ReturnUrl { get; set; }
+        public bool IsStored { get; set; }
+        public bool RequireConfirm { get; set; } = true;
 
         public string[] Words
         {

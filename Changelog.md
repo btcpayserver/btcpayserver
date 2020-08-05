@@ -4,11 +4,11 @@
 
 ### New features and improvements
 * BTCPayServer has now two different build Bitcoin-Only and Altcoins. See more [in our blog post](https://blog.btcpayserver.org/btcpay-server-1-0-5-4) (@xpayserver)
-* Wallet UI improvement #1763 @dennisreinmann
+* Wallet UI improvement #1763 @dennisreimann
 * Improve pull payment view #1764 @dennisreimann
-* Login/Register view UI improvements #1752 @dennisreinmann
+* Login/Register view UI improvements #1752 @dennisreimann
 * Manage store UI improvements #1761 @dennisreimann
-* Improve the UX when creating a new seed #1745 @dennisreinmann
+* Improve the UX when creating a new seed #1745 @dennisreimann
 * Allow selection of all notifications at once in notification list #1751 @bolatovumar
 * Add filtering to Payment Requests @rockstardev
 * Last filter used in payment requests and invoice list are now saved in user's preferences (cookie) #1775 #1498 @rockstardev

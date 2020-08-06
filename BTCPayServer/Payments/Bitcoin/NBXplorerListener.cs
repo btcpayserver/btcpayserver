@@ -14,6 +14,7 @@ using BTCPayServer.Services.Wallets;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using NBitcoin.Altcoins.Elements;
 using NBitcoin.RPC;
 using NBXplorer;
 using NBXplorer.DerivationStrategy;
@@ -152,9 +153,19 @@ namespace BTCPayServer.Payments.Bitcoin
                                     var invoice = (await _InvoiceRepository.GetInvoicesFromAddresses(new[] { key })).FirstOrDefault();
                                     if (invoice != null)
                                     {
-                                        var address = network.NBXplorerNetwork.CreateAddress(evt.DerivationStrategy,
-                                            output.Item1.KeyPath, output.Item1.ScriptPubKey);
+                                        var address = network.NBXplorerNetwork.CreateAddress(evt.DerivationStrategy, output.Item1.KeyPath, output.Item1.ScriptPubKey);
+#if ALTCOINS
+                                        if (network is ElementsBTCPayNetwork && address is BitcoinBlindedAddress blindedAddress)
+                                        {
+                                            var det = invoice.GetPaymentMethod(network, BitcoinPaymentType.Instance)
+                                                .GetPaymentMethodDetails() as BitcoinLikeOnChainPaymentMethod;
 
+                                            if (blindedAddress.UnblindedAddress.ToString() == det.DepositAddress)
+                                            {
+                                                address = det.GetDepositAddress(network.NBitcoinNetwork);
+                                            }
+                                        }
+#endif
                                         var paymentData = new BitcoinLikePaymentData(address,
                                             output.matchedOutput.Value, output.outPoint,
                                             evt.TransactionData.Transaction.RBF);

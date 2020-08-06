@@ -83,7 +83,7 @@ namespace BTCPayServer.Hosting
             });
 
             services.AddSingleton<BTCPayNetworkJsonSerializerSettings>();
-            services.RegisterJsonConverter(n => new ClaimDestinationJsonConverter(n));
+            // services.RegisterJsonConverter(n => new ClaimDestinationJsonConverter(n));
 
             services.AddPayJoinServices();
 #if ALTCOINS
@@ -318,6 +318,8 @@ namespace BTCPayServer.Hosting
                 .ConfigureHttpClient(h => h.DefaultRequestHeaders.ConnectionClose = true)
                 .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();
             
+
+            services.AddSingleton<IPayoutHandler, BitcoinLikePayoutHandler>();
             services.AddSingleton<HostedServices.PullPaymentHostedService>();
             services.AddSingleton<IHostedService, HostedServices.PullPaymentHostedService>(o => o.GetRequiredService<PullPaymentHostedService>());
 

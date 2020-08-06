@@ -964,16 +964,20 @@ namespace BTCPayServer.Tests
                 var payouts = s.Driver.FindElements(By.ClassName("pp-payout"));
                 Assert.Equal(2, payouts.Count);
                 payouts[1].Click();
-                Assert.Contains("No payout waiting for approval", s.Driver.PageSource);
-
+                Assert.Empty(s.Driver.FindElements(By.ClassName("payout")));
                 // PP2 should have payouts
                 s.GoToWallet(navPages: WalletsNavPages.PullPayments);
                 payouts = s.Driver.FindElements(By.ClassName("pp-payout"));
                 payouts[0].Click();
-                Assert.DoesNotContain("No payout waiting for approval", s.Driver.PageSource);
-                s.Driver.FindElement(By.Id("selectAllCheckbox")).Click();
-                s.Driver.FindElement(By.Id("payCommand")).Click();
-                s.Driver.FindElement(By.Id("SendMenu")).Click();
+                
+                Assert.NotEmpty(s.Driver.FindElements(By.ClassName("payout")));
+                s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-selectAllCheckbox")).Click();
+                
+                s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-actions")).Click();
+                s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-approve-pay")).Click();
+                
+                s.Driver.ScrollTo(By.Id("SendMenu"));
+                s.Driver.FindElement(By.Id("SendMenu")).ForceClick();
                 s.Driver.FindElement(By.CssSelector("button[value=nbx-seed]")).Click();
                 s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).Click();
 
@@ -984,13 +988,14 @@ namespace BTCPayServer.Tests
                     s.Driver.Navigate().Refresh();
                     Assert.Contains("badge transactionLabel", s.Driver.PageSource);
                 });
-                Assert.Equal("payout", s.Driver.FindElement(By.ClassName("transactionLabel")).Text);
+                Assert.Equal("Payout", s.Driver.FindElement(By.ClassName("transactionLabel")).Text);
 
                 s.GoToWallet(navPages: WalletsNavPages.Payouts);
                 TestUtils.Eventually(() =>
                 {
                     s.Driver.Navigate().Refresh();
-                    Assert.Contains("No payout waiting for approval", s.Driver.PageSource);
+                    Assert.NotNull(s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-no-payouts")));
+                    Assert.NotNull(s.Driver.FindElement(By.Id($"{PayoutState.AwaitingPayment}-no-payouts")));
                 });
                 var txs = s.Driver.FindElements(By.ClassName("transaction-link"));
                 Assert.Equal(2, txs.Count);

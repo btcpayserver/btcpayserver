@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using BTCPayServer;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Logging;
@@ -17,7 +16,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.DataEncoders;
-using NBitcoin.RPC;
+using NBXplorer;
 
 namespace BTCPayServer.HostedServices
 {
@@ -106,7 +105,7 @@ namespace BTCPayServer.HostedServices
                 Limit = create.Amount,
                 Period = o.Period is long periodSeconds ? (TimeSpan?)TimeSpan.FromSeconds(periodSeconds) : null,
                 SupportedPaymentMethods = create.PaymentMethodIds,
-                View = new PullPaymentView()
+                View = new PullPaymentBlob.PullPaymentView()
                 {
                     Title = create.Name ?? string.Empty,
                     Description = string.Empty,
@@ -144,19 +143,19 @@ namespace BTCPayServer.HostedServices
             BTCPayNetworkJsonSerializerSettings jsonSerializerSettings,
             CurrencyNameTable currencyNameTable,
             EventAggregator eventAggregator,
-            ExplorerClientProvider explorerClientProvider,
             BTCPayNetworkProvider networkProvider,
             NotificationSender notificationSender,
-            RateFetcher rateFetcher)
+            RateFetcher rateFetcher,
+            IEnumerable<IPayoutHandler> payoutHandlers)
         {
             _dbContextFactory = dbContextFactory;
             _jsonSerializerSettings = jsonSerializerSettings;
             _currencyNameTable = currencyNameTable;
             _eventAggregator = eventAggregator;
-            _explorerClientProvider = explorerClientProvider;
             _networkProvider = networkProvider;
             _notificationSender = notificationSender;
             _rateFetcher = rateFetcher;
+            _payoutHandlers = payoutHandlers;
         }
 
         Channel<object> _Channel;
@@ -164,17 +163,28 @@ namespace BTCPayServer.HostedServices
         private readonly BTCPayNetworkJsonSerializerSettings _jsonSerializerSettings;
         private readonly CurrencyNameTable _currencyNameTable;
         private readonly EventAggregator _eventAggregator;
-        private readonly ExplorerClientProvider _explorerClientProvider;
         private readonly BTCPayNetworkProvider _networkProvider;
         private readonly NotificationSender _notificationSender;
         private readonly RateFetcher _rateFetcher;
+        private readonly IEnumerable<IPayoutHandler> _payoutHandlers;
+        private readonly CompositeDisposable _subscriptions = new CompositeDisposable();
 
         internal override Task[] InitializeTasks()
         {
             _Channel = Channel.CreateUnbounded<object>();
-            _eventAggregator.Subscribe<NewOnChainTransactionEvent>(o => _Channel.Writer.TryWrite(o));
-            _eventAggregator.Subscribe<NewBlockEvent>(o => _Channel.Writer.TryWrite(o));
+            foreach (IPayoutHandler payoutHandler in _payoutHandlers)
+            {
+                payoutHandler.StartBackgroundCheck(Subscribe);
+            }
             return new[] { Loop() };
+        }
+
+        private void Subscribe(params Type[] events)
+        {
+            foreach (Type @event in events)
+            {
+                _eventAggregator.Subscribe(@event, (subscription, o) => _Channel.Writer.TryWrite(o));
+            }
         }
 
         private async Task Loop()
@@ -198,10 +208,10 @@ namespace BTCPayServer.HostedServices
                 if (o is CancelRequest cancel)
                 {
                     await HandleCancel(cancel);
-                }
-                if (o is NewBlockEvent || o is NewOnChainTransactionEvent)
+                } 
+                foreach (IPayoutHandler payoutHandler in _payoutHandlers)
                 {
-                    await UpdatePayoutsInProgress();
+                   await payoutHandler.BackgroundCheck(o);
                 }
             }
         }
@@ -455,75 +465,6 @@ namespace BTCPayServer.HostedServices
             }
         }
 
-        private async Task UpdatePayoutsInProgress()
-        {
-            try
-            {
-                using var ctx = _dbContextFactory.CreateContext();
-                var payouts = await ctx.Payouts
-                            .Include(p => p.PullPaymentData)
-                            .Where(p => p.State == PayoutState.InProgress)
-                            .ToListAsync();
-
-                foreach (var payout in payouts)
-                {
-                    var proof = payout.GetProofBlob(this._jsonSerializerSettings);
-                    var payoutBlob = payout.GetBlob(this._jsonSerializerSettings);
-                    foreach (var txid in proof.Candidates.ToList())
-                    {
-                        var explorer = _explorerClientProvider.GetExplorerClient(payout.GetPaymentMethodId().CryptoCode);
-                        var tx = await explorer.GetTransactionAsync(txid);
-                        if (tx is null)
-                        {
-                            proof.Candidates.Remove(txid);
-                        }
-                        else if (tx.Confirmations >= payoutBlob.MinimumConfirmation)
-                        {
-                            payout.State = PayoutState.Completed;
-                            proof.TransactionId = tx.TransactionHash;
-                            payout.Destination = null;
-                            break;
-                        }
-                        else
-                        {
-                            var rebroadcasted = await explorer.BroadcastAsync(tx.Transaction);
-                            if (rebroadcasted.RPCCode == RPCErrorCode.RPC_TRANSACTION_ERROR ||
-                                rebroadcasted.RPCCode == RPCErrorCode.RPC_TRANSACTION_REJECTED)
-                            {
-                                proof.Candidates.Remove(txid);
-                            }
-                            else
-                            {
-                                payout.State = PayoutState.InProgress;
-                                proof.TransactionId = tx.TransactionHash;
-                                continue;
-                            }
-                        }
-                    }
-                    if (proof.TransactionId is null && !proof.Candidates.Contains(proof.TransactionId))
-                    {
-                        proof.TransactionId = null;
-                    }
-                    if (proof.Candidates.Count == 0)
-                    {
-                        payout.State = PayoutState.AwaitingPayment;
-                    }
-                    else if (proof.TransactionId is null)
-                    {
-                        proof.TransactionId = proof.Candidates.First();
-                    }
-                    if (payout.State == PayoutState.Completed)
-                        proof.Candidates = null;
-                    payout.SetProofBlob(proof, this._jsonSerializerSettings);
-                }
-                await ctx.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                Logs.PayServer.LogWarning(ex, "Error while processing an update in the pull payment hosted service");
-            }
-        }
-
         private Money GetMinimumCryptoAmount(PaymentMethodId paymentMethodId, Script scriptPubKey)
         {
             Money mininumAmount = Money.Zero;
@@ -565,6 +506,7 @@ namespace BTCPayServer.HostedServices
         public override Task StopAsync(CancellationToken cancellationToken)
         {
             _Channel?.Writer.Complete();
+            _subscriptions.Dispose();
             return base.StopAsync(cancellationToken);
         }
     }

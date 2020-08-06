@@ -74,7 +74,6 @@ namespace BTCPayServer.Hosting
             });
 
             services.AddSingleton<BTCPayNetworkJsonSerializerSettings>();
-            services.RegisterJsonConverter(n => new ClaimDestinationJsonConverter(n));
 
             services.AddPayJoinServices();
 #if ALTCOINS

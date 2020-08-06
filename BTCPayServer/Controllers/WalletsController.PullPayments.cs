@@ -250,7 +250,7 @@ namespace BTCPayServer.Controllers
                     var output = new WalletSendModel.TransactionOutput()
                     {
                         Amount = blob.CryptoAmount,
-                        DestinationAddress = blob.Destination.Address.ToString()
+                        DestinationAddress = blob.Destination.ToString()
                     };
                     walletSend.Outputs.Add(output);
                 }
@@ -312,7 +312,7 @@ namespace BTCPayServer.Controllers
                 m.Date = item.Payout.Date;
                 m.PayoutId = item.Payout.Id;
                 m.Amount = _currencyTable.DisplayFormatCurrency(payoutBlob.Amount, ppBlob.Currency);
-                m.Destination = payoutBlob.Destination.Address.ToString();
+                m.Destination = payoutBlob.Destination.ToString();
                 if (item.Payout.State == PayoutState.AwaitingPayment || item.Payout.State == PayoutState.AwaitingApproval)
                 {
                     vm.WaitingForApproval.Add(m);

@@ -76,7 +76,7 @@ namespace BTCPayServer.Hosting
             });
 
             services.AddSingleton<BTCPayNetworkJsonSerializerSettings>();
-            services.RegisterJsonConverter(n => new ClaimDestinationJsonConverter(n));
+            // services.RegisterJsonConverter(n => new ClaimDestinationJsonConverter(n));
 
             services.AddPayJoinServices();
 #if ALTCOINS
@@ -217,6 +217,7 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<HostedServices.CheckConfigurationHostedService>();
             services.AddSingleton<IHostedService, HostedServices.CheckConfigurationHostedService>(o => o.GetRequiredService<CheckConfigurationHostedService>());
 
+            services.AddSingleton<IPayoutHandler, BitcoinLikePayoutHandler>();
             services.AddSingleton<HostedServices.PullPaymentHostedService>();
             services.AddSingleton<IHostedService, HostedServices.PullPaymentHostedService>(o => o.GetRequiredService<PullPaymentHostedService>());
 
@@ -256,7 +257,7 @@ namespace BTCPayServer.Hosting
 
             services.AddSingleton<INotificationHandler, InvoiceEventNotification.Handler>();
             services.AddSingleton<INotificationHandler, PayoutNotification.Handler>();
-
+            services.AddSingleton<INotificationHandler, ExternalPayoutTransactionNotification.Handler>();
             services.AddShopify();
 #if DEBUG
             services.AddSingleton<INotificationHandler, JunkNotification.Handler>();

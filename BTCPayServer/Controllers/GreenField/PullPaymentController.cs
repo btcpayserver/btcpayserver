@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -30,13 +31,15 @@ namespace BTCPayServer.Controllers.GreenField
         private readonly CurrencyNameTable _currencyNameTable;
         private readonly BTCPayNetworkJsonSerializerSettings _serializerSettings;
         private readonly BTCPayNetworkProvider _networkProvider;
+        private readonly IEnumerable<IPayoutHandler> _payoutHandlers;
 
         public GreenfieldPullPaymentController(PullPaymentHostedService pullPaymentService,
             LinkGenerator linkGenerator,
             ApplicationDbContextFactory dbContextFactory,
             CurrencyNameTable currencyNameTable,
             Services.BTCPayNetworkJsonSerializerSettings serializerSettings,
-            BTCPayNetworkProvider networkProvider)
+            BTCPayNetworkProvider networkProvider,
+            IEnumerable<IPayoutHandler> payoutHandlers)
         {
             _pullPaymentService = pullPaymentService;
             _linkGenerator = linkGenerator;
@@ -44,6 +47,7 @@ namespace BTCPayServer.Controllers.GreenField
             _currencyNameTable = currencyNameTable;
             _serializerSettings = serializerSettings;
             _networkProvider = networkProvider;
+            _payoutHandlers = payoutHandlers;
         }
 
         [HttpGet("~/api/v1/stores/{storeId}/pull-payments")]
@@ -202,7 +206,7 @@ namespace BTCPayServer.Controllers.GreenField
                                             p.State == Data.PayoutState.InProgress ? Client.Models.PayoutState.InProgress :
                                             throw new NotSupportedException(),
             };
-            model.Destination = blob.Destination.ToString();
+            model.Destination = blob.Destination;
             model.PaymentMethod = p.PaymentMethodId;
             return model;
         }
@@ -213,10 +217,14 @@ namespace BTCPayServer.Controllers.GreenField
         {
             if (request is null)
                 return NotFound();
-
-            var network = request?.PaymentMethod is string paymentMethod ?
-                            this._networkProvider.GetNetwork<BTCPayNetwork>(paymentMethod) : null;
-            if (network is null)
+            if (!PaymentMethodId.TryParse(request?.PaymentMethod, out var paymentMethodId))
+            {
+                ModelState.AddModelError(nameof(request.PaymentMethod), "Invalid payment method");
+                return this.CreateValidationError(ModelState);
+            }
+            
+            var payoutHandler = _payoutHandlers.FirstOrDefault(handler => handler.CanHandle(paymentMethodId));
+            if (payoutHandler is null)
             {
                 ModelState.AddModelError(nameof(request.PaymentMethod), "Invalid payment method");
                 return this.CreateValidationError(ModelState);
@@ -227,7 +235,8 @@ namespace BTCPayServer.Controllers.GreenField
             if (pp is null)
                 return NotFound();
             var ppBlob = pp.GetBlob();
-            if (request.Destination is null || !ClaimDestination.TryParse(request.Destination, network, out var destination))
+            IClaimDestination destination = await payoutHandler.ParseClaimDestination(paymentMethodId,request.Destination);
+            if (destination is null)
             {
                 ModelState.AddModelError(nameof(request.Destination), "The destination must be an address or a BIP21 URI");
                 return this.CreateValidationError(ModelState);
@@ -244,7 +253,7 @@ namespace BTCPayServer.Controllers.GreenField
                 Destination = destination,
                 PullPaymentId = pullPaymentId,
                 Value = request.Amount,
-                PaymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike)
+                PaymentMethodId = paymentMethodId
             });
             switch (result.Result)
             {

@@ -35,25 +35,6 @@ namespace BTCPayServer.Data
                 return request.Where(p => false);
             }
         }
-
-        public static string GetStateString(this PayoutState state)
-        {
-            switch (state)
-            {
-                case PayoutState.AwaitingApproval:
-                    return "Awaiting Approval";
-                case PayoutState.AwaitingPayment:
-                    return "Awaiting Payment";
-                case PayoutState.InProgress:
-                    return "In Progress";
-                case PayoutState.Completed:
-                    return "Completed";
-                case PayoutState.Cancelled:
-                    return "Cancelled";
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(state), state, null);
-            }
-        }
     }
     public class PullPaymentData
     {

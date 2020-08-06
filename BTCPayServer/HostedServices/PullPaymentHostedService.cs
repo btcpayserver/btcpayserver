@@ -400,6 +400,7 @@ namespace BTCPayServer.HostedServices
                 await ctx.Payouts.AddAsync(payout);
                 try
                 {
+                    await payoutHandler.TrackClaim(req.ClaimRequest.PaymentMethodId, req.ClaimRequest.Destination);
                     await ctx.SaveChangesAsync();
                     req.Completion.TrySetResult(new ClaimRequest.ClaimResponse(ClaimRequest.ClaimResult.Ok, payout));
                     await _notificationSender.SendNotification(new StoreScope(pp.StoreId), new PayoutNotification()

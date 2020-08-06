@@ -338,7 +338,21 @@ namespace BTCPayServer.Controllers
                     return RedirectToAction(nameof(Payouts),
                         new {walletId = walletId.ToString(), pullPaymentId = vm.PullPaymentId});
             }
+            
+            var handler = _payoutHandlers
+                .FirstOrDefault(handler => handler.CanHandle(paymentMethodId));
 
+            if (handler != null)
+            {
+                var result = await handler.DoSpecificAction(command, payoutIds, walletId.StoreId);
+                TempData.SetStatusMessageModel(result);
+                return RedirectToAction(nameof(Payouts), new
+                {
+                    walletId = walletId.ToString(),
+                    pullPaymentId = vm.PullPaymentId
+                });
+            }
+            
             return NotFound();
         }
 

@@ -6,7 +6,9 @@
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePageAndTitle(WalletsNavPages.Payouts, $"Manage {Model.PaymentMethodId.ToPrettyString()} payouts{(string.IsNullOrEmpty(Model.PullPaymentName) ? string.Empty : " for pull payment " + Model.PullPaymentName)}", Context.GetStoreData().StoreName);
 
-    var stateActions = new List<(string Action, string Text)>();
+    var actions = new List<(string Action, string Text)>();
+    var payoutHandler = PayoutHandlers.First(handler => handler.CanHandle(Model.PaymentMethodId));
+    actions.AddRange(payoutHandler.GetPayoutSpecificActions());
     switch (Model.PayoutState)
     {
         case PayoutState.AwaitingApproval:

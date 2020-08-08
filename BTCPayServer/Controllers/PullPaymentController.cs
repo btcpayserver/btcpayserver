@@ -133,7 +133,7 @@ namespace BTCPayServer.Controllers
             {
                 TempData.SetStatusMessageModel(new StatusMessageModel()
                 {
-                    Message = $"You posted a claim of {_currencyNameTable.DisplayFormatCurrency(vm.ClaimedAmount, ppBlob.Currency)} to {vm.Destination}, this will get fullfilled later.",
+                    Message = $"Your claim request of {_currencyNameTable.DisplayFormatCurrency(vm.ClaimedAmount, ppBlob.Currency)} to {vm.Destination} has been submitted and is awaiting approval.",
                     Severity = StatusMessageModel.StatusSeverity.Success
                 });
             }

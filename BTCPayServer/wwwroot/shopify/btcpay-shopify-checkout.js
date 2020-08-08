@@ -6,12 +6,12 @@
 2. In Shopify Settings > Payment Providers > Manual Payment Methods add one which contains "Bitcoin"
 3. In Shopify Settings > Checkout > Additional Scripts input the following script, with the details from your BTCPayServer instead of the placeholder values.
 <script>
-    const BTCPAYSERVER_URL = "https://your-btcpay-server-url:port";
-    const STORE_ID = "your-btcpayserver-store-id";
+    const BTCPAYSERVER_URL = "FULL_BTCPAYSERVER_URL_WITH_HTTPS";
+    const STORE_ID = "YOUR_BTCPAY_STORE_ID";
 </script>
-<script src="https://your-btcpay-server-url:port/modal/btcpay.js"></script>
-<script src="https://your-btcpay-server-url:port/shopify/btcpay-browser-client.js"></script>
-<script src="https://your-btcpay-server-url:port/shopify/btcpay-shopify-checkout.js"></script>
+<script src="FULL_BTCPAYSERVER_URL_WITH_HTTPS/modal/btcpay.js"></script>
+<script src="FULL_BTCPAYSERVER_URL_WITH_HTTPS/shopify/btcpay-browser-client.js"></script>
+<script src="FULL_BTCPAYSERVER_URL_WITH_HTTPS/shopify/btcpay-shopify-checkout.js"></script>
 
  */
 

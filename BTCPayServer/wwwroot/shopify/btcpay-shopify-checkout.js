@@ -8,9 +8,6 @@
 <script>
     const BTCPAYSERVER_URL = "https://your-btcpay-server-url:port";
     const STORE_ID = "your-btcpayserver-store-id";
-    const DEFAULT_CURRENCY_SYMBOL = "$";
-    const DEFAULT_CURRENCY = "USD";
-    const THOUSAND_DELIMITER = ",";
 </script>
 <script src="https://your-btcpay-server-url:port/modal/btcpay.js"></script>
 <script src="https://your-btcpay-server-url:port/shopify/btcpay-browser-client.js"></script>
@@ -19,6 +16,10 @@
  */
 
 ! function () {
+    // extracted from shopify initialized page
+    const shopify_price = Shopify.checkout.payment_due;
+    const shopify_currency = Shopify.checkout.currency;
+
     "use strict";
     const pageElements = document.querySelector.bind(document),
         insertElement = (document.querySelectorAll.bind(document),
@@ -81,11 +82,6 @@
                 pageItems.orderConfirmedDescription && (pageItems.orderConfirmedDescription.style.display = "none"),
                 buttonElement = document.createElement("div");
 
-            const priceElement = pageItems.finalPrice || pageItems.price;
-            var price = priceElement.innerText.replace(DEFAULT_CURRENCY_SYMBOL, "").replace(THOUSAND_DELIMITER, "");
-            if (THOUSAND_DELIMITER === ".") {
-                price = price.replace(",", "."); // 5.000,00 needs to become 5000.00
-            }
             const orderId = pageItems.orderNumber.innerText.replace("Order #", "");
 
             const url = BTCPAYSERVER_URL + "/invoices" + "?storeId=" + STORE_ID + "&orderId=" + orderId + "&status=complete";
@@ -116,8 +112,8 @@
                     BTCPAYSERVER_URL,
                     STORE_ID,
                     {
-                        price: price,
-                        currency: DEFAULT_CURRENCY,
+                        price: shopify_price,
+                        currency: shopify_currency,
                         orderId: orderId
                     }
                 )

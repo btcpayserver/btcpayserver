@@ -79,8 +79,7 @@
                 pageItems.continueButton && (pageItems.continueButton.style.visibility = "hidden"),
                 pageItems.checkMarkIcon && (pageItems.checkMarkIcon.style.visibility = "hidden"),
                 pageItems.orderConfirmed && (pageItems.orderConfirmed.style.display = "none"),
-                pageItems.orderConfirmedDescription && (pageItems.orderConfirmedDescription.style.display = "none"),
-                buttonElement = document.createElement("div");
+                pageItems.orderConfirmedDescription && (pageItems.orderConfirmedDescription.style.display = "none");
 
             const orderId = pageItems.orderNumber.innerText.replace("Order #", "");
 
@@ -108,6 +107,7 @@
                 });
 
             window.waitForPayment = function () {
+                buttonElement.innerHTML = "<span>Loading Invoice...</span>";
                 BtcPayServerModal.show(
                     BTCPAYSERVER_URL,
                     STORE_ID,
@@ -118,6 +118,7 @@
                     }
                 )
                     .then(function (invoice) {
+                        buttonElement.innerHTML = payButtonHtml;
                         if (invoice != null) {
                             orderPaid();
                         }
@@ -125,8 +126,11 @@
             }
 
             // Payment button that opens modal
-            buttonElement.innerHTML = `\n    <button class="btn btn-primary" onclick="window.waitForPayment()"/>Pay with BTCPayServer</button>\n`,
-                insertElement(buttonElement, pageItems.orderConfirmed);
+            const payButtonHtml = '<button class="" onclick="window.waitForPayment()" style="width:210px"><img src="' + BTCPAYSERVER_URL + '/img/paybutton/pay.svg"></button>';
+
+            buttonElement = document.createElement("div");
+            buttonElement.innerHTML = payButtonHtml;
+            insertElement(buttonElement, pageItems.orderConfirmed);
 
         }
 

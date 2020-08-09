@@ -55,7 +55,7 @@ namespace BTCPayServer.Models.AppViewModels
         }
         public class Contribution
         {
-            public PaymentMethodId PaymentMehtodId { get; set; }
+            public PaymentMethodId PaymentMethodId { get; set; }
             public decimal Value { get; set; }
             public decimal CurrencyValue { get; set; }
         }

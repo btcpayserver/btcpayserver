@@ -15,8 +15,7 @@ namespace BTCPayServer.Data
         public static PaymentMethodId GetDefaultPaymentId(this StoreData storeData, BTCPayNetworkProvider networks)
         {
             PaymentMethodId[] paymentMethodIds = storeData.GetEnabledPaymentIds(networks);
-
-            var defaultPaymentId = string.IsNullOrEmpty(storeData.DefaultCrypto) ? null : PaymentMethodId.Parse(storeData.DefaultCrypto);
+            PaymentMethodId.TryParse(storeData.DefaultCrypto, out var defaultPaymentId);
             var chosen = paymentMethodIds.FirstOrDefault(f => f == defaultPaymentId) ??
                          paymentMethodIds.FirstOrDefault(f => f.CryptoCode == defaultPaymentId?.CryptoCode) ??
                          paymentMethodIds.FirstOrDefault();
@@ -80,7 +79,10 @@ namespace BTCPayServer.Data
                 JObject strategies = JObject.Parse(storeData.DerivationStrategies);
                 foreach (var strat in strategies.Properties())
                 {
-                    var paymentMethodId = PaymentMethodId.Parse(strat.Name);
+                    if (!PaymentMethodId.TryParse(strat.Name, out var paymentMethodId))
+                    {
+                        continue;
+                    }
                     var network = networks.GetNetwork<BTCPayNetworkBase>(paymentMethodId.CryptoCode);
                     if (network != null)
                     {

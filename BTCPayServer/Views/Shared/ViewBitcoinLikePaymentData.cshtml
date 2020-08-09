@@ -5,10 +5,14 @@
 
 @{
     PayjoinInformation payjoinIformation = null;
-    var onchainPayments = Model.Where(entity => entity.GetPaymentMethodId().PaymentType == BitcoinPaymentType.Instance).Select(payment =>
+    var onchainPayments = Model.Where(entity => entity.GetPaymentMethodId()?.PaymentType == BitcoinPaymentType.Instance).Select(payment =>
     {
         var m = new OnchainPaymentViewModel();
         var onChainPaymentData = payment.GetCryptoPaymentData() as BitcoinLikePaymentData;
+        if (onChainPaymentData is null)
+        {
+            return null;
+        }
         m.Crypto = payment.GetPaymentMethodId().CryptoCode;
         m.DepositAddress = onChainPaymentData.GetDestination();
 
@@ -38,7 +42,7 @@
         m.Replaced = !payment.Accounted;
         m.CryptoPaymentData = onChainPaymentData;
         return m;
-    });
+    }).Where(model => model != null);
 }
 
 @if (onchainPayments.Any())

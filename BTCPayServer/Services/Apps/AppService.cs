@@ -333,7 +333,7 @@ namespace BTCPayServer.Services.Apps
                 .SelectMany(p =>
                 {
                     var contribution = new Contribution();
-                    contribution.PaymentMehtodId = new PaymentMethodId(p.ProductInformation.Currency, PaymentTypes.BTCLike);
+                    contribution.PaymentMethodId = new PaymentMethodId(p.ProductInformation.Currency, PaymentTypes.BTCLike);
                     contribution.CurrencyValue = p.ProductInformation.Price;
                     contribution.Value = contribution.CurrencyValue;
 
@@ -363,18 +363,18 @@ namespace BTCPayServer.Services.Apps
                              .Select(pay =>
                              {
                                  var paymentMethodContribution = new Contribution();
-                                 paymentMethodContribution.PaymentMehtodId = pay.GetPaymentMethodId();
+                                 paymentMethodContribution.PaymentMethodId = pay.GetPaymentMethodId();
                                  paymentMethodContribution.Value = pay.GetCryptoPaymentData().GetValue() - pay.NetworkFee;
-                                 var rate = p.GetPaymentMethod(paymentMethodContribution.PaymentMehtodId).Rate;
+                                 var rate = p.GetPaymentMethod(paymentMethodContribution.PaymentMethodId).Rate;
                                  paymentMethodContribution.CurrencyValue = rate * paymentMethodContribution.Value;
                                  return paymentMethodContribution;
                              })
                              .ToArray();
                 })
-                .GroupBy(p => p.PaymentMehtodId)
+                .GroupBy(p => p.PaymentMethodId)
                 .ToDictionary(p => p.Key, p => new Contribution()
                 {
-                    PaymentMehtodId = p.Key,
+                    PaymentMethodId = p.Key,
                     Value = p.Select(v => v.Value).Sum(),
                     CurrencyValue = p.Select(v => v.CurrencyValue).Sum()
                 });

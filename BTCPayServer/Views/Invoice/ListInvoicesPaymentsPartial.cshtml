@@ -47,7 +47,7 @@
     </div>
 </div>
 @{
-    var grouped = invoice.Payments.GroupBy(payment => payment.GetPaymentMethodId().PaymentType);    
+    var grouped = invoice.Payments.GroupBy(payment => payment.GetPaymentMethodId()?.PaymentType).Where(entities => entities.Key!= null);    
 }
 @foreach (var paymentGroup in grouped)
 {

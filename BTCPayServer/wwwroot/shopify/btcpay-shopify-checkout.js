@@ -3,7 +3,7 @@
 /*
  
 1. In your BTCPayServer store you need to check "Allow anyone to create invoice"
-2. In Shopify Settings > Payment Providers > Manual Payment Methods add one which contains "Bitcoin"
+2. In Shopify Settings > Payment Providers > Manual Payment Methods add one which contains "Bitcoin with BTCPayServer"
 3. In Shopify Settings > Checkout > Additional Scripts input the following script, with the details from your BTCPayServer instead of the placeholder values.
 <script>
     const BTCPAYSERVER_URL = "FULL_BTCPAYSERVER_URL_WITH_HTTPS";
@@ -107,7 +107,7 @@
                 });
 
             window.waitForPayment = function () {
-                buttonElement.innerHTML = "<span>Loading Invoice...</span>";
+                buttonElement.innerHTML = "<span>Displaying Invoice...</span>";
                 BtcPayServerModal.show(
                     BTCPAYSERVER_URL,
                     STORE_ID,
@@ -126,7 +126,7 @@
             }
 
             // Payment button that opens modal
-            const payButtonHtml = '<button class="" onclick="window.waitForPayment()" style="width:210px"><img src="' + BTCPAYSERVER_URL + '/img/paybutton/pay.svg"></button>';
+            const payButtonHtml = '<button class="" onclick="window.waitForPayment()" style="width:210px; border: none; outline: none;"><img src="' + BTCPAYSERVER_URL + '/img/paybutton/pay.svg"></button>';
 
             buttonElement = document.createElement("div");
             buttonElement.innerHTML = payButtonHtml;

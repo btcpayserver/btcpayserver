@@ -238,6 +238,7 @@ namespace BTCPayServer.Payments.PayJoin
             Dictionary<OutPoint, UTXO> selectedUTXOs = new Dictionary<OutPoint, UTXO>();
             PSBTOutput originalPaymentOutput = null;
             BitcoinAddress paymentAddress = null;
+            KeyPath paymentAddressIndex = null;
             InvoiceEntity invoice = null;
             DerivationSchemeSettings derivationSchemeSettings = null;
             foreach (var output in psbt.Outputs)
@@ -300,6 +301,7 @@ namespace BTCPayServer.Payments.PayJoin
                 ctx.LockedUTXOs = selectedUTXOs.Select(u => u.Key).ToArray();
                 originalPaymentOutput = output;
                 paymentAddress = paymentDetails.GetDepositAddress(network.NBitcoinNetwork);
+                paymentAddressIndex = paymentDetails.KeyPath;
                 break;
             }
 
@@ -440,7 +442,7 @@ namespace BTCPayServer.Payments.PayJoin
             var originalPaymentData = new BitcoinLikePaymentData(paymentAddress,
                 originalPaymentOutput.Value,
                 new OutPoint(ctx.OriginalTransaction.GetHash(), originalPaymentOutput.Index),
-                ctx.OriginalTransaction.RBF);
+                ctx.OriginalTransaction.RBF, paymentAddressIndex);
             originalPaymentData.ConfirmationCount = -1;
             originalPaymentData.PayjoinInformation = new PayjoinInformation()
             {

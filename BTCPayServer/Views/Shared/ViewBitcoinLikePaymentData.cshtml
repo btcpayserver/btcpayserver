@@ -54,6 +54,7 @@
                 <thead class="thead-inverse">
                 <tr>
                     <th>Crypto</th>
+                    <th>Index</th>
                     <th>Deposit address</th>
                     <th>Amount</th>
                     <th>Transaction Id</th>
@@ -65,9 +66,10 @@
                 {
                     <tr style="@(payment.Replaced ? "text-decoration: line-through" : "")">
                         <td>@payment.Crypto</td>
-                        <td>@payment.DepositAddress</td>
+                        <td>@(payment.CryptoPaymentData.Index?.ToString()?? "Unknown")</td>
+                        <td style="max-width:300px;" data-toggle="tooltip" class="text-truncate" title="@payment.DepositAddress">@payment.DepositAddress</td>
                         <td class="payment-value">@payment.CryptoPaymentData.GetValue() @Safe.Raw(payment.AdditionalInformation is string i ? $"<br/>({i})" : string.Empty)</td>
-                        <td>
+                        <td style="max-width:300px;" data-toggle="tooltip" class="text-truncate"  title="@payment.TransactionId">
                             <div class="wraptextAuto">
                                 <a href="@payment.TransactionLink" target="_blank">
                                     @payment.TransactionId

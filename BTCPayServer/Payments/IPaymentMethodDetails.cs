@@ -21,10 +21,5 @@ namespace BTCPayServer.Payments
         /// </summary>
         /// <returns></returns>
         decimal GetFeeRate();
-        /// <summary>
-        /// Change the payment destination (internal plumbing)
-        /// </summary>
-        /// <param name="newPaymentDestination"></param>
-        void SetPaymentDestination(string newPaymentDestination);
     }
 }

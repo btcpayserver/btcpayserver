@@ -2502,6 +2502,8 @@ input[type="button"].btn-block {
   background-color: var(--btcpay-color-white);
   border: 1px solid var(--btcpay-color-neutral-300);
   border-radius: 0.25rem;
+  -webkit-appearance: none;
+  -moz-appearance: none;
   appearance: none; }
   .custom-select:focus {
     border-color: var(--btcpay-color-primary-backdrop);
@@ -2593,6 +2595,8 @@ input[type="button"].btn-block {
   height: calc(1rem + 0.4rem);
   padding: 0;
   background-color: transparent;
+  -webkit-appearance: none;
+  -moz-appearance: none;
   appearance: none; }
   .custom-range:focus {
     outline: none; }
@@ -3779,6 +3783,8 @@ button.close {
   padding: 0;
   background-color: transparent;
   border: 0;
+  -webkit-appearance: none;
+  -moz-appearance: none;
   appearance: none; }
 
 a.close.disabled {

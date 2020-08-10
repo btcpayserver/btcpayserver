@@ -319,9 +319,11 @@ namespace BTCPayServer.Controllers
                 }
                 else
                 {
-                    if (item.Payout.GetPaymentMethodId().PaymentType == PaymentTypes.BTCLike &&
-                        item.Payout.GetProofBlob(this._jsonSerializerSettings)?.TransactionId is uint256 txId)
-                        m.TransactionLink = string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink, txId);
+
+                    var proofBlob = _payoutHandlers
+                        .FirstOrDefault(handler => handler.CanHandle(item.Payout.GetPaymentMethodId()))
+                        ?.ParseProof(item.Payout.GetPaymentMethodId(), item.Payout.Proof);
+                    m.TransactionLink = proofBlob?.Link;
                     vm.Other.Add(m);
                 }
             }

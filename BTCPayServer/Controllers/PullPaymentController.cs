@@ -56,7 +56,7 @@ namespace BTCPayServer.Controllers
                            {
                                Entity = o,
                                Blob = o.GetBlob(_serializerSettings),
-                               TransactionId = o.GetProofBlob(_serializerSettings)?.TransactionId?.ToString()
+                               ProofBlob = _payoutHandlers.FirstOrDefault(handler => handler.CanHandle(o.GetPaymentMethodId()))?.ParseProof(o.GetPaymentMethodId(),o.Proof)
                            });
             var cd = _currencyNameTable.GetCurrencyData(blob.Currency, false);
             var totalPaid = payouts.Where(p => p.Entity.State != PayoutState.Cancelled).Select(p => p.Blob.Amount).Sum();
@@ -81,8 +81,8 @@ namespace BTCPayServer.Controllers
                               Currency = blob.Currency,
                               Status = entity.Entity.State.ToString(),
                               Destination = entity.Blob.Destination.ToString(),
-                              Link = GetTransactionLink(_networkProvider.GetNetwork<BTCPayNetwork>(entity.Entity.GetPaymentMethodId().CryptoCode), entity.TransactionId),
-                              TransactionId = entity.TransactionId
+                              Link = entity.ProofBlob?.Link,
+                              TransactionId = entity.ProofBlob?.Id
                           }).ToList()
             };
             vm.IsPending &= vm.AmountDue > 0.0m;

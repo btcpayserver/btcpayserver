@@ -55,6 +55,7 @@ namespace BTCPayServer.Controllers
         private readonly ApplicationDbContextFactory _dbContextFactory;
         private readonly BTCPayNetworkJsonSerializerSettings _jsonSerializerSettings;
         private readonly PullPaymentHostedService _pullPaymentService;
+        private readonly IEnumerable<IPayoutHandler> _payoutHandlers;
 
         public RateFetcher RateFetcher { get; }
 
@@ -79,7 +80,8 @@ namespace BTCPayServer.Controllers
                                  LabelFactory labelFactory,
                                  ApplicationDbContextFactory dbContextFactory,
                                  BTCPayNetworkJsonSerializerSettings jsonSerializerSettings,
-                                 HostedServices.PullPaymentHostedService pullPaymentService)
+                                 HostedServices.PullPaymentHostedService pullPaymentService,
+                                 IEnumerable<IPayoutHandler> payoutHandlers)
         {
             _currencyTable = currencyTable;
             Repository = repo;
@@ -102,6 +104,7 @@ namespace BTCPayServer.Controllers
             _dbContextFactory = dbContextFactory;
             _jsonSerializerSettings = jsonSerializerSettings;
             _pullPaymentService = pullPaymentService;
+            _payoutHandlers = payoutHandlers;
         }
 
         // Borrowed from https://github.com/ManageIQ/guides/blob/master/labels.md

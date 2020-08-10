@@ -322,7 +322,7 @@ namespace BTCPayServer.Controllers
 
                     var proofBlob = _payoutHandlers
                         .FirstOrDefault(handler => handler.CanHandle(item.Payout.GetPaymentMethodId()))
-                        ?.ParseProof(item.Payout.GetPaymentMethodId(), item.Payout.Proof);
+                        ?.ParseProof(item.Payout);
                     m.TransactionLink = proofBlob?.Link;
                     vm.Other.Add(m);
                 }

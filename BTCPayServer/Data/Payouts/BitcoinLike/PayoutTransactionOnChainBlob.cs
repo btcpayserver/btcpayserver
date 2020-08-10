@@ -14,8 +14,11 @@ namespace BTCPayServer.Data
 
         [JsonIgnore] public string LinkTemplate { get; set; }
         [JsonIgnore]
-        public string Link { get { return string.Format(CultureInfo.InvariantCulture, LinkTemplate, Id); } }
+        public string Link
+        {
+            get { return Id != null ? string.Format(CultureInfo.InvariantCulture, LinkTemplate, Id) : null; }
+        }
         [JsonIgnore]
-        public string Id { get { return TransactionId.ToString(); } }
+        public string Id { get { return TransactionId?.ToString(); } }
     }
 }

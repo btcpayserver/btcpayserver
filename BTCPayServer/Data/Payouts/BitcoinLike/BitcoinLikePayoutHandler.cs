@@ -81,11 +81,15 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
         }
     }
 
-    public IPayoutProof ParseProof(PaymentMethodId paymentMethodId, byte[] blob)
+    public IPayoutProof ParseProof(PayoutData payout)
     {
-        if (blob is null)
+        if (payout?.Proof is null)
             return null;
-        return JsonConvert.DeserializeObject<PayoutTransactionOnChainBlob>(Encoding.UTF8.GetString(blob), _jsonSerializerSettings.GetSerializer(paymentMethodId.CryptoCode));
+        var paymentMethodId = payout.GetPaymentMethodId();
+        var res =  JsonConvert.DeserializeObject<PayoutTransactionOnChainBlob>(Encoding.UTF8.GetString(payout.Proof), _jsonSerializerSettings.GetSerializer(paymentMethodId.CryptoCode));
+        var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
+        res.LinkTemplate = network.BlockExplorerLink;
+        return res;
     }
 
     public void StartBackgroundCheck(Action<Type[]> subscribe)
@@ -140,7 +144,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
 
             foreach (var payout in payouts)
             {
-                var proof = ParseProof(payout.GetPaymentMethodId(), payout.Blob) as PayoutTransactionOnChainBlob;
+                var proof = ParseProof(payout) as PayoutTransactionOnChainBlob;
                 var payoutBlob = payout.GetBlob(this._jsonSerializerSettings);
                 if (proof is null)
                 {
@@ -248,7 +252,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
                 //this is dangerous, a merchant may send an incorrect amount and this would just completely ignore it 
                 if (destination.Value != payoutBlob.CryptoAmount)
                     continue;
-                var proof = ParseProof(payout.GetPaymentMethodId(), payout.Proof) as PayoutTransactionOnChainBlob;
+                var proof = ParseProof(payout) as PayoutTransactionOnChainBlob;
                 if (proof is null)
                 {
                     proof = new PayoutTransactionOnChainBlob();

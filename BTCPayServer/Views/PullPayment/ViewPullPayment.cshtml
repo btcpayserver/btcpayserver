@@ -130,7 +130,7 @@
                                         </tr>
                                         <tr class="bg-light">
                                             <td class="font-weight-bold">Destination</td>
-                                            <td class="text-right text-break">
+                                            <td class="text-right text-nowrap">
                                                 <code>@invoice.Destination</code>
                                             </td>
                                         </tr>
@@ -138,7 +138,7 @@
                                         {
                                             <tr class="bg-light">
                                                 <td class="font-weight-bold">Transaction</td>
-                                                <td class="text-right text-truncate" style="max-width: 100px;"><a class="transaction-link" href="@invoice.Link">@invoice.TransactionId</a></td>
+                                                <td class="text-right text-truncate" style="max-width: 100px;" data-target="tooltip" title="@invoice.TransactionId"><a class="transaction-link" href="@invoice.Link">@invoice.TransactionId</a></td>
                                             </tr>
                                         }
                                     </table>

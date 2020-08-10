@@ -56,7 +56,7 @@ namespace BTCPayServer.Controllers
                            {
                                Entity = o,
                                Blob = o.GetBlob(_serializerSettings),
-                               ProofBlob = _payoutHandlers.FirstOrDefault(handler => handler.CanHandle(o.GetPaymentMethodId()))?.ParseProof(o.GetPaymentMethodId(),o.Proof)
+                               ProofBlob = _payoutHandlers.FirstOrDefault(handler => handler.CanHandle(o.GetPaymentMethodId()))?.ParseProof(o)
                            });
             var cd = _currencyNameTable.GetCurrencyData(blob.Currency, false);
             var totalPaid = payouts.Where(p => p.Entity.State != PayoutState.Cancelled).Select(p => p.Blob.Amount).Sum();

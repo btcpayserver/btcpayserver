@@ -269,7 +269,8 @@ namespace BTCPayServer.HostedServices
                     req.Rate = 1.0m;
                 var cryptoAmount = payoutBlob.Amount / req.Rate;
                 var payoutHandler = _payoutHandlers.First(handler => handler.CanHandle(paymentMethod));
-                decimal minimumCryptoAmount = await payoutHandler.GetMinimumPayoutAmount(paymentMethod, payoutBlob.Destination);
+                var dest = await payoutHandler.ParseClaimDestination(paymentMethod, payoutBlob.Destination);
+                decimal minimumCryptoAmount = await payoutHandler.GetMinimumPayoutAmount(paymentMethod, dest);
                 if (cryptoAmount < minimumCryptoAmount)
                 {
                     req.Completion.TrySetResult(PayoutApproval.Result.TooLowAmount);
@@ -309,7 +310,9 @@ namespace BTCPayServer.HostedServices
                     return;
                 }
                 var ppBlob = pp.GetBlob();
-                if (!ppBlob.SupportedPaymentMethods.Contains(req.ClaimRequest.PaymentMethodId))
+                var payoutHandler =
+                    _payoutHandlers.FirstOrDefault(handler => handler.CanHandle(req.ClaimRequest.PaymentMethodId));
+                if (!ppBlob.SupportedPaymentMethods.Contains(req.ClaimRequest.PaymentMethodId) || payoutHandler is null )
                 {
                     req.Completion.TrySetResult(new ClaimRequest.ClaimResponse(ClaimRequest.ClaimResult.PaymentMethodNotSupported));
                     return;
@@ -345,16 +348,18 @@ namespace BTCPayServer.HostedServices
                     req.Completion.TrySetResult(new ClaimRequest.ClaimResponse(ClaimRequest.ClaimResult.AmountTooLow));
                     return;
                 }
+                
                 var payoutBlob = new PayoutBlob()
                 {
                     Amount = claimed,
-                    Destination = req.ClaimRequest.Destination
+                    Destination = req.ClaimRequest.Destination.ToString()
                 };
                 payout.SetBlob(payoutBlob, _jsonSerializerSettings);
                 // payout.SetProofBlob(new PayoutTransactionOnChainBlob(), _jsonSerializerSettings);
                 await ctx.Payouts.AddAsync(payout);
                 try
                 {
+                    await payoutHandler.TrackClaim(req.ClaimRequest.PaymentMethodId, req.ClaimRequest.Destination);
                     await ctx.SaveChangesAsync();
                     req.Completion.TrySetResult(new ClaimRequest.ClaimResponse(ClaimRequest.ClaimResult.Ok, payout));
                     await _notificationSender.SendNotification(new StoreScope(pp.StoreId), new PayoutNotification()

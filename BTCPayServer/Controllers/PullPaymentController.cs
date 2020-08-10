@@ -80,7 +80,7 @@ namespace BTCPayServer.Controllers
                               AmountFormatted = _currencyNameTable.FormatCurrency(entity.Blob.Amount, blob.Currency),
                               Currency = blob.Currency,
                               Status = entity.Entity.State.ToString(),
-                              Destination = entity.Blob.Destination.ToString(),
+                              Destination = entity.Blob.Destination,
                               Link = entity.ProofBlob?.Link,
                               TransactionId = entity.ProofBlob?.Id
                           }).ToList()

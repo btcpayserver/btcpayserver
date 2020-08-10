@@ -10,7 +10,7 @@ namespace BTCPayServer.Data
         [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal? CryptoAmount { get; set; }
         public int MinimumConfirmation { get; set; } = 1;
-        public IClaimDestination Destination { get; set; }
+        public string Destination { get; set; }
         public int Revision { get; set; }
     }
 }

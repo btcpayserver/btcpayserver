@@ -2,7 +2,6 @@ namespace BTCPayServer.Data
 {
     public interface IClaimDestination
     {
-        
     }
 
     public interface IPayoutProof

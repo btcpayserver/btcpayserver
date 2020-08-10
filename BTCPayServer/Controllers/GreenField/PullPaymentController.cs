@@ -206,7 +206,7 @@ namespace BTCPayServer.Controllers.GreenField
                                             p.State == Data.PayoutState.InProgress ? Client.Models.PayoutState.InProgress :
                                             throw new NotSupportedException(),
             };
-            model.Destination = blob.Destination.ToString();
+            model.Destination = blob.Destination;
             model.PaymentMethod = p.PaymentMethodId;
             return model;
         }

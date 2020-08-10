@@ -251,7 +251,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
                 var proof = ParseProof(payout.GetPaymentMethodId(), payout.Proof) as PayoutTransactionOnChainBlob;
                 if (proof is null)
                 {
-                    continue;
+                    proof = new PayoutTransactionOnChainBlob();
                 }
                 var txId = newTransaction.NewTransactionEvent.TransactionData.TransactionHash;
                 if (proof.Candidates.Add(txId))

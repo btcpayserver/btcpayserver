@@ -1,6 +1,10 @@
 ---
 name: Report a problem
 about: File a technical problem or report a bug
+title: ''
+labels: ''
+assignees: ''
+
 ---
 
 **Describe the problem/bug**

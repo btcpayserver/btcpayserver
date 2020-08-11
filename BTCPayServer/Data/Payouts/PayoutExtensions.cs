@@ -19,8 +19,6 @@ namespace BTCPayServer.Data
                 query = query.Include(p => p.PullPaymentData.StoreData);
             var payout = await query.Where(p => p.Id == payoutId &&
                                                 p.PullPaymentData.StoreId == storeId).FirstOrDefaultAsync();
-            if (payout is null)
-                return null;
             return payout;
         }
         

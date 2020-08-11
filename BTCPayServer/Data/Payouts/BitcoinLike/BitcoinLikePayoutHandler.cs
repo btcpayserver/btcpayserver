@@ -4,13 +4,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer;
+using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
+using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.Payment;
@@ -129,6 +133,28 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
         }
 
         return Task.FromResult(0m);
+    }
+
+    public async Task<IActionResult> CreatePayout(Controller controllerContext, IEnumerable<PayoutData> payouts)
+    {
+        if(!payouts.Any() || !payouts.All(data => data.GetPaymentMethodId() == payouts.First().GetPaymentMethodId()))
+        {
+            return null;
+        }
+
+        var destandValueList = payouts.Select(data =>
+        {
+            var y = data.GetBlob(_jsonSerializerSettings);
+            return (y.Destination, y.CryptoAmount);
+        }).ToArray();
+        var walletId = new WalletId(payouts.First().PullPaymentData.StoreId,payouts.First().GetPaymentMethodId().CryptoCode);
+        return controllerContext.RedirectToAction(nameof(WalletsController.WalletSend), "Wallets", new
+        {
+            walletId,
+            defaultDestinations = destandValueList.Select(t=>t.Destination).ToArray(),
+            defaultAmounts = destandValueList.Select(t=>t.CryptoAmount).ToArray()
+        });
+
     }
 
 

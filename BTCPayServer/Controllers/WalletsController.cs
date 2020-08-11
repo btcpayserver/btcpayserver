@@ -41,7 +41,6 @@ namespace BTCPayServer.Controllers
         public ExplorerClientProvider ExplorerClientProvider { get; }
 
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly JsonSerializerSettings _serializerSettings;
         private readonly NBXplorerDashboard _dashboard;
         private readonly IAuthorizationService _authorizationService;
         private readonly IFeeProviderFactory _feeRateProvider;
@@ -65,7 +64,6 @@ namespace BTCPayServer.Controllers
                                  CurrencyNameTable currencyTable,
                                  BTCPayNetworkProvider networkProvider,
                                  UserManager<ApplicationUser> userManager,
-                                 MvcNewtonsoftJsonOptions mvcJsonOptions,
                                  NBXplorerDashboard dashboard,
                                  RateFetcher rateProvider,
                                  IAuthorizationService authorizationService,
@@ -90,7 +88,6 @@ namespace BTCPayServer.Controllers
             _authorizationService = authorizationService;
             NetworkProvider = networkProvider;
             _userManager = userManager;
-            _serializerSettings = mvcJsonOptions.SerializerSettings;
             _dashboard = dashboard;
             ExplorerClientProvider = explorerProvider;
             _feeRateProvider = feeRateProvider;
@@ -410,7 +407,7 @@ namespace BTCPayServer.Controllers
         [Route("{walletId}/send")]
         public async Task<IActionResult> WalletSend(
             [ModelBinder(typeof(WalletIdModelBinder))]
-            WalletId walletId, string defaultDestination = null, string defaultAmount = null, string bip21 = null)
+            WalletId walletId, string defaultDestination = null, string defaultAmount = null, string bip21 = null, string[] defaultDestinations = null, string[] defaultAmounts=null )
         {
             if (walletId?.StoreId == null)
                 return NotFound();
@@ -425,14 +422,26 @@ namespace BTCPayServer.Controllers
             var rateRules = store.GetStoreBlob().GetRateRules(NetworkProvider);
             rateRules.Spread = 0.0m;
             var currencyPair = new Rating.CurrencyPair(paymentMethod.PaymentId.CryptoCode, GetCurrencyCode(storeData.DefaultLang) ?? "USD");
-            double.TryParse(defaultAmount, out var amount);
+            List<WalletSendModel.TransactionOutput> list = null;
+            if (defaultDestinations != null)
+            {
+                list = new List<WalletSendModel.TransactionOutput>();
+                for (var index = 0; index < defaultDestinations.Length; index++)
+                {
+                    string destination = defaultDestinations[index];
+                    decimal.TryParse(defaultAmounts?.ElementAtOrDefault(index), out var amt);
+                    list.Add(new WalletSendModel.TransactionOutput() {Amount = amt, DestinationAddress = destination});
+                }
+            }
+            
+            decimal.TryParse(defaultAmount, out var amount);
             var model = new WalletSendModel()
             {
-                Outputs = new List<WalletSendModel.TransactionOutput>()
+                Outputs = list?? new List<WalletSendModel.TransactionOutput>()
                 {
                     new WalletSendModel.TransactionOutput()
                     {
-                        Amount = Convert.ToDecimal(amount),
+                        Amount = amount,
                         DestinationAddress = defaultDestination
                     }
                 },

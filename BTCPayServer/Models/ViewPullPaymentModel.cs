@@ -66,6 +66,7 @@ namespace BTCPayServer.Models
         public decimal ClaimedAmount { get; set; }
         public decimal MinimumClaim { get; set; }
         public string Destination { get; set; }
+        public string PaymentMethod { get; set; }
         public string AmountDueFormatted { get; set; }
         public decimal Amount { get; set; }
         public string Id { get; set; }

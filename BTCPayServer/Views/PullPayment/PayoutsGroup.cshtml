@@ -1,0 +1,39 @@
+﻿@using BTCPayServer.Views.Wallets
+@using BTCPayServer.Payments
+@model Dictionary<string, BTCPayServer.Models.WalletViewModels.PayoutsModel>
+@{
+    Layout = "../Shared/_NavLayout.cshtml";
+    ViewData["Title"] = "Manage payouts";
+    ViewData.SetActivePageAndTitle(WalletsNavPages.Payouts);
+}
+
+@if (TempData.HasStatusMessage())
+{
+    <div class="row">
+        <div class="col-md-12 text-center">
+            <partial name="_StatusMessage" />
+        </div>
+    </div>
+}
+
+<script type="text/javascript">
+    function selectAll(e, elementClass)
+    {
+        var items = document.getElementsByClassName("selection-item-"+ elementClass);
+        for (var i = 0; i < items.length; i++) {
+            items[i].checked = e.checked;
+        }
+    }
+</script>
+
+@foreach (var item in Model)
+{
+    <div class="row button-row">
+        <div class="col">
+            <h3 class="mb-3">@PaymentMethodId.Parse(item.Key).ToPrettyString()</h3>
+        </div>
+    </div>
+    <partial for="@item.Value" name="Payouts"/>
+                                             
+    <hr class="my-4"/>
+}

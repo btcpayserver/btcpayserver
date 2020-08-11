@@ -21,9 +21,9 @@ namespace BTCPayServer.Services.Notifications.Blobs
             protected override void FillViewModel(PayoutNotification notification, NotificationViewModel vm)
             {
                 vm.Body = "A new payout is awaiting for payment";
-                vm.ActionLink = _linkGenerator.GetPathByAction(nameof(WalletsController.Payouts),
-                    "Wallets",
-                    new { walletId = new WalletId(notification.StoreId, notification.PaymentMethod) }, _options.RootPath);
+                vm.ActionLink = _linkGenerator.GetPathByAction(nameof(PullPaymentController.Payouts),
+                    "PullPayment",
+                    new { storeId = notification.StoreId}, _options.RootPath);
             }
         }
         public string PayoutId { get; set; }

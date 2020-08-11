@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Payments;
+using Microsoft.AspNetCore.Mvc;
 
 public interface IPayoutHandler
 {
@@ -12,4 +14,6 @@ public interface IPayoutHandler
     void StartBackgroundCheck(Action<Type[]> subscribe);
     Task BackgroundCheck(object o);
     Task<decimal> GetMinimumPayoutAmount(PaymentMethodId paymentMethod, IClaimDestination claimDestination);
+
+    Task<IActionResult> CreatePayout(Controller controllerContext, IEnumerable<PayoutData> payouts);
 }

@@ -1,8 +1,9 @@
-﻿@model NewPullPaymentModel
+﻿@using BTCPayServer.Views.Wallets
+@model BTCPayServer.Models.WalletViewModels.NewPullPaymentModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData["Title"] = "Manage pull payments";
-    ViewData.SetActivePageAndTitle(WalletsNavPages.PullPayments);
+    ViewData.SetActivePageAndTitle(PullPaymentNavPages.PullPayments);
 }
 <style type="text/css">
     .smMaxWidth {
@@ -52,7 +53,7 @@
 {
     <div class="row">
         <div class="col-md-12 text-center">
-            <partial name="_StatusMessage" />
+            <partial name="_StatusMessage"/>
         </div>
     </div>
 }
@@ -64,23 +65,29 @@
               asp-action="NewPullPayment">
             <div class="form-group">
                 <label asp-for="Name" class="control-label"></label>
-                <input asp-for="Name" class="form-control" />
+                <input asp-for="Name" class="form-control"/>
                 <span asp-validation-for="Name" class="text-danger"></span>
             </div>
             <div class="form-row">
                 <div class="form-group col-8">
                     <label asp-for="Amount" class="control-label"></label>
-                    <input asp-for="Amount" class="form-control" />
+                    <input asp-for="Amount" class="form-control"/>
                     <span asp-validation-for="Amount" class="text-danger"></span>
                 </div>
                 <div class="form-group col-4">
                     <label asp-for="Currency" class="control-label"></label>
-                    <input asp-for="Currency" class="form-control" />
+                    <input asp-for="Currency" class="form-control"/>
                     <span asp-validation-for="Currency" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="PaymentMethods" class="control-label"></label>
+                    <select asp-for="PaymentMethods" asp-items="Model.AvailablePaymentMethods" class="form-control" multiple="multiple"></select>
+                    <span asp-validation-for="PaymentMethods" class="text-danger"></span>
                 </div>
             </div>
             <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" id="Create" />
+                <input type="submit" value="Create" class="btn btn-primary" id="Create"/>
             </div>
         </form>
     </div>

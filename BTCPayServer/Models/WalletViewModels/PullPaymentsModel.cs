@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using BTCPayServer.Payments;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BTCPayServer.Models.WalletViewModels
 {
@@ -42,5 +44,7 @@ namespace BTCPayServer.Models.WalletViewModels
         [Required]
         [ReadOnly(true)]
         public string Currency { get; set; }
+        public List<string> PaymentMethods { get; set; }
+        public SelectList AvailablePaymentMethods { get; set; }
     }
 }

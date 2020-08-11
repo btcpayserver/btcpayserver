@@ -373,6 +373,15 @@ namespace BTCPayServer.Tests
 
         }
 
+        public void GoToPullPayments(string storeId = null, PullPaymentNavPages navPages = PullPaymentNavPages.PullPayments)
+        {
+            storeId ??= WalletId?.StoreId;
+            Driver.Navigate().GoToUrl(new Uri(Server.PayTester.ServerUri, $"stores/{storeId}/pull-payments/"));
+            if (navPages != PullPaymentNavPages.PullPayments)
+            {
+                Driver.FindElement(By.Id($"{navPages}")).Click();
+            }
+        }
         public void GoToWallet(WalletId walletId = null, WalletsNavPages navPages = WalletsNavPages.Send)
         {
             walletId ??= WalletId;

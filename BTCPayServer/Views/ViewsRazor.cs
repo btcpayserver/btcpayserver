@@ -18,8 +18,9 @@ namespace BTCPayServer.Views
         public static string IsActivePage<T>(this ViewDataDictionary viewData, T page)
             where T : IConvertible
         {
-            var activePage = (T)viewData[ACTIVE_PAGE_KEY];
-            return page.Equals(activePage) ? "active" : null;
+            if(Enum.TryParse(typeof(T), viewData[ACTIVE_PAGE_KEY].ToString(),true, out var activePage))
+                return page.Equals(activePage) ? "active" : null;
+            return null;
         }
 
         public static HtmlString ToBrowserDate(this DateTimeOffset date)

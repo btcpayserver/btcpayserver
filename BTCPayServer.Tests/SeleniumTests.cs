@@ -699,7 +699,7 @@ namespace BTCPayServer.Tests
                 var receiverSeed = s.GenerateWallet("BTC", "", true, true, ScriptPubKeyType.Segwit);
                 await s.Server.ExplorerNode.GenerateAsync(1);
                 await s.FundStoreWallet(denomination: 50.0m);
-                s.GoToWallet(navPages: WalletsNavPages.PullPayments);
+                s.GoToPullPayments(navPages: PullPaymentNavPages.PullPayments);
                 s.Driver.FindElement(By.Id("NewPullPayment")).Click();
                 s.Driver.FindElement(By.Id("Name")).SendKeys("PP1");
                 s.Driver.FindElement(By.Id("Amount")).Clear();
@@ -707,7 +707,7 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.LinkText("View")).Click();
 
                 Thread.Sleep(1000);
-                s.GoToWallet(navPages: WalletsNavPages.PullPayments);
+                s.GoToPullPayments(navPages: PullPaymentNavPages.PullPayments);
                 s.Driver.FindElement(By.Id("NewPullPayment")).Click();
                 s.Driver.FindElement(By.Id("Name")).SendKeys("PP2");
                 s.Driver.FindElement(By.Id("Amount")).Clear();
@@ -738,14 +738,14 @@ namespace BTCPayServer.Tests
 
                 var viewPullPaymentUrl = s.Driver.Url;
                 // This one should have nothing
-                s.GoToWallet(navPages: WalletsNavPages.PullPayments);
+                s.GoToPullPayments(navPages: PullPaymentNavPages.PullPayments);
                 var payouts = s.Driver.FindElements(By.ClassName("pp-payout"));
                 Assert.Equal(2, payouts.Count);
                 payouts[1].Click();
                 Assert.Contains("No payout waiting for approval", s.Driver.PageSource);
 
                 // PP2 should have payouts
-                s.GoToWallet(navPages: WalletsNavPages.PullPayments);
+                s.GoToPullPayments(navPages: PullPaymentNavPages.PullPayments);
                 payouts = s.Driver.FindElements(By.ClassName("pp-payout"));
                 payouts[0].Click();
                 Assert.DoesNotContain("No payout waiting for approval", s.Driver.PageSource);

@@ -15,22 +15,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Controllers
 {
-
-    public class NotificationsDropdown : ViewComponent
-    {
-        private readonly NotificationManager _notificationManager;
-
-        public NotificationsDropdown(NotificationManager notificationManager)
-        {
-            _notificationManager = notificationManager;
-        }
-
-        public async Task<IViewComponentResult> InvokeAsync(int noOfEmployee)
-        {
-            return View(await _notificationManager.GetSummaryNotifications(UserClaimsPrincipal));
-        }
-    }
-
     [BitpayAPIConstraint(false)]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [Route("[controller]/[action]")]

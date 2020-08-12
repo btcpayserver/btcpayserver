@@ -34,6 +34,14 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
         public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(InvoiceLogs logs, MoneroSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod,
             StoreData store, MoneroLikeSpecificBtcPayNetwork network, object preparePaymentObject)
         {
+            
+            if (preparePaymentObject is null)
+            {
+                return new MoneroLikeOnChainPaymentMethodDetails()
+                {
+                    Activated = false
+                };
+            }
 
             if (!_moneroRpcProvider.IsAvailable(network.CryptoCode))
                 throw new PaymentMethodUnavailableException($"Node or wallet not available");
@@ -49,7 +57,8 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
                 NextNetworkFee = MoneroMoney.Convert(feeRatePerByte * 100),
                 AccountIndex = supportedPaymentMethod.AccountIndex,
                 AddressIndex = address.AddressIndex,
-                DepositAddress = address.Address
+                DepositAddress = address.Address,
+                Activated = true
             };
 
         }

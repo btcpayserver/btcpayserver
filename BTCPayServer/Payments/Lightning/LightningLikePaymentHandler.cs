@@ -92,6 +92,7 @@ namespace BTCPayServer.Payments.Lightning
             var nodeInfo = await test;
             return new LightningLikePaymentMethodDetails
             {
+                Activated = true,
                 BOLT11 = lightningInvoice.BOLT11,
                 InvoiceId = lightningInvoice.Id,
                 NodeInfo = nodeInfo.ToString()

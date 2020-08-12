@@ -266,7 +266,7 @@ namespace BTCPayServer.Payments.PayJoin
                 var paymentMethod = invoice.GetPaymentMethod(paymentMethodId);
                 var paymentDetails =
                     paymentMethod.GetPaymentMethodDetails() as Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod;
-                if (paymentDetails is null || !paymentDetails.PayjoinEnabled)
+                if (paymentDetails is null || !paymentDetails.PayjoinEnabled || !paymentDetails.Activated)
                     continue;
                 if (invoice.GetAllBitcoinPaymentData().Any())
                 {

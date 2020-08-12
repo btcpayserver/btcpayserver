@@ -320,7 +320,16 @@ namespace BTCPayServer.Controllers
             {
                 var logPrefix = $"{supportedPaymentMethod.PaymentId.ToPrettyString()}:";
                 var storeBlob = store.GetStoreBlob();
-                var preparePayment = handler.PreparePayment(supportedPaymentMethod, store, network);
+
+                object preparePayment;
+                if (storeBlob.LazyPaymentMethods)
+                {
+                    preparePayment = null;
+                }
+                else
+                {
+                    preparePayment = handler.PreparePayment(supportedPaymentMethod, store, network);
+                }
                 var rate = await fetchingByCurrencyPair[new CurrencyPair(network.CryptoCode, entity.Currency)];
                 if (rate.BidAsk == null)
                 {

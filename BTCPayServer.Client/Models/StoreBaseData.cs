@@ -53,7 +53,7 @@ namespace BTCPayServer.Client.Models
 
         public string HtmlTitle { get; set; }
 
-
+        public bool LazyPaymentMethods { get; set; }
 
         [JsonConverter(typeof(StringEnumConverter))]
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]

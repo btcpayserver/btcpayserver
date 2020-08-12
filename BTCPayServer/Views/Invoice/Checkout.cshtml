@@ -170,6 +170,7 @@
             emailAddressInputDirty: false,
             emailAddressInputInvalid: false,
             emailAddressFormSubmitting: false,
+            activatingPaymentMethod: false,
             lineItemsExpanded: false,
             changingCurrencies: false,
             loading: true,
@@ -208,6 +209,23 @@
             this.loading = false;
         },
         methods: {
+            activatePaymentMethod: function(){
+                var self = this;
+                if(this.srvModel.activated){
+                    this.activatingPaymentMethod = false;
+                    return;
+                }
+                this.activatingPaymentMethod = true;
+                 $.ajax({
+                     url: window.location.pathname + "/"+ this.srvModel.paymentMethodId+"/activate",
+                     type: "POST",
+                 }).done(function() {
+                   self.fetchData();
+                 })
+                 .always(function () {
+                     self.activatingPaymentMethod = false;
+                 });
+            },
             onlyExpandLineItems: function() {
                 if (!this.lineItemsExpanded) {
                     this.toggleLineItems();

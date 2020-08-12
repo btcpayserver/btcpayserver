@@ -131,6 +131,7 @@ namespace BTCPayServer.Controllers.GreenField
                 LightningPrivateRouteHints = storeBlob.LightningPrivateRouteHints,
                 OnChainWithLnInvoiceFallback = storeBlob.OnChainWithLnInvoiceFallback,
                 RedirectAutomatically = storeBlob.RedirectAutomatically,
+                LazyPaymentMethods = storeBlob.LazyPaymentMethods,
                 ShowRecommendedFee = storeBlob.ShowRecommendedFee,
                 RecommendedFeeBlockTarget = storeBlob.RecommendedFeeBlockTarget,
                 DefaultLang = storeBlob.DefaultLang,
@@ -168,6 +169,7 @@ namespace BTCPayServer.Controllers.GreenField
             blob.LightningPrivateRouteHints = restModel.LightningPrivateRouteHints;
             blob.OnChainWithLnInvoiceFallback = restModel.OnChainWithLnInvoiceFallback;
             blob.RedirectAutomatically = restModel.RedirectAutomatically;
+            blob.LazyPaymentMethods = restModel.LazyPaymentMethods;
             blob.ShowRecommendedFee = restModel.ShowRecommendedFee;
             blob.RecommendedFeeBlockTarget = restModel.RecommendedFeeBlockTarget;
             blob.DefaultLang = restModel.DefaultLang;

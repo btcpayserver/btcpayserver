@@ -283,6 +283,7 @@ namespace BTCPayServer.Controllers.GreenField
 
                     return new InvoicePaymentMethodDataModel()
                     {
+                        Activated = details.Activated,
                         PaymentMethod = method.GetId().ToStringNormalized(),
                         Destination = details.GetPaymentDestination(),
                         Rate = method.Rate,

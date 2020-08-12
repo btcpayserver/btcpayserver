@@ -352,7 +352,6 @@ namespace BTCPayServer.Payments.Bitcoin
                 if (strategy == null)
                     continue;
                 var cryptoId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
-                var paymentMethod = invoice.GetPaymentMethod(cryptoId).GetPaymentMethodDetails() as BitcoinLikeOnChainPaymentMethod;
 
                 if (!invoice.Support(cryptoId))
                     continue;
@@ -403,6 +402,7 @@ namespace BTCPayServer.Payments.Bitcoin
             var paymentMethod = invoice.GetPaymentMethod(wallet.Network, PaymentTypes.BTCLike);
             if (paymentMethod != null &&
                 paymentMethod.GetPaymentMethodDetails() is BitcoinLikeOnChainPaymentMethod btc &&
+                btc.Activated && 
                 btc.GetDepositAddress(wallet.Network.NBitcoinNetwork).ScriptPubKey == paymentData.ScriptPubKey &&
                 paymentMethod.Calculate().Due > Money.Zero)
             {

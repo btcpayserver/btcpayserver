@@ -108,7 +108,7 @@ namespace BTCPayServer.Payments.Lightning
                                                               .Where(c => c.GetId().PaymentType == PaymentTypes.LightningLike))
                 {
                     var lightningMethod = paymentMethod.GetPaymentMethodDetails() as LightningLikePaymentMethodDetails;
-                    if (lightningMethod == null)
+                    if (lightningMethod == null || !lightningMethod.Activated)
                         continue;
                     var lightningSupportedMethod = invoice.GetSupportedPaymentMethod<LightningSupportedPaymentMethod>()
                                               .FirstOrDefault(c => c.CryptoCode == paymentMethod.GetId().CryptoCode);

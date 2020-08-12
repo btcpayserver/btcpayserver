@@ -374,7 +374,7 @@ namespace BTCPayServer.Services.Invoices
                 }).ToList();
 
 
-                if (paymentId.PaymentType == PaymentTypes.LightningLike)
+                if (details?.Activated is true && paymentId.PaymentType == PaymentTypes.LightningLike)
                 {
                     cryptoInfo.PaymentUrls = new InvoicePaymentUrls()
                     {
@@ -382,7 +382,7 @@ namespace BTCPayServer.Services.Invoices
                             ServerUrl)
                     };
                 }
-                else if (paymentId.PaymentType == PaymentTypes.BTCLike)
+                else if (details?.Activated is true && paymentId.PaymentType == PaymentTypes.BTCLike)
                 {
                     var minerInfo = new MinerFeeInfo();
                     minerInfo.TotalFee = accounting.NetworkFee.Satoshi;
@@ -935,10 +935,7 @@ namespace BTCPayServer.Services.Invoices
 
         private decimal GetTxFee()
         {
-            var method = GetPaymentMethodDetails();
-            if (method == null)
-                return 0.0m;
-            return method.GetNextNetworkFee();
+            return GetPaymentMethodDetails()?.GetNextNetworkFee()?? 0m;
         }
     }
 

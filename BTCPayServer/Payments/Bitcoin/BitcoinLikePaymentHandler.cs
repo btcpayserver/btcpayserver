@@ -140,12 +140,20 @@ namespace BTCPayServer.Payments.Bitcoin
             DerivationSchemeSettings supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store,
             BTCPayNetwork network, object preparePaymentObject)
         {
+            if (preparePaymentObject is null)
+            {
+                return new BitcoinLikeOnChainPaymentMethod()
+                {
+                    Activated = false
+                };
+            }
             if (!_ExplorerProvider.IsAvailable(network))
                 throw new PaymentMethodUnavailableException($"Full node not available");
             var prepare = (Prepare)preparePaymentObject;
             Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod onchainMethod =
                 new Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod();
             var blob = store.GetStoreBlob();
+            onchainMethod.Activated = true;
             onchainMethod.NetworkFeeMode = blob.NetworkFeeMode;
             onchainMethod.FeeRate = await prepare.GetFeeRate;
             switch (onchainMethod.NetworkFeeMode)

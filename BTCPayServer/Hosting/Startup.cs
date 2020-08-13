@@ -81,6 +81,12 @@ namespace BTCPayServer.Hosting
                     return builtInFactory(context);
                 };
             })
+            .AddRazorOptions(o =>
+            {
+                // /Components/{View Component Name}/{View Name}.cshtml
+                o.ViewLocationFormats.Add("/{0}.cshtml");
+                o.PageViewLocationFormats.Add("/{0}.cshtml");
+            })
             .AddNewtonsoftJson()
 #if RAZOR_RUNTIME_COMPILE
             .AddRazorRuntimeCompilation()

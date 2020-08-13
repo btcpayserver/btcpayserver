@@ -144,6 +144,7 @@ namespace BTCPayServer.Controllers
                     .Select(o => new PaymentMethodId(o, PaymentTypes.BTCLike))
                     .ToList();
                 var defaultRefund = invoice.Payments.Select(p => p.GetBlob(_NetworkProvider))
+                                                .Where(p => p != null)
                                                 .Select(p => p.GetPaymentMethodId().CryptoCode)
                                                 .FirstOrDefault();
                 // TODO: What if no option?

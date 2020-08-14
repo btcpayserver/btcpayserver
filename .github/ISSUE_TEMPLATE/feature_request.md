@@ -1,6 +1,9 @@
 ---
 name: Feature request
-about: Ideas and feature requests
+about: Suggest a new feature or enhancement
+title: ''
+labels: ''
+assignees: ''
 
 ---
 
@@ -10,11 +13,11 @@ A clear and concise description of what the problem is. Ex. I'm always frustrate
 **Describe the solution you'd like**
 A clear and concise description of what you want to happen.
 
+**Sketch/Image/Wireframe/Mockup**
+ If applicable provide examples, wireframes, sketches or images to better explain your idea.
+
 **Describe alternatives you've considered**
 A clear and concise description of any alternative solutions or features you've considered.
-
-**Provide examples**
-If applicable provide examples, wireframes, sketches or images to better explain your idea.
 
 **Additional context**
 Add any other context or screenshots about the feature request here.

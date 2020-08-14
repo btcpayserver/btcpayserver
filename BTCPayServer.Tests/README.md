@@ -52,6 +52,9 @@ If you get this message:
 
 Please, run the test `CanSetLightningServer`, this will establish a channel between the customer and the merchant, then, retry.
 
+Alternatively you can run the `./docker-lightning-channel-setup.sh` script to establish the channel connection.
+The `./docker-lightning-channel-teardown.sh` script closes any existing lightning channels.
+
 ## FAQ
 
 `docker-compose up dev` failed or tests are not passing, what should I do?

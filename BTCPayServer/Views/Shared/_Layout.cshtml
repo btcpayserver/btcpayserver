@@ -1,4 +1,4 @@
-﻿@inject SignInManager<ApplicationUser> SignInManager
+@inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
 @inject RoleManager<IdentityRole> RoleManager
 @inject BTCPayServer.Services.BTCPayServerEnvironment env
@@ -77,8 +77,7 @@
                         <li class="nav-item">
                             <a asp-area="" asp-controller="Manage" asp-action="Index" title="My settings" class="nav-link js-scroll-trigger" id="MySettings"><i class="fa fa-user"></i></a>
                         </li>
-
-                        <partial name="LayoutPartials/NotificationsNavItem" />
+                        <vc:notifications-dropdown></vc:notifications-dropdown>
 
                         <li class="nav-item">
                             <a asp-area="" asp-controller="Account" asp- asp-action="Logout" title="Logout" class="nav-link js-scroll-trigger" id="Logout"><i class="fa fa-sign-out"></i></a>

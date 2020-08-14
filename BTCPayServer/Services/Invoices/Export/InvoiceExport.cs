@@ -47,10 +47,8 @@ namespace BTCPayServer.Services.Invoices.Export
             using StringWriter writer = new StringWriter();
             using var csvWriter = new CsvHelper.CsvWriter(writer, new CsvConfiguration(CultureInfo.InvariantCulture), true);
             csvWriter.WriteHeader<ExportInvoiceHolder>();
-            foreach (var invoice in invoices)
-            {
-                csvWriter.WriteRecord(invoice);
-            }
+            csvWriter.NextRecord();
+            csvWriter.WriteRecords(invoices);
             csvWriter.Flush();
             return writer.ToString();
         }

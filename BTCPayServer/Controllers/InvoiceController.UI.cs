@@ -145,7 +145,7 @@ namespace BTCPayServer.Controllers
                     .ToList();
                 var defaultRefund = invoice.Payments
                     .Select(p => p.GetBlob(_NetworkProvider))
-                    .Select(p => p.GetPaymentMethodId())
+                    .Select(p => p?.GetPaymentMethodId())
                     .FirstOrDefault(p => p != null && p.PaymentType == BitcoinPaymentType.Instance);
                 // TODO: What if no option?
                 var refund = new RefundModel();

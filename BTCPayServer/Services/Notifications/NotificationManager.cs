@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using BTCPayServer.Components.NotificationsDropdown;
 using BTCPayServer.Data;
 using BTCPayServer.Models.NotificationViewModels;
 using Microsoft.AspNetCore.Identity;
@@ -123,11 +124,5 @@ namespace BTCPayServer.Services.Notifications
                 return h;
             throw new InvalidOperationException($"No INotificationHandler found for {blobType.Name}");
         }
-    }
-
-    public class NotificationSummaryViewModel
-    {
-        public int UnseenCount { get; set; }
-        public List<NotificationViewModel> Last5 { get; set; }
     }
 }

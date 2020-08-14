@@ -15,7 +15,7 @@ namespace BTCPayServer.Data
             PaymentEntity paymentEntity = null;
             if (network == null)
             {
-                paymentEntity = NBitcoin.JsonConverters.Serializer.ToObject<PaymentEntity>(unziped, null);
+                return null;
             }
             else
             {

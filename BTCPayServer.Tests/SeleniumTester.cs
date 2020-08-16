@@ -157,7 +157,7 @@ namespace BTCPayServer.Tests
         {
             string connectionString = null;
             if (connectionType == LightningConnectionType.Charge)
-                connectionString = "type=charge;server=" + Server.MerchantCharge.Client.Uri.AbsoluteUri;
+                connectionString = $"type=charge;server={Server.MerchantCharge.Client.Uri.AbsoluteUri};allowinsecure=true";
             else if (connectionType == LightningConnectionType.CLightning)
                 connectionString = "type=clightning;server=" + ((CLightningClient)Server.MerchantLightningD).Address.AbsoluteUri;
             else if (connectionType == LightningConnectionType.LndREST)

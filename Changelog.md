@@ -11,8 +11,9 @@
 
 ### Bug fixes
 * Fix some crashes when switching from Altcoins edition to Bitcoin-Only. (@Kukks @NicolasDorier)
-* Fix invoices CSV Export formatting introduced in 1.0.5.4
+* Fix invoices CSV Export formatting introduced in 1.0.5.4 (@NicolasDorier)
 * UI: Fix custom-select glitch (#1822 @DennisReimann)
+* Fix crash with hitbtc rate provider (@NicolasDorier)
 
 ## 1.0.5.4:
 

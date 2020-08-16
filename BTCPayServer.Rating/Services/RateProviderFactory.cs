@@ -90,10 +90,10 @@ namespace BTCPayServer.Services.Rates
             AddExchangeSharpProviders<ExchangeBinanceAPI>("binance");
             AddExchangeSharpProviders<ExchangeBittrexAPI>("bittrex");
             AddExchangeSharpProviders<ExchangePoloniexAPI>("poloniex");
-            AddExchangeSharpProviders<ExchangeHitBTCAPI>("hitbtc");
             AddExchangeSharpProviders<ExchangeNDAXAPI>("ndax");
 
             // Handmade providers
+            Providers.Add("hitbtc", new HitBTCRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_HITBTC")));
             Providers.Add("coingecko", new CoinGeckoRateProvider(_httpClientFactory));
             Providers.Add("kraken", new KrakenExchangeRateProvider() { HttpClient = _httpClientFactory?.CreateClient("EXCHANGE_KRAKEN") });
             Providers.Add("bylls", new ByllsRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_BYLLS")));

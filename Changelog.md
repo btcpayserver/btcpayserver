@@ -2,9 +2,7 @@
 
 ## 1.0.5.5:
 
-
 ### Improvements
-
 * UI: Improve mobile login views (#1833 @DennisReimann)
 * Pull payments claim & payout notification rewording (#1825 @Zaxounette)
 * Do not load webfonts from google font server, serve locally (@DennisReimann)

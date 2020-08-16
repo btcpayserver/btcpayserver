@@ -20,7 +20,7 @@ namespace BTCPayServer.Payments
 
         public override CryptoPaymentData DeserializePaymentData(BTCPayNetworkBase network, string str)
         {
-            return ((BTCPayNetwork)network).ToObject<LightningLikePaymentData>(str);
+            return ((BTCPayNetwork)network)?.ToObject<LightningLikePaymentData>(str);
         }
 
         public override string SerializePaymentData(BTCPayNetworkBase network, CryptoPaymentData paymentData)

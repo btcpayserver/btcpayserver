@@ -704,7 +704,7 @@ retry:
                     Accounted = accounted
                 };
 
-                context.Payments.Add(data);
+                await context.Payments.AddAsync(data);
 
                 try
                 {

@@ -104,10 +104,16 @@ namespace BTCPayServer.PaymentRequest
                     Currency = entity.ProductInformation.Currency,
                     ExpiryDate = entity.ExpirationTime.DateTime,
                     Status = entity.GetInvoiceState().ToString(),
-                    Payments = entity.GetPayments().Select(paymentEntity =>
+                    Payments = entity
+                        .GetPayments()
+                        .Select(paymentEntity =>
                     {
                         var paymentData = paymentEntity.GetCryptoPaymentData();
                         var paymentMethodId = paymentEntity.GetPaymentMethodId();
+                        if (paymentData is null || paymentMethodId is null)
+                        {
+                            return null;
+                        }
 
                         string txId = paymentData.GetPaymentId();
                         string link = GetTransactionLink(paymentMethodId, txId);
@@ -118,7 +124,9 @@ namespace BTCPayServer.PaymentRequest
                             Link = link,
                             Id = txId
                         };
-                    }).ToList()
+                    })
+                        .Where(payment => payment != null)
+                        .ToList()
                 }).ToList()
             };
         }

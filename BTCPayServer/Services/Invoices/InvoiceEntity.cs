@@ -267,11 +267,11 @@ namespace BTCPayServer.Services.Invoices
 #pragma warning disable CS0618
         public List<PaymentEntity> GetPayments()
         {
-            return Payments?.ToList() ?? new List<PaymentEntity>();
+            return Payments?.Where(entity => entity.GetPaymentMethodId() != null).ToList() ?? new List<PaymentEntity>();
         }
         public List<PaymentEntity> GetPayments(string cryptoCode)
         {
-            return Payments.Where(p => p.CryptoCode == cryptoCode).ToList();
+            return GetPayments().Where(p => p.CryptoCode == cryptoCode).ToList();
         }
         public List<PaymentEntity> GetPayments(BTCPayNetworkBase network)
         {
@@ -551,7 +551,10 @@ namespace BTCPayServer.Services.Invoices
                 foreach (var prop in PaymentMethod.Properties())
                 {
                     var r = serializer.ToObject<PaymentMethod>(prop.Value.ToString());
-                    var paymentMethodId = PaymentMethodId.Parse(prop.Name);
+                    if (!PaymentMethodId.TryParse(prop.Name, out var paymentMethodId))
+                    {
+                        continue;
+                    }
                     r.CryptoCode = paymentMethodId.CryptoCode;
                     r.PaymentType = paymentMethodId.PaymentType.ToString();
                     r.ParentEntity = this;
@@ -1006,7 +1009,18 @@ namespace BTCPayServer.Services.Invoices
             }
             else
             {
-                paymentData = GetPaymentMethodId().PaymentType.DeserializePaymentData(Network, CryptoPaymentData);
+                var paymentMethodId = GetPaymentMethodId();
+                if (paymentMethodId is null)
+                {
+                    return null;
+                }
+
+                paymentData = paymentMethodId.PaymentType.DeserializePaymentData(Network, CryptoPaymentData);
+                if (paymentData is null)
+                {
+                    return null;
+                }
+                
                 paymentData.Network = Network;
                 if (paymentData is BitcoinLikePaymentData bitcoin)
                 {
@@ -1051,7 +1065,16 @@ namespace BTCPayServer.Services.Invoices
         public PaymentMethodId GetPaymentMethodId()
         {
 #pragma warning disable CS0618 // Type or member is obsolete
-            return new PaymentMethodId(CryptoCode ?? "BTC", string.IsNullOrEmpty(CryptoPaymentDataType) ? PaymentTypes.BTCLike : PaymentTypes.Parse(CryptoPaymentDataType));
+            PaymentType paymentType;
+            if (string.IsNullOrEmpty(CryptoPaymentDataType))
+            {
+                paymentType = BitcoinPaymentType.Instance;;
+            }
+            else if(!PaymentTypes.TryParse(CryptoPaymentDataType, out paymentType))
+            {
+                return null;
+            }
+            return new PaymentMethodId(CryptoCode ?? "BTC", paymentType);
 #pragma warning restore CS0618 // Type or member is obsolete
         }
 

@@ -4,7 +4,7 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="NBXplorer.Client" Version="3.0.16" />
+    <PackageReference Include="NBXplorer.Client" Version="3.0.17" />
   </ItemGroup>
   <ItemGroup Condition="'$(Altcoins)' != 'true'">
     <Compile Remove="Altcoins\**\*.cs"></Compile>

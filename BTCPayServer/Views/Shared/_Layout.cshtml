@@ -52,12 +52,6 @@
                     <span class="badge badge-warning" style="font-size:10px;">@env.NetworkType.ToString()</span>
                 }
             </a>
-            @if (env.OnionUrl != null)
-            {
-                <a class="onion" href="@env.OnionUrl" target="_blank">
-                    <img src="~/img/icons/onion.svg" width="26" height="32" asp-append-version="true" />
-                </a>
-            }
             <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
                 <svg class="navbar-toggler-icon" viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'><path stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22' /></svg>
             </button>

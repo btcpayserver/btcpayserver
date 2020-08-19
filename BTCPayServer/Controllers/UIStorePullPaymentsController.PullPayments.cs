@@ -139,7 +139,8 @@ namespace BTCPayServer.Controllers
                 PaymentMethodIds = selectedPaymentMethodIds,
                 EmbeddedCSS = model.EmbeddedCSS,
                 CustomCSSLink = model.CustomCSSLink,
-                BOLT11Expiration = TimeSpan.FromDays(model.BOLT11Expiration)
+                BOLT11Expiration = TimeSpan.FromDays(model.BOLT11Expiration),
+                AutoApproveClaims = model.AutoApproveClaims
             });
             this.TempData.SetStatusMessageModel(new StatusMessageModel()
             {

@@ -41,6 +41,12 @@
                     <input asp-for="Currency" currency-selection class="form-control"/>
                     <span asp-validation-for="Currency" class="text-danger"></span>
                 </div>
+                 
+                <div class="form-check col-12">
+                    <input asp-for="AutoApproveClaims"  type="checkbox" class="form-check-input"/>
+                    <label asp-for="AutoApproveClaims" class="form-check-label"></label>
+                    <span asp-validation-for="AutoApproveClaims" class="text-danger"></span>
+                </div>
             </div>
             <div class="form-group mb-4">
                 <label asp-for="PaymentMethods" class="form-label"></label>

@@ -99,9 +99,9 @@ namespace BTCPayServer.Controllers
                 Skip = skip,
                 Count = count,
                 Items = _db.Notifications
+                    .Where(a => a.ApplicationUserId == userId)
                     .OrderByDescending(a => a.Created)
                     .Skip(skip).Take(count)
-                    .Where(a => a.ApplicationUserId == userId)
                     .Select(a => _notificationManager.ToViewModel(a))
                     .ToList(),
                 Total = _db.Notifications.Count(a => a.ApplicationUserId == userId)

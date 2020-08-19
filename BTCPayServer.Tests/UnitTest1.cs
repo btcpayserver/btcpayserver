@@ -735,7 +735,7 @@ namespace BTCPayServer.Tests
 
                 var testResult = storeController.AddLightningNode(user.StoreId, new LightningNodeViewModel()
                 {
-                    ConnectionString = "type=charge;server=" + tester.MerchantCharge.Client.Uri.AbsoluteUri,
+                    ConnectionString = $"type=charge;server={tester.MerchantCharge.Client.Uri.AbsoluteUri};allowinsecure=true",
                     SkipPortTest = true // We can't test this as the IP can't be resolved by the test host :(
                 }, "test", "BTC").GetAwaiter().GetResult();
                 Assert.False(storeController.TempData.ContainsKey(WellKnownTempData.ErrorMessage));
@@ -745,7 +745,7 @@ namespace BTCPayServer.Tests
                 Assert.IsType<RedirectToActionResult>(storeController.AddLightningNode(user.StoreId,
                     new LightningNodeViewModel()
                     {
-                        ConnectionString = "type=charge;server=" + tester.MerchantCharge.Client.Uri.AbsoluteUri
+                        ConnectionString = $"type=charge;server={tester.MerchantCharge.Client.Uri.AbsoluteUri};allowinsecure=true"
                     }, "save", "BTC").GetAwaiter().GetResult());
 
                 // Make sure old connection string format does not work

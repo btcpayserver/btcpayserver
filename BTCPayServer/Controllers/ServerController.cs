@@ -285,14 +285,15 @@ namespace BTCPayServer.Controllers
                 return NotFound();
 
             var admins = await _UserManager.GetUsersInRoleAsync(Roles.ServerAdmin);
-            if (!viewModel.IsAdmin && admins.Count == 1)
+            var roles = await _UserManager.GetRolesAsync(user);
+            var wasAdmin = IsAdmin(roles);
+            if (!viewModel.IsAdmin && admins.Count == 1 && wasAdmin)
             {
                 TempData[WellKnownTempData.ErrorMessage] = "This is the only Admin, so their role can't be removed until another Admin is added.";
                 return View(viewModel); // return
             }
 
-            var roles = await _UserManager.GetRolesAsync(user);
-            if (viewModel.IsAdmin != IsAdmin(roles))
+            if (viewModel.IsAdmin != wasAdmin)
             {
                 if (viewModel.IsAdmin)
                     await _UserManager.AddToRoleAsync(user, Roles.ServerAdmin);
@@ -571,15 +572,14 @@ namespace BTCPayServer.Controllers
         [Route("server/services/{serviceName}/{cryptoCode?}")]
         public async Task<IActionResult> Service(string serviceName, string cryptoCode, bool showQR = false, uint? nonce = null)
         {
-            if (!string.IsNullOrEmpty(cryptoCode) && !_dashBoard.IsFullySynched(cryptoCode, out _))
+            var service = GetService(serviceName, cryptoCode);
+            if (service == null)
+                return NotFound();
+            if (!string.IsNullOrEmpty(cryptoCode) && !_dashBoard.IsFullySynched(cryptoCode, out _) && service.Type != ExternalServiceTypes.RPC)
             {
                 TempData[WellKnownTempData.ErrorMessage] = $"{cryptoCode} is not fully synched";
                 return RedirectToAction(nameof(Services));
             }
-            var service = GetService(serviceName, cryptoCode);
-            if (service == null)
-                return NotFound();
-
             try
             {
 

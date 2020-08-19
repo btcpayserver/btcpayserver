@@ -37,6 +37,8 @@
         "inputFiles": [
             "wwwroot/vendor/font-awesome/css/font-awesome.css",
             "wwwroot/vendor/vex/css/vex.css",
+            "wwwroot/main/fonts/Roboto.css",
+            "wwwroot/main/fonts/RobotoMono.css",
             "wwwroot/checkout/*/*.css",
             "wwwroot/vendor/jquery-prettydropdowns/prettydropdowns.css"
         ]

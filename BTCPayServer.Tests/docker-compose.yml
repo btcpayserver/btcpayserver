@@ -21,7 +21,7 @@ services:
       TESTS_AzureBlobStorageConnectionString: ${TESTS_AzureBlobStorageConnectionString:-none}
       TEST_MERCHANTLIGHTNINGD: "type=clightning;server=unix://etc/merchant_lightningd_datadir/lightning-rpc"
       TEST_CUSTOMERLIGHTNINGD: "type=clightning;server=unix://etc/customer_lightningd_datadir/lightning-rpc"
-      TEST_MERCHANTCHARGE: "type=charge;server=http://lightning-charged:9112/;api-token=foiewnccewuify"
+      TEST_MERCHANTCHARGE: "type=charge;server=http://lightning-charged:9112/;api-token=foiewnccewuify;allowinsecure=true"
       TEST_MERCHANTLND: "https://lnd:lnd@merchant_lnd:8080/"
       TESTS_INCONTAINER: "true"
       TESTS_SSHCONNECTION: "root@sshd:22"
@@ -78,7 +78,7 @@ services:
       - customer_lnd
       - merchant_lnd
   nbxplorer:
-    image: nicolasdorier/nbxplorer:2.1.37
+    image: nicolasdorier/nbxplorer:2.1.40
     restart: unless-stopped
     ports:
       - "32838:32838"
@@ -127,7 +127,7 @@ services:
       - "bitcoin_datadir:/data"
 
   customer_lightningd:
-    image: btcpayserver/lightning:v0.8.2-dev
+    image: btcpayserver/lightning:v0.9.0-1-dev
     stop_signal: SIGKILL
     restart: unless-stopped
     environment: 
@@ -174,7 +174,7 @@ services:
       - merchant_lightningd
 
   merchant_lightningd:
-    image: btcpayserver/lightning:v0.8.2-dev
+    image: btcpayserver/lightning:v0.9.0-1-dev
     stop_signal: SIGKILL
     environment: 
       EXPOSE_TCP: "true"

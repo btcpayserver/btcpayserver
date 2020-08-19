@@ -1,4 +1,5 @@
-@model BTCPayServer.Services.Notifications.NotificationSummaryViewModel
+@inject LinkGenerator linkGenerator
+@model BTCPayServer.Components.NotificationsDropdown.NotificationSummaryViewModel
 
 @if (Model.UnseenCount > 0)
 {
@@ -31,3 +32,36 @@ else
         </a>
     </li>
 }
+<script type="text/javascript">
+
+var supportsWebSockets = 'WebSocket' in window && window.WebSocket.CLOSING === 2;
+
+    if (supportsWebSockets) {
+
+    var loc = window.location, ws_uri;
+    if (loc.protocol === "https:") {
+        ws_uri = "wss:";
+    } else {
+        ws_uri = "ws:";
+    }
+    ws_uri += "//" + loc.host;
+    ws_uri += "@linkGenerator.GetPathByAction("SubscribeUpdates", "Notifications")";
+    var newDataEndpoint = "@linkGenerator.GetPathByAction("GetNotificationDropdownUI", "Notifications")";
+
+    try {
+        socket = new WebSocket(ws_uri);
+        socket.onmessage = function (e) {
+            $.get(newDataEndpoint, function(data){
+                $("#notifications-nav-item").replaceWith($(data));
+           });
+        };
+        socket.onerror = function (e) {
+            console.error("Error while connecting to websocket for notifications (callback)", e);
+        };
+    }
+    catch (e) {
+        console.error("Error while connecting to websocket for notifications", e);
+    }
+}
+
+</script>

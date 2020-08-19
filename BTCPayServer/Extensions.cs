@@ -117,8 +117,9 @@ namespace BTCPayServer
         public static IEnumerable<BitcoinLikePaymentData> GetAllBitcoinPaymentData(this InvoiceEntity invoice)
         {
             return invoice.GetPayments()
-                    .Where(p => p.GetPaymentMethodId().PaymentType == PaymentTypes.BTCLike)
-                    .Select(p => (BitcoinLikePaymentData)p.GetCryptoPaymentData());
+                .Where(p => p.GetPaymentMethodId()?.PaymentType == PaymentTypes.BTCLike)
+                .Select(p => (BitcoinLikePaymentData)p.GetCryptoPaymentData())
+                .Where(data => data != null);
         }
 
         public static async Task<Dictionary<uint256, TransactionResult>> GetTransactions(this BTCPayWallet client, uint256[] hashes, bool includeOffchain = false, CancellationToken cts = default(CancellationToken))
@@ -445,6 +446,7 @@ namespace BTCPayServer
                     new KeyValuePair<string, string>("mnemonic", vm.Mnemonic),
                     new KeyValuePair<string, string>("passphrase", vm.Passphrase),
                     new KeyValuePair<string, string>("isStored", vm.IsStored ? "true" : "false"),
+                    new KeyValuePair<string, string>("requireConfirm", vm.RequireConfirm ? "true" : "false"),
                     new KeyValuePair<string, string>("returnUrl", vm.ReturnUrl)
                 }
             };

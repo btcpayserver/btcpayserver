@@ -260,7 +260,7 @@ namespace BTCPayServer.Tests
             if (connectionType == LightningConnectionType.Charge)
             {
                 if (isMerchant)
-                    connectionString = "type=charge;server=" + parent.MerchantCharge.Client.Uri.AbsoluteUri;
+                    connectionString = $"type=charge;server={parent.MerchantCharge.Client.Uri.AbsoluteUri};allowinsecure=true";
                 else
                     throw new NotSupportedException();
             }

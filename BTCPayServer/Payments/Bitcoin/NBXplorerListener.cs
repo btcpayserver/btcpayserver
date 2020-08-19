@@ -222,7 +222,7 @@ namespace BTCPayServer.Payments.Bitcoin
             var paymentEntitiesByPrevOut = new Dictionary<OutPoint, PaymentEntity>();
             foreach (var payment in invoice.GetPayments(wallet.Network))
             {
-                if (payment.GetPaymentMethodId().PaymentType != PaymentTypes.BTCLike)
+                if (payment.GetPaymentMethodId()?.PaymentType != PaymentTypes.BTCLike)
                     continue;
                 var paymentData = (BitcoinLikePaymentData)payment.GetCryptoPaymentData();
                 if (!transactions.TryGetValue(paymentData.Outpoint.Hash, out TransactionResult tx))

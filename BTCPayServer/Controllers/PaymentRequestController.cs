@@ -292,18 +292,21 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
-            var invoice = result.Invoices.SingleOrDefault(requestInvoice =>
+            var invoices = result.Invoices.Where(requestInvoice =>
                 requestInvoice.Status.Equals(InvoiceState.ToString(InvoiceStatus.New),
                     StringComparison.InvariantCulture) && !requestInvoice.Payments.Any());
 
-            if (invoice == null)
+            if (!invoices.Any())
             {
                 return BadRequest("No unpaid pending invoice to cancel");
             }
 
-            await _InvoiceRepository.UpdatePaidInvoiceToInvalid(invoice.Id);
-            _EventAggregator.Publish(new InvoiceEvent(await _InvoiceRepository.GetInvoice(invoice.Id), 1008,
-                InvoiceEvent.MarkedInvalid));
+            foreach (var invoice in invoices)
+            {
+                await _InvoiceRepository.UpdatePaidInvoiceToInvalid(invoice.Id);
+                _EventAggregator.Publish(new InvoiceEvent(await _InvoiceRepository.GetInvoice(invoice.Id), 1008,
+                    InvoiceEvent.MarkedInvalid));
+            }
 
             if (redirect)
             {

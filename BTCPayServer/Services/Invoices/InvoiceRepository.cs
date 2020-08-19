@@ -484,6 +484,8 @@ retry:
             entity.Payments = invoice.Payments.Select(p =>
             {
                 var paymentEntity = p.GetBlob(_Networks);
+                if (paymentEntity is null)
+                    return null;
                 // PaymentEntity on version 0 does not have their own fee, because it was assumed that the payment method have fixed fee.
                 // We want to hide this legacy detail in InvoiceRepository, so we fetch the fee from the PaymentMethod and assign it to the PaymentEntity.
                 if (paymentEntity.Version == 0)
@@ -497,6 +499,7 @@ retry:
 
                 return paymentEntity;
             })
+            .Where(p => p != null)
             .OrderBy(a => a.ReceivedTime).ToList();
 #pragma warning restore CS0618
             var state = invoice.GetInvoiceState();
@@ -701,7 +704,7 @@ retry:
                     Accounted = accounted
                 };
 
-                context.Payments.Add(data);
+                await context.Payments.AddAsync(data);
 
                 try
                 {

@@ -33,7 +33,7 @@ namespace BTCPayServer.HostedServices
         protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
         {
             if (evt is InvoiceEvent invoiceEvent && invoiceEvent.Name == InvoiceEvent.ReceivedPayment &&
-                invoiceEvent.Payment.GetPaymentMethodId().PaymentType == BitcoinPaymentType.Instance &&
+                invoiceEvent.Payment.GetPaymentMethodId()?.PaymentType == BitcoinPaymentType.Instance &&
                 invoiceEvent.Payment.GetCryptoPaymentData() is BitcoinLikePaymentData bitcoinLikePaymentData)
             {
                 var walletId = new WalletId(invoiceEvent.Invoice.StoreId, invoiceEvent.Payment.GetCryptoCode());

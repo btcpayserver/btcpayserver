@@ -1,5 +1,62 @@
 # Changelog
 
+## 1.0.5.5:
+
+### Improvements
+* UI: Improve mobile login views (#1833 @DennisReimann)
+* Pull payments claim & payout notification rewording (#1825 @Zaxounette)
+* Do not load webfonts from google font server, serve locally (@DennisReimann)
+
+### Bug fixes
+* Fix some crashes when switching from Altcoins edition to Bitcoin-Only. (@Kukks @NicolasDorier)
+* Fix invoices CSV Export formatting introduced in 1.0.5.4 (@NicolasDorier)
+* UI: Fix custom-select glitch (#1822 @DennisReimann)
+* Fix crash with hitbtc rate provider (@NicolasDorier)
+
+## 1.0.5.4:
+
+### New features and improvements
+* BTCPayServer has now two different build Bitcoin-Only and Altcoins. See more [in our blog post](https://blog.btcpayserver.org/btcpay-server-1-0-5-4) (@xpayserver)
+* Wallet UI improvement #1763 @dennisreimann
+* Improve pull payment view #1764 @dennisreimann
+* Login/Register view UI improvements #1752 @dennisreimann
+* Manage store UI improvements #1761 @dennisreimann
+* Improve the UX when creating a new seed #1745 @dennisreimann
+* Allow selection of all notifications at once in notification list #1751 @bolatovumar
+* Add filtering to Payment Requests @rockstardev
+* Last filter used in payment requests and invoice list are now saved in user's preferences (cookie) #1775 #1498 @rockstardev
+* Notification when new version of btcpayserver is available. $1420 @rockstardev
+* Can sort apps list by store name, name or app type #1753 @bolatovumar
+* Improve query performance when listing invoices @NicolasDorier
+* Add margin to Delete store #1773 @bolatovumar
+* Add pagination to wallet's transaction page #1772 @bolatovumar
+* Improve VSCode user development experience #1769 @msafi
+* Fix error message positioning in PoS #1759 @bolatovumar
+* Fix swagger doc for approve payout @NicolasDorier
+* Use BTCPay doc for RBF explanation tooltip @britttttk
+* Allow mass archiving of invoices #1742 @bolatovumar
+* Improve 2FA UI #1741 @dennisreimann
+* .gitignore .DStore @Eskyee
+* Allow RPC access in services when the node is synching @NicolasDorier
+
+### Bug fixes
+* Fix: In the PoS app, embedded CSS was ignored. @NicolasDorier
+* Fix error when modifying user who does not have admin right. #1793 @NicolasDorier
+* Fix null instance on invoice when using paymentCurrencies #1766 @Kukks
+* Fix: Sluggish scrolling in pages having a rich text editor @dennisreimann
+* Fix: Crash in payment request if there is several invoice in "new" state @Kukks
+* Fix: Crowdfund app doesn't count old invoices. It was only invoices created after enabling the option. @Kukks
+
+### Security fixes
+Those are low risk injection vulnerabilities.
+* Prevent script injection via X-Forwarded-For (reported by @benichmt1) @NicolasDorier
+* Prevent script injection via the csv invoice export (reported by @benichmt1) @NicolasDorier
+
+### Altcoins
+
+* BTCPay Server build is Bitcoin Only by default. If you are developer and wants to work on the altcoins build, please read [the documentation](https://docs.btcpayserver.org/LocalDevelopment/).
+* Show sync progress for monero and show amount of monero payment #1729 @xpayserver
+
 ## 1.0.5.3:
 
 ### Bug fixes

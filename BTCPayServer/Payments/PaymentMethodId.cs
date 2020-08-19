@@ -72,6 +72,7 @@ namespace BTCPayServer.Payments
 
         public static bool TryParse(string str, out PaymentMethodId paymentMethodId)
         {
+            str ??= "";
             paymentMethodId = null;
             var parts = str.Split('_', StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length == 0 || parts.Length > 2)

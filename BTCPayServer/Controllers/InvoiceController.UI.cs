@@ -135,7 +135,7 @@ namespace BTCPayServer.Controllers
             else
             {
                 var paymentMethods = invoice.GetBlob(_NetworkProvider).GetPaymentMethods();
-                var options = invoice.GetBlob(_NetworkProvider).GetPaymentMethods()
+                var options = paymentMethods
                     .Select(o => o.GetId())
                     .Select(o => o.CryptoCode)
                     .Where(o => _NetworkProvider.GetNetwork<BTCPayNetwork>(o) is BTCPayNetwork n && !n.ReadonlyWallet)
@@ -143,14 +143,15 @@ namespace BTCPayServer.Controllers
                     .OrderBy(o => o)
                     .Select(o => new PaymentMethodId(o, PaymentTypes.BTCLike))
                     .ToList();
-                var defaultRefund = invoice.Payments.Select(p => p.GetBlob(_NetworkProvider))
-                                                .Select(p => p.GetPaymentMethodId().CryptoCode)
-                                                .FirstOrDefault();
+                var defaultRefund = invoice.Payments
+                    .Select(p => p.GetBlob(_NetworkProvider))
+                    .Select(p => p?.GetPaymentMethodId())
+                    .FirstOrDefault(p => p != null && p.PaymentType == BitcoinPaymentType.Instance);
                 // TODO: What if no option?
                 var refund = new RefundModel();
                 refund.Title = "Select a payment method";
                 refund.AvailablePaymentMethods = new SelectList(options, nameof(PaymentMethodId.CryptoCode), nameof(PaymentMethodId.CryptoCode));
-                refund.SelectedPaymentMethod = defaultRefund ?? options.Select(o => o.CryptoCode).First();
+                refund.SelectedPaymentMethod = defaultRefund?.ToString() ?? options.Select(o => o.CryptoCode).First();
 
                 // Nothing to select, skip to next
                 if (refund.AvailablePaymentMethods.Count() == 1)

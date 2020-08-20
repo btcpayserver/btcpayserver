@@ -87,7 +87,18 @@ namespace BTCPayServer.Controllers
 
             return new EmptyResult();
         }
+#if DEBUG
+        [HttpGet]
+        public async Task<IActionResult> GenerateJunk(int x = 100)
+        {
+            for (int i = 0; i < x; i++)
+            {
+                await _notificationSender.SendNotification(new AdminScope(), new JunkNotification());
+            }
 
+            return RedirectToAction("Index");
+        }
+#endif
         [HttpGet]
         public IActionResult Index(int skip = 0, int count = 50, int timezoneOffset = 0)
         {

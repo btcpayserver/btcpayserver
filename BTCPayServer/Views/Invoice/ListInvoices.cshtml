@@ -1,3 +1,4 @@
+@using BTCPayServer.Payments
 @model InvoicesModel
 @{
     ViewData["Title"] = "Invoices";
@@ -264,6 +265,11 @@
                             </td>
                             <td>@invoice.InvoiceId</td>
                             <td>
+                                @{
+                                    var grouped = invoice.Details.Payments.GroupBy(payment => payment.GetPaymentMethodId()?.PaymentType).Where(entities => entities.Key!= null);
+                                    var paiOnChain = grouped.Where(g => g.Key == BitcoinPaymentType.Instance).Any();
+                                    var paidOffChain = grouped.Where(g => g.Key == LightningPaymentType.Instance).Any();
+                                }
                                 @if (invoice.Details.Archived)
                                 {
                                     <span class="badge badge-warning">archived</span>
@@ -274,6 +280,14 @@
                                         <span class="dropdown-toggle dropdown-toggle-split pavpill pavpil-@invoice.Status.ToString().ToLower()"
                                               data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                             @invoice.StatusString
+                                            @if (paiOnChain)
+                                            {
+                                                <span class="pavpill-symbol">🔗</span>
+                                            }
+                                            @if (paidOffChain)
+                                            {
+                                                <span class="pavpill-symbol">⚡️</span>
+                                            }
                                         </span>
                                         <div class="dropdown-menu pull-right">
                                             @if (invoice.CanMarkInvalid)
@@ -293,7 +307,18 @@
                                 }
                                 else
                                 {
-                                    <span class="pavpill pavpil-@invoice.Status.ToString().ToLower()">@invoice.StatusString</span>
+                                    <span class="pavpill pavpil-@invoice.Status.ToString().ToLower()">
+                                        @invoice.Status.ToString()
+
+                                        @if (paiOnChain)
+                                        {
+                                            <span class="pavpill-symbol">🔗</span>
+                                        }
+                                        @if (paidOffChain)
+                                        {
+                                            <span class="pavpill-symbol">⚡️</span>
+                                        }
+                                    </span>
                                 }
                             </td>
                             <td style="text-align:right">@invoice.AmountCurrency</td>
@@ -416,9 +441,15 @@
             border-radius: 0.25rem;
         }
 
-            .pavpill.dropdown-toggle {
-                cursor: pointer;
-            }
+        .pavpill .pavpill-symbol {
+            display: inline-block;
+            width: .9rem;
+            height: .9rem;
+        }
+
+        .pavpill.dropdown-toggle {
+            cursor: pointer;
+        }
 
         .dropdown-item {
             cursor: pointer;
@@ -439,7 +470,8 @@
             color: #fff;
         }
 
-        .pavpil-confirmed, .pavpil-paid {
+        .pavpil-confirmed,
+        .pavpil-paid {
             background: #f1c332;
             color: #000;
         }

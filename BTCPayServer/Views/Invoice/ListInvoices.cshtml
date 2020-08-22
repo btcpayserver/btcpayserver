@@ -324,7 +324,10 @@
                         }
                     </tbody>
                 </table>
-                <vc:pager view-model="Model"></vc:pager>
+                @if (Model.Total > Model.Count)
+                {
+                    <vc:pager view-model="Model"></vc:pager>
+                }
             </form>
         }
         else

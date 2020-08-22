@@ -2,6 +2,9 @@
 @{
     ViewData["Title"] = "Invoices";
     var storeIds = string.Join("", Model.StoreIds.Select(storeId => $",storeid:{storeId}"));
+    var displayList = Model.Total > 0;
+    var isFiltered = Model.Total > 0 || Model.SearchTerm.Length > 0;
+    var displaySearch = displayList || isFiltered;
 }
 @section HeadScripts {
     <script src="~/modal/btcpay.js" asp-append-version="true"></script>
@@ -33,7 +36,7 @@
                     Create an invoice
                 </a>
             </div>
-            @if (Model.Total > 0)
+            @if (displaySearch)
             {
                 <div class="col-12 col-sm-8 col-lg-6 mb-3">
                     <form asp-action="ListInvoices" method="get">
@@ -183,7 +186,7 @@
             </div>
         </div>
 
-        @if (Model.Total > 0)
+        @if (displayList)
         {
             <form method="post" id="MassAction" asp-action="MassAction" class="mt-3">
                 <span class="mr-2">
@@ -324,7 +327,7 @@
                     }
                     </tbody>
                 </table>
-                @if (Model.Total > Model.Count)
+                @if (displayList)
                 {
                     <vc:pager view-model="Model"></vc:pager>
                 }
@@ -332,7 +335,10 @@
         }
         else
         {
-            <p class="text-secondary mt-3">There are no invoices, yet.</p>
+            <p class="text-secondary mt-3">
+                There are no invoices
+                @(isFiltered ? "matching your criteria" : ", yet").
+            </p>
         }
     </div>
     <script type="text/javascript">
@@ -381,7 +387,6 @@
         }
     </script>
     <style type="text/css">
-
         .invoice-payments h3 {
             font-size: 15px;
             font-weight: bold;

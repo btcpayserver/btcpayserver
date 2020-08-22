@@ -3,6 +3,9 @@
 @{
     Layout = "_Layout";
     ViewData["Title"] = "Payment Requests";
+    var displayList = Model.Total > 0;
+    var isFiltered = Model.Total > 0 || Model.SearchTerm.Length > 0;
+    var displaySearch = displayList || isFiltered;
 }
 <section>
     <div class="container">
@@ -35,7 +38,7 @@
                 </a>
             </div>
 
-            @if (Model.Total > 0)
+            @if (displaySearch)
             {
                 <div class="col-12 col-md-8 col-lg-6 mb-3">
                     <form asp-action="GetPaymentRequests" method="get">
@@ -66,7 +69,7 @@
 
         <div class="row">
             <div class="col-lg-12">
-                @if (Model.Total > 0)
+                @if (displayList)
                 {
                     <table class="table table-sm table-responsive-md">
                         <thead>
@@ -104,14 +107,17 @@
                         </tbody>
                     </table>
 
-                    @if (Model.Total > Model.Count)
+                    @if (displayList)
                     {
                         <vc:pager view-model="Model"></vc:pager>
                     }
                 }
                 else
                 {
-                    <p class="text-secondary mt-3">There are no payment requests, yet.</p>
+                    <p class="text-secondary mt-3">
+                        There are no payment requests
+                        @(isFiltered ? "matching your criteria" : ", yet").
+                    </p>
                 }
             </div>
         </div>

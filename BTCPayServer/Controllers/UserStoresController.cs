@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
@@ -70,10 +71,40 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> ListStores()
+        public async Task<IActionResult> ListStores(
+            string sortOrder = null,
+            string sortOrderColumn = null
+        )
         {
             StoresViewModel result = new StoresViewModel();
             var stores = await _Repo.GetStoresByUserId(GetUserId());
+            if (sortOrder != null && sortOrderColumn != null) 
+            {
+                stores = stores.OrderByDescending(store => 
+                    {
+                        switch (sortOrderColumn)
+                        {
+                            case nameof(store.StoreName):
+                                return store.StoreName;
+                            case nameof(store.StoreWebsite):
+                                return store.StoreWebsite;
+                            default:
+                                return store.Id;
+                        }
+                    }).ToArray();
+
+                switch (sortOrder)
+                {
+                    case "desc":
+                        ViewData[$"{sortOrderColumn}SortOrder"] = "asc";
+                        break;
+                    case "asc":
+                        stores = stores.Reverse().ToArray();
+                        ViewData[$"{sortOrderColumn}SortOrder"] = "desc";
+                        break;
+                }
+            }
+
             for (int i = 0; i < stores.Length; i++)
             {
                 var store = stores[i];

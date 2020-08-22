@@ -1,8 +1,13 @@
-﻿@using BTCPayServer.Services.Apps
-@model ListAppsViewModel
+﻿@model ListAppsViewModel
 @{
     ViewData["Title"] = "Apps";
+    var storeNameSortOrder = (string)ViewData["StoreNameSortOrder"];
+    var appNameSortOrder = (string)ViewData["AppNameSortOrder"];
+    var appTypeSortOrder = (string)ViewData["AppTypeSortOrder"];
+    var sortByDesc = "Sort by descending...";
+    var sortByAsc = "Sort by ascending...";
 }
+
 <section>
     <div class="container">
         @if (TempData.HasStatusMessage())
@@ -34,43 +39,37 @@
                             <th>
                                 <a
                                     asp-action="ListApps"
-                                    asp-route-sortOrder="@(ViewData["StoreNameSortOrder"] ?? "asc")"
+                                    asp-route-sortOrder="@(storeNameSortOrder ?? "asc")"
                                     asp-route-sortOrderColumn="StoreName"
                                     class="text-nowrap"
-                                    title="@((string)ViewData["StoreNameSortOrder"] == "desc" ? "Sort by descending..." : "Sort by ascending...")"
+                                    title="@(storeNameSortOrder == "desc" ? sortByDesc : sortByAsc)"
                                 >
-                                    Store  @if (ViewData["StoreNameSortOrder"] != null)
-                                    {
-                                        <span class="fa @((string)ViewData["StoreNameSortOrder"] == "asc" ? "fa-arrow-down": "fa-arrow-up")" />
-                                    }
+                                    Store
+                                    <span class="fa @(storeNameSortOrder == "asc" ? "fa-sort-alpha-desc" : storeNameSortOrder == "desc" ? "fa-sort-alpha-asc" : "fa-sort")" />
                                 </a>
                             </th>
                             <th>
                                 <a
                                     asp-action="ListApps"
-                                    asp-route-sortOrder="@(ViewData["AppNameSortOrder"] ?? "asc")"
+                                    asp-route-sortOrder="@(appNameSortOrder ?? "asc")"
                                     asp-route-sortOrderColumn="AppName"
                                     class="text-nowrap"
-                                    title="@((string)ViewData["AppNameSortOrder"] == "desc" ? "Sort by descending..." : "Sort by ascending...")"
+                                    title="@(appNameSortOrder == "desc" ? sortByDesc : sortByAsc)"
                                 >
-                                    Name  @if (ViewData["AppNameSortOrder"] != null)
-                                    {
-                                        <span class="fa @((string)ViewData["AppNameSortOrder"] == "asc" ? "fa-arrow-down": "fa-arrow-up")" />
-                                    }
+                                    Name
+                                    <span class="fa @(appNameSortOrder == "asc" ? "fa-sort-alpha-desc" : appNameSortOrder == "desc" ? "fa-sort-alpha-asc" : "fa-sort")" />
                                 </a>
                             </th>
                             <th>
                                 <a
                                     asp-action="ListApps"
-                                    asp-route-sortOrder="@(ViewData["AppTypeSortOrder"] ?? "asc")"
+                                    asp-route-sortOrder="@(appTypeSortOrder ?? "asc")"
                                     asp-route-sortOrderColumn="AppType"
                                     class="text-nowrap"
-                                    title="@((string)ViewData["AppTypeSortOrder"] == "desc" ? "Sort by descending..." : "Sort by ascending...")"
+                                    title="@(appTypeSortOrder == "desc" ? sortByDesc : sortByAsc)"
                                 >
-                                    App Type  @if (ViewData["AppTypeSortOrder"] != null)
-                                    {
-                                        <span class="fa @((string)ViewData["AppTypeSortOrder"] == "asc" ? "fa-arrow-down": "fa-arrow-up")" />
-                                    }
+                                    App Type
+                                    <span class="fa @(appTypeSortOrder == "asc" ? "fa-sort-alpha-desc" : appTypeSortOrder == "desc" ? "fa-sort-alpha-asc" : "fa-sort")" />
                                 </a>
                             </th>
                             <th style="text-align:right">Actions</th>

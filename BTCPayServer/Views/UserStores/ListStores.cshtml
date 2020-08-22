@@ -1,6 +1,10 @@
 ﻿@model StoresViewModel
 @{
     ViewData["Title"] = "Stores";
+    var storeNameSortOrder = (string)ViewData["StoreNameSortOrder"];
+    var storeWebsiteSortOrder = (string)ViewData["StoreWebsiteSortOrder"];
+    var sortByDesc = "Sort by descending...";
+    var sortByAsc = "Sort by ascending...";
 }
 
 <section>
@@ -32,8 +36,30 @@
                 <table class="table table-sm table-responsive-md">
                     <thead>
                         <tr>
-                            <th>Name</th>
-                            <th>Website</th>
+                            <th>
+                                <a
+                                    asp-action="ListStores"
+                                    asp-route-sortOrder="@(storeNameSortOrder ?? "asc")"
+                                    asp-route-sortOrderColumn="StoreName"
+                                    class="text-nowrap"
+                                    title="@(storeNameSortOrder == "desc" ? sortByDesc : sortByAsc)"
+                                >
+                                    Name
+                                    <span class="fa @(storeNameSortOrder == "asc" ? "fa-sort-alpha-desc" : storeNameSortOrder == "desc" ? "fa-sort-alpha-asc" : "fa-sort")" />
+                                </a>
+                            </th>
+                            <th>
+                                <a
+                                    asp-action="ListStores"
+                                    asp-route-sortOrder="@(storeWebsiteSortOrder ?? "asc")"
+                                    asp-route-sortOrderColumn="StoreWebsite"
+                                    class="text-nowrap"
+                                    title="@(storeWebsiteSortOrder == "desc" ? sortByDesc : sortByAsc)"
+                                >
+                                    Website
+                                    <span class="fa @(storeWebsiteSortOrder == "asc" ? "fa-sort-alpha-desc" : storeWebsiteSortOrder == "desc" ? "fa-sort-alpha-asc" : "fa-sort")" />
+                                </a>
+                            </th>
                             <th style="text-align:right">Actions</th>
                         </tr>
                     </thead>

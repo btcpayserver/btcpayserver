@@ -265,29 +265,15 @@
                             </td>
                             <td>@invoice.InvoiceId</td>
                             <td>
-                                @{
-                                    var grouped = invoice.Details.Payments.GroupBy(payment => payment.GetPaymentMethodId()?.PaymentType).Where(entities => entities.Key!= null);
-                                    var paiOnChain = grouped.Where(g => g.Key == BitcoinPaymentType.Instance).Any();
-                                    var paidOffChain = grouped.Where(g => g.Key == LightningPaymentType.Instance).Any();
-                                }
                                 @if (invoice.Details.Archived)
                                 {
                                     <span class="badge badge-warning">archived</span>
                                 }
                                 @if (invoice.CanMarkStatus)
                                 {
-                                    <div id="pavpill_@invoice.InvoiceId">
-                                        <span class="dropdown-toggle dropdown-toggle-split pavpill pavpil-@invoice.Status.ToString().ToLower()"
-                                              data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                            @invoice.StatusString
-                                            @if (paiOnChain)
-                                            {
-                                                <span class="pavpill-symbol">🔗</span>
-                                            }
-                                            @if (paidOffChain)
-                                            {
-                                                <span class="pavpill-symbol">⚡️</span>
-                                            }
+                                    <div id="pavpill_@invoice.InvoiceId" class="badge badge-@invoice.Status.ToString().ToLower()">
+                                        <span class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            @invoice.Status.ToString().ToLower()
                                         </span>
                                         <div class="dropdown-menu pull-right">
                                             @if (invoice.CanMarkInvalid)
@@ -307,18 +293,22 @@
                                 }
                                 else
                                 {
-                                    <span class="pavpill pavpil-@invoice.Status.ToString().ToLower()">
-                                        @invoice.Status.ToString()
-
-                                        @if (paiOnChain)
-                                        {
-                                            <span class="pavpill-symbol">🔗</span>
-                                        }
-                                        @if (paidOffChain)
-                                        {
-                                            <span class="pavpill-symbol">⚡️</span>
-                                        }
+                                    <span class="badge badge-@invoice.Status.ToString().ToLower()">
+                                        @invoice.Status.ToString().ToLower()
                                     </span>
+                                }
+                                @{
+                                    var grouped = invoice.Details.Payments.GroupBy(payment => payment.GetPaymentMethodId()?.PaymentType).Where(entities => entities.Key!= null);
+                                    var paiOnChain = grouped.Where(g => g.Key == BitcoinPaymentType.Instance).Any();
+                                    var paidOffChain = grouped.Where(g => g.Key == LightningPaymentType.Instance).Any();
+                                }
+                                @if (paiOnChain)
+                                {
+                                    <span class="badge">🔗</span>
+                                }
+                                @if (paidOffChain)
+                                {
+                                    <span class="badge">⚡️</span>
                                 }
                             </td>
                             <td style="text-align:right">@invoice.AmountCurrency</td>
@@ -402,8 +392,8 @@
 
             $.post("invoices/" + invoiceId + "/changestate/" + newState)
                 .done(function (data) {
-                    var statusHtml = "<span class='pavpill pavpil-" + newState + "'>" + data.statusString + " <span class='fa fa-check'></span></span>";
-                    pavpill.html(statusHtml);
+                    var statusHtml = "<span class='badge badge-" + newState + "'>" + data.statusString + " <span class='fa fa-check'></span></span>";
+                    pavpill.replaceWith(statusHtml);
                 })
                 .fail(function (data) {
                     pavpill.html(originalHtml.replace("dropdown-menu pull-right show", "dropdown-menu pull-right"));
@@ -441,42 +431,37 @@
             border-radius: 0.25rem;
         }
 
-        .pavpill .pavpill-symbol {
-            display: inline-block;
-            width: .9rem;
-            height: .9rem;
-        }
-
-        .pavpill.dropdown-toggle {
+        .badge .dropdown-toggle {
             cursor: pointer;
+            padding: 0;
         }
 
         .dropdown-item {
             cursor: pointer;
         }
 
-        .pavpil-new {
+        .badge-new {
             background: #d4edda;
             color: #000;
         }
 
-        .pavpil-expired {
+        .badge-expired {
             background: #eee;
             color: #000;
         }
 
-        .pavpil-invalid {
+        .badge-invalid {
             background: #c94a47;
             color: #fff;
         }
 
-        .pavpil-confirmed,
-        .pavpil-paid {
+        .badge-confirmed,
+        .badge-paid {
             background: #f1c332;
             color: #000;
         }
 
-        .pavpil-complete {
+        .badge-complete {
             background: #329f80;
             color: #fff;
         }

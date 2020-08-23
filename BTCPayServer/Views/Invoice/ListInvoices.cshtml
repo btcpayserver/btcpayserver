@@ -3,7 +3,6 @@
 @{
     ViewData["Title"] = "Invoices";
     var storeIds = string.Join("", Model.StoreIds.Select(storeId => $",storeid:{storeId}"));
-    var displayList = Model.Total > 0;
 }
 @section HeadScripts {
     <script src="~/modal/btcpay.js" asp-append-version="true"></script>
@@ -182,7 +181,7 @@
             </div>
         </div>
 
-        @if (displayList)
+        @if (Model.Total > 0)
         {
             <form method="post" id="MassAction" asp-action="MassAction" class="mt-3">
                 <span class="mr-2">

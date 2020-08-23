@@ -4,8 +4,6 @@
     Layout = "_Layout";
     ViewData["Title"] = "Payment Requests";
     var displayList = Model.Total > 0;
-    var isFiltered = Model.Total > 0 || Model.SearchTerm.Length > 0;
-    var displaySearch = displayList || isFiltered;
 }
 <section>
     <div class="container">
@@ -37,34 +35,30 @@
                     Create a payment request
                 </a>
             </div>
+            <div class="col-12 col-md-8 col-lg-6 mb-3">
+                <form asp-action="GetPaymentRequests" method="get">
+                    <input type="hidden" asp-for="Count"/>
+                    <input type="hidden" asp-for="TimezoneOffset" />
+                    <div class="input-group">
+                        <input asp-for="SearchTerm" class="form-control" style="width:300px;"/>
+                        <div class="input-group-append">
+                            <button type="submit" class="btn btn-secondary" title="Search invoice">
+                                <span class="fa fa-search"></span> Search
+                            </button>
+                            <button type="button" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="sr-only">Toggle Dropdown</span>
+                            </button>
 
-            @if (displaySearch)
-            {
-                <div class="col-12 col-md-8 col-lg-6 mb-3">
-                    <form asp-action="GetPaymentRequests" method="get">
-                        <input type="hidden" asp-for="Count"/>
-                        <input type="hidden" asp-for="TimezoneOffset" />
-                        <div class="input-group">
-                            <input asp-for="SearchTerm" class="form-control" style="width:300px;"/>
-                            <div class="input-group-append">
-                                <button type="submit" class="btn btn-secondary" title="Search invoice">
-                                    <span class="fa fa-search"></span> Search
-                                </button>
-                                <button type="button" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    <span class="sr-only">Toggle Dropdown</span>
-                                </button>
-
-                                <div class="dropdown-menu dropdown-menu-right">
-                                    <a class="dropdown-item" href="/payment-requests?Count=@Model.Count&SearchTerm=includearchived%3Atrue">Include Archived Payment Reqs</a>
-                                    <div role="separator" class="dropdown-divider"></div>
-                                    <a class="dropdown-item" href="/payment-requests?SearchTerm=">Unfiltered</a>
-                                </div>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <a class="dropdown-item" href="/payment-requests?Count=@Model.Count&SearchTerm=includearchived%3Atrue">Include Archived Payment Reqs</a>
+                                <div role="separator" class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="/payment-requests?SearchTerm=">Unfiltered</a>
                             </div>
                         </div>
-                        <span asp-validation-for="SearchTerm" class="text-danger"></span>
-                    </form>
-                </div>
-            }
+                    </div>
+                    <span asp-validation-for="SearchTerm" class="text-danger"></span>
+                </form>
+            </div>
         </div>
 
         <div class="row">
@@ -107,16 +101,12 @@
                         </tbody>
                     </table>
 
-                    @if (displayList)
-                    {
-                        <vc:pager view-model="Model"></vc:pager>
-                    }
+                    <vc:pager view-model="Model"></vc:pager>
                 }
                 else
                 {
                     <p class="text-secondary mt-3">
-                        There are no payment requests
-                        @(isFiltered ? "matching your criteria" : ", yet").
+                        There are no payment requests matching your criteria.
                     </p>
                 }
             </div>

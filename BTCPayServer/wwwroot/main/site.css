@@ -76,6 +76,11 @@ ul li {
     opacity: .5;
 }
 
+.dropdown-toggle-split,
+.dropdown-toggle-split:hover {
+    border-left: 1px solid var(--btcpay-color-white);
+}
+
 /* Admin Sidebar Navigation */
 a.nav-link {
     color: var(--btcpay-nav-color-link, var(--btcpay-color-neutral-600));

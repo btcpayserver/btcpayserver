@@ -19,7 +19,6 @@ namespace BTCPayServer.Models.InvoicingModels
         public string InvoiceId { get; set; }
 
         public InvoiceStatus Status { get; set; }
-        public string StatusString { get; set; }
         public bool CanMarkComplete { get; set; }
         public bool CanMarkInvalid { get; set; }
         public bool CanMarkStatus => CanMarkComplete || CanMarkInvalid;

@@ -57,6 +57,11 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarResponsive">
                 <ul class="navbar-nav ml-auto">
+                    @inject IEnumerable<BTCPayServer.Contracts.IMainNavExtension> Extensions;
+                    @foreach (var extension in Extensions)
+                    {
+                        <partial name="@extension.Partial"/>
+                    }
                     @if (SignInManager.IsSignedIn(User))
                     {
                         if (User.IsInRole(Roles.ServerAdmin))

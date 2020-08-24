@@ -2,6 +2,7 @@ using System;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
+using BTCPayServer.Events;
 using BTCPayServer.Models.ManageViewModels;
 using BTCPayServer.Security;
 using BTCPayServer.Security.GreenField;
@@ -34,6 +35,7 @@ namespace BTCPayServer.Controllers
         private readonly APIKeyRepository _apiKeyRepository;
         private readonly IAuthorizationService _authorizationService;
         private readonly LinkGenerator _linkGenerator;
+        private readonly EventAggregator _eventAggregator;
         readonly StoreRepository _StoreRepository;
 
 
@@ -51,7 +53,8 @@ namespace BTCPayServer.Controllers
           BTCPayServerEnvironment btcPayServerEnvironment,
           APIKeyRepository apiKeyRepository,
           IAuthorizationService authorizationService,
-          LinkGenerator linkGenerator
+          LinkGenerator linkGenerator,
+          EventAggregator eventAggregator
           )
         {
             _userManager = userManager;
@@ -65,6 +68,7 @@ namespace BTCPayServer.Controllers
             _apiKeyRepository = apiKeyRepository;
             _authorizationService = authorizationService;
             _linkGenerator = linkGenerator;
+            _eventAggregator = eventAggregator;
             _StoreRepository = storeRepository;
         }
 
@@ -113,6 +117,10 @@ namespace BTCPayServer.Controllers
                     throw new ApplicationException($"Unexpected error occurred setting email for user with ID '{user.Id}'.");
                 }
                 await _userManager.SetUserNameAsync(user, model.Username);
+                _eventAggregator.Publish(new EmailChangedEvent()
+                {
+                    UserId = user.Id, OldEmail = email, Email = model.Email
+                });
             }
 
             var phoneNumber = user.PhoneNumber;

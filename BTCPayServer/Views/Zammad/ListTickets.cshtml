@@ -1,0 +1,68 @@
+﻿@model BTCPayServer.Zammad.ListTicketsVM
+@{
+    ViewData["Title"] = "Support tickets";
+}
+
+<section>
+    <div class="container">
+        @if (TempData.HasStatusMessage())
+        {
+            <div class="row">
+                <div class="col-lg-12 text-center">
+                    <partial name="_StatusMessage"/>
+                </div>
+            </div>
+        }
+        <div class="row">
+            <div class="col-lg-12 section-heading">
+                <h2>@ViewData["Title"]</h2>
+                <hr class="primary">
+            </div>
+        </div>
+
+        <div class="row button-row">
+            <div class="col-lg-12">
+                <a asp-action="CreateTicket" class="btn btn-primary" role="button" id="CreateStore"><span class="fa fa-plus"></span> Create a support ticket.</a>
+
+                @if (User.IsInRole(Roles.ServerAdmin))
+                {
+                    <a asp-action="UpdateSetting" class="btn btn-secondary">Configure Zammad</a>
+                }
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-12">
+                <table class="table table-sm table-responsive-md">
+                    <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Status</th>
+                        <th>Updated</th>
+                        <th style="text-align:right">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var ticket in Model.Tickets)
+                    {
+                        <tr>
+                            <td><span class="text-truncate" style="max-width: 200px" title="@ticket.Title" data-toggle="tooltip">@ticket.Title</span></td>
+                            <td>@(Model.States.FirstOrDefault(state => state.Id == ticket.StateId)?.Name ?? "unknown")</td>
+                            <td>@ticket.UpdatedAt.ToBrowserDate()</td>
+                            <td class="text-right">
+                                <a asp-action="ViewTicket" asp-route-ticketId="@ticket.Id">View</a>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Tickets.Any())
+                    {
+                        <tr>
+                            <td colspan="4">No tickets</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>

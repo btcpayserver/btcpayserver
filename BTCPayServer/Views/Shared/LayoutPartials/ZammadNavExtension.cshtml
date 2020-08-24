@@ -1,0 +1,9 @@
+@using Microsoft.Extensions.Caching.Memory
+@using BTCPayServer.Zammad
+@inject IMemoryCache MemoryCache;
+@if (User.IsInRole(Roles.ServerAdmin) || (MemoryCache.TryGetValue(nameof(ZammadOptions), out var options) && options is ZammadOptions zammadOptions && zammadOptions.Configured))
+{
+    <li class="nav-item">
+        <a asp-area="" asp-controller="Zammad" asp-action="ListTickets" class="nav-link js-scroll-trigger" id="Support">Support</a>
+    </li>
+}

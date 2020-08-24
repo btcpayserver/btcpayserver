@@ -1,0 +1,68 @@
+@model BTCPayServer.Zammad.ZammadOptionsVM
+
+@{
+    ViewData["Title"] = "Zammad Config";
+}
+
+
+<section>
+    <div class="container">
+        @if (TempData.HasStatusMessage())
+        {
+            <div class="row">
+                <div class="col-lg-12 text-center">
+                    <partial name="_StatusMessage"/>
+                </div>
+            </div>
+        }
+        <div class="row">
+            <div class="col-lg-12 section-heading">
+                <h2>@ViewData["Title"]</h2>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <form method="post" asp-action="UpdateSetting">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                    <div class="form-group">
+                        <label asp-for="Endpoint"></label>
+                        <input asp-for="Endpoint" required="required" class="form-control"/>
+                        <span asp-validation-for="Endpoint" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="APIKey"></label>
+                        <input asp-for="APIKey" required="required" class="form-control"/>
+                        <span asp-validation-for="APIKey" class="text-danger"></span>
+                    </div>
+                    @if (Model.Configured && Model.Groups != null)
+                    {
+                        <div class="form-group">
+                            <label asp-for="ServerTicketsGroupId"></label>
+                            <select asp-items="@Model.Groups" asp-for="ServerTicketsGroupId" class="form-control"></select>
+                            <span asp-validation-for="ServerTicketsGroupId" class="text-danger"></span>
+                        </div>
+                    }
+                    @if (Model.Configured && Model.Organizations != null)
+                    {
+                        <div class="form-group">
+                            <label asp-for="ServerUserOrganizationId"></label>
+                            <select asp-items="@Model.Organizations" asp-for="ServerUserOrganizationId" class="form-control"></select>
+                            <span asp-validation-for="ServerUserOrganizationId" class="text-danger"></span>
+                        </div>
+                    }
+                    @if (Model.Configured)
+                    {
+                        <div class="form-group">
+                            <label asp-for="Enabled"></label>
+                            <input asp-for="Enabled" class="form-check"/>
+                            <span asp-validation-for="Enabled" class="text-danger"></span>
+                        </div>
+                    }
+                    <button type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,98 @@
+@addTagHelper *, BundlerMinifier.TagHelpers
+@using BTCPayServer.Zammad
+@model BTCPayServer.Zammad.ViewTicketVM
+@{
+    ViewData["Title"] = $"Support ticket #{Model.Ticket.Number}";
+    var status = Model.States.FirstOrDefault(state => state.Id == Model.Ticket.StateId)?.Name;
+}
+
+<section>
+    <div class="container">
+        @if (TempData.HasStatusMessage())
+        {
+            <div class="row">
+                <div class="col-lg-12 text-center">
+                    <partial name="_StatusMessage"/>
+                </div>
+            </div>
+        }
+        <div class="row">
+            <div class="col-lg-12 section-heading">
+                <div class="d-flex justify-content-between">
+                    <h2>@ViewData["Title"] - <span>@status</span></h2>
+                    <div class="text-muted">Created @Model.Ticket.CreatedAt.ToTimeAgo()</div>
+
+                </div>
+
+                <hr class="primary">
+                <h3 class="text-left">@Model.Ticket.Title</h3>
+            </div>
+        </div>
+        @{
+            var nonInternalOnly = Model.TicketArticles.Where(article => !article.Internal).ToList();
+        }
+        @for (int i = 0; i < nonInternalOnly.Count; i++)
+        {
+            var article = nonInternalOnly[i];
+            <div class="card mb-2" id="ticketArticle-@article.Id">
+                @if (!string.IsNullOrEmpty(article.Subject))
+                {
+                    <h5 class="card-header">
+                        @article.Subject
+                    </h5>
+                }
+                <div class="card-body">
+                    @if (article.ContentType == "text/html")
+                    {
+                        @Safe.Raw(article.Body)
+                    }
+                    else
+                    {
+                        @article.Body
+                    }
+                </div>
+                <div class="card-footer">
+                    @if (article.OriginById == Model.ZammadUserId)
+                    {
+                        <span>Sent by you </span>
+                    }
+                    <span class="text-muted">@article.CreatedAt.ToTimeAgo()</span>
+
+                </div>
+            </div>
+        }
+        <div class="w-100">
+            @if (status == "closed")
+            {
+                <textarea  rows="4"  placeholder="This ticket is closed and can no longer be commented on by you." class="form-control" readonly></textarea>
+            }
+            else
+            {
+                <form asp-action="ReplyToTicket" asp-route-ticketId="@Model.Ticket.Id" class="form-group" onsubmit="document.getElementById('btn-reply').disabled = true;">
+                    <textarea rows="4" name="@nameof(ReplyTicketVM.Comment)" required minlength="10" placeholder="Enter your message" class="form-control richtext w-100"></textarea>
+                    <button type="submit" class="btn btn-outline-primary float-right mt-2" id="btn-reply">Add Comment</button>
+                </form>
+            }
+        </div>
+        <div class="w-100 d-flex mt-2">
+            @if (status != "closed")
+            {
+                <form asp-action="ResolveTicket" asp-route-ticketId="@Model.Ticket.Id" onsubmit="document.getElementById('btn-resolve').disabled = true;">
+
+                    <button type="submit" class="btn btn-primary mr-2" id="btn-resolve">Mark resolved</button>
+                </form>
+            }
+            <a class="btn btn-secondary" target="_blank" asp-action="ListTickets">Back to list</a>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <link href="~/vendor/summernote/summernote-bs4.min.css" rel="stylesheet" asp-append-version="true">
+    <script src="~/vendor/summernote/summernote-bs4.min.js" asp-append-version="true"></script>
+    <script>
+    $(document).ready(function() {
+        $(".richtext").summernote();
+    });
+    </script>
+}

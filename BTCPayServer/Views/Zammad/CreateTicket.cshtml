@@ -1,0 +1,53 @@
+﻿@model BTCPayServer.Zammad.CreateTicketVM
+@{
+    ViewData["Title"] = "Create a new support ticket";
+}
+<section>
+    <div class="container">
+        @if (TempData.HasStatusMessage())
+        {
+            <div class="row">
+                <div class="col-lg-12 text-center">
+                    <partial name="_StatusMessage"/>
+                </div>
+            </div>
+        }
+        <div class="row">
+            <div class="col-lg-12 section-heading">
+                <h2>@ViewData["Title"]</h2>
+                <hr class="primary">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <form asp-action="CreateTicket" onsubmit="document.getElementById('btn-create').disabled = true;">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <div class="form-group">
+                        <label asp-for="Title" class="control-label"></label>*
+                        <input asp-for="Title" class="form-control"/>
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Comment" class="control-label"></label>*
+                        <textarea asp-for="Comment" class="form-control richtext"></textarea>
+                        <span asp-validation-for="Comment" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <input type="submit" value="Create" class="btn btn-primary" id="btn-create"/>
+                    </div>
+                </form>
+                <a asp-action="ListTickets">Back to List</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <link href="~/vendor/summernote/summernote-bs4.min.css" rel="stylesheet" asp-append-version="true">
+    <script src="~/vendor/summernote/summernote-bs4.min.js" asp-append-version="true"></script>
+    <script>
+    $(document).ready(function() {
+        $(".richtext").summernote();
+    });
+    </script>
+}

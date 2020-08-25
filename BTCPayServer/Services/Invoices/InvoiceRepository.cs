@@ -12,13 +12,19 @@ using DBriize;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using Newtonsoft.Json;
 using Encoders = NBitcoin.DataEncoders.Encoders;
 
 namespace BTCPayServer.Services.Invoices
 {
     public class InvoiceRepository : IDisposable
     {
-
+        static JsonSerializerSettings DefaultSerializerSettings;
+        static InvoiceRepository()
+        {
+            DefaultSerializerSettings = new JsonSerializerSettings();
+            NBitcoin.JsonConverters.Serializer.RegisterFrontConverters(DefaultSerializerSettings);
+        }
 
         private readonly DBriizeEngine _Engine;
         public DBriizeEngine Engine
@@ -746,7 +752,7 @@ retry:
         {
             if (network == null)
             {
-                return NBitcoin.JsonConverters.Serializer.ToString(data, null);
+                return JsonConvert.SerializeObject(data, DefaultSerializerSettings);
             }
             return network.ToString(data);
         }

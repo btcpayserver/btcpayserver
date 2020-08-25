@@ -217,6 +217,13 @@ The BTCPay Server Project is proudly supported by these entities through the [BT
           <span>Wallet of Satoshi</span>
         </a>
       </td>
+      <td align="center" valign="middle">
+        <a href="https://nomics.com/" target="_blank">
+          <img  src="BTCPayServer/wwwroot/img/nomics.svg" alt="Nomics" height=100>
+          <br/>
+          <span>Nomics</span>
+        </a>
+      </td>
     </tr>
   </tbody>
 </table>

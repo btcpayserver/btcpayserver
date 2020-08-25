@@ -57,7 +57,7 @@ namespace BTCPayServer.Controllers
             DataWrapper<InvoiceResponse> invoice = null;
             try
             {
-                invoice = await _InvoiceController.CreateInvoiceCore(new CreateInvoiceRequest()
+                invoice = await _InvoiceController.CreateInvoiceCore(new BitpayCreateInvoiceRequest()
                 {
                     Price = model.Price,
                     Currency = model.Currency,

@@ -53,7 +53,6 @@ using Newtonsoft.Json.Schema;
 using Xunit;
 using Xunit.Abstractions;
 using Xunit.Sdk;
-using ProductInformation = BTCPayServer.Services.Invoices.ProductInformation;
 using RatesViewModel = BTCPayServer.Models.StoreViewModels.RatesViewModel;
 
 namespace BTCPayServer.Tests
@@ -326,7 +325,7 @@ namespace BTCPayServer.Tests
             Assert.True(Torrc.TryParse(input, out torrc));
             Assert.Equal(expected, torrc.ToString());
         }
-
+#if ALTCOINS
         [Fact]
         [Trait("Fast", "Fast")]
         public void CanCalculateCryptoDue()
@@ -347,7 +346,7 @@ namespace BTCPayServer.Tests
                 Rate = 5000,
                 NextNetworkFee = Money.Coins(0.1m)
             });
-            entity.ProductInformation = new ProductInformation() { Price = 5000 };
+            entity.Price = 5000;
 
             var paymentMethod = entity.GetPaymentMethods().TryGet("BTC", PaymentTypes.BTCLike);
             var accounting = paymentMethod.Calculate();
@@ -397,7 +396,7 @@ namespace BTCPayServer.Tests
 
             entity = new InvoiceEntity();
             entity.Networks = networkProvider;
-            entity.ProductInformation = new ProductInformation() { Price = 5000 };
+            entity.Price = 5000;
             PaymentMethodDictionary paymentMethods = new PaymentMethodDictionary();
             paymentMethods.Add(
                 new PaymentMethod() { CryptoCode = "BTC", Rate = 1000, NextNetworkFee = Money.Coins(0.1m) });
@@ -491,7 +490,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(accounting.Paid, accounting.TotalDue);
 #pragma warning restore CS0618
         }
-
+#endif
         [Fact]
         [Trait("Integration", "Integration")]
         public async Task CanUseTestWebsiteUI()
@@ -546,7 +545,7 @@ namespace BTCPayServer.Tests
                 Rate = 5000,
                 NextNetworkFee = Money.Coins(0.1m)
             });
-            entity.ProductInformation = new ProductInformation() { Price = 5000 };
+            entity.Price = 5000;
             entity.PaymentTolerance = 0;
 
 

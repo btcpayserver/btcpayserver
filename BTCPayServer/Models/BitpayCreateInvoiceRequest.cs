@@ -2,10 +2,11 @@ using System;
 using System.Collections.Generic;
 using NBitpayClient;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Models
 {
-    public class CreateInvoiceRequest
+    public class BitpayCreateInvoiceRequest
     {
         [JsonProperty(PropertyName = "buyer")]
         public Buyer Buyer { get; set; }
@@ -81,5 +82,6 @@ namespace BTCPayServer.Models
         //Bitpay compatibility: create invoice in btcpay uses this instead of supportedTransactionCurrencies
         [JsonProperty(PropertyName = "paymentCurrencies", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public IEnumerable<string> PaymentCurrencies { get; set; }
+        public JObject Metadata { get; set; }
     }
 }

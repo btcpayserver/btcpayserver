@@ -101,9 +101,9 @@ namespace BTCPayServer.PaymentRequest
                 Invoices = invoices.Select(entity => new ViewPaymentRequestViewModel.PaymentRequestInvoice()
                 {
                     Id = entity.Id,
-                    Amount = entity.ProductInformation.Price,
-                    AmountFormatted = _currencies.FormatCurrency(entity.ProductInformation.Price, blob.Currency),
-                    Currency = entity.ProductInformation.Currency,
+                    Amount = entity.Price,
+                    AmountFormatted = _currencies.FormatCurrency(entity.Price, blob.Currency),
+                    Currency = entity.Currency,
                     ExpiryDate = entity.ExpirationTime.DateTime,
                     Status = entity.GetInvoiceState().ToString(),
                     Payments = entity

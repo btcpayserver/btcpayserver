@@ -29,7 +29,7 @@ namespace BTCPayServer.Controllers
         [HttpPost]
         [Route("invoices")]
         [MediaTypeConstraint("application/json")]
-        public async Task<DataWrapper<InvoiceResponse>> CreateInvoice([FromBody] CreateInvoiceRequest invoice, CancellationToken cancellationToken)
+        public async Task<DataWrapper<InvoiceResponse>> CreateInvoice([FromBody] BitpayCreateInvoiceRequest invoice, CancellationToken cancellationToken)
         {
             if (invoice == null)
                 throw new BitpayHttpException(400, "Invalid invoice");

@@ -20,7 +20,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Routing;
-using CreateInvoiceRequest = BTCPayServer.Models.CreateInvoiceRequest;
+using BitpayCreateInvoiceRequest = BTCPayServer.Models.BitpayCreateInvoiceRequest;
 using PaymentRequestData = BTCPayServer.Data.PaymentRequestData;
 using StoreData = BTCPayServer.Data.StoreData;
 
@@ -260,7 +260,7 @@ namespace BTCPayServer.Controllers
             try
             {
                 var redirectUrl = _linkGenerator.PaymentRequestLink(id, Request.Scheme, Request.Host, Request.PathBase);
-                var newInvoiceId = (await _InvoiceController.CreateInvoiceCore(new CreateInvoiceRequest()
+                var newInvoiceId = (await _InvoiceController.CreateInvoiceCore(new BitpayCreateInvoiceRequest()
                 {
                     OrderId = $"{PaymentRequestRepository.GetOrderIdForPaymentRequest(id)}",
                     Currency = blob.Currency,

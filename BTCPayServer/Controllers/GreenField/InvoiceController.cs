@@ -11,6 +11,7 @@ using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using NBitcoin;
 using NBitpayClient;
 using Newtonsoft.Json;
@@ -48,7 +49,8 @@ namespace BTCPayServer.Controllers.GreenField
             var invoices =
                 await _invoiceRepository.GetInvoices(new InvoiceQuery()
                 {
-                    StoreId = new[] {store.Id}, IncludeArchived = includeArchived
+                    StoreId = new[] { store.Id },
+                    IncludeArchived = includeArchived
                 });
 
             return Ok(invoices.Select(ToModel));
@@ -121,13 +123,6 @@ namespace BTCPayServer.Controllers.GreenField
                             "Invalid payment method", this);
                     }
                 }
-            }
-
-            if (!string.IsNullOrEmpty(request.CustomerEmail) &&
-                !EmailValidator.IsEmail(request.CustomerEmail))
-            {
-                request.AddModelError(invoiceRequest => invoiceRequest.CustomerEmail, "Invalid email address",
-                    this);
             }
 
             if (request.Checkout.ExpirationTime != null && request.Checkout.ExpirationTime < DateTime.Now)
@@ -211,7 +206,7 @@ namespace BTCPayServer.Controllers.GreenField
                 request.AddModelError(invoiceRequest => invoiceRequest.Email, "Invalid email address",
                     this);
             }
-            else if (!string.IsNullOrEmpty(invoice.BuyerInformation.BuyerEmail))
+            else if (!string.IsNullOrEmpty(invoice.Metadata.BuyerEmail))
             {
                 request.AddModelError(invoiceRequest => invoiceRequest.Email, "Email address already set",
                     this);
@@ -220,7 +215,7 @@ namespace BTCPayServer.Controllers.GreenField
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
 
-            await _invoiceRepository.UpdateInvoice(invoice.Id, new UpdateCustomerModel() {Email = request.Email});
+            await _invoiceRepository.UpdateInvoice(invoice.Id, new UpdateCustomerModel() { Email = request.Email });
 
             return await GetInvoice(storeId, invoiceId);
         }
@@ -260,13 +255,12 @@ namespace BTCPayServer.Controllers.GreenField
         {
             return new InvoiceData()
             {
-                Amount = entity.ProductInformation.Price,
+                Amount = entity.Price,
                 Id = entity.Id,
                 Status = entity.Status,
                 AdditionalStatus = entity.ExceptionStatus,
-                Currency = entity.ProductInformation.Currency,
-                Metadata = entity.PosData,
-                CustomerEmail = entity.RefundMail ?? entity.BuyerInformation.BuyerEmail,
+                Currency = entity.Currency,
+                Metadata = entity.Metadata.ToJObject(),
                 Checkout = new CreateInvoiceRequest.CheckoutOptions()
                 {
                     ExpirationTime = entity.ExpirationTime,
@@ -324,31 +318,27 @@ namespace BTCPayServer.Controllers.GreenField
             };
         }
 
-        private Models.CreateInvoiceRequest FromModel(CreateInvoiceRequest entity)
+        private Models.BitpayCreateInvoiceRequest FromModel(CreateInvoiceRequest entity)
         {
-            Buyer buyer = null;
-            ProductInformation pi = null;
-            JToken? orderId = null;
-            if (!string.IsNullOrEmpty(entity.Metadata) && entity.Metadata.StartsWith('{'))
+            InvoiceMetadata invoiceMetadata = null;
+            if (entity.Metadata != null)
             {
-                //metadata was provided and is json. Let's try and match props
-                try
-                {
-                    buyer = JsonConvert.DeserializeObject<Buyer>(entity.Metadata);
-                    pi = JsonConvert.DeserializeObject<ProductInformation>(entity.Metadata);
-                    JObject.Parse(entity.Metadata).TryGetValue("orderid", StringComparison.InvariantCultureIgnoreCase,
-                        out orderId);
-                }
-                catch
-                {
-                    // ignored
-                }
+                invoiceMetadata = entity.Metadata.ToObject<InvoiceMetadata>();
             }
-
-            return new Models.CreateInvoiceRequest()
+            return new Models.BitpayCreateInvoiceRequest()
             {
-                Buyer = buyer,
-                BuyerEmail = entity.CustomerEmail,
+                Buyer = invoiceMetadata == null ? null : new Buyer()
+                {
+                    Address1 = invoiceMetadata.BuyerAddress1,
+                    Address2 = invoiceMetadata.BuyerAddress2,
+                    City = invoiceMetadata.BuyerCity,
+                    country = invoiceMetadata.BuyerCountry,
+                    email = invoiceMetadata.BuyerEmail,
+                    Name = invoiceMetadata.BuyerName,
+                    phone = invoiceMetadata.BuyerPhone,
+                    State = invoiceMetadata.BuyerState,
+                    zip = invoiceMetadata.BuyerZip,
+                },
                 Currency = entity.Currency,
                 Price = entity.Amount,
                 Refundable = true,
@@ -360,12 +350,13 @@ namespace BTCPayServer.Controllers.GreenField
                 TransactionSpeed = entity.Checkout.SpeedPolicy?.ToString(),
                 PaymentCurrencies = entity.Checkout.PaymentMethods,
                 NotificationURL = entity.Checkout.RedirectUri,
-                PosData = entity.Metadata,
-                Physical = pi?.Physical ?? false,
-                ItemCode = pi?.ItemCode,
-                ItemDesc = pi?.ItemDesc,
-                TaxIncluded = pi?.TaxIncluded,
-                OrderId = orderId?.ToString()
+                PosData = invoiceMetadata?.PosData,
+                Physical = invoiceMetadata?.Physical ?? false,
+                ItemCode = invoiceMetadata?.ItemCode,
+                ItemDesc = invoiceMetadata?.ItemDesc,
+                TaxIncluded = invoiceMetadata?.TaxIncluded,
+                OrderId = invoiceMetadata?.OrderId,
+                Metadata = entity.Metadata
             };
         }
     }

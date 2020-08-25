@@ -23,9 +23,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using NBitpayClient;
 using Newtonsoft.Json;
-using BuyerInformation = BTCPayServer.Services.Invoices.BuyerInformation;
-using CreateInvoiceRequest = BTCPayServer.Models.CreateInvoiceRequest;
-using ProductInformation = BTCPayServer.Services.Invoices.ProductInformation;
+using BitpayCreateInvoiceRequest = BTCPayServer.Models.BitpayCreateInvoiceRequest;
 using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers
@@ -74,7 +72,7 @@ namespace BTCPayServer.Controllers
         }
 
 
-        internal async Task<DataWrapper<InvoiceResponse>> CreateInvoiceCore(CreateInvoiceRequest invoice,
+        internal async Task<DataWrapper<InvoiceResponse>> CreateInvoiceCore(BitpayCreateInvoiceRequest invoice,
             StoreData store, string serverUrl, List<string> additionalTags = null,
             CancellationToken cancellationToken = default)
         {
@@ -83,7 +81,7 @@ namespace BTCPayServer.Controllers
             return new DataWrapper<InvoiceResponse>(resp) {Facade = "pos/invoice"};
         }
 
-        internal async Task<InvoiceEntity> CreateInvoiceCoreRaw(CreateInvoiceRequest invoice, StoreData store, string serverUrl, List<string> additionalTags = null, CancellationToken cancellationToken = default)
+        internal async Task<InvoiceEntity> CreateInvoiceCoreRaw(BitpayCreateInvoiceRequest invoice, StoreData store, string serverUrl, List<string> additionalTags = null, CancellationToken cancellationToken = default)
         {
             invoice.Currency = invoice.Currency?.ToUpperInvariant() ?? "USD";
             InvoiceLogs logs = new InvoiceLogs();
@@ -99,23 +97,21 @@ namespace BTCPayServer.Controllers
                 throw new BitpayHttpException(400, "The expirationTime is set too soon");
             }
             entity.MonitoringExpiration = entity.ExpirationTime + TimeSpan.FromMinutes(storeBlob.MonitoringExpiration);
-            entity.OrderId = invoice.OrderId;
+            entity.Metadata.OrderId = invoice.OrderId;
             entity.ServerUrl = serverUrl;
             entity.FullNotifications = invoice.FullNotifications || invoice.ExtendedNotifications;
             entity.ExtendedNotifications = invoice.ExtendedNotifications;
             entity.NotificationURLTemplate = invoice.NotificationURL;
             entity.NotificationEmail = invoice.NotificationEmail;
-            entity.BuyerInformation = Map<CreateInvoiceRequest, BuyerInformation>(invoice);
             entity.PaymentTolerance = storeBlob.PaymentTolerance;
             if (additionalTags != null)
                 entity.InternalTags.AddRange(additionalTags);
-            //Another way of passing buyer info to support
-            FillBuyerInfo(invoice.Buyer, entity.BuyerInformation);
-            if (entity?.BuyerInformation?.BuyerEmail != null)
+            FillBuyerInfo(invoice, entity);
+            if (entity.Metadata.BuyerEmail != null)
             {
-                if (!EmailValidator.IsEmail(entity.BuyerInformation.BuyerEmail))
+                if (!EmailValidator.IsEmail(entity.Metadata.BuyerEmail))
                     throw new BitpayHttpException(400, "Invalid email");
-                entity.RefundMail = entity.BuyerInformation.BuyerEmail;
+                entity.RefundMail = entity.Metadata.BuyerEmail;
             }
 
             var taxIncluded = invoice.TaxIncluded.HasValue ? invoice.TaxIncluded.Value : 0m;
@@ -132,8 +128,23 @@ namespace BTCPayServer.Controllers
             invoice.TaxIncluded = Math.Max(0.0m, taxIncluded);
             invoice.TaxIncluded = Math.Min(taxIncluded, invoice.Price);
 
-            entity.ProductInformation = Map<CreateInvoiceRequest, ProductInformation>(invoice);
+            entity.Metadata.ItemCode = invoice.ItemCode;
+            entity.Metadata.ItemDesc = invoice.ItemDesc;
+            entity.Metadata.Physical = invoice.Physical;
+            entity.Metadata.TaxIncluded = invoice.TaxIncluded;
+            entity.Currency = invoice.Currency;
+            entity.Price = invoice.Price;
 
+            if (invoice.Metadata != null)
+            {
+                var currentMetadata = entity.Metadata.ToJObject();
+                foreach (var prop in invoice.Metadata.Properties())
+                {
+                    if (!currentMetadata.ContainsKey(prop.Name))
+                        currentMetadata.Add(prop.Name, prop.Value);
+                }
+                entity.Metadata = InvoiceMetadata.FromJObject(currentMetadata);
+            }
 
             entity.RedirectURLTemplate = invoice.RedirectURL ?? store.StoreWebsite;
 
@@ -220,8 +231,7 @@ namespace BTCPayServer.Controllers
 
             entity.SetSupportedPaymentMethods(supported);
             entity.SetPaymentMethods(paymentMethods);
-            entity.PosData = invoice.PosData;
-
+            entity.Metadata.PosData = invoice.PosData;
             foreach (var app in await getAppsTaggingStore)
             {
                 entity.InternalTags.Add(AppService.GetAppInternalTag(app.Id));
@@ -273,7 +283,7 @@ namespace BTCPayServer.Controllers
                 var logPrefix = $"{supportedPaymentMethod.PaymentId.ToPrettyString()}:";
                 var storeBlob = store.GetStoreBlob();
                 var preparePayment = handler.PreparePayment(supportedPaymentMethod, store, network);
-                var rate = await fetchingByCurrencyPair[new CurrencyPair(network.CryptoCode, entity.ProductInformation.Currency)];
+                var rate = await fetchingByCurrencyPair[new CurrencyPair(network.CryptoCode, entity.Currency)];
                 if (rate.BidAsk == null)
                 {
                     return null;
@@ -337,24 +347,30 @@ namespace BTCPayServer.Controllers
             return policy;
         }
 
-        private void FillBuyerInfo(Buyer buyer, BuyerInformation buyerInformation)
+        private void FillBuyerInfo(BitpayCreateInvoiceRequest req, InvoiceEntity invoiceEntity)
         {
+            var buyerInformation = invoiceEntity.Metadata;
+            buyerInformation.BuyerAddress1 = req.BuyerAddress1;
+            buyerInformation.BuyerAddress2 = req.BuyerAddress2;
+            buyerInformation.BuyerCity = req.BuyerCity;
+            buyerInformation.BuyerCountry = req.BuyerCountry;
+            buyerInformation.BuyerEmail = req.BuyerEmail;
+            buyerInformation.BuyerName = req.BuyerName;
+            buyerInformation.BuyerPhone = req.BuyerPhone;
+            buyerInformation.BuyerState = req.BuyerState;
+            buyerInformation.BuyerZip = req.BuyerZip;
+            var buyer = req.Buyer;
             if (buyer == null)
                 return;
-            buyerInformation.BuyerAddress1 = buyerInformation.BuyerAddress1 ?? buyer.Address1;
-            buyerInformation.BuyerAddress2 = buyerInformation.BuyerAddress2 ?? buyer.Address2;
-            buyerInformation.BuyerCity = buyerInformation.BuyerCity ?? buyer.City;
-            buyerInformation.BuyerCountry = buyerInformation.BuyerCountry ?? buyer.country;
-            buyerInformation.BuyerEmail = buyerInformation.BuyerEmail ?? buyer.email;
-            buyerInformation.BuyerName = buyerInformation.BuyerName ?? buyer.Name;
-            buyerInformation.BuyerPhone = buyerInformation.BuyerPhone ?? buyer.phone;
-            buyerInformation.BuyerState = buyerInformation.BuyerState ?? buyer.State;
-            buyerInformation.BuyerZip = buyerInformation.BuyerZip ?? buyer.zip;
-        }
-
-        private TDest Map<TFrom, TDest>(TFrom data)
-        {
-            return JsonConvert.DeserializeObject<TDest>(JsonConvert.SerializeObject(data));
+            buyerInformation.BuyerAddress1 ??= buyer.Address1;
+            buyerInformation.BuyerAddress2 ??= buyer.Address2;
+            buyerInformation.BuyerCity ??= buyer.City;
+            buyerInformation.BuyerCountry ??= buyer.country;
+            buyerInformation.BuyerEmail ??= buyer.email;
+            buyerInformation.BuyerName ??= buyer.Name;
+            buyerInformation.BuyerPhone ??= buyer.phone;
+            buyerInformation.BuyerState ??= buyer.State;
+            buyerInformation.BuyerZip ??= buyer.zip;
         }
     }
 }

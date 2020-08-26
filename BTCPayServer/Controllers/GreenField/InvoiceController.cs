@@ -267,7 +267,7 @@ namespace BTCPayServer.Controllers.GreenField
                     Monitoring = entity.MonitoringExpiration - entity.ExpirationTime,
                     PaymentTolerance = entity.PaymentTolerance,
                     PaymentMethods =
-                        entity.GetPaymentMethods().Select(method => method.GetId().ToString()).ToArray(),
+                        entity.GetPaymentMethods().Select(method => method.GetId().ToStringNormalized()).ToArray(),
                     SpeedPolicy = entity.SpeedPolicy
                 }
             };

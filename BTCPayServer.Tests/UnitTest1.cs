@@ -153,6 +153,36 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Fast", "Fast")]
+        public void CanParsePaymentMethodId()
+        {
+            var id = PaymentMethodId.Parse("BTC");
+            var id1 = PaymentMethodId.Parse("BTC-OnChain");
+            var id2 = PaymentMethodId.Parse("BTC-BTCLike");
+            Assert.Equal(id, id1);
+            Assert.Equal(id, id2);
+            Assert.Equal("BTC", id.ToString());
+            Assert.Equal("BTC", id.ToString());
+            id = PaymentMethodId.Parse("LTC");
+            Assert.Equal("LTC", id.ToString());
+            Assert.Equal("LTC", id.ToStringNormalized());
+            id = PaymentMethodId.Parse("LTC-offchain");
+            id1 = PaymentMethodId.Parse("LTC-OffChain");
+            id2 = PaymentMethodId.Parse("LTC-LightningLike");
+            Assert.Equal(id, id1);
+            Assert.Equal(id, id2);
+            Assert.Equal("LTC_LightningLike", id.ToString());
+            Assert.Equal("LTC-LightningNetwork", id.ToStringNormalized());
+#if ALTCOINS
+            id = PaymentMethodId.Parse("XMR");
+            id1 = PaymentMethodId.Parse("XMR-MoneroLike");
+            Assert.Equal(id, id1);
+            Assert.Equal("XMR_MoneroLike", id.ToString());
+            Assert.Equal("XMR", id.ToStringNormalized());
+#endif
+        }
+
+        [Fact]
+        [Trait("Fast", "Fast")]
         public async Task CheckNoDeadLink()
         {
             var views = Path.Combine(TestUtils.TryGetSolutionDirectoryInfo().FullName, "BTCPayServer", "Views");

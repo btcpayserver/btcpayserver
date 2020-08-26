@@ -64,20 +64,38 @@ namespace BTCPayServer.Payments
             //BTCLike case is special because it is in legacy mode.
             return PaymentType == PaymentTypes.BTCLike ? CryptoCode : $"{CryptoCode}_{PaymentType}";
         }
+        /// <summary>
+        /// A string we can expose to Greenfield API, not subjected to internal legacy
+        /// </summary>
+        /// <returns></returns>
+        public string ToStringNormalized()
+        {
+            if (PaymentType == PaymentTypes.BTCLike)
+                return CryptoCode;
+#if ALTCOINS
+            if (CryptoCode == "XMR" && PaymentType == PaymentTypes.MoneroLike)
+                return CryptoCode;
+#endif
+            return $"{CryptoCode}-{PaymentType.ToStringNormalized()}";
+        }
 
         public string ToPrettyString()
         {
             return $"{CryptoCode} ({PaymentType.ToPrettyString()})";
         }
-
+        static char[] Separators = new[] { '_', '-' };
         public static bool TryParse(string str, out PaymentMethodId paymentMethodId)
         {
             str ??= "";
             paymentMethodId = null;
-            var parts = str.Split('_', StringSplitOptions.RemoveEmptyEntries);
+            var parts = str.Split(Separators, StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length == 0 || parts.Length > 2)
                 return false;
             PaymentType type = PaymentTypes.BTCLike;
+#if ALTCOINS
+            if (parts[0].ToUpperInvariant() == "XMR")
+                type = PaymentTypes.MoneroLike;
+#endif
             if (parts.Length == 2)
             {
                 if (!PaymentTypes.TryParse(parts[1], out type))

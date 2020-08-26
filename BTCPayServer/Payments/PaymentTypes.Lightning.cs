@@ -17,7 +17,10 @@ namespace BTCPayServer.Payments
 
         public override string ToPrettyString() => "Off-Chain";
         public override string GetId() => "LightningLike";
-
+        public override string ToStringNormalized()
+        {
+            return "LightningNetwork";
+        }
         public override CryptoPaymentData DeserializePaymentData(BTCPayNetworkBase network, string str)
         {
             return ((BTCPayNetwork)network)?.ToObject<LightningLikePaymentData>(str);

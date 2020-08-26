@@ -660,12 +660,6 @@
                         "format": "decimal",
                         "description": "The amount of the invoice"
                     },
-                    "customerEmail": {
-                        "type": "string",
-                        "format": "email",
-                        "nullable": true,
-                        "description": "The email of the customer. If the store is configured to ask for a refund email, the checkout UI will prompt for one when not provided."
-                    },
                     "currency": {
                         "type": "string",
                         "nullable": true,
@@ -674,7 +668,7 @@
                     "metadata": {
                         "type": "string",
                         "nullable": true,
-                        "description": "Additional information around the invoice that can be supplied.<br/> You can pass a json body with values of `ProductInformation` `BuyerInformation` which will populate the fields to stay compatible with previous workflows (and bitpay invoice api)./>"
+                        "description": "Additional information around the invoice that can be supplied."
                     },
                     "checkout": {
                         "nullable": true,
@@ -684,84 +678,6 @@
                             }
                         ],
                         "description": "Additional settings to customize the checkout flow"
-                    }
-                }
-            },
-            "ProductInformation": {
-                "type": "object",
-                "additionalProperties": false,
-                "properties": {
-                    "orderId": {
-                        "type": "string",
-                        "nullable": true,
-                        "description": "Can be used by the merchant to assign their own internal ID to an invoice."
-                    },
-                    "posData": {
-                        "type": "string",
-                        "nullable": true,
-                        "description": "A passthru variable provided by the merchant and designed to be used by the merchant to correlate the invoice with an order or other object in their system. This passthru variable can be a serialized object, e.g.:"
-                    },
-                    "itemDesc": {
-                        "type": "string",
-                        "nullable": true,
-                        "description": "Invoice description - will be added as a line item on the checkout page, under the merchant name"
-                    },
-                    "itemCode": {
-                        "type": "string",
-                        "nullable": true,
-                        "description": "An item code, for a specific product code that is being paid for. Usually used in conjunction with the POS/Crowdfund apps"
-                    },
-                    "physical": {
-                        "type": "boolean",
-                        "description": "Whether it was a physical purchase"
-                    },
-                    "taxIncluded": {
-                        "type": "string",
-                        "format": "decimal",
-                        "nullable": true,
-                        "description": "How much tax is included in the invoice amount"
-                    }
-                }
-            },
-            "BuyerInformation": {
-                "type": "object",
-                "additionalProperties": false,
-                "properties": {
-                    "buyerName": {
-                        "type": "string",
-                        "nullable": true
-                    },
-                    "buyerEmail": {
-                        "type": "string",
-                        "nullable": true
-                    },
-                    "buyerCountry": {
-                        "type": "string",
-                        "nullable": true
-                    },
-                    "buyerZip": {
-                        "type": "string",
-                        "nullable": true
-                    },
-                    "buyerState": {
-                        "type": "string",
-                        "nullable": true
-                    },
-                    "buyerCity": {
-                        "type": "string",
-                        "nullable": true
-                    },
-                    "buyerAddress2": {
-                        "type": "string",
-                        "nullable": true
-                    },
-                    "buyerAddress1": {
-                        "type": "string",
-                        "nullable": true
-                    },
-                    "buyerPhone": {
-                        "type": "string",
-                        "nullable": true
                     }
                 }
             },
@@ -784,37 +700,25 @@
                         "items": {
                             "type": "string"
                         },
-                        "description": "A specific set of payment methods to use for this invoice" 
+                        "description": "A specific set of payment methods to use for this invoice"
                     },
-                    "redirectAutomatically": {
-                        "type": "boolean",
+                    "expirationMinutes": {
+                        "type": "integer",
                         "nullable": true,
-                        "description": "Whether to redirect to the redirectUri automatically after the invoice has been paid. Default to the store setting (which is `false` by default)"
+                        "description": "The number of minutes after which an invoice becomes expired. Default to the store's settings. (The default store settings is 15)"
                     },
-                    "redirectUri": {
-                        "type": "string",
+                    "monitoringMinutes": {
+                        "type": "integer",
                         "nullable": true,
-                        "description": "This is the URL for a return link that is displayed on the receipt, to return the shopper back to your website after a successful purchase. This could be a page specific to the order, or to their account."
-                    },
-                    "webHook": {
-                        "type": "string",
-                        "format": "uri",
-                        "nullable": true,
-                        "description":"A URL to send webhook notification to. Sent when the status changes or a payment is detected"
-                    },
-                    "expirationTime": {
-                        "type": "string",
-                        "format": "date-time",
-                        "nullable": true,
-                        "description": "When the invoice expires. By default will use the store settings (which is set to 15 minutes by default)"
+                        "description": "The number of minutes after an invoice expired after which we are still monitoring for incoming payments. Default to the store's settings. (The default store settings is 1440, 1 day)"
                     },
                     "paymentTolerance": {
-                        "type": "string",
+                        "type": "number",
                         "format": "double",
                         "nullable": true,
                         "minimum": 0,
                         "maximum": 100,
-                        "description": "A percentage dtermining whether to count the invoice as paid when the invoice is paid within the specified margin of error"
+                        "description": "A percentage determining whether to count the invoice as paid when the invoice is paid within the specified margin of error. Default to the store's settings. (The default store settings is 100)"
                     }
                 }
             },

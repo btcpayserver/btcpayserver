@@ -29,7 +29,6 @@ namespace BTCPayServer.Client.Models
             [JsonProperty("monitoringMinutes")]
             public TimeSpan? Monitoring { get; set; }
 
-            [JsonProperty(ItemConverterType = typeof(NumericStringJsonConverter))]
             public double? PaymentTolerance { get; set; }
         }
     }

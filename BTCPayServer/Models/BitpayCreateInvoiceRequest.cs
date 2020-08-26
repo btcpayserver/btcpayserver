@@ -82,6 +82,5 @@ namespace BTCPayServer.Models
         //Bitpay compatibility: create invoice in btcpay uses this instead of supportedTransactionCurrencies
         [JsonProperty(PropertyName = "paymentCurrencies", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public IEnumerable<string> PaymentCurrencies { get; set; }
-        public JObject Metadata { get; set; }
     }
 }

@@ -125,10 +125,10 @@ namespace BTCPayServer.Controllers.GreenField
                 }
             }
 
-            if (request.Checkout.ExpirationTime != null && request.Checkout.ExpirationTime < DateTime.Now)
+            if (request.Checkout.Expiration != null && request.Checkout.Expiration < TimeSpan.FromSeconds(30.0))
             {
-                request.AddModelError(invoiceRequest => invoiceRequest.Checkout.ExpirationTime,
-                    "Expiration time must be in the future", this);
+                request.AddModelError(invoiceRequest => invoiceRequest.Checkout.Expiration,
+                    "Expiration time must be at least 30 seconds", this);
             }
 
             if (request.Checkout.PaymentTolerance != null &&
@@ -143,7 +143,7 @@ namespace BTCPayServer.Controllers.GreenField
 
             try
             {
-                var invoice = await _invoiceController.CreateInvoiceCoreRaw(FromModel(request), store,
+                var invoice = await _invoiceController.CreateInvoiceCoreRaw(request, store,
                     Request.GetAbsoluteUri(""));
                 return Ok(ToModel(invoice));
             }
@@ -263,14 +263,12 @@ namespace BTCPayServer.Controllers.GreenField
                 Metadata = entity.Metadata.ToJObject(),
                 Checkout = new CreateInvoiceRequest.CheckoutOptions()
                 {
-                    ExpirationTime = entity.ExpirationTime,
+                    Expiration = entity.ExpirationTime - entity.InvoiceTime,
+                    Monitoring = entity.MonitoringExpiration - entity.ExpirationTime,
                     PaymentTolerance = entity.PaymentTolerance,
                     PaymentMethods =
                         entity.GetPaymentMethods().Select(method => method.GetId().ToString()).ToArray(),
-                    RedirectAutomatically = entity.RedirectAutomatically,
-                    RedirectUri = entity.RedirectURL?.ToString(),
-                    SpeedPolicy = entity.SpeedPolicy,
-                    WebHook = entity.NotificationURL
+                    SpeedPolicy = entity.SpeedPolicy
                 },
                 PaymentMethodData = entity.GetPaymentMethods().ToDictionary(method => method.GetId().ToString(),
                     method =>
@@ -315,48 +313,6 @@ namespace BTCPayServer.Controllers.GreenField
                             }).ToList()
                         };
                     })
-            };
-        }
-
-        private Models.BitpayCreateInvoiceRequest FromModel(CreateInvoiceRequest entity)
-        {
-            InvoiceMetadata invoiceMetadata = null;
-            if (entity.Metadata != null)
-            {
-                invoiceMetadata = entity.Metadata.ToObject<InvoiceMetadata>();
-            }
-            return new Models.BitpayCreateInvoiceRequest()
-            {
-                Buyer = invoiceMetadata == null ? null : new Buyer()
-                {
-                    Address1 = invoiceMetadata.BuyerAddress1,
-                    Address2 = invoiceMetadata.BuyerAddress2,
-                    City = invoiceMetadata.BuyerCity,
-                    country = invoiceMetadata.BuyerCountry,
-                    email = invoiceMetadata.BuyerEmail,
-                    Name = invoiceMetadata.BuyerName,
-                    phone = invoiceMetadata.BuyerPhone,
-                    State = invoiceMetadata.BuyerState,
-                    zip = invoiceMetadata.BuyerZip,
-                },
-                Currency = entity.Currency,
-                Price = entity.Amount,
-                Refundable = true,
-                ExtendedNotifications = true,
-                FullNotifications = true,
-                RedirectURL = entity.Checkout.RedirectUri,
-                RedirectAutomatically = entity.Checkout.RedirectAutomatically,
-                ExpirationTime = entity.Checkout.ExpirationTime,
-                TransactionSpeed = entity.Checkout.SpeedPolicy?.ToString(),
-                PaymentCurrencies = entity.Checkout.PaymentMethods,
-                NotificationURL = entity.Checkout.RedirectUri,
-                PosData = invoiceMetadata?.PosData,
-                Physical = invoiceMetadata?.Physical ?? false,
-                ItemCode = invoiceMetadata?.ItemCode,
-                ItemDesc = invoiceMetadata?.ItemDesc,
-                TaxIncluded = invoiceMetadata?.TaxIncluded,
-                OrderId = invoiceMetadata?.OrderId,
-                Metadata = entity.Metadata
             };
         }
     }

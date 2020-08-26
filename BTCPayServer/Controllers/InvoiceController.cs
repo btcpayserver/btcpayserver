@@ -21,6 +21,7 @@ using BTCPayServer.Services.Stores;
 using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using NBitpayClient;
 using Newtonsoft.Json;
 using BitpayCreateInvoiceRequest = BTCPayServer.Models.BitpayCreateInvoiceRequest;
@@ -78,41 +79,31 @@ namespace BTCPayServer.Controllers
         {
             var entity = await CreateInvoiceCoreRaw(invoice, store, serverUrl, additionalTags, cancellationToken);
             var resp = entity.EntityToDTO();
-            return new DataWrapper<InvoiceResponse>(resp) {Facade = "pos/invoice"};
+            return new DataWrapper<InvoiceResponse>(resp) { Facade = "pos/invoice" };
         }
 
         internal async Task<InvoiceEntity> CreateInvoiceCoreRaw(BitpayCreateInvoiceRequest invoice, StoreData store, string serverUrl, List<string> additionalTags = null, CancellationToken cancellationToken = default)
         {
-            invoice.Currency = invoice.Currency?.ToUpperInvariant() ?? "USD";
-            InvoiceLogs logs = new InvoiceLogs();
-            logs.Write("Creation of invoice starting");
-            var entity = _InvoiceRepository.CreateNewInvoice();
-
-            var getAppsTaggingStore = _InvoiceRepository.GetAppsTaggingStore(store.Id);
             var storeBlob = store.GetStoreBlob();
-            EmailAddressAttribute emailValidator = new EmailAddressAttribute();
-            entity.ExpirationTime = invoice.ExpirationTime is DateTimeOffset v ? v : entity.InvoiceTime.AddMinutes(storeBlob.InvoiceExpiration);
+            var entity = _InvoiceRepository.CreateNewInvoice();
+            entity.ExpirationTime = invoice.ExpirationTime is DateTimeOffset v ? v : entity.InvoiceTime + storeBlob.InvoiceExpiration;
+            entity.MonitoringExpiration = entity.ExpirationTime + storeBlob.MonitoringExpiration;
             if (entity.ExpirationTime - TimeSpan.FromSeconds(30.0) < entity.InvoiceTime)
             {
                 throw new BitpayHttpException(400, "The expirationTime is set too soon");
             }
-            entity.MonitoringExpiration = entity.ExpirationTime + TimeSpan.FromMinutes(storeBlob.MonitoringExpiration);
+            invoice.Currency = invoice.Currency?.ToUpperInvariant() ?? "USD";
+            entity.Currency = invoice.Currency;
             entity.Metadata.OrderId = invoice.OrderId;
+            entity.Metadata.PosData = invoice.PosData;
             entity.ServerUrl = serverUrl;
             entity.FullNotifications = invoice.FullNotifications || invoice.ExtendedNotifications;
             entity.ExtendedNotifications = invoice.ExtendedNotifications;
             entity.NotificationURLTemplate = invoice.NotificationURL;
             entity.NotificationEmail = invoice.NotificationEmail;
-            entity.PaymentTolerance = storeBlob.PaymentTolerance;
             if (additionalTags != null)
                 entity.InternalTags.AddRange(additionalTags);
             FillBuyerInfo(invoice, entity);
-            if (entity.Metadata.BuyerEmail != null)
-            {
-                if (!EmailValidator.IsEmail(entity.Metadata.BuyerEmail))
-                    throw new BitpayHttpException(400, "Invalid email");
-                entity.RefundMail = entity.Metadata.BuyerEmail;
-            }
 
             var taxIncluded = invoice.TaxIncluded.HasValue ? invoice.TaxIncluded.Value : 0m;
 
@@ -127,7 +118,6 @@ namespace BTCPayServer.Controllers
             invoice.Price = Math.Max(0.0m, invoice.Price);
             invoice.TaxIncluded = Math.Max(0.0m, taxIncluded);
             invoice.TaxIncluded = Math.Min(taxIncluded, invoice.Price);
-
             entity.Metadata.ItemCode = invoice.ItemCode;
             entity.Metadata.ItemDesc = invoice.ItemDesc;
             entity.Metadata.Physical = invoice.Physical;
@@ -135,29 +125,12 @@ namespace BTCPayServer.Controllers
             entity.Currency = invoice.Currency;
             entity.Price = invoice.Price;
 
-            if (invoice.Metadata != null)
-            {
-                var currentMetadata = entity.Metadata.ToJObject();
-                foreach (var prop in invoice.Metadata.Properties())
-                {
-                    if (!currentMetadata.ContainsKey(prop.Name))
-                        currentMetadata.Add(prop.Name, prop.Value);
-                }
-                entity.Metadata = InvoiceMetadata.FromJObject(currentMetadata);
-            }
-
             entity.RedirectURLTemplate = invoice.RedirectURL ?? store.StoreWebsite;
-
             entity.RedirectAutomatically =
                 invoice.RedirectAutomatically.GetValueOrDefault(storeBlob.RedirectAutomatically);
-
-            entity.Status = InvoiceStatus.New;
             entity.SpeedPolicy = ParseSpeedPolicy(invoice.TransactionSpeed, store.SpeedPolicy);
 
-            HashSet<CurrencyPair> currencyPairsToFetch = new HashSet<CurrencyPair>();
-            var rules = storeBlob.GetRateRules(_NetworkProvider);
-            var excludeFilter = storeBlob.GetExcludedPaymentMethods(); // Here we can compose filters from other origin with PaymentFilter.Any()
-
+            IPaymentFilter excludeFilter = null;
             if (invoice.PaymentCurrencies?.Any() is true)
             {
                 invoice.SupportedTransactionCurrencies ??=
@@ -173,17 +146,67 @@ namespace BTCPayServer.Controllers
                 var supportedTransactionCurrencies = invoice.SupportedTransactionCurrencies
                                                             .Where(c => c.Value.Enabled)
                                                             .Select(c => PaymentMethodId.TryParse(c.Key, out var p) ? p : null)
+                                                            .Where(c => c != null)
                                                             .ToHashSet();
-                excludeFilter = PaymentFilter.Or(excludeFilter,
-                                                 PaymentFilter.Where(p => !supportedTransactionCurrencies.Contains(p)));
+                excludeFilter = PaymentFilter.Where(p => !supportedTransactionCurrencies.Contains(p));
             }
+            entity.PaymentTolerance = storeBlob.PaymentTolerance;
+            return await CreateInvoiceCoreRaw(entity, store, excludeFilter, cancellationToken);
+        }
 
+        internal async Task<InvoiceEntity> CreateInvoiceCoreRaw(CreateInvoiceRequest invoice, StoreData store, string serverUrl, List<string> additionalTags = null, CancellationToken cancellationToken = default)
+        {
+            var storeBlob = store.GetStoreBlob();
+            var entity = _InvoiceRepository.CreateNewInvoice();
+            entity.ExpirationTime = entity.InvoiceTime + (invoice.Checkout.Expiration ?? storeBlob.InvoiceExpiration);
+            entity.MonitoringExpiration = entity.ExpirationTime + (invoice.Checkout.Monitoring ?? storeBlob.MonitoringExpiration);
+            if (invoice.Metadata != null)
+                entity.Metadata = InvoiceMetadata.FromJObject(invoice.Metadata);
+            invoice.Checkout ??= new CreateInvoiceRequest.CheckoutOptions();
+            entity.Currency = invoice.Currency;
+            entity.Price = invoice.Amount;
+            entity.SpeedPolicy = invoice.Checkout.SpeedPolicy ?? store.SpeedPolicy;
+            IPaymentFilter excludeFilter = null;
+            if (invoice.Checkout.PaymentMethods != null)
+            {
+                var supportedTransactionCurrencies = invoice.Checkout.PaymentMethods
+                                                            .Select(c => PaymentMethodId.TryParse(c, out var p) ? p : null)
+                                                            .ToHashSet();
+                excludeFilter = PaymentFilter.Where(p => !supportedTransactionCurrencies.Contains(p));
+            }
+            entity.PaymentTolerance = invoice.Checkout.PaymentTolerance ?? storeBlob.PaymentTolerance;
+            return await CreateInvoiceCoreRaw(entity, store, excludeFilter, cancellationToken);
+        }
+
+        internal async Task<InvoiceEntity> CreateInvoiceCoreRaw(InvoiceEntity entity, StoreData store, IPaymentFilter invoicePaymentMethodFilter, CancellationToken cancellationToken = default)
+        {
+            InvoiceLogs logs = new InvoiceLogs();
+            logs.Write("Creation of invoice starting");
+
+            var getAppsTaggingStore = _InvoiceRepository.GetAppsTaggingStore(store.Id);
+            var storeBlob = store.GetStoreBlob();
+
+            if (entity.Metadata.BuyerEmail != null)
+            {
+                if (!EmailValidator.IsEmail(entity.Metadata.BuyerEmail))
+                    throw new BitpayHttpException(400, "Invalid email");
+                entity.RefundMail = entity.Metadata.BuyerEmail;
+            }
+            entity.Status = InvoiceStatus.New;
+            HashSet<CurrencyPair> currencyPairsToFetch = new HashSet<CurrencyPair>();
+            var rules = storeBlob.GetRateRules(_NetworkProvider);
+            var excludeFilter = storeBlob.GetExcludedPaymentMethods(); // Here we can compose filters from other origin with PaymentFilter.Any()
+            if (invoicePaymentMethodFilter != null)
+            {
+                excludeFilter = PaymentFilter.Or(excludeFilter,
+                                                 invoicePaymentMethodFilter);
+            }
             foreach (var network in store.GetSupportedPaymentMethods(_NetworkProvider)
                                                 .Where(s => !excludeFilter.Match(s.PaymentId))
                                                 .Select(c => _NetworkProvider.GetNetwork<BTCPayNetworkBase>(c.PaymentId.CryptoCode))
                                                 .Where(c => c != null))
             {
-                currencyPairsToFetch.Add(new CurrencyPair(network.CryptoCode, invoice.Currency));
+                currencyPairsToFetch.Add(new CurrencyPair(network.CryptoCode, entity.Currency));
                 //TODO: abstract
                 if (storeBlob.LightningMaxValue != null)
                     currencyPairsToFetch.Add(new CurrencyPair(network.CryptoCode, storeBlob.LightningMaxValue.Currency));
@@ -195,7 +218,12 @@ namespace BTCPayServer.Controllers
             var fetchingByCurrencyPair = _RateProvider.FetchRates(currencyPairsToFetch, rateRules, cancellationToken);
             var fetchingAll = WhenAllFetched(logs, fetchingByCurrencyPair);
 
-            var supportedPaymentMethods = store.GetSupportedPaymentMethods(_NetworkProvider)
+            List<ISupportedPaymentMethod> supported = new List<ISupportedPaymentMethod>();
+            var paymentMethods = new PaymentMethodDictionary();
+
+            // This loop ends with .ToList so we are querying all payment methods at once
+            // instead of sequentially to improve response time
+            foreach (var o in store.GetSupportedPaymentMethods(_NetworkProvider)
                                                .Where(s => !excludeFilter.Match(s.PaymentId) && _paymentMethodHandlerDictionary.Support(s.PaymentId))
                                                .Select(c =>
                                                 (Handler: _paymentMethodHandlerDictionary[c.PaymentId],
@@ -205,10 +233,7 @@ namespace BTCPayServer.Controllers
                                                 .Select(o =>
                                                     (SupportedPaymentMethod: o.SupportedPaymentMethod,
                                                     PaymentMethod: CreatePaymentMethodAsync(fetchingByCurrencyPair, o.Handler, o.SupportedPaymentMethod, o.Network, entity, store, logs)))
-                                                .ToList();
-            List<ISupportedPaymentMethod> supported = new List<ISupportedPaymentMethod>();
-            var paymentMethods = new PaymentMethodDictionary();
-            foreach (var o in supportedPaymentMethods)
+                                                .ToList())
             {
                 var paymentMethod = await o.PaymentMethod;
                 if (paymentMethod == null)
@@ -231,7 +256,6 @@ namespace BTCPayServer.Controllers
 
             entity.SetSupportedPaymentMethods(supported);
             entity.SetPaymentMethods(paymentMethods);
-            entity.Metadata.PosData = invoice.PosData;
             foreach (var app in await getAppsTaggingStore)
             {
                 entity.InternalTags.Add(AppService.GetAppInternalTag(app.Id));

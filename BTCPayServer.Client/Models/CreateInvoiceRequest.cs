@@ -1,4 +1,5 @@
 using System;
+using BTCPayServer.Client.JsonConverters;
 using BTCPayServer.JsonConverters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -20,12 +21,13 @@ namespace BTCPayServer.Client.Models
             public SpeedPolicy? SpeedPolicy { get; set; }
 
             public string[] PaymentMethods { get; set; }
-            public bool? RedirectAutomatically { get; set; }
-            public string RedirectUri { get; set; }
-            public Uri WebHook { get; set; }
 
-            [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
-            public DateTimeOffset? ExpirationTime { get; set; }
+            [JsonConverter(typeof(TimeSpanJsonConverter.Minutes))]
+            [JsonProperty("expirationMinutes")]
+            public TimeSpan? Expiration { get; set; }
+            [JsonConverter(typeof(TimeSpanJsonConverter.Minutes))]
+            [JsonProperty("monitoringMinutes")]
+            public TimeSpan? Monitoring { get; set; }
 
             [JsonProperty(ItemConverterType = typeof(NumericStringJsonConverter))]
             public double? PaymentTolerance { get; set; }

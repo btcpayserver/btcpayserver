@@ -533,122 +533,9 @@
                             "additionalStatus": {
                                 "$ref": "#/components/schemas/InvoiceAdditionalStatus",
                                 "description": "a secondary status of the invoice"
-                            },
-                            "paymentMethodData": {
-                                "type": "object",
-                                "nullable": false,
-                                "additionalProperties": {
-                                    "$ref": "#/components/schemas/PaymentMethodDataModel"
-                                },
-                                "description": "Activated payment methods details"
                             }
                         }
                     }
-                ]
-            },
-            "PaymentMethodDataModel": {
-                "type": "object",
-                "additionalProperties": false,
-                "properties": {
-                    "destination": {
-                        "type": "string",
-                        "nullable": true,
-                        "description": "The destination the payment must be made to"
-                    },
-                    "paymentLink": {
-                        "type": "string",
-                        "nullable": true,
-                        "description": "A payment link that helps pay to the payment destination"
-                    },
-                    "rate": {
-                        "type": "string",
-                        "format": "decimal",
-                        "description": "The rate between this payment method's currency and the invoice currency"
-                    },
-                    "paymentMethodPaid": {
-                        "type": "string",
-                        "format": "decimal",
-                        "description": "The amount paid by this payment method"
-                    },
-                    "totalPaid": {
-                        "type": "string",
-                        "format": "decimal",
-                        "description": "The total amount paid by all payment methods to the invoice, converted to this payment method's currency"
-                    },
-                    "due": {
-                        "type": "string",
-                        "format": "decimal",
-                        "description": "The total amount left to be paid, converted to this payment method's currency"
-                    },
-                    "amount": {
-                        "type": "string",
-                        "format": "decimal",
-                        "description": "The invoice amount, converted to this payment method's currency"
-                    },
-                    "networkFee": {
-                        "type": "string",
-                        "format": "decimal",
-                        "description": "The added merchant fee to pay for network costs of this payment method."
-                    },
-                    "payments": {
-                        "type": "array",
-                        "nullable": true,
-                        "items": {
-                            "$ref": "#/components/schemas/Payment"
-                        },
-                        "description": "Payments made with this payment method."
-                    }
-                }
-            },
-            "Payment": {
-                "type": "object",
-                "additionalProperties": false,
-                "properties": {
-                    "id": {
-                        "type": "string",
-                        "nullable": true,
-                        "description": "A unique identifier for this payment"
-                    },
-                    "receivedDate": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "The date the payment was recorded"
-                    },
-                    "value": {
-                        "type": "string",
-                        "format": "decimal",
-                        "description": "The value of the payment"
-                    },
-                    "fee": {
-                        "type": "string",
-                        "format": "decimal",
-                        "description": "The fee paid for the payment"
-                    },
-                    "status": {
-                        "$ref": "#/components/schemas/PaymentStatus",
-                        "description": "The status of the payment"
-                    },
-                    "destination": {
-                        "type": "string",
-                        "nullable": true,
-                        "description": "The destination the payment was made to"
-                    }
-                }
-            },
-            "PaymentStatus": {
-                "type": "string",
-                "description": "",
-                "x-enumNames": [
-                    "Invalid",
-                    "AwaitingConfirmation",
-                    "AwaitingCompletion",
-                    "Complete"
-                ],
-                "enum": [
-                    "Invalid",
-                    "AwaitingConfirmation",
-                    "AwaitingCompletion",
-                    "Complete"
                 ]
             },
             "CreateInvoiceRequest": {
@@ -699,8 +586,8 @@
                         "nullable": true,
                         "items": {
                             "type": "string"
-                        },
-                        "description": "A specific set of payment methods to use for this invoice"
+                        }, 
+                        "description": "A specific set of payment methods to use for this invoice (ie. BTC, BTC_OnChain). By default, select all payment methods activated in the store."
                     },
                     "expirationMinutes": {
                         "type": "integer",

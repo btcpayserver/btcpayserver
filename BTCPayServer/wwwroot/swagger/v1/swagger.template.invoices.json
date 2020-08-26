@@ -523,8 +523,22 @@
                         "properties": {
                             "id": {
                                 "type": "string",
-                                "nullable": true,
                                 "description": "The identifier of the invoice"
+                            },
+                            "createdTime": {
+                                "type": "number",
+                                "format": "int64",
+                                "description": "The creation time of the invoice"
+                            },
+                            "expirationTime": {
+                                "type": "number",
+                                "format": "int64",
+                                "description": "The expiration time of the invoice"
+                            },
+                            "monitoringTime": {
+                                "type": "number",
+                                "format": "int64",
+                                "description": "The monitoring time of the invoice"
                             },
                             "status": {
                                 "$ref": "#/components/schemas/InvoiceStatus",

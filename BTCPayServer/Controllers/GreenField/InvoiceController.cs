@@ -255,6 +255,9 @@ namespace BTCPayServer.Controllers.GreenField
         {
             return new InvoiceData()
             {
+                ExpirationTime = entity.ExpirationTime,
+                MonitoringExpiration = entity.MonitoringExpiration,
+                CreatedTime = entity.InvoiceTime,
                 Amount = entity.Price,
                 Id = entity.Id,
                 Status = entity.Status,

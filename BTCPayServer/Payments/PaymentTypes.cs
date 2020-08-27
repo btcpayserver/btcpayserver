@@ -22,6 +22,13 @@ namespace BTCPayServer.Payments
         /// </summary>
         public static LightningPaymentType LightningLike => LightningPaymentType.Instance;
 
+#if ALTCOINS
+        /// <summary>
+        /// Monero payment
+        /// </summary>
+        public static MoneroPaymentType MoneroLike => MoneroPaymentType.Instance;
+#endif
+
         public static bool TryParse(string paymentType, out PaymentType type)
         {
             switch (paymentType.ToLowerInvariant())
@@ -36,7 +43,7 @@ namespace BTCPayServer.Payments
                     break;
 #if ALTCOINS
                 case "monerolike":
-                    type = MoneroPaymentType.Instance;
+                    type = PaymentTypes.MoneroLike;
                     break;
 #endif
                 default:
@@ -59,6 +66,15 @@ namespace BTCPayServer.Payments
         public override string ToString()
         {
             return GetId();
+        }
+
+        /// <summary>
+        /// A string we can expose to Greenfield API, not subjected to internal legacy
+        /// </summary>
+        /// <returns></returns>
+        public virtual string ToStringNormalized()
+        {
+            return ToString();
         }
 
         public abstract string GetId();

@@ -363,6 +363,8 @@ namespace BTCPayServer.Controllers
                     {BTCPayServer.Client.Policies.CanModifyProfile, ("Manage your profile", "The app will be able to view and modify your user profile.")},
                     {BTCPayServer.Client.Policies.CanCreateInvoice, ("Create an invoice", "The app will be able to create new invoices.")},
                     {$"{BTCPayServer.Client.Policies.CanCreateInvoice}:", ("Create an invoice", "The app will be able to create new invoices on the selected stores.")},
+                    {BTCPayServer.Client.Policies.CanViewInvoices, ("View invoices", "The app will be able to view invoices.")},
+                    {$"{BTCPayServer.Client.Policies.CanViewInvoices}:", ("View invoices", "The app will be able to view invoices on the selected stores.")},
                     {BTCPayServer.Client.Policies.CanModifyPaymentRequests, ("Modify your payment requests", "The app will be able to view, modify, delete and create new payment requests on all your stores.")},
                     {$"{BTCPayServer.Client.Policies.CanModifyPaymentRequests}:", ("Manage selected stores' payment requests", "The app will be able to view, modify, delete and create new payment requests on the selected stores.")},
                     {BTCPayServer.Client.Policies.CanViewPaymentRequests, ("View your payment requests", "The app will be able to view payment requests.")},

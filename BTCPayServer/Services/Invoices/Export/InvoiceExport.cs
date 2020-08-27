@@ -56,9 +56,8 @@ namespace BTCPayServer.Services.Invoices.Export
         private IEnumerable<ExportInvoiceHolder> convertFromDb(InvoiceEntity invoice)
         {
             var exportList = new List<ExportInvoiceHolder>();
-            var currency = Currencies.GetNumberFormatInfo(invoice.ProductInformation.Currency, true);
-
-            var invoiceDue = invoice.ProductInformation.Price;
+            var currency = Currencies.GetNumberFormatInfo(invoice.Currency, true);
+            var invoiceDue = invoice.Price;
             // in this first version we are only exporting invoices that were paid
             foreach (var payment in invoice.GetPayments())
             {
@@ -88,7 +87,7 @@ namespace BTCPayServer.Services.Invoices.Export
                     // while looking just at export you could sum Paid and assume merchant "received payments"
                     NetworkFee = payment.NetworkFee.ToString(CultureInfo.InvariantCulture),
                     InvoiceDue = Math.Round(invoiceDue, currency.NumberDecimalDigits),
-                    OrderId = invoice.OrderId,
+                    OrderId = invoice.Metadata.OrderId ?? string.Empty,
                     StoreId = invoice.StoreId,
                     InvoiceId = invoice.Id,
                     InvoiceCreatedDate = invoice.InvoiceTime.UtcDateTime,
@@ -99,11 +98,11 @@ namespace BTCPayServer.Services.Invoices.Export
                     InvoiceStatus = invoice.StatusString,
                     InvoiceExceptionStatus = invoice.ExceptionStatusString,
 #pragma warning restore CS0618 // Type or member is obsolete
-                    InvoiceItemCode = invoice.ProductInformation.ItemCode,
-                    InvoiceItemDesc = invoice.ProductInformation.ItemDesc,
-                    InvoicePrice = invoice.ProductInformation.Price,
-                    InvoiceCurrency = invoice.ProductInformation.Currency,
-                    BuyerEmail = invoice.BuyerInformation?.BuyerEmail
+                    InvoiceItemCode = invoice.Metadata.ItemCode,
+                    InvoiceItemDesc = invoice.Metadata.ItemDesc,
+                    InvoicePrice = invoice.Price,
+                    InvoiceCurrency = invoice.Currency,
+                    BuyerEmail = invoice.Metadata.BuyerEmail
                 };
 
                 exportList.Add(target);

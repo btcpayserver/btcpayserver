@@ -48,7 +48,7 @@ namespace BTCPayServer.Payments.Lightning
             var storeBlob = store.GetStoreBlob();
             var test = GetNodeInfo(paymentMethod.PreferOnion, supportedPaymentMethod, network);
             var invoice = paymentMethod.ParentEntity;
-            var due = Extensions.RoundUp(invoice.ProductInformation.Price / paymentMethod.Rate, network.Divisibility);
+            var due = Extensions.RoundUp(invoice.Price / paymentMethod.Rate, network.Divisibility);
             var client = _lightningClientFactory.Create(supportedPaymentMethod.GetLightningUrl(), network);
             var expiry = invoice.ExpirationTime - DateTimeOffset.UtcNow;
             if (expiry < TimeSpan.Zero)
@@ -58,8 +58,8 @@ namespace BTCPayServer.Payments.Lightning
 
             string description = storeBlob.LightningDescriptionTemplate;
             description = description.Replace("{StoreName}", store.StoreName ?? "", StringComparison.OrdinalIgnoreCase)
-                                     .Replace("{ItemDescription}", invoice.ProductInformation.ItemDesc ?? "", StringComparison.OrdinalIgnoreCase)
-                                     .Replace("{OrderId}", invoice.OrderId ?? "", StringComparison.OrdinalIgnoreCase);
+                                     .Replace("{ItemDescription}", invoice.Metadata.ItemDesc ?? "", StringComparison.OrdinalIgnoreCase)
+                                     .Replace("{OrderId}", invoice.Metadata.OrderId ?? "", StringComparison.OrdinalIgnoreCase);
             using (var cts = new CancellationTokenSource(LIGHTNING_TIMEOUT))
             {
                 try

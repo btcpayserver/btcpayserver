@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using BTCPayServer.Services.Invoices;
 
 namespace BTCPayServer.Events
@@ -15,11 +16,26 @@ namespace BTCPayServer.Events
         public const string FailedToConfirm = "invoice_failedToConfirm";
         public const string Confirmed = "invoice_confirmed";
         public const string Completed = "invoice_completed";
+        
+        public static Dictionary<string, int> EventCodes = new Dictionary<string, int>()
+        {
+            {Created, 1001},
+            {ReceivedPayment, 1002},
+            {PaidInFull, 1003},
+            {Expired, 1004},
+            {Confirmed, 1005},
+            {Completed, 1006},
+            {MarkedInvalid, 1008},
+            {FailedToConfirm, 1013},
+            {PaidAfterExpiration, 1009},
+            {ExpiredPaidPartial, 2000},
+            {MarkedCompleted, 2008},
+        };
 
-        public InvoiceEvent(InvoiceEntity invoice, int code, string name)
+        public InvoiceEvent(InvoiceEntity invoice, string name)
         {
             Invoice = invoice;
-            EventCode = code;
+            EventCode = EventCodes[name];
             Name = name;
         }
 

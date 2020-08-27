@@ -195,7 +195,7 @@ namespace BTCPayServer.Data
         [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal MinimumClaim { get; set; }
         public PullPaymentView View { get; set; } = new PullPaymentView();
-        [JsonConverter(typeof(TimeSpanJsonConverter))]
+        [JsonConverter(typeof(TimeSpanJsonConverter.Seconds))]
         public TimeSpan? Period { get; set; }
 
         [JsonProperty(ItemConverterType = typeof(PaymentMethodIdJsonConverter))]

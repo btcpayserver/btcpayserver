@@ -10,6 +10,7 @@ using BTCPayServer.Controllers;
 using BTCPayServer.Events;
 using BTCPayServer.JsonConverters;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +18,7 @@ using NBitcoin;
 using NBitpayClient;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using NUglify.Helpers;
 using Xunit;
 using Xunit.Abstractions;
 using CreateApplicationUserRequest = BTCPayServer.Client.Models.CreateApplicationUserRequest;
@@ -733,6 +735,147 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task InvoiceLegacyTests()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                await tester.StartAsync();
+                var user = tester.NewAccount();
+                await user.GrantAccessAsync();
+                user.RegisterDerivationScheme("BTC");
+                var client = await user.CreateClient(Policies.Unrestricted);
+                var oldBitpay = user.BitPay;
+
+                Logs.Tester.LogInformation("Let's create an invoice with bitpay API");
+                var oldInvoice = await oldBitpay.CreateInvoiceAsync(new Invoice()
+                {
+                    Currency = "BTC",
+                    Price = 1000.19392922m,
+                    BuyerAddress1 = "blah",
+                    Buyer = new Buyer()
+                    {
+                        Address2 = "blah2"
+                    },
+                    ItemCode = "code",
+                    ItemDesc = "desc",
+                    OrderId = "orderId",
+                    PosData = "posData"
+                });
+
+                async Task<Client.Models.InvoiceData> AssertInvoiceMetadata()
+                {
+                    Logs.Tester.LogInformation("Let's check if we can get invoice in the new format with the metadata");
+                    var newInvoice = await client.GetInvoice(user.StoreId, oldInvoice.Id);
+                    Assert.Equal("posData", newInvoice.Metadata["posData"].Value<string>());
+                    Assert.Equal("code", newInvoice.Metadata["itemCode"].Value<string>());
+                    Assert.Equal("desc", newInvoice.Metadata["itemDesc"].Value<string>());
+                    Assert.Equal("orderId", newInvoice.Metadata["orderId"].Value<string>());
+                    Assert.False(newInvoice.Metadata["physical"].Value<bool>());
+                    Assert.Null(newInvoice.Metadata["buyerCountry"]);
+                    Assert.Equal(1000.19392922m, newInvoice.Amount);
+                    Assert.Equal("BTC", newInvoice.Currency);
+                    return newInvoice;
+                }
+
+                await AssertInvoiceMetadata();
+
+                Logs.Tester.LogInformation("Let's hack the Bitpay created invoice to be just like before this update. (Invoice V1)");
+                var invoiceV1 = "{\r\n  \"version\": 1,\r\n  \"id\": \"" + oldInvoice.Id + "\",\r\n  \"storeId\": \"" + user.StoreId + "\",\r\n  \"orderId\": \"orderId\",\r\n  \"speedPolicy\": 1,\r\n  \"rate\": 1.0,\r\n  \"invoiceTime\": 1598329634,\r\n  \"expirationTime\": 1598330534,\r\n  \"depositAddress\": \"mm83rVs8ZnZok1SkRBmXiwQSiPFgTgCKpD\",\r\n  \"productInformation\": {\r\n    \"itemDesc\": \"desc\",\r\n    \"itemCode\": \"code\",\r\n    \"physical\": false,\r\n    \"price\": 1000.19392922,\r\n    \"currency\": \"BTC\"\r\n  },\r\n  \"buyerInformation\": {\r\n    \"buyerName\": null,\r\n    \"buyerEmail\": null,\r\n    \"buyerCountry\": null,\r\n    \"buyerZip\": null,\r\n    \"buyerState\": null,\r\n    \"buyerCity\": null,\r\n    \"buyerAddress2\": \"blah2\",\r\n    \"buyerAddress1\": \"blah\",\r\n    \"buyerPhone\": null\r\n  },\r\n  \"posData\": \"posData\",\r\n  \"internalTags\": [],\r\n  \"derivationStrategy\": null,\r\n  \"derivationStrategies\": \"{\\\"BTC\\\":{\\\"signingKey\\\":\\\"tpubDD1AW2ruUxSsDa55NQYtNt7DQw9bqXx4K7r2aScySmjxHtsCZoxFTN3qCMcKLxgsRDMGSwk9qj1fBfi8jqSLenwyYkhDrmgaxQuvuKrTHEf\\\",\\\"source\\\":\\\"NBXplorer\\\",\\\"accountDerivation\\\":\\\"tpubDD1AW2ruUxSsDa55NQYtNt7DQw9bqXx4K7r2aScySmjxHtsCZoxFTN3qCMcKLxgsRDMGSwk9qj1fBfi8jqSLenwyYkhDrmgaxQuvuKrTHEf-[legacy]\\\",\\\"accountOriginal\\\":null,\\\"accountKeySettings\\\":[{\\\"rootFingerprint\\\":\\\"54d5044d\\\",\\\"accountKeyPath\\\":\\\"44'/1'/0'\\\",\\\"accountKey\\\":\\\"tpubDD1AW2ruUxSsDa55NQYtNt7DQw9bqXx4K7r2aScySmjxHtsCZoxFTN3qCMcKLxgsRDMGSwk9qj1fBfi8jqSLenwyYkhDrmgaxQuvuKrTHEf\\\"}],\\\"label\\\":null}}\",\r\n  \"status\": \"new\",\r\n  \"exceptionStatus\": \"\",\r\n  \"payments\": [],\r\n  \"refundable\": false,\r\n  \"refundMail\": null,\r\n  \"redirectURL\": null,\r\n  \"redirectAutomatically\": false,\r\n  \"txFee\": 0,\r\n  \"fullNotifications\": false,\r\n  \"notificationEmail\": null,\r\n  \"notificationURL\": null,\r\n  \"serverUrl\": \"http://127.0.0.1:8001\",\r\n  \"cryptoData\": {\r\n    \"BTC\": {\r\n      \"rate\": 1.0,\r\n      \"paymentMethod\": {\r\n        \"networkFeeMode\": 0,\r\n        \"networkFeeRate\": 100.0,\r\n        \"payjoinEnabled\": false\r\n      },\r\n      \"feeRate\": 100.0,\r\n      \"txFee\": 0,\r\n      \"depositAddress\": \"mm83rVs8ZnZok1SkRBmXiwQSiPFgTgCKpD\"\r\n    }\r\n  },\r\n  \"monitoringExpiration\": 1598416934,\r\n  \"historicalAddresses\": null,\r\n  \"availableAddressHashes\": null,\r\n  \"extendedNotifications\": false,\r\n  \"events\": null,\r\n  \"paymentTolerance\": 0.0,\r\n  \"archived\": false\r\n}";
+                var db = tester.PayTester.GetService<Data.ApplicationDbContextFactory>();
+                using var ctx = db.CreateContext();
+                var dbInvoice = await ctx.Invoices.FindAsync(oldInvoice.Id);
+                dbInvoice.Blob = ZipUtils.Zip(invoiceV1);
+                await ctx.SaveChangesAsync();
+                var newInvoice = await AssertInvoiceMetadata();
+
+                Logs.Tester.LogInformation("Now, let's create an invoice with the new API but with the same metadata as Bitpay");
+                newInvoice.Metadata.Add("lol", "lol");
+                newInvoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest()
+                {
+                    Metadata = newInvoice.Metadata,
+                    Amount = 1000.19392922m,
+                    Currency = "BTC"
+                });
+                oldInvoice = await oldBitpay.GetInvoiceAsync(newInvoice.Id);
+                await AssertInvoiceMetadata();
+                Assert.Equal("lol", newInvoice.Metadata["lol"].Value<string>());
+            }
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task InvoiceTests()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                await tester.StartAsync();
+                var user = tester.NewAccount();
+                await user.GrantAccessAsync();
+                await user.MakeAdmin();
+                var client = await user.CreateClient(Policies.Unrestricted);
+                var viewOnly = await user.CreateClient(Policies.CanViewInvoices);
+
+                //create
+
+                //validation errors
+                await AssertValidationError(new[] { nameof(CreateInvoiceRequest.Currency), nameof(CreateInvoiceRequest.Amount), $"{nameof(CreateInvoiceRequest.Checkout)}.{nameof(CreateInvoiceRequest.Checkout.PaymentTolerance)}", $"{nameof(CreateInvoiceRequest.Checkout)}.{nameof(CreateInvoiceRequest.Checkout.PaymentMethods)}[0]" }, async () =>
+               {
+                   await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest() { Amount = -1, Checkout = new CreateInvoiceRequest.CheckoutOptions() { PaymentTolerance = -2, PaymentMethods = new[] { "jasaas_sdsad" } } });
+               });
+
+                await AssertHttpError(403, async () =>
+                {
+                    await viewOnly.CreateInvoice(user.StoreId,
+                        new CreateInvoiceRequest() { Currency = "helloinvalid", Amount = 1 });
+                });
+                await user.RegisterDerivationSchemeAsync("BTC");
+                var newInvoice = await client.CreateInvoice(user.StoreId,
+                    new CreateInvoiceRequest() { Currency = "USD", Amount = 1, Metadata = JObject.Parse("{\"itemCode\": \"testitem\"}") });
+
+                //list 
+                var invoices = await viewOnly.GetInvoices(user.StoreId);
+
+                Assert.NotNull(invoices);
+                Assert.Single(invoices);
+                Assert.Equal(newInvoice.Id, invoices.First().Id);
+
+                //get payment request
+                var invoice = await viewOnly.GetInvoice(user.StoreId, newInvoice.Id);
+                Assert.Equal(newInvoice.Metadata, invoice.Metadata);
+
+                //update
+                invoice = await viewOnly.GetInvoice(user.StoreId, newInvoice.Id);
+
+                await AssertValidationError(new[] { nameof(MarkInvoiceStatusRequest.Status) }, async () =>
+                {
+                    await client.MarkInvoiceStatus(user.StoreId, invoice.Id, new MarkInvoiceStatusRequest()
+                    {
+                        Status = InvoiceStatus.Complete
+                    });
+                });
+
+
+                //archive 
+                await AssertHttpError(403, async () =>
+                {
+                    await viewOnly.ArchiveInvoice(user.StoreId, invoice.Id);
+                });
+
+                await client.ArchiveInvoice(user.StoreId, invoice.Id);
+                Assert.DoesNotContain(invoice.Id,
+                    (await client.GetInvoices(user.StoreId)).Select(data => data.Id));
+
+                //unarchive
+                await client.UnarchiveInvoice(user.StoreId, invoice.Id);
+                Assert.NotNull(await client.GetInvoice(user.StoreId, invoice.Id));
+
+            }
+        }
+
+
+
+        [Fact(Timeout = TestTimeout)]
         [Trait("Fast", "Fast")]
         public void NumericJsonConverterTests()
         {
@@ -762,10 +905,11 @@ namespace BTCPayServer.Tests
             Assert.Throws<JsonSerializationException>(() =>
             {
                 jsonConverter.ReadJson(Get("null"), typeof(decimal), null, null);
-            });Assert.Throws<JsonSerializationException>(() =>
-            {
-                jsonConverter.ReadJson(Get("null"), typeof(double), null, null);
             });
+            Assert.Throws<JsonSerializationException>(() =>
+         {
+             jsonConverter.ReadJson(Get("null"), typeof(double), null, null);
+         });
             Assert.Equal(1.2m, jsonConverter.ReadJson(Get(stringJson), typeof(decimal), null, null));
             Assert.Equal(1.2m, jsonConverter.ReadJson(Get(stringJson), typeof(decimal?), null, null));
             Assert.Equal(1.2, jsonConverter.ReadJson(Get(stringJson), typeof(double), null, null));

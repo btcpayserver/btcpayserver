@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Models.PaymentRequestViewModels;
 using BTCPayServer.Payments;
@@ -9,6 +10,7 @@ using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.PaymentRequests;
 using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.SignalR;
+using PaymentRequestData = BTCPayServer.Data.PaymentRequestData;
 
 namespace BTCPayServer.PaymentRequest
 {
@@ -99,9 +101,9 @@ namespace BTCPayServer.PaymentRequest
                 Invoices = invoices.Select(entity => new ViewPaymentRequestViewModel.PaymentRequestInvoice()
                 {
                     Id = entity.Id,
-                    Amount = entity.ProductInformation.Price,
-                    AmountFormatted = _currencies.FormatCurrency(entity.ProductInformation.Price, blob.Currency),
-                    Currency = entity.ProductInformation.Currency,
+                    Amount = entity.Price,
+                    AmountFormatted = _currencies.FormatCurrency(entity.Price, blob.Currency),
+                    Currency = entity.Currency,
                     ExpiryDate = entity.ExpirationTime.DateTime,
                     Status = entity.GetInvoiceState().ToString(),
                     Payments = entity

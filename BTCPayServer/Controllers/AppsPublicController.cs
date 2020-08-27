@@ -175,7 +175,7 @@ namespace BTCPayServer.Controllers
             var store = await _AppService.GetStore(app);
             try
             {
-                var invoice = await _InvoiceController.CreateInvoiceCore(new CreateInvoiceRequest()
+                var invoice = await _InvoiceController.CreateInvoiceCore(new BitpayCreateInvoiceRequest()
                 {
                     ItemCode = choice?.Id,
                     ItemDesc = title,
@@ -317,7 +317,7 @@ namespace BTCPayServer.Controllers
 
             try
             {
-                var invoice = await _InvoiceController.CreateInvoiceCore(new CreateInvoiceRequest()
+                var invoice = await _InvoiceController.CreateInvoiceCore(new BitpayCreateInvoiceRequest()
                 {
                     OrderId = AppService.GetCrowdfundOrderId(appId),
                     Currency = settings.TargetCurrency,

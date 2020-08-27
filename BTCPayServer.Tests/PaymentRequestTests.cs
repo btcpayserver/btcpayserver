@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using BTCPayServer.Models.PaymentRequestViewModels;
 using BTCPayServer.PaymentRequest;

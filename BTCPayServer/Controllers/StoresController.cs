@@ -481,8 +481,8 @@ namespace BTCPayServer.Controllers
             vm.SpeedPolicy = store.SpeedPolicy;
             vm.CanDelete = _Repo.CanDeleteStores();
             AddPaymentMethods(store, storeBlob, vm);
-            vm.MonitoringExpiration = storeBlob.MonitoringExpiration;
-            vm.InvoiceExpiration = storeBlob.InvoiceExpiration;
+            vm.MonitoringExpiration = (int)storeBlob.MonitoringExpiration.TotalMinutes;
+            vm.InvoiceExpiration = (int)storeBlob.InvoiceExpiration.TotalMinutes;
             vm.LightningDescriptionTemplate = storeBlob.LightningDescriptionTemplate;
             vm.PaymentTolerance = storeBlob.PaymentTolerance;
             vm.PayJoinEnabled = storeBlob.PayJoinEnabled;
@@ -579,8 +579,8 @@ namespace BTCPayServer.Controllers
             var blob = CurrentStore.GetStoreBlob();
             blob.AnyoneCanInvoice = model.AnyoneCanCreateInvoice;
             blob.NetworkFeeMode = model.NetworkFeeMode;
-            blob.MonitoringExpiration = model.MonitoringExpiration;
-            blob.InvoiceExpiration = model.InvoiceExpiration;
+            blob.MonitoringExpiration = TimeSpan.FromMinutes(model.MonitoringExpiration);
+            blob.InvoiceExpiration = TimeSpan.FromMinutes(model.InvoiceExpiration);
             blob.LightningDescriptionTemplate = model.LightningDescriptionTemplate ?? string.Empty;
             blob.PaymentTolerance = model.PaymentTolerance;
             var payjoinChanged = blob.PayJoinEnabled != model.PayJoinEnabled;

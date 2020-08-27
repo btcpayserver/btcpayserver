@@ -406,7 +406,7 @@ namespace BTCPayServer.Payments.Bitcoin
                 invoice.SetPaymentMethod(paymentMethod);
             }
             wallet.InvalidateCache(strategy);
-            _Aggregator.Publish(new InvoiceEvent(invoice, 1002, InvoiceEvent.ReceivedPayment) { Payment = payment });
+            _Aggregator.Publish(new InvoiceEvent(invoice, InvoiceEvent.ReceivedPayment) { Payment = payment });
             return invoice;
         }
         public async Task StopAsync(CancellationToken cancellationToken)

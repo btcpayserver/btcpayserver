@@ -153,6 +153,36 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Fast", "Fast")]
+        public void CanParsePaymentMethodId()
+        {
+            var id = PaymentMethodId.Parse("BTC");
+            var id1 = PaymentMethodId.Parse("BTC-OnChain");
+            var id2 = PaymentMethodId.Parse("BTC-BTCLike");
+            Assert.Equal(id, id1);
+            Assert.Equal(id, id2);
+            Assert.Equal("BTC", id.ToString());
+            Assert.Equal("BTC", id.ToString());
+            id = PaymentMethodId.Parse("LTC");
+            Assert.Equal("LTC", id.ToString());
+            Assert.Equal("LTC", id.ToStringNormalized());
+            id = PaymentMethodId.Parse("LTC-offchain");
+            id1 = PaymentMethodId.Parse("LTC-OffChain");
+            id2 = PaymentMethodId.Parse("LTC-LightningLike");
+            Assert.Equal(id, id1);
+            Assert.Equal(id, id2);
+            Assert.Equal("LTC_LightningLike", id.ToString());
+            Assert.Equal("LTC-LightningNetwork", id.ToStringNormalized());
+#if ALTCOINS
+            id = PaymentMethodId.Parse("XMR");
+            id1 = PaymentMethodId.Parse("XMR-MoneroLike");
+            Assert.Equal(id, id1);
+            Assert.Equal("XMR_MoneroLike", id.ToString());
+            Assert.Equal("XMR", id.ToStringNormalized());
+#endif
+        }
+
+        [Fact]
+        [Trait("Fast", "Fast")]
         public async Task CheckNoDeadLink()
         {
             var views = Path.Combine(TestUtils.TryGetSolutionDirectoryInfo().FullName, "BTCPayServer", "Views");
@@ -325,7 +355,7 @@ namespace BTCPayServer.Tests
             Assert.True(Torrc.TryParse(input, out torrc));
             Assert.Equal(expected, torrc.ToString());
         }
-
+#if ALTCOINS
         [Fact]
         [Trait("Fast", "Fast")]
         public void CanCalculateCryptoDue()
@@ -346,7 +376,7 @@ namespace BTCPayServer.Tests
                 Rate = 5000,
                 NextNetworkFee = Money.Coins(0.1m)
             });
-            entity.ProductInformation = new ProductInformation() { Price = 5000 };
+            entity.Price = 5000;
 
             var paymentMethod = entity.GetPaymentMethods().TryGet("BTC", PaymentTypes.BTCLike);
             var accounting = paymentMethod.Calculate();
@@ -396,7 +426,7 @@ namespace BTCPayServer.Tests
 
             entity = new InvoiceEntity();
             entity.Networks = networkProvider;
-            entity.ProductInformation = new ProductInformation() { Price = 5000 };
+            entity.Price = 5000;
             PaymentMethodDictionary paymentMethods = new PaymentMethodDictionary();
             paymentMethods.Add(
                 new PaymentMethod() { CryptoCode = "BTC", Rate = 1000, NextNetworkFee = Money.Coins(0.1m) });
@@ -490,7 +520,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(accounting.Paid, accounting.TotalDue);
 #pragma warning restore CS0618
         }
-
+#endif
         [Fact]
         [Trait("Integration", "Integration")]
         public async Task CanUseTestWebsiteUI()
@@ -545,7 +575,7 @@ namespace BTCPayServer.Tests
                 Rate = 5000,
                 NextNetworkFee = Money.Coins(0.1m)
             });
-            entity.ProductInformation = new ProductInformation() { Price = 5000 };
+            entity.Price = 5000;
             entity.PaymentTolerance = 0;
 
 

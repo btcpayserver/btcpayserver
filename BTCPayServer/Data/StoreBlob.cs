@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using BTCPayServer.Client.JsonConverters;
 using BTCPayServer.Client.Models;
 using BTCPayServer.JsonConverters;
 using BTCPayServer.Payments;
@@ -19,8 +20,8 @@ namespace BTCPayServer.Data
     {
         public StoreBlob()
         {
-            InvoiceExpiration = 15;
-            MonitoringExpiration = 1440;
+            InvoiceExpiration = TimeSpan.FromMinutes(15);
+            MonitoringExpiration = TimeSpan.FromDays(1);
             PaymentTolerance = 0;
             ShowRecommendedFee = true;
             RecommendedFeeBlockTarget = 1;
@@ -66,17 +67,19 @@ namespace BTCPayServer.Data
         }
 
         public string DefaultLang { get; set; }
-        [DefaultValue(60)]
+        [DefaultValue(typeof(TimeSpan), "1.00:00:00")]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
-        public int MonitoringExpiration
+        [JsonConverter(typeof(TimeSpanJsonConverter.Minutes))]
+        public TimeSpan MonitoringExpiration
         {
             get;
             set;
         }
 
-        [DefaultValue(15)]
+        [DefaultValue(typeof(TimeSpan), "00:15:00")]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
-        public int InvoiceExpiration
+        [JsonConverter(typeof(TimeSpanJsonConverter.Minutes))]
+        public TimeSpan InvoiceExpiration
         {
             get;
             set;

@@ -877,7 +877,7 @@ normal:
             InvoiceEntity invoiceEntity = new InvoiceEntity();
             invoiceEntity.Networks = networkProvider;
             invoiceEntity.Payments = new System.Collections.Generic.List<PaymentEntity>();
-            invoiceEntity.ProductInformation = new ProductInformation() { Price = 100 };
+            invoiceEntity.Price = 100;
             PaymentMethodDictionary paymentMethods = new PaymentMethodDictionary();
             paymentMethods.Add(new PaymentMethod() { Network = networkBTC, CryptoCode = "BTC", Rate = 10513.44m, }
                 .SetPaymentMethodDetails(

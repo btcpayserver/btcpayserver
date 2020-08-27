@@ -1,4 +1,5 @@
 using BTCPayServer.Services.Invoices;
+using Microsoft.AspNetCore.Authorization.Infrastructure;
 
 namespace BTCPayServer.Data
 {
@@ -8,6 +9,17 @@ namespace BTCPayServer.Data
         {
             var entity = NBitcoin.JsonConverters.Serializer.ToObject<InvoiceEntity>(ZipUtils.Unzip(invoiceData.Blob), null);
             entity.Networks = networks;
+            if (entity.Metadata is null)
+            {
+                if (entity.Version < InvoiceEntity.GreenfieldInvoices_Version)
+                {
+                    entity.MigrateLegacyInvoice();
+                }
+                else
+                {
+                    entity.Metadata = new InvoiceMetadata();
+                }
+            }
             return entity;
         }
         public static InvoiceState GetInvoiceState(this InvoiceData invoiceData)

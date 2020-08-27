@@ -124,8 +124,8 @@ namespace BTCPayServer.Controllers.GreenField
                 ShowRecommendedFee = storeBlob.ShowRecommendedFee,
                 RecommendedFeeBlockTarget = storeBlob.RecommendedFeeBlockTarget,
                 DefaultLang = storeBlob.DefaultLang,
-                MonitoringExpiration = TimeSpan.FromMinutes(storeBlob.MonitoringExpiration),
-                InvoiceExpiration = TimeSpan.FromMinutes(storeBlob.InvoiceExpiration),
+                MonitoringExpiration = storeBlob.MonitoringExpiration,
+                InvoiceExpiration = storeBlob.InvoiceExpiration,
                 LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi,
                 CustomLogo = storeBlob.CustomLogo,
                 CustomCSS = storeBlob.CustomCSS,
@@ -160,8 +160,8 @@ namespace BTCPayServer.Controllers.GreenField
             blob.ShowRecommendedFee = restModel.ShowRecommendedFee;
             blob.RecommendedFeeBlockTarget = restModel.RecommendedFeeBlockTarget;
             blob.DefaultLang = restModel.DefaultLang;
-            blob.MonitoringExpiration = (int)restModel.MonitoringExpiration.TotalMinutes;
-            blob.InvoiceExpiration = (int)restModel.InvoiceExpiration.TotalMinutes;
+            blob.MonitoringExpiration = restModel.MonitoringExpiration;
+            blob.InvoiceExpiration = restModel.InvoiceExpiration;
             blob.LightningAmountInSatoshi = restModel.LightningAmountInSatoshi;
             blob.CustomLogo = restModel.CustomLogo;
             blob.CustomCSS = restModel.CustomCSS;

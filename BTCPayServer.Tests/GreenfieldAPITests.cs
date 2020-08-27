@@ -845,17 +845,6 @@ namespace BTCPayServer.Tests
                 Assert.Equal(newInvoice.Metadata, invoice.Metadata);
 
                 //update
-                await AssertHttpError(403, async () =>
-                {
-                    await viewOnly.AddCustomerEmailToInvoice(user.StoreId, invoice.Id, new AddCustomerEmailRequest()
-                    {
-                        Email = "j@g.com"
-                    });
-                });
-                await client.AddCustomerEmailToInvoice(user.StoreId, invoice.Id, new AddCustomerEmailRequest()
-                {
-                    Email = "j@g.com"
-                });
                 invoice = await viewOnly.GetInvoice(user.StoreId, newInvoice.Id);
 
                 await AssertValidationError(new[] { nameof(MarkInvoiceStatusRequest.Status) }, async () =>

@@ -47,17 +47,6 @@ namespace BTCPayServer.Client
             return await HandleResponse<InvoiceData>(response);
         }
 
-        public virtual async Task<InvoiceData> AddCustomerEmailToInvoice(string storeId, string invoiceId,
-            AddCustomerEmailRequest request, CancellationToken token = default)
-        {
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
-            var response = await _httpClient.SendAsync(
-                CreateHttpRequest($"api/v1/stores/{storeId}/invoices/{invoiceId}/email", bodyPayload: request,
-                    method: HttpMethod.Post), token);
-            return await HandleResponse<InvoiceData>(response);
-        }
-
         public virtual async Task<InvoiceData> MarkInvoiceStatus(string storeId, string invoiceId,
             MarkInvoiceStatusRequest request, CancellationToken token = default)
         {

@@ -103,7 +103,7 @@ namespace BTCPayServer.Client
             return request;
         }
 
-        private static void AppendPayloadToQuery(UriBuilder uri, KeyValuePair<string, object> keyValuePair)
+        public static void AppendPayloadToQuery(UriBuilder uri, KeyValuePair<string, object> keyValuePair)
         {
             if (uri.Query.Length > 1)
                 uri.Query += "&";
@@ -126,7 +126,7 @@ namespace BTCPayServer.Client
             uri.Query = uri.Query.Trim('&');
         }
 
-        private static void AppendPayloadToQuery(UriBuilder uri, Dictionary<string, object> payload)
+        public static void AppendPayloadToQuery(UriBuilder uri, Dictionary<string, object> payload)
         {
             if (uri.Query.Length > 1)
                 uri.Query += "&";

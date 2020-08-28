@@ -9308,7 +9308,7 @@ strong {
 }
 
 .status-icon--error .status-icon__wrapper__outline {
-    border-color: #E5465A;
+    border-color: #51b13e;
 }
 
 .status-icon--error .status-icon__wrapper__icon {
@@ -9335,7 +9335,7 @@ strong {
     border-radius: 50%;
     height: 154px;
     width: 154px;
-    border: 2px solid #13E5B6;
+    border: 5px solid #51b13e;
 }
 
 .status-icon__wrapper__icon {

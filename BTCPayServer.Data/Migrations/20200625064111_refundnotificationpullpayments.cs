@@ -73,7 +73,7 @@ namespace BTCPayServer.Migrations
                     PullPaymentDataId = table.Column<string>(maxLength: 30, nullable: true),
                     State = table.Column<string>(maxLength: 20, nullable: false),
                     PaymentMethodId = table.Column<string>(maxLength: 20, nullable: false),
-                    Destination = table.Column<string>(maxLength: 1000, nullable: true),
+                    Destination = table.Column<string>(nullable: true),
                     Blob = table.Column<byte[]>(nullable: true),
                     Proof = table.Column<byte[]>(nullable: true)
                 },

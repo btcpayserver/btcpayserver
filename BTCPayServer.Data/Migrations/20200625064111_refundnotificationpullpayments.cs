@@ -70,7 +70,7 @@ namespace BTCPayServer.Migrations
                 {
                     Id = table.Column<string>(maxLength: 30, nullable: false),
                     Date = table.Column<DateTimeOffset>(nullable: false),
-                    PullPaymentDataId = table.Column<string>(nullable: true),
+                    PullPaymentDataId = table.Column<string>(maxLength: 30, nullable: true),
                     State = table.Column<string>(maxLength: 20, nullable: false),
                     PaymentMethodId = table.Column<string>(maxLength: 20, nullable: false),
                     Destination = table.Column<string>(nullable: true),

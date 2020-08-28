@@ -118,7 +118,7 @@ namespace BTCPayServer.HostedServices
 #pragma warning restore CS0618
             }
 
-            if (!String.IsNullOrEmpty(invoice.NotificationEmail))
+            if (invoiceEvent.Name != InvoiceEvent.Expired && !String.IsNullOrEmpty(invoice.NotificationEmail))
             {
                 var emailBody = NBitcoin.JsonConverters.Serializer.ToString(notification);
 
@@ -126,7 +126,6 @@ namespace BTCPayServer.HostedServices
                     invoice.NotificationEmail,
                     $"BtcPayServer Invoice Notification - ${invoice.StoreId}",
                     emailBody);
-
             }
 
             if (invoice.NotificationURL != null)

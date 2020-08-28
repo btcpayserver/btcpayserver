@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using BTCPayServer.Data;
 
 namespace BTCPayServer.Logging
 {
@@ -8,20 +9,21 @@ namespace BTCPayServer.Logging
     {
         public DateTimeOffset Timestamp { get; set; }
         public string Log { get; set; }
-
+        public InvoiceEventData.EventSeverity Severity { get; set; }
         public override string ToString()
         {
-            return $"{Timestamp.UtcDateTime}: {Log}";
+            return $"{Timestamp.UtcDateTime}:{Severity} {Log}";
         }
+
     }
     public class InvoiceLogs
     {
         readonly List<InvoiceLog> _InvoiceLogs = new List<InvoiceLog>();
-        public void Write(string data)
+        public void Write(string data, InvoiceEventData.EventSeverity eventSeverity)
         {
             lock (_InvoiceLogs)
             {
-                _InvoiceLogs.Add(new InvoiceLog() { Timestamp = DateTimeOffset.UtcNow, Log = data });
+                _InvoiceLogs.Add(new InvoiceLog() { Timestamp = DateTimeOffset.UtcNow, Log = data, Severity = eventSeverity});
             }
         }
 
@@ -54,11 +56,11 @@ namespace BTCPayServer.Logging
                 var timespan = DateTimeOffset.UtcNow - _Before;
                 if (timespan.TotalSeconds >= 1.0)
                 {
-                    _logs.Write($"{_msg} took {(int)timespan.TotalSeconds} seconds");
+                    _logs.Write($"{_msg} took {(int)timespan.TotalSeconds} seconds", InvoiceEventData.EventSeverity.Info);
                 }
                 else
                 {
-                    _logs.Write($"{_msg} took {(int)timespan.TotalMilliseconds} milliseconds");
+                    _logs.Write($"{_msg} took {(int)timespan.TotalMilliseconds} milliseconds", InvoiceEventData.EventSeverity.Info);
                 }
             }
         }

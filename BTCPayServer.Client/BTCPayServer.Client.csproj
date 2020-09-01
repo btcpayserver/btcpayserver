@@ -2,12 +2,36 @@
 
     <PropertyGroup>
         <TargetFramework>netstandard2.1</TargetFramework>
+        <Company>BTCPay Server</Company>
+        <Copyright>Copyright © BTCPay Server 2020</Copyright>
+        <Description>A client library for BTCPay Server Greenfield API</Description>
+        <PackageIcon>icon.png</PackageIcon>
+        <PackageTags>btcpay,btcpayserver</PackageTags>
+        <PackageProjectUrl>https://github.com/btcpayserver/btcpayserver/tree/master/BTCPayServer.Client</PackageProjectUrl>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <RepositoryUrl>https://github.com/btcpayserver/btcpayserver</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
     </PropertyGroup>
-
+  <PropertyGroup>
+    <Version Condition=" '$(Version)' == '' ">1.1.0</Version>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <DebugType>portable</DebugType>
+    <Optimize>true</Optimize>
+    <NoWarn>1591;1573;1572;1584;1570;3021</NoWarn>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup Condition=" '$(Configuration)' == 'Release' ">
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
+  </ItemGroup>
     <ItemGroup>
       <PackageReference Include="NBitcoin" Version="5.0.51" />
       <PackageReference Include="BTCPayServer.Lightning.Common" Version="1.2.0" />
       <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     </ItemGroup>
-
+  <ItemGroup>
+    <None Include="icon.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
 </Project>

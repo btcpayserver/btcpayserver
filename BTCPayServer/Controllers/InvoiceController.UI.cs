@@ -11,15 +11,18 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Filters;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Changelly;
 using BTCPayServer.Payments.CoinSwitch;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Rating;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Invoices.Export;
+using BTCPayServer.Services.Rates;
 using DBriize.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -164,7 +167,6 @@ namespace BTCPayServer.Controllers
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> Refund(string invoiceId, RefundModel model, CancellationToken cancellationToken)
         {
-            model.RefundStep = RefundSteps.SelectRate;
             using var ctx = _dbContextFactory.CreateContext();
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
             if (invoice is null)
@@ -177,30 +179,43 @@ namespace BTCPayServer.Controllers
             var paymentMethodId = new PaymentMethodId(model.SelectedPaymentMethod, PaymentTypes.BTCLike);
             var cdCurrency = _CurrencyNameTable.GetCurrencyData(invoice.Currency, true);
             var paymentMethodDivisibility = _CurrencyNameTable.GetCurrencyData(paymentMethodId.CryptoCode, false)?.Divisibility ?? 8;
-            if (model.SelectedRefundOption is null)
+            RateRules rules;
+            RateResult rateResult;
+            CreatePullPayment createPullPayment;
+            switch (model.RefundStep)
             {
-                model.Title = "What to refund?";
-                var paymentMethod = invoice.GetPaymentMethods()[paymentMethodId];
-                var paidCurrency = Math.Round(paymentMethod.Calculate().Paid.ToDecimal(MoneyUnit.BTC) * paymentMethod.Rate, cdCurrency.Divisibility);
-                model.CryptoAmountThen = Math.Round(paidCurrency / paymentMethod.Rate, paymentMethodDivisibility);
-                model.RateThenText = _CurrencyNameTable.DisplayFormatCurrency(model.CryptoAmountThen, paymentMethodId.CryptoCode, true);
-                var rules = store.GetStoreBlob().GetRateRules(_NetworkProvider);
-                var rateResult = await _RateProvider.FetchRate(new Rating.CurrencyPair(paymentMethodId.CryptoCode, invoice.Currency), rules, cancellationToken);
-                //TODO: What if fetching rate failed?
-                if (rateResult.BidAsk is null)
-                {
-                    ModelState.AddModelError(nameof(model.SelectedRefundOption), $"Impossible to fetch rate: {rateResult.EvaluatedRule}");
+                case RefundSteps.SelectPaymentMethod:
+                    model.RefundStep = RefundSteps.SelectRate;
+                    model.Title = "What to refund?";
+                    var paymentMethod = invoice.GetPaymentMethods()[paymentMethodId];
+                    var paidCurrency =
+                        Math.Round(paymentMethod.Calculate().Paid.ToDecimal(MoneyUnit.BTC) * paymentMethod.Rate,
+                            cdCurrency.Divisibility);
+                    model.CryptoAmountThen = Math.Round(paidCurrency / paymentMethod.Rate, paymentMethodDivisibility);
+                    model.RateThenText =
+                        _CurrencyNameTable.DisplayFormatCurrency(model.CryptoAmountThen, paymentMethodId.CryptoCode,
+                            true);
+                    rules = store.GetStoreBlob().GetRateRules(_NetworkProvider);
+                    rateResult = await _RateProvider.FetchRate(
+                        new Rating.CurrencyPair(paymentMethodId.CryptoCode, invoice.Currency), rules,
+                        cancellationToken);
+                    //TODO: What if fetching rate failed?
+                    if (rateResult.BidAsk is null)
+                    {
+                        ModelState.AddModelError(nameof(model.SelectedRefundOption),
+                            $"Impossible to fetch rate: {rateResult.EvaluatedRule}");
+                        return View(model);
+                    }
+
+                    model.CryptoAmountNow = Math.Round(paidCurrency / rateResult.BidAsk.Bid, paymentMethodDivisibility);
+                    model.CurrentRateText =
+                        _CurrencyNameTable.DisplayFormatCurrency(model.CryptoAmountNow, paymentMethodId.CryptoCode,
+                            true);
+                    model.FiatAmount = paidCurrency;
+                    model.FiatText = _CurrencyNameTable.DisplayFormatCurrency(model.FiatAmount, invoice.Currency, true);
                     return View(model);
-                }
-                model.CryptoAmountNow = Math.Round(paidCurrency / rateResult.BidAsk.Bid, paymentMethodDivisibility);
-                model.CurrentRateText = _CurrencyNameTable.DisplayFormatCurrency(model.CryptoAmountNow, paymentMethodId.CryptoCode, true);
-                model.FiatAmount = paidCurrency;
-                model.FiatText = _CurrencyNameTable.DisplayFormatCurrency(model.FiatAmount, invoice.Currency, true);
-                return View(model);
-            }
-            else
-            {
-                var createPullPayment = new HostedServices.CreatePullPayment();
+                case RefundSteps.SelectRate:
+                    createPullPayment = new HostedServices.CreatePullPayment();
                 createPullPayment.Name = $"Refund {invoice.Id}";
                 createPullPayment.PaymentMethodIds = new[] { paymentMethodId };
                 createPullPayment.StoreId = invoice.StoreId;
@@ -218,28 +233,76 @@ namespace BTCPayServer.Controllers
                         createPullPayment.Currency = invoice.Currency;
                         createPullPayment.Amount = model.FiatAmount;
                         break;
+                    case "Custom":
+                        model.Title = "How much to refund?";
+                        model.CustomCurrency = invoice.Currency;
+                        model.CustomAmount = model.FiatAmount;
+                        model.RefundStep = RefundSteps.SelectCustomAmount;
+                        return View(model);
                     default:
                         ModelState.AddModelError(nameof(model.SelectedRefundOption), "Invalid choice");
                         return View(model);
                 }
-                var ppId = await _paymentHostedService.CreatePullPayment(createPullPayment);
-                this.TempData.SetStatusMessageModel(new StatusMessageModel()
-                {
-                    Html = "Share this page with a customer so they can claim a refund <br />Once claimed you need to initiate a refund from Wallet > Payouts",
-                    Severity = StatusMessageModel.StatusSeverity.Success
-                });
-                (await ctx.Invoices.FindAsync(invoice.Id)).CurrentRefundId = ppId;
-                ctx.Refunds.Add(new RefundData()
-                {
-                    InvoiceDataId = invoice.Id,
-                    PullPaymentDataId = ppId
-                });
-                await ctx.SaveChangesAsync();
-                // TODO: Having dedicated UI later on
-                return RedirectToAction(nameof(PullPaymentController.ViewPullPayment),
-                                "PullPayment",
-                                new { pullPaymentId = ppId });
+
+                    break;
+                case RefundSteps.SelectCustomAmount:
+                    if (model.CustomAmount <= 0)
+                    {
+                        model.AddModelError(refundModel => refundModel.CustomAmount, "Amount must be greater than 0", this);
+                    }
+
+                    if (string.IsNullOrEmpty(model.CustomCurrency) ||
+                        _CurrencyNameTable.GetCurrencyData(model.CustomCurrency, false) == null)
+                    {
+                        ModelState.AddModelError(nameof(model.CustomCurrency), "Invalid currency");
+                    }
+
+                    if (!ModelState.IsValid)
+                    {
+                        return View(model);
+                    }
+                    rules = store.GetStoreBlob().GetRateRules(_NetworkProvider);
+                    rateResult = await _RateProvider.FetchRate(
+                        new Rating.CurrencyPair(paymentMethodId.CryptoCode, model.CustomCurrency), rules,
+                        cancellationToken);
+                    //TODO: What if fetching rate failed?
+                    if (rateResult.BidAsk is null)
+                    {
+                        ModelState.AddModelError(nameof(model.SelectedRefundOption),
+                            $"Impossible to fetch rate: {rateResult.EvaluatedRule}");
+                        return View(model);
+                    }
+
+                    createPullPayment = new HostedServices.CreatePullPayment();
+                    createPullPayment.Name = $"Refund {invoice.Id}";
+                    createPullPayment.PaymentMethodIds = new[] { paymentMethodId };
+                    createPullPayment.StoreId = invoice.StoreId;
+                    createPullPayment.Currency = model.CustomCurrency;
+                    createPullPayment.Amount = model.CustomAmount;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
+
+            var ppId = await _paymentHostedService.CreatePullPayment(createPullPayment);
+            this.TempData.SetStatusMessageModel(new StatusMessageModel()
+            {
+                Html = "Share this page with a customer so they can claim a refund <br />Once claimed you need to initiate a refund from Wallet > Payouts",
+                Severity = StatusMessageModel.StatusSeverity.Success
+            });
+            (await ctx.Invoices.FindAsync(invoice.Id)).CurrentRefundId = ppId;
+            ctx.Refunds.Add(new RefundData()
+            {
+                InvoiceDataId = invoice.Id,
+                PullPaymentDataId = ppId
+            });
+            await ctx.SaveChangesAsync(cancellationToken);
+            // TODO: Having dedicated UI later on
+            return RedirectToAction(nameof(PullPaymentController.ViewPullPayment),
+                "PullPayment",
+                new { pullPaymentId = ppId });
+
+
         }
 
         private InvoiceDetailsModel InvoicePopulatePayments(InvoiceEntity invoice)

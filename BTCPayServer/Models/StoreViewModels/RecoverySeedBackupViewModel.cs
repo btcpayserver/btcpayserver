@@ -16,7 +16,7 @@ namespace BTCPayServer.Models.StoreViewModels
 
         public string[] Words
         {
-            get => Mnemonic.Split(" ");
+            get => Mnemonic.Split((char[])null, System.StringSplitOptions.RemoveEmptyEntries);
         }
     }
 }

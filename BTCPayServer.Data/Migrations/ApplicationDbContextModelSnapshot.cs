@@ -240,6 +240,9 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("Message")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("Severity")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTimeOffset>("Timestamp")
                         .HasColumnType("TEXT");
 

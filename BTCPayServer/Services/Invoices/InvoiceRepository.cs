@@ -218,20 +218,19 @@ retry:
 
         public async Task AddInvoiceLogs(string invoiceId, InvoiceLogs logs)
         {
-            using (var context = _ContextFactory.CreateContext())
+            await using var context = _ContextFactory.CreateContext();
+            foreach (var log in logs.ToList())
             {
-                foreach (var log in logs.ToList())
+                await context.InvoiceEvents.AddAsync(new InvoiceEventData()
                 {
-                    context.InvoiceEvents.Add(new InvoiceEventData()
-                    {
-                        InvoiceDataId = invoiceId,
-                        Message = log.Log,
-                        Timestamp = log.Timestamp,
-                        UniqueId = Encoders.Hex.EncodeData(RandomUtils.GetBytes(10))
-                    });
-                }
-                await context.SaveChangesAsync().ConfigureAwait(false);
+                    Severity = log.Severity,
+                    InvoiceDataId = invoiceId,
+                    Message = log.Log,
+                    Timestamp = log.Timestamp,
+                    UniqueId = Encoders.Hex.EncodeData(RandomUtils.GetBytes(10))
+                });
             }
+            await context.SaveChangesAsync().ConfigureAwait(false);
         }
 
         private string GetDestination(PaymentMethod paymentMethod)
@@ -325,23 +324,22 @@ retry:
             }
         }
 
-        public async Task AddInvoiceEvent(string invoiceId, object evt)
+        public async Task AddInvoiceEvent(string invoiceId, object evt, InvoiceEventData.EventSeverity severity)
         {
-            using (var context = _ContextFactory.CreateContext())
+            await using var context = _ContextFactory.CreateContext();
+            await context.InvoiceEvents.AddAsync(new InvoiceEventData()
             {
-                context.InvoiceEvents.Add(new InvoiceEventData()
-                {
-                    InvoiceDataId = invoiceId,
-                    Message = evt.ToString(),
-                    Timestamp = DateTimeOffset.UtcNow,
-                    UniqueId = Encoders.Hex.EncodeData(RandomUtils.GetBytes(10))
-                });
-                try
-                {
-                    await context.SaveChangesAsync();
-                }
-                catch (DbUpdateException) { } // Probably the invoice does not exists anymore
+                Severity = severity,
+                InvoiceDataId = invoiceId,
+                Message = evt.ToString(),
+                Timestamp = DateTimeOffset.UtcNow,
+                UniqueId = Encoders.Hex.EncodeData(RandomUtils.GetBytes(10))
+            });
+            try
+            {
+                await context.SaveChangesAsync();
             }
+            catch (DbUpdateException) { } // Probably the invoice does not exists anymore
         }
 
         private static void MarkUnassigned(string invoiceId, InvoiceEntity entity, ApplicationDbContext context, PaymentMethodId paymentMethodId)

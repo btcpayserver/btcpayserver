@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Filters;
 using BTCPayServer.HostedServices;
@@ -141,7 +142,7 @@ namespace BTCPayServer.Payments.PayJoin
             await using var ctx = new PayjoinReceiverContext(_invoiceRepository, _explorerClientProvider.GetExplorerClient(network), _payJoinRepository);
             ObjectResult CreatePayjoinErrorAndLog(int httpCode, PayjoinReceiverWellknownErrors err, string debug)
             {
-                ctx.Logs.Write($"Payjoin error: {debug}");
+                ctx.Logs.Write($"Payjoin error: {debug}", InvoiceEventData.EventSeverity.Error);
                 return StatusCode(httpCode, CreatePayjoinError(err, debug));
             }
             var explorer = _explorerClientProvider.GetExplorerClient(network);

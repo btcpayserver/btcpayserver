@@ -181,7 +181,7 @@ namespace BTCPayServer.Controllers
         internal async Task<InvoiceEntity> CreateInvoiceCoreRaw(InvoiceEntity entity, StoreData store, IPaymentFilter invoicePaymentMethodFilter, CancellationToken cancellationToken = default)
         {
             InvoiceLogs logs = new InvoiceLogs();
-            logs.Write("Creation of invoice starting");
+            logs.Write("Creation of invoice starting", InvoiceEventData.EventSeverity.Info);
 
             var getAppsTaggingStore = _InvoiceRepository.GetAppsTaggingStore(store.Id);
             var storeBlob = store.GetStoreBlob();
@@ -273,7 +273,7 @@ namespace BTCPayServer.Controllers
                 }
                 catch (AggregateException ex)
                 {
-                    ex.Handle(e => { logs.Write($"Error while fetching rates {ex}"); return true; });
+                    ex.Handle(e => { logs.Write($"Error while fetching rates {ex}", InvoiceEventData.EventSeverity.Error); return true; });
                 }
                 await _InvoiceRepository.AddInvoiceLogs(entity.Id, logs);
             });
@@ -286,16 +286,16 @@ namespace BTCPayServer.Controllers
             return Task.WhenAll(fetchingByCurrencyPair.Select(async pair =>
             {
                 var rateResult = await pair.Value;
-                logs.Write($"{pair.Key}: The rating rule is {rateResult.Rule}");
-                logs.Write($"{pair.Key}: The evaluated rating rule is {rateResult.EvaluatedRule}");
+                logs.Write($"{pair.Key}: The rating rule is {rateResult.Rule}", InvoiceEventData.EventSeverity.Info);
+                logs.Write($"{pair.Key}: The evaluated rating rule is {rateResult.EvaluatedRule}", InvoiceEventData.EventSeverity.Info);
                 if (rateResult.Errors.Count != 0)
                 {
                     var allRateRuleErrors = string.Join(", ", rateResult.Errors.ToArray());
-                    logs.Write($"{pair.Key}: Rate rule error ({allRateRuleErrors})");
+                    logs.Write($"{pair.Key}: Rate rule error ({allRateRuleErrors})", InvoiceEventData.EventSeverity.Error);
                 }
                 foreach (var ex in rateResult.ExchangeExceptions)
                 {
-                    logs.Write($"{pair.Key}: Exception reaching exchange {ex.ExchangeName} ({ex.Exception.Message})");
+                    logs.Write($"{pair.Key}: Exception reaching exchange {ex.ExchangeName} ({ex.Exception.Message})", InvoiceEventData.EventSeverity.Error);
                 }
             }).ToArray());
         }
@@ -331,7 +331,7 @@ namespace BTCPayServer.Controllers
                             paymentMethod.Calculate().Due, supportedPaymentMethod.PaymentId);
                 if (!string.IsNullOrEmpty(errorMessage))
                 {
-                    logs.Write($"{logPrefix} {errorMessage}");
+                    logs.Write($"{logPrefix} {errorMessage}", InvoiceEventData.EventSeverity.Error);
                     return null;
                 }
 
@@ -348,11 +348,11 @@ namespace BTCPayServer.Controllers
             }
             catch (PaymentMethodUnavailableException ex)
             {
-                logs.Write($"{supportedPaymentMethod.PaymentId.CryptoCode}: Payment method unavailable ({ex.Message})");
+                logs.Write($"{supportedPaymentMethod.PaymentId.CryptoCode}: Payment method unavailable ({ex.Message})", InvoiceEventData.EventSeverity.Error);
             }
             catch (Exception ex)
             {
-                logs.Write($"{supportedPaymentMethod.PaymentId.CryptoCode}: Unexpected exception ({ex.ToString()})");
+                logs.Write($"{supportedPaymentMethod.PaymentId.CryptoCode}: Unexpected exception ({ex.ToString()})", InvoiceEventData.EventSeverity.Error);
             }
             return null;
         }

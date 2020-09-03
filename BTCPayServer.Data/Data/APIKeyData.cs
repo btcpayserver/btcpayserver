@@ -43,6 +43,8 @@ namespace BTCPayServer.Data
     public class APIKeyBlob
     {
         public string[] Permissions { get; set; }
+        public string ApplicationIdentifier { get; set; }
+        public string ApplicationAuthority { get; set; }
 
     }
 

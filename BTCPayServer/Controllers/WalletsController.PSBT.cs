@@ -51,7 +51,7 @@ namespace BTCPayServer.Controllers
             if (sendModel.FeeSatoshiPerByte is decimal v &&
                 v > decimal.Zero)
             {
-                psbtRequest.FeePreference.ExplicitFeeRate = new FeeRate(Money.Satoshis(v), 1);
+                psbtRequest.FeePreference.ExplicitFeeRate = new FeeRate(v);
             }
             if (sendModel.NoChange)
             {

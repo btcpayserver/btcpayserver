@@ -4,12 +4,10 @@ using BTCPayServer.Data;
 
 namespace BTCPayServer.Events
 {
-    public class UserRegisteredEvent
+    public class UserPasswordResetRequestedEvent
     {
         public ApplicationUser User { get; set; }
-        public bool Admin { get; set; }
         public Uri RequestUri { get; set; }
-
         public TaskCompletionSource<Uri> CallbackUrlGenerated;
     }
 }

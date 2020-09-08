@@ -7,8 +7,6 @@ using BTCPayServer.Client.JsonConverters;
 using BTCPayServer.Client.Models;
 using BTCPayServer.JsonConverters;
 using BTCPayServer.Payments;
-using BTCPayServer.Payments.Changelly;
-using BTCPayServer.Payments.CoinSwitch;
 using BTCPayServer.Rating;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Rates;
@@ -107,10 +105,6 @@ namespace BTCPayServer.Data
         public string RateScript { get; set; }
 
         public bool AnyoneCanInvoice { get; set; }
-
-        public ChangellySettings ChangellySettings { get; set; }
-        public CoinSwitchSettings CoinSwitchSettings { get; set; }
-
 
         string _LightningDescriptionTemplate;
         public string LightningDescriptionTemplate

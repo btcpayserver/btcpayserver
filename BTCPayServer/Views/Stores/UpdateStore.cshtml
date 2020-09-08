@@ -228,36 +228,6 @@
                 </p>
             </div>
 
-            <h4 class="mt-5 mb-3">Additional Payment methods</h4>
-            <table class="table table-sm table-responsive-md mt-1 mb-5">
-                <thead>
-                    <tr>
-                        <th>Provider</th>
-                        <th class="text-center">Enabled</th>
-                        <th class="text-right">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                @foreach (var scheme in Model.ThirdPartyPaymentMethods)
-                {
-                    <tr>
-                        <td>@scheme.Provider</td>
-                        <td  class="text-center">
-                            @if (scheme.Enabled)
-                            {
-                                <span class="text-success fa fa-check"></span>
-                            }
-                            else
-                            {
-                                <span class="text-danger fa fa-times"></span>
-                            }
-                        </td>
-                        <td class="text-right"><a asp-action="@scheme.Action" id='Modify-@scheme.Provider' asp-route-storeId="@this.Context.GetRouteValue("storeId")">Modify</a></td>
-                    </tr>
-                }
-                </tbody>
-            </table>
-
             <h4 class="mt-5 mb-3">Services</h4>
             <table class="table table-sm table-responsive-md mt-1 mb-5">
                 <thead>

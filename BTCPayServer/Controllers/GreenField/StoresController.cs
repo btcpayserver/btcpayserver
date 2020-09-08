@@ -114,8 +114,6 @@ namespace BTCPayServer.Controllers.GreenField
                 //we do not include the default payment method in this model and instead opt to set it in the stores/storeid/payment-methods endpoints
                 //blob
                 //we do not include DefaultCurrencyPairs,Spread, PreferredExchange, RateScripting, RateScript  in this model and instead opt to set it in stores/storeid/rates endpoints
-                //we do not include ChangellySettings in this model and instead opt to set it in stores/storeid/changelly endpoints
-                //we do not include CoinSwitchSettings in this model and instead opt to set it in stores/storeid/coinswitch endpoints
                 //we do not include ExcludedPaymentMethods in this model and instead opt to set it in stores/storeid/payment-methods endpoints
                 //we do not include EmailSettings in this model and instead opt to set it in stores/storeid/email endpoints
                 //we do not include OnChainMinValue and LightningMaxValue because moving the CurrencyValueJsonConverter to the Client csproj is hard and requires a refactor (#1571 & #1572)
@@ -150,8 +148,6 @@ namespace BTCPayServer.Controllers.GreenField
             //we do not include the default payment method in this model and instead opt to set it in the stores/storeid/payment-methods endpoints
             //blob
             //we do not include DefaultCurrencyPairs;Spread; PreferredExchange; RateScripting; RateScript  in this model and instead opt to set it in stores/storeid/rates endpoints
-            //we do not include ChangellySettings in this model and instead opt to set it in stores/storeid/changelly endpoints
-            //we do not include CoinSwitchSettings in this model and instead opt to set it in stores/storeid/coinswitch endpoints
             //we do not include ExcludedPaymentMethods in this model and instead opt to set it in stores/storeid/payment-methods endpoints
             //we do not include EmailSettings in this model and instead opt to set it in stores/storeid/email endpoints
             //we do not include OnChainMinValue and LightningMaxValue because moving the CurrencyValueJsonConverter to the Client csproj is hard and requires a refactor (#1571 & #1572)

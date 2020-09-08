@@ -11510,46 +11510,7 @@ low-fee-timeline {
         opacity: 1;
         transition: opacity 1s ease;
     }
-
-.changelly-component {
-    position: relative;
-}
-
-.changelly-component-dropdown-holder {
-    height: 32px;
-    margin-bottom: 10px;
-}
-
-.changelly-component .general__spinner bp-spinner {
-    width: 50px;
-    height: 50px;
-}
-
-    .changelly-component .general__spinner bp-spinner svg {
-        margin: 0;
-    }
-
-.changelly-component .retry-button {
-    border-radius: 5px;
-    border: 1px solid #a9a9a9;
-    background: #fff;
-    color: #000;
-    min-width: 100px;
-    padding-left: 0.8rem;
-    padding-right: 0.8rem;
-    min-height: 30px;
-    word-break: break-all;
-}
-
-    .changelly-component .retry-button :hover {
-        border-color: #7f7f7f;
-    }
-
-.changelly-component .prettydropdown li img {
-    width: 20px;
-    margin-right: 5px;
-}
-
+    
 
 #prettydropdown-DefaultLang {
     min-width: 200px;

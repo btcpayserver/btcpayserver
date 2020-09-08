@@ -12,7 +12,6 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
-using BTCPayServer.Payments.Changelly;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Rating;
 using BTCPayServer.Security;
@@ -57,7 +56,6 @@ namespace BTCPayServer.Controllers
             ExplorerClientProvider explorerProvider,
             IFeeProviderFactory feeRateProvider,
             LanguageService langService,
-            ChangellyClientProvider changellyClientProvider,
             IWebHostEnvironment env, IHttpClientFactory httpClientFactory,
             PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
             SettingsRepository settingsRepository,
@@ -71,7 +69,6 @@ namespace BTCPayServer.Controllers
             _TokenRepository = tokenRepo;
             _UserManager = userManager;
             _LangService = langService;
-            _changellyClientProvider = changellyClientProvider;
             _TokenController = tokenController;
             _WalletProvider = walletProvider;
             _Env = env;
@@ -102,7 +99,6 @@ namespace BTCPayServer.Controllers
         readonly TokenRepository _TokenRepository;
         readonly UserManager<ApplicationUser> _UserManager;
         private readonly LanguageService _LangService;
-        private readonly ChangellyClientProvider _changellyClientProvider;
         readonly IWebHostEnvironment _Env;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
@@ -537,13 +533,6 @@ namespace BTCPayServer.Controllers
                 }
             }
 
-            var changellyEnabled = storeBlob.ChangellySettings != null && storeBlob.ChangellySettings.Enabled;
-            vm.ThirdPartyPaymentMethods.Add(new StoreViewModel.AdditionalPaymentMethod()
-            {
-                Enabled = changellyEnabled,
-                Action = nameof(UpdateChangellySettings),
-                Provider = "Changelly"
-            });
 
             var coinSwitchEnabled = storeBlob.CoinSwitchSettings != null && storeBlob.CoinSwitchSettings.Enabled;
             vm.ThirdPartyPaymentMethods.Add(new StoreViewModel.AdditionalPaymentMethod()

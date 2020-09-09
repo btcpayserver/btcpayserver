@@ -283,7 +283,7 @@ namespace BTCPayServer.Controllers
             var uri = new UriBuilder(redirect);
             var permissions = key.GetBlob().Permissions;
             BTCPayServerClient.AppendPayloadToQuery(uri,
-                new Dictionary<string, object>() {{"key", key.Id}, {"permissions", permissions}, {"user", key.UserId}});
+                new Dictionary<string, object>() {{"key", key.Id}, {"permissions", permissions}, {"userId", key.UserId}});
             return uri.Uri.AbsoluteUri;
         }
 

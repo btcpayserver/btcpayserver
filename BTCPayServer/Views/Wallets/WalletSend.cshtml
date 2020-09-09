@@ -21,7 +21,8 @@
     <div class="@(!Model.InputSelection && Model.Outputs.Count==1? "col-lg-7 transaction-output-form": "col-lg-8")">
         <form method="post" asp-action="WalletSend" asp-route-walletId="@this.Context.GetRouteValue("walletId")">
             <input type="hidden" asp-for="InputSelection" />
-            <input type="hidden" asp-for="Divisibility" />
+            <input type="hidden" asp-for="FiatDivisibility" />
+            <input type="hidden" asp-for="CryptoDivisibility" />
             <input type="hidden" asp-for="NBXSeedAvailable" />
             <input type="hidden" asp-for="Fiat" />
             <input type="hidden" asp-for="Rate" />

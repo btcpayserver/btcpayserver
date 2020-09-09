@@ -4,7 +4,7 @@
         element = $(this);
     }
     var rateStr = $("#Rate").val();
-    var divisibilityStr = $("#Divisibility").val();
+    var divisibilityStr = $("#FiatDivisibility").val();
     var rate = parseFloat(rateStr);
     var divisibility = parseInt(divisibilityStr);
     if (!isNaN(rate) && !isNaN(divisibility)) {
@@ -26,13 +26,16 @@ function updateCryptoValue(element) {
     if (!element) {
         element = $(this);
     }
+
+    var divisibilityStr = $("#CryptoDivisibility").val();
+    var divisibility = parseInt(divisibilityStr);
     var rateStr = $("#Rate").val();
     var rate = parseFloat(rateStr);
     if (!isNaN(rate)) {
         var cryptoValueInput =  $(element).parents(".input-group").first().find(".output-amount");
         var amountValue = parseFloat($(element).val());
         if (!isNaN(amountValue)) {
-            cryptoValueInput.val(( amountValue/rate));
+            cryptoValueInput.val(( amountValue/rate).toFixed(divisibility));
         } else {
             cryptoValueInput.val("")
         }

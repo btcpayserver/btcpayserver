@@ -471,6 +471,8 @@ namespace BTCPayServer.Controllers
 
             model.FeeSatoshiPerByte = model.RecommendedSatoshiPerByte.LastOrDefault()?.FeeRate;
             model.SupportRBF = network.SupportRBF;
+
+            model.CryptoDivisibility = network.Divisibility;
             using (CancellationTokenSource cts = new CancellationTokenSource())
             {
                 try
@@ -480,7 +482,7 @@ namespace BTCPayServer.Controllers
                     if (result.BidAsk != null)
                     {
                         model.Rate = result.BidAsk.Center;
-                        model.Divisibility = _currencyTable.GetNumberFormatInfo(currencyPair.Right, true).CurrencyDecimalDigits;
+                        model.FiatDivisibility = _currencyTable.GetNumberFormatInfo(currencyPair.Right, true).CurrencyDecimalDigits;
                         model.Fiat = currencyPair.Right;
                     }
                     else

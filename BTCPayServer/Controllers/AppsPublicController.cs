@@ -351,6 +351,92 @@ namespace BTCPayServer.Controllers
 
         }
 
+        [HttpGet]
+        [Route("/apps/{appId}/simple-pos")]
+        [XFrameOptionsAttribute(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
+        public async Task<IActionResult> ViewSimplePointOfSale(string appId)
+        {
+            var app = await _AppService.GetApp(appId, AppType.SimplePointOfSale);
+            if (app == null)
+                return NotFound();
+            var settings = app.GetSettings<SimplePointOfSaleSettings>();
+            var numberFormatInfo = _AppService.Currencies.GetNumberFormatInfo(settings.Currency) ?? _AppService.Currencies.GetNumberFormatInfo("USD");
+            double step = Math.Pow(10, -(numberFormatInfo.CurrencyDecimalDigits));
+            var store = await _AppService.GetStore(app);
+            var storeBlob = store.GetStoreBlob();
+
+            return View("ViewSimplePointOfSale", new ViewSimplePointOfSaleViewModel()
+            {
+                Title = settings.Title,
+                Currency = settings.Currency,
+                Step = step.ToString(CultureInfo.InvariantCulture),
+                CustomCSSLink = settings.CustomCSSLink,
+                CustomLogoLink = storeBlob.CustomLogo,
+                AppId = appId,
+                EmbeddedCSS = settings.EmbeddedCSS
+            });
+        }
+
+        [HttpPost]
+        [Route("/apps/{appId}/simple-pos")]
+        [XFrameOptionsAttribute(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
+        [IgnoreAntiforgeryToken]
+        [EnableCors(CorsPolicies.All)]
+        public async Task<IActionResult> ViewSimplePointOfSale(string appId,
+                                                        [ModelBinder(typeof(InvariantDecimalModelBinder))] decimal amount,
+                                                        string email,
+                                                        string orderId,
+                                                        string notificationUrl,
+                                                        string redirectUrl,
+                                                        string posData = null, CancellationToken cancellationToken = default)
+        {
+            var app = await _AppService.GetApp(appId, AppType.SimplePointOfSale);
+            if (amount <= 0)
+            {
+                return RedirectToAction(nameof(ViewSimplePointOfSale), new { appId = appId });
+            }
+            if (app == null)
+                return NotFound();
+            var settings = app.GetSettings<SimplePointOfSaleSettings>();
+            string title = settings.Title;
+            var price = amount;
+            Dictionary<string, InvoiceSupportedTransactionCurrency> paymentMethods = null;
+            var store = await _AppService.GetStore(app);
+            try
+            {
+                var invoice = await _InvoiceController.CreateInvoiceCore(new BitpayCreateInvoiceRequest()
+                {
+                    ItemCode = string.Empty,
+                    ItemDesc = title,
+                    Currency = settings.Currency,
+                    Price = price,
+                    BuyerEmail = email,
+                    OrderId = orderId,
+                    NotificationURL =
+                            string.IsNullOrEmpty(notificationUrl) ? settings.NotificationUrl : notificationUrl,
+                    RedirectURL = redirectUrl ?? Request.GetDisplayUrl(),
+                    FullNotifications = true,
+                    ExtendedNotifications = true,
+                    PosData = string.IsNullOrEmpty(posData) ? null : posData,
+                    RedirectAutomatically = settings.RedirectAutomatically,
+                    SupportedTransactionCurrencies = paymentMethods,
+                }, store, HttpContext.Request.GetAbsoluteRoot(),
+                    new List<string>() { AppService.GetAppInternalTag(appId) },
+                    cancellationToken);
+                return RedirectToAction(nameof(InvoiceController.Checkout), "Invoice", new { invoiceId = invoice.Data.Id });
+            }
+            catch (BitpayHttpException e)
+            {
+                TempData.SetStatusMessageModel(new StatusMessageModel()
+                {
+                    Html = e.Message.Replace("\n", "<br />", StringComparison.OrdinalIgnoreCase),
+                    Severity = StatusMessageModel.StatusSeverity.Error,
+                    AllowDismiss = true
+                });
+                return RedirectToAction(nameof(ViewSimplePointOfSale), new { appId = appId });
+            }
+        }
+
 
         private string GetUserId()
         {

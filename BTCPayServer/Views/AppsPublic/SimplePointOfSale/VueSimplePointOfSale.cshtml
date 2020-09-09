@@ -1,0 +1,39 @@
+<div id="app" class="l-pos-wrapper" v-cloak>
+    <form method="post" asp-controller="AppsPublic" asp-action="ViewSimplePointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" data-buy>
+        <div class="l-pos-header bg-primary py-3 px-3">
+            <img :src="srvModel.customLogoLink" v-if="srvModel.customLogoLink" height="40">
+            <h1 v-else class="mb-0">{{srvModel.title}}</h1>
+        </div>
+        
+        <display :currency="srvModel.currency" :value="payTotal"></display>
+        <keypad :keys="keys"></keypad>
+        <controls></controls>
+
+        <input class="form-control" type="hidden" name="amount" v-model="payTotalNumeric">
+    </form>
+</div>
+
+<script type="text/x-template" id="keypad-template"> 
+<div class="l-pos-keypad">
+    <keypad-button 
+        v-for="(key, index) in keys" 
+        :key="index"
+        :text="key"
+    ></keypad-button>
+</div>
+</script>
+
+<script type="text/x-template" id="display-template"> 
+<div ref="display" class="l-pos-display pt-5 pb-3 px-3"><div class="text-muted">{{currency}}</div><span ref="amount" v-bind:style="{fontSize: fontSize + 'px'}">{{ value }}</span></div>
+</script>
+
+<script type="text/x-template" id="keypad-button-template"> 
+<div v-if="text !== ''" v-bind:class="classObject" v-on:click="onClickButton">{{ text }}</div>
+<div v-else class="btn btn-empty"></div>
+</script>
+
+<script type="text/x-template" id="controls-template">
+<div class="l-pos-controls mt-2">
+    <div class="btn btn-outline-secondary btn-lg" v-on:click="onClickClear">Clear</div><button class="btn btn-primary btn-lg" type="submit"><b>Pay</b></button>
+</div>
+</script>

@@ -1,0 +1,51 @@
+﻿@addTagHelper *, BundlerMinifier.TagHelpers
+@inject BTCPayServer.HostedServices.CssThemeManager themeManager
+@model BTCPayServer.Models.AppViewModels.ViewSimplePointOfSaleViewModel
+@{
+    ViewData["Title"] = Model.Title;
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html class="h-100">
+<head>
+    <title>@Model.Title</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.BootstrapUri)" rel="stylesheet" />
+    <link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.ThemeUri)" rel="stylesheet" />
+    @if (Model.CustomCSSLink != null)
+    {
+        <link href="@Model.CustomCSSLink" rel="stylesheet" />
+    }
+    @if (!Context.Request.Query.ContainsKey("simple"))
+    {
+        <script type="text/javascript">
+            var srvModel = @Safe.Json(Model);
+        </script>
+        <bundle name="wwwroot/bundles/simple-pos-bundle.min.js" asp-append-version="true"></bundle>
+    }
+
+    <bundle name="wwwroot/bundles/simple-pos-bundle.min.css" asp-append-version="true"></bundle>
+    @if (!string.IsNullOrEmpty(Model.EmbeddedCSS))
+    {
+        @Safe.Raw($"<style>{Model.EmbeddedCSS}</style>");
+    }
+
+</head>
+<body>
+    @if (Context.Request.Query.ContainsKey("simple"))
+    {
+        @await Html.PartialAsync("/Views/AppsPublic/SimplePointOfSale/MinimalSimplePointOfSale.cshtml", Model)
+    }
+    else
+    {
+        <noscript>
+            @await Html.PartialAsync("/Views/AppsPublic/SimplePointOfSale/MinimalSimplePointOfSale.cshtml", Model)
+        </noscript>
+        @await Html.PartialAsync("/Views/AppsPublic/SimplePointOfSale/VueSimplePointOfSale.cshtml", Model)
+    }
+
+</body>
+</html>

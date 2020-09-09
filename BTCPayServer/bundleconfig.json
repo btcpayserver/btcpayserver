@@ -141,6 +141,24 @@
         ]
     },
     {
+        "outputFileName": "wwwroot/bundles/simple-pos-bundle.min.js",
+        "inputFiles": [
+            "wwwroot/vendor/vuejs/vue.min.js",
+            "wwwroot/vendor/babel-polyfill/polyfill.min.js",
+            "wwwroot/vendor/vue-toasted/vue-toasted.min.js",
+            "wwwroot/vendor/bootstrap-vue/bootstrap-vue.js",
+            "wwwroot/simple-pos/**/*.js"
+        ]
+    },
+    {
+        "outputFileName": "wwwroot/bundles/simple-pos-bundle.min.css",
+        "inputFiles": [
+            "wwwroot/vendor/font-awesome/css/font-awesome.min.css",
+            "wwwroot/vendor/bootstrap-vue/bootstrap-vue.css",
+            "wwwroot/simple-pos/**/*.css"
+        ]
+    },
+    {
         "outputFileName": "wwwroot/bundles/payment-request-admin-bundle.min.js",
         "inputFiles": [
             "wwwroot/vendor/summernote/summernote-bs4.js",

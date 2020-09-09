@@ -3,7 +3,8 @@ namespace BTCPayServer.Services.Apps
     public enum AppType
     {
         PointOfSale,
-        Crowdfund
+        Crowdfund,
+        SimplePointOfSale
     }
 
     public enum PosViewType

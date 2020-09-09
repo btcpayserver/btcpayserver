@@ -169,6 +169,8 @@ namespace BTCPayServer.Controllers
                     return RedirectToAction(nameof(UpdatePointOfSale), new { appId = appData.Id });
                 case AppType.Crowdfund:
                     return RedirectToAction(nameof(UpdateCrowdfund), new { appId = appData.Id });
+                case AppType.SimplePointOfSale:
+                    return RedirectToAction(nameof(UpdateSimplePointOfSale), new { appId = appData.Id });
                 default:
                     return RedirectToAction(nameof(ListApps));
             }

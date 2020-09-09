@@ -1,0 +1,26 @@
+@using Microsoft.CodeAnalysis.CSharp.Syntax
+@model BTCPayServer.Models.AppViewModels.ViewSimplePointOfSaleViewModel
+
+
+<div class="container p-0">
+    <div class="bg-primary py-3 px-3">
+        @if (!string.IsNullOrEmpty(Model.CustomLogoLink)) {
+            <img src="@Model.CustomLogoLink" height="40">
+        } else {
+            <h1 class="mb-0">@Model.Title</h1>
+        }
+    </div>
+    <div class="py-5 px-3">
+        <form method="post" asp-controller="AppsPublic" asp-action="ViewSimplePointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" data-buy>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">@Model.Currency</span>
+                </div>
+                <input class="form-control" type="number" step="@Model.Step" name="amount" placeholder="Amount">
+                <div class="input-group-append">
+                    <button class="btn btn-primary" type="submit">Pay</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

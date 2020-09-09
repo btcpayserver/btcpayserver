@@ -1,0 +1,155 @@
+﻿@using BTCPayServer.Services.Apps
+@addTagHelper *, BundlerMinifier.TagHelpers
+@model UpdateSimplePointOfSaleViewModel
+@{
+    ViewData["Title"] = "Update Simple Point of Sale";
+}
+<section>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12 section-heading">
+                <h2>@ViewData["Title"]</h2>
+                <hr class="primary">
+            </div>
+        </div>
+        @if (TempData.HasStatusMessage())
+        {
+            <div class="row">
+                <div class="col-lg-12 text-center">
+                    <partial name="_StatusMessage" />
+                </div>
+            </div>
+        }
+        <div class="row">
+            <div class="col-lg-12">
+                <form method="post">
+                    <input type="hidden" asp-for="StoreId" />
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <div class="form-group">
+                        <label asp-for="Title" class="control-label"></label>*
+                        <input asp-for="Title" class="form-control" />
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Currency" class="control-label"></label>*
+                        <input asp-for="Currency" class="form-control" />
+                        <span asp-validation-for="Currency" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="CustomCSSLink" class="control-label"></label>
+                        <a href="https://docs.btcpayserver.org/Theme/#2-bootstrap-themes" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                        <input asp-for="CustomCSSLink" class="form-control" />
+                        <span asp-validation-for="CustomCSSLink" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="NotificationUrl" class="control-label"></label>
+                        <input asp-for="NotificationUrl" class="form-control" />
+                        <span asp-validation-for="NotificationUrl" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="RedirectAutomatically" class="control-label"></label>*
+                        <select asp-for="RedirectAutomatically" asp-items="Model.RedirectAutomaticallySelectList" class="form-control"></select>
+                        <span asp-validation-for="RedirectAutomatically" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="EmbeddedCSS" class="control-label"></label>
+                        <textarea asp-for="EmbeddedCSS" rows="10" cols="40" class="form-control"></textarea>
+                        <span asp-validation-for="EmbeddedCSS" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary" id="SaveSettings">Save Settings</button>
+                        <div class="btn-group">
+                            <a class="btn btn-outline-primary" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
+                            <a class="btn btn-outline-primary" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm"
+                               target="viewinvoices_@Model.Id"><span class="fa fa-external-link"></span></a>
+                        </div>
+                        <div class="btn-group">
+                            <a class="btn btn-outline-primary" asp-action="ViewPointOfSale" asp-controller="AppsPublic" asp-route-appId="@Model.Id" id="ViewApp">View App</a>
+                            <a class="btn btn-outline-primary" asp-action="ViewPointOfSale" asp-controller="AppsPublic" asp-route-appId="@Model.Id"
+                               target="viewapp_@Model.Id"><span class="fa fa-external-link"></span></a>
+                        </div>
+                        <div class="btn-group">
+                            <a class="btn btn-outline-primary" asp-action="ListApps">Back to the app list</a>
+                            <a class="btn btn-outline-primary" asp-action="ListApps" target="viewapp_@Model.Id"><span class="fa fa-external-link"></span></a>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="accordion" id="accordian-dev-info">
+                            <div class="card">
+                                <div class="card-header" id="accordian-dev-info-embed-payment-button-header">
+                                    <h2 class="mb-0">
+                                        <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#accordian-dev-info-embed-payment-button" aria-expanded="true" aria-controls="accordian-dev-info-embed-payment-button">
+                                            Embed Payment Button linking to Simple POS item
+                                        </button>
+                                    </h2>
+                                </div>
+                                <div id="accordian-dev-info-embed-payment-button" class="collapse" aria-labelledby="accordian-dev-info-embed-payment-button-header" data-parent="#accordian-dev-info">
+                                    <div class="card-body">
+                                        <p>You can host point of sale buttons in an external website with the following code.</p>
+                                        @if (Model.Example1 != null)
+                                        {
+                                            <span>For anything with a custom amount</span>
+                                            <pre><code class="html">@Model.Example1</code></pre>
+                                        }
+                                        @if (Model.Example2 != null)
+                                        {
+                                            <span>For a specific item of your template</span>
+                                            <pre><code class="html">@Model.Example2</code></pre>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card">
+                                <div class="card-header" id="accordian-dev-info-embed-pos-iframe-header">
+                                    <h2 class="mb-0">
+                                        <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#accordian-dev-info-embed-pos-iframe" aria-expanded="false" aria-controls="accordian-dev-info-embed-pos-iframe">
+                                            Embed Simple POS with Iframe
+
+                                        </button>
+                                    </h2>
+                                </div>
+                                <div id="accordian-dev-info-embed-pos-iframe" class="collapse" aria-labelledby="accordian-dev-info-embed-pos-iframe-header" data-parent="#accordian-dev-info">
+                                    <div class="card-body">
+                                        You can embed the Simple POS using an iframe
+                                        @{
+                                            var iframe = $"<iframe src='{(Url.Action("ViewSimplePointOfSale", "AppsPublic", new { appId = Model.Id }, Context.Request.Scheme))}' style='max-width: 100%; border: 0;'></iframe>";
+                                        }
+                                        <pre><code class="html">@iframe</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card">
+                                <div class="card-header" id="accordian-dev-info-notification-header">
+                                    <h2 class="mb-0">
+                                        <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#accordian-dev-info-notification" aria-expanded="false" aria-controls="accordian-dev-info-notification">
+                                            Notification Url Callbacks
+                                        </button>
+                                    </h2>
+                                </div>
+                                <div id="accordian-dev-info-notification" class="collapse" aria-labelledby="accordian-dev-info-notification-header" data-parent="#accordian-dev-info">
+                                    <div class="card-body">
+                                        <p>A <code>POST</code> callback will be sent to notification with the following form will be sent to <code>notificationUrl</code> once the enough is paid and once again once there is enough confirmations to the payment:</p>
+                                        <pre><code class="json">@Model.ExampleCallback</code></pre>
+                                        <p><strong>Never</strong> trust anything but <code>id</code>, <strong>ignore</strong> the other fields completely, an attacker can spoof those, they are present only for backward compatibility reason:</p>
+                                        <p>
+                                            <ul>
+                                                <li>Send a <code>GET</code> request to <code>https://btcpay.example.com/invoices/{invoiceId}</code> with <code>Content-Type: application/json; Authorization: Basic YourLegacyAPIkey"</code>, Legacy API key can be created with Access Tokens in Store settings</li>
+                                                <li>Verify that the <code>orderId</code> is from your backend, that the <code>price</code> is correct and that <code>status</code> is either <code>confirmed</code> or <code>complete</code></li>
+                                                <li>You can then ship your order</li>
+                                            </ul>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</section>
+@section Scripts {
+    @* <bundle name="wwwroot/bundles/simple-pos-admin-bundle.min.js" asp-append-version="true"></bundle> *@
+    @* <bundle name="wwwroot/bundles/simple-pos-admin-bundle.min.css" asp-append-version="true"></bundle> *@
+}

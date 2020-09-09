@@ -79,6 +79,22 @@ namespace BTCPayServer.Controllers
 
                             break;
                         }
+                    
+                    case AppType.SimplePointOfSale:
+                        {
+                            var serviceProvider = HttpContext.RequestServices;
+                            var controller = (AppsPublicController)serviceProvider.GetService(typeof(AppsPublicController));
+                            controller.Url = Url;
+                            controller.ControllerContext = ControllerContext;
+                            var res = await controller.ViewSimplePointOfSale(appId) as ViewResult;
+                            if (res != null)
+                            {
+                                res.ViewName = $"/Views/AppsPublic/ViewSimplePointOfSale.cshtml";
+                                return res; // return 
+                            }
+
+                            break;
+                        }
                 }
             }
             return null;

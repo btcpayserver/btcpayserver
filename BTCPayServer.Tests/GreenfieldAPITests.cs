@@ -848,9 +848,11 @@ namespace BTCPayServer.Tests
                 Assert.Single(invoices);
                 Assert.Equal(newInvoice.Id, invoices.First().Id);
 
-                //get payment request
+                //get
                 var invoice = await viewOnly.GetInvoice(user.StoreId, newInvoice.Id);
                 Assert.Equal(newInvoice.Metadata, invoice.Metadata);
+                var paymentMethods = await viewOnly.GetInvoicePaymentMethods(user.StoreId, newInvoice.Id);
+                
 
                 //update
                 invoice = await viewOnly.GetInvoice(user.StoreId, newInvoice.Id);

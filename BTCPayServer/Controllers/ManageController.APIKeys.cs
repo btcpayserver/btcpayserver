@@ -255,13 +255,17 @@ namespace BTCPayServer.Controllers
                 return View(viewModel);
             }
 
-            switch (viewModel.Command.ToLowerInvariant())
+            var command = viewModel.Command.ToLowerInvariant();
+            switch (command)
             {
-                case "no":
+                case "cancel":
                     return RedirectToAction("APIKeys");
 
-                case "yes":
-                    var key = await CreateKey(viewModel, (viewModel.ApplicationIdentifier, viewModel.RedirectUrl?.Authority));
+                case "authorize":
+                case "confirm":
+                    var key = command == "authorize"
+                        ? await CreateKey(viewModel, (viewModel.ApplicationIdentifier, viewModel.RedirectUrl?.Authority))
+                        : await  _apiKeyRepository.GetKey(viewModel.Key);
     
                     if (viewModel.RedirectUrl != null)
                     {

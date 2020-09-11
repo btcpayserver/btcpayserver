@@ -24,14 +24,15 @@
             </div>
 
             <form method="post" class="modal-footer justify-content-center" asp-controller="Manage" asp-action="AuthorizeAPIKey">
+                <input type="hidden" asp-for="ApplicationName" value="@Model.ApplicationName"/>
+                <input type="hidden" asp-for="ApplicationIdentifier" value="@Model.ApplicationIdentifier"/>
+                <input type="hidden" asp-for="Key" value="@Model.Key"/>
+                <input type="hidden" asp-for="Strict" value="@Model.Strict"/>
                 <input type="hidden" asp-for="RedirectUrl" value="@Model.RedirectUrl"/>
                 <input type="hidden" asp-for="Permissions" value="@Model.Permissions"/>
-                <input type="hidden" asp-for="Strict" value="@Model.Strict"/>
-                <input type="hidden" asp-for="ApplicationName" value="@Model.ApplicationName"/>
                 <input type="hidden" asp-for="SelectiveStores" value="@Model.SelectiveStores"/>
-                <input type="hidden" asp-for="ApplicationIdentifier" value="@Model.ApplicationIdentifier"/>
 
-                <button type="submit" class="btn btn-primary w-25 mx-2" id="continue" name="command" value="Yes">Confirm</button>
+                <button type="submit" class="btn btn-primary w-25 mx-2" id="continue" name="command" value="Confirm">Confirm</button>
                 <button type="submit" class="btn btn-secondary w-25 mx-2" onclick="history.back(); return false;">Go back</button>
             </form>
         </div>

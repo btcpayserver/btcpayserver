@@ -108,6 +108,11 @@ namespace BTCPayServer.Controllers.GreenField
                 ModelState.AddModelError(nameof(request.Amount), "The amount should be 0 or more.");
             }
 
+            if (!string.IsNullOrEmpty(request.CustomerEmail) && !EmailValidator.IsEmail(request.CustomerEmail))
+            {
+                request.AddModelError(invoiceRequest => invoiceRequest.CustomerEmail, "Invalid email address", this);
+            }
+
             if (string.IsNullOrEmpty(request.Currency))
             {
                 ModelState.AddModelError(nameof(request.Currency), "Currency is required");
@@ -256,6 +261,7 @@ namespace BTCPayServer.Controllers.GreenField
             return new InvoiceData()
             {
                 ExpirationTime = entity.ExpirationTime,
+                CustomerEmail = entity.RefundMail,
                 MonitoringExpiration = entity.MonitoringExpiration,
                 CreatedTime = entity.InvoiceTime,
                 Amount = entity.Price,

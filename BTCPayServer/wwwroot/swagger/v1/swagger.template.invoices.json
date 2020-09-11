@@ -566,6 +566,12 @@
                         "nullable": true,
                         "description": "The currency the invoice will use"
                     },
+                    "customerEmail": {
+                        "type": "string",
+                        "format": "email",
+                        "nullable": true,
+                        "description": "The email of the customer"
+                    },
                     "metadata": {
                         "type": "string",
                         "nullable": true,

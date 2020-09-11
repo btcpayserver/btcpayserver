@@ -183,6 +183,43 @@ namespace BTCPayServer.Controllers.GreenField
             return await GetInvoice(storeId, invoiceId);
         }
 
+        [Authorize(Policy = Policies.CanCreateInvoice,
+            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpPost("~/api/v1/stores/{storeId}/invoices/{invoiceId}/email")]
+        public async Task<IActionResult> AddCustomerEmail(string storeId, string invoiceId,
+            AddCustomerEmailRequest request)
+        {
+            var store = HttpContext.GetStoreData();
+            if (store == null)
+            {
+                return NotFound();
+            }
+
+            var invoice = await _invoiceRepository.GetInvoice(invoiceId, true);
+            if (invoice.StoreId != store.Id)
+            {
+                return NotFound();
+            }
+
+            if (!EmailValidator.IsEmail(request.Email))
+            {
+                request.AddModelError(invoiceRequest => invoiceRequest.Email, "Invalid email address",
+                    this);
+            }
+            else if (!string.IsNullOrEmpty(invoice.Metadata.BuyerEmail))
+            {
+                request.AddModelError(invoiceRequest => invoiceRequest.Email, "Email address already set",
+                    this);
+            }
+
+            if (!ModelState.IsValid)
+                return this.CreateValidationError(ModelState);
+
+            await _invoiceRepository.UpdateInvoice(invoice.Id, new UpdateCustomerModel() { Email = request.Email });
+
+            return await GetInvoice(storeId, invoiceId);
+        }
+
         [Authorize(Policy = Policies.CanModifyStoreSettings,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPost("~/api/v1/stores/{storeId}/invoices/{invoiceId}/unarchive")]

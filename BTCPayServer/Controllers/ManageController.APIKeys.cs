@@ -7,9 +7,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Security.GreenField;
-using ExchangeSharp;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBitcoin.DataEncoders;
@@ -81,7 +79,7 @@ namespace BTCPayServer.Controllers
         }
         
         [HttpGet("~/api-keys/authorize")]
-        public async Task<IActionResult> AuthorizeAPIKey( string[] permissions, string applicationName = null, Uri redirect = null,
+        public async Task<IActionResult> AuthorizeAPIKey(string[] permissions, string applicationName = null, Uri redirect = null,
             bool strict = true, bool selectiveStores = false, string applicationIdentifier = null)
         {
             if (!_btcPayServerEnvironment.IsSecure)
@@ -157,16 +155,17 @@ namespace BTCPayServer.Controllers
                     }
 
                     //we have a key that is sufficient, redirect to a page to confirm that it's ok to provide this key to the app.
-                    return View("Confirm",
-                        new ConfirmModel()
+                    return View("ConfirmAPIKey",
+                        new AuthorizeApiKeysViewModel()
                         {
-                            Title =
-                                $"Are you sure about exposing your API Key to {applicationName ?? applicationIdentifier}?",
-                            Description =
-                                $"You've previously generated this API Key ({key.Id}) specifically for {applicationName ?? applicationIdentifier} with the url {redirect}. ",
-                            ActionUrl = GetRedirectToApplicationUrl(redirect, key),
-                            ButtonClass = "btn-secondary",
-                            Action = "Confirm"
+                            Key = key.Id,
+                            RedirectUrl = redirect,
+                            Label = applicationName,
+                            ApplicationName = applicationName,
+                            SelectiveStores = selectiveStores,
+                            Strict = strict,
+                            Permissions = string.Join(';', permissions),
+                            ApplicationIdentifier = applicationIdentifier
                         });
                 }
             }
@@ -259,12 +258,29 @@ namespace BTCPayServer.Controllers
             {
                 case "no":
                     return RedirectToAction("APIKeys");
+
                 case "yes":
                     var key = await CreateKey(viewModel, (viewModel.ApplicationIdentifier, viewModel.RedirectUrl?.Authority));
     
                     if (viewModel.RedirectUrl != null)
                     {
-                        return Redirect(GetRedirectToApplicationUrl(viewModel.RedirectUrl, key));
+                        var permissions = key.GetBlob().Permissions;
+                        var redirectVm = new PostRedirectViewModel()
+                        {
+                            FormUrl = viewModel.RedirectUrl.ToString(),
+                            Parameters =
+                            {
+                                new KeyValuePair<string, string>("key", key.Id),
+                                new KeyValuePair<string, string>("userId", key.UserId)
+                            }
+                        };
+                        foreach (var permission in permissions)
+                        {
+                            redirectVm.Parameters.Add(
+                                new KeyValuePair<string, string>("permissions[]", permission));
+                        }
+
+                        return View("PostRedirect", redirectVm);
                     }
 
                     TempData.SetStatusMessageModel(new StatusMessageModel()
@@ -272,19 +288,12 @@ namespace BTCPayServer.Controllers
                         Severity = StatusMessageModel.StatusSeverity.Success,
                         Html = $"API key generated! <code class='alert-link'>{key.Id}</code>"
                     });
+
                     return RedirectToAction("APIKeys", new { key = key.Id });
+
                 default:
                     return View(viewModel);
             }
-        }
-
-        private string GetRedirectToApplicationUrl(Uri redirect, APIKeyData key)
-        {
-            var uri = new UriBuilder(redirect);
-            var permissions = key.GetBlob().Permissions;
-            BTCPayServerClient.AppendPayloadToQuery(uri,
-                new Dictionary<string, object>() {{"key", key.Id}, {"permissions", permissions}, {"userId", key.UserId}});
-            return uri.Uri.AbsoluteUri;
         }
 
         [HttpPost]
@@ -501,8 +510,8 @@ namespace BTCPayServer.Controllers
             public bool Strict { get; set; }
             public bool SelectiveStores { get; set; }
             public string Permissions { get; set; }
+            public string Key { get; set; }
         }
-
 
         public class ApiKeysViewModel
         {

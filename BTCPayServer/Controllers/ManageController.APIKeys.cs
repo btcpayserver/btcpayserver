@@ -38,10 +38,11 @@ namespace BTCPayServer.Controllers
             }
             return View("Confirm", new ConfirmModel()
             {
-                Title = "Delete API Key " + (string.IsNullOrEmpty(key.Label) ? string.Empty : key.Label) + "(" + key.Id + ")",
-                Description = "Any application using this api key will immediately lose access",
+                Title = $"Delete API Key {(string.IsNullOrEmpty(key.Label) ? string.Empty : key.Label)}",
+                DescriptionHtml = true,
+                Description = $"Any application using this API key will immediately lose access: <code>{key.Id}</code>",
                 Action = "Delete",
-                ActionUrl = this.Url.ActionLink(nameof(RemoveAPIKeyPost), values: new { id = id })
+                ActionUrl = Url.ActionLink(nameof(RemoveAPIKeyPost), values: new { id })
             });
         }
 

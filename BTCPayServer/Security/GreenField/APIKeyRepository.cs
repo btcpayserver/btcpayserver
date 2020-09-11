@@ -16,13 +16,14 @@ namespace BTCPayServer.Security.GreenField
             _applicationDbContextFactory = applicationDbContextFactory;
         }
 
-        public async Task<APIKeyData> GetKey(string apiKey)
+        public async Task<APIKeyData> GetKey(string apiKey, bool includeUser = false)
         {
-            using (var context = _applicationDbContextFactory.CreateContext())
+            await using var context = _applicationDbContextFactory.CreateContext();
+            if (includeUser)
             {
-                return await EntityFrameworkQueryableExtensions.SingleOrDefaultAsync(context.ApiKeys,
-                    data => data.Id == apiKey && data.Type != APIKeyType.Legacy);
+                return await context.ApiKeys.Include(data => data.User).SingleOrDefaultAsync(data => data.Id == apiKey && data.Type != APIKeyType.Legacy);
             }
+            return await context.ApiKeys.SingleOrDefaultAsync(data => data.Id == apiKey && data.Type != APIKeyType.Legacy);
         }
 
         public async Task<List<APIKeyData>> GetKeys(APIKeyQuery query)

@@ -9,6 +9,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using BTCPayServer.Events;
 using BTCPayServer.JsonConverters;
+using BTCPayServer.Lightning;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Tests.Logging;
@@ -870,6 +871,96 @@ namespace BTCPayServer.Tests
                 await client.UnarchiveInvoice(user.StoreId, invoice.Id);
                 Assert.NotNull(await client.GetInvoice(user.StoreId, invoice.Id));
 
+            }
+        }
+        
+         [Fact(Timeout = 60 * 2 * 1000)]
+        [Trait("Integration", "Integration")]
+        [Trait("Lightning", "Lightning")]
+        public async Task CanUseLightningAPI()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.ActivateLightning();
+                await tester.StartAsync();
+                await tester.EnsureChannelsSetup();
+                var user = tester.NewAccount();
+                user.GrantAccess(true);
+                user.RegisterLightningNode("BTC", LightningConnectionType.CLightning, false);
+
+                var merchant = tester.NewAccount();
+                merchant.GrantAccess(true);
+                merchant.RegisterLightningNode("BTC", LightningConnectionType.LndREST);
+                var merchantClient = await merchant.CreateClient($"{Policies.CanUseLightningNodeInStore}:{merchant.StoreId}");
+                var merchantInvoice = await merchantClient.CreateLightningInvoice(merchant.StoreId, "BTC", new CreateLightningInvoiceRequest(new LightMoney(1_000), "hey", TimeSpan.FromSeconds(60)));
+                tester.PayTester.GetService<BTCPayServerEnvironment>().DevelopmentOverride = false;
+                // The default client is using charge, so we should not be able to query channels
+                var client = await user.CreateClient(Policies.CanUseInternalLightningNode);
+
+                var info = await client.GetLightningNodeInfo("BTC");
+                Assert.Single(info.NodeURIs);
+                Assert.NotEqual(0, info.BlockHeight);
+                
+                var err = await Assert.ThrowsAsync<HttpRequestException>(async () => await client.GetLightningNodeChannels("BTC"));
+                Assert.Contains("503", err.Message);
+                // Not permission for the store!
+                err = await Assert.ThrowsAsync<HttpRequestException>(async () => await client.GetLightningNodeChannels(user.StoreId, "BTC"));
+                Assert.Contains("403", err.Message);
+                var invoiceData = await client.CreateLightningInvoice("BTC", new CreateLightningInvoiceRequest()
+                {
+                    Amount = LightMoney.Satoshis(1000),
+                    Description = "lol",
+                    Expiry = TimeSpan.FromSeconds(400),
+                    PrivateRouteHints = false
+                });
+                var chargeInvoice = invoiceData;
+                Assert.NotNull(await client.GetLightningInvoice("BTC", invoiceData.Id));
+
+                client = await user.CreateClient($"{Policies.CanUseLightningNodeInStore}:{user.StoreId}");
+                // Not permission for the server
+                err = await Assert.ThrowsAsync<HttpRequestException>(async () => await client.GetLightningNodeChannels("BTC"));
+                Assert.Contains("403", err.Message);
+
+                var data = await client.GetLightningNodeChannels(user.StoreId, "BTC");
+                Assert.Equal(2, data.Count());
+                BitcoinAddress.Create(await client.GetLightningDepositAddress(user.StoreId, "BTC"), Network.RegTest);
+
+                invoiceData = await client.CreateLightningInvoice(user.StoreId, "BTC", new CreateLightningInvoiceRequest()
+                {
+                    Amount = LightMoney.Satoshis(1000),
+                    Description = "lol",
+                    Expiry = TimeSpan.FromSeconds(400),
+                    PrivateRouteHints = false
+                });
+
+                Assert.NotNull(await client.GetLightningInvoice(user.StoreId, "BTC", invoiceData.Id));
+
+                await client.PayLightningInvoice(user.StoreId, "BTC", new PayLightningInvoiceRequest()
+                {
+                    BOLT11 = merchantInvoice.BOLT11
+                });
+                await Assert.ThrowsAsync<GreenFieldValidationException>(async () => await client.PayLightningInvoice(user.StoreId, "BTC", new PayLightningInvoiceRequest()
+                {
+                    BOLT11 = "lol"
+                }));
+
+                var validationErr = await Assert.ThrowsAsync<GreenFieldValidationException>(async () => await client.CreateLightningInvoice(user.StoreId, "BTC", new CreateLightningInvoiceRequest()
+                {
+                    Amount = -1,
+                    Expiry = TimeSpan.FromSeconds(-1),
+                    Description = null
+                }));
+                Assert.Equal(2, validationErr.ValidationErrors.Length);
+
+                var invoice = await merchantClient.GetLightningInvoice(merchant.StoreId, "BTC", merchantInvoice.Id);
+                Assert.NotNull(invoice.PaidAt);
+                Assert.Equal(LightMoney.Satoshis(1000), invoice.Amount);
+                // Amount received might be bigger because of internal implementation shit from lightning
+                Assert.True(LightMoney.Satoshis(1000) <= invoice.AmountReceived);
+
+                info = await client.GetLightningNodeInfo(user.StoreId, "BTC");
+                Assert.Single(info.NodeURIs);
+                Assert.NotEqual(0, info.BlockHeight);
             }
         }
 

@@ -206,7 +206,7 @@ namespace BTCPayServer.Controllers.GreenField
                 request.AddModelError(invoiceRequest => invoiceRequest.Email, "Invalid email address",
                     this);
             }
-            else if (!string.IsNullOrEmpty(invoice.Metadata.BuyerEmail))
+            else if (!string.IsNullOrEmpty(invoice.RefundMail))
             {
                 request.AddModelError(invoiceRequest => invoiceRequest.Email, "Email address already set",
                     this);

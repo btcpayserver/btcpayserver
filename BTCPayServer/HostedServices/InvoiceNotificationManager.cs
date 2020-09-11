@@ -61,7 +61,7 @@ namespace BTCPayServer.HostedServices
             _StoreRepository = storeRepository;
         }
 
-        async void Notify(InvoiceEntity invoice, InvoiceEvent invoiceEvent, bool extendedNotification)
+        async Task Notify(InvoiceEntity invoice, InvoiceEvent invoiceEvent, bool extendedNotification)
         {
             var dto = invoice.EntityToDTO();
             var notification = new InvoicePaymentNotificationEventWrapper()

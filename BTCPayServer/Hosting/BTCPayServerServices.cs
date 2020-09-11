@@ -10,7 +10,6 @@ using BTCPayServer.Logging;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
-using BTCPayServer.Payments.Changelly;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Payments.PayJoin;
 using BTCPayServer.Security;
@@ -217,8 +216,6 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IHostedService, LightningListener>();
 
             services.AddSingleton<PaymentMethodHandlerDictionary>();
-
-            services.AddSingleton<ChangellyClientProvider>();
 
             services.AddSingleton<NotificationManager>();
             services.AddScoped<NotificationSender>();

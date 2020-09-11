@@ -15,7 +15,6 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
-using BTCPayServer.Payments.Changelly;
 using BTCPayServer.Payments.CoinSwitch;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Rating;
@@ -467,21 +466,12 @@ namespace BTCPayServer.Controllers
             var currency = invoice.Currency;
             var accounting = paymentMethod.Calculate();
 
-            ChangellySettings changelly = (storeBlob.ChangellySettings != null && storeBlob.ChangellySettings.Enabled &&
-                                           storeBlob.ChangellySettings.IsConfigured())
-                ? storeBlob.ChangellySettings
-                : null;
 
             CoinSwitchSettings coinswitch = (storeBlob.CoinSwitchSettings != null && storeBlob.CoinSwitchSettings.Enabled &&
                                            storeBlob.CoinSwitchSettings.IsConfigured())
                 ? storeBlob.CoinSwitchSettings
                 : null;
 
-
-            var changellyAmountDue = changelly != null
-                ? (accounting.Due.ToDecimal(MoneyUnit.BTC) *
-                   (1m + (changelly.AmountMarkupPercentage / 100m)))
-                : (decimal?)null;
 
             var paymentMethodHandler = _paymentMethodHandlerDictionary[paymentMethodId];
 
@@ -521,9 +511,6 @@ namespace BTCPayServer.Controllers
 #pragma warning restore CS0618 // Type or member is obsolete
                 NetworkFee = paymentMethodDetails.GetNextNetworkFee(),
                 IsMultiCurrency = invoice.GetPayments().Select(p => p.GetPaymentMethodId()).Concat(new[] { paymentMethod.GetId() }).Distinct().Count() > 1,
-                ChangellyEnabled = changelly != null,
-                ChangellyMerchantId = changelly?.ChangellyMerchantId,
-                ChangellyAmountDue = changellyAmountDue,
                 CoinSwitchEnabled = coinswitch != null,
                 CoinSwitchAmountMarkupPercentage = coinswitch?.AmountMarkupPercentage ?? 0,
                 CoinSwitchMerchantId = coinswitch?.MerchantId,

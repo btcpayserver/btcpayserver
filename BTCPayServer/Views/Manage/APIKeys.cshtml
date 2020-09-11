@@ -34,7 +34,7 @@
                     <ul>
                         @foreach (var permission in Permission.ToPermissions(permissions).Select(c => c.ToString()).Distinct().ToArray())
                         {
-                            <li>@permission</li>
+                            <li><code>@permission</code></li>
                         }
                     </ul>
                 }

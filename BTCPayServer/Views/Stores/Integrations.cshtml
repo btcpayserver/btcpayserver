@@ -63,18 +63,15 @@
                     Orders on <b>@shopify.ShopName</b>.myshopify.com will be marked as paid on successful invoice payment.
                     Started: @shopify.IntegratedAt.Value.ToBrowserDate()
                 </p>
-                <p></p>
             }
 
             @if (shopifyCredsSet)
             {
-                <h5 class="mt-9 mb-3">Shopify Operations</h5>
-
                 if (!shopify.IntegratedAt.HasValue)
                 {
                     <button name="command" type="submit" class="btn btn-primary" value="ShopifyIntegrate">Integrate Shopify Order Paid Marking</button>
                 }
-                <button name="command" type="submit" class="btn btn-error" value="ShopifyClearCredentials">Clear Credentials</button>
+                <button name="command" type="submit" class="btn btn-danger" value="ShopifyClearCredentials">Clear Credentials</button>
             }
 
         </form>

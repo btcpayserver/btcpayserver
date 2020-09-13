@@ -1040,6 +1040,18 @@ namespace BTCPayServer.Controllers
                 }
                 TempData[WellKnownTempData.SuccessMessage] = "Shopify integration successfully turned on";
             }
+            else if (command == "ShopifyClearCredentials")
+            {
+                var shopify = vm.Shopify;
+
+                var blob = CurrentStore.GetStoreBlob();
+                blob.Shopify = null;
+                if (CurrentStore.SetStoreBlob(blob))
+                {
+                    await _Repo.UpdateStore(CurrentStore);
+                }
+                TempData[WellKnownTempData.SuccessMessage] = "Shopify integration credentials cleared";
+            }
 
             return RedirectToAction(nameof(Integrations), new
             {

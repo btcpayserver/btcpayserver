@@ -48,6 +48,11 @@ namespace BTCPayServer.Services.Shopify
                     if (storeBlob.Shopify?.IntegratedAt.HasValue == true)
                     {
                         var client = createShopifyApiClient(storeBlob.Shopify);
+                        if (!await client.OrderExists(shopifyOrderId))
+                        {
+                            // don't register transactions for orders that don't exist on shopify
+                            return;
+                        }
 
                         try
                         {

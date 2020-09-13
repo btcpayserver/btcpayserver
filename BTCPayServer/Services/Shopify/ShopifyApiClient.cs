@@ -84,6 +84,14 @@ namespace BTCPayServer.Services.Shopify
 
             return parsed.count;
         }
+
+        public async Task<bool> OrderExists(string orderId)
+        {
+            var req = createRequest(_creds.ShopName, HttpMethod.Get, $"orders/{orderId}.json?fields=id");
+            var strResp = await sendRequest(req);
+
+            return strResp?.Contains(orderId, StringComparison.OrdinalIgnoreCase) == true;
+        }
     }
 
     public class ShopifyApiClientCredentials

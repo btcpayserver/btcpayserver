@@ -20,6 +20,7 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
+using BTCPayServer.Services.Shopify;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Authorization;
@@ -964,5 +965,89 @@ namespace BTCPayServer.Controllers
             });
 
         }
+
+        //
+        [HttpGet]
+        [Route("{storeId}/integrations")]
+        public async Task<IActionResult> Integrations()
+        {
+            var blob = CurrentStore.GetStoreBlob();
+
+            var vm = new IntegrationsViewModel
+            {
+                Shopify = blob.Shopify
+            };
+
+            return View("Integrations", vm);
+        }
+
+        [HttpPost]
+        [Route("{storeId}/integrations")]
+        public async Task<IActionResult> Integrations([FromServices] IHttpClientFactory clientFactory,
+            IntegrationsViewModel vm, string command = "")
+        {
+            if (command == "ShopifySaveCredentials")
+            {
+                var shopify = vm.Shopify;
+                var validCreds = shopify != null && shopify?.CredentialsPopulated() == true;
+                if (!validCreds)
+                {
+                    TempData[WellKnownTempData.ErrorMessage] = "Please provide valid Shopify credentials";
+                    // 
+                    return View("Integrations", vm);
+                }
+
+                var apiCreds = new ShopifyApiClientCredentials
+                {
+                    ShopName = shopify.ShopName,
+                    ApiKey = shopify.ApiKey,
+                    ApiPassword = shopify.Password,
+                    SharedSecret = shopify.SharedSecret
+                };
+
+                var apiClient = new ShopifyApiClient(clientFactory, null, apiCreds);
+                try
+                {
+                    var result = await apiClient.OrdersCount();
+                }
+                catch
+                {
+                    TempData[WellKnownTempData.ErrorMessage] = "Shopify rejected provided credentials, please correct values and again";
+                    // 
+                    return View("Integrations", vm);
+                }
+
+
+                shopify.CredentialsValid = true;
+
+                var blob = CurrentStore.GetStoreBlob();
+                blob.Shopify = shopify;
+                if (CurrentStore.SetStoreBlob(blob))
+                {
+                    await _Repo.UpdateStore(CurrentStore);
+                }
+                TempData[WellKnownTempData.SuccessMessage] = "Shopify credentials successfully updated";
+            }
+            else if (command == "ShopifyIntegrate")
+            {
+                var shopify = vm.Shopify;
+
+                var blob = CurrentStore.GetStoreBlob();
+                blob.Shopify.IntegratedAt = DateTimeOffset.UtcNow;
+                if (CurrentStore.SetStoreBlob(blob))
+                {
+                    await _Repo.UpdateStore(CurrentStore);
+                }
+                TempData[WellKnownTempData.SuccessMessage] = "Shopify integration successfully turned on";
+            }
+
+            return RedirectToAction(nameof(Integrations), new
+            {
+                storeId = CurrentStore.Id
+            });
+
+        }
+
+
     }
 }

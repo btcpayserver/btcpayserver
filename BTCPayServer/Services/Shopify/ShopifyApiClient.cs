@@ -36,6 +36,23 @@ namespace BTCPayServer.Services.Shopify
             _httpClient.DefaultRequestHeaders.Add("Authorization", "Basic " + bearer);
         }
 
+        private HttpRequestMessage createRequest(string shopNameInUrl, HttpMethod method, string action)
+        {
+            var url = $"https://{shopNameInUrl}.myshopify.com/admin/api/2020-07/" + action;
+
+            var req = new HttpRequestMessage(method, url);
+
+            return req;
+        }
+
+        private async Task<string> sendRequest(HttpRequestMessage req)
+        {
+            using var resp = await _httpClient.SendAsync(req);
+
+            var strResp = await resp.Content.ReadAsStringAsync();
+            return strResp;
+        }
+
         public async Task<dynamic> TransactionsList(string orderId)
         {
             var req = createRequest(_creds.ShopName, HttpMethod.Get, $"orders/{orderId}/transactions.json");
@@ -58,21 +75,14 @@ namespace BTCPayServer.Services.Shopify
             return JObject.Parse(strResp);
         }
 
-        private HttpRequestMessage createRequest(string shopNameInUrl, HttpMethod method, string action)
+        public async Task<int> OrdersCount()
         {
-            var url = $"https://{shopNameInUrl}.myshopify.com/admin/api/2020-07/" + action;
+            var req = createRequest(_creds.ShopName, HttpMethod.Get, $"orders/count.json");
+            var strResp = await sendRequest(req);
 
-            var req = new HttpRequestMessage(method, url);
+            dynamic parsed = JObject.Parse(strResp);
 
-            return req;
-        }
-
-        private async Task<string> sendRequest(HttpRequestMessage req)
-        {
-            using var resp = await _httpClient.SendAsync(req);
-
-            var strResp = await resp.Content.ReadAsStringAsync();
-            return strResp;
+            return parsed.count;
         }
     }
 

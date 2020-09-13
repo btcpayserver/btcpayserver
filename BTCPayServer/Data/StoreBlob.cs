@@ -26,6 +26,28 @@ namespace BTCPayServer.Data
             RecommendedFeeBlockTarget = 1;
         }
 
+        public ShopifyDataHolder Shopify { get; set; }
+
+        public class ShopifyDataHolder
+        {
+            public string ShopName { get; set; }
+            public string ApiKey { get; set; }
+            public string Password { get; set; }
+            public string SharedSecret { get; set; }
+
+            public bool CredentialsPopulated()
+            {
+                return
+                    !String.IsNullOrWhiteSpace(ShopName) &&
+                    !String.IsNullOrWhiteSpace(ApiKey) &&
+                    !String.IsNullOrWhiteSpace(Password) &&
+                    !String.IsNullOrWhiteSpace(SharedSecret);
+            }
+            public bool CredentialsValid { get; set; }
+
+            public DateTimeOffset? IntegratedAt { get; set; }
+        }
+
         [Obsolete("Use NetworkFeeMode instead")]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public bool? NetworkFeeDisabled

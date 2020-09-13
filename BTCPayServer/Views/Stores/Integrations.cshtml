@@ -1,0 +1,87 @@
+@using static BTCPayServer.Data.StoreBlob
+@model IntegrationsViewModel
+@{
+    Layout = "../Shared/_NavLayout.cshtml";
+    ViewData.SetActivePageAndTitle(StoreNavPages.Integrations, "Integrations");
+}
+
+<partial name="_StatusMessage" />
+
+@if (!ViewContext.ModelState.IsValid)
+{
+    <div class="row">
+        <div class="col-md-6">
+            <div asp-validation-summary="All" class="text-danger"></div>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <div class="col-md-8">
+        <form method="post">
+            <h4 class="mb-3">Shopify</h4>
+
+            <div class="form-group">
+                <label asp-for="Shopify.ShopName"></label>
+                <a href="https://docs.btcpayserver.org/Theme/#checkout-page-themes" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                <input asp-for="Shopify.ShopName" class="form-control" />
+                <span asp-validation-for="Shopify.ShopName" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Shopify.ApiKey"></label>
+                <a href="https://docs.btcpayserver.org/Theme/#checkout-page-themes" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                <input asp-for="Shopify.ApiKey" class="form-control" />
+                <span asp-validation-for="Shopify.ApiKey" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Shopify.Password"></label>
+                <a href="https://docs.btcpayserver.org/Theme/#checkout-page-themes" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                <input asp-for="Shopify.Password" class="form-control" />
+                <span asp-validation-for="Shopify.Password" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Shopify.SharedSecret"></label>
+                <a href="https://docs.btcpayserver.org/Theme/#checkout-page-themes" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                <input asp-for="Shopify.SharedSecret" class="form-control" />
+                <span asp-validation-for="Shopify.SharedSecret" class="text-danger"></span>
+            </div>
+
+            @if (Model.Shopify?.CredentialsValid == false)
+            {
+                <button name="command" type="submit" class="btn btn-primary" value="ShopifySaveCredentials">Save Credentials</button>
+            }
+            else
+            {
+                <button name="command" type="submit" class="btn btn-error btn-sm" value="ShopifyClearCredentials">Clear Credentials</button>
+            }
+
+            @if (Model.Shopify?.CredentialsValid == true)
+            {
+                var shopify = Model.Shopify;
+                <br /><br />
+                <h4 class="mb-3">Shopify Operations</h4>
+
+                if (!shopify.IntegratedAt.HasValue)
+                {
+                    <button name="command" type="submit" class="btn btn-primary" value="ShopifyIntegrate">Integrate Shopify Order Paid Marking</button>
+                }
+                else
+                {
+                    <p>
+                        Orders on <b>@shopify.ShopName</b>.myshopify.com will be marked as paid on successful invoice payment.
+                        Started: @shopify.IntegratedAt.Value.ToBrowserDate()
+                    </p>
+                    <p></p>
+                }
+            }
+
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

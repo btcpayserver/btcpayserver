@@ -3,6 +3,10 @@
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePageAndTitle(StoreNavPages.Integrations, "Integrations");
+
+
+    var shopify = Model.Shopify;
+    var shopifyCredsSet = shopify?.CredentialsValid == true;
 }
 
 <partial name="_StatusMessage" />
@@ -24,58 +28,53 @@
             <div class="form-group">
                 <label asp-for="Shopify.ShopName"></label>
                 <a href="https://docs.btcpayserver.org/Theme/#checkout-page-themes" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
-                <input asp-for="Shopify.ShopName" class="form-control" />
+                <input asp-for="Shopify.ShopName" class="form-control" readonly="@shopifyCredsSet" />
                 <span asp-validation-for="Shopify.ShopName" class="text-danger"></span>
             </div>
 
             <div class="form-group">
                 <label asp-for="Shopify.ApiKey"></label>
                 <a href="https://docs.btcpayserver.org/Theme/#checkout-page-themes" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
-                <input asp-for="Shopify.ApiKey" class="form-control" />
+                <input asp-for="Shopify.ApiKey" class="form-control" readonly="@shopifyCredsSet" />
                 <span asp-validation-for="Shopify.ApiKey" class="text-danger"></span>
             </div>
 
             <div class="form-group">
                 <label asp-for="Shopify.Password"></label>
                 <a href="https://docs.btcpayserver.org/Theme/#checkout-page-themes" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
-                <input asp-for="Shopify.Password" class="form-control" />
+                <input asp-for="Shopify.Password" class="form-control" readonly="@shopifyCredsSet" />
                 <span asp-validation-for="Shopify.Password" class="text-danger"></span>
             </div>
 
             <div class="form-group">
                 <label asp-for="Shopify.SharedSecret"></label>
                 <a href="https://docs.btcpayserver.org/Theme/#checkout-page-themes" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
-                <input asp-for="Shopify.SharedSecret" class="form-control" />
+                <input asp-for="Shopify.SharedSecret" class="form-control" readonly="@shopifyCredsSet" />
                 <span asp-validation-for="Shopify.SharedSecret" class="text-danger"></span>
             </div>
 
-            @if (Model.Shopify?.CredentialsValid == false)
+            @if (!shopifyCredsSet)
             {
                 <button name="command" type="submit" class="btn btn-primary" value="ShopifySaveCredentials">Save Credentials</button>
             }
-            else
+            else if (shopify?.IntegratedAt.HasValue == true)
             {
-                <button name="command" type="submit" class="btn btn-error btn-sm" value="ShopifyClearCredentials">Clear Credentials</button>
+                <p>
+                    Orders on <b>@shopify.ShopName</b>.myshopify.com will be marked as paid on successful invoice payment.
+                    Started: @shopify.IntegratedAt.Value.ToBrowserDate()
+                </p>
+                <p></p>
             }
 
-            @if (Model.Shopify?.CredentialsValid == true)
+            @if (shopifyCredsSet)
             {
-                var shopify = Model.Shopify;
-                <br /><br />
-                <h4 class="mb-3">Shopify Operations</h4>
+                <h5 class="mt-9 mb-3">Shopify Operations</h5>
 
                 if (!shopify.IntegratedAt.HasValue)
                 {
                     <button name="command" type="submit" class="btn btn-primary" value="ShopifyIntegrate">Integrate Shopify Order Paid Marking</button>
                 }
-                else
-                {
-                    <p>
-                        Orders on <b>@shopify.ShopName</b>.myshopify.com will be marked as paid on successful invoice payment.
-                        Started: @shopify.IntegratedAt.Value.ToBrowserDate()
-                    </p>
-                    <p></p>
-                }
+                <button name="command" type="submit" class="btn btn-error" value="ShopifyClearCredentials">Clear Credentials</button>
             }
 
         </form>

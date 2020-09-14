@@ -50,6 +50,8 @@ namespace BTCPayServer.Controllers
             var numberFormatInfo = _AppService.Currencies.GetNumberFormatInfo(settings.Currency) ?? _AppService.Currencies.GetNumberFormatInfo("USD");
             double step = Math.Pow(10, -(numberFormatInfo.CurrencyDecimalDigits));
             viewType ??= settings.EnableShoppingCart ? PosViewType.Cart : settings.DefaultView;
+            var store = await _AppService.GetStore(app);
+            var storeBlob = store.GetStoreBlob();
 
             return View("PointOfSale/" + viewType, new ViewPointOfSaleViewModel()
             {
@@ -76,6 +78,7 @@ namespace BTCPayServer.Controllers
                 CustomTipText = settings.CustomTipText,
                 CustomTipPercentages = settings.CustomTipPercentages,
                 CustomCSSLink = settings.CustomCSSLink,
+                CustomLogoLink = storeBlob.CustomLogo,
                 AppId = appId,
                 Description = settings.Description,
                 EmbeddedCSS = settings.EmbeddedCSS

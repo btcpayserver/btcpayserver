@@ -49,6 +49,7 @@ namespace BTCPayServer.Models.AppViewModels
         public int[] CustomTipPercentages { get; set; }
 
         public string CustomCSSLink { get; set; }
+        public string CustomLogoLink { get; set; }
         public string Description { get; set; }
         public string EmbeddedCSS { get; set; }
     }

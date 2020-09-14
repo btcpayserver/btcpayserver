@@ -9,9 +9,7 @@
     const BTCPAYSERVER_URL = "FULL_BTCPAYSERVER_URL_WITH_HTTPS";
     const STORE_ID = "YOUR_BTCPAY_STORE_ID";
 </script>
-<script src="FULL_BTCPAYSERVER_URL_WITH_HTTPS/modal/btcpay.js"></script>
-<script src="FULL_BTCPAYSERVER_URL_WITH_HTTPS/shopify/btcpay-browser-client.js"></script>
-<script src="FULL_BTCPAYSERVER_URL_WITH_HTTPS/shopify/btcpay-shopify-checkout.js"></script>
+<script src="FULL_BTCPAYSERVER_URL_WITH_HTTPS/bundles/shopify-bundle.min.js"></script>
 
  */
 

@@ -28,8 +28,14 @@
         text-overflow: ellipsis;
     }
 
-    .transactionLabel:not(:last-child) {
+    .badge-container:not(:last-child) {
         margin-bottom: 4px;
+    }
+
+    .badge-container {
+        display: flex;
+        align-items: center;
+        flex-wrap: nowrap;
     }
 
     .removeTransactionLabelForm {
@@ -39,14 +45,19 @@
     }
 
     .removeTransactionLabelForm button {
-        color: #212529;
         cursor: pointer;
         display: inline;
         padding: 0;
         background-color: transparent;
         border: 0;
     }
-</style>    
+
+    .transaction-details-icon {
+        position: relative;
+        padding-left: 12px;
+        left: -8px;
+    }
+</style>
 @if (TempData.HasStatusMessage())
 {
     <div class="row">
@@ -106,30 +117,37 @@
                         <td class="text-left">
                             @foreach (var label in transaction.Labels)
                             {
-                                <div
-                                    class="badge transactionLabel position-relative text-white d-block"
-                                    style="background-color: @label.Color; padding-right: 16px;"
-                                    data-toggle="tooltip"
-                                    title="@label.Tooltip">
-                                     <a asp-route-labelFilter="@label.Value" class="text-white">@label.Value</a>
-                                    
+                                <div class="badge-container">
+                                    <div
+                                        class="badge transactionLabel position-relative text-white d-block"
+                                        style="background-color: @label.Color; padding-right: 16px; z-index: 1;"
+                                        data-toggle="tooltip"
+                                        title="@label.Tooltip">
+                                        <a asp-route-labelFilter="@label.Value" class="text-white">@label.Value</a>
+
+                                        <form
+                                            asp-route-walletId="@this.Context.GetRouteValue("walletId")"
+                                            asp-action="ModifyTransaction"
+                                            method="post"
+                                            class="removeTransactionLabelForm">
+                                            <input type="hidden" name="transactionId" value="@transaction.Id"/>
+                                            <button
+                                                name="removelabel"
+                                                style="color: @label.Color; filter: brightness(0.5);"
+                                                type="submit"
+                                                value="@label.RawValue">
+                                                <span class="fa fa-close"></span>
+                                            </button>
+                                        </form>
+                                    </div>
                                     @if (!string.IsNullOrEmpty(label.Link))
                                     {
-                                        <a href="@label.Link" target="_blank"> <span class="fa fa-info-circle"></span></a>
+                                        <a href="@label.Link" target="_blank" class="badge transaction-details-icon" style="background-color: @label.Color; filter: brightness(1.1);">
+                                            <span class="fa fa-info-circle" title="Transaction details" style="color: @label.Color; filter: brightness(0.5);">
+                                                <span class="sr-only">Transaction details</span>
+                                            </span>
+                                        </a>
                                     }
-                                    <form
-                                        asp-route-walletId="@this.Context.GetRouteValue("walletId")"
-                                        asp-action="ModifyTransaction"
-                                        method="post"
-                                        class="removeTransactionLabelForm">
-                                        <input type="hidden" name="transactionId" value="@transaction.Id"/>
-                                        <button
-                                            name="removelabel"
-                                            type="submit"
-                                            value="@label.RawValue">
-                                            <span class="fa fa-close"></span>
-                                        </button>
-                                    </form>
                                 </div>
                             }
                         </td>

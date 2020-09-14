@@ -28,6 +28,8 @@ namespace BTCPayServer.Services.Shopify
         private CancellationTokenSource _Cts;
         private readonly CompositeDisposable leases = new CompositeDisposable();
 
+        public const string SHOPIFY_ORDER_ID_PREFIX = "shopify-";
+
         public Task StartAsync(CancellationToken cancellationToken)
         {
             _Cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -41,8 +43,11 @@ namespace BTCPayServer.Services.Shopify
                     var storeData = await _storeRepository.FindStore(invoice.StoreId);
                     var storeBlob = storeData.GetStoreBlob();
 
-                    if (storeBlob.Shopify?.IntegratedAt.HasValue == true)
+                    if (storeBlob.Shopify?.IntegratedAt.HasValue == true &&
+                        shopifyOrderId.StartsWith(SHOPIFY_ORDER_ID_PREFIX, StringComparison.OrdinalIgnoreCase))
                     {
+                        shopifyOrderId = shopifyOrderId[SHOPIFY_ORDER_ID_PREFIX.Length..];
+
                         var client = createShopifyApiClient(storeBlob.Shopify);
                         if (!await client.OrderExists(shopifyOrderId))
                         {

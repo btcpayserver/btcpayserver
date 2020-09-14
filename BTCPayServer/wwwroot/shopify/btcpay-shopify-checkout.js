@@ -17,6 +17,7 @@
     // extracted from shopify initialized page
     const shopify_price = Shopify.checkout.payment_due;
     const shopify_currency = Shopify.checkout.currency;
+    const shopify_order_id = "shopify-" + Shopify.checkout.order_id;
 
     "use strict";
     const pageElements = document.querySelector.bind(document),
@@ -79,9 +80,7 @@
                 pageItems.orderConfirmed && (pageItems.orderConfirmed.style.display = "none"),
                 pageItems.orderConfirmedDescription && (pageItems.orderConfirmedDescription.style.display = "none");
 
-            const orderId = pageItems.orderNumber.innerText.replace("Order #", "");
-
-            const url = BTCPAYSERVER_URL + "/invoices" + "?storeId=" + STORE_ID + "&orderId=" + orderId + "&status=complete";
+            const url = BTCPAYSERVER_URL + "/invoices" + "?storeId=" + STORE_ID + "&orderId=" + shopify_order_id + "&status=complete";
 
             // Check if already paid.
             fetch(url, {
@@ -112,7 +111,7 @@
                     {
                         price: shopify_price,
                         currency: shopify_currency,
-                        orderId: orderId
+                        orderId: shopify_order_id
                     }
                 )
                     .then(function (invoice) {

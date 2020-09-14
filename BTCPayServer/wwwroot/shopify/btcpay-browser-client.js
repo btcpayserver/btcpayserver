@@ -16,6 +16,7 @@ var BtcPayServerModal = (function () {
             else {
                 waitForPayment.lock = true;
             }
+            window.btcpay.setApiUrlPrefix(btcpayServerUrl);
             window.btcpay.onModalWillEnter(function () {
                 var interval = setInterval(function () {
                     getBtcPayInvoice(btcPayServerUrl, invoiceId, storeId)

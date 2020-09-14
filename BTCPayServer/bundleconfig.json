@@ -144,15 +144,12 @@
         "outputFileName": "wwwroot/bundles/light-pos-bundle.min.js",
         "inputFiles": [
             "wwwroot/vendor/vuejs/vue.min.js",
-            "wwwroot/vendor/babel-polyfill/polyfill.min.js",
-            "wwwroot/vendor/bootstrap-vue/bootstrap-vue.js",
             "wwwroot/light-pos/**/*.js"
         ]
     },
     {
         "outputFileName": "wwwroot/bundles/light-pos-bundle.min.css",
         "inputFiles": [
-            "wwwroot/vendor/bootstrap-vue/bootstrap-vue.css",
             "wwwroot/light-pos/**/*.css"
         ]
     },

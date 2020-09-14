@@ -22,7 +22,7 @@ namespace BTCPayServer.Services.Shopify
             {
                 dynamic transaction = transactions[0];
 
-                if (currency != null && currency.Equals(transaction.currency, StringComparison.OrdinalIgnoreCase))
+                if (currency != null && currency.ToUpperInvariant().Trim() != transaction.currency.ToString().ToUpperInvariant().Trim())
                 {
                     // because of parent_id present, currency will always be the one from parent transaction
                     // malicious attacker could potentially exploit this by creating invoice 

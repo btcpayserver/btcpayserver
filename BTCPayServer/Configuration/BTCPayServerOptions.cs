@@ -10,8 +10,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Serilog.Events;
-using TwentyTwenty.Storage;
-
+#if ALTCOINS
+using BTCPayServer.Common.Altcoins.Fiat;
+#endif
 namespace BTCPayServer.Configuration
 {
     public class NBXplorerConnectionSetting
@@ -94,6 +95,12 @@ namespace BTCPayServer.Configuration
 #if ALTCOINS
             supportedChains.AddRange(filtered.GetAllElementsSubChains(networkProvider));
             supportedChains.AddRange(filtered.GetAllEthereumSubChains(networkProvider));
+            if (supportedChains.Contains("FIAT"))
+            {
+                
+                supportedChains.AddRange(networkProvider.GetAllFiatChains());
+                supportedChains.Remove("FIAT");
+            }
 #endif
 #if !ALTCOINS
             var onlyBTC = supportedChains.Count == 1 && supportedChains.First() == "BTC";

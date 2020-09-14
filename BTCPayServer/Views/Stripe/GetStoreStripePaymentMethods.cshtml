@@ -1,0 +1,64 @@
+@using BTCPayServer.Views.Stores
+@model BTCPayServer.Services.Altcoins.Stripe.UI.StripeController.StripePaymentMethodListViewModel
+
+@{
+    Layout = "../Shared/_NavLayout.cshtml";
+
+    ViewData.SetActivePageAndTitle(StoreNavPages.ActivePage, "Stripe Settings");
+
+    ViewData["NavPartialName"] = "../Stores/_Nav";
+}
+
+
+<div class="row">
+    <partial name="_StatusMessage"/>
+</div>
+<div class="row">
+    <div class="col-md-6">
+        <div asp-validation-summary="All" class="text-danger"></div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-8">
+        <div class="form-group">
+            <table class="table table-sm table-responsive-md">
+                <thead>
+                <tr>
+                    <th>Crypto</th>
+                    <th class="text-center">Enabled</th>
+                    <th class="text-right">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td>@item.CryptoCode</td>
+                        <td class="text-center">
+                            @if (item.Enabled)
+                            {
+                                <span class="text-success fa fa-check"></span>
+                            }
+                            else
+                            {
+                                <span class="text-danger fa fa-times"></span>
+                            }
+                        </td>
+                        <td class="text-right">
+                            <a id="Modify" asp-action="GetStoreStripePaymentMethod"
+                               asp-route-storeId="@this.Context.GetRouteValue("storeId")"
+                               asp-route-cryptoCode="@item.CryptoCode">
+                                Modify
+                            </a>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

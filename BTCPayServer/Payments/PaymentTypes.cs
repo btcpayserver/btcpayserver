@@ -2,6 +2,7 @@ using System;
 #if ALTCOINS
 using BTCPayServer.Services.Altcoins.Ethereum.Payments;
 using BTCPayServer.Services.Altcoins.Monero.Payments;
+using BTCPayServer.Services.Altcoins.Stripe.Payments;
 #endif
 using BTCPayServer.Services.Invoices;
 using NBitcoin;
@@ -48,6 +49,9 @@ namespace BTCPayServer.Payments
                     break;
                 case "ethereumlike":
                     type = EthereumPaymentType.Instance;
+                    break;
+                case "stripe":
+                    type = StripePaymentType.Instance;
                     break;
 #endif
                 default:

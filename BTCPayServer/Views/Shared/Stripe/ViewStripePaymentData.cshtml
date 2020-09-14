@@ -1,0 +1,53 @@
+@using System.Globalization
+@using BTCPayServer.Services.Altcoins.Stripe.Payments
+@using BTCPayServer.Services.Altcoins.Stripe.UI
+@model IEnumerable<BTCPayServer.Services.Invoices.PaymentEntity>
+
+@{
+    var payments = Model.Where(entity => entity.GetPaymentMethodId().PaymentType == StripePaymentType.Instance).Select(payment =>
+    {
+        var m = new StripePaymentViewModel();
+        var onChainPaymentData = payment.GetCryptoPaymentData() as StripePaymentData;
+        m.Crypto = payment.GetPaymentMethodId().CryptoCode;
+        m.Amount = onChainPaymentData.GetValue().ToString(CultureInfo.InvariantCulture);
+
+        m.TransactionId = onChainPaymentData.GetPaymentId();
+        m.ReceivedTime = payment.ReceivedTime;
+       
+        return m;
+    });
+}
+
+@if (payments.Any())
+{
+    <div class="row">
+        <div class="col-md-12 invoice-payments">
+            <h3>Stripe payments</h3>
+            <table class="table table-sm table-responsive-lg">
+                <thead class="thead-inverse">
+                <tr>
+                    <th>Crypto</th>
+                    <th>Amount</th>
+                    <th>Transaction Id</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var payment in payments)
+                {
+                    <tr >
+                        <td>@payment.Crypto</td>
+                        <td>@payment.Amount</td>
+                        <td>
+                            <div class="wraptextAuto">
+                                <a href="@payment.TransactionLink" target="_blank">
+                                    @payment.TransactionId
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

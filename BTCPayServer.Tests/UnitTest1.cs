@@ -1918,7 +1918,6 @@ namespace BTCPayServer.Tests
                 var cd = CurrencyNameTable.Instance.GetCurrencyData(network.CryptoCode, false);
                 Assert.NotNull(cd);
                 Assert.Equal(network.Divisibility, cd.Divisibility);
-                Assert.True(cd.Crypto);
             }
         }
 

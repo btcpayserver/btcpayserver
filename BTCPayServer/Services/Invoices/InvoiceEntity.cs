@@ -300,7 +300,7 @@ namespace BTCPayServer.Services.Invoices
                 foreach (var strat in strategies.Properties())
                 {
                     var paymentMethodId = PaymentMethodId.Parse(strat.Name);
-                    var network = Networks.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
+                    var network = Networks.GetNetwork(paymentMethodId.CryptoCode);
                     if (network != null)
                     {
                         if (network == Networks.BTC && paymentMethodId.PaymentType == PaymentTypes.BTCLike)

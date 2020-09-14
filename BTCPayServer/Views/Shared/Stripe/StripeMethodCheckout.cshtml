@@ -1,0 +1,127 @@
+@model BTCPayServer.Models.InvoicingModels.PaymentModel
+
+    <script src="https://js.stripe.com/v3/"></script>
+<script type="text/x-template" id="stripe-method-checkout-template">
+    <div>
+        <div class="bp-view payment active" v-if="paymentData" >
+        
+             <form id="payment-form" v-on:submit="onCardSubmit" v-if="!paymentData.SessionId" >
+                 
+                    <div class="input-wrapper">
+                                   <input class="bp-input "
+                                          
+                                          v-bind:placeholder="$t('Your Name')" type="text" v-model="cardName" required>
+                                  
+                               </div>
+                    <div id="card-element" style="margin-top: 15px;"></div>
+                 
+                    <div style="margin-top: 15px;" role="alert" v-show="cardError">{{cardError}}</div>
+                   <bp-loading-button>
+                                                         <button type="submit" class="action-button" style="margin-top: 15px;" v-bind:disabled="loading" v-bind:class="{ 'loading': loading }">
+                                                             <span class="button-text">{{$t("Pay now")}}</span>
+                                                             <div class="loader-wrapper">
+                                                                 <partial name="Checkout-Spinner" />
+                                                             </div>
+                                                         </button>
+                                                     </bp-loading-button>
+                </form>
+                 <button  v-else type="button" class="action-button" style="margin-top: 15px;" v-on:click="openCheckout">
+                                                                             <span class="button-text">{{$t("Pay now")}}</span>
+                                                                            
+                                                                         </button>
+        </div>
+    </div>          
+</script>
+
+<script type="text/javascript">
+    Vue.component('StripeMethodCheckout',
+        {
+            props: ["srvModel"],
+            template: "#stripe-method-checkout-template",
+            data: function() {
+                return {
+                    stripe : null,
+                    elements: null,
+                    card: null,
+                    loading: true,
+                    cardError: "",
+                    cardName: "",
+                    paymentData: null
+                }
+            },
+            mounted: function (){
+                debugger;
+               this.paymentData = JSON.parse(this.srvModel.btcAddress);
+               debugger;
+               var self = this;
+                this.stripe = Stripe(  this.paymentData.PublishableKey);
+                if (!this.paymentData.SessionId){
+                        var style = {
+
+                          invalid: {
+                            fontFamily: 'Arial, sans-serif',
+                            color: "#fa755a",
+                          }
+                        };
+
+                    this.elements = this.stripe.elements();
+                          this.card = this.elements.create('card', {style});
+                          this.$nextTick(function (){
+                              
+                             this.card.mount('#card-element');
+                          });
+                          
+                          this.card.addEventListener('change', (change) => {
+
+                                  this.cardError= change.error?.message;
+                                   self.loading = false;
+                                });
+                          self.loading = false;
+                    }
+            },
+            methods: {
+                onCardSubmit: function (evt){
+                    evt.preventDefault();
+                    var self = this;
+                    self.loading = true;
+                    self.stripe.confirmCardPayment(self.paymentData.PaymentIntentClientSecret, {
+                        payment_method: {
+                          card: self.card,
+                          billing_details: {
+                            name: self.cardName
+                          }
+                        }
+                      }).then(function(result) {
+                            if (result.error) {
+                              // Show error to your customer (e.g., insufficient funds)
+                               self.cardError= result.error.message
+                            } else  if (result.paymentIntent.status === 'succeeded') {
+                                // Show a success message to your customer
+                                // There's a risk of the customer closing the window before callback
+                                // execution. Set up a webhook or plugin to listen for the
+                                // payment_intent.succeeded event that handles any business critical
+                                // post-payment actions.
+                                self.cardError="payment succeeded, updating momentarily"
+                                return;
+                              }
+                             self.loading = false;
+                          });
+                },
+                openCheckout: function (){
+                    this.stripe.redirectToCheckout({ sessionId:   this.paymentData.SessionId})
+                                                    .then(function(result) {
+                                                        // If `redirectToCheckout` fails due to a browser or network
+                                                        // error, you should display the localized error message to your
+                                                        // customer using `error.message`.
+                                                        if (result.error) {
+                                                            alert(result.error.message);
+                                                        }
+                                                         self.loading = false;
+                                                    })
+                                                    .catch(function(error) {
+                                                        console.error('Error:', error);
+                                                    });
+                }
+            }
+        });
+</script>

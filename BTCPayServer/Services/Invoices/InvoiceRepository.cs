@@ -63,6 +63,7 @@ retry:
         {
             return new InvoiceEntity()
             {
+                Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16)),
                 Networks = _Networks,
                 Version = InvoiceEntity.Lastest_Version,
                 InvoiceTime = DateTimeOffset.UtcNow,
@@ -151,7 +152,7 @@ retry:
             List<string> textSearch = new List<string>();
             invoice = Clone(invoice);
             invoice.Networks = _Networks;
-            invoice.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16));
+            invoice.Id ??= Encoders.Base58.EncodeData(RandomUtils.GetBytes(16));
 #pragma warning disable CS0618
             invoice.Payments = new List<PaymentEntity>();
 #pragma warning restore CS0618

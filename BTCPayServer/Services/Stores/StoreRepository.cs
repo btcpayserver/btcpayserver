@@ -30,6 +30,14 @@ namespace BTCPayServer.Services.Stores
             }
         }
 
+        public async Task<List<StoreData>> FindStores(params string[] storeId)
+        {
+            if (storeId == null)
+                return null;
+            await using var ctx = _ContextFactory.CreateContext();
+            return await ctx.Stores.Where(data => storeId.Contains(data.Id)).ToListAsync().ConfigureAwait(false);
+        }
+
         public async Task<StoreData> FindStore(string storeId, string userId)
         {
             if (userId == null)

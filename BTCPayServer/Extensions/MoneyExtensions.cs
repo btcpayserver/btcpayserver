@@ -35,8 +35,13 @@ namespace BTCPayServer
         {
             var amt = sats.ToString(CultureInfo.InvariantCulture).PadLeft(divisibility, '0');
             amt = amt.Length == divisibility ? $"0.{amt}" : amt.Insert(amt.Length - divisibility, ".");
-
             return decimal.Parse(amt, CultureInfo.InvariantCulture);
+        }
+        
+        public static long Convert(decimal btc, int divisibility = 8)
+        {
+            long multiplier = long.Parse("1".PadRight(divisibility+1,'0'), CultureInfo.InvariantCulture);
+            return System.Convert.ToInt64(btc * multiplier);
         }
         public static string ShowMoney(this IMoney money, BTCPayNetwork network)
         {

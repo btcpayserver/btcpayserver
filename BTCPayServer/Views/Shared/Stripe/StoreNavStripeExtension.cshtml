@@ -1,0 +1,13 @@
+@using BTCPayServer.Services.Altcoins.Stripe.UI
+@using BTCPayNetworkProvider = BTCPayServer.BTCPayNetworkProvider
+@using BTCPayServer.Common.Altcoins.Fiat
+@inject SignInManager<ApplicationUser> SignInManager;
+@inject BTCPayNetworkProvider BTCPayNetworkProvider;
+@{
+    var controller = ViewContext.RouteData.Values["Controller"].ToString();
+    var isStripe = controller.Equals(nameof(StripeController), StringComparison.InvariantCultureIgnoreCase);
+}
+@if (SignInManager.IsSignedIn(User) &&  BTCPayNetworkProvider.GetAllFiatChains().Any())
+{
+    <a class="nav-link @(isStripe ? "active" : string.Empty)" asp-route-storeId="@this.Context.GetRouteValue("storeId")" asp-action="GetStoreStripePaymentMethods" asp-controller="Stripe">Stripe</a>
+}

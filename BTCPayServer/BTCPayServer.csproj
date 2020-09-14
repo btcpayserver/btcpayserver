@@ -34,14 +34,17 @@
     <PackageReference Include="Nethereum.HdWallet" Version="3.8.0" />
     <PackageReference Include="Nethereum.StandardTokenEIP20" Version="3.8.0" />
     <PackageReference Include="Nethereum.Web3" Version="3.8.0" />
+    <PackageReference Include="Stripe.net" Version="39.3.0" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(Altcoins)' != 'true'">
-    <Content Remove="Services\Altcoins\**\*" />
+    <Compile Remove="Services\Altcoins\**\*" />
     <Content Remove="Views\EthereumLikeStore\**\*" />
     <Content Remove="Views\MoneroLikeStore\**\*" />
     <Content Remove="Views\Shared\Ethereum\**\*" />
     <Content Remove="Views\Shared\Monero\**\*" />
+    <Content Remove="Views\Shared\Stripe\**\*" />
+    <Content Remove="Views\Stripe\**\*" />
   </ItemGroup>
 
   <ItemGroup>

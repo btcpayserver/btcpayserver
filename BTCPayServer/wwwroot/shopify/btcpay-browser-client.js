@@ -21,7 +21,7 @@ var BtcPayServerModal = (function () {
                 var interval = setInterval(function () {
                     getBtcPayInvoice(btcPayServerUrl, invoiceId, storeId)
                         .then(function (invoice) {
-                            if (invoice.status == "complete") {
+                            if (invoice.status === "complete" || invoice.status === "paid") {
                                 clearInterval(interval);
                                 resolve(invoice);
                             }

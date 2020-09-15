@@ -78,6 +78,11 @@ namespace BTCPayServer.Tests
             PayTester.Chains.Add("LBTC");
             PayTester.LBTCNBXplorerUri = LBTCExplorerClient.Address;
         }
+        public void ActivateETH()
+        {
+            PayTester.Chains.Add("ETH");
+        }
+
 #endif
         public void ActivateLightning()
         {

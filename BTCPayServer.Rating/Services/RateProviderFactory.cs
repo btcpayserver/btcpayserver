@@ -101,7 +101,7 @@ namespace BTCPayServer.Services.Rates
             Providers.Add("bitpay", new BitpayRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_BITPAY")));
             Providers.Add("bitflyer", new BitflyerRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_BITFLYER")));
             Providers.Add("polispay", new PolisRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_POLIS")));
-            Providers.Add("argoneum", new ArgoneumRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_ARGONEUM")));
+            // Providers.Add("argoneum", new ArgoneumRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_ARGONEUM")));
 
 
             // Backward compatibility: coinaverage should be using coingecko to prevent stores from breaking

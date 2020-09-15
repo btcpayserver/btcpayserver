@@ -19,14 +19,14 @@
             </div>
 
             <div class="modal-body text-center">
-                You've previously generated the API Key <code>@Model.Key</code> specifically for
+                You've previously generated the API Key <code>@Model.ApiKey</code> specifically for
                 <strong>@displayName</strong> with the URL <code>@Model.RedirectUrl</code>.
             </div>
 
             <form method="post" class="modal-footer justify-content-center" asp-controller="Manage" asp-action="AuthorizeAPIKey">
                 <input type="hidden" asp-for="ApplicationName" value="@Model.ApplicationName"/>
                 <input type="hidden" asp-for="ApplicationIdentifier" value="@Model.ApplicationIdentifier"/>
-                <input type="hidden" asp-for="Key" value="@Model.Key"/>
+                <input type="hidden" asp-for="ApiKey" value="@Model.ApiKey"/>
                 <input type="hidden" asp-for="Strict" value="@Model.Strict"/>
                 <input type="hidden" asp-for="RedirectUrl" value="@Model.RedirectUrl"/>
                 <input type="hidden" asp-for="Permissions" value="@Model.Permissions"/>

@@ -86,7 +86,7 @@
                         }
                     },
                     "307": {
-                        "description": "Redirects to the specified url in `redirect` with query string values for `key` (the api key created or matched), `permissions` (the permissions the user consented to), and `userId` (the id of the user that consented) upon consent"
+                        "description": "Redirects to the specified url in `redirect` with query string values for `apiKey` (the api key created or matched), `permissions` (the permissions the user consented to), and `userId` (the id of the user that consented) upon consent"
                     }
                 },
                 "security": []

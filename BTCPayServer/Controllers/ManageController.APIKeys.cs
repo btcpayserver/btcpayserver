@@ -159,7 +159,7 @@ namespace BTCPayServer.Controllers
                     return View("ConfirmAPIKey",
                         new AuthorizeApiKeysViewModel()
                         {
-                            Key = key.Id,
+                            ApiKey = key.Id,
                             RedirectUrl = redirect,
                             Label = applicationName,
                             ApplicationName = applicationName,
@@ -265,7 +265,7 @@ namespace BTCPayServer.Controllers
                 case "confirm":
                     var key = command == "authorize"
                         ? await CreateKey(viewModel, (viewModel.ApplicationIdentifier, viewModel.RedirectUrl?.Authority))
-                        : await  _apiKeyRepository.GetKey(viewModel.Key);
+                        : await _apiKeyRepository.GetKey(viewModel.ApiKey);
     
                     if (viewModel.RedirectUrl != null)
                     {
@@ -275,7 +275,7 @@ namespace BTCPayServer.Controllers
                             FormUrl = viewModel.RedirectUrl.ToString(),
                             Parameters =
                             {
-                                new KeyValuePair<string, string>("key", key.Id),
+                                new KeyValuePair<string, string>("apiKey", key.Id),
                                 new KeyValuePair<string, string>("userId", key.UserId)
                             }
                         };
@@ -327,6 +327,7 @@ namespace BTCPayServer.Controllers
             });
             return RedirectToAction("APIKeys");
         }
+
         private IActionResult HandleCommands(AddApiKeyViewModel viewModel)
         {
             if (string.IsNullOrEmpty(viewModel.Command))
@@ -347,7 +348,6 @@ namespace BTCPayServer.Controllers
             switch (command)
             {
                 case "change-store-mode":
-
                     permissionValueItem.StoreMode = permissionValueItem.StoreMode == AddApiKeyViewModel.ApiKeyStoreMode.Specific
                         ? AddApiKeyViewModel.ApiKeyStoreMode.AllStores
                         : AddApiKeyViewModel.ApiKeyStoreMode.Specific;
@@ -358,6 +358,7 @@ namespace BTCPayServer.Controllers
                         permissionValueItem.SpecificStores.Add(null);
                     }
                     return View(viewModel);
+
                 case "add-store":
                     permissionValueItem.SpecificStores.Add(null);
                     return View(viewModel);
@@ -515,7 +516,7 @@ namespace BTCPayServer.Controllers
             public bool Strict { get; set; }
             public bool SelectiveStores { get; set; }
             public string Permissions { get; set; }
-            public string Key { get; set; }
+            public string ApiKey { get; set; }
         }
 
         public class ApiKeysViewModel

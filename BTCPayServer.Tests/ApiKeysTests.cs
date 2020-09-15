@@ -335,7 +335,7 @@ namespace BTCPayServer.Tests
         {
             var source = driver.FindElement(By.TagName("body")).Text;
             var json = JObject.Parse(source);
-            return json.GetValue("key")!.Value<string>();
+            return json.GetValue("apiKey")!.Value<string>();
         }
     }
 }

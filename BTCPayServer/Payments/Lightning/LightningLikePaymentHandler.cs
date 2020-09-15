@@ -47,8 +47,17 @@ namespace BTCPayServer.Payments.Lightning
             //direct casting to (BTCPayNetwork) is fixed in other pull requests with better generic interfacing for handlers
             var storeBlob = store.GetStoreBlob();
             var test = GetNodeInfo(paymentMethod.PreferOnion, supportedPaymentMethod, network);
+            
             var invoice = paymentMethod.ParentEntity;
-            var due = Extensions.RoundUp(invoice.Price / paymentMethod.Rate, network.Divisibility);
+            decimal due = Extensions.RoundUp(invoice.Price / paymentMethod.Rate, network.Divisibility);
+            try
+            {
+                due = paymentMethod.Calculate().Due.ToDecimal(MoneyUnit.BTC);
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
             var client = _lightningClientFactory.Create(supportedPaymentMethod.GetLightningUrl(), network);
             var expiry = invoice.ExpirationTime - DateTimeOffset.UtcNow;
             if (expiry < TimeSpan.Zero)

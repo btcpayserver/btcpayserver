@@ -747,6 +747,33 @@ namespace BTCPayServer.Tests
             Assert.True(tor.Services.Where(t => t.ServiceType == TorServiceType.Other).Count() > 1);
         }
 
+
+        [Fact(Timeout = 60 * 2 * 1000)]
+        [Trait("Integration", "Integration")]
+        [Trait("Lightning", "Lightning")]
+        public async Task EnsureNewLightningInvoiceOnPartialPayment()
+        {
+            using var tester = ServerTester.Create();
+            tester.ActivateLightning();
+            await tester.StartAsync();
+            await tester.EnsureChannelsSetup();
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync();
+            await user.RegisterDerivationSchemeAsync("BTC");
+            await user.RegisterLightningNodeAsync("BTC", LightningConnectionType.CLightning);
+
+            var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice(0.01m, "BTC"));
+            await tester.WaitForEvent<InvoiceNewAddressEvent>(async () =>
+            {
+                await tester.ExplorerNode.SendToAddressAsync(
+                    BitcoinAddress.Create(invoice.BitcoinAddress, Network.RegTest), Money.Coins(0.005m));
+            });
+
+            var localInvoice = await user.BitPay.GetInvoiceAsync(invoice.Id);
+            Assert.NotEqual(invoice.CryptoInfo.First(o => o.PaymentUrls.BOLT11 != null).PaymentUrls.BOLT11,
+                localInvoice.CryptoInfo.First(o => o.PaymentUrls.BOLT11 != null).PaymentUrls.BOLT11);
+        }
+
         [Fact(Timeout = 60 * 2 * 1000)]
         [Trait("Integration", "Integration")]
         [Trait("Lightning", "Lightning")]

@@ -200,7 +200,6 @@ namespace BTCPayServer.Controllers
             return View("RecoverySeedBackup", vm);
         }
 
-#if DEBUG || ALTCOINS_DEBUG
         [HttpPost]
         [Route("postredirect-callback-test")]
         public ActionResult PostRedirectCallbackTestpage(IFormCollection data)
@@ -212,7 +211,6 @@ namespace BTCPayServer.Controllers
             });
             return Json(list);
         }
-#endif
 
         public IActionResult Error()
         {

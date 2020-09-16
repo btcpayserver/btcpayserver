@@ -58,7 +58,7 @@ namespace BTCPayServer.Controllers.GreenField
         public async Task<ActionResult<ApplicationUserData>> GetCurrentUser()
         {
             var user = await _userManager.GetUserAsync(User);
-            return FromModel(user);
+            return await FromModel(user);
         }
 
         [AllowAnonymous]
@@ -152,17 +152,20 @@ namespace BTCPayServer.Controllers.GreenField
                 }
             }
             _eventAggregator.Publish(new UserRegisteredEvent() { RequestUri = Request.GetAbsoluteRootUri(), User = user, Admin = request.IsAdministrator is true });
-            return CreatedAtAction(string.Empty, user);
+            var model = await FromModel(user);
+            return CreatedAtAction(string.Empty, model);
         }
 
-        private static ApplicationUserData FromModel(ApplicationUser data)
+        private async Task<ApplicationUserData> FromModel(ApplicationUser data)
         {
+            var roles = (await _userManager.GetRolesAsync(data)).ToArray();
             return new ApplicationUserData()
             {
                 Id = data.Id,
                 Email = data.Email,
                 EmailConfirmed = data.EmailConfirmed,
-                RequiresEmailConfirmation = data.RequiresEmailConfirmation
+                RequiresEmailConfirmation = data.RequiresEmailConfirmation,
+                Roles = roles
             };
         }
     }

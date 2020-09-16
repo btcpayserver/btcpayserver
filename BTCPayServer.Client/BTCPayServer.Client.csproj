@@ -30,7 +30,6 @@
       <PackageReference Include="NBitcoin" Version="5.0.51" />
       <PackageReference Include="BTCPayServer.Lightning.Common" Version="1.2.0" />
       <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-      <PackageReference Include="Selenium.WebDriver.ChromeDriver" Version="85.0.4183.8700" />
     </ItemGroup>
   <ItemGroup>
     <None Include="icon.png" Pack="true" PackagePath="\" />

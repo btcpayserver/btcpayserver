@@ -148,10 +148,13 @@ namespace BTCPayServer.Tests
                 // We have no admin, so it should work
                 var user1 = await unauthClient.CreateUser(
                     new CreateApplicationUserRequest() { Email = "test@gmail.com", Password = "abceudhqw" });
+                Assert.Empty(user1.Roles);
+                
                 // We have no admin, so it should work
                 var user2 = await unauthClient.CreateUser(
                     new CreateApplicationUserRequest() { Email = "test2@gmail.com", Password = "abceudhqw" });
-
+                Assert.Empty(user2.Roles);
+                
                 // Duplicate email
                 await AssertValidationError(new[] { "Email" },
                     async () => await unauthClient.CreateUser(
@@ -164,7 +167,8 @@ namespace BTCPayServer.Tests
                     Password = "abceudhqw",
                     IsAdministrator = true
                 });
-
+                Assert.Contains("ServerAdmin", admin.Roles);
+                
                 // Creating a new user without proper creds is now impossible (unauthorized) 
                 // Because if registration are locked and that an admin exists, we don't accept unauthenticated connection
                 await AssertHttpError(401,
@@ -560,6 +564,7 @@ namespace BTCPayServer.Tests
                 Assert.NotNull(apiKeyProfileUserData);
                 Assert.Equal(apiKeyProfileUserData.Id, user.UserId);
                 Assert.Equal(apiKeyProfileUserData.Email, user.RegisterDetails.Email);
+                Assert.Contains("ServerAdmin", apiKeyProfileUserData.Roles);
 
                 await Assert.ThrowsAsync<HttpRequestException>(async () => await clientInsufficient.GetCurrentUser());
                 await clientServer.GetCurrentUser();

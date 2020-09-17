@@ -61,9 +61,12 @@ namespace BTCPayServer.Services.Shopify
                         try
                         {
                             var logic = new OrderTransactionRegisterLogic(client);
-                            await logic.Process(shopifyOrderId, invoice.Currency, invoice.Price.ToString(CultureInfo.InvariantCulture));
-                            Logs.PayServer.LogInformation("Registered order transaction on Shopify. " +
-                                $"Triggered by invoiceId: {invoice.Id}, Shopify orderId: {shopifyOrderId}");
+                            var resp = await logic.Process(shopifyOrderId, invoice.Id, invoice.Currency, invoice.Price.ToString(CultureInfo.InvariantCulture));
+                            if (resp != null)
+                            {
+                                Logs.PayServer.LogInformation("Registered order transaction on Shopify. " +
+                                    $"Triggered by invoiceId: {invoice.Id}, Shopify orderId: {shopifyOrderId}");
+                            }
                         }
                         catch (Exception ex)
                         {

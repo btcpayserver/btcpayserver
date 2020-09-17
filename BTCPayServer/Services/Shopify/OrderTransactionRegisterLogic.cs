@@ -16,16 +16,17 @@ namespace BTCPayServer.Services.Shopify
             _client = client;
         }
 
-        public async Task<dynamic> Process(string orderId, string currency = null, string amountCaptured = null)
+        public async Task<TransactionsCreateResp> Process(string orderId, string invoiceId, string currency = null, string amountCaptured = null)
         {
             var resp = await _client.TransactionsList(orderId);
 
             var txns = resp.transactions;
-            if (txns != null && txns.Count >= 1)
+            // only register transactions if first, parent_id transaction is present and we haven't already registered transaction for this invoice
+            if (txns != null && txns.Count >= 1 && !txns.Any(a => a.authorization == invoiceId))
             {
                 var transaction = txns[0];
 
-                if (currency != null && currency.ToUpperInvariant().Trim() != transaction.currency.ToString().ToUpperInvariant().Trim())
+                if (currency != null && currency.ToUpperInvariant().Trim() != transaction.currency.ToUpperInvariant().Trim())
                 {
                     // because of parent_id present, currency will always be the one from parent transaction
                     // malicious attacker could potentially exploit this by creating invoice 
@@ -43,11 +44,12 @@ namespace BTCPayServer.Services.Shopify
                         amount = amountCaptured ?? transaction.amount,
                         kind = "capture",
                         gateway = "BTCPayServer",
-                        source = "external"
+                        source = "external",
+                        authorization = invoiceId
                     }
                 };
 
-                dynamic createResp = await _client.TransactionCreate(orderId, createTransaction);
+                var createResp = await _client.TransactionCreate(orderId, createTransaction);
                 return createResp;
             }
 

@@ -41,14 +41,15 @@ namespace BTCPayServer.Services.Shopify
             {
                 var invoice = b.Invoice;
                 var shopifyOrderId = invoice.Metadata?.OrderId;
-                // TODO: Don't code on live webcast, take time offline with Kukks to verify all flows
-                // Lightning it can just be paid
-                if ((invoice.Status == Client.Models.InvoiceStatus.Complete || invoice.Status == Client.Models.InvoiceStatus.Confirmed)
+                // We're only registering transaction on confirmed or complete and if invoice has orderId
+                if ((invoice.Status == Client.Models.InvoiceStatus.Confirmed || invoice.Status == Client.Models.InvoiceStatus.Complete)
                     && shopifyOrderId != null)
                 {
                     var storeData = await _storeRepository.FindStore(invoice.StoreId);
                     var storeBlob = storeData.GetStoreBlob();
 
+                    // ensure that store in question has shopify integration turned on 
+                    // and that invoice's orderId has shopify specific prefix
                     if (storeBlob.Shopify?.IntegratedAt.HasValue == true &&
                         shopifyOrderId.StartsWith(SHOPIFY_ORDER_ID_PREFIX, StringComparison.OrdinalIgnoreCase))
                     {
@@ -63,6 +64,8 @@ namespace BTCPayServer.Services.Shopify
                             return;
                         }
 
+                        // if we got this far, we likely need to register this invoice's payment on Shopify
+                        // OrderTransactionRegisterLogic has check if transaction is already registered which is why we're passing invoice.Id
                         try
                         {
                             await _shopifyEventsSemaphore.WaitAsync();

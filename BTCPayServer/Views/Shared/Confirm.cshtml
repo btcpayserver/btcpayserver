@@ -16,33 +16,25 @@
             <div class="modal-header">
                 <h4 class="modal-title w-100 text-center">@Model.Title</h4>
             </div>
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-lg-12 text-center">
-                        <p>
-                            @if (Model.DescriptionHtml)
-                            {
-                                @Safe.Raw(Model.Description)
-                            }
-                            else
-                            {
-                                @Model.Description
-                            }
-                        </p>
-                    </div>
-                </div>
-                @if (!String.IsNullOrEmpty(Model.Action))
+
+            <div class="modal-body text-center">
+                @if (Model.DescriptionHtml)
                 {
-                    <div class="row">
-                        <div class="col-lg-12 text-center">
-                            <form method="post" action="@Model.ActionUrl">
-                                <button id="continue" type="submit" class="btn @Model.ButtonClass w-25">@Model.Action</button>
-                                <button type="submit" class="btn btn-secondary w-25" onclick="history.back(); return false;">Go back</button>
-                            </form>
-                        </div>
-                    </div>
+                    @Safe.Raw(Model.Description)
+                }
+                else
+                {
+                    @Model.Description
                 }
             </div>
+
+            @if (!String.IsNullOrEmpty(Model.Action))
+            {
+                <form method="post" class="modal-footer justify-content-center" action="@Model.ActionUrl">
+                    <button type="submit" class="btn @Model.ButtonClass w-25 mx-2" id="continue">@Model.Action</button>
+                    <button type="submit" class="btn btn-secondary w-25 mx-2" onclick="history.back(); return false;">Go back</button>
+                </form>
+            }
         </div>
     </div>
 </body>

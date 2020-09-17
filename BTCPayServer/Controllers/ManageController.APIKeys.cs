@@ -7,9 +7,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Security.GreenField;
-using ExchangeSharp;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBitcoin.DataEncoders;
@@ -40,10 +38,11 @@ namespace BTCPayServer.Controllers
             }
             return View("Confirm", new ConfirmModel()
             {
-                Title = "Delete API Key " + (string.IsNullOrEmpty(key.Label) ? string.Empty : key.Label) + "(" + key.Id + ")",
-                Description = "Any application using this api key will immediately lose access",
+                Title = $"Delete API Key {(string.IsNullOrEmpty(key.Label) ? string.Empty : key.Label)}",
+                DescriptionHtml = true,
+                Description = $"Any application using this API key will immediately lose access: <code>{key.Id}</code>",
                 Action = "Delete",
-                ActionUrl = this.Url.ActionLink(nameof(RemoveAPIKeyPost), values: new { id = id })
+                ActionUrl = Url.ActionLink(nameof(RemoveAPIKeyPost), values: new { id })
             });
         }
 
@@ -81,7 +80,7 @@ namespace BTCPayServer.Controllers
         }
         
         [HttpGet("~/api-keys/authorize")]
-        public async Task<IActionResult> AuthorizeAPIKey( string[] permissions, string applicationName = null, Uri redirect = null,
+        public async Task<IActionResult> AuthorizeAPIKey(string[] permissions, string applicationName = null, Uri redirect = null,
             bool strict = true, bool selectiveStores = false, string applicationIdentifier = null)
         {
             if (!_btcPayServerEnvironment.IsSecure)
@@ -157,16 +156,17 @@ namespace BTCPayServer.Controllers
                     }
 
                     //we have a key that is sufficient, redirect to a page to confirm that it's ok to provide this key to the app.
-                    return View("Confirm",
-                        new ConfirmModel()
+                    return View("ConfirmAPIKey",
+                        new AuthorizeApiKeysViewModel()
                         {
-                            Title =
-                                $"Are you sure about exposing your API Key to {applicationName ?? applicationIdentifier}?",
-                            Description =
-                                $"You've previously generated this API Key ({key.Id}) specifically for {applicationName ?? applicationIdentifier} with the url {redirect}. ",
-                            ActionUrl = GetRedirectToApplicationUrl(redirect, key),
-                            ButtonClass = "btn-secondary",
-                            Action = "Confirm"
+                            ApiKey = key.Id,
+                            RedirectUrl = redirect,
+                            Label = applicationName,
+                            ApplicationName = applicationName,
+                            SelectiveStores = selectiveStores,
+                            Strict = strict,
+                            Permissions = string.Join(';', permissions),
+                            ApplicationIdentifier = applicationIdentifier
                         });
                 }
             }
@@ -255,16 +255,37 @@ namespace BTCPayServer.Controllers
                 return View(viewModel);
             }
 
-            switch (viewModel.Command.ToLowerInvariant())
+            var command = viewModel.Command.ToLowerInvariant();
+            switch (command)
             {
-                case "no":
+                case "cancel":
                     return RedirectToAction("APIKeys");
-                case "yes":
-                    var key = await CreateKey(viewModel, (viewModel.ApplicationIdentifier, viewModel.RedirectUrl?.Authority));
+
+                case "authorize":
+                case "confirm":
+                    var key = command == "authorize"
+                        ? await CreateKey(viewModel, (viewModel.ApplicationIdentifier, viewModel.RedirectUrl?.Authority))
+                        : await _apiKeyRepository.GetKey(viewModel.ApiKey);
     
                     if (viewModel.RedirectUrl != null)
                     {
-                        return Redirect(GetRedirectToApplicationUrl(viewModel.RedirectUrl, key));
+                        var permissions = key.GetBlob().Permissions;
+                        var redirectVm = new PostRedirectViewModel()
+                        {
+                            FormUrl = viewModel.RedirectUrl.ToString(),
+                            Parameters =
+                            {
+                                new KeyValuePair<string, string>("apiKey", key.Id),
+                                new KeyValuePair<string, string>("userId", key.UserId)
+                            }
+                        };
+                        foreach (var permission in permissions)
+                        {
+                            redirectVm.Parameters.Add(
+                                new KeyValuePair<string, string>("permissions[]", permission));
+                        }
+
+                        return View("PostRedirect", redirectVm);
                     }
 
                     TempData.SetStatusMessageModel(new StatusMessageModel()
@@ -272,19 +293,12 @@ namespace BTCPayServer.Controllers
                         Severity = StatusMessageModel.StatusSeverity.Success,
                         Html = $"API key generated! <code class='alert-link'>{key.Id}</code>"
                     });
+
                     return RedirectToAction("APIKeys", new { key = key.Id });
+
                 default:
                     return View(viewModel);
             }
-        }
-
-        private string GetRedirectToApplicationUrl(Uri redirect, APIKeyData key)
-        {
-            var uri = new UriBuilder(redirect);
-            var permissions = key.GetBlob().Permissions;
-            BTCPayServerClient.AppendPayloadToQuery(uri,
-                new Dictionary<string, object>() {{"key", key.Id}, {"permissions", permissions}, {"user", key.UserId}});
-            return uri.Uri.AbsoluteUri;
         }
 
         [HttpPost]
@@ -313,6 +327,7 @@ namespace BTCPayServer.Controllers
             });
             return RedirectToAction("APIKeys");
         }
+
         private IActionResult HandleCommands(AddApiKeyViewModel viewModel)
         {
             if (string.IsNullOrEmpty(viewModel.Command))
@@ -333,7 +348,6 @@ namespace BTCPayServer.Controllers
             switch (command)
             {
                 case "change-store-mode":
-
                     permissionValueItem.StoreMode = permissionValueItem.StoreMode == AddApiKeyViewModel.ApiKeyStoreMode.Specific
                         ? AddApiKeyViewModel.ApiKeyStoreMode.AllStores
                         : AddApiKeyViewModel.ApiKeyStoreMode.Specific;
@@ -344,6 +358,7 @@ namespace BTCPayServer.Controllers
                         permissionValueItem.SpecificStores.Add(null);
                     }
                     return View(viewModel);
+
                 case "add-store":
                     permissionValueItem.SpecificStores.Add(null);
                     return View(viewModel);
@@ -501,8 +516,8 @@ namespace BTCPayServer.Controllers
             public bool Strict { get; set; }
             public bool SelectiveStores { get; set; }
             public string Permissions { get; set; }
+            public string ApiKey { get; set; }
         }
-
 
         public class ApiKeysViewModel
         {

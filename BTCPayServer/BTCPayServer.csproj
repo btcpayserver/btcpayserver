@@ -43,7 +43,7 @@
     <Content Remove="Views\Shared\Ethereum\**\*" />
     <Content Remove="Views\Shared\Monero\**\*" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <PackageReference Include="BTCPayServer.Hwi" Version="1.1.3" />
     <PackageReference Include="BTCPayServer.Lightning.All" Version="1.2.4" />

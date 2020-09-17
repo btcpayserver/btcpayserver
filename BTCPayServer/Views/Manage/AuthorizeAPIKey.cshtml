@@ -18,16 +18,15 @@
     <input type="hidden" asp-for="SelectiveStores" value="@Model.SelectiveStores"/>
     <input type="hidden" asp-for="ApplicationIdentifier" value="@Model.ApplicationIdentifier"/>
     <section>
-        <div class="card container">
+        <div class="container">
             <div class="row">
                 <div class="col-lg-12 section-heading">
                     <h2>Authorization Request</h2>
-                    <hr class="primary">
-                    <p class="mb-1">@(Model.ApplicationName ?? "An application") is requesting access to your account.</p>
+                    <p class="my-3">@(Model.ApplicationName ?? "An application") is requesting access to your account.</p>
                     @if (Model.RedirectUrl != null)
                     {
                         <p class="mb-1 alert alert-info">
-                        If authorized, the generated API key will be provided to <strong>@Model.RedirectUrl.AbsoluteUri</strong>
+                            If authorized, the generated API key will be provided to <strong>@Model.RedirectUrl.AbsoluteUri</strong>
                         </p>
                     }
                 </div>
@@ -174,13 +173,10 @@
                     }
                 </div>
             </div>
-            <div class="row my-2">
+            <div class="row my-4">
                 <div class="col-lg-12 text-center">
-                    <div class="btn-group">
-                        <button class="btn btn-primary" name="command" id="consent-yes" type="submit" value="Yes">Authorize app</button>
-                    </div>
-                    <button class="btn btn-secondary" id="consent-no" name="command" type="submit" value="No">Cancel</button>
-
+                    <button class="btn btn-primary mx-2" name="command" id="consent-yes" type="submit" value="Authorize">Authorize app</button>
+                    <button class="btn btn-secondary mx-2" name="command" id="consent-no" type="submit" value="Cancel">Cancel</button>
                 </div>
             </div>
         </div>

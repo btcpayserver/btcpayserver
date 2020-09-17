@@ -86,7 +86,7 @@
                         }
                     },
                     "307": {
-                        "description": "Redirects to the specified url in `redirect` with query string values for `key` (the api key created or matched), `permissions` (the permissions the user consented to), and `user` (the id of the user that consented) upon consent"
+                        "description": "Makes browser do an HTTP POST request to the specified url in `redirect` with a JSON body consisting of `apiKey` (the api key created or matched), `permissions` (the permissions the user consented to), and `userId` (the id of the user that consented) upon consent"
                     }
                 },
                 "security": []

@@ -30,6 +30,9 @@ namespace BTCPayServer.Services.Shopify
 
         public const string SHOPIFY_ORDER_ID_PREFIX = "shopify-";
 
+
+        private static readonly SemaphoreSlim _shopifyEventsSemaphore = new SemaphoreSlim(1, 1);
+
         public Task StartAsync(CancellationToken cancellationToken)
         {
             _Cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -40,7 +43,7 @@ namespace BTCPayServer.Services.Shopify
                 var shopifyOrderId = invoice.Metadata?.OrderId;
                 // TODO: Don't code on live webcast, take time offline with Kukks to verify all flows
                 // Lightning it can just be paid
-                if ((invoice.Status == Client.Models.InvoiceStatus.Complete || invoice.Status == Client.Models.InvoiceStatus.Confirmed) 
+                if ((invoice.Status == Client.Models.InvoiceStatus.Complete || invoice.Status == Client.Models.InvoiceStatus.Confirmed)
                     && shopifyOrderId != null)
                 {
                     var storeData = await _storeRepository.FindStore(invoice.StoreId);
@@ -49,6 +52,8 @@ namespace BTCPayServer.Services.Shopify
                     if (storeBlob.Shopify?.IntegratedAt.HasValue == true &&
                         shopifyOrderId.StartsWith(SHOPIFY_ORDER_ID_PREFIX, StringComparison.OrdinalIgnoreCase))
                     {
+                        await _shopifyEventsSemaphore.WaitAsync();
+
                         shopifyOrderId = shopifyOrderId[SHOPIFY_ORDER_ID_PREFIX.Length..];
 
                         var client = createShopifyApiClient(storeBlob.Shopify);
@@ -60,6 +65,8 @@ namespace BTCPayServer.Services.Shopify
 
                         try
                         {
+                            await _shopifyEventsSemaphore.WaitAsync();
+
                             var logic = new OrderTransactionRegisterLogic(client);
                             var resp = await logic.Process(shopifyOrderId, invoice.Id, invoice.Currency, invoice.Price.ToString(CultureInfo.InvariantCulture));
                             if (resp != null)
@@ -72,6 +79,10 @@ namespace BTCPayServer.Services.Shopify
                         {
                             Logs.PayServer.LogError(ex, $"Shopify error while trying to register order transaction. " +
                                 $"Triggered by invoiceId: {invoice.Id}, Shopify orderId: {shopifyOrderId}");
+                        }
+                        finally
+                        {
+                            _shopifyEventsSemaphore.Release();
                         }
                     }
                 }

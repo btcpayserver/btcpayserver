@@ -1,5 +1,8 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Services.Shopify.ApiModels;
+using Microsoft.EntityFrameworkCore.Internal;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services.Shopify
@@ -15,12 +18,12 @@ namespace BTCPayServer.Services.Shopify
 
         public async Task<dynamic> Process(string orderId, string currency = null, string amountCaptured = null)
         {
-            dynamic resp = await _client.TransactionsList(orderId);
+            var resp = await _client.TransactionsList(orderId);
 
-            JArray transactions = resp.transactions;
-            if (transactions != null && transactions.Count >= 1)
+            var txns = resp.transactions;
+            if (txns != null && txns.Count >= 1)
             {
-                dynamic transaction = transactions[0];
+                var transaction = txns[0];
 
                 if (currency != null && currency.ToUpperInvariant().Trim() != transaction.currency.ToString().ToUpperInvariant().Trim())
                 {
@@ -31,9 +34,9 @@ namespace BTCPayServer.Services.Shopify
                     return null;
                 }
 
-                var createTransaction = new TransactionCreate
+                var createTransaction = new TransactionsCreateReq
                 {
-                    transaction = new TransactionCreate.DataHolder
+                    transaction = new TransactionsCreateReq.DataHolder
                     {
                         parent_id = transaction.id,
                         currency = transaction.currency,

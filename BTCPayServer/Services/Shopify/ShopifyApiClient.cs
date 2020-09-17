@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using BTCPayServer.Services.Shopify.ApiModels;
 using DBriize.Utils;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -53,18 +54,18 @@ namespace BTCPayServer.Services.Shopify
             return strResp;
         }
 
-        public async Task<dynamic> TransactionsList(string orderId)
+        public async Task<TransactionsListResp> TransactionsList(string orderId)
         {
             var req = createRequest(_creds.ShopName, HttpMethod.Get, $"orders/{orderId}/transactions.json");
 
             var strResp = await sendRequest(req);
 
-            dynamic parsed = JObject.Parse(strResp);
+            var parsed = JsonConvert.DeserializeObject<TransactionsListResp>(strResp);
 
             return parsed;
         }
 
-        public async Task<dynamic> TransactionCreate(string orderId, TransactionCreate txnCreate)
+        public async Task<TransactionsCreateResp> TransactionCreate(string orderId, TransactionsCreateReq txnCreate)
         {
             var postJson = JsonConvert.SerializeObject(txnCreate);
 
@@ -72,15 +73,15 @@ namespace BTCPayServer.Services.Shopify
             req.Content = new StringContent(postJson, Encoding.UTF8, "application/json");
 
             var strResp = await sendRequest(req);
-            return JObject.Parse(strResp);
+            return JsonConvert.DeserializeObject<TransactionsCreateResp>(strResp);
         }
 
-        public async Task<int> OrdersCount()
+        public async Task<long> OrdersCount()
         {
             var req = createRequest(_creds.ShopName, HttpMethod.Get, $"orders/count.json");
             var strResp = await sendRequest(req);
 
-            dynamic parsed = JObject.Parse(strResp);
+            var parsed = JsonConvert.DeserializeObject<OrdersCountResp>(strResp);
 
             return parsed.count;
         }
@@ -100,20 +101,5 @@ namespace BTCPayServer.Services.Shopify
         public string ApiKey { get; set; }
         public string ApiPassword { get; set; }
         public string SharedSecret { get; set; }
-    }
-
-    public class TransactionCreate
-    {
-        public DataHolder transaction { get; set; }
-
-        public class DataHolder
-        {
-            public string currency { get; set; }
-            public string amount { get; set; }
-            public string kind { get; set; }
-            public string parent_id { get; set; }
-            public string gateway { get; set; }
-            public string source { get; set; }
-        }
     }
 }

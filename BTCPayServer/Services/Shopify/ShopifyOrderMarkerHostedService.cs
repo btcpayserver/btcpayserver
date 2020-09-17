@@ -38,7 +38,10 @@ namespace BTCPayServer.Services.Shopify
             {
                 var invoice = b.Invoice;
                 var shopifyOrderId = invoice.Metadata?.OrderId;
-                if (invoice.Status == Client.Models.InvoiceStatus.Paid && shopifyOrderId != null)
+                // TODO: Don't code on live webcast, take time offline with Kukks to verify all flows
+                // Lightning it can just be paid
+                if ((invoice.Status == Client.Models.InvoiceStatus.Complete || invoice.Status == Client.Models.InvoiceStatus.Confirmed) 
+                    && shopifyOrderId != null)
                 {
                     var storeData = await _storeRepository.FindStore(invoice.StoreId);
                     var storeBlob = storeData.GetStoreBlob();

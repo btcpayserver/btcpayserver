@@ -8,6 +8,8 @@ using BTCPayServer.Events;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Apps;
+using BTCPayServer.Services.PaymentRequests;
 using NBitcoin;
 using Newtonsoft.Json.Linq;
 
@@ -50,6 +52,17 @@ namespace BTCPayServer.HostedServices
                     labels.Add(UpdateTransactionLabel.PayjoinLabelTemplate());
                 }
 
+                foreach (var paymentId in PaymentRequestRepository.GetPaymentIdsFromInternalTags(invoiceEvent.Invoice))
+                {
+                    labels.Add(UpdateTransactionLabel.PaymentRequestLabelTemplate(paymentId));
+                }
+                foreach (var appId in  AppService.GetAppInternalTags(invoiceEvent.Invoice))
+                {
+                    labels.Add(UpdateTransactionLabel.AppLabelTemplate(appId));
+                }
+
+               
+                
                 _eventAggregator.Publish(new UpdateTransactionLabel(walletId, transactionId, labels));
             }
             else if (evt is UpdateTransactionLabel updateTransactionLabel)
@@ -115,6 +128,14 @@ namespace BTCPayServer.HostedServices
         public static (string color, string label) InvoiceLabelTemplate(string invoice)
         {
             return ("#cedc21", JObject.FromObject(new { value = "invoice", id = invoice }).ToString());
+        }        
+        public static (string color, string label) PaymentRequestLabelTemplate(string paymentRequestId)
+        {
+            return ("#489D77", JObject.FromObject(new { value = "payment-request", id = paymentRequestId }).ToString());
+        }
+        public static (string color, string label) AppLabelTemplate(string appId)
+        {
+            return ("#5093B6", JObject.FromObject(new { value = "app", id = appId }).ToString());
         }
 
         public static (string color, string label) PayjoinExposedLabelTemplate(string invoice)
@@ -122,6 +143,10 @@ namespace BTCPayServer.HostedServices
             return ("#51b13e", JObject.FromObject(new { value = "pj-exposed", id = invoice }).ToString());
         }
 
+        public static  (string color, string label) PayoutTemplate(string payoutId, string pullPaymentId, string walletId)
+        {
+            return ("#3F88AF", JObject.FromObject(new { value = "payout", id = payoutId, pullPaymentId, walletId }).ToString());
+        }
         public WalletId WalletId { get; set; }
         public Dictionary<uint256, List<(string color, string label)>> TransactionLabels { get; set; }
         public override string ToString()

@@ -50,6 +50,7 @@ namespace BTCPayServer.Services.Labels
                 {
                     var id = jObj.ContainsKey("id") ? jObj["id"].Value<string>() : string.Empty;
                     var idInLabel = string.IsNullOrEmpty(id) ? string.Empty : $"({id})";
+                    
                     switch (jObj["value"].Value<string>())
                     {
                         case "invoice":
@@ -63,6 +64,28 @@ namespace BTCPayServer.Services.Labels
                                     ? null
                                     : _linkGenerator.InvoiceLink(id, request.Scheme, request.Host, request.PathBase)
                             };
+                        case "payment-request":
+                            return new Label()
+                            {
+                                RawValue = value,
+                                Value = "payment-request",
+                                Color = color,
+                                Tooltip = $"Received through a payment request {idInLabel}",
+                                Link = string.IsNullOrEmpty(id)
+                                    ? null
+                                    : _linkGenerator.PaymentRequestLink(id, request.Scheme, request.Host, request.PathBase)
+                            };
+                        case "app":
+                            return new Label()
+                            {
+                                RawValue = value,
+                                Value = "app",
+                                Color = color,
+                                Tooltip = $"Received through an app {idInLabel}",
+                                Link = string.IsNullOrEmpty(id)
+                                    ? null
+                                    : _linkGenerator.AppLink(id, request.Scheme, request.Host, request.PathBase)
+                            };
                         case "pj-exposed":
                             return new Label()
                             {
@@ -73,6 +96,19 @@ namespace BTCPayServer.Services.Labels
                                 Link = string.IsNullOrEmpty(id)
                                     ? null
                                     : _linkGenerator.InvoiceLink(id, request.Scheme, request.Host, request.PathBase)
+                            };
+                        case "payout":
+                            return new Label()
+                            {
+                                RawValue = value,
+                                Value = "payout",
+                                Color = color,
+                                Tooltip = $"Paid a payout of a pull payment ({jObj["pullPaymentId"].Value<string>()})",
+                                Link = string.IsNullOrEmpty(id)
+                                    ? null
+                                    : _linkGenerator.PayoutLink(jObj["walletId"].Value<string>(),
+                                        jObj["pullPaymentId"].Value<string>(), request.Scheme, request.Host,
+                                        request.PathBase)
                             };
                     }
                 }

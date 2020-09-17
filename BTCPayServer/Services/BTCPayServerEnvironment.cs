@@ -78,9 +78,9 @@ namespace BTCPayServer.Services
         public override string ToString()
         {
             StringBuilder txt = new StringBuilder();
-            txt.Append($"CryptoPay");
+            txt.Append($"MyCryptoPay");
             if (AltcoinsVersion)
-                txt.Append($" (altcoins)");
+                txt.Append($" ()");
             if (!Environment.IsProduction() || !Build.Equals("Release", StringComparison.OrdinalIgnoreCase))
             {
                 txt.Append($" Environment: {Environment.EnvironmentName} Build: {Build}");

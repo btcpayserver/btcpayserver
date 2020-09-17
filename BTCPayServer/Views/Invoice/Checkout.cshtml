@@ -194,6 +194,9 @@
             },
             invoicePaid: function(){
                 return  ["complete", "confirmed", "paid"].indexOf(this.srvModel.status) >= 0;
+            },
+            invoiceConfirmed: function(){
+                return ["complete", "confirmed"].indexOf(this.srvModel.status) >= 0;                
             }
         },
         mounted: function(){

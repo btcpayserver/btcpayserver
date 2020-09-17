@@ -8,7 +8,7 @@ namespace BTCPayServer.Services
         public static void SendEmailConfirmation(this IEmailSender emailSender, string email, string link)
         {
             emailSender.SendEmail(email, "Confirm your email",
-                $"Please confirm your account by clicking this link: <a href='{HtmlEncoder.Default.Encode(link)}'>link</a>");
+                $"Hello <br> Thank you for registering your Mycryptopay Account, Please click <a href='{HtmlEncoder.Default.Encode(link)}'>here</a> to verify your account . <br> Nice to have you onboard");
         }
     }
 }

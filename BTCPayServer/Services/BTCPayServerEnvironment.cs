@@ -80,7 +80,7 @@ namespace BTCPayServer.Services
             StringBuilder txt = new StringBuilder();
             txt.Append($"MyCryptoPay");
             if (AltcoinsVersion)
-                txt.Append($" ()");
+                txt.Append($" ");
             if (!Environment.IsProduction() || !Build.Equals("Release", StringComparison.OrdinalIgnoreCase))
             {
                 txt.Append($" Environment: {Environment.EnvironmentName} Build: {Build}");

@@ -38,10 +38,11 @@ namespace BTCPayServer.Controllers
             }
             return View("Confirm", new ConfirmModel()
             {
-                Title = "Delete API Key " + (string.IsNullOrEmpty(key.Label) ? string.Empty : key.Label) + "(" + key.Id + ")",
-                Description = "Any application using this api key will immediately lose access",
+                Title = $"Delete API Key {(string.IsNullOrEmpty(key.Label) ? string.Empty : key.Label)}",
+                DescriptionHtml = true,
+                Description = $"Any application using this API key will immediately lose access: <code>{key.Id}</code>",
                 Action = "Delete",
-                ActionUrl = this.Url.ActionLink(nameof(RemoveAPIKeyPost), values: new { id = id })
+                ActionUrl = Url.ActionLink(nameof(RemoveAPIKeyPost), values: new { id })
             });
         }
 
@@ -77,10 +78,10 @@ namespace BTCPayServer.Controllers
 
             return View("AddApiKey", await SetViewModelValues(new AddApiKeyViewModel()));
         }
-
+        
         [HttpGet("~/api-keys/authorize")]
-        public async Task<IActionResult> AuthorizeAPIKey(string[] permissions, string applicationName = null,
-            bool strict = true, bool selectiveStores = false)
+        public async Task<IActionResult> AuthorizeAPIKey(string[] permissions, string applicationName = null, Uri redirect = null,
+            bool strict = true, bool selectiveStores = false, string applicationIdentifier = null)
         {
             if (!_btcPayServerEnvironment.IsSecure)
             {
@@ -94,14 +95,91 @@ namespace BTCPayServer.Controllers
 
             permissions ??= Array.Empty<string>();
 
-            var parsedPermissions = Permission.ToPermissions(permissions).GroupBy(permission => permission.Policy);
+            var requestPermissions = Permission.ToPermissions(permissions);
+            if (!string.IsNullOrEmpty(applicationIdentifier) && redirect != null)
+            {
+                //check if there is an app identifier that matches and belongs to the current user
+                var keys = await _apiKeyRepository.GetKeys(new APIKeyRepository.APIKeyQuery()
+                {
+                    UserId = new[] {_userManager.GetUserId(User)}
+                });
+                foreach (var key in keys)
+                {
+                    var blob = key.GetBlob();
+
+                    if (blob.ApplicationIdentifier != applicationIdentifier ||
+                        blob.ApplicationAuthority != redirect.Authority)
+                    {
+                        continue;
+                    }
+
+                    //matched the identifier and authority, but we need to check if what the app is requesting in terms of permissions is enough
+                    var alreadyPresentPermissions = Permission.ToPermissions(blob.Permissions)
+                        .GroupBy(permission => permission.Policy);
+                    var fail = false;
+                    foreach (var permission in requestPermissions.GroupBy(permission => permission.Policy))
+                    {
+                        var presentPermission =
+                            alreadyPresentPermissions.SingleOrDefault(grouping => permission.Key == grouping.Key);
+                        if (strict && presentPermission == null)
+                        {
+                            fail = true;
+                            break;
+                        }
+
+                        if (Policies.IsStorePolicy(permission.Key))
+                        {
+                            if (!selectiveStores &&
+                                permission.Any(permission1 => !string.IsNullOrEmpty(permission1.Scope)))
+                            {
+
+                                TempData.SetStatusMessageModel(new StatusMessageModel()
+                                {
+                                    Severity = StatusMessageModel.StatusSeverity.Error,
+                                    Message =
+                                        "Cannot request specific store permission when selectiveStores is not enable"
+                                });
+                                return RedirectToAction("APIKeys");
+                            }
+                            else if (!selectiveStores && presentPermission.Any(permission1 =>
+                                !string.IsNullOrEmpty(permission1.Scope)))
+                            {
+                                fail = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (fail)
+                    {
+                        continue;
+                    }
+
+                    //we have a key that is sufficient, redirect to a page to confirm that it's ok to provide this key to the app.
+                    return View("ConfirmAPIKey",
+                        new AuthorizeApiKeysViewModel()
+                        {
+                            ApiKey = key.Id,
+                            RedirectUrl = redirect,
+                            Label = applicationName,
+                            ApplicationName = applicationName,
+                            SelectiveStores = selectiveStores,
+                            Strict = strict,
+                            Permissions = string.Join(';', permissions),
+                            ApplicationIdentifier = applicationIdentifier
+                        });
+                }
+            }
+
             var vm = await SetViewModelValues(new AuthorizeApiKeysViewModel()
             {
+                RedirectUrl = redirect,
                 Label = applicationName,
                 ApplicationName = applicationName,
                 SelectiveStores = selectiveStores,
                 Strict = strict,
-                Permissions = string.Join(';', parsedPermissions.SelectMany(grouping => grouping.Select(permission => permission.ToString())))
+                Permissions = string.Join(';', requestPermissions),
+                ApplicationIdentifier = applicationIdentifier
             });
             AdjustVMForAuthorization(vm);
 
@@ -172,24 +250,52 @@ namespace BTCPayServer.Controllers
                 }
             }
 
-
             if (!ModelState.IsValid)
             {
                 return View(viewModel);
             }
 
-            switch (viewModel.Command.ToLowerInvariant())
+            var command = viewModel.Command.ToLowerInvariant();
+            switch (command)
             {
-                case "no":
+                case "cancel":
                     return RedirectToAction("APIKeys");
-                case "yes":
-                    var key = await CreateKey(viewModel);
+
+                case "authorize":
+                case "confirm":
+                    var key = command == "authorize"
+                        ? await CreateKey(viewModel, (viewModel.ApplicationIdentifier, viewModel.RedirectUrl?.Authority))
+                        : await _apiKeyRepository.GetKey(viewModel.ApiKey);
+    
+                    if (viewModel.RedirectUrl != null)
+                    {
+                        var permissions = key.GetBlob().Permissions;
+                        var redirectVm = new PostRedirectViewModel()
+                        {
+                            FormUrl = viewModel.RedirectUrl.ToString(),
+                            Parameters =
+                            {
+                                new KeyValuePair<string, string>("apiKey", key.Id),
+                                new KeyValuePair<string, string>("userId", key.UserId)
+                            }
+                        };
+                        foreach (var permission in permissions)
+                        {
+                            redirectVm.Parameters.Add(
+                                new KeyValuePair<string, string>("permissions[]", permission));
+                        }
+
+                        return View("PostRedirect", redirectVm);
+                    }
+
                     TempData.SetStatusMessageModel(new StatusMessageModel()
                     {
                         Severity = StatusMessageModel.StatusSeverity.Success,
                         Html = $"API key generated! <code class='alert-link'>{key.Id}</code>"
                     });
+
                     return RedirectToAction("APIKeys", new { key = key.Id });
+
                 default:
                     return View(viewModel);
             }
@@ -221,6 +327,7 @@ namespace BTCPayServer.Controllers
             });
             return RedirectToAction("APIKeys");
         }
+
         private IActionResult HandleCommands(AddApiKeyViewModel viewModel)
         {
             if (string.IsNullOrEmpty(viewModel.Command))
@@ -241,7 +348,6 @@ namespace BTCPayServer.Controllers
             switch (command)
             {
                 case "change-store-mode":
-
                     permissionValueItem.StoreMode = permissionValueItem.StoreMode == AddApiKeyViewModel.ApiKeyStoreMode.Specific
                         ? AddApiKeyViewModel.ApiKeyStoreMode.AllStores
                         : AddApiKeyViewModel.ApiKeyStoreMode.Specific;
@@ -252,6 +358,7 @@ namespace BTCPayServer.Controllers
                         permissionValueItem.SpecificStores.Add(null);
                     }
                     return View(viewModel);
+
                 case "add-store":
                     permissionValueItem.SpecificStores.Add(null);
                     return View(viewModel);
@@ -268,18 +375,20 @@ namespace BTCPayServer.Controllers
             return null;
         }
 
-        private async Task<APIKeyData> CreateKey(AddApiKeyViewModel viewModel)
+        private async Task<APIKeyData> CreateKey(AddApiKeyViewModel viewModel, (string appIdentifier, string appAuthority) app = default)
         {
             var key = new APIKeyData()
             {
                 Id = Encoders.Hex.EncodeData(RandomUtils.GetBytes(20)),
                 Type = APIKeyType.Permanent,
                 UserId = _userManager.GetUserId(User),
-                Label = viewModel.Label
+                Label = viewModel.Label,
             };
             key.SetBlob(new APIKeyBlob()
             {
-                Permissions = GetPermissionsFromViewModel(viewModel).Select(p => p.ToString()).Distinct().ToArray()
+                Permissions = GetPermissionsFromViewModel(viewModel).Select(p => p.ToString()).Distinct().ToArray(),
+                ApplicationAuthority = app.appAuthority,
+                ApplicationIdentifier = app.appIdentifier
             });
             await _apiKeyRepository.CreateKey(key);
             return key;
@@ -363,6 +472,8 @@ namespace BTCPayServer.Controllers
                     {BTCPayServer.Client.Policies.CanModifyProfile, ("Manage your profile", "The app will be able to view and modify your user profile.")},
                     {BTCPayServer.Client.Policies.CanCreateInvoice, ("Create an invoice", "The app will be able to create new invoices.")},
                     {$"{BTCPayServer.Client.Policies.CanCreateInvoice}:", ("Create an invoice", "The app will be able to create new invoices on the selected stores.")},
+                    {BTCPayServer.Client.Policies.CanViewInvoices, ("View invoices", "The app will be able to view invoices.")},
+                    {$"{BTCPayServer.Client.Policies.CanViewInvoices}:", ("View invoices", "The app will be able to view invoices on the selected stores.")},
                     {BTCPayServer.Client.Policies.CanModifyPaymentRequests, ("Modify your payment requests", "The app will be able to view, modify, delete and create new payment requests on all your stores.")},
                     {$"{BTCPayServer.Client.Policies.CanModifyPaymentRequests}:", ("Manage selected stores' payment requests", "The app will be able to view, modify, delete and create new payment requests on the selected stores.")},
                     {BTCPayServer.Client.Policies.CanViewPaymentRequests, ("View your payment requests", "The app will be able to view payment requests.")},
@@ -400,11 +511,13 @@ namespace BTCPayServer.Controllers
         public class AuthorizeApiKeysViewModel : AddApiKeyViewModel
         {
             public string ApplicationName { get; set; }
+            public string ApplicationIdentifier { get; set; }
+            public Uri RedirectUrl { get; set; }
             public bool Strict { get; set; }
             public bool SelectiveStores { get; set; }
             public string Permissions { get; set; }
+            public string ApiKey { get; set; }
         }
-
 
         public class ApiKeysViewModel
         {

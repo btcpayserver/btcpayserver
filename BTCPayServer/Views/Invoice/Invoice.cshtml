@@ -1,4 +1,4 @@
-﻿@model InvoiceDetailsModel
+@model InvoiceDetailsModel
 @{
     ViewData["Title"] = "Invoice " + Model.Id;
 }
@@ -23,28 +23,33 @@
 
         <div class="row">
             <div class="col-lg-12 section-heading">
-                <div class="d-flex justify-content-between">
-                    <h2>@ViewData["Title"]</h2>
-                    <form asp-action="ToggleArchive" asp-route-invoiceId="@Model.Id" method="post">
-                        @if (Model.CanRefund)
-                        {
-                            <a id="refundlink" class="btn btn-success" asp-action="Refund" asp-route-invoiceId="@this.Context.GetRouteValue("invoiceId")">Issue refund <span class="fa fa-undo"></span></a>
-                        }
-                        else
-                        {
-                            <button href="#" class="btn btn-secondary" data-toggle="tooltip" title="You can only issue refunds on invoices with confirmed payments" disabled>Issue refund <span class="fa fa-undo"></span></button>
-                        }
-                        <button type="submit" class="@(Model.Archived ? "btn btn btn-warning" : "btn btn-danger")" id="btn-archive-toggle">
-                            @if (Model.Archived)
+                <div class="row">
+                    <h2 class="col-xs-12 col-lg-9">@ViewData["Title"]</h2>
+                    <div class="col-xs-12 col-lg-3 ">
+                        <div class="d-inline-flex">
+                            @if (Model.CanRefund)
                             {
-                                <span data-toggle="tooltip" title="Unarchive this invoice">Archived <i class=" ml-1 fa fa-close"></i></span>
+                                <a id="refundlink" class=" btn btn-success" asp-action="Refund" asp-route-invoiceId="@this.Context.GetRouteValue("invoiceId")">Issue refund <span class="fa fa-undo"></span></a>
                             }
                             else
                             {
-                                <span data-toggle="tooltip" title="Archive this invoice so that it does not appear in the invoice list by default">Archive <i class=" ml-1 fa fa-archive"></i></span>
+                                <button href="#" class="btn btn-secondary" data-toggle="tooltip" title="You can only issue refunds on invoices with confirmed payments" disabled>Issue refund <span class="fa fa-undo"></span></button>
                             }
-                        </button>
-                    </form>
+                            <form class="p-0 ml-1" asp-action="ToggleArchive" asp-route-invoiceId="@Model.Id" method="post">
+
+                                <button type="submit" class="btn @(Model.Archived ? "btn-warning" : "btn btn-danger")" id="btn-archive-toggle">
+                                    @if (Model.Archived)
+                                    {
+                                        <span data-toggle="tooltip" title="Unarchive this invoice">Archived <i class=" ml-1 fa fa-close"></i></span>
+                                    }
+                                    else
+                                    {
+                                        <span data-toggle="tooltip" title="Archive this invoice so that it does not appear in the invoice list by default">Archive <i class=" ml-1 fa fa-archive"></i></span>
+                                    }
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
                 <hr class="primary">
             </div>
@@ -88,7 +93,7 @@
                     </tr>
                     <tr>
                         <th>Order Id</th>
-                        <td>@Model.OrderId</td>
+                        <td>@Model.TypedMetadata.OrderId</td>
                     </tr>
                     <tr>
                         <th>Total fiat due</th>
@@ -109,39 +114,39 @@
                 <table class="table table-sm table-responsive-md removetopborder">
                     <tr>
                         <th>Name</th>
-                        <td>@Model.BuyerInformation.BuyerName</td>
+                        <td>@Model.TypedMetadata.BuyerName</td>
                     </tr>
                     <tr>
                         <th>Email</th>
-                        <td><a href="mailto:@Model.BuyerInformation.BuyerEmail">@Model.BuyerInformation.BuyerEmail</a></td>
+                        <td><a href="mailto:@Model.TypedMetadata.BuyerEmail">@Model.TypedMetadata.BuyerEmail</a></td>
                     </tr>
                     <tr>
                         <th>Phone</th>
-                        <td>@Model.BuyerInformation.BuyerPhone</td>
+                        <td>@Model.TypedMetadata.BuyerPhone</td>
                     </tr>
                     <tr>
                         <th>Address 1</th>
-                        <td>@Model.BuyerInformation.BuyerAddress1</td>
+                        <td>@Model.TypedMetadata.BuyerAddress1</td>
                     </tr>
                     <tr>
                         <th>Address 2</th>
-                        <td>@Model.BuyerInformation.BuyerAddress2</td>
+                        <td>@Model.TypedMetadata.BuyerAddress2</td>
                     </tr>
                     <tr>
                         <th>City</th>
-                        <td>@Model.BuyerInformation.BuyerCity</td>
+                        <td>@Model.TypedMetadata.BuyerCity</td>
                     </tr>
                     <tr>
                         <th>State</th>
-                        <td>@Model.BuyerInformation.BuyerState</td>
+                        <td>@Model.TypedMetadata.BuyerState</td>
                     </tr>
                     <tr>
                         <th>Country</th>
-                        <td>@Model.BuyerInformation.BuyerCountry</td>
+                        <td>@Model.TypedMetadata.BuyerCountry</td>
                     </tr>
                     <tr>
                         <th>Zip</th>
-                        <td>@Model.BuyerInformation.BuyerZip</td>
+                        <td>@Model.TypedMetadata.BuyerZip</td>
                     </tr>
                 </table>
                 @if (Model.PosData.Count == 0)
@@ -150,11 +155,11 @@
                     <table class="table table-sm table-responsive-md removetopborder">
                         <tr>
                             <th>Item code</th>
-                            <td>@Model.ProductInformation.ItemCode</td>
+                            <td>@Model.TypedMetadata.ItemCode</td>
                         </tr>
                         <tr>
                             <th>Item Description</th>
-                            <td>@Model.ProductInformation.ItemDesc</td>
+                            <td>@Model.TypedMetadata.ItemDesc</td>
                         </tr>
                         <tr>
                             <th>Price</th>
@@ -177,11 +182,11 @@
                     <table class="table table-sm table-responsive-md removetopborder">
                         <tr>
                             <th>Item code</th>
-                            <td>@Model.ProductInformation.ItemCode</td>
+                            <td>@Model.TypedMetadata.ItemCode</td>
                         </tr>
                         <tr>
                             <th>Item Description</th>
-                            <td>@Model.ProductInformation.ItemDesc</td>
+                            <td>@Model.TypedMetadata.ItemDesc</td>
                         </tr>
                         <tr>
                             <th>Price</th>
@@ -216,7 +221,7 @@
                     <tbody>
                         @foreach (var evt in Model.Events)
                         {
-                            <tr>
+                            <tr class="alert alert-@evt.GetCssClass()">
                                 <td>@evt.Timestamp.ToBrowserDate()</td>
                                 <td>@evt.Message</td>
                             </tr>

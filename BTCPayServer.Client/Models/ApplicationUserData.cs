@@ -21,5 +21,10 @@ namespace BTCPayServer.Client.Models
         /// whether the user needed to verify their email on account creation
         /// </summary>
         public bool RequiresEmailConfirmation { get; set; }
+
+        /// <summary>
+        /// the roles of the user
+        /// </summary>
+        public string[] Roles { get; set; }
     }
 }

@@ -104,9 +104,8 @@ namespace BTCPayServer.HostedServices
                         return;
                 }
 
-
-                if ((!string.IsNullOrEmpty(invoiceEvent.Invoice.ProductInformation.ItemCode) ||
-                     AppService.TryParsePosCartItems(invoiceEvent.Invoice.PosData, out cartItems)))
+                if ((!string.IsNullOrEmpty(invoiceEvent.Invoice.Metadata.ItemCode) ||
+                     AppService.TryParsePosCartItems(invoiceEvent.Invoice.Metadata.PosData, out cartItems)))
                 {
                     var appIds = AppService.GetAppInternalTags(invoiceEvent.Invoice);
 
@@ -116,9 +115,9 @@ namespace BTCPayServer.HostedServices
                     }
 
                     var items = cartItems ?? new Dictionary<string, int>();
-                    if (!string.IsNullOrEmpty(invoiceEvent.Invoice.ProductInformation.ItemCode))
+                    if (!string.IsNullOrEmpty(invoiceEvent.Invoice.Metadata.ItemCode))
                     {
-                        items.TryAdd(invoiceEvent.Invoice.ProductInformation.ItemCode, 1);
+                        items.TryAdd(invoiceEvent.Invoice.Metadata.ItemCode, 1);
                     }
 
                     _eventAggregator.Publish(new UpdateAppInventory()

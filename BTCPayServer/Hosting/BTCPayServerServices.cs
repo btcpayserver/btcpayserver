@@ -10,7 +10,6 @@ using BTCPayServer.Logging;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
-using BTCPayServer.Payments.Changelly;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Payments.PayJoin;
 using BTCPayServer.Security;
@@ -49,6 +48,7 @@ using NicolasDorier.RateLimits;
 using Serilog;
 #if ALTCOINS
 using BTCPayServer.Services.Altcoins.Monero;
+using BTCPayServer.Services.Altcoins.Ethereum;
 #endif
 namespace BTCPayServer.Hosting
 {
@@ -79,6 +79,7 @@ namespace BTCPayServer.Hosting
             services.AddPayJoinServices();
 #if ALTCOINS
             services.AddMoneroLike();
+            services.AddEthereumLike();
 #endif
             services.TryAddSingleton<SettingsRepository>();
             services.TryAddSingleton<LabelFactory>();
@@ -96,7 +97,7 @@ namespace BTCPayServer.Hosting
                 var dbpath = Path.Combine(opts.DataDir, "InvoiceDB");
                 if (!Directory.Exists(dbpath))
                     Directory.CreateDirectory(dbpath);
-                return new InvoiceRepository(dbContext, dbpath, o.GetRequiredService<BTCPayNetworkProvider>());
+                return new InvoiceRepository(dbContext, dbpath, o.GetRequiredService<BTCPayNetworkProvider>(), o.GetService<EventAggregator>());
             });
             services.AddSingleton<BTCPayServerEnvironment>();
             services.TryAddSingleton<TokenRepository>();
@@ -218,8 +219,6 @@ namespace BTCPayServer.Hosting
 
             services.AddSingleton<PaymentMethodHandlerDictionary>();
 
-            services.AddSingleton<ChangellyClientProvider>();
-
             services.AddSingleton<NotificationManager>();
             services.AddScoped<NotificationSender>();
 
@@ -246,7 +245,10 @@ namespace BTCPayServer.Hosting
 
             services.AddSingleton<INotificationHandler, InvoiceEventNotification.Handler>();
             services.AddSingleton<INotificationHandler, PayoutNotification.Handler>();
-
+            
+#if DEBUG
+            services.AddSingleton<INotificationHandler, JunkNotification.Handler>();
+#endif    
             services.TryAddSingleton<ExplorerClientProvider>();
             services.TryAddSingleton<Bitpay>(o =>
             {

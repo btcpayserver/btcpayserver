@@ -8,22 +8,34 @@
     {
         routeParams["walletId"] = routeData.Values["walletId"]?.ToString();
     }
+    var action = Model.FormUrl ?? Url.Action(Model.AspAction, Model.AspController, routeParams);
 }
 
-<html>
-<head></head>
+<html lang="en">
+<head>
+    <partial name="Header" />
+    <title>Post Redirect</title>
+</head>
 <body>
-    <form
-        method="post"
-        id="postform"
-        asp-action="@Model.AspAction"
-        asp-controller="@Model.AspController"
-        asp-all-route-data="@routeParams"
-    >
-        @foreach(var o in Model.Parameters) {
-            <input type="hidden" name="@o.Key" value="@o.Value" />
-        }
-    </form>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form method="post" id="postform" action="@action" class="modal-body text-center my-3">
+                @Html.AntiForgeryToken()
+                @foreach (var o in Model.Parameters)
+                {
+                    <input type="hidden" name="@o.Key" value="@o.Value"/>
+                }
+                <noscript>
+                    <p>
+                        This redirection page is supposed to be submitted automatically.
+                        <br>
+                        Since you have not enabled JavaScript, please submit manually.
+                    </p>
+                    <button class="btn btn-primary" type="submit">Submit</button>
+                </noscript>
+            </form>
+        </div>
+    </div>
     <script type="text/javascript">
         document.forms.item(0).submit();
     </script>

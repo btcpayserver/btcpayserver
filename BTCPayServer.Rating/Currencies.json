@@ -1293,5 +1293,26 @@
       "divisibility":0,
       "symbol":"Sats",
       "crypto":true
+   },
+   {
+       "name": "Ethereum",
+       "code": "ETH",
+       "divisibility": 18,
+       "symbol": null,
+       "crypto": true
+   },
+   {
+       "name":"USDt",
+       "code":"USDT20",
+       "divisibility":6,
+       "symbol":null,
+       "crypto":true
+   },
+   {
+       "name":"FaucetToken",
+       "code":"FAU",
+       "divisibility":18,
+       "symbol":null,
+       "crypto":true
    }
 ]

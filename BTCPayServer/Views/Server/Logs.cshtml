@@ -5,34 +5,40 @@
 
 <partial name="_StatusMessage" />
 
-<div class="row">
-    <ul>
-        @foreach (var file in Model.LogFiles)
-        {
-            <li>
-                <a asp-action="LogsView" asp-route-file="@file.Name">@file.Name</a>
-            </li>
-        }
+<ul class="list-unstyled">
+    @foreach (var file in Model.LogFiles)
+    {
         <li>
-            @if (Model.LogFileOffset > 0)
-            {
-            <a asp-action="LogsView" asp-route-offset="@(Model.LogFileOffset - 5)">&lt;&lt;</a>
-            }
-            Showing @Model.LogFileOffset - (@(Model.LogFileOffset+Model.LogFiles.Count)) of @Model.LogFileCount
-            @if ((Model.LogFileOffset+ Model.LogFiles.Count) < Model.LogFileCount)
-            {
-                <a asp-action="LogsView" asp-route-offset="@(Model.LogFileOffset + Model.LogFiles.Count)">&gt;&gt;</a>
-            }
+            <a asp-action="LogsView" asp-route-file="@file.Name">@file.Name</a>
+        </li>
+    }
+</ul>
+
+<nav aria-label="..." class="w-100">
+    <ul class="pagination float-left">
+        <li class="page-item @(Model.LogFileOffset == 0 ? "disabled" : null)">
+            <a class="page-link" asp-action="LogsView" asp-route-offset="@(Model.LogFileOffset - 5)">&laquo;</a>
+        </li>
+        <li class="page-item disabled">
+            <span class="page-link">Showing @Model.LogFileOffset - (@(Model.LogFileOffset+Model.LogFiles.Count)) of @Model.LogFileCount</span>
+        </li>
+        <li class="page-item @((Model.LogFileOffset + Model.LogFiles.Count) < Model.LogFileCount ? null : "disabled")">
+            <a class="page-link" asp-action="LogsView" asp-route-offset="@(Model.LogFileOffset + Model.LogFiles.Count)">&raquo;</a>
         </li>
     </ul>
-    @if (!string.IsNullOrEmpty(Model.Log))
-    {
-        <pre>
+</nav>
+
+@if (!string.IsNullOrEmpty(Model.Log))
+{
+<br>
+<br>
+<br>
+
+<pre>
 @Model.Log
 </pre>
-    }
+}
 
-</div>
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")

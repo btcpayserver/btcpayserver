@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -12,6 +13,7 @@ using BTCPayServer.Security;
 using BTCPayServer.Services.Apps;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders;
@@ -139,7 +141,6 @@ namespace BTCPayServer.Controllers
             return View();
         }
 
-
         [HttpPost]
         [Route("translate")]
         public async Task<IActionResult> BitpayTranslator(BitpayTranslatorViewModel vm)
@@ -197,6 +198,18 @@ namespace BTCPayServer.Controllers
         public IActionResult RecoverySeedBackup(RecoverySeedBackupViewModel vm)
         {
             return View("RecoverySeedBackup", vm);
+        }
+
+        [HttpPost]
+        [Route("postredirect-callback-test")]
+        public ActionResult PostRedirectCallbackTestpage(IFormCollection data)
+        {
+            var list = data.Keys.Aggregate(new Dictionary<string, string>(), (res, key) =>
+            {
+                res.Add(key, data[key]);
+                return res;
+            });
+            return Json(list);
         }
 
         public IActionResult Error()

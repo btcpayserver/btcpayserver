@@ -40,15 +40,16 @@ namespace BTCPayServer.Security.GreenField
             if (!Context.Request.HttpContext.GetAPIKey(out var apiKey) || string.IsNullOrEmpty(apiKey))
                 return AuthenticateResult.NoResult();
 
-            var key = await _apiKeyRepository.GetKey(apiKey);
+            var key = await _apiKeyRepository.GetKey(apiKey, true);
 
             if (key == null)
             {
                 return AuthenticateResult.Fail("ApiKey authentication failed");
             }
-
             List<Claim> claims = new List<Claim>();
             claims.Add(new Claim(_identityOptions.CurrentValue.ClaimsIdentity.UserIdClaimType, key.UserId));
+            
+            claims.AddRange((await _userManager.GetRolesAsync(key.User)).Select(s => new Claim(_identityOptions.CurrentValue.ClaimsIdentity.RoleClaimType, s)));
             claims.AddRange(Permission.ToPermissions(key.GetBlob().Permissions).Select(permission =>
                 new Claim(GreenFieldConstants.ClaimTypes.Permission, permission.ToString())));
             return AuthenticateResult.Success(new AuthenticationTicket(

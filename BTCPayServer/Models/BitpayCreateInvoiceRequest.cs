@@ -2,10 +2,11 @@ using System;
 using System.Collections.Generic;
 using NBitpayClient;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Models
 {
-    public class CreateInvoiceRequest
+    public class BitpayCreateInvoiceRequest
     {
         [JsonProperty(PropertyName = "buyer")]
         public Buyer Buyer { get; set; }

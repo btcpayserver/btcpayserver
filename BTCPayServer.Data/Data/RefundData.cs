@@ -8,6 +8,7 @@ namespace BTCPayServer.Data
         [Required]
         public string InvoiceDataId { get; set; }
         [Required]
+        [MaxLength(30)]
         public string PullPaymentDataId { get; set; }
         public PullPaymentData PullPaymentData { get; set; }
         public InvoiceData InvoiceData { get; set; }

@@ -122,7 +122,7 @@
                     }
                 ],
                 "description": "View information about the specified payment request",
-                "operationId": "PaymentRequests_GetPaymentRequests",
+                "operationId": "PaymentRequests_GetPaymentRequest",
                 "responses": {
                     "200": {
                         "description": "specified payment request",
@@ -218,7 +218,7 @@
                         "name": "paymentRequestId",
                         "in": "path",
                         "required": true,
-                        "description": "The payment request to remove",
+                        "description": "The payment request to update",
                         "schema": { "type": "string" }
                     }
                 ],

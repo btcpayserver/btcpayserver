@@ -1,4 +1,4 @@
-﻿@using BTCPayServer.Contracts
+@using BTCPayServer.Contracts
 @inject IEnumerable<ISyncSummaryProvider> SyncSummaryProviders;
 @if(SyncSummaryProviders.Any(provider => !provider.AllAvailable()))
 {

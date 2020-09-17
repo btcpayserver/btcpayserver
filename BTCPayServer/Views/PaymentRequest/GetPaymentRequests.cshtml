@@ -18,80 +18,96 @@
             <div class="col-lg-12 section-heading">
                 <h2>Payment Requests</h2>
                 <hr class="primary">
-                <p>Create, search or pay an payment request.</p>
+                <p>
+                    Create, search or pay a payment request.
+                    <a href="https://docs.btcpayserver.org/PaymentRequests/" class="ml-1" target="_blank">
+                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                    </a>
+                </p>
             </div>
         </div>
 
-        <form asp-action="GetPaymentRequests" method="get" class="pull-right">
-            <input type="hidden" asp-for="Count" />
-            <div class="input-group">
-                <input asp-for="TimezoneOffset" type="hidden" />
-                <input asp-for="SearchTerm" class="form-control" style="width:300px;" />
-                <div class="input-group-append">
-                    <button type="submit" class="btn btn-primary" title="Search invoice">
-                        <span class="fa fa-search"></span> Search
-                    </button>
-                    <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <span class="sr-only">Toggle Dropdown</span>
-                    </button>
-
-                    <div class="dropdown-menu dropdown-menu-right">
-                        <a class="dropdown-item" href="/payment-requests?Count=@Model.Count&SearchTerm=includearchived%3Atrue">Include Archived Payment Reqs</a>
-                        <div role="separator" class="dropdown-divider"></div>
-                        <a class="dropdown-item" href="/payment-requests?SearchTerm=">Unfiltered</a>
-                    </div>
-                </div>
-            </div>
-            <span asp-validation-for="SearchTerm" class="text-danger"></span>
-        </form>
-
-        <div class="row button-row">
-            <div class="col-lg-12 pl-0">
-                <a asp-action="EditPaymentRequest" class="btn btn-primary" role="button" id="CreatePaymentRequest"><span class="fa fa-plus"></span> Create a new payment request</a>
-                <a href="https://docs.btcpayserver.org/PaymentRequests/" target="_blank">
-                    <span class="fa fa-question-circle-o" title="More information..."></span>
+        <div class="row">
+            <div class="col-12 col-md-4 col-lg-6 mb-3">
+                <a asp-action="EditPaymentRequest" class="btn btn-primary" role="button" id="CreatePaymentRequest">
+                    <span class="fa fa-plus"></span>
+                    Create a payment request
                 </a>
             </div>
+            <div class="col-12 col-md-8 col-lg-6 mb-3">
+                <form asp-action="GetPaymentRequests" method="get">
+                    <input type="hidden" asp-for="Count"/>
+                    <input type="hidden" asp-for="TimezoneOffset" />
+                    <div class="input-group">
+                        <input asp-for="SearchTerm" class="form-control" style="width:300px;"/>
+                        <div class="input-group-append">
+                            <button type="submit" class="btn btn-secondary" title="Search invoice">
+                                <span class="fa fa-search"></span> Search
+                            </button>
+                            <button type="button" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="sr-only">Toggle Dropdown</span>
+                            </button>
+
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <a class="dropdown-item" href="/payment-requests?Count=@Model.Count&SearchTerm=includearchived%3Atrue">Include Archived Payment Reqs</a>
+                                <div role="separator" class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="/payment-requests?SearchTerm=">Unfiltered</a>
+                            </div>
+                        </div>
+                    </div>
+                    <span asp-validation-for="SearchTerm" class="text-danger"></span>
+                </form>
+            </div>
         </div>
+
         <div class="row">
             <div class="col-lg-12">
-                <table class="table table-sm table-responsive-md">
-                    <thead>
-                        <tr>
-                            <th>Title</th>
-                            <th>Expiry</th>
-                            <th class="text-right">Price</th>
-                            <th class="text-right">Status</th>
-                            <th class="text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in Model.Items)
-                        {
+                @if (Model.Total > 0)
+                {
+                    <table class="table table-sm table-responsive-md">
+                        <thead>
                             <tr>
-                                <td>@item.Title</td>
-                                <td>@(item.ExpiryDate?.ToString("g") ?? "No Expiry")</td>
-                                <td class="text-right">@item.Amount @item.Currency</td>
-                                <td class="text-right">@item.Status</td>
-                                <td class="text-right">
-                                    <a asp-action="EditPaymentRequest" asp-route-id="@item.Id">Edit</a>
-                                    <span> - </span>
-                                    <a asp-action="ViewPaymentRequest" asp-route-id="@item.Id">View</a>
-                                    <span> - </span>
-                                    <a target="_blank" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@($"orderid:{PaymentRequestRepository.GetOrderIdForPaymentRequest(item.Id)}")">Invoices</a>
-                                    <span> - </span>
-                                    <a target="_blank" asp-action="PayPaymentRequest" asp-route-id="@item.Id">Pay</a>
-                                    <span> - </span>
-                                    <a target="_blank" asp-action="ClonePaymentRequest" asp-route-id="@item.Id">Clone</a>
-                                    <span> - </span>
-                                    <a asp-action="TogglePaymentRequestArchival" asp-route-id="@item.Id">@(item.Archived ? "Unarchive" : "Archive")</a>
-                                </td>
+                                <th>Title</th>
+                                <th>Expiry</th>
+                                <th class="text-right">Price</th>
+                                <th class="text-right">Status</th>
+                                <th class="text-right">Actions</th>
                             </tr>
-                        }
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Items)
+                            {
+                                <tr>
+                                    <td>@item.Title</td>
+                                    <td>@(item.ExpiryDate?.ToString("g") ?? "No Expiry")</td>
+                                    <td class="text-right">@item.Amount @item.Currency</td>
+                                    <td class="text-right">@item.Status</td>
+                                    <td class="text-right">
+                                        <a asp-action="EditPaymentRequest" asp-route-id="@item.Id">Edit</a>
+                                        <span> - </span>
+                                        <a asp-action="ViewPaymentRequest" asp-route-id="@item.Id">View</a>
+                                        <span> - </span>
+                                        <a target="_blank" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@($"orderid:{PaymentRequestRepository.GetOrderIdForPaymentRequest(item.Id)}")">Invoices</a>
+                                        <span> - </span>
+                                        <a target="_blank" asp-action="PayPaymentRequest" asp-route-id="@item.Id">Pay</a>
+                                        <span> - </span>
+                                        <a target="_blank" asp-action="ClonePaymentRequest" asp-route-id="@item.Id">Clone</a>
+                                        <span> - </span>
+                                        <a asp-action="TogglePaymentRequestArchival" asp-route-id="@item.Id">@(item.Archived ? "Unarchive" : "Archive")</a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
 
-                <vc:pager view-model="Model"></vc:pager>
+                    <vc:pager view-model="Model"></vc:pager>
+                }
+                else
+                {
+                    <p class="text-secondary mt-3">
+                        There are no payment requests matching your criteria.
+                    </p>
+                }
             </div>
         </div>
     </div>

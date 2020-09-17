@@ -78,7 +78,7 @@ services:
       - customer_lnd
       - merchant_lnd
   nbxplorer:
-    image: nicolasdorier/nbxplorer:2.1.40
+    image: nicolasdorier/nbxplorer:2.1.42
     restart: unless-stopped
     ports:
       - "32838:32838"
@@ -207,7 +207,7 @@ services:
       - "5432"
 
   merchant_lnd:
-    image: btcpayserver/lnd:v0.10.2-beta
+    image: btcpayserver/lnd:v0.11.0-beta
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
@@ -237,7 +237,7 @@ services:
       - bitcoind
 
   customer_lnd:
-    image: btcpayserver/lnd:v0.10.2-beta
+    image: btcpayserver/lnd:v0.11.0-beta
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"

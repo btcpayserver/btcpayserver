@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.Events;
 using BTCPayServer.Logging;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
@@ -12,13 +13,21 @@ using DBriize;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Encoders = NBitcoin.DataEncoders.Encoders;
+using InvoiceData = BTCPayServer.Data.InvoiceData;
 
 namespace BTCPayServer.Services.Invoices
 {
     public class InvoiceRepository : IDisposable
     {
-
+        static JsonSerializerSettings DefaultSerializerSettings;
+        static InvoiceRepository()
+        {
+            DefaultSerializerSettings = new JsonSerializerSettings();
+            NBitcoin.JsonConverters.Serializer.RegisterFrontConverters(DefaultSerializerSettings);
+        }
 
         private readonly DBriizeEngine _Engine;
         public DBriizeEngine Engine
@@ -30,11 +39,12 @@ namespace BTCPayServer.Services.Invoices
         }
 
         private readonly ApplicationDbContextFactory _ContextFactory;
+        private readonly EventAggregator _eventAggregator;
         private readonly BTCPayNetworkProvider _Networks;
         private readonly CustomThreadPool _IndexerThread;
 
         public InvoiceRepository(ApplicationDbContextFactory contextFactory, string dbreezePath,
-            BTCPayNetworkProvider networks)
+            BTCPayNetworkProvider networks, EventAggregator eventAggregator)
         {
             int retryCount = 0;
 retry:
@@ -46,6 +56,7 @@ retry:
             _IndexerThread = new CustomThreadPool(1, "Invoice Indexer");
             _ContextFactory = contextFactory;
             _Networks = networks;
+            _eventAggregator = eventAggregator;
         }
 
         public InvoiceEntity CreateNewInvoice()
@@ -55,6 +66,7 @@ retry:
                 Networks = _Networks,
                 Version = InvoiceEntity.Lastest_Version,
                 InvoiceTime = DateTimeOffset.UtcNow,
+                Metadata = new InvoiceMetadata()
             };
         }
 
@@ -152,11 +164,11 @@ retry:
                     Id = invoice.Id,
                     Created = invoice.InvoiceTime,
                     Blob = ToBytes(invoice, null),
-                    OrderId = invoice.OrderId,
+                    OrderId = invoice.Metadata.OrderId,
 #pragma warning disable CS0618 // Type or member is obsolete
                     Status = invoice.StatusString,
 #pragma warning restore CS0618 // Type or member is obsolete
-                    ItemCode = invoice.ProductInformation.ItemCode,
+                    ItemCode = invoice.Metadata.ItemCode,
                     CustomerEmail = invoice.RefundMail,
                     Archived = false
                 });
@@ -188,10 +200,9 @@ retry:
 
             textSearch.Add(invoice.Id);
             textSearch.Add(invoice.InvoiceTime.ToString(CultureInfo.InvariantCulture));
-            textSearch.Add(invoice.ProductInformation.Price.ToString(CultureInfo.InvariantCulture));
-            textSearch.Add(invoice.OrderId);
-            textSearch.Add(ToString(invoice.BuyerInformation, null));
-            textSearch.Add(ToString(invoice.ProductInformation, null));
+            textSearch.Add(invoice.Price.ToString(CultureInfo.InvariantCulture));
+            textSearch.Add(invoice.Metadata.OrderId);
+            textSearch.Add(ToString(invoice.Metadata, null));
             textSearch.Add(invoice.StoreId);
 
             AddToTextSearch(invoice.Id, textSearch.ToArray());
@@ -207,20 +218,19 @@ retry:
 
         public async Task AddInvoiceLogs(string invoiceId, InvoiceLogs logs)
         {
-            using (var context = _ContextFactory.CreateContext())
+            await using var context = _ContextFactory.CreateContext();
+            foreach (var log in logs.ToList())
             {
-                foreach (var log in logs.ToList())
+                await context.InvoiceEvents.AddAsync(new InvoiceEventData()
                 {
-                    context.InvoiceEvents.Add(new InvoiceEventData()
-                    {
-                        InvoiceDataId = invoiceId,
-                        Message = log.Log,
-                        Timestamp = log.Timestamp,
-                        UniqueId = Encoders.Hex.EncodeData(RandomUtils.GetBytes(10))
-                    });
-                }
-                await context.SaveChangesAsync().ConfigureAwait(false);
+                    Severity = log.Severity,
+                    InvoiceDataId = invoiceId,
+                    Message = log.Log,
+                    Timestamp = log.Timestamp,
+                    UniqueId = Encoders.Hex.EncodeData(RandomUtils.GetBytes(10))
+                });
             }
+            await context.SaveChangesAsync().ConfigureAwait(false);
         }
 
         private string GetDestination(PaymentMethod paymentMethod)
@@ -314,23 +324,22 @@ retry:
             }
         }
 
-        public async Task AddInvoiceEvent(string invoiceId, object evt)
+        public async Task AddInvoiceEvent(string invoiceId, object evt, InvoiceEventData.EventSeverity severity)
         {
-            using (var context = _ContextFactory.CreateContext())
+            await using var context = _ContextFactory.CreateContext();
+            await context.InvoiceEvents.AddAsync(new InvoiceEventData()
             {
-                context.InvoiceEvents.Add(new InvoiceEventData()
-                {
-                    InvoiceDataId = invoiceId,
-                    Message = evt.ToString(),
-                    Timestamp = DateTimeOffset.UtcNow,
-                    UniqueId = Encoders.Hex.EncodeData(RandomUtils.GetBytes(10))
-                });
-                try
-                {
-                    await context.SaveChangesAsync();
-                }
-                catch (DbUpdateException) { } // Probably the invoice does not exists anymore
+                Severity = severity,
+                InvoiceDataId = invoiceId,
+                Message = evt.ToString(),
+                Timestamp = DateTimeOffset.UtcNow,
+                UniqueId = Encoders.Hex.EncodeData(RandomUtils.GetBytes(10))
+            });
+            try
+            {
+                await context.SaveChangesAsync();
             }
+            catch (DbUpdateException) { } // Probably the invoice does not exists anymore
         }
 
         private static void MarkUnassigned(string invoiceId, InvoiceEntity entity, ApplicationDbContext context, PaymentMethodId paymentMethodId)
@@ -421,42 +430,68 @@ retry:
             }
         }
 
-        public async Task ToggleInvoiceArchival(string invoiceId, bool archived)
+        public async Task ToggleInvoiceArchival(string invoiceId, bool archived, string storeId = null)
         {
             using (var context = _ContextFactory.CreateContext())
             {
                 var invoiceData = await context.FindAsync<InvoiceData>(invoiceId).ConfigureAwait(false);
-                if (invoiceData == null || invoiceData.Archived == archived)
+                if (invoiceData == null || invoiceData.Archived == archived ||
+                    (storeId != null &&
+                     !invoiceData.StoreDataId.Equals(storeId, StringComparison.InvariantCultureIgnoreCase)))
                     return;
                 invoiceData.Archived = archived;
                 await context.SaveChangesAsync().ConfigureAwait(false);
             }
         }
-        public async Task UpdatePaidInvoiceToInvalid(string invoiceId)
+        public async Task<bool> MarkInvoiceStatus(string invoiceId, InvoiceStatus status)
         {
             using (var context = _ContextFactory.CreateContext())
             {
-                var invoiceData = await context.FindAsync<Data.InvoiceData>(invoiceId).ConfigureAwait(false);
-                if (invoiceData == null || !invoiceData.GetInvoiceState().CanMarkInvalid())
-                    return;
-                invoiceData.Status = "invalid";
-                invoiceData.ExceptionStatus = "marked";
-                await context.SaveChangesAsync().ConfigureAwait(false);
+                var invoiceData = await GetInvoiceRaw(invoiceId);
+                if (invoiceData == null)
+                {
+                    return false;
+                }
+
+                context.Attach(invoiceData);
+                string eventName;
+                switch (status)
+                {
+                    case InvoiceStatus.Complete:
+                        if (!invoiceData.GetInvoiceState().CanMarkComplete())
+                        {
+                            return false;
+                        }
+
+                        eventName = InvoiceEvent.MarkedCompleted;
+                        break;
+                    case InvoiceStatus.Invalid:
+                        if (!invoiceData.GetInvoiceState().CanMarkInvalid())
+                        {
+                            return false;
+                        }
+                        eventName = InvoiceEvent.MarkedInvalid;
+                        break;
+                    default:
+                        return false;
+                }
+
+                invoiceData.Status = status.ToString().ToLowerInvariant();
+                invoiceData.ExceptionStatus = InvoiceExceptionStatus.Marked.ToString().ToLowerInvariant();
+                _eventAggregator.Publish(new InvoiceEvent(ToEntity(invoiceData), eventName));
+                await context.SaveChangesAsync();
             }
+
+            return true;
         }
-        public async Task UpdatePaidInvoiceToComplete(string invoiceId)
-        {
-            using (var context = _ContextFactory.CreateContext())
-            {
-                var invoiceData = await context.FindAsync<Data.InvoiceData>(invoiceId).ConfigureAwait(false);
-                if (invoiceData == null || !invoiceData.GetInvoiceState().CanMarkComplete())
-                    return;
-                invoiceData.Status = "complete";
-                invoiceData.ExceptionStatus = "marked";
-                await context.SaveChangesAsync().ConfigureAwait(false);
-            }
-        }
+
         public async Task<InvoiceEntity> GetInvoice(string id, bool inludeAddressData = false)
+        {
+            var res = await GetInvoiceRaw(id, inludeAddressData);
+            return res == null ? null : ToEntity(res);
+        }
+
+        private async Task<InvoiceData> GetInvoiceRaw(string id, bool inludeAddressData = false)
         {
             using (var context = _ContextFactory.CreateContext())
             {
@@ -472,7 +507,7 @@ retry:
                 if (invoice == null)
                     return null;
 
-                return ToEntity(invoice);
+                return invoice;
             }
         }
 
@@ -519,10 +554,9 @@ retry:
             {
                 entity.Events = invoice.Events.OrderBy(c => c.Timestamp).ToList();
             }
-
-            if (!string.IsNullOrEmpty(entity.RefundMail) && string.IsNullOrEmpty(entity.BuyerInformation.BuyerEmail))
+            if (!string.IsNullOrEmpty(entity.RefundMail) && string.IsNullOrEmpty(entity.Metadata.BuyerEmail))
             {
-                entity.BuyerInformation.BuyerEmail = entity.RefundMail;
+                entity.Metadata.BuyerEmail = entity.RefundMail;
             }
             entity.Archived = invoice.Archived;
             return entity;
@@ -746,7 +780,7 @@ retry:
         {
             if (network == null)
             {
-                return NBitcoin.JsonConverters.Serializer.ToString(data, null);
+                return JsonConvert.SerializeObject(data, DefaultSerializerSettings);
             }
             return network.ToString(data);
         }

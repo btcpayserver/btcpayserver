@@ -10,10 +10,13 @@ namespace BTCPayServer.Client
     public partial class BTCPayServerClient
     {
         public virtual async Task<IEnumerable<PaymentRequestData>> GetPaymentRequests(string storeId,
+            bool includeArchived = false,
             CancellationToken token = default)
         {
             var response =
-                await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/payment-requests"), token);
+                await _httpClient.SendAsync(
+                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-requests",
+                        new Dictionary<string, object>() {{nameof(includeArchived), includeArchived}}), token);
             return await HandleResponse<IEnumerable<PaymentRequestData>>(response);
         }
 

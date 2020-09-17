@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Filters;
 using BTCPayServer.HostedServices;
@@ -141,7 +142,7 @@ namespace BTCPayServer.Payments.PayJoin
             await using var ctx = new PayjoinReceiverContext(_invoiceRepository, _explorerClientProvider.GetExplorerClient(network), _payJoinRepository);
             ObjectResult CreatePayjoinErrorAndLog(int httpCode, PayjoinReceiverWellknownErrors err, string debug)
             {
-                ctx.Logs.Write($"Payjoin error: {debug}");
+                ctx.Logs.Write($"Payjoin error: {debug}", InvoiceEventData.EventSeverity.Error);
                 return StatusCode(httpCode, CreatePayjoinError(err, debug));
             }
             var explorer = _explorerClientProvider.GetExplorerClient(network);
@@ -454,7 +455,7 @@ namespace BTCPayServer.Payments.PayJoin
                     $"The original transaction has already been accounted"));
             }
             await _btcPayWalletProvider.GetWallet(network).SaveOffchainTransactionAsync(ctx.OriginalTransaction);
-            _eventAggregator.Publish(new InvoiceEvent(invoice, 1002, InvoiceEvent.ReceivedPayment) { Payment = payment });
+            _eventAggregator.Publish(new InvoiceEvent(invoice,InvoiceEvent.ReceivedPayment) { Payment = payment });
             _eventAggregator.Publish(new UpdateTransactionLabel()
             {
                 WalletId = new WalletId(invoice.StoreId, network.CryptoCode),

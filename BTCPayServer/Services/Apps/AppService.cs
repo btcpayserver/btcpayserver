@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Payments;
@@ -20,6 +21,7 @@ using NUglify.Helpers;
 using YamlDotNet.RepresentationModel;
 using YamlDotNet.Serialization;
 using static BTCPayServer.Models.AppViewModels.ViewCrowdfundViewModel;
+using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Services.Apps
 {
@@ -95,8 +97,8 @@ namespace BTCPayServer.Services.Apps
             var currentPayments = GetContributionsByPaymentMethodId(settings.TargetCurrency, completeInvoices, !settings.EnforceTargetAmount);
 
             var perkCount = paidInvoices
-                .Where(entity => !string.IsNullOrEmpty(entity.ProductInformation.ItemCode))
-                .GroupBy(entity => entity.ProductInformation.ItemCode)
+                .Where(entity => !string.IsNullOrEmpty(entity.Metadata.ItemCode))
+                .GroupBy(entity => entity.Metadata.ItemCode)
                 .ToDictionary(entities => entities.Key, entities => entities.Count());
 
             var perks = Parse(settings.PerksTemplate, settings.TargetCurrency);
@@ -329,12 +331,12 @@ namespace BTCPayServer.Services.Apps
         public Contributions GetContributionsByPaymentMethodId(string currency, InvoiceEntity[] invoices, bool softcap)
         {
             var contributions = invoices
-                .Where(p => p.ProductInformation.Currency.Equals(currency, StringComparison.OrdinalIgnoreCase))
+                .Where(p => p.Currency.Equals(currency, StringComparison.OrdinalIgnoreCase))
                 .SelectMany(p =>
                 {
                     var contribution = new Contribution();
-                    contribution.PaymentMethodId = new PaymentMethodId(p.ProductInformation.Currency, PaymentTypes.BTCLike);
-                    contribution.CurrencyValue = p.ProductInformation.Price;
+                    contribution.PaymentMethodId = new PaymentMethodId(p.Currency, PaymentTypes.BTCLike);
+                    contribution.CurrencyValue = p.Price;
                     contribution.Value = contribution.CurrencyValue;
 
                     // For hardcap, we count newly created invoices as part of the contributions

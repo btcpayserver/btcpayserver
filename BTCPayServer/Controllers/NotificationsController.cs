@@ -87,7 +87,18 @@ namespace BTCPayServer.Controllers
 
             return new EmptyResult();
         }
+#if DEBUG
+        [HttpGet]
+        public async Task<IActionResult> GenerateJunk(int x = 100)
+        {
+            for (int i = 0; i < x; i++)
+            {
+                await _notificationSender.SendNotification(new AdminScope(), new JunkNotification());
+            }
 
+            return RedirectToAction("Index");
+        }
+#endif
         [HttpGet]
         public IActionResult Index(int skip = 0, int count = 50, int timezoneOffset = 0)
         {
@@ -99,9 +110,9 @@ namespace BTCPayServer.Controllers
                 Skip = skip,
                 Count = count,
                 Items = _db.Notifications
+                    .Where(a => a.ApplicationUserId == userId)
                     .OrderByDescending(a => a.Created)
                     .Skip(skip).Take(count)
-                    .Where(a => a.ApplicationUserId == userId)
                     .Select(a => _notificationManager.ToViewModel(a))
                     .ToList(),
                 Total = _db.Notifications.Count(a => a.ApplicationUserId == userId)

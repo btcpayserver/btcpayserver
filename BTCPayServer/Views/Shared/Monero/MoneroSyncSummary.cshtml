@@ -10,10 +10,10 @@
         {
             <h4>@summary.Key</h4>
             <ul >
-                <li >Node available: @Model.Summary.DaemonAvailable</li>
-                <li >Wallet available: @Model.Summary.WalletAvailable (@(Model.WalletFileFound ? "Wallet file present" : "Wallet file not found"))</li>
-                <li >Last updated: @Model.Summary.UpdatedAt</li>
-                <li >Synced: @Model.Summary.Synced (@Model.Summary.CurrentHeight / @Model.Summary.TargetHeight)</li>
+                <li >Node available: @summary.Value.DaemonAvailable</li>
+                <li >Wallet available: @summary.Value.WalletAvailable</li>
+                <li >Last updated: @summary.Value.UpdatedAt</li>
+                <li >Synced: @summary.Value.Synced (@summary.Value.CurrentHeight / @summary.Value.TargetHeight)</li>
             </ul>
         }
     }

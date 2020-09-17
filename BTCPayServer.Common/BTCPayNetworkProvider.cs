@@ -57,8 +57,10 @@ namespace BTCPayServer
             InitMonero();
             InitPolis();
             InitChaincoin();
-            InitArgoneum();
+            // InitArgoneum();//their rate source is down 9/15/20.
             InitMonetaryUnit();
+            InitEthereum();
+            InitERC20();
 
             // Assume that electrum mappings are same as BTC if not specified
             foreach (var network in _Networks.Values.OfType<BTCPayNetwork>())

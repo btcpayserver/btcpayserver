@@ -181,6 +181,13 @@ The BTCPay Server Project is proudly supported by these entities through the [BT
         </a>
       </td>
       <td align="center" valign="middle">
+        <a href="https://www.okcoin.com/" target="_blank">
+          <img  src="BTCPayServer/wwwroot/img/okcoin.svg" alt="OKCoin" height=100>
+          <br/>
+          <span>OKCoin</span>
+        </a>
+      </td>
+      <td align="center" valign="middle">
         <a href="https://www.dglab.com/en/" target="_blank">
           <img  src="BTCPayServer/wwwroot/img/dglab.svg" alt="DG Lab" height=100>
           <br/>
@@ -189,13 +196,6 @@ The BTCPay Server Project is proudly supported by these entities through the [BT
       </td>
     </tr>
     <tr>
-      <td align="center" valign="middle">
-        <a href="https://www.okcoin.com/" target="_blank">
-          <img  src="BTCPayServer/wwwroot/img/okcoin.svg" alt="OKCoin" height=100>
-          <br/>
-          <span>OKCoin</span>
-        </a>
-      </td>
        <td align="center" valign="middle">
         <a href="https://acinq.co/" target="_blank">
           <img  src="BTCPayServer/wwwroot/img/acinq-logo.svg" alt="ACINQ" height=100>
@@ -215,6 +215,13 @@ The BTCPay Server Project is proudly supported by these entities through the [BT
           <img  src="BTCPayServer/wwwroot/img/walletofsatoshi.svg" alt="Wallet of Satoshi" height=100>
           <br/>
           <span>Wallet of Satoshi</span>
+        </a>
+      </td>
+       <td align="center" valign="middle">
+        <a href="https://nomics.com/" target="_blank">
+          <img  src="BTCPayServer/wwwroot/img/nomics.svg" alt="Nomics" height=100>
+          <br/>
+          <span>Nomics</span>
         </a>
       </td>
     </tr>

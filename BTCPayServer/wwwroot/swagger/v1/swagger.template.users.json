@@ -117,12 +117,12 @@
                 "properties": {
                     "id": {
                         "type": "string",
-                        "description": "The id of the new user",
+                        "description": "The id of the user",
                         "nullable": false
                     },
                     "email": {
                         "type": "string",
-                        "description": "The email of the new user",
+                        "description": "The email of the user",
                         "nullable": false
                     },
                     "emailConfirmed": {
@@ -132,6 +132,14 @@
                     "requiresEmailConfirmation": {
                         "type": "boolean",
                         "description": "True if the email requires email confirmation to log in"
+                    },
+                    "roles": {
+                        "type": "array",
+                        "nullable": false,
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "The roles of the user"
                     }
                 }
             }

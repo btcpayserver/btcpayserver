@@ -471,6 +471,8 @@ namespace BTCPayServer.Controllers
 
             model.FeeSatoshiPerByte = model.RecommendedSatoshiPerByte.LastOrDefault()?.FeeRate;
             model.SupportRBF = network.SupportRBF;
+
+            model.CryptoDivisibility = network.Divisibility;
             using (CancellationTokenSource cts = new CancellationTokenSource())
             {
                 try
@@ -480,7 +482,7 @@ namespace BTCPayServer.Controllers
                     if (result.BidAsk != null)
                     {
                         model.Rate = result.BidAsk.Center;
-                        model.Divisibility = _currencyTable.GetNumberFormatInfo(currencyPair.Right, true).CurrencyDecimalDigits;
+                        model.FiatDivisibility = _currencyTable.GetNumberFormatInfo(currencyPair.Right, true).CurrencyDecimalDigits;
                         model.Fiat = currencyPair.Right;
                     }
                     else
@@ -891,7 +893,7 @@ namespace BTCPayServer.Controllers
             else
             {
                 ModelState.AddModelError(nameof(viewModel.SeedOrKey), "The master fingerprint does not match the one set in your wallet settings. Probable cause are: wrong seed, wrong passphrase or wrong fingerprint in your wallet settings.");
-                return View(viewModel);
+                return View(nameof(SignWithSeed), viewModel);
             }
 
             var changed = PSBTChanged(psbt, () => psbt.SignAll(settings.AccountDerivation, signingKey, rootedKeyPath, new SigningOptions()
@@ -901,7 +903,7 @@ namespace BTCPayServer.Controllers
             if (!changed)
             {
                 ModelState.AddModelError(nameof(viewModel.SeedOrKey), "Impossible to sign the transaction. Probable cause: Incorrect account key path in wallet settings, PSBT already signed.");
-                return View(viewModel);
+                return View(nameof(SignWithSeed), viewModel);
             }
             ModelState.Remove(nameof(viewModel.SigningContext.PSBT));
             viewModel.SigningContext.PSBT = psbt.ToBase64();

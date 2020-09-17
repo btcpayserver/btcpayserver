@@ -16,11 +16,11 @@ namespace BTCPayServer.Client.Models
 
         public string Website { get; set; }
 
-        [JsonConverter(typeof(TimeSpanJsonConverter))]
+        [JsonConverter(typeof(TimeSpanJsonConverter.Seconds))]
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public TimeSpan InvoiceExpiration { get; set; } = TimeSpan.FromMinutes(15);
 
-        [JsonConverter(typeof(TimeSpanJsonConverter))]
+        [JsonConverter(typeof(TimeSpanJsonConverter.Seconds))]
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public TimeSpan MonitoringExpiration { get; set; } = TimeSpan.FromMinutes(60);
 

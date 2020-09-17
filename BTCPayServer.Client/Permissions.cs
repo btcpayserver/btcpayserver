@@ -14,6 +14,7 @@ namespace BTCPayServer.Client
         public const string CanModifyStoreSettings = "btcpay.store.canmodifystoresettings";
         public const string CanModifyStoreSettingsUnscoped = "btcpay.store.canmodifystoresettings:";
         public const string CanViewStoreSettings = "btcpay.store.canviewstoresettings";
+        public const string CanViewInvoices = "btcpay.store.canviewinvoices";
         public const string CanCreateInvoice = "btcpay.store.cancreateinvoice";
         public const string CanViewPaymentRequests = "btcpay.store.canviewpaymentrequests";
         public const string CanModifyPaymentRequests = "btcpay.store.canmodifypaymentrequests";
@@ -26,6 +27,7 @@ namespace BTCPayServer.Client
         {
             get
             {
+                yield return CanViewInvoices;
                 yield return CanCreateInvoice;
                 yield return CanModifyServerSettings;
                 yield return CanModifyStoreSettings;
@@ -153,6 +155,8 @@ namespace BTCPayServer.Client
                 return true;
             switch (subpolicy)
             {
+                case Policies.CanViewInvoices when this.Policy == Policies.CanModifyStoreSettings:
+                case Policies.CanViewInvoices when this.Policy == Policies.CanViewStoreSettings:
                 case Policies.CanViewStoreSettings when this.Policy == Policies.CanModifyStoreSettings:
                 case Policies.CanCreateInvoice when this.Policy == Policies.CanModifyStoreSettings:
                 case Policies.CanViewProfile when this.Policy == Policies.CanModifyProfile:

@@ -93,7 +93,7 @@ namespace BTCPayServer.Controllers
 
                 if (connectionString.BaseUri.Scheme == "http")
                 {
-                    if (!isInternalNode)
+                    if (!isInternalNode && !connectionString.AllowInsecure)
                     {
                         ModelState.AddModelError(nameof(vm.ConnectionString), "The url must be HTTPS");
                         return View(vm);

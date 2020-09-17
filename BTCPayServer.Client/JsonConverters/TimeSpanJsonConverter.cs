@@ -4,13 +4,38 @@ using Newtonsoft.Json;
 
 namespace BTCPayServer.Client.JsonConverters
 {
-    public class TimeSpanJsonConverter : JsonConverter
+    public abstract class TimeSpanJsonConverter : JsonConverter
     {
+        public class Seconds : TimeSpanJsonConverter
+        {
+            protected override long ToLong(TimeSpan value)
+            {
+                return (long)value.TotalSeconds;
+            }
+
+            protected override TimeSpan ToTimespan(long value)
+            {
+                return TimeSpan.FromSeconds(value);
+            }
+        }
+        public class Minutes : TimeSpanJsonConverter
+        {
+            protected override long ToLong(TimeSpan value)
+            {
+                return (long)value.TotalMinutes;
+            }
+            protected override TimeSpan ToTimespan(long value)
+            {
+                return TimeSpan.FromMinutes(value);
+            }
+        }
         public override bool CanConvert(Type objectType)
         {
             return objectType == typeof(TimeSpan) || objectType == typeof(TimeSpan?);
         }
 
+        protected abstract TimeSpan ToTimespan(long value);
+        protected abstract long ToLong(TimeSpan value);
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             try
@@ -24,11 +49,11 @@ namespace BTCPayServer.Client.JsonConverters
                 }
                 if (reader.TokenType != JsonToken.Integer)
                     throw new JsonObjectException("Invalid timespan, expected integer", reader);
-                return TimeSpan.FromSeconds((long)reader.Value);
+                return ToTimespan((long)reader.Value);
             }
             catch
             {
-                throw new JsonObjectException("Invalid locktime", reader);
+                throw new JsonObjectException("Invalid timespan", reader);
             }
         }
 
@@ -36,7 +61,7 @@ namespace BTCPayServer.Client.JsonConverters
         {
             if (value is TimeSpan s)
             {
-                writer.WriteValue((long)s.TotalSeconds);
+                writer.WriteValue(ToLong(s));
             }
         }
     }

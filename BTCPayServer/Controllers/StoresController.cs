@@ -23,6 +23,7 @@ using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Shopify;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
+using BundlerMinifier.TagHelpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -63,7 +64,9 @@ namespace BTCPayServer.Controllers
             IAuthorizationService authorizationService,
             EventAggregator eventAggregator,
             CssThemeManager cssThemeManager,
-            AppService appService)
+            AppService appService,
+            IWebHostEnvironment webHostEnvironment,
+            IBundleProvider bundleProvider)
         {
             _RateFactory = rateFactory;
             _Repo = repo;
@@ -79,6 +82,8 @@ namespace BTCPayServer.Controllers
             _authorizationService = authorizationService;
             _CssThemeManager = cssThemeManager;
             _appService = appService;
+            _webHostEnvironment = webHostEnvironment;
+            _bundleProvider = bundleProvider;
             _EventAggregator = eventAggregator;
             _NetworkProvider = networkProvider;
             _ExplorerProvider = explorerProvider;
@@ -107,6 +112,8 @@ namespace BTCPayServer.Controllers
         private readonly IAuthorizationService _authorizationService;
         private readonly CssThemeManager _CssThemeManager;
         private readonly AppService _appService;
+        private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly IBundleProvider _bundleProvider;
         private readonly EventAggregator _EventAggregator;
 
         [TempData]
@@ -966,99 +973,6 @@ namespace BTCPayServer.Controllers
 
         }
 
-        //
-        [HttpGet]
-        [Route("{storeId}/integrations")]
-        public async Task<IActionResult> Integrations()
-        {
-            var blob = CurrentStore.GetStoreBlob();
-
-            var vm = new IntegrationsViewModel
-            {
-                Shopify = blob.Shopify
-            };
-
-            return View("Integrations", vm);
-        }
-
-        [HttpPost]
-        [Route("{storeId}/integrations")]
-        public async Task<IActionResult> Integrations([FromServices] IHttpClientFactory clientFactory,
-            IntegrationsViewModel vm, string command = "")
-        {
-            if (command == "ShopifySaveCredentials")
-            {
-                var shopify = vm.Shopify;
-                var validCreds = shopify != null && shopify?.CredentialsPopulated() == true;
-                if (!validCreds)
-                {
-                    TempData[WellKnownTempData.ErrorMessage] = "Please provide valid Shopify credentials";
-                    // 
-                    return View("Integrations", vm);
-                }
-
-                var apiCreds = new ShopifyApiClientCredentials
-                {
-                    ShopName = shopify.ShopName,
-                    ApiKey = shopify.ApiKey,
-                    ApiPassword = shopify.Password,
-                    SharedSecret = shopify.SharedSecret
-                };
-
-                var apiClient = new ShopifyApiClient(clientFactory, null, apiCreds);
-                try
-                {
-                    var result = await apiClient.OrdersCount();
-                }
-                catch
-                {
-                    TempData[WellKnownTempData.ErrorMessage] = "Shopify rejected provided credentials, please correct values and again";
-                    // 
-                    return View("Integrations", vm);
-                }
-
-
-                shopify.CredentialsValid = true;
-
-                var blob = CurrentStore.GetStoreBlob();
-                blob.Shopify = shopify;
-                if (CurrentStore.SetStoreBlob(blob))
-                {
-                    await _Repo.UpdateStore(CurrentStore);
-                }
-                TempData[WellKnownTempData.SuccessMessage] = "Shopify credentials successfully updated";
-            }
-            else if (command == "ShopifyIntegrate")
-            {
-                var shopify = vm.Shopify;
-
-                var blob = CurrentStore.GetStoreBlob();
-                blob.Shopify.IntegratedAt = DateTimeOffset.UtcNow;
-                if (CurrentStore.SetStoreBlob(blob))
-                {
-                    await _Repo.UpdateStore(CurrentStore);
-                }
-                TempData[WellKnownTempData.SuccessMessage] = "Shopify integration successfully turned on";
-            }
-            else if (command == "ShopifyClearCredentials")
-            {
-                var shopify = vm.Shopify;
-
-                var blob = CurrentStore.GetStoreBlob();
-                blob.Shopify = null;
-                if (CurrentStore.SetStoreBlob(blob))
-                {
-                    await _Repo.UpdateStore(CurrentStore);
-                }
-                TempData[WellKnownTempData.SuccessMessage] = "Shopify integration credentials cleared";
-            }
-
-            return RedirectToAction(nameof(Integrations), new
-            {
-                storeId = CurrentStore.Id
-            });
-
-        }
 
 
     }

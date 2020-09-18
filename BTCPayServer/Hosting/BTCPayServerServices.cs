@@ -247,7 +247,7 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<INotificationHandler, InvoiceEventNotification.Handler>();
             services.AddSingleton<INotificationHandler, PayoutNotification.Handler>();
 
-            services.AddSingleton<IHostedService, ShopifyOrderMarkerHostedService>();
+            services.AddShopify();
 #if DEBUG
             services.AddSingleton<INotificationHandler, JunkNotification.Handler>();
 #endif    

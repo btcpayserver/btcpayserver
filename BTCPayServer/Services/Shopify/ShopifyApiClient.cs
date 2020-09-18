@@ -1,24 +1,19 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Services.Shopify.ApiModels;
 using DBriize.Utils;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services.Shopify
 {
     public class ShopifyApiClient
     {
         private readonly HttpClient _httpClient;
-        private readonly ILogger _logger;
-        private readonly ShopifyApiClientCredentials _creds;
+        private readonly ShopifyApiClientCredentials _credentials;
 
-        public ShopifyApiClient(IHttpClientFactory httpClientFactory, ILogger logger, ShopifyApiClientCredentials creds)
+        public ShopifyApiClient(IHttpClientFactory httpClientFactory, ShopifyApiClientCredentials credentials)
         {
             if (httpClientFactory != null)
             {
@@ -28,37 +23,74 @@ namespace BTCPayServer.Services.Shopify
             {
                 _httpClient = new HttpClient();
             }
-            _logger = logger;
-            _creds = creds;
+            _credentials = credentials;
 
-            var bearer = $"{creds.ApiKey}:{creds.ApiPassword}";
+            var bearer = $"{credentials.ApiKey}:{credentials.ApiPassword}";
             bearer = Encoding.UTF8.GetBytes(bearer).ToBase64String();
 
             _httpClient.DefaultRequestHeaders.Add("Authorization", "Basic " + bearer);
         }
 
-        private HttpRequestMessage createRequest(string shopNameInUrl, HttpMethod method, string action)
+        private HttpRequestMessage CreateRequest(string shopName, HttpMethod method, string action)
         {
-            var url = $"https://{shopNameInUrl}.myshopify.com/admin/api/2020-07/" + action;
-
+            var url = $"https://{(shopName.Contains(".", StringComparison.InvariantCulture)? shopName: $"{shopName}.myshopify.com")}/admin/api/2020-07/" + action;
             var req = new HttpRequestMessage(method, url);
-
             return req;
         }
 
-        private async Task<string> sendRequest(HttpRequestMessage req)
+        private async Task<string> SendRequest(HttpRequestMessage req)
         {
             using var resp = await _httpClient.SendAsync(req);
 
             var strResp = await resp.Content.ReadAsStringAsync();
             return strResp;
         }
+        
+        public async Task<CreateWebhookResponse> CreateWebhook(string topic, string address, string format = "json")
+        {
+            var req = CreateRequest(_credentials.ShopName, HttpMethod.Post, $"webhooks.json");
+            req.Content = new StringContent(JsonConvert.SerializeObject(new
+            {
+                topic,
+                address,
+                format
+            }), Encoding.UTF8, "application/json");
+            var strResp = await SendRequest(req);
+
+            return JsonConvert.DeserializeObject<CreateWebhookResponse>(strResp);
+        }
+
+        public async Task RemoveWebhook(string id)
+        {
+            var req = CreateRequest(_credentials.ShopName, HttpMethod.Delete, $"webhooks/{id}.json");
+            await SendRequest(req);
+        }
+
+        public async Task<CreateScriptResponse> CreateScript(string scriptUrl, string evt = "onload", string scope = "order_status")
+        {
+            var req = CreateRequest(_credentials.ShopName, HttpMethod.Post, $"script_tags.json");
+            req.Content = new StringContent(JsonConvert.SerializeObject(new
+            {
+                @event = evt,
+                src = scriptUrl,
+                display_scope = scope
+            }), Encoding.UTF8, "application/json");
+            var strResp = await SendRequest(req);
+
+            return JsonConvert.DeserializeObject<CreateScriptResponse>(strResp);
+        }
+
+        public async Task RemoveScript(string id)
+        {
+            var req = CreateRequest(_credentials.ShopName, HttpMethod.Delete, $"script_tags/{id}.json");
+            await SendRequest(req);
+        }
 
         public async Task<TransactionsListResp> TransactionsList(string orderId)
         {
-            var req = createRequest(_creds.ShopName, HttpMethod.Get, $"orders/{orderId}/transactions.json");
+            var req = CreateRequest(_credentials.ShopName, HttpMethod.Get, $"orders/{orderId}/transactions.json");
 
-            var strResp = await sendRequest(req);
+            var strResp = await SendRequest(req);
 
             var parsed = JsonConvert.DeserializeObject<TransactionsListResp>(strResp);
 
@@ -69,27 +101,27 @@ namespace BTCPayServer.Services.Shopify
         {
             var postJson = JsonConvert.SerializeObject(txnCreate);
 
-            var req = createRequest(_creds.ShopName, HttpMethod.Post, $"orders/{orderId}/transactions.json");
+            var req = CreateRequest(_credentials.ShopName, HttpMethod.Post, $"orders/{orderId}/transactions.json");
             req.Content = new StringContent(postJson, Encoding.UTF8, "application/json");
 
-            var strResp = await sendRequest(req);
+            var strResp = await SendRequest(req);
             return JsonConvert.DeserializeObject<TransactionsCreateResp>(strResp);
         }
 
         public async Task<long> OrdersCount()
         {
-            var req = createRequest(_creds.ShopName, HttpMethod.Get, $"orders/count.json");
-            var strResp = await sendRequest(req);
+            var req = CreateRequest(_credentials.ShopName, HttpMethod.Get, $"orders/count.json");
+            var strResp = await SendRequest(req);
 
-            var parsed = JsonConvert.DeserializeObject<OrdersCountResp>(strResp);
+            var parsed = JsonConvert.DeserializeObject<CountResponse>(strResp);
 
-            return parsed.count;
+            return parsed.Count;
         }
 
         public async Task<bool> OrderExists(string orderId)
         {
-            var req = createRequest(_creds.ShopName, HttpMethod.Get, $"orders/{orderId}.json?fields=id");
-            var strResp = await sendRequest(req);
+            var req = CreateRequest(_credentials.ShopName, HttpMethod.Get, $"orders/{orderId}.json?fields=id");
+            var strResp = await SendRequest(req);
 
             return strResp?.Contains(orderId, StringComparison.OrdinalIgnoreCase) == true;
         }
@@ -100,6 +132,5 @@ namespace BTCPayServer.Services.Shopify
         public string ShopName { get; set; }
         public string ApiKey { get; set; }
         public string ApiPassword { get; set; }
-        public string SharedSecret { get; set; }
     }
 }

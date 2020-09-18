@@ -1,13 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Services.Shopify.ApiModels
 {
-    public class OrdersCountResp
+    public class CountResponse
     {
-        public long count { get; set; }
+        [JsonProperty("count")] 
+        public long Count { get; set; }
     }
 }

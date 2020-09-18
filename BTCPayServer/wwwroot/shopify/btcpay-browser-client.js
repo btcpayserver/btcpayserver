@@ -18,7 +18,11 @@ var BtcPayServerModal = (function () {
             }
             window.btcpay.setApiUrlPrefix(btcPayServerUrl);
             window.btcpay.onModalWillEnter(function () {
-                var interval = setInterval(function () {
+                var stopLoop = false;
+                function loopCheck(){
+                    if(stopLoop){
+                        return;
+                    }
                     getBtcPayInvoice(btcPayServerUrl, invoiceId, storeId)
                         .then(function (invoice) {
                             // in most cases this will be triggered by paid, but we put other statuses just in case
@@ -28,13 +32,18 @@ var BtcPayServerModal = (function () {
                             }
                         })
                         .catch(function (err) {
-                            clearInterval(interval);
+                            stopLoop = true;
                             reject(err);
-                        });
-                }, 1000);
+                        }).finally(function(){
+                            if(!stopLoop){
+                                setTimeout(loopCheck, 1000);
+                            }
+                    });   
+                }
+                loopCheck();
                 window.btcpay.onModalWillLeave(function () {
                     waitForPayment.lock = false;
-                    clearInterval(interval);
+                    stopLoop = true;
                     // If user exited the payment modal,
                     // indicate that there was no error but invoice did not complete.
                     resolve(null);

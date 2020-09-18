@@ -4,45 +4,45 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
+using BTCPayServer.Events;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
+using BTCPayServer.Services.Shopify.Models;
 using BTCPayServer.Services.Stores;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using NBXplorer;
 
 namespace BTCPayServer.Services.Shopify
 {
-    public class ShopifyOrderMarkerHostedService : IHostedService
+    public class ShopifyOrderMarkerHostedService : EventHostedServiceBase
     {
-        private readonly EventAggregator _eventAggregator;
         private readonly StoreRepository _storeRepository;
         private readonly IHttpClientFactory _httpClientFactory;
 
-        public ShopifyOrderMarkerHostedService(EventAggregator eventAggregator, StoreRepository storeRepository, IHttpClientFactory httpClientFactory)
+        public ShopifyOrderMarkerHostedService(EventAggregator eventAggregator,
+            StoreRepository storeRepository,
+            IHttpClientFactory httpClientFactory) : base(eventAggregator)
         {
-            _eventAggregator = eventAggregator;
             _storeRepository = storeRepository;
             _httpClientFactory = httpClientFactory;
         }
 
-        private CancellationTokenSource _Cts;
-        private readonly CompositeDisposable leases = new CompositeDisposable();
-
         public const string SHOPIFY_ORDER_ID_PREFIX = "shopify-";
 
-
-        private static readonly SemaphoreSlim _shopifyEventsSemaphore = new SemaphoreSlim(1, 1);
-
-        public Task StartAsync(CancellationToken cancellationToken)
+        protected override void SubscribeToEvents()
         {
-            _Cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            Subscribe<InvoiceEvent>();
+            base.SubscribeToEvents();
+        }
 
-            leases.Add(_eventAggregator.Subscribe<Events.InvoiceEvent>(async b =>
+        protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
+        {
+            if (evt is InvoiceEvent invoiceEvent)
             {
-                var invoice = b.Invoice;
+                var invoice = invoiceEvent.Invoice;
                 var shopifyOrderId = invoice.Metadata?.OrderId;
                 // We're only registering transaction on confirmed or complete and if invoice has orderId
-                if ((invoice.Status == Client.Models.InvoiceStatus.Confirmed || invoice.Status == Client.Models.InvoiceStatus.Complete)
+                if ((invoice.Status == Client.Models.InvoiceStatus.Confirmed ||
+                     invoice.Status == Client.Models.InvoiceStatus.Complete)
                     && shopifyOrderId != null)
                 {
                     var storeData = await _storeRepository.FindStore(invoice.StoreId);
@@ -53,11 +53,9 @@ namespace BTCPayServer.Services.Shopify
                     if (storeBlob.Shopify?.IntegratedAt.HasValue == true &&
                         shopifyOrderId.StartsWith(SHOPIFY_ORDER_ID_PREFIX, StringComparison.OrdinalIgnoreCase))
                     {
-                        await _shopifyEventsSemaphore.WaitAsync();
-
                         shopifyOrderId = shopifyOrderId[SHOPIFY_ORDER_ID_PREFIX.Length..];
 
-                        var client = createShopifyApiClient(storeBlob.Shopify);
+                        var client = CreateShopifyApiClient(storeBlob.Shopify);
                         if (!await client.OrderExists(shopifyOrderId))
                         {
                             // don't register transactions for orders that don't exist on shopify
@@ -68,48 +66,31 @@ namespace BTCPayServer.Services.Shopify
                         // OrderTransactionRegisterLogic has check if transaction is already registered which is why we're passing invoice.Id
                         try
                         {
-                            await _shopifyEventsSemaphore.WaitAsync();
-
                             var logic = new OrderTransactionRegisterLogic(client);
-                            var resp = await logic.Process(shopifyOrderId, invoice.Id, invoice.Currency, invoice.Price.ToString(CultureInfo.InvariantCulture));
+                            var resp = await logic.Process(shopifyOrderId, invoice.Id, invoice.Currency,
+                                invoice.Price.ToString(CultureInfo.InvariantCulture));
                             if (resp != null)
                             {
                                 Logs.PayServer.LogInformation("Registered order transaction on Shopify. " +
-                                    $"Triggered by invoiceId: {invoice.Id}, Shopify orderId: {shopifyOrderId}");
+                                                              $"Triggered by invoiceId: {invoice.Id}, Shopify orderId: {shopifyOrderId}");
                             }
                         }
                         catch (Exception ex)
                         {
                             Logs.PayServer.LogError(ex, $"Shopify error while trying to register order transaction. " +
-                                $"Triggered by invoiceId: {invoice.Id}, Shopify orderId: {shopifyOrderId}");
-                        }
-                        finally
-                        {
-                            _shopifyEventsSemaphore.Release();
+                                                        $"Triggered by invoiceId: {invoice.Id}, Shopify orderId: {shopifyOrderId}");
                         }
                     }
                 }
-            }));
-            return Task.CompletedTask;
+            }
+
+            await base.ProcessEvent(evt, cancellationToken);
         }
 
-        private ShopifyApiClient createShopifyApiClient(StoreBlob.ShopifyDataHolder shopify)
-        {
-            return new ShopifyApiClient(_httpClientFactory, null, new ShopifyApiClientCredentials
-            {
-                ShopName = shopify.ShopName,
-                ApiKey = shopify.ApiKey,
-                ApiPassword = shopify.Password,
-                SharedSecret = shopify.SharedSecret
-            });
-        }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        private ShopifyApiClient CreateShopifyApiClient(ShopifySettings shopify)
         {
-            _Cts?.Cancel();
-            leases.Dispose();
-
-            return Task.CompletedTask;
+            return new ShopifyApiClient(_httpClientFactory, shopify.CreateShopifyApiCredentials());
         }
     }
 }

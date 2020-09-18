@@ -20,7 +20,6 @@
 <form method="post">
     <div class="form-group">
         <input type="hidden" asp-for="ChainId"/>
-        <input type="hidden" asp-for="InvoiceId"/>
         <div class="form-check">
             <label asp-for="Web3ProviderUrl" class="form-control-label"></label>
             <input asp-for="Web3ProviderUrl" type="text" class="form-control"/>
@@ -45,20 +44,6 @@
             <input asp-for="Web3ProviderPassword" type="text" class="form-control"/>
             <span asp-validation-for="Web3ProviderPassword" class="text-danger"></span>
         </div>
-        @{
-            var valid = await EthereumConfigController.CheckValid(HttpClientFactory, BTCPayNetworkProvider.NetworkType, Model.InvoiceId);
-            if (!valid)
-            {
-                <div class="alert alert-warning mt-2">
-                    <span>Support for this feature requires a one-time donation.</span>
-                    @if (!string.IsNullOrEmpty(Model.InvoiceId))
-                    {
-                        <span title="@Model.InvoiceId">The payment instructions associated has not been paid or confirmed yet.</span>
-                    }
-                    <a asp-action="CreateInvoice" asp-controller="EthereumConfig" asp-route-chainId="@Model.ChainId" class="alert-link">Please click here to generate payment instructions.</a>
-                </div>
-            }
-        }
     </div>
 
     <button type="submit" class="btn btn-primary" name="command" value="Save" id="saveButton">Save</button>

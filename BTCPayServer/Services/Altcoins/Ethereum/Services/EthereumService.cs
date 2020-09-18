@@ -33,9 +33,10 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
 
         private readonly Dictionary<int, CancellationTokenSource> _chainHostedServiceCancellationTokenSources =
             new Dictionary<int, CancellationTokenSource>();
+
         public EthereumService(
             IHttpClientFactory httpClientFactory,
-            EventAggregator eventAggregator, 
+            EventAggregator eventAggregator,
             StoreRepository storeRepository,
             BTCPayNetworkProvider btcPayNetworkProvider,
             SettingsRepository settingsRepository,
@@ -67,14 +68,15 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     _eventAggregator.Publish(new CheckWatchers());
-                    await Task.Delay(IsAllAvailable()? TimeSpan.FromDays(1): TimeSpan.FromSeconds(5) , cancellationToken);
+                    await Task.Delay(IsAllAvailable() ? TimeSpan.FromDays(1) : TimeSpan.FromSeconds(5),
+                        cancellationToken);
                 }
             }, cancellationToken);
-
         }
 
         private static bool First = true;
-        private  async Task LoopThroughChainWatchers(CancellationToken cancellationToken)
+
+        private async Task LoopThroughChainWatchers(CancellationToken cancellationToken)
         {
             var chainIds = _btcPayNetworkProvider.GetAll().OfType<EthereumBTCPayNetwork>()
                 .Select(network => network.ChainId).Distinct().ToList();
@@ -99,14 +101,15 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
                                 Web3ProviderPassword = valPass,
                                 Web3ProviderUsername = valUser
                             };
-                            await _settingsRepository.UpdateSetting(settings, EthereumLikeConfiguration.SettingsKey(chainId));
+                            await _settingsRepository.UpdateSetting(settings,
+                                EthereumLikeConfiguration.SettingsKey(chainId));
                         }
                     }
+
                     var currentlyRunning = _chainHostedServices.ContainsKey(chainId);
-                    var valid = await EthereumConfigController.CheckValid(_httpClientFactory, _btcPayNetworkProvider.NetworkType, settings?.InvoiceId);
-                    if (!currentlyRunning  || (currentlyRunning && !valid))
+                    if (!currentlyRunning || (currentlyRunning))
                     {
-                        await HandleChainWatcher(settings, valid, cancellationToken);
+                        await HandleChainWatcher(settings, cancellationToken);
                     }
                 }
                 catch (Exception)
@@ -146,8 +149,7 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
 
             if (evt is SettingsChanged<EthereumLikeConfiguration> settingsChangedEthConfig)
             {
-                var valid = await EthereumConfigController.CheckValid(_httpClientFactory, _btcPayNetworkProvider.NetworkType, settingsChangedEthConfig?.Settings?.InvoiceId);
-                await HandleChainWatcher(settingsChangedEthConfig.Settings, valid, cancellationToken);
+                await HandleChainWatcher(settingsChangedEthConfig.Settings, cancellationToken);
             }
 
             if (evt is CheckWatchers)
@@ -158,7 +160,7 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
             await base.ProcessEvent(evt, cancellationToken);
         }
 
-        private async Task HandleChainWatcher(EthereumLikeConfiguration ethereumLikeConfiguration, bool valid, 
+        private async Task HandleChainWatcher(EthereumLikeConfiguration ethereumLikeConfiguration,
             CancellationToken cancellationToken)
         {
             if (ethereumLikeConfiguration is null)
@@ -178,9 +180,8 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
                 _chainHostedServices.Remove(ethereumLikeConfiguration.ChainId);
             }
 
-            if (!string.IsNullOrWhiteSpace(ethereumLikeConfiguration.Web3ProviderUrl) && valid)
+            if (!string.IsNullOrWhiteSpace(ethereumLikeConfiguration.Web3ProviderUrl))
             {
-                
                 var cts = new CancellationTokenSource();
                 _chainHostedServiceCancellationTokenSources.AddOrReplace(ethereumLikeConfiguration.ChainId, cts);
                 _chainHostedServices.AddOrReplace(ethereumLikeConfiguration.ChainId,

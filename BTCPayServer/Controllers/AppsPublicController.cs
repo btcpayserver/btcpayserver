@@ -38,6 +38,21 @@ namespace BTCPayServer.Controllers
         private readonly InvoiceController _InvoiceController;
         private readonly UserManager<ApplicationUser> _UserManager;
 
+        [HttpGet("/apps/{appId}")]
+        public async Task<IActionResult> RedirectToApp(string appId)
+        {
+            switch (await _AppService.GetAppInfo(appId))
+            {
+                case ViewCrowdfundViewModel  _:
+                    return RedirectToAction("ViewCrowdfund", new {appId});
+                
+                case ViewPointOfSaleViewModel  _:
+                    return RedirectToAction("ViewPointOfSale", new {appId});
+            }
+
+            return NotFound();
+        }
+        
         [HttpGet]
         [Route("/apps/{appId}/pos/{viewType?}")]
         [XFrameOptionsAttribute(XFrameOptionsAttribute.XFrameOptions.AllowAll)]

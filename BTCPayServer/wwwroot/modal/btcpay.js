@@ -40,7 +40,7 @@
     iframe.style.width = '100%';
     iframe.style.zIndex = '2000';
 
-    var origin = 'http://slack.btcpayserver.org join us there, and initialize this with your origin url through setApiUrlPrefix';
+    var origin = 'http://chat.btcpayserver.org join us there, and initialize this with your origin url through setApiUrlPrefix';
     var scriptMatch = thisScript.match(scriptSrcRegex)
     if (scriptMatch) {
         // We can't just take the domain as btcpay can run under a sub path with RootPath

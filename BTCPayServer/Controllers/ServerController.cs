@@ -26,6 +26,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
@@ -47,6 +48,8 @@ namespace BTCPayServer.Controllers
         private readonly BTCPayServerOptions _Options;
         private readonly AppService _AppService;
         private readonly CheckConfigurationHostedService _sshState;
+        private readonly EventAggregator _eventAggregator;
+        private readonly CssThemeManager _cssThemeManager;
         private readonly StoredFileRepository _StoredFileRepository;
         private readonly FileService _FileService;
         private readonly IEnumerable<IStorageProviderService> _StorageProviderServices;
@@ -63,7 +66,9 @@ namespace BTCPayServer.Controllers
             TorServices torServices,
             StoreRepository storeRepository,
             AppService appService,
-            CheckConfigurationHostedService sshState)
+            CheckConfigurationHostedService sshState,
+            EventAggregator eventAggregator,
+            CssThemeManager cssThemeManager)    
         {
             _Options = options;
             _StoredFileRepository = storedFileRepository;
@@ -78,37 +83,8 @@ namespace BTCPayServer.Controllers
             _torServices = torServices;
             _AppService = appService;
             _sshState = sshState;
-        }
-
-        [Route("server/users")]
-        public IActionResult ListUsers(int skip = 0, int count = 50)
-        {
-            var users = new UsersViewModel();
-            users.Users = _UserManager.Users.Skip(skip).Take(count)
-                .Select(u => new UsersViewModel.UserViewModel
-                {
-                    Name = u.UserName,
-                    Email = u.Email,
-                    Id = u.Id
-                }).ToList();
-            users.Skip = skip;
-            users.Count = count;
-            users.Total = _UserManager.Users.Count();
-            return View(users);
-        }
-
-        [Route("server/users/{userId}")]
-        public new async Task<IActionResult> User(string userId)
-        {
-            var user = await _UserManager.FindByIdAsync(userId);
-            if (user == null)
-                return NotFound();
-            var roles = await _UserManager.GetRolesAsync(user);
-            var userVM = new UserViewModel();
-            userVM.Id = user.Id;
-            userVM.Email = user.Email;
-            userVM.IsAdmin = IsAdmin(roles);
-            return View(userVM);
+            _eventAggregator = eventAggregator;
+            _cssThemeManager = cssThemeManager;
         }
 
         [Route("server/maintenance")]
@@ -270,127 +246,7 @@ namespace BTCPayServer.Controllers
                 sshClient.Dispose();
             }
         }
-
-        private static bool IsAdmin(IList<string> roles)
-        {
-            return roles.Contains(Roles.ServerAdmin, StringComparer.Ordinal);
-        }
-
-        [Route("server/users/{userId}")]
-        [HttpPost]
-        public new async Task<IActionResult> User(string userId, UserViewModel viewModel)
-        {
-            var user = await _UserManager.FindByIdAsync(userId);
-            if (user == null)
-                return NotFound();
-
-            var admins = await _UserManager.GetUsersInRoleAsync(Roles.ServerAdmin);
-            var roles = await _UserManager.GetRolesAsync(user);
-            var wasAdmin = IsAdmin(roles);
-            if (!viewModel.IsAdmin && admins.Count == 1 && wasAdmin)
-            {
-                TempData[WellKnownTempData.ErrorMessage] = "This is the only Admin, so their role can't be removed until another Admin is added.";
-                return View(viewModel); // return
-            }
-
-            if (viewModel.IsAdmin != wasAdmin)
-            {
-                if (viewModel.IsAdmin)
-                    await _UserManager.AddToRoleAsync(user, Roles.ServerAdmin);
-                else
-                    await _UserManager.RemoveFromRoleAsync(user, Roles.ServerAdmin);
-
-                TempData[WellKnownTempData.SuccessMessage] = "User successfully updated";
-            }
-
-            return RedirectToAction(nameof(User), new { userId = userId });
-        }
-
-        [Route("server/users/new")]
-        [HttpGet]
-        public IActionResult CreateUser()
-        {
-            ViewData["AllowIsAdmin"] = _Options.AllowAdminRegistration;
-
-            return View();
-        }
-
-        [Route("server/users/new")]
-        [HttpPost]
-        public async Task<IActionResult> CreateUser(RegisterViewModel model)
-        {
-            ViewData["AllowIsAdmin"] = _Options.AllowAdminRegistration;
-
-            if (ModelState.IsValid)
-            {
-                var user = new ApplicationUser { UserName = model.Email, Email = model.Email, RequiresEmailConfirmation = false };
-                var result = await _UserManager.CreateAsync(user, model.Password);
-                if (result.Succeeded)
-                {
-                    TempData[WellKnownTempData.SuccessMessage] = "Account created";
-                    return RedirectToAction(nameof(ListUsers));
-                }
-
-                foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError(string.Empty, error.Description);
-                }
-            }
-
-            // If we got this far, something failed, redisplay form
-            return View(model);
-        }
-
-        [Route("server/users/{userId}/delete")]
-        public async Task<IActionResult> DeleteUser(string userId)
-        {
-            var user = userId == null ? null : await _UserManager.FindByIdAsync(userId);
-            if (user == null)
-                return NotFound();
-
-            var roles = await _UserManager.GetRolesAsync(user);
-            if (IsAdmin(roles))
-            {
-                var admins = await _UserManager.GetUsersInRoleAsync(Roles.ServerAdmin);
-                if (admins.Count == 1)
-                {
-                    // return
-                    return View("Confirm", new ConfirmModel("Unable to Delete Last Admin",
-                        "This is the last Admin, so it can't be removed"));
-                }
-
-                return View("Confirm", new ConfirmModel("Delete Admin " + user.Email,
-                    "Are you sure you want to delete this Admin and delete all accounts, users and data associated with the server account?",
-                    "Delete"));
-            }
-            else
-            {
-                return View("Confirm", new ConfirmModel("Delete user " + user.Email,
-                                    "This user will be permanently deleted",
-                                    "Delete"));
-            }
-        }
-
-        [Route("server/users/{userId}/delete")]
-        [HttpPost]
-        public async Task<IActionResult> DeleteUserPost(string userId)
-        {
-            var user = userId == null ? null : await _UserManager.FindByIdAsync(userId);
-            if (user == null)
-                return NotFound();
-
-            var files = await _StoredFileRepository.GetFiles(new StoredFileRepository.FilesQuery()
-            {
-                UserIds = new[] { userId },
-            });
-
-            await Task.WhenAll(files.Select(file => _FileService.RemoveFile(file.Id, userId)));
-
-            await _UserManager.DeleteAsync(user);
-            await _StoreRepository.CleanUnreachableStores();
-            TempData[WellKnownTempData.SuccessMessage] = "User deleted";
-            return RedirectToAction(nameof(ListUsers));
-        }
+        
         public IHttpClientFactory HttpClientFactory { get; }
 
         [Route("server/policies")]

@@ -56,7 +56,6 @@ namespace BTCPayServer.Controllers
             BTCPayNetworkProvider networkProvider,
             RateFetcher rateFactory,
             ExplorerClientProvider explorerProvider,
-            IFeeProviderFactory feeRateProvider,
             LanguageService langService,
             PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
             SettingsRepository settingsRepository,
@@ -82,7 +81,6 @@ namespace BTCPayServer.Controllers
             _EventAggregator = eventAggregator;
             _NetworkProvider = networkProvider;
             _ExplorerProvider = explorerProvider;
-            _FeeRateProvider = feeRateProvider;
             _ServiceProvider = serviceProvider;
             _BtcpayServerOptions = btcpayServerOptions;
             _BTCPayEnv = btcpayEnv;
@@ -93,7 +91,6 @@ namespace BTCPayServer.Controllers
         readonly IServiceProvider _ServiceProvider;
         readonly BTCPayNetworkProvider _NetworkProvider;
         private readonly ExplorerClientProvider _ExplorerProvider;
-        private readonly IFeeProviderFactory _FeeRateProvider;
         readonly BTCPayWalletProvider _WalletProvider;
         readonly AccessTokenController _TokenController;
         readonly StoreRepository _Repo;

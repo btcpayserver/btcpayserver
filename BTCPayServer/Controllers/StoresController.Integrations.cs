@@ -1,28 +1,32 @@
 using System;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Models.StoreViewModels;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Shopify;
 using BTCPayServer.Services.Shopify.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Nethereum.Util;
 
 namespace BTCPayServer.Controllers
 {
     public partial class StoresController
     {
 
-        private static string _cachedBasejavascript;
+        private static string _cachedShopifyJavascript;
 
         private async Task<string> GetJavascript()
         {
-            if (!string.IsNullOrEmpty(_cachedBasejavascript))
+            if (!string.IsNullOrEmpty(_cachedShopifyJavascript))
             {
-                return _cachedBasejavascript;
+                return _cachedShopifyJavascript;
             }
 
             string[] fileList = _BtcpayServerOptions.BundleJsCss
@@ -35,10 +39,10 @@ namespace BTCPayServer.Controllers
                 await using var stream = _webHostEnvironment.WebRootFileProvider
                     .GetFileInfo(file).CreateReadStream();
                 using var reader = new StreamReader(stream);
-                _cachedBasejavascript += Environment.NewLine + await reader.ReadToEndAsync();
+                _cachedShopifyJavascript += Environment.NewLine + await reader.ReadToEndAsync();
             }
 
-            return _cachedBasejavascript;
+            return _cachedShopifyJavascript;
         }
 
         [AllowAnonymous]
@@ -70,7 +74,7 @@ namespace BTCPayServer.Controllers
             {
                 try
                 {
-//https://{apikey}:{password}@{hostname}/admin/api/{version}/{resource}.json
+                    //https://{apikey}:{password}@{hostname}/admin/api/{version}/{resource}.json
                     var parsedUrl = new Uri(exampleUrl);
                     var userInfo = parsedUrl.UserInfo.Split(":");
                     vm.Shopify = new ShopifySettings()
@@ -108,12 +112,20 @@ namespace BTCPayServer.Controllers
                     catch
                     {
                         TempData[WellKnownTempData.ErrorMessage] =
-                            "Shopify rejected provided credentials, please correct values and again";
+                            "Shopify rejected provided credentials, please correct values and try again";
                         return View("Integrations", vm);
                     }
 
                     shopify.CredentialsValid = true;
 
+                    var scopesGranted = await apiClient.CheckScopes();
+                    if (!scopesGranted.Contains("read_orders") || !scopesGranted.Contains("write_script_tags"))
+                    {
+                        TempData[WellKnownTempData.ErrorMessage] =
+                            "Please grant the private app permissions for read_orders, write_script_tags";
+                        return View("Integrations", vm);
+                    }
+                    
                     var blob = CurrentStore.GetStoreBlob();
                     blob.Shopify = shopify;
                     if (CurrentStore.SetStoreBlob(blob))
@@ -121,26 +133,7 @@ namespace BTCPayServer.Controllers
                         await _Repo.UpdateStore(CurrentStore);
                     }
 
-                    TempData[WellKnownTempData.SuccessMessage] = "Shopify credentials successfully updated";
-                    break;
-                }
-                case "ShopifyIntegrate":
-                {
-                    var blob = CurrentStore.GetStoreBlob();
-
-                    var apiClient = new ShopifyApiClient(clientFactory, blob.Shopify.CreateShopifyApiCredentials());
-                    var result = await apiClient.CreateScript(Url.Action("ShopifyJavascript", "Stores",
-                        new {storeId = CurrentStore.Id}, Request.Scheme));
-
-                    blob.Shopify.ScriptId = result.ScriptTag?.Id.ToString(CultureInfo.InvariantCulture);
-
-                    blob.Shopify.IntegratedAt = DateTimeOffset.UtcNow;
-                    if (CurrentStore.SetStoreBlob(blob))
-                    {
-                        await _Repo.UpdateStore(CurrentStore);
-                    }
-
-                    TempData[WellKnownTempData.SuccessMessage] = "Shopify integration successfully turned on";
+                    TempData[WellKnownTempData.SuccessMessage] = "Shopify integration successfully updated";
                     break;
                 }
                 case "ShopifyClearCredentials":

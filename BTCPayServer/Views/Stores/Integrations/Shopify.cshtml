@@ -81,7 +81,7 @@ function promptExampleUrl(){
         }
         else
         {
-            <p>Checkout scripts should be automatically added to the order status page to display the BTCPay payment option.</p>
+            <p class="alert alert-success">Checkout scripts should be automatically added to the order status page to display the BTCPay payment option.</p>
         }
         <p class="alert alert-info">
             Please add a payment method at <a href="https://@(shopify.ShopName).myshopify.com/admin/settings/payments" target="_blank"> Settings > Payments > Manual Payment Methods</a> with the name <kbd>Bitcoin with BTCPay Server</kbd>
@@ -90,10 +90,6 @@ function promptExampleUrl(){
 
     @if (shopifyCredsSet)
     {
-        if (!shopify.IntegratedAt.HasValue)
-        {
-            <button name="command" type="submit" class="btn btn-primary" value="ShopifyIntegrate">Integrate Shopify Order Paid Marking</button>
-        }
         <button name="command" type="submit" class="btn btn-danger" value="ShopifyClearCredentials">
             @(shopify.IntegratedAt.HasValue ? "Stop Shopify calls and clear credentials" : "Clear credentials")
         </button>

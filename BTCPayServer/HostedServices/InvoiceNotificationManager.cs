@@ -13,6 +13,7 @@ using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Mails;
+using BTCPayServer.Services.Stores;
 using Microsoft.Extensions.Hosting;
 using NBitpayClient;
 using NBXplorer;
@@ -42,13 +43,14 @@ namespace BTCPayServer.HostedServices
         readonly EventAggregator _EventAggregator;
         readonly InvoiceRepository _InvoiceRepository;
         private readonly EmailSenderFactory _EmailSenderFactory;
+        private readonly StoreRepository _StoreRepository;
 
         public InvoiceNotificationManager(
             IHttpClientFactory httpClientFactory,
             IBackgroundJobClient jobClient,
             EventAggregator eventAggregator,
             InvoiceRepository invoiceRepository,
-            BTCPayNetworkProvider networkProvider,
+            StoreRepository storeRepository,
             EmailSenderFactory emailSenderFactory)
         {
             _Client = httpClientFactory.CreateClient();
@@ -56,9 +58,10 @@ namespace BTCPayServer.HostedServices
             _EventAggregator = eventAggregator;
             _InvoiceRepository = invoiceRepository;
             _EmailSenderFactory = emailSenderFactory;
+            _StoreRepository = storeRepository;
         }
 
-        void Notify(InvoiceEntity invoice, InvoiceEvent invoiceEvent, bool extendedNotification)
+        async Task Notify(InvoiceEntity invoice, InvoiceEvent invoiceEvent, bool extendedNotification)
         {
             var dto = invoice.EntityToDTO();
             var notification = new InvoicePaymentNotificationEventWrapper()
@@ -118,15 +121,21 @@ namespace BTCPayServer.HostedServices
 #pragma warning restore CS0618
             }
 
-            if (!String.IsNullOrEmpty(invoice.NotificationEmail))
+            if (invoiceEvent.Name != InvoiceEvent.Expired && !String.IsNullOrEmpty(invoice.NotificationEmail))
             {
-                var emailBody = NBitcoin.JsonConverters.Serializer.ToString(notification);
+                var json = NBitcoin.JsonConverters.Serializer.ToString(notification);
+                var store = await _StoreRepository.FindStore(invoice.StoreId);
+                var storeName = store.StoreName ?? "BTCPay Server";
+                var emailBody = $"Store: {storeName}<br>" +
+                                $"Invoice ID: {notification.Data.Id}<br>" +
+                                $"Status: {notification.Data.Status}<br>" +
+                                $"Amount: {notification.Data.Price} {notification.Data.Currency}<br>" +
+                                $"<br><details><summary>Details</summary><pre>{json}</pre></details>";
 
                 _EmailSenderFactory.GetEmailSender(invoice.StoreId).SendEmail(
                     invoice.NotificationEmail,
-                    $"BtcPayServer Invoice Notification - ${invoice.StoreId}",
+                    $"{storeName} Invoice Notification - ${invoice.StoreId}",
                     emailBody);
-
             }
 
             if (invoice.NotificationURL != null)

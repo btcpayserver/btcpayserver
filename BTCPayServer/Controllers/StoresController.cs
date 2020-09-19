@@ -58,15 +58,13 @@ namespace BTCPayServer.Controllers
             ExplorerClientProvider explorerProvider,
             IFeeProviderFactory feeRateProvider,
             LanguageService langService,
-            IWebHostEnvironment env, IHttpClientFactory httpClientFactory,
             PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
             SettingsRepository settingsRepository,
             IAuthorizationService authorizationService,
             EventAggregator eventAggregator,
             CssThemeManager cssThemeManager,
             AppService appService,
-            IWebHostEnvironment webHostEnvironment,
-            IBundleProvider bundleProvider)
+            IWebHostEnvironment webHostEnvironment)
         {
             _RateFactory = rateFactory;
             _Repo = repo;
@@ -75,15 +73,12 @@ namespace BTCPayServer.Controllers
             _LangService = langService;
             _TokenController = tokenController;
             _WalletProvider = walletProvider;
-            _Env = env;
-            _httpClientFactory = httpClientFactory;
             _paymentMethodHandlerDictionary = paymentMethodHandlerDictionary;
             _settingsRepository = settingsRepository;
             _authorizationService = authorizationService;
             _CssThemeManager = cssThemeManager;
             _appService = appService;
             _webHostEnvironment = webHostEnvironment;
-            _bundleProvider = bundleProvider;
             _EventAggregator = eventAggregator;
             _NetworkProvider = networkProvider;
             _ExplorerProvider = explorerProvider;
@@ -105,15 +100,12 @@ namespace BTCPayServer.Controllers
         readonly TokenRepository _TokenRepository;
         readonly UserManager<ApplicationUser> _UserManager;
         private readonly LanguageService _LangService;
-        readonly IWebHostEnvironment _Env;
-        private readonly IHttpClientFactory _httpClientFactory;
         private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
         private readonly SettingsRepository _settingsRepository;
         private readonly IAuthorizationService _authorizationService;
         private readonly CssThemeManager _CssThemeManager;
         private readonly AppService _appService;
         private readonly IWebHostEnvironment _webHostEnvironment;
-        private readonly IBundleProvider _bundleProvider;
         private readonly EventAggregator _EventAggregator;
 
         [TempData]

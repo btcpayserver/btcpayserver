@@ -10,37 +10,42 @@ using BTCPayServer.Services.Shopify;
 using BTCPayServer.Services.Shopify.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Controllers
 {
     public partial class StoresController
     {
-        [AllowAnonymous]
-        [HttpGet("{storeId}/integrations/shopify/shopify.js")]
-        public async Task<IActionResult> ShopifyJavascript(string storeId)
-        {
 
-            string[] fileList = new[]
+        private static string _cachedBasejavascript;
+
+        private async Task<string> GetJavascript()
+        {
+            if (!string.IsNullOrEmpty(_cachedBasejavascript))
             {
-                "modal/btcpay.js", 
-                "shopify/btcpay-browser-client.js",
-                "shopify/btcpay-shopify-checkout.js"
-            };
-            if (_BtcpayServerOptions.BundleJsCss)
-            {
-                fileList = new[] {_bundleProvider.GetBundle("shopify-bundle.min.js").OutputFileUrl};
+                return _cachedBasejavascript;
             }
 
-            var jsFile = $"var BTCPAYSERVER_URL = \"{Request.GetAbsoluteRoot()}\"; var STORE_ID = \"{storeId}\";";
+            string[] fileList = _BtcpayServerOptions.BundleJsCss
+                ? new[] { "bundles/shopify-bundle.min.js"}
+                : new[] {"modal/btcpay.js", "shopify/btcpay-browser-client.js", "shopify/btcpay-shopify-checkout.js"};
+
+
             foreach (var file in fileList)
             {
                 await using var stream = _webHostEnvironment.WebRootFileProvider
                     .GetFileInfo(file).CreateReadStream();
                 using var reader = new StreamReader(stream);
-                jsFile += Environment.NewLine + await reader.ReadToEndAsync();
+                _cachedBasejavascript += Environment.NewLine + await reader.ReadToEndAsync();
             }
 
+            return _cachedBasejavascript;
+        }
+
+        [AllowAnonymous]
+        [HttpGet("{storeId}/integrations/shopify/shopify.js")]
+        public async Task<IActionResult> ShopifyJavascript(string storeId)
+        {
+            var jsFile = $"var BTCPAYSERVER_URL = \"{Request.GetAbsoluteRoot()}\"; var STORE_ID = \"{storeId}\"; { await GetJavascript()}";
             return Content(jsFile, "text/javascript");
         }
 

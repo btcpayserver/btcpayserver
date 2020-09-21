@@ -56,6 +56,7 @@
 
     var onModalWillEnterMethod = function () { };
     var onModalWillLeaveMethod = function () { };
+    var onModalReceiveMessageMethod = function (event) { };
 
     function showFrame() {
         if (window.document.getElementsByName('btcpay').length === 0) {
@@ -80,6 +81,10 @@
         onModalWillLeaveMethod = customOnModalWillLeave;
     }
 
+    function onModalReceiveMessage(customOnModalReceiveMessage) {
+        onModalReceiveMessageMethod = customOnModalReceiveMessage;
+    }
+
     function receiveMessage(event) {
         var uri;
 
@@ -101,6 +106,7 @@
                 window.location = uri;
             }
         }
+        onModalReceiveMessageMethod(event);
     }
 
     function showInvoice(invoiceId, params) {
@@ -134,7 +140,8 @@
         showInvoice: showInvoice,
         onModalWillEnter: onModalWillEnter,
         onModalWillLeave: onModalWillLeave,
-        setApiUrlPrefix: setApiUrlPrefix
+        setApiUrlPrefix: setApiUrlPrefix,
+        onModalReceiveMessage: onModalReceiveMessage
     };
 
 })();

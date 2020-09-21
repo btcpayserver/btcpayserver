@@ -133,7 +133,7 @@ namespace BTCPayServer.Services.Shopify
 
             var strResp = await SendRequest(req);
 
-            return JsonConvert.DeserializeObject<ShopifyOrder>(strResp);
+            return JObject.Parse(strResp)["order"].ToObject<ShopifyOrder>();
         }
 
         public async Task<long> OrdersCount()

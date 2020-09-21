@@ -1,15 +1,19 @@
 using System;
 using System.Globalization;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Shopify.Models;
 using BTCPayServer.Services.Stores;
 using Microsoft.Extensions.Logging;
+using NBitpayClient;
 
 namespace BTCPayServer.Services.Shopify
 {
@@ -36,55 +40,70 @@ namespace BTCPayServer.Services.Shopify
 
         protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
         {
-            if (evt is InvoiceEvent invoiceEvent)
+            if (evt is InvoiceEvent invoiceEvent && !new[]
+            {
+                InvoiceEvent.Created, InvoiceEvent.Confirmed, InvoiceEvent.ExpiredPaidPartial,
+                InvoiceEvent.ReceivedPayment, InvoiceEvent.PaidInFull
+            }.Contains(invoiceEvent.Name))
             {
                 var invoice = invoiceEvent.Invoice;
-                var shopifyOrderId = invoice.Metadata?.OrderId;
-                // We're only registering transaction on confirmed or complete and if invoice has orderId
-                if ((invoice.Status == Client.Models.InvoiceStatus.Confirmed ||
-                     invoice.Status == Client.Models.InvoiceStatus.Complete)
-                    && shopifyOrderId != null)
+                var shopifyOrderId = invoice.GetInternalTags(SHOPIFY_ORDER_ID_PREFIX).FirstOrDefault();
+                if (shopifyOrderId != null)
                 {
-                    var storeData = await _storeRepository.FindStore(invoice.StoreId);
-                    var storeBlob = storeData.GetStoreBlob();
-
-                    // ensure that store in question has shopify integration turned on 
-                    // and that invoice's orderId has shopify specific prefix
-                    if (storeBlob.Shopify?.IntegratedAt.HasValue == true &&
-                        shopifyOrderId.StartsWith(SHOPIFY_ORDER_ID_PREFIX, StringComparison.OrdinalIgnoreCase))
+                    if (new[] {InvoiceStatus.Invalid, InvoiceStatus.Expired}.Contains(invoice.GetInvoiceState()
+                        .Status) && invoice.ExceptionStatus != InvoiceExceptionStatus.None)
                     {
-                        shopifyOrderId = shopifyOrderId[SHOPIFY_ORDER_ID_PREFIX.Length..];
+                        //you have failed us, customer
 
-                        var client = CreateShopifyApiClient(storeBlob.Shopify);
-                        if (!await client.OrderExists(shopifyOrderId))
-                        {
-                            // don't register transactions for orders that don't exist on shopify
-                            return;
-                        }
-
-                        // if we got this far, we likely need to register this invoice's payment on Shopify
-                        // OrderTransactionRegisterLogic has check if transaction is already registered which is why we're passing invoice.Id
-                        try
-                        {
-                            var logic = new OrderTransactionRegisterLogic(client);
-                            var resp = await logic.Process(shopifyOrderId, invoice.Id, invoice.Currency,
-                                invoice.Price.ToString(CultureInfo.InvariantCulture));
-                            if (resp != null)
-                            {
-                                Logs.PayServer.LogInformation("Registered order transaction on Shopify. " +
-                                                              $"Triggered by invoiceId: {invoice.Id}, Shopify orderId: {shopifyOrderId}");
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Logs.PayServer.LogError(ex, $"Shopify error while trying to register order transaction. " +
-                                                        $"Triggered by invoiceId: {invoice.Id}, Shopify orderId: {shopifyOrderId}");
-                        }
+                        await RegisterTransaction(invoice, shopifyOrderId, false);
+                    }
+                    else if (new[] {Client.Models.InvoiceStatus.Complete, InvoiceStatus.Confirmed}.Contains(
+                        invoice.Status))
+                    {
+                        await RegisterTransaction(invoice, shopifyOrderId, true);
                     }
                 }
             }
 
             await base.ProcessEvent(evt, cancellationToken);
+        }
+
+        private async Task RegisterTransaction(InvoiceEntity invoice, string shopifyOrderId, bool success)
+        {
+            var storeData = await _storeRepository.FindStore(invoice.StoreId);
+            var storeBlob = storeData.GetStoreBlob();
+
+            // ensure that store in question has shopify integration turned on 
+            // and that invoice's orderId has shopify specific prefix
+            if (storeBlob.Shopify?.IntegratedAt.HasValue == true)
+            {
+                var client = CreateShopifyApiClient(storeBlob.Shopify);
+                if (!await client.OrderExists(shopifyOrderId))
+                {
+                    // don't register transactions for orders that don't exist on shopify
+                    return;
+                }
+
+                // if we got this far, we likely need to register this invoice's payment on Shopify
+                // OrderTransactionRegisterLogic has check if transaction is already registered which is why we're passing invoice.Id
+                try
+                {
+                    var logic = new OrderTransactionRegisterLogic(client);
+                    var resp = await logic.Process(shopifyOrderId, invoice.Id, invoice.Currency,
+                        invoice.Price.ToString(CultureInfo.InvariantCulture), success);
+                    if (resp != null)
+                    {
+                        Logs.PayServer.LogInformation("Registered order transaction on Shopify. " +
+                                                      $"Triggered by invoiceId: {invoice.Id}, Shopify orderId: {shopifyOrderId}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logs.PayServer.LogError(ex,
+                        $"Shopify error while trying to register order transaction. " +
+                        $"Triggered by invoiceId: {invoice.Id}, Shopify orderId: {shopifyOrderId}");
+                }
+            }
         }
 
 

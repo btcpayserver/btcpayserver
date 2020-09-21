@@ -1,9 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
@@ -11,9 +11,12 @@ using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Shopify;
 using BTCPayServer.Services.Shopify.Models;
+using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Nethereum.Util;
+using NicolasDorier.RateLimits;
 
 namespace BTCPayServer.Controllers
 {
@@ -24,14 +27,14 @@ namespace BTCPayServer.Controllers
 
         private async Task<string> GetJavascript()
         {
-            if (!string.IsNullOrEmpty(_cachedShopifyJavascript))
+            if (!string.IsNullOrEmpty(_cachedShopifyJavascript) && !_BTCPayEnv.IsDeveloping)
             {
                 return _cachedShopifyJavascript;
             }
 
             string[] fileList = _BtcpayServerOptions.BundleJsCss
                 ? new[] { "bundles/shopify-bundle.min.js"}
-                : new[] {"modal/btcpay.js", "shopify/btcpay-browser-client.js", "shopify/btcpay-shopify-checkout.js"};
+                : new[] {"modal/btcpay.js", "shopify/btcpay-shopify.js"};
 
 
             foreach (var file in fileList)
@@ -53,6 +56,80 @@ namespace BTCPayServer.Controllers
             return Content(jsFile, "text/javascript");
         }
 
+
+        [RateLimitsFilter(ZoneLimits.Shopify, Scope = RateLimitsScope.RemoteAddress)]
+        [AllowAnonymous]
+        [EnableCors(CorsPolicies.All)]
+        [HttpGet("{storeId}/integrations/shopify/{orderId}")]
+        public async Task<IActionResult> ShopifyInvoiceEndpoint(
+            [FromServices] StoreRepository storeRepository, 
+            [FromServices] InvoiceRepository invoiceRepository, 
+            [FromServices] InvoiceController invoiceController, 
+            [FromServices] IHttpClientFactory httpClientFactory,
+            string storeId, string orderId, bool checkOnly = false)
+        {
+            var invoiceOrderId = $"{ShopifyOrderMarkerHostedService.SHOPIFY_ORDER_ID_PREFIX}{orderId}";
+            var matchedExistingInvoices = await invoiceRepository.GetInvoices(new InvoiceQuery()
+            {
+                TextSearch = invoiceOrderId
+            });
+            matchedExistingInvoices = matchedExistingInvoices.Where(entity =>
+                    entity.GetInternalTags(ShopifyOrderMarkerHostedService.SHOPIFY_ORDER_ID_PREFIX)
+                        .Any(s => s == orderId))
+                .ToArray();
+            
+            var firstInvoiceStillPending =
+                matchedExistingInvoices.FirstOrDefault(entity => entity.GetInvoiceState().Status == InvoiceStatus.New);
+            if (firstInvoiceStillPending != null)
+            {
+                return Ok(new
+                {
+                    invoiceId = firstInvoiceStillPending.Id,
+                    status = firstInvoiceStillPending.Status.ToStringInvariant().ToLowerInvariant()
+                });
+            }
+            
+            var firstInvoiceSettled = 
+                matchedExistingInvoices.FirstOrDefault(entity => new []{InvoiceStatus.Paid, InvoiceStatus.Complete, InvoiceStatus.Confirmed }.Contains(entity.GetInvoiceState().Status) );
+            
+            if (firstInvoiceSettled != null)
+            {
+                return Ok(new
+                {
+                    invoiceId = firstInvoiceSettled.Id,
+                    status = firstInvoiceSettled.Status.ToStringInvariant().ToLowerInvariant()
+                });
+            }
+
+            if (checkOnly)
+            {
+                return Ok();
+            }
+            var store = await storeRepository.FindStore(storeId);
+            var shopify =  store?.GetStoreBlob()?.Shopify;
+            if (shopify?.IntegratedAt.HasValue is true)
+            {
+                var client = new ShopifyApiClient(httpClientFactory, shopify.CreateShopifyApiCredentials());
+                var order = await client.GetOrder(orderId);
+                if (string.IsNullOrEmpty(order?.Id) || order.FinancialStatus != "pending")
+                {
+                    return NotFound();
+                }
+
+                var invoice = await invoiceController.CreateInvoiceCoreRaw(
+                    new CreateInvoiceRequest() {Amount = order.TotalPrice, Currency = order.Currency}, store,
+                    Request.GetAbsoluteUri(""), new List<string>() {invoiceOrderId});
+
+                return Ok(new
+                {
+                    invoiceId = invoice.Id,
+                    status = invoice.Status.ToStringInvariant().ToLowerInvariant()
+                });
+            }
+            return NotFound();
+        }
+
+        
         [HttpGet]
         [Route("{storeId}/integrations")]
         [Route("{storeId}/integrations/shopify")]

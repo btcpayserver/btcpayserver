@@ -12,6 +12,7 @@ namespace BTCPayServer.Services.Shopify.ApiModels
             public long? parent_id { get; set; }
             public string gateway { get; set; }
             public string source { get; set; }
+            public string status { get; set; }
             public string authorization { get; set; }
         }
     }

@@ -204,7 +204,7 @@ retry:
             textSearch.Add(invoice.Metadata.OrderId);
             textSearch.Add(ToString(invoice.Metadata, null));
             textSearch.Add(invoice.StoreId);
-
+            textSearch.AddRange(invoice.InternalTags);
             AddToTextSearch(invoice.Id, textSearch.ToArray());
             return invoice;
         }

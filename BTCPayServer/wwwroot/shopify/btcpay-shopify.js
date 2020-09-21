@@ -81,7 +81,14 @@ window.BTCPayShopifyIntegrationModule = function () {
     function handleInvoiceData(data, opts) {
         currentInvoiceData = data;
         if (!currentInvoiceData) {
-            window.btcpay.hideFrame();
+            if (modalShown) {
+                window.btcpay.hideFrame();
+                fail();
+            }else if(opts && opts.backgroundCheck){
+                injectPaymentButtonHtml();
+            }else{
+                fail();
+            }
             return;
         }
         if (["complete", "confirmed", "paid"].indexOf(currentInvoiceData.status.toLowerCase()) >= 0) {
@@ -90,7 +97,7 @@ window.BTCPayShopifyIntegrationModule = function () {
             fail();
         } else if (!opts || !opts.backgroundCheck) {
             showModal();
-        }
+        } 
     }
 
     function showModal() {
@@ -110,7 +117,9 @@ window.BTCPayShopifyIntegrationModule = function () {
 
             window.btcpay.onModalWillLeave(function () {
                 modalShown = false;
-                fail();
+                getOrCheckInvoice(true).then(function (d) {
+                    handleInvoiceData(d, {backgroundCheck: true})
+                });
             });
             window.btcpay.showInvoice(currentInvoiceData.invoiceId);
         }
@@ -139,7 +148,6 @@ window.BTCPayShopifyIntegrationModule = function () {
         return;
     }
     showPaymentInstructions();
-    injectPaymentButtonHtml();
     window.onPayButtonClicked = onPayButtonClicked.bind(this);
     getOrCheckInvoice(true).then(function (d) {
         handleInvoiceData(d, {backgroundCheck: true})

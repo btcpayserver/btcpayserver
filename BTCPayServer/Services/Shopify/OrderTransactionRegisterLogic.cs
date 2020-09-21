@@ -20,40 +20,62 @@ namespace BTCPayServer.Services.Shopify
         {
             currency = currency.ToUpperInvariant().Trim();
             var existingShopifyOrderTransactions = (await _client.TransactionsList(orderId)).transactions;
-            // only register transactions if first, parent_id transaction is present and we haven't already registered transaction for this invoice( or if there was one registered but it was a failure and this one is success, in the case of a merchant marking it as complete)
-            if (existingShopifyOrderTransactions != null && existingShopifyOrderTransactions.Count >= 1 && existingShopifyOrderTransactions.All(a => a.authorization != invoiceId || (!success || a.status == "failure")))
+
+            if (existingShopifyOrderTransactions?.Count < 1)
             {
-                var transaction = existingShopifyOrderTransactions[0];
-
-                if (currency.ToUpperInvariant().Trim() != transaction.currency.ToUpperInvariant().Trim())
-                {
-                    // because of parent_id present, currency will always be the one from parent transaction
-                    // malicious attacker could potentially exploit this by creating invoice 
-                    // in different currency and paying that one, registering order on Shopify as paid
-                    // so if currency is supplied and is different from parent transaction currency we just won't register
-                    return null;
-                }
-
-                var createTransaction = new TransactionsCreateReq
-                {
-                    transaction = new TransactionsCreateReq.DataHolder
-                    {
-                        parent_id = transaction.id,
-                        currency = currency,
-                        amount = amountCaptured,
-                        kind = "capture",
-                        gateway = "BTCPayServer",
-                        source = "external",
-                        authorization = invoiceId,
-                        status = success? "success": "failure"
-                    }
-                };
-
-                var createResp = await _client.TransactionCreate(orderId, createTransaction);
-                return createResp;
+                return null;
+            }
+            
+            
+            var baseParentTransaction = existingShopifyOrderTransactions[0];
+            
+            if (currency.ToUpperInvariant().Trim() != baseParentTransaction.currency.ToUpperInvariant().Trim())
+            {
+                // because of parent_id present, currency will always be the one from parent transaction
+                // malicious attacker could potentially exploit this by creating invoice 
+                // in different currency and paying that one, registering order on Shopify as paid
+                // so if currency is supplied and is different from parent transaction currency we just won't register
+                return null;
             }
 
-            return null;
+            var kind = "capture";
+            var parentId = baseParentTransaction.id;
+            var status = success ? "success" : "failure";
+            var existingShopifyOrderTransactionsOnSameInvoice =
+                existingShopifyOrderTransactions.Where(holder => holder.authorization == invoiceId);
+            
+            var successfulActions =
+                existingShopifyOrderTransactionsOnSameInvoice.Where(holder => holder.status == "success").ToArray();
+
+            var successfulCaptures = successfulActions.Where(holder => holder.kind == "capture").ToArray();
+            var refunds = successfulActions.Where(holder => holder.kind == "refund").ToArray();
+            
+            if (!success && successfulCaptures.Length > 0 && (successfulCaptures.Length - refunds.Length) > 0)
+            {
+                kind = "void";
+                parentId = successfulCaptures.Last().id;
+                status = "success";
+            }
+            else if(success && successfulCaptures.Length >0 && (successfulCaptures.Length - refunds.Length  ) > 0 ) 
+            {
+                return null;
+            }
+            var createTransaction = new TransactionsCreateReq
+            {
+                transaction = new TransactionsCreateReq.DataHolder
+                {
+                    parent_id = parentId,
+                    currency = currency,
+                    amount = amountCaptured,
+                    kind = kind,
+                    gateway = "BTCPayServer",
+                    source = "external",
+                    authorization = invoiceId,
+                    status = status
+                }
+            };
+            var createResp = await _client.TransactionCreate(orderId, createTransaction);
+            return createResp;
         }
     }
 }

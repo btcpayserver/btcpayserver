@@ -1,0 +1,54 @@
+[v-cloak] > * {
+    display: none
+}
+
+[v-cloak]::before {
+    content: "loading…"
+}
+
+.l-pos-wrapper {
+    max-width: 450px;
+    margin: auto;
+}
+
+.l-pos-header {
+    color: #fff;
+}
+
+.l-pos-display {
+    font-size: 1.4rem;
+    overflow: hidden;
+}
+.l-pos-display span {
+    display: inline-block;
+    height: 80px;
+    line-height: 80px;
+}
+
+.l-pos-keypad {
+    margin-left: 2%;
+}
+
+.l-pos-keypad .btn {
+    width: 32%;
+    margin-right: 1%;
+    margin-bottom: 1%;
+    border-radius: 0;
+    padding-top: 4%;
+    padding-bottom: 4%;
+    font-weight: bold;
+    font-size: 1.3rem;
+}
+
+.l-pos-controls .btn {
+    width: 47%;
+    border-radius: 0;
+    margin-right: 0%;
+    margin-left: 2%;
+    margin-bottom: 1%;
+}
+
+.logo {
+    height: 40px;
+    filter: contrast(0) brightness(200%);
+}

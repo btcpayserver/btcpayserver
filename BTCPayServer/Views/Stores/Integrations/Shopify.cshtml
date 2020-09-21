@@ -1,7 +1,7 @@
 @model IntegrationsViewModel
 @{
     var shopify = Model.Shopify;
-    var shopifyCredsSet = shopify?.CredentialsValid == true;
+    var shopifyCredsSet = shopify?.IntegratedAt.HasValue is true;
 }
 <script>
 function promptExampleUrl(){
@@ -21,7 +21,7 @@ function promptExampleUrl(){
     </h4>
     @if (!shopifyCredsSet)
     {
-        <p class="alert alert-info">Create a Shopify private app with the permission "Script tags - Read and write" then <a href="#" class="alert-link" onclick="promptExampleUrl()">click here and paste the provided example URL.</a></p>
+        <p class="alert alert-info">Create a Shopify private app with the permissions "Script tags - Read and write" and "Orders - Read and write" then <a href="#" class="alert-link" onclick="promptExampleUrl()">click here and paste the provided example URL.</a></p>
         <input type="hidden" id="exampleUrl" name="exampleUrl">
     }
     <div class="form-group">
@@ -61,7 +61,7 @@ function promptExampleUrl(){
     {
         <button name="command" type="submit" class="btn btn-primary" value="ShopifySaveCredentials">Save Credentials</button>
     }
-    else if (shopify?.IntegratedAt.HasValue == true)
+    else
     {
         <p class="alert alert-success">
             Orders on <b>@shopify.ShopName</b>.myshopify.com will be marked as paid on successful invoice payment.

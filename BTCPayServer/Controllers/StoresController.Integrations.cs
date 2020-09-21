@@ -116,8 +116,6 @@ namespace BTCPayServer.Controllers
                         return View("Integrations", vm);
                     }
 
-                    shopify.CredentialsValid = true;
-
                     var scopesGranted = await apiClient.CheckScopes();
                     if (!scopesGranted.Contains("read_orders") || !scopesGranted.Contains("write_script_tags"))
                     {
@@ -125,6 +123,11 @@ namespace BTCPayServer.Controllers
                             "Please grant the private app permissions for read_orders, write_script_tags";
                         return View("Integrations", vm);
                     }
+                    var result = await apiClient.CreateScript(Url.Action("ShopifyJavascript", "Stores",
+                        new {storeId = CurrentStore.Id}, Request.Scheme));
+
+                    shopify.ScriptId = result.ScriptTag?.Id.ToString(CultureInfo.InvariantCulture);
+                    shopify.IntegratedAt = DateTimeOffset.Now;
                     
                     var blob = CurrentStore.GetStoreBlob();
                     blob.Shopify = shopify;

@@ -70,7 +70,7 @@ namespace BTCPayServer.Services.Shopify
 
         public async Task<string[]> CheckScopes()
         {
-            var req = CreateRequest(_credentials.ShopName, HttpMethod.Delete, null, "admin/oauth/access_scopes.json");
+            var req = CreateRequest(_credentials.ShopName, HttpMethod.Get, null, "admin/oauth/access_scopes.json");
             return JObject.Parse(await SendRequest(req))["access_scopes"].Values<JToken>()
                 .Select(token => token["handle"].Value<string>()).ToArray();
         }

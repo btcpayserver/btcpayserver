@@ -747,6 +747,51 @@ namespace BTCPayServer.Tests
             Assert.True(tor.Services.Where(t => t.ServiceType == TorServiceType.Other).Count() > 1);
         }
 
+
+        [Fact(Timeout = 60 * 2 * 1000)]
+        [Trait("Integration", "Integration")]
+        [Trait("Lightning", "Lightning")]
+        public async Task EnsureNewLightningInvoiceOnPartialPayment()
+        {
+            using var tester = ServerTester.Create();
+            tester.ActivateLightning();
+            await tester.StartAsync();
+            await tester.EnsureChannelsSetup();
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync();
+            await user.RegisterDerivationSchemeAsync("BTC");
+            await user.RegisterLightningNodeAsync("BTC", LightningConnectionType.CLightning);
+            user.SetNetworkFeeMode(NetworkFeeMode.Never);
+            var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice(0.01m, "BTC"));
+            await tester.WaitForEvent<InvoiceNewAddressEvent>(async () =>
+            {
+                await tester.ExplorerNode.SendToAddressAsync(
+                    BitcoinAddress.Create(invoice.BitcoinAddress, Network.RegTest), Money.Coins(0.005m));
+            });
+
+            var newInvoice = await user.BitPay.GetInvoiceAsync(invoice.Id);
+            var newBolt11  = newInvoice.CryptoInfo.First(o => o.PaymentUrls.BOLT11 != null).PaymentUrls.BOLT11;
+            var  oldBolt11= invoice.CryptoInfo.First(o => o.PaymentUrls.BOLT11 != null).PaymentUrls.BOLT11;
+            Assert.NotEqual(newBolt11,oldBolt11);
+            Assert.Equal(newInvoice.BtcDue.GetValue(), BOLT11PaymentRequest.Parse(newBolt11, Network.RegTest).MinimumAmount.ToDecimal(LightMoneyUnit.BTC));
+            var evt = await tester.WaitForEvent<InvoiceDataChangedEvent>(async () =>
+            {
+                await tester.SendLightningPaymentAsync(newInvoice);
+            });
+            Assert.Equal(evt.InvoiceId, invoice.Id);
+            Assert.Equal(InvoiceStatus.Complete, evt.State.Status);
+            Assert.Equal(InvoiceExceptionStatus.None, evt.State.ExceptionStatus);
+            
+            evt = await tester.WaitForEvent<InvoiceDataChangedEvent>(async () =>
+            {
+                await tester.SendLightningPaymentAsync(invoice);
+            });
+            
+            Assert.Equal(evt.InvoiceId, invoice.Id);
+            Assert.Equal(InvoiceStatus.Invalid, evt.State.Status);
+            Assert.Equal(InvoiceExceptionStatus.PaidOver, evt.State.ExceptionStatus);
+        }
+
         [Fact(Timeout = 60 * 2 * 1000)]
         [Trait("Integration", "Integration")]
         [Trait("Lightning", "Lightning")]

@@ -36,6 +36,14 @@
         </script>
         <bundle name="wwwroot/bundles/cart-bundle.min.js" asp-append-version="true" />
     }
+    @if (Model.ViewType == PosViewType.Light)
+    {
+        <bundle name="wwwroot/bundles/light-pos-bundle.min.css" asp-append-version="true" />
+        <script type="text/javascript">
+            var srvModel = @Safe.Json(Model);
+        </script>
+        <bundle name="wwwroot/bundles/light-pos-bundle.min.js" asp-append-version="true" />
+    }
     <style>
         .card-deck {
             display: grid;

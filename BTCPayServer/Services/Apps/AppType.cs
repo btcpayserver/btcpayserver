@@ -9,6 +9,7 @@ namespace BTCPayServer.Services.Apps
     public enum PosViewType
     {
         Static,
-        Cart
+        Cart,
+        Light
     }
 }

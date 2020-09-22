@@ -141,6 +141,19 @@
         ]
     },
     {
+        "outputFileName": "wwwroot/bundles/light-pos-bundle.min.js",
+        "inputFiles": [
+            "wwwroot/vendor/vuejs/vue.min.js",
+            "wwwroot/light-pos/**/*.js"
+        ]
+    },
+    {
+        "outputFileName": "wwwroot/bundles/light-pos-bundle.min.css",
+        "inputFiles": [
+            "wwwroot/light-pos/**/*.css"
+        ]
+    },
+    {
         "outputFileName": "wwwroot/bundles/payment-request-admin-bundle.min.js",
         "inputFiles": [
             "wwwroot/vendor/summernote/summernote-bs4.js",

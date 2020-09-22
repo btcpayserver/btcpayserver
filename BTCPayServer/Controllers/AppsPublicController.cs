@@ -38,6 +38,21 @@ namespace BTCPayServer.Controllers
         private readonly InvoiceController _InvoiceController;
         private readonly UserManager<ApplicationUser> _UserManager;
 
+        [HttpGet("/apps/{appId}")]
+        public async Task<IActionResult> RedirectToApp(string appId)
+        {
+            switch (await _AppService.GetAppInfo(appId))
+            {
+                case ViewCrowdfundViewModel  _:
+                    return RedirectToAction("ViewCrowdfund", new {appId});
+                
+                case ViewPointOfSaleViewModel  _:
+                    return RedirectToAction("ViewPointOfSale", new {appId});
+            }
+
+            return NotFound();
+        }
+        
         [HttpGet]
         [Route("/apps/{appId}/pos/{viewType?}")]
         [XFrameOptionsAttribute(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
@@ -50,6 +65,8 @@ namespace BTCPayServer.Controllers
             var numberFormatInfo = _AppService.Currencies.GetNumberFormatInfo(settings.Currency) ?? _AppService.Currencies.GetNumberFormatInfo("USD");
             double step = Math.Pow(10, -(numberFormatInfo.CurrencyDecimalDigits));
             viewType ??= settings.EnableShoppingCart ? PosViewType.Cart : settings.DefaultView;
+            var store = await _AppService.GetStore(app);
+            var storeBlob = store.GetStoreBlob();
 
             return View("PointOfSale/" + viewType, new ViewPointOfSaleViewModel()
             {
@@ -76,6 +93,7 @@ namespace BTCPayServer.Controllers
                 CustomTipText = settings.CustomTipText,
                 CustomTipPercentages = settings.CustomTipPercentages,
                 CustomCSSLink = settings.CustomCSSLink,
+                CustomLogoLink = storeBlob.CustomLogo,
                 AppId = appId,
                 Description = settings.Description,
                 EmbeddedCSS = settings.EmbeddedCSS

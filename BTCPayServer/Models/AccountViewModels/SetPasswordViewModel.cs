@@ -2,12 +2,11 @@ using System.ComponentModel.DataAnnotations;
 
 namespace BTCPayServer.Models.AccountViewModels
 {
-    public class ResetPasswordViewModel
+    public class SetPasswordViewModel
     {
         [Required]
         [EmailAddress]
         public string Email { get; set; }
-
         [Required]
         [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
         [DataType(DataType.Password)]
@@ -19,5 +18,6 @@ namespace BTCPayServer.Models.AccountViewModels
         public string ConfirmPassword { get; set; }
 
         public string Code { get; set; }
+        public bool EmailSetInternally { get; set; }
     }
 }

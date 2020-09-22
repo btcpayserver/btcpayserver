@@ -1,5 +1,7 @@
 
+using BTCPayServer;
 using BTCPayServer.Controllers;
+using BTCPayServer.Services.Apps;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 
@@ -13,13 +15,16 @@ namespace Microsoft.AspNetCore.Mvc
                 new { userId, code }, scheme, host, pathbase);
         }
 
-        public static string ResetPasswordCallbackLink(this IUrlHelper urlHelper, string userId, string code, string scheme)
+        public static string ResetPasswordCallbackLink(this LinkGenerator urlHelper, string userId, string code, string scheme,  HostString host, string pathbase)
         {
-            return urlHelper.Action(
-                action: nameof(AccountController.ResetPassword),
+            return urlHelper.GetUriByAction(
+                action: nameof(AccountController.SetPassword),
                 controller: "Account",
                 values: new { userId, code },
-                protocol: scheme);
+                scheme: scheme,
+                host:host,
+                pathBase: pathbase
+            );
         }
 
         public static string PaymentRequestLink(this LinkGenerator urlHelper, string paymentRequestId, string scheme, HostString host, string pathbase)
@@ -31,12 +36,30 @@ namespace Microsoft.AspNetCore.Mvc
                 scheme, host, pathbase);
         }
 
+        public static string AppLink(this LinkGenerator urlHelper, string appId,  string scheme, HostString host, string pathbase)
+        {
+            return urlHelper.GetUriByAction(
+                action: nameof(AppsPublicController.RedirectToApp),
+                controller: "AppsPublic",
+                values: new {  appId },
+                scheme, host, pathbase);
+        }
+
         public static string InvoiceLink(this LinkGenerator urlHelper, string invoiceId, string scheme, HostString host, string pathbase)
         {
             return urlHelper.GetUriByAction(
                 action: nameof(InvoiceController.Invoice),
                 controller: "Invoice",
                 values: new { invoiceId = invoiceId },
+                scheme, host, pathbase);
+        }
+
+        public static string PayoutLink(this LinkGenerator urlHelper, string walletId,string pullPaymentId, string scheme, HostString host, string pathbase)
+        {
+            return urlHelper.GetUriByAction(
+                action: nameof(WalletsController.Payouts),
+                controller: "Wallets",
+                values: new {walletId, pullPaymentId},
                 scheme, host, pathbase);
         }
     }

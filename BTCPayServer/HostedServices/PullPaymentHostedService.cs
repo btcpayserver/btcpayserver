@@ -405,9 +405,10 @@ namespace BTCPayServer.HostedServices
                         if (proof.TransactionId is null)
                             proof.TransactionId = txId;
                         payout.SetProofBlob(proof, _jsonSerializerSettings);
-                        _eventAggregator.Publish(new UpdateTransactionLabel(new WalletId(payout.PullPaymentData.StoreId, newTransaction.CryptoCode),
+                        var walletId = new WalletId(payout.PullPaymentData.StoreId, newTransaction.CryptoCode);
+                        _eventAggregator.Publish(new UpdateTransactionLabel(walletId,
                                                                         newTransaction.NewTransactionEvent.TransactionData.TransactionHash,
-                                                                        ("#3F88AF", "Payout")));
+                                                                        UpdateTransactionLabel.PayoutTemplate(payout.Id,payout.PullPaymentDataId, walletId.ToString())));
                     }
                 }
                 await ctx.SaveChangesAsync();

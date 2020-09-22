@@ -19,8 +19,6 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Configuration
         [Display(Name = "Web3 provider password (can be left blank)")]
         public string Web3ProviderPassword { get; set; }
 
-        public string InvoiceId { get; set; }
-
         public override string ToString()
         {
             return "";

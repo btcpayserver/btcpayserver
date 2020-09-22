@@ -8,6 +8,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Tests.Logging;
+using BTCPayServer.Views.Server;
 using BTCPayServer.Views.Wallets;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
@@ -88,7 +89,7 @@ namespace BTCPayServer.Tests
                 await s.StartAsync();
                 //Register & Log Out
                 var email = s.RegisterNewUser();
-                s.Driver.FindElement(By.Id("Logout")).Click();
+                s.Logout();
                 s.Driver.AssertNoError();
                 Assert.Contains("Account/Login", s.Driver.Url);
                 // Should show the Tor address
@@ -129,7 +130,32 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("MySettings")).Click();
                 s.ClickOnAllSideMenus();
 
-                s.Driver.Quit();
+                //let's test invite link
+                s.Logout();
+                s.GoToRegister();
+                var newAdminUser =  s.RegisterNewUser(true);
+                s.GoToServer(ServerNavPages.Users);
+                s.Driver.FindElement(By.Id("CreateUser")).Click();
+                
+                var usr = RandomUtils.GetUInt256().ToString().Substring(64 - 20) + "@a.com";
+                s.Driver.FindElement(By.Id("Email")).SendKeys(usr);
+                s.Driver.FindElement(By.Id("Save")).Click();
+                var url = s.AssertHappyMessage().FindElement(By.TagName("a")).Text;;
+                s.Logout();
+                s.Driver.Navigate().GoToUrl(url);
+                Assert.Equal("hidden",s.Driver.FindElement(By.Id("Email")).GetAttribute("type"));
+                Assert.Equal(usr,s.Driver.FindElement(By.Id("Email")).GetAttribute("value"));
+                
+                s.Driver.FindElement(By.Id("Password")).SendKeys("123456");
+                s.Driver.FindElement(By.Id("ConfirmPassword")).SendKeys("123456");
+                s.Driver.FindElement(By.Id("SetPassword")).Click();
+                s.AssertHappyMessage();
+                s.Driver.FindElement(By.Id("Email")).SendKeys(usr);
+                s.Driver.FindElement(By.Id("Password")).SendKeys("123456");
+                s.Driver.FindElement(By.Id("LoginButton")).Click();
+
+                // We should be logged in now
+                s.Driver.FindElement(By.Id("mainNav"));
             }
         }
 
@@ -768,7 +794,7 @@ namespace BTCPayServer.Tests
                     s.Driver.Navigate().Refresh();
                     Assert.Contains("badge transactionLabel", s.Driver.PageSource);
                 });
-                Assert.Equal("Payout", s.Driver.FindElement(By.ClassName("transactionLabel")).Text);
+                Assert.Equal("payout", s.Driver.FindElement(By.ClassName("transactionLabel")).Text);
 
                 s.GoToWallet(navPages: WalletsNavPages.Payouts);
                 TestUtils.Eventually(() =>

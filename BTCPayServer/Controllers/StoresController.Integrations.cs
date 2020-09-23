@@ -15,7 +15,6 @@ using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
-using Nethereum.Util;
 using NicolasDorier.RateLimits;
 
 namespace BTCPayServer.Controllers
@@ -85,7 +84,7 @@ namespace BTCPayServer.Controllers
                 return Ok(new
                 {
                     invoiceId = firstInvoiceStillPending.Id,
-                    status = firstInvoiceStillPending.Status.ToStringInvariant().ToLowerInvariant()
+                    status = firstInvoiceStillPending.Status.ToString().ToLowerInvariant()
                 });
             }
             
@@ -97,7 +96,7 @@ namespace BTCPayServer.Controllers
                 return Ok(new
                 {
                     invoiceId = firstInvoiceSettled.Id,
-                    status = firstInvoiceSettled.Status.ToStringInvariant().ToLowerInvariant()
+                    status = firstInvoiceSettled.Status.ToString().ToLowerInvariant()
                 });
             }
 
@@ -123,7 +122,7 @@ namespace BTCPayServer.Controllers
                 return Ok(new
                 {
                     invoiceId = invoice.Id,
-                    status = invoice.Status.ToStringInvariant().ToLowerInvariant()
+                    status = invoice.Status.ToString().ToLowerInvariant()
                 });
             }
             return NotFound();

@@ -1,7 +1,9 @@
 namespace BTCPayServer.Contracts
 {
-    public interface IStoreNavExtension
+    public interface ISyncSummaryProvider
     {
+        bool AllAvailable();
+
         string Partial { get; }
     }
 }

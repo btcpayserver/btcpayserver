@@ -80,6 +80,7 @@ namespace BTCPayServer.Configuration
         {
             NetworkType = DefaultConfiguration.GetNetworkType(conf);
             DataDir = conf.GetDataDir(NetworkType);
+            ExtensionDir = conf.GetExtensionDir(NetworkType);
             Logs.Configuration.LogInformation("Network: " + NetworkType.ToString());
 
             if (conf.GetOrDefault<bool>("launchsettings", false) && NetworkType != NetworkType.Regtest)
@@ -238,6 +239,8 @@ namespace BTCPayServer.Configuration
 
             DisableRegistration = conf.GetOrDefault<bool>("disable-registration", true);
         }
+
+        public string ExtensionDir { get; set; }
 
         private SSHSettings ParseSSHConfiguration(IConfiguration conf)
         {

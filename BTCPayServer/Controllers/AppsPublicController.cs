@@ -203,7 +203,9 @@ namespace BTCPayServer.Controllers
                     OrderId = orderId,
                     NotificationURL =
                             string.IsNullOrEmpty(notificationUrl) ? settings.NotificationUrl : notificationUrl,
-                    RedirectURL = redirectUrl ?? Request.GetDisplayUrl(),
+                    RedirectURL = !string.IsNullOrEmpty(redirectUrl) ? redirectUrl
+                                : !string.IsNullOrEmpty(settings.RedirectUrl) ? settings.RedirectUrl
+                                : Request.GetDisplayUrl(),
                     FullNotifications = true,
                     ExtendedNotifications = true,
                     PosData = string.IsNullOrEmpty(posData) ? null : posData,

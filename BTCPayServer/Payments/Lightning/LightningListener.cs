@@ -170,11 +170,30 @@ namespace BTCPayServer.Payments.Lightning
                                     await _lightningLikePaymentHandler.CreatePaymentMethodDetails(
                                         logs, supportedMethod,
                                         paymentMethod, store, paymentMethod.Network, prepObj);
+                                
+                                
+                                var instanceListenerKey = (paymentMethod.Network.CryptoCode,
+                                    supportedMethod.GetLightningUrl().ToString());
+                                if (_InstanceListeners.TryGetValue(instanceListenerKey, out var instanceListener))
+                                {
+                                    
+                                    await _InvoiceRepository.NewAddress(invoice.Id, newPaymentMethodDetails,
+                                        paymentMethod.Network);
 
-                                await _InvoiceRepository.NewAddress(invoice.Id, newPaymentMethodDetails,
-                                    paymentMethod.Network);
-
-                                _Aggregator.Publish(new InvoiceNewAddressEvent(invoice.Id, newPaymentMethodDetails.GetPaymentDestination(),paymentMethod.Network ));
+                                    instanceListener.AddListenedInvoice(new ListenedInvoice()
+                                    {
+                                        Expiration = invoice.ExpirationTime,
+                                        Uri = supportedMethod.GetLightningUrl().BaseUri.AbsoluteUri,
+                                        PaymentMethodDetails = (LightningLikePaymentMethodDetails) newPaymentMethodDetails,
+                                        SupportedPaymentMethod = supportedMethod,
+                                        PaymentMethod = paymentMethod,
+                                        Network = (BTCPayNetwork) paymentMethod.Network,
+                                        InvoiceId = invoice.Id
+                                    });
+                                    
+                                    _Aggregator.Publish(new InvoiceNewAddressEvent(invoice.Id,
+                                        newPaymentMethodDetails.GetPaymentDestination(), paymentMethod.Network));
+                                }
                             }
                             catch (Exception e)
                             {

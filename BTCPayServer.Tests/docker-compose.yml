@@ -72,6 +72,7 @@ services:
       BITCOIN_EXTRA_ARGS: |
         deprecatedrpc=signrawtransaction
         connect=bitcoind:39388
+        fallbackfee=0.0002
     links:
       - nbxplorer
       - postgres
@@ -115,6 +116,7 @@ services:
         zmqpubrawblock=tcp://0.0.0.0:28332
         zmqpubrawtx=tcp://0.0.0.0:28333
         deprecatedrpc=signrawtransaction
+        fallbackfee=0.0002
     ports: 
       - "43782:43782"
       - "39388:39388"

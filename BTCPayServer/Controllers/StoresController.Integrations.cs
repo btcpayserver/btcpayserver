@@ -15,6 +15,7 @@ using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json.Linq;
 using NicolasDorier.RateLimits;
 
 namespace BTCPayServer.Controllers
@@ -55,7 +56,6 @@ namespace BTCPayServer.Controllers
             return Content(jsFile, "text/javascript");
         }
 
-
         [RateLimitsFilter(ZoneLimits.Shopify, Scope = RateLimitsScope.RemoteAddress)]
         [AllowAnonymous]
         [EnableCors(CorsPolicies.All)]
@@ -70,7 +70,7 @@ namespace BTCPayServer.Controllers
             var invoiceOrderId = $"{ShopifyOrderMarkerHostedService.SHOPIFY_ORDER_ID_PREFIX}{orderId}";
             var matchedExistingInvoices = await invoiceRepository.GetInvoices(new InvoiceQuery()
             {
-                TextSearch = invoiceOrderId
+                OrderId = new[] {invoiceOrderId}, StoreId = new[] {storeId}
             });
             matchedExistingInvoices = matchedExistingInvoices.Where(entity =>
                     entity.GetInternalTags(ShopifyOrderMarkerHostedService.SHOPIFY_ORDER_ID_PREFIX)
@@ -116,7 +116,7 @@ namespace BTCPayServer.Controllers
                 }
 
                 var invoice = await invoiceController.CreateInvoiceCoreRaw(
-                    new CreateInvoiceRequest() {Amount = order.TotalPrice, Currency = order.Currency}, store,
+                    new CreateInvoiceRequest() {Amount = order.TotalPrice, Currency = order.Currency, Metadata = new JObject {["orderId"] = invoiceOrderId} }, store,
                     Request.GetAbsoluteUri(""), new List<string>() {invoiceOrderId});
 
                 return Ok(new

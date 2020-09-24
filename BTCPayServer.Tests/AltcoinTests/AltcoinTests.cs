@@ -788,8 +788,13 @@ noninventoryitem:
                 Assert.IsType<RedirectToActionResult>(apps.UpdatePointOfSale(appId, vmpos).Result);
 
                 //inventoryitem has 1 item available
-                Assert.IsType<RedirectToActionResult>(publicApps
-                    .ViewPointOfSale(appId, PosViewType.Cart, 1, null, null, null, null, "inventoryitem").Result);
+                await tester.WaitForEvent<InvoiceEvent>(() =>
+                {
+                    Assert.IsType<RedirectToActionResult>(publicApps
+                        .ViewPointOfSale(appId, PosViewType.Cart, 1, null, null, null, null, "inventoryitem").Result);
+                    return Task.CompletedTask;
+                });
+                
                 //we already bought all available stock so this should fail
                 await Task.Delay(100);
                 Assert.IsType<RedirectToActionResult>(publicApps

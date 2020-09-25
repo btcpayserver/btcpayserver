@@ -164,7 +164,7 @@ namespace BTCPayServer.Controllers
                 }
                 catch (Exception)
                 {
-                    TempData[WellKnownTempData.ErrorMessage] = "The provided example url was invalid.";
+                    TempData[WellKnownTempData.ErrorMessage] = "The provided Example Url was invalid.";
                     return View("Integrations", vm);
                 }
             }

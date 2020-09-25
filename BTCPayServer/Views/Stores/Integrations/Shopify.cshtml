@@ -3,15 +3,6 @@
     var shopify = Model.Shopify;
     var shopifyCredsSet = shopify?.IntegratedAt.HasValue is true;
 }
-<script>
-function promptExampleUrl(){
-    var exampleUrl = prompt("Enter Example URL from the private app");
-    if (!exampleUrl)
-        return;
-    $("#exampleUrl").val(exampleUrl);
-    $("#shopifyForm").submit();
-}
-</script>
 <form method="post" id="shopifyForm">
     <h4 class="mb-3">
         Shopify
@@ -21,48 +12,50 @@ function promptExampleUrl(){
     </h4>
     @if (!shopifyCredsSet)
     {
-        <p class="alert alert-info">Create a Shopify private app with the permissions "Script tags - Read and write" and "Orders - Read and write" then <a href="#" class="alert-link" onclick="promptExampleUrl()">click here and paste the provided example URL.</a></p>
-        <input type="hidden" id="exampleUrl" name="exampleUrl">
-    }
-    <div class="form-group">
-        <label asp-for="Shopify.ShopName"></label>
-        <div class="input-group">
-            @if (!Model.Shopify?.ShopName?.Contains(".") is true)
-            {
-                <div class="input-group-prepend">
-                    <span class="input-group-text">https://</span>
-                </div>
-            }
-            <input asp-for="Shopify.ShopName" class="form-control" readonly="@shopifyCredsSet"/>
+        <p class="alert alert-info">Create a Shopify Private App with the permissions "Script tags - Read and write" and "Orders - Read and write"</p>
 
-            @if (!Model.Shopify?.ShopName?.Contains(".") is true)
-            {
-                <div class="input-group-append">
-                    <span class="input-group-text">.myshopify.com</span>
-                </div>
-            }
+        <div class="form-group">
+            <label for="exampleUrl">Example Url from Shopify Private App</label>
+            <input class="form-control" id="exampleUrl" name="exampleUrl">
         </div>
-        <span asp-validation-for="Shopify.ShopName" class="text-danger"></span>
-    </div>
 
-    <div class="form-group">
-        <label asp-for="Shopify.ApiKey"></label>
-        <input asp-for="Shopify.ApiKey" class="form-control" readonly="@shopifyCredsSet"/>
-        <span asp-validation-for="Shopify.ApiKey" class="text-danger"></span>
-    </div>
-
-    <div class="form-group">
-        <label asp-for="Shopify.Password"></label>
-        <input asp-for="Shopify.Password" class="form-control" type="password" value="@Model.Shopify?.Password" readonly="@shopifyCredsSet"/>
-        <span asp-validation-for="Shopify.Password" class="text-danger"></span>
-    </div>
-
-    @if (!shopifyCredsSet)
-    {
         <button name="command" type="submit" class="btn btn-primary" value="ShopifySaveCredentials">Save Credentials</button>
     }
     else
     {
+        <div class="form-group">
+            <label asp-for="Shopify.ShopName"></label>
+            <div class="input-group">
+                @if (!Model.Shopify?.ShopName?.Contains(".") is true)
+                {
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">https://</span>
+                    </div>
+                }
+                <input asp-for="Shopify.ShopName" class="form-control" readonly="@shopifyCredsSet" />
+
+                @if (!Model.Shopify?.ShopName?.Contains(".") is true)
+                {
+                    <div class="input-group-append">
+                        <span class="input-group-text">.myshopify.com</span>
+                    </div>
+                }
+            </div>
+            <span asp-validation-for="Shopify.ShopName" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Shopify.ApiKey"></label>
+            <input asp-for="Shopify.ApiKey" class="form-control" readonly="@shopifyCredsSet" />
+            <span asp-validation-for="Shopify.ApiKey" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Shopify.Password"></label>
+            <input asp-for="Shopify.Password" class="form-control" type="password" value="@Model.Shopify?.Password" readonly="@shopifyCredsSet" />
+            <span asp-validation-for="Shopify.Password" class="text-danger"></span>
+        </div>
+
         <p class="alert alert-success">
             Orders on <b>@shopify.ShopName</b>.myshopify.com will be marked as paid on successful invoice payment.
             Started: @shopify.IntegratedAt.Value.ToBrowserDate()
@@ -86,10 +79,8 @@ function promptExampleUrl(){
         <p class="alert alert-info">
             Please add a payment method at <a href="https://@(shopify.ShopName).myshopify.com/admin/settings/payments" target="_blank"> Settings > Payments > Manual Payment Methods</a> with the name <kbd>Bitcoin with BTCPay Server</kbd>
         </p>
-    }
 
-    @if (shopifyCredsSet)
-    {
+
         <button name="command" type="submit" class="btn btn-danger" value="ShopifyClearCredentials">
             @(shopify.IntegratedAt.HasValue ? "Stop Shopify calls and clear credentials" : "Clear credentials")
         </button>

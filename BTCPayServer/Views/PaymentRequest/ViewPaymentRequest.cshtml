@@ -12,96 +12,162 @@
 <head>
     <title>@Model.Title</title>
     <meta charset="utf-8" />
-    <meta name="robots" content="noindex, nofollow">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex,nofollow">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.BootstrapUri)" rel="stylesheet" />
     <link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.ThemeUri)" rel="stylesheet" />
+    <bundle name="wwwroot/bundles/payment-request-bundle.min.css" asp-append-version="true"></bundle>
     @if (Model.CustomCSSLink != null)
     {
         <link href="@Model.CustomCSSLink" rel="stylesheet" />
     }
-    @if (!Context.Request.Query.ContainsKey("simple"))
-    {
-        <script type="text/javascript">
-            var srvModel = @Safe.Json(Model);
-        </script>
-        <bundle name="wwwroot/bundles/payment-request-bundle-1.min.js" asp-append-version="true"></bundle>
-        <bundle name="wwwroot/bundles/payment-request-bundle-2.min.js" asp-append-version="true"></bundle>
-        @*We need to make sure btcpay.js is not bundled, else it will not work if there is a RootPath*@
-        <script src="~/modal/btcpay.js" asp-append-version="true"></script>
-    }
-
-    <bundle name="wwwroot/bundles/payment-request-bundle.min.css" asp-append-version="true"></bundle>
-
+    <script type="text/javascript">
+        var srvModel = @Safe.Json(Model);
+    </script>
+    <bundle name="wwwroot/bundles/payment-request-bundle.min.js" asp-append-version="true"></bundle>
+    @*We need to make sure btcpay.js is not bundled, else it will not work if there is a RootPath*@
+    <script src="~/modal/btcpay.js" asp-append-version="true"></script>
     @Safe.Raw(Model.EmbeddedCSS)
 </head>
-<body>
-
-<partial name="_StatusMessage" />
-@if (Context.Request.Query.ContainsKey("simple"))
-{
-    @await Html.PartialAsync("MinimalPaymentRequest", Model)
-}
-else
-{
-    <noscript>
-        @await Html.PartialAsync("MinimalPaymentRequest", Model)
-    </noscript>
-
-    <div class="container" id="app" v-cloak>
-        <div class="row w-100 p-0 m-0" style="height: 100vh">
-            <div class="mx-auto my-auto w-100">
-                <div class="card">
-                    <h1 class="card-header px-3">
-                        {{srvModel.title}}
-
-                        <span class="text-muted float-right text-center">
-                            <template v-if="settled">Settled</template>
-                            <template v-else>
-                                <template v-if="ended">Request Expired</template>
-                                <template v-else-if="endDiff">Expires in {{endDiff}}</template>
-                                <template v-else>{{srvModel.status}}</template>
-                            </template>
-                        </span>
-                    </h1>
-                    <div class="card-body px-0 pt-0 pb-0">
+<body class="h-100">
+    <div id="app" class="h-100 d-flex flex-column">
+        <nav id="mainNav" class="navbar sticky-top py-3 py-lg-4">
+            <div class="container">
+                <div class="row align-items-center" style="width:calc(100% + 30px)">
+                    <div class="col-12 col-md-8 col-lg-9 col-xl-10">
                         <div class="row">
-                            <div class="col-sm-12 col-md-12 col-lg-6">
-                                <table class="table table-light mb-0">
-                                    <tbody>
-                                        <tr>
-                                            <td class="px-3 h2 text-muted">Request amount:</td>
-                                            <td class="px-3 h2 text-nowrap text-right">{{srvModel.amountFormatted}}</td>
-                                        </tr>
-                                        <tr>
-                                            <td class="px-3 h2 text-muted">Paid so far:</td>
-                                            <td class="px-3 h2 text-nowrap text-right">{{srvModel.amountCollectedFormatted}}</td>
-                                        </tr>
-                                        <tr>
-                                            <td class="px-3 h2 text-muted">Amount due:</td>
-                                            <td class="px-3 h2 text-nowrap text-right">{{srvModel.amountDueFormatted}}</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                                <div
-                                    v-if="srvModel.description && srvModel.description !== '' && srvModel.description !== '<br>'"
-                                    v-html="srvModel.description"
-                                    class="w-100 px-3 pt-4 pb-3"
-                                ></div>
+                            <div class="col col-12 col-lg-8">
+                                <h1 class="h3" v-bind="srvModel.title">@Model.Title</h1>
                             </div>
-                            <div class="col-sm-12 col-md-12 col-lg-6">
-                                <div class="table-responsive">
-                                    <table class="table table-light border-top-0 ">
-                                        <thead>
+                            <div class="col col-12 col-sm-7 col-lg-8 d-flex align-items-center">
+                                <span class="text-muted">Last Updated</span>
+                                &nbsp;
+                                <span v-bind="lastUpdated">@Model.LastUpdated.ToString("g")</span>
+                                <button type="button" class="btn btn-link d-none d-lg-inline-block d-print-none border-0 p-0 ml-4" v-on:click="window.print" v-cloak>
+                                    Print
+                                </button>
+                                <button type="button" class="btn btn-link d-none d-lg-inline-block d-print-none border-0 p-0 ml-4" v-on:click="copyLink" v-cloak>
+                                    Copy Link
+                                </button>
+                            </div>
+                            <div class="col col-12 col-sm-5 text-sm-right col-lg-4 mt-lg-n4 pt-lg-1">
+                                <noscript>@Model.Status</noscript>
+                                <template v-if="settled">Settled</template>
+                                <template v-else-if="ended">Request Expired</template>
+                                <template v-else-if="endDiff"><span class="text-muted">Expires in</span> {{endDiff}}</template>
+                                <template v-else>{{srvModel.status}}</template>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 pt-4 pb-2 col-md-4 py-md-0 col-lg-3 col-xl-2">
+                        <template v-if="srvModel.archived">
+                            <div class="h3">
+                                <span class="badge badge-secondary">Archived</span>
+                            </div>
+                        </template>
+                        <template v-else-if="!ended && (srvModel.amountDue) > 0" class="d-print-none">
+                            <template v-if="srvModel.allowCustomPaymentAmounts && !srvModel.anyPendingInvoice">
+                                <form v-on:submit="submitCustomAmountForm">
+                                    <div class="input-group m-auto" style="max-width: 250px">
+                                        <input
+                                            :readonly="!srvModel.allowCustomPaymentAmounts"
+                                            class="form-control"
+                                            type="number"
+                                            v-model="customAmount"
+                                            :max="srvModel.amountDue"
+                                            step="any"
+                                            placeholder="Amount"
+                                            required>
+                                        <div class="input-group-append">
+                                            <span class='input-group-text'>{{currency}}</span>
+                                            <button
+                                                class="btn btn-primary btn-lg d-inline-block w-100"
+                                                v-bind:class="{ 'btn-disabled': loading}"
+                                                :disabled="loading"
+                                                type="submit">
+                                                <div v-if="loading" class="spinner-grow spinner-grow-sm" role="status">
+                                                    <span class="sr-only">Loading...</span>
+                                                </div>
+                                                Pay Invoice
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </template>
+
+                            <template v-else>
+                                <button class="btn btn-primary btn-lg w-100 d-flex align-items-center justify-content-center" v-on:click="pay(null)" :disabled="loading">
+                                    <div v-if="loading" class="spinner-grow spinner-grow-sm mr-2" role="status">
+                                        <span class="sr-only">Loading...</span>
+                                    </div>
+                                    <span>Pay Invoice</span>
+                                </button>
+                                <button class="btn btn-outline-secondary mt-2 w-100 d-flex align-items-center justify-content-center" v-if="srvModel.anyPendingInvoice && !srvModel.pendingInvoiceHasPayments" v-on:click="cancelPayment()" :disabled="loading">
+                                    <span v-if="loading" class="spinner-grow spinner-grow-sm mr-2" role="status">
+                                        <span class="sr-only">Loading...</span>
+                                    </span>
+                                    <span>Cancel Invoice</span>
+                                </button>
+                            </template>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <main class="flex-grow-1 py-4">
+            <div class="container">
+                <div class="row" style="margin-bottom:30px;">
+                    <partial name="_StatusMessage"/>
+                    <div class="col-sm-12 col-md-12 col-lg-6">
+                        <div class="jumbotron h-100 p-sm-5">
+                            <h2 class="h4 mb-3">Invoice Summary</h2>
+                            <div v-html="srvModel.description">
+                                @if (Model.Description != null && Model.Description != "" && Model.Description != "<br>")
+                                {
+                                    @Safe.Raw(Model.Description)
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-12 col-md-12 col-lg-6">
+                        <div class="jumbotron h-100 p-sm-5">
+                            <h2 class="h4 mb-3">Payment Details</h2>
+                            <table class="table">
+                                <tbody>
+                                    <tr>
+                                        <td class="px-3 h2 text-muted">Request amount:</td>
+                                        <td class="px-3 h2 text-nowrap text-right">{{srvModel.amountFormatted}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-3 h2 text-muted">Paid so far:</td>
+                                        <td class="px-3 h2 text-nowrap text-right">{{srvModel.amountCollectedFormatted}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-3 h2 text-muted">Amount due:</td>
+                                        <td class="px-3 h2 text-nowrap text-right">{{srvModel.amountDueFormatted}}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <div class="jumbotron h-100 p-sm-5">
+                            <h2 class="h4 mb-3">Payment History</h2>
+                            <div class="table-responsive">
+                                <table class="table border-top-0">
+                                    <thead>
                                         <tr>
                                             <th class="border-top-0" scope="col">Invoice #</th>
                                             <th class="border-top-0">Price</th>
                                             <th class="border-top-0">Expiry</th>
                                             <th class="border-top-0">Status</th>
                                         </tr>
-                                        </thead>
-                                        <tbody>
+                                    </thead>
+                                    <tbody>
                                         <tr v-if="!srvModel.invoices || srvModel.invoices.length == 0">
                                             <td colspan="4" class="text-center">No payments made yet</td>
                                         </tr>
@@ -144,85 +210,19 @@ else
                                                 </td>
                                             </tr>
                                         </template>
-                                        <tr v-if="srvModel.archived">
-                                            <td colspan="4" class="text-center">
-                                                <button type="button" class="btn btn-secondary" disabled>Archived</button>
-                                            </td>
-                                        </tr> 
-                                        <tr v-else-if="!ended && (srvModel.amountDue) > 0" class="d-print-none">
-                                            <td colspan="4" class="text-center">
-
-                                                <template v-if="srvModel.allowCustomPaymentAmounts && !srvModel.anyPendingInvoice">
-                                                    <form v-on:submit="submitCustomAmountForm">
-
-                                                        <div class="input-group m-auto" style="max-width: 250px">
-                                                            <input
-                                                                :readonly="!srvModel.allowCustomPaymentAmounts"
-                                                                class="form-control"
-                                                                type="number"
-                                                                v-model="customAmount"
-                                                                :max="srvModel.amountDue"
-                                                                step="any"
-                                                                placeholder="Amount"
-                                                                required>
-                                                            <div class="input-group-append">
-                                                                <span class='input-group-text'>{{currency}}</span>
-                                                                <button
-                                                                    class="btn btn-primary"
-                                                                    v-bind:class="{ 'btn-disabled': loading}"
-                                                                    :disabled="loading"
-                                                                    type="submit">
-                                                                    <div v-if="loading" class="spinner-grow spinner-grow-sm" role="status">
-                                                                        <span class="sr-only">Loading...</span>
-                                                                    </div>
-                                                                    Pay now
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    </form>
-                                                </template>
-
-                                                <template v-else>
-                                                    <button class="btn btn-primary btn-lg mt-1" v-on:click="pay(null)"
-                                                            :disabled="loading">
-                                                        <div v-if="loading" class="spinner-grow spinner-grow-sm" role="status">
-                                                            <span class="sr-only">Loading...</span>
-                                                        </div>
-
-                                                        Pay now
-                                                    </button>
-                                                    <button class="btn btn-secondary btn-lg mt-1"
-                                                            v-if="srvModel.anyPendingInvoice && !srvModel.pendingInvoiceHasPayments"
-                                                            v-on:click="cancelPayment()"
-                                                            :disabled="loading">
-                                                        <div v-if="loading" class="spinner-grow spinner-grow-sm" role="status">
-                                                            <span class="sr-only">Loading...</span>
-                                                        </div>
-
-                                                            Cancel current invoice</button>
-                                                </template>
-                                            </td>
-                                        </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
+                                    </tbody>
+                                </table>
                             </div>
-                        </div>
-
-                    </div>
-                    <div class="card-footer text-muted d-flex justify-content-between">
-                        <div>
-                            <span v-on:click="print" class="btn-link d-print-none" style="cursor: pointer"> <span class="fa fa-print"></span> Print</span>
-                            <span>Updated {{lastUpdated}}</span>
-                        </div>
-                        <div>
-                            <span class="text-muted">Powered by </span><a href="https://btcpayserver.org" target="_blank">BTCPay Server</a>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </main>
+        <footer class="pt-2 pb-4">
+            <div class="container text-center">
+                Powered by <a href="https://btcpayserver.org" target="_blank">BTCPay Server</a>
+            </div>
+        </footer>
     </div>
-}
 </body>
 </html>

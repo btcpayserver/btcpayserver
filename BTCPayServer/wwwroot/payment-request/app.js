@@ -18,7 +18,6 @@ function addLoadEvent(func) {
 addLoadEvent(function (ev) {
     Vue.use(Toasted);
 
-
     app = new Vue({
         el: '#app',
         data: function () {
@@ -83,6 +82,13 @@ addLoadEvent(function (ev) {
 
                 eventAggregator.$emit("pay", amount);
             },
+            copyLink: function (e) {
+                if (navigator.clipboard) {
+                    e.preventDefault();
+                    navigator.clipboard.writeText(window.location);
+                    e.currentTarget.blur();
+                }
+            },
             cancelPayment: function (amount) {
                 this.setLoading(true);
                 var self = this;
@@ -100,9 +106,6 @@ addLoadEvent(function (ev) {
                 return str;
 
             },
-            print:function(){
-                window.print();
-            },
             submitCustomAmountForm : function(e){
                 if (e) {
                     e.preventDefault();
@@ -115,10 +118,10 @@ addLoadEvent(function (ev) {
             }
         },
         mounted: function () {
-
             this.customAmount = (this.srvModel.amountDue || 0).noExponents();
             hubListener.connect();
             var self = this;
+
             eventAggregator.$on("invoice-created", function (invoiceId) {
                 self.setLoading(false);
                 btcpay.showInvoice(invoiceId);

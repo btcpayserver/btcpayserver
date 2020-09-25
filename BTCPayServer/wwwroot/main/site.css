@@ -176,8 +176,18 @@ pre {
     background-color: lightgray;
 }
 
-[v-cloak] > * { display:none }
-[v-cloak]::before { content: "loading…" }
+
+.hide-when-js {
+    display: block !important;
+}
+
+.only-for-js {
+    display: none !important;
+}
+
+[v-cloak] { display:none }
+[v-cloak-loading] > * { display:none }
+[v-cloak-loading]::before { content: "loading…" }
 
 .cursor-pointer{
     cursor: pointer;

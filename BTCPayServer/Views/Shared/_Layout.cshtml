@@ -13,20 +13,10 @@
     @RenderSection("HeadScripts", required: false)
     @RenderSection("HeaderContent", false)
 
-
     <noscript>
         <style>
-            .hide-when-js {
-                display: block !important;
-            }
-
-            .only-for-js {
-                display: none !important;
-            }
-
-            [v-cloak]::before {
-                content: "" !important;
-            }
+            .hide-when-js { display: block !important; }
+            .only-for-js { display: none !important; }
         </style>
     </noscript>
 </head>

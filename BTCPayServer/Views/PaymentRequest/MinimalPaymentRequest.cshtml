@@ -147,7 +147,8 @@
                                                 }
                                             </td>
                                         </tr>
-                                    }else if (Model.Archived)
+                                    }
+                                    else if (Model.Archived)
                                     {
                                         <tr>
                                             <td colspan="4" class="text-center">
@@ -161,13 +162,6 @@
                         </div>
                     </div>
 
-                </div>
-                <div class="card-footer text-muted d-flex justify-content-between">
-
-                    <div >Updated @Model.LastUpdated.ToString("g")</div>
-                    <div >
-                        <span class="text-muted">Powered by </span><a href="https://btcpayserver.org" target="_blank">BTCPay Server</a>
-                    </div>
                 </div>
             </div>
         </div>

@@ -46,6 +46,7 @@ window.BTCPayShopifyIntegrationModule = function () {
     };
 
     function setOrderAsPaid() {
+        document.title = document.title.replace("Review and pay!", "Thank you!");
         pageItems.mainHeader.innerText = "Thank you!",
         pageItems.orderConfirmed && (pageItems.orderConfirmed.style.display = "block"),
         pageItems.orderConfirmedDescription && (pageItems.orderConfirmedDescription.style.display = "block"),
@@ -55,6 +56,7 @@ window.BTCPayShopifyIntegrationModule = function () {
     }
 
     function showPaymentInstructions() {
+        document.title = document.title.replace("Thank you!", "Review and pay!");
         pageItems.mainHeader && (pageItems.mainHeader.innerText = "Review and pay!"),
         pageItems.continueButton && (pageItems.continueButton.style.visibility = "hidden"),
         pageItems.checkMarkIcon && (pageItems.checkMarkIcon.style.visibility = "hidden"),

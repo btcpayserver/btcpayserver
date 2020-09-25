@@ -1,4 +1,20 @@
 window.BTCPayShopifyIntegrationModule = function () {
+    const pageElements = document.querySelector.bind(document);
+    const insertElement = (document.querySelectorAll.bind(document),
+        (e,
+            n) => {
+            n.parentNode.insertBefore(e,
+                n.nextSibling)
+        });
+
+    // execute BTCPayShopifyIntegrationModule as soon as possible
+    var paymentMethod = pageElements(".payment-method-list__item__info");
+    if (null === paymentMethod) {
+        return void setTimeout(() => {
+            window.BTCPayShopifyIntegrationModule();
+        }, 10);
+    }
+
     if (!window.btcpay) {
         throw new Error("The BTCPay modal js was not loaded on this page.");
     }
@@ -14,17 +30,9 @@ window.BTCPayShopifyIntegrationModule = function () {
     var currentInvoiceData;
     var modalShown = false;
 
-    const pageElements = document.querySelector.bind(document);
-    const insertElement = (document.querySelectorAll.bind(document),
-        (e,
-         n) => {
-            n.parentNode.insertBefore(e,
-                n.nextSibling)
-        });
-
     let buttonElement = null;
 
-    const pageItems = {
+    var pageItems = {
         mainHeader: pageElements("#main-header"),
         orderConfirmed: pageElements(".os-step__title"),
         orderConfirmedDescription: pageElements(".os-step__description"),
@@ -35,7 +43,7 @@ window.BTCPayShopifyIntegrationModule = function () {
         price: pageElements(".payment-due__price"),
         finalPrice: pageElements(".total-recap__final-price"),
         orderNumber: pageElements(".os-order-number"),
-    }
+    };
 
     function setOrderAsPaid() {
         pageItems.mainHeader.innerText = "Thank you!",
@@ -155,4 +163,4 @@ window.BTCPayShopifyIntegrationModule = function () {
 
 };
 
-window.addEventListener("load", BTCPayShopifyIntegrationModule);
+window.BTCPayShopifyIntegrationModule();

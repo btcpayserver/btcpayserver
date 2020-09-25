@@ -61,7 +61,6 @@ namespace BTCPayServer.Controllers
         [EnableCors(CorsPolicies.All)]
         [HttpGet("{storeId}/integrations/shopify/{orderId}")]
         public async Task<IActionResult> ShopifyInvoiceEndpoint(
-            [FromServices] StoreRepository storeRepository, 
             [FromServices] InvoiceRepository invoiceRepository, 
             [FromServices] InvoiceController invoiceController, 
             [FromServices] IHttpClientFactory httpClientFactory,
@@ -104,7 +103,7 @@ namespace BTCPayServer.Controllers
             {
                 return Ok();
             }
-            var store = await storeRepository.FindStore(storeId);
+            var store = await _Repo.FindStore(storeId);
             var shopify =  store?.GetStoreBlob()?.Shopify;
             if (shopify?.IntegratedAt.HasValue is true)
             {

@@ -185,7 +185,7 @@ namespace BTCPayServer.Controllers
                     {
                         await apiClient.OrdersCount();
                     }
-                    catch
+                    catch (ShopifyApiException)
                     {
                         TempData[WellKnownTempData.ErrorMessage] =
                             "Shopify rejected provided credentials, please correct values and try again";

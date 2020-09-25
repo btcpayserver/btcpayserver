@@ -29,7 +29,7 @@ namespace BTCPayServer.Services.Shopify
 
             _credentials = credentials;
 
-            var bearer = $"{credentials.ApiKey}:{credentials.ApiPassword}";
+            var bearer = $"{_credentials.ApiKey}:{_credentials.ApiPassword}";
             bearer = Encoding.UTF8.GetBytes(bearer).ToBase64String();
 
             _httpClient.DefaultRequestHeaders.Add("Authorization", "Basic " + bearer);
@@ -49,6 +49,9 @@ namespace BTCPayServer.Services.Shopify
             using var resp = await _httpClient.SendAsync(req);
 
             var strResp = await resp.Content.ReadAsStringAsync();
+            if (strResp?.StartsWith("{\"errors\":\"[API] Invalid API key or access token", StringComparison.OrdinalIgnoreCase) == true)
+                throw new ShopifyApiException("Invalid API key or access token");
+
             return strResp;
         }
 

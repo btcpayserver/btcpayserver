@@ -199,10 +199,21 @@ namespace BTCPayServer.Controllers
                             "Please grant the private app permissions for read_orders, write_script_tags";
                         return View("Integrations", vm);
                     }
-                    var result = await apiClient.CreateScript(Url.Action("ShopifyJavascript", "Stores",
-                        new {storeId = CurrentStore.Id}, Request.Scheme));
 
-                    shopify.ScriptId = result.ScriptTag?.Id.ToString(CultureInfo.InvariantCulture);
+                    try
+                    {
+                        var result = await apiClient.CreateScript(Url.Action("ShopifyJavascript", "Stores",
+                            new { storeId = CurrentStore.Id }, Request.Scheme));
+
+                        shopify.ScriptId = result.ScriptTag?.Id.ToString(CultureInfo.InvariantCulture);
+                    }
+                    catch
+                    {
+                        // ignore errors, signify ScriptId needs to be set manually
+                        shopify.ScriptId = null;
+                    }
+
+                    // everything ready, proceed with saving Shopify integration credentials
                     shopify.IntegratedAt = DateTimeOffset.Now;
                     
                     var blob = CurrentStore.GetStoreBlob();

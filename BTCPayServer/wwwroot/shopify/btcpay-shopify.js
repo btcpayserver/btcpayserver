@@ -126,6 +126,7 @@ window.BTCPayShopifyIntegrationModule = function () {
             window.btcpay.onModalWillLeave(function () {
                 modalShown = false;
                 getOrCheckInvoice(true).then(function (d) {
+                    buttonElement.innerHTML = payButtonHtml;
                     handleInvoiceData(d, {backgroundCheck: true})
                 });
             });
@@ -158,6 +159,7 @@ window.BTCPayShopifyIntegrationModule = function () {
     showPaymentInstructions();
     window.onPayButtonClicked = onPayButtonClicked.bind(this);
     getOrCheckInvoice(true).then(function (d) {
+        injectPaymentButtonHtml();
         handleInvoiceData(d, {backgroundCheck: true})
     });
 

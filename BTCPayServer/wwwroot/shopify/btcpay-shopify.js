@@ -155,7 +155,7 @@ window.BTCPayShopifyIntegrationModule = function () {
         insertElement(buttonElement, pageItems.orderConfirmed);
     }
 
-    if (["bitcoin", "btc", "btcpayserver"].filter(value => pageItems.paymentMethod.innerText.toLowerCase().indexOf(value) !== -1).length === 0) {
+    if (["bitcoin", "btc", "btcpayserver", "btcpay server"].filter(value => pageItems.paymentMethod.innerText.toLowerCase().indexOf(value) !== -1).length === 0) {
         return;
     }
     showPaymentInstructions();

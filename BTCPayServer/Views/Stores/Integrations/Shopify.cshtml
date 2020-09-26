@@ -55,29 +55,28 @@
             <input asp-for="Shopify.Password" class="form-control" type="password" value="@Model.Shopify?.Password" readonly="@shopifyCredsSet" />
             <span asp-validation-for="Shopify.Password" class="text-danger"></span>
         </div>
-
-        <p class="alert alert-success">
-            Orders on <b>@shopify.ShopName</b>.myshopify.com will be marked as paid on successful invoice payment.
-            Started: @shopify.IntegratedAt.Value.ToBrowserDate()
-        </p>
         @if (string.IsNullOrEmpty(shopify.ScriptId))
         {
             <div class="alert alert-warning">
                 <p>
-                    Scripts could not automatically be added, please ensure the following is saved at
-                    <a class="alert-link" href="https://@(shopify.ShopName).myshopify.com/admin/settings/checkout#PolarisTextField1" target="_blank"> Settings > Checkout > Additional Scripts</a>
+                    In Shopify please paste following script at <a href="https://satoshis-bakery.myshopify.com/admin/settings/checkout#PolarisTextField1" target="_blank" class="font-weight-bold"> Settings &gt; Checkout &gt; Order Processing &gt; Additional Scripts</a>
                 </p>
-                <code class="html">
-                    @($"<script src='{Url.Action("ShopifyJavascript", "Stores", new {storeId = Context.GetRouteValue("storeId")}, Context.Request.Scheme)}'></script>")
-                </code>
+                <kbd style="display: block;">
+                    &lt;script src='https://btcpay151676.lndyn.com/stores/4mWitQRd4pdw4SRai6xRZnZB3Y4LbR953duK1kK58Hgh/integrations/shopify/shopify.js'&gt;&lt;/script&gt;
+                </kbd>
             </div>
         }
         else
         {
             <p class="alert alert-success">Checkout scripts should be automatically added to the order status page to display the BTCPay payment option.</p>
         }
-        <p class="alert alert-info">
-            Please add a payment method at <a href="https://@(shopify.ShopName).myshopify.com/admin/settings/payments" target="_blank"> Settings > Payments > Manual Payment Methods</a> with the name <kbd>Bitcoin with BTCPay Server</kbd>
+        <p class="alert alert-warning">
+            In Shopify please add a payment method at <a target="_blank" href="https://satoshis-bakery.myshopify.com/admin/settings/payments" class="font-weight-bold"> Settings &gt; Payments &gt; Manual Payment Methods</a> with the name <kbd>Bitcoin with BTCPay Server</kbd>
+        </p>
+
+        <p class="alert alert-success">
+            Orders on <b>@shopify.ShopName</b>.myshopify.com will be marked as paid on successful invoice payment.
+            Started: @shopify.IntegratedAt.Value.ToBrowserDate()
         </p>
 
 

@@ -192,25 +192,26 @@ namespace BTCPayServer.Controllers
                     }
 
                     var scopesGranted = await apiClient.CheckScopes();
-                    if (!scopesGranted.Contains("read_orders") || !scopesGranted.Contains("write_script_tags"))
+                    if (!scopesGranted.Contains("read_orders") || !scopesGranted.Contains("write_orders"))
                     {
                         TempData[WellKnownTempData.ErrorMessage] =
-                            "Please grant the private app permissions for read_orders, write_script_tags";
+                            "Please grant the private app permissions for read_orders, write_orders";
                         return View("Integrations", vm);
                     }
 
-                    try
-                    {
-                        var result = await apiClient.CreateScript(Url.Action("ShopifyJavascript", "Stores",
-                            new { storeId = CurrentStore.Id }, Request.Scheme));
+                    // Not automatically registering scripts
+                    //try
+                    //{
+                    //    var result = await apiClient.CreateScript(Url.Action("ShopifyJavascript", "Stores",
+                    //        new { storeId = CurrentStore.Id }, Request.Scheme));
 
-                        shopify.ScriptId = result.ScriptTag?.Id.ToString(CultureInfo.InvariantCulture);
-                    }
-                    catch
-                    {
-                        // ignore errors, signify ScriptId needs to be set manually
-                        shopify.ScriptId = null;
-                    }
+                    //    shopify.ScriptId = result.ScriptTag?.Id.ToString(CultureInfo.InvariantCulture);
+                    //}
+                    //catch
+                    //{
+                    //    // ignore errors, signify ScriptId needs to be set manually
+                    //    shopify.ScriptId = null;
+                    //}
 
                     // everything ready, proceed with saving Shopify integration credentials
                     shopify.IntegratedAt = DateTimeOffset.Now;

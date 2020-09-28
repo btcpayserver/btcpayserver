@@ -1,9 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Services.Shopify.ApiModels;
-using Microsoft.EntityFrameworkCore.Internal;
-using Newtonsoft.Json.Linq;
+using BTCPayServer.Services.Shopify.ApiModels.DataHolders;
 
 namespace BTCPayServer.Services.Shopify
 {
@@ -16,17 +16,21 @@ namespace BTCPayServer.Services.Shopify
             _client = client;
         }
 
+        private static TransactionDataHolder GetParentTransaction(List<TransactionDataHolder> txs)
+        {
+            var keywords = new[] {"bitcoin", "btc"};
+            return txs.FirstOrDefault(holder =>keywords .Any(s => holder.gateway.Contains(s, StringComparison.InvariantCultureIgnoreCase)));
+        }
+        
         public async Task<TransactionsCreateResp> Process(string orderId, string invoiceId, string currency, string amountCaptured, bool success)
         {
             currency = currency.ToUpperInvariant().Trim();
             var existingShopifyOrderTransactions = (await _client.TransactionsList(orderId)).transactions;
-
-            if (existingShopifyOrderTransactions?.Count < 1)
+            var baseParentTransaction = GetParentTransaction(existingShopifyOrderTransactions);
+            if (baseParentTransaction is null)
             {
                 return null;
             }
-            //TODO: verify if we should be doing this or filtering out the parent transaction by the gateway (the one that shows in the checkout UI, aka the manual payment method created by the merchant)
-            var baseParentTransaction = existingShopifyOrderTransactions[0];
             
             //technically, this exploit should not be possible as we use internal invoice tags to verify that the invoice was created by our controlled, dedicated endpoint.
             if (currency.ToUpperInvariant().Trim() != baseParentTransaction.currency.ToUpperInvariant().Trim())

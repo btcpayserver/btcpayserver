@@ -29,6 +29,12 @@
     @*We need to make sure btcpay.js is not bundled, else it will not work if there is a RootPath*@
     <script src="~/modal/btcpay.js" asp-append-version="true"></script>
     @Safe.Raw(Model.EmbeddedCSS)
+    <noscript>
+        <style>
+            .hide-when-js { display: block !important; }
+            .only-for-js { display: none !important; }
+        </style>
+    </noscript>
 </head>
 <body class="h-100">
     <div id="app" class="h-100 d-flex flex-column">

@@ -176,13 +176,9 @@ pre {
     background-color: lightgray;
 }
 
-
-.hide-when-js {
-    display: block !important;
-}
-
-.only-for-js {
-    display: none !important;
+/* Fix for small table showing unnecessary scrollbars */
+.table-responsive .table-sm {
+    width: 100% !important;
 }
 
 [v-cloak] { display:none }

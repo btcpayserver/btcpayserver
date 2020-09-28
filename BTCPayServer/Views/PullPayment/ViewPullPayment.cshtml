@@ -26,6 +26,12 @@
     <bundle name="wwwroot/bundles/payment-request-bundle.min.css" asp-append-version="true"></bundle>
 
     @Safe.Raw(Model.EmbeddedCSS)
+    <noscript>
+        <style>
+            .hide-when-js { display: block !important; }
+            .only-for-js { display: none !important; }
+        </style>
+    </noscript>
 </head>
 <body>
 <div class="container" style="max-width:960px;">

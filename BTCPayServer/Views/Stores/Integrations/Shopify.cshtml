@@ -2,7 +2,7 @@
 @{
     var shopify = Model.Shopify;
     var shopifyCredsSet = shopify?.IntegratedAt.HasValue is true;
-    var shopifyUrl = !Model.Shopify?.ShopName?.Contains(".") is true ? $"https://{shopify.ShopName}.myshopify.com" : shopify.ShopName;
+    var shopifyUrl = shopify is null? null:  !shopify?.ShopName?.Contains(".") is true ? $"https://{shopify.ShopName}.myshopify.com" : shopify.ShopName;
 }
 <form method="post" id="shopifyForm">
     <h4 class="mb-3">

@@ -13,7 +13,6 @@ using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Shopify.Models;
 using BTCPayServer.Services.Stores;
 using Microsoft.Extensions.Logging;
-using NBitpayClient;
 
 namespace BTCPayServer.Services.Shopify
 {
@@ -57,7 +56,7 @@ namespace BTCPayServer.Services.Shopify
 
                         await RegisterTransaction(invoice, shopifyOrderId, false);
                     }
-                    else if (new[] {Client.Models.InvoiceStatus.Complete, InvoiceStatus.Confirmed}.Contains(
+                    else if (new[] {InvoiceStatus.Complete, InvoiceStatus.Confirmed}.Contains(
                         invoice.Status))
                     {
                         await RegisterTransaction(invoice, shopifyOrderId, true);
@@ -93,8 +92,8 @@ namespace BTCPayServer.Services.Shopify
                         invoice.Price.ToString(CultureInfo.InvariantCulture), success);
                     if (resp != null)
                     {
-                        Logs.PayServer.LogInformation("Registered order transaction on Shopify. " +
-                                                      $"Triggered by invoiceId: {invoice.Id}, Shopify orderId: {shopifyOrderId}");
+                        Logs.PayServer.LogInformation($"Registered order transaction {invoice.Price}{invoice.Currency} on Shopify. " +
+                                                      $"Triggered by invoiceId: {invoice.Id}, Shopify orderId: {shopifyOrderId}, Success: {success}");
                     }
                 }
                 catch (Exception ex)

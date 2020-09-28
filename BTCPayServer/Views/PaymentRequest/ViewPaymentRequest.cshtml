@@ -1,6 +1,7 @@
 ﻿@model BTCPayServer.Models.PaymentRequestViewModels.ViewPaymentRequestViewModel
 
 @addTagHelper *, BundlerMinifier.TagHelpers
+@inject BTCPayServer.Services.BTCPayServerEnvironment env
 @inject BTCPayServer.HostedServices.CssThemeManager themeManager
 @{
     ViewData["Title"] = Model.Title;
@@ -8,7 +9,7 @@
 }
 
 <!DOCTYPE html>
-<html class="h-100">
+<html lang="en" @(env.IsDeveloping ? " data-devenv" : "")>
 <head>
     <title>@Model.Title</title>
     <meta charset="utf-8" />

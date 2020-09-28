@@ -5,7 +5,7 @@
 @inject BTCPayServer.HostedServices.CssThemeManager themeManager
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en"@(env.IsDeveloping ? " data-devenv" : "")>
 
 <head>
     <partial name="Header" />

@@ -261,3 +261,24 @@ input[type=number].hide-number-spin {
     -moz-appearance: textfield;
 }
 
+/* Bootstrap Responsive Helper */
+html[data-devenv]:before {
+    display: inline-block;
+    position: fixed;
+    z-index: 1000;
+    right: 0;
+    bottom: 0;
+    background: var(--btcpay-bg-dark);
+    color: var(--btcpay-color-dark-text);
+    opacity: .7;
+    padding: 4px 5px 3px 7px;
+    font-size: 10px;
+    border-top-left-radius: 4px;
+}
+
+@media (max-width: 575px) { html[data-devenv]:before { content: 'XS'; } }
+@media (min-width: 576px) and (max-width: 767px) { html[data-devenv]:before { content: 'SM'; } }
+@media (min-width: 768px) and (max-width: 991px) { html[data-devenv]:before { content: 'MD'; } }
+@media (min-width: 992px) and (max-width: 1199px) { html[data-devenv]:before { content: 'LG'; } }
+@media (min-width: 1200px) { html[data-devenv]:before { content: 'XL'; } }
+@media print { html[data-devenv]:before { content: none; } }

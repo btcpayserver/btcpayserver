@@ -2,6 +2,7 @@
 @model BTCPayServer.Models.ViewPullPaymentModel
 
 @addTagHelper *, BundlerMinifier.TagHelpers
+@inject BTCPayServer.Services.BTCPayServerEnvironment env
 @inject BTCPayServer.HostedServices.CssThemeManager themeManager
 @{
     ViewData["Title"] = Model.Title;
@@ -9,7 +10,7 @@
 }
 
 <!DOCTYPE html>
-<html class="h-100">
+<html lang="en" @(env.IsDeveloping ? " data-devenv" : "")>
 <head>
     <title>@ViewData["Title"]</title>
     <meta charset="utf-8" />
@@ -18,13 +19,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.BootstrapUri)" rel="stylesheet" />
     <link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.ThemeUri)" rel="stylesheet" />
+    <bundle name="wwwroot/bundles/payment-request-bundle.min.css" asp-append-version="true"></bundle>
     @if (Model.CustomCSSLink != null)
     {
         <link href="@Model.CustomCSSLink" rel="stylesheet" />
     }
-
-    <bundle name="wwwroot/bundles/payment-request-bundle.min.css" asp-append-version="true"></bundle>
-
     @Safe.Raw(Model.EmbeddedCSS)
     <noscript>
         <style>
@@ -35,7 +34,6 @@
 </head>
 <body>
 <div class="container" style="max-width:960px;">
-
     <div class="row w-100 p-0 m-0" style="height: 100vh">
         <div class="mx-auto my-auto w-100">
             @if (TempData.HasStatusMessage())

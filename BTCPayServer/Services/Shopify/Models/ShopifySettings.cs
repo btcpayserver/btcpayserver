@@ -18,6 +18,5 @@ namespace BTCPayServer.Services.Shopify.Models
                 !string.IsNullOrWhiteSpace(Password);
         }
         public DateTimeOffset? IntegratedAt { get; set; }
-        public string ScriptId { get; set; }
     }
 }

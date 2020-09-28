@@ -78,25 +78,6 @@ namespace BTCPayServer.Services.Shopify
                 .Select(token => token["handle"].Value<string>()).ToArray();
         }
 
-        public async Task<CreateScriptResponse> CreateScript(string scriptUrl, string evt = "onload",
-            string scope = "order_status")
-        {
-            var req = CreateRequest(_credentials.ShopName, HttpMethod.Post, $"script_tags.json");
-            req.Content =
-                new StringContent(
-                    JsonConvert.SerializeObject(new {@event = evt, src = scriptUrl, display_scope = scope}),
-                    Encoding.UTF8, "application/json");
-            var strResp = await SendRequest(req);
-
-            return JsonConvert.DeserializeObject<CreateScriptResponse>(strResp);
-        }
-
-        public async Task RemoveScript(string id)
-        {
-            var req = CreateRequest(_credentials.ShopName, HttpMethod.Delete, $"script_tags/{id}.json");
-            await SendRequest(req);
-        }
-
         public async Task<TransactionsListResp> TransactionsList(string orderId)
         {
             var req = CreateRequest(_credentials.ShopName, HttpMethod.Get, $"orders/{orderId}/transactions.json");
@@ -117,16 +98,6 @@ namespace BTCPayServer.Services.Shopify
 
             var strResp = await SendRequest(req);
             return JsonConvert.DeserializeObject<TransactionsCreateResp>(strResp);
-        }
-
-        public async Task UpdateOrderNote(string orderId, string note)
-        {
-            var postJson = JsonConvert.SerializeObject(new {order = new {id = orderId, note}});
-
-            var req = CreateRequest(_credentials.ShopName, HttpMethod.Put, $"orders/{orderId}.json");
-            req.Content = new StringContent(postJson, Encoding.UTF8, "application/json");
-
-            await SendRequest(req);
         }
 
         public async Task<ShopifyOrder> GetOrder(string orderId)

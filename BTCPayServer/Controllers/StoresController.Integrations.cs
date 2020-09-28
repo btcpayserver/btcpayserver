@@ -192,26 +192,13 @@ namespace BTCPayServer.Controllers
                     }
 
                     var scopesGranted = await apiClient.CheckScopes();
+                    //TODO: check if these are actually needed
                     if (!scopesGranted.Contains("read_orders") || !scopesGranted.Contains("write_orders"))
                     {
                         TempData[WellKnownTempData.ErrorMessage] =
                             "Please grant the private app permissions for read_orders, write_orders";
                         return View("Integrations", vm);
                     }
-
-                    // Not automatically registering scripts
-                    //try
-                    //{
-                    //    var result = await apiClient.CreateScript(Url.Action("ShopifyJavascript", "Stores",
-                    //        new { storeId = CurrentStore.Id }, Request.Scheme));
-
-                    //    shopify.ScriptId = result.ScriptTag?.Id.ToString(CultureInfo.InvariantCulture);
-                    //}
-                    //catch
-                    //{
-                    //    // ignore errors, signify ScriptId needs to be set manually
-                    //    shopify.ScriptId = null;
-                    //}
 
                     // everything ready, proceed with saving Shopify integration credentials
                     shopify.IntegratedAt = DateTimeOffset.Now;
@@ -229,24 +216,6 @@ namespace BTCPayServer.Controllers
                 case "ShopifyClearCredentials":
                 {
                     var blob = CurrentStore.GetStoreBlob();
-
-                    if (blob.Shopify.IntegratedAt.HasValue)
-                    {
-                        if (!string.IsNullOrEmpty(blob.Shopify.ScriptId))
-                        {
-                            try
-                            {
-                                var apiClient = new ShopifyApiClient(clientFactory,
-                                    blob.Shopify.CreateShopifyApiCredentials());
-                                await apiClient.RemoveScript(blob.Shopify.ScriptId);
-                            }
-                            catch (Exception e)
-                            {
-                                //couldnt remove the script but that's ok
-                            }
-                        }
-                    }
-
                     blob.Shopify = null;
                     if (CurrentStore.SetStoreBlob(blob))
                     {

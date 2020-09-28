@@ -10,6 +10,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Shopify;
+using BTCPayServer.Services.Shopify.ApiModels;
 using BTCPayServer.Services.Shopify.Models;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
@@ -22,7 +23,6 @@ namespace BTCPayServer.Controllers
 {
     public partial class StoresController
     {
-
         private static string _cachedShopifyJavascript;
 
         private async Task<string> GetJavascript()
@@ -33,7 +33,7 @@ namespace BTCPayServer.Controllers
             }
 
             string[] fileList = _BtcpayServerOptions.BundleJsCss
-                ? new[] { "bundles/shopify-bundle.min.js"}
+                ? new[] {"bundles/shopify-bundle.min.js"}
                 : new[] {"modal/btcpay.js", "shopify/btcpay-shopify.js"};
 
 
@@ -52,7 +52,8 @@ namespace BTCPayServer.Controllers
         [HttpGet("{storeId}/integrations/shopify/shopify.js")]
         public async Task<IActionResult> ShopifyJavascript(string storeId)
         {
-            var jsFile = $"var BTCPAYSERVER_URL = \"{Request.GetAbsoluteRoot()}\"; var STORE_ID = \"{storeId}\"; { await GetJavascript()}";
+            var jsFile =
+                $"var BTCPAYSERVER_URL = \"{Request.GetAbsoluteRoot()}\"; var STORE_ID = \"{storeId}\"; {await GetJavascript()}";
             return Content(jsFile, "text/javascript");
         }
 
@@ -61,10 +62,10 @@ namespace BTCPayServer.Controllers
         [EnableCors(CorsPolicies.All)]
         [HttpGet("{storeId}/integrations/shopify/{orderId}")]
         public async Task<IActionResult> ShopifyInvoiceEndpoint(
-            [FromServices] InvoiceRepository invoiceRepository, 
-            [FromServices] InvoiceController invoiceController, 
+            [FromServices] InvoiceRepository invoiceRepository,
+            [FromServices] InvoiceController invoiceController,
             [FromServices] IHttpClientFactory httpClientFactory,
-            string storeId, string orderId, bool checkOnly = false)
+            string storeId, string orderId, decimal amount, bool checkOnly = false)
         {
             var invoiceOrderId = $"{ShopifyOrderMarkerHostedService.SHOPIFY_ORDER_ID_PREFIX}{orderId}";
             var matchedExistingInvoices = await invoiceRepository.GetInvoices(new InvoiceQuery()
@@ -75,7 +76,7 @@ namespace BTCPayServer.Controllers
                     entity.GetInternalTags(ShopifyOrderMarkerHostedService.SHOPIFY_ORDER_ID_PREFIX)
                         .Any(s => s == orderId))
                 .ToArray();
-            
+
             var firstInvoiceStillPending =
                 matchedExistingInvoices.FirstOrDefault(entity => entity.GetInvoiceState().Status == InvoiceStatus.New);
             if (firstInvoiceStillPending != null)
@@ -86,48 +87,78 @@ namespace BTCPayServer.Controllers
                     status = firstInvoiceStillPending.Status.ToString().ToLowerInvariant()
                 });
             }
-            
-            var firstInvoiceSettled = 
-                matchedExistingInvoices.FirstOrDefault(entity => new []{InvoiceStatus.Paid, InvoiceStatus.Complete, InvoiceStatus.Confirmed }.Contains(entity.GetInvoiceState().Status) );
-            
+
+            var firstInvoiceSettled =
+                matchedExistingInvoices.LastOrDefault(entity =>
+                    new[] {InvoiceStatus.Paid, InvoiceStatus.Complete, InvoiceStatus.Confirmed}.Contains(
+                        entity.GetInvoiceState().Status));
+
+            var store = await _Repo.FindStore(storeId);
+            var shopify = store?.GetStoreBlob()?.Shopify;
+            ShopifyApiClient client = null;
+            ShopifyOrder order = null;
+            if (shopify?.IntegratedAt.HasValue is true)
+            {
+                client = new ShopifyApiClient(httpClientFactory, shopify.CreateShopifyApiCredentials());
+                order = await client.GetOrder(orderId);
+                if (string.IsNullOrEmpty(order?.Id))
+                {
+                    return NotFound();
+                }
+            }
+
             if (firstInvoiceSettled != null)
             {
-                return Ok(new
+                //if BTCPay was shut down before the tx managed to get registered on shopify, this will fix it on the next UI load in shopify
+                if (client != null && order?.FinancialStatus == "pending" &&
+                    firstInvoiceSettled.Status != InvoiceStatus.Paid)
                 {
-                    invoiceId = firstInvoiceSettled.Id,
-                    status = firstInvoiceSettled.Status.ToString().ToLowerInvariant()
-                });
+                    await new OrderTransactionRegisterLogic(client).Process(orderId, firstInvoiceSettled.Id,
+                        firstInvoiceSettled.Currency,
+                        firstInvoiceSettled.Price.ToString(CultureInfo.InvariantCulture), true);
+                    order = await client.GetOrder(orderId);
+                }
+
+                if (order?.FinancialStatus != "pending" && order?.FinancialStatus != "partially_paid")
+                {
+                    return Ok(new
+                    {
+                        invoiceId = firstInvoiceSettled.Id,
+                        status = firstInvoiceSettled.Status.ToString().ToLowerInvariant()
+                    });
+                }
             }
 
             if (checkOnly)
             {
                 return Ok();
             }
-            var store = await _Repo.FindStore(storeId);
-            var shopify =  store?.GetStoreBlob()?.Shopify;
+
             if (shopify?.IntegratedAt.HasValue is true)
             {
-                var client = new ShopifyApiClient(httpClientFactory, shopify.CreateShopifyApiCredentials());
-                var order = await client.GetOrder(orderId);
-                if (string.IsNullOrEmpty(order?.Id) || order.FinancialStatus != "pending")
+                if (string.IsNullOrEmpty(order?.Id) ||
+                    !new[] {"pending", "partially_paid"}.Contains(order.FinancialStatus))
                 {
                     return NotFound();
                 }
 
+                //we create the invoice at due amount provided from order page or full amount if due amount is bigger than order amount
                 var invoice = await invoiceController.CreateInvoiceCoreRaw(
-                    new CreateInvoiceRequest() {Amount = order.TotalPrice, Currency = order.Currency, Metadata = new JObject {["orderId"] = invoiceOrderId} }, store,
+                    new CreateInvoiceRequest()
+                    {
+                        Amount = amount < order.TotalPrice ? amount : order.TotalPrice,
+                        Currency = order.Currency,
+                        Metadata = new JObject {["orderId"] = invoiceOrderId}
+                    }, store,
                     Request.GetAbsoluteUri(""), new List<string>() {invoiceOrderId});
 
-                return Ok(new
-                {
-                    invoiceId = invoice.Id,
-                    status = invoice.Status.ToString().ToLowerInvariant()
-                });
+                return Ok(new {invoiceId = invoice.Id, status = invoice.Status.ToString().ToLowerInvariant()});
             }
+
             return NotFound();
         }
 
-        
+
         [HttpGet]
         [Route("{storeId}/integrations")]
         [Route("{storeId}/integrations/shopify")]
@@ -156,10 +187,10 @@ namespace BTCPayServer.Controllers
                     {
                         ApiKey = userInfo[0],
                         Password = userInfo[1],
-                        ShopName = parsedUrl.Host.Replace(".myshopify.com", "", StringComparison.InvariantCultureIgnoreCase)
+                        ShopName = parsedUrl.Host.Replace(".myshopify.com", "",
+                            StringComparison.InvariantCultureIgnoreCase)
                     };
                     command = "ShopifySaveCredentials";
-
                 }
                 catch (Exception)
                 {
@@ -167,6 +198,7 @@ namespace BTCPayServer.Controllers
                     return View("Integrations", vm);
                 }
             }
+
             switch (command)
             {
                 case "ShopifySaveCredentials":
@@ -192,7 +224,6 @@ namespace BTCPayServer.Controllers
                     }
 
                     var scopesGranted = await apiClient.CheckScopes();
-                    //TODO: check if these are actually needed
                     if (!scopesGranted.Contains("read_orders") || !scopesGranted.Contains("write_orders"))
                     {
                         TempData[WellKnownTempData.ErrorMessage] =
@@ -202,7 +233,7 @@ namespace BTCPayServer.Controllers
 
                     // everything ready, proceed with saving Shopify integration credentials
                     shopify.IntegratedAt = DateTimeOffset.Now;
-                    
+
                     var blob = CurrentStore.GetStoreBlob();
                     blob.Shopify = shopify;
                     if (CurrentStore.SetStoreBlob(blob))

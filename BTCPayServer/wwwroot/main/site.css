@@ -282,3 +282,10 @@ html[data-devenv]:before {
 @media (min-width: 992px) and (max-width: 1199px) { html[data-devenv]:before { content: 'LG'; } }
 @media (min-width: 1200px) { html[data-devenv]:before { content: 'XL'; } }
 @media print { html[data-devenv]:before { content: none; } }
+
+/* Print */
+@media print {
+    .jumbotron {
+        padding: 1rem 0 !important;
+    }
+}

@@ -65,7 +65,7 @@ window.BTCPayShopifyIntegrationModule = function () {
     }
 
     function getOrCheckInvoice(backgroundCheck) {
-        const url = btcPayServerUrl + "/stores/" + storeId + "/integrations/shopify/" + shopify_order_id + (backgroundCheck ? "?checkonly=true" : "");
+        const url = btcPayServerUrl + "/stores/" + storeId + "/integrations/shopify/" + shopify_order_id+"?amount="+Shopify.checkout.payment_due+ (backgroundCheck ? "&checkonly=true" : "");
         return fetch(url, {
             method: "GET",
             mode: "cors", // no-cors, cors, *same-origin,
@@ -155,7 +155,7 @@ window.BTCPayShopifyIntegrationModule = function () {
         insertElement(buttonElement, pageItems.orderConfirmed);
     }
 
-    if (["bitcoin", "btc", "btcpayserver", "btcpay server"].filter(value => pageItems.paymentMethod.innerText.toLowerCase().indexOf(value) !== -1).length === 0) {
+    if (["bitcoin", "btc"].filter(value => pageItems.paymentMethod.innerText.toLowerCase().indexOf(value) !== -1).length === 0) {
         return;
     }
     showPaymentInstructions();

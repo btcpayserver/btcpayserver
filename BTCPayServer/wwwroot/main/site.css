@@ -248,3 +248,16 @@ pre {
     display: inline-block;
     margin-top: .5rem;
 }
+
+/* Chrome, Safari, Edge, Opera */
+input[type=number].hide-number-spin::-webkit-outer-spin-button,
+input[type=number].hide-number-spin::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Firefox */
+input[type=number].hide-number-spin {
+    -moz-appearance: textfield;
+}
+

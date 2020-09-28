@@ -73,9 +73,8 @@
             Started: @shopify.IntegratedAt.Value.ToBrowserDate()
         </p>
 
-
         <button name="command" type="submit" class="btn btn-danger" value="ShopifyClearCredentials">
-            @(shopify.IntegratedAt.HasValue ? "Stop Shopify calls and clear credentials" : "Clear credentials")
+            Stop Shopify calls and clear credentials
         </button>
     }
 

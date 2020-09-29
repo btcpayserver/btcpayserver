@@ -16,22 +16,18 @@ namespace BTCPayServer.Services.Shopify
             _client = client;
         }
 
-        private static TransactionDataHolder GetParentTransaction(List<TransactionDataHolder> txs)
-        {
-            var keywords = new[] {"bitcoin", "btc", "btcpayserver", "btcpay server"};
-            return txs.FirstOrDefault(holder =>keywords .Any(s => holder.gateway.Contains(s, StringComparison.InvariantCultureIgnoreCase)));
-        }
-        
+        private static string[] _keywords = new[] { "bitcoin", "btc", "btcpayserver", "btcpay server" };
         public async Task<TransactionsCreateResp> Process(string orderId, string invoiceId, string currency, string amountCaptured, bool success)
         {
             currency = currency.ToUpperInvariant().Trim();
             var existingShopifyOrderTransactions = (await _client.TransactionsList(orderId)).transactions;
-            var baseParentTransaction = GetParentTransaction(existingShopifyOrderTransactions);
-            if (baseParentTransaction is null)
+            var baseParentTransaction = existingShopifyOrderTransactions.FirstOrDefault();
+            if (baseParentTransaction is null ||
+                !_keywords.Any(a => baseParentTransaction.gateway.Contains(a, StringComparison.InvariantCultureIgnoreCase)))
             {
                 return null;
             }
-            
+
             //technically, this exploit should not be possible as we use internal invoice tags to verify that the invoice was created by our controlled, dedicated endpoint.
             if (currency.ToUpperInvariant().Trim() != baseParentTransaction.currency.ToUpperInvariant().Trim())
             {
@@ -48,17 +44,17 @@ namespace BTCPayServer.Services.Shopify
             //find all existing transactions recorded around this invoice id 
             var existingShopifyOrderTransactionsOnSameInvoice =
                 existingShopifyOrderTransactions.Where(holder => holder.authorization == invoiceId);
-            
+
             //filter out the successful ones
             var successfulActions =
                 existingShopifyOrderTransactionsOnSameInvoice.Where(holder => holder.status == "success").ToArray();
 
             //of the successful ones, get the ones we registered as a valid payment
             var successfulCaptures = successfulActions.Where(holder => holder.kind == "capture").ToArray();
-            
+
             //of the successful ones, get the ones we registered as a voiding of a previous successful payment
             var refunds = successfulActions.Where(holder => holder.kind == "refund").ToArray();
-            
+
             //if we are working with a non-success registration, but see that we have previously registered this invoice as a success, we switch to creating a "void" transaction, which in shopify terms is a refund.
             if (!success && successfulCaptures.Length > 0 && (successfulCaptures.Length - refunds.Length) > 0)
             {
@@ -67,7 +63,7 @@ namespace BTCPayServer.Services.Shopify
                 status = "success";
             }
             //if we are working with a success registration, but can see that we have already had a successful transaction saved, get outta here
-            else if(success && successfulCaptures.Length >0 && (successfulCaptures.Length - refunds.Length  ) > 0 ) 
+            else if (success && successfulCaptures.Length > 0 && (successfulCaptures.Length - refunds.Length) > 0)
             {
                 return null;
             }

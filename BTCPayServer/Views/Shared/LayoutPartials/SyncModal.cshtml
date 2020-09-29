@@ -4,52 +4,30 @@
 {
     <!-- Modal -->
     <div id="syncModal" class="modal-dialog">
-
-        <!-- Modal content-->
         <div class="modal-content">
-            <a class="modal-header btn-link border-0 text-decoration-none cursor-pointer" data-toggle="collapse" data-target="#syncModalContent">
+            <a class="modal-header btn-link border-0 text-decoration-none cursor-pointer align-items-center" data-toggle="collapse" data-target="#syncModalContent">
                 <h4 class="modal-title">Your nodes are synching...</h4>
-                <span class="fa fa-toggle-up close" style="font-size: 2em"></span>
+                <span class="fa fa-chevron-down" style="font-size:1em;"></span>
             </a>
-            <div class="modal-body collapse show" id="syncModalContent">
-                <p>
-                    Your node is synching the entire blockchain and validating the consensus rules...
-                </p>
-                @foreach (var provider in SyncSummaryProviders)
-                {
-                    <partial name="@provider.Partial"/>
-                }
-                <p>
-                    <a href="https://www.youtube.com/watch?v=OrYDehC-8TU" target="_blank">Watch this video</a> to understand the importance of blockchain synchronization.
-                </p>
-
-                <p>If you really don't want to synch and you are familiar with the command line, check <a href="https://github.com/btcpayserver/btcpayserver-docker/blob/master/contrib/FastSync/README.md" target="_blank">FastSync</a>.</p>
+            <div id="syncModalContent" class="collapse show">
+                <div class="modal-body pt-0">
+                    <p>
+                        Your node is synching the entire blockchain and validating the consensus rules...
+                    </p>
+                    @foreach (var provider in SyncSummaryProviders)
+                    {
+                        <partial name="@provider.Partial"/>
+                    }
+                    <p>
+                        <a href="https://www.youtube.com/watch?v=OrYDehC-8TU" target="_blank">Watch this video</a> to understand the importance of blockchain synchronization.
+                    </p>
+                    <p class="mb-0">If you really don't want to synch and you are familiar with the command line, check <a href="https://github.com/btcpayserver/btcpayserver-docker/blob/master/contrib/FastSync/README.md" target="_blank">FastSync</a>.</p>
+                </div>
             </div>
-
         </div>
-
     </div>
-
-    <style type="text/css">
-        #syncModal {
-            position: fixed;
-            bottom: 30px;
-            right: 0;
-            margin: 0px;
-            z-index: 1000;
-            width: 500px;
-            max-width: 100%;
-            
-        }
-        #syncModal .modal-body{
-            max-height: 400px; 
-            overflow-y: scroll;
-        }
-    </style>
     <script>
-    
-    $(document).ready(function (){
-        var syncModalContent =  $('#syncModalContent');
+        var syncModalContent = $('#syncModalContent');
         if (localStorage.getItem("sync-collapsed")){
             syncModalContent.removeClass("show");
         }
@@ -58,6 +36,26 @@
         }).on('shown.bs.collapse', function () {
             localStorage.removeItem("sync-collapsed");
         });
-    });
-</script>
+    </script>
+    <style type="text/css">
+        #syncModal {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            margin: 0;
+            z-index: 1000;
+            width: 500px;
+            max-width: 100%;
+        }
+        #syncModal .modal-body {
+            max-height: 400px; 
+            overflow-y: scroll;
+        }
+        #syncModal .fa-chevron-down {
+            transition: transform .35s;
+        }
+        #syncModal .collapsed .fa-chevron-down {
+            transform: rotate(-90deg);
+        }
+    </style>
 }

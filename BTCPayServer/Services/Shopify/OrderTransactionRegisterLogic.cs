@@ -18,7 +18,7 @@ namespace BTCPayServer.Services.Shopify
 
         private static TransactionDataHolder GetParentTransaction(List<TransactionDataHolder> txs)
         {
-            var keywords = new[] {"bitcoin", "btc"};
+            var keywords = new[] {"bitcoin", "btc", "btcpayserver", "btcpay server"};
             return txs.FirstOrDefault(holder =>keywords .Any(s => holder.gateway.Contains(s, StringComparison.InvariantCultureIgnoreCase)));
         }
         

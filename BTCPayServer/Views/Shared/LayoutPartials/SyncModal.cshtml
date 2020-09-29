@@ -1,51 +1,61 @@
 @using BTCPayServer.Contracts
 @inject IEnumerable<ISyncSummaryProvider> SyncSummaryProviders;
-@if(SyncSummaryProviders.Any(provider => !provider.AllAvailable()))
+@if (SyncSummaryProviders.Any(provider => !provider.AllAvailable()))
 {
     <!-- Modal -->
-    <div id="modalDialog" class="modal-dialog animated bounceInRight"
-         style="z-index:1000">
-        @* Z-Index less then other bootstrap modals (1050) *@
-
-        <!-- Modal content-->
+    <div id="syncModal" class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
+            <a class="modal-header btn-link border-0 text-decoration-none cursor-pointer align-items-center" data-toggle="collapse" data-target="#syncModalContent">
                 <h4 class="modal-title">Your nodes are synching...</h4>
-                <button type="button" class="close" onclick="dismissSyncModal()">&times;</button>
+                <span class="fa fa-chevron-down" style="font-size:1em;"></span>
+            </a>
+            <div id="syncModalContent" class="collapse show">
+                <div class="modal-body pt-0">
+                    <p>
+                        Your node is synching the entire blockchain and validating the consensus rules...
+                    </p>
+                    @foreach (var provider in SyncSummaryProviders)
+                    {
+                        <partial name="@provider.Partial"/>
+                    }
+                    <p>
+                        <a href="https://www.youtube.com/watch?v=OrYDehC-8TU" target="_blank">Watch this video</a> to understand the importance of blockchain synchronization.
+                    </p>
+                    <p class="mb-0">If you really don't want to synch and you are familiar with the command line, check <a href="https://github.com/btcpayserver/btcpayserver-docker/blob/master/contrib/FastSync/README.md" target="_blank">FastSync</a>.</p>
+                </div>
             </div>
-            <div class="modal-body" style="max-height: 400px; overflow-y: scroll;">
-                <p>
-                    Your node is synching the entire blockchain and validating the consensus rules...
-                </p>
-                @foreach (var provider in SyncSummaryProviders)
-                {
-                    <partial name="@provider.Partial" />
-                }
-                <p>
-                    <a href="https://www.youtube.com/watch?v=OrYDehC-8TU" target="_blank">Watch this video</a> to understand the importance of blockchain synchronization.
-                </p>
-
-                <p>If you really don't want to synch and you are familiar with the command line, check <a href="https://github.com/btcpayserver/btcpayserver-docker/blob/master/contrib/FastSync/README.md" target="_blank">FastSync</a>.</p>
-            </div>
-
         </div>
-
     </div>
-
-    @*<link href="~/vendor/animatecss/animate.css" rel="stylesheet" asp-append-version="true" />*@
-    <script type="text/javascript">
-        function dismissSyncModal() {
-            $("#modalDialog").addClass('animated bounceOutRight')
+    <script>
+        var syncModalContent = $('#syncModalContent');
+        if (localStorage.getItem("sync-collapsed")){
+            syncModalContent.removeClass("show");
         }
+        syncModalContent.on('hidden.bs.collapse', function () {
+            localStorage.setItem("sync-collapsed", "true");
+        }).on('shown.bs.collapse', function () {
+            localStorage.removeItem("sync-collapsed");
+        });
     </script>
-
     <style type="text/css">
-        #modalDialog {
+        #syncModal {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
-            margin: 0px;
+            bottom: 10px;
+            right: 10px;
+            margin: 0;
+            z-index: 1000;
+            width: 500px;
+            max-width: 100%;
+        }
+        #syncModal .modal-body {
+            max-height: 400px; 
+            overflow-y: scroll;
+        }
+        #syncModal .fa-chevron-down {
+            transition: transform .35s;
+        }
+        #syncModal .collapsed .fa-chevron-down {
+            transform: rotate(-90deg);
         }
     </style>
-
 }

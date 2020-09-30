@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using BTCPayServer.Data;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -15,7 +17,7 @@ namespace BTCPayServer.Models.StoreViewModels
             public string Value { get; set; }
             public PaymentMethodId PaymentId { get; set; }
         }
-        public SelectList CryptoCurrencies { get; set; }
+        public SelectList PaymentMethods { get; set; }
 
         public void SetLanguages(LanguageService langService, string defaultLang)
         {
@@ -49,15 +51,7 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Recommended fee confirmation target blocks")]
         [Range(1, double.PositiveInfinity)]
         public int RecommendedFeeBlockTarget { get; set; }
-
-        [Display(Name = "Do not propose on chain payment if the value of the invoice is below...")]
-        [MaxLength(20)]
-        public string OnChainMinValue { get; set; }
-
-        [Display(Name = "Do not propose lightning payment if value of the invoice is above...")]
-        [MaxLength(20)]
-        public string LightningMaxValue { get; set; }
-
+        
         [Display(Name = "Display lightning payment amounts in Satoshis")]
         public bool LightningAmountInSatoshi { get; set; }
 
@@ -66,5 +60,34 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Redirect invoice to redirect url automatically after paid")]
         public bool RedirectAutomatically { get; set; }
+
+        public List<PaymentMethodCriteriaViewModel> PaymentMethodCriteria { get; set; }
+    }
+
+    public class PaymentMethodCriteriaViewModel
+    {
+        public string PaymentMethod { get; set; }
+        public string Value { get; set; }
+
+        public  CriteriaType Type { get; set; }
+
+        public enum CriteriaType
+        {
+            GreaterThan,
+            LessThan
+        }
+        public static string ToString(CriteriaType type)
+        {
+            switch (type)
+            {
+                case CriteriaType.GreaterThan:
+                    return "Greater than";
+                case CriteriaType.LessThan:
+                    return "Less than";
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(type), type, null);
+            }
+        }
+        
     }
 }

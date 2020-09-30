@@ -98,13 +98,6 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
             var network = _networkProvider.GetNetwork<MoneroLikeSpecificBtcPayNetwork>(paymentMethodId.CryptoCode);
             return GetPaymentMethodName(network);
         }
-
-        public override Task<string> IsPaymentMethodAllowedBasedOnInvoiceAmount(StoreBlob storeBlob, Dictionary<CurrencyPair, Task<RateResult>> rate, Money amount,
-            PaymentMethodId paymentMethodId)
-        {
-            return Task.FromResult<string>(null);
-        }
-
         public override IEnumerable<PaymentMethodId> GetSupportedPaymentMethods()
         {
             return _networkProvider.GetAll()

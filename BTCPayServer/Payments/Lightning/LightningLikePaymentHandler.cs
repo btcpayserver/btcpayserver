@@ -158,26 +158,6 @@ namespace BTCPayServer.Payments.Lightning
                 .Select(network => new PaymentMethodId(network.CryptoCode, PaymentTypes.LightningLike));
         }
 
-
-        public override async Task<string> IsPaymentMethodAllowedBasedOnInvoiceAmount(StoreBlob storeBlob,
-            Dictionary<CurrencyPair, Task<RateResult>> rate, Money amount, PaymentMethodId paymentMethodId)
-        {
-            if (storeBlob.LightningMaxValue != null)
-            {
-                var currentRateToCrypto = await rate[new CurrencyPair(paymentMethodId.CryptoCode, storeBlob.LightningMaxValue.Currency)];
-
-                if (currentRateToCrypto?.BidAsk != null)
-                {
-                    var limitValueCrypto = Money.Coins(storeBlob.LightningMaxValue.Value / currentRateToCrypto.BidAsk.Bid);
-                    if (amount > limitValueCrypto)
-                    {
-                        return "The amount of the invoice is too high to be paid with lightning";
-                    }
-                }
-            }
-            return string.Empty;
-        }
-
         public override void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse,
             StoreBlob storeBlob)
         {

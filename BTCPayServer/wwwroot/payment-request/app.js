@@ -28,7 +28,6 @@ addLoadEvent(function (ev) {
                 ended: false,
                 endDiff: "",
                 active: true,
-                lastUpdated: "",
                 loading: false,
                 timeoutState: "",
                 customAmount: null
@@ -40,6 +39,12 @@ addLoadEvent(function (ev) {
             },
             settled: function () {
                 return this.srvModel.amountDue <= 0;
+            },
+            lastUpdated: function () {
+                return this.srvModel.lastUpdated && moment(this.srvModel.lastUpdated).calendar();
+            },
+            active: function () {
+                return !this.ended;
             }
         },
         methods: {
@@ -48,7 +53,6 @@ addLoadEvent(function (ev) {
                     var endDateM = moment(this.srvModel.expiryDate);
                     this.endDate = endDateM.format('MMMM Do YYYY');
                     this.ended = endDateM.isBefore(moment());
-
                 } else {
                     this.ended = false;
                     this.endDate = null;
@@ -63,8 +67,6 @@ addLoadEvent(function (ev) {
                     this.endDiff = mDiffD > 0 ? mDiffD + " days" : mDiffH > 0 ? mDiffH + " hours" : mDiffM > 0 ? mDiffM + " minutes" : mDiffS > 0 ? mDiffS + " seconds" : "";
                 }
 
-                this.lastUpdated = moment(this.srvModel.lastUpdated).calendar();
-                this.active = !this.ended;
                 setTimeout(this.updateComputed, 1000);
             },
             setLoading: function (val) {

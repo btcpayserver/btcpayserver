@@ -32,7 +32,7 @@
     @Safe.Raw(Model.EmbeddedCSS)
     <noscript>
         <style>
-            .hide-when-js { display: block !important; }
+            .hide-when-js, [v-cloak] { display: block !important; }
             .only-for-js { display: none !important; }
         </style>
     </noscript>
@@ -45,12 +45,12 @@
                     <div class="col-12 col-md-8 col-lg-9">
                         <div class="row">
                             <div class="col col-12 col-lg-8">
-                                <h1 class="h3" v-bind="srvModel.title">@Model.Title</h1>
+                                <h1 class="h3" v-text="srvModel.title">@Model.Title</h1>
                             </div>
                             <div class="col col-12 col-sm-6 col-lg-8 d-flex align-items-center">
                                 <span class="text-muted text-nowrap">Last Updated</span>
                                 &nbsp;
-                                <span v-bind="lastUpdated" class="text-nowrap">@Model.LastUpdated.ToString("g")</span>
+                                <span class="text-nowrap" v-text="lastUpdated" v-cloak>@Model.LastUpdated.ToString("g")</span>
                                 <button type="button" class="btn btn-link d-none d-lg-inline-block d-print-none border-0 p-0 ml-4 only-for-js" v-on:click="window.print" v-cloak>
                                     Print
                                 </button>
@@ -59,11 +59,11 @@
                                 </button>
                             </div>
                             <div class="col col-12 col-sm-6 text-sm-right col-lg-4 mt-lg-n4 pt-lg-1 d-print-none">
-                                @if (Model.IsPending && !Model.Archived)
+                                @if (Model.IsPending && !Model.Archived && Model.ExpiryDate.HasValue)
                                 {
                                     <noscript>@Model.Status</noscript>
                                 }
-                                <template v-if="srvModel.isPending && !srvModel.archived">
+                                <template v-if="srvModel.isPending && !srvModel.archived && endDiff">
                                     <span class="text-muted">Expires in</span> {{endDiff}}
                                 </template>
                             </div>
@@ -188,18 +188,18 @@
                             <h2 class="h4 mb-3">Payment Details</h2>
                             <dl class="mb-0 mt-md-4">
                                 <div class="d-flex flex-column mb-4">
-                                    <dt class="h4 font-weight-normal text-nowrap text-primary order-2 order-sm-1 mb-0" v-bind="srvModel.amountDueFormatted">@Model.AmountDueFormatted</dt>
+                                    <dt class="h4 font-weight-normal text-nowrap text-primary order-2 order-sm-1 mb-0" v-text="srvModel.amountDueFormatted">@Model.AmountDueFormatted</dt>
                                     <dd class="text-muted order-1 order-sm-2 mb-1">Amount due</dd>
                                 </div>
                                 <div class="progress d-none d-sm-flex mb-sm-4 d-print-none" style="height:5px">
                                   <div class="progress-bar bg-primary" role="progressbar" style="width:@((Model.AmountCollected/Model.Amount)*100)%" v-bind:style="{ width: (srvModel.amountCollected/srvModel.amount*100) + '%' }"></div>
                                 </div>
                                 <div class="d-flex flex-column mb-4 d-sm-inline-flex mb-sm-0">
-                                    <dt class="h4 font-weight-normal text-nowrap order-2 order-sm-1 mb-0" v-bind="srvModel.amountCollectedFormatted">@Model.AmountCollectedFormatted</dt>
+                                    <dt class="h4 font-weight-normal text-nowrap order-2 order-sm-1 mb-0" v-text="srvModel.amountCollectedFormatted">@Model.AmountCollectedFormatted</dt>
                                     <dd class="text-muted order-1 order-sm-2 mb-1">Amount paid</dd>
                                 </div>
                                 <div class="d-flex flex-column mb-0 d-sm-inline-flex float-sm-right">
-                                    <dt class="h4 font-weight-normal text-nowrap order-2 order-sm-1 mb-0" v-bind="srvModel.amountFormatted">@Model.AmountFormatted</dt>
+                                    <dt class="h4 font-weight-normal text-nowrap order-2 order-sm-1 mb-0" v-text="srvModel.amountFormatted">@Model.AmountFormatted</dt>
                                     <dd class="text-muted order-1 order-sm-2 mb-1">Total requested</dd>
                                 </div>
                             </dl>
@@ -211,26 +211,24 @@
                         <div class="jumbotron h-100 m-0 p-sm-5">
                             <h2 class="h4 mb-3">Payment History</h2>
                             <div class="table-responsive">
-                                <table class="table my-0">
-                                    <thead>
-                                        <tr class="table-borderless">
-                                            <th class="font-weight-normal text-secondary" scope="col">Invoice Id</th>
-                                            <th class="font-weight-normal text-secondary">Price</th>
-                                            <th class="font-weight-normal text-secondary">Expiry</th>
-                                            <th class="font-weight-normal text-secondary text-right">Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <noscript>
-                                            @if (Model.Invoices == null || !Model.Invoices.Any())
-                                            {
-                                                <tr>
-                                                    <td colspan="4" class="text-center">No payments made yet</td>
+                                <noscript>
+                                    @if (Model.Invoices == null || !Model.Invoices.Any())
+                                    {
+                                        <p class="text-muted">No payments made yet.</p>
+                                    }
+                                    else
+                                    {
+                                        <table class="table my-0">
+                                            <thead>
+                                                <tr class="table-borderless">
+                                                    <th class="font-weight-normal text-secondary" scope="col">Invoice Id</th>
+                                                    <th class="font-weight-normal text-secondary">Price</th>
+                                                    <th class="font-weight-normal text-secondary">Expiry</th>
+                                                    <th class="font-weight-normal text-secondary text-right">Status</th>
                                                 </tr>
-                                            }
-                                            else
-                                            {
-                                                foreach (var invoice in Model.Invoices)
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var invoice in Model.Invoices)
                                                 {
                                                     <tr>
                                                         <td>@invoice.Id</td>
@@ -264,15 +262,25 @@
                                                         }
                                                     }
                                                 }
-                                            }
-                                        </noscript>
+                                            </tbody>
+                                        </table>
+                                    }
+                                </noscript>
 
-                                        <template v-if="!srvModel.invoices || srvModel.invoices.length == 0">
-                                            <tr>
-                                                <td colspan="4" class="text-center">No payments made yet</td>
+                                <template v-if="!srvModel.invoices || srvModel.invoices.length == 0">
+                                    <p class="text-muted">No payments made yet.</p>
+                                </template>
+                                <template v-else v-for="invoice of srvModel.invoices" :key="invoice.id">
+                                    <table class="table my-0">
+                                        <thead>
+                                            <tr class="table-borderless">
+                                                <th class="font-weight-normal text-secondary" scope="col">Invoice Id</th>
+                                                <th class="font-weight-normal text-secondary">Price</th>
+                                                <th class="font-weight-normal text-secondary">Expiry</th>
+                                                <th class="font-weight-normal text-secondary text-right">Status</th>
                                             </tr>
-                                        </template>
-                                        <template v-else v-for="invoice of srvModel.invoices" :key="invoice.id">
+                                        </thead>
+                                        <tbody>
                                             <tr>
                                                 <td>{{invoice.id}}</td>
                                                 <td>{{invoice.amountFormatted}}</td>
@@ -294,9 +302,9 @@
                                                     <td class="text-right">{{payment.amount.noExponents()}}</td>
                                                 </tr>
                                             </template>
-                                        </template>
-                                    </tbody>
-                                </table>
+                                        </tbody>
+                                    </table>
+                                </template>
                             </div>
                         </div>
                     </div>

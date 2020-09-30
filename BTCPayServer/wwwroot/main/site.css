@@ -289,3 +289,13 @@ html[data-devenv]:before {
         padding: 1rem 0 !important;
     }
 }
+
+/* Richtext editor */
+.note-editor .table.table-sm {
+    border-collapse: collapse !important;
+}
+
+.note-editor .table.table-sm th,
+.note-editor .table.table-sm td {
+    border: 1px dotted var(--btcpay-color-neutral-400);
+}

@@ -111,7 +111,10 @@
     @if (User.Identity.IsAuthenticated)
     {
         <footer class="footer">
-            <div class="container text-right">@env.ToString()</div>
+            <div class="container">
+                <div class="float-left">Logo made with 💚 by <a href="https://ibukingdom.themedia.jp/" target="_blank">Ibuki</a></div>
+                <div class="text-right">@env.ToString()</div>
+            </div>
         </footer>
     }
 

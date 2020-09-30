@@ -205,5 +205,12 @@
         "minify": {
             "enabled": false
         }
-    }  
+    },
+    {
+        "outputFileName": "wwwroot/bundles/shopify-bundle.min.js",
+        "inputFiles": [
+            "wwwroot/modal/btcpay.js",
+            "wwwroot/shopify/btcpay-shopify.js"
+        ]
+    }
 ]

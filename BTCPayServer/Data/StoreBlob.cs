@@ -11,6 +11,7 @@ using BTCPayServer.Payments.CoinSwitch;
 using BTCPayServer.Rating;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Rates;
+using BTCPayServer.Services.Shopify.Models;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.Data
@@ -25,6 +26,8 @@ namespace BTCPayServer.Data
             ShowRecommendedFee = true;
             RecommendedFeeBlockTarget = 1;
         }
+
+        public ShopifySettings Shopify { get; set; }
 
         [Obsolete("Use NetworkFeeMode instead")]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]

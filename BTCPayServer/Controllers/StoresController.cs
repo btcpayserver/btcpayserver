@@ -20,8 +20,10 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
+using BTCPayServer.Services.Shopify;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
+using BundlerMinifier.TagHelpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -54,15 +56,14 @@ namespace BTCPayServer.Controllers
             BTCPayNetworkProvider networkProvider,
             RateFetcher rateFactory,
             ExplorerClientProvider explorerProvider,
-            IFeeProviderFactory feeRateProvider,
             LanguageService langService,
-            IWebHostEnvironment env, IHttpClientFactory httpClientFactory,
             PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
             SettingsRepository settingsRepository,
             IAuthorizationService authorizationService,
             EventAggregator eventAggregator,
             CssThemeManager cssThemeManager,
-            AppService appService)
+            AppService appService,
+            IWebHostEnvironment webHostEnvironment)
         {
             _RateFactory = rateFactory;
             _Repo = repo;
@@ -71,17 +72,15 @@ namespace BTCPayServer.Controllers
             _LangService = langService;
             _TokenController = tokenController;
             _WalletProvider = walletProvider;
-            _Env = env;
-            _httpClientFactory = httpClientFactory;
             _paymentMethodHandlerDictionary = paymentMethodHandlerDictionary;
             _settingsRepository = settingsRepository;
             _authorizationService = authorizationService;
             _CssThemeManager = cssThemeManager;
             _appService = appService;
+            _webHostEnvironment = webHostEnvironment;
             _EventAggregator = eventAggregator;
             _NetworkProvider = networkProvider;
             _ExplorerProvider = explorerProvider;
-            _FeeRateProvider = feeRateProvider;
             _ServiceProvider = serviceProvider;
             _BtcpayServerOptions = btcpayServerOptions;
             _BTCPayEnv = btcpayEnv;
@@ -92,20 +91,18 @@ namespace BTCPayServer.Controllers
         readonly IServiceProvider _ServiceProvider;
         readonly BTCPayNetworkProvider _NetworkProvider;
         private readonly ExplorerClientProvider _ExplorerProvider;
-        private readonly IFeeProviderFactory _FeeRateProvider;
         readonly BTCPayWalletProvider _WalletProvider;
         readonly AccessTokenController _TokenController;
         readonly StoreRepository _Repo;
         readonly TokenRepository _TokenRepository;
         readonly UserManager<ApplicationUser> _UserManager;
         private readonly LanguageService _LangService;
-        readonly IWebHostEnvironment _Env;
-        private readonly IHttpClientFactory _httpClientFactory;
         private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
         private readonly SettingsRepository _settingsRepository;
         private readonly IAuthorizationService _authorizationService;
         private readonly CssThemeManager _CssThemeManager;
         private readonly AppService _appService;
+        private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly EventAggregator _EventAggregator;
 
         [TempData]
@@ -964,5 +961,8 @@ namespace BTCPayServer.Controllers
             });
 
         }
+
+
+
     }
 }

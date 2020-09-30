@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using AngleSharp.Dom.Events;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
@@ -177,7 +178,7 @@ namespace BTCPayServer.Payments.Lightning
                                 if (_InstanceListeners.TryGetValue(instanceListenerKey, out var instanceListener))
                                 {
                                     
-                                    await _InvoiceRepository.NewAddress(invoice.Id, newPaymentMethodDetails,
+                                    await _InvoiceRepository.NewPaymentDetails(invoice.Id, newPaymentMethodDetails,
                                         paymentMethod.Network);
 
                                     instanceListener.AddListenedInvoice(new ListenedInvoice()
@@ -191,8 +192,8 @@ namespace BTCPayServer.Payments.Lightning
                                         InvoiceId = invoice.Id
                                     });
                                     
-                                    _Aggregator.Publish(new InvoiceNewAddressEvent(invoice.Id,
-                                        newPaymentMethodDetails.GetPaymentDestination(), paymentMethod.Network));
+                                    _Aggregator.Publish(new Events.InvoiceNewPaymentDetailsEvent(invoice.Id,
+                                        newPaymentMethodDetails, paymentMethod.GetId()));
                                 }
                             }
                             catch (Exception e)

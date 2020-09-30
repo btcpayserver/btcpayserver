@@ -57,7 +57,9 @@ namespace BTCPayServer.Data
             return storeData.GetEnabledPaymentIds(networkProvider).Select(paymentMethodId=>
             {
                 var matchedFromBlob =
+#pragma warning disable CS0618 // Type or member is obsolete
                     storeBlob.PaymentMethodCriteria?.SingleOrDefault(criteria => criteria.PaymentMethod == paymentMethodId && criteria.Value != null);
+#pragma warning restore CS0618 // Type or member is obsolete
                 if (matchedFromBlob is null && paymentMethodId.PaymentType == LightningPaymentType.Instance && storeBlob.LightningMaxValue != null)
                 {
                     return new PaymentMethodCriteria()

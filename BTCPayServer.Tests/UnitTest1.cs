@@ -1508,6 +1508,35 @@ namespace BTCPayServer.Tests
                 );
             }
         }
+        
+        // [Fact(Timeout = TestTimeout)]
+        [Fact()]
+        [Trait("Integration", "Integration")]
+        public async Task CanSaveKeyPathForOnChainPayments()
+        {
+            using var tester = ServerTester.Create();
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync();
+            await user.RegisterDerivationSchemeAsync("BTC");
+
+            var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice(0.01m, "BTC"));
+            await tester.WaitForEvent<InvoiceEvent>(async () =>
+            {
+                var tx = await tester.ExplorerNode.SendToAddressAsync(
+                    BitcoinAddress.Create(invoice.BitcoinAddress, Network.RegTest),
+                    Money.Coins(0.01m));
+            });
+           
+
+            
+            var payments = Assert.IsType<InvoiceDetailsModel>(
+                    Assert.IsType<ViewResult>(await user.GetController<InvoiceController>().Invoice(invoice.Id)).Model)
+                .Payments;
+            Assert.Single(payments);
+            var paymentData = payments.First().GetCryptoPaymentData() as BitcoinLikePaymentData;
+            Assert.NotNull(paymentData.KeyPath);
+        }
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Fast", "Fast")]

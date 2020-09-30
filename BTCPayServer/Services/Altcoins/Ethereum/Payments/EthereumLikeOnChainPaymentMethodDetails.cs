@@ -25,6 +25,11 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Payments
             return 0;
         }
 
+        public void SetPaymentDetails(IPaymentMethodDetails newPaymentMethodDetails)
+        {
+            throw new System.NotImplementedException();
+        }
+
         public void SetPaymentDestination(string newPaymentDestination)
         {
             DepositAddress = newPaymentDestination;

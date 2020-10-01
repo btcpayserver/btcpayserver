@@ -191,7 +191,7 @@
                                     <dt class="h4 font-weight-normal text-nowrap text-primary order-2 order-sm-1 mb-0" v-text="srvModel.amountDueFormatted">@Model.AmountDueFormatted</dt>
                                     <dd class="text-muted order-1 order-sm-2 mb-1">Amount due</dd>
                                 </div>
-                                <div class="progress d-none d-sm-flex mb-sm-4 d-print-none" style="height:5px">
+                                <div class="progress bg-light d-none d-sm-flex mb-sm-4 d-print-none" style="height:5px">
                                   <div class="progress-bar bg-primary" role="progressbar" style="width:@((Model.AmountCollected/Model.Amount)*100)%" v-bind:style="{ width: (srvModel.amountCollected/srvModel.amount*100) + '%' }"></div>
                                 </div>
                                 <div class="d-flex flex-column mb-4 d-sm-inline-flex mb-sm-0">

@@ -1,11 +1,10 @@
-<div id="psbt-camera-app" v-cloak class="only-for-js">
-    <div class="modal fade" data-backdrop="static" id="scanModal">
-
+<div id="camera-qr-scanner-modal-app" v-cloak class="only-for-js">
+    <div class="modal fade" data-backdrop="static" :id="modalId">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">
-                        Scan PSBT
+                        {{title}}
                         <span v-if="workload.length > 0">Animated QR detected: {{workload.length}} / {{workload[0].total}} scanned</span>
                     </h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close" v-on:click="close">
@@ -52,19 +51,23 @@
 
 
 <script>
-$(function() {
+
+function initCameraScanningApp(title, onDataSubmit, modalId){
+
     new Vue({
-        el: '#psbt-camera-app',
+        el: '#camera-qr-scanner-modal-app',
         data: {
             noStreamApiSupport: false,
             loaded: false,
             workload: [],
             data: "",
-            errorMessage: ""
+            title: title,
+            errorMessage: "",
+            modalId: modalId
         },
         mounted: function() {
             var self = this;
-            $("#scanModal")
+            $("#"+this.modalId)
                 .on("shown.bs.modal", function (){
                     self.loaded = true;
             })
@@ -97,7 +100,6 @@ $(function() {
                 this.errorMessage = "";
             },
             onDecode(content) {
-                debugger;
                 if (this.data) {
                     return;
                 }
@@ -125,8 +127,9 @@ $(function() {
                 }
             },
             submitData: function() {
-                $("textarea[name=PSBT]").val(this.data);
-                $("#Decode").click();
+                if (onDataSubmit){
+                    onDataSubmit(this.data);
+                }
                 this.close();
             },
             logErrors: function(promise) {
@@ -170,5 +173,5 @@ $(function() {
             }
         }
     });
-});
+}
 </script>

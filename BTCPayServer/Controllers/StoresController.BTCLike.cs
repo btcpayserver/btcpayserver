@@ -112,6 +112,18 @@ namespace BTCPayServer.Controllers
                     vm.Confirmation = false;
                     return View(nameof(AddDerivationScheme), vm);
                 }
+            }else if (!string.IsNullOrEmpty(vm.WalletFileContent))
+            {
+                if (!DerivationSchemeSettings.TryParseFromWalletFile(vm.WalletFileContent, network, out strategy))
+                {
+                    TempData.SetStatusMessageModel(new StatusMessageModel()
+                    {
+                        Severity = StatusMessageModel.StatusSeverity.Error,
+                        Message = "QR import was not in the correct format"
+                    });
+                    vm.Confirmation = false;
+                    return View(nameof(AddDerivationScheme), vm);
+                }
             }
             else
             {

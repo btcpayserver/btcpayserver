@@ -1,26 +1,29 @@
-<div class="modal" tabindex="-1" role="dialog" id="scan-qr-modal">
-  <div class="modal-dialog" role="document" id="scan-qr-modal-app">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Scan PSBT ({{index+1}}/{{fragments.length}})</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-        <div class="modal-body " >
-            <div class="qr-container text-center" style="min-height: 256px;" >
-                <qrcode v-bind:value="currentFragment" :options="{ width: 256,height:256, margin: 1, color: {dark:'#000', light:'#f5f5f7'} }">
-                </qrcode>
+<div id="scan-qr-modal-app">
+    <div class="modal" tabindex="-1" role="dialog" :id="modalId">
+        <div class="modal-dialog" role="document" >
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{title}} <template v-if="fragments.length > 1">({{index+1}}/{{fragments.length}})</template></h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body " >
+                    <div class="qr-container text-center" style="min-height: 256px;" >
+                        <qrcode v-bind:value="currentFragment" :options="{ width: 256,height:256, margin: 1, color: {dark:'#000', light:'#f5f5f7'} }">
+                        </qrcode>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
             </div>
         </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        </div>
     </div>
-  </div>
-</div>
+    </div>
  <script> 
-   $(document).ready(function() {
+ 
+function initQRShow(title, data, modalId){   
        new Vue({
            el: '#scan-qr-modal-app',
            components: {
@@ -28,10 +31,12 @@
            },
            data: {
                index: -1,
+               title: title,
                speed: 500,
-               data: @Json.Serialize(Model.PSBTHex),
+               data: data,
                fragments: [],
-               active: false
+               active: false,
+               modalId: modalId
            },
            computed: {
                currentFragment: function() {
@@ -40,7 +45,7 @@
            },
            mounted: function() {
                var self = this;
-               $("#scan-qr-modal")
+               $("#"+this.modalId)
                    .on("shown.bs.modal", function() {
                        self.start();
                    })
@@ -79,7 +84,6 @@
                    setTimeout(this.playNext, this.speed)
                }
            }
-       });
- 
-   });
+       }); 
+   }
  </script>

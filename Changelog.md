@@ -1,5 +1,51 @@
 # Changelog
 
+## 1.0.5.6:
+
+### New features:
+
+* Shopify support @rockstardev @Kukks
+* Can enable/disable any payment method based on the amount of the invoice #1871 @xpayserver
+* New Invoice API in Greenfield (Still incomplete, more for next release) @Kukks @NicolasDorier
+* A new light view more adapted for Point of Sale @mariodian
+* Allows administrator to invite new users via link and email @Kukks
+* New labels in the wallet for payment requests, apps, and improvement of the payout label @Kukks
+* Allows entry in wallet send via fiat #1891 @Kukks
+* Allows partial invoice refund #1882 @Kukks
+* In the Request API key flow, let the user be redirected to the original website #1800 @Kukks @dennisreimann ([more info](https://docs.btcpayserver.org/API/Greenfield/v1/#tag/Authorization))
+* Invoice logs now show their severity #1681 @Kukks (see https://i.imgur.com/eyMO9M3.png)
+* Add store sort (#1861) @bolatovumar
+
+### Improvements:
+* Update PSBT and PSBT sent to Hardware wallet will include `non_witness_utxo` by default, when possible, to match Bitcoin Core 0.20.1 behavior. @NicolasDorier
+* Adjust invoice badge styling (#1906) @bolatovumar
+* Invoice notification email improvements (#1875) @dennisreimann
+* Improvement of the UX flow for requesting an API Key of a BTCPay Server user (#1898) @dennisreimann
+* Don't send notification email for expired invoices @dennisreimann
+* Greenfield API: Add `Roles` property to the user data. @dennisreimann
+* Remove Changelly integration @Kukks
+* Better wording in transaction list page #1887 @maltokyo
+* Fix alerts text break. #1865 @bolatovumar
+* Remove Tor link from navbar @NicolasDorier
+* Improve invoices list view #1815 @dennisreimann
+* Improve sync progress dialog #1929 @Kukks
+* Show index of payment address for onchain payments @Kukks
+
+### Bug fixes:
+* When an invoice is partially paid on-chain and allow off-chain, a new lightning network invoice should be created for the remainder of the payment. @Kukks
+* Changing the inventory of a PoS item was not working properly (@mariodian)
+* Greenfield API: The internal lightning API was returning error 403, even when used as an administrator (@Kukks)
+* Using lightning charge as lightning network invoice provider over HTTP was not working properly @bolatovumar
+* Fix: If the hot wallet failed to sign a PSBT, should not show a blank page crash (@NicolasDorier)
+* Fix bug: The wallet was sending only round amount of sat per byte (@NicolasDorier)
+* "Attempt MySql Fix" #1856 @Kukks
+* Fix HitBTC rate provider again @NicolasDorier
+
+### Altcoin build
+* MonetaryUnit support (MUE) @sotblad
+* ETH/ERC20 support @xpayserver
+* Fix monero crash #1883 @Kukks
+
 ## 1.0.5.5:
 
 ### Improvements

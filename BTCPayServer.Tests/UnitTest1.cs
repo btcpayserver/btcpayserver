@@ -764,7 +764,7 @@ namespace BTCPayServer.Tests
             user.SetNetworkFeeMode(NetworkFeeMode.Never);
             await user.ModifyStoreAsync(model => model.SpeedPolicy = SpeedPolicy.HighSpeed);
             var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice(0.0001m, "BTC"));
-            await tester.WaitForEvent<InvoiceNewAddressEvent>(async () =>
+            await tester.WaitForEvent<InvoiceNewPaymentDetailsEvent>(async () =>
             {
                 await tester.ExplorerNode.SendToAddressAsync(
                     BitcoinAddress.Create(invoice.BitcoinAddress, Network.RegTest), Money.Coins(0.00005m));

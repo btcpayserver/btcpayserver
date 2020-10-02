@@ -1,4 +1,7 @@
-﻿@model WalletSettingsViewModel
+﻿@using Newtonsoft.Json
+@using System.Text
+@using NBitcoin.DataEncoders
+@model WalletSettingsViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData["Title"] = "Wallet settings";
@@ -37,8 +40,9 @@
             @for (int i = 0; i < Model.AccountKeys.Count; i++)
             {
                 <hr class="my-4"/>
-
+<span class="d-flex">
                 <h4 class="mb-3">Account key @i</h4>
+                <button type="button" class="btn btn-link only-for-js mb-2 fa fa-qrcode text-decoration-none" data-wallet="@i" title="Show QR"></button></span>
                 <div class="form-group">
                     <label asp-for="@Model.AccountKeys[i].AccountKey"></label>
                     <input asp-for="@Model.AccountKeys[i].AccountKey" class="form-control" readonly/>
@@ -86,9 +90,25 @@
         </form>
     </div>
 </div>
+    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/bc-ur/web-bundle.js" asp-append-version="true"></script>
+    <script src="~/vendor/vue-qrcode-reader/vue-qrcode-reader.browser.js" asp-append-version="true"></script>
+<link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true"/>
 
+<partial name="ShowQR"/>
 <script>
-    $(document).ready(function(){
+    var wallets = @Safe.Json(Model.AccountKeys.Select(model =>  Encoders.Hex.EncodeData(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(model)))));
+    $(document).ready(function(){        
+        var qrApp = initQRShow("Wallet QR", "", "scan-qr-modal");
+        $("button[data-wallet]").on("click", function (){
+            var data = $(this).data("wallet");
+            var wallet = wallets[parseInt(data)];
+            qrApp.data = wallet;
+            $("#scan-qr-modal").modal("show");
+        });
+        
+        
         if(navigator.registerProtocolHandler){
             $(".register-wallet")
                 .show()

@@ -24,7 +24,7 @@
  <script> 
  
 function initQRShow(title, data, modalId){   
-       new Vue({
+      return new Vue({
            el: '#scan-qr-modal-app',
            components: {
                qrcode: VueQrcode
@@ -56,8 +56,7 @@ function initQRShow(title, data, modalId){
            },
            watch: {
                data: function() {
-                   self.setFragments();
-                   self.start();
+                   this.setFragments();
                }
            },
            methods: {
@@ -66,7 +65,7 @@ function initQRShow(title, data, modalId){
                        this.fragments = [];
                        return;
                    }
-                   this.fragments = window.bcur.encodeUR(this.data, 200);
+                   this.fragments = window.bcur.encodeUR(this.data.toString(), 200);
                },
                start: function() {
                    this.active = true;

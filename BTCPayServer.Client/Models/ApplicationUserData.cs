@@ -1,3 +1,6 @@
+using System;
+using Newtonsoft.Json;
+
 namespace BTCPayServer.Client.Models
 {
     public class ApplicationUserData
@@ -26,5 +29,11 @@ namespace BTCPayServer.Client.Models
         /// the roles of the user
         /// </summary>
         public string[] Roles { get; set; }
+
+        /// <summary>
+        /// the date the user was created. Null if created before v1.0.5.6.
+        /// </summary>
+        [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
+        public DateTimeOffset? Created { get; set; }
     }
 }

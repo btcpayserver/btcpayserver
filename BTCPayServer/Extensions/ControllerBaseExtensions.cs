@@ -3,6 +3,7 @@ using System.Reflection;
 using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Models.PaymentRequestViewModels;
+using BTCPayServer.Models.ServerViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
@@ -18,6 +19,8 @@ namespace BTCPayServer
                 prop = typeof(UserPrefsCookie).GetProperty(nameof(UserPrefsCookie.InvoicesQuery));
             else if (model is ListPaymentRequestsViewModel)
                 prop = typeof(UserPrefsCookie).GetProperty(nameof(UserPrefsCookie.PaymentRequestsQuery));
+            else if (model is UsersViewModel)
+                prop = typeof(UserPrefsCookie).GetProperty(nameof(UserPrefsCookie.UsersQuery));
             else
                 throw new Exception("Unsupported BasePagingViewModel for cookie user preferences saving");
 
@@ -74,6 +77,7 @@ namespace BTCPayServer
             public ListQueryDataHolder InvoicesQuery { get; set; }
 
             public ListQueryDataHolder PaymentRequestsQuery { get; set; }
+            public ListQueryDataHolder UsersQuery { get; set; }
         }
 
         class ListQueryDataHolder

@@ -1,31 +1,36 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
+using BTCPayServer.Configuration;
 using BTCPayServer.Contracts;
-using BTCPayServer.Controllers;
 using McMaster.NETCore.Plugins;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Logging;
 
 namespace BTCPayServer
 {
     public static class ExtensionManager
     {
         private static readonly List<Assembly> _pluginAssemblies = new List<Assembly>();
+        private static ILogger _logger;
 
         public static IMvcBuilder AddExtensions(this IMvcBuilder mvcBuilder, IServiceCollection serviceCollection,
-            string extensionsFolder)
+            IConfiguration config, ILoggerFactory loggerFactory)
         {
+            _logger = loggerFactory.CreateLogger(typeof(ExtensionManager));
+            var extensionsFolder = config.GetExtensionDir(DefaultConfiguration.GetNetworkType(config));
             var extensions = new List<IBTCPayServerExtension>();
 
-            Console.WriteLine($"Loading extensions from {extensionsFolder}");
+            _logger.LogInformation($"Loading extensions from {extensionsFolder}");
             Directory.CreateDirectory(extensionsFolder);
-
             ExecuteCommands(extensionsFolder);
             List<(PluginLoader, Assembly, IFileProvider)> plugins = new List<(PluginLoader, Assembly, IFileProvider)>();
             foreach (var dir in Directory.GetDirectories(extensionsFolder))
@@ -49,6 +54,7 @@ namespace BTCPayServer
 
             foreach (var extension in extensions)
             {
+                _logger.LogInformation($"Adding and executing extension {extension.Identifier} - {extension.Version}");
                 serviceCollection.AddSingleton(extension);
                 extension.Execute(serviceCollection);
             }
@@ -58,8 +64,6 @@ namespace BTCPayServer
 
         public static void UseExtensions(this IApplicationBuilder applicationBuilder)
         {
-            
-
             foreach (var extension in applicationBuilder.ApplicationServices
                 .GetServices<IBTCPayServerExtension>())
             {
@@ -67,9 +71,8 @@ namespace BTCPayServer
                     applicationBuilder.ApplicationServices);
             }
 
-
             var webHostEnvironment = applicationBuilder.ApplicationServices.GetService<IWebHostEnvironment>();
-            List<IFileProvider> providers = new List<IFileProvider>() { webHostEnvironment.WebRootFileProvider};
+            List<IFileProvider> providers = new List<IFileProvider>() {webHostEnvironment.WebRootFileProvider};
             providers.AddRange(
                 _pluginAssemblies
                     .Select(CreateEmbeddedFileProviderForAssembly));
@@ -98,36 +101,37 @@ namespace BTCPayServer
             if (File.Exists(Path.Combine(extensionsFolder, "commands")))
             {
                 var commands = File.ReadAllLines(Path.Combine(extensionsFolder, "commands"));
+
                 foreach (var command in commands)
                 {
+                    _logger.LogInformation($"Executing command {command}");
                     ExecuteCommand(command, extensionsFolder);
                 }
             }
-
             File.Delete(Path.Combine(extensionsFolder, "commands"));
         }
 
         private static void ExecuteCommand(string command, string extensionsFolder)
         {
             var split = command.Split(":");
-            switch (split[0].ToLower())
+
+            var dirName = Path.Combine(extensionsFolder, split[1]);
+            switch (split[0].ToLower(CultureInfo.InvariantCulture))
             {
                 case "delete":
-                    if (Directory.Exists(Path.Combine(extensionsFolder, split[1])))
+                    if (Directory.Exists(dirName))
                     {
-                        Directory.Delete(Path.Combine(extensionsFolder, split[1]), true);
+                        Directory.Delete(dirName, true);
                     }
-
                     break;
                 case "install":
-                    if (File.Exists(Path.Combine(extensionsFolder, split[1])))
-                    {
-                        var filedest = Path.Combine(extensionsFolder, split[1]);
-                        ZipFile.ExtractToDirectory(filedest,
-                            filedest.TrimEnd(".btcpay", StringComparison.InvariantCultureIgnoreCase), true);
-                        System.IO.File.Delete(filedest);
-                    }
 
+                    var fileName = dirName + ".btcpay";
+                    if (File.Exists(fileName))
+                    {
+                        ZipFile.ExtractToDirectory(fileName, dirName, true);
+                        File.Delete(fileName);
+                    }
                     break;
             }
         }

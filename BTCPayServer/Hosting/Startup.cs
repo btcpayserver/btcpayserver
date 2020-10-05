@@ -91,7 +91,7 @@ namespace BTCPayServer.Hosting
 #if RAZOR_RUNTIME_COMPILE
             .AddRazorRuntimeCompilation()
 #endif
-            .AddExtensions(services, Configuration.GetExtensionDir(DefaultConfiguration.GetNetworkType(Configuration)))
+            .AddExtensions(services, Configuration, LoggerFactory)
             .AddControllersAsServices();
 
             

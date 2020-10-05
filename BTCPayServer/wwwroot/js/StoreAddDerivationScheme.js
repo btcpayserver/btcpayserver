@@ -1,4 +1,4 @@
-﻿function getVaultUI() {
+function getVaultUI() {
     var websocketPath = $("#WebsocketPath").text();
     var loc = window.location, ws_uri;
     if (loc.protocol === "https:") {
@@ -51,8 +51,8 @@ $(document).ready(function () {
         $('#btcpayservervault').on('hidden.bs.modal', function () {
             vaultUI.closeBridge();
         });
-        if (await vaultUI.askForDevice() && await vaultUI.askForXPubs()) {
-            displayXPubs(vaultUI.xpub);
+        while (! await vaultUI.askForDevice() || ! await vaultUI.askForXPubs()) {
         }
+        displayXPubs(vaultUI.xpub);
     });
 });

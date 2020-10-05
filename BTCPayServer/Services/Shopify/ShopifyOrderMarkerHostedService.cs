@@ -41,7 +41,7 @@ namespace BTCPayServer.Services.Shopify
         {
             if (evt is InvoiceEvent invoiceEvent && !new[]
             {
-                InvoiceEvent.Created, InvoiceEvent.Confirmed, InvoiceEvent.ExpiredPaidPartial,
+                InvoiceEvent.Created, InvoiceEvent.ExpiredPaidPartial,
                 InvoiceEvent.ReceivedPayment, InvoiceEvent.PaidInFull
             }.Contains(invoiceEvent.Name))
             {

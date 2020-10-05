@@ -254,6 +254,7 @@ namespace BTCPayServer.Controllers
         {
             var data = (await _SettingsRepository.GetSettingAsync<PoliciesSettings>()) ?? new PoliciesSettings();
             ViewBag.AppsList = await GetAppSelectList();
+            ViewBag.UpdateUrlPresent = _Options.UpdateUrl != null;
             return View(data);
         }
 

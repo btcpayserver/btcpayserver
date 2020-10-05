@@ -204,6 +204,46 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
+        public async Task CanSetupEmailServer()
+        {
+            using (var s = SeleniumTester.Create())
+            {
+                await s.StartAsync();
+                var alice = s.RegisterNewUser(isAdmin: true);
+                s.Driver.Navigate().GoToUrl(s.Link("/server/emails"));
+                if (s.Driver.PageSource.Contains("Configured"))
+                {
+                    s.Driver.FindElement(By.CssSelector("button[value=\"ResetPassword\"]")).Submit();
+                    s.AssertHappyMessage();
+                }
+                CanSetupEmailCore(s);
+                s.CreateNewStore();
+                s.GoToUrl($"stores/{s.StoreId}/emails");
+                CanSetupEmailCore(s);
+            }
+        }
+
+        private static void CanSetupEmailCore(SeleniumTester s)
+        {
+            s.Driver.FindElement(By.ClassName("dropdown-toggle")).Click();
+            s.Driver.FindElement(By.ClassName("dropdown-item")).Click();
+            s.Driver.FindElement(By.Id("Settings_Login")).SendKeys("test@gmail.com");
+            s.Driver.FindElement(By.CssSelector("button[value=\"Save\"]")).Submit();
+            s.AssertHappyMessage();
+            s.Driver.FindElement(By.Id("Settings_Password")).SendKeys("mypassword");
+            s.Driver.FindElement(By.CssSelector("button[value=\"Save\"]")).Submit();
+            Assert.Contains("Configured", s.Driver.PageSource);
+            s.Driver.FindElement(By.Id("Settings_Login")).SendKeys("test_fix@gmail.com");
+            s.Driver.FindElement(By.CssSelector("button[value=\"Save\"]")).Submit();
+            Assert.Contains("Configured", s.Driver.PageSource);
+            Assert.Contains("test_fix", s.Driver.PageSource);
+            s.Driver.FindElement(By.CssSelector("button[value=\"ResetPassword\"]")).Submit();
+            s.AssertHappyMessage();
+            Assert.DoesNotContain("Configured", s.Driver.PageSource);
+            Assert.Contains("test_fix", s.Driver.PageSource);
+        }
+
+        [Fact(Timeout = TestTimeout)]
         public async Task CanUseDynamicDns()
         {
             using (var s = SeleniumTester.Create())

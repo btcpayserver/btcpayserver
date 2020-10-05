@@ -59,7 +59,7 @@ namespace BTCPayServer.Controllers
                 store.SetStoreBlob(storeBlob);
                 await _Repo.UpdateStore(store);
                 TempData[WellKnownTempData.SuccessMessage] = "Email server password reset";
-                return RedirectToAction(nameof(UpdateStore), new
+                return RedirectToAction(nameof(Emails), new
                 {
                     storeId
                 });
@@ -76,7 +76,7 @@ namespace BTCPayServer.Controllers
                 store.SetStoreBlob(storeBlob);
                 await _Repo.UpdateStore(store);
                 TempData[WellKnownTempData.SuccessMessage] = "Email settings modified";
-                return RedirectToAction(nameof(UpdateStore), new
+                return RedirectToAction(nameof(Emails), new
                 {
                     storeId
                 });

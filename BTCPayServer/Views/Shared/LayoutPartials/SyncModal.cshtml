@@ -39,7 +39,7 @@
         });
         function handleFooterBottom() {
             if (document.getElementsByTagName("footer")[0].getBoundingClientRect().top < window.innerHeight){
-                syncModal.stop().animate({"bottom":"30px"});
+                syncModal.stop().animate({"bottom":"30px"}, 200);
             } else {      
                 syncModal.stop().animate({"bottom":"10px"}, 200);
             }

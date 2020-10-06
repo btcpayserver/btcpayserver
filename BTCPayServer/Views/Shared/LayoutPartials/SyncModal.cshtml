@@ -28,6 +28,7 @@
     </div>
     <script>
         var syncModalContent = $('#syncModalContent');
+        var syncModal = $('#syncModal');
         if (localStorage.getItem("sync-collapsed")){
             syncModalContent.removeClass("show");
         }
@@ -36,8 +37,18 @@
         }).on('shown.bs.collapse', function () {
             localStorage.removeItem("sync-collapsed");
         });
+        function handleFooterBottom() {
+            if (document.getElementsByTagName("footer")[0].getBoundingClientRect().top < window.innerHeight){
+                syncModal.stop().animate({"bottom":"40px"}, 200);
+            } else {      
+                syncModal.stop().animate({"bottom":"10px"}, 200);
+            }
+        }
+        $(document).on("scroll", handleFooterBottom);
+        handleFooterBottom();
     </script>
     <style type="text/css">
+        
         #syncModal {
             position: fixed;
             bottom: 40px;

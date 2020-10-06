@@ -106,7 +106,14 @@ namespace BTCPayServer.HostedServices
                     var tag = jobj["tag_name"].ToString();
 
                     var isReleaseVersionTag = _releaseVersionTag.IsMatch(tag);
-                    return isReleaseVersionTag ? tag : null;
+                    if (isReleaseVersionTag)
+                    {
+                        return tag.TrimStart('v');
+                    }
+                    else
+                    {
+                        return null;
+                    }
                 }
                 else
                 {

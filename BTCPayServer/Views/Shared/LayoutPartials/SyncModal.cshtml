@@ -7,7 +7,7 @@
         <div class="modal-content">
             <a class="modal-header btn-link border-0 text-decoration-none cursor-pointer align-items-center" data-toggle="collapse" data-target="#syncModalContent">
                 <h4 class="modal-title">Your nodes are synching...</h4>
-                <span class="fa fa-chevron-down" style="font-size:1em;"></span>
+                <span class="fa fa-chevron-down"></span>
             </a>
             <div id="syncModalContent" class="collapse show">
                 <div class="modal-body pt-0">
@@ -39,7 +39,7 @@
         });
         function handleFooterBottom() {
             if (document.getElementsByTagName("footer")[0].getBoundingClientRect().top < window.innerHeight){
-                syncModal.stop().animate({"bottom":"30px"}, 200);
+                syncModal.stop().animate({"bottom":"40px"}, 200);
             } else {      
                 syncModal.stop().animate({"bottom":"10px"}, 200);
             }
@@ -51,7 +51,7 @@
         
         #syncModal {
             position: fixed;
-            bottom: 30px;
+            bottom: 40px;
             right: 10px;
             margin: 0;
             z-index: 1000;
@@ -63,6 +63,8 @@
             overflow-y: scroll;
         }
         #syncModal .fa-chevron-down {
+            font-size: 1em;
+            text-decoration: none;
             transition: transform .35s;
         }
         #syncModal .collapsed .fa-chevron-down {

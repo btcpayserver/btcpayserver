@@ -260,7 +260,7 @@ retry:
             var existingPaymentMethod = paymentMethod.GetPaymentMethodDetails();
             if (existingPaymentMethod.GetPaymentDestination() != null)
             {
-                MarkUnassigned(invoiceId, invoiceEntity, context, paymentMethod.GetId());
+                MarkUnassigned(invoiceId, context, paymentMethod.GetId());
             }
             paymentMethod.SetPaymentMethodDetails(paymentMethodDetails);
 #pragma warning disable CS0618
@@ -323,36 +323,30 @@ retry:
             catch (DbUpdateException) { } // Probably the invoice does not exists anymore
         }
 
-        private static void MarkUnassigned(string invoiceId, InvoiceEntity entity, ApplicationDbContext context, PaymentMethodId paymentMethodId)
+        private static void MarkUnassigned(string invoiceId, ApplicationDbContext context,
+            PaymentMethodId paymentMethodId)
         {
-            foreach (var address in entity.GetPaymentMethods())
-            {
-                if (paymentMethodId != null && paymentMethodId != address.GetId())
-                    continue;
-                var historical = new HistoricalAddressInvoiceData();
-                historical.InvoiceDataId = invoiceId;
-                historical.SetAddress(address.GetPaymentMethodDetails().GetPaymentDestination(), address.GetId().ToString());
-                historical.UnAssigned = DateTimeOffset.UtcNow;
-                context.Attach(historical);
-                context.Entry(historical).Property(o => o.UnAssigned).IsModified = true;
-            }
+            var paymentMethodIdStr = paymentMethodId?.ToString();
+            context.HistoricalAddressInvoices.Where(data =>
+                    data.InvoiceDataId == invoiceId && paymentMethodIdStr == null ||
+                    data.CryptoCode == paymentMethodIdStr &&
+                    data.UnAssigned == null)
+                .ForEachAsync(
+                    data =>
+                    {
+                        data.UnAssigned = DateTimeOffset.UtcNow;
+                    });
         }
 
         public async Task UnaffectAddress(string invoiceId)
         {
-            using (var context = _ContextFactory.CreateContext())
+            await using var context = _ContextFactory.CreateContext();
+            MarkUnassigned(invoiceId, context, null);
+            try
             {
-                var invoiceData = await context.FindAsync<Data.InvoiceData>(invoiceId).ConfigureAwait(false);
-                if (invoiceData == null)
-                    return;
-                var invoiceEntity = invoiceData.GetBlob(_Networks);
-                MarkUnassigned(invoiceId, invoiceEntity, context, null);
-                try
-                {
-                    await context.SaveChangesAsync();
-                }
-                catch (DbUpdateException) { } //Possibly, it was unassigned before
+                await context.SaveChangesAsync();
             }
+            catch (DbUpdateException) { } //Possibly, it was unassigned before
         }
 
         private string[] SearchInvoice(string searchTerms)

@@ -324,6 +324,16 @@ namespace BTCPayServer.Controllers
                 cryptoPayment.Address = paymentMethodDetails.GetPaymentDestination();
                 cryptoPayment.Rate = ExchangeRate(data);
                 model.CryptoPayments.Add(cryptoPayment);
+                if (paymentMethodDetails is LightningLikePaymentMethodDetails likePaymentMethodDetails &&
+                    likePaymentMethodDetails.PreviousDestinations?.Any() is true)
+                {
+                    model.CryptoPayments.AddRange(likePaymentMethodDetails.PreviousDestinations.Select(s => new InvoiceDetailsModel.CryptoPayment()
+                    {
+                        Address = s,
+                        PaymentMethodId =  paymentMethodId,
+                        PaymentMethod = $"{paymentMethodId.ToPrettyString()} (old)"
+                    }));
+                }
             }
             return model;
         }

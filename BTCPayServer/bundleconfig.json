@@ -21,6 +21,7 @@
             "wwwroot/vendor/flatpickr/flatpickr.js",
             "wwwroot/main/bootstrap/bootstrap.js",
             "wwwroot/main/bootstrap4-creativestart/creative.js",
+            "wwwroot/js/copy-to-clipboard.js",
             "wwwroot/main/site.js"
         ]
     },
@@ -175,6 +176,7 @@
             "wwwroot/vendor/signalr/signalr.js",
             "wwwroot/vendor/animejs/anime.min.js",
             "wwwroot/vendor/moment/moment.min.js",
+            "wwwroot/js/copy-to-clipboard.js",
             "wwwroot/payment-request/**/*.js"
         ],
         "minify": {

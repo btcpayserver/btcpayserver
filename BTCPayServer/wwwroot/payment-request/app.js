@@ -84,18 +84,6 @@ addLoadEvent(function (ev) {
 
                 eventAggregator.$emit("pay", amount);
             },
-            copyLink: function (e) {
-                if (navigator.clipboard) {
-                    e.preventDefault();
-                    var button = e.currentTarget;
-                    if (!button.dataset.initialText) button.dataset.initialText = button.innerText;
-                    navigator.clipboard.writeText(window.location).then(function () {
-                        button.innerText = 'Copied ✔';
-                        setTimeout(function() { button.innerText = button.dataset.initialText; }, 2500);
-                    });
-                    button.blur();
-                }
-            },
             cancelPayment: function (amount) {
                 this.setLoading(true);
                 var self = this;

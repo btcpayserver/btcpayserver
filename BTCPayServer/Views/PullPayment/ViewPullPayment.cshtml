@@ -24,6 +24,7 @@
         <link href="@Model.CustomCSSLink" rel="stylesheet" />
     }
     @Safe.Raw(Model.EmbeddedCSS)
+    <script src="~/js/copy-to-clipboard.js" asp-append-version="true"></script>
     <noscript>
         <style>
             .hide-when-js, [v-cloak] { display: block !important; }
@@ -189,18 +190,7 @@
         </footer>
     </div>
     <script>
-        document.getElementById("copyLink").addEventListener("click", function (e) {
-            if (navigator.clipboard) {
-                e.preventDefault();
-                var button = e.currentTarget;
-                if (!button.dataset.initialText) button.dataset.initialText = button.innerText;
-                navigator.clipboard.writeText(window.location).then(function () {
-                    button.innerText = 'Copied ✔';
-                    setTimeout(function() { button.innerText = button.dataset.initialText; }, 2500);
-                });
-                button.blur();
-            }
-        });
+        document.getElementById("copyLink").addEventListener("click", window.copyUrlToClipboard);
     </script>
 </body>
 </html>

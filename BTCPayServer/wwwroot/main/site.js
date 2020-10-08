@@ -80,26 +80,7 @@ $(function () {
         }
     }
 
-    $('[data-clipboard]').on('click', function (e) {
-        if (navigator.clipboard) {
-            e.preventDefault();
-            var item = e.currentTarget;
-            var text = item.getAttribute('data-clipboard');
-            var confirm = item.querySelector('[data-clipboard-confirm]') || item;
-            var message = confirm.getAttribute('data-clipboard-confirm') || 'Copied ✔';
-            if (!confirm.dataset.clipboardInitialText) {
-                confirm.dataset.clipboardInitialText = confirm.innerText;
-                console.log(confirm.clientWidth)
-                confirm.style.minWidth = confirm.clientWidth + 'px';
-            }
-            navigator.clipboard.writeText(text).then(function () {
-                confirm.innerText = message;
-                setTimeout(function(){ confirm.innerText = confirm.dataset.clipboardInitialText; }, 2500);
-            });
-            item.blur();
-        }
-    });
-
+    $('[data-clipboard]').on('click', window.copyToClipboard);
 });
 
 function switchTimeFormat() {

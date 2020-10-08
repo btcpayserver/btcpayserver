@@ -1,5 +1,31 @@
 # Changelog
 
+## 1.0.5.7:
+
+### Bug fixes:
+
+* Mark Shopify orders paid on invoice payment confirmed @rockstardev
+* Fix: notification of new BTCPay Server not showing properly @rockstardev
+* Fix: When collapsed, the sync window blocks the version text in the footer #1941 @Kukks
+* Fix: Not possible to delete a user if U2F is enabled. @Kukks
+* Fix onion location not always working #1947 @Kukks
+* Fix invoice exception status not displaying in list #1963 @Kukks
+* Fix: Is administrator checkbox does not work on create user page @NicolasDorier
+
+### Improvements:
+
+* Add specter desktop to the list of Bitcoin RPC compatible wallet @NicolasDorier
+* If some operation using BTCPay Server Vault fails, add a retry button so the user does not have to refresh the page. #1937 @NicolasDorier
+* Do not show password in clear text in email configuration (Fix #1790) @NicolasDorier
+* Showing CheckForNewVersions checkbox only if BTCPAY_UPDATEURL is set @rockstardev
+* Add Created date to user, add verified column in list and make user list use same model as modern lists @Kukks
+* Do not overlap the footer. Also removed the underline for the toggle button in chrome. Fixes #1946 @dennisreimann
+* Improve notifications dropdown #1961 @dennisreimann
+
+### Altcoins
+
+* Fix: DOGE could be trapped, due to our sanity check of absurdly high fee of "1 DOGE". @NicolasDorier
+
 ## 1.0.5.6:
 
 ### New features:

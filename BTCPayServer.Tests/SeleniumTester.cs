@@ -384,6 +384,11 @@ namespace BTCPayServer.Tests
                 Driver.FindElement(By.Id($"Wallet{navPages}")).Click();
             }
         }
+
+        public void GoToUrl(string relativeUrl)
+        {
+            Driver.Navigate().GoToUrl(new Uri(Server.PayTester.ServerUri, relativeUrl));
+        }
         
         public void GoToServer(ServerNavPages navPages = ServerNavPages.Index)
         {

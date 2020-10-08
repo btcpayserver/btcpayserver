@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Data
 {
@@ -18,5 +19,15 @@ namespace BTCPayServer.Data
 
         public string ApplicationUserId { get; set; }
         public ApplicationUser ApplicationUser { get; set; }
+        
+        
+        internal static void OnModelCreating(ModelBuilder builder)
+        {
+            builder.Entity<U2FDevice>()
+                .HasOne(o => o.ApplicationUser)
+                .WithMany(i => i.U2FDevices)
+                .HasForeignKey(i => i.ApplicationUserId).OnDelete(DeleteBehavior.Cascade);
+            
+        }
     }
 }

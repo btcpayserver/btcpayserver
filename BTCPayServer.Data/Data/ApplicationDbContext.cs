@@ -90,7 +90,8 @@ namespace BTCPayServer.Data
             PullPaymentData.OnModelCreating(builder);
             PayoutData.OnModelCreating(builder);
             RefundData.OnModelCreating(builder);
-
+            U2FDevice.OnModelCreating(builder);
+            
             if (Database.IsSqlite() && !_designTime)
             {
                 // SQLite does not have proper support for DateTimeOffset via Entity Framework Core, see the limitations

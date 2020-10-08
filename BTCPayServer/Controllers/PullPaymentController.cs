@@ -76,7 +76,7 @@ namespace BTCPayServer.Controllers
                               Amount = entity.Blob.Amount,
                               AmountFormatted = _currencyNameTable.FormatCurrency(entity.Blob.Amount, blob.Currency),
                               Currency = blob.Currency,
-                              Status = Regex.Replace(entity.Entity.State.ToString(), "(\\B[A-Z])", " $1"),
+                              Status = entity.Entity.State.GetStateString(),
                               Destination = entity.Blob.Destination.Address.ToString(),
                               Link = GetTransactionLink(_networkProvider.GetNetwork<BTCPayNetwork>(entity.Entity.GetPaymentMethodId().CryptoCode), entity.TransactionId),
                               TransactionId = entity.TransactionId

@@ -806,7 +806,7 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("ClaimedAmount")).Clear();
                 s.Driver.FindElement(By.Id("ClaimedAmount")).SendKeys("20" + Keys.Enter);
                 s.AssertHappyMessage();
-                Assert.Contains("AwaitingApproval", s.Driver.PageSource);
+                Assert.Contains("Awaiting Approval", s.Driver.PageSource);
 
                 var viewPullPaymentUrl = s.Driver.Url;
                 // This one should have nothing
@@ -848,8 +848,7 @@ namespace BTCPayServer.Tests
                 s.Driver.Navigate().GoToUrl(viewPullPaymentUrl);
                 txs = s.Driver.FindElements(By.ClassName("transaction-link"));
                 Assert.Equal(2, txs.Count);
-                Assert.Contains("InProgress", s.Driver.PageSource);
-
+                Assert.Contains("In Progress", s.Driver.PageSource);
 
                 await s.Server.ExplorerNode.GenerateAsync(1);
 

@@ -267,7 +267,7 @@
                                 {
                                     <div id="pavpill_@invoice.InvoiceId" class="badge badge-@invoice.Status.ToString().ToLower()">
                                         <span class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                            @invoice.Status.ToString().ToLower()
+                                            @invoice.Status.ToString()
                                         </span>
                                         <div class="dropdown-menu pull-right">
                                             @if (invoice.CanMarkInvalid)

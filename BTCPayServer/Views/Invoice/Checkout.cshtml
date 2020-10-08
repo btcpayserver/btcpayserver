@@ -33,8 +33,9 @@
     {
         <style type="text/css">
             body {
-                background: rgba(25, 25, 25, 0.9);
+                background: rgba(55, 58, 60, 0.4);
             }
+
             .close-icon {
                 display: flex;
             }
@@ -43,25 +44,25 @@
 </head>
 <body>
     <noscript>
-        <div style="padding:2em;text-align:center;">
+        <center style="padding: 2em">
             <h2>Javascript is currently disabled in your browser.</h2>
             <h5>Please enable Javascript and refresh this page for the best experience.</h5>
 
             <p>Alternatively, click below to continue to our HTML-only invoice.</p>
 
-            <a href="/invoice-noscript?id=@Model.InvoiceId" style="text-decoration:underline;color:blue">
+            <a href="/invoice-noscript?id=@Model.InvoiceId" style="text-decoration: underline; color: blue">
                 Continue to javascript-disabled invoice &gt;
             </a>
-        </div>
+        </center>
     </noscript>
 
     <!--[if lte IE 8]>
-    <div style="padding:2em;text-align:center;">
+    <center style="padding: 2em">
       <form action="/invoice-noscript" method="GET">
         <button style="text-decoration: underline; color: blue">Continue to legacy browser compatible invoice page
         </button>
       </form>
-    </div>
+    </center>
     <![endif]-->
 
     <invoice>

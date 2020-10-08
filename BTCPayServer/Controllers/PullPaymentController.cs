@@ -1,7 +1,6 @@
 using System;
 using System.Globalization;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using BTCPayServer;
 using BTCPayServer.Data;
@@ -70,13 +69,13 @@ namespace BTCPayServer.Controllers
                 CurrencyData = cd,
                 LastUpdated = DateTime.Now,
                 Payouts = payouts
-                          .Select(entity => new ViewPullPaymentModel.PayoutLine
+                          .Select(entity => new ViewPullPaymentModel.PayoutLine()
                           {
                               Id = entity.Entity.Id,
                               Amount = entity.Blob.Amount,
                               AmountFormatted = _currencyNameTable.FormatCurrency(entity.Blob.Amount, blob.Currency),
                               Currency = blob.Currency,
-                              Status = Regex.Replace(entity.Entity.State.ToString(), "(\\B[A-Z])", " $1"),
+                              Status = entity.Entity.State.ToString(),
                               Destination = entity.Blob.Destination.Address.ToString(),
                               Link = GetTransactionLink(_networkProvider.GetNetwork<BTCPayNetwork>(entity.Entity.GetPaymentMethodId().CryptoCode), entity.TransactionId),
                               TransactionId = entity.TransactionId

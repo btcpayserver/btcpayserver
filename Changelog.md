@@ -7,7 +7,7 @@
 * Mark Shopify orders paid on invoice payment confirmed @rockstardev
 * Fix: notification of new BTCPay Server not showing properly @rockstardev
 * Fix: When collapsed, the sync window blocks the version text in the footer #1941 @Kukks
-* Fix: Not possible to delete a second admin user if U2F is enabled. @Kukks
+* Fix: Not possible to delete a user if U2F is enabled. @Kukks
 * Fix onion location not always working #1947 @Kukks
 * Fix invoice exception status not displaying in list #1963 @Kukks
 * Fix: Is administrator checkbox does not work on create user page @NicolasDorier

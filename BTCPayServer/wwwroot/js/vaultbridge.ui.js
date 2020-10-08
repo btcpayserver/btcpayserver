@@ -1,4 +1,4 @@
-﻿/// <reference path="vaultbridge.js" />
+/// <reference path="vaultbridge.js" />
 /// file: vaultbridge.js
 
 var vaultui = (function () {
@@ -73,6 +73,15 @@ var vaultui = (function () {
         this.psbt = null;
 
         this.xpub = null;
+
+        this.retryShowing = false;
+
+        function showRetry() {
+            var button = $(".vault-retry");
+            self.retryShowing = true;
+            button.show();
+        }
+
         /**
         * @param {VaultFeedback} feedback
         */
@@ -88,6 +97,7 @@ var vaultui = (function () {
             }
             else if (feedback.type == "failed") {
                 icon.addClass("fa fa-times-circle feedback-icon-failed");
+                showRetry();
             }
             var content = $(".vault-feedback." + feedback.category + " " + ".vault-feedback-content");
             content.html(feedback.txt);
@@ -149,7 +159,28 @@ var vaultui = (function () {
             return false;
         }
 
+        this.waitRetryPushed = function () {
+            var button = $(".vault-retry");
+            return new Promise(function (resolve) {
+                button.click(function () {
+                    // Cleanup old feedback
+                    var icon = $(".vault-feedback-icon");
+                    icon.removeClass();
+                    icon.addClass("vault-feedback-icon");
+                    var content = $(".vault-feedback-content");
+                    content.html('');
+                    ///////////////////
+                    button.hide();
+                    self.retryShowing = false;
+                    resolve(true);
+                });
+            });
+        };
+
         this.ensureConnectedToBackend = async function () {
+            if (self.retryShowing) {
+                await self.waitRetryPushed();
+            }
             if (!self.bridge) {
                 $("#vault-dropdown").css("display", "none");
                 show(VaultFeedbacks.vaultLoading);

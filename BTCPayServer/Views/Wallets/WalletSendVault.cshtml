@@ -1,4 +1,4 @@
-﻿@model WalletSendVaultModel
+@model WalletSendVaultModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData["Title"] = "Manage wallet";
@@ -26,6 +26,7 @@
             <partial name="SigningContext" for="SigningContext" />
         </form>
         <div id="vaultPlaceholder"></div>
+        <button class="btn btn-primary vault-retry" style="display:none;" type="button">Retry</button>
         <button id="vault-confirm" class="btn btn-primary" style="display:none;"></button>
     </div>
 </div>
@@ -50,13 +51,14 @@
             var html = $("#VaultConnection").html();
             $("#vaultPlaceholder").html(html);
             var vaultUI = new vaultui.VaultBridgeUI(ws_uri);
-            if (await vaultUI.askForDevice() && await vaultUI.askSignPSBT({
+            
+            while (!await vaultUI.askForDevice() || !await vaultUI.askSignPSBT({
                 walletId: $("#WalletId").val(),
                 psbt: $("#SigningContext_PSBT").val()
             })) {
-                $("#SigningContext_PSBT").val(vaultUI.psbt);
-                $("#broadcastForm").submit();
             }
+            $("#SigningContext_PSBT").val(vaultUI.psbt);
+            $("#broadcastForm").submit();
         }
         $(function () {
             askSign();

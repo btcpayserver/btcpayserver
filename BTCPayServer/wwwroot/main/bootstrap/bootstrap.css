@@ -1977,9 +1977,9 @@ input[type="button"].btn-block {
   color: var(--btcpay-body-color);
   text-align: left;
   list-style: none;
-  background-color: var(--btcpay-color-white);
+  background-color: var(--btcpay-bg-tile, var(--btcpay-color-white));
   background-clip: padding-box;
-  border: 1px solid rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--btcpay-border-color-medium, var(--btcpay-color-neutral-300));
   border-radius: 0.25rem; }
 
 .dropdown-menu-left {
@@ -2111,23 +2111,22 @@ input[type="button"].btn-block {
   padding: 0.25rem 1.5rem;
   clear: both;
   font-weight: 400;
-  color: var(--btcpay-color-neutral-900);
+  color: var(--btcpay-body-color);
   text-align: inherit;
   white-space: nowrap;
   background-color: transparent;
   border: 0; }
   .dropdown-item:hover, .dropdown-item:focus {
-    color: #16181b;
+    color: var(--btcpay-body-color);
     text-decoration: none;
-    background-color: var(--btcpay-color-neutral-100); }
+    background-color: var(--btcpay-bg-color-light); }
   .dropdown-item.active, .dropdown-item:active {
-    color: var(--btcpay-color-white);
+    color: var(--btcpay-body-color);
     text-decoration: none;
-    background-color: var(--btcpay-color-primary); }
+    background-color: var(--btcpay-bg-color-light) }
   .dropdown-item.disabled, .dropdown-item:disabled {
-    color: var(--btcpay-color-neutral-600);
-    pointer-events: none;
-    background-color: transparent; }
+    color: var(--btcpay-color-secondary);
+    pointer-events: none; }
 
 .dropdown-menu.show {
   display: block; }

@@ -168,6 +168,8 @@ namespace BTCPayServer.Tests
                     IsAdministrator = true
                 });
                 Assert.Contains("ServerAdmin", admin.Roles);
+                Assert.NotNull(admin.Created);
+                Assert.True((DateTimeOffset.Now - admin.Created).Value.Seconds < 10);
                 
                 // Creating a new user without proper creds is now impossible (unauthorized) 
                 // Because if registration are locked and that an admin exists, we don't accept unauthenticated connection

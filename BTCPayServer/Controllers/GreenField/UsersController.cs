@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -110,7 +111,8 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 UserName = request.Email,
                 Email = request.Email,
-                RequiresEmailConfirmation = policies.RequiresConfirmedEmail
+                RequiresEmailConfirmation = policies.RequiresConfirmedEmail,
+                Created = DateTimeOffset.UtcNow,
             };
             var passwordValidation = await this._passwordValidator.ValidateAsync(_userManager, user, request.Password);
             if (!passwordValidation.Succeeded)
@@ -165,7 +167,8 @@ namespace BTCPayServer.Controllers.GreenField
                 Email = data.Email,
                 EmailConfirmed = data.EmailConfirmed,
                 RequiresEmailConfirmation = data.RequiresEmailConfirmation,
-                Roles = roles
+                Roles = roles,
+                Created = data.Created
             };
         }
     }

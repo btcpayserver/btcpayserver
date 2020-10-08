@@ -99,7 +99,8 @@ namespace BTCPayServer.Controllers
         {
             ViewData["AllowIsAdmin"] = _Options.AllowAdminRegistration;
             ViewData["AllowRequestEmailConfirmation"] = _cssThemeManager.Policies.RequiresConfirmedEmail;
-
+            if (!_Options.AllowAdminRegistration)
+                model.IsAdmin = false;
             if (ModelState.IsValid)
             {
                 IdentityResult result;
@@ -107,14 +108,7 @@ namespace BTCPayServer.Controllers
 
                 if (!string.IsNullOrEmpty(model.Password))
                 {
-                    
                     result = await _UserManager.CreateAsync(user, model.Password);
-                    
-                    if (result.Succeeded)
-                    {
-                        TempData[WellKnownTempData.SuccessMessage] = "Account created";
-                        return RedirectToAction(nameof(ListUsers));
-                    }
                 }
                 else
                 {

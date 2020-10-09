@@ -7,6 +7,20 @@
 @{
     ViewData["Title"] = Model.Title;
     Layout = null;
+
+    string StatusTextClass(string status)
+    {
+        switch (status)
+        {
+            case "Completed":
+            case "In Progress":
+                return "text-success";
+            case "Cancelled":
+                return "text-danger";
+            default:
+                return "text-warning";
+        }
+    }
 }
 <!DOCTYPE html>
 <html lang="en" @(env.IsDeveloping ? " data-devenv" : "")>
@@ -143,29 +157,13 @@
                                                 </td>
                                                 <td class="text-right">@invoice.AmountFormatted</td>
                                                 <td class="text-right text-nowrap">
-                                                    @{
-                                                        string textClass;
-                                                        switch (invoice.Status)
-                                                        {
-                                                            case "Completed":
-                                                            case "In Progress":
-                                                                textClass = "text-success";
-                                                                break;
-                                                            case "Cancelled":
-                                                                textClass = "text-danger";
-                                                                break;
-                                                            default:
-                                                                textClass = "text-warning";
-                                                                break;
-                                                        }
-                                                    }
                                                     @if (!string.IsNullOrEmpty(invoice.Link))
                                                     {
-                                                        <a class="transaction-link @textClass" href="@invoice.Link">@invoice.Status</a>
+                                                        <a class="transaction-link @StatusTextClass(invoice.Status)" href="@invoice.Link">@invoice.Status</a>
                                                     }
                                                     else
                                                     {
-                                                        <span class="@textClass">@invoice.Status</span>
+                                                        <span class="@StatusTextClass(invoice.Status)">@invoice.Status</span>
                                                     }
                                                 </td>
                                             </tr>

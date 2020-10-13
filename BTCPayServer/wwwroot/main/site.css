@@ -249,6 +249,10 @@ pre {
     margin-top: .5rem;
 }
 
+.w-150px {
+    width: 150px;
+}
+
 /* Chrome, Safari, Edge, Opera */
 input[type=number].hide-number-spin::-webkit-outer-spin-button,
 input[type=number].hide-number-spin::-webkit-inner-spin-button {
@@ -285,8 +289,15 @@ html[data-devenv]:before {
 
 /* Print */
 @media print {
+    .table td,
+    .table th {
+        background: transparent;
+    }
     .jumbotron {
         padding: 1rem 0 !important;
+    }
+    a {
+        text-decoration: none !important;
     }
 }
 

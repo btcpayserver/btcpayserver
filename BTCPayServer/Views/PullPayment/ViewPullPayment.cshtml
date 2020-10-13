@@ -2,14 +2,28 @@
 @model BTCPayServer.Models.ViewPullPaymentModel
 
 @addTagHelper *, BundlerMinifier.TagHelpers
+@inject BTCPayServer.Services.BTCPayServerEnvironment env
 @inject BTCPayServer.HostedServices.CssThemeManager themeManager
 @{
     ViewData["Title"] = Model.Title;
     Layout = null;
-}
 
+    string StatusTextClass(string status)
+    {
+        switch (status)
+        {
+            case "Completed":
+            case "In Progress":
+                return "text-success";
+            case "Cancelled":
+                return "text-danger";
+            default:
+                return "text-warning";
+        }
+    }
+}
 <!DOCTYPE html>
-<html class="h-100">
+<html lang="en" @(env.IsDeveloping ? " data-devenv" : "")>
 <head>
     <title>@ViewData["Title"]</title>
     <meta charset="utf-8" />
@@ -18,155 +32,163 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.BootstrapUri)" rel="stylesheet" />
     <link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.ThemeUri)" rel="stylesheet" />
+    <bundle name="wwwroot/bundles/payment-request-bundle.min.css" asp-append-version="true"></bundle>
     @if (Model.CustomCSSLink != null)
     {
         <link href="@Model.CustomCSSLink" rel="stylesheet" />
     }
-
-    <bundle name="wwwroot/bundles/payment-request-bundle.min.css" asp-append-version="true"></bundle>
-
     @Safe.Raw(Model.EmbeddedCSS)
+    <script src="~/js/copy-to-clipboard.js" asp-append-version="true"></script>
+    <noscript>
+        <style>
+            .hide-when-js, [v-cloak] { display: block !important; }
+            .only-for-js { display: none !important; }
+        </style>
+    </noscript>
 </head>
-<body>
-<div class="container" style="max-width:960px;">
-
-    <div class="row w-100 p-0 m-0" style="height: 100vh">
-        <div class="mx-auto my-auto w-100">
-            @if (TempData.HasStatusMessage())
-            {
-                <partial name="_StatusMessage" />
-            }
-            @if (!this.ViewContext.ModelState.IsValid)
-            {
-                @Html.ValidationSummary(string.Empty, new { @class = "alert alert-danger pb-0 text-center" })
-            }
-
-            <div class="card">
-                @if (!Model.Title.IsNullOrWhiteSpace())
-                {
-                    <h1 class="card-header px-3">
-                        @Model.Title
-                        <span class="text-muted float-right text-center">@Model.Status</span>
-                    </h1>
-                }
-                @if (Model.IsPending)
-                {
-                    <div class="card-body" style="padding-left:.75rem;padding-right:.75rem;">
-                        <form asp-action="ClaimPullPayment" asp-route-pullPaymentId="@Model.Id">
-                            <div class="row">
-                                <div class="col-12 mb-2 col-lg-6 mb-lg-0">
-                                    <input class="form-control text-monospace w-100"
-                                           asp-for="Destination"
-                                           placeholder="Destination address"
-                                           required
-                                           style="font-size:.9rem;height:38px;">
-                                </div>
-                                <div class="col-12 mb-2 col-sm-6 mb-sm-0 col-lg-3">
-                                    <div class="input-group">
-                                        <input class="form-control"
-                                               asp-for="ClaimedAmount"
-                                               type="number"
-                                               max="@Model.AmountDue"
-                                               min="@Model.MinimumClaim"
-                                               step="any"
-                                               placeholder="Amount"
-                                               required>
-                                        <div class="input-group-append">
-                                            <span class='input-group-text'>@Model.Currency.ToUpper()</span>
-                                        </div>
+<body class="h-100">
+    <div class="h-100 d-flex flex-column">
+        @if (Model.IsPending)
+        {
+            <nav id="mainNav" class="navbar sticky-top py-3 py-lg-4 d-print-block">
+                <div class="container">
+                    <form asp-action="ClaimPullPayment" asp-route-pullPaymentId="@Model.Id" class="w-100">
+                        <div class="row align-items-center" style="width:calc(100% + 30px)">
+                            <div class="col-12 mb-3 col-lg-6 mb-lg-0">
+                                <input class="form-control form-control-lg text-monospace w-100" asp-for="Destination" placeholder="Enter destination address to claim funds …" required style="font-size:.9rem;height:42px;">
+                            </div>
+                            <div class="col-12 mb-3 col-sm-6 mb-sm-0 col-lg-3">
+                                <div class="input-group">
+                                    <input type="number" class="form-control form-control-lg text-right hide-number-spin" asp-for="ClaimedAmount" max="@Model.AmountDue" min="@Model.MinimumClaim" step="any" placeholder="Amount" required>
+                                    <div class="input-group-append">
+                                        <span class="input-group-text px-3">@Model.Currency.ToUpper()</span>
                                     </div>
                                 </div>
-                                <div class="col-12 col-sm-6 col-lg-3">
-                                    <button class="form-control btn btn-primary" type="submit">Claim now</button>
-                                </div>
                             </div>
-                        </form>
-                    </div>
+                            <div class="col-12 col-sm-6 col-lg-3">
+                                <button class="btn btn-lg btn-primary w-100 text-nowrap" type="submit">Claim Funds</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </nav>
+        }
+
+        <main class="flex-grow-1 py-4">
+            <div class="container">
+                @await Html.PartialAsync("_StatusMessage", new ViewDataDictionary(ViewData){ { "Margin", "mb-4" } })
+                @if (!ViewContext.ModelState.IsValid)
+                {
+                    @Html.ValidationSummary(string.Empty, new { @class = "alert alert-danger mb-4 pb-0 text-center" })
                 }
-                <div class="card-body px-0 pt-0 pb-0">
-                    <div class="row">
-                        <div class="col-sm-12 col-md-12 col-lg-6">
-                            <h5 style="margin:1rem .75rem;">Pull payment details</h5>
-                            <table class="table mb-lg-0 border-top-0">
-                                <tr class="bg-light">
-                                    <td class="font-weight-bold">Claim limit:</td>
-                                    <td class="text-right">@Model.AmountFormatted</td>
-                                </tr>
-                                <tr class="bg-light">
-                                    <td class="font-weight-bold">Already claimed:</td>
-                                    <td class="text-right">@Model.AmountCollectedFormatted</td>
-                                </tr>
-                                <tr class="bg-light">
-                                    <td class="font-weight-bold">Available claim:</td>
-                                    <td class="text-right">@Model.AmountDueFormatted</td>
-                                </tr>
-                                @if (Model.ResetIn != String.Empty)
-                                {
-                                    <tr class="bg-light">
-                                        <td class="font-weight-bold">Reset in:</td>
-                                        <td class="text-right">@Model.ResetIn</td>
-                                    </tr>
-                                }
-                            </table>
-                            @if (Model.Description != null && Model.Description != "" && Model.Description != "<br>")
+                <div class="row">
+                    <div class="col col-12 col-lg-6 mb-4">
+                        <div class="jumbotron h-100 m-0 p-sm-5">
+                            @if (!Model.Title.IsNullOrWhiteSpace())
                             {
-                                <div class="w-100 px-3 pt-4 pb-3">@Safe.Raw(Model.Description)</div>
+                                <h2 class="h4 mb-3">@Model.Title</h2>
+                            }
+                            <div class="d-flex align-items-center">
+                                <span class="text-muted text-nowrap">Last Updated</span>
+                                &nbsp;
+                                <span class="text-nowrap">@Model.LastUpdated.ToString("g")</span>
+                                <button type="button" class="btn btn-link d-none d-lg-inline-block d-print-none border-0 p-0 ml-4 only-for-js" id="copyLink">
+                                    Copy Link
+                                </button>
+                            </div>
+                            @if (!string.IsNullOrEmpty(Model.ResetIn))
+                            {
+                                <p>
+                                    <span class="text-muted text-nowrap">Reset in</span>
+                                    &nbsp;
+                                    <span class="text-nowrap">@Model.ResetIn</span>
+                                </p>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.Description) && Model.Description != "<br>")
+                            {
+                                <div>@Safe.Raw(Model.Description)</div>
                             }
                         </div>
-                        <div class="col-sm-12 col-md-12 col-lg-6">
-                            <h5 style="margin:1rem .75rem;">Awaiting claims</h5>
-                            @if (Model.Payouts.Any())
-                            {
-                                foreach (var invoice in Model.Payouts)
-                                {
-                                    <table class="table border-top-0 mt-3 mb-0">
-                                        <tr class="bg-light">
-                                            <td class="font-weight-bold">Status</td>
-                                            <td class="text-right">@invoice.Status</td>
-                                        </tr>
-                                        <tr class="bg-light">
-                                            <td class="font-weight-bold">Amount&nbsp;claimed</td>
-                                            <td class="text-right">@invoice.AmountFormatted</td>
-                                        </tr>
-                                        <tr class="bg-light">
-                                            <td class="font-weight-bold">Destination</td>
-                                            <td class="text-right text-break">
-                                                <code>@invoice.Destination</code>
-                                            </td>
-                                        </tr>
-                                        @if (!String.IsNullOrEmpty(invoice.Link))
-                                        {
-                                            <tr class="bg-light">
-                                                <td class="font-weight-bold">Transaction</td>
-                                                <td class="text-right text-truncate" style="max-width: 100px;"><a class="transaction-link" href="@invoice.Link">@invoice.TransactionId</a></td>
-                                            </tr>
-                                        }
-                                    </table>
-                                }
-                            }
-                            else
-                            {
-                                <p class="text-secondary">No claim made yet</p>
-                            }
+                    </div>
+                    <div class="col col-12 col-lg-6 mb-4">
+                        <div class="jumbotron h-100 m-0 p-sm-5">
+                            <h2 class="h4 mb-3">Payment Details</h2>
+                            <dl class="mb-0 mt-md-4">
+                                <div class="d-flex flex-column mb-4">
+                                    <dt class="h4 font-weight-normal text-nowrap text-primary order-2 order-sm-1 mb-0">@Model.AmountDueFormatted</dt>
+                                    <dd class="text-muted order-1 order-sm-2 mb-1">Available claim</dd>
+                                </div>
+                                <div class="progress bg-light d-none d-sm-flex mb-sm-4 d-print-none" style="height:5px">
+                                    <div class="progress-bar bg-primary" role="progressbar" style="width:@((Model.AmountCollected / Model.Amount) * 100)%"></div>
+                                </div>
+                                <div class="d-flex flex-column mb-4 d-sm-inline-flex mb-sm-0">
+                                    <dt class="h4 font-weight-normal text-nowrap order-2 order-sm-1 mb-0">@Model.AmountCollectedFormatted</dt>
+                                    <dd class="text-muted order-1 order-sm-2 mb-1">Already claimed</dd>
+                                </div>
+                                <div class="d-flex flex-column mb-0 d-sm-inline-flex float-sm-right">
+                                    <dt class="h4 font-weight-normal text-nowrap order-2 order-sm-1 mb-0">@Model.AmountFormatted</dt>
+                                    <dd class="text-muted text-sm-right order-1 order-sm-2 mb-1">Claim limit</dd>
+                                </div>
+                            </dl>
                         </div>
                     </div>
                 </div>
-                <div class="card-footer text-muted">
-                    <div class="row">
-                        <div class="col-12 col-sm-6">
-                            Updated @Model.LastUpdated.ToString("g")
-                        </div>
-                        <div class="col-12 col-sm-6 text-sm-right">
-                            Powered by <a href="https://btcpayserver.org" target="_blank">BTCPay Server</a>
+                <div class="row">
+                    <div class="col">
+                        <div class="jumbotron h-100 m-0 p-sm-5">
+                            <h2 class="h4 mb-3">Awaiting Claims</h2>
+                            <div class="table-responsive">
+                                @if (Model.Payouts.Any())
+                                {
+                                    <table class="table my-0">
+                                        <thead>
+                                        <tr class="table-borderless">
+                                            <th class="font-weight-normal text-secondary" scope="col">Destination</th>
+                                            <th class="font-weight-normal text-secondary text-right text-nowrap">Amount requested</th>
+                                            <th class="font-weight-normal text-secondary text-right">Status</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        @foreach (var invoice in Model.Payouts)
+                                        {
+                                            <tr>
+                                                <td class="text-break">
+                                                    @invoice.Destination
+                                                </td>
+                                                <td class="text-right">@invoice.AmountFormatted</td>
+                                                <td class="text-right text-nowrap">
+                                                    @if (!string.IsNullOrEmpty(invoice.Link))
+                                                    {
+                                                        <a class="transaction-link @StatusTextClass(invoice.Status)" href="@invoice.Link">@invoice.Status</a>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="@StatusTextClass(invoice.Status)">@invoice.Status</span>
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                        </tbody>
+                                    </table>
+                                }
+                                else
+                                {
+                                    <p class="text-muted">No claim made yet.</p>
+                                }
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </main>
+        <footer class="pt-2 pb-4 d-print-none">
+            <div class="container text-center">
+                Powered by <a href="https://btcpayserver.org" target="_blank">BTCPay Server</a>
+            </div>
+        </footer>
     </div>
-</div>
-<style>
-    tbody + tbody { padding-top: 1.5rem; }
-</style>
+    <script>
+        document.getElementById("copyLink").addEventListener("click", window.copyUrlToClipboard);
+    </script>
 </body>
 </html>

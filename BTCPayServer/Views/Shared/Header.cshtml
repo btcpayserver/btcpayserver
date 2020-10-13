@@ -21,3 +21,10 @@
 <bundle name="wwwroot/bundles/main-bundle.min.css" asp-append-version="true" />
 @* JS *@
 <bundle name="wwwroot/bundles/main-bundle.min.js" asp-append-version="true" />
+@* Non-JS *@
+<noscript>
+    <style>
+        .hide-when-js, [v-cloak] { display: block !important; }
+        .only-for-js { display: none !important; }
+    </style>
+</noscript>

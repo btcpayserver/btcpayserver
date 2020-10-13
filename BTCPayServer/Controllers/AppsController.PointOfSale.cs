@@ -82,6 +82,7 @@ namespace BTCPayServer.Controllers
 
             public string Description { get; set; }
             public string NotificationUrl { get; set; }
+            public string RedirectUrl { get; set; }
             public bool? RedirectAutomatically { get; set; }
         }
 
@@ -115,6 +116,7 @@ namespace BTCPayServer.Controllers
                 EmbeddedCSS = settings.EmbeddedCSS,
                 Description = settings.Description,
                 NotificationUrl = settings.NotificationUrl,
+                RedirectUrl = settings.RedirectUrl,
                 SearchTerm = $"storeid:{app.StoreDataId}",
                 RedirectAutomatically = settings.RedirectAutomatically.HasValue ? settings.RedirectAutomatically.Value ? "true" : "false" : ""
             };
@@ -191,6 +193,7 @@ namespace BTCPayServer.Controllers
                 CustomTipPercentages = ListSplit(vm.CustomTipPercentages),
                 CustomCSSLink = vm.CustomCSSLink,
                 NotificationUrl = vm.NotificationUrl,
+                RedirectUrl = vm.RedirectUrl,
                 Description = vm.Description,
                 EmbeddedCSS = vm.EmbeddedCSS,
                 RedirectAutomatically = string.IsNullOrEmpty(vm.RedirectAutomatically) ? (bool?)null : bool.Parse(vm.RedirectAutomatically)

@@ -33,6 +33,9 @@ namespace BTCPayServer.Models.AppViewModels
         [Display(Name = "Callback Notification Url")]
         [Uri]
         public string NotificationUrl { get; set; }
+        [Display(Name = "Redirect Url")]
+        [Uri]
+        public string RedirectUrl { get; set; }
 
         [Required]
         [MaxLength(30)]

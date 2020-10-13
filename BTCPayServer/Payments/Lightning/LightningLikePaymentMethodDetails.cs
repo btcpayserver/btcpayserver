@@ -2,7 +2,6 @@ namespace BTCPayServer.Payments.Lightning
 {
     public class LightningLikePaymentMethodDetails : IPaymentMethodDetails
     {
-        public string[] PreviousDestinations { get; set; } = System.Array.Empty<string>();
         public string BOLT11 { get; set; }
         public string InvoiceId { get; set; }
         public string NodeInfo { get; set; }

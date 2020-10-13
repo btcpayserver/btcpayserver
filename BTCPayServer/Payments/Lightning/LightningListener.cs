@@ -204,12 +204,6 @@ namespace BTCPayServer.Payments.Lightning
                             (LightningLikePaymentMethodDetails)(await _lightningLikePaymentHandler
                                 .CreatePaymentMethodDetails(logs, supportedMethod, paymentMethod, store,
                                     paymentMethod.Network, prepObj));
-                        if (paymentMethod.GetPaymentMethodDetails() is LightningLikePaymentMethodDetails
-                            oldPaymentMethodDetails)
-                        {
-                            newPaymentMethodDetails.PreviousDestinations = oldPaymentMethodDetails.PreviousDestinations
-                                .Concat(new[] {oldPaymentMethodDetails.GetPaymentDestination()}).ToArray();
-                        }
 
                         var instanceListenerKey = (paymentMethod.Network.CryptoCode,
                             supportedMethod.GetLightningUrl().ToString());

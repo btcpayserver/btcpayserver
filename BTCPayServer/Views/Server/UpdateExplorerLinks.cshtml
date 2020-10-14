@@ -1,0 +1,70 @@
+@model BTCPayServer.Controllers.ExplorerLinksViewModel
+@{
+    ViewData.SetActivePageAndTitle(ServerNavPages.ExplorerLinks, "Blockchain Explorer Links");
+}
+
+
+<partial name="_StatusMessage" />
+@if (!this.ViewContext.ModelState.IsValid)
+{
+    <div asp-validation-summary="All" class="text-danger"></div>
+}
+
+<form method="post">
+    
+    @if (Model.Items.Any())
+    {
+        <div class="list-group mb-2">
+            @for (var index = 0; index < Model.Items.Count; index++)
+            {
+                <div class="list-group-item p-0 pl-lg-2">
+                    <div class="row">
+                        <div class="col-sm-12 col-md-12 col-lg-10  py-2 ">
+                           
+                            <div class="form-group mb-0 mb-md-2">
+                                <label asp-for="Items[index].Link">@Model.Items[index].Name</label>
+                                <input type="text" asp-for="Items[index].Link" class="form-control current-link"/>
+                                <input type="hidden" asp-for="Items[index].DefaultLink" class="form-control default-link"/>
+                                <input type="hidden" asp-for="Items[index].CryptoCode" class="form-control"/>
+                                <input type="hidden" asp-for="Items[index].Name" class="form-control"/>
+                                <span asp-validation-for="Items[index].Link" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-sm-12 col-md-12 col-lg-2 pull-right">
+                            <button type="button" title="Revert to default" 
+                                    class="d-block d-lg-none d-xl-none btn btn-link mb-2 ml-2 revert-default">
+                                Revert to default
+                            </button>
+                            <button type="button" title="Revert to default"
+                                    class="d-none d-lg-block revert-default revert-default-btn text-decoration-none h-100 align-middle btn btn-link fa fa-refresh rounded-0 pull-right">
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+
+        </div>
+    }
+    <button type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
+</form>
+
+@section Scripts {
+    <style>
+            .revert-default-btn {
+                font-size: 1.5rem;
+                border-radius: 0;
+            }
+             .revert-default-btn:hover{
+                       background-color: #CCCCCC;
+             }
+    </style>
+    <script>
+    $(document).ready(function (){
+       $(".revert-default").click(function (){
+           debugger;
+          var parElement =  $(this).parents(".row").first();
+          parElement.find(".current-link").val(parElement.find(".default-link").val());
+       })
+    });
+    </script>
+}

@@ -130,9 +130,25 @@ namespace BTCPayServer
 
     public abstract class BTCPayNetworkBase
     {
+        private string _blockExplorerLink;
         public bool ShowSyncSummary { get; set; } = true;
         public string CryptoCode { get; internal set; }
-        public string BlockExplorerLink { get; internal set; }
+
+        public string BlockExplorerLink
+        {
+            get => _blockExplorerLink;
+            set
+            {
+                if (string.IsNullOrEmpty(BlockExplorerLinkDefault))
+                {
+                    BlockExplorerLinkDefault = value;
+                }
+
+                _blockExplorerLink = value;
+            }
+        }
+
+        public string BlockExplorerLinkDefault { get; internal set; }
         public string DisplayName { get; set; }
         public int Divisibility { get; set; } = 8;
         [Obsolete("Should not be needed")]

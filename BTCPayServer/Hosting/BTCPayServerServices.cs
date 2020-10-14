@@ -335,6 +335,9 @@ namespace BTCPayServer.Hosting
 
         public static IApplicationBuilder UsePayServer(this IApplicationBuilder app)
         {
+            ServerController.LoadNetworkLinkOverrides(app.ApplicationServices.GetService<SettingsRepository>(),
+                app.ApplicationServices.GetService<BTCPayNetworkProvider>()).GetAwaiter().GetResult();
+            
             app.UseMiddleware<BTCPayMiddleware>();
             return app;
         }

@@ -314,7 +314,7 @@ namespace BTCPayServer.Services
             using (HttpClient client = CreateHttpClient(endpoint))
             {
                 var bpuresponse = await client.PostAsync(endpoint,
-                    new StringContent(originalTx.ToHex(), Encoding.UTF8, "text/plain"), cancellationToken);
+                    new StringContent(originalTx.ToBase64(), Encoding.UTF8, "text/plain"), cancellationToken);
                 if (!bpuresponse.IsSuccessStatusCode)
                 {
                     var errorStr = await bpuresponse.Content.ReadAsStringAsync();

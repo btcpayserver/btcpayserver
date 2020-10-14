@@ -66,12 +66,13 @@ services:
         - "sshd_datadir:/root/.ssh"
 
   devlnd: 
-    image: btcpayserver/bitcoin:0.19.0.1
+    image: btcpayserver/bitcoin:0.20.1
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_EXTRA_ARGS: |
         deprecatedrpc=signrawtransaction
         connect=bitcoind:39388
+        fallbackfee=0.0002
     links:
       - nbxplorer
       - postgres
@@ -102,7 +103,7 @@ services:
 
   bitcoind:
     restart: unless-stopped
-    image: btcpayserver/bitcoin:0.19.0.1
+    image: btcpayserver/bitcoin:0.20.1
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_EXTRA_ARGS: |-
@@ -115,6 +116,7 @@ services:
         zmqpubrawblock=tcp://0.0.0.0:28332
         zmqpubrawtx=tcp://0.0.0.0:28333
         deprecatedrpc=signrawtransaction
+        fallbackfee=0.0002
     ports: 
       - "43782:43782"
       - "39388:39388"

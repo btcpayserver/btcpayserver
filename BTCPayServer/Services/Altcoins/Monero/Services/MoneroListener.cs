@@ -135,9 +135,9 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
                     });
                 monero.DepositAddress = address.Address;
                 monero.AddressIndex = address.AddressIndex;
-                await _invoiceRepository.NewAddress(invoice.Id, monero, payment.Network);
+                await _invoiceRepository.NewPaymentDetails(invoice.Id, monero, payment.Network);
                 _eventAggregator.Publish(
-                    new InvoiceNewAddressEvent(invoice.Id, address.Address, payment.Network));
+                    new InvoiceNewPaymentDetailsEvent(invoice.Id, monero, payment.GetPaymentMethodId()));
                 paymentMethod.SetPaymentMethodDetails(monero);
                 invoice.SetPaymentMethod(paymentMethod);
             }

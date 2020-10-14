@@ -1,4 +1,4 @@
-﻿@model BTCPayServer.Models.ServerViewModels.EmailsViewModel
+@model BTCPayServer.Models.ServerViewModels.EmailsViewModel
 
 
 <partial name="_StatusMessage" />
@@ -27,36 +27,36 @@
     </div>
 </div>
 <script>
-$(document).ready(function(){
-    $('.row-quick-fill').show();
-    
-    $('.dropdown.quick-fill a').click(function(e){
-        e.preventDefault();
-        
-        var aNode = $(this);
-        var data = aNode.data();
-        
-        for(var key in data){
-            var value = data[key];
-            var inputNodes = $('input[name*="Settings.'+key+'" i]');
-            
-            if(inputNodes.length){
-                inputNodes.each(function(i, input){
-                    input = $(input);
-                    var type = input.attr('type');
-                    if(type === 'checkbox'){
-                        input.prop('checked', value);
-                        
-                    }else{
-                        input.val(value);
-                    }
-                });
-                
+    $(document).ready(function () {
+        $('.row-quick-fill').show();
+
+        $('.dropdown.quick-fill a').click(function (e) {
+            e.preventDefault();
+
+            var aNode = $(this);
+            var data = aNode.data();
+
+            for (var key in data) {
+                var value = data[key];
+                var inputNodes = $('input[name*="Settings.' + key + '" i]');
+
+                if (inputNodes.length) {
+                    inputNodes.each(function (i, input) {
+                        input = $(input);
+                        var type = input.attr('type');
+                        if (type === 'checkbox') {
+                            input.prop('checked', value);
+
+                        } else {
+                            input.val(value);
+                        }
+                    });
+
+                }
             }
-        }  
+        });
+
     });
-    
-});
 </script>
 
 <form method="post" autocomplete="off">
@@ -64,17 +64,17 @@ $(document).ready(function(){
         <div class="col-md-6">
             <div class="form-group">
                 <label asp-for="Settings.Server"></label>
-                <input asp-for="Settings.Server" class="form-control"/>
+                <input asp-for="Settings.Server" class="form-control" />
                 <span asp-validation-for="Settings.Server" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="Settings.Port"></label>
-                <input asp-for="Settings.Port" class="form-control"/>
+                <input asp-for="Settings.Port" class="form-control" />
                 <span asp-validation-for="Settings.Port" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="Settings.FromDisplay"></label>
-                <input asp-for="Settings.FromDisplay" class="form-control"/>
+                <input asp-for="Settings.FromDisplay" class="form-control" />
                 <small class="form-text text-muted">
                     Some email providers (like Gmail) don't allow you to set your display name, so this setting may not have any effect.
                 </small>
@@ -82,28 +82,43 @@ $(document).ready(function(){
             </div>
             <div class="form-group">
                 <label asp-for="Settings.From"></label>
-                <input asp-for="Settings.From" class="form-control"/>
+                <input asp-for="Settings.From" class="form-control" />
                 <span asp-validation-for="Settings.From" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="Settings.Login"></label>
-                <input asp-for="Settings.Login" class="form-control"/>
+                <input asp-for="Settings.Login" class="form-control" />
                 <small class="form-text text-muted">
-                    For many email providers (like Gmail) your login is your email address. 
+                    For many email providers (like Gmail) your login is your email address.
                 </small>
                 <span asp-validation-for="Settings.Login" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="Settings.Password"></label>
-                <input asp-for="Settings.Password" value="@Model.Settings.Password" class="form-control"/>
-                <span asp-validation-for="Settings.Password" class="text-danger"></span>
+                @if (!Model.PasswordSet)
+                {
+
+                    <label asp-for="Settings.Password"></label>
+                    <input asp-for="Settings.Password" type="password" class="form-control" />
+                    <span asp-validation-for="Settings.Password" class="text-danger"></span>
+                }
+                else
+                {
+                    <label asp-for="Settings.Password"></label>
+                    <div class="input-group">
+                        <input value="Configured" type="text" readonly class="form-control" />
+                        <div class="input-group-append">
+                            <button type="submit" class="btn btn-danger" name="command" value="ResetPassword">Reset</button>
+                        </div>
+                    </div>
+                }
             </div>
             <div class="form-group">
                 <div class="form-check">
-                    <input asp-for="Settings.EnableSSL" type="checkbox" class="form-check-input"/>
+                    <input asp-for="Settings.EnableSSL" type="checkbox" class="form-check-input" />
                     <label asp-for="Settings.EnableSSL" class="form-check-label"></label>
                 </div>
             </div>
+            <input asp-for="PasswordSet" type="hidden" />
             <button type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
         </div>
     </div>
@@ -116,11 +131,11 @@ $(document).ready(function(){
                 <p class="form-text text-muted">
                     If you want to test your settings, enter an email address here and click "Send Test Email".
                     <strong>Your settings won't be saved</strong>, only a test email will be sent.
-                    <br/>
+                    <br />
                     After a successful test, you can click "Save".
                 </p>
                 <label asp-for="TestEmail"></label>
-                <input asp-for="TestEmail" class="form-control"/>
+                <input asp-for="TestEmail" class="form-control" />
                 <span asp-validation-for="TestEmail" class="text-danger"></span>
             </div>
             <button type="submit" class="btn btn-secondary" name="command" value="Test">Send Test Email</button>

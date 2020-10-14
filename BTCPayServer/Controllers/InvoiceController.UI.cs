@@ -600,7 +600,7 @@ namespace BTCPayServer.Controllers
             try
             {
                 leases.Add(_EventAggregator.Subscribe<Events.InvoiceDataChangedEvent>(async o => await NotifySocket(webSocket, o.InvoiceId, invoiceId)));
-                leases.Add(_EventAggregator.Subscribe<Events.InvoiceNewAddressEvent>(async o => await NotifySocket(webSocket, o.InvoiceId, invoiceId)));
+                leases.Add(_EventAggregator.Subscribe<Events.InvoiceNewPaymentDetailsEvent>(async o => await NotifySocket(webSocket, o.InvoiceId, invoiceId)));
                 leases.Add(_EventAggregator.Subscribe<Events.InvoiceEvent>(async o => await NotifySocket(webSocket, o.Invoice.Id, invoiceId)));
                 while (true)
                 {
@@ -669,7 +669,7 @@ namespace BTCPayServer.Controllers
                 var state = invoice.GetInvoiceState();
                 model.Invoices.Add(new InvoiceModel()
                 {
-                    Status = invoice.Status,
+                    Status = state,
                     ShowCheckout = invoice.Status == InvoiceStatus.New,
                     Date = invoice.InvoiceTime,
                     InvoiceId = invoice.Id,

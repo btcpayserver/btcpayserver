@@ -157,7 +157,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
                                         var paymentData = new BitcoinLikePaymentData(address,
                                             output.matchedOutput.Value, output.outPoint,
-                                            evt.TransactionData.Transaction.RBF);
+                                            evt.TransactionData.Transaction.RBF, output.Item1.KeyPath);
 
                                         var alreadyExist = invoice.GetAllBitcoinPaymentData().Where(c => c.GetPaymentId() == paymentData.GetPaymentId()).Any();
                                         if (!alreadyExist)
@@ -363,7 +363,7 @@ namespace BTCPayServer.Payments.Bitcoin
                     var address = network.NBXplorerNetwork.CreateAddress(strategy, coin.KeyPath, coin.ScriptPubKey);
 
                     var paymentData = new BitcoinLikePaymentData(address, coin.Value, coin.OutPoint,
-                        transaction.Transaction.RBF);
+                        transaction.Transaction.RBF, coin.KeyPath);
 
                     var payment = await _InvoiceRepository.AddPayment(invoice.Id, coin.Timestamp, paymentData, network).ConfigureAwait(false);
                     alreadyAccounted.Add(coin.OutPoint);
@@ -400,8 +400,9 @@ namespace BTCPayServer.Payments.Bitcoin
             {
                 var address = await wallet.ReserveAddressAsync(strategy);
                 btc.DepositAddress = address.Address.ToString();
-                await _InvoiceRepository.NewAddress(invoice.Id, btc, wallet.Network);
-                _Aggregator.Publish(new InvoiceNewAddressEvent(invoice.Id, btc.DepositAddress, wallet.Network));
+                btc.KeyPath = address.KeyPath;
+                await _InvoiceRepository.NewPaymentDetails(invoice.Id, btc, wallet.Network);
+                _Aggregator.Publish(new InvoiceNewPaymentDetailsEvent(invoice.Id, btc, paymentMethod.GetId()));
                 paymentMethod.SetPaymentMethodDetails(btc);
                 invoice.SetPaymentMethod(paymentMethod);
             }

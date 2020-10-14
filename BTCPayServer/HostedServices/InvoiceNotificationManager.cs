@@ -331,17 +331,17 @@ namespace BTCPayServer.HostedServices
                        e.Name == InvoiceEvent.Completed ||
                        e.Name == InvoiceEvent.ExpiredPaidPartial
                      )
-                        Notify(invoice, e, false);
+                        _ = Notify(invoice, e, false);
                 }
 
                 if (e.Name == InvoiceEvent.Confirmed)
                 {
-                    Notify(invoice, e, false);
+                    _ = Notify(invoice, e, false);
                 }
 
                 if (invoice.ExtendedNotifications)
                 {
-                    Notify(invoice, e, true);
+                    _ = Notify(invoice, e, true);
                 }
             }));
 

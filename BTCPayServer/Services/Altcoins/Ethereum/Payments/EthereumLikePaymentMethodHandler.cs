@@ -95,13 +95,6 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Payments
             return GetPaymentMethodName(network);
         }
 
-        public override Task<string> IsPaymentMethodAllowedBasedOnInvoiceAmount(StoreBlob storeBlob,
-            Dictionary<CurrencyPair, Task<RateResult>> rate, Money amount,
-            PaymentMethodId paymentMethodId)
-        {
-            return Task.FromResult<string>(null);
-        }
-
         public override IEnumerable<PaymentMethodId> GetSupportedPaymentMethods()
         {
             return _networkProvider.GetAll().OfType<EthereumBTCPayNetwork>()

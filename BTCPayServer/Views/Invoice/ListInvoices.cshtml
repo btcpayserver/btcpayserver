@@ -267,7 +267,7 @@
                                 {
                                     <div id="pavpill_@invoice.InvoiceId" class="badge badge-@invoice.Status.ToString().ToLower()">
                                         <span class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                            @invoice.Status.ToString().ToLower()
+                                            @invoice.Status.ToString()
                                         </span>
                                         <div class="dropdown-menu pull-right">
                                             @if (invoice.CanMarkInvalid)
@@ -291,18 +291,9 @@
                                         @invoice.Status.ToString().ToLower()
                                     </span>
                                 }
-                                @{
-                                    var grouped = invoice.Details.Payments.GroupBy(payment => payment.GetPaymentMethodId()?.PaymentType).Where(entities => entities.Key!= null);
-                                    var paiOnChain = grouped.Where(g => g.Key == BitcoinPaymentType.Instance).Any();
-                                    var paidOffChain = grouped.Where(g => g.Key == LightningPaymentType.Instance).Any();
-                                }
-                                @if (paiOnChain)
+                                @foreach (var paymentType in  invoice.Details.Payments.Select(payment => payment.GetPaymentMethodId()?.PaymentType).Distinct().Where(type => type != null && !string.IsNullOrEmpty(type.GetBadge())))
                                 {
-                                    <span class="badge">🔗</span>
-                                }
-                                @if (paidOffChain)
-                                {
-                                    <span class="badge">⚡️</span>
+                                    <span class="badge">@paymentType.GetBadge()</span>
                                 }
                             </td>
                             <td style="text-align:right">@invoice.AmountCurrency</td>

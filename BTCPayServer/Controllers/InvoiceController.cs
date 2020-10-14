@@ -22,6 +22,7 @@ using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using NBitcoin;
 using NBitpayClient;
 using Newtonsoft.Json;
 using BitpayCreateInvoiceRequest = BTCPayServer.Models.BitpayCreateInvoiceRequest;
@@ -175,6 +176,8 @@ namespace BTCPayServer.Controllers
                 excludeFilter = PaymentFilter.Where(p => !supportedTransactionCurrencies.Contains(p));
             }
             entity.PaymentTolerance = invoice.Checkout.PaymentTolerance ?? storeBlob.PaymentTolerance;
+            if (additionalTags != null)
+                entity.InternalTags.AddRange(additionalTags);
             return await CreateInvoiceCoreRaw(entity, store, excludeFilter, cancellationToken);
         }
 
@@ -207,11 +210,13 @@ namespace BTCPayServer.Controllers
                                                 .Where(c => c != null))
             {
                 currencyPairsToFetch.Add(new CurrencyPair(network.CryptoCode, entity.Currency));
-                //TODO: abstract
-                if (storeBlob.LightningMaxValue != null)
-                    currencyPairsToFetch.Add(new CurrencyPair(network.CryptoCode, storeBlob.LightningMaxValue.Currency));
-                if (storeBlob.OnChainMinValue != null)
-                    currencyPairsToFetch.Add(new CurrencyPair(network.CryptoCode, storeBlob.OnChainMinValue.Currency));
+                foreach (var paymentMethodCriteria in store.GetPaymentMethodCriteria(_NetworkProvider, storeBlob))
+                {
+                    if (paymentMethodCriteria.Value != null)
+                    {
+                        currencyPairsToFetch.Add(new CurrencyPair(network.CryptoCode, paymentMethodCriteria.Value.Currency));
+                    }   
+                }
             }
 
             var rateRules = storeBlob.GetRateRules(_NetworkProvider);
@@ -325,16 +330,28 @@ namespace BTCPayServer.Controllers
                     paymentMethod.SetPaymentMethodDetails(paymentDetails);
                 }
 
-                var errorMessage = await
-                    handler
-                        .IsPaymentMethodAllowedBasedOnInvoiceAmount(storeBlob, fetchingByCurrencyPair,
-                            paymentMethod.Calculate().Due, supportedPaymentMethod.PaymentId);
-                if (!string.IsNullOrEmpty(errorMessage))
+                var criteria = store.GetPaymentMethodCriteria(_NetworkProvider, storeBlob)?.Find(methodCriteria => methodCriteria.PaymentMethod == supportedPaymentMethod.PaymentId);
+                if (criteria?.Value != null)
                 {
-                    logs.Write($"{logPrefix} {errorMessage}", InvoiceEventData.EventSeverity.Error);
-                    return null;
+                    var currentRateToCrypto =
+                        await fetchingByCurrencyPair[new CurrencyPair(supportedPaymentMethod.PaymentId.CryptoCode, criteria.Value.Currency)];
+                    if (currentRateToCrypto?.BidAsk != null)
+                    {
+                        var amount = paymentMethod.Calculate().Due.GetValue(network as BTCPayNetwork);
+                        var limitValueCrypto = criteria.Value.Value / currentRateToCrypto.BidAsk.Bid;
+                        
+                        if (amount < limitValueCrypto && criteria.Above)
+                        {
+                            logs.Write($"{logPrefix} invoice amount below accepted value for payment method", InvoiceEventData.EventSeverity.Error);
+                            return null;
+                        }
+                        if (amount > limitValueCrypto && !criteria.Above)
+                        {
+                            logs.Write($"{logPrefix} invoice amount above accepted value for payment method", InvoiceEventData.EventSeverity.Error);
+                            return null;
+                        }
+                    }
                 }
-
 
 #pragma warning disable CS0618
                 if (paymentMethod.GetId().IsBTCOnChain)

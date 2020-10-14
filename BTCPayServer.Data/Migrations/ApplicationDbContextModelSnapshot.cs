@@ -108,6 +108,9 @@ namespace BTCPayServer.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTimeOffset?>("Created")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Email")
                         .HasColumnType("TEXT")
                         .HasMaxLength(256);
@@ -525,7 +528,8 @@ namespace BTCPayServer.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("PullPaymentDataId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasMaxLength(30);
 
                     b.HasKey("InvoiceDataId", "PullPaymentDataId");
 
@@ -960,7 +964,8 @@ namespace BTCPayServer.Migrations
                 {
                     b.HasOne("BTCPayServer.Data.ApplicationUser", "ApplicationUser")
                         .WithMany("U2FDevices")
-                        .HasForeignKey("ApplicationUserId");
+                        .HasForeignKey("ApplicationUserId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("BTCPayServer.Data.UserStore", b =>

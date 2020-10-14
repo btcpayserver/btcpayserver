@@ -4,7 +4,6 @@
         "inputFiles": [
             "wwwroot/vendor/magnific-popup/magnific-popup.css",
             "wwwroot/vendor/font-awesome/css/font-awesome.css",
-            "wwwroot/vendor/animatecss/animate.css",
             "wwwroot/vendor/flatpickr/flatpickr.css",
             "wwwroot/main/fonts/OpenSans.css",
             "wwwroot/main/site.css"
@@ -22,6 +21,7 @@
             "wwwroot/vendor/flatpickr/flatpickr.js",
             "wwwroot/main/bootstrap/bootstrap.js",
             "wwwroot/main/bootstrap4-creativestart/creative.js",
+            "wwwroot/js/copy-to-clipboard.js",
             "wwwroot/main/site.js"
         ]
     },
@@ -167,7 +167,7 @@
         ]
     },
     {
-        "outputFileName": "wwwroot/bundles/payment-request-bundle-1.min.js",
+        "outputFileName": "wwwroot/bundles/payment-request-bundle.min.js",
         "inputFiles": [
             "wwwroot/vendor/vuejs/vue.min.js",
             "wwwroot/vendor/babel-polyfill/polyfill.min.js",
@@ -175,13 +175,9 @@
             "wwwroot/vendor/bootstrap-vue/bootstrap-vue.js",
             "wwwroot/vendor/signalr/signalr.js",
             "wwwroot/vendor/animejs/anime.min.js",
+            "wwwroot/vendor/moment/moment.min.js",
+            "wwwroot/js/copy-to-clipboard.js",
             "wwwroot/payment-request/**/*.js"
-        ]
-    },
-    {
-        "outputFileName": "wwwroot/bundles/payment-request-bundle-2.min.js",
-        "inputFiles": [
-            "wwwroot/vendor/moment/moment.min.js"
         ],
         "minify": {
             "enabled": false
@@ -192,7 +188,7 @@
         "inputFiles": [
             "wwwroot/vendor/font-awesome/css/font-awesome.min.css",
             "wwwroot/vendor/bootstrap-vue/bootstrap-vue.css",
-            "wwwroot/payment-request/**/*.css"
+            "wwwroot/main/site.css"
         ]
     },
     {
@@ -206,5 +202,12 @@
         "minify": {
             "enabled": false
         }
-    }  
+    },
+    {
+        "outputFileName": "wwwroot/bundles/shopify-bundle.min.js",
+        "inputFiles": [
+            "wwwroot/modal/btcpay.js",
+            "wwwroot/shopify/btcpay-shopify.js"
+        ]
+    }
 ]

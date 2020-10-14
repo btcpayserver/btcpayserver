@@ -7,6 +7,7 @@ using BTCPayServer.Logging;
 using BTCPayServer.Models;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json;
@@ -59,7 +60,7 @@ namespace BTCPayServer.Hosting
 
                 if (!httpContext.Request.IsOnion() && (httpContext.Request.Headers["Accept"].ToString().StartsWith("text/html", StringComparison.InvariantCulture)))
                 {
-                    var onionLocation = _Env.OnionUrl + httpContext.Request.Path;
+                    var onionLocation = _Env.OnionUrl + httpContext.Request.GetEncodedPathAndQuery();
                     httpContext.Response.SetHeader("Onion-Location", onionLocation);
                 }
             }

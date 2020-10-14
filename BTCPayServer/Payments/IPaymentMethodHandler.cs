@@ -42,10 +42,6 @@ namespace BTCPayServer.Payments
         string GetCryptoImage(PaymentMethodId paymentMethodId);
         string GetPaymentMethodName(PaymentMethodId paymentMethodId);
 
-        Task<string> IsPaymentMethodAllowedBasedOnInvoiceAmount(StoreBlob storeBlob,
-            Dictionary<CurrencyPair, Task<RateResult>> rate,
-            Money amount, PaymentMethodId paymentMethodId);
-
         IEnumerable<PaymentMethodId> GetSupportedPaymentMethods();
         CheckoutUIPaymentMethodSettings GetCheckoutUISettings();
     }
@@ -74,9 +70,6 @@ namespace BTCPayServer.Payments
             StoreBlob storeBlob);
         public abstract string GetCryptoImage(PaymentMethodId paymentMethodId);
         public abstract string GetPaymentMethodName(PaymentMethodId paymentMethodId);
-
-        public abstract Task<string> IsPaymentMethodAllowedBasedOnInvoiceAmount(StoreBlob storeBlob,
-            Dictionary<CurrencyPair, Task<RateResult>> rate, Money amount, PaymentMethodId paymentMethodId);
 
         public abstract IEnumerable<PaymentMethodId> GetSupportedPaymentMethods();
         public virtual CheckoutUIPaymentMethodSettings GetCheckoutUISettings()

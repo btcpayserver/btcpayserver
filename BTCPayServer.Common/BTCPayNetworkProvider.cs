@@ -58,6 +58,7 @@ namespace BTCPayServer
             InitPolis();
             InitChaincoin();
             // InitArgoneum();//their rate source is down 9/15/20.
+            InitMonetaryUnit();
             InitEthereum();
             InitERC20();
 

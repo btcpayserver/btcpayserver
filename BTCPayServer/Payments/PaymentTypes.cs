@@ -82,6 +82,7 @@ namespace BTCPayServer.Payments
         }
 
         public abstract string GetId();
+        public virtual string GetBadge() => null;
         public abstract CryptoPaymentData DeserializePaymentData(BTCPayNetworkBase network, string str);
         public abstract string SerializePaymentData(BTCPayNetworkBase network, CryptoPaymentData paymentData);
         public abstract IPaymentMethodDetails DeserializePaymentMethodDetails(BTCPayNetworkBase network, string str);

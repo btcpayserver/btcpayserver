@@ -176,8 +176,14 @@ pre {
     background-color: lightgray;
 }
 
-[v-cloak] > * { display:none }
-[v-cloak]::before { content: "loading…" }
+/* Fix for small table showing unnecessary scrollbars */
+.table-responsive .table-sm {
+    width: 100% !important;
+}
+
+[v-cloak] { display:none }
+[v-cloak-loading] > * { display:none }
+[v-cloak-loading]::before { content: "loading…" }
 
 .cursor-pointer{
     cursor: pointer;
@@ -241,4 +247,55 @@ pre {
 [class*="field-validation"]:not(:empty) {
     display: inline-block;
     margin-top: .5rem;
+}
+
+/* Chrome, Safari, Edge, Opera */
+input[type=number].hide-number-spin::-webkit-outer-spin-button,
+input[type=number].hide-number-spin::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Firefox */
+input[type=number].hide-number-spin {
+    -moz-appearance: textfield;
+}
+
+/* Bootstrap Responsive Helper */
+html[data-devenv]:before {
+    display: inline-block;
+    position: fixed;
+    z-index: 1000;
+    right: 0;
+    bottom: 0;
+    background: var(--btcpay-bg-dark);
+    color: var(--btcpay-color-dark-text);
+    opacity: .7;
+    padding: 4px 5px 3px 7px;
+    font-size: 10px;
+    border-top-left-radius: 4px;
+}
+
+@media (max-width: 575px) { html[data-devenv]:before { content: 'XS'; } }
+@media (min-width: 576px) and (max-width: 767px) { html[data-devenv]:before { content: 'SM'; } }
+@media (min-width: 768px) and (max-width: 991px) { html[data-devenv]:before { content: 'MD'; } }
+@media (min-width: 992px) and (max-width: 1199px) { html[data-devenv]:before { content: 'LG'; } }
+@media (min-width: 1200px) { html[data-devenv]:before { content: 'XL'; } }
+@media print { html[data-devenv]:before { content: none; } }
+
+/* Print */
+@media print {
+    .jumbotron {
+        padding: 1rem 0 !important;
+    }
+}
+
+/* Richtext editor */
+.note-editor .table.table-sm {
+    border-collapse: collapse !important;
+}
+
+.note-editor .table.table-sm th,
+.note-editor .table.table-sm td {
+    border: 1px dotted var(--btcpay-color-neutral-400);
 }

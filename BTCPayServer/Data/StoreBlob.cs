@@ -11,6 +11,7 @@ using BTCPayServer.Payments.CoinSwitch;
 using BTCPayServer.Rating;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Rates;
+using BTCPayServer.Services.Shopify.Models;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.Data
@@ -25,6 +26,8 @@ namespace BTCPayServer.Data
             ShowRecommendedFee = true;
             RecommendedFeeBlockTarget = 1;
         }
+
+        public ShopifySettings Shopify { get; set; }
 
         [Obsolete("Use NetworkFeeMode instead")]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
@@ -90,8 +93,17 @@ namespace BTCPayServer.Data
         public List<RateRule_Obsolete> RateRules { get; set; } = new List<RateRule_Obsolete>();
         public string PreferredExchange { get; set; }
 
+        public List<PaymentMethodCriteria> PaymentMethodCriteria
+        {
+            [Obsolete("Use GetPaymentMethodCriteria instead")]
+            get;
+            set;
+        }
+
+        [Obsolete]
         [JsonConverter(typeof(CurrencyValueJsonConverter))]
         public CurrencyValue OnChainMinValue { get; set; }
+        [Obsolete]
         [JsonConverter(typeof(CurrencyValueJsonConverter))]
         public CurrencyValue LightningMaxValue { get; set; }
         public bool LightningAmountInSatoshi { get; set; }
@@ -202,6 +214,15 @@ namespace BTCPayServer.Data
 #pragma warning restore CS0618 // Type or member is obsolete
         }
     }
+    public class PaymentMethodCriteria
+    {
+        [JsonConverter(typeof(PaymentMethodIdJsonConverter))]
+        public PaymentMethodId PaymentMethod { get; set; }
+        [JsonConverter(typeof(CurrencyValueJsonConverter))]
+        public CurrencyValue Value { get; set; }
+        public bool Above { get; set; }
+    }
+    
     public class RateRule_Obsolete
     {
         public RateRule_Obsolete()

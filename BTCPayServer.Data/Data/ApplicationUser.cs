@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Identity;
 
@@ -26,5 +27,6 @@ namespace BTCPayServer.Data
 
         public List<U2FDevice> U2FDevices { get; set; }
         public List<APIKeyData> APIKeys { get; set; }
+        public DateTimeOffset? Created { get; set; }
     }
 }

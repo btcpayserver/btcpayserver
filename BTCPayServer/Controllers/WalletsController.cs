@@ -641,17 +641,6 @@ namespace BTCPayServer.Controllers
                     vm.AddModelError(model => model.FeeSatoshiPerByte,
                             "The fee rate should be above 0", this);
                 }
-                if (fee > 5_000m)
-                {
-                    vm.AddModelError(model => model.FeeSatoshiPerByte,
-                            "The fee rate is absurdly high", this);
-                }
-                if (_dashboard.Get(network.CryptoCode).Status?.BitcoinStatus?.MinRelayTxFee?.SatoshiPerByte is decimal minFee)
-                {
-                    if (vm.FeeSatoshiPerByte < minFee)
-                        vm.AddModelError(model => model.FeeSatoshiPerByte,
-                            $"The fee rate is lower than the minimum relay fee ({vm.FeeSatoshiPerByte} < {minFee})", this);
-                }
             }
 
             if (!ModelState.IsValid)

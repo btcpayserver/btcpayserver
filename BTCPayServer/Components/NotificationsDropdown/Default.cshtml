@@ -11,7 +11,7 @@
         <div class="dropdown-menu dropdown-menu-right text-center notification-items" aria-labelledby="navbarDropdown">
             @foreach (var notif in Model.Last5)
             {
-                <a asp-action="NotificationPassThrough" asp-controller="Notifications" asp-route-id="@notif.Id" class="dropdown-item border-bottom">
+                <a asp-action="NotificationPassThrough" asp-controller="Notifications" asp-route-id="@notif.Id" class="dropdown-item border-bottom py-2 px-3">
                     <div class="text-left" style="width: 200px; white-space:normal;">
                         @notif.Body
                     </div>
@@ -20,7 +20,7 @@
                     </div>
                 </a>
             }
-            <a class="dropdown-item text-info" asp-controller="Notifications" asp-action="Index">See All</a>
+            <a class="dropdown-item text-secondary" asp-controller="Notifications" asp-action="Index">See All</a>
         </div>
     </li>
 }

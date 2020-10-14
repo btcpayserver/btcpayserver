@@ -18,7 +18,7 @@ namespace BTCPayServer.Controllers
             if (store == null)
                 return NotFound();
             var data = store.GetStoreBlob().EmailSettings ?? new EmailSettings();
-            return View(new EmailsViewModel() { Settings = data });
+            return View(new EmailsViewModel(data));
         }
 
         [Route("{storeId}/emails")]
@@ -32,6 +32,10 @@ namespace BTCPayServer.Controllers
             {
                 try
                 {
+                    if (model.PasswordSet)
+                    {
+                        model.Settings.Password = store.GetStoreBlob().EmailSettings.Password;
+                    }
                     if (!model.Settings.IsComplete())
                     {
                         TempData[WellKnownTempData.ErrorMessage] = "Required fields missing";
@@ -48,19 +52,34 @@ namespace BTCPayServer.Controllers
                 }
                 return View(model);
             }
+            else if (command == "ResetPassword")
+            {
+                var storeBlob = store.GetStoreBlob();
+                storeBlob.EmailSettings.Password = null;
+                store.SetStoreBlob(storeBlob);
+                await _Repo.UpdateStore(store);
+                TempData[WellKnownTempData.SuccessMessage] = "Email server password reset";
+                return RedirectToAction(nameof(Emails), new
+                {
+                    storeId
+                });
+            }
             else // if(command == "Save")
             {
-
                 var storeBlob = store.GetStoreBlob();
+                var oldPassword = storeBlob.EmailSettings?.Password;
+                if (new EmailsViewModel(storeBlob.EmailSettings).PasswordSet)
+                {
+                    model.Settings.Password = storeBlob.EmailSettings.Password;
+                }
                 storeBlob.EmailSettings = model.Settings;
                 store.SetStoreBlob(storeBlob);
                 await _Repo.UpdateStore(store);
                 TempData[WellKnownTempData.SuccessMessage] = "Email settings modified";
-                return RedirectToAction(nameof(UpdateStore), new
+                return RedirectToAction(nameof(Emails), new
                 {
                     storeId
                 });
-
             }
         }
     }

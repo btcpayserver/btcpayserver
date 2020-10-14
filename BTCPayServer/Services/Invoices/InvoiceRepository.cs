@@ -245,67 +245,48 @@ retry:
             return paymentMethod.GetPaymentMethodDetails().GetPaymentDestination();
         }
 
-        public async Task<bool> NewAddress(string invoiceId, IPaymentMethodDetails paymentMethod, BTCPayNetworkBase network)
+        public async Task<bool> NewPaymentDetails(string invoiceId, IPaymentMethodDetails paymentMethodDetails, BTCPayNetworkBase network)
         {
-            using (var context = _ContextFactory.CreateContext())
+            await using var context = _ContextFactory.CreateContext();
+            var invoice = (await context.Invoices.Where(i => i.Id == invoiceId).ToListAsync()).FirstOrDefault();
+            if (invoice == null)
+                return false;
+
+            var invoiceEntity = invoice.GetBlob(_Networks);
+            var paymentMethod = invoiceEntity.GetPaymentMethod(network, paymentMethodDetails.GetPaymentType());
+            if (paymentMethod == null)
+                return false;
+
+            var existingPaymentMethod = paymentMethod.GetPaymentMethodDetails();
+            if (existingPaymentMethod.GetPaymentDestination() != null)
             {
-                var invoice = (await context.Invoices.Where(i => i.Id == invoiceId).ToListAsync()).FirstOrDefault();
-                if (invoice == null)
-                    return false;
-
-                var invoiceEntity = invoice.GetBlob(_Networks);
-                var currencyData = invoiceEntity.GetPaymentMethod(network, paymentMethod.GetPaymentType());
-                if (currencyData == null)
-                    return false;
-
-                var existingPaymentMethod = currencyData.GetPaymentMethodDetails();
-                if (existingPaymentMethod.GetPaymentDestination() != null)
-                {
-                    MarkUnassigned(invoiceId, invoiceEntity, context, currencyData.GetId());
-                }
-
-                existingPaymentMethod.SetPaymentDestination(paymentMethod.GetPaymentDestination());
-                currencyData.SetPaymentMethodDetails(existingPaymentMethod);
+                MarkUnassigned(invoiceId, invoiceEntity, context, paymentMethod.GetId());
+            }
+            paymentMethod.SetPaymentMethodDetails(paymentMethodDetails);
 #pragma warning disable CS0618
-                if (network.IsBTC)
-                {
-                    invoiceEntity.DepositAddress = currencyData.DepositAddress;
-                }
+            if (network.IsBTC)
+            {
+                invoiceEntity.DepositAddress = paymentMethod.DepositAddress;
+            }
 #pragma warning restore CS0618
-                invoiceEntity.SetPaymentMethod(currencyData);
-                invoice.Blob = ToBytes(invoiceEntity, network);
+            invoiceEntity.SetPaymentMethod(paymentMethod);
+            invoice.Blob = ToBytes(invoiceEntity, network);
 
-                context.AddressInvoices.Add(new AddressInvoiceData()
+            await context.AddressInvoices.AddAsync(new AddressInvoiceData()
                 {
                     InvoiceDataId = invoiceId,
                     CreatedTime = DateTimeOffset.UtcNow
                 }
-                .Set(GetDestination(currencyData), currencyData.GetId()));
-                context.HistoricalAddressInvoices.Add(new HistoricalAddressInvoiceData()
-                {
-                    InvoiceDataId = invoiceId,
-                    Assigned = DateTimeOffset.UtcNow
-                }.SetAddress(paymentMethod.GetPaymentDestination(), network.CryptoCode));
-
-                await context.SaveChangesAsync();
-                AddToTextSearch(invoice.Id, paymentMethod.GetPaymentDestination());
-                return true;
-            }
-        }
-
-        public async Task UpdateInvoicePaymentMethod(string invoiceId, PaymentMethod paymentMethod)
-        {
-            using (var context = _ContextFactory.CreateContext())
+                .Set(GetDestination(paymentMethod), paymentMethod.GetId()));
+            await context.HistoricalAddressInvoices.AddAsync(new HistoricalAddressInvoiceData()
             {
-                var invoice = await context.Invoices.FindAsync(invoiceId);
-                if (invoice == null)
-                    return;
-                var network = paymentMethod.Network;
-                var invoiceEntity = invoice.GetBlob(_Networks);
-                invoiceEntity.SetPaymentMethod(paymentMethod);
-                invoice.Blob = ToBytes(invoiceEntity, network);
-                await context.SaveChangesAsync();
-            }
+                InvoiceDataId = invoiceId,
+                Assigned = DateTimeOffset.UtcNow
+            }.SetAddress(paymentMethodDetails.GetPaymentDestination(), network.CryptoCode));
+
+            await context.SaveChangesAsync();
+            AddToTextSearch(invoice.Id, paymentMethodDetails.GetPaymentDestination());
+            return true;
         }
 
         public async Task AddPendingInvoiceIfNotPresent(string invoiceId)

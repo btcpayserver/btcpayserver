@@ -17,6 +17,8 @@ namespace BTCPayServer.Payments
 
         public override string ToPrettyString() => "Off-Chain";
         public override string GetId() => "LightningLike";
+        public override string GetBadge() =>  "⚡";
+
         public override string ToStringNormalized()
         {
             return "LightningNetwork";

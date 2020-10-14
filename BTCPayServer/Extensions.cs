@@ -137,7 +137,8 @@ namespace BTCPayServer
             var result = await explorerClientProvider.GetExplorerClient(psbt.Network.NetworkSet.CryptoCode).UpdatePSBTAsync(new UpdatePSBTRequest()
             {
                 PSBT = psbt,
-                DerivationScheme = derivationSchemeSettings.AccountDerivation
+                DerivationScheme = derivationSchemeSettings.AccountDerivation,
+                AlwaysIncludeNonWitnessUTXO = true
             });
             if (result == null)
                 return null;

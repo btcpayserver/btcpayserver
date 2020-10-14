@@ -3,16 +3,17 @@
     ViewData.SetActivePageAndTitle(ServerNavPages.Users);
 }
 
-<partial name="_StatusMessage" />
+<partial name="_StatusMessage"/>
 
 <div class="row button-row">
-    <div class="col-lg-9 col-xl-8">
-        <span>Total Users: @Model.Total</span>
-        <span class="pull-right">
-            <a asp-action="CreateUser" class="btn btn-primary" role="button" id="CreateUser">
-                <span class="fa fa-plus"></span> Add User
-            </a>
-        </span>
+    <div class="col-12 col-sm-4 col-lg-6 mb-3">
+        <a asp-action="CreateUser" class="btn btn-primary" role="button" id="CreateUser">
+            <span class="fa fa-plus"></span> Add User
+        </a>
+    </div>
+    
+    <div class="col-12 col-sm-8 col-lg-6 mb-3">
+       
     </div>
 </div>
 
@@ -22,6 +23,8 @@
             <thead>
             <tr>
                 <th>Email</th>
+                <th>Created</th>
+                <th>Verified</th>
                 <th class="text-right">Actions</th>
             </tr>
             </thead>
@@ -30,63 +33,26 @@
             {
                 <tr>
                     <td>@user.Email</td>
-                    <td class="text-right"><a asp-action="User" asp-route-userId="@user.Id">Edit</a> <span> - </span> <a asp-action="DeleteUser" asp-route-userId="@user.Id">Remove</a></td>
+                    <td>@user.Created?.ToBrowserDate()</td>
+                    <td class="text-center">
+                        @if (user.Verified)
+                        {
+                            <span class="text-success fa fa-check"></span>
+                        }
+                        else
+                        {
+                            <span class="text-danger fa fa-times"></span>
+                        }
+                    </td>
+                    <td class="text-right">
+                        <a asp-action="User" asp-route-userId="@user.Id">Edit</a> <span> - </span> <a asp-action="DeleteUser" asp-route-userId="@user.Id">Remove</a>
+                    </td>
                 </tr>
             }
             </tbody>
         </table>
 
-        <nav aria-label="..." class="w-100">
-            <ul class="pagination float-left">
-                <li class="page-item @(Model.Skip == 0 ? "disabled" : null)">
-                    <a class="page-link" tabindex="-1" href="@listUsers(-1, Model.Count)">&laquo;</a>
-                </li>
-                <li class="page-item disabled">
-                    <span class="page-link">@(Model.Skip + 1) to @(Model.Skip + Model.Users.Count) of @Model.Total</span>
-                </li>
-                <li class="page-item @(Model.Total > (Model.Skip + Model.Users.Count) ? null : "disabled")">
-                    <a class="page-link" href="@listUsers(1, Model.Count)">&raquo;</a>
-                </li>
-            </ul>
-            <ul class="pagination float-right">
-                <li class="page-item disabled">
-                    <span class="page-link">Page Size:</span>
-                </li>
-                <li class="page-item @(Model.Count == 50 ? "active" : null)">
-                    <a class="page-link" href="@listUsers(0, 50)">50</a>
-                </li>
-                <li class="page-item @(Model.Count == 100 ? "active" : null)">
-                    <a class="page-link" href="@listUsers(0, 100)">100</a>
-                </li>
-                <li class="page-item @(Model.Count == 250 ? "active" : null)">
-                    <a class="page-link" href="@listUsers(0, 250)">250</a>
-                </li>
-                <li class="page-item @(Model.Count == 500 ? "active" : null)">
-                    <a class="page-link" href="@listUsers(0, 500)">500</a>
-                </li>
-            </ul>
-        </nav>
-        @{
-            string listUsers(int prevNext, int count)
-            {
-                var skip = Model.Skip;
-                if (prevNext == -1)
-                {
-                    skip = Math.Max(0, Model.Skip - Model.Count);
-                }
-                else if (prevNext == 1)
-                {
-                    skip = Model.Skip + count;
-                }
-
-                var act = Url.Action("ListUsers", new
-                {
-                    skip = skip,
-                    count = count,
-                });
-
-                return act;
-            }
-        }
+        
+        <vc:pager view-model="Model"></vc:pager>
     </div>
 </div>

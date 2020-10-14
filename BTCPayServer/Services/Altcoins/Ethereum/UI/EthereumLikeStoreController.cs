@@ -14,7 +14,6 @@ using BTCPayServer.Services.Altcoins.Ethereum.Payments;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Internal;
 using NBitcoin;
 using Nethereum.HdWallet;
 using Nethereum.Hex.HexConvertors.Extensions;
@@ -189,13 +188,11 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.UI
                 int index = -1;
                 if (wallet != null)
                 {
-                    index = wallet.GetAddresses(1000)
-                        .IndexOf(viewModel.AddressCheck);
+                    index = Array.IndexOf(wallet.GetAddresses(1000), viewModel.AddressCheck);
                 }
                 else if (publicWallet != null)
                 {
-                    index = publicWallet.GetAddresses(1000)
-                        .IndexOf(viewModel.AddressCheck);
+                    index = Array.IndexOf(publicWallet.GetAddresses(1000), viewModel.AddressCheck);
                 }
 
                 if (viewModel.AddressCheckLastUsed && index > -1)

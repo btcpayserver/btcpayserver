@@ -20,8 +20,10 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
+using BTCPayServer.Services.Shopify;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
+using BundlerMinifier.TagHelpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -54,15 +56,14 @@ namespace BTCPayServer.Controllers
             BTCPayNetworkProvider networkProvider,
             RateFetcher rateFactory,
             ExplorerClientProvider explorerProvider,
-            IFeeProviderFactory feeRateProvider,
             LanguageService langService,
-            IWebHostEnvironment env, IHttpClientFactory httpClientFactory,
             PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
             SettingsRepository settingsRepository,
             IAuthorizationService authorizationService,
             EventAggregator eventAggregator,
             CssThemeManager cssThemeManager,
-            AppService appService)
+            AppService appService,
+            IWebHostEnvironment webHostEnvironment)
         {
             _RateFactory = rateFactory;
             _Repo = repo;
@@ -71,17 +72,15 @@ namespace BTCPayServer.Controllers
             _LangService = langService;
             _TokenController = tokenController;
             _WalletProvider = walletProvider;
-            _Env = env;
-            _httpClientFactory = httpClientFactory;
             _paymentMethodHandlerDictionary = paymentMethodHandlerDictionary;
             _settingsRepository = settingsRepository;
             _authorizationService = authorizationService;
             _CssThemeManager = cssThemeManager;
             _appService = appService;
+            _webHostEnvironment = webHostEnvironment;
             _EventAggregator = eventAggregator;
             _NetworkProvider = networkProvider;
             _ExplorerProvider = explorerProvider;
-            _FeeRateProvider = feeRateProvider;
             _ServiceProvider = serviceProvider;
             _BtcpayServerOptions = btcpayServerOptions;
             _BTCPayEnv = btcpayEnv;
@@ -92,20 +91,18 @@ namespace BTCPayServer.Controllers
         readonly IServiceProvider _ServiceProvider;
         readonly BTCPayNetworkProvider _NetworkProvider;
         private readonly ExplorerClientProvider _ExplorerProvider;
-        private readonly IFeeProviderFactory _FeeRateProvider;
         readonly BTCPayWalletProvider _WalletProvider;
         readonly AccessTokenController _TokenController;
         readonly StoreRepository _Repo;
         readonly TokenRepository _TokenRepository;
         readonly UserManager<ApplicationUser> _UserManager;
         private readonly LanguageService _LangService;
-        readonly IWebHostEnvironment _Env;
-        private readonly IHttpClientFactory _httpClientFactory;
         private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
         private readonly SettingsRepository _settingsRepository;
         private readonly IAuthorizationService _authorizationService;
         private readonly CssThemeManager _CssThemeManager;
         private readonly AppService _appService;
+        private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly EventAggregator _EventAggregator;
 
         [TempData]
@@ -370,6 +367,14 @@ namespace BTCPayServer.Controllers
             var storeBlob = CurrentStore.GetStoreBlob();
             var vm = new CheckoutExperienceViewModel();
             SetCryptoCurrencies(vm, CurrentStore);
+            vm.PaymentMethodCriteria =
+                CurrentStore.GetPaymentMethodCriteria(_NetworkProvider, storeBlob).Select(criteria =>
+                    new PaymentMethodCriteriaViewModel()
+                    {
+                        PaymentMethod = criteria.PaymentMethod.ToString(),
+                        Type = criteria.Above? PaymentMethodCriteriaViewModel.CriteriaType.GreaterThan : PaymentMethodCriteriaViewModel.CriteriaType.LessThan,
+                        Value = criteria.Value?.ToString()?? ""
+                    }).ToList();
             vm.CustomCSS = storeBlob.CustomCSS;
             vm.CustomLogo = storeBlob.CustomLogo;
             vm.HtmlTitle = storeBlob.HtmlTitle;
@@ -377,45 +382,32 @@ namespace BTCPayServer.Controllers
             vm.RequiresRefundEmail = storeBlob.RequiresRefundEmail;
             vm.ShowRecommendedFee = storeBlob.ShowRecommendedFee;
             vm.RecommendedFeeBlockTarget = storeBlob.RecommendedFeeBlockTarget;
-            vm.OnChainMinValue = storeBlob.OnChainMinValue?.ToString() ?? "";
-            vm.LightningMaxValue = storeBlob.LightningMaxValue?.ToString() ?? "";
             vm.LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi;
             vm.LightningPrivateRouteHints = storeBlob.LightningPrivateRouteHints;
             vm.RedirectAutomatically = storeBlob.RedirectAutomatically;
             return View(vm);
         }
+
         void SetCryptoCurrencies(CheckoutExperienceViewModel vm, Data.StoreData storeData)
         {
             var choices = storeData.GetEnabledPaymentIds(_NetworkProvider)
-                                      .Select(o => new CheckoutExperienceViewModel.Format() { Name = o.ToPrettyString(), Value = o.ToString(), PaymentId = o }).ToArray();
+                .Select(o =>
+                    new CheckoutExperienceViewModel.Format()
+                    {
+                        Name = o.ToPrettyString(), Value = o.ToString(), PaymentId = o
+                    }).ToArray();
 
             var defaultPaymentId = storeData.GetDefaultPaymentId(_NetworkProvider);
             var chosen = choices.FirstOrDefault(c => c.PaymentId == defaultPaymentId);
-            vm.CryptoCurrencies = new SelectList(choices, nameof(chosen.Value), nameof(chosen.Name), chosen?.Value);
+            vm.PaymentMethods = new SelectList(choices, nameof(chosen.Value), nameof(chosen.Name), chosen?.Value);
             vm.DefaultPaymentMethod = chosen?.Value;
         }
+
 
         [HttpPost]
         [Route("{storeId}/checkout")]
         public async Task<IActionResult> CheckoutExperience(CheckoutExperienceViewModel model)
         {
-            CurrencyValue lightningMaxValue = null;
-            if (!string.IsNullOrWhiteSpace(model.LightningMaxValue))
-            {
-                if (!CurrencyValue.TryParse(model.LightningMaxValue, out lightningMaxValue))
-                {
-                    ModelState.AddModelError(nameof(model.LightningMaxValue), "Invalid lightning max value");
-                }
-            }
-
-            CurrencyValue onchainMinValue = null;
-            if (!string.IsNullOrWhiteSpace(model.OnChainMinValue))
-            {
-                if (!CurrencyValue.TryParse(model.OnChainMinValue, out onchainMinValue))
-                {
-                    ModelState.AddModelError(nameof(model.OnChainMinValue), "Invalid on chain min value");
-                }
-            }
             bool needUpdate = false;
             var blob = CurrentStore.GetStoreBlob();
             var defaultPaymentMethodId = model.DefaultPaymentMethod == null ? null : PaymentMethodId.Parse(model.DefaultPaymentMethod);
@@ -426,11 +418,33 @@ namespace BTCPayServer.Controllers
             }
             SetCryptoCurrencies(model, CurrentStore);
             model.SetLanguages(_LangService, model.DefaultLang);
+            for (var index = 0; index < model.PaymentMethodCriteria.Count; index++)
+            {
+                var methodCriterion = model.PaymentMethodCriteria[index];
+                if (!string.IsNullOrWhiteSpace(methodCriterion.Value))
+                {
+                    if (!CurrencyValue.TryParse(methodCriterion.Value, out var value))
+                    {
+                        model.AddModelError(viewModel => viewModel.PaymentMethodCriteria[index].Value, $"{methodCriterion.PaymentMethod}: invalid format (1.0 USD)", this);
+                    }
+                }
+            }
 
             if (!ModelState.IsValid)
             {
                 return View(model);
             }
+
+            blob.PaymentMethodCriteria = model.PaymentMethodCriteria
+                .Where(viewModel => !string.IsNullOrEmpty(viewModel.Value)).Select(viewModel =>
+                {
+                    CurrencyValue.TryParse(viewModel.Value, out var cv);
+                    return new PaymentMethodCriteria() {Above = viewModel.Type == PaymentMethodCriteriaViewModel.CriteriaType.GreaterThan, Value = cv, PaymentMethod = PaymentMethodId.Parse(viewModel.PaymentMethod)};
+                }).ToList();
+#pragma warning disable 612
+            blob.LightningMaxValue = null;
+            blob.OnChainMinValue = null;
+#pragma warning restore 612
             blob.CustomLogo = model.CustomLogo;
             blob.CustomCSS = model.CustomCSS;
             blob.HtmlTitle = string.IsNullOrWhiteSpace(model.HtmlTitle) ? null : model.HtmlTitle;
@@ -438,8 +452,6 @@ namespace BTCPayServer.Controllers
             blob.RequiresRefundEmail = model.RequiresRefundEmail;
             blob.ShowRecommendedFee = model.ShowRecommendedFee;
             blob.RecommendedFeeBlockTarget = model.RecommendedFeeBlockTarget;
-            blob.OnChainMinValue = onchainMinValue;
-            blob.LightningMaxValue = lightningMaxValue;
             blob.LightningAmountInSatoshi = model.LightningAmountInSatoshi;
             blob.LightningPrivateRouteHints = model.LightningPrivateRouteHints;
             blob.RedirectAutomatically = model.RedirectAutomatically;
@@ -964,5 +976,8 @@ namespace BTCPayServer.Controllers
             });
 
         }
+
+
+
     }
 }

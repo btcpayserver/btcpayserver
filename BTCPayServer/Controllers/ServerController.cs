@@ -254,6 +254,7 @@ namespace BTCPayServer.Controllers
         {
             var data = (await _SettingsRepository.GetSettingAsync<PoliciesSettings>()) ?? new PoliciesSettings();
             ViewBag.AppsList = await GetAppSelectList();
+            ViewBag.UpdateUrlPresent = _Options.UpdateUrl != null;
             return View(data);
         }
 
@@ -944,23 +945,28 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> Emails()
         {
             var data = (await _SettingsRepository.GetSettingAsync<EmailSettings>()) ?? new EmailSettings();
-            return View(new EmailsViewModel() { Settings = data });
+            return View(new EmailsViewModel(data));
         }
 
         [Route("server/emails")]
         [HttpPost]
         public async Task<IActionResult> Emails(EmailsViewModel model, string command)
         {
-            if (!model.Settings.IsComplete())
-            {
-                TempData[WellKnownTempData.ErrorMessage] = "Required fields missing";
-                return View(model);
-            }
-
+           
             if (command == "Test")
             {
                 try
                 {
+                    if (model.PasswordSet)
+                    {
+                        var settings = await _SettingsRepository.GetSettingAsync<EmailSettings>();
+                        model.Settings.Password = settings.Password;
+                    }
+                    if (!model.Settings.IsComplete())
+                    {
+                        TempData[WellKnownTempData.ErrorMessage] = "Required fields missing";
+                        return View(model);
+                    }
                     using (var client = model.Settings.CreateSmtpClient())
                     using (var message = model.Settings.CreateMailMessage(new MailAddress(model.TestEmail), "BTCPay test", "BTCPay test"))
                     {
@@ -974,11 +980,24 @@ namespace BTCPayServer.Controllers
                 }
                 return View(model);
             }
+            else if (command == "ResetPassword")
+            {
+                var settings = await _SettingsRepository.GetSettingAsync<EmailSettings>();
+                settings.Password = null;
+                await _SettingsRepository.UpdateSetting(model.Settings);
+                TempData[WellKnownTempData.SuccessMessage] = "Email server password reset";
+                return RedirectToAction(nameof(Emails));
+            }
             else // if(command == "Save")
             {
+                var oldSettings = await _SettingsRepository.GetSettingAsync<EmailSettings>();
+                if (new EmailsViewModel(oldSettings).PasswordSet)
+                {
+                    model.Settings.Password = oldSettings.Password;
+                }
                 await _SettingsRepository.UpdateSetting(model.Settings);
                 TempData[WellKnownTempData.SuccessMessage] = "Email settings saved";
-                return View(model);
+                return RedirectToAction(nameof(Emails));
             }
         }
 

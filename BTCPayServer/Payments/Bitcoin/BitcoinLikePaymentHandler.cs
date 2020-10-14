@@ -76,27 +76,6 @@ namespace BTCPayServer.Payments.Bitcoin
             return GetPaymentMethodName(network);
         }
 
-        public override async Task<string> IsPaymentMethodAllowedBasedOnInvoiceAmount(StoreBlob storeBlob,
-            Dictionary<CurrencyPair, Task<RateResult>> rate, Money amount, PaymentMethodId paymentMethodId)
-        {
-            if (storeBlob.OnChainMinValue != null)
-            {
-                var currentRateToCrypto =
-                    await rate[new CurrencyPair(paymentMethodId.CryptoCode, storeBlob.OnChainMinValue.Currency)];
-                if (currentRateToCrypto?.BidAsk != null)
-                {
-                    var limitValueCrypto =
-                        Money.Coins(storeBlob.OnChainMinValue.Value / currentRateToCrypto.BidAsk.Bid);
-                    if (amount < limitValueCrypto)
-                    {
-                        return "The amount of the invoice is too low to be paid on chain";
-                    }
-                }
-            }
-
-            return string.Empty;
-        }
-
         public override IEnumerable<PaymentMethodId> GetSupportedPaymentMethods()
         {
             return _networkProvider
@@ -159,7 +138,9 @@ namespace BTCPayServer.Payments.Bitcoin
                     break;
             }
 
-            onchainMethod.DepositAddress = (await prepare.ReserveAddress).Address.ToString();
+            var reserved = await prepare.ReserveAddress;
+            onchainMethod.DepositAddress = reserved.Address.ToString();
+            onchainMethod.KeyPath = reserved.KeyPath;
             onchainMethod.PayjoinEnabled = blob.PayJoinEnabled &&
                                            PayjoinClient.SupportedFormats.Contains(supportedPaymentMethod
                                                .AccountDerivation.ScriptPubKeyType()) &&

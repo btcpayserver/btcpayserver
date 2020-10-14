@@ -112,12 +112,12 @@ namespace BTCPayServer.Hosting
                 ApplicationDbContextFactory dbContext = null;
                 if (!String.IsNullOrEmpty(opts.PostgresConnectionString))
                 {
-                    Logs.Configuration.LogInformation($"Postgres DB used ({opts.PostgresConnectionString})");
+                    Logs.Configuration.LogInformation($"Postgres DB used");
                     dbContext = new ApplicationDbContextFactory(DatabaseType.Postgres, opts.PostgresConnectionString);
                 }
                 else if (!String.IsNullOrEmpty(opts.MySQLConnectionString))
                 {
-                    Logs.Configuration.LogInformation($"MySQL DB used ({opts.MySQLConnectionString})");
+                    Logs.Configuration.LogInformation($"MySQL DB used");
                     Logs.Configuration.LogWarning("MySQL is not widely tested and should be considered experimental, we advise you to use postgres instead.");
                     dbContext = new ApplicationDbContextFactory(DatabaseType.MySQL, opts.MySQLConnectionString);
                 }

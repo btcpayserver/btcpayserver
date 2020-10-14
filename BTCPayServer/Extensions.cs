@@ -224,15 +224,7 @@ namespace BTCPayServer
             return false;
         }
 
-        public static void SetStatusMessageModel(this ITempDataDictionary tempData, StatusMessageModel statusMessage)
-        {
-            if (statusMessage == null)
-            {
-                tempData.Remove("StatusMessageModel");
-                return;
-            }
-            tempData["StatusMessageModel"] = JObject.FromObject(statusMessage).ToString(Formatting.None);
-        }
+        
 
         public static StatusMessageModel GetStatusMessageModel(this ITempDataDictionary tempData)
         {

@@ -4,6 +4,8 @@
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
     <PreserveCompilationContext>false</PreserveCompilationContext>
     <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
+    <RootNamespace>BTCPayServer.Extensions.Test</RootNamespace>
+    <AssemblyVersion>1.0.0</AssemblyVersion>
 
   </PropertyGroup>
     <ItemGroup>

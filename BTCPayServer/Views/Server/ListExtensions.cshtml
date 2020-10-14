@@ -35,24 +35,28 @@
                     <p class="card-text">@extension.Description</p>
 
                 </div>
-                @if (matchedAvailable != null)
+                @if (!extension.SystemExtension)
                 {
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item d-flex justify-content-between">
                             <span>Current version</span>
                             <span>@extension.Version</span>
                         </li>
-                        <li class="list-group-item d-flex justify-content-between">
-                            <span>Remote version</span>
-                            <span>@matchedAvailable.Version</span>
-                        </li>
+                        @if (matchedAvailable != null)
+                        {
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Remote version</span>
+                                <span>@matchedAvailable.Version</span>
+                            </li>
+                        }
                     </ul>
                     <div class="card-footer">
                         @if (Model.Commands.Any(tuple => tuple.extension.Equals(extension.Identifier, StringComparison.InvariantCultureIgnoreCase)))
                         {
                             <div class="d-flex justify-content-between">
                                 <div>
-                                    <div class="badge badge-info">pending action</div></div>
+                                    <div class="badge badge-info">pending action</div>
+                                </div>
                                 <form asp-action="CancelExtensionCommands" asp-route-extension="@extension.Identifier">
                                     <button type="submit" class="btn btn-link pt-0">Cancel</button>
                                 </form>
@@ -61,16 +65,26 @@
                         else
                         {
                             <form asp-action="UnInstallExtension" asp-route-extension="@extension.Identifier">
-                                <button type="submit" class="btn btn-link">Uninstall</button>
+                                <button type="submit" class="btn btn-link  pt-0">Uninstall</button>
                             </form>
-                            @if (extension.Version < matchedAvailable.Version)
+
+                            @if (matchedAvailable != null && extension.Version < matchedAvailable.Version)
                             {
                                 <form asp-action="InstallExtension" asp-route-extension="@extension.Identifier" asp-route-remote="@Model.Remote">
-                                    <button type="submit" class="btn btn-link">Update</button>
+                                    <button type="submit" class="btn btn-link  pt-0">Update</button>
                                 </form>
                             }
                         }
-
+                    </div>
+                }
+                else if (extension.SystemExtension)
+                {
+                    <div class="card-footer">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <div class="badge badge-info">system extension</div>
+                            </div>
+                        </div>
                     </div>
                 }
 
@@ -92,12 +106,13 @@
                     </h3>
                     <p class="card-text">@extension.Description</p>
                 </div>
-                <div class="card-footer py-0 text-right">
+                <div class="card-footer">
                     @if (Model.Commands.Any(tuple => tuple.extension.Equals(extension.Identifier, StringComparison.InvariantCultureIgnoreCase)))
                     {
                         <div class="d-flex justify-content-between">
-                                <div>
-                                <div class="badge badge-info">pending action</div></div>
+                            <div>
+                                <div class="badge badge-info">pending action</div>
+                            </div>
                             <form asp-action="CancelExtensionCommands" asp-route-extension="@extension.Identifier">
                                 <button type="submit" class="btn btn-link pt-0">Cancel</button>
                             </form>
@@ -106,7 +121,7 @@
                     else
                     {
                         <form asp-action="InstallExtension" asp-route-extension="@extension.Identifier" asp-route-remote="@Model.Remote">
-                            <button type="submit" class="btn btn-link">Install</button>
+                            <button type="submit" class="btn btn-link  pt-0">Install</button>
                         </form>
                     }
                 </div>
@@ -114,7 +129,6 @@
         }
     </div>
 }
-
 <button class="btn btn-link mt-4" type="button" data-toggle="collapse" data-target="#manual-upload">
     Upload extension
 </button>
@@ -124,14 +138,46 @@
             <h3 class="card-title">Add extension manually</h3>
             <div class="alert alert-warning">This is an extremely dangerous operation. Do not upload extensions from someone that you do not trust.</div>
             <form method="post" enctype="multipart/form-data" asp-action="UploadExtension">
+
                 <div class="form-group">
-                    <input type="file" name="files" accept=".btcpay" id="files"/>
+                    <div class="custom-file">
+                        <input type="file" class="custom-file-input" required name="files" accept=".btcpay" id="files">
+                        <label class="custom-file-label" for="files">Choose file</label>
+                    </div>
+                </div>
+                <div class="form-group">
                     <button class="btn btn-primary" type="submit">Upload</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+@if (Model.Commands.Any())
+{
+    <button class="btn btn-link mt-4" type="button" data-toggle="collapse" data-target="#pending-actions">
+        Pending
+    </button>
+    <div class="collapse" id="pending-actions">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="card-title">Pending actions</h3>
+                <ul class="list-group list-group-flush">
+                    @foreach (var extComm in Model.Commands.GroupBy(tuple => tuple.extension))
+                    {
+                        <li class="list-group-item">
+                            <div class="d-flex justify-content-between">
+                                @extComm.Key (@extComm.Last().command)
+                                <form asp-action="CancelExtensionCommands" asp-route-extension="@extComm.Key">
+                                    <button type="submit" class="btn btn-link pt-0">Cancel</button>
+                                </form>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+}
 
 @section Scripts {
     <script>
@@ -140,8 +186,9 @@
                 $('.custom-file-input').on('change',
                     function () {
                         var label = $(this).next('label');
-                        if (document.getElementById("file").files.length > 0) {
-                            var fileName = document.getElementById("file").files[0].name;
+                        var el = $(this).get(0);
+                        if (el.files.length > 0) {
+                            var fileName = el.files[0].name;
                             label.addClass("selected").html(fileName);
                         } else {
                             label.removeClass("selected").html("Choose file");

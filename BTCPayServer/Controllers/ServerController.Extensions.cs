@@ -23,7 +23,7 @@ namespace BTCPayServer.Controllers
             {
                 availableExtensions = await extensionService.GetRemoteExtensions(remote);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 TempData.SetStatusMessageModel(new StatusMessageModel()
                 {
@@ -93,7 +93,7 @@ namespace BTCPayServer.Controllers
                     Severity = StatusMessageModel.StatusSeverity.Success
                 });
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 TempData.SetStatusMessageModel(new StatusMessageModel()
                 {

@@ -40,12 +40,7 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarResponsive">
                 <ul class="navbar-nav ml-auto">
-                @inject IEnumerable<BTCPayServer.Contracts.INavExtension> Extensions;
-                        @foreach (var extension in Extensions.Where(extension => extension.Location == "header-nav"))
-                        {
-                            <partial name="@extension.Partial"/>
-                        }
-                    
+                    <vc:ui-extension-point location="header-nav" />
                     @if (SignInManager.IsSignedIn(User))
                     {
                         if (User.IsInRole(Roles.ServerAdmin))

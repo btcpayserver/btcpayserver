@@ -1,4 +1,4 @@
-﻿@using NUglify.Helpers
+@using NUglify.Helpers
 @model BTCPayServer.Models.ViewPullPaymentModel
 
 @addTagHelper *, BundlerMinifier.TagHelpers
@@ -171,29 +171,11 @@
                                         </tbody>
                                     </table>
                                 }
-<<<<<<< HEAD
-                            }
-                            else
-                            {
-                                <p class="text-secondary">No claim made yet</p>
-                            }
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer text-muted">
-                    <div class="row">
-                        <div class="col-12 col-sm-6">
-                            Updated @Model.LastUpdated.ToString("g")
-                        </div>
-                        <div class="col-12 col-sm-6 text-sm-right">
-                            Powered by <a href="https://mycryptopay.io" target="_blank">MyCryptopay</a>
-=======
                                 else
                                 {
                                     <p class="text-muted">No claim made yet.</p>
                                 }
                             </div>
->>>>>>> 0a8c2926ea4a18536935e995d86a1e9ba318493c
                         </div>
                     </div>
                 </div>

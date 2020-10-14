@@ -327,15 +327,14 @@ retry:
             PaymentMethodId paymentMethodId)
         {
             var paymentMethodIdStr = paymentMethodId?.ToString();
-            context.HistoricalAddressInvoices.Where(data =>
-                    data.InvoiceDataId == invoiceId && paymentMethodIdStr == null ||
-                    data.CryptoCode == paymentMethodIdStr &&
-                    data.UnAssigned == null)
-                .ForEachAsync(
-                    data =>
-                    {
-                        data.UnAssigned = DateTimeOffset.UtcNow;
-                    });
+            var addresses = context.HistoricalAddressInvoices.Where(data =>
+                (data.InvoiceDataId == invoiceId && paymentMethodIdStr == null ||
+                 data.CryptoCode == paymentMethodIdStr) &&
+                data.UnAssigned == null);
+            foreach (var historicalAddressInvoiceData in addresses)
+            {
+                historicalAddressInvoiceData.UnAssigned = DateTimeOffset.UtcNow;   
+            }
         }
 
         public async Task UnaffectAddress(string invoiceId)

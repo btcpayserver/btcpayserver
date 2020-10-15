@@ -167,6 +167,7 @@ namespace BTCPayServer.Configuration
             PostgresConnectionString = conf.GetOrDefault<string>("postgres", null);
             MySQLConnectionString = conf.GetOrDefault<string>("mysql", null);
             BundleJsCss = conf.GetOrDefault<bool>("bundlejscss", true);
+            DockerDeployment = conf.GetOrDefault<bool>("dockerdeployment", true);
             AllowAdminRegistration = conf.GetOrDefault<bool>("allow-admin-registration", false);
             TorrcFile = conf.GetOrDefault<string>("torrcfile", null);
 
@@ -284,6 +285,7 @@ namespace BTCPayServer.Configuration
         public ExternalServices ExternalServices { get; set; } = new ExternalServices();
 
         public BTCPayNetworkProvider NetworkProvider { get; set; }
+        public bool DockerDeployment { get; set; }
         public string PostgresConnectionString
         {
             get;

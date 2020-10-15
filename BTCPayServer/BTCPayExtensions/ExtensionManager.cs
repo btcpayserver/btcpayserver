@@ -19,6 +19,7 @@ namespace BTCPayServer
 {
     public static class ExtensionManager
     {
+        public  const string BTCPayExtensionSuffix =".btcpay";
         private static readonly List<Assembly> _pluginAssemblies = new List<Assembly>();
         private static ILogger _logger;
 
@@ -98,25 +99,18 @@ namespace BTCPayServer
 
         private static void ExecuteCommands(string extensionsFolder)
         {
-            if (File.Exists(Path.Combine(extensionsFolder, "commands")))
+            var pendingCommands = GetPendingCommands(extensionsFolder);
+            foreach (var command in pendingCommands)
             {
-                var commands = File.ReadAllLines(Path.Combine(extensionsFolder, "commands"));
-
-                foreach (var command in commands)
-                {
-                    _logger.LogInformation($"Executing command {command}");
-                    ExecuteCommand(command, extensionsFolder);
-                }
+                ExecuteCommand(command, extensionsFolder);
             }
             File.Delete(Path.Combine(extensionsFolder, "commands"));
         }
 
-        private static void ExecuteCommand(string command, string extensionsFolder)
+        private static void ExecuteCommand((string command, string extension) command, string extensionsFolder)
         {
-            var split = command.Split(":");
-
-            var dirName = Path.Combine(extensionsFolder, split[1]);
-            switch (split[0].ToLower(CultureInfo.InvariantCulture))
+            var dirName = Path.Combine(extensionsFolder, command.extension);
+            switch (command.command)
             {
                 case "delete":
                     if (Directory.Exists(dirName))
@@ -125,8 +119,7 @@ namespace BTCPayServer
                     }
                     break;
                 case "install":
-
-                    var fileName = dirName + ".btcpay";
+                    var fileName = dirName + BTCPayExtensionSuffix;
                     if (File.Exists(fileName))
                     {
                         ZipFile.ExtractToDirectory(fileName, dirName, true);
@@ -136,10 +129,32 @@ namespace BTCPayServer
             }
         }
 
-        public static void QueueCommands(string extensionsFolder, params ( string action, string val)[] commands)
+        public static (string command, string extension)[] GetPendingCommands(string extensionsFolder)
+        {
+            if (!File.Exists(Path.Combine(extensionsFolder, "commands")))
+                return Array.Empty<(string command, string extension)>();
+            var commands = File.ReadAllLines(Path.Combine(extensionsFolder, "commands"));
+            return commands.Select(s =>
+            {
+                var split = s.Split(':');
+                return (split[0].ToLower(CultureInfo.InvariantCulture), split[1]);
+            }).ToArray();
+        }
+
+        public static void QueueCommands(string extensionsFolder, params ( string action, string extension)[] commands)
         {
             File.AppendAllLines(Path.Combine(extensionsFolder, "commands"),
-                commands.Select((tuple) => $"{tuple.action}:{tuple.val}"));
+                commands.Select((tuple) => $"{tuple.action}:{tuple.extension}"));
+        }
+
+        public static void CancelCommands(string extensionDir, string extension)
+        {
+            var cmds = GetPendingCommands(extensionDir).Where(tuple =>
+                !tuple.extension.Equals(extension, StringComparison.InvariantCultureIgnoreCase)).ToArray();
+
+            File.Delete(Path.Combine(extensionDir, "commands"));
+            QueueCommands(extensionDir, cmds);
+
         }
     }
 }

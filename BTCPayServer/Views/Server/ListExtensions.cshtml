@@ -5,7 +5,18 @@
     var availableAndNotInstalled = Model.Available.Where(extension => !installed.Contains(extension.Identifier));
 }
 
-
+@if (Model.Commands.Any())
+{
+    <div class="alert alert-info">
+        You need to restart BTCPay Server in order to update your active extensions.
+        @if (Model.CanShowRestart)
+        {
+            <form method="post" asp-action="Maintenance">
+                <button type="submit" name="command" value="restart" class="btn btn-outline-info alert-link" asp-action="Maintenance">Restart now</button>
+            </form>
+        }
+    </div>
+}
 <partial name="_StatusMessage"/>
 
 
@@ -23,25 +34,47 @@
                         @extension.Name <span class="badge badge-secondary">@extension.Version</span>
                     </h3>
                     <p class="card-text">@extension.Description</p>
+
                 </div>
                 @if (matchedAvailable != null)
                 {
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Current version</span>
+                            <span>@extension.Version</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Remote version</span>
+                            <span>@matchedAvailable.Version</span>
+                        </li>
+                    </ul>
                     <div class="card-footer">
-                        Current version: @extension.Version <br/>
-                        Remote version: @matchedAvailable.Version <br/>
-                        <form asp-action="UnInstallExtension" asp-route-extension="@extension.Identifier">
-                            <button type="submit" class="btn btn-link">Uninstall</button>
-                        </form>
-                        @if (extension.Version < matchedAvailable.Version)
+                        @if (Model.Commands.Any(tuple => tuple.extension.Equals(extension.Identifier, StringComparison.InvariantCultureIgnoreCase)))
                         {
-                            <br/>
-                            <form asp-action="InstallExtension" asp-route-extension="@extension.Identifier" asp-route-remote="@Model.Remote">
-                                <button type="submit" class="btn btn-link">Update</button>
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div class="badge badge-info">pending action</div></div>
+                                <form asp-action="CancelExtensionCommands" asp-route-extension="@extension.Identifier">
+                                    <button type="submit" class="btn btn-link pt-0">Cancel</button>
+                                </form>
+                            </div>
+                        }
+                        else
+                        {
+                            <form asp-action="UnInstallExtension" asp-route-extension="@extension.Identifier">
+                                <button type="submit" class="btn btn-link">Uninstall</button>
                             </form>
+                            @if (extension.Version < matchedAvailable.Version)
+                            {
+                                <form asp-action="InstallExtension" asp-route-extension="@extension.Identifier" asp-route-remote="@Model.Remote">
+                                    <button type="submit" class="btn btn-link">Update</button>
+                                </form>
+                            }
                         }
 
                     </div>
                 }
+
             </div>
         }
     </div>
@@ -61,9 +94,22 @@
                     <p class="card-text">@extension.Description</p>
                 </div>
                 <div class="card-footer py-0 text-right">
-                    <form asp-action="InstallExtension" asp-route-extension="@extension.Identifier" asp-route-remote="@Model.Remote">
-                        <button type="submit" class="btn btn-link">Install</button>
-                    </form>
+                    @if (Model.Commands.Any(tuple => tuple.extension.Equals(extension.Identifier, StringComparison.InvariantCultureIgnoreCase)))
+                    {
+                        <div class="d-flex justify-content-between">
+                                <div>
+                                <div class="badge badge-info">pending action</div></div>
+                            <form asp-action="CancelExtensionCommands" asp-route-extension="@extension.Identifier">
+                                <button type="submit" class="btn btn-link pt-0">Cancel</button>
+                            </form>
+                        </div>
+                    }
+                    else
+                    {
+                        <form asp-action="InstallExtension" asp-route-extension="@extension.Identifier" asp-route-remote="@Model.Remote">
+                            <button type="submit" class="btn btn-link">Install</button>
+                        </form>
+                    }
                 </div>
             </div>
         }

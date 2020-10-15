@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Configuration;
 using BTCPayServer.Contracts;
 using BTCPayServer.Models;
 using Microsoft.AspNetCore.Http;
@@ -14,13 +15,16 @@ namespace BTCPayServer.Controllers
         [HttpGet("server/extensions")]
         public async Task<IActionResult> ListExtensions(
             [FromServices] ExtensionService extensionService,
+            [FromServices] BTCPayServerOptions btcPayServerOptions,
             string remote = "kukks/btcpayserver-extensions")
         {
             var res = new ListExtensionsViewModel()
             {
                 Installed = extensionService.LoadedExtensions,
                 Available = await extensionService.GetRemoteExtensions(remote),
-                Remote = remote
+                Remote = remote,
+                Commands = extensionService.GetPendingCommands(),
+                CanShowRestart = btcPayServerOptions.DockerDeployment
             };
             return View(res);
         }
@@ -30,16 +34,31 @@ namespace BTCPayServer.Controllers
             public string Remote { get; set; }
             public IEnumerable<IBTCPayServerExtension> Installed { get; set; }
             public IEnumerable<ExtensionService.AvailableExtension> Available { get; set; }
+            public (string command, string extension)[] Commands { get; set; }
+            public bool CanShowRestart { get; set; }
         }
 
         [HttpPost("server/extensions/uninstall")]
-        public async Task<IActionResult> UnInstallExtension(
+        public IActionResult UnInstallExtension(
             [FromServices] ExtensionService extensionService, string extension)
         {
-            await extensionService.UninstallExtension(extension);
+            extensionService.UninstallExtension(extension);
             TempData.SetStatusMessageModel(new StatusMessageModel()
             {
-                Message = "Extension scheduled to be uninstalled, app restarting.",
+                Message = "Extension scheduled to be uninstalled",
+                Severity = StatusMessageModel.StatusSeverity.Success
+            });
+
+            return RedirectToAction("ListExtensions");
+        }
+        [HttpPost("server/extensions/cancel")]
+        public IActionResult CancelExtensionCommands(
+            [FromServices] ExtensionService extensionService, string extension)
+        {
+            extensionService.CancelCommands(extension);
+            TempData.SetStatusMessageModel(new StatusMessageModel()
+            {
+                Message = "Updated",
                 Severity = StatusMessageModel.StatusSeverity.Success
             });
 
@@ -53,7 +72,7 @@ namespace BTCPayServer.Controllers
             try
             {
                 await extensionService.DownloadRemoteExtension(remote, extension);
-                await extensionService.InstallExtension(extension);
+                extensionService.InstallExtension(extension);
                 TempData.SetStatusMessageModel(new StatusMessageModel()
                 {
                     Message = "Extension scheduled to be installed.",
@@ -79,7 +98,7 @@ namespace BTCPayServer.Controllers
             foreach (var formFile in files.Where(file => file.Length > 0))
             {
                 await extensionService.UploadExtension(formFile);
-                await extensionService.InstallExtension(formFile.FileName.TrimEnd(".btcpay",
+                extensionService.InstallExtension(formFile.FileName.TrimEnd(ExtensionManager.BTCPayExtensionSuffix,
                     StringComparison.InvariantCultureIgnoreCase));
             }
 

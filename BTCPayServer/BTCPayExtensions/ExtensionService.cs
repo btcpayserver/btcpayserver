@@ -36,7 +36,7 @@ namespace BTCPayServer
             var resp = await _githubClient
                 .GetStringAsync(new Uri($"https://api.github.com/repos/{remote}/contents"));
             var files = JsonConvert.DeserializeObject<GithubFile[]>(resp);
-            return await Task.WhenAll(files.Where(file => file.Name.EndsWith(".btcpay.json")).Select(async file =>
+            return await Task.WhenAll(files.Where(file => file.Name.EndsWith($"{ExtensionManager.BTCPayExtensionSuffix}.json", StringComparison.InvariantCulture)).Select(async file =>
             {
                 return await _githubClient.GetStringAsync(file.DownloadUrl).ContinueWith(
                     task => JsonConvert.DeserializeObject<AvailableExtension>(task.Result), TaskScheduler.Current);
@@ -49,7 +49,7 @@ namespace BTCPayServer
             var resp = await _githubClient
                 .GetStringAsync(new Uri($"https://api.github.com/repos/{remote}/contents"));
             var files = JsonConvert.DeserializeObject<GithubFile[]>(resp);
-            var ext = files.SingleOrDefault(file => file.Name == $"{extension}.btcpay");
+            var ext = files.SingleOrDefault(file => file.Name == $"{extension}{ExtensionManager.BTCPayExtensionSuffix}");
             if (ext is null)
             {
                 throw new Exception("Extension not found on remote");
@@ -60,10 +60,10 @@ namespace BTCPayServer
             new WebClient().DownloadFile(new Uri(ext.DownloadUrl), filedest);
         }
 
-        public async Task InstallExtension(string extension)
+        public void InstallExtension(string extension)
         {
             var dest = _btcPayServerOptions.ExtensionDir;
-            await UninstallExtension(extension);
+            UninstallExtension(extension);
             ExtensionManager.QueueCommands(dest, ("install", extension));
         }
 
@@ -72,14 +72,14 @@ namespace BTCPayServer
             var dest = _btcPayServerOptions.ExtensionDir;
             var filedest = Path.Combine(dest, extension.FileName);
             Directory.CreateDirectory(Path.GetDirectoryName(filedest));
-            if (Path.GetExtension(filedest) == ".btcpay")
+            if (Path.GetExtension(filedest) == ExtensionManager.BTCPayExtensionSuffix)
             {
                 await using var stream = new FileStream(filedest, FileMode.Create);
                 await extension.CopyToAsync(stream);
             }
         }
 
-        public async Task UninstallExtension(string extension)
+        public void UninstallExtension(string extension)
         {
             var dest = _btcPayServerOptions.ExtensionDir;
             ExtensionManager.QueueCommands(dest, ("delete", extension));
@@ -109,6 +109,16 @@ namespace BTCPayServer
             [JsonProperty("sha")] public string Sha { get; set; }
 
             [JsonProperty("download_url")] public string DownloadUrl { get; set; }
+        }
+
+        public (string command, string extension)[] GetPendingCommands()
+        {
+            return ExtensionManager.GetPendingCommands(_btcPayServerOptions.ExtensionDir);
+        }
+
+        public  void CancelCommands(string extension)
+        {
+            ExtensionManager.CancelCommands(_btcPayServerOptions.ExtensionDir, extension);
         }
     }
 }

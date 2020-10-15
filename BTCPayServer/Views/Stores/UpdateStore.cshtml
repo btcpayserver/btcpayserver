@@ -1,4 +1,4 @@
-﻿@using System.Text.RegularExpressions
+@using System.Text.RegularExpressions
 @model StoreViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
@@ -9,11 +9,11 @@
 
 @if (!ViewContext.ModelState.IsValid)
 {
-<div class="row">
-    <div class="col-md-6">
-        <div asp-validation-summary="All" class="text-danger"></div>
+    <div class="row">
+        <div class="col-md-6">
+            <div asp-validation-summary="All" class="text-danger"></div>
+        </div>
     </div>
-</div>
 }
 
 <div class="row">
@@ -36,6 +36,144 @@
                     <span asp-validation-for="StoreWebsite" class="text-danger"></span>
                 </div>
 
+                <h4 class="mt-5 mb-3">Wallet <span class="text-muted small">On-chain payments</span></h4>
+                @if (!Model.DerivationSchemes.Any(a => !String.IsNullOrEmpty(a.Value)))
+                {
+                    <p class="alert alert-warning">
+                        <span class="fa fa-warning"></span>
+                        Wallet not setup for the store. Please provide Derviation Scheme
+                        <button type="button" class="close only-for-js" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </p>
+                }
+                <p>
+                    The Derivation Scheme <a href="https://docs.btcpayserver.org/FAQ/FAQ-Wallet/#what-is-a-derivation-scheme" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                    facilitates generation of the destination addresses for your invoices so funds can be received on-chain.
+                </p>
+                <p>
+                    Until wallet is defined, no invoices can be created for this store.
+                    Optionally, you can have a store that only receives Lightning payments, see the next section for more details.
+                </p>
+
+                <table class="table table-sm table-responsive-md mt-0 mb-5">
+                    <thead>
+                        <tr>
+                            <th>Crypto</th>
+                            <th>Derivation Scheme</th>
+                            <th style="text-align:center;">Enabled</th>
+                            <th style="text-align:right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var scheme in Model.DerivationSchemes.OrderBy(scheme => scheme.Collapsed))
+                        {
+                            <tr class="@(@scheme.Collapsed? "collapsed": "")">
+                                <td>@scheme.Crypto</td>
+                                <td title="@scheme.Value" data-toggle="tooltip" class="d-flex">
+                                    @if (string.IsNullOrEmpty(scheme.Value))
+                                    {
+                                        <span class="smMaxWidth">Not set</span>
+                                    }
+                                    else
+                                    {
+                                        <code class="text-truncate" style="max-width:25ch">
+                                            @scheme.Value
+                                        </code>
+                                        <code>
+                                            @if (scheme.Value.Length > 20)
+                                            {
+                                                var match = Regex.Match(scheme.Value, @"((?:-\[(?:[^\]])+\])+|\S{6})$");
+                                                @match.Value;
+                                            }
+                                        </code>
+                                    }
+                                </td>
+                                <td style="text-align:center;">
+                                    @if (scheme.Enabled)
+                                    {
+                                        <span class="text-success fa fa-check"></span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-danger fa fa-times"></span>
+                                    }
+                                </td>
+                                <td style="text-align:right">
+                                    @if (!string.IsNullOrWhiteSpace(scheme.Value) && scheme.WalletSupported)
+                                    {
+                                        <a asp-action="WalletTransactions" asp-controller="Wallets" asp-route-walletId="@scheme.WalletId">Wallet</a><span> - </span>
+                                    }
+                                    <a asp-action="AddDerivationScheme" asp-route-cryptoCode="@scheme.Crypto" asp-route-storeId="@this.Context.GetRouteValue("storeId")" id="@($"Modify{scheme.Crypto}")">Modify</a>
+                                </td>
+                            </tr>
+                        }
+
+                        @if (Model.DerivationSchemes.Any(scheme => scheme.Collapsed))
+                        {
+                            <tr class="only-for-js">
+                                <td colspan="4"><button class="btn btn-link" id="toggle-assets" type="button">Show additional assets</button></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                <h4 class="mt-5 mb-3">Lightning <span class="text-muted small">Off-chain payments</span></h4>
+                @if (!Model.DerivationSchemes.Any(a => !String.IsNullOrEmpty(a.Value)))
+                {
+                    <p class="alert alert-warning">
+                        <span class="fa fa-warning"></span>
+                        Review settings if you want to receive Lightning payments
+                        <button type="button" class="close only-for-js" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </p>
+                }
+                <p>
+                    A connection to a Lightning Node is required to generate Lightning Network enabled invoices.
+                </p>
+
+                <table class="table table-sm table-responsive-md">
+                    <thead>
+                        <tr>
+                            <th>Crypto</th>
+                            <th>Address</th>
+                            <th style="text-align:center;">Enabled</th>
+                            <th style="text-align:right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var scheme in Model.LightningNodes)
+                        {
+                            <tr>
+                                <td>@scheme.CryptoCode</td>
+                                <td class="smMaxWidth text-truncate">@scheme.Address</td>
+                                <td style="text-align:center;">
+                                    @if (scheme.Enabled)
+                                    {
+                                        <span class="text-success fa fa-check"></span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-danger fa fa-times"></span>
+                                    }
+                                </td>
+                                <td style="text-align:right"><a asp-action="AddLightningNode" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@this.Context.GetRouteValue("storeId")" id="@($"Modify-Lightning{scheme.CryptoCode}")">Modify</a></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                <div class="form-group mb-5">
+                    <label asp-for="LightningDescriptionTemplate"></label>
+                    <input asp-for="LightningDescriptionTemplate" class="form-control" />
+                    <span asp-validation-for="LightningDescriptionTemplate" class="text-danger"></span>
+                    <p class="form-text text-muted">
+                        Available placeholders:
+                        <code>{StoreName} {ItemDescription} {OrderId}</code>
+                    </p>
+                </div>
+
                 <h4 class="mt-5 mb-3">Payment</h4>
                 <div class="form-group">
                     <div class="form-check">
@@ -46,7 +184,7 @@
                 </div>
                 <div class="form-group">
                     <div class="form-check">
-                        <input asp-for="PayJoinEnabled" type="checkbox" class="form-check-input"/>
+                        <input asp-for="PayJoinEnabled" type="checkbox" class="form-check-input" />
                         <label asp-for="PayJoinEnabled" class="form-check-label"></label>
                         <a href="https://docs.btcpayserver.org/Payjoin/" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
                         <span asp-validation-for="PayJoinEnabled" class="text-danger"></span>
@@ -67,7 +205,7 @@
                         <a href="https://docs.btcpayserver.org/FAQ/FAQ-Stores/#invoice-expires-if-the-full-amount-has-not-been-paid-after-minutes" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
                     </div>
                     <div class="input-group">
-                        <input asp-for="InvoiceExpiration" class="form-control" style="max-width:10ch;"/>
+                        <input asp-for="InvoiceExpiration" class="form-control" style="max-width:10ch;" />
                         <div class="input-group-append">
                             <span class="input-group-text">minutes</span>
                         </div>
@@ -80,7 +218,7 @@
                         <a href="https://docs.btcpayserver.org/FAQ/FAQ-Stores/#payment-invalid-if-transactions-fails-to-confirm-minutes-after-invoice-expiration" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
                     </div>
                     <div class="input-group">
-                        <input asp-for="MonitoringExpiration" class="form-control" style="max-width:10ch;"/>
+                        <input asp-for="MonitoringExpiration" class="form-control" style="max-width:10ch;" />
                         <div class="input-group-append">
                             <span class="input-group-text">minutes</span>
                         </div>
@@ -93,7 +231,7 @@
                         <a href="https://docs.btcpayserver.org/FAQ/FAQ-Stores/#consider-the-invoice-paid-even-if-the-paid-amount-is-less-than-expected" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
                     </div>
                     <div class="input-group">
-                        <input asp-for="PaymentTolerance" class="form-control" style="max-width:10ch;"/>
+                        <input asp-for="PaymentTolerance" class="form-control" style="max-width:10ch;" />
                         <div class="input-group-append">
                             <span class="input-group-text">percent</span>
                         </div>
@@ -115,119 +253,6 @@
                 </div>
             </div>
 
-            <h4 class="mt-5 mb-3">Derivation Scheme</h4>
-            <p>The Derivation Scheme represents the destination of the funds received by your invoice on chain.</p>
-
-            <table class="table table-sm table-responsive-md mt-0 mb-5">
-                <thead>
-                    <tr>
-                        <th>Crypto</th>
-                        <th>Derivation Scheme</th>
-                        <th style="text-align:center;">Enabled</th>
-                        <th style="text-align:right;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach(var scheme in Model.DerivationSchemes.OrderBy(scheme => scheme.Collapsed))
-                    {
-                        <tr class="@(@scheme.Collapsed? "collapsed": "")">
-                            <td>@scheme.Crypto</td>
-                            <td title="@scheme.Value" data-toggle="tooltip" class="d-flex">
-                                @if (string.IsNullOrEmpty(scheme.Value))
-                                {
-                                    <span class="smMaxWidth">Not set</span>
-                                }
-                                else
-                                {
-                                    <code class="text-truncate" style="max-width:25ch">
-                                        @scheme.Value
-                                    </code>
-                                    <code>
-                                        @if (scheme.Value.Length > 20)
-                                        {
-                                            var match = Regex.Match(scheme.Value, @"((?:-\[(?:[^\]])+\])+|\S{6})$");
-                                            @match.Value;
-                                        }
-                                    </code>
-                                }
-                            </td>
-                            <td style="text-align:center;">
-                                @if(scheme.Enabled)
-                                {
-                                    <span class="text-success fa fa-check"></span>
-                                }
-                                else
-                                {
-                                    <span class="text-danger fa fa-times"></span>
-                                }
-                            </td>
-                            <td style="text-align:right">
-                                @if(!string.IsNullOrWhiteSpace(scheme.Value) && scheme.WalletSupported)
-                                {
-                                    <a asp-action="WalletTransactions" asp-controller="Wallets" asp-route-walletId="@scheme.WalletId">Wallet</a><span> - </span>
-                                }
-                                <a asp-action="AddDerivationScheme" asp-route-cryptoCode="@scheme.Crypto" asp-route-storeId="@this.Context.GetRouteValue("storeId")" id="@($"Modify{scheme.Crypto}")">Modify</a>
-                            </td>
-                        </tr>
-                    }
-
-                @if (Model.DerivationSchemes.Any(scheme => scheme.Collapsed))
-                {
-                    <tr class="only-for-js">
-                        <td colspan="4"><button class="btn btn-link" id="toggle-assets" type="button">Show additional assets</button></td>
-                    </tr>
-                }
-                </tbody>
-            </table>
-
-            <h4 class="mt-5 mb-3">Lightning nodes (Experimental)</h4>
-            <p>
-                A connection to a lightning charge node is required to generate lightning network enabled invoices.
-                <br />
-                This is experimental and not advised for production.
-            </p>
-
-            <table class="table table-sm table-responsive-md">
-                <thead>
-                    <tr>
-                        <th>Crypto</th>
-                        <th>Address</th>
-                        <th style="text-align:center;">Enabled</th>
-                        <th style="text-align:right">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach(var scheme in Model.LightningNodes)
-                    {
-                        <tr>
-                            <td>@scheme.CryptoCode</td>
-                            <td class="smMaxWidth text-truncate">@scheme.Address</td>
-                            <td style="text-align:center;">
-                                @if (scheme.Enabled)
-                                {
-                                    <span class="text-success fa fa-check"></span>
-                                }
-                                else
-                                {
-                                    <span class="text-danger fa fa-times"></span>
-                                }
-                            </td>
-                            <td style="text-align:right"><a asp-action="AddLightningNode" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@this.Context.GetRouteValue("storeId")" id="@($"Modify-Lightning{scheme.CryptoCode}")">Modify</a></td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-
-            <div class="form-group mb-5">
-                <label asp-for="LightningDescriptionTemplate"></label>
-                <input asp-for="LightningDescriptionTemplate" class="form-control" />
-                <span asp-validation-for="LightningDescriptionTemplate" class="text-danger"></span>
-                <p class="form-text text-muted">
-                    Available placeholders:
-                    <code>{StoreName} {ItemDescription} {OrderId}</code>
-                </p>
-            </div>
-
             <h4 class="mt-5 mb-3">Additional Payment methods</h4>
             <table class="table table-sm table-responsive-md mt-1 mb-5">
                 <thead>
@@ -238,23 +263,23 @@
                     </tr>
                 </thead>
                 <tbody>
-                @foreach (var scheme in Model.ThirdPartyPaymentMethods)
-                {
-                    <tr>
-                        <td>@scheme.Provider</td>
-                        <td  class="text-center">
-                            @if (scheme.Enabled)
-                            {
-                                <span class="text-success fa fa-check"></span>
-                            }
-                            else
-                            {
-                                <span class="text-danger fa fa-times"></span>
-                            }
-                        </td>
-                        <td class="text-right"><a asp-action="@scheme.Action" id='Modify-@scheme.Provider' asp-route-storeId="@this.Context.GetRouteValue("storeId")">Modify</a></td>
-                    </tr>
-                }
+                    @foreach (var scheme in Model.ThirdPartyPaymentMethods)
+                    {
+                        <tr>
+                            <td>@scheme.Provider</td>
+                            <td class="text-center">
+                                @if (scheme.Enabled)
+                                {
+                                    <span class="text-success fa fa-check"></span>
+                                }
+                                else
+                                {
+                                    <span class="text-danger fa fa-times"></span>
+                                }
+                            </td>
+                            <td class="text-right"><a asp-action="@scheme.Action" id='Modify-@scheme.Provider' asp-route-storeId="@this.Context.GetRouteValue("storeId")">Modify</a></td>
+                        </tr>
+                    }
                 </tbody>
             </table>
 
@@ -265,8 +290,8 @@
                         <th>Service</th>
                         <th style="text-align:right">Actions</th>
                     </tr>
-                    </thead>
-                    <tbody>
+                </thead>
+                <tbody>
                     <tr>
                         <td>
                             Email
@@ -293,12 +318,12 @@
     @await Html.PartialAsync("_ValidationScriptsPartial")
 
     <script>
-    $(document).ready(function(){
-       $(".collapsed").hide();
-       $("#toggle-assets").click(function() {
-         $(".collapsed").show();
-         $(this).parents("tr").hide();
-       });
-    });
+        $(document).ready(function () {
+            $(".collapsed").hide();
+            $("#toggle-assets").click(function () {
+                $(".collapsed").show();
+                $(this).parents("tr").hide();
+            });
+        });
     </script>
 }

@@ -165,6 +165,9 @@ namespace BTCPayServer.Configuration
 
             PostgresConnectionString = conf.GetOrDefault<string>("postgres", null);
             MySQLConnectionString = conf.GetOrDefault<string>("mysql", null);
+            SQLiteConnectionString = conf.GetOrDefault<string>("sqlite", null);
+            SQLiteFileName = conf.GetOrDefault<string>("sqlitefile", null);
+            
             BundleJsCss = conf.GetOrDefault<bool>("bundlejscss", true);
             AllowAdminRegistration = conf.GetOrDefault<bool>("allow-admin-registration", false);
             TorrcFile = conf.GetOrDefault<string>("torrcfile", null);
@@ -287,6 +290,16 @@ namespace BTCPayServer.Configuration
             set;
         }
         public string MySQLConnectionString
+        {
+            get;
+            set;
+        }
+        public string SQLiteConnectionString
+        {
+            get;
+            set;
+        }
+        public string SQLiteFileName
         {
             get;
             set;

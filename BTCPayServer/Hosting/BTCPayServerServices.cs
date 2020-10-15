@@ -110,23 +110,34 @@ namespace BTCPayServer.Hosting
             {
                 var opts = o.GetRequiredService<BTCPayServerOptions>();
                 ApplicationDbContextFactory dbContext = null;
-                if (!String.IsNullOrEmpty(opts.PostgresConnectionString))
+                if (!string.IsNullOrEmpty(opts.PostgresConnectionString))
                 {
                     Logs.Configuration.LogInformation($"Postgres DB used");
                     dbContext = new ApplicationDbContextFactory(DatabaseType.Postgres, opts.PostgresConnectionString);
                 }
-                else if (!String.IsNullOrEmpty(opts.MySQLConnectionString))
+                else if (!string.IsNullOrEmpty(opts.MySQLConnectionString))
                 {
                     Logs.Configuration.LogInformation($"MySQL DB used");
                     Logs.Configuration.LogWarning("MySQL is not widely tested and should be considered experimental, we advise you to use postgres instead.");
                     dbContext = new ApplicationDbContextFactory(DatabaseType.MySQL, opts.MySQLConnectionString);
                 }
-                else
+                else if (!string.IsNullOrEmpty(opts.SQLiteConnectionString))
                 {
-                    var connStr = "Data Source=" + Path.Combine(opts.DataDir, "sqllite.db");
-                    Logs.Configuration.LogInformation($"SQLite DB used ({connStr})");
+                    var connStr = opts.SQLiteConnectionString;
+                    Logs.Configuration.LogInformation($"SQLite DB used");
                     Logs.Configuration.LogWarning("SQLite is not widely tested and should be considered experimental, we advise you to use postgres instead.");
                     dbContext = new ApplicationDbContextFactory(DatabaseType.Sqlite, connStr);
+                }
+                else if (!string.IsNullOrEmpty(opts.SQLiteFileName))
+                {
+                    var connStr = "Data Source=" + Path.Combine(opts.DataDir, opts.SQLiteFileName);
+                    Logs.Configuration.LogInformation($"SQLite DB used");
+                    Logs.Configuration.LogWarning("SQLite is not widely tested and should be considered experimental, we advise you to use postgres instead.");
+                    dbContext = new ApplicationDbContextFactory(DatabaseType.Sqlite, connStr);
+                }
+                else
+                {
+                    throw new ConfigException("No database option was configured.");
                 }
 
                 return dbContext;

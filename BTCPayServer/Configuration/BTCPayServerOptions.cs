@@ -80,6 +80,7 @@ namespace BTCPayServer.Configuration
         {
             NetworkType = DefaultConfiguration.GetNetworkType(conf);
             DataDir = conf.GetDataDir(NetworkType);
+            ExtensionDir = conf.GetExtensionDir(NetworkType);
             Logs.Configuration.LogInformation("Network: " + NetworkType.ToString());
 
             if (conf.GetOrDefault<bool>("launchsettings", false) && NetworkType != NetworkType.Regtest)
@@ -166,6 +167,7 @@ namespace BTCPayServer.Configuration
             PostgresConnectionString = conf.GetOrDefault<string>("postgres", null);
             MySQLConnectionString = conf.GetOrDefault<string>("mysql", null);
             BundleJsCss = conf.GetOrDefault<bool>("bundlejscss", true);
+            DockerDeployment = conf.GetOrDefault<bool>("dockerdeployment", true);
             AllowAdminRegistration = conf.GetOrDefault<bool>("allow-admin-registration", false);
             TorrcFile = conf.GetOrDefault<string>("torrcfile", null);
 
@@ -239,6 +241,8 @@ namespace BTCPayServer.Configuration
             DisableRegistration = conf.GetOrDefault<bool>("disable-registration", true);
         }
 
+        public string ExtensionDir { get; set; }
+
         private SSHSettings ParseSSHConfiguration(IConfiguration conf)
         {
             var settings = new SSHSettings();
@@ -281,6 +285,7 @@ namespace BTCPayServer.Configuration
         public ExternalServices ExternalServices { get; set; } = new ExternalServices();
 
         public BTCPayNetworkProvider NetworkProvider { get; set; }
+        public bool DockerDeployment { get; set; }
         public string PostgresConnectionString
         {
             get;

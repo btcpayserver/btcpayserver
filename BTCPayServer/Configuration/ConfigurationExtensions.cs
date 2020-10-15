@@ -67,5 +67,11 @@ namespace BTCPayServer.Configuration
             var defaultSettings = BTCPayDefaultSettings.GetDefaultSettings(networkType);
             return configuration.GetOrDefault("datadir", defaultSettings.DefaultDataDirectory);
         }
+        
+        public static string GetExtensionDir(this IConfiguration configuration, NetworkType networkType) 
+        {
+            var defaultSettings = BTCPayDefaultSettings.GetDefaultSettings(networkType);
+            return configuration.GetOrDefault("extensiondir", defaultSettings.DefaultExtensionDirectory);
+        }
     }
 }

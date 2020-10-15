@@ -1,4 +1,5 @@
 using BTCPayServer.Configuration;
+using BTCPayServer.Contracts;
 using BTCPayServer.Controllers;
 using BTCPayServer.Models.NotificationViewModels;
 using Microsoft.AspNetCore.Routing;

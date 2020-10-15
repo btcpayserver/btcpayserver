@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using BTCPayServer.Components.NotificationsDropdown;
+using BTCPayServer.Contracts;
 using BTCPayServer.Data;
 using BTCPayServer.Models.NotificationViewModels;
 using Microsoft.AspNetCore.Identity;

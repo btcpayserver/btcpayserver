@@ -105,6 +105,12 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> Maintenance(MaintenanceViewModel vm, string command)
         {
             vm.CanUseSSH = _sshState.CanUseSSH;
+
+            if (!vm.CanUseSSH)
+            {
+                TempData[WellKnownTempData.ErrorMessage] = "Maintenance feature requires access to SSH properly configured in BTCPayServer configuration.";
+                return View(vm);
+            }
             if (!ModelState.IsValid)
                 return View(vm);
             if (command == "changedomain")
@@ -181,6 +187,13 @@ namespace BTCPayServer.Controllers
                 if (error != null)
                     return error;
                 TempData[WellKnownTempData.SuccessMessage] = $"The old docker images will be cleaned soon...";
+            }
+            else if (command == "restart")
+            {
+                var error = await RunSSH(vm, $"btcpay-restart.sh");
+                if (error != null)
+                    return error;
+                TempData[WellKnownTempData.SuccessMessage] = $"BTCPay will restart momentarily.";
             }
             else
             {

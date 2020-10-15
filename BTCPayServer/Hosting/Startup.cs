@@ -56,7 +56,7 @@ namespace BTCPayServer.Hosting
             services.AddProviderStorage();
             services.AddSession();
             services.AddSignalR();
-            services.AddMvc(o =>
+            var mvcBuilder= services.AddMvc(o =>
             {
                 o.Filters.Add(new XFrameOptionsAttribute("DENY"));
                 o.Filters.Add(new XContentTypeOptionsAttribute("nosniff"));
@@ -91,7 +91,11 @@ namespace BTCPayServer.Hosting
 #if RAZOR_RUNTIME_COMPILE
             .AddRazorRuntimeCompilation()
 #endif
+            .AddExtensions(services, Configuration, LoggerFactory)
             .AddControllersAsServices();
+
+            
+
             services.TryAddScoped<ContentSecurityPolicies>();
             services.Configure<IdentityOptions>(options =>
             {
@@ -174,6 +178,7 @@ namespace BTCPayServer.Hosting
         private static void ConfigureCore(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider prov, ILoggerFactory loggerFactory, BTCPayServerOptions options)
         {
             Logs.Configure(loggerFactory);
+            app.UseExtensions();
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

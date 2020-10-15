@@ -606,7 +606,7 @@ namespace BTCPayServer.Controllers
             }
 
             AddErrors(result);
-            return View();
+            return View(model);
         }
 
         [HttpGet]

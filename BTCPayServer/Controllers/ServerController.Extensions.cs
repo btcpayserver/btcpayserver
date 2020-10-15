@@ -16,12 +16,26 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> ListExtensions(
             [FromServices] ExtensionService extensionService,
             [FromServices] BTCPayServerOptions btcPayServerOptions,
-            string remote = "kukks/btcpayserver-extensions")
+            string remote = "btcpayserver/btcpayserver-extensions")
         {
+            IEnumerable<ExtensionService.AvailableExtension> availableExtensions;
+            try
+            {
+                availableExtensions = await extensionService.GetRemoteExtensions(remote);
+            }
+            catch (Exception e)
+            {
+                TempData.SetStatusMessageModel(new StatusMessageModel()
+                {
+                    Severity = StatusMessageModel.StatusSeverity.Error,
+                    Message = "The remote could not be reached"
+                });
+                availableExtensions = Array.Empty<ExtensionService.AvailableExtension>();
+            }
             var res = new ListExtensionsViewModel()
             {
                 Installed = extensionService.LoadedExtensions,
-                Available = await extensionService.GetRemoteExtensions(remote),
+                Available = availableExtensions,
                 Remote = remote,
                 Commands = extensionService.GetPendingCommands(),
                 CanShowRestart = btcPayServerOptions.DockerDeployment
@@ -83,7 +97,7 @@ namespace BTCPayServer.Controllers
             {
                 TempData.SetStatusMessageModel(new StatusMessageModel()
                 {
-                    Message = e.Message, Severity = StatusMessageModel.StatusSeverity.Error
+                    Message = "The extension could not be downloaded. Try again later.", Severity = StatusMessageModel.StatusSeverity.Error
                 });
             }
 

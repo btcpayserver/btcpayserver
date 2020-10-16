@@ -275,6 +275,8 @@ namespace BTCPayServer.Controllers
         [HttpPost]
         public async Task<IActionResult> Policies(PoliciesSettings settings, string command = "")
         {
+            
+            ViewBag.UpdateUrlPresent = _Options.UpdateUrl != null;
             ViewBag.AppsList = await GetAppSelectList();
             if (command == "add-domain")
             {

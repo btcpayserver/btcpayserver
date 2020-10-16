@@ -2,7 +2,7 @@
 @model StoreViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePageAndTitle(StoreNavPages.Index, @Model.StoreName);
+    ViewData.SetActivePageAndTitle(StoreNavPages.Index, Model.StoreName);
 }
 
 <partial name="_StatusMessage" />
@@ -25,7 +25,8 @@
                 <p class="alert alert-warning">
                     <span class="fa fa-warning"></span>
                     Wallet not setup for the store. Please provide Derviation Scheme
-                    <button type="button" class="close only-for-js" data-dismiss="alert" aria-label="Close">
+                    <button type="button" class="close only-for-js" data-dismiss="alert" aria-label="Close"
+                            onclick="return dismissHint('Wallet', '@Model.Id');">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </p>
@@ -107,7 +108,8 @@
                 <p class="alert alert-warning">
                     <span class="fa fa-warning"></span>
                     Review settings if you want to receive Lightning payments
-                    <button type="button" class="close only-for-js" data-dismiss="alert" aria-label="Close">
+                    <button type="button" class="close only-for-js" data-dismiss="alert" aria-label="Close"
+                            onclick="return dismissHint('Lightning', '@Model.Id');">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </p>

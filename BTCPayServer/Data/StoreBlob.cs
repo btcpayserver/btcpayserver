@@ -192,7 +192,7 @@ namespace BTCPayServer.Data
         public class StoreHints
         {
             public bool Wallet { get; set; }
-            public bool Lighting { get; set; }
+            public bool Lightning { get; set; }
             public bool Rates { get; set; }
         }
 

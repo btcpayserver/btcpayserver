@@ -210,7 +210,6 @@ namespace BTCPayServer.Controllers
             vm.AvailableExchanges = exchanges;
             vm.DefaultCurrencyPairs = storeBlob.GetDefaultCurrencyPairString();
             vm.ShowScripting = storeBlob.RateScripting;
-            vm.HintRates = storeBlob.Hints?.Rates == true;
             return View(vm);
         }
 
@@ -256,7 +255,6 @@ namespace BTCPayServer.Controllers
             blob.PreferredExchange = model.PreferredExchange;
             blob.Spread = (decimal)model.Spread / 100.0m;
             blob.DefaultCurrencyPairs = currencyPairs;
-            blob.Hints.Rates = false;
             if (!model.ShowScripting)
             {
                 if (!exchanges.Any(provider => provider.Id.Equals(model.PreferredExchange, StringComparison.InvariantCultureIgnoreCase)))
@@ -988,7 +986,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> DismissHint(string id)
         {
             var blob = CurrentStore.GetStoreBlob();
-            if (id == "Rates" || id == "Wallet" || id == "Lightning")
+            if (id == "Wallet" || id == "Lightning")
             {
                 try
                 {

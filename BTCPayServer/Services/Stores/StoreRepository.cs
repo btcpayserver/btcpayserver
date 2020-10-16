@@ -186,8 +186,7 @@ namespace BTCPayServer.Services.Stores
             blob.Hints = new Data.StoreBlob.StoreHints
             {
                 Wallet = true,
-                Lightning = true,
-                Rates = true
+                Lightning = true
             };
             store.SetStoreBlob(blob);
             await CreateStore(ownerId, store);

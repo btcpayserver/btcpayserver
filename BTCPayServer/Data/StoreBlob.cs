@@ -193,7 +193,6 @@ namespace BTCPayServer.Data
         {
             public bool Wallet { get; set; }
             public bool Lightning { get; set; }
-            public bool Rates { get; set; }
         }
 
         public IPaymentFilter GetExcludedPaymentMethods()

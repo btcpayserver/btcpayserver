@@ -1,4 +1,5 @@
 @inject LinkGenerator linkGenerator
+@inject UserManager<ApplicationUser> UserManager
 @model BTCPayServer.Components.NotificationsDropdown.NotificationSummaryViewModel
 
 @if (Model.UnseenCount > 0)
@@ -32,7 +33,13 @@ else
         </a>
     </li>
 }
-<script type="text/javascript">
+@{
+    var user = await UserManager.GetUserAsync(User);
+}
+@if (user.DisabledNotifications != "all")
+{
+
+    <script type="text/javascript">
 
 var supportsWebSockets = 'WebSocket' in window && window.WebSocket.CLOSING === 2;
 
@@ -65,3 +72,4 @@ var supportsWebSockets = 'WebSocket' in window && window.WebSocket.CLOSING === 2
 }
 
 </script>
+}

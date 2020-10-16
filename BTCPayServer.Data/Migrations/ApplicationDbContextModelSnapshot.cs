@@ -111,6 +111,9 @@ namespace BTCPayServer.Migrations
                     b.Property<DateTimeOffset?>("Created")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("DisabledNotifications")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Email")
                         .HasColumnType("TEXT")
                         .HasMaxLength(256);

@@ -1,0 +1,32 @@
+@using BTCPayServer.Contracts
+@model BTCPayServer.Controllers.ManageController.NotificationSettingsViewModel
+@inject IEnumerable<INotificationHandler> NotificationHandlers
+@{
+    ViewData.SetActivePageAndTitle(ManageNavPages.Notifications, "Notification preferences");
+}
+
+<partial name="_StatusMessage"/>
+<form method="post" asp-action="NotificationSettings">
+    @if (Model.DisabledNotifications.Contains("all"))
+    {
+        <div>
+            All notifications are disabled.
+            <button type="submit" class="btn btn-primary" name="command" value="enable-all">Enable</button>
+        </div>
+    }
+    else
+    {
+        var items = new SelectList(NotificationHandlers.SelectMany(handler => handler.Meta.Select(tuple => new SelectListItem(tuple.name, tuple.identifier))), nameof(SelectListItem.Value), nameof(SelectListItem.Text));
+        
+        <div class="form-group">
+            <label asp-for="DisabledNotifications">Do not receive notifications for</label>
+            <select size="@items.Count()" class="form-control" multiple asp-for="DisabledNotifications"
+                    asp-items="@items">
+            </select>
+        </div>
+        <div>
+            <button type="submit" class="btn btn-secondary" name="command" value="disable-all">Disable all</button>
+            <button type="submit" class="btn btn-primary" name="command" value="update">Save</button>
+        </div>
+    }
+</form>

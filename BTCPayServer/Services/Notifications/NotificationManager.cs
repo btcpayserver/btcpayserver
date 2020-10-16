@@ -21,7 +21,6 @@ namespace BTCPayServer.Services.Notifications
         private readonly IMemoryCache _memoryCache;
         private readonly EventAggregator _eventAggregator;
         private readonly Dictionary<string, INotificationHandler> _handlersByNotificationType;
-        private readonly Dictionary<Type, INotificationHandler> _handlersByBlobType;
 
         public NotificationManager(ApplicationDbContextFactory factory, UserManager<ApplicationUser> userManager,
             IMemoryCache memoryCache, IEnumerable<INotificationHandler> handlers, EventAggregator eventAggregator)
@@ -31,7 +30,6 @@ namespace BTCPayServer.Services.Notifications
             _memoryCache = memoryCache;
             _eventAggregator = eventAggregator;
             _handlersByNotificationType = handlers.ToDictionary(h => h.NotificationType);
-            _handlersByBlobType = handlers.ToDictionary(h => h.NotificationBlobType);
         }
 
         private const int _cacheExpiryMs = 5000;
@@ -117,13 +115,6 @@ namespace BTCPayServer.Services.Notifications
             if (_handlersByNotificationType.TryGetValue(notificationId, out var h))
                 return h;
             throw new InvalidOperationException($"No INotificationHandler found for {notificationId}");
-        }
-
-        public INotificationHandler GetHandler(Type blobType)
-        {
-            if (_handlersByBlobType.TryGetValue(blobType, out var h))
-                return h;
-            throw new InvalidOperationException($"No INotificationHandler found for {blobType.Name}");
         }
     }
 }

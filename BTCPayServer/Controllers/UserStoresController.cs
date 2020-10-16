@@ -37,6 +37,23 @@ namespace BTCPayServer.Controllers
             return View();
         }
 
+        [HttpPost]
+        [Route("create")]
+        public async Task<IActionResult> CreateStore(CreateStoreViewModel vm)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(vm);
+            }
+            var store = await _Repo.CreateStore(GetUserId(), vm.Name);
+            CreatedStoreId = store.Id;
+            TempData[WellKnownTempData.SuccessMessage] = "Store successfully created";
+            return RedirectToAction(nameof(StoresController.UpdateStore), "Stores", new
+            {
+                storeId = store.Id
+            });
+        }
+
         public string CreatedStoreId
         {
             get; set;
@@ -117,23 +134,6 @@ namespace BTCPayServer.Controllers
                 });
             }
             return View(result);
-        }
-
-        [HttpPost]
-        [Route("create")]
-        public async Task<IActionResult> CreateStore(CreateStoreViewModel vm)
-        {
-            if (!ModelState.IsValid)
-            {
-                return View(vm);
-            }
-            var store = await _Repo.CreateStore(GetUserId(), vm.Name);
-            CreatedStoreId = store.Id;
-            TempData[WellKnownTempData.SuccessMessage] = "Store successfully created";
-            return RedirectToAction(nameof(StoresController.UpdateStore), "Stores", new
-            {
-                storeId = store.Id
-            });
         }
 
         private string GetUserId()

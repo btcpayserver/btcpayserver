@@ -210,6 +210,7 @@ namespace BTCPayServer.Controllers
             vm.AvailableExchanges = exchanges;
             vm.DefaultCurrencyPairs = storeBlob.GetDefaultCurrencyPairString();
             vm.ShowScripting = storeBlob.RateScripting;
+            vm.HintRates = storeBlob.Hints?.Rates == true;
             return View(vm);
         }
 
@@ -255,6 +256,7 @@ namespace BTCPayServer.Controllers
             blob.PreferredExchange = model.PreferredExchange;
             blob.Spread = (decimal)model.Spread / 100.0m;
             blob.DefaultCurrencyPairs = currencyPairs;
+            blob.Hints.Rates = false;
             if (!model.ShowScripting)
             {
                 if (!exchanges.Any(provider => provider.Id.Equals(model.PreferredExchange, StringComparison.InvariantCultureIgnoreCase)))
@@ -471,32 +473,6 @@ namespace BTCPayServer.Controllers
             });
         }
 
-        [HttpGet]
-        [Route("{storeId}")]
-        public IActionResult UpdateStore()
-        {
-            var store = HttpContext.GetStoreData();
-            if (store == null)
-                return NotFound();
-
-            var storeBlob = store.GetStoreBlob();
-            var vm = new StoreViewModel();
-            vm.Id = store.Id;
-            vm.StoreName = store.StoreName;
-            vm.StoreWebsite = store.StoreWebsite;
-            vm.NetworkFeeMode = storeBlob.NetworkFeeMode;
-            vm.AnyoneCanCreateInvoice = storeBlob.AnyoneCanInvoice;
-            vm.SpeedPolicy = store.SpeedPolicy;
-            vm.CanDelete = _Repo.CanDeleteStores();
-            AddPaymentMethods(store, storeBlob, vm);
-            vm.MonitoringExpiration = (int)storeBlob.MonitoringExpiration.TotalMinutes;
-            vm.InvoiceExpiration = (int)storeBlob.InvoiceExpiration.TotalMinutes;
-            vm.LightningDescriptionTemplate = storeBlob.LightningDescriptionTemplate;
-            vm.PaymentTolerance = storeBlob.PaymentTolerance;
-            vm.PayJoinEnabled = storeBlob.PayJoinEnabled;
-            return View(vm);
-        }
-
 
         private void AddPaymentMethods(StoreData store, StoreBlob storeBlob, StoreViewModel vm)
         {
@@ -553,6 +529,36 @@ namespace BTCPayServer.Controllers
                 Action = nameof(UpdateCoinSwitchSettings),
                 Provider = "CoinSwitch"
             });
+        }
+
+
+
+        [HttpGet]
+        [Route("{storeId}")]
+        public IActionResult UpdateStore()
+        {
+            var store = HttpContext.GetStoreData();
+            if (store == null)
+                return NotFound();
+
+            var storeBlob = store.GetStoreBlob();
+            var vm = new StoreViewModel();
+            vm.Id = store.Id;
+            vm.StoreName = store.StoreName;
+            vm.StoreWebsite = store.StoreWebsite;
+            vm.NetworkFeeMode = storeBlob.NetworkFeeMode;
+            vm.AnyoneCanCreateInvoice = storeBlob.AnyoneCanInvoice;
+            vm.SpeedPolicy = store.SpeedPolicy;
+            vm.CanDelete = _Repo.CanDeleteStores();
+            AddPaymentMethods(store, storeBlob, vm);
+            vm.MonitoringExpiration = (int)storeBlob.MonitoringExpiration.TotalMinutes;
+            vm.InvoiceExpiration = (int)storeBlob.InvoiceExpiration.TotalMinutes;
+            vm.LightningDescriptionTemplate = storeBlob.LightningDescriptionTemplate;
+            vm.PaymentTolerance = storeBlob.PaymentTolerance;
+            vm.PayJoinEnabled = storeBlob.PayJoinEnabled;
+            vm.HintWallet = storeBlob.Hints.Wallet;
+            vm.HintLightning = storeBlob.Hints.Lighting;
+            return View(vm);
         }
 
 
@@ -625,7 +631,6 @@ namespace BTCPayServer.Controllers
             {
                 storeId = CurrentStore.Id
             });
-
         }
 
         [HttpGet]

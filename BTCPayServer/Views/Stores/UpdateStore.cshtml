@@ -20,7 +20,7 @@
     <div class="col-md-8">
         <div>
             <h4 class="mb-3">Wallet <span class="text-muted small">On-chain payments</span></h4>
-            @if (!Model.DerivationSchemes.Any(a => !String.IsNullOrEmpty(a.Value)))
+            @if (Model.HintWallet)
             {
                 <p class="alert alert-warning">
                     <span class="fa fa-warning"></span>
@@ -102,7 +102,7 @@
             </table>
 
             <h4 class="mt-5 mb-3">Lightning <span class="text-muted small">Off-chain payments</span></h4>
-            @if (!Model.DerivationSchemes.Any(a => !String.IsNullOrEmpty(a.Value)))
+            @if (Model.HintLightning)
             {
                 <p class="alert alert-warning">
                     <span class="fa fa-warning"></span>

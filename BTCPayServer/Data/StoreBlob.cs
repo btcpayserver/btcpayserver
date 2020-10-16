@@ -188,6 +188,14 @@ namespace BTCPayServer.Data
         public bool RedirectAutomatically { get; set; }
         public bool PayJoinEnabled { get; set; }
 
+        public StoreHints Hints { get; set; }
+        public class StoreHints
+        {
+            public bool Wallet { get; set; }
+            public bool Lighting { get; set; }
+            public bool Rates { get; set; }
+        }
+
         public IPaymentFilter GetExcludedPaymentMethods()
         {
 #pragma warning disable CS0618 // Type or member is obsolete

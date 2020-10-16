@@ -53,6 +53,7 @@ namespace BTCPayServer.Models.StoreViewModels
         public string DefaultCurrencyPairs { get; set; }
         public string StoreId { get; set; }
         public IEnumerable<AvailableRateProvider> AvailableExchanges { get; set; }
+        public bool HintRates { get; set; }
 
         [Display(Name = "Add a spread on exchange rate of ... %")]
         [Range(0.0, 100.0)]

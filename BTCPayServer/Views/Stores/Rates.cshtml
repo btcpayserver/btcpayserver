@@ -1,4 +1,4 @@
-﻿@model BTCPayServer.Models.StoreViewModels.RatesViewModel
+@model BTCPayServer.Models.StoreViewModels.RatesViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePageAndTitle(StoreNavPages.Rates, "Rates");
@@ -18,6 +18,16 @@
 <div class="row">
     <div class="col-md-8">
         <form method="post">
+            @if (Model.HintRates)
+            {
+                <p class="alert alert-warning">
+                    <span class="fa fa-warning"></span>
+                    Please verify all Rates settings and test exchange rate currency pairs
+                    <button type="button" class="close only-for-js" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </p>
+            }
             @if (Model.ShowScripting)
             {
                 <div class="form-group">
@@ -159,7 +169,7 @@
                     <select asp-for="PreferredExchange" asp-items="Model.Exchanges" class="form-control"></select>
                     <span asp-validation-for="PreferredExchange" class="text-danger"></span>
                     <p id="PreferredExchangeHelpBlock" class="form-text text-muted">
-                        Current price source is <a href="@Model.RateSource" target="_blank">@Model.PreferredExchange</a>.
+                        Current Rates source is <a href="@Model.RateSource" target="_blank">@Model.PreferredExchange</a>.
                     </p>
                 </div>
                 <div class="form-group">

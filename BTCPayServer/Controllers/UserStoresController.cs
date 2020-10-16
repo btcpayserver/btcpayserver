@@ -5,6 +5,7 @@ using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Stores;
+using ExchangeSharp;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -125,12 +126,15 @@ namespace BTCPayServer.Controllers
             for (int i = 0; i < stores.Length; i++)
             {
                 var store = stores[i];
+                var blob = store.GetStoreBlob();
                 result.Stores.Add(new StoresViewModel.StoreViewModel()
                 {
                     Id = store.Id,
+                    
                     Name = store.StoreName,
                     WebSite = store.StoreWebsite,
-                    IsOwner = store.Role == StoreRoles.Owner
+                    IsOwner = store.Role == StoreRoles.Owner,
+                    HintWalletWarning = blob.Hints.Wallet
                 });
             }
             return View(result);

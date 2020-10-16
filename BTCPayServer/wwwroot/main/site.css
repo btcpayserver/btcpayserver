@@ -249,6 +249,9 @@ pre {
     margin-top: .5rem;
 }
 
+.w-100px {
+    width: 100px;
+}
 .w-150px {
     width: 150px;
 }
@@ -272,8 +275,8 @@ html[data-devenv]:before {
     z-index: 1000;
     right: 0;
     bottom: 0;
-    background: var(--btcpay-bg-dark);
-    color: var(--btcpay-color-dark-text);
+    background: var(--btcpay-color-secondary-backdrop);
+    color: var(--btcpay-color-secondary-text);
     opacity: .7;
     padding: 4px 5px 3px 7px;
     font-size: 10px;

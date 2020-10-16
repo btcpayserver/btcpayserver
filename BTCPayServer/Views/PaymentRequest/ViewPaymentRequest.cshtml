@@ -223,7 +223,7 @@
                                                 <tr class="table-borderless">
                                                     <th class="font-weight-normal text-secondary" scope="col">Invoice Id</th>
                                                     <th class="font-weight-normal text-secondary w-150px">Price</th>
-                                                    <th class="font-weight-normal text-secondary w-150px">Expiry</th>
+                                                    <th class="font-weight-normal text-secondary w-100px">Expiry</th>
                                                     <th class="font-weight-normal text-secondary text-right w-150px">Status</th>
                                                 </tr>
                                             </thead>
@@ -232,7 +232,7 @@
                                                 {
                                                     <tr>
                                                         <td>@invoice.Id</td>
-                                                        <td>@invoice.Amount @invoice.Currency</td>
+                                                        <td>@invoice.AmountFormatted</td>
                                                         <td>@invoice.ExpiryDate.ToString("g")</td>
                                                         <td class="text-right">@invoice.Status</td>
                                                     </tr>
@@ -275,7 +275,7 @@
                                         <thead>
                                             <tr class="table-borderless">
                                                 <th class="font-weight-normal text-secondary" scope="col">Invoice Id</th>
-                                                <th class="font-weight-normal text-secondary w-150px">Price</th>
+                                                <th class="font-weight-normal text-secondary w-100px">Price</th>
                                                 <th class="font-weight-normal text-secondary w-150px">Expiry</th>
                                                 <th class="font-weight-normal text-secondary text-right w-150px">Status</th>
                                             </tr>

@@ -91,6 +91,7 @@ namespace BTCPayServer
             public string Name { get; set; }
             public Version Version { get; set; }
             public string Description { get; set; }
+            public bool SystemExtension { get; set; } = false;
 
             public void Execute(IApplicationBuilder applicationBuilder,
                 IServiceProvider applicationBuilderApplicationServices)

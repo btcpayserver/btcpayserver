@@ -19,7 +19,7 @@ namespace BTCPayServer
 {
     public static class ExtensionManager
     {
-        public  const string BTCPayExtensionSuffix =".btcpay";
+        public const string BTCPayExtensionSuffix = ".btcpay";
         private static readonly List<Assembly> _pluginAssemblies = new List<Assembly>();
         private static ILogger _logger;
 
@@ -34,6 +34,13 @@ namespace BTCPayServer
             Directory.CreateDirectory(extensionsFolder);
             ExecuteCommands(extensionsFolder);
             List<(PluginLoader, Assembly, IFileProvider)> plugins = new List<(PluginLoader, Assembly, IFileProvider)>();
+            var systemExtensions = GetDefaultLoadedPluginAssemblies();
+            extensions.AddRange(systemExtensions.SelectMany(assembly =>
+                GetAllExtensionTypesFromAssembly(assembly).Select(GetExtensionInstanceFromType)));
+            foreach (IBTCPayServerExtension btcPayServerExtension in extensions)
+            {
+                btcPayServerExtension.SystemExtension = true;
+            }
             foreach (var dir in Directory.GetDirectories(extensionsFolder))
             {
                 var pluginName = Path.GetFileName(dir);
@@ -55,9 +62,17 @@ namespace BTCPayServer
 
             foreach (var extension in extensions)
             {
-                _logger.LogInformation($"Adding and executing extension {extension.Identifier} - {extension.Version}");
-                serviceCollection.AddSingleton(extension);
-                extension.Execute(serviceCollection);
+                try
+                {
+                    _logger.LogInformation(
+                        $"Adding and executing extension {extension.Identifier} - {extension.Version}");
+                    extension.Execute(serviceCollection);
+                    serviceCollection.AddSingleton(extension);
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError($"Error when loading extension {extension.Identifier} - {extension.Version}", e);
+                }
             }
 
             return mvcBuilder;
@@ -78,6 +93,13 @@ namespace BTCPayServer
                 _pluginAssemblies
                     .Select(CreateEmbeddedFileProviderForAssembly));
             webHostEnvironment.WebRootFileProvider = new CompositeFileProvider(providers);
+        }
+        private static Assembly[] GetDefaultLoadedPluginAssemblies()
+        {
+            return AppDomain.CurrentDomain.GetAssemblies().Where(assembly =>
+                    assembly.FullName.StartsWith("BTCPayServer.Extensions",
+                        StringComparison.InvariantCultureIgnoreCase))
+                .ToArray();
         }
 
         private static Type[] GetAllExtensionTypesFromAssembly(Assembly assembly)
@@ -104,6 +126,7 @@ namespace BTCPayServer
             {
                 ExecuteCommand(command, extensionsFolder);
             }
+
             File.Delete(Path.Combine(extensionsFolder, "commands"));
         }
 
@@ -117,6 +140,7 @@ namespace BTCPayServer
                     {
                         Directory.Delete(dirName, true);
                     }
+
                     break;
                 case "install":
                     var fileName = dirName + BTCPayExtensionSuffix;
@@ -125,6 +149,7 @@ namespace BTCPayServer
                         ZipFile.ExtractToDirectory(fileName, dirName, true);
                         File.Delete(fileName);
                     }
+
                     break;
             }
         }
@@ -154,7 +179,6 @@ namespace BTCPayServer
 
             File.Delete(Path.Combine(extensionDir, "commands"));
             QueueCommands(extensionDir, cmds);
-
         }
     }
 }

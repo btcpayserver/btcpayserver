@@ -1,0 +1,7 @@
+@using BTCPayServer.Extensions.BlockExplorerLinks
+@{
+    var controller = ViewContext.RouteData.Values["Controller"].ToString();
+    var isController = nameof(BlockExplorerEditorController).StartsWith(controller, StringComparison.InvariantCultureIgnoreCase);
+}
+    <a class="nav-link @(isController ? "active" : string.Empty)" asp-action="UpdateExplorerLinks" asp-controller="BlockExplorerEditor">Blockchain Explorer Links</a>
+

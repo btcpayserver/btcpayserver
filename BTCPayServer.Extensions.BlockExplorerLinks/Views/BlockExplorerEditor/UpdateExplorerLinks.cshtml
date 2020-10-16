@@ -1,6 +1,9 @@
-@model BTCPayServer.Controllers.ExplorerLinksViewModel
+@model BTCPayServer.Extensions.BlockExplorerLinks.ExplorerLinksViewModel
 @{
-    ViewData.SetActivePageAndTitle(ServerNavPages.ExplorerLinks, "Blockchain Explorer Links");
+    Layout = "../Shared/_NavLayout.cshtml";
+    ViewData["NavPartialName"] = "../Server/_Nav";
+    ViewData["MainTitle"] = "Server Settings";
+    ViewData["Title"] = "Blockchain Explorer Links";
 }
 
 

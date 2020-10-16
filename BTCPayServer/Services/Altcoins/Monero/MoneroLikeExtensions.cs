@@ -23,7 +23,7 @@ namespace BTCPayServer.Services.Altcoins.Monero
             serviceCollection.AddHostedService<MoneroListener>();
             serviceCollection.AddSingleton<MoneroLikePaymentMethodHandler>();
             serviceCollection.AddSingleton<IPaymentMethodHandler>(provider => provider.GetService<MoneroLikePaymentMethodHandler>());
-            serviceCollection.AddSingleton<INavExtension, MoneroNavExtension>();
+            serviceCollection.AddSingleton<IUIExtension>(new UIExtension("Monero/StoreNavMoneroExtension",  "store-nav"));
             serviceCollection.AddSingleton<ISyncSummaryProvider, MoneroSyncSummaryProvider>();
 
             return serviceCollection;

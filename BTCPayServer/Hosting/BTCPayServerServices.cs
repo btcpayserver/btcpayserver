@@ -83,6 +83,7 @@ namespace BTCPayServer.Hosting
             services.AddEthereumLike();
 #endif
             services.TryAddSingleton<SettingsRepository>();
+            services.TryAddSingleton<ISettingsRepository>(provider => provider.GetService<SettingsRepository>());
             services.TryAddSingleton<LabelFactory>();
             services.TryAddSingleton<TorServices>();
             services.TryAddSingleton<SocketFactory>();
@@ -335,9 +336,6 @@ namespace BTCPayServer.Hosting
 
         public static IApplicationBuilder UsePayServer(this IApplicationBuilder app)
         {
-            ServerController.LoadNetworkLinkOverrides(app.ApplicationServices.GetService<SettingsRepository>(),
-                app.ApplicationServices.GetService<BTCPayNetworkProvider>()).GetAwaiter().GetResult();
-            
             app.UseMiddleware<BTCPayMiddleware>();
             return app;
         }

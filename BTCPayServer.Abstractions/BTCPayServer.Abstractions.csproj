@@ -8,4 +8,7 @@
   <ItemGroup Condition="'$(Altcoins)' != 'true'">
     <Compile Remove="Altcoins\**\*.cs"></Compile>
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.1" />
+  </ItemGroup>
 </Project>

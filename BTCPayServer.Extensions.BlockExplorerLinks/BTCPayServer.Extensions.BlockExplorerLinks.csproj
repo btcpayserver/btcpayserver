@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+    <PreserveCompilationContext>false</PreserveCompilationContext>
+    <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <ProjectReference Include="..\BTCPayServer.Abstractions\BTCPayServer.Abstractions.csproj" />
+    <EmbeddedResource Include="Resources\**" />
+    <ProjectReference Include="..\BTCPayServer.Client\BTCPayServer.Client.csproj" />
+    <ProjectReference Include="..\BTCPayServer.Common\BTCPayServer.Common.csproj" />
+  </ItemGroup>
+</Project>

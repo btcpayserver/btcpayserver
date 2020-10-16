@@ -10,6 +10,7 @@ namespace BTCPayServer.Contracts
         string Name { get; }
         Version Version { get; }
         string Description { get; }
+        bool SystemExtension { get; set; }
 
         void Execute(IApplicationBuilder applicationBuilder, IServiceProvider applicationBuilderApplicationServices);
         void Execute(IServiceCollection applicationBuilder);

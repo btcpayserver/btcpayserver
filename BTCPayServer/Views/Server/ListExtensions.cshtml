@@ -35,7 +35,7 @@
                     <p class="card-text">@extension.Description</p>
 
                 </div>
-                @if (matchedAvailable != null)
+                @if (!extension.SystemExtension && matchedAvailable != null)
                 {
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item d-flex justify-content-between">
@@ -52,7 +52,8 @@
                         {
                             <div class="d-flex justify-content-between">
                                 <div>
-                                    <div class="badge badge-info">pending action</div></div>
+                                    <div class="badge badge-info">pending action</div>
+                                </div>
                                 <form asp-action="CancelExtensionCommands" asp-route-extension="@extension.Identifier">
                                     <button type="submit" class="btn btn-link pt-0">Cancel</button>
                                 </form>
@@ -70,7 +71,16 @@
                                 </form>
                             }
                         }
-
+                    </div>
+                }
+                else if (extension.SystemExtension)
+                {
+                    <div class="card-footer">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <div class="badge badge-info">system extension</div>
+                            </div>
+                        </div>
                     </div>
                 }
 
@@ -96,8 +106,9 @@
                     @if (Model.Commands.Any(tuple => tuple.extension.Equals(extension.Identifier, StringComparison.InvariantCultureIgnoreCase)))
                     {
                         <div class="d-flex justify-content-between">
-                                <div>
-                                <div class="badge badge-info">pending action</div></div>
+                            <div>
+                                <div class="badge badge-info">pending action</div>
+                            </div>
                             <form asp-action="CancelExtensionCommands" asp-route-extension="@extension.Identifier">
                                 <button type="submit" class="btn btn-link pt-0">Cancel</button>
                             </form>

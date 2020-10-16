@@ -1,0 +1,6 @@
+{
+    "Identifier": "BTCPayServer.Extensions.BlockExplorerLinks",
+    "Name": "Block Explorer Changer",
+    "Version": "1.0.0.0",
+    "Description": "This extension allows you to change the default block explorers"
+}

@@ -123,7 +123,9 @@ namespace BTCPayServer.Hosting
                 }
                 else if (!string.IsNullOrEmpty(opts.SQLiteFileName))
                 {
-                    var connStr = "Data Source=" + Path.Combine(opts.DataDir, opts.SQLiteFileName);
+                    var connStr = "Data Source=" +(Path.IsPathRooted(opts.SQLiteFileName)
+                        ? opts.SQLiteFileName
+                        : Path.Combine(opts.DataDir, opts.SQLiteFileName));
                     Logs.Configuration.LogInformation($"SQLite DB used");
                     Logs.Configuration.LogWarning("SQLite is not widely tested and should be considered experimental, we advise you to use postgres instead.");
                     dbContext = new ApplicationDbContextFactory(DatabaseType.Sqlite, connStr);

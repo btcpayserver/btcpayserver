@@ -228,7 +228,11 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.Id("Email")).SendKeys(user);
             Driver.FindElement(By.Id("Password")).SendKeys(password);
             Driver.FindElement(By.Id("LoginButton")).Click();
+        }
 
+        public void GoToStores()
+        {
+            Driver.FindElement(By.Id("Stores")).Click();
         }
 
         public void GoToStore(string storeId, StoreNavPages storeNavPage = StoreNavPages.Index)

@@ -66,16 +66,15 @@
                                 <td>
                                     @if (store.IsOwner)
                                     {
-                                        <a asp-action="UpdateStore" asp-controller="Stores" asp-route-storeId="@store.Id" id="update-store-@store.Id">@store.Name</a>
+                                        <a asp-action="UpdateStore" asp-controller="Stores" asp-route-storeId="@store.Id">@store.Name</a>
                                     }
                                     else
                                     {
                                         @store.Name
                                     }
-
                                     @if (store.HintWalletWarning)
                                     {
-                                        <span class="fa fa-warning text-warning" title="Wallet not setup for this store"></span>
+                                        <span class="fa fa-warning text-warning" title="Wallet not setup for this store" id="warninghint_@store.Id"></span>
                                     }
                                 </td>
                                 <td>

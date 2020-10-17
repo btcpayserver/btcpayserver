@@ -300,13 +300,18 @@ namespace BTCPayServer.Tests
             {
                 await s.StartAsync();
                 var alice = s.RegisterNewUser();
-                var store = s.CreateNewStore().storeName;
+                var storeData = s.CreateNewStore();
                 // verify that hints are displayed on the store page
                 Assert.True(s.Driver.PageSource.Contains("Wallet not setup for the store, please provide Derviation Scheme"), 
                     "Wallet hint not present");
                 Assert.True(s.Driver.PageSource.Contains("Review settings if you want to receive Lightning payments"),
                     "Lightning hint not present");
 
+                s.GoToStores();
+                Assert.True(s.Driver.PageSource.Contains("warninghint_" + storeData.storeId),
+                    "Warning hint on list not present");
+
+                s.GoToStore(storeData.storeId);
                 s.AddDerivationScheme(); // wallet hint should be dismissed
                 s.Driver.AssertNoError();
                 Assert.False(s.Driver.PageSource.Contains("Wallet not setup for the store, please provide Derviation Scheme"),
@@ -314,11 +319,11 @@ namespace BTCPayServer.Tests
 
                 s.Driver.FindElement(By.Id("dismissLightningHint")).Click(); // dismiss lightning hint
 
-                Assert.Contains(store, s.Driver.PageSource);
+                Assert.Contains(storeData.storeName, s.Driver.PageSource);
                 var storeUrl = s.Driver.Url;
                 s.ClickOnAllSideMenus();
                 s.GoToInvoices();
-                var invoiceId = s.CreateInvoice(store);
+                var invoiceId = s.CreateInvoice(storeData.storeName);
                 s.AssertHappyMessage();
                 s.Driver.FindElement(By.ClassName("invoice-details-link")).Click();
                 var invoiceUrl = s.Driver.Url;

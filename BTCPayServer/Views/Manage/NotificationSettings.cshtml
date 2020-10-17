@@ -20,7 +20,8 @@
         
         <div class="form-group">
             <label asp-for="DisabledNotifications">Do not receive notifications for</label>
-            <select size="@items.Count()" class="form-control" multiple asp-for="DisabledNotifications"
+
+            <select size="@items.Count()" class="form-control hide-when-js" multiple asp-for="DisabledNotifications"
                     asp-items="@items">
             </select>
         </div>
@@ -30,3 +31,21 @@
         </div>
     }
 </form>
+@section Scripts
+{
+    <script src="~/vendor/bootstrap-multiselect/bootstrap-multiselect.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $('select[multiple]').multiselect({
+                buttonContainer: '<div class="card"></div>',
+                buttonClass: '',
+                selectedClass: '',
+                templates: {
+                    button: '',
+                    li: '<li class="list-group-item"><label class="mb-0 cursor-pointer"></label></li>',
+                    ul: '<ul class="list-group list-group-flush "></ul>',
+                }
+            });
+        });
+    </script>
+}

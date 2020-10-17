@@ -42,18 +42,19 @@ namespace BTCPayServer.Tests
         {
             await Server.StartAsync();
             ChromeOptions options = new ChromeOptions();
-            var isDebug = !Server.PayTester.InContainer;
+            if (Server.PayTester.InContainer)
+            {
+                // this must be first option https://stackoverflow.com/questions/53073411/selenium-webdriverexceptionchrome-failed-to-start-crashed-as-google-chrome-is#comment102570662_53073789
+                options.AddArgument("no-sandbox");
+            }
 
+            var isDebug = !Server.PayTester.InContainer;
             if (!isDebug)
             {
                 options.AddArguments("headless"); // Comment to view browser
                 options.AddArguments("window-size=1200x1000"); // Comment to view browser
             }
             options.AddArgument("shm-size=2g");
-            if (Server.PayTester.InContainer)
-            {
-                options.AddArgument("no-sandbox");
-            }
             Driver = new ChromeDriver(Server.PayTester.InContainer ? "/usr/bin" : Directory.GetCurrentDirectory(), options);
             if (isDebug)
             {

@@ -18,9 +18,7 @@
         var url = "@Url.Action("DismissHint", "Stores", new { storeId = "store_Id", id="hint_Id" })"
             .replace("hint_Id", hintId)
             .replace("store_Id", storeId);
-        $.get(url, function (data) {
-            //row.toggleClass("seen loading");
-        });
+        $.post(url);
         return true;
     }
 </script>

@@ -981,8 +981,9 @@ namespace BTCPayServer.Controllers
             });
         }
 
-        [HttpGet]
-        [Route("{storeId}/dismissHint/{id}")]
+        [HttpPost]
+        [Route("{storeId}/dismissHint")]
+        [IgnoreAntiforgeryToken]
         public async Task<IActionResult> DismissHint(string id)
         {
             var blob = CurrentStore.GetStoreBlob();

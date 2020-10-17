@@ -25,10 +25,5 @@ namespace BTCPayServer.Payments.Lightning
         {
             return 0.0m;
         }
-
-        public void SetPaymentDetails(IPaymentMethodDetails newPaymentMethodDetails)
-        {
-            BOLT11 = newPaymentMethodDetails.GetPaymentDestination();
-        }
     }
 }

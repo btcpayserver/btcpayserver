@@ -303,7 +303,7 @@ namespace BTCPayServer.Tests
         public string CreateInvoice(string storeName, decimal amount = 100, string currency = "USD", string refundEmail = "")
         {
             GoToInvoices();
-            Driver.FindElement(By.Id("CreateNewInvoice")).Click();
+            Driver.FindElement(By.Id("CreateNewInvoice")).Click(); // ocassionally gets stuck for some reason, tried force click and wait for element
             Driver.FindElement(By.Id("Amount")).SendKeys(amount.ToString(CultureInfo.InvariantCulture));
             var currencyEl = Driver.FindElement(By.Id("Currency"));
             currencyEl.Clear();

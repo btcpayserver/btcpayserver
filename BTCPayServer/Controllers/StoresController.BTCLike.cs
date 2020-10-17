@@ -167,7 +167,7 @@ namespace BTCPayServer.Controllers
                 (vm.Confirmation && !string.IsNullOrWhiteSpace(vm.HintAddress)) ||
                 // - The user is clicking on continue after changing the config
                 (!vm.Confirmation && oldConfig != vm.Config) ||
-                // - The user is clickingon continue without changing config nor enabling/disabling
+                // - The user is clicking on continue without changing config nor enabling/disabling
                 (!vm.Confirmation && oldConfig == vm.Config && willBeExcluded == wasExcluded);
 
             showAddress = showAddress && strategy != null;
@@ -179,6 +179,7 @@ namespace BTCPayServer.Controllers
                         await wallet.TrackAsync(strategy.AccountDerivation);
                     store.SetSupportedPaymentMethod(paymentMethodId, strategy);
                     storeBlob.SetExcluded(paymentMethodId, willBeExcluded);
+                    storeBlob.Hints.Wallet = false;
                     store.SetStoreBlob(storeBlob);
                 }
                 catch
@@ -202,6 +203,7 @@ namespace BTCPayServer.Controllers
                 {
                     TempData[WellKnownTempData.SuccessMessage] = $"Derivation settings for {network.CryptoCode} has been modified.";
                 }
+                // This is success case when derivation scheme is added to the store
                 return RedirectToAction(nameof(UpdateStore), new { storeId = storeId });
             }
             else if (!string.IsNullOrEmpty(vm.HintAddress))

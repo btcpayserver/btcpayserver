@@ -24,7 +24,7 @@
             {
                 <p class="alert alert-warning">
                     <span class="fa fa-warning"></span>
-                    Wallet not setup for the store. Please provide Derviation Scheme
+                    Wallet not setup for the store, please provide Derviation Scheme
                     <button type="button" class="close only-for-js" data-dismiss="alert" aria-label="Close"
                             onclick="return dismissHint('Wallet', '@Model.Id');">
                         <span aria-hidden="true">&times;</span>
@@ -108,7 +108,7 @@
                 <p class="alert alert-warning">
                     <span class="fa fa-warning"></span>
                     Review settings if you want to receive Lightning payments
-                    <button type="button" class="close only-for-js" data-dismiss="alert" aria-label="Close"
+                    <button id="dismissLightningHint" type="button" class="close only-for-js" data-dismiss="alert" aria-label="Close"
                             onclick="return dismissHint('Lightning', '@Model.Id');">
                         <span aria-hidden="true">&times;</span>
                     </button>

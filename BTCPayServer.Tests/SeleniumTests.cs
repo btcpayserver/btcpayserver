@@ -301,8 +301,19 @@ namespace BTCPayServer.Tests
                 await s.StartAsync();
                 var alice = s.RegisterNewUser();
                 var store = s.CreateNewStore().storeName;
-                s.AddDerivationScheme();
+                // verify that hints are displayed on the store page
+                Assert.True(s.Driver.PageSource.Contains("Wallet not setup for the store, please provide Derviation Scheme"), 
+                    "Wallet hint not present");
+                Assert.True(s.Driver.PageSource.Contains("Review settings if you want to receive Lightning payments"),
+                    "Lightning hint not present");
+
+                s.AddDerivationScheme(); // wallet hint should be dismissed
                 s.Driver.AssertNoError();
+                Assert.False(s.Driver.PageSource.Contains("Wallet not setup for the store, please provide Derviation Scheme"),
+                    "Wallet hint not dismissed on derivation scheme add");
+
+                s.Driver.FindElement(By.Id("dismissLightningHint")).Click(); // dismiss lightning hint
+
                 Assert.Contains(store, s.Driver.PageSource);
                 var storeUrl = s.Driver.Url;
                 s.ClickOnAllSideMenus();
@@ -362,6 +373,11 @@ namespace BTCPayServer.Tests
                 s.Logout();
                 LogIn(s, alice);
                 s.Driver.FindElement(By.Id("Stores")).Click();
+
+                // there shouldn't be any hints now
+                Assert.False(s.Driver.PageSource.Contains("Review settings if you want to receive Lightning payments"),
+                    "Lightning hint should be dismissed at this point");
+
                 s.Driver.FindElement(By.LinkText("Remove")).Click();
                 s.Driver.FindElement(By.Id("continue")).Click();
                 s.Driver.FindElement(By.Id("Stores")).Click();

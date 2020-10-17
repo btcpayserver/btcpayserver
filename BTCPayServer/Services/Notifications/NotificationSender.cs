@@ -66,7 +66,7 @@ namespace BTCPayServer.Services.Notifications
             var terms = new List<string>();
             foreach (var t in split)
             {
-                terms.Add(terms.Any() ? $"{terms.Last()}_{t};" : $"{t};");
+                terms.Add(terms.Any() ? $"{terms.Last().TrimEnd(';')}_{t};" : $"{t};");
             }
             IQueryable<ApplicationUser> query;
             switch (scope)

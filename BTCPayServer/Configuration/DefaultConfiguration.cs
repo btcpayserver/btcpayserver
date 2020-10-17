@@ -123,7 +123,6 @@ namespace BTCPayServer.Configuration
             builder.AppendLine("### Database ###");
             builder.AppendLine("#postgres=User ID=root;Password=myPassword;Host=localhost;Port=5432;Database=myDataBase;");
             builder.AppendLine("#mysql=User ID=root;Password=myPassword;Host=localhost;Port=3306;Database=myDataBase;");
-            builder.AppendLine($"#sqlite=Data Source={Path.Combine(defaultSettings.DefaultDataDirectory, "sqlite.db")}");
             builder.AppendLine("#sqlitefile=sqlite.db");
             builder.AppendLine();
             builder.AppendLine("### NBXplorer settings ###");

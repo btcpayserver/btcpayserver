@@ -1,4 +1,4 @@
-﻿@model BTCPayServer.Models.StoreViewModels.RatesViewModel
+@model BTCPayServer.Models.StoreViewModels.RatesViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePageAndTitle(StoreNavPages.Rates, "Rates");
@@ -159,7 +159,7 @@
                     <select asp-for="PreferredExchange" asp-items="Model.Exchanges" class="form-control"></select>
                     <span asp-validation-for="PreferredExchange" class="text-danger"></span>
                     <p id="PreferredExchangeHelpBlock" class="form-text text-muted">
-                        Current price source is <a href="@Model.RateSource" target="_blank">@Model.PreferredExchange</a>.
+                        Current Rates source is <a href="@Model.RateSource" target="_blank">@Model.PreferredExchange</a>.
                     </p>
                 </div>
                 <div class="form-group">

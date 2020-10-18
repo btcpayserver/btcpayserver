@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Validation;
+using static BTCPayServer.Data.StoreBlob;
 
 namespace BTCPayServer.Models.StoreViewModels
 {
@@ -89,6 +90,9 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Enable Payjoin/P2EP")]
         public bool PayJoinEnabled { get; set; }
+
+        public bool HintWallet { get; set; }
+        public bool HintLightning { get; set; }
 
         public class LightningNode
         {

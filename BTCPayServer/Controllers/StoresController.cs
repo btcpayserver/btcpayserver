@@ -372,8 +372,8 @@ namespace BTCPayServer.Controllers
                     new PaymentMethodCriteriaViewModel()
                     {
                         PaymentMethod = criteria.PaymentMethod.ToString(),
-                        Type = criteria.Above? PaymentMethodCriteriaViewModel.CriteriaType.GreaterThan : PaymentMethodCriteriaViewModel.CriteriaType.LessThan,
-                        Value = criteria.Value?.ToString()?? ""
+                        Type = criteria.Above ? PaymentMethodCriteriaViewModel.CriteriaType.GreaterThan : PaymentMethodCriteriaViewModel.CriteriaType.LessThan,
+                        Value = criteria.Value?.ToString() ?? ""
                     }).ToList();
             vm.CustomCSS = storeBlob.CustomCSS;
             vm.CustomLogo = storeBlob.CustomLogo;
@@ -394,7 +394,9 @@ namespace BTCPayServer.Controllers
                 .Select(o =>
                     new CheckoutExperienceViewModel.Format()
                     {
-                        Name = o.ToPrettyString(), Value = o.ToString(), PaymentId = o
+                        Name = o.ToPrettyString(),
+                        Value = o.ToString(),
+                        PaymentId = o
                     }).ToArray();
 
             var defaultPaymentId = storeData.GetDefaultPaymentId(_NetworkProvider);
@@ -439,7 +441,7 @@ namespace BTCPayServer.Controllers
                 .Where(viewModel => !string.IsNullOrEmpty(viewModel.Value)).Select(viewModel =>
                 {
                     CurrencyValue.TryParse(viewModel.Value, out var cv);
-                    return new PaymentMethodCriteria() {Above = viewModel.Type == PaymentMethodCriteriaViewModel.CriteriaType.GreaterThan, Value = cv, PaymentMethod = PaymentMethodId.Parse(viewModel.PaymentMethod)};
+                    return new PaymentMethodCriteria() { Above = viewModel.Type == PaymentMethodCriteriaViewModel.CriteriaType.GreaterThan, Value = cv, PaymentMethod = PaymentMethodId.Parse(viewModel.PaymentMethod) };
                 }).ToList();
 #pragma warning disable 612
             blob.LightningMaxValue = null;
@@ -469,32 +471,6 @@ namespace BTCPayServer.Controllers
             {
                 storeId = CurrentStore.Id
             });
-        }
-
-        [HttpGet]
-        [Route("{storeId}")]
-        public IActionResult UpdateStore()
-        {
-            var store = HttpContext.GetStoreData();
-            if (store == null)
-                return NotFound();
-
-            var storeBlob = store.GetStoreBlob();
-            var vm = new StoreViewModel();
-            vm.Id = store.Id;
-            vm.StoreName = store.StoreName;
-            vm.StoreWebsite = store.StoreWebsite;
-            vm.NetworkFeeMode = storeBlob.NetworkFeeMode;
-            vm.AnyoneCanCreateInvoice = storeBlob.AnyoneCanInvoice;
-            vm.SpeedPolicy = store.SpeedPolicy;
-            vm.CanDelete = _Repo.CanDeleteStores();
-            AddPaymentMethods(store, storeBlob, vm);
-            vm.MonitoringExpiration = (int)storeBlob.MonitoringExpiration.TotalMinutes;
-            vm.InvoiceExpiration = (int)storeBlob.InvoiceExpiration.TotalMinutes;
-            vm.LightningDescriptionTemplate = storeBlob.LightningDescriptionTemplate;
-            vm.PaymentTolerance = storeBlob.PaymentTolerance;
-            vm.PayJoinEnabled = storeBlob.PayJoinEnabled;
-            return View(vm);
         }
 
 
@@ -553,6 +529,36 @@ namespace BTCPayServer.Controllers
                 Action = nameof(UpdateCoinSwitchSettings),
                 Provider = "CoinSwitch"
             });
+        }
+
+
+
+        [HttpGet]
+        [Route("{storeId}")]
+        public IActionResult UpdateStore()
+        {
+            var store = HttpContext.GetStoreData();
+            if (store == null)
+                return NotFound();
+
+            var storeBlob = store.GetStoreBlob();
+            var vm = new StoreViewModel();
+            vm.Id = store.Id;
+            vm.StoreName = store.StoreName;
+            vm.StoreWebsite = store.StoreWebsite;
+            vm.NetworkFeeMode = storeBlob.NetworkFeeMode;
+            vm.AnyoneCanCreateInvoice = storeBlob.AnyoneCanInvoice;
+            vm.SpeedPolicy = store.SpeedPolicy;
+            vm.CanDelete = _Repo.CanDeleteStores();
+            AddPaymentMethods(store, storeBlob, vm);
+            vm.MonitoringExpiration = (int)storeBlob.MonitoringExpiration.TotalMinutes;
+            vm.InvoiceExpiration = (int)storeBlob.InvoiceExpiration.TotalMinutes;
+            vm.LightningDescriptionTemplate = storeBlob.LightningDescriptionTemplate;
+            vm.PaymentTolerance = storeBlob.PaymentTolerance;
+            vm.PayJoinEnabled = storeBlob.PayJoinEnabled;
+            vm.HintWallet = storeBlob.Hints.Wallet;
+            vm.HintLightning = storeBlob.Hints.Lightning;
+            return View(vm);
         }
 
 
@@ -625,7 +631,6 @@ namespace BTCPayServer.Controllers
             {
                 storeId = CurrentStore.Id
             });
-
         }
 
         [HttpGet]
@@ -974,10 +979,30 @@ namespace BTCPayServer.Controllers
             {
                 storeId = CurrentStore.Id
             });
-
         }
 
+        [HttpPost]
+        [Route("{storeId}/dismissHint")]
+        [IgnoreAntiforgeryToken]
+        public async Task<IActionResult> DismissHint(string id)
+        {
+            var blob = CurrentStore.GetStoreBlob();
+            if (id == "Wallet" || id == "Lightning")
+            {
+                try
+                {
+                    var prop = blob.Hints.GetType().GetProperty(id);
+                    prop.SetValue(blob.Hints, false);
+                }
+                // disregard parse errors 
+                catch { }
 
-
+                if (CurrentStore.SetStoreBlob(blob))
+                {
+                    await _Repo.UpdateStore(CurrentStore);
+                }
+            }
+            return Content("ack");
+        }
     }
 }

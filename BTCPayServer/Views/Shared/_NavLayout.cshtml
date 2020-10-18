@@ -1,11 +1,11 @@
-﻿@{
+@{
     Layout = "/Views/Shared/_Layout.cshtml";
     ViewBag.ShowMenu = ViewBag.ShowMenu ?? true;
     if (!ViewData.ContainsKey("NavPartialName"))
     {
         ViewData["NavPartialName"] = "_Nav";
     }
-    var title = $"{(ViewData.ContainsKey("MainTitle")?  $"{ViewData["MainTitle"]}:" : String.Empty)} {ViewData["Title"]}";
+    var title = $"{(ViewData.ContainsKey("MainTitle") ? $"{ViewData["MainTitle"]}:" : String.Empty)} {ViewData["Title"]}";
 }
 
 <section>

@@ -108,20 +108,20 @@
                                asp-route-searchterm="@($"orderid:{PaymentRequestRepository.GetOrderIdForPaymentRequest(Model.Id)}")">Invoices</a>
                             <a class="btn btn-secondary" asp-route-id="@this.Context.GetRouteValue("id")" asp-action="ClonePaymentRequest" id="@Model.Id">Clone</a>
                             @if (!Model.Archived)
-                            {                                
-                                <a class="btn btn-secondary" data-toggle="tooltip" title="Archive this payment request so that it does not appear in the payment request list by default" asp-route-id="@this.Context.GetRouteValue("id")"  asp-controller="PaymentRequest"  asp-action="TogglePaymentRequestArchival">Archive</a>
-                                                       
+                            {
+                                <a class="btn btn-secondary" data-toggle="tooltip" title="Archive this payment request so that it does not appear in the payment request list by default" asp-route-id="@this.Context.GetRouteValue("id")" asp-controller="PaymentRequest" asp-action="TogglePaymentRequestArchival">Archive</a>
+
                             }
                             else
                             {
-                                <a class="btn btn-secondary" data-toggle="tooltip" title="Unarchive this payment request" asp-route-id="@this.Context.GetRouteValue("id")" asp-controller="PaymentRequest" asp-action="TogglePaymentRequestArchival"  >Unarchive</a>
-                           
+                                <a class="btn btn-secondary" data-toggle="tooltip" title="Unarchive this payment request" asp-route-id="@this.Context.GetRouteValue("id")" asp-controller="PaymentRequest" asp-action="TogglePaymentRequestArchival">Unarchive</a>
+
                             }
                         }
-                       
-                        <a class="btn btn-secondary" target="_blank" asp-action="GetPaymentRequests">Back to list</a>
+
                     </div>
                 </form>
+                <a asp-action="GetPaymentRequests">Back to List</a>
             </div>
         </div>
     </div>

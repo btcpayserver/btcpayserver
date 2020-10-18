@@ -137,6 +137,7 @@ namespace BTCPayServer.Controllers
                 case "save":
                     var storeBlob = store.GetStoreBlob();
                     storeBlob.SetExcluded(paymentMethodId, !vm.Enabled);
+                    storeBlob.Hints.Lightning = false;
                     store.SetStoreBlob(storeBlob);
                     store.SetSupportedPaymentMethod(paymentMethodId, paymentMethod);
                     await _Repo.UpdateStore(store);

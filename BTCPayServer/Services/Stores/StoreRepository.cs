@@ -171,7 +171,7 @@ namespace BTCPayServer.Services.Stores
                 {
                     StoreDataId = storeData.Id,
                     ApplicationUserId = ownerId,
-                    Role = StoreRoles.Owner
+                    Role = StoreRoles.Owner,
                 };
                 ctx.Add(storeData);
                 ctx.Add(userStore);
@@ -182,6 +182,13 @@ namespace BTCPayServer.Services.Stores
         public async Task<StoreData> CreateStore(string ownerId, string name)
         {
             var store = new StoreData() { StoreName = name };
+            var blob = store.GetStoreBlob();
+            blob.Hints = new Data.StoreBlob.StoreHints
+            {
+                Wallet = true,
+                Lightning = true
+            };
+            store.SetStoreBlob(blob);
             await CreateStore(ownerId, store);
             return store;
         }

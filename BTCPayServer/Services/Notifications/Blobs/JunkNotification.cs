@@ -1,5 +1,5 @@
 #if DEBUG
-using BTCPayServer.Models.NotificationViewModels;
+using BTCPayServer.Contracts;
 
 namespace BTCPayServer.Services.Notifications.Blobs
 {

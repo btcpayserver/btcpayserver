@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.0.5.8:
+
+### Bug fixes:
+
+* Fix payjoin client implementation (was sending hex instead of base64) @Kukks
+* Fix: The send wallet, by default, should not include the previous transaction (timeouts issue with some hardware wallets) @NicolasDorier
+* Do not log the database connection string @Kukks
+* If a password fail to be reset by mail, show proper error @NicolasDorier
+* When you map a specific domain to an app, when there's no app created there's a blank page @Kukks
+
+### Bug fixes:
+
+* Mark Shopify orders paid on invoice payment confirmed @rockstardev
+* Fix: notification of new BTCPay Server not showing properly @rockstardev
+* Fix: When collapsed, the sync window blocks the version text in the footer #1941 @Kukks
+* Fix: Not possible to delete a user if U2F is enabled. @Kukks
+* Fix onion location not always working #1947 @Kukks
+* Fix invoice exception status not displaying in list #1963 @Kukks
+* Fix: Is administrator checkbox does not work on create user page @NicolasDorier
+
 ## 1.0.5.7:
 
 ### Bug fixes:

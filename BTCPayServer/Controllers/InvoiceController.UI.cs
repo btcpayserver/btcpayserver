@@ -300,32 +300,35 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(PullPaymentController.ViewPullPayment),
                 "PullPayment",
                 new { pullPaymentId = ppId });
-
-
         }
 
         private InvoiceDetailsModel InvoicePopulatePayments(InvoiceEntity invoice)
         {
-            var model = new InvoiceDetailsModel();
-            model.Archived = invoice.Archived;
-            model.Payments = invoice.GetPayments();
-            foreach (var data in invoice.GetPaymentMethods())
+            return new InvoiceDetailsModel
             {
-                var accounting = data.Calculate();
-                var paymentMethodId = data.GetId();
-                var cryptoPayment = new InvoiceDetailsModel.CryptoPayment();
-
-                cryptoPayment.PaymentMethodId = paymentMethodId;
-                cryptoPayment.PaymentMethod = paymentMethodId.ToPrettyString();
-                cryptoPayment.Due = _CurrencyNameTable.DisplayFormatCurrency(accounting.Due.ToDecimal(MoneyUnit.BTC), paymentMethodId.CryptoCode);
-                cryptoPayment.Paid = _CurrencyNameTable.DisplayFormatCurrency(accounting.CryptoPaid.ToDecimal(MoneyUnit.BTC), paymentMethodId.CryptoCode);
-                cryptoPayment.Overpaid = _CurrencyNameTable.DisplayFormatCurrency(accounting.OverpaidHelper.ToDecimal(MoneyUnit.BTC), paymentMethodId.CryptoCode);
-                var paymentMethodDetails = data.GetPaymentMethodDetails();
-                cryptoPayment.Address = paymentMethodDetails.GetPaymentDestination();
-                cryptoPayment.Rate = ExchangeRate(data);
-                model.CryptoPayments.Add(cryptoPayment);
-            }
-            return model;
+                Archived = invoice.Archived,
+                Payments = invoice.GetPayments(),
+                CryptoPayments = invoice.GetPaymentMethods().Select(
+                    data =>
+                    {
+                        var accounting = data.Calculate();
+                        var paymentMethodId = data.GetId();
+                        return new InvoiceDetailsModel.CryptoPayment
+                        {
+                            PaymentMethodId = paymentMethodId,
+                            PaymentMethod = paymentMethodId.ToPrettyString(),
+                            Due = _CurrencyNameTable.DisplayFormatCurrency(accounting.Due.ToDecimal(MoneyUnit.BTC),
+                                paymentMethodId.CryptoCode),
+                            Paid = _CurrencyNameTable.DisplayFormatCurrency(
+                                accounting.CryptoPaid.ToDecimal(MoneyUnit.BTC),
+                                paymentMethodId.CryptoCode),
+                            Overpaid = _CurrencyNameTable.DisplayFormatCurrency(
+                                accounting.OverpaidHelper.ToDecimal(MoneyUnit.BTC), paymentMethodId.CryptoCode),
+                            Address = data.GetPaymentMethodDetails().GetPaymentDestination(),
+                            Rate = ExchangeRate(data)
+                        };
+                    }).ToList()
+            };
         }
 
         [HttpPost("invoices/{invoiceId}/archive")]

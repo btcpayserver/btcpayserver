@@ -1,0 +1,152 @@
+@model BTCPayServer.Controllers.ServerController.ListExtensionsViewModel 
+@{
+    ViewData.SetActivePageAndTitle(ServerNavPages.Extensions);
+    var installed = Model.Installed.Select(extension => extension.Identifier);
+    var availableAndNotInstalled = Model.Available.Where(extension => !installed.Contains(extension.Identifier));
+}
+
+@if (Model.Commands.Any())
+{
+    <div class="alert alert-info">
+        You need to restart BTCPay Server in order to update your active extensions.
+        @if (Model.CanShowRestart)
+        {
+            <form method="post" asp-action="Maintenance">
+                <button type="submit" name="command" value="restart" class="btn btn-outline-info alert-link" asp-action="Maintenance">Restart now</button>
+            </form>
+        }
+    </div>
+}
+<partial name="_StatusMessage"/>
+
+@if (Model.Installed.Any())
+{
+    <h4>Installed Extensions</h4>
+    <div class="card-columns">
+
+        @foreach (var extension in Model.Installed)
+        {
+            var matchedAvailable = Model.Available.SingleOrDefault(availableExtension => availableExtension.Identifier == extension.Identifier);
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title">
+                        @extension.Name <span class="badge badge-secondary">@extension.Version</span>
+                    </h3>
+                    <p class="card-text">@extension.Description</p>
+
+                </div>
+                @if (matchedAvailable != null)
+                {
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Current version</span>
+                            <span>@extension.Version</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Remote version</span>
+                            <span>@matchedAvailable.Version</span>
+                        </li>
+                    </ul>
+                    <div class="card-footer">
+                        @if (Model.Commands.Any(tuple => tuple.extension.Equals(extension.Identifier, StringComparison.InvariantCultureIgnoreCase)))
+                        {
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div class="badge badge-info">pending action</div></div>
+                                <form asp-action="CancelExtensionCommands" asp-route-extension="@extension.Identifier">
+                                    <button type="submit" class="btn btn-link pt-0">Cancel</button>
+                                </form>
+                            </div>
+                        }
+                        else
+                        {
+                            <form asp-action="UnInstallExtension" asp-route-extension="@extension.Identifier">
+                                <button type="submit" class="btn btn-link">Uninstall</button>
+                            </form>
+                            @if (extension.Version < matchedAvailable.Version)
+                            {
+                                <form asp-action="InstallExtension" asp-route-extension="@extension.Identifier" asp-route-remote="@Model.Remote">
+                                    <button type="submit" class="btn btn-link">Update</button>
+                                </form>
+                            }
+                        }
+
+                    </div>
+                }
+
+            </div>
+        }
+    </div>
+}
+@if (availableAndNotInstalled.Any())
+{
+    <h4>Available Extensions</h4>
+
+    <div class="card-columns">
+        @foreach (var extension in availableAndNotInstalled)
+        {
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title">
+                        @extension.Name <span class="badge badge-secondary">@extension.Version</span>
+                    </h3>
+                    <p class="card-text">@extension.Description</p>
+                </div>
+                <div class="card-footer py-0 text-right">
+                    @if (Model.Commands.Any(tuple => tuple.extension.Equals(extension.Identifier, StringComparison.InvariantCultureIgnoreCase)))
+                    {
+                        <div class="d-flex justify-content-between">
+                                <div>
+                                <div class="badge badge-info">pending action</div></div>
+                            <form asp-action="CancelExtensionCommands" asp-route-extension="@extension.Identifier">
+                                <button type="submit" class="btn btn-link pt-0">Cancel</button>
+                            </form>
+                        </div>
+                    }
+                    else
+                    {
+                        <form asp-action="InstallExtension" asp-route-extension="@extension.Identifier" asp-route-remote="@Model.Remote">
+                            <button type="submit" class="btn btn-link">Install</button>
+                        </form>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<button class="btn btn-link mt-4" type="button" data-toggle="collapse" data-target="#manual-upload">
+    Upload extension
+</button>
+<div class="collapse" id="manual-upload">
+    <div class="card">
+        <div class="card-body">
+            <h3 class="card-title">Add extension manually</h3>
+            <div class="alert alert-warning">This is an extremely dangerous operation. Do not upload extensions from someone that you do not trust.</div>
+            <form method="post" enctype="multipart/form-data" asp-action="UploadExtension">
+                <div class="form-group">
+                    <input type="file" name="files" accept=".btcpay" id="files"/>
+                    <button class="btn btn-primary" type="submit">Upload</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+            $(document).ready(function () {
+
+                $('.custom-file-input').on('change',
+                    function () {
+                        var label = $(this).next('label');
+                        if (document.getElementById("file").files.length > 0) {
+                            var fileName = document.getElementById("file").files[0].name;
+                            label.addClass("selected").html(fileName);
+                        } else {
+                            label.removeClass("selected").html("Choose file");
+                        }
+                    });
+            });
+        </script>
+}

@@ -21,7 +21,7 @@ namespace BTCPayServer.Services.Altcoins.Ethereum
             serviceCollection.AddSingleton<IHostedService, EthereumService>(provider => provider.GetService<EthereumService>());
             serviceCollection.AddSingleton<EthereumLikePaymentMethodHandler>();
             serviceCollection.AddSingleton<IPaymentMethodHandler>(provider => provider.GetService<EthereumLikePaymentMethodHandler>());
-            serviceCollection.AddSingleton<IStoreNavExtension, EthereumStoreNavExtension>();
+            serviceCollection.AddSingleton<INavExtension, EthereumNavExtension>();
             serviceCollection.AddTransient<NoRedirectHttpClientHandler>();
             serviceCollection.AddSingleton<ISyncSummaryProvider, EthereumSyncSummaryProvider>();
             serviceCollection.AddHttpClient(EthereumInvoiceCreateHttpClient)

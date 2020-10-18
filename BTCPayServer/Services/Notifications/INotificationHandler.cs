@@ -1,14 +1,10 @@
 using System;
+using BTCPayServer.Contracts;
 using BTCPayServer.Models.NotificationViewModels;
 
 namespace BTCPayServer.Services.Notifications
 {
-    public interface INotificationHandler
-    {
-        string NotificationType { get; }
-        Type NotificationBlobType { get; }
-        void FillViewModel(object notification, NotificationViewModel vm);
-    }
+
     public abstract class NotificationHandler<TNotification> : INotificationHandler
     {
         public abstract string NotificationType { get; }

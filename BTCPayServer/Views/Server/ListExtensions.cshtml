@@ -129,7 +129,6 @@
         }
     </div>
 }
-
 <button class="btn btn-link mt-4" type="button" data-toggle="collapse" data-target="#manual-upload">
     Upload extension
 </button>
@@ -147,7 +146,32 @@
         </div>
     </div>
 </div>
-
+@if (Model.Commands.Any())
+{
+    <button class="btn btn-link mt-4" type="button" data-toggle="collapse" data-target="#pending-actions">
+        Pending
+    </button>
+    <div class="collapse" id="pending-actions">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="card-title">Pending actions</h3>
+                <ul class="list-group list-group-flush">
+                    @foreach (var extComm in Model.Commands.GroupBy(tuple => tuple.extension))
+                    {
+                        <li class="list-group-item">
+                            <div class="d-flex justify-content-between">
+                                @extComm.Key (@extComm.Last().command)
+                                <form asp-action="CancelExtensionCommands" asp-route-extension="@extComm.Key">
+                                    <button type="submit" class="btn btn-link pt-0">Cancel</button>
+                                </form>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+}
 @section Scripts {
     <script>
             $(document).ready(function () {

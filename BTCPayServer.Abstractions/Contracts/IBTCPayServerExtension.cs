@@ -1,4 +1,6 @@
 using System;
+using System.Text.Json.Serialization;
+using BTCPayServer.Abstractions.Converters;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -8,6 +10,7 @@ namespace BTCPayServer.Contracts
     {
         public string Identifier { get; }
         string Name { get; }
+        [JsonConverter(typeof(VersionConverter))]
         Version Version { get; }
         string Description { get; }
         bool SystemExtension { get; set; }

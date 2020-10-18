@@ -17,25 +17,27 @@
     <title>Post Redirect</title>
 </head>
 <body>
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <form method="post" id="postform" action="@action" class="modal-body text-center my-3">
-                @Html.AntiForgeryToken()
-                @foreach (var o in Model.Parameters)
-                {
-                    <input type="hidden" name="@o.Key" value="@o.Value"/>
-                }
-                <noscript>
-                    <p>
-                        This redirection page is supposed to be submitted automatically.
-                        <br>
-                        Since you have not enabled JavaScript, please submit manually.
-                    </p>
-                    <button class="btn btn-primary" type="submit">Submit</button>
-                </noscript>
-            </form>
-        </div>
-    </div>
+    <form method="post" id="postform" action="@action">
+        @Html.AntiForgeryToken()
+        @foreach (var o in Model.Parameters)
+        {
+            <input type="hidden" name="@o.Key" value="@o.Value"/>
+        }
+        <noscript>
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-body text-center my-3">
+                        <p>
+                            This redirection page is supposed to be submitted automatically.
+                            <br>
+                            Since you have not enabled JavaScript, please submit manually.
+                        </p>
+                        <button class="btn btn-primary" type="submit">Submit</button>
+                    </div>
+                </div>
+            </div>
+        </noscript>
+    </form>
     <script type="text/javascript">
         document.forms.item(0).submit();
     </script>

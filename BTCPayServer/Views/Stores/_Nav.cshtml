@@ -13,3 +13,12 @@
     }
 </div>
 
+<script type="text/javascript">
+    function dismissHint(hintId, storeId) {
+        var url = "@Url.Action("DismissHint", "Stores", new { storeId = "store_Id", id="hint_Id" })"
+            .replace("hint_Id", hintId)
+            .replace("store_Id", storeId);
+        $.post(url);
+        return true;
+    }
+</script>

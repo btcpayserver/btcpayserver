@@ -46,6 +46,9 @@ namespace BTCPayServer.Data
             var result = storeData.StoreBlob == null ? new StoreBlob() : new Serializer(null).ToObject<StoreBlob>(Encoding.UTF8.GetString(storeData.StoreBlob));
             if (result.PreferredExchange == null)
                 result.PreferredExchange = CoinGeckoRateProvider.CoinGeckoName;
+
+            if (result.Hints == null)
+                result.Hints = new StoreBlob.StoreHints();
             return result;
         }
 

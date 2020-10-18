@@ -1,4 +1,4 @@
-﻿@model StoresViewModel
+@model StoresViewModel
 @{
     ViewData["Title"] = "Stores";
     var storeNameSortOrder = (string)ViewData["StoreNameSortOrder"];
@@ -11,11 +11,11 @@
     <div class="container">
         @if (TempData.HasStatusMessage())
         {
-        <div class="row">
-            <div class="col-lg-12 text-center">
-                <partial name="_StatusMessage" />
+            <div class="row">
+                <div class="col-lg-12 text-center">
+                    <partial name="_StatusMessage" />
+                </div>
             </div>
-        </div>
         }
         <div class="row">
             <div class="col-lg-12 section-heading">
@@ -37,25 +37,21 @@
                     <thead>
                         <tr>
                             <th>
-                                <a
-                                    asp-action="ListStores"
-                                    asp-route-sortOrder="@(storeNameSortOrder ?? "asc")"
-                                    asp-route-sortOrderColumn="StoreName"
-                                    class="text-nowrap"
-                                    title="@(storeNameSortOrder == "desc" ? sortByDesc : sortByAsc)"
-                                >
+                                <a asp-action="ListStores"
+                                   asp-route-sortOrder="@(storeNameSortOrder ?? "asc")"
+                                   asp-route-sortOrderColumn="StoreName"
+                                   class="text-nowrap"
+                                   title="@(storeNameSortOrder == "desc" ? sortByDesc : sortByAsc)">
                                     Name
                                     <span class="fa @(storeNameSortOrder == "asc" ? "fa-sort-alpha-desc" : storeNameSortOrder == "desc" ? "fa-sort-alpha-asc" : "fa-sort")" />
                                 </a>
                             </th>
                             <th>
-                                <a
-                                    asp-action="ListStores"
-                                    asp-route-sortOrder="@(storeWebsiteSortOrder ?? "asc")"
-                                    asp-route-sortOrderColumn="StoreWebsite"
-                                    class="text-nowrap"
-                                    title="@(storeWebsiteSortOrder == "desc" ? sortByDesc : sortByAsc)"
-                                >
+                                <a asp-action="ListStores"
+                                   asp-route-sortOrder="@(storeWebsiteSortOrder ?? "asc")"
+                                   asp-route-sortOrderColumn="StoreWebsite"
+                                   class="text-nowrap"
+                                   title="@(storeWebsiteSortOrder == "desc" ? sortByDesc : sortByAsc)">
                                     Website
                                     <span class="fa @(storeWebsiteSortOrder == "asc" ? "fa-sort-alpha-desc" : storeWebsiteSortOrder == "desc" ? "fa-sort-alpha-asc" : "fa-sort")" />
                                 </a>
@@ -67,7 +63,20 @@
                         @foreach (var store in Model.Stores)
                         {
                             <tr id="store-@store.Id">
-                                <td>@store.Name</td>
+                                <td>
+                                    @if (store.IsOwner)
+                                    {
+                                        <a asp-action="UpdateStore" asp-controller="Stores" asp-route-storeId="@store.Id">@store.Name</a>
+                                    }
+                                    else
+                                    {
+                                        @store.Name
+                                    }
+                                    @if (store.HintWalletWarning)
+                                    {
+                                        <span class="fa fa-warning text-warning" title="Wallet not setup for this store" id="warninghint_@store.Id"></span>
+                                    }
+                                </td>
                                 <td>
                                     @if (!string.IsNullOrEmpty(store.WebSite))
                                     {

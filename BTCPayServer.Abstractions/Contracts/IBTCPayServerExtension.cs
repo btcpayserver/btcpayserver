@@ -6,12 +6,12 @@ namespace BTCPayServer.Contracts
 {
     public interface IBTCPayServerExtension
     {
-        public string Identifier { get;}
+        public string Identifier { get; }
         string Name { get; }
         Version Version { get; }
         string Description { get; }
         bool SystemExtension { get; set; }
-
+        string[] Dependencies { get; }
         void Execute(IApplicationBuilder applicationBuilder, IServiceProvider applicationBuilderApplicationServices);
         void Execute(IServiceCollection applicationBuilder);
     }

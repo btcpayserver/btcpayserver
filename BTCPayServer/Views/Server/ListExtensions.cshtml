@@ -35,19 +35,22 @@
                     <p class="card-text">@extension.Description</p>
 
                 </div>
-                @if (!extension.SystemExtension && matchedAvailable != null)
+                @if (!extension.SystemExtension)
                 {
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item d-flex justify-content-between">
                             <span>Current version</span>
                             <span>@extension.Version</span>
                         </li>
-                        <li class="list-group-item d-flex justify-content-between">
-                            <span>Remote version</span>
-                            <span>@matchedAvailable.Version</span>
-                        </li>
+                        @if (matchedAvailable != null)
+                        {
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Remote version</span>
+                                <span>@matchedAvailable.Version</span>
+                            </li>
+                        }
                     </ul>
-                    <div class="card-footer">
+                    <div class="card-footer  py-0">
                         @if (Model.Commands.Any(tuple => tuple.extension.Equals(extension.Identifier, StringComparison.InvariantCultureIgnoreCase)))
                         {
                             <div class="d-flex justify-content-between">
@@ -62,12 +65,13 @@
                         else
                         {
                             <form asp-action="UnInstallExtension" asp-route-extension="@extension.Identifier">
-                                <button type="submit" class="btn btn-link">Uninstall</button>
+                                <button type="submit" class="btn btn-link  pt-0">Uninstall</button>
                             </form>
-                            @if (extension.Version < matchedAvailable.Version)
+                            
+                            @if (matchedAvailable != null && extension.Version < matchedAvailable.Version)
                             {
                                 <form asp-action="InstallExtension" asp-route-extension="@extension.Identifier" asp-route-remote="@Model.Remote">
-                                    <button type="submit" class="btn btn-link">Update</button>
+                                    <button type="submit" class="btn btn-link  pt-0">Update</button>
                                 </form>
                             }
                         }
@@ -117,7 +121,7 @@
                     else
                     {
                         <form asp-action="InstallExtension" asp-route-extension="@extension.Identifier" asp-route-remote="@Model.Remote">
-                            <button type="submit" class="btn btn-link">Install</button>
+                            <button type="submit" class="btn btn-link  pt-0">Install</button>
                         </form>
                     }
                 </div>

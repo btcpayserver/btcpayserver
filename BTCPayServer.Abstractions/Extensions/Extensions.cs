@@ -1,8 +1,6 @@
-
+using System.Text.Json;
 using BTCPayServer.Models;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer
 {
@@ -15,7 +13,8 @@ namespace BTCPayServer
                 tempData.Remove("StatusMessageModel");
                 return;
             }
-            tempData["StatusMessageModel"] = JObject.FromObject(statusMessage).ToString(Formatting.None);
+
+            tempData["StatusMessageModel"] = JsonSerializer.Serialize(statusMessage, new JsonSerializerOptions());
         }
     }
 }

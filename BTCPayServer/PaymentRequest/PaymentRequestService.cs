@@ -105,9 +105,9 @@ namespace BTCPayServer.PaymentRequest
                     return new ViewPaymentRequestViewModel.PaymentRequestInvoice()
                     {
                         Id = entity.Id,
-                        Rate = entity.Rate,
                         Amount = entity.Price,
                         AmountFormatted = _currencies.FormatCurrency(entity.Price, blob.Currency),
+                        RateFormatted = _currencies.FormatCurrency(entity.Rate, blob.Currency),
                         AmountPaid = amountPaid,
                         AmountPaidFormatted = _currencies.FormatCurrency(amountPaid, blob.Currency),
                         Currency = entity.Currency,
@@ -126,14 +126,12 @@ namespace BTCPayServer.PaymentRequest
                                     return null;
                                 }
 
-                                var paymentMethod = entity.GetPaymentMethod(paymentMethodId);
                                 string txId = paymentData.GetPaymentId();
                                 string link = GetTransactionLink(paymentMethodId, txId);
                                 return new ViewPaymentRequestViewModel.PaymentRequestInvoicePayment()
                                 {
                                     Amount = paymentData.GetValue(),
                                     PaymentMethod = paymentMethodId.ToString(),
-                                    RateFormatted = _currencies.FormatCurrency(paymentMethod.Rate, entity.Currency),
                                     Link = link,
                                     Id = txId
                                 };

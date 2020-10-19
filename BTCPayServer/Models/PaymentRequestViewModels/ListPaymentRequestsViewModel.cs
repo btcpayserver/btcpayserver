@@ -139,9 +139,9 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
         {
             public string Id { get; set; }
             public DateTime ExpiryDate { get; set; }
-            public decimal Rate { get; set; }
             public decimal Amount { get; set; }
             public string AmountFormatted { get; set; }
+            public string RateFormatted { get; set; }
             public decimal AmountPaid { get; set; }
             public string AmountPaidFormatted { get; set; }
             public InvoiceState State { get; set; }
@@ -156,7 +156,6 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
         {
             public string PaymentMethod { get; set; }
             public decimal Amount { get; set; }
-            public string RateFormatted { get; set; }
             public string Link { get; set; }
             public string Id { get; set; }
         }

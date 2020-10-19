@@ -90,25 +90,46 @@ addLoadEvent(function (ev) {
                 self.timeoutState = setTimeout(function () {
                     self.setLoading(false);
                 }, 5000);
-
                 eventAggregator.$emit("cancel-invoice", amount);
             },
             formatPaymentMethod: function (str) {
-
                 if (str.endsWith("LightningLike")) {
                     return str.replace("LightningLike", "Lightning")
                 }
                 return str;
 
             },
-            submitCustomAmountForm : function(e){
+            submitCustomAmountForm: function(e) {
                 if (e) {
                     e.preventDefault();
                 }
-                if(this.srvModel.allowCustomPaymentAmounts && parseFloat(this.customAmount) < this.srvModel.amountDue){
+                if (this.srvModel.allowCustomPaymentAmounts && parseFloat(this.customAmount) < this.srvModel.amountDue){
                     this.pay(parseFloat(this.customAmount));
-                }else{
+                } else {
                     this.pay();
+                }
+            },
+            statusTextClass: function (state) {
+                var [, status,, exceptionStatus] = state.match(/(\w*)\s?(\((\w*)\))?/) || [];
+                console.log(status, exceptionStatus)
+                switch (status) {
+                    case "confirmed":
+                    case "complete":
+                    case "paid":
+                        return "text-success";
+                    case "expired":
+                        switch (exceptionStatus) {
+                            case "paidLate":
+                            case "paidPartial":
+                            case "paidOver":
+                                return "text-warning";
+                            default:
+                                return "text-danger";
+                        }
+                    case "invalid":
+                        return "text-danger";
+                    default:
+                        return "text-warning";
                 }
             }
         },

@@ -302,6 +302,9 @@ html[data-devenv]:before {
     .jumbotron {
         padding: 1rem 0 !important;
     }
+    .text-print-default {
+        color: inherit !important;
+    }
     a {
         text-decoration: none !important;
     }

@@ -215,7 +215,7 @@
                             <h2 class="h4 mb-3">Payment Details</h2>
                             <dl class="mb-0 mt-md-4">
                                 <div class="d-flex d-print-inline-block flex-column mb-4 mr-5">
-                                    <dt class="h4 font-weight-normal text-nowrap text-primary order-2 order-sm-1 mb-0" v-text="srvModel.amountDueFormatted">@Model.AmountDueFormatted</dt>
+                                    <dt class="h4 font-weight-normal text-nowrap text-primary text-print-default order-2 order-sm-1 mb-0" v-text="srvModel.amountDueFormatted">@Model.AmountDueFormatted</dt>
                                     <dd class="text-muted order-1 order-sm-2 mb-1">Amount due</dd>
                                 </div>
                                 <div class="progress bg-light d-none d-sm-flex mb-sm-4 d-print-none" style="height:5px">
@@ -265,7 +265,7 @@
                                                         <td class="text-right">@invoice.AmountFormatted</td>
                                                         <td class="text-right">@invoice.RateFormatted</td>
                                                         <td class="text-right">@invoice.AmountPaidFormatted</td>
-                                                        <td class="text-right @StatusTextClass(invoice.State)">@invoice.StatusFormatted</td>
+                                                        <td class="text-right text-print-default @StatusTextClass(invoice.State)">@invoice.StatusFormatted</td>
                                                     </tr>
                                                     if (invoice.Payments != null && invoice.Payments.Any())
                                                     {
@@ -280,7 +280,7 @@
                                                                 <td colspan="4" class="pl-3 text-break">
                                                                     @if (!string.IsNullOrEmpty(payment.Link))
                                                                     {
-                                                                        <a href="@payment.Link" target="_blank">@payment.Id</a>
+                                                                        <a href="@payment.Link" class="text-print-default" target="_blank">@payment.Id</a>
                                                                     }
                                                                     else
                                                                     {
@@ -321,7 +321,7 @@
                                                     <td class="text-right">{{invoice.amountFormatted}}</td>
                                                     <td class="text-right">{{invoice.rateFormatted}}</td>
                                                     <td class="text-right">{{invoice.amountPaidFormatted}}</td>
-                                                    <td class="text-right" :class="statusTextClass(invoice.statusFormatted)">{{invoice.statusFormatted}}</td>
+                                                    <td class="text-right text-print-default" :class="statusTextClass(invoice.statusFormatted)">{{invoice.statusFormatted}}</td>
                                                 </tr>
                                                 <template v-if="invoice.payments && invoice.payments.length > 0">
                                                     <tr class="table-borderless table-light">
@@ -331,7 +331,7 @@
                                                     </tr>
                                                     <tr v-for="payment of invoice.payments" class="table-borderless table-light">
                                                         <td colspan="4" class="pl-3 text-break">
-                                                            <a v-if="payment.link" :href="payment.link" target="_blank">{{payment.id}}</a>
+                                                            <a v-if="payment.link" :href="payment.link" class="text-print-default" target="_blank">{{payment.id}}</a>
                                                             <span v-else>{{payment.id}}</span>
                                                         </td>
                                                         <td class="text-right">{{payment.amount.noExponents()}}</td>

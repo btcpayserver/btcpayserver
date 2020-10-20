@@ -2,23 +2,32 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Contracts;
 using BTCPayServer.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BTCPayServer.Controllers
 {
     public partial class ManageController
     {
         [HttpGet("notifications")]
-        public async Task<IActionResult> NotificationSettings()
+        public async Task<IActionResult> NotificationSettings([FromServices] IEnumerable<INotificationHandler> notificationHandlers)
         {
             var user = await _userManager.GetUserAsync(User);
-            return View(new NotificationSettingsViewModel()
+            if (user.DisabledNotifications == "all")
             {
-                DisabledNotifications =
-                    user.DisabledNotifications?.Split(';', StringSplitOptions.RemoveEmptyEntries)?.ToList() ??
-                    new List<string>()
-            });
+                return View(new NotificationSettingsViewModel() {All = true});
+            }
+            var disabledNotifications =
+                user.DisabledNotifications?.Split(';', StringSplitOptions.RemoveEmptyEntries)?.ToList() ??
+                new List<string>();
+            var notifications = notificationHandlers.SelectMany(handler => handler.Meta.Select(tuple =>
+                    new SelectListItem(tuple.name, tuple.identifier,
+                        disabledNotifications.Contains(tuple.identifier, StringComparer.InvariantCultureIgnoreCase))))
+                .ToList();
+
+            return View(new NotificationSettingsViewModel() {DisabledNotifications = notifications});
         }
 
         [HttpPost("notifications")]
@@ -35,8 +44,10 @@ namespace BTCPayServer.Controllers
             }
             else if (command == "update")
             {
-                user.DisabledNotifications = vm.DisabledNotifications?.Any() is true
-                    ? string.Join(';', vm.DisabledNotifications) + ";"
+                var disabled = vm.DisabledNotifications.Where(item => item.Selected).Select(item => item.Value)
+                    .ToArray();
+                user.DisabledNotifications = disabled.Any() is true
+                    ? string.Join(';', disabled) + ";"
                     : string.Empty;
             }
 
@@ -50,7 +61,8 @@ namespace BTCPayServer.Controllers
 
         public class NotificationSettingsViewModel
         {
-            public List<string> DisabledNotifications { get; set; }
+            public bool All { get; set; }
+            public List<SelectListItem> DisabledNotifications { get; set; }
         }
     }
 }

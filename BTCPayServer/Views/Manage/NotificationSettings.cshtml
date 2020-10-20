@@ -7,7 +7,7 @@
 
 <partial name="_StatusMessage"/>
 <form method="post" asp-action="NotificationSettings">
-    @if (Model.DisabledNotifications.Contains("all"))
+    @if (Model.All)
     {
         <div>
             All notifications are disabled.
@@ -16,14 +16,26 @@
     }
     else
     {
-        var items = new SelectList(NotificationHandlers.SelectMany(handler => handler.Meta.Select(tuple => new SelectListItem(tuple.name, tuple.identifier))), nameof(SelectListItem.Value), nameof(SelectListItem.Text));
-        
         <div class="form-group">
-            <label asp-for="DisabledNotifications">Do not receive notifications for</label>
 
-            <select size="@items.Count()" class="form-control hide-when-js" multiple asp-for="DisabledNotifications"
-                    asp-items="@items">
-            </select>
+            <label> Do not receive notifications for</label>
+
+            <div class="card ">
+
+                <ul class="list-group list-group-flush">
+                    @for (var index = 0; index < Model.DisabledNotifications.Count; index++)
+                    {
+                        var item = Model.DisabledNotifications[index];
+                        <li class="list-group-item">
+                            <input type="hidden"  asp-for="DisabledNotifications[index].Value"/> 
+                            <input type="checkbox" asp-for="DisabledNotifications[index].Selected" class="form-check-inline"/>
+                            <label class="mb-0 cursor-pointer" asp-for="DisabledNotifications[index].Selected">
+                                @item.Text
+                            </label>
+                        </li>
+                    }
+                </ul>
+            </div>
         </div>
         <div>
             <button type="submit" class="btn btn-secondary" name="command" value="disable-all">Disable all</button>
@@ -31,21 +43,3 @@
         </div>
     }
 </form>
-@section Scripts
-{
-    <script src="~/vendor/bootstrap-multiselect/bootstrap-multiselect.js"></script>
-    <script type="text/javascript">
-        $(document).ready(function() {
-            $('select[multiple]').multiselect({
-                buttonContainer: '<div class="card"></div>',
-                buttonClass: '',
-                selectedClass: '',
-                templates: {
-                    button: '',
-                    li: '<li class="list-group-item"><label class="mb-0 cursor-pointer"></label></li>',
-                    ul: '<ul class="list-group list-group-flush "></ul>',
-                }
-            });
-        });
-    </script>
-}

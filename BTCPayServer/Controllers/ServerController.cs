@@ -273,7 +273,7 @@ namespace BTCPayServer.Controllers
 
         [Route("server/policies")]
         [HttpPost]
-        public async Task<IActionResult> Policies(PoliciesSettings settings, string command = "")
+        public async Task<IActionResult> Policies([FromServices] BTCPayNetworkProvider btcPayNetworkProvider,PoliciesSettings settings, string command = "")
         {
             
             ViewBag.UpdateUrlPresent = _Options.UpdateUrl != null;
@@ -291,6 +291,8 @@ namespace BTCPayServer.Controllers
                 settings.DomainToAppMapping.RemoveAt(index);
                 return View(settings);
             }
+
+            settings.BlockExplorerLinks = settings.BlockExplorerLinks.Where(tuple => btcPayNetworkProvider.GetNetwork(tuple.CryptoCode).BlockExplorerLinkDefault != tuple.Link).ToList();
 
             if (!ModelState.IsValid)
             {

@@ -91,6 +91,7 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<BTCPayServerOptions>(o =>
                 o.GetRequiredService<IOptions<BTCPayServerOptions>>().Value);
             services.AddStartupTask<MigrationStartupTask>();
+            services.AddStartupTask<BlockExplorerLinkStartupTask>();
             services.TryAddSingleton<InvoiceRepository>(o =>
             {
                 var opts = o.GetRequiredService<BTCPayServerOptions>();

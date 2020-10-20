@@ -42,6 +42,11 @@
             <label asp-for="AllowHotWalletRPCImportForAll" class="form-check-label"></label>
             <span asp-validation-for="AllowHotWalletRPCImportForAll" class="text-danger"></span>
         </div>
+        <div class="form-check">
+            <input asp-for="DisableInstantNotifications" type="checkbox" class="form-check-input"/>
+            <label asp-for="DisableInstantNotifications" class="form-check-label"></label>
+            <span asp-validation-for="DisableInstantNotifications" class="text-danger"></span>
+        </div>
         @if (ViewBag.UpdateUrlPresent)
         {
         <div class="form-check">

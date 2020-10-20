@@ -40,10 +40,10 @@ else
     if (!disabled)
     {
         var user = await UserManager.GetUserAsync(User);
-        disabled = user.DisabledNotifications != "all";
+        disabled = user.DisabledNotifications == "all";
     }
 }
-@if (disabled)
+@if (!disabled)
 {
 
     <script type="text/javascript">

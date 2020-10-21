@@ -4,6 +4,7 @@
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
     <PreserveCompilationContext>false</PreserveCompilationContext>
     <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
+    <AssemblyVersion>1.0.0</AssemblyVersion>
 
   </PropertyGroup>
     <ItemGroup>

@@ -298,3 +298,4 @@ BTCPayServer/wwwroot/bundles/*
 !.vscode/extensions.json
 BTCPayServer/testpwd
 .DS_Store
+Packed Plugins

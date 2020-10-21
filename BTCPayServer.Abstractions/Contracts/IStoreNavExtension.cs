@@ -1,15 +1,15 @@
 namespace BTCPayServer.Contracts
 {
-    public interface INavExtension
+    public interface IUIExtension
     {
         string Partial { get; }
         
         string Location { get; }
     }
 
-    public class NavExtension: INavExtension
+    public class UIExtension: IUIExtension
     {
-        public NavExtension(string partial, string location)
+        public UIExtension(string partial, string location)
         {
             Partial = partial;
             Location = location;

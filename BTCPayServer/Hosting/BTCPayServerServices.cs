@@ -12,6 +12,7 @@ using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Payments.PayJoin;
+using BTCPayServer.Plugins;
 using BTCPayServer.Security;
 using BTCPayServer.Security.Bitpay;
 using BTCPayServer.Security.GreenField;
@@ -83,6 +84,7 @@ namespace BTCPayServer.Hosting
             services.AddEthereumLike();
 #endif
             services.TryAddSingleton<SettingsRepository>();
+            services.TryAddSingleton<ISettingsRepository>(provider => provider.GetService<SettingsRepository>());
             services.TryAddSingleton<LabelFactory>();
             services.TryAddSingleton<TorServices>();
             services.TryAddSingleton<SocketFactory>();
@@ -146,7 +148,7 @@ namespace BTCPayServer.Hosting
             });
 
             services.TryAddSingleton<AppService>();
-            services.AddSingleton<ExtensionService>();
+            services.AddSingleton<PluginService>();
             services.TryAddTransient<Safe>();
             services.TryAddSingleton<Ganss.XSS.HtmlSanitizer>(o =>
             {

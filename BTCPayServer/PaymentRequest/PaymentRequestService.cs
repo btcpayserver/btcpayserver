@@ -100,16 +100,12 @@ namespace BTCPayServer.PaymentRequest
                                             pendingInvoice.ExceptionStatus != InvoiceExceptionStatus.None,
                 Invoices = invoices.Select(entity =>
                 {
-                    var amountPaid = entity.GetPaymentMethods().Sum(method => method.Calculate().Paid.GetValue(method.Network as BTCPayNetwork) * method.Rate);
                     var state = entity.GetInvoiceState();
-                    return new ViewPaymentRequestViewModel.PaymentRequestInvoice()
+                    return new ViewPaymentRequestViewModel.PaymentRequestInvoice
                     {
                         Id = entity.Id,
                         Amount = entity.Price,
                         AmountFormatted = _currencies.FormatCurrency(entity.Price, blob.Currency),
-                        RateFormatted = _currencies.FormatCurrency(entity.Rate, blob.Currency),
-                        AmountPaid = amountPaid,
-                        AmountPaidFormatted = _currencies.FormatCurrency(amountPaid, blob.Currency),
                         Currency = entity.Currency,
                         ExpiryDate = entity.ExpirationTime.DateTime,
                         State = state,
@@ -128,10 +124,18 @@ namespace BTCPayServer.PaymentRequest
 
                                 string txId = paymentData.GetPaymentId();
                                 string link = GetTransactionLink(paymentMethodId, txId);
-                                return new ViewPaymentRequestViewModel.PaymentRequestInvoicePayment()
+                                var paymentMethod = entity.GetPaymentMethod(paymentMethodId);
+                                var rate = paymentMethod.Rate;
+                                var paid = paymentMethod.Calculate().Paid
+                                    .GetValue(paymentMethod.Network as BTCPayNetwork) * rate;
+
+                                return new ViewPaymentRequestViewModel.PaymentRequestInvoicePayment
                                 {
                                     Amount = paymentData.GetValue(),
-                                    PaymentMethod = paymentMethodId.ToString(),
+                                    Paid = paid,
+                                    PaidFormatted = _currencies.FormatCurrency(paid, blob.Currency),
+                                    RateFormatted = _currencies.FormatCurrency(rate, blob.Currency),
+                                    PaymentMethod = paymentMethodId.ToPrettyString(),
                                     Link = link,
                                     Id = txId
                                 };

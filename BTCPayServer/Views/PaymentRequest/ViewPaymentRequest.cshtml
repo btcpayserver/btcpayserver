@@ -78,7 +78,7 @@
                                 <span class="text-muted text-nowrap">Last Updated</span>
                                 &nbsp;
                                 <span class="text-nowrap d-print-none" v-text="lastUpdated" v-cloak>@Model.LastUpdated.ToString("g")</span>
-                                <span class="text-nowrap d-none d-print-block" v-text="lastUpdatedDate" v-cloak>@Model.LastUpdated.ToString("g")</span>
+                                <span class="text-nowrap d-none d-print-block" v-text="lastUpdatedDate">@Model.LastUpdated.ToString("g")</span>
                                 <button type="button" class="btn btn-link d-none d-lg-inline-block d-print-none border-0 p-0 ml-4 only-for-js" v-on:click="window.print" v-cloak>
                                     Print
                                 </button>
@@ -250,11 +250,10 @@
                                             <thead>
                                                 <tr class="table-borderless">
                                                     <th class="font-weight-normal text-secondary" scope="col">Invoice Id</th>
-                                                    <th class="font-weight-normal text-secondary w-150px">Expiry</th>
+                                                    <th class="font-weight-normal text-secondary w-175px">Expiry</th>
                                                     <th class="font-weight-normal text-secondary text-right w-100px">Amount</th>
-                                                    <th class="font-weight-normal text-secondary text-right w-125px">Rate</th>
-                                                    <th class="font-weight-normal text-secondary text-right w-125px">Paid</th>
-                                                    <th class="font-weight-normal text-secondary text-right w-150px">Status</th>
+                                                    <th class="font-weight-normal text-secondary text-right w-125px"></th>
+                                                    <th class="font-weight-normal text-secondary text-right">Status</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -264,21 +263,21 @@
                                                         <td>@invoice.Id</td>
                                                         <td>@invoice.ExpiryDate.ToString("g")</td>
                                                         <td class="text-right">@invoice.AmountFormatted</td>
-                                                        <td class="text-right">@invoice.RateFormatted</td>
-                                                        <td class="text-right">@invoice.AmountPaidFormatted</td>
+                                                        <td class="text-right"></td>
                                                         <td class="text-right text-print-default @StatusTextClass(invoice.State)">@invoice.StatusFormatted</td>
                                                     </tr>
                                                     if (invoice.Payments != null && invoice.Payments.Any())
                                                     {
                                                         <tr class="table-borderless table-light">
-                                                            <th colspan="4" class="pl-3 font-weight-normal text-secondary">Transaction Id</th>
+                                                            <th colspan="2" class="pl-3 font-weight-normal text-secondary">Transaction Id</th>
                                                             <th class="font-weight-normal text-secondary text-right">Paid</th>
-                                                            <th class="font-weight-normal text-secondary text-right">Payment Method</th>
+                                                            <th class="font-weight-normal text-secondary text-right">Rate</th>
+                                                            <th class="font-weight-normal text-secondary text-right">Payment</th>
                                                         </tr>
                                                         @foreach (var payment in invoice.Payments)
                                                         {
                                                             <tr class="table-borderless table-light">
-                                                                <td colspan="4" class="pl-3 text-break">
+                                                                <td colspan="2" class="pl-3 text-break">
                                                                     @if (!string.IsNullOrEmpty(payment.Link))
                                                                     {
                                                                         <a href="@payment.Link" class="text-print-default" target="_blank">@payment.Id</a>
@@ -288,8 +287,9 @@
                                                                         <span>@payment.Id</span>
                                                                     }
                                                                 </td>
-                                                                <td class="text-right">@payment.Amount</td>
-                                                                <td class="text-right">@payment.PaymentMethod</td>
+                                                                <td class="text-right">@payment.PaidFormatted</td>
+                                                                <td class="text-right">@payment.RateFormatted</td>
+                                                                <td class="text-right text-nowrap">@payment.Amount @payment.PaymentMethod</td>
                                                             </tr>
                                                         }
                                                     }
@@ -307,36 +307,36 @@
                                         <thead>
                                             <tr class="table-borderless">
                                                 <th class="font-weight-normal text-secondary" scope="col">Invoice Id</th>
-                                                <th class="font-weight-normal text-secondary w-150px">Expiry</th>
+                                                <th class="font-weight-normal text-secondary w-175px">Expiry</th>
                                                 <th class="font-weight-normal text-secondary text-right w-100px">Amount</th>
-                                                <th class="font-weight-normal text-secondary text-right w-125px">Rate</th>
-                                                <th class="font-weight-normal text-secondary text-right w-125px">Paid</th>
-                                                <th class="font-weight-normal text-secondary text-right w-150px">Status</th>
+                                                <th class="font-weight-normal text-secondary text-right w-125px"></th>
+                                                <th class="font-weight-normal text-secondary text-right">Status</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <template v-for="invoice of srvModel.invoices" :key="invoice.id">
                                                 <tr>
                                                     <td>{{invoice.id}}</td>
-                                                    <td>{{moment(invoice.expiryDate).format('L HH:mm')}}</td>
+                                                    <td v-text="formatDate(invoice.expiryDate)"></td>
                                                     <td class="text-right">{{invoice.amountFormatted}}</td>
-                                                    <td class="text-right">{{invoice.rateFormatted}}</td>
-                                                    <td class="text-right">{{invoice.amountPaidFormatted}}</td>
+                                                    <td class="text-right"></td>
                                                     <td class="text-right text-print-default" :class="statusTextClass(invoice.statusFormatted)">{{invoice.statusFormatted}}</td>
                                                 </tr>
                                                 <template v-if="invoice.payments && invoice.payments.length > 0">
                                                     <tr class="table-borderless table-light">
-                                                        <th colspan="4" class="pl-3 font-weight-normal text-secondary">Transaction Id</th>
+                                                        <th colspan="2" class="pl-3 font-weight-normal text-secondary">Transaction Id</th>
                                                         <th class="font-weight-normal text-secondary text-right">Paid</th>
-                                                        <th class="font-weight-normal text-secondary text-right">Payment Method</th>
+                                                        <th class="font-weight-normal text-secondary text-right">Rate</th>
+                                                        <th class="font-weight-normal text-secondary text-right">Payment</th>
                                                     </tr>
                                                     <tr v-for="payment of invoice.payments" class="table-borderless table-light">
-                                                        <td colspan="4" class="pl-3 text-break">
+                                                        <td colspan="2" class="pl-3 text-break">
                                                             <a v-if="payment.link" :href="payment.link" class="text-print-default" target="_blank">{{payment.id}}</a>
                                                             <span v-else>{{payment.id}}</span>
                                                         </td>
-                                                        <td class="text-right">{{payment.amount.noExponents()}}</td>
-                                                        <td class="text-right">{{formatPaymentMethod(payment.paymentMethod)}}</td>
+                                                        <td class="text-right">{{payment.paidFormatted}}</td>
+                                                        <td class="text-right">{{payment.rateFormatted}}</td>
+                                                        <td class="text-right text-nowrap">{{payment.amount.noExponents()}} {{payment.paymentMethod}}</td>
                                                     </tr>
                                                 </template>
                                             </template>

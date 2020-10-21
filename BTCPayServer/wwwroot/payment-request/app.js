@@ -95,12 +95,8 @@ addLoadEvent(function (ev) {
                 }, 5000);
                 eventAggregator.$emit("cancel-invoice", amount);
             },
-            formatPaymentMethod: function (str) {
-                if (str.endsWith("LightningLike")) {
-                    return str.replace("LightningLike", "Lightning")
-                }
-                return str;
-
+            formatDate: function (date) {
+                return moment(date).format('L h:mm A')
             },
             submitCustomAmountForm: function(e) {
                 if (e) {
@@ -114,7 +110,6 @@ addLoadEvent(function (ev) {
             },
             statusTextClass: function (state) {
                 var [, status,, exceptionStatus] = state.match(/(\w*)\s?(\((\w*)\))?/) || [];
-                console.log(status, exceptionStatus)
                 switch (status) {
                     case "confirmed":
                     case "complete":

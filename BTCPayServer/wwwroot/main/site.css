@@ -249,15 +249,11 @@ pre {
     margin-top: .5rem;
 }
 
-.w-100px {
-    width: 100px;
-}
-.w-125px {
-    width: 125px;
-}
-.w-150px {
-    width: 150px;
-}
+.w-100px { width: 100px; }
+.w-125px { width: 125px; }
+.w-150px { width: 150px; }
+.w-175px { width: 175px; }
+.w-200px { width: 200px; }
 
 /* Chrome, Safari, Edge, Opera */
 input[type=number].hide-number-spin::-webkit-outer-spin-button,

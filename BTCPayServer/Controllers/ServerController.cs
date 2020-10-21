@@ -11,6 +11,7 @@ using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
+using BTCPayServer.Hosting;
 using BTCPayServer.Logging;
 using BTCPayServer.Models;
 using BTCPayServer.Models.AccountViewModels;
@@ -273,7 +274,7 @@ namespace BTCPayServer.Controllers
 
         [Route("server/policies")]
         [HttpPost]
-        public async Task<IActionResult> Policies(PoliciesSettings settings, string command = "")
+        public async Task<IActionResult> Policies([FromServices] BTCPayNetworkProvider btcPayNetworkProvider,PoliciesSettings settings, string command = "")
         {
             
             ViewBag.UpdateUrlPresent = _Options.UpdateUrl != null;
@@ -292,6 +293,8 @@ namespace BTCPayServer.Controllers
                 return View(settings);
             }
 
+            settings.BlockExplorerLinks = settings.BlockExplorerLinks.Where(tuple => btcPayNetworkProvider.GetNetwork(tuple.CryptoCode).BlockExplorerLinkDefault != tuple.Link).ToList();
+        
             if (!ModelState.IsValid)
             {
                 return View(settings);
@@ -323,6 +326,7 @@ namespace BTCPayServer.Controllers
             }
 
             await _SettingsRepository.UpdateSetting(settings);
+            BlockExplorerLinkStartupTask.SetLinkOnNetworks(settings.BlockExplorerLinks, btcPayNetworkProvider);
             TempData[WellKnownTempData.SuccessMessage] = "Policies updated successfully";
             return RedirectToAction(nameof(Policies));
         }

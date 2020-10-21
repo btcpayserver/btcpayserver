@@ -33,8 +33,18 @@ namespace BTCPayServer.Services
         public string RootAppId { get; set; }
         public AppType? RootAppType { get; set; }
 
+        
+        [Display(Name = "Override the block explorers used")]
+        public List<BlockExplorerOverrideItem> BlockExplorerLinks { get; set; } = new List<BlockExplorerOverrideItem>();
+        
         public List<DomainToAppMappingItem> DomainToAppMapping { get; set; } = new List<DomainToAppMappingItem>();
 
+        public class BlockExplorerOverrideItem
+        {
+            public string CryptoCode { get; set; }
+            public string Link { get; set; }
+        }
+        
         public class DomainToAppMappingItem
         {
             [Display(Name = "Domain")] [Required] [HostName] public string Domain { get; set; }

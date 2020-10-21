@@ -13,6 +13,7 @@ namespace BTCPayServer.Models.WalletViewModels
         public string CryptoCode { get; set; }
         public string Decoded { get; set; }
         string _FileName;
+        public string PSBTHex { get; set; }
         public bool NBXSeedAvailable { get; set; }
 
         public string FileName

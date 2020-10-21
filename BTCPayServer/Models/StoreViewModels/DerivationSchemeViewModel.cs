@@ -35,6 +35,8 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Wallet File")]
         public IFormFile WalletFile { get; set; }
+        [Display(Name = "Wallet File Content")]
+        public string WalletFileContent { get; set; }
         public string Config { get; set; }
         public string Source { get; set; }
         public string DerivationSchemeFormat { get; set; }

@@ -1,4 +1,5 @@
 ﻿@model WalletPSBTViewModel
+@addTagHelper *, BundlerMinifier.TagHelpers
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData["Title"] = "PSBT";
@@ -8,7 +9,7 @@
 {
     <div class="row">
         <div class="col-md-10 text-center">
-            <partial name="_StatusMessage" />
+            <partial name="_StatusMessage"/>
         </div>
     </div>
 }
@@ -17,10 +18,13 @@
         @if (Model.Errors != null && Model.Errors.Count != 0)
         {
             <div class="alert alert-danger alert-dismissible" role="alert">
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
                 @foreach (var error in Model.Errors)
                 {
-                    <span>@error</span><br />
+                    <span>@error</span>
+                    <br/>
                 }
             </div>
         }
@@ -29,11 +33,11 @@
             <h3>Decoded PSBT</h3>
             <div class="form-group">
                 <form method="post" asp-action="WalletPSBT" asp-route-walletId="@this.Context.GetRouteValue("walletId")">
-                    <input type="hidden" asp-for="CryptoCode" />
-                    <input type="hidden" asp-for="NBXSeedAvailable" />
-                    <input type="hidden" asp-for="PSBT" />
-                    <input type="hidden" asp-for="FileName" />
-                    <div  class="d-flex">
+                    <input type="hidden" asp-for="CryptoCode"/>
+                    <input type="hidden" asp-for="NBXSeedAvailable"/>
+                    <input type="hidden" asp-for="PSBT"/>
+                    <input type="hidden" asp-for="FileName"/>
+                    <div class="d-flex">
                         <partial name="WalletSigningMenu" model="@((Model.CryptoCode, Model.NBXSeedAvailable))"/>
                         <div class="ml-2 dropdown">
                             <button class="btn btn-secondary dropdown-toggle" type="button" id="OtherActions" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -44,6 +48,7 @@
                                 <button name="command" type="submit" class="dropdown-item" value="update">Update</button>
                                 <button name="command" type="submit" class="dropdown-item" value="combine">Combine</button>
                                 <button name="command" type="submit" class="dropdown-item" value="save-psbt">Download</button>
+                                <button name="command" type="button" class="dropdown-item only-for-js" data-toggle="modal" data-target="#scan-qr-modal">Show QR</button>
                             </div>
                         </div>
                     </div>
@@ -58,18 +63,40 @@
                 <label asp-for="PSBT"></label>
                 <textarea class="form-control" rows="5" asp-for="PSBT"></textarea>
                 <span asp-validation-for="PSBT" class="text-danger"></span>
+
             </div>
             <div class="form-group">
                 <label asp-for="UploadedPSBTFile"></label>
                 <input type="file" class="form-control-file" asp-for="UploadedPSBTFile">
             </div>
-            <button type="submit" name="command" value="decode" class="btn btn-primary">Decode</button>
+
+            <button type="button" id="scanqrcode" class="ml-2 btn btn-secondary only-for-js" data-toggle="modal" data-target="#scanModal" title="Scan with camera">
+                <i class="fa fa-camera"></i>
+            </button>
+            <button type="submit" name="command" value="decode" class="btn btn-primary" id="Decode">Decode</button>
         </form>
     </div>
 </div>
+<partial name="ShowQR"/>
+<partial name="CameraScanner"/>
+
 
 @section Scripts {
     <link rel="stylesheet" href="~/vendor/highlightjs/default.min.css" asp-append-version="true">
     <script src="~/vendor/highlightjs/highlight.min.js" asp-append-version="true"></script>
+    <bundle name="wwwroot/bundles/camera-bundle.min.js"></bundle>
+    <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true"/>
     <script>hljs.initHighlightingOnLoad();</script>
+
+    <script>
+    
+    $(function (){
+        initQRShow("Scan PSBT", @Json.Serialize(Model.PSBTHex), "scan-qr-modal");
+        
+       initCameraScanningApp("Scan PSBT", function (data){
+           $("textarea[name=PSBT]").val(data);
+           $("#Decode").click();
+       }, "scanModal") 
+    });
+</script>
 }

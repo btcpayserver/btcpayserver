@@ -155,7 +155,7 @@
     <script >
         for (let element of document.getElementsByClassName("revert-default")) {
             element.addEventListener("click", function (){
-              element.previousElementSibling.value = element.previousElementSibling.getAttribute("data-default-link")
+              element.parentElement.previousElementSibling.value = element.parentElement.previousElementSibling.getAttribute("data-default-link")
             });
         }
         for (let element of document.getElementsByClassName("collapse-on-js")){

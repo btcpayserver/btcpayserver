@@ -43,6 +43,9 @@ addLoadEvent(function (ev) {
             lastUpdated: function () {
                 return this.srvModel.lastUpdated && moment(this.srvModel.lastUpdated).calendar();
             },
+            lastUpdatedDate: function () {
+                return this.srvModel.lastUpdated && moment(this.srvModel.lastUpdated).format('MMMM Do YYYY, h:mm:ss a');
+            },
             active: function () {
                 return !this.ended;
             }

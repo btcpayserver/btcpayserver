@@ -77,7 +77,8 @@
                             <div class="col col-12 col-sm-6 col-lg-8 d-flex align-items-center">
                                 <span class="text-muted text-nowrap">Last Updated</span>
                                 &nbsp;
-                                <span class="text-nowrap" v-text="lastUpdated" v-cloak>@Model.LastUpdated.ToString("g")</span>
+                                <span class="text-nowrap d-print-none" v-text="lastUpdated" v-cloak>@Model.LastUpdated.ToString("g")</span>
+                                <span class="text-nowrap d-none d-print-block" v-text="lastUpdatedDate" v-cloak>@Model.LastUpdated.ToString("g")</span>
                                 <button type="button" class="btn btn-link d-none d-lg-inline-block d-print-none border-0 p-0 ml-4 only-for-js" v-on:click="window.print" v-cloak>
                                     Print
                                 </button>

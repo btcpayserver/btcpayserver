@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,15 +24,20 @@ namespace BTCPayServer.Hosting
             var settings = await _settingsRepository.GetSettingAsync<PoliciesSettings>();
             if (settings?.BlockExplorerLinks?.Any() is true)
             {
-                foreach (var item in settings.BlockExplorerLinks)
-                {
-                    var network = _btcPayNetworkProvider.GetNetwork(item.CryptoCode);
-                    if (network is null)
-                    {
-                        continue;;
-                    }
-                    network.BlockExplorerLink = item.Link;
-                }
+                SetLinkOnNetworks(settings.BlockExplorerLinks, _btcPayNetworkProvider);
+            }
+        }
+
+        public static void SetLinkOnNetworks(List<PoliciesSettings.BlockExplorerOverrideItem> links,
+            BTCPayNetworkProvider networkProvider)
+        {
+            var networks = networkProvider.GetAll();
+            foreach (var network in networks)
+            {
+                var overrideLink = links.SingleOrDefault(item =>
+                    item.CryptoCode.Equals(network.CryptoCode, StringComparison.InvariantCultureIgnoreCase));
+                network.BlockExplorerLink = overrideLink?.Link ?? network.BlockExplorerLinkDefault;
+
             }
         }
     }

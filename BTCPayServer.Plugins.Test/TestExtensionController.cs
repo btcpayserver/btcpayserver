@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace BTCPayServer.Extensions.Test
+namespace BTCPayServer.Plugins.Test
 {
     [Route("extensions/test")]
     public class TestExtensionController : Controller

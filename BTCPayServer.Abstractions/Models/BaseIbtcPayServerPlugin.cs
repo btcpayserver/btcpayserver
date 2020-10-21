@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace BTCPayServer.Models
 {
-    public abstract class BaseBTCPayServerExtension : IBTCPayServerExtension
+    public abstract class BaseBTCPayServerPlugin : IBTCPayServerPlugin
     {
         public abstract string Identifier { get; }
         public abstract string Name { get; }
@@ -20,6 +20,7 @@ namespace BTCPayServer.Models
         }
 
         public abstract string Description { get; }
+        public bool SystemPlugin { get; set; }
         public bool SystemExtension { get; set; }
         public virtual string[] Dependencies { get; } = Array.Empty<string>();
 

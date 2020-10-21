@@ -1,13 +1,12 @@
-﻿using System;
-using BTCPayServer.Contracts;
+﻿using BTCPayServer.Contracts;
 using BTCPayServer.Models;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace BTCPayServer.Extensions.Test
+namespace BTCPayServer.Plugins.Test
 {
-    public class TestExtension: BaseBTCPayServerExtension
+    public class TestPlugin: BaseBTCPayServerPlugin
     {
-        public  override string Identifier { get; } = "BTCPayServer.Extensions.Test";
+        public  override string Identifier { get; } = "BTCPayServer.Plugins.Test";
         public  override string Name { get; } = "Test Plugin!";
         public  override string Description { get; } = "This is a description of the loaded test extension!";
 

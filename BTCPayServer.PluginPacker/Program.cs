@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Text.Json;
 using BTCPayServer.Contracts;
 
-namespace BTCPayServer.ExtensionPacker
+namespace BTCPayServer.PluginPacker
 {
     class Program
     {
@@ -26,11 +26,11 @@ namespace BTCPayServer.ExtensionPacker
             var extension = GetAllExtensionTypesFromAssembly(assembly).FirstOrDefault();
             if (extension is null)
             {
-                throw new Exception($"{rootDLLPath} is not a valid extension");
+                throw new Exception($"{rootDLLPath} is not a valid plugin");
             }
 
-            var loadedExtension = (IBTCPayServerExtension)Activator.CreateInstance(extension);
-            var json = JsonSerializer.Serialize(loadedExtension);
+            var loadedPlugin = (IBTCPayServerPlugin)Activator.CreateInstance(extension);
+            var json = JsonSerializer.Serialize(loadedPlugin);
             Directory.CreateDirectory(outputDir);
             if (File.Exists(outputFile + ".btcpay"))
             {
@@ -43,7 +43,7 @@ namespace BTCPayServer.ExtensionPacker
         private static Type[] GetAllExtensionTypesFromAssembly(Assembly assembly)
         {
             return assembly.GetTypes().Where(type =>
-                typeof(IBTCPayServerExtension).IsAssignableFrom(type) &&
+                typeof(IBTCPayServerPlugin).IsAssignableFrom(type) &&
                 !type.IsAbstract).ToArray();
         }
     }

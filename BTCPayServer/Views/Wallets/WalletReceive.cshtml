@@ -1,4 +1,5 @@
-﻿@using Microsoft.AspNetCore.Mvc.ModelBinding
+﻿
+@addTagHelper *, BundlerMinifier.TagHelpers
 @model BTCPayServer.Controllers.WalletReceiveViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
@@ -74,7 +75,7 @@
 @section HeadScripts
 
 {
-    <script src="~/bundles/lightning-node-info-bundle.min.js" type="text/javascript" asp-append-version="true"></script>
+    <bundle name="wwwroot/bundles/lightning-node-info-bundle.min.js" asp-append-version="true" />
     <script type="text/javascript">
         var srvModel = @Safe.Json(Model);
         window.onload = function() {

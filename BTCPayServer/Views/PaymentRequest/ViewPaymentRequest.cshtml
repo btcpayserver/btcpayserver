@@ -269,7 +269,8 @@
                                                     if (invoice.Payments != null && invoice.Payments.Any())
                                                     {
                                                         <tr class="table-borderless table-light">
-                                                            <th colspan="2" class="pl-3 font-weight-normal text-secondary">Transaction Id</th>
+                                                            <th class="pl-3 font-weight-normal text-secondary">Transaction Id</th>
+                                                            <th class="font-weight-normal text-secondary">Received</th>
                                                             <th class="font-weight-normal text-secondary text-right">Paid</th>
                                                             <th class="font-weight-normal text-secondary text-right">Rate</th>
                                                             <th class="font-weight-normal text-secondary text-right">Payment</th>
@@ -277,7 +278,7 @@
                                                         @foreach (var payment in invoice.Payments)
                                                         {
                                                             <tr class="table-borderless table-light">
-                                                                <td colspan="2" class="pl-3 text-break">
+                                                                <td class="pl-3 text-break">
                                                                     @if (!string.IsNullOrEmpty(payment.Link))
                                                                     {
                                                                         <a href="@payment.Link" class="text-print-default" target="_blank">@payment.Id</a>
@@ -287,6 +288,7 @@
                                                                         <span>@payment.Id</span>
                                                                     }
                                                                 </td>
+                                                                <td>@payment.ReceivedDate.ToString("g")</td>
                                                                 <td class="text-right">@payment.PaidFormatted</td>
                                                                 <td class="text-right">@payment.RateFormatted</td>
                                                                 <td class="text-right text-nowrap">@payment.Amount @payment.PaymentMethod</td>
@@ -324,16 +326,18 @@
                                                 </tr>
                                                 <template v-if="invoice.payments && invoice.payments.length > 0">
                                                     <tr class="table-borderless table-light">
-                                                        <th colspan="2" class="pl-3 font-weight-normal text-secondary">Transaction Id</th>
+                                                        <th class="pl-3 font-weight-normal text-secondary">Transaction Id</th>
+                                                        <th class="font-weight-normal text-secondary">Received</th>
                                                         <th class="font-weight-normal text-secondary text-right">Paid</th>
                                                         <th class="font-weight-normal text-secondary text-right">Rate</th>
                                                         <th class="font-weight-normal text-secondary text-right">Payment</th>
                                                     </tr>
                                                     <tr v-for="payment of invoice.payments" class="table-borderless table-light">
-                                                        <td colspan="2" class="pl-3 text-break">
+                                                        <td class="pl-3 text-break">
                                                             <a v-if="payment.link" :href="payment.link" class="text-print-default" target="_blank">{{payment.id}}</a>
                                                             <span v-else>{{payment.id}}</span>
                                                         </td>
+                                                        <td v-text="formatDate(payment.receivedDate)"></td>
                                                         <td class="text-right">{{payment.paidFormatted}}</td>
                                                         <td class="text-right">{{payment.rateFormatted}}</td>
                                                         <td class="text-right text-nowrap">{{payment.amount.noExponents()}} {{payment.paymentMethod}}</td>

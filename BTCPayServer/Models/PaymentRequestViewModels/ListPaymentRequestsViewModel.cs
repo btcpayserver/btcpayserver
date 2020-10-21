@@ -156,6 +156,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             public string RateFormatted { get; set; }
             public decimal Paid { get; set; }
             public string PaidFormatted { get; set; }
+            public DateTime ReceivedDate { get; set; }
             public string Link { get; set; }
             public string Id { get; set; }
         }

@@ -133,6 +133,7 @@ namespace BTCPayServer.PaymentRequest
                                 {
                                     Amount = paymentData.GetValue(),
                                     Paid = paid,
+                                    ReceivedDate = paymentEntity.ReceivedTime.DateTime,
                                     PaidFormatted = _currencies.FormatCurrency(paid, blob.Currency),
                                     RateFormatted = _currencies.FormatCurrency(rate, blob.Currency),
                                     PaymentMethod = paymentMethodId.ToPrettyString(),

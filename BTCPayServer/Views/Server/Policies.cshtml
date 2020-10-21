@@ -1,10 +1,11 @@
+@using BTCPayServer.Services
 @model BTCPayServer.Services.PoliciesSettings
 @{
     ViewData.SetActivePageAndTitle(ServerNavPages.Policies);
 }
 
 
-<partial name="_StatusMessage" />
+<partial name="_StatusMessage"/>
 @if (!this.ViewContext.ModelState.IsValid)
 {
     <div asp-validation-summary="All" class="text-danger"></div>
@@ -42,22 +43,27 @@
             <label asp-for="AllowHotWalletRPCImportForAll" class="form-check-label"></label>
             <span asp-validation-for="AllowHotWalletRPCImportForAll" class="text-danger"></span>
         </div>
+        <div class="form-check">
+            <input asp-for="DisableInstantNotifications" type="checkbox" class="form-check-input"/>
+            <label asp-for="DisableInstantNotifications" class="form-check-label"></label>
+            <span asp-validation-for="DisableInstantNotifications" class="text-danger"></span>
+        </div>
         @if (ViewBag.UpdateUrlPresent)
         {
-        <div class="form-check">
-            <input asp-for="CheckForNewVersions" type="checkbox" class="form-check-input" />
-            <label asp-for="CheckForNewVersions" class="form-check-label"></label>
-            <span asp-validation-for="CheckForNewVersions" class="text-danger"></span>
-        </div>
+            <div class="form-check">
+                <input asp-for="CheckForNewVersions" type="checkbox" class="form-check-input"/>
+                <label asp-for="CheckForNewVersions" class="form-check-label"></label>
+                <span asp-validation-for="CheckForNewVersions" class="text-danger"></span>
+            </div>
         }
     </div>
     <div class="form-group">
         <label asp-for="RootAppId"></label>
         <select asp-for="RootAppId" asp-items="@(new SelectList(ViewBag.AppsList, nameof(SelectListItem.Value), nameof(SelectListItem.Text), Model.RootAppId))" class="form-control"></select>
         @if (!Model.DomainToAppMapping.Any())
-             {
-                 <button type="submit" name="command" value="add-domain" class="btn btn-link"> Map specific domains to specific apps</button>
-             }
+        {
+            <button type="submit" name="command" value="add-domain" class="btn btn-link"> Map specific domains to specific apps</button>
+        }
     </div>
 
     @if (Model.DomainToAppMapping.Any())
@@ -82,10 +88,7 @@
                             <div class="form-group">
                                 <label asp-for="DomainToAppMapping[index].AppId"></label>
                                 <select asp-for="DomainToAppMapping[index].AppId"
-                                        asp-items="@(new SelectList(ViewBag.AppsList,
-                                                         nameof(SelectListItem.Value),
-                                                         nameof(SelectListItem.Text),
-                                                         Model.DomainToAppMapping[index].AppId))"
+                                        asp-items="@(new SelectList(ViewBag.AppsList, nameof(SelectListItem.Value), nameof(SelectListItem.Text), Model.DomainToAppMapping[index].AppId))"
                                         class="form-control">
                                 </select>
 
@@ -107,6 +110,40 @@
 
         </div>
     }
+    <div class="form-group card">
+        <div class="cursor-pointer p-2" data-target="#explorer-links" data-toggle="collapse">
+            <label asp-for="BlockExplorerLinks" class="pb-0 cursor-pointer"></label>
+            <span class="fa fa-chevron-down float-right pt-1"></span>
+        </div>
+        <ul class="list-group list-group-flush collapse show collapse-on-js" id="explorer-links">
+            @inject BTCPayNetworkProvider BTCPayNetworkProvider
+            @{
+                var networks = BTCPayNetworkProvider.GetAll().ToArray();
+            }
+
+            @for (int i = 0; i < networks.Count(); i++)
+            {
+                var network = networks.ElementAt(i);
+                var existingOverride = Model.BlockExplorerLinks?.SingleOrDefault(tuple => tuple.CryptoCode.Equals(network.CryptoCode, StringComparison.InvariantCultureIgnoreCase));
+                var linkValue = existingOverride?.Link ?? network.BlockExplorerLinkDefault;
+                if (Model.BlockExplorerLinks.Count < i + 1)
+                {
+                    Model.BlockExplorerLinks.Add(new PoliciesSettings.BlockExplorerOverrideItem() {CryptoCode = network.CryptoCode, Link = network.BlockExplorerLinkDefault});
+                }
+                <li class="list-group-item">
+                    <label > @network.DisplayName (@network.CryptoCode)</label>
+                    <input type="hidden" asp-for="BlockExplorerLinks[i].CryptoCode" value="@network.CryptoCode"/>
+                    <div class="input-group">
+                        <input type="text" class="form-control" asp-for="BlockExplorerLinks[i].Link" value="@linkValue" data-default-link="@network.BlockExplorerLinkDefault"/>
+                        <div class="input-group-btn only-for-js">
+                            <button type="button" class="text-decoration-none btn btn-link revert-default fa fa-refresh " title="Revert to default"></button>
+                        </div>
+                    </div>
+
+                </li>
+            }
+        </ul>
+    </div>
     <button type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
 </form>
 
@@ -120,4 +157,16 @@
                        background-color: #CCCCCC;
              }
     </style>
+    <script >
+        for (let element of document.getElementsByClassName("revert-default")) {
+            element.addEventListener("click", function (){
+              element.parentElement.previousElementSibling.value = element.parentElement.previousElementSibling.getAttribute("data-default-link")
+            });
+        }
+        for (let element of document.getElementsByClassName("collapse-on-js")){
+            if (element.classList.contains("show")){
+                element.classList.remove("show");
+            }    
+        }
+    </script>
 }

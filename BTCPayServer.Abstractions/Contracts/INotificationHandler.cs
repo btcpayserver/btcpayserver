@@ -2,10 +2,17 @@ using System;
 
 namespace BTCPayServer.Contracts
 {
+    public abstract class BaseNotification
+    {
+        public abstract string Identifier { get; }
+        public abstract string NotificationType { get; }
+    }
+    
     public interface INotificationHandler
     {
         string NotificationType { get; }
         Type NotificationBlobType { get; }
+        public (string identifier, string name)[] Meta { get; }
         void FillViewModel(object notification, NotificationViewModel vm);
     }
     

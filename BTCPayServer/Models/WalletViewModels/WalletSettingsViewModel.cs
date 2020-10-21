@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Models.WalletViewModels
 {
@@ -22,6 +23,7 @@ namespace BTCPayServer.Models.WalletViewModels
 
     public class WalletSettingsAccountKeyViewModel
     {
+        [JsonProperty("ExtPubKey")]
         [DisplayName("Account key")]
         public string AccountKey { get; set; }
         [DisplayName("Master fingerprint")]

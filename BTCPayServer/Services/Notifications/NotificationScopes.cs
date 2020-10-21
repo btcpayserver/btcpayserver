@@ -18,6 +18,16 @@ namespace BTCPayServer.Services.Notifications
         }
         public string StoreId { get; }
     }
+    public class UserScope : NotificationScope
+    {
+        public UserScope(string userId)
+        {
+            if (userId == null)
+                throw new ArgumentNullException(nameof(userId));
+            UserId = userId;
+        }
+        public string UserId { get; }
+    }
 
     public interface NotificationScope
     {

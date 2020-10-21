@@ -6,5 +6,7 @@
     <a id="@ManageNavPages.TwoFactorAuthentication.ToString()" class="nav-link @ViewData.IsActivePage(ManageNavPages.TwoFactorAuthentication)" asp-action="TwoFactorAuthentication">Two-factor authentication</a>
     <a id="@ManageNavPages.U2F.ToString()" class="nav-link @ViewData.IsActivePage(ManageNavPages.U2F)" asp-action="U2FAuthentication">U2F Authentication</a>
     <a id="@ManageNavPages.APIKeys.ToString()" class="nav-link @ViewData.IsActivePage(ManageNavPages.APIKeys)" asp-action="APIKeys">API Keys</a>
+    <a id="@ManageNavPages.Notifications.ToString()" class="nav-link @ViewData.IsActivePage(ManageNavPages.Notifications)" asp-action="NotificationSettings">Notifications</a>
+    <vc:ui-extension-point location="user-nav" />
 </div>
 

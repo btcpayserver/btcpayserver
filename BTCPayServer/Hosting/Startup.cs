@@ -6,6 +6,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Logging;
 using BTCPayServer.PaymentRequest;
+using BTCPayServer.Plugins;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Storage;
@@ -91,7 +92,7 @@ namespace BTCPayServer.Hosting
 #if RAZOR_RUNTIME_COMPILE
             .AddRazorRuntimeCompilation()
 #endif
-            .AddExtensions(services, Configuration, LoggerFactory)
+            .AddPlugins(services, Configuration, LoggerFactory)
             .AddControllersAsServices();
 
             
@@ -178,7 +179,7 @@ namespace BTCPayServer.Hosting
         private static void ConfigureCore(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider prov, ILoggerFactory loggerFactory, BTCPayServerOptions options)
         {
             Logs.Configure(loggerFactory);
-            app.UseExtensions();
+            app.UsePlugins();
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

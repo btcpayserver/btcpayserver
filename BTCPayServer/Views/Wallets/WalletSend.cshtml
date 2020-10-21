@@ -15,7 +15,7 @@
         </div>
     </div>
 }
-<partial name="WalletCameraScanner"/>
+<partial name="CameraScanner"/>
 
 <div class="row">
     <div class="@(!Model.InputSelection && Model.Outputs.Count==1? "col-lg-7 transaction-output-form": "col-lg-8")">
@@ -229,7 +229,8 @@
 
 @section HeadScripts
 {
-    <bundle name="wwwroot/bundles/wallet-send-bundle.min.js" asp-append-version="true"></bundle>
+    <bundle name="wwwroot/bundles/wallet-send-bundle.min.js"></bundle>
+    <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true"/>
     <style>
         .remove-destination-btn { font-size: 1.5rem; }
         .remove-destination-btn:hover { border-color: var(--btcpay-color-danger); }

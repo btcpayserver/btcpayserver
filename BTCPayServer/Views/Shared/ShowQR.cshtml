@@ -1,0 +1,105 @@
+<div id="scan-qr-modal-app">
+    <div class="modal" tabindex="-1" role="dialog" :id="modalId">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{title}} <template v-if="fragments.length > 1">({{index+1}}/{{fragments.length}})</template></h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body ">
+                    <div class="qr-container text-center" style="min-height: 256px;">
+                        <qrcode v-bind:value="currentFragment" :options="{ width: 256,height:256, margin: 1, color: {dark:'#000', light:'#f5f5f7'} }">
+                        </qrcode>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script> 
+ function initQRShow(title, data, modalId)
+ {
+ 	return new Vue(
+ 	{
+ 		el: '#scan-qr-modal-app',
+ 		components:
+ 		{
+ 			qrcode: VueQrcode
+ 		},
+ 		data:
+ 		{
+ 			index: -1,
+ 			title: title,
+ 			speed: 500,
+ 			data: data,
+ 			fragments: [],
+ 			active: false,
+ 			modalId: modalId
+ 		},
+ 		computed:
+ 		{
+ 			currentFragment: function ()
+ 			{
+ 				return this.fragments[this.index];
+ 			}
+ 		},
+ 		mounted: function ()
+ 		{
+ 			var self = this;
+ 			$("#" + this.modalId)
+ 				.on("shown.bs.modal", function ()
+ 				{
+ 					self.start();
+ 				})
+ 				.on("hide.bs.modal", function ()
+ 				{
+ 					self.active = false;
+ 				});
+ 			self.setFragments();
+ 		},
+ 		watch:
+ 		{
+ 			data: function ()
+ 			{
+ 				this.setFragments();
+ 			}
+ 		},
+ 		methods:
+ 		{
+ 			setFragments: function ()
+ 			{
+ 				if (!this.data)
+ 				{
+ 					this.fragments = [];
+ 					return;
+ 				}
+ 				this.fragments = window.bcur.encodeUR(this.data.toString(), 200);
+ 			},
+ 			start: function ()
+ 			{
+ 				this.active = true;
+ 				this.index = -1;
+ 				this.playNext();
+ 			},
+ 			playNext: function ()
+ 			{
+ 				if (!this.active)
+ 				{
+ 					return;
+ 				}
+ 				this.index++;
+ 				if (this.index > (this.fragments.length - 1))
+ 				{
+ 					this.index = 0;
+ 				}
+ 				setTimeout(this.playNext, this.speed)
+ 			}
+ 		}
+ 	});
+ }
+ </script>

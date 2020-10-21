@@ -89,11 +89,11 @@ namespace BTCPayServer.Controllers
         }
 #if DEBUG
         [HttpGet]
-        public async Task<IActionResult> GenerateJunk(int x = 100)
+        public async Task<IActionResult> GenerateJunk(int x = 100, bool admin=true)
         {
             for (int i = 0; i < x; i++)
             {
-                await _notificationSender.SendNotification(new AdminScope(), new JunkNotification());
+                await _notificationSender.SendNotification(admin? (NotificationScope) new AdminScope(): new UserScope(_userManager.GetUserId(User)), new JunkNotification());
             }
 
             return RedirectToAction("Index");

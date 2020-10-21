@@ -1,0 +1,199 @@
+@model BTCPayServer.Controllers.ServerController.ListPluginsViewModel 
+@{
+    ViewData.SetActivePageAndTitle(ServerNavPages.Plugins);
+    var installed = Model.Installed.Select(plugin => plugin.Identifier);
+    var availableAndNotInstalled = Model.Available.Where(plugin => !installed.Contains(plugin.Identifier));
+}
+
+@if (Model.Commands.Any())
+{
+    <div class="alert alert-info">
+        You need to restart BTCPay Server in order to update your active plugins.
+        @if (Model.CanShowRestart)
+        {
+            <form method="post" asp-action="Maintenance">
+                <button type="submit" name="command" value="restart" class="btn btn-outline-info alert-link" asp-action="Maintenance">Restart now</button>
+            </form>
+        }
+    </div>
+}
+<partial name="_StatusMessage"/>
+
+@if (Model.Installed.Any())
+{
+    <h4>Installed Plugins</h4>
+    <div class="card-columns">
+
+        @foreach (var plugin in Model.Installed)
+        {
+            var matchedAvailable = Model.Available.SingleOrDefault(availablePlugin => availablePlugin.Identifier == plugin.Identifier);
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title">
+                        @plugin.Name <span class="badge badge-secondary">@plugin.Version</span>
+                    </h3>
+                    <p class="card-text">@plugin.Description</p>
+
+                </div>
+                @if (!plugin.SystemPlugin)
+                {
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Current version</span>
+                            <span>@plugin.Version</span>
+                        </li>
+                        @if (matchedAvailable != null)
+                        {
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Remote version</span>
+                                <span>@matchedAvailable.Version</span>
+                            </li>
+                        }
+                    </ul>
+                    <div class="card-footer">
+                        @if (Model.Commands.Any(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase)))
+                        {
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div class="badge badge-info">pending action</div>
+                                </div>
+                                <form asp-action="CancelPluginCommands" asp-route-plugin="@plugin.Identifier">
+                                    <button type="submit" class="btn btn-link pt-0">Cancel</button>
+                                </form>
+                            </div>
+                        }
+                        else
+                        {
+                            <form asp-action="UnInstallPlugin" asp-route-plugin="@plugin.Identifier">
+                                <button type="submit" class="btn btn-link  pt-0">Uninstall</button>
+                            </form>
+
+                            @if (matchedAvailable != null && plugin.Version < matchedAvailable.Version)
+                            {
+                                <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-remote="@Model.Remote">
+                                    <button type="submit" class="btn btn-link  pt-0">Update</button>
+                                </form>
+                            }
+                        }
+                    </div>
+                }
+                else if (plugin.SystemPlugin)
+                {
+                    <div class="card-footer">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <div class="badge badge-info">system plugin</div>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+            </div>
+        }
+    </div>
+}
+@if (availableAndNotInstalled.Any())
+{
+    <h4>Available Plugins</h4>
+
+    <div class="card-columns">
+        @foreach (var plugin in availableAndNotInstalled)
+        {
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title">
+                        @plugin.Name <span class="badge badge-secondary">@plugin.Version</span>
+                    </h3>
+                    <p class="card-text">@plugin.Description</p>
+                </div>
+                <div class="card-footer">
+                    @if (Model.Commands.Any(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase)))
+                    {
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <div class="badge badge-info">pending action</div>
+                            </div>
+                            <form asp-action="CancelPluginCommands" asp-route-plugin="@plugin.Identifier">
+                                <button type="submit" class="btn btn-link pt-0">Cancel</button>
+                            </form>
+                        </div>
+                    }
+                    else
+                    {
+                        <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-remote="@Model.Remote">
+                            <button type="submit" class="btn btn-link  pt-0">Install</button>
+                        </form>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}
+<button class="btn btn-link mt-4" type="button" data-toggle="collapse" data-target="#manual-upload">
+    Upload plugin
+</button>
+<div class="collapse" id="manual-upload">
+    <div class="card">
+        <div class="card-body">
+            <h3 class="card-title">Add plugin manually</h3>
+            <div class="alert alert-warning">This is an extremely dangerous operation. Do not upload plugins from someone that you do not trust.</div>
+            <form method="post" enctype="multipart/form-data" asp-action="UploadPlugin">
+
+                <div class="form-group">
+                    <div class="custom-file">
+                        <input type="file" class="custom-file-input" required name="files" accept=".btcpay" id="files">
+                        <label class="custom-file-label" for="files">Choose file</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <button class="btn btn-primary" type="submit">Upload</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@if (Model.Commands.Any())
+{
+    <button class="btn btn-link mt-4" type="button" data-toggle="collapse" data-target="#pending-actions">
+        Pending
+    </button>
+    <div class="collapse" id="pending-actions">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="card-title">Pending actions</h3>
+                <ul class="list-group list-group-flush">
+                    @foreach (var extComm in Model.Commands.GroupBy(tuple => tuple.plugin))
+                    {
+                        <li class="list-group-item">
+                            <div class="d-flex justify-content-between">
+                                @extComm.Key (@extComm.Last().command)
+                                <form asp-action="CancelPluginCommands" asp-route-plugin="@extComm.Key">
+                                    <button type="submit" class="btn btn-link pt-0">Cancel</button>
+                                </form>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+            $(document).ready(function () {
+
+                $('.custom-file-input').on('change',
+                    function () {
+                        var label = $(this).next('label');
+                        var el = $(this).get(0);
+                        if (el.files.length > 0) {
+                            var fileName = el.files[0].name;
+                            label.addClass("selected").html(fileName);
+                        } else {
+                            label.removeClass("selected").html("Choose file");
+                        }
+                    });
+            });
+        </script>
+}

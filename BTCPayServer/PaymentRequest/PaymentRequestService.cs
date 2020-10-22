@@ -125,13 +125,13 @@ namespace BTCPayServer.PaymentRequest
                                 string txId = paymentData.GetPaymentId();
                                 string link = GetTransactionLink(paymentMethodId, txId);
                                 var paymentMethod = entity.GetPaymentMethod(paymentMethodId);
+                                var amount = paymentData.GetValue();
                                 var rate = paymentMethod.Rate;
-                                var paid = paymentMethod.Calculate().Paid
-                                    .GetValue(paymentMethod.Network as BTCPayNetwork) * rate;
+                                var paid = (amount - paymentEntity.NetworkFee) * rate;
 
                                 return new ViewPaymentRequestViewModel.PaymentRequestInvoicePayment
                                 {
-                                    Amount = paymentData.GetValue(),
+                                    Amount = amount,
                                     Paid = paid,
                                     ReceivedDate = paymentEntity.ReceivedTime.DateTime,
                                     PaidFormatted = _currencies.FormatCurrency(paid, blob.Currency),

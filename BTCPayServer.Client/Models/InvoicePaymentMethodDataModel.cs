@@ -11,22 +11,22 @@ namespace BTCPayServer.Client.Models
         public string Destination { get; set; }
         public string PaymentLink { get; set; }
 
-        [JsonProperty(ItemConverterType = typeof(NumericStringJsonConverter))]
+        [JsonConverter(typeof(StringEnumConverter))]
         public decimal Rate { get; set; }
 
-        [JsonProperty(ItemConverterType = typeof(NumericStringJsonConverter))]
+        [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal PaymentMethodPaid { get; set; }
 
-        [JsonProperty(ItemConverterType = typeof(NumericStringJsonConverter))]
+        [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal TotalPaid { get; set; }
 
-        [JsonProperty(ItemConverterType = typeof(NumericStringJsonConverter))]
+        [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal Due { get; set; }
 
-        [JsonProperty(ItemConverterType = typeof(NumericStringJsonConverter))]
+        [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal Amount { get; set; }
 
-        [JsonProperty(ItemConverterType = typeof(NumericStringJsonConverter))]
+        [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal NetworkFee { get; set; }
 
         public List<Payment> Payments { get; set; }
@@ -39,19 +39,17 @@ namespace BTCPayServer.Client.Models
             [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
             public DateTime ReceivedDate { get; set; }
 
-            [JsonProperty(ItemConverterType = typeof(NumericStringJsonConverter))]
+            [JsonConverter(typeof(NumericStringJsonConverter))]
             public decimal Value { get; set; }
 
-            [JsonProperty(ItemConverterType = typeof(NumericStringJsonConverter))]
+            [JsonConverter(typeof(NumericStringJsonConverter))]
             public decimal Fee { get; set; }
 
             [JsonConverter(typeof(StringEnumConverter))]
             public PaymentStatus Status { get; set; }
 
             public string Destination { get; set; }
-        
-        
-
+            
             public enum PaymentStatus
             {
                 Invalid,

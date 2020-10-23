@@ -234,9 +234,7 @@ namespace BTCPayServer.Controllers
             }
 
             var statusesAllowedToDisplay = new List<InvoiceStatus>() { InvoiceStatus.New };
-            var validInvoice = result.Invoices.FirstOrDefault(invoice =>
-                Enum.TryParse<InvoiceStatus>(invoice.Status, true, out var status) &&
-                statusesAllowedToDisplay.Contains(status));
+            var validInvoice = result.Invoices.FirstOrDefault(invoice => statusesAllowedToDisplay.Contains(invoice.Status));
 
             if (validInvoice != null)
             {
@@ -297,7 +295,7 @@ namespace BTCPayServer.Controllers
             }
 
             var invoices = result.Invoices.Where(requestInvoice =>
-                requestInvoice.Status.Equals(InvoiceState.ToString(InvoiceStatus.New),
+                requestInvoice.StatusFormatted.Equals(InvoiceState.ToString(InvoiceStatus.New),
                     StringComparison.InvariantCulture) && !requestInvoice.Payments.Any());
 
             if (!invoices.Any())

@@ -1,4 +1,6 @@
-﻿@model BTCPayServer.Models.PaymentRequestViewModels.ViewPaymentRequestViewModel
+﻿@using BTCPayServer.Services.Invoices
+@using BTCPayServer.Client.Models
+@model BTCPayServer.Models.PaymentRequestViewModels.ViewPaymentRequestViewModel
 
 @addTagHelper *, BundlerMinifier.TagHelpers
 @inject BTCPayServer.Services.BTCPayServerEnvironment env
@@ -6,6 +8,31 @@
 @{
     ViewData["Title"] = Model.Title;
     Layout = null;
+
+    string StatusTextClass(InvoiceState state)
+    {
+        switch (state.Status)
+        {
+            case InvoiceStatus.Confirmed:
+            case InvoiceStatus.Complete:
+            case InvoiceStatus.Paid:
+                return "text-success";
+            case InvoiceStatus.Expired:
+                switch (state.ExceptionStatus)
+                {
+                    case InvoiceExceptionStatus.PaidLate:
+                    case InvoiceExceptionStatus.PaidPartial:
+                    case InvoiceExceptionStatus.PaidOver:
+                        return "text-warning";
+                    default:
+                        return "text-danger";
+                }
+            case InvoiceStatus.Invalid:
+                return "text-danger";
+            default:
+                return "text-warning";
+        }
+    }
 }
 
 <!DOCTYPE html>
@@ -50,7 +77,8 @@
                             <div class="col col-12 col-sm-6 col-lg-8 d-flex align-items-center">
                                 <span class="text-muted text-nowrap">Last Updated</span>
                                 &nbsp;
-                                <span class="text-nowrap" v-text="lastUpdated" v-cloak>@Model.LastUpdated.ToString("g")</span>
+                                <span class="text-nowrap d-print-none" v-text="lastUpdated" v-cloak>@Model.LastUpdated.ToString("g")</span>
+                                <span class="text-nowrap d-none d-print-block" v-text="lastUpdatedDate">@Model.LastUpdated.ToString("g")</span>
                                 <button type="button" class="btn btn-link d-none d-lg-inline-block d-print-none border-0 p-0 ml-4 only-for-js" v-on:click="window.print" v-cloak>
                                     Print
                                 </button>
@@ -69,13 +97,13 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-12 pt-3 pb-2 col-md-4 py-md-0 col-lg-3 d-print-none">
+                    <div class="col-12 pt-3 pb-2 col-md-4 py-md-0 col-lg-3">
                         <noscript>
                             @if (Model.IsPending && !Model.Archived)
                             {
                                 @if (Model.AllowCustomPaymentAmounts && !Model.AnyPendingInvoice)
                                 {
-                                    <form method="get" asp-action="PayPaymentRequest" asp-route-id="@Model.Id">
+                                    <form method="get" asp-action="PayPaymentRequest" asp-route-id="@Model.Id" class="d-print-none">
                                         <div class="row">
                                             <div class="col col-12 col-sm-6 col-md-12">
                                                 <div class="input-group">
@@ -93,12 +121,12 @@
                                 }
                                 else
                                 {
-                                    <a class="btn btn-primary d-inline-block w-100 text-nowrap @if (!(Model.AnyPendingInvoice && !Model.PendingInvoiceHasPayments)) { @("btn-lg") }" asp-action="PayPaymentRequest" asp-route-id="@Model.Id">
+                                    <a class="btn btn-primary d-inline-block d-print-none w-100 text-nowrap @if (!(Model.AnyPendingInvoice && !Model.PendingInvoiceHasPayments)) { @("btn-lg") }" asp-action="PayPaymentRequest" asp-route-id="@Model.Id">
                                         Pay Invoice
                                     </a>
                                     if (Model.AnyPendingInvoice && !Model.PendingInvoiceHasPayments)
                                     {
-                                        <form method="get" asp-action="CancelUnpaidPendingInvoice" asp-route-id="@Model.Id" class="mt-2">
+                                        <form method="get" asp-action="CancelUnpaidPendingInvoice" asp-route-id="@Model.Id" class="mt-2 d-print-none">
                                             <button class="btn btn-outline-secondary w-100 text-nowrap" type="submit">Cancel Invoice</button>
                                         </form>
                                     }
@@ -119,7 +147,7 @@
                         </noscript>
                         <template v-if="srvModel.isPending && !srvModel.archived" class="d-print-none">
                             <template v-if="srvModel.allowCustomPaymentAmounts && !srvModel.anyPendingInvoice">
-                                <form v-on:submit="submitCustomAmountForm">
+                                <form v-on:submit="submitCustomAmountForm" class="d-print-none">
                                     <div class="row">
                                         <div class="col col-12 col-sm-6 col-md-12">
                                             <div class="input-group">
@@ -141,13 +169,13 @@
                                 </form>
                             </template>
                             <template v-else>
-                                <button class="btn btn-primary w-100 d-flex align-items-center justify-content-center text-nowrap" :class="{ 'btn-lg': !(srvModel.anyPendingInvoice && !srvModel.pendingInvoiceHasPayments)}" v-on:click="pay(null)" :disabled="loading">
+                                <button class="btn btn-primary w-100 d-flex d-print-none align-items-center justify-content-center text-nowrap" :class="{ 'btn-lg': !(srvModel.anyPendingInvoice && !srvModel.pendingInvoiceHasPayments)}" v-on:click="pay(null)" :disabled="loading">
                                     <div v-if="loading" class="spinner-grow spinner-grow-sm mr-2" role="status">
                                         <span class="sr-only">Loading...</span>
                                     </div>
                                     <span>Pay Invoice</span>
                                 </button>
-                                <button class="btn btn-outline-secondary mt-2 w-100 d-flex align-items-center justify-content-center text-nowrap" v-if="srvModel.anyPendingInvoice && !srvModel.pendingInvoiceHasPayments" v-on:click="cancelPayment()" :disabled="loading">
+                                <button class="btn btn-outline-secondary mt-2 w-100 d-flex d-print-none align-items-center justify-content-center text-nowrap" v-if="srvModel.anyPendingInvoice && !srvModel.pendingInvoiceHasPayments" v-on:click="cancelPayment()" :disabled="loading">
                                     <span v-if="loading" class="spinner-grow spinner-grow-sm mr-2" role="status">
                                         <span class="sr-only">Loading...</span>
                                     </span>
@@ -187,19 +215,19 @@
                         <div class="jumbotron h-100 m-0 p-sm-5">
                             <h2 class="h4 mb-3">Payment Details</h2>
                             <dl class="mb-0 mt-md-4">
-                                <div class="d-flex flex-column mb-4">
-                                    <dt class="h4 font-weight-normal text-nowrap text-primary order-2 order-sm-1 mb-0" v-text="srvModel.amountDueFormatted">@Model.AmountDueFormatted</dt>
+                                <div class="d-flex d-print-inline-block flex-column mb-4 mr-5">
+                                    <dt class="h4 font-weight-normal text-nowrap text-primary text-print-default order-2 order-sm-1 mb-0" v-text="srvModel.amountDueFormatted">@Model.AmountDueFormatted</dt>
                                     <dd class="text-muted order-1 order-sm-2 mb-1">Amount due</dd>
                                 </div>
                                 <div class="progress bg-light d-none d-sm-flex mb-sm-4 d-print-none" style="height:5px">
                                   <div class="progress-bar bg-primary" role="progressbar" style="width:@((Model.AmountCollected/Model.Amount)*100)%" v-bind:style="{ width: (srvModel.amountCollected/srvModel.amount*100) + '%' }"></div>
                                 </div>
-                                <div class="d-flex flex-column mb-4 d-sm-inline-flex mb-sm-0">
+                                <div class="d-flex d-print-inline-block flex-column mb-4 mr-5 d-sm-inline-flex mb-sm-0">
                                     <dt class="h4 font-weight-normal text-nowrap order-2 order-sm-1 mb-0" v-text="srvModel.amountCollectedFormatted">@Model.AmountCollectedFormatted</dt>
                                     <dd class="text-muted order-1 order-sm-2 mb-1">Amount paid</dd>
                                 </div>
-                                <div class="d-flex flex-column mb-0 d-sm-inline-flex float-sm-right">
-                                    <dt class="h4 font-weight-normal text-nowrap order-2 order-sm-1 mb-0" v-text="srvModel.amountFormatted">@Model.AmountFormatted</dt>
+                                <div class="d-flex d-print-inline-block flex-column mb-0 d-sm-inline-flex float-sm-right">
+                                    <dt class="h4 text-sm-right font-weight-normal text-nowrap order-2 order-sm-1 mb-0" v-text="srvModel.amountFormatted">@Model.AmountFormatted</dt>
                                     <dd class="text-muted text-sm-right order-1 order-sm-2 mb-1">Total requested</dd>
                                 </div>
                             </dl>
@@ -222,8 +250,9 @@
                                             <thead>
                                                 <tr class="table-borderless">
                                                     <th class="font-weight-normal text-secondary" scope="col">Invoice Id</th>
-                                                    <th class="font-weight-normal text-secondary">Price</th>
-                                                    <th class="font-weight-normal text-secondary">Expiry</th>
+                                                    <th class="font-weight-normal text-secondary w-175px">Expiry</th>
+                                                    <th class="font-weight-normal text-secondary text-right w-100px">Amount</th>
+                                                    <th class="font-weight-normal text-secondary text-right w-125px"></th>
                                                     <th class="font-weight-normal text-secondary text-right">Status</th>
                                                 </tr>
                                             </thead>
@@ -232,32 +261,37 @@
                                                 {
                                                     <tr>
                                                         <td>@invoice.Id</td>
-                                                        <td>@invoice.Amount @invoice.Currency</td>
                                                         <td>@invoice.ExpiryDate.ToString("g")</td>
-                                                        <td class="text-right">@invoice.Status</td>
+                                                        <td class="text-right">@invoice.AmountFormatted</td>
+                                                        <td class="text-right"></td>
+                                                        <td class="text-right text-print-default @StatusTextClass(invoice.State)">@invoice.StatusFormatted</td>
                                                     </tr>
                                                     if (invoice.Payments != null && invoice.Payments.Any())
                                                     {
                                                         <tr class="table-borderless table-light">
-                                                            <th colspan="2" class="pl-3 font-weight-normal text-secondary">TX Id</th>
-                                                            <th class="font-weight-normal text-secondary">Payment Method</th>
-                                                            <th class="font-weight-normal text-secondary text-right">Amount</th>
+                                                            <th class="pl-3 font-weight-normal text-secondary">Transaction Id</th>
+                                                            <th class="font-weight-normal text-secondary">Received</th>
+                                                            <th class="font-weight-normal text-secondary text-right">Paid</th>
+                                                            <th class="font-weight-normal text-secondary text-right">Rate</th>
+                                                            <th class="font-weight-normal text-secondary text-right">Payment</th>
                                                         </tr>
                                                         @foreach (var payment in invoice.Payments)
                                                         {
                                                             <tr class="table-borderless table-light">
-                                                                <td colspan="2" class="pl-3 text-break">
+                                                                <td class="pl-3 text-break">
                                                                     @if (!string.IsNullOrEmpty(payment.Link))
                                                                     {
-                                                                        <a href="@payment.Link" target="_blank">@payment.Id</a>
+                                                                        <a href="@payment.Link" class="text-print-default" target="_blank">@payment.Id</a>
                                                                     }
                                                                     else
                                                                     {
                                                                         <span>@payment.Id</span>
                                                                     }
                                                                 </td>
-                                                                <td>@payment.PaymentMethod</td>
-                                                                <td class="text-right">@payment.Amount</td>
+                                                                <td>@payment.ReceivedDate.ToString("g")</td>
+                                                                <td class="text-right">@payment.PaidFormatted</td>
+                                                                <td class="text-right">@payment.RateFormatted</td>
+                                                                <td class="text-right text-nowrap">@payment.Amount @payment.PaymentMethod</td>
                                                             </tr>
                                                         }
                                                     }
@@ -270,37 +304,45 @@
                                 <template v-if="!srvModel.invoices || srvModel.invoices.length == 0">
                                     <p class="text-muted">No payments made yet.</p>
                                 </template>
-                                <template v-else v-for="invoice of srvModel.invoices" :key="invoice.id">
+                                <template v-else>
                                     <table class="table my-0">
                                         <thead>
                                             <tr class="table-borderless">
                                                 <th class="font-weight-normal text-secondary" scope="col">Invoice Id</th>
-                                                <th class="font-weight-normal text-secondary">Price</th>
-                                                <th class="font-weight-normal text-secondary">Expiry</th>
+                                                <th class="font-weight-normal text-secondary w-175px">Expiry</th>
+                                                <th class="font-weight-normal text-secondary text-right w-100px">Amount</th>
+                                                <th class="font-weight-normal text-secondary text-right w-125px"></th>
                                                 <th class="font-weight-normal text-secondary text-right">Status</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr>
-                                                <td>{{invoice.id}}</td>
-                                                <td>{{invoice.amountFormatted}}</td>
-                                                <td>{{moment(invoice.expiryDate).format('L HH:mm')}}</td>
-                                                <td class="text-right">{{invoice.status}}</td>
-                                            </tr>
-                                            <template v-if="invoice.payments && invoice.payments.length > 0">
-                                                <tr class="table-borderless table-light">
-                                                    <th colspan="2" class="pl-3 font-weight-normal text-secondary">TX Id</th>
-                                                    <th class="font-weight-normal text-secondary">Payment Method</th>
-                                                    <th class="font-weight-normal text-secondary text-right">Amount</th>
+                                            <template v-for="invoice of srvModel.invoices" :key="invoice.id">
+                                                <tr>
+                                                    <td>{{invoice.id}}</td>
+                                                    <td v-text="formatDate(invoice.expiryDate)"></td>
+                                                    <td class="text-right">{{invoice.amountFormatted}}</td>
+                                                    <td class="text-right"></td>
+                                                    <td class="text-right text-print-default" :class="statusTextClass(invoice.statusFormatted)">{{invoice.statusFormatted}}</td>
                                                 </tr>
-                                                <tr v-for="payment of invoice.payments" class="table-borderless table-light">
-                                                    <td colspan="2" class="pl-3 text-break">
-                                                        <a v-if="payment.link" :href="payment.link" target="_blank">{{payment.id}}</a>
-                                                        <span v-else>{{payment.id}}</span>
-                                                    </td>
-                                                    <td>{{formatPaymentMethod(payment.paymentMethod)}}</td>
-                                                    <td class="text-right">{{payment.amount.noExponents()}}</td>
-                                                </tr>
+                                                <template v-if="invoice.payments && invoice.payments.length > 0">
+                                                    <tr class="table-borderless table-light">
+                                                        <th class="pl-3 font-weight-normal text-secondary">Transaction Id</th>
+                                                        <th class="font-weight-normal text-secondary">Received</th>
+                                                        <th class="font-weight-normal text-secondary text-right">Paid</th>
+                                                        <th class="font-weight-normal text-secondary text-right">Rate</th>
+                                                        <th class="font-weight-normal text-secondary text-right">Payment</th>
+                                                    </tr>
+                                                    <tr v-for="payment of invoice.payments" class="table-borderless table-light">
+                                                        <td class="pl-3 text-break">
+                                                            <a v-if="payment.link" :href="payment.link" class="text-print-default" target="_blank">{{payment.id}}</a>
+                                                            <span v-else>{{payment.id}}</span>
+                                                        </td>
+                                                        <td v-text="formatDate(payment.receivedDate)"></td>
+                                                        <td class="text-right">{{payment.paidFormatted}}</td>
+                                                        <td class="text-right">{{payment.rateFormatted}}</td>
+                                                        <td class="text-right text-nowrap">{{payment.amount.noExponents()}} {{payment.paymentMethod}}</td>
+                                                    </tr>
+                                                </template>
                                             </template>
                                         </tbody>
                                     </table>

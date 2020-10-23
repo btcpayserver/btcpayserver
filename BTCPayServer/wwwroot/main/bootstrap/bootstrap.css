@@ -3769,11 +3769,10 @@ input[type="button"].btn-block {
   font-size: 1.5rem;
   font-weight: 700;
   line-height: 1;
-  color: var(--btcpay-color-dark-accent);
+  color: inherit;
   text-shadow: 0 1px 0 var(--btcpay-color-white);
   opacity: .5; }
   .close:hover {
-    color: var(--btcpay-color-dark-accent);
     text-decoration: none; }
   .close:not(:disabled):not(.disabled):hover, .close:not(:disabled):not(.disabled):focus {
     opacity: .75; }

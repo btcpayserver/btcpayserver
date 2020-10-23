@@ -18,141 +18,145 @@
 
 <div class="row">
     <div class="col-lg-10 col-xl-9">
-        <h4 class="mb-3">
-            <span class="mr-1">Wallet</span>
-            <span class="text-muted small">On-chain payments</span>
-        </h4>
-        @if (Model.HintWallet)
-        {
-            <div class="alert alert-warning d-flex align-items-start mb-2">
-                <span class="fa fa-warning mt-1"></span>
-                <p class="mb-0 mx-3 flex-fill">
-                    A store requires a wallet to receive on-chain payments.
-                    Optionally, you can have a store that only receives Lightning payments, see the next section for more details.
-                </p>
-                <button type="button" class="close only-for-js" data-dismiss="alert" aria-label="Close" onclick="return dismissHint('Wallet', '@Model.Id');">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-        }
-        <table class="table table-sm mt-0 mb-5">
-            <thead>
-                <tr>
-                    <th>Crypto</th>
-                    <th>Derivation Scheme</th>
-                    <th class="text-center w-100px">Enabled</th>
-                    <th class="text-right w-100px">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
+        <div class="mb-5">
+            <h4 class="mb-3">
+                <span class="mr-1">Wallet</span>
+                <span class="text-muted small">On-chain payments</span>
+            </h4>
+            @if (Model.HintWallet)
+            {
+                <div class="alert alert-warning d-flex align-items-start mb-3">
+                    <span class="fa fa-warning mt-1"></span>
+                    <p class="mb-0 mx-3 flex-fill">
+                        A store requires a wallet to receive on-chain payments.
+                        Optionally, you can have a store that only receives Lightning payments, see the next section for more details.
+                    </p>
+                    <button type="button" class="close only-for-js" data-dismiss="alert" aria-label="Close" onclick="return dismissHint('Wallet', '@Model.Id');">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            }
+            <ul class="list-group mb-3">
                 @foreach (var scheme in Model.DerivationSchemes.OrderBy(scheme => scheme.Collapsed))
                 {
-                    <tr class="@(@scheme.Collapsed? "collapsed": "")">
-                        <td>
-                            @scheme.Crypto
-                            @if (!string.IsNullOrWhiteSpace(scheme.Value) && scheme.WalletSupported)
-                            {
-                                <span> - </span>
-                                <a asp-action="WalletTransactions" asp-controller="Wallets" asp-route-walletId="@scheme.WalletId">Wallet</a>
-                            }
-                        </td>
-                        <td title="@scheme.Value" data-toggle="tooltip" class="d-flex">
-                            @if (string.IsNullOrEmpty(scheme.Value))
-                            {
-                                <span class="smMaxWidth">Not set</span>
-                            }
-                            else
-                            {
-                                <code class="text-truncate" style="max-width:25ch">
-                                    @scheme.Value
-                                </code>
-                                <code>
-                                    @if (scheme.Value.Length > 20)
+                    <li class="list-group-item @(scheme.Collapsed ? "collapsed": "")">
+                        <div class="d-flex align-items-center">
+                            <span class="d-flex align-items-center flex-fill mr-3">
+                                <strong>@scheme.Crypto</strong>
+                                @if (!string.IsNullOrWhiteSpace(scheme.Value))
+                                {
+                                    <span class="text-light mx-2">|</span>
+                                    <span title="@scheme.Value" data-toggle="tooltip" class="d-flex">
+                                        <code class="text-truncate" style="max-width:10ch">
+                                            @scheme.Value
+                                        </code>
+                                        <code class="text-nowrap">
+                                            @if (scheme.Value.Length > 20)
+                                            {
+                                                var match = Regex.Match(scheme.Value, @"((?:-\[(?:[^\]])+\])+|\S{6})$");
+                                                @match.Value;
+                                            }
+                                        </code>
+                                    </span>
+                                    @if (scheme.WalletSupported)
                                     {
-                                        var match = Regex.Match(scheme.Value, @"((?:-\[(?:[^\]])+\])+|\S{6})$");
-                                        @match.Value;
+                                        <span class="text-light mx-2">|</span>
+                                        <a asp-action="WalletTransactions" asp-controller="Wallets" asp-route-walletId="@scheme.WalletId" class="text-secondary">Wallet</a>
                                     }
-                                </code>
-                            }
-                        </td>
-                        <td class="text-center">
-                            @if (scheme.Enabled)
-                            {
-                                <span class="text-success fa fa-check"></span>
-                            }
-                            else
-                            {
-                                <span class="text-danger fa fa-times"></span>
-                            }
-                        </td>
-                        <td class="text-right">
-                            <a asp-action="AddDerivationScheme" asp-route-cryptoCode="@scheme.Crypto" asp-route-storeId="@Context.GetRouteValue("storeId")" id="@($"Modify{scheme.Crypto}")">
-                                @(scheme.Enabled ? "Modify" : "Setup")
-                            </a>
-                        </td>
-                    </tr>
+                                }
+                            </span>
+                            <span class="d-flex align-items-center">
+                                @if (scheme.Enabled)
+                                {
+                                    <strong class="d-flex align-items-center text-success">
+                                        <span class="fa fa-check-circle mr-2"></span>
+                                        Enabled
+                                    </strong>
+                                }
+                                else
+                                {
+                                    <strong class="d-flex align-items-center text-danger">
+                                        <span class="fa fa-times-circle mr-2"></span>
+                                        Disabled
+                                    </strong>
+                                }
+                                <span class="text-light mx-2">|</span>
+                                <a asp-action="AddDerivationScheme" asp-route-cryptoCode="@scheme.Crypto" asp-route-storeId="@Context.GetRouteValue("storeId")" id="@($"Modify{scheme.Crypto}")" class="@(scheme.Enabled ? "text-secondary" : "text-primary")">
+                                    @(scheme.Enabled ? "Modify" : "Setup")
+                                </a>
+                            </span>
+                        </div>
+                    </li>
                 }
-                @if (Model.DerivationSchemes.Any(scheme => scheme.Collapsed))
-                {
-                    <tr class="only-for-js">
-                        <td colspan="4"><button class="btn btn-link" id="toggle-assets" type="button">Show additional assets</button></td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+            </ul>
+            @if (Model.DerivationSchemes.Any(scheme => scheme.Collapsed))
+            {
+                <script>
+                    $(document).ready(function () {
+                        $(".collapsed").hide();
+                        $("#toggle-assets").click(function () {
+                            $(".collapsed").show();
+                        });
+                    });
+                </script>
+                <button class="btn btn-link text-secondary mb-3 p-0 only-for-js" id="toggle-assets" type="button">Show additional assets</button>
+            }
+        </div>
 
-        <h4 class="mb-3">
-            <span class="mr-1">Lightning</span>
-            <span class="text-muted small">Off-chain payments</span>
-        </h4>
-        @if (Model.HintLightning)
-        {
-            <div class="alert alert-warning d-flex align-items-start mb-2">
-                <span class="fa fa-warning mt-1"></span>
-                <p class="mb-0 mx-3 flex-fill">
-                    A connection to a Lightning node is required if you want to receive Lightning payments.
-                </p>
-                <button id="dismissLightningHint" type="button" class="close only-for-js" data-dismiss="alert" aria-label="Close" onclick="return dismissHint('Lightning', '@Model.Id');">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-        }
-
-        <div class="table-responsive-md">
-            <table class="table table-sm mb-5">
-                <thead>
-                <tr>
-                    <th class="w-100px">Crypto</th>
-                    <th>Address</th>
-                    <th class="text-center w-100px">Enabled</th>
-                    <th class="text-right w-100px">Actions</th>
-                </tr>
-                </thead>
-                <tbody>
+        <div class="mb-5">
+            <h4 class="mb-3">
+                <span class="mr-1">Lightning</span>
+                <span class="text-muted small">Off-chain payments</span>
+            </h4>
+            @if (Model.HintLightning)
+            {
+                <div class="alert alert-warning d-flex align-items-start mb-3">
+                    <span class="fa fa-warning mt-1"></span>
+                    <p class="mb-0 mx-3 flex-fill">
+                        A connection to a Lightning node is required if you want to receive Lightning payments.
+                    </p>
+                    <button id="dismissLightningHint" type="button" class="close only-for-js" data-dismiss="alert" aria-label="Close" onclick="return dismissHint('Lightning', '@Model.Id');">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            }
+            <ul class="list-group mb-3">
                 @foreach (var scheme in Model.LightningNodes)
                 {
-                    <tr>
-                        <td>@scheme.CryptoCode</td>
-                        <td class="smMaxWidth text-truncate">@scheme.Address</td>
-                        <td class="text-center">
-                            @if (scheme.Enabled)
-                            {
-                                <span class="text-success fa fa-check"></span>
-                            }
-                            else
-                            {
-                                <span class="text-danger fa fa-times"></span>
-                            }
-                        </td>
-                        <td class="text-right">
-                            <a asp-action="AddLightningNode" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@Context.GetRouteValue("storeId")" id="@($"Modify-Lightning{scheme.CryptoCode}")">
-                                @(scheme.Enabled ? "Modify" : "Setup")
-                            </a>
-                        </td>
-                    </tr>
+                    <li class="list-group-item">
+                        <div class="d-flex align-items-center">
+                            <span class="d-flex align-items-center flex-fill mr-3">
+                                <strong>@scheme.CryptoCode</strong>
+                                @if (!string.IsNullOrWhiteSpace(scheme.Address))
+                                {
+                                    <span class="text-light mx-2">|</span>
+                                    <code class="smMaxWidth text-truncate">@scheme.Address</code>
+                                }
+                            </span>
+                            <span class="d-flex align-items-center">
+                                @if (scheme.Enabled)
+                                {
+                                    <strong class="d-flex align-items-center text-success">
+                                        <span class="fa fa-check-circle mr-2"></span>
+                                        Enabled
+                                    </strong>
+                                }
+                                else
+                                {
+                                    <strong class="d-flex align-items-center text-danger">
+                                        <span class="fa fa-times-circle mr-2"></span>
+                                        Disabled
+                                    </strong>
+                                }
+                                <span class="text-light mx-2">|</span>
+                                <a asp-action="AddLightningNode" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@Context.GetRouteValue("storeId")" id="@($"Modify-Lightning{scheme.CryptoCode}")" class="@(scheme.Enabled ? "text-secondary" : "text-primary")">
+                                    @(scheme.Enabled ? "Modify" : "Setup")
+                                </a>
+                            </span>
+                        </div>
+                    </li>
                 }
-                </tbody>
-            </table>
+            </ul>
         </div>
 
         <form method="post" class="mb-5">
@@ -347,14 +351,4 @@
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
-
-    <script>
-        $(document).ready(function () {
-            $(".collapsed").hide();
-            $("#toggle-assets").click(function () {
-                $(".collapsed").show();
-                $(this).parents("tr").hide();
-            });
-        });
-    </script>
 }

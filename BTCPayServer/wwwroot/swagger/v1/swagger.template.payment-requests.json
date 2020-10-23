@@ -299,7 +299,7 @@
                         "type": "string",
                         "description": "The creation date of the payment request",
                         "nullable": false,
-                        "format": "date-time"
+                        "format": "int64"
                     }
                 }
             },
@@ -342,7 +342,7 @@
                         "type": "string",
                         "description": "The expiry date of the payment request",
                         "nullable": true,
-                        "format": "date-time"
+                        "format": "int64"
                     },
                     "embeddedCSS": {
                         "type": "string",

@@ -750,7 +750,7 @@
                     },
                     "receivedDate": {
                         "type": "string",
-                        "format": "date-time",
+                        "format": "int64",
                         "description": "The date the payment was recorded"
                     },
                     "value": {

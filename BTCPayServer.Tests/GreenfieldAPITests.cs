@@ -852,6 +852,10 @@ namespace BTCPayServer.Tests
                 var invoice = await viewOnly.GetInvoice(user.StoreId, newInvoice.Id);
                 Assert.Equal(newInvoice.Metadata, invoice.Metadata);
                 var paymentMethods = await viewOnly.GetInvoicePaymentMethods(user.StoreId, newInvoice.Id);
+                Assert.Equal(1, paymentMethods.Length);
+                var paymentMethod = paymentMethods.First();
+                Assert.Equal("BTC", paymentMethod.PaymentMethod);
+                Assert.Equal(0, paymentMethod.Payments.Count);
                 
 
                 //update

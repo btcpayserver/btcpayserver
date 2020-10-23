@@ -127,6 +127,7 @@ retry:
                 if (invoiceData.CustomerEmail == null && data.Email != null)
                 {
                     invoiceData.CustomerEmail = data.Email;
+                    AddToTextSearch(invoiceId, invoiceData.CustomerEmail);
                 }
                 await ctx.SaveChangesAsync().ConfigureAwait(false);
             }
@@ -204,7 +205,7 @@ retry:
             textSearch.Add(invoice.Metadata.OrderId);
             textSearch.Add(ToString(invoice.Metadata, null));
             textSearch.Add(invoice.StoreId);
-
+            textSearch.Add(invoice.Metadata.BuyerEmail);
             AddToTextSearch(invoice.Id, textSearch.ToArray());
             return invoice;
         }
@@ -367,7 +368,7 @@ retry:
             {
                 using (var tx = _Engine.GetTransaction())
                 {
-                    tx.TextAppend("InvoiceSearch", Encoders.Base58.DecodeData(invoiceId), string.Join(" ", terms.Where(t => !String.IsNullOrWhiteSpace(t))));
+                    tx.TextAppend("InvoiceSearch", Encoders.Base58.DecodeData(invoiceId), string.Join(" ", terms.Where(t => !string.IsNullOrWhiteSpace(t))));
                     tx.Commit();
                 }
             });

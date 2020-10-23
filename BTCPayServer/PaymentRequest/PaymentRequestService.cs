@@ -109,8 +109,7 @@ namespace BTCPayServer.PaymentRequest
                         Currency = entity.Currency,
                         ExpiryDate = entity.ExpirationTime.DateTime,
                         State = state,
-                        Status = state.Status,
-                        StatusFormatted = state.ToString(),
+                        StateFormatted = state.ToString(),
                         Payments = entity
                             .GetPayments()
                             .Select(paymentEntity =>

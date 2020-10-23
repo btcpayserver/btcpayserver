@@ -826,6 +826,40 @@ namespace BTCPayServer.Services.Invoices
                    (Status != InvoiceStatus.Invalid && ExceptionStatus == InvoiceExceptionStatus.Marked);
 #pragma warning restore CA1305 // Specify IFormatProvider;
         }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Status, ExceptionStatus);
+        }
+
+        public static bool operator ==(InvoiceState a, InvoiceState b)
+        {
+            if (a is null && b is null)
+                return true;
+            if (a is null)
+                return false;
+            return a.Equals(b);
+        }
+
+        public static bool operator !=(InvoiceState a, InvoiceState b)
+        {
+            return !(a == b);
+        }
+
+        public bool Equals(InvoiceState o)
+        {
+            if (o is null)
+                return false;
+            return o.Status == Status && o.ExceptionStatus == ExceptionStatus;
+        }
+        public override bool Equals(object obj)
+        {
+            if (obj is InvoiceState o)
+            {
+                return this.Equals(o);
+            }
+            return false;
+        }
         public override string ToString()
         {
             return ToString(Status) + (ExceptionStatus == InvoiceExceptionStatus.None ? string.Empty : $" ({ToString(ExceptionStatus)})");

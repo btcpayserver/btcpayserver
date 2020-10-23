@@ -233,17 +233,22 @@ namespace BTCPayServer.Controllers
                 return BadRequest("Payment Request has expired");
             }
 
-            var statusesAllowedToDisplay = new List<InvoiceStatus>() { InvoiceStatus.New };
-            var validInvoice = result.Invoices.FirstOrDefault(invoice => statusesAllowedToDisplay.Contains(invoice.Status));
-
-            if (validInvoice != null)
+            var stateAllowedToDisplay = new HashSet<InvoiceState>()
+            {
+                new InvoiceState(InvoiceStatus.New, InvoiceExceptionStatus.None),
+                new InvoiceState(InvoiceStatus.New, InvoiceExceptionStatus.PaidPartial),
+            };
+            var currentInvoice = result
+                .Invoices
+                .FirstOrDefault(invoice => stateAllowedToDisplay.Contains(invoice.State));
+            if (currentInvoice != null)
             {
                 if (redirectToInvoice)
                 {
-                    return RedirectToAction("Checkout", "Invoice", new { Id = validInvoice.Id });
+                    return RedirectToAction("Checkout", "Invoice", new { Id = currentInvoice.Id });
                 }
 
-                return Ok(validInvoice.Id);
+                return Ok(currentInvoice.Id);
             }
 
             if (result.AllowCustomPaymentAmounts && amount != null)
@@ -295,8 +300,7 @@ namespace BTCPayServer.Controllers
             }
 
             var invoices = result.Invoices.Where(requestInvoice =>
-                requestInvoice.StatusFormatted.Equals(InvoiceState.ToString(InvoiceStatus.New),
-                    StringComparison.InvariantCulture) && !requestInvoice.Payments.Any());
+                requestInvoice.State.Status == InvoiceStatus.New && !requestInvoice.Payments.Any());
 
             if (!invoices.Any())
             {

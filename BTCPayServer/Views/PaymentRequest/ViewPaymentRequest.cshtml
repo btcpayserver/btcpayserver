@@ -1,4 +1,4 @@
-﻿@using BTCPayServer.Services.Invoices
+@using BTCPayServer.Services.Invoices
 @using BTCPayServer.Client.Models
 @model BTCPayServer.Models.PaymentRequestViewModels.ViewPaymentRequestViewModel
 
@@ -264,7 +264,7 @@
                                                         <td>@invoice.ExpiryDate.ToString("g")</td>
                                                         <td class="text-right">@invoice.AmountFormatted</td>
                                                         <td class="text-right"></td>
-                                                        <td class="text-right text-print-default @StatusTextClass(invoice.State)">@invoice.StatusFormatted</td>
+                                                        <td class="text-right text-print-default @StatusTextClass(invoice.State)">@invoice.StateFormatted</td>
                                                     </tr>
                                                     if (invoice.Payments != null && invoice.Payments.Any())
                                                     {
@@ -322,7 +322,7 @@
                                                     <td v-text="formatDate(invoice.expiryDate)"></td>
                                                     <td class="text-right">{{invoice.amountFormatted}}</td>
                                                     <td class="text-right"></td>
-                                                    <td class="text-right text-print-default" :class="statusTextClass(invoice.statusFormatted)">{{invoice.statusFormatted}}</td>
+                                                    <td class="text-right text-print-default" :class="statusTextClass(invoice.stateFormatted)">{{invoice.stateFormatted}}</td>
                                                 </tr>
                                                 <template v-if="invoice.payments && invoice.payments.length > 0">
                                                     <tr class="table-borderless table-light">

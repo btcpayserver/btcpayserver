@@ -304,6 +304,9 @@ html[data-devenv]:before {
     a {
         text-decoration: none !important;
     }
+    .toasted-container {
+        display: none !important;
+    }
 }
 
 /* Richtext editor */

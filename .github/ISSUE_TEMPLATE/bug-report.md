@@ -24,15 +24,15 @@ A clear and concise description of what you expected to happen.
 If applicable, add screenshots to help explain your problem.
 
 **Your BTCPay Environment (please complete the following information):**
-- BTCPay Server Version [available in the right bottom corner of footer] 
-- Deployment Method: [e.g. Docker, Manual, Third-Party-hoist]
- - Browser [e.g. chrome, safari]
+- BTCPay Server Version: [available in the right bottom corner of footer] 
+- Deployment Method: [e.g. Docker, Manual, Third-Party-host]
+- Browser: [e.g. Chrome, Safari]
 
 **Logs (if applicable)**
 Basic logs can be found in Server Settings > Logs. More logs https://docs.btcpayserver.org/Troubleshooting/#2-looking-through-the-logs
 
 **Setup Parameters**
-If you're reporting a deployment issue run `. btcpay-setup.sh -i` and paste your the parameters by obscuring private information.
+If you're reporting a deployment issue run `. btcpay-setup.sh -i` and paste the setup parameters here with your private information removed or obscured.
 
 **Additional context**
 Add any other context about the problem here.

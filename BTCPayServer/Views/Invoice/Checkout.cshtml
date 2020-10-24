@@ -328,11 +328,15 @@
                 this.endDate = newEnd;
                 // updating ui
                 this.srvModel = jsonData;
-                if (this.invoicePaid && !jsonData.isModal && jsonData.redirectAutomatically && jsonData.merchantRefLink) {
+                if (this.invoicePaid && jsonData.redirectAutomatically && jsonData.merchantRefLink) {
                     this.loading = true;
                     setTimeout(function () {
-                        window.location = jsonData.merchantRefLink;
-                    }, 2000);
+                        if (this.isModal && window.top.location == jsonData.merchantRefLink){
+                            this.close();
+                        } else {
+                            window.top.location = jsonData.merchantRefLink;
+                        }
+                    }.bind(this), 2000);
                 }
             },
             onEmailChange: function(){

@@ -95,7 +95,7 @@ namespace BTCPayServer.Services.Notifications
             query = query.Where(store => store.DisabledNotifications != "all");
             foreach (string term in terms)
             {
-                query = query.Where(user => user.DisabledNotifications == null ||  !user.DisabledNotifications.Contains(term));
+                query = query.Where(user => user.DisabledNotifications == null ||  !user.DisabledNotifications.Contains(term, StringComparison.OrdinalIgnoreCase));
             }
 
             return query.Select(user => user.Id).ToArray();

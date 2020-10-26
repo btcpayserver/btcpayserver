@@ -330,7 +330,9 @@ retry:
             var paymentMethodIdStr = paymentMethodId?.ToString();
             var addresses = context.HistoricalAddressInvoices.Where(data =>
                 (data.InvoiceDataId == invoiceId && paymentMethodIdStr == null ||
+#pragma warning disable CS0618 // Type or member is obsolete
                  data.CryptoCode == paymentMethodIdStr) &&
+#pragma warning restore CS0618 // Type or member is obsolete
                 data.UnAssigned == null);
             foreach (var historicalAddressInvoiceData in addresses)
             {

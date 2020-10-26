@@ -65,7 +65,7 @@ namespace BTCPayServer.HostedServices
         readonly CompositeDisposable leases = new CompositeDisposable();
 
 
-        private async Task UpdateInvoice(UpdateInvoiceContext context)
+        private void UpdateInvoice(UpdateInvoiceContext context)
         {
             var invoice = context.Invoice;
             if (invoice.Status == InvoiceStatus.New && invoice.ExpirationTime <= DateTimeOffset.UtcNow)
@@ -283,7 +283,7 @@ namespace BTCPayServer.HostedServices
                         if (invoice == null)
                             break;
                         var updateContext = new UpdateInvoiceContext(invoice);
-                        await UpdateInvoice(updateContext);
+                        UpdateInvoice(updateContext);
                         if (updateContext.Unaffect)
                         {
                             await _InvoiceRepository.UnaffectAddress(invoice.Id);

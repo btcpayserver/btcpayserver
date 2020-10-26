@@ -808,23 +808,19 @@ namespace BTCPayServer.Services.Invoices
         public bool CanMarkComplete()
         {
             return (Status == InvoiceStatus.Paid) ||
-#pragma warning disable CA1305 // Specify IFormatProvider
                    ((Status == InvoiceStatus.New || Status == InvoiceStatus.Expired) && ExceptionStatus == InvoiceExceptionStatus.PaidPartial) ||
                    ((Status == InvoiceStatus.New || Status == InvoiceStatus.Expired) && ExceptionStatus == InvoiceExceptionStatus.PaidLate) ||
                    (Status != InvoiceStatus.Complete && ExceptionStatus == InvoiceExceptionStatus.Marked) ||
                    (Status == InvoiceStatus.Invalid);
-#pragma warning restore CA1305 // Specify IFormatProvider
         }
 
         public bool CanMarkInvalid()
         {
             return (Status == InvoiceStatus.Paid) ||
                    (Status == InvoiceStatus.New) ||
-#pragma warning disable CA1305 // Specify IFormatProvider
                    ((Status == InvoiceStatus.New || Status == InvoiceStatus.Expired) && ExceptionStatus == InvoiceExceptionStatus.PaidPartial) ||
                    ((Status == InvoiceStatus.New || Status == InvoiceStatus.Expired) && ExceptionStatus == InvoiceExceptionStatus.PaidLate) ||
                    (Status != InvoiceStatus.Invalid && ExceptionStatus == InvoiceExceptionStatus.Marked);
-#pragma warning restore CA1305 // Specify IFormatProvider;
         }
 
         public override int GetHashCode()

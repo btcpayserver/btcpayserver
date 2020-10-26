@@ -68,20 +68,20 @@
                             <span class="d-flex align-items-center">
                                 @if (scheme.Enabled)
                                 {
-                                    <strong class="d-flex align-items-center text-success">
-                                        <span class="fa fa-check-circle mr-2"></span>
+                                    <stron class="d-flex align-items-center text-primary">
+                                        <span class="mr-2 btcpay-status btcpay-status--enabled"></span>
                                         Enabled
-                                    </strong>
+                                    </stron>
                                 }
                                 else
                                 {
                                     <strong class="d-flex align-items-center text-danger">
-                                        <span class="fa fa-times-circle mr-2"></span>
+                                        <span class="mr-2 btcpay-status btcpay-status--disabled"></span>
                                         Disabled
                                     </strong>
                                 }
                                 <span class="text-light mx-2">|</span>
-                                <a asp-action="AddDerivationScheme" asp-route-cryptoCode="@scheme.Crypto" asp-route-storeId="@Context.GetRouteValue("storeId")" id="@($"Modify{scheme.Crypto}")" class="@(scheme.Enabled ? "text-secondary" : "text-primary")">
+                                <a asp-action="AddDerivationScheme" asp-route-cryptoCode="@scheme.Crypto" asp-route-storeId="@Context.GetRouteValue("storeId")" id="@($"Modify{scheme.Crypto}")" class="text-dark">
                                     @(scheme.Enabled ? "Modify" : "Setup")
                                 </a>
                             </span>
@@ -137,19 +137,19 @@
                                 @if (scheme.Enabled)
                                 {
                                     <strong class="d-flex align-items-center text-success">
-                                        <span class="fa fa-check-circle mr-2"></span>
+                                        <span class="mr-2 btcpay-status btcpay-status--enabled"></span>
                                         Enabled
                                     </strong>
                                 }
                                 else
                                 {
                                     <strong class="d-flex align-items-center text-danger">
-                                        <span class="fa fa-times-circle mr-2"></span>
+                                        <span class="mr-2 btcpay-status btcpay-status--disabled"></span>
                                         Disabled
                                     </strong>
                                 }
                                 <span class="text-light mx-2">|</span>
-                                <a asp-action="AddLightningNode" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@Context.GetRouteValue("storeId")" id="@($"Modify-Lightning{scheme.CryptoCode}")" class="@(scheme.Enabled ? "text-secondary" : "text-primary")">
+                                <a asp-action="AddLightningNode" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@Context.GetRouteValue("storeId")" id="@($"Modify-Lightning{scheme.CryptoCode}")" class="text-dark">
                                     @(scheme.Enabled ? "Modify" : "Setup")
                                 </a>
                             </span>

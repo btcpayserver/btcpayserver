@@ -95,7 +95,8 @@ namespace BTCPayServer.Services.Notifications
             query = query.Where(store => store.DisabledNotifications != "all");
             foreach (string term in terms)
             {
-                query = query.Where(user => user.DisabledNotifications == null ||  !user.DisabledNotifications.Contains(term, StringComparison.OrdinalIgnoreCase));
+                // ReSharper disable once CA1307 
+                query = query.Where(user => user.DisabledNotifications == null ||  !user.DisabledNotifications.Contains(term ));
             }
 
             return query.Select(user => user.Id).ToArray();

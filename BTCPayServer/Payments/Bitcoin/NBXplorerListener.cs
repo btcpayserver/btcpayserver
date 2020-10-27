@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
 using BTCPayServer;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
@@ -26,6 +27,8 @@ namespace BTCPayServer.Payments.Bitcoin
     /// </summary>
     public class NBXplorerListener : IHostedService
     {
+        private const int UpdatePaymentStatesMaxDegreeOfParallelism = 32;
+
         readonly EventAggregator _Aggregator;
         private readonly PayJoinRepository _payJoinRepository;
         readonly ExplorerClientProvider _ExplorerClients;
@@ -138,9 +141,7 @@ namespace BTCPayServer.Payments.Bitcoin
                         switch (newEvent)
                         {
                             case NBXplorer.Models.NewBlockEvent evt:
-                                await Task.WhenAll((await _InvoiceRepository.GetPendingInvoices())
-                                    .Select(invoiceId => UpdatePaymentStates(wallet, invoiceId))
-                                    .ToArray());
+                                await UpdatePaymentStatesForPendingInvoices(wallet);
                                 _Aggregator.Publish(new Events.NewBlockEvent() { CryptoCode = evt.CryptoCode });
                                 break;
                             case NBXplorer.Models.NewTransactionEvent evt:
@@ -204,6 +205,27 @@ namespace BTCPayServer.Payments.Bitcoin
                     }
                 }
             }
+        }
+
+        private async Task UpdatePaymentStatesForPendingInvoices(BTCPayWallet wallet)
+        {
+            var pendingInvoices = await _InvoiceRepository.GetPendingInvoices();
+            var actionBlock = new ActionBlock<string>(invoiceId => UpdatePaymentStates(wallet, invoiceId),
+                new ExecutionDataflowBlockOptions
+                {
+                    CancellationToken = _Cts.Token,
+                    EnsureOrdered = false,
+                    SingleProducerConstrained = true,
+                    MaxDegreeOfParallelism = UpdatePaymentStatesMaxDegreeOfParallelism
+                });
+
+            foreach (var invoiceId in pendingInvoices)
+            {
+                await actionBlock.SendAsync(invoiceId);
+            }
+
+            actionBlock.Complete();
+            await actionBlock.Completion;
         }
 
         async Task<InvoiceEntity> UpdatePaymentStates(BTCPayWallet wallet, string invoiceId)
@@ -278,7 +300,7 @@ namespace BTCPayServer.Payments.Bitcoin
                                     pj.CoinjoinTransactionHash == tx.TransactionHash)
                                 {
                                     // This payment is a coinjoin, so the value of
-                                    // the payment output is different from the real value of the payment 
+                                    // the payment output is different from the real value of the payment
                                     paymentData.Value = pj.CoinjoinValue;
                                     payment.SetCryptoPaymentData(paymentData);
                                 }

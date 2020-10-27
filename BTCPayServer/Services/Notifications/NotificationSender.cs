@@ -95,7 +95,8 @@ namespace BTCPayServer.Services.Notifications
             query = query.Where(store => store.DisabledNotifications != "all");
             foreach (string term in terms)
             {
-                // ReSharper disable once CA1307 
+                // Cannot specify StringComparison as EF core does not support it and would attempt client-side evaluation 
+                // ReSharper disable once CA1307
                 query = query.Where(user => user.DisabledNotifications == null ||  !user.DisabledNotifications.Contains(term ));
             }
 

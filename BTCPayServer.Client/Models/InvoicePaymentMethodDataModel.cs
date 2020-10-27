@@ -11,7 +11,7 @@ namespace BTCPayServer.Client.Models
         public string Destination { get; set; }
         public string PaymentLink { get; set; }
 
-        [JsonConverter(typeof(StringEnumConverter))]
+        [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal Rate { get; set; }
 
         [JsonConverter(typeof(NumericStringJsonConverter))]

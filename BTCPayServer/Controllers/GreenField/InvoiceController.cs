@@ -265,13 +265,10 @@ namespace BTCPayServer.Controllers.GreenField
                                 Id = data.GetPaymentId(),
                                 Status = !paymentEntity.Accounted
                                     ? InvoicePaymentMethodDataModel.Payment.PaymentStatus.Invalid
-                                    : data.PaymentCompleted(paymentEntity)
+                                    : data.PaymentConfirmed(paymentEntity, entity.SpeedPolicy) ||
+                                      data.PaymentCompleted(paymentEntity)
                                         ? InvoicePaymentMethodDataModel.Payment.PaymentStatus.Complete
-                                        : data.PaymentConfirmed(paymentEntity, entity.SpeedPolicy)
-                                            ? InvoicePaymentMethodDataModel.Payment.PaymentStatus
-                                                .AwaitingCompletion
-                                            : InvoicePaymentMethodDataModel.Payment.PaymentStatus
-                                                .AwaitingConfirmation,
+                                        : InvoicePaymentMethodDataModel.Payment.PaymentStatus.AwaitingCompletion,
                                 Fee = paymentEntity.NetworkFee,
                                 Value = data.GetValue(),
                                 ReceivedDate = paymentEntity.ReceivedTime.DateTime

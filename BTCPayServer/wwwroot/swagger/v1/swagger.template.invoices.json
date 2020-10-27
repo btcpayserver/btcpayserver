@@ -778,13 +778,11 @@
                 "description": "",
                 "x-enumNames": [
                     "Invalid",
-                    "AwaitingConfirmation",
                     "AwaitingCompletion",
                     "Complete"
                 ],
                 "enum": [
                     "Invalid",
-                    "AwaitingConfirmation",
                     "AwaitingCompletion",
                     "Complete"
                 ]

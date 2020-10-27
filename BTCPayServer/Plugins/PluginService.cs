@@ -98,7 +98,7 @@ namespace BTCPayServer.Plugins
             public string Description { get; set; }
             public bool SystemPlugin { get; set; } = false;
 
-            public string[] Dependencies { get; } = Array.Empty<string>();
+            public IBTCPayServerPlugin.PluginDependency[] Dependencies { get; } = Array.Empty<IBTCPayServerPlugin.PluginDependency>();
 
             public void Execute(IApplicationBuilder applicationBuilder,
                 IServiceProvider applicationBuilderApplicationServices)

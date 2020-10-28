@@ -4,13 +4,15 @@ namespace BTCPayServer.Events
 {
     public class InvoiceDataChangedEvent
     {
+
         public InvoiceDataChangedEvent(InvoiceEntity invoice)
         {
-            InvoiceId = invoice.Id;
-            State = invoice.GetInvoiceState();
+            Invoice = invoice;
         }
-        public string InvoiceId { get; }
-        public InvoiceState State { get; }
+
+        public readonly InvoiceEntity Invoice;
+        public string InvoiceId => Invoice.Id;
+        public InvoiceState State  => Invoice.GetInvoiceState();
 
         public override string ToString()
         {

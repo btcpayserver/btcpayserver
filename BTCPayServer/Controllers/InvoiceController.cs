@@ -164,9 +164,11 @@ namespace BTCPayServer.Controllers
             if (invoice.Metadata != null)
                 entity.Metadata = InvoiceMetadata.FromJObject(invoice.Metadata);
             invoice.Checkout ??= new CreateInvoiceRequest.CheckoutOptions();
+            invoice.Webhooks ??= new List<WebhookSubscription>();
             entity.Currency = invoice.Currency;
             entity.Price = invoice.Amount;
             entity.SpeedPolicy = invoice.Checkout.SpeedPolicy ?? store.SpeedPolicy;
+            entity.Webhooks = invoice.Webhooks;
             IPaymentFilter excludeFilter = null;
             if (invoice.Checkout.PaymentMethods != null)
             {
@@ -197,7 +199,6 @@ namespace BTCPayServer.Controllers
             }
             entity.Status = InvoiceStatus.New;
             HashSet<CurrencyPair> currencyPairsToFetch = new HashSet<CurrencyPair>();
-            var rules = storeBlob.GetRateRules(_NetworkProvider);
             var excludeFilter = storeBlob.GetExcludedPaymentMethods(); // Here we can compose filters from other origin with PaymentFilter.Any()
             if (invoicePaymentMethodFilter != null)
             {

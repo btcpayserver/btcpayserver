@@ -64,7 +64,7 @@ retry:
             return new InvoiceEntity()
             {
                 Networks = _Networks,
-                Version = InvoiceEntity.Lastest_Version,
+                Version = InvoiceEntity.Latest_Version,
                 InvoiceTime = DateTimeOffset.UtcNow,
                 Metadata = new InvoiceMetadata()
             };

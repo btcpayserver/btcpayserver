@@ -16,6 +16,7 @@ using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using NBitcoin;
 using Newtonsoft.Json.Linq;
 using NicolasDorier.RateLimits;
 
@@ -162,11 +163,17 @@ namespace BTCPayServer.Controllers
         [HttpGet]
         [Route("{storeId}/integrations")]
         [Route("{storeId}/integrations/shopify")]
-        public IActionResult Integrations()
+        public async Task<IActionResult> Integrations([FromServices] StoreRepository storeRepository)
         {
             var blob = CurrentStore.GetStoreBlob();
-
-            var vm = new IntegrationsViewModel {Shopify = blob.Shopify};
+            if (blob.EventSigner is null)
+            {
+                blob.EventSigner = new Key();
+                var store = CurrentStore;
+                store.SetStoreBlob(blob);
+                await storeRepository.UpdateStore(store);
+            }
+            var vm = new IntegrationsViewModel {Shopify = blob.Shopify, EventPublicKey = blob.EventSigner.PubKey.ToString(Network.Main)};
 
             return View("Integrations", vm);
         }

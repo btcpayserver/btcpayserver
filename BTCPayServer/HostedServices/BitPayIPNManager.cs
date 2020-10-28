@@ -22,7 +22,7 @@ using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.HostedServices
 {
-    public class InvoiceNotificationManager : IHostedService
+    public class BitPayIPNManager : IHostedService
     {
         readonly HttpClient _Client;
 
@@ -33,7 +33,7 @@ namespace BTCPayServer.HostedServices
                 get; set;
             }
 
-            public InvoicePaymentNotificationEventWrapper Notification
+            public BitPayInvoicePaymentNotificationEventWrapper Notification
             {
                 get; set;
             }
@@ -45,7 +45,7 @@ namespace BTCPayServer.HostedServices
         private readonly EmailSenderFactory _EmailSenderFactory;
         private readonly StoreRepository _StoreRepository;
 
-        public InvoiceNotificationManager(
+        public BitPayIPNManager(
             IHttpClientFactory httpClientFactory,
             IBackgroundJobClient jobClient,
             EventAggregator eventAggregator,
@@ -64,7 +64,7 @@ namespace BTCPayServer.HostedServices
         async Task Notify(InvoiceEntity invoice, InvoiceEvent invoiceEvent, bool extendedNotification)
         {
             var dto = invoice.EntityToDTO();
-            var notification = new InvoicePaymentNotificationEventWrapper()
+            var notification = new BitPayInvoicePaymentNotificationEventWrapper()
             {
                 Data = new InvoicePaymentNotification()
                 {
@@ -84,7 +84,7 @@ namespace BTCPayServer.HostedServices
                     ExchangeRates = dto.ExchangeRates,
                     OrderId = dto.OrderId
                 },
-                Event = new InvoicePaymentNotificationEvent()
+                Event = new BitPayInvoicePaymentNotificationEvent()
                 {
                     Code = invoiceEvent.EventCode,
                     Name = invoiceEvent.Name
@@ -149,13 +149,13 @@ namespace BTCPayServer.HostedServices
         {
             var job = NBitcoin.JsonConverters.Serializer.ToObject<ScheduledJob>(invoiceData);
             bool reschedule = false;
-            var aggregatorEvent = new InvoiceIPNEvent(job.Notification.Data.Id, job.Notification.Event.Code, job.Notification.Event.Name);
+            var aggregatorEvent = new BitPayInvoiceIPNEvent(job.Notification.Data.Id, job.Notification.Event.Code, job.Notification.Event.Name);
             try
             {
                 HttpResponseMessage response = await SendNotification(job.Notification, cancellationToken);
                 reschedule = !response.IsSuccessStatusCode;
                 aggregatorEvent.Error = reschedule ? $"Unexpected return code: {(int)response.StatusCode}" : null;
-                _EventAggregator.Publish<InvoiceIPNEvent>(aggregatorEvent);
+                _EventAggregator.Publish<BitPayInvoiceIPNEvent>(aggregatorEvent);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
@@ -167,7 +167,7 @@ namespace BTCPayServer.HostedServices
             catch (OperationCanceledException)
             {
                 aggregatorEvent.Error = "Timeout";
-                _EventAggregator.Publish<InvoiceIPNEvent>(aggregatorEvent);
+                _EventAggregator.Publish<BitPayInvoiceIPNEvent>(aggregatorEvent);
                 reschedule = true;
             }
             catch (Exception ex)
@@ -183,7 +183,7 @@ namespace BTCPayServer.HostedServices
                 string message = String.Join(',', messages.ToArray());
 
                 aggregatorEvent.Error = $"Unexpected error: {message}";
-                _EventAggregator.Publish<InvoiceIPNEvent>(aggregatorEvent);
+                _EventAggregator.Publish<BitPayInvoiceIPNEvent>(aggregatorEvent);
             }
 
             job.TryCount++;
@@ -195,17 +195,17 @@ namespace BTCPayServer.HostedServices
             }
         }
 
-        public class InvoicePaymentNotificationEvent
+        public class BitPayInvoicePaymentNotificationEvent
         {
             [JsonProperty("code")]
             public int Code { get; set; }
             [JsonProperty("name")]
             public string Name { get; set; }
         }
-        public class InvoicePaymentNotificationEventWrapper
+        public class BitPayInvoicePaymentNotificationEventWrapper
         {
             [JsonProperty("event")]
-            public InvoicePaymentNotificationEvent Event { get; set; }
+            public BitPayInvoicePaymentNotificationEvent Event { get; set; }
             [JsonProperty("data")]
             public InvoicePaymentNotification Data { get; set; }
             [JsonProperty("extendedNotification")]
@@ -215,7 +215,7 @@ namespace BTCPayServer.HostedServices
         }
 
         readonly Encoding UTF8 = new UTF8Encoding(false);
-        private async Task<HttpResponseMessage> SendNotification(InvoicePaymentNotificationEventWrapper notification, CancellationToken cancellationToken)
+        private async Task<HttpResponseMessage> SendNotification(BitPayInvoicePaymentNotificationEventWrapper notification, CancellationToken cancellationToken)
         {
             var request = new HttpRequestMessage();
             request.Method = HttpMethod.Post;
@@ -226,8 +226,7 @@ namespace BTCPayServer.HostedServices
             if (notification.ExtendedNotification)
             {
                 jobj.Remove("extendedNotification");
-                jobj.Remove("notificationURL");
-                notificationString = jobj.ToString();
+                jobj.Remove("notificationURL"); notificationString = jobj.ToString();
             }
             else
             {
@@ -311,13 +310,13 @@ namespace BTCPayServer.HostedServices
         {
             leases.Add(_EventAggregator.Subscribe<InvoiceEvent>(async e =>
             {
+                if (e.Invoice.NotificationURL is null && !string.IsNullOrEmpty(e.Invoice.NotificationEmail))
+                {
+                    return;
+                }
                 var invoice = await _InvoiceRepository.GetInvoice(e.Invoice.Id);
                 if (invoice == null)
                     return;
-                List<Task> tasks = new List<Task>();
-
-                // Awaiting this later help make sure invoices should arrive in order
-                tasks.Add(SaveEvent(invoice.Id, e, InvoiceEventData.EventSeverity.Info));
 
                 // we need to use the status in the event and not in the invoice. The invoice might now be in another status.
                 if (invoice.FullNotifications)
@@ -346,29 +345,10 @@ namespace BTCPayServer.HostedServices
             }));
 
 
-            leases.Add(_EventAggregator.Subscribe<InvoiceDataChangedEvent>(async e =>
-            {
-                await SaveEvent(e.InvoiceId, e, InvoiceEventData.EventSeverity.Info);
-            }));
-
-
-            leases.Add(_EventAggregator.Subscribe<InvoiceStopWatchedEvent>(async e =>
-            {
-                await SaveEvent(e.InvoiceId, e, InvoiceEventData.EventSeverity.Info);
-            }));
-
-            leases.Add(_EventAggregator.Subscribe<InvoiceIPNEvent>(async e =>
-            {
-                await SaveEvent(e.InvoiceId, e, string.IsNullOrEmpty(e.Error)? InvoiceEventData.EventSeverity.Success: InvoiceEventData.EventSeverity.Error);
-            }));
 
             return Task.CompletedTask;
         }
 
-        private Task SaveEvent(string invoiceId, object evt, InvoiceEventData.EventSeverity severity)
-        {
-            return _InvoiceRepository.AddInvoiceEvent(invoiceId, evt, severity);
-        }
 
         public Task StopAsync(CancellationToken cancellationToken)
         {

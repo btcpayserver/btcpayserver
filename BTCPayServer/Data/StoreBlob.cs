@@ -12,6 +12,7 @@ using BTCPayServer.Rating;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Shopify.Models;
+using NBitcoin;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.Data
@@ -26,6 +27,8 @@ namespace BTCPayServer.Data
             ShowRecommendedFee = true;
             RecommendedFeeBlockTarget = 1;
         }
+
+        public Key EventSigner { get; set; }
 
         public ShopifySettings Shopify { get; set; }
 

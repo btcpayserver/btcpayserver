@@ -208,7 +208,7 @@ namespace BTCPayServer.Services.Invoices
         public BTCPayNetworkProvider Networks { get; set; }
         public const int InternalTagSupport_Version = 1;
         public const int GreenfieldInvoices_Version = 2;
-        public const int Lastest_Version = 2;
+        public const int Latest_Version = 2;
         public int Version { get; set; }
         public string Id
         {
@@ -464,6 +464,7 @@ namespace BTCPayServer.Services.Invoices
         public List<InvoiceEventData> Events { get; internal set; }
         public double PaymentTolerance { get; set; }
         public bool Archived { get; set; }
+        public List<WebhookSubscription> Webhooks { get; set; }
 
         public bool IsExpired()
         {

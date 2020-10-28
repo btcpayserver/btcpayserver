@@ -4,7 +4,7 @@
     ViewData.SetActivePageAndTitle(StoreNavPages.Integrations, "Integrations");
 }
 
-<partial name="_StatusMessage" />
+<partial name="_StatusMessage"/>
 
 @if (!ViewContext.ModelState.IsValid)
 {
@@ -17,7 +17,7 @@
 
 <div class="row">
     <div class="col-md-8">
-       <partial name="Integrations/Shopify"/>
+        <partial name="Integrations/Shopify"/>
 
         <h4 class="mb-3 mt-5">
             Other Integrations
@@ -25,14 +25,28 @@
         <p>
             Take a look at documentation for the list of other integrations we support and the directions on how to enable them:
             <ul>
-                <li><a href="https://docs.btcpayserver.org/WooCommerce/" target="_blank">WooCommerce</a></li>
-                <li><a href="https://docs.btcpayserver.org/Drupal/" target="_blank">Drupal</a></li>
-                <li><a href="https://docs.btcpayserver.org/Magento/" target="_blank">Magento</a></li>
-                <li><a href="https://docs.btcpayserver.org/PrestaShop/" target="_blank">PrestaShop</a></li>
+                <li>
+                    <a href="https://docs.btcpayserver.org/WooCommerce/" target="_blank">WooCommerce</a>
+                </li>
+                <li>
+                    <a href="https://docs.btcpayserver.org/Drupal/" target="_blank">Drupal</a>
+                </li>
+                <li>
+                    <a href="https://docs.btcpayserver.org/Magento/" target="_blank">Magento</a>
+                </li>
+                <li>
+                    <a href="https://docs.btcpayserver.org/PrestaShop/" target="_blank">PrestaShop</a>
+                </li>
             </ul>
         </p>
+        <h4 class="mb-3 mt-5">
+            Event Verification Key
+        </h4>
+        <p>When receiving events from the Greenfield API related to this store, you can verify the signature against this public key.</p>
+        <input type="text" class="form-control" readonly asp-for="EventPublicKey"/>
     </div>
 </div>
+
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")

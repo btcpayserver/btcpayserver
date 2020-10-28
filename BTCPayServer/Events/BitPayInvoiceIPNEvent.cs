@@ -1,8 +1,8 @@
 namespace BTCPayServer.Events
 {
-    public class InvoiceIPNEvent
+    public class BitPayInvoiceIPNEvent
     {
-        public InvoiceIPNEvent(string invoiceId, int? eventCode, string name)
+        public BitPayInvoiceIPNEvent(string invoiceId, int? eventCode, string name)
         {
             InvoiceId = invoiceId;
             EventCode = eventCode;

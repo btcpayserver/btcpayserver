@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using BTCPayServer.Client.JsonConverters;
 using BTCPayServer.JsonConverters;
 using Newtonsoft.Json;
@@ -14,6 +15,7 @@ namespace BTCPayServer.Client.Models
         public string Currency { get; set; }
         public JObject Metadata { get; set; }
         public CheckoutOptions Checkout { get; set; } = new CheckoutOptions();
+        public List<WebhookSubscription> Webhooks { get; set; }
 
         public class CheckoutOptions
         {

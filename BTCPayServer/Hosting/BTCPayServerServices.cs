@@ -234,7 +234,12 @@ namespace BTCPayServer.Hosting
             services.AddScoped<NotificationSender>();
 
             services.AddSingleton<IHostedService, NBXplorerWaiters>();
-            services.AddSingleton<IHostedService, InvoiceNotificationManager>();
+            services.AddSingleton<IHostedService, BitPayIPNManager>();
+            services.AddSingleton<IHostedService, InvoiceEventSaverService>();
+            services.AddSingleton<IHostedService, GreenFieldWebhookManager>();
+            services.AddHttpClient(GreenFieldWebhookManager.OnionNamedClient)
+                .ConfigureHttpClient(h => h.DefaultRequestHeaders.ConnectionClose = true);
+            services.AddHttpClient(GreenFieldWebhookManager.ClearnetNamedClient);
             services.AddSingleton<IHostedService, InvoiceWatcher>();
             services.AddSingleton<IHostedService, RatesHostedService>();
             services.AddSingleton<IHostedService, BackgroundJobSchedulerHostedService>();

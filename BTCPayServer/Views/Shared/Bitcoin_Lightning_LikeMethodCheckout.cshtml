@@ -151,8 +151,17 @@
         <div class="payment-tabs__tab" id="copy-tab" v-on:click="switchTab('copy')"  v-bind:class="{ 'active': currentTab == 'copy'}" >
             <span>{{$t("Copy")}}</span>
         </div>
-        
-        <div id="tabsSlider" class="payment-tabs__slider"  v-bind:class="['slide-'+currentTab]"></div>
+        @if (Model.CoinSwitchEnabled)
+        {
+            <div class="payment-tabs__tab" id="altcoins-tab" v-on:click="switchTab('altcoins')"  v-bind:class="{ 'active': currentTab == 'altcoins'}" >
+                <span>{{$t("Conversion")}}</span>
+            </div>
+            <div id="tabsSlider" class="payment-tabs__slider three-tabs"  v-bind:class="['slide-'+currentTab]"></div>
+        }
+        else
+        {
+            <div id="tabsSlider" class="payment-tabs__slider"  v-bind:class="['slide-'+currentTab]"></div>
+        } 
     </div>
 </script>
 

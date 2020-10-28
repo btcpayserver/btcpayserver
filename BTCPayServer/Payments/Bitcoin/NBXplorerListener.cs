@@ -138,9 +138,7 @@ namespace BTCPayServer.Payments.Bitcoin
                         switch (newEvent)
                         {
                             case NBXplorer.Models.NewBlockEvent evt:
-                                await Task.WhenAll((await _InvoiceRepository.GetPendingInvoices())
-                                    .Select(invoiceId => UpdatePaymentStates(wallet, invoiceId))
-                                    .ToArray());
+                                await UpdatePaymentStates(wallet, await _InvoiceRepository.GetPendingInvoices());
                                 _Aggregator.Publish(new Events.NewBlockEvent() { CryptoCode = evt.CryptoCode });
                                 break;
                             case NBXplorer.Models.NewTransactionEvent evt:
@@ -206,11 +204,21 @@ namespace BTCPayServer.Payments.Bitcoin
             }
         }
 
+        async Task UpdatePaymentStates(BTCPayWallet wallet, string[] invoiceIds)
+        {
+            var invoices = await _InvoiceRepository.GetInvoices(invoiceIds);
+            await Task.WhenAll(invoices.Select(i => UpdatePaymentStates(wallet, i)).ToArray());
+        }
         async Task<InvoiceEntity> UpdatePaymentStates(BTCPayWallet wallet, string invoiceId)
         {
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId, false);
             if (invoice == null)
                 return null;
+            return await UpdatePaymentStates(wallet, invoice);
+        }
+        async Task<InvoiceEntity> UpdatePaymentStates(BTCPayWallet wallet, InvoiceEntity invoice)
+        {
+            
             List<PaymentEntity> updatedPaymentEntities = new List<PaymentEntity>();
             var transactions = await wallet.GetTransactions(invoice.GetAllBitcoinPaymentData()
                     .Select(p => p.Outpoint.Hash)

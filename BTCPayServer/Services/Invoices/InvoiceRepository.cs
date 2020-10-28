@@ -467,6 +467,20 @@ retry:
             var res = await GetInvoiceRaw(id, inludeAddressData);
             return res == null ? null : ToEntity(res);
         }
+        public async Task<InvoiceEntity[]> GetInvoices(string[] invoiceIds)
+        {
+            var invoiceIdSet = invoiceIds.ToHashSet();
+            using (var context = _ContextFactory.CreateContext())
+            {
+                IQueryable<Data.InvoiceData> query =
+                    context
+                    .Invoices
+                    .Include(o => o.Payments)
+                    .Where(o => invoiceIdSet.Contains(o.Id));
+
+                return (await query.ToListAsync()).Select(o => ToEntity(o)).ToArray();
+            }
+        }
 
         private async Task<InvoiceData> GetInvoiceRaw(string id, bool inludeAddressData = false)
         {

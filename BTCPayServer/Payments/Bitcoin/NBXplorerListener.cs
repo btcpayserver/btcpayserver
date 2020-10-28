@@ -210,7 +210,7 @@ namespace BTCPayServer.Payments.Bitcoin
         private async Task UpdatePaymentStatesForPendingInvoices(BTCPayWallet wallet)
         {
             var pendingInvoices = await _InvoiceRepository.GetPendingInvoices();
-            var actionBlock = new ActionBlock<string>(async invoiceId => await UpdatePaymentStates(wallet, invoiceId),
+            var actionBlock = new ActionBlock<string>(invoiceId => UpdatePaymentStates(wallet, invoiceId),
                 new ExecutionDataflowBlockOptions
                 {
                     CancellationToken = _Cts.Token,

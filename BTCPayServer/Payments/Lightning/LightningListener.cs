@@ -9,6 +9,7 @@ using AngleSharp.Dom.Events;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
 using BTCPayServer.Logging;
 using BTCPayServer.Services;
@@ -30,6 +31,7 @@ namespace BTCPayServer.Payments.Lightning
         private readonly LightningClientFactoryService lightningClientFactory;
         private readonly LightningLikePaymentHandler _lightningLikePaymentHandler;
         private readonly StoreRepository _storeRepository;
+        private readonly InvoiceLogsService _invoiceLogsService;
         readonly Channel<string> _CheckInvoices = Channel.CreateUnbounded<string>();
         Task _CheckingInvoice;
         readonly Dictionary<(string, string), LightningInstanceListener> _InstanceListeners = new Dictionary<(string, string), LightningInstanceListener>();
@@ -40,7 +42,8 @@ namespace BTCPayServer.Payments.Lightning
                               BTCPayNetworkProvider networkProvider,
                               LightningClientFactoryService lightningClientFactory,
                               LightningLikePaymentHandler lightningLikePaymentHandler,
-                              StoreRepository storeRepository)
+                              StoreRepository storeRepository,
+                              InvoiceLogsService invoiceLogsService)
         {
             _Aggregator = aggregator;
             _InvoiceRepository = invoiceRepository;
@@ -49,6 +52,7 @@ namespace BTCPayServer.Payments.Lightning
             this.lightningClientFactory = lightningClientFactory;
             _lightningLikePaymentHandler = lightningLikePaymentHandler;
             _storeRepository = storeRepository;
+            _invoiceLogsService = invoiceLogsService;
         }
 
         async Task CheckingInvoice(CancellationToken cancellation)
@@ -233,8 +237,7 @@ namespace BTCPayServer.Payments.Lightning
                             InvoiceEventData.EventSeverity.Error);
                     }
                 }
-
-                await _InvoiceRepository.AddInvoiceLogs(invoice.Id, logs);
+                _invoiceLogsService.AddInvoiceLogs(invoice.Id, logs);
                 _CheckInvoices.Writer.TryWrite(invoice.Id);
             }
 

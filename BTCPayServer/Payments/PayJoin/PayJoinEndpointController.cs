@@ -89,6 +89,7 @@ namespace BTCPayServer.Payments.PayJoin
         private readonly DelayedTransactionBroadcaster _broadcaster;
         private readonly WalletRepository _walletRepository;
         private readonly BTCPayServerEnvironment _env;
+        private readonly InvoiceLogsService _invoiceLogsService;
 
         public PayJoinEndpointController(BTCPayNetworkProvider btcPayNetworkProvider,
             InvoiceRepository invoiceRepository, ExplorerClientProvider explorerClientProvider,
@@ -98,7 +99,8 @@ namespace BTCPayServer.Payments.PayJoin
             NBXplorerDashboard dashboard,
             DelayedTransactionBroadcaster broadcaster,
             WalletRepository walletRepository,
-            BTCPayServerEnvironment env)
+            BTCPayServerEnvironment env,
+            InvoiceLogsService invoiceLogsService)
         {
             _btcPayNetworkProvider = btcPayNetworkProvider;
             _invoiceRepository = invoiceRepository;
@@ -111,6 +113,7 @@ namespace BTCPayServer.Payments.PayJoin
             _broadcaster = broadcaster;
             _walletRepository = walletRepository;
             _env = env;
+            _invoiceLogsService = invoiceLogsService;
         }
 
         [HttpPost("")]
@@ -139,7 +142,7 @@ namespace BTCPayServer.Payments.PayJoin
                 });
             }
 
-            await using var ctx = new PayjoinReceiverContext(_invoiceRepository, _explorerClientProvider.GetExplorerClient(network), _payJoinRepository);
+            await using var ctx = new PayjoinReceiverContext(_invoiceRepository, _explorerClientProvider.GetExplorerClient(network), _payJoinRepository, _invoiceLogsService);
             ObjectResult CreatePayjoinErrorAndLog(int httpCode, PayjoinReceiverWellknownErrors err, string debug)
             {
                 ctx.Logs.Write($"Payjoin error: {debug}", InvoiceEventData.EventSeverity.Error);

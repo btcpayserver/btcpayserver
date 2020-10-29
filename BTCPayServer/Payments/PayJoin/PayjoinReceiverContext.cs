@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
 using BTCPayServer.Services.Invoices;
 using Microsoft.Extensions.Logging;
@@ -15,12 +16,14 @@ namespace BTCPayServer.Payments.PayJoin
         private readonly InvoiceRepository _invoiceRepository;
         private readonly ExplorerClient _explorerClient;
         private readonly PayJoinRepository _payJoinRepository;
+        private readonly InvoiceLogsService _invoiceLogsService;
 
-        public PayjoinReceiverContext(InvoiceRepository invoiceRepository, ExplorerClient explorerClient, PayJoinRepository payJoinRepository)
+        public PayjoinReceiverContext(InvoiceRepository invoiceRepository, ExplorerClient explorerClient, PayJoinRepository payJoinRepository, InvoiceLogsService invoiceLogsService)
         {
             _invoiceRepository = invoiceRepository;
             _explorerClient = explorerClient;
             _payJoinRepository = payJoinRepository;
+            _invoiceLogsService = invoiceLogsService;
         }
         public Invoice Invoice { get; set; }
         public NBitcoin.Transaction OriginalTransaction { get; set; }
@@ -31,7 +34,7 @@ namespace BTCPayServer.Payments.PayJoin
             List<Task> disposing = new List<Task>();
             if (Invoice != null)
             {
-                disposing.Add(_invoiceRepository.AddInvoiceLogs(Invoice.Id, Logs));
+                _invoiceLogsService.AddInvoiceLogs(Invoice.Id, Logs);
             }
             if (!doNotBroadcast && OriginalTransaction != null)
             {

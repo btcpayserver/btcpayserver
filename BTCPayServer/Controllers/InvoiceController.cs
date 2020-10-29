@@ -44,6 +44,7 @@ namespace BTCPayServer.Controllers
         private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
         private readonly ApplicationDbContextFactory _dbContextFactory;
         private readonly PullPaymentHostedService _paymentHostedService;
+        private readonly InvoiceLogsService _invoiceLogsService;
         readonly IServiceProvider _ServiceProvider;
         public InvoiceController(
             IServiceProvider serviceProvider,
@@ -57,7 +58,8 @@ namespace BTCPayServer.Controllers
             BTCPayNetworkProvider networkProvider,
             PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
             ApplicationDbContextFactory dbContextFactory,
-            PullPaymentHostedService paymentHostedService)
+            PullPaymentHostedService paymentHostedService,
+            InvoiceLogsService invoiceLogsService)
         {
             _ServiceProvider = serviceProvider;
             _CurrencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
@@ -70,6 +72,7 @@ namespace BTCPayServer.Controllers
             _paymentMethodHandlerDictionary = paymentMethodHandlerDictionary;
             _dbContextFactory = dbContextFactory;
             _paymentHostedService = paymentHostedService;
+            _invoiceLogsService = invoiceLogsService;
             _CSP = csp;
         }
 
@@ -280,7 +283,7 @@ namespace BTCPayServer.Controllers
                 {
                     ex.Handle(e => { logs.Write($"Error while fetching rates {ex}", InvoiceEventData.EventSeverity.Error); return true; });
                 }
-                await _InvoiceRepository.AddInvoiceLogs(entity.Id, logs);
+                _invoiceLogsService.AddInvoiceLogs(entity.Id, logs);
             });
             _EventAggregator.Publish(new Events.InvoiceEvent(entity, InvoiceEvent.Created));
             return entity;

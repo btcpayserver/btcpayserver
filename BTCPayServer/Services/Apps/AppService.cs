@@ -248,13 +248,13 @@ namespace BTCPayServer.Services.Apps
             }
         }
 
-        public async Task<AppData> GetApp(string appId, AppType appType, bool includeStore = false)
+        public async Task<AppData> GetApp(string appId, AppType? appType, bool includeStore = false)
         {
             using (var ctx = _ContextFactory.CreateContext())
             {
                 var query = ctx.Apps
                     .Where(us => us.Id == appId &&
-                                 us.AppType == appType.ToString());
+                                 (appType == null || us.AppType == appType.ToString()));
 
                 if (includeStore)
                 {

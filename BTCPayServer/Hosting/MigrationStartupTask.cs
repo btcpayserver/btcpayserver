@@ -1,16 +1,23 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Logging;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
+using DBriize;
+using DBriize.Utils;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using NBitcoin.DataEncoders;
 
 namespace BTCPayServer.Hosting
 {
@@ -20,18 +27,21 @@ namespace BTCPayServer.Hosting
         private readonly StoreRepository _StoreRepository;
         private readonly BTCPayNetworkProvider _NetworkProvider;
         private readonly SettingsRepository _Settings;
+        private readonly BTCPayServerOptions _btcPayServerOptions;
         private readonly UserManager<ApplicationUser> _userManager;
         public MigrationStartupTask(
             BTCPayNetworkProvider networkProvider,
             StoreRepository storeRepository,
             ApplicationDbContextFactory dbContextFactory,
             UserManager<ApplicationUser> userManager,
-            SettingsRepository settingsRepository)
+            SettingsRepository settingsRepository,
+            BTCPayServerOptions btcPayServerOptions)
         {
             _DBContextFactory = dbContextFactory;
             _StoreRepository = storeRepository;
             _NetworkProvider = networkProvider;
             _Settings = settingsRepository;
+            _btcPayServerOptions = btcPayServerOptions;
             _userManager = userManager;
         }
         public async Task ExecuteAsync(CancellationToken cancellationToken = default)
@@ -40,6 +50,11 @@ namespace BTCPayServer.Hosting
             {
                 await Migrate(cancellationToken);
                 var settings = (await _Settings.GetSettingAsync<MigrationSettings>()) ?? new MigrationSettings();
+                if (!settings.MigratedInvoiceTextSearchToDb)
+                {
+                    settings.MigratedInvoiceTextSearchToDb =  await MigratedInvoiceTextSearchToDb();
+                    await _Settings.UpdateSetting(settings);
+                }
                 if (!settings.DeprecatedLightningConnectionStringCheck)
                 {
                     await DeprecatedLightningConnectionStringCheck();
@@ -231,6 +246,42 @@ retry:
                 }
                 await ctx.SaveChangesAsync();
             }
+        }
+        private async Task<bool> MigratedInvoiceTextSearchToDb()
+        {
+            int retryCount = 0;
+            retry:
+            DBriizeEngine engine;
+            try
+            {
+                var dbpath = Path.Combine(_btcPayServerOptions.DataDir, "InvoiceDB");
+                if (!Directory.Exists(dbpath))
+                    return true;
+                engine = new DBriizeEngine(dbpath);
+            }
+            catch when (retryCount++ < 5) { goto retry; }
+            catch
+            {
+                return false;
+            }
+
+            await using var ctx = _DBContextFactory.CreateContext();
+
+            var invoices = await ctx.Invoices.ToListAsync();
+            var invoiceIds = invoices.Select(data => Encoders.Base58.DecodeData(data.Id)).ToHashSet();
+            using (var t = engine.GetTransaction())
+            {
+                var textSearch = t.TextGetDocumentsSearchables("InvoiceSearch", invoiceIds);
+                
+                foreach (var el in textSearch)
+                {
+                    var invoice = invoices.Single(data => data.Id == Encoders.Base58.EncodeData(el.Key));
+                    invoice.TextSearch = string.Join(' ', el.Value);
+                }
+            }
+            await ctx.SaveChangesAsync();
+
+            return true;
         }
     }
 }

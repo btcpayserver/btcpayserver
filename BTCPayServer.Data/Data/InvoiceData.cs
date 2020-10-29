@@ -79,6 +79,9 @@ namespace BTCPayServer.Data
         public string CurrentRefundId { get; set; }
         [ForeignKey("Id,CurrentRefundId")]
         public RefundData CurrentRefund { get; set; }
+
+        public string TextSearch { get; set; }
+
         internal static void OnModelCreating(ModelBuilder builder)
         {
             builder.Entity<InvoiceData>()

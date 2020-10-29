@@ -16,13 +16,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Encoders = NBitcoin.DataEncoders.Encoders;
 using InvoiceData = BTCPayServer.Data.InvoiceData;
 
 namespace BTCPayServer.Services.Invoices
 {
-    public class InvoiceRepository : IDisposable
+    public class InvoiceRepository
     {
         static JsonSerializerSettings DefaultSerializerSettings;
         static InvoiceRepository()
@@ -31,31 +30,13 @@ namespace BTCPayServer.Services.Invoices
             NBitcoin.JsonConverters.Serializer.RegisterFrontConverters(DefaultSerializerSettings);
         }
 
-        private readonly DBriizeEngine _Engine;
-        public DBriizeEngine Engine
-        {
-            get
-            {
-                return _Engine;
-            }
-        }
-
         private readonly ApplicationDbContextFactory _ContextFactory;
         private readonly EventAggregator _eventAggregator;
         private readonly BTCPayNetworkProvider _Networks;
-        private readonly CustomThreadPool _IndexerThread;
 
-        public InvoiceRepository(ApplicationDbContextFactory contextFactory, string dbreezePath,
+        public InvoiceRepository(ApplicationDbContextFactory contextFactory,
             BTCPayNetworkProvider networks, EventAggregator eventAggregator)
         {
-            int retryCount = 0;
-retry:
-            try
-            {
-                _Engine = new DBriizeEngine(dbreezePath);
-            }
-            catch when (retryCount++ < 5) { goto retry; }
-            _IndexerThread = new CustomThreadPool(1, "Invoice Indexer");
             _ContextFactory = contextFactory;
             _Networks = networks;
             _eventAggregator = eventAggregator;
@@ -148,7 +129,7 @@ retry:
                 if (invoiceData.CustomerEmail == null && data.Email != null)
                 {
                     invoiceData.CustomerEmail = data.Email;
-                    AddToTextSearch(invoiceId, invoiceData.CustomerEmail);
+                    AddToTextSearch(invoiceData, invoiceData.CustomerEmail);
                 }
                 await ctx.SaveChangesAsync().ConfigureAwait(false);
             }
@@ -180,7 +161,7 @@ retry:
             invoice.StoreId = storeId;
             using (var context = _ContextFactory.CreateContext())
             {
-                context.Invoices.Add(new Data.InvoiceData()
+                var invoiceData = new Data.InvoiceData()
                 {
                     StoreDataId = storeId,
                     Id = invoice.Id,
@@ -193,7 +174,9 @@ retry:
                     ItemCode = invoice.Metadata.ItemCode,
                     CustomerEmail = invoice.RefundMail,
                     Archived = false
-                });
+                };
+                await context.Invoices.AddAsync(invoiceData);
+               
 
                 foreach (var paymentMethod in invoice.GetPaymentMethods())
                 {
@@ -202,13 +185,13 @@ retry:
                     var paymentDestination = paymentMethod.GetPaymentMethodDetails().GetPaymentDestination();
 
                     string address = GetDestination(paymentMethod);
-                    context.AddressInvoices.Add(new AddressInvoiceData()
+                    await context.AddressInvoices.AddAsync(new AddressInvoiceData()
                     {
                         InvoiceDataId = invoice.Id,
                         CreatedTime = DateTimeOffset.UtcNow,
                     }.Set(address, paymentMethod.GetId()));
 
-                    context.HistoricalAddressInvoices.Add(new HistoricalAddressInvoiceData()
+                    await context.HistoricalAddressInvoices.AddAsync(new HistoricalAddressInvoiceData()
                     {
                         InvoiceDataId = invoice.Id,
                         Assigned = DateTimeOffset.UtcNow
@@ -216,18 +199,21 @@ retry:
                     textSearch.Add(paymentDestination);
                     textSearch.Add(paymentMethod.Calculate().TotalDue.ToString());
                 }
-                context.PendingInvoices.Add(new PendingInvoiceData() { Id = invoice.Id });
+                await context.PendingInvoices.AddAsync(new PendingInvoiceData() { Id = invoice.Id });
+                
+                textSearch.Add(invoice.Id);
+                textSearch.Add(invoice.InvoiceTime.ToString(CultureInfo.InvariantCulture));
+                textSearch.Add(invoice.Price.ToString(CultureInfo.InvariantCulture));
+                textSearch.Add(invoice.Metadata.OrderId);
+                textSearch.Add(ToString(invoice.Metadata, null));
+                textSearch.Add(invoice.StoreId);
+                textSearch.Add(invoice.Metadata.BuyerEmail);
+                AddToTextSearch(invoiceData, textSearch.ToArray());
+                
                 await context.SaveChangesAsync().ConfigureAwait(false);
             }
 
-            textSearch.Add(invoice.Id);
-            textSearch.Add(invoice.InvoiceTime.ToString(CultureInfo.InvariantCulture));
-            textSearch.Add(invoice.Price.ToString(CultureInfo.InvariantCulture));
-            textSearch.Add(invoice.Metadata.OrderId);
-            textSearch.Add(ToString(invoice.Metadata, null));
-            textSearch.Add(invoice.StoreId);
-            textSearch.Add(invoice.Metadata.BuyerEmail);
-            AddToTextSearch(invoice.Id, textSearch.ToArray());
+            
             return invoice;
         }
 
@@ -306,8 +292,8 @@ retry:
                 Assigned = DateTimeOffset.UtcNow
             }.SetAddress(paymentMethodDetails.GetPaymentDestination(), network.CryptoCode));
 
+            AddToTextSearch(invoice, paymentMethodDetails.GetPaymentDestination());
             await context.SaveChangesAsync();
-            AddToTextSearch(invoice.Id, paymentMethodDetails.GetPaymentDestination());
             return true;
         }
 
@@ -372,29 +358,9 @@ retry:
             catch (DbUpdateException) { } //Possibly, it was unassigned before
         }
 
-        private string[] SearchInvoice(string searchTerms)
+        void AddToTextSearch(InvoiceData invoice, params string[] terms)
         {
-            using (var tx = _Engine.GetTransaction())
-            {
-                var terms = searchTerms.Split(null);
-                searchTerms = string.Join(' ', terms.Select(t => t.Length > 50 ? t.Substring(0, 50) : t).ToArray());
-                return tx.TextSearch("InvoiceSearch").Block(searchTerms)
-                    .GetDocumentIDs()
-                    .Select(id => Encoders.Base58.EncodeData(id))
-                    .ToArray();
-            }
-        }
-
-        void AddToTextSearch(string invoiceId, params string[] terms)
-        {
-            _IndexerThread.DoAsync(() =>
-            {
-                using (var tx = _Engine.GetTransaction())
-                {
-                    tx.TextAppend("InvoiceSearch", Encoders.Base58.DecodeData(invoiceId), string.Join(" ", terms.Where(t => !string.IsNullOrWhiteSpace(t))));
-                    tx.Commit();
-                }
-            });
+            invoice.TextSearch += string.Join(" ", terms.Where(t => !string.IsNullOrWhiteSpace(t)));
         }
 
         public async Task UpdateInvoiceStatus(string invoiceId, InvoiceState invoiceState)
@@ -618,14 +584,7 @@ retry:
 
             if (!string.IsNullOrEmpty(queryObject.TextSearch))
             {
-                var ids = new HashSet<string>(SearchInvoice(queryObject.TextSearch)).ToArray();
-                if (ids.Length == 0)
-                {
-                    // Hacky way to return an empty query object. The nice way is much too elaborate:
-                    // https://stackoverflow.com/questions/33305495/how-to-return-empty-iqueryable-in-an-async-repository-method
-                    return query.Where(x => false);
-                }
-                query = query.Where(i => ids.Contains(i.Id));
+                query = query.Where(i => i.TextSearch.Contains(queryObject.TextSearch));
             }
 
             if (queryObject.StartDate != null)
@@ -771,12 +730,12 @@ retry:
 
                 await context.Payments.AddAsync(data);
 
+                AddToTextSearch(invoice, paymentData.GetSearchTerms());
                 try
                 {
                     await context.SaveChangesAsync().ConfigureAwait(false);
                 }
                 catch (DbUpdateException) { return null; } // Already exists
-                AddToTextSearch(invoiceId, paymentData.GetSearchTerms());
                 return entity;
             }
         }
@@ -814,14 +773,6 @@ retry:
                 return JsonConvert.SerializeObject(data, DefaultSerializerSettings);
             }
             return network.ToString(data);
-        }
-
-        public void Dispose()
-        {
-            if (_Engine != null)
-                _Engine.Dispose();
-            if (_IndexerThread != null)
-                _IndexerThread.Dispose();
         }
     }
 

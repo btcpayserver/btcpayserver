@@ -1,0 +1,52 @@
+@using BTCPayServer.Client.Events
+@model IntegrationsViewModel
+
+<form method="post" asp-action="UpdateWebhooks" asp-route-storeId="@this.Context.GetRouteValue("storeId")">
+    <div class="list-group mb-2  mt-5">
+        <div class="list-group-item">
+            <h4 class="mb-1">
+                Webhooks
+                <button type="submit" name="command" value="add" class="ml-1 btn btn-secondary btn-sm ">Add webhook</button>
+            </h4>
+        </div>
+        @for (var index = 0; index < Model.Webhooks.Count; index++)
+        {
+            <div class="list-group-item p-0 pl-lg-2">
+                <div class="row">
+                    <div class="col-sm-12 col-md-12 col-lg-10  py-2 ">
+                        <div class="form-group">
+                            <label asp-for="Webhooks[index].Url" class="control-label"></label>
+                            <input asp-for="Webhooks[index].Url" class="form-control"/>
+                            <span asp-validation-for="Webhooks[index].Url" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="Webhooks[index].EventType"></label>
+                            <select asp-for="Webhooks[index].EventType" class="form-control">
+                                <option value="@InvoiceStatusChangeEventPayload.EventType">Invoice status change</option>
+                            </select>
+
+                            <span asp-validation-for="Webhooks[index].EventType" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-sm-12 col-md-12 col-lg-2 pull-right">
+                        <button type="submit" title="Remove webhook" name="command" value="@($"remove:{index}")"
+                                class="d-block d-lg-none d-xl-none btn btn-danger mb-2 ml-2">
+                            Remove
+                        </button>
+                        <button type="submit" title="Remove webhook" name="command" value="@($"remove:{index}")"
+                                class="d-none d-lg-block remove-domain-btn text-decoration-none h-100 align-middle btn text-danger btn-link fa fa-times rounded-0 pull-right">
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+
+    </div>
+
+    <h4 class="mb-3 mt-5">
+        Webhook Verification Key
+    </h4>
+    <p>When receiving webhook events from the Greenfield API related to this store, you can verify the signature against this public key.</p>
+    <input type="text" class="form-control" readonly asp-for="EventPublicKey"/>
+
+</form>

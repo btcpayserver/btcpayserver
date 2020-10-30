@@ -59,7 +59,7 @@ namespace BTCPayServer.Models.InvoicingModels
         }
 
         [Uri]
-        [DisplayName("Notification Url")]
+        [DisplayName("Invoice Status Change Webhook Url")]
         public string NotificationUrl
         {
             get; set;

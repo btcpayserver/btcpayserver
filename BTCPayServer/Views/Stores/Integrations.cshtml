@@ -18,7 +18,7 @@
 <div class="row">
     <div class="col-md-8">
         <partial name="Integrations/Shopify"/>
-
+        <partial name="Integrations/Webhooks"/>
         <h4 class="mb-3 mt-5">
             Other Integrations
         </h4>
@@ -39,11 +39,7 @@
                 </li>
             </ul>
         </p>
-        <h4 class="mb-3 mt-5">
-            Event Verification Key
-        </h4>
-        <p>When receiving events from the Greenfield API related to this store, you can verify the signature against this public key.</p>
-        <input type="text" class="form-control" readonly asp-for="EventPublicKey"/>
+
     </div>
 </div>
 

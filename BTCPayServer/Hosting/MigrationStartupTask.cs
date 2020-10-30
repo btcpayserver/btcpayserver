@@ -10,6 +10,7 @@ using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using NBitcoin;
 
 namespace BTCPayServer.Hosting
 {
@@ -39,6 +40,12 @@ namespace BTCPayServer.Hosting
             {
                 await Migrate(cancellationToken);
                 var settings = (await _Settings.GetSettingAsync<MigrationSettings>()) ?? new MigrationSettings();
+                if (!settings.StoreEventSignerCreatedCheck)
+                {
+                    await StoreEventSignerCreatedCheck();
+                    settings.StoreEventSignerCreatedCheck = true;
+                    await _Settings.UpdateSetting(settings);
+                }       
                 if (!settings.DeprecatedLightningConnectionStringCheck)
                 {
                     await DeprecatedLightningConnectionStringCheck();
@@ -230,6 +237,18 @@ retry:
                 }
                 await ctx.SaveChangesAsync();
             }
+        }
+
+        private async Task StoreEventSignerCreatedCheck()
+        {
+            await using var ctx = _DBContextFactory.CreateContext();
+            foreach (var store in await ctx.Stores.ToArrayAsync())
+            {
+                var blob = store.GetStoreBlob();
+                blob.EventSigner = new Key();
+                store.SetStoreBlob(blob);
+            }
+            await ctx.SaveChangesAsync();
         }
     }
 }

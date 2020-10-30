@@ -163,24 +163,42 @@ namespace BTCPayServer.Controllers
         [HttpGet]
         [Route("{storeId}/integrations")]
         [Route("{storeId}/integrations/shopify")]
+        [Route("{storeId}/integrations/webhooks")]
         public async Task<IActionResult> Integrations([FromServices] StoreRepository storeRepository)
         {
             var blob = CurrentStore.GetStoreBlob();
-            if (blob.EventSigner is null)
-            {
-                blob.EventSigner = new Key();
-                var store = CurrentStore;
-                store.SetStoreBlob(blob);
-                await storeRepository.UpdateStore(store);
-            }
-            var vm = new IntegrationsViewModel {Shopify = blob.Shopify, EventPublicKey = blob.EventSigner.PubKey.ToString(Network.Main)};
+            
+            var vm = new IntegrationsViewModel {Shopify = blob.Shopify, EventPublicKey = blob.EventSigner.PubKey.ToString(Network.Main), Webhooks = blob.Webhooks};
 
             return View("Integrations", vm);
         }
 
         [HttpPost]
+        [Route("{storeId}/integrations/webhooks")]
+        public async Task<IActionResult> UpdateWebhooks([FromServices] IHttpClientFactory clientFactory,
+            IntegrationsViewModel vm, string command = "")
+        {
+            switch (command.ToLowerInvariant())
+            {
+                case "add":
+                    vm.Webhooks.Add(new WebhookSubscription());
+                    return View("Integrations", vm);
+                case string c when c.StartsWith("remove:", StringComparison.InvariantCultureIgnoreCase):
+                    var index = int.Parse(c.Substring(command.IndexOf(":", StringComparison.InvariantCultureIgnoreCase) + 1), CultureInfo.InvariantCulture);
+                    vm.Webhooks.RemoveAt(index);
+                    return View("Integrations", vm);
+                case "save":
+                    TempData[WellKnownTempData.SuccessMessage] = "Webhooks saved";
+                    var blob = CurrentStore.GetStoreBlob();
+                    blob.Webhooks = vm.Webhooks.Where(subscription => subscription.Url != null).ToList();
+                    break;
+            }
+            return RedirectToAction(nameof(Integrations), new {storeId = CurrentStore.Id});
+        }
+
+        [HttpPost]
         [Route("{storeId}/integrations/shopify")]
-        public async Task<IActionResult> Integrations([FromServices] IHttpClientFactory clientFactory,
+        public async Task<IActionResult> UpdateShopify([FromServices] IHttpClientFactory clientFactory,
             IntegrationsViewModel vm, string command = "", string exampleUrl = "")
         {
             if (!string.IsNullOrEmpty(exampleUrl))

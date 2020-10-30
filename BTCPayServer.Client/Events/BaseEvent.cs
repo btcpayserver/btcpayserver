@@ -5,20 +5,38 @@ using Newtonsoft.Json.Converters;
 
 namespace BTCPayServer.Client.Events
 {
-    public class GreenFieldEvent<T>
+    public interface IGreenFieldEvent
+    {
+        string EventType { get; set; }
+        object Payload { get; set; }
+        string Signature { get; set; }
+        void SetSignature(string url, Key key);
+        bool VerifySignature(string url, PubKey key);
+        string GetPayload();
+    }
+
+    public class GreenFieldEvent<T> : IGreenFieldEvent
     {
         public string EventType { get; set; }
-        public T Payload { get; set; }
+        public object Payload { get; set; }
+
+        [JsonIgnore]
+        public T PayloadParsed { get{ return (T) Payload;} set { Payload = value; } }
         public string Signature { get; set; }
         
         public void SetSignature(string url, Key key)
         {
-            Signature = key.SignMessage($"{url}_{Payload.GetHashCode()}");
+            Signature = key.SignMessage($"{url}_{GetPayload()}");
         }
 
         public bool VerifySignature(string url, PubKey key)
         {
-            return key.VerifyMessage($"{url}_{Payload.GetHashCode()}", Signature);
+            return key.VerifyMessage($"{url}_{GetPayload()}", Signature);
+        }
+
+        public virtual string GetPayload()
+        {
+            return JsonConvert.SerializeObject(Payload);
         }
     }
     

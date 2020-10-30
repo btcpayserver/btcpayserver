@@ -44,8 +44,8 @@ namespace BTCPayServer.HostedServices
                             ? InvoiceEventData.EventSeverity.Success
                             : InvoiceEventData.EventSeverity.Error);
                     break;
-                case GreenFieldWebhookResultEvent e:
-                    await SaveEvent(e.InvoiceId, e,
+                case GreenFieldWebhookResultEvent e when e.Hook.Scope is InvoiceWebhookScope webhookScope:
+                    await SaveEvent(webhookScope.InvoiceId, e,
                         string.IsNullOrEmpty(e.Error)
                             ? InvoiceEventData.EventSeverity.Success
                             : InvoiceEventData.EventSeverity.Error);
@@ -62,7 +62,6 @@ namespace BTCPayServer.HostedServices
     public class GreenFieldWebhookResultEvent
     {
         public  GreenFieldWebhookManager.QueuedGreenFieldWebHook Hook { get; set; }
-        public string InvoiceId { get; set; }
         public string Error { get; set; }
         
         public override string ToString()

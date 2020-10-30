@@ -262,6 +262,9 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<INotificationHandler, InvoiceEventNotification.Handler>();
             services.AddSingleton<INotificationHandler, PayoutNotification.Handler>();
 
+            services.AddSingleton<IGreenFieldWebhookScopeKeyFetcher, InvoiceGreenFieldWebhookScopeKeyFetcher>();
+            services.AddSingleton<GreenFieldWebhookVerificationKeyFetcher>();
+            
             services.AddShopify();
 #if DEBUG
             services.AddSingleton<INotificationHandler, JunkNotification.Handler>();

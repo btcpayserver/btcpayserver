@@ -7,24 +7,94 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Events;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Stores;
+using NBitcoin;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.HostedServices
 {
+    public interface IGreenFieldWebhookScopeKeyFetcher
+    {
+        bool CanFetch(WebhookScope webhookScope);
+
+        Task<Key> Fetch(WebhookScope webhookScope);
+    }
+
+    public abstract class GreenFieldWebhookScopeKeyFetcher<T> : IGreenFieldWebhookScopeKeyFetcher where T : WebhookScope
+    {
+        public virtual bool CanFetch(WebhookScope webhookScope)
+        {
+            return webhookScope is T;
+        }
+
+        public abstract Task<Key> Fetch(T webhookScope);
+        
+        public Task<Key> Fetch(WebhookScope webhookScope)
+        {
+            return Fetch((T)webhookScope);
+        }
+    }
+    
+    
+    public interface WebhookScope
+    {
+            
+    }
+
+    public class InvoiceWebhookScope : WebhookScope
+    {
+        public string InvoiceId { get; set; }
+        public string StoreId { get; set; }
+    }
+    
+    public class InvoiceGreenFieldWebhookScopeKeyFetcher: GreenFieldWebhookScopeKeyFetcher<InvoiceWebhookScope>
+    {
+        private readonly StoreRepository _storeRepository;
+
+        public InvoiceGreenFieldWebhookScopeKeyFetcher(StoreRepository storeRepository)
+        {
+            _storeRepository = storeRepository;
+        }
+        public override async Task<Key> Fetch(InvoiceWebhookScope webhookScope)
+        {
+            var store = await _storeRepository.FindStore(webhookScope.StoreId);
+            return store?.GetStoreBlob()?.EventSigner;
+        }
+    }
+
+
+    public class GreenFieldWebhookVerificationKeyFetcher
+    {
+        private IEnumerable<IGreenFieldWebhookScopeKeyFetcher> _keyFetchers;
+
+        public GreenFieldWebhookVerificationKeyFetcher(IEnumerable<IGreenFieldWebhookScopeKeyFetcher> keyFetchers)
+        {
+            _keyFetchers = keyFetchers;
+        }
+        Task<Key> GetKey(WebhookScope webhookScope)
+        {
+            return _keyFetchers.FirstOrDefault(fetcher => fetcher.CanFetch(webhookScope))?.Fetch(webhookScope) ??
+                   Task.FromResult<Key>(null);
+        }
+    }
+    
     public class GreenFieldWebhookManager : EventHostedServiceBase
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IBackgroundJobClient _backgroundJobClient;
+        private readonly GreenFieldWebhookVerificationKeyFetcher _greenFieldWebhookVerificationKeyFetcher;
         private readonly EventAggregator _eventAggregator;
 
         public GreenFieldWebhookManager(EventAggregator eventAggregator, IHttpClientFactory httpClientFactory,
-            IBackgroundJobClient backgroundJobClient) : base(
+            IBackgroundJobClient backgroundJobClient, GreenFieldWebhookVerificationKeyFetcher greenFieldWebhookVerificationKeyFetcher) : base(
             eventAggregator)
         {
             _httpClientFactory = httpClientFactory;
             _backgroundJobClient = backgroundJobClient;
+            _greenFieldWebhookVerificationKeyFetcher = greenFieldWebhookVerificationKeyFetcher;
             _eventAggregator = eventAggregator;
         }
 
@@ -131,7 +201,11 @@ namespace BTCPayServer.HostedServices
                                 Event = webHook,
                                 Subscription = webhookSubscription,
                                 Grouping = webhookSubscription.ToString(),
-                                InvoiceId = e.InvoiceId
+                                Scope = new InvoiceWebhookScope()
+                                {
+                                    InvoiceId = e.Invoice.Id,
+                                    StoreId = e.Invoice.StoreId
+                                },
                             });
                         }
                     }
@@ -163,13 +237,10 @@ namespace BTCPayServer.HostedServices
                 var result = await client.SendAsync(request, cts.Token);
                 if (result.IsSuccessStatusCode)
                 {
-                    if (!string.IsNullOrEmpty(e.InvoiceId))
+                    _eventAggregator.Publish(new GreenFieldWebhookResultEvent()
                     {
-                        _eventAggregator.Publish(new GreenFieldWebhookResultEvent()
-                        {
-                            Error = webhookEventResultError, Hook = e, InvoiceId = e.InvoiceId
-                        });
-                    }
+                        Error = webhookEventResultError, Hook = e
+                    });
 
                     return;
                 }
@@ -199,13 +270,10 @@ namespace BTCPayServer.HostedServices
             }
 
             e.TryCount++;
-            if (!string.IsNullOrEmpty(e.InvoiceId))
+            _eventAggregator.Publish(new GreenFieldWebhookResultEvent()
             {
-                _eventAggregator.Publish(new GreenFieldWebhookResultEvent()
-                {
-                    Error = webhookEventResultError, Hook = e, InvoiceId = e.InvoiceId
-                });
-            }
+                Error = webhookEventResultError, Hook = e
+            });
 
             if (e.TryCount <= QueuedGreenFieldWebHook.MaxTry)
                 _backgroundJobClient.Schedule((cancellation) => Send(e, cancellation), TimeSpan.FromMinutes(10.0));
@@ -220,13 +288,10 @@ namespace BTCPayServer.HostedServices
         {
             public string Grouping { get; set; }
             public WebhookSubscription Subscription { get; set; }
-            public object Event { get; set; }
+            public IGreenFieldEvent Event { get; set; }
             public int TryCount { get; set; } = 0;
-
             public const int MaxTry = 6;
-
-            //TODO: introduce a Scope system like in notifications for when webhooks aren't only for invoices
-            public string InvoiceId { get; set; }
+            public WebhookScope Scope { get; set; }
         }
     }
 }

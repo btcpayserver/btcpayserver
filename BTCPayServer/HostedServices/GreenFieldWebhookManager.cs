@@ -16,85 +16,20 @@ using Newtonsoft.Json;
 
 namespace BTCPayServer.HostedServices
 {
-    public interface IGreenFieldWebhookScopeKeyFetcher
-    {
-        bool CanFetch(WebhookScope webhookScope);
-
-        Task<Key> Fetch(WebhookScope webhookScope);
-    }
-
-    public abstract class GreenFieldWebhookScopeKeyFetcher<T> : IGreenFieldWebhookScopeKeyFetcher where T : WebhookScope
-    {
-        public virtual bool CanFetch(WebhookScope webhookScope)
-        {
-            return webhookScope is T;
-        }
-
-        public abstract Task<Key> Fetch(T webhookScope);
-        
-        public Task<Key> Fetch(WebhookScope webhookScope)
-        {
-            return Fetch((T)webhookScope);
-        }
-    }
-    
-    
-    public interface WebhookScope
-    {
-            
-    }
-
-    public class InvoiceWebhookScope : WebhookScope
-    {
-        public string InvoiceId { get; set; }
-        public string StoreId { get; set; }
-    }
-    
-    public class InvoiceGreenFieldWebhookScopeKeyFetcher: GreenFieldWebhookScopeKeyFetcher<InvoiceWebhookScope>
-    {
-        private readonly StoreRepository _storeRepository;
-
-        public InvoiceGreenFieldWebhookScopeKeyFetcher(StoreRepository storeRepository)
-        {
-            _storeRepository = storeRepository;
-        }
-        public override async Task<Key> Fetch(InvoiceWebhookScope webhookScope)
-        {
-            var store = await _storeRepository.FindStore(webhookScope.StoreId);
-            return store?.GetStoreBlob()?.EventSigner;
-        }
-    }
-
-
-    public class GreenFieldWebhookVerificationKeyFetcher
-    {
-        private IEnumerable<IGreenFieldWebhookScopeKeyFetcher> _keyFetchers;
-
-        public GreenFieldWebhookVerificationKeyFetcher(IEnumerable<IGreenFieldWebhookScopeKeyFetcher> keyFetchers)
-        {
-            _keyFetchers = keyFetchers;
-        }
-        Task<Key> GetKey(WebhookScope webhookScope)
-        {
-            return _keyFetchers.FirstOrDefault(fetcher => fetcher.CanFetch(webhookScope))?.Fetch(webhookScope) ??
-                   Task.FromResult<Key>(null);
-        }
-    }
-    
     public class GreenFieldWebhookManager : EventHostedServiceBase
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IBackgroundJobClient _backgroundJobClient;
-        private readonly GreenFieldWebhookVerificationKeyFetcher _greenFieldWebhookVerificationKeyFetcher;
+        private readonly StoreRepository _storeRepository;
         private readonly EventAggregator _eventAggregator;
 
         public GreenFieldWebhookManager(EventAggregator eventAggregator, IHttpClientFactory httpClientFactory,
-            IBackgroundJobClient backgroundJobClient, GreenFieldWebhookVerificationKeyFetcher greenFieldWebhookVerificationKeyFetcher) : base(
+            IBackgroundJobClient backgroundJobClient, StoreRepository storeRepository) : base(
             eventAggregator)
         {
             _httpClientFactory = httpClientFactory;
             _backgroundJobClient = backgroundJobClient;
-            _greenFieldWebhookVerificationKeyFetcher = greenFieldWebhookVerificationKeyFetcher;
+            _storeRepository = storeRepository;
             _eventAggregator = eventAggregator;
         }
 
@@ -175,12 +110,14 @@ namespace BTCPayServer.HostedServices
             await sending;
         }
 
-        protected override Task ProcessEvent(object evt, CancellationToken cancellationToken)
+        protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
         {
             switch (evt)
             {
                 case InvoiceDataChangedEvent e:
-                    var validWebhooks = e.Invoice.Webhooks.Where(subscription =>
+                    var blob = (await _storeRepository.FindStore(e.Invoice.StoreId)).GetStoreBlob();
+                    var key = blob.EventSigner;
+                    var validWebhooks = blob.Webhooks.Concat(e.Invoice.Webhooks).Where(subscription =>
                         ValidWebhookForEvent(subscription, InvoiceStatusChangeEventPayload.EventType)).ToList();
                     if (validWebhooks.Any())
                     {
@@ -190,22 +127,19 @@ namespace BTCPayServer.HostedServices
                             AdditionalStatus = e.State.ExceptionStatus,
                             InvoiceId = e.InvoiceId
                         };
-                        var webHook = new GreenFieldEvent<InvoiceStatusChangeEventPayload>()
-                        {
-                            EventType = InvoiceStatusChangeEventPayload.EventType, Payload = payload
-                        };
+                        
                         foreach (WebhookSubscription webhookSubscription in validWebhooks)
                         {
+                            var webHook = new GreenFieldEvent<InvoiceStatusChangeEventPayload>()
+                            {
+                                EventType = InvoiceStatusChangeEventPayload.EventType, Payload = payload
+                            };
+                            webHook.SetSignature(webhookSubscription.Url.ToString(), key);
                             _eventAggregator.Publish(new QueuedGreenFieldWebHook()
                             {
                                 Event = webHook,
                                 Subscription = webhookSubscription,
                                 Grouping = webhookSubscription.ToString(),
-                                Scope = new InvoiceWebhookScope()
-                                {
-                                    InvoiceId = e.Invoice.Id,
-                                    StoreId = e.Invoice.StoreId
-                                },
                             });
                         }
                     }
@@ -216,7 +150,7 @@ namespace BTCPayServer.HostedServices
                     break;
             }
 
-            return base.ProcessEvent(evt, cancellationToken);
+            await base.ProcessEvent(evt, cancellationToken);
         }
 
         private async Task Send(QueuedGreenFieldWebHook e, CancellationToken cancellationToken)
@@ -270,10 +204,7 @@ namespace BTCPayServer.HostedServices
             }
 
             e.TryCount++;
-            _eventAggregator.Publish(new GreenFieldWebhookResultEvent()
-            {
-                Error = webhookEventResultError, Hook = e
-            });
+            _eventAggregator.Publish(new GreenFieldWebhookResultEvent() {Error = webhookEventResultError, Hook = e});
 
             if (e.TryCount <= QueuedGreenFieldWebHook.MaxTry)
                 _backgroundJobClient.Schedule((cancellation) => Send(e, cancellation), TimeSpan.FromMinutes(10.0));
@@ -291,7 +222,6 @@ namespace BTCPayServer.HostedServices
             public IGreenFieldEvent Event { get; set; }
             public int TryCount { get; set; } = 0;
             public const int MaxTry = 6;
-            public WebhookScope Scope { get; set; }
         }
     }
 }

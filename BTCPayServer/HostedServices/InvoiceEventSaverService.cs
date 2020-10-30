@@ -1,5 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Events;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Services.Invoices;
@@ -44,8 +45,8 @@ namespace BTCPayServer.HostedServices
                             ? InvoiceEventData.EventSeverity.Success
                             : InvoiceEventData.EventSeverity.Error);
                     break;
-                case GreenFieldWebhookResultEvent e when e.Hook.Scope is InvoiceWebhookScope webhookScope:
-                    await SaveEvent(webhookScope.InvoiceId, e,
+                case GreenFieldWebhookResultEvent e when e.Hook.Event is GreenFieldEvent<InvoiceStatusChangeEventPayload> greenFieldEvent:
+                    await SaveEvent(greenFieldEvent.PayloadParsed.InvoiceId, e,
                         string.IsNullOrEmpty(e.Error)
                             ? InvoiceEventData.EventSeverity.Success
                             : InvoiceEventData.EventSeverity.Error);

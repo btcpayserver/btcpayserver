@@ -29,6 +29,8 @@ namespace BTCPayServer.Data
         }
 
         public Key EventSigner { get; set; }
+        public List<WebhookSubscription> Webhooks { get; set; } = new List<WebhookSubscription>();
+
 
         public ShopifySettings Shopify { get; set; }
 

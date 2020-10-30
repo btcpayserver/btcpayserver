@@ -858,7 +858,7 @@ namespace BTCPayServer.Tests
                     s.Driver.Navigate().Refresh();
                     Assert.Contains("badge transactionLabel", s.Driver.PageSource);
                 });
-                Assert.Equal("payout", s.Driver.FindElement(By.ClassName("transactionLabel")).Text);
+                Assert.Equal("Payout", s.Driver.FindElement(By.ClassName("transactionLabel")).Text);
 
                 s.GoToWallet(navPages: WalletsNavPages.Payouts);
                 TestUtils.Eventually(() =>

@@ -159,11 +159,11 @@
                                                 <td class="text-right text-nowrap">
                                                     @if (!string.IsNullOrEmpty(invoice.Link))
                                                     {
-                                                        <a class="transaction-link text-print-default @StatusTextClass(invoice.Status)" href="@invoice.Link">@invoice.Status</a>
+                                                        <a class="transaction-link text-print-default @StatusTextClass(invoice.Status.ToString())" href="@invoice.Link">@invoice.Status.GetStateString()</a>
                                                     }
                                                     else
                                                     {
-                                                        <span class="text-print-default @StatusTextClass(invoice.Status)">@invoice.Status</span>
+                                                        <span class="text-print-default @StatusTextClass(invoice.Status.ToString())">@invoice.Status.GetStateString()</span>
                                                     }
                                                 </td>
                                             </tr>

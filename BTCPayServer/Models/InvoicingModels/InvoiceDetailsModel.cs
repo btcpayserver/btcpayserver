@@ -60,6 +60,8 @@ namespace BTCPayServer.Models.InvoicingModels
             get; set;
         } = new List<CryptoPayment>();
 
+        public List<WebhookSubscription> Webhooks { get; set; }
+
         public string State
         {
             get; set;

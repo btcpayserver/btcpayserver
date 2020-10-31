@@ -92,7 +92,7 @@ namespace BTCPayServer.Controllers
             var details = InvoicePopulatePayments(invoice);
             model.CryptoPayments = details.CryptoPayments;
             model.Payments = details.Payments;
-
+            model.Webhooks = invoice.Webhooks;
             return View(model);
         }
 

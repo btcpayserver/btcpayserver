@@ -226,7 +226,8 @@ namespace BTCPayServer.HostedServices
             e.TryCount++;
             _eventAggregator.Publish(new GreenFieldWebhookResultEvent()
             {
-                Error = $"{webhookEventResultError} (Tried {e.TryCount}/{QueuedGreenFieldWebHook.MaxTry})",
+                Error =
+                    $"{webhookEventResultError} (Tried {Math.Max(e.TryCount, QueuedGreenFieldWebHook.MaxTry)}/{QueuedGreenFieldWebHook.MaxTry})",
                 Hook = e,
                 Timestamp = timestamp
             });

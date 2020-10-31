@@ -1,3 +1,4 @@
+@using BTCPayServer.Client.Models
 @model InvoiceDetailsModel
 @{
     ViewData["Title"] = "Invoice " + Model.Id;
@@ -99,14 +100,36 @@
                         <th>Total fiat due</th>
                         <td>@Model.Fiat</td>
                     </tr>
-                    <tr>
-                        <th>Notification Url</th>
-                        <td>@Model.NotificationUrl</td>
-                    </tr>
+                    @if (!string.IsNullOrEmpty(Model.NotificationUrl))
+                    {
+                        <tr>
+                            <th>Notification Url</th>
+                            <td>@Model.NotificationUrl</td>
+                        </tr>
+                    }
                     <tr>
                         <th>Redirect Url</th>
                         <td><a href="@Model.RedirectUrl">@Model.RedirectUrl</a></td>
                     </tr>
+                    @if (Model.Webhooks?.Any() is true)
+                    {
+                        <tr>
+                            <th>Webhooks</th>
+                            <td>
+                                <ul class="list-group list-group-flush">
+                                    @foreach (var webhook in Model.Webhooks)
+                                    {
+                                        <li class="list-group-item ">
+                                            <div class="d-flex justify-content-between">
+                                                <a href="@webhook.Url" target="_blank" class="text-truncate" style="max-width: 200px;" data-toggle="tooltip" title="@webhook.Url">@webhook.Url</a>
+                                                <span class="text-muted">@webhook.EventType</span>
+                                            </div>
+                                        </li>
+                                    }
+                                </ul>
+                            </td>
+                        </tr>
+                    }
                 </table>
             </div>
             <div class="col-md-6">

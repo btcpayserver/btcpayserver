@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Events;
@@ -43,20 +44,20 @@ namespace BTCPayServer.HostedServices
                     await SaveEvent(e.InvoiceId, e,
                         string.IsNullOrEmpty(e.Error)
                             ? InvoiceEventData.EventSeverity.Success
-                            : InvoiceEventData.EventSeverity.Error);
+                            : InvoiceEventData.EventSeverity.Error, e.Timestamp);
                     break;
                 case GreenFieldWebhookResultEvent e when e.Hook.Event is GreenFieldEvent<InvoiceStatusChangeEventPayload> greenFieldEvent:
                     await SaveEvent(greenFieldEvent.PayloadParsed.InvoiceId, e,
                         string.IsNullOrEmpty(e.Error)
                             ? InvoiceEventData.EventSeverity.Success
-                            : InvoiceEventData.EventSeverity.Error);
+                            : InvoiceEventData.EventSeverity.Error, e.Timestamp);
                     break;
             }
         }
 
-        private Task SaveEvent(string invoiceId, object evt, InvoiceEventData.EventSeverity severity)
+        private Task SaveEvent(string invoiceId, object evt, InvoiceEventData.EventSeverity severity, DateTimeOffset? timeOffset = null)
         {
-            return _invoiceRepository.AddInvoiceEvent(invoiceId, evt, severity);
+            return _invoiceRepository.AddInvoiceEvent(invoiceId, evt, severity, timeOffset);
         }
     }
 
@@ -71,5 +72,7 @@ namespace BTCPayServer.HostedServices
                 ? $"Webhook {Hook.Subscription.EventType} sent to {Hook.Subscription.Url}"
                 : $"Error while sending webhook {Hook.Subscription.EventType} to {Hook.Subscription.Url}: {Error}";
         }
+        
+        public DateTimeOffset Timestamp { get; set; }
     }
 }

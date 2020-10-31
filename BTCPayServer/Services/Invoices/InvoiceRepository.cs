@@ -306,17 +306,17 @@ retry:
             }
         }
 
-        public async Task AddInvoiceEvent(string invoiceId, object evt, InvoiceEventData.EventSeverity severity)
+        public async Task AddInvoiceEvent(string invoiceId, object evt, InvoiceEventData.EventSeverity severity, DateTimeOffset? timestamp = null)
         {
             await using var context = _ContextFactory.CreateContext();
             await context.InvoiceEvents.AddAsync(new InvoiceEventData()
-            {
-                Severity = severity,
-                InvoiceDataId = invoiceId,
-                Message = evt.ToString(),
-                Timestamp = DateTimeOffset.UtcNow,
-                UniqueId = Encoders.Hex.EncodeData(RandomUtils.GetBytes(10))
-            });
+                {
+                    Severity = severity,
+                    InvoiceDataId = invoiceId,
+                    Message = evt.ToString(),
+                    Timestamp = timestamp ?? DateTimeOffset.UtcNow,
+                    UniqueId = Encoders.Hex.EncodeData(RandomUtils.GetBytes(10))
+                });
             try
             {
                 await context.SaveChangesAsync();

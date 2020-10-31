@@ -188,9 +188,12 @@ namespace BTCPayServer.Controllers
                     vm.Webhooks.RemoveAt(index);
                     return View("Integrations", vm);
                 case "save":
-                    TempData[WellKnownTempData.SuccessMessage] = "Webhooks saved";
                     var blob = CurrentStore.GetStoreBlob();
                     blob.Webhooks = vm.Webhooks.Where(subscription => subscription.Url != null).ToList();
+                    var store = CurrentStore;
+                    store.SetStoreBlob(blob);
+                    await _Repo.UpdateStore(store);
+                    TempData[WellKnownTempData.SuccessMessage] = "Webhooks saved";
                     break;
             }
             return RedirectToAction(nameof(Integrations), new {storeId = CurrentStore.Id});

@@ -1,3 +1,5 @@
+using System;
+
 namespace BTCPayServer.Events
 {
     public class BitPayInvoiceIPNEvent
@@ -7,7 +9,10 @@ namespace BTCPayServer.Events
             InvoiceId = invoiceId;
             EventCode = eventCode;
             Name = name;
+            Timestamp= DateTimeOffset.UtcNow;;
         }
+
+        public DateTimeOffset Timestamp { get; set; }
 
         public int? EventCode { get; set; }
         public string Name { get; set; }

@@ -42,7 +42,20 @@ namespace BTCPayServer.Controllers
             _fileProvider = webHostEnvironment.WebRootFileProvider;
             SignInManager = signInManager;
         }
-
+#if DEBUG
+        [HttpGet("~/webhook/{status}")]
+        [HttpPost("~/webhook/{status}")]
+        public async Task<IActionResult> TestWH(int status)
+        {
+            if (status == 0)
+            {
+                await Task.Delay(TimeSpan.FromMinutes(2));
+                return Ok();
+            }
+            return StatusCode(status);
+        }
+#endif  
+        
         private async Task<ViewResult> GoToApp(string appId, AppType? appType)
         {
             if (appType.HasValue && !string.IsNullOrEmpty(appId))

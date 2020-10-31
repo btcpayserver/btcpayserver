@@ -464,7 +464,7 @@ namespace BTCPayServer.Services.Invoices
         public List<InvoiceEventData> Events { get; internal set; }
         public double PaymentTolerance { get; set; }
         public bool Archived { get; set; }
-        public List<WebhookSubscription> Webhooks { get; set; }
+        public List<WebhookSubscription> Webhooks { get; set; } = new List<WebhookSubscription>();
 
         public bool IsExpired()
         {

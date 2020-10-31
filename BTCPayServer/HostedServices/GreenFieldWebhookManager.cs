@@ -10,8 +10,9 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
-using NBitcoin;
+using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.HostedServices
@@ -21,15 +22,18 @@ namespace BTCPayServer.HostedServices
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IBackgroundJobClient _backgroundJobClient;
         private readonly StoreRepository _storeRepository;
+        private readonly MvcNewtonsoftJsonOptions _jsonOptions;
         private readonly EventAggregator _eventAggregator;
 
         public GreenFieldWebhookManager(EventAggregator eventAggregator, IHttpClientFactory httpClientFactory,
-            IBackgroundJobClient backgroundJobClient, StoreRepository storeRepository) : base(
+            IBackgroundJobClient backgroundJobClient, StoreRepository storeRepository,
+            MvcNewtonsoftJsonOptions jsonOptions) : base(
             eventAggregator)
         {
             _httpClientFactory = httpClientFactory;
             _backgroundJobClient = backgroundJobClient;
             _storeRepository = storeRepository;
+            _jsonOptions = jsonOptions;
             _eventAggregator = eventAggregator;
         }
 
@@ -40,6 +44,7 @@ namespace BTCPayServer.HostedServices
         {
             base.SubscribeToEvents();
             Subscribe<InvoiceDataChangedEvent>();
+            Subscribe<InvoiceEvent>();
             Subscribe<QueuedGreenFieldWebHook>();
         }
 
@@ -49,7 +54,6 @@ namespace BTCPayServer.HostedServices
         }
 
         readonly Dictionary<string, Task> _queuedSendingTasks = new Dictionary<string, Task>();
-
 
         /// <summary>
         /// Will make sure only one callback is called at once on the same key
@@ -114,36 +118,13 @@ namespace BTCPayServer.HostedServices
         {
             switch (evt)
             {
+                case InvoiceEvent e
+                    when new[] {InvoiceEvent.MarkedCompleted, InvoiceEvent.MarkedInvalid, InvoiceEvent.Created}
+                        .Contains(e.Name):
+                    await HandleInvoiceStatusChange(e.Invoice);
+                    break;
                 case InvoiceDataChangedEvent e:
-                    var blob = (await _storeRepository.FindStore(e.Invoice.StoreId)).GetStoreBlob();
-                    var key = blob.EventSigner;
-                    var validWebhooks = blob.Webhooks.Concat(e.Invoice.Webhooks).Where(subscription =>
-                        ValidWebhookForEvent(subscription, InvoiceStatusChangeEventPayload.EventType)).ToList();
-                    if (validWebhooks.Any())
-                    {
-                        var payload = new InvoiceStatusChangeEventPayload()
-                        {
-                            Status = e.State.Status,
-                            AdditionalStatus = e.State.ExceptionStatus,
-                            InvoiceId = e.InvoiceId
-                        };
-                        
-                        foreach (WebhookSubscription webhookSubscription in validWebhooks)
-                        {
-                            var webHook = new GreenFieldEvent<InvoiceStatusChangeEventPayload>()
-                            {
-                                EventType = InvoiceStatusChangeEventPayload.EventType, Payload = payload
-                            };
-                            webHook.SetSignature(webhookSubscription.Url.ToString(), key);
-                            _eventAggregator.Publish(new QueuedGreenFieldWebHook()
-                            {
-                                Event = webHook,
-                                Subscription = webhookSubscription,
-                                Grouping = webhookSubscription.ToString(),
-                            });
-                        }
-                    }
-
+                    await HandleInvoiceStatusChange(e.Invoice);
                     break;
                 case QueuedGreenFieldWebHook e:
                     _ = Enqueue(e.Grouping, () => Send(e, cancellationToken));
@@ -153,14 +134,49 @@ namespace BTCPayServer.HostedServices
             await base.ProcessEvent(evt, cancellationToken);
         }
 
+
+        private async Task HandleInvoiceStatusChange(InvoiceEntity invoice)
+        {
+            var state = invoice.GetInvoiceState();
+            var blob = (await _storeRepository.FindStore(invoice.StoreId)).GetStoreBlob();
+            var key = blob.EventSigner;
+            var validWebhooks = blob.Webhooks.Concat(invoice.Webhooks ?? new List<WebhookSubscription>()).Where(
+                subscription =>
+                    ValidWebhookForEvent(subscription, InvoiceStatusChangeEventPayload.EventType)).ToList();
+            if (validWebhooks.Any())
+            {
+                var payload = new InvoiceStatusChangeEventPayload()
+                {
+                    Status = state.Status, AdditionalStatus = state.ExceptionStatus, InvoiceId = invoice.Id
+                };
+
+                foreach (WebhookSubscription webhookSubscription in validWebhooks)
+                {
+                    var webHook = new GreenFieldEvent<InvoiceStatusChangeEventPayload>()
+                    {
+                        EventType = InvoiceStatusChangeEventPayload.EventType, Payload = payload
+                    };
+                    webHook.SetSignature(webhookSubscription.Url.ToString(), key);
+                    _eventAggregator.Publish(new QueuedGreenFieldWebHook()
+                    {
+                        Event = webHook,
+                        Subscription = webhookSubscription,
+                        Grouping = webhookSubscription.ToString(),
+                    });
+                }
+            }
+        }
+
         private async Task Send(QueuedGreenFieldWebHook e, CancellationToken cancellationToken)
         {
             var client = GetClient(e.Subscription.Url);
+            var timestamp = DateTimeOffset.UtcNow;
             var request = new HttpRequestMessage
             {
                 Method = HttpMethod.Post,
                 RequestUri = e.Subscription.Url,
-                Content = new StringContent(JsonConvert.SerializeObject(e.Event),
+                Content = new StringContent(
+                    JsonConvert.SerializeObject(e.Event, Formatting.Indented, _jsonOptions.SerializerSettings),
                     Encoding.UTF8, "application/json")
             };
             var webhookEventResultError = "";
@@ -173,10 +189,14 @@ namespace BTCPayServer.HostedServices
                 {
                     _eventAggregator.Publish(new GreenFieldWebhookResultEvent()
                     {
-                        Error = webhookEventResultError, Hook = e
+                        Error = webhookEventResultError, Hook = e, Timestamp = timestamp
                     });
 
                     return;
+                }
+                else
+                {
+                    webhookEventResultError = $"Failure HTTP status code: {(int)result.StatusCode}";
                 }
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -204,7 +224,12 @@ namespace BTCPayServer.HostedServices
             }
 
             e.TryCount++;
-            _eventAggregator.Publish(new GreenFieldWebhookResultEvent() {Error = webhookEventResultError, Hook = e});
+            _eventAggregator.Publish(new GreenFieldWebhookResultEvent()
+            {
+                Error = $"{webhookEventResultError} (Tried {e.TryCount}/{QueuedGreenFieldWebHook.MaxTry})",
+                Hook = e,
+                Timestamp = timestamp
+            });
 
             if (e.TryCount <= QueuedGreenFieldWebHook.MaxTry)
                 _backgroundJobClient.Schedule((cancellation) => Send(e, cancellation), TimeSpan.FromMinutes(10.0));
@@ -222,6 +247,10 @@ namespace BTCPayServer.HostedServices
             public IGreenFieldEvent Event { get; set; }
             public int TryCount { get; set; } = 0;
             public const int MaxTry = 6;
+            public override string ToString()
+            {
+                return string.Empty;
+            }
         }
     }
 }

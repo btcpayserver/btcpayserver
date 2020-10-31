@@ -55,6 +55,7 @@ namespace BTCPayServer.Client.Models
 
         public bool PayJoinEnabled { get; set; }
         public bool LightningPrivateRouteHints { get; set; }
+        public List<WebhookSubscription> Webhooks { get; set; }
 
 
         [JsonExtensionData]

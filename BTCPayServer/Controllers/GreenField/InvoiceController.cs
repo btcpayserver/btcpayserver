@@ -227,6 +227,7 @@ namespace BTCPayServer.Controllers.GreenField
                 AdditionalStatus = entity.ExceptionStatus,
                 Currency = entity.Currency,
                 Metadata = entity.Metadata.ToJObject(),
+                Webhooks = entity.Webhooks,
                 Checkout = new CreateInvoiceRequest.CheckoutOptions()
                 {
                     Expiration = entity.ExpirationTime - entity.InvoiceTime,

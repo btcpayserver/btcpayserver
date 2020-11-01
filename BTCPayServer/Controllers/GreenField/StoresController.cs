@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using NBitcoin;
 
 namespace BTCPayServer.Controllers.GreenField
 {
@@ -135,7 +136,8 @@ namespace BTCPayServer.Controllers.GreenField
                 RedirectAutomatically = storeBlob.RedirectAutomatically,
                 PayJoinEnabled = storeBlob.PayJoinEnabled,
                 LightningPrivateRouteHints = storeBlob.LightningPrivateRouteHints,
-                Webhooks = storeBlob.Webhooks
+                Webhooks = storeBlob.Webhooks,
+                EventKey = storeBlob.EventSigner.PubKey.ToString(Network.Main)
             };
         }
 

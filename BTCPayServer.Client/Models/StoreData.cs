@@ -6,5 +6,7 @@ namespace BTCPayServer.Client.Models
         /// the id of the store
         /// </summary>
         public string Id { get; set; }
+        
+        public string EventKey { get; set; }
     }
 }

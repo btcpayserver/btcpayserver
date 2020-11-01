@@ -288,7 +288,8 @@ namespace BTCPayServer
                         "://",
                         request.Host.ToUriComponent(),
                         request.PathBase.ToUriComponent(),
-                        request.Path.ToUriComponent());
+                        request.Path.ToUriComponent(),
+                        request.QueryString.ToUriComponent());
         }
 
         public static string GetCurrentPath(this HttpRequest request)

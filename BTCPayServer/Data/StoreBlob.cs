@@ -26,6 +26,8 @@ namespace BTCPayServer.Data
             PaymentTolerance = 0;
             ShowRecommendedFee = true;
             RecommendedFeeBlockTarget = 1;
+            EventSigner = new Key();
+            Hints = new StoreHints {Wallet = true, Lightning = true};
         }
 
         public Key EventSigner { get; set; }

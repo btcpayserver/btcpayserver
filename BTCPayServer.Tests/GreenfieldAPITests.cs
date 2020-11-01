@@ -1,13 +1,16 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
+using BTCPayServer.Client.Events;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using BTCPayServer.Events;
+using BTCPayServer.HostedServices;
 using BTCPayServer.JsonConverters;
 using BTCPayServer.Lightning;
 using BTCPayServer.Services;
@@ -815,6 +818,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task InvoiceTests()
         {
+            
             using (var tester = ServerTester.Create())
             {
                 await tester.StartAsync();
@@ -877,7 +881,68 @@ namespace BTCPayServer.Tests
                 //unarchive
                 await client.UnarchiveInvoice(user.StoreId, invoice.Id);
                 Assert.NotNull(await client.GetInvoice(user.StoreId, invoice.Id));
+#if  DEBUG
+                
+                //let's test invoice webhooks
+                var store = await client.GetStore(user.StoreId);
+                
+                //we can have webhooks on a store level
+                Assert.Empty(store.Webhooks);
+                store.Webhooks.Add(new WebhookSubscription()
+                {
+                    Url = new Uri(tester.PayTester.ServerUri, "webhook/200?src=store"),
+                    EventType = InvoiceStatusChangeEventPayload.EventType
+                });
+                var updateStore = JsonConvert.DeserializeObject<UpdateStoreRequest>(JsonConvert.SerializeObject(store));
+                store = await client.UpdateStore(store.Id, updateStore);
+                Assert.Single(store.Webhooks);
+                
+                //we can verify that messages are authentic by using a dedicated key saved in the store
+                var key = new BitcoinPubKeyAddress(store.EventKey, Network.Main);
+                
+                //status change
+                var webhookedInvoice = await client.CreateInvoice(user.StoreId,
+                    new CreateInvoiceRequest()
+                    {
+                        Amount = 1,
+                        Currency = "USD",
+                        Webhooks = new List<WebhookSubscription>()
+                        {
+                            new WebhookSubscription()
+                            {
+                                Url = new Uri(tester.PayTester.ServerUri, "webhook/200?src=invoice"),
+                                EventType = InvoiceStatusChangeEventPayload.EventType
+                            }
+                        }
+                    });
+                    
+                Assert.Single(webhookedInvoice.Webhooks);
 
+                TestUtils.Eventually(() =>
+                {
+                    Assert.Equal(2, HomeController.RecordedWebhooks.Count);
+                });
+
+                var webHooKResult = HomeController.RecordedWebhooks
+                    .Single(tuple => tuple.Url.EndsWith("/200?src=invoice"));
+                NewFunction(webHooKResult.Url, webHooKResult.body);
+                
+                webHooKResult = HomeController.RecordedWebhooks
+                    .Single(tuple => tuple.Url.EndsWith("/200?src=store"));
+                NewFunction(webHooKResult.Url, webHooKResult.body);
+                void NewFunction(string url, string body)
+                {
+                    var invWebhookResultObj = JObject.Parse(body);
+
+                    Assert.Equal(InvoiceStatusChangeEventPayload.EventType, invWebhookResultObj["eventType"].Value<string>());
+
+                    var evt = invWebhookResultObj.ToObject<GreenFieldEvent<InvoiceStatusChangeEventPayload>>();
+                    Assert.True(evt.VerifySignature(url, key));
+                    Assert.Equal(InvoiceStatus.New, evt.PayloadParsed.Status);
+                    Assert.Equal(InvoiceExceptionStatus.None, evt.PayloadParsed.AdditionalStatus);
+                }
+                
+#endif
             }
         }
         

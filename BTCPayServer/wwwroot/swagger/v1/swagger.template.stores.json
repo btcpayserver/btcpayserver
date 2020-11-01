@@ -264,6 +264,10 @@
                                 "type": "string",
                                 "description": "The id of the store",
                                 "nullable": false
+                            },
+                            "eventKey": {
+                                "type": "string",
+                                "description": "The public key used to sign webhooks related to this store."
                             }
                         }
                     }
@@ -377,6 +381,13 @@
                         "type": "boolean",
                         "default": false,
                         "description": "Should private route hints be included in the lightning payment of the checkout page."
+                    },
+                    "webhooks": {
+                        "type": "array",
+                        "description": "A list of webhook subscriptions",
+                        "items": {
+                            "$ref": "#/components/schemas/WebhookSubscription"
+                        }
                     }
                 }
             },

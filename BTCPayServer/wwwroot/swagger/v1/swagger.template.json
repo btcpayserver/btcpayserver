@@ -64,7 +64,12 @@
                 "name": "Authorization",
                 "in": "header",
                 "scheme": "Basic"
-            }
+            },
+            "Webhook":{
+                "description": "BTCPay Server supports verifying webhooks through various generated private keys. Depending on the event, the private key can be found in the store, server, user, etc.",
+                "name": "Webhooks",
+                "type": "Bitcoin Core message signing"
+            } 
         }
     },
     "security": [

@@ -506,6 +506,13 @@
                             }
                         ],
                         "description": "Additional settings to customize the checkout flow"
+                    },
+                    "webhooks": {
+                        "type": "array",
+                        "description": "A list of webhook subscriptions",
+                        "items": {
+                            "$ref": "#/components/schemas/WebhookSubscription"
+                        }
                     }
                 }
             },
@@ -565,6 +572,68 @@
                     "LowSpeed",
                     "LowMediumSpeed"
                 ]
+            }
+        }
+    },
+
+    "x-webhooks": {
+        "Invoice Status Changed": {
+            "post": {
+                "summary": "Invoice Status Changed",
+                "description": "Information on when an invoice status has changed.",
+                "operationId": "invoice_status",
+                "tags": [
+                    "Invoices"
+                ],
+                "security": [
+                    {
+                        "Webhook": ["store"]
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "eventType": {
+                                        "type": "string",
+                                        "example": "invoice_status",
+                                        "description": "The event type"
+                                    },
+                                    "payload": {
+                                        "type": "object",
+                                        "properties": {
+                                            "invoiceId": {
+                                                "type": "string",
+                                                "example": "9dD1z86QWCy2rNPGT9KBtD",
+                                                "description": "The invoice id"
+                                            },
+                                            "status": {
+                                                "$ref": "#/components/schemas/InvoiceStatus",
+                                                "description": "The status of the invoice"
+                                            },
+                                            "additionalStatus": {
+                                                "$ref": "#/components/schemas/InvoiceAdditionalStatus",
+                                                "description": "a secondary status of the invoice"
+                                            }
+                                        }
+                                    },
+                                    "signature": {
+                                        "type": "string",
+                                        "example": "HwQQDD37sIhar3o1OcY2msxecHhdubCyliOp5qEpHm9YErvKGsFl2iVF8QEOafrIHM4INB27aGLPJkEtRc9s1r4=",
+                                        "description": "A signature signed by store to verify the event was sent from your store."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Return a 200 status to indicate that the data was received successfully"
+                    }
+                }
             }
         }
     },

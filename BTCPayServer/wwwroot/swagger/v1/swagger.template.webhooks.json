@@ -1,0 +1,25 @@
+{
+    "components": {
+        "schemas": {
+            "WebhookSubscription": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "eventType": {
+                        "type": "string",
+                        "example": "invoice_status",
+                        "description": "The event the webhook is subscribed to",
+                        "enum": [
+                            "invoice_status"
+                        ]
+                    },
+                    "url": {
+                        "type": "string",
+                        "format": "url",
+                        "description": "The url the webhook HTTP POST request will be sent to"
+                    }
+                }
+            }
+        }
+    }
+}

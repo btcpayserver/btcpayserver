@@ -8,7 +8,6 @@ namespace BTCPayServer.Client.Events
         object Payload { get; set; }
         string Signature { get; set; }
         void SetSignature(string url, Key key);
-        bool VerifySignature(string url, BitcoinPubKeyAddress key);
-        string GetPayload();
+        bool VerifySignature(string url, PubKey key);
     }
 }

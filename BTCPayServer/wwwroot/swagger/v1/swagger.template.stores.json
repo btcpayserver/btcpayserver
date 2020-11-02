@@ -267,6 +267,7 @@
                             },
                             "eventKey": {
                                 "type": "string",
+                                "format": "hex",
                                 "description": "The public key used to sign webhooks related to this store."
                             }
                         }

@@ -16,7 +16,7 @@ namespace BTCPayServer.Tests
     {
         readonly IWebHost _Host = null;
         readonly CancellationTokenSource _Closed = new CancellationTokenSource();
-        readonly Channel<JObject> _Requests = Channel.CreateUnbounded<JObject>();
+        readonly Channel<(JObject, Uri)> _Requests = Channel.CreateUnbounded<(JObject, Uri)>();
         public CustomServer()
         {
             var port = Utils.FreeTcpPort();
@@ -25,7 +25,9 @@ namespace BTCPayServer.Tests
                 {
                     app.Run(async req =>
                     {
-                        await _Requests.Writer.WriteAsync(JsonConvert.DeserializeObject<JObject>(await new StreamReader(req.Request.Body).ReadToEndAsync()), _Closed.Token);
+                        await _Requests.Writer.WriteAsync(
+                            (JsonConvert.DeserializeObject<JObject>(await new StreamReader(req.Request.Body).ReadToEndAsync()), 
+                                new Uri(req.Request.GetCurrentUrl())), _Closed.Token);
                         req.Response.StatusCode = 200;
                     });
                 })
@@ -40,18 +42,18 @@ namespace BTCPayServer.Tests
             return new Uri(_Host.ServerFeatures.Get<IServerAddressesFeature>().Addresses.First());
         }
 
-        public async Task<JObject> GetNextRequest()
+        public async Task<(JObject,Uri)> GetNextRequest()
         {
             using (CancellationTokenSource cancellation = new CancellationTokenSource(2000000))
             {
                 try
                 {
-                    JObject req = null;
+                    (JObject, Uri) req = (null, null);
                     while (!await _Requests.Reader.WaitToReadAsync(cancellation.Token) ||
                         !_Requests.Reader.TryRead(out req))
                     {
-
                     }
+
                     return req;
                 }
                 catch (TaskCanceledException)

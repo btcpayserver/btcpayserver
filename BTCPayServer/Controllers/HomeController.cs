@@ -4,11 +4,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
-using BTCPayServer.Logging;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Security;
@@ -19,7 +17,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders;
-using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.Payment;
 using Newtonsoft.Json;
@@ -44,30 +41,7 @@ namespace BTCPayServer.Controllers
             _cachedServerSettings = cachedServerSettings;
             _fileProvider = webHostEnvironment.WebRootFileProvider;
             SignInManager = signInManager;
-        }
-#if DEBUG
-        public static List<(string Url, string body)> RecordedWebhooks = new List<(string Url, string body)>(); 
-        [HttpGet("~/webhook/{status}")]
-        [HttpPost("~/webhook/{status}")]
-        public async Task<IActionResult> TestWH(int status)
-        {
-            Logs.PayServer.LogInformation("Received test webhook");
-            string rawBody;
-            using (StreamReader reader = new StreamReader(Request.Body, Encoding.UTF8))
-            {
-                rawBody = (await reader.ReadToEndAsync()) ?? string.Empty;
-            }
-
-            RecordedWebhooks.Add((Request.GetCurrentUrl(), rawBody));
-            if (status == 0)
-            {
-                await Task.Delay(TimeSpan.FromMinutes(2));
-                return Ok();
-            }
-            return StatusCode(status);
-        }
-#endif  
-        
+        }        
         private async Task<ViewResult> GoToApp(string appId, AppType? appType)
         {
             if (appType.HasValue && !string.IsNullOrEmpty(appId))

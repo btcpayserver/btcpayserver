@@ -137,7 +137,7 @@ namespace BTCPayServer.Controllers.GreenField
                 PayJoinEnabled = storeBlob.PayJoinEnabled,
                 LightningPrivateRouteHints = storeBlob.LightningPrivateRouteHints,
                 Webhooks = storeBlob.Webhooks,
-                EventKey = storeBlob.EventSigner.PubKey.ToString(Network.Main)
+                EventKey = storeBlob.EventSigner.PubKey.ToHex()
             };
         }
 

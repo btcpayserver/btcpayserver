@@ -92,6 +92,10 @@ namespace BTCPayServer.Tests
                 {
                     cts.Token.WaitHandle.WaitOne(500);
                 }
+                catch (EqualException) when (!cts.Token.IsCancellationRequested)
+                {
+                    cts.Token.WaitHandle.WaitOne(500);
+                }
             }
         }
 

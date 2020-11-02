@@ -881,7 +881,7 @@ namespace BTCPayServer.Tests
                 //unarchive
                 await client.UnarchiveInvoice(user.StoreId, invoice.Id);
                 Assert.NotNull(await client.GetInvoice(user.StoreId, invoice.Id));
-#if  DEBUG
+                using var customServer = new CustomServer();
                 
                 //let's test invoice webhooks
                 var store = await client.GetStore(user.StoreId);
@@ -890,7 +890,7 @@ namespace BTCPayServer.Tests
                 Assert.Empty(store.Webhooks);
                 store.Webhooks.Add(new WebhookSubscription()
                 {
-                    Url = new Uri(tester.PayTester.ServerUri, "webhook/200?src=store"),
+                    Url = new Uri(customServer.GetUri(), "?src=store"),
                     EventType = InvoiceStatusChangeEventPayload.EventType
                 });
                 var updateStore = JsonConvert.DeserializeObject<UpdateStoreRequest>(JsonConvert.SerializeObject(store));
@@ -898,7 +898,7 @@ namespace BTCPayServer.Tests
                 Assert.Single(store.Webhooks);
                 
                 //we can verify that messages are authentic by using a dedicated key saved in the store
-                var key = new BitcoinPubKeyAddress(store.EventKey, Network.Main);
+                var key = new PubKey(store.EventKey);
                 
                 //status change
                 var webhookedInvoice = await client.CreateInvoice(user.StoreId,
@@ -910,7 +910,7 @@ namespace BTCPayServer.Tests
                         {
                             new WebhookSubscription()
                             {
-                                Url = new Uri(tester.PayTester.ServerUri, "webhook/200?src=invoice"),
+                                Url = new Uri(customServer.GetUri(), "?src=invoice"),
                                 EventType = InvoiceStatusChangeEventPayload.EventType
                             }
                         }
@@ -918,31 +918,31 @@ namespace BTCPayServer.Tests
                     
                 Assert.Single(webhookedInvoice.Webhooks);
 
-                TestUtils.Eventually(() =>
+                var totalEvents = 0;
+                var invResult = false;
+                var storeResult = false;
+                while (totalEvents != 2)
                 {
-                    Assert.Equal(2, HomeController.RecordedWebhooks.Count);
-                });
+                    var webHooKResult = await customServer.GetNextRequest();
+                    if (webHooKResult.Item2.ParseQueryString().Get("src") == "invoice")
+                    {
+                        invResult = true;
+                    }
+                    if (webHooKResult.Item2.ParseQueryString().Get("src") == "store")
+                    {
+                        storeResult = true;
+                    }
 
-                var webHooKResult = HomeController.RecordedWebhooks
-                    .Single(tuple => tuple.Url.EndsWith("/200?src=invoice"));
-                NewFunction(webHooKResult.Url, webHooKResult.body);
-                
-                webHooKResult = HomeController.RecordedWebhooks
-                    .Single(tuple => tuple.Url.EndsWith("/200?src=store"));
-                NewFunction(webHooKResult.Url, webHooKResult.body);
-                void NewFunction(string url, string body)
-                {
-                    var invWebhookResultObj = JObject.Parse(body);
+                    Assert.Equal(InvoiceStatusChangeEventPayload.EventType, webHooKResult.Item1["eventType"].Value<string>());
 
-                    Assert.Equal(InvoiceStatusChangeEventPayload.EventType, invWebhookResultObj["eventType"].Value<string>());
-
-                    var evt = invWebhookResultObj.ToObject<GreenFieldEvent<InvoiceStatusChangeEventPayload>>();
-                    Assert.True(evt.VerifySignature(url, key));
+                    var evt = webHooKResult.Item1.ToObject<GreenFieldEvent<InvoiceStatusChangeEventPayload>>();
+                    Assert.True(evt.VerifySignature(webHooKResult.Item2.ToString(), key));
                     Assert.Equal(InvoiceStatus.New, evt.PayloadParsed.Status);
                     Assert.Equal(InvoiceExceptionStatus.None, evt.PayloadParsed.AdditionalStatus);
+                    totalEvents++;
                 }
-                
-#endif
+                Assert.True(invResult);
+                Assert.True(storeResult);
             }
         }
         

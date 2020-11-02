@@ -168,7 +168,7 @@ namespace BTCPayServer.Controllers
         {
             var blob = CurrentStore.GetStoreBlob();
             
-            var vm = new IntegrationsViewModel {Shopify = blob.Shopify, EventPublicKey = blob.EventSigner.PubKey.ToString(Network.Main), Webhooks = blob.Webhooks};
+            var vm = new IntegrationsViewModel {Shopify = blob.Shopify, EventPublicKey = blob.EventSigner.ToHex(), Webhooks = blob.Webhooks};
 
             return View("Integrations", vm);
         }

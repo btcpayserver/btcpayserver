@@ -1,4 +1,7 @@
+using System.Text;
 using NBitcoin;
+using NBitcoin.Crypto;
+using NBitcoin.DataEncoders;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.Client.Events
@@ -27,17 +30,19 @@ namespace BTCPayServer.Client.Events
 
         public void SetSignature(string url, Key key)
         {
-            Signature = key.SignMessage($"{Normalize(url)}_{GetPayload()}");
+            uint256 hash = new uint256(Hashes.SHA256(Encoding.UTF8.GetBytes(GetMessage(url))));
+            Signature = Encoders.Hex.EncodeData(key.Sign(hash).ToDER());
         }
 
-        public bool VerifySignature(string url, BitcoinPubKeyAddress key)
+        public bool VerifySignature(string url, PubKey key)
         {
-            return key.VerifyMessage($"{Normalize(url)}_{GetPayload()}", Signature);
+            uint256 hash = new uint256(Hashes.SHA256(Encoding.UTF8.GetBytes(GetMessage(url))));
+            return key.Verify(hash, new ECDSASignature(Encoders.Hex.DecodeData(Signature)));
         }
 
-        public virtual string GetPayload()
+        protected virtual string GetMessage(string url )
         {
-            return Normalize(JsonConvert.SerializeObject(Payload));
+            return Normalize($"{Normalize(url)}_{JsonConvert.SerializeObject(Payload)}");
         }
 
         private string Normalize(string str)

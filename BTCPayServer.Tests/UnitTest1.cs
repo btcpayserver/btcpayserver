@@ -968,9 +968,9 @@ namespace BTCPayServer.Tests
                     while (!completed || !confirmed)
                     {
                         var request = await callbackServer.GetNextRequest();
-                        if (request.ContainsKey("event"))
+                        if (request.Item1.ContainsKey("event"))
                         {
-                            var evtName = request["event"]["name"].Value<string>();
+                            var evtName = request.Item1["event"]["name"].Value<string>();
                             switch (evtName)
                             {
                                 case InvoiceEvent.Created:

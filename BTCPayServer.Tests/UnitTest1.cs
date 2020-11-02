@@ -221,7 +221,7 @@ namespace BTCPayServer.Tests
                 bool valid = swagger.IsValid(schema, out errors);
                 //the schema is not fully compliant to the spec. We ARE allowed to have multiple security schemas. 
                 var matchedError = errors.Where(error =>
-                    error.Path == "components.securitySchemes.Basic" && error.ErrorType == ErrorType.OneOf).ToList();
+                    new []{"components.securitySchemes.Basic", "components.securitySchemes.Webhook"}.Contains(error.Path) && error.ErrorType == ErrorType.OneOf).ToList();
                 foreach (ValidationError validationError in matchedError)
                 {
                     errors.Remove(validationError);

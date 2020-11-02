@@ -1893,7 +1893,7 @@ namespace BTCPayServer.Tests
 
                 rateVm.ScriptTest = "BTC_USD,BTC_CAD,DOGE_USD,DOGE_CAD";
                 rateVm.Script = "DOGE_X = bittrex(DOGE_BTC) * BTC_X;\n" +
-                                "X_CAD = quadrigacx(X_CAD);\n" +
+                                "X_CAD = ndax(X_CAD);\n" +
                                 "X_X = coingecko(X_X);";
                 rateVm.Spread = 50;
                 rateVm = Assert.IsType<RatesViewModel>(Assert.IsType<ViewResult>(await store.Rates(rateVm, "Test"))

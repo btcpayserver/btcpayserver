@@ -47,7 +47,12 @@ namespace BTCPayServer.Client.Events
 
         private string Normalize(string str)
         {
-            return str.Replace(" ", "").Replace("    ", "").ToLowerInvariant();
+            return str
+                .Replace(" ", "")
+                .Replace("\t", "")
+                .Replace("\n", "")
+                .Replace("\r", "")
+                .ToLowerInvariant();
         }
     }
 }

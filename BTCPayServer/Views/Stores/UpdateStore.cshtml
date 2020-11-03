@@ -246,12 +246,20 @@
                             <span class="fa fa-question-circle-o" title="More information..."></span>
                         </a>
                     </div>
-                    <select asp-for="SpeedPolicy" class="form-control w-auto">
+                    <script>
+                        function handleSpeedPolicyChange(select) {
+                            document.getElementById('unconfirmed-warning').hidden = select.value !== '0';
+                        }
+                    </script>
+                    <select asp-for="SpeedPolicy" class="form-control w-auto" onchange="handleSpeedPolicyChange(this)">
                         <option value="0">Is unconfirmed</option>
                         <option value="1">Has at least 1 confirmation</option>
                         <option value="3">Has at least 2 confirmations</option>
                         <option value="2">Has at least 6 confirmations</option>
                     </select>
+                    <div class="alert alert-warning my-2" hidden="@(Model.SpeedPolicy != 0)" id="unconfirmed-warning" role="alert">
+                        Choosing to accept an unconfirmed invoice can lead to double-spending and is strongly discouraged.
+                    </div>
                     <span asp-validation-for="SpeedPolicy" class="text-danger"></span>
                     <button name="command" type="submit" class="btn btn-primary mt-3" value="Save" id="Save">Save Store Settings</button>
                 </div>

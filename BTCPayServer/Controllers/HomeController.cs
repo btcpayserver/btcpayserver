@@ -12,6 +12,7 @@ using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Apps;
+using DBriize.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -132,6 +133,33 @@ namespace BTCPayServer.Controllers
             var servers = new JArray();
             servers.Add(new JObject(new JProperty("url", HttpContext.Request.GetAbsoluteRoot())));
             json["servers"] = servers;
+            var description = json["components"]["securitySchemes"]["API Key"]["description"].Value<string>();
+            var storePolicies =
+                ManageController.AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions.Where(pair =>
+                    Policies.IsStorePolicy(pair.Key) && !pair.Key.EndsWith(":", StringComparison.InvariantCulture));
+            var serverPolicies =
+                ManageController.AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions.Where(pair =>
+                    Policies.IsServerPolicy(pair.Key));
+            var otherPolicies =
+                ManageController.AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions.Where(pair =>
+                    !Policies.IsStorePolicy(pair.Key) && !Policies.IsServerPolicy(pair.Key));
+
+            description = description.ReplaceMultiple(new Dictionary<string, string>()
+            {
+                {
+                    "#OTHERPERMISSIONS#",
+                    string.Join("\n", otherPolicies.Select(pair => $"* `{pair.Key}`: {pair.Value.Title}"))
+                },
+                {
+                    "#SERVERPERMISSIONS#",
+                    string.Join("\n", serverPolicies.Select(pair => $"* `{pair.Key}`: {pair.Value.Title}"))
+                },
+                {
+                    "#STOREPERMISSIONS#",
+                    string.Join("\n", storePolicies.Select(pair => $"* `{pair.Key}`: {pair.Value.Title}"))
+                }
+            });
+            json["components"]["securitySchemes"]["API Key"]["description"] = description;
             return Json(json);
         }
 

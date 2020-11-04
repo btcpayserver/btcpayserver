@@ -16,13 +16,12 @@ namespace BTCPayServer.Controllers
         [HttpGet("server/plugins")]
         public async Task<IActionResult> ListPlugins(
             [FromServices] PluginService pluginService,
-            [FromServices] BTCPayServerOptions btcPayServerOptions,
-            string remote = "btcpayserver/btcpayserver-plugins")
+            [FromServices] BTCPayServerOptions btcPayServerOptions)
         {
             IEnumerable<PluginService.AvailablePlugin> availablePlugins;
             try
             {
-                availablePlugins = await pluginService.GetRemotePlugins(remote);
+                availablePlugins = await pluginService.GetRemotePlugins();
             }
             catch (Exception)
             {
@@ -37,7 +36,6 @@ namespace BTCPayServer.Controllers
             {
                 Installed = pluginService.LoadedPlugins,
                 Available = availablePlugins,
-                Remote = remote,
                 Commands = pluginService.GetPendingCommands(),
                 CanShowRestart = btcPayServerOptions.DockerDeployment
             };
@@ -46,7 +44,6 @@ namespace BTCPayServer.Controllers
 
         public class ListPluginsViewModel
         {
-            public string Remote { get; set; }
             public IEnumerable<IBTCPayServerPlugin> Installed { get; set; }
             public IEnumerable<PluginService.AvailablePlugin> Available { get; set; }
             public (string command, string plugin)[] Commands { get; set; }
@@ -82,11 +79,11 @@ namespace BTCPayServer.Controllers
 
         [HttpPost("server/plugins/install")]
         public async Task<IActionResult> InstallPlugin(
-            [FromServices] PluginService pluginService, string remote, string plugin)
+            [FromServices] PluginService pluginService, string plugin)
         {
             try
             {
-                await pluginService.DownloadRemotePlugin(remote, plugin);
+                await pluginService.DownloadRemotePlugin(plugin);
                 pluginService.InstallPlugin(plugin);
                 TempData.SetStatusMessageModel(new StatusMessageModel()
                 {

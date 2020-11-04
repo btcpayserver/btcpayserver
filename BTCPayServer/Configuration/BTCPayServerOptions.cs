@@ -241,9 +241,13 @@ namespace BTCPayServer.Configuration
             }
 
             DisableRegistration = conf.GetOrDefault<bool>("disable-registration", true);
+            PluginRemote = conf.GetOrDefault("plugin-remote", "btcpayserver/btcpayserver-plugins");
+            RecommendedPlugins = conf.GetOrDefault("recommended-plugins", "").ToLowerInvariant().Split('\r','\n','\t',' ').Where(s => !string.IsNullOrEmpty(s)).Distinct().ToArray();
         }
 
         public string PluginDir { get; set; }
+        public string PluginRemote { get; set; }
+        public string[] RecommendedPlugins { get; set; }
 
         private SSHSettings ParseSSHConfiguration(IConfiguration conf)
         {

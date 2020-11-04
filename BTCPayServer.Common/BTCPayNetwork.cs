@@ -25,7 +25,7 @@ namespace BTCPayServer
                 _Settings.Add(chainType, settings);
                 settings.DefaultDataDirectory = StandardConfiguration.DefaultDataDirectory.GetDirectory("BTCPayServer", NBXplorerDefaultSettings.GetFolderName(chainType));
                 settings.DefaultPluginDirectory =
-                    StandardConfiguration.DefaultDataDirectory.GetDirectory("BTCPayServer", "Extensions");
+                    StandardConfiguration.DefaultDataDirectory.GetDirectory("BTCPayServer", "Plugins");
                 settings.DefaultConfigurationFile = Path.Combine(settings.DefaultDataDirectory, "settings.config");
                 settings.DefaultPort = (chainType == NetworkType.Mainnet ? 23000 :
                                                       chainType == NetworkType.Regtest ? 23002 :

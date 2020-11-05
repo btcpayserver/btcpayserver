@@ -5,7 +5,7 @@
 @{
     ViewData.SetActivePageAndTitle(ServerNavPages.Plugins);
     var installed = Model.Installed.ToDictionary(plugin => plugin.Identifier.ToLowerInvariant(), plugin => plugin.Version);
-        var availableAndNotInstalled = Model.Available.Where(plugin => !installed.Contains(plugin.Identifier)).Select(plugin => (plugin,  BTCPayServerOptions.RecommendedPlugins.Contains(plugin.Identifier.ToLowerInvariant()))).OrderBy(tuple => tuple.Item1);
+    var availableAndNotInstalled = Model.Available.Where(plugin => !installed.ContainsKey(plugin.Identifier.ToLowerInvariant())).Select(plugin => (plugin,  BTCPayServerOptions.RecommendedPlugins.Contains(plugin.Identifier.ToLowerInvariant()))).OrderBy(tuple => tuple.Item1);
 
     bool DependentOn(string plugin)
     {
@@ -118,7 +118,7 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-xs-12 col-md-6">
-                                <h4 class="card-title" title="@plugin.Identifier" data-toggle="tooltip" >@plugin.Name</h4>
+                                <h4 class="card-title" title="@plugin.Identifier" data-toggle="tooltip">@plugin.Name</h4>
                                 <h5 class="card-subtitle mb-3 text-muted d-flex align-items-center">
 
                                     @plugin.Version
@@ -160,7 +160,7 @@
                                                 @dependency
                                                 @if (!DependencyMet(dependency))
                                                 {
-                                                    <span title="Dependency not met." data-toggle="tooltip"  class="fa fa-warning text-danger"></span>
+                                                    <span title="Dependency not met." data-toggle="tooltip" class="fa fa-warning text-danger"></span>
                                                 }
                                             </li>
                                         }
@@ -183,7 +183,7 @@
                                                     @dependency
                                                     @if (!DependencyMet(dependency))
                                                     {
-                                                        <span title="Dependency not met." data-toggle="tooltip"  class="fa fa-warning text-danger"></span>
+                                                        <span title="Dependency not met." data-toggle="tooltip" class="fa fa-warning text-danger"></span>
                                                     }
                                                 </li>
                                             }
@@ -196,7 +196,7 @@
                     @{
                         var pendingAction = Model.Commands.Any(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase));
                     }
-                    @if (!plugin.SystemPlugin && (pendingAction || (updateAvailable && DependenciesMet(matchedAvailable.Dependencies))))
+                    @if (!plugin.SystemPlugin && (pendingAction || (updateAvailable && DependenciesMet(matchedAvailable.Dependencies)) || !DependentOn(plugin.Identifier)))
                     {
                         <div class="card-footer border-0 pb-3 d-flex">
                             @if (pendingAction)
@@ -215,7 +215,7 @@
                                 }
                                 @if (DependentOn(plugin.Identifier))
                                 {
-                                    <button type="button" class="btn btn-outline-danger" data-toggle="tooltip"  title="This plugin cannot be uninstalled as it is depended on by other plugins.">Uninstall <span class="fa fa-exclamation"></span></button>
+                                    <button type="button" class="btn btn-outline-danger" data-toggle="tooltip" title="This plugin cannot be uninstalled as it is depended on by other plugins.">Uninstall <span class="fa fa-exclamation"></span></button>
                                 }
                                 else
                                 {
@@ -223,7 +223,6 @@
                                         <button type="submit" class="btn btn-outline-danger">Uninstall</button>
                                     </form>
                                 }
-                                
                             }
                         </div>
                     }
@@ -242,7 +241,7 @@
             <div class="col col-12 col-lg-6 mb-4">
                 <div class="card h-100">
                     <div class="card-body">
-                        <h4 class="card-title" data-toggle="tooltip"  title="@plugin.Identifier">@plugin.Name</h4>
+                        <h4 class="card-title" data-toggle="tooltip" title="@plugin.Identifier">@plugin.Name</h4>
                         <h5 class="card-subtitle mb-3 text-muted d-flex justify-content-between">
                             <span>@plugin.Version</span>
                             @if (pluginT.Item2)
@@ -262,7 +261,7 @@
                                         @dependency
                                         @if (!DependencyMet(dependency))
                                         {
-                                            <span title="Dependency not met." data-toggle="tooltip"  class="fa fa-warning text-danger"></span>
+                                            <span title="Dependency not met." data-toggle="tooltip" class="fa fa-warning text-danger"></span>
                                         }
                                     </li>
                                 }

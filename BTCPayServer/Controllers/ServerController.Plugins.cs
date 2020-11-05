@@ -83,7 +83,7 @@ namespace BTCPayServer.Controllers
         {
             try
             {
-                await pluginService.DownloadRemotePlugin(remote);
+                await pluginService.DownloadRemotePlugin(plugin);
                 if (update)
                 {
                     pluginService.UpdatePlugin(plugin);

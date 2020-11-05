@@ -22,6 +22,10 @@ namespace BTCPayServer.Contracts
         {
             public string Identifier { get; set; }
             public string Condition { get; set; }
+            public override string ToString()
+            {
+                return $"{Identifier}: {Condition}";
+            }
         }
     }
     

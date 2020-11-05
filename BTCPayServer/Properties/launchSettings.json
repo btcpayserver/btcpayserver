@@ -21,7 +21,8 @@
         "BTCPAY_TORRCFILE": "../BTCPayServer.Tests/TestData/Tor/torrc",
         "BTCPAY_SOCKSENDPOINT": "localhost:9050",
         "BTCPAY_UPDATEURL": "",
-        "BTCPAY_DOCKERDEPLOYMENT": "true"
+        "BTCPAY_DOCKERDEPLOYMENT": "true",
+        "BTCPAY_RECOMMENDED-PLUGINS": "BTCPayServer.Plugins.Test"
       },
       "applicationUrl": "http://127.0.0.1:14142/"
     },
@@ -53,7 +54,8 @@
         "BTCPAY_DEBUGLOG": "debug.log",
         "BTCPAY_TORRCFILE": "../BTCPayServer.Tests/TestData/Tor/torrc",
         "BTCPAY_SOCKSENDPOINT": "localhost:9050",
-        "BTCPAY_DOCKERDEPLOYMENT": "true"
+        "BTCPAY_DOCKERDEPLOYMENT": "true",
+        "BTCPAY_RECOMMENDED-PLUGINS": "BTCPayServer.Plugins.Test"
       },
       "applicationUrl": "https://localhost:14142/"
     },
@@ -87,7 +89,8 @@
         "BTCPAY_DEBUGLOG": "debug.log",
         "BTCPAY_TORRCFILE": "../BTCPayServer.Tests/TestData/Tor/torrc",
         "BTCPAY_SOCKSENDPOINT": "localhost:9050",
-        "BTCPAY_DOCKERDEPLOYMENT": "true"
+        "BTCPAY_DOCKERDEPLOYMENT": "true",
+        "BTCPAY_RECOMMENDED-PLUGINS": "BTCPayServer.Plugins.Test"
       },
       "applicationUrl": "https://localhost:14142/"
     }

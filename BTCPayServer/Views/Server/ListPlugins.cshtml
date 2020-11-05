@@ -268,8 +268,11 @@
                             </ul>
                         }
                     </div>
+                    @{
+                        var pending = Model.Commands.Any(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase));
+                    }
                     <div class="card-footer border-0 pb-3">
-                        @if (Model.Commands.Any(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase)))
+                        @if (pending)
                         {
                             <form asp-action="CancelPluginCommands" asp-route-plugin="@plugin.Identifier">
                                 <button type="submit" class="btn btn-outline-secondary">Cancel pending install</button>
@@ -280,6 +283,12 @@
                             <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier">
                                 <button type="submit" class="btn btn-primary">Install</button>
                             </form>
+                        }
+                        else
+                        {
+                            <span class="text-danger">
+                                Cannot install until dependencies are met
+                            </span>
                         }
                     </div>
                 </div>

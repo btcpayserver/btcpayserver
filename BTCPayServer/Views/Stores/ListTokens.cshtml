@@ -1,4 +1,4 @@
-﻿@model TokensViewModel
+@model TokensViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePageAndTitle(StoreNavPages.Tokens, "Access Tokens");
@@ -21,7 +21,7 @@
 </div>
 <div class="row">
     <div class="col-md-8">
-        <a id="CreateNewToken" asp-action="CreateToken" class="btn btn-primary" role="button"><span class="fa fa-plus" asp-route-storeId="@this.Context.GetRouteValue("storeId")"></span> Create a new token</a>
+        <a id="CreateNewToken" asp-action="CreateToken" class="btn btn-primary" role="button" asp-route-storeId="@this.Context.GetRouteValue("storeId")"><span class="fa fa-plus"></span> Create a new token</a>
 
         @if (Model.Tokens.Any())
         {

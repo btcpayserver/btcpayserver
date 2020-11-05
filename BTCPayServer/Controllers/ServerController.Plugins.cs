@@ -79,12 +79,20 @@ namespace BTCPayServer.Controllers
 
         [HttpPost("server/plugins/install")]
         public async Task<IActionResult> InstallPlugin(
-            [FromServices] PluginService pluginService, string plugin)
+            [FromServices] PluginService pluginService, string plugin , bool update = false)
         {
             try
             {
                 await pluginService.DownloadRemotePlugin(plugin);
-                pluginService.InstallPlugin(plugin);
+                if (update)
+                {
+                    pluginService.UpdatePlugin(plugin);
+                }
+                else
+                {
+                    
+                    pluginService.InstallPlugin(plugin);
+                }
                 TempData.SetStatusMessageModel(new StatusMessageModel()
                 {
                     Message = "Plugin scheduled to be installed.",

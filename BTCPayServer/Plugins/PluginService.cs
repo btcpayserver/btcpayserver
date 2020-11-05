@@ -66,6 +66,11 @@ namespace BTCPayServer.Plugins
             UninstallPlugin(plugin);
             PluginManager.QueueCommands(dest, ("install", plugin));
         }
+        public void UpdatePlugin(string plugin)
+        {
+            var dest = _btcPayServerOptions.PluginDir;
+            PluginManager.QueueCommands(dest, ("update", plugin));
+        }
 
         public async Task UploadPlugin(IFormFile plugin)
         {
@@ -93,7 +98,7 @@ namespace BTCPayServer.Plugins
             public string Description { get; set; }
             public bool SystemPlugin { get; set; } = false;
 
-            public string[] Dependencies { get; } = Array.Empty<string>();
+            public IBTCPayServerPlugin.PluginDependency[] Dependencies { get; set; } = Array.Empty<IBTCPayServerPlugin.PluginDependency>();
 
             public void Execute(IApplicationBuilder applicationBuilder,
                 IServiceProvider applicationBuilderApplicationServices)

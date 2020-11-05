@@ -1,10 +1,93 @@
 @using BTCPayServer.Configuration
+@using BTCPayServer.Contracts
 @model BTCPayServer.Controllers.ServerController.ListPluginsViewModel 
 @inject BTCPayServerOptions BTCPayServerOptions
 @{
     ViewData.SetActivePageAndTitle(ServerNavPages.Plugins);
-    var installed = Model.Installed.Select(plugin => plugin.Identifier);
-    var availableAndNotInstalled = Model.Available.Where(plugin => !installed.Contains(plugin.Identifier)).Select(plugin => (plugin,  BTCPayServerOptions.RecommendedPlugins.Contains(plugin.Identifier.ToLowerInvariant()))).OrderBy(tuple => tuple.Item1);
+    var installed = Model.Installed.ToDictionary(plugin => plugin.Identifier.ToLowerInvariant(), plugin => plugin.Version);
+    var availableAndNotInstalled = Model.Available.Where(plugin => !installed.ContainsKey(plugin.Identifier.ToLowerInvariant())).Select(plugin => (plugin,  BTCPayServerOptions.RecommendedPlugins.Contains(plugin.Identifier.ToLowerInvariant()))).OrderBy(tuple => tuple.Item1);
+
+    bool DependentOn(string plugin)
+    {
+        foreach (var installedPlugin in Model.Installed)
+        {
+            if (installedPlugin.Dependencies.Any(dep => dep.Identifier.Equals(plugin, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                return true;
+            }
+        }
+
+        var pendingInstalls = Model.Commands.Where(tuple => tuple.command != "uninstall").Select(tuple => tuple.plugin).Distinct();
+        foreach (var pendingInstall in pendingInstalls)
+        {
+            if (Model.Available.Any(availablePlugin => availablePlugin.Identifier.Equals(pendingInstall, StringComparison.InvariantCultureIgnoreCase) &&
+                                                       availablePlugin.Dependencies.Any(dep => dep.Identifier.Equals(plugin, StringComparison.InvariantCultureIgnoreCase))))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool DependencyMet(IBTCPayServerPlugin.PluginDependency dependency)
+    {
+        var plugin = dependency.Identifier.ToLowerInvariant();
+        var versionReq = dependency.Condition;
+        if (!installed.ContainsKey(plugin) && !versionReq.Equals("!"))
+        {
+            return false;
+        }
+        if (installed.ContainsKey(plugin) && versionReq.Equals("!"))
+        {
+            return false;
+        }
+
+        var versionConditions = versionReq.Split("||", StringSplitOptions.RemoveEmptyEntries);
+        return versionConditions.Any(s =>
+        {
+            s = s.Trim();
+            var v = s.Substring(1);
+            if (s[1] == '=')
+            {
+                v = s.Substring(2);
+            }
+            var parsedV = Version.Parse(v);
+            switch (s)
+            {
+                case { } xx when xx.StartsWith(">="):
+                    return installed[plugin] >= parsedV;
+                case { } xx when xx.StartsWith("<="):
+                    return installed[plugin] <= parsedV;
+                case { } xx when xx.StartsWith(">"):
+                    return installed[plugin] > parsedV;
+                case { } xx when xx.StartsWith("<"):
+                    return installed[plugin] >= parsedV;
+                case { } xx when xx.StartsWith("^"):
+                    return installed[plugin] >= parsedV && installed[plugin].Major == parsedV.Major;
+                case { } xx when xx.StartsWith("~"):
+                    return installed[plugin] >= parsedV && installed[plugin].Major == parsedV.Major && installed[plugin].Minor == parsedV.Minor;
+                case { } xx when xx.StartsWith("!="):
+                    return installed[plugin] != parsedV;
+                case { } xx when xx.StartsWith("=="):
+                default:
+                    return installed[plugin] == parsedV;
+            }
+        });
+    }
+
+    bool DependenciesMet(IBTCPayServerPlugin.PluginDependency[] dependencies)
+    {
+        foreach (var dependency in dependencies)
+        {
+            if (!DependencyMet(dependency))
+            {
+                return false;
+            }
+            ;
+        }
+        return true;
+    }
+
 }
 
 <partial name="_StatusMessage"/>
@@ -29,28 +112,94 @@
         @foreach (var plugin in Model.Installed)
         {
             var matchedAvailable = Model.Available.SingleOrDefault(availablePlugin => availablePlugin.Identifier == plugin.Identifier);
-            var updateAvailable = matchedAvailable != null && plugin.Version < matchedAvailable.Version;
+            var updateAvailable = !plugin.SystemPlugin && matchedAvailable != null && plugin.Version < matchedAvailable.Version;
             <div class="col col-12 col-lg-6 mb-4">
                 <div class="card h-100">
                     <div class="card-body">
-                        <h4 class="card-title">@plugin.Name</h4>
-                        <h5 class="card-subtitle mb-3 text-muted d-flex align-items-center">
-                            @plugin.Version
-                            @if (plugin.SystemPlugin)
+                        <div class="row">
+                            <div class="col-xs-12 col-md-6">
+                                <h4 class="card-title" title="@plugin.Identifier" data-toggle="tooltip">@plugin.Name</h4>
+                                <h5 class="card-subtitle mb-3 text-muted d-flex align-items-center">
+
+                                    @plugin.Version
+                                    @if (plugin.SystemPlugin)
+                                    {
+                                        <div class="badge badge-secondary ml-2">System plugin</div>
+                                    }
+                                    else if (updateAvailable)
+                                    {
+                                        <div class="badge badge-secondary ml-2">@matchedAvailable.Version available</div>
+                                    }
+                                </h5>
+                            </div>
+                            @if (updateAvailable)
                             {
-                                <div class="badge badge-secondary ml-2">System plugin</div>
+                                <ul class="nav nav-pills col-xs-12 col-md-6 text-right">
+                                    <li class="nav-item">
+                                        <a data-toggle="tab" href="#@plugin.Identifier.ToLowerInvariant().Replace(".", "_")-current" class="nav-link show active">Current</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a data-toggle="tab" href="#@plugin.Identifier.ToLowerInvariant().Replace(".", "_")-update" class="nav-link">Update</a>
+                                    </li>
+                                </ul>
                             }
-                            else if (updateAvailable)
+                        </div>
+
+
+                        <div class="tab-content">
+                            <div class="tab-pane show active" id="@plugin.Identifier.ToLowerInvariant().Replace(".", "_")-current">
+                                <p class="card-text">@plugin.Description</p>
+
+                                @if (plugin.Dependencies.Any())
+                                {
+                                    <h5 class=" text-muted">Dependencies</h5>
+                                    <ul class="list-group list-group-flush">
+                                        @foreach (var dependency in plugin.Dependencies)
+                                        {
+                                            <li class="list-group-item">
+                                                @dependency
+                                                @if (!DependencyMet(dependency))
+                                                {
+                                                    <span title="Dependency not met." data-toggle="tooltip" class="fa fa-warning text-danger"></span>
+                                                }
+                                            </li>
+                                        }
+                                    </ul>
+                                }
+                            </div>
+
+                            @if (updateAvailable)
                             {
-                                <div class="badge badge-secondary ml-2">@matchedAvailable.Version available</div>
+                                <div class="tab-pane" id="@plugin.Identifier.ToLowerInvariant().Replace(".", "_")-update">
+                                    <p class="card-text">@matchedAvailable.Description</p>
+
+                                    @if (matchedAvailable.Dependencies.Any())
+                                    {
+                                        <h5 class=" text-muted">Dependencies</h5>
+                                        <ul class="list-group list-group-flush">
+                                            @foreach (var dependency in matchedAvailable.Dependencies)
+                                            {
+                                                <li class="list-group-item ">
+                                                    @dependency
+                                                    @if (!DependencyMet(dependency))
+                                                    {
+                                                        <span title="Dependency not met." data-toggle="tooltip" class="fa fa-warning text-danger"></span>
+                                                    }
+                                                </li>
+                                            }
+                                        </ul>
+                                    }
+                                </div>
                             }
-                        </h5>
-                        <p class="card-text">@plugin.Description</p>
+                        </div>
                     </div>
-                    @if (!plugin.SystemPlugin)
+                    @{
+                        var pendingAction = Model.Commands.Any(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase));
+                    }
+                    @if (!plugin.SystemPlugin && (pendingAction || (updateAvailable && DependenciesMet(matchedAvailable.Dependencies)) || !DependentOn(plugin.Identifier)))
                     {
                         <div class="card-footer border-0 pb-3 d-flex">
-                            @if (Model.Commands.Any(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase)))
+                            @if (pendingAction)
                             {
                                 <form asp-action="CancelPluginCommands" asp-route-plugin="@plugin.Identifier">
                                     <button type="submit" class="btn btn-outline-secondary">Cancel pending action</button>
@@ -58,15 +207,22 @@
                             }
                             else
                             {
-                                @if (updateAvailable)
+                                @if (updateAvailable && DependenciesMet(matchedAvailable.Dependencies))
                                 {
-                                    <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" class="mr-3">
+                                    <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-update="true" class="mr-3">
                                         <button type="submit" class="btn btn-secondary">Update</button>
                                     </form>
                                 }
-                                <form asp-action="UnInstallPlugin" asp-route-plugin="@plugin.Identifier">
-                                    <button type="submit" class="btn btn-outline-danger">Uninstall</button>
-                                </form>
+                                @if (DependentOn(plugin.Identifier))
+                                {
+                                    <button type="button" class="btn btn-outline-danger" data-toggle="tooltip" title="This plugin cannot be uninstalled as it is depended on by other plugins.">Uninstall <span class="fa fa-exclamation"></span></button>
+                                }
+                                else
+                                {
+                                    <form asp-action="UnInstallPlugin" asp-route-plugin="@plugin.Identifier">
+                                        <button type="submit" class="btn btn-outline-danger">Uninstall</button>
+                                    </form>
+                                }
                             }
                         </div>
                     }
@@ -85,7 +241,7 @@
             <div class="col col-12 col-lg-6 mb-4">
                 <div class="card h-100">
                     <div class="card-body">
-                        <h4 class="card-title">@plugin.Name</h4>
+                        <h4 class="card-title" data-toggle="tooltip" title="@plugin.Identifier">@plugin.Name</h4>
                         <h5 class="card-subtitle mb-3 text-muted d-flex justify-content-between">
                             <span>@plugin.Version</span>
                             @if (pluginT.Item2)
@@ -94,19 +250,45 @@
                             }
                         </h5>
                         <p class="card-text">@plugin.Description</p>
+                        @if (plugin.Dependencies?.Any() is true)
+                        {
+                            <h5 class=" text-muted">Dependencies</h5>
+                            <ul class="list-group list-group-flush">
+
+                                @foreach (var dependency in plugin.Dependencies)
+                                {
+                                    <li class="list-group-item">
+                                        @dependency
+                                        @if (!DependencyMet(dependency))
+                                        {
+                                            <span title="Dependency not met." data-toggle="tooltip" class="fa fa-warning text-danger"></span>
+                                        }
+                                    </li>
+                                }
+                            </ul>
+                        }
                     </div>
+                    @{
+                        var pending = Model.Commands.Any(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase));
+                    }
                     <div class="card-footer border-0 pb-3">
-                        @if (Model.Commands.Any(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase)))
+                        @if (pending)
                         {
                             <form asp-action="CancelPluginCommands" asp-route-plugin="@plugin.Identifier">
                                 <button type="submit" class="btn btn-outline-secondary">Cancel pending install</button>
                             </form>
                         }
-                        else
+                        else if (DependenciesMet(plugin.Dependencies))
                         {
                             <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier">
                                 <button type="submit" class="btn btn-primary">Install</button>
                             </form>
+                        }
+                        else
+                        {
+                            <span class="text-danger">
+                                Cannot install until dependencies are met
+                            </span>
                         }
                     </div>
                 </div>

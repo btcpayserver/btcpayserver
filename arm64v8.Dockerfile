@@ -8,6 +8,7 @@ RUN apt-get update \
 WORKDIR /source
 COPY nuget.config nuget.config
 COPY Build/Common.csproj Build/Common.csproj
+COPY BTCPayServer.Abstractions/BTCPayServer.Abstractions.csproj BTCPayServer.Abstractions/BTCPayServer.Abstractions.csproj
 COPY BTCPayServer/BTCPayServer.csproj BTCPayServer/BTCPayServer.csproj
 COPY BTCPayServer.Common/BTCPayServer.Common.csproj BTCPayServer.Common/BTCPayServer.Common.csproj
 COPY BTCPayServer.Rating/BTCPayServer.Rating.csproj BTCPayServer.Rating/BTCPayServer.Rating.csproj
@@ -18,6 +19,7 @@ COPY BTCPayServer.Common/. BTCPayServer.Common/.
 COPY BTCPayServer.Rating/. BTCPayServer.Rating/.
 COPY BTCPayServer.Data/. BTCPayServer.Data/.
 COPY BTCPayServer.Client/. BTCPayServer.Client/.
+COPY BTCPayServer.Abstractions/. BTCPayServer.Abstractions/.
 COPY BTCPayServer/. BTCPayServer/.
 COPY Build/Version.csproj Build/Version.csproj
 ARG CONFIGURATION_NAME=Release

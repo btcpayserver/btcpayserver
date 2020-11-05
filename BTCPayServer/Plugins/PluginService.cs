@@ -31,10 +31,10 @@ namespace BTCPayServer.Plugins
 
         public IEnumerable<IBTCPayServerPlugin> LoadedPlugins { get; }
 
-        public async Task<IEnumerable<AvailablePlugin>> GetRemotePlugins(string remote)
+        public async Task<IEnumerable<AvailablePlugin>> GetRemotePlugins()
         {
             var resp = await _githubClient
-                .GetStringAsync(new Uri($"https://api.github.com/repos/{remote}/contents"));
+                .GetStringAsync(new Uri($"https://api.github.com/repos/{_btcPayServerOptions.PluginRemote}/contents"));
             var files = JsonConvert.DeserializeObject<GithubFile[]>(resp);
             return await Task.WhenAll(files.Where(file => file.Name.EndsWith($"{PluginManager.BTCPayPluginSuffix}.json", StringComparison.InvariantCulture)).Select(async file =>
             {
@@ -43,11 +43,11 @@ namespace BTCPayServer.Plugins
             }));
         }
 
-        public async Task DownloadRemotePlugin(string remote, string plugin)
+        public async Task DownloadRemotePlugin(string plugin)
         {
             var dest = _btcPayServerOptions.PluginDir;
             var resp = await _githubClient
-                .GetStringAsync(new Uri($"https://api.github.com/repos/{remote}/contents"));
+                .GetStringAsync(new Uri($"https://api.github.com/repos/{_btcPayServerOptions.PluginRemote}/contents"));
             var files = JsonConvert.DeserializeObject<GithubFile[]>(resp);
             var ext = files.SingleOrDefault(file => file.Name == $"{plugin}{PluginManager.BTCPayPluginSuffix}");
             if (ext is null)

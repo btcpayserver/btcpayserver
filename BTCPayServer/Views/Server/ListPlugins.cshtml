@@ -1,8 +1,10 @@
+@using BTCPayServer.Configuration
 @model BTCPayServer.Controllers.ServerController.ListPluginsViewModel 
+@inject BTCPayServerOptions BTCPayServerOptions
 @{
     ViewData.SetActivePageAndTitle(ServerNavPages.Plugins);
     var installed = Model.Installed.Select(plugin => plugin.Identifier);
-    var availableAndNotInstalled = Model.Available.Where(plugin => !installed.Contains(plugin.Identifier));
+    var availableAndNotInstalled = Model.Available.Where(plugin => !installed.Contains(plugin.Identifier)).Select(plugin => (plugin,  BTCPayServerOptions.RecommendedPlugins.Contains(plugin.Identifier.ToLowerInvariant()))).OrderBy(tuple => tuple.Item1);
 }
 
 <partial name="_StatusMessage"/>
@@ -58,7 +60,7 @@
                             {
                                 @if (updateAvailable)
                                 {
-                                    <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-remote="@Model.Remote" class="mr-3">
+                                    <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" class="mr-3">
                                         <button type="submit" class="btn btn-secondary">Update</button>
                                     </form>
                                 }
@@ -77,13 +79,20 @@
 {
     <h3 class="mb-3">Available Plugins</h3>
     <div class="row mb-4">
-        @foreach (var plugin in availableAndNotInstalled)
+        @foreach (var pluginT in availableAndNotInstalled)
         {
+            var plugin = pluginT.Item1;
             <div class="col col-12 col-lg-6 mb-4">
                 <div class="card h-100">
                     <div class="card-body">
                         <h4 class="card-title">@plugin.Name</h4>
-                        <h5 class="card-subtitle mb-3 text-muted">@plugin.Version</h5>
+                        <h5 class="card-subtitle mb-3 text-muted d-flex justify-content-between">
+                            <span>@plugin.Version</span>
+                            @if (pluginT.Item2)
+                            {
+                                <span data-toggle="tooltip" title="This plugin has been recommended to be installed by your deployment method.">Recommended <span class="fa fa-question-circle-o"></span></span>
+                            }
+                        </h5>
                         <p class="card-text">@plugin.Description</p>
                     </div>
                     <div class="card-footer border-0 pb-3">
@@ -95,7 +104,7 @@
                         }
                         else
                         {
-                            <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-remote="@Model.Remote">
+                            <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier">
                                 <button type="submit" class="btn btn-primary">Install</button>
                             </form>
                         }

@@ -83,7 +83,6 @@
             {
                 return false;
             }
-            ;
         }
         return true;
     }
@@ -118,9 +117,8 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-xs-12 col-md-6">
-                                <h4 class="card-title" title="@plugin.Identifier" data-toggle="tooltip">@plugin.Name</h4>
+                                <h4 class="card-title d-inline-block" title="@plugin.Identifier" data-toggle="tooltip">@plugin.Name</h4>
                                 <h5 class="card-subtitle mb-3 text-muted d-flex align-items-center">
-
                                     @plugin.Version
                                     @if (plugin.SystemPlugin)
                                     {
@@ -145,18 +143,17 @@
                             }
                         </div>
 
-
                         <div class="tab-content">
                             <div class="tab-pane show active" id="@plugin.Identifier.ToLowerInvariant().Replace(".", "_")-current">
                                 <p class="card-text">@plugin.Description</p>
 
                                 @if (plugin.Dependencies.Any())
                                 {
-                                    <h5 class=" text-muted">Dependencies</h5>
+                                    <h5 class="text-muted">Dependencies</h5>
                                     <ul class="list-group list-group-flush">
                                         @foreach (var dependency in plugin.Dependencies)
                                         {
-                                            <li class="list-group-item">
+                                            <li class="list-group-item px-0">
                                                 @dependency
                                                 @if (!DependencyMet(dependency))
                                                 {
@@ -175,11 +172,11 @@
 
                                     @if (matchedAvailable.Dependencies.Any())
                                     {
-                                        <h5 class=" text-muted">Dependencies</h5>
+                                        <h5 class="text-muted">Dependencies</h5>
                                         <ul class="list-group list-group-flush">
                                             @foreach (var dependency in matchedAvailable.Dependencies)
                                             {
-                                                <li class="list-group-item ">
+                                                <li class="list-group-item px-0">
                                                     @dependency
                                                     @if (!DependencyMet(dependency))
                                                     {
@@ -198,7 +195,7 @@
                     }
                     @if (!plugin.SystemPlugin && (pendingAction || (updateAvailable && DependenciesMet(matchedAvailable.Dependencies)) || !DependentOn(plugin.Identifier)))
                     {
-                        <div class="card-footer border-0 pb-3 d-flex">
+                        <div class="card-footer border-0 pt-0 pb-3 d-flex">
                             @if (pendingAction)
                             {
                                 <form asp-action="CancelPluginCommands" asp-route-plugin="@plugin.Identifier">
@@ -241,23 +238,22 @@
             <div class="col col-12 col-lg-6 mb-4">
                 <div class="card h-100">
                     <div class="card-body">
-                        <h4 class="card-title" data-toggle="tooltip" title="@plugin.Identifier">@plugin.Name</h4>
-                        <h5 class="card-subtitle mb-3 text-muted d-flex justify-content-between">
-                            <span>@plugin.Version</span>
+                        <h4 class="card-title d-inline-block" data-toggle="tooltip" title="@plugin.Identifier">@plugin.Name</h4>
+                        <h5 class="card-subtitle mb-3 text-muted d-flex align-items-center">
+                            @plugin.Version
                             @if (pluginT.Item2)
                             {
-                                <span data-toggle="tooltip" title="This plugin has been recommended to be installed by your deployment method.">Recommended <span class="fa fa-question-circle-o"></span></span>
+                                <div class="badge badge-light ml-2" data-toggle="tooltip" title="This plugin has been recommended to be installed by your deployment method." class="text-nowrap">Recommended <span class="fa fa-question-circle-o"></span></div>
                             }
                         </h5>
                         <p class="card-text">@plugin.Description</p>
                         @if (plugin.Dependencies?.Any() is true)
                         {
-                            <h5 class=" text-muted">Dependencies</h5>
+                            <h5 class="text-muted">Dependencies</h5>
                             <ul class="list-group list-group-flush">
-
                                 @foreach (var dependency in plugin.Dependencies)
                                 {
-                                    <li class="list-group-item">
+                                    <li class="list-group-item px-0">
                                         @dependency
                                         @if (!DependencyMet(dependency))
                                         {
@@ -271,7 +267,7 @@
                     @{
                         var pending = Model.Commands.Any(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase));
                     }
-                    <div class="card-footer border-0 pb-3">
+                    <div class="card-footer border-0 pt-0 pb-3">
                         @if (pending)
                         {
                             <form asp-action="CancelPluginCommands" asp-route-plugin="@plugin.Identifier">
@@ -286,9 +282,9 @@
                         }
                         else
                         {
-                            <span class="text-danger">
-                                Cannot install until dependencies are met
-                            </span>
+                            <div class="text-danger">
+                                Cannot install until dependencies are met.
+                            </div>
                         }
                     </div>
                 </div>

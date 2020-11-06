@@ -3,6 +3,8 @@ html {
     position: relative;
     min-height: 100%;
     font-size: var(--btcpay-font-size-base);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 .logo {
@@ -189,7 +191,7 @@ pre {
     cursor: pointer;
 }
 
-.list-group-item a {
+.list-group-item a:not(.btn) {
   color: inherit;
 }
 
@@ -317,4 +319,33 @@ html[data-devenv]:before {
 .note-editor .table.table-sm th,
 .note-editor .table.table-sm td {
     border: 1px dotted var(--btcpay-color-neutral-400);
+}
+
+/* Custom */
+.btcpay-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: .25em solid transparent;
+    border-radius: 50%;
+    width: 19px;
+    height: 19px;
+}
+.btcpay-status:before {
+    content: '';
+    border-radius: 50%;
+    width: 9px;
+    height: 9px;
+}
+.btcpay-status--enabled {
+    background-color: rgba(0, 182, 52, .3);
+}
+.btcpay-status--enabled:before {
+    background-color: #00B634;
+}
+.btcpay-status--disabled {
+    background-color: rgba(251, 56, 61, .3);
+}
+.btcpay-status--disabled:before {
+    background-color: #FB383D;
 }

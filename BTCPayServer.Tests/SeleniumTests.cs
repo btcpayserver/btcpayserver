@@ -301,11 +301,12 @@ namespace BTCPayServer.Tests
                 await s.StartAsync();
                 var alice = s.RegisterNewUser();
                 var storeData = s.CreateNewStore();
+                var onchainHint = "A store requires a wallet to receive payments. Set up your wallet.";
+                var offchainHint = "A connection to a Lightning node is required to receive Lightning payments.";
+
                 // verify that hints are displayed on the store page
-                Assert.True(s.Driver.PageSource.Contains("Wallet not setup for the store, please provide Derviation Scheme"), 
-                    "Wallet hint not present");
-                Assert.True(s.Driver.PageSource.Contains("Review settings if you want to receive Lightning payments"),
-                    "Lightning hint not present");
+                Assert.True(s.Driver.PageSource.Contains(onchainHint), "Wallet hint not present");
+                Assert.True(s.Driver.PageSource.Contains(offchainHint), "Lightning hint not present");
 
                 s.GoToStores();
                 Assert.True(s.Driver.PageSource.Contains("warninghint_" + storeData.storeId),
@@ -314,7 +315,7 @@ namespace BTCPayServer.Tests
                 s.GoToStore(storeData.storeId);
                 s.AddDerivationScheme(); // wallet hint should be dismissed
                 s.Driver.AssertNoError();
-                Assert.False(s.Driver.PageSource.Contains("Wallet not setup for the store, please provide Derviation Scheme"),
+                Assert.False(s.Driver.PageSource.Contains(onchainHint),
                     "Wallet hint not dismissed on derivation scheme add");
 
                 s.Driver.FindElement(By.Id("dismissLightningHint")).Click(); // dismiss lightning hint
@@ -380,8 +381,7 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("Stores")).Click();
 
                 // there shouldn't be any hints now
-                Assert.False(s.Driver.PageSource.Contains("Review settings if you want to receive Lightning payments"),
-                    "Lightning hint should be dismissed at this point");
+                Assert.False(s.Driver.PageSource.Contains(offchainHint), "Lightning hint should be dismissed at this point");
 
                 s.Driver.FindElement(By.LinkText("Remove")).Click();
                 s.Driver.FindElement(By.Id("continue")).Click();

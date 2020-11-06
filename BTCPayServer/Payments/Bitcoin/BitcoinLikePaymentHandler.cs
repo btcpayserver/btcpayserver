@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,10 +7,8 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
 using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
-using BTCPayServer.Rating;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
-using BTCPayServer.Services.Rates;
 using NBitcoin;
 using NBXplorer.Models;
 using StoreData = BTCPayServer.Data.StoreData;
@@ -47,13 +44,13 @@ namespace BTCPayServer.Payments.Bitcoin
         }
 
         public override void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse,
-            StoreBlob storeBlob)
+            StoreBlob storeBlob, IPaymentMethod paymentMethod)
         {
-            var paymentMethodId = new PaymentMethodId(model.CryptoCode, PaymentTypes.BTCLike);
-
+            var paymentMethodId = paymentMethod.GetId();
             var cryptoInfo = invoiceResponse.CryptoInfo.First(o => o.GetpaymentMethodId() == paymentMethodId);
             var network = _networkProvider.GetNetwork<BTCPayNetwork>(model.CryptoCode);
-            model.IsLightning = false;
+            model.ShowRecommendedFee = storeBlob.ShowRecommendedFee;
+            model.FeeRate = ((BitcoinLikeOnChainPaymentMethod) paymentMethod.GetPaymentMethodDetails()).GetFeeRate();
             model.PaymentMethodName = GetPaymentMethodName(network);
             model.InvoiceBitcoinUrl = cryptoInfo.PaymentUrls.BIP21;
             model.InvoiceBitcoinUrlQR = cryptoInfo.PaymentUrls.BIP21;

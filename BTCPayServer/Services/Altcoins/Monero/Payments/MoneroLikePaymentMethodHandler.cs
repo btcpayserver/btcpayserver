@@ -73,12 +73,12 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
             public Func<string, Task<CreateAddressResponse>> ReserveAddress;
         }
 
-        public override void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse, StoreBlob storeBlob)
+        public override void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse,
+            StoreBlob storeBlob, IPaymentMethod paymentMethod)
         {
-            var paymentMethodId = new PaymentMethodId(model.CryptoCode, PaymentType);
+            var paymentMethodId = paymentMethod.GetId();
             var cryptoInfo = invoiceResponse.CryptoInfo.First(o => o.GetpaymentMethodId() == paymentMethodId);
             var network = _networkProvider.GetNetwork<MoneroLikeSpecificBtcPayNetwork>(model.CryptoCode);
-            model.IsLightning = false;
             model.PaymentMethodName = GetPaymentMethodName(network);
             model.CryptoImage = GetCryptoImage(network);
             model.InvoiceBitcoinUrl = MoneroPaymentType.Instance.GetPaymentLink(network, new MoneroLikeOnChainPaymentMethodDetails()

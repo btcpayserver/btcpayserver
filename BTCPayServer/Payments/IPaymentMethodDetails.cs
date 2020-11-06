@@ -16,10 +16,5 @@ namespace BTCPayServer.Payments
         /// </summary>
         /// <returns></returns>
         decimal GetNextNetworkFee();
-        /// <summary>
-        /// Returns recommended fee rate for a transaction
-        /// </summary>
-        /// <returns></returns>
-        decimal GetFeeRate();
     }
 }

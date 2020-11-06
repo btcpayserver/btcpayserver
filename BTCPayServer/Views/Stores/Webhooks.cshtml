@@ -1,0 +1,46 @@
+@model WebhooksViewModel
+@{
+    Layout = "../Shared/_NavLayout.cshtml";
+    ViewData.SetActivePageAndTitle(StoreNavPages.Webhooks, "Webhooks");
+}
+
+<partial name="_StatusMessage" />
+
+<h4>Webhooks</h4>
+<div class="row">
+    <div class="col-md-8">
+        <p>Webhooks allows BTCPayServer to send HTTP events related to your store</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <a id="CreateWebhook" asp-action="NewWebhook" class="btn btn-primary" role="button" asp-route-storeId="@this.Context.GetRouteValue("storeId")"><span class="fa fa-plus"></span> Create a new webhook</a>
+        @if (Model.Webhooks.Any())
+        {
+            <table class="table table-sm table-responsive-md">
+                <thead>
+                <tr>
+                    <th>Url</th>
+                    <th class="text-right">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var wh in Model.Webhooks)
+                {
+                    <tr>
+                        <td class="text-truncate d-block" style="max-width:300px;">@wh.Url</td>
+                        <td class="text-right">
+                            <a asp-action="ModifyWebhook" asp-route-storeId="@this.Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id">Modify</a> - <a asp-action="DeleteWebhook" asp-route-storeId="@this.Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id">Delete</a>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

@@ -999,7 +999,6 @@ namespace BTCPayServer.Tests
                             }
                         }
                     }
-
                     var invoice2 = acc.BitPay.GetInvoice(invoice.Id);
                     Assert.NotNull(invoice2);
                 }

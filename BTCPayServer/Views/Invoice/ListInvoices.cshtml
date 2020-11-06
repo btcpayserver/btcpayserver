@@ -5,7 +5,8 @@
     var storeIds = string.Join("", Model.StoreIds.Select(storeId => $",storeid:{storeId}"));
 }
 @section HeadScripts {
-    <script src="~/modal/btcpay.js" asp-append-version="true"></script>
+    @*Without async, somehow selenium do not manage to click on links in this page*@
+    <script src="~/modal/btcpay.js" asp-append-version="true" async></script>
 }
 @Html.HiddenFor(a => a.Count)
 <section>

@@ -5,7 +5,7 @@
 @{
     ViewData.SetActivePageAndTitle(ServerNavPages.Plugins);
     var installed = Model.Installed.ToDictionary(plugin => plugin.Identifier.ToLowerInvariant(), plugin => plugin.Version);
-    var availableAndNotInstalled = Model.Available.Where(plugin => !installed.ContainsKey(plugin.Identifier.ToLowerInvariant())).Select(plugin => (plugin,  BTCPayServerOptions.RecommendedPlugins.Contains(plugin.Identifier.ToLowerInvariant()))).OrderBy(tuple => tuple.Item1);
+    var availableAndNotInstalled = Model.Available.Where(plugin => !installed.ContainsKey(plugin.Identifier.ToLowerInvariant())).Select(plugin => (plugin, BTCPayServerOptions.RecommendedPlugins.Contains(plugin.Identifier.ToLowerInvariant()))).OrderBy(tuple => tuple.Item1);
 
     bool DependentOn(string plugin)
     {
@@ -83,14 +83,17 @@
             {
                 return false;
             }
-            ;
         }
         return true;
     }
-
 }
 
 <partial name="_StatusMessage"/>
+
+<style>
+    .version-switch .nav-link { display: inline; }
+    .version-switch .nav-link.active { display: none; }
+</style>
 
 @if (Model.Commands.Any())
 {
@@ -113,50 +116,44 @@
         {
             var matchedAvailable = Model.Available.SingleOrDefault(availablePlugin => availablePlugin.Identifier == plugin.Identifier);
             var updateAvailable = !plugin.SystemPlugin && matchedAvailable != null && plugin.Version < matchedAvailable.Version;
+            var tabId = plugin.Identifier.ToLowerInvariant().Replace(".", "_");
             <div class="col col-12 col-lg-6 mb-4">
                 <div class="card h-100">
                     <div class="card-body">
-                        <div class="row">
-                            <div class="col-xs-12 col-md-6">
-                                <h4 class="card-title" title="@plugin.Identifier" data-toggle="tooltip">@plugin.Name</h4>
-                                <h5 class="card-subtitle mb-3 text-muted d-flex align-items-center">
-
-                                    @plugin.Version
-                                    @if (plugin.SystemPlugin)
-                                    {
-                                        <div class="badge badge-secondary ml-2">System plugin</div>
-                                    }
-                                    else if (updateAvailable)
-                                    {
-                                        <div class="badge badge-secondary ml-2">@matchedAvailable.Version available</div>
-                                    }
-                                </h5>
-                            </div>
+                        <h4 class="card-title d-inline-block" title="@plugin.Identifier" data-toggle="tooltip">@plugin.Name</h4>
+                        <div class="d-flex flex-wrap align-items-center mb-3">
+                            <h5 class="card-subtitle text-muted d-flex align-items-center mr-3">
+                                @plugin.Version
+                                @if (plugin.SystemPlugin)
+                                {
+                                    <div class="badge badge-secondary ml-2">System plugin</div>
+                                }
+                                else if (updateAvailable)
+                                {
+                                    <div class="badge badge-info ml-2">
+                                        @matchedAvailable.Version available
+                                    </div>
+                                }
+                            </h5>
                             @if (updateAvailable)
                             {
-                                <ul class="nav nav-pills col-xs-12 col-md-6 text-right">
-                                    <li class="nav-item">
-                                        <a data-toggle="tab" href="#@plugin.Identifier.ToLowerInvariant().Replace(".", "_")-current" class="nav-link show active">Current</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a data-toggle="tab" href="#@plugin.Identifier.ToLowerInvariant().Replace(".", "_")-update" class="nav-link">Update</a>
-                                    </li>
-                                </ul>
+                                <span class="nav version-switch mt-n1" role="tablist">
+                                    <a data-toggle="tab" href="#@tabId-current" class="nav-link px-0 small text-info show active">Show current version</a>
+                                    <a data-toggle="tab" href="#@tabId-update" class="nav-link px-0 small text-info">Show update information</a>
+                                </span>
                             }
                         </div>
 
-
                         <div class="tab-content">
-                            <div class="tab-pane show active" id="@plugin.Identifier.ToLowerInvariant().Replace(".", "_")-current">
+                            <div class="tab-pane active" id="@tabId-current">
                                 <p class="card-text">@plugin.Description</p>
-
                                 @if (plugin.Dependencies.Any())
                                 {
-                                    <h5 class=" text-muted">Dependencies</h5>
+                                    <h5 class="text-muted">Dependencies</h5>
                                     <ul class="list-group list-group-flush">
                                         @foreach (var dependency in plugin.Dependencies)
                                         {
-                                            <li class="list-group-item">
+                                            <li class="list-group-item px-0">
                                                 @dependency
                                                 @if (!DependencyMet(dependency))
                                                 {
@@ -170,16 +167,15 @@
 
                             @if (updateAvailable)
                             {
-                                <div class="tab-pane" id="@plugin.Identifier.ToLowerInvariant().Replace(".", "_")-update">
+                                <div class="tab-pane" id="@tabId-update">
                                     <p class="card-text">@matchedAvailable.Description</p>
-
                                     @if (matchedAvailable.Dependencies.Any())
                                     {
-                                        <h5 class=" text-muted">Dependencies</h5>
+                                        <h5 class="text-muted">Dependencies</h5>
                                         <ul class="list-group list-group-flush">
                                             @foreach (var dependency in matchedAvailable.Dependencies)
                                             {
-                                                <li class="list-group-item ">
+                                                <li class="list-group-item px-0">
                                                     @dependency
                                                     @if (!DependencyMet(dependency))
                                                     {
@@ -241,23 +237,22 @@
             <div class="col col-12 col-lg-6 mb-4">
                 <div class="card h-100">
                     <div class="card-body">
-                        <h4 class="card-title" data-toggle="tooltip" title="@plugin.Identifier">@plugin.Name</h4>
-                        <h5 class="card-subtitle mb-3 text-muted d-flex justify-content-between">
-                            <span>@plugin.Version</span>
+                        <h4 class="card-title d-inline-block" data-toggle="tooltip" title="@plugin.Identifier">@plugin.Name</h4>
+                        <h5 class="card-subtitle mb-3 text-muted d-flex align-items-center">
+                            @plugin.Version
                             @if (pluginT.Item2)
                             {
-                                <span data-toggle="tooltip" title="This plugin has been recommended to be installed by your deployment method.">Recommended <span class="fa fa-question-circle-o"></span></span>
+                                <div class="badge badge-light ml-2" data-toggle="tooltip" title="This plugin has been recommended to be installed by your deployment method." class="text-nowrap">Recommended <span class="fa fa-question-circle-o"></span></div>
                             }
                         </h5>
                         <p class="card-text">@plugin.Description</p>
                         @if (plugin.Dependencies?.Any() is true)
                         {
-                            <h5 class=" text-muted">Dependencies</h5>
+                            <h5 class="text-muted">Dependencies</h5>
                             <ul class="list-group list-group-flush">
-
                                 @foreach (var dependency in plugin.Dependencies)
                                 {
-                                    <li class="list-group-item">
+                                    <li class="list-group-item px-0">
                                         @dependency
                                         @if (!DependencyMet(dependency))
                                         {
@@ -286,9 +281,9 @@
                         }
                         else
                         {
-                            <span class="text-danger">
-                                Cannot install until dependencies are met
-                            </span>
+                            <div class="text-danger">
+                                Cannot install until dependencies are met.
+                            </div>
                         }
                     </div>
                 </div>

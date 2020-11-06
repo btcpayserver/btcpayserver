@@ -21,10 +21,6 @@
     <None Remove="Build\**" />
     <None Remove="wwwroot\bundles\jqueryvalidate\**" />
     <None Remove="wwwroot\vendor\jquery-nice-select\**" />
-    <Content Update="Views\Shared\NBXSyncSummary.cshtml">
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
   </ItemGroup>
   <ItemGroup>
     <None Remove="Currencies.txt" />

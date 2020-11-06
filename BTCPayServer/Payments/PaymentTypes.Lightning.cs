@@ -61,6 +61,6 @@ namespace BTCPayServer.Payments
                 $"lightning:{paymentMethodDetails.GetPaymentDestination().ToUpperInvariant().Replace("LIGHTNING:", "", StringComparison.InvariantCultureIgnoreCase)}";
         }
 
-        public override string InvoiceViewPaymentPartialName { get; } = "ViewLightningLikePaymentData";
+        public override string InvoiceViewPaymentPartialName { get; } = "Lightning/ViewLightningLikePaymentData";
     }
 }

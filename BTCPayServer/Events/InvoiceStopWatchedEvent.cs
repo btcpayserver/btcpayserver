@@ -1,6 +1,6 @@
 namespace BTCPayServer.Events
 {
-    public class InvoiceStopWatchedEvent
+    public class InvoiceStopWatchedEvent : IHasInvoiceId
     {
         public InvoiceStopWatchedEvent(string invoiceId)
         {

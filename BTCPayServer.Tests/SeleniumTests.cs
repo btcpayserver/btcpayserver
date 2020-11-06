@@ -301,8 +301,8 @@ namespace BTCPayServer.Tests
                 await s.StartAsync();
                 var alice = s.RegisterNewUser();
                 var storeData = s.CreateNewStore();
-                var onchainHint = "A store requires a wallet to receive on-chain payments.";
-                var offchainHint = "A connection to a Lightning node is required if you want to receive Lightning payments.";
+                var onchainHint = "A store requires a wallet to receive payments. Set up your wallet.";
+                var offchainHint = "A connection to a Lightning node is required to receive Lightning payments.";
 
                 // verify that hints are displayed on the store page
                 Assert.True(s.Driver.PageSource.Contains(onchainHint), "Wallet hint not present");

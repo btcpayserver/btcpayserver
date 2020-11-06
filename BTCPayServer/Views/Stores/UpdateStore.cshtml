@@ -26,10 +26,9 @@
             @if (Model.HintWallet)
             {
                 <div class="alert alert-light d-flex align-items-start mb-3">
-                    <span class="fa fa-warning mt-1"></span>
+                    <span class="fa fa-warning text-warning mt-1"></span>
                     <p class="mb-0 mx-3 flex-fill">
-                        A store requires a wallet to receive on-chain payments.
-                        Optionally, you can have a store that only receives Lightning payments, see the next section for more details.
+                        A store requires a wallet to receive payments. Set up your wallet.
                     </p>
                     <button type="button" class="close only-for-js" data-dismiss="alert" aria-label="Close" onclick="return dismissHint('Wallet', '@Model.Id');">
                         <span aria-hidden="true">&times;</span>
@@ -80,8 +79,7 @@
                                         Disabled
                                     </strong>
                                 }
-                                <span class="text-light mx-2">|</span>
-                                <a asp-action="AddDerivationScheme" asp-route-cryptoCode="@scheme.Crypto" asp-route-storeId="@Context.GetRouteValue("storeId")" id="@($"Modify{scheme.Crypto}")" class="text-dark">
+                                <a asp-action="AddDerivationScheme" asp-route-cryptoCode="@scheme.Crypto" asp-route-storeId="@Context.GetRouteValue("storeId")" id="@($"Modify{scheme.Crypto}")" class="btn btn-@(scheme.Enabled ? "light" : "info") py-1 ml-3">
                                     @(scheme.Enabled ? "Modify" : "Setup")
                                 </a>
                             </span>
@@ -111,9 +109,9 @@
             @if (Model.HintLightning)
             {
                 <div class="alert alert-light d-flex align-items-start mb-3">
-                    <span class="fa fa-warning mt-1"></span>
+                    <span class="fa fa-warning text-warning mt-1"></span>
                     <p class="mb-0 mx-3 flex-fill">
-                        A connection to a Lightning node is required if you want to receive Lightning payments.
+                        A connection to a Lightning node is required to receive Lightning payments.
                     </p>
                     <button id="dismissLightningHint" type="button" class="close only-for-js" data-dismiss="alert" aria-label="Close" onclick="return dismissHint('Lightning', '@Model.Id');">
                         <span aria-hidden="true">&times;</span>
@@ -148,8 +146,7 @@
                                         Disabled
                                     </strong>
                                 }
-                                <span class="text-light mx-2">|</span>
-                                <a asp-action="AddLightningNode" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@Context.GetRouteValue("storeId")" id="@($"Modify-Lightning{scheme.CryptoCode}")" class="text-dark">
+                                <a asp-action="AddLightningNode" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@Context.GetRouteValue("storeId")" id="@($"Modify-Lightning{scheme.CryptoCode}")" class="btn btn-@(scheme.Enabled ? "light" : "info") py-1 ml-3">
                                     @(scheme.Enabled ? "Modify" : "Setup")
                                 </a>
                             </span>

@@ -191,7 +191,7 @@ pre {
     cursor: pointer;
 }
 
-.list-group-item a {
+.list-group-item a:not(.btn) {
   color: inherit;
 }
 

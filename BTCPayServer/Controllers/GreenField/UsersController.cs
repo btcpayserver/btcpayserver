@@ -17,7 +17,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using NicolasDorier.RateLimits;
 
 namespace BTCPayServer.Controllers.GreenField
@@ -28,7 +27,6 @@ namespace BTCPayServer.Controllers.GreenField
     public class UsersController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly BTCPayServerOptions _btcPayServerOptions;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly SettingsRepository _settingsRepository;
         private readonly EventAggregator _eventAggregator;
@@ -38,8 +36,9 @@ namespace BTCPayServer.Controllers.GreenField
         private readonly IAuthorizationService _authorizationService;
         private readonly CssThemeManager _themeManager;
 
-        public UsersController(UserManager<ApplicationUser> userManager, BTCPayServerOptions btcPayServerOptions,
-            RoleManager<IdentityRole> roleManager, SettingsRepository settingsRepository,
+        public UsersController(UserManager<ApplicationUser> userManager, 
+            RoleManager<IdentityRole> roleManager, 
+            SettingsRepository settingsRepository,
             EventAggregator eventAggregator,
             IPasswordValidator<ApplicationUser> passwordValidator,
             RateLimitService throttleService,
@@ -48,7 +47,6 @@ namespace BTCPayServer.Controllers.GreenField
             CssThemeManager themeManager)
         {
             _userManager = userManager;
-            _btcPayServerOptions = btcPayServerOptions;
             _roleManager = roleManager;
             _settingsRepository = settingsRepository;
             _eventAggregator = eventAggregator;

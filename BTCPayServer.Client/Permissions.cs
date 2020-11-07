@@ -21,6 +21,8 @@ namespace BTCPayServer.Client
         public const string CanModifyPaymentRequests = "btcpay.store.canmodifypaymentrequests";
         public const string CanModifyProfile = "btcpay.user.canmodifyprofile";
         public const string CanViewProfile = "btcpay.user.canviewprofile";
+        public const string CanManageNotificationsForUser = "btcpay.user.canmanagenotificationsforuser";
+        public const string CanViewNotificationsForUser = "btcpay.user.canviewnotificationsforuser";
         public const string CanCreateUser = "btcpay.server.cancreateuser";
         public const string CanManagePullPayments = "btcpay.store.canmanagepullpayments";
         public const string Unrestricted = "unrestricted";
@@ -39,6 +41,8 @@ namespace BTCPayServer.Client
                 yield return CanModifyProfile;
                 yield return CanViewProfile;
                 yield return CanCreateUser;
+                yield return CanManageNotificationsForUser;
+                yield return CanViewNotificationsForUser;
                 yield return Unrestricted;
                 yield return CanUseInternalLightningNode;
                 yield return CanCreateLightningInvoiceInternalNode;

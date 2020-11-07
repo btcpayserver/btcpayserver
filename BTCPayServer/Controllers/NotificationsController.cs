@@ -22,21 +22,18 @@ namespace BTCPayServer.Controllers
     public class NotificationsController : Controller
     {
         private readonly BTCPayServerEnvironment _env;
-        private readonly ApplicationDbContext _db;
         private readonly NotificationSender _notificationSender;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly NotificationManager _notificationManager;
         private readonly EventAggregator _eventAggregator;
 
         public NotificationsController(BTCPayServerEnvironment env,
-            ApplicationDbContext db,
             NotificationSender notificationSender,
             UserManager<ApplicationUser> userManager,
             NotificationManager notificationManager,
             EventAggregator eventAggregator)
         {
             _env = env;
-            _db = db;
             _notificationSender = notificationSender;
             _userManager = userManager;
             _notificationManager = notificationManager;
@@ -57,6 +54,7 @@ namespace BTCPayServer.Controllers
             {
                 return BadRequest();
             }
+
             var websocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
             var userId = _userManager.GetUserId(User);
             var websocketHelper = new WebSocketHelper(websocket);
@@ -90,34 +88,30 @@ namespace BTCPayServer.Controllers
         }
 #if DEBUG
         [HttpGet]
-        public async Task<IActionResult> GenerateJunk(int x = 100, bool admin=true)
+        public async Task<IActionResult> GenerateJunk(int x = 100, bool admin = true)
         {
             for (int i = 0; i < x; i++)
             {
-                await _notificationSender.SendNotification(admin? (NotificationScope) new AdminScope(): new UserScope(_userManager.GetUserId(User)), new JunkNotification());
+                await _notificationSender.SendNotification(
+                    admin ? (NotificationScope)new AdminScope() : new UserScope(_userManager.GetUserId(User)),
+                    new JunkNotification());
             }
 
             return RedirectToAction("Index");
         }
 #endif
         [HttpGet]
-        public IActionResult Index(int skip = 0, int count = 50, int timezoneOffset = 0)
+        public async Task<IActionResult> Index(int skip = 0, int count = 50, int timezoneOffset = 0)
         {
             if (!ValidUserClaim(out var userId))
                 return RedirectToAction("Index", "Home");
 
-            var model = new IndexViewModel()
+            var res = await _notificationManager.GetNotifications(new NotificationsQuery()
             {
-                Skip = skip,
-                Count = count,
-                Items = _db.Notifications
-                    .Where(a => a.ApplicationUserId == userId)
-                    .OrderByDescending(a => a.Created)
-                    .Skip(skip).Take(count)
-                    .Select(a => _notificationManager.ToViewModel(a))
-                    .ToList(),
-                Total = _db.Notifications.Count(a => a.ApplicationUserId == userId)
-            };
+                Skip = skip, Take = count, UserId = userId
+            });
+
+            var model = new IndexViewModel() {Skip = skip, Count = count, Items = res.Items, Total = res.Count};
 
             return View(model);
         }
@@ -136,10 +130,7 @@ namespace BTCPayServer.Controllers
         {
             if (ValidUserClaim(out var userId))
             {
-                var notif = _db.Notifications.Single(a => a.Id == id && a.ApplicationUserId == userId);
-                notif.Seen = !notif.Seen;
-                await _db.SaveChangesAsync();
-                _notificationManager.InvalidateNotificationCache(userId);
+                await _notificationManager.ToggleSeen(new NotificationsQuery() {Ids = new[] {id}, UserId = userId}, null);
                 return RedirectToAction(nameof(Index));
             }
 
@@ -151,21 +142,19 @@ namespace BTCPayServer.Controllers
         {
             if (ValidUserClaim(out var userId))
             {
-                var notif = _db.Notifications.Single(a => a.Id == id && a.ApplicationUserId == userId);
-                if (!notif.Seen)
-                {
-                    notif.Seen = !notif.Seen;
-                    await _db.SaveChangesAsync();
-                    _notificationManager.InvalidateNotificationCache(userId);
-                }
-
-                var vm = _notificationManager.ToViewModel(notif);
-                if (string.IsNullOrEmpty(vm.ActionLink))
+                var items = await
+                    _notificationManager.ToggleSeen(new NotificationsQuery()
+                    {
+                        Ids = new[] {id}, UserId = userId
+                    }, true);
+                
+                var link = items.FirstOrDefault()?.ActionLink ?? "";
+                if (string.IsNullOrEmpty(link))
                 {
                     return RedirectToAction(nameof(Index));
                 }
 
-                return Redirect(vm.ActionLink);
+                return Redirect(link);
             }
 
             return NotFound();
@@ -188,31 +177,29 @@ namespace BTCPayServer.Controllers
 
             if (selectedItems != null)
             {
-                var items = _db.Notifications.Where(a => a.ApplicationUserId == userId && selectedItems.Contains(a.Id));
                 switch (command)
                 {
                     case "delete":
-                        _db.Notifications.RemoveRange(items);
+                        await _notificationManager.Remove(new NotificationsQuery()
+                        {
+                            UserId = userId, Ids = selectedItems
+                        });
 
                         break;
                     case "mark-seen":
-                        foreach (NotificationData notificationData in items)
+                        await _notificationManager.ToggleSeen(new NotificationsQuery()
                         {
-                            notificationData.Seen = true;
-                        }
+                            UserId = userId, Ids = selectedItems, Seen = false
+                        }, true);
 
                         break;
                     case "mark-unseen":
-                        foreach (NotificationData notificationData in items)
+                        await _notificationManager.ToggleSeen(new NotificationsQuery()
                         {
-                            notificationData.Seen = false;
-                        }
-
+                            UserId = userId, Ids = selectedItems, Seen = true
+                        }, false);
                         break;
                 }
-
-                await _db.SaveChangesAsync();
-                _notificationManager.InvalidateNotificationCache(userId);
                 return RedirectToAction(nameof(Index));
             }
 

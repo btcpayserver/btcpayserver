@@ -49,7 +49,7 @@
 
             <p>Alternatively, click below to continue to our HTML-only invoice.</p>
 
-            <a href="/invoice-noscript?id=@Model.InvoiceId" style="text-decoration:underline;color:blue">
+            <a asp-action="CheckoutNoScript" asp-route-invoiceId="@Model.InvoiceId" style="text-decoration:underline;color:blue">
                 Continue to javascript-disabled invoice &gt;
             </a>
         </div>
@@ -57,7 +57,7 @@
 
     <!--[if lte IE 8]>
     <div style="padding:2em;text-align:center;">
-      <form action="/invoice-noscript" method="GET">
+      <form asp-action="CheckoutNoScript" method="GET">
         <button style="text-decoration: underline; color: blue">Continue to legacy browser compatible invoice page
         </button>
       </form>

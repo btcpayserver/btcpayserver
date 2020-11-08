@@ -33,7 +33,7 @@ namespace BTCPayServer.Controllers.GreenField
         [Authorize(Policy = Policies.CanViewNotificationsForUser,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/users/me/notifications")]
-        public async Task<IActionResult> GetNotifications(bool? includeSeen = null)
+        public async Task<IActionResult> GetNotifications(bool? seen = null)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
@@ -43,7 +43,7 @@ namespace BTCPayServer.Controllers.GreenField
 
             var items = await _notificationManager.GetNotifications(new NotificationsQuery()
             {
-                Seen = includeSeen, UserId = _userManager.GetUserId(User)
+                Seen = seen, UserId = _userManager.GetUserId(User)
             });
 
             return Ok(items.Items.Select(ToModel));

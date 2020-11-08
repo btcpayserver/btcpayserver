@@ -11,7 +11,8 @@ using BTCPayServer.Events;
 using BTCPayServer.JsonConverters;
 using BTCPayServer.Lightning;
 using BTCPayServer.Services;
-using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Notifications;
+using BTCPayServer.Services.Notifications.Blobs;
 using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -20,7 +21,6 @@ using NBitcoin.OpenAsset;
 using NBitpayClient;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using NUglify.Helpers;
 using Xunit;
 using Xunit.Abstractions;
 using CreateApplicationUserRequest = BTCPayServer.Client.Models.CreateApplicationUserRequest;
@@ -1117,6 +1117,45 @@ namespace BTCPayServer.Tests
                 Assert.NotEqual(0, info.BlockHeight);
             }
         }
+        
+        
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task NotificationAPITests()
+        {
+            using var tester = ServerTester.Create();
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync(true);
+            var client = await user.CreateClient(Policies.CanManageNotificationsForUser);
+            var viewOnlyClient = await user.CreateClient(Policies.CanViewNotificationsForUser);
+            await tester.PayTester.GetService<NotificationSender>()
+                .SendNotification(new UserScope(user.UserId), new NewVersionNotification());
+
+            Assert.Single(await viewOnlyClient.GetNotifications());
+            Assert.Single(await viewOnlyClient.GetNotifications(false));
+            Assert.Empty(await viewOnlyClient.GetNotifications(true));
+
+            Assert.Single(await client.GetNotifications());
+            Assert.Single(await client.GetNotifications(false));
+            Assert.Empty(await client.GetNotifications(true));
+            var notification = (await client.GetNotifications()).First();
+            Assert.False(notification.Seen);
+            await AssertHttpError(403, async () =>
+            {
+                await viewOnlyClient.UpdateNotification(notification.Id, true);
+            });
+            await AssertHttpError(403, async () =>
+            {
+                await viewOnlyClient.RemoveNotification(notification.Id);
+            });
+            Assert.True((await client.UpdateNotification(notification.Id, true)).Seen);
+            Assert.Single(await viewOnlyClient.GetNotifications(true));
+            Assert.Empty(await viewOnlyClient.GetNotifications(false));
+            await client.RemoveNotification(notification.Id);
+            Assert.Empty(await viewOnlyClient.GetNotifications(true));
+            Assert.Empty(await viewOnlyClient.GetNotifications(false));
+        }
 
 
 
@@ -1160,5 +1199,6 @@ namespace BTCPayServer.Tests
             Assert.Equal(1.2, jsonConverter.ReadJson(Get(stringJson), typeof(double), null, null));
             Assert.Equal(1.2, jsonConverter.ReadJson(Get(stringJson), typeof(double?), null, null));
         }
+
     }
 }

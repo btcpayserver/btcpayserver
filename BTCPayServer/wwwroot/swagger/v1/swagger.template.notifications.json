@@ -1,0 +1,238 @@
+{
+    "paths": {
+        "/api/v1/users/me/notifications": {
+            "get": {
+                "tags": [
+                    "Notifications (Current User)"
+                ],
+                "summary": "Get notifications",
+                "parameters": [
+                    {
+                        "name": "seen",
+                        "in": "query",
+                        "required": false,
+                        "description": "filter by seen notifications",
+                        "schema": {
+                            "type": "string",
+                            "nullable": true
+                        }
+                    }
+                ],
+                "description": "View current user's notifications",
+                "operationId": "Notifications_GetNotifications",
+                "responses": {
+                    "200": {
+                        "description": "list of notifications",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NotificationData"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.user.canmanagenotificationsforuser",
+                            "btcpay.user.canviewnotificationsforuser"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/users/me/notifications/{id}": {
+            "get": {
+                "tags": [
+                    "Notifications (Current User)"
+                ],
+                "summary": "Get notification",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The notification to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "View information about the specified notification",
+                "operationId": "Notifications_GetInvoice",
+                "responses": {
+                    "200": {
+                        "description": "specified notification",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NotificationData"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified notification"
+                    },
+                    "404": {
+                        "description": "The key is not found for this notification"
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.user.canmanagenotificationsforuser",
+                            "btcpay.user.canviewnotificationsforuser"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Notifications (Current User)"
+                ],
+                "summary": "Update notification",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The notification to update",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "Updates the notification",
+                "operationId": "Notifications_UpdateNotification",
+                "responses": {
+                    "200": {
+                        "description": "updated notification",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NotificationData"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to update the specified notification"
+                    },
+                    "404": {
+                        "description": "The key is not found for this notification"
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.user.canmanagenotificationsforuser"
+                        ],
+                        "Basic": []
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateNotification"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Notifications (Current User)"
+                ],
+                "summary": "Remove Notification",
+                "description": "Removes the specified notification.",
+                "operationId": "Notifications_DeleteNotification",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The notification to remove",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The notification has been deleted"
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to remove the specified notification"
+                    },
+                    "404": {
+                        "description": "The key is not found for this notification"
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.user.canmanagenotificationsforuser"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "UpdateNotification": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "seen": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "description": "Sets the notification as seen/unseen. If left null, sets it to the opposite value"
+                    }
+                }
+            },
+            "NotificationData": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "The identifier of the notification"
+                    },
+                    "body": {
+                        "type": "string",
+                        "format": "html",
+                        "description": "The html body of the notifications"
+                    },
+                    "link": {
+                        "type": "string",
+                        "format": "uri",
+                        "nullable": true,
+                        "description": "The link of the notification"
+                    },
+                    "createdTime": {
+                        "type": "number",
+                        "format": "int64",
+                        "description": "The creation time of the notification"
+                    },
+                    "seen": {
+                        "type": "boolean",
+                        "description": "If the notification has been seen by the user"
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Notifications (Current User)"
+        }
+    ]
+}

@@ -50,12 +50,14 @@ namespace BTCPayServer.Services.Notifications
                 return res;
             });
         }
-
-        public void InvalidateNotificationCache(string userId)
+        
+        public void InvalidateNotificationCache(params string[] userIds)
         {
-            _memoryCache.Remove(GetNotificationsCacheId(userId));
-
-            _eventAggregator.Publish(new UserNotificationsUpdatedEvent() {UserId = userId});
+            foreach (var userId in userIds)
+            {
+                _memoryCache.Remove(GetNotificationsCacheId(userId));
+                _eventAggregator.Publish(new UserNotificationsUpdatedEvent() {UserId = userId});
+            }
         }
 
         private static string GetNotificationsCacheId(string userId)
@@ -115,12 +117,14 @@ namespace BTCPayServer.Services.Notifications
 
             var queryables = GetNotificationsQueryable(dbContext, notificationsQuery);
             var items = await queryables.withPaging.ToListAsync();
+            var userIds = items.Select(data => data.ApplicationUserId).Distinct();
             foreach (var notificationData in items)
             {
-                notificationData.Seen =!setSeen.GetValueOrDefault(!notificationData.Seen);
+                notificationData.Seen = setSeen.GetValueOrDefault(!notificationData.Seen);
             }
 
             await dbContext.SaveChangesAsync();
+            InvalidateNotificationCache(userIds.ToArray());
             return items.Select(ToViewModel).ToList();
         }
 

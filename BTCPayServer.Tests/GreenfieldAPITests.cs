@@ -1140,6 +1140,7 @@ namespace BTCPayServer.Tests
             Assert.Single(await client.GetNotifications(false));
             Assert.Empty(await client.GetNotifications(true));
             var notification = (await client.GetNotifications()).First();
+            notification = await client.GetNotification(notification.Id);
             Assert.False(notification.Seen);
             await AssertHttpError(403, async () =>
             {

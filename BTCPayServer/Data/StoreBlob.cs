@@ -62,6 +62,7 @@ namespace BTCPayServer.Data
                 _DefaultCurrencyPairs = value;
             }
         }
+        public bool OnChainWithLnInvoiceFallback { get; set; } = true;
 
         public string GetDefaultCurrencyPairString()
         {
@@ -189,6 +190,7 @@ namespace BTCPayServer.Data
         public bool PayJoinEnabled { get; set; }
 
         public StoreHints Hints { get; set; }
+
         public class StoreHints
         {
             public bool Wallet { get; set; }

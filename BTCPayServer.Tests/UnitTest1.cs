@@ -770,6 +770,7 @@ namespace BTCPayServer.Tests
                     BitcoinAddress.Create(invoice.BitcoinAddress, Network.RegTest), Money.Coins(0.00005m));
             });
             await tester.ExplorerNode.GenerateAsync(1);
+            await Task.Delay(100); // wait a bit for payment to process before fetching new invoice
             var newInvoice = await user.BitPay.GetInvoiceAsync(invoice.Id);
             var newBolt11  = newInvoice.CryptoInfo.First(o => o.PaymentUrls.BOLT11 != null).PaymentUrls.BOLT11;
             var  oldBolt11= invoice.CryptoInfo.First(o => o.PaymentUrls.BOLT11 != null).PaymentUrls.BOLT11;

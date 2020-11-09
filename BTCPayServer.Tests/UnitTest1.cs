@@ -772,29 +772,29 @@ namespace BTCPayServer.Tests
             await tester.ExplorerNode.GenerateAsync(1);
             await Task.Delay(100); // wait a bit for payment to process before fetching new invoice
             var newInvoice = await user.BitPay.GetInvoiceAsync(invoice.Id);
-            var newBolt11  = newInvoice.CryptoInfo.First(o => o.PaymentUrls.BOLT11 != null).PaymentUrls.BOLT11;
-            var  oldBolt11= invoice.CryptoInfo.First(o => o.PaymentUrls.BOLT11 != null).PaymentUrls.BOLT11;
-            Assert.NotEqual(newBolt11,oldBolt11);
+            var newBolt11 = newInvoice.CryptoInfo.First(o => o.PaymentUrls.BOLT11 != null).PaymentUrls.BOLT11;
+            var oldBolt11 = invoice.CryptoInfo.First(o => o.PaymentUrls.BOLT11 != null).PaymentUrls.BOLT11;
+            Assert.NotEqual(newBolt11, oldBolt11);
             Assert.Equal(newInvoice.BtcDue.GetValue(), BOLT11PaymentRequest.Parse(newBolt11, Network.RegTest).MinimumAmount.ToDecimal(LightMoneyUnit.BTC));
-            
-            Logs.Tester.LogInformation($"Paying invoice {newInvoice.Id} remaining due amount {newInvoice.BtcDue.GetValue()} via lightning" );
+
+            Logs.Tester.LogInformation($"Paying invoice {newInvoice.Id} remaining due amount {newInvoice.BtcDue.GetValue()} via lightning");
             var evt = await tester.WaitForEvent<InvoiceDataChangedEvent>(async () =>
             {
                 await tester.SendLightningPaymentAsync(newInvoice);
             }, evt => evt.InvoiceId == invoice.Id);
 
             var fetchedInvoice = await tester.PayTester.InvoiceRepository.GetInvoice(evt.InvoiceId);
-            Assert.Contains(fetchedInvoice.Status, new []{InvoiceStatus.Complete, InvoiceStatus.Confirmed});
+            Assert.Contains(fetchedInvoice.Status, new[] { InvoiceStatus.Complete, InvoiceStatus.Confirmed });
             Assert.Equal(InvoiceExceptionStatus.None, fetchedInvoice.ExceptionStatus);
-            
-            Logs.Tester.LogInformation($"Paying invoice {invoice.Id} original full amount bolt11 invoice " );
+
+            Logs.Tester.LogInformation($"Paying invoice {invoice.Id} original full amount bolt11 invoice ");
             evt = await tester.WaitForEvent<InvoiceDataChangedEvent>(async () =>
             {
                 await tester.SendLightningPaymentAsync(invoice);
             }, evt => evt.InvoiceId == invoice.Id);
             Assert.Equal(evt.InvoiceId, invoice.Id);
             fetchedInvoice = await tester.PayTester.InvoiceRepository.GetInvoice(evt.InvoiceId);
-            Assert.Equal( 3,fetchedInvoice.Payments.Count);
+            Assert.Equal(3, fetchedInvoice.Payments.Count);
         }
 
         [Fact(Timeout = 60 * 2 * 1000)]
@@ -1509,7 +1509,7 @@ namespace BTCPayServer.Tests
                 );
             }
         }
-        
+
         // [Fact(Timeout = TestTimeout)]
         [Fact()]
         [Trait("Integration", "Integration")]
@@ -1528,9 +1528,9 @@ namespace BTCPayServer.Tests
                     BitcoinAddress.Create(invoice.BitcoinAddress, Network.RegTest),
                     Money.Coins(0.01m));
             });
-           
 
-            
+
+
             var payments = Assert.IsType<InvoiceDetailsModel>(
                     Assert.IsType<ViewResult>(await user.GetController<InvoiceController>().Invoice(invoice.Id)).Model)
                 .Payments;
@@ -1991,7 +1991,7 @@ namespace BTCPayServer.Tests
                 };
                 var criteriaCompat = store.GetPaymentMethodCriteria(tester.NetworkProvider, blob);
                 Assert.Single(criteriaCompat);
-                Assert.NotNull(criteriaCompat.FirstOrDefault(methodCriteria => methodCriteria.Value.ToString() == "2 USD" && methodCriteria.Above && methodCriteria.PaymentMethod == new PaymentMethodId("BTC", BitcoinPaymentType.Instance) ));
+                Assert.NotNull(criteriaCompat.FirstOrDefault(methodCriteria => methodCriteria.Value.ToString() == "2 USD" && methodCriteria.Above && methodCriteria.PaymentMethod == new PaymentMethodId("BTC", BitcoinPaymentType.Instance)));
             }
         }
 
@@ -2031,7 +2031,7 @@ namespace BTCPayServer.Tests
 
                 Assert.Single(invoice.CryptoInfo);
                 Assert.Equal(PaymentTypes.LightningLike.ToString(), invoice.CryptoInfo[0].PaymentType);
-                
+
                 //test backward compat
                 var store = await tester.PayTester.StoreRepository.FindStore(user.StoreId);
                 var blob = store.GetStoreBlob();
@@ -2045,8 +2045,8 @@ namespace BTCPayServer.Tests
                 };
                 var criteriaCompat = store.GetPaymentMethodCriteria(tester.NetworkProvider, blob);
                 Assert.Single(criteriaCompat);
-                Assert.NotNull(criteriaCompat.FirstOrDefault(methodCriteria => methodCriteria.Value.ToString() == "2 USD" && !methodCriteria.Above && methodCriteria.PaymentMethod == new PaymentMethodId("BTC", LightningPaymentType.Instance) ));
-                
+                Assert.NotNull(criteriaCompat.FirstOrDefault(methodCriteria => methodCriteria.Value.ToString() == "2 USD" && !methodCriteria.Above && methodCriteria.PaymentMethod == new PaymentMethodId("BTC", LightningPaymentType.Instance)));
+
             }
         }
 

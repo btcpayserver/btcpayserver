@@ -12,15 +12,13 @@ namespace BTCPayServer.Payments
     public class BitcoinPaymentType : PaymentType
     {
         public static BitcoinPaymentType Instance { get; } = new BitcoinPaymentType();
-        private BitcoinPaymentType()
-        {
-
-        }
+        
+        private BitcoinPaymentType() { }
 
         public override string ToPrettyString() => "On-Chain";
         public override string GetId() => "BTCLike";
+        public override string GetBadge() => "🔗";
         public override string ToStringNormalized() => "OnChain";
-        public override string GetBadge() =>  "🔗";
 
         public override CryptoPaymentData DeserializePaymentData(BTCPayNetworkBase network, string str)
         {
@@ -72,8 +70,8 @@ namespace BTCPayServer.Payments
         public override string GetPaymentLink(BTCPayNetworkBase network, IPaymentMethodDetails paymentMethodDetails,
             Money cryptoInfoDue, string serverUri)
         {
-            var bip21 =  ((BTCPayNetwork)network).GenerateBIP21(paymentMethodDetails.GetPaymentDestination(), cryptoInfoDue);
-            
+            var bip21 = ((BTCPayNetwork)network).GenerateBIP21(paymentMethodDetails.GetPaymentDestination(), cryptoInfoDue);
+
             if ((paymentMethodDetails as BitcoinLikeOnChainPaymentMethod)?.PayjoinEnabled is true)
             {
                 bip21 += $"&{PayjoinClient.BIP21EndpointKey}={serverUri.WithTrailingSlash()}{network.CryptoCode}/{PayjoinClient.BIP21EndpointKey}";

@@ -31,10 +31,10 @@ namespace BTCPayServer.Plugins
 
         public IEnumerable<IBTCPayServerPlugin> LoadedPlugins { get; }
 
-        public async Task<IEnumerable<AvailablePlugin>> GetRemotePlugins(string remote)
+        public async Task<IEnumerable<AvailablePlugin>> GetRemotePlugins()
         {
             var resp = await _githubClient
-                .GetStringAsync(new Uri($"https://api.github.com/repos/{remote}/contents"));
+                .GetStringAsync(new Uri($"https://api.github.com/repos/{_btcPayServerOptions.PluginRemote}/contents"));
             var files = JsonConvert.DeserializeObject<GithubFile[]>(resp);
             return await Task.WhenAll(files.Where(file => file.Name.EndsWith($"{PluginManager.BTCPayPluginSuffix}.json", StringComparison.InvariantCulture)).Select(async file =>
             {
@@ -43,11 +43,11 @@ namespace BTCPayServer.Plugins
             }));
         }
 
-        public async Task DownloadRemotePlugin(string remote, string plugin)
+        public async Task DownloadRemotePlugin(string plugin)
         {
             var dest = _btcPayServerOptions.PluginDir;
             var resp = await _githubClient
-                .GetStringAsync(new Uri($"https://api.github.com/repos/{remote}/contents"));
+                .GetStringAsync(new Uri($"https://api.github.com/repos/{_btcPayServerOptions.PluginRemote}/contents"));
             var files = JsonConvert.DeserializeObject<GithubFile[]>(resp);
             var ext = files.SingleOrDefault(file => file.Name == $"{plugin}{PluginManager.BTCPayPluginSuffix}");
             if (ext is null)
@@ -65,6 +65,11 @@ namespace BTCPayServer.Plugins
             var dest = _btcPayServerOptions.PluginDir;
             UninstallPlugin(plugin);
             PluginManager.QueueCommands(dest, ("install", plugin));
+        }
+        public void UpdatePlugin(string plugin)
+        {
+            var dest = _btcPayServerOptions.PluginDir;
+            PluginManager.QueueCommands(dest, ("update", plugin));
         }
 
         public async Task UploadPlugin(IFormFile plugin)
@@ -93,7 +98,7 @@ namespace BTCPayServer.Plugins
             public string Description { get; set; }
             public bool SystemPlugin { get; set; } = false;
 
-            public string[] Dependencies { get; } = Array.Empty<string>();
+            public IBTCPayServerPlugin.PluginDependency[] Dependencies { get; set; } = Array.Empty<IBTCPayServerPlugin.PluginDependency>();
 
             public void Execute(IApplicationBuilder applicationBuilder,
                 IServiceProvider applicationBuilderApplicationServices)

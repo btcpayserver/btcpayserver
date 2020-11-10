@@ -105,10 +105,10 @@
                             X_X = kraken(X_X);
                         </code>
                     </pre>
-                    <p>However, <code>kraken</code> does not support the <code>BTC_CAD</code> pair. For this reason you can add a rule mapping all <code>X_CAD</code> to <code>quadrigacx</code>, a Canadian exchange.</p>
+                    <p>However, <code>kraken</code> does not support the <code>BTC_CAD</code> pair. For this reason you can add a rule mapping all <code>X_CAD</code> to <code>ndax</code>, a Canadian exchange.</p>
                     <pre>
                     <code>
-                            X_CAD = quadrigacx(X_CAD);
+                            X_CAD = ndax(X_CAD);
                             X_X = kraken(X_X);
                         </code>
                     </pre>
@@ -120,19 +120,19 @@
                     <pre>
                     <code>
                             DOGE_X = bittrex(DOGE_BTC) * BTC_X
-                            X_CAD = quadrigacx(X_CAD);
+                            X_CAD = ndax(X_CAD);
                             X_X = kraken(X_X);
                         </code>
                     </pre>
                     <p>
-                        With <code>DOGE_USD</code> will be expanded to <code>bittrex(DOGE_BTC) * kraken(BTC_USD)</code>. And <code>DOGE_CAD</code> will be expanded to <code>bittrex(DOGE_BTC) * quadrigacx(BTC_CAD)</code>. <br />
+                        With <code>DOGE_USD</code> will be expanded to <code>bittrex(DOGE_BTC) * kraken(BTC_USD)</code>. And <code>DOGE_CAD</code> will be expanded to <code>bittrex(DOGE_BTC) * ndax(BTC_CAD)</code>. <br />
                         However, we advise you to write it that way to increase coverage so that <code>DOGE_BTC</code> is also supported:
                     </p>
                     <pre>
                     <code>
                             DOGE_X = DOGE_BTC * BTC_X
                             DOGE_BTC = bittrex(DOGE_BTC)
-                            X_CAD = quadrigacx(X_CAD);
+                            X_CAD = ndax(X_CAD);
                             X_X = kraken(X_X);
                         </code>
                     </pre>

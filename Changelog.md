@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.5.9:
+
+### Bug fixes:
+
+* If there was too many pending invoice, postgres would be overwhelmed and freeze some requests (Igor Rylko)
+* Emails were not included in the text search anymore @Kukks
+* Payjoin: Do not include maxadditionalfeecontribution if there is no change. @NicolasDorier
+
 ## 1.0.5.8:
 
 ### Bug fixes:

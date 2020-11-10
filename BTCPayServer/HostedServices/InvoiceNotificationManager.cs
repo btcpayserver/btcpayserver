@@ -86,7 +86,7 @@ namespace BTCPayServer.HostedServices
                 },
                 Event = new InvoicePaymentNotificationEvent()
                 {
-                    Code = invoiceEvent.EventCode,
+                    Code = (int)invoiceEvent.EventCode,
                     Name = invoiceEvent.Name
                 },
                 ExtendedNotification = extendedNotification,
@@ -314,11 +314,6 @@ namespace BTCPayServer.HostedServices
                 var invoice = await _InvoiceRepository.GetInvoice(e.Invoice.Id);
                 if (invoice == null)
                     return;
-                List<Task> tasks = new List<Task>();
-
-                // Awaiting this later help make sure invoices should arrive in order
-                tasks.Add(SaveEvent(invoice.Id, e, InvoiceEventData.EventSeverity.Info));
-
                 // we need to use the status in the event and not in the invoice. The invoice might now be in another status.
                 if (invoice.FullNotifications)
                 {
@@ -344,30 +339,7 @@ namespace BTCPayServer.HostedServices
                     _ = Notify(invoice, e, true);
                 }
             }));
-
-
-            leases.Add(_EventAggregator.Subscribe<InvoiceDataChangedEvent>(async e =>
-            {
-                await SaveEvent(e.InvoiceId, e, InvoiceEventData.EventSeverity.Info);
-            }));
-
-
-            leases.Add(_EventAggregator.Subscribe<InvoiceStopWatchedEvent>(async e =>
-            {
-                await SaveEvent(e.InvoiceId, e, InvoiceEventData.EventSeverity.Info);
-            }));
-
-            leases.Add(_EventAggregator.Subscribe<InvoiceIPNEvent>(async e =>
-            {
-                await SaveEvent(e.InvoiceId, e, string.IsNullOrEmpty(e.Error)? InvoiceEventData.EventSeverity.Success: InvoiceEventData.EventSeverity.Error);
-            }));
-
             return Task.CompletedTask;
-        }
-
-        private Task SaveEvent(string invoiceId, object evt, InvoiceEventData.EventSeverity severity)
-        {
-            return _InvoiceRepository.AddInvoiceEvent(invoiceId, evt, severity);
         }
 
         public Task StopAsync(CancellationToken cancellationToken)

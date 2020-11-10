@@ -12,6 +12,11 @@ namespace BTCPayServer.PluginPacker
     {
         static void Main(string[] args)
         {
+            if (args.Length < 3)
+            {
+                Console.WriteLine("Usage: btcpay-plugin [directory of compiled plugin] [name of plugin] [packed plugin output directory]");
+                return;
+            }
             var directory = args[0];
             var name = args[1];
             var outputDir = args[2];

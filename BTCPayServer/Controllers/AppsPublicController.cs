@@ -41,12 +41,13 @@ namespace BTCPayServer.Controllers
         [HttpGet("/apps/{appId}")]
         public async Task<IActionResult> RedirectToApp(string appId)
         {
-            switch (await _AppService.GetAppInfo(appId))
+           
+            switch ((await _AppService.GetApp(appId, null)).AppType)
             {
-                case ViewCrowdfundViewModel  _:
+                case nameof(AppType.Crowdfund):
                     return RedirectToAction("ViewCrowdfund", new {appId});
                 
-                case ViewPointOfSaleViewModel  _:
+                case nameof(AppType.PointOfSale):
                     return RedirectToAction("ViewPointOfSale", new {appId});
             }
 

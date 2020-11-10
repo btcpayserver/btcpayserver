@@ -139,7 +139,7 @@ namespace BTCPayServer.Controllers.GreenField
                 ModelState.AddModelError(nameof(request.FeeRate), "FeeRate must be more than 0");
             }
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
                 return this.CreateValidationError(ModelState);
             }

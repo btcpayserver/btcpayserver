@@ -12,6 +12,7 @@ namespace BTCPayServer.HostedServices
     public class EventHostedServiceBase : IHostedService
     {
         private readonly EventAggregator _EventAggregator;
+        public EventAggregator EventAggregator => _EventAggregator;
 
         private List<IEventAggregatorSubscription> _Subscriptions;
         private CancellationTokenSource _Cts;

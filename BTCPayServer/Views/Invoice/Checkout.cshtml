@@ -49,7 +49,7 @@
 
             <p>Alternatively, click below to continue to our HTML-only invoice.</p>
 
-            <a href="/invoice-noscript?id=@Model.InvoiceId" style="text-decoration:underline;color:blue">
+            <a asp-action="CheckoutNoScript" asp-route-invoiceId="@Model.InvoiceId" style="text-decoration:underline;color:blue">
                 Continue to javascript-disabled invoice &gt;
             </a>
         </div>
@@ -57,7 +57,7 @@
 
     <!--[if lte IE 8]>
     <div style="padding:2em;text-align:center;">
-      <form action="/invoice-noscript" method="GET">
+      <form asp-action="CheckoutNoScript" method="GET">
         <button style="text-decoration: underline; color: blue">Continue to legacy browser compatible invoice page
         </button>
       </form>
@@ -331,11 +331,15 @@
                 this.endDate = newEnd;
                 // updating ui
                 this.srvModel = jsonData;
-                if (this.invoicePaid && !jsonData.isModal && jsonData.redirectAutomatically && jsonData.merchantRefLink) {
+                if (this.invoicePaid && jsonData.redirectAutomatically && jsonData.merchantRefLink) {
                     this.loading = true;
                     setTimeout(function () {
-                        window.location = jsonData.merchantRefLink;
-                    }, 2000);
+                        if (this.isModal && window.top.location == jsonData.merchantRefLink){
+                            this.close();
+                        } else {
+                            window.top.location = jsonData.merchantRefLink;
+                        }
+                    }.bind(this), 2000);
                 }
             },
             onEmailChange: function(){

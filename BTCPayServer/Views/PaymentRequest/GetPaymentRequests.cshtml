@@ -49,9 +49,9 @@
                             </button>
 
                             <div class="dropdown-menu dropdown-menu-right">
-                                <a class="dropdown-item" href="/payment-requests?Count=@Model.Count&SearchTerm=includearchived%3Atrue">Include Archived Payment Reqs</a>
+                                <a class="dropdown-item" asp-action="GetPaymentRequests" asp-route-count="@Model.Count" asp-route-searchTerm="includearchived:true">Include Archived Payment Reqs</a>
                                 <div role="separator" class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="/payment-requests?SearchTerm=">Unfiltered</a>
+                                <a class="dropdown-item" href="?searchTerm=">Unfiltered</a>
                             </div>
                         </div>
                     </div>

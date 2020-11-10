@@ -1,13 +1,32 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <OutputType>Exe</OutputType>
-        <TargetFramework>netcoreapp3.1</TargetFramework>
-        <AssemblyVersion>1.0.0.1</AssemblyVersion>
+      <OutputType>Exe</OutputType>
+      <TargetFramework>netcoreapp3.1</TargetFramework>
+      <Version>1.0.0.0</Version>
+      <PackAsTool>true</PackAsTool>
+      <ToolCommandName>btcpay-plugin</ToolCommandName>
+      <Company>BTCPay Server</Company>
+      <Copyright>Copyright © BTCPay Server 2020</Copyright>
+      <Description>A dotnet tool for packaging BTCPay Server plugins</Description>
+      <PackageIcon>icon.png</PackageIcon>
+      <PackageTags>btcpay,btcpayserver</PackageTags>
+      <PackageProjectUrl>https://github.com/btcpayserver/btcpayserver/tree/master/BTCPayServer.PluginPacker</PackageProjectUrl>
+      <PackageLicenseExpression>MIT</PackageLicenseExpression>
+      <RepositoryUrl>https://github.com/btcpayserver/btcpayserver</RepositoryUrl>
+      <RepositoryType>git</RepositoryType>
     </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <DebugType>portable</DebugType>
+    <Optimize>true</Optimize>
+    <NoWarn>1591;1573;1572;1584;1570;3021</NoWarn>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
 
-    <ItemGroup>
+  <ItemGroup>
       <ProjectReference Include="..\BTCPayServer.Abstractions\BTCPayServer.Abstractions.csproj" />
-    </ItemGroup>
-
+      <None Include="icon.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
 </Project>

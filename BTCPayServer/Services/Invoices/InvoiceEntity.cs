@@ -808,23 +808,53 @@ namespace BTCPayServer.Services.Invoices
         public bool CanMarkComplete()
         {
             return (Status == InvoiceStatus.Paid) ||
-#pragma warning disable CA1305 // Specify IFormatProvider
                    ((Status == InvoiceStatus.New || Status == InvoiceStatus.Expired) && ExceptionStatus == InvoiceExceptionStatus.PaidPartial) ||
                    ((Status == InvoiceStatus.New || Status == InvoiceStatus.Expired) && ExceptionStatus == InvoiceExceptionStatus.PaidLate) ||
                    (Status != InvoiceStatus.Complete && ExceptionStatus == InvoiceExceptionStatus.Marked) ||
                    (Status == InvoiceStatus.Invalid);
-#pragma warning restore CA1305 // Specify IFormatProvider
         }
 
         public bool CanMarkInvalid()
         {
             return (Status == InvoiceStatus.Paid) ||
                    (Status == InvoiceStatus.New) ||
-#pragma warning disable CA1305 // Specify IFormatProvider
                    ((Status == InvoiceStatus.New || Status == InvoiceStatus.Expired) && ExceptionStatus == InvoiceExceptionStatus.PaidPartial) ||
                    ((Status == InvoiceStatus.New || Status == InvoiceStatus.Expired) && ExceptionStatus == InvoiceExceptionStatus.PaidLate) ||
                    (Status != InvoiceStatus.Invalid && ExceptionStatus == InvoiceExceptionStatus.Marked);
-#pragma warning restore CA1305 // Specify IFormatProvider;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Status, ExceptionStatus);
+        }
+
+        public static bool operator ==(InvoiceState a, InvoiceState b)
+        {
+            if (a is null && b is null)
+                return true;
+            if (a is null)
+                return false;
+            return a.Equals(b);
+        }
+
+        public static bool operator !=(InvoiceState a, InvoiceState b)
+        {
+            return !(a == b);
+        }
+
+        public bool Equals(InvoiceState o)
+        {
+            if (o is null)
+                return false;
+            return o.Status == Status && o.ExceptionStatus == ExceptionStatus;
+        }
+        public override bool Equals(object obj)
+        {
+            if (obj is InvoiceState o)
+            {
+                return this.Equals(o);
+            }
+            return false;
         }
         public override string ToString()
         {

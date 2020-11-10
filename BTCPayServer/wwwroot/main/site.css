@@ -3,6 +3,8 @@ html {
     position: relative;
     min-height: 100%;
     font-size: var(--btcpay-font-size-base);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 .logo {
@@ -189,7 +191,7 @@ pre {
     cursor: pointer;
 }
 
-.list-group-item a {
+.list-group-item a:not(.btn) {
   color: inherit;
 }
 
@@ -249,6 +251,12 @@ pre {
     margin-top: .5rem;
 }
 
+.w-100px { width: 100px; }
+.w-125px { width: 125px; }
+.w-150px { width: 150px; }
+.w-175px { width: 175px; }
+.w-200px { width: 200px; }
+
 /* Chrome, Safari, Edge, Opera */
 input[type=number].hide-number-spin::-webkit-outer-spin-button,
 input[type=number].hide-number-spin::-webkit-inner-spin-button {
@@ -268,8 +276,8 @@ html[data-devenv]:before {
     z-index: 1000;
     right: 0;
     bottom: 0;
-    background: var(--btcpay-bg-dark);
-    color: var(--btcpay-color-dark-text);
+    background: var(--btcpay-color-secondary-backdrop);
+    color: var(--btcpay-color-secondary-text);
     opacity: .7;
     padding: 4px 5px 3px 7px;
     font-size: 10px;
@@ -285,8 +293,21 @@ html[data-devenv]:before {
 
 /* Print */
 @media print {
+    .table td,
+    .table th {
+        background: transparent;
+    }
     .jumbotron {
         padding: 1rem 0 !important;
+    }
+    .text-print-default {
+        color: inherit !important;
+    }
+    a {
+        text-decoration: none !important;
+    }
+    .toasted-container {
+        display: none !important;
     }
 }
 
@@ -298,4 +319,33 @@ html[data-devenv]:before {
 .note-editor .table.table-sm th,
 .note-editor .table.table-sm td {
     border: 1px dotted var(--btcpay-color-neutral-400);
+}
+
+/* Custom */
+.btcpay-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: .25em solid transparent;
+    border-radius: 50%;
+    width: 19px;
+    height: 19px;
+}
+.btcpay-status:before {
+    content: '';
+    border-radius: 50%;
+    width: 9px;
+    height: 9px;
+}
+.btcpay-status--enabled {
+    background-color: rgba(0, 182, 52, .3);
+}
+.btcpay-status--enabled:before {
+    background-color: #00B634;
+}
+.btcpay-status--disabled {
+    background-color: rgba(251, 56, 61, .3);
+}
+.btcpay-status--disabled:before {
+    background-color: #FB383D;
 }

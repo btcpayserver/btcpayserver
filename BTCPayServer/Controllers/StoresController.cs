@@ -420,6 +420,7 @@ namespace BTCPayServer.Controllers
             }
             SetCryptoCurrencies(model, CurrentStore);
             model.SetLanguages(_LangService, model.DefaultLang);
+            model.PaymentMethodCriteria??= new List<PaymentMethodCriteriaViewModel>();
             for (var index = 0; index < model.PaymentMethodCriteria.Count; index++)
             {
                 var methodCriterion = model.PaymentMethodCriteria[index];
@@ -427,10 +428,12 @@ namespace BTCPayServer.Controllers
                 {
                     if (!CurrencyValue.TryParse(methodCriterion.Value, out var value))
                     {
-                        model.AddModelError(viewModel => viewModel.PaymentMethodCriteria[index].Value, $"{methodCriterion.PaymentMethod}: invalid format (1.0 USD)", this);
+                        model.AddModelError(viewModel => viewModel.PaymentMethodCriteria[index].Value,
+                            $"{methodCriterion.PaymentMethod}: invalid format (1.0 USD)", this);
                     }
                 }
             }
+            
 
             if (!ModelState.IsValid)
             {

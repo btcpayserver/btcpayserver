@@ -98,37 +98,51 @@ namespace BTCPayServer.PaymentRequest
                 AnyPendingInvoice = pendingInvoice != null,
                 PendingInvoiceHasPayments = pendingInvoice != null &&
                                             pendingInvoice.ExceptionStatus != InvoiceExceptionStatus.None,
-                Invoices = invoices.Select(entity => new ViewPaymentRequestViewModel.PaymentRequestInvoice()
+                Invoices = invoices.Select(entity =>
                 {
-                    Id = entity.Id,
-                    Amount = entity.Price,
-                    AmountFormatted = _currencies.FormatCurrency(entity.Price, blob.Currency),
-                    Currency = entity.Currency,
-                    ExpiryDate = entity.ExpirationTime.DateTime,
-                    Status = entity.GetInvoiceState().ToString(),
-                    Payments = entity
-                        .GetPayments()
-                        .Select(paymentEntity =>
+                    var state = entity.GetInvoiceState();
+                    return new ViewPaymentRequestViewModel.PaymentRequestInvoice
                     {
-                        var paymentData = paymentEntity.GetCryptoPaymentData();
-                        var paymentMethodId = paymentEntity.GetPaymentMethodId();
-                        if (paymentData is null || paymentMethodId is null)
-                        {
-                            return null;
-                        }
+                        Id = entity.Id,
+                        Amount = entity.Price,
+                        AmountFormatted = _currencies.FormatCurrency(entity.Price, blob.Currency),
+                        Currency = entity.Currency,
+                        ExpiryDate = entity.ExpirationTime.DateTime,
+                        State = state,
+                        StateFormatted = state.ToString(),
+                        Payments = entity
+                            .GetPayments()
+                            .Select(paymentEntity =>
+                            {
+                                var paymentData = paymentEntity.GetCryptoPaymentData();
+                                var paymentMethodId = paymentEntity.GetPaymentMethodId();
+                                if (paymentData is null || paymentMethodId is null)
+                                {
+                                    return null;
+                                }
 
-                        string txId = paymentData.GetPaymentId();
-                        string link = GetTransactionLink(paymentMethodId, txId);
-                        return new ViewPaymentRequestViewModel.PaymentRequestInvoicePayment()
-                        {
-                            Amount = paymentData.GetValue(),
-                            PaymentMethod = paymentMethodId.ToString(),
-                            Link = link,
-                            Id = txId
-                        };
-                    })
-                        .Where(payment => payment != null)
-                        .ToList()
+                                string txId = paymentData.GetPaymentId();
+                                string link = GetTransactionLink(paymentMethodId, txId);
+                                var paymentMethod = entity.GetPaymentMethod(paymentMethodId);
+                                var amount = paymentData.GetValue();
+                                var rate = paymentMethod.Rate;
+                                var paid = (amount - paymentEntity.NetworkFee) * rate;
+
+                                return new ViewPaymentRequestViewModel.PaymentRequestInvoicePayment
+                                {
+                                    Amount = amount,
+                                    Paid = paid,
+                                    ReceivedDate = paymentEntity.ReceivedTime.DateTime,
+                                    PaidFormatted = _currencies.FormatCurrency(paid, blob.Currency),
+                                    RateFormatted = _currencies.FormatCurrency(rate, blob.Currency),
+                                    PaymentMethod = paymentMethodId.ToPrettyString(),
+                                    Link = link,
+                                    Id = txId
+                                };
+                            })
+                            .Where(payment => payment != null)
+                            .ToList()
+                    };
                 }).ToList()
             };
         }

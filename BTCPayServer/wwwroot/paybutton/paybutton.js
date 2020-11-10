@@ -188,7 +188,17 @@ function inputChanges(event, buttonSize) {
 
     $("#mainCode").text(html).html();
     $("#preview").html(html);
-
+    var form = document.querySelector("#preview form");
+    var url =  new URL(form.getAttribute("action"));
+    var formData =   new FormData(form);
+    formData.forEach((value, key) => {
+        if(key !== "jsonResponse"){
+            url.searchParams.append(key, value);
+        }
+    });
+    url = url.href;
+    $("#preview-link").append(`<a href="${url}">${url}</a>`)
+    
     $('pre code').each(function (i, block) {
         hljs.highlightBlock(block);
     });

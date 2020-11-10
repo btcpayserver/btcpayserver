@@ -127,6 +127,7 @@ retry:
                 if (invoiceData.CustomerEmail == null && data.Email != null)
                 {
                     invoiceData.CustomerEmail = data.Email;
+                    AddToTextSearch(invoiceId, invoiceData.CustomerEmail);
                 }
                 await ctx.SaveChangesAsync().ConfigureAwait(false);
             }
@@ -204,7 +205,7 @@ retry:
             textSearch.Add(invoice.Metadata.OrderId);
             textSearch.Add(ToString(invoice.Metadata, null));
             textSearch.Add(invoice.StoreId);
-
+            textSearch.Add(invoice.Metadata.BuyerEmail);
             AddToTextSearch(invoice.Id, textSearch.ToArray());
             return invoice;
         }
@@ -329,7 +330,9 @@ retry:
             var paymentMethodIdStr = paymentMethodId?.ToString();
             var addresses = context.HistoricalAddressInvoices.Where(data =>
                 (data.InvoiceDataId == invoiceId && paymentMethodIdStr == null ||
+#pragma warning disable CS0618 // Type or member is obsolete
                  data.CryptoCode == paymentMethodIdStr) &&
+#pragma warning restore CS0618 // Type or member is obsolete
                 data.UnAssigned == null);
             foreach (var historicalAddressInvoiceData in addresses)
             {
@@ -367,7 +370,7 @@ retry:
             {
                 using (var tx = _Engine.GetTransaction())
                 {
-                    tx.TextAppend("InvoiceSearch", Encoders.Base58.DecodeData(invoiceId), string.Join(" ", terms.Where(t => !String.IsNullOrWhiteSpace(t))));
+                    tx.TextAppend("InvoiceSearch", Encoders.Base58.DecodeData(invoiceId), string.Join(" ", terms.Where(t => !string.IsNullOrWhiteSpace(t))));
                     tx.Commit();
                 }
             });
@@ -463,6 +466,20 @@ retry:
         {
             var res = await GetInvoiceRaw(id, inludeAddressData);
             return res == null ? null : ToEntity(res);
+        }
+        public async Task<InvoiceEntity[]> GetInvoices(string[] invoiceIds)
+        {
+            var invoiceIdSet = invoiceIds.ToHashSet();
+            using (var context = _ContextFactory.CreateContext())
+            {
+                IQueryable<Data.InvoiceData> query =
+                    context
+                    .Invoices
+                    .Include(o => o.Payments)
+                    .Where(o => invoiceIdSet.Contains(o.Id));
+
+                return (await query.ToListAsync()).Select(o => ToEntity(o)).ToArray();
+            }
         }
 
         private async Task<InvoiceData> GetInvoiceRaw(string id, bool inludeAddressData = false)

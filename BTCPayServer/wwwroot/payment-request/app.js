@@ -43,6 +43,9 @@ addLoadEvent(function (ev) {
             lastUpdated: function () {
                 return this.srvModel.lastUpdated && moment(this.srvModel.lastUpdated).calendar();
             },
+            lastUpdatedDate: function () {
+                return this.srvModel.lastUpdated && moment(this.srvModel.lastUpdated).format('MMMM Do YYYY, h:mm:ss a');
+            },
             active: function () {
                 return !this.ended;
             }
@@ -90,25 +93,41 @@ addLoadEvent(function (ev) {
                 self.timeoutState = setTimeout(function () {
                     self.setLoading(false);
                 }, 5000);
-
                 eventAggregator.$emit("cancel-invoice", amount);
             },
-            formatPaymentMethod: function (str) {
-
-                if (str.endsWith("LightningLike")) {
-                    return str.replace("LightningLike", "Lightning")
-                }
-                return str;
-
+            formatDate: function (date) {
+                return moment(date).format('L h:mm A')
             },
-            submitCustomAmountForm : function(e){
+            submitCustomAmountForm: function(e) {
                 if (e) {
                     e.preventDefault();
                 }
-                if(this.srvModel.allowCustomPaymentAmounts && parseFloat(this.customAmount) < this.srvModel.amountDue){
+                if (this.srvModel.allowCustomPaymentAmounts && parseFloat(this.customAmount) < this.srvModel.amountDue){
                     this.pay(parseFloat(this.customAmount));
-                }else{
+                } else {
                     this.pay();
+                }
+            },
+            statusTextClass: function (state) {
+                var [, status,, exceptionStatus] = state.match(/(\w*)\s?(\((\w*)\))?/) || [];
+                switch (status) {
+                    case "confirmed":
+                    case "complete":
+                    case "paid":
+                        return "text-success";
+                    case "expired":
+                        switch (exceptionStatus) {
+                            case "paidLate":
+                            case "paidPartial":
+                            case "paidOver":
+                                return "text-warning";
+                            default:
+                                return "text-danger";
+                        }
+                    case "invalid":
+                        return "text-danger";
+                    default:
+                        return "text-warning";
                 }
             }
         },
@@ -116,30 +135,27 @@ addLoadEvent(function (ev) {
             this.customAmount = (this.srvModel.amountDue || 0).noExponents();
             hubListener.connect();
             var self = this;
+            var toastOptions = {
+                iconPack: "fontawesome",
+                theme: "bubble",
+                duration: 10000
+            };
 
             eventAggregator.$on("invoice-created", function (invoiceId) {
                 self.setLoading(false);
                 btcpay.showInvoice(invoiceId);
                 btcpay.showFrame();
             });
-            eventAggregator.$on("invoice-cancelled", function(){
+            eventAggregator.$on("invoice-cancelled", function (){
                 self.setLoading(false);
-                Vue.toasted.show('Payment cancelled', {
-                    iconPack: "fontawesome",
-                    icon: "check",
-                    duration: 10000
+                Vue.toasted.info('Payment cancelled', Object.assign({}, toastOptions), {
+                    icon: "check"
                 });
             });
-            eventAggregator.$on("cancel-invoice-error", function (error) {
+            eventAggregator.$on("cancel-invoice-error", function () {
                 self.setLoading(false);
-                Vue.toasted.show("Error cancelling payment", {
-                    iconPack: "fontawesome",
-                    icon: "exclamation-triangle",
-                    fullWidth: false,
-                    theme: "bubble",
-                    type: "error",
-                    position: "top-center",
-                    duration: 10000
+                Vue.toasted.error("Error cancelling payment", Object.assign({}, toastOptions), {
+                    icon: "exclamation-triangle"
                 });
             });
             eventAggregator.$on("invoice-error", function (error) {
@@ -152,35 +168,16 @@ addLoadEvent(function (ev) {
                 } else {
                     msg = JSON.stringify(error);
                 }
-
-                Vue.toasted.show("Error creating invoice: " + msg, {
-                    iconPack: "fontawesome",
-                    icon: "exclamation-triangle",
-                    fullWidth: false,
-                    theme: "bubble",
-                    type: "error",
-                    position: "top-center",
-                    duration: 10000
+                Vue.toasted.error("Error creating invoice: " + msg, Object.assign({}, toastOptions), {
+                    icon: "exclamation-triangle"
                 });
             });
             eventAggregator.$on("payment-received", function (amount, cryptoCode, type) {
                 var onChain = type.toLowerCase() === "btclike";
-                amount = parseFloat(amount).noExponents();
-                if (onChain) {
-                    Vue.toasted.show('New payment of ' + amount + " " + cryptoCode + " " + (onChain ? "On Chain" : "LN "), {
-                        iconPack: "fontawesome",
-                        icon: "plus",
-                        duration: 10000
-                    });
-                } else {
-                    Vue.toasted.show('New payment of ' + amount + " " + cryptoCode + " " + (onChain ? "On Chain" : "LN "), {
-                        iconPack: "fontawesome",
-                        icon: "bolt",
-                        duration: 10000
-                    });
-                }
-
-
+                var amountFormatted = parseFloat(amount).noExponents();
+                var icon = onChain ? "plus" : "bolt";
+                var title = "New payment of " + amountFormatted + " " + cryptoCode + " " + (onChain ? "On Chain" : "LN");
+                Vue.toasted.success(title, Object.assign({}, toastOptions), { icon });
             });
             eventAggregator.$on("info-updated", function (model) {
                 console.warn("UPDATED", self.srvModel, arguments);

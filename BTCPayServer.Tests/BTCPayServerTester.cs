@@ -206,9 +206,9 @@ namespace BTCPayServer.Tests
                 bitflyerMock.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("BTC_JPY"), new BidAsk(700000m)));
                 rateProvider.Providers.Add("bitflyer", bitflyerMock);
 
-                var quadrigacx = new MockRateProvider();
-                quadrigacx.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("BTC_CAD"), new BidAsk(6000m)));
-                rateProvider.Providers.Add("quadrigacx", quadrigacx);
+                var ndax = new MockRateProvider();
+                ndax.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("BTC_CAD"), new BidAsk(6000m)));
+                rateProvider.Providers.Add("ndax", ndax);
 
                 var bittrex = new MockRateProvider();
                 bittrex.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("DOGE_BTC"), new BidAsk(0.004m)));

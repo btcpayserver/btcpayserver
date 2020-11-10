@@ -30,10 +30,12 @@ namespace BTCPayServer.Plugins
             var pluginsFolder = config.GetPluginDir(DefaultConfiguration.GetNetworkType(config));
             var plugins = new List<IBTCPayServerPlugin>();
 
+
             _logger.LogInformation($"Loading plugins from {pluginsFolder}");
             Directory.CreateDirectory(pluginsFolder);
             ExecuteCommands(pluginsFolder);
-            List<(PluginLoader, Assembly, IFileProvider)> loadedPlugins = new List<(PluginLoader, Assembly, IFileProvider)>();
+            List<(PluginLoader, Assembly, IFileProvider)> loadedPlugins =
+                new List<(PluginLoader, Assembly, IFileProvider)>();
             var systemExtensions = GetDefaultLoadedPluginAssemblies();
             plugins.AddRange(systemExtensions.SelectMany(assembly =>
                 GetAllPluginTypesFromAssembly(assembly).Select(GetPluginInstanceFromType)));
@@ -41,7 +43,29 @@ namespace BTCPayServer.Plugins
             {
                 btcPayServerExtension.SystemPlugin = true;
             }
-            foreach (var dir in Directory.GetDirectories(pluginsFolder))
+
+            var orderFilePath = Path.Combine(pluginsFolder, "order");
+            var availableDirs = Directory.GetDirectories(pluginsFolder);
+            var orderedDirs = new List<string>();
+            if (File.Exists(orderFilePath))
+            {
+                var order = File.ReadLines(orderFilePath);
+                foreach (var s in order)
+                {
+                    if (availableDirs.Contains(s))
+                    {
+                        orderedDirs.Add(s);
+                    }
+                }
+
+                orderedDirs.AddRange(availableDirs.Where(s => !orderedDirs.Contains(s)));
+            }
+            else
+            {
+                orderedDirs = availableDirs.ToList();
+            }
+
+            foreach (var dir in orderedDirs)
             {
                 var pluginName = Path.GetFileName(dir);
 
@@ -71,7 +95,8 @@ namespace BTCPayServer.Plugins
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError($"Error when loading plugin {plugin.Identifier} - {plugin.Version}{Environment.NewLine}{e.Message}");
+                    _logger.LogError(
+                        $"Error when loading plugin {plugin.Identifier} - {plugin.Version}{Environment.NewLine}{e.Message}");
                 }
             }
 
@@ -94,18 +119,17 @@ namespace BTCPayServer.Plugins
                     .Select(CreateEmbeddedFileProviderForAssembly));
             webHostEnvironment.WebRootFileProvider = new CompositeFileProvider(providers);
         }
+
         private static Assembly[] GetDefaultLoadedPluginAssemblies()
         {
-            return AppDomain.CurrentDomain.GetAssemblies().Where(assembly =>
-                    assembly?.FullName?.StartsWith("BTCPayServer.Plugins",
-                        StringComparison.InvariantCultureIgnoreCase) is true)
+            return AppDomain.CurrentDomain.GetAssemblies()
                 .ToArray();
         }
 
         private static Type[] GetAllPluginTypesFromAssembly(Assembly assembly)
         {
             return assembly.GetTypes().Where(type =>
-                typeof(IBTCPayServerPlugin).IsAssignableFrom(type) &&
+                typeof(IBTCPayServerPlugin).IsAssignableFrom(type) && type != typeof(PluginService.AvailablePlugin) &&
                 !type.IsAbstract).ToArray();
         }
 
@@ -130,15 +154,26 @@ namespace BTCPayServer.Plugins
             File.Delete(Path.Combine(pluginsFolder, "commands"));
         }
 
-        private static void ExecuteCommand((string command, string extension) command, string pluginsFolder)
+        private static void ExecuteCommand((string command, string extension) command, string pluginsFolder,
+            bool ignoreOrder = false)
         {
             var dirName = Path.Combine(pluginsFolder, command.extension);
             switch (command.command)
             {
+                case "update":
+                    ExecuteCommand(("delete", command.extension), pluginsFolder, true);
+                    ExecuteCommand(("install", command.extension), pluginsFolder, true);
+                    break;
                 case "delete":
                     if (Directory.Exists(dirName))
                     {
                         Directory.Delete(dirName, true);
+                        if (!ignoreOrder && File.Exists(Path.Combine(pluginsFolder, "order")))
+                        {
+                            var orders = File.ReadAllLines(Path.Combine(pluginsFolder, "order"));
+                            File.AppendAllLines(Path.Combine(pluginsFolder, "order"),
+                                orders.Where(s => s != command.extension));
+                        }
                     }
 
                     break;
@@ -147,6 +182,11 @@ namespace BTCPayServer.Plugins
                     if (File.Exists(fileName))
                     {
                         ZipFile.ExtractToDirectory(fileName, dirName, true);
+                        if (!ignoreOrder)
+                        {
+                            File.AppendAllLines(Path.Combine(pluginsFolder, "order"), new[] {command.extension});
+                        }
+
                         File.Delete(fileName);
                     }
 

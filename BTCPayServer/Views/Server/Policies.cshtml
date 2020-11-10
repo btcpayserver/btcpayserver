@@ -1,5 +1,7 @@
 @using BTCPayServer.Services
+@using BTCPayServer.Services.Mails;
 @model BTCPayServer.Services.PoliciesSettings
+@inject BTCPayServer.Services.SettingsRepository _SettingsRepository
 @{
     ViewData.SetActivePageAndTitle(ServerNavPages.Policies);
 }
@@ -14,9 +16,22 @@
 <form method="post">
     <div class="form-group">
         <div class="form-check">
-            <input asp-for="RequiresConfirmedEmail" type="checkbox" class="form-check-input"/>
+            @{
+                var emailSettings = (await _SettingsRepository.GetSettingAsync<EmailSettings>()) ?? new EmailSettings();
+                /**
+                 * The "|| Model.RequiresConfirmedEmail" check is for the case when a user had checked
+                 * the checkbox without first configuring the e-mail settings so that they can uncheck it.
+                 **/
+                var isEmailConfigured = emailSettings.IsComplete() || Model.RequiresConfirmedEmail;
+            }
+            <input asp-for="RequiresConfirmedEmail" type="checkbox" class="form-check-input" disabled="@(isEmailConfigured ? null : "disabled")" />
             <label asp-for="RequiresConfirmedEmail" class="form-check-label"></label>
             <span asp-validation-for="RequiresConfirmedEmail" class="text-danger"></span>
+            @if (!isEmailConfigured) {
+                <div>
+                    <span class="text-secondary">Your email server has not been configured. <a asp-controller="Server" asp-action="Emails">Please configure it first.</a></span>
+                </div>
+            }
         </div>
         <div class="form-check">
             <input asp-for="LockSubscription" type="checkbox" class="form-check-input"/>

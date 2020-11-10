@@ -2006,7 +2006,7 @@ namespace BTCPayServer.Tests
                 await tester.EnsureChannelsSetup();
                 var user = tester.NewAccount();
                 user.GrantAccess();
-                user.RegisterDerivationScheme("BTC");
+                user.RegisterDerivationScheme("BTC", ScriptPubKeyType.Segwit);
                 user.RegisterLightningNode("BTC", LightningConnectionType.CLightning);
 
                 var invoice = user.BitPay.CreateInvoice(
@@ -2043,6 +2043,8 @@ namespace BTCPayServer.Tests
                 );
                 Assert.Contains("&lightning=", paymentMethodSecond.InvoiceBitcoinUrlQR);
                 Assert.StartsWith("BITCOIN:", paymentMethodSecond.InvoiceBitcoinUrlQR);
+                var split = paymentMethodSecond.InvoiceBitcoinUrlQR.Split('?')[0];
+                Assert.True($"BITCOIN:{paymentMethodSecond.BtcAddress.ToUpperInvariant()}" == split);
             }
         }
 

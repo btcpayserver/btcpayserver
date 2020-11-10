@@ -71,8 +71,16 @@ namespace BTCPayServer.Payments.Bitcoin
             model.InvoiceBitcoinUrlQR = cryptoInfo.PaymentUrls.BIP21
                 .Replace("bitcoin:", "BITCOIN:", StringComparison.OrdinalIgnoreCase)
                 + lightningFallback.ToUpperInvariant().Replace("LIGHTNING=", "lightning=", StringComparison.OrdinalIgnoreCase);
-            ;
+
+            if (bech32Prefixes.Any(a => model.BtcAddress.StartsWith(a, StringComparison.OrdinalIgnoreCase)))
+            {
+                model.InvoiceBitcoinUrlQR = model.InvoiceBitcoinUrlQR.Replace(
+                    $"BITCOIN:{model.BtcAddress}", $"BITCOIN:{model.BtcAddress.ToUpperInvariant()}", 
+                    StringComparison.OrdinalIgnoreCase
+                );
+            }
         }
+        private static string[] bech32Prefixes = new[] { "bc1", "tb1", "bcrt1" };
 
         public override string GetCryptoImage(PaymentMethodId paymentMethodId)
         {

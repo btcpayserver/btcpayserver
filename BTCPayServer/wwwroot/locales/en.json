@@ -16,7 +16,7 @@
   "Due": "Due",
   "Scan": "Scan",
   "Copy": "Copy",
-  "Conversion": "Conversion",
+  "Conversion": "Other Coins",
   "Open in wallet": "Open in wallet",
   "CompletePay_Body": "To complete your payment, please send {{btcDue}} {{cryptoCode}} to the address below.",
   "Amount": "Amount",

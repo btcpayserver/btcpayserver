@@ -1995,6 +1995,56 @@ namespace BTCPayServer.Tests
             }
         }
 
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public async Task CanSetUnifiedQrCode()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.ActivateLightning();
+                await tester.StartAsync();
+                await tester.EnsureChannelsSetup();
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                user.RegisterDerivationScheme("BTC");
+                user.RegisterLightningNode("BTC", LightningConnectionType.CLightning);
+
+                var invoice = user.BitPay.CreateInvoice(
+                    new Invoice()
+                    {
+                        Price = 5.5m,
+                        Currency = "USD",
+                        PosData = "posData",
+                        OrderId = "orderId",
+                        ItemDesc = "Some description",
+                        FullNotifications = true
+                    }, Facade.Merchant);
+
+                // validate that invoice data model doesn't have lightning string initially
+                var res = await user.GetController<InvoiceController>().Checkout(invoice.Id);
+                var paymentMethodFirst = Assert.IsType<PaymentModel>(
+                    Assert.IsType<ViewResult>(res).Model
+                );
+                Assert.DoesNotContain("&lightning=", paymentMethodFirst.InvoiceBitcoinUrlQR);
+
+                // enable unified QR code in settings
+                var vm = Assert.IsType<CheckoutExperienceViewModel>(Assert
+                    .IsType<ViewResult>(user.GetController<StoresController>().CheckoutExperience()).Model
+                );
+                vm.OnChainWithLnInvoiceFallback = true;
+                Assert.IsType<RedirectToActionResult>(
+                    user.GetController<StoresController>().CheckoutExperience(vm).Result
+                );
+
+                // validate that QR code now has both onchain and offchain payment urls
+                res = await user.GetController<InvoiceController>().Checkout(invoice.Id);
+                var paymentMethodSecond = Assert.IsType<PaymentModel>(
+                    Assert.IsType<ViewResult>(res).Model
+                );
+                Assert.Contains("&lightning=", paymentMethodSecond.InvoiceBitcoinUrlQR);
+            }
+        }
+
         [Fact(Timeout = 60 * 2 * 1000)]
         [Trait("Integration", "Integration")]
         [Trait("Lightning", "Lightning")]

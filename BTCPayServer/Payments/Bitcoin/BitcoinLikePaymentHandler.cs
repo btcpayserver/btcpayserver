@@ -69,7 +69,7 @@ namespace BTCPayServer.Payments.Bitcoin
             // We're trying to make as many characters uppercase to make QR smaller
             // Ref: https://github.com/btcpayserver/btcpayserver/pull/2060#issuecomment-723828348
             model.InvoiceBitcoinUrlQR = cryptoInfo.PaymentUrls.BIP21
-                // .Replace("bitcoin:", "BITCOIN:", StringComparison.OrdinalIgnoreCase)
+                .Replace("bitcoin:", "BITCOIN:", StringComparison.OrdinalIgnoreCase)
                 + lightningFallback.ToUpperInvariant().Replace("LIGHTNING=", "lightning=", StringComparison.OrdinalIgnoreCase);
             ;
         }

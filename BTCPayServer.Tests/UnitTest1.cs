@@ -2042,6 +2042,7 @@ namespace BTCPayServer.Tests
                     Assert.IsType<ViewResult>(res).Model
                 );
                 Assert.Contains("&lightning=", paymentMethodSecond.InvoiceBitcoinUrlQR);
+                Assert.StartsWith("BITCOIN:", paymentMethodSecond.InvoiceBitcoinUrlQR);
             }
         }
 

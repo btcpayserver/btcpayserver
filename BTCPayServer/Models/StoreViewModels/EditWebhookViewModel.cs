@@ -15,7 +15,7 @@ namespace BTCPayServer.Models.StoreViewModels
         {
 
         }
-        public DeliveryViewModel(WebhookDeliveryData s)
+        public DeliveryViewModel(Data.WebhookDeliveryData s)
         {
             var blob = s.GetBlob();
             Id = s.Id;

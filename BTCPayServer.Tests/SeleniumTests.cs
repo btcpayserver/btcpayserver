@@ -639,10 +639,10 @@ namespace BTCPayServer.Tests
                 Logs.Tester.LogInformation("Let's try to update one of them");
                 s.Driver.FindElement(By.LinkText("Modify")).Click();
 
-                using RawHttpServer server = new RawHttpServer();
-
+                using FakeServer server = new FakeServer();
+                await server.Start();
                 s.Driver.FindElement(By.Name("PayloadUrl")).Clear();
-                s.Driver.FindElement(By.Name("PayloadUrl")).SendKeys(server.GetUri().AbsoluteUri);
+                s.Driver.FindElement(By.Name("PayloadUrl")).SendKeys(server.ServerUri.AbsoluteUri);
                 s.Driver.FindElement(By.Name("Secret")).Clear();
                 s.Driver.FindElement(By.Name("Secret")).SendKeys("HelloWorld");
                 s.Driver.FindElement(By.Name("update")).Click();
@@ -663,26 +663,26 @@ namespace BTCPayServer.Tests
 
                 s.Driver.FindElement(By.Name("update")).Click();
                 s.AssertHappyMessage();
-                Assert.Contains(server.GetUri().AbsoluteUri, s.Driver.PageSource);
+                Assert.Contains(server.ServerUri.AbsoluteUri, s.Driver.PageSource);
 
                 Logs.Tester.LogInformation("Let's see if we can generate an event");
                 s.GoToStore(store.storeId);
                 s.AddDerivationScheme();
                 s.CreateInvoice(store.storeName);
                 var request = await server.GetNextRequest();
-                var headers = request.HttpContext.Request.Headers;
+                var headers = request.Request.Headers;
                 var actualSig = headers["BTCPay-Sig"].First();
-                var bytes = await request.HttpContext.Request.Body.ReadBytesAsync((int)headers.ContentLength.Value);
+                var bytes = await request.Request.Body.ReadBytesAsync((int)headers.ContentLength.Value);
                 var expectedSig = $"sha256={Encoders.Hex.EncodeData(new HMACSHA256(Encoding.UTF8.GetBytes("HelloWorld")).ComputeHash(bytes))}";
                 Assert.Equal(expectedSig, actualSig);
-                request.HttpContext.Response.StatusCode = 200;
-                request.Complete();
+                request.Response.StatusCode = 200;
+                server.Done();
 
                 Logs.Tester.LogInformation("Let's make a failed event");
                 s.CreateInvoice(store.storeName);
                 request = await server.GetNextRequest();
-                request.HttpContext.Response.StatusCode = 404;
-                request.Complete();
+                request.Response.StatusCode = 404;
+                server.Done();
 
                 // The delivery is done asynchronously, so small wait here
                 await Task.Delay(500);
@@ -695,8 +695,8 @@ namespace BTCPayServer.Tests
                 elements[0].Click();
                 s.AssertHappyMessage();
                 request = await server.GetNextRequest();
-                request.HttpContext.Response.StatusCode = 404;
-                request.Complete();
+                request.Response.StatusCode = 404;
+                server.Done();
 
                 Logs.Tester.LogInformation("Can we browse the json content?");
                 CanBrowseContent(s);
@@ -708,8 +708,8 @@ namespace BTCPayServer.Tests
                 element.Click();
                 s.AssertHappyMessage();
                 request = await server.GetNextRequest();
-                request.HttpContext.Response.StatusCode = 404;
-                request.Complete();
+                request.Response.StatusCode = 404;
+                server.Done();
 
                 Logs.Tester.LogInformation("Let's see if we can delete store with some webhooks inside");
                 s.GoToStore(store.storeId);

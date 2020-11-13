@@ -230,14 +230,16 @@ namespace BTCPayServer.Services.Stores
             await ctx.SaveChangesAsync();
         }
 
-        public async Task<WebhookDeliveryData[]> GetWebhookDeliveries(string storeId, string webhookId, int count)
+        public async Task<WebhookDeliveryData[]> GetWebhookDeliveries(string storeId, string webhookId, int? count)
         {
             using var ctx = _ContextFactory.CreateContext();
-            return await ctx.StoreWebhooks
+            IQueryable<WebhookDeliveryData> req = ctx.StoreWebhooks
                 .Where(s => s.StoreId == storeId && s.WebhookId == webhookId)
                 .SelectMany(s => s.Webhook.Deliveries)
-                .OrderByDescending(s => s.Timestamp)
-                .Take(count)
+                .OrderByDescending(s => s.Timestamp);
+            if (count is int c)
+                req = req.Take(c);
+            return await req
                 .ToArrayAsync();
         }
 
@@ -246,6 +248,8 @@ namespace BTCPayServer.Services.Stores
             using var ctx = _ContextFactory.CreateContext();
             WebhookData data = new WebhookData();
             data.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16));
+            if (string.IsNullOrEmpty(blob.Secret))
+                blob.Secret = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16));
             data.SetBlob(blob);
             StoreWebhookData storeWebhook = new StoreWebhookData();
             storeWebhook.StoreId = storeId;

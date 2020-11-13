@@ -1,0 +1,593 @@
+{
+    "paths": {
+        "/api/v1/stores/{storeId}/webhooks": {
+            "parameters": [
+                {
+                    "name": "storeId",
+                    "in": "path",
+                    "required": true,
+                    "description": "The store id",
+                    "schema": {
+                        "type": "string"
+                    }
+                }
+            ],
+            "get": {
+                "tags": [
+                    "Webhooks"
+                ],
+                "summary": "Get webhooks of a store",
+                "description": "View webhooks of a store",
+                "operationId": "Webhokks_GetWebhooks",
+                "responses": {
+                    "200": {
+                        "description": "List of webhooks",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/WebhookDataList"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.webhooks.canmodifywebhooks"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [ "Webhooks" ],
+                "summary": "Create a new webhook",
+                "description": "Create a new webhook",
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WebhookDataCreate"
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "responses": {
+                    "200": {
+                        "description": "Information about the new webhook",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/WebhookDataCreate"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when creating the webhook",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.webhooks.canmodifywebhooks"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}/webhooks/{webhookId}": {
+            "parameters": [
+                {
+                    "name": "storeId",
+                    "in": "path",
+                    "required": true,
+                    "description": "The store id",
+                    "schema": {
+                        "type": "string"
+                    }
+                },
+                {
+                    "name": "webhookId",
+                    "in": "path",
+                    "required": true,
+                    "description": "The webhook id",
+                    "schema": {
+                        "type": "string"
+                    }
+                }
+            ],
+            "get": {
+                "tags": [
+                    "Webhooks"
+                ],
+                "summary": "Get a webhook of a store",
+                "description": "View webhook of a store",
+                "operationId": "Webhokks_GetWebhook",
+                "responses": {
+                    "200": {
+                        "description": "A webhook",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/WebhookData"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "The webhook has not been found"
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.webhooks.canmodifywebhooks"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [ "Webhooks" ],
+                "summary": "Update a webhook",
+                "description": "Update a webhook",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WebhookDataBase"
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "responses": {
+                    "200": {
+                        "description": "Information about the updated webhook",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/WebhookData"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when creating the webhook",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.webhooks.canmodifywebhooks"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [ "Webhooks" ],
+                "summary": "Delete a webhook",
+                "description": "Delete a webhook",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WebhookDataBase"
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "responses": {
+                    "200": {
+                        "description": "The webhook has been deleted"
+                    },
+                    "404": {
+                        "description": "The webhook does not exist"
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.webhooks.canmodifywebhooks"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}/webhooks/{webhookId}/deliveries": {
+            "parameters": [
+                {
+                    "name": "storeId",
+                    "in": "path",
+                    "required": true,
+                    "description": "The store id",
+                    "schema": {
+                        "type": "string"
+                    }
+                },
+                {
+                    "name": "webhookId",
+                    "in": "path",
+                    "required": true,
+                    "description": "The webhook id",
+                    "schema": {
+                        "type": "string"
+                    }
+                }
+            ],
+            "get": {
+                "tags": [
+                    "Webhooks"
+                ],
+                "summary": "Get latest deliveries",
+                "description": "List the latest deliveries to the webhook, ordered from the most recent",
+                "parameters": [
+                    {
+                        "name": "count",
+                        "in": "query",
+                        "description": "The number of latest deliveries to fetch",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of deliveries",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/WebhookDeliveryList"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.webhooks.canmodifywebhooks"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}/webhooks/{webhookId}/deliveries/{deliveryId}": {
+            "parameters": [
+                {
+                    "name": "storeId",
+                    "in": "path",
+                    "required": true,
+                    "description": "The store id",
+                    "schema": {
+                        "type": "string"
+                    }
+                },
+                {
+                    "name": "webhookId",
+                    "in": "path",
+                    "required": true,
+                    "description": "The webhook id",
+                    "schema": {
+                        "type": "string"
+                    }
+                },
+                {
+                    "name": "deliveryId",
+                    "in": "path",
+                    "required": true,
+                    "description": "The id of the delivery",
+                    "schema": {
+                        "type": "string"
+                    }
+                }
+            ],
+            "get": {
+                "tags": [
+                    "Webhooks"
+                ],
+                "summary": "Get a webhook delivery",
+                "description": "Information about a webhook delivery",
+                "responses": {
+                    "200": {
+                        "description": "Information about a delivery",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/WebhookDeliveryData"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "The delivery does not exists."
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.webhooks.canmodifywebhooks"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}/webhooks/{webhookId}/deliveries/{deliveryId}/request": {
+            "parameters": [
+                {
+                    "name": "storeId",
+                    "in": "path",
+                    "required": true,
+                    "description": "The store id",
+                    "schema": {
+                        "type": "string"
+                    }
+                },
+                {
+                    "name": "webhookId",
+                    "in": "path",
+                    "required": true,
+                    "description": "The webhook id",
+                    "schema": {
+                        "type": "string"
+                    }
+                },
+                {
+                    "name": "deliveryId",
+                    "in": "path",
+                    "required": true,
+                    "description": "The id of the delivery",
+                    "schema": {
+                        "type": "string"
+                    }
+                }
+            ],
+            "get": {
+                "tags": [
+                    "Webhooks"
+                ],
+                "summary": "Get the delivery's request",
+                "description": "The delivery's JSON request sent to the endpoint",
+                "responses": {
+                    "200": {
+                        "description": "The delivery's JSON Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "The delivery does not exists."
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.webhooks.canmodifywebhooks"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}/webhooks/{webhookId}/deliveries/{deliveryId}/redeliver": {
+            "parameters": [
+                {
+                    "name": "storeId",
+                    "in": "path",
+                    "required": true,
+                    "description": "The store id",
+                    "schema": {
+                        "type": "string"
+                    }
+                },
+                {
+                    "name": "webhookId",
+                    "in": "path",
+                    "required": true,
+                    "description": "The webhook id",
+                    "schema": {
+                        "type": "string"
+                    }
+                },
+                {
+                    "name": "deliveryId",
+                    "in": "path",
+                    "required": true,
+                    "description": "The id of the delivery",
+                    "schema": {
+                        "type": "string"
+                    }
+                }
+            ],
+            "post": {
+                "tags": [
+                    "Webhooks"
+                ],
+                "summary": "Redeliver the delivery",
+                "description": "Redeliver the delivery",
+                "responses": {
+                    "200": {
+                        "description": "The new delivery id being broadcasted. (Broadcast happen asynchronously with this call)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "The delivery does not exists."
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.webhooks.canmodifywebhooks"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "WebhookDeliveryList": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/WebhookDeliveryData"
+                }
+            },
+            "WebhookDeliveryData": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "The id of the delivery",
+                        "nullable": false
+                    },
+                    "timestamp": {
+                        "type": "number",
+                        "format": "int64",
+                        "nullable": false,
+                        "description": "Timestamp of when the delivery got broadcasted"
+                    },
+                    "httpCode": {
+                        "type": "number",
+                        "description": "HTTP code received by the remote service, if any.",
+                        "nullable": true
+                    },
+                    "errorMessage": {
+                        "type": "string",
+                        "description": "User friendly error message, if any."
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Whether the delivery failed or not (possible values are: `Failed`, `HttpError`, `HttpSuccess`)"
+                    }
+                }
+            },
+            "WebhookDataList": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/WebhookData"
+                }
+            },
+            "WebhookData": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/WebhookDataBase"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string",
+                                "description": "The id of the webhook",
+                                "nullable": false
+                            }
+                        }
+                    }
+                ]
+            },
+            "WebhookDataCreate": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/WebhookData"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "secret": {
+                                "type": "string",
+                                "description": "Must be used by the callback receiver to ensure the delivery comes from BTCPay Server. BTCPay Server includes the `BTCPay-Sig` HTTP header, whose format is `sha256=[HMAC256(secret,bodyBytes)]`. The pattern to authenticate the webhook is similar to [how to secure webhooks in Github](https://developer.github.com/webhooks/securing/) but with sha256 instead of sha1.",
+                                "nullable": false
+                            }
+                        }
+                    }
+                ]
+            },
+            "WebhookDataBase": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "The id of the webhook",
+                        "nullable": false
+                    },
+                    "enabled": {
+                        "type": "boolean",
+                        "description": "Whether this webhook is enabled or not",
+                        "nullable": false
+                    },
+                    "automaticRedelivery": {
+                        "type": "boolean",
+                        "description": "If true, BTCPay Server will retry to redeliver any failed delivery after 10 seconds, 1 minutes and up to 6 times after 10 minutes.",
+                        "nullable": false
+                    },
+                    "url": {
+                        "type": "string",
+                        "description": "The endpoint where BTCPay Server will make the POST request with the webhook body",
+                        "nullable": false
+                    },
+                    "authorizedEvents": {
+                        "type": "object",
+                        "description": "Which event should be received by this endpoint",
+                        "properties": {
+                            "everything": {
+                                "type": "string",
+                                "description": "If true, the endpoint will receive all events related to the store.",
+                                "nullable": false
+                            },
+                            "specificEvents": {
+                                "type": "string",
+                                "description": "If `everything` is false, the specific events that the endpoint is interested in. Current events are: `InvoiceCreated`, `InvoiceReceivedPayment`, `InvoicePaidInFull`, `InvoiceExpired`, `InvoiceConfirmed`, `InvoiceInvalid`.",
+                                "nullable": false
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Webhooks"
+        }
+    ]
+}

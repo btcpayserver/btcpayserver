@@ -61,7 +61,7 @@ retry:
             _eventAggregator = eventAggregator;
         }
 
-        public async Task<WebhookDeliveryData> GetWebhookDelivery(string invoiceId, string deliveryId)
+        public async Task<Data.WebhookDeliveryData> GetWebhookDelivery(string invoiceId, string deliveryId)
         {
             using var ctx = _ContextFactory.CreateContext();
             return await ctx.InvoiceWebhookDeliveries
@@ -118,7 +118,7 @@ retry:
             }
         }
 
-        public async Task<List<WebhookDeliveryData>> GetWebhookDeliveries(string invoiceId)
+        public async Task<List<Data.WebhookDeliveryData>> GetWebhookDeliveries(string invoiceId)
         {
             using var ctx = _ContextFactory.CreateContext();
             return await ctx.InvoiceWebhookDeliveries

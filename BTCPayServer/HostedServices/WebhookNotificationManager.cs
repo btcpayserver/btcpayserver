@@ -57,10 +57,10 @@ namespace BTCPayServer.HostedServices
         class WebhookDeliveryRequest
         {
             public WebhookEvent WebhookEvent;
-            public WebhookDeliveryData Delivery;
+            public Data.WebhookDeliveryData Delivery;
             public WebhookBlob WebhookBlob;
             public string WebhookId;
-            public WebhookDeliveryRequest(string webhookId, WebhookEvent webhookEvent, WebhookDeliveryData delivery, WebhookBlob webhookBlob)
+            public WebhookDeliveryRequest(string webhookId, WebhookEvent webhookEvent, Data.WebhookDeliveryData delivery, WebhookBlob webhookBlob)
             {
                 WebhookId = webhookId;
                 WebhookEvent = webhookEvent;
@@ -130,7 +130,7 @@ namespace BTCPayServer.HostedServices
                         continue;
                     if (!ShouldDeliver(webhookEventType, webhookBlob))
                         continue;
-                    WebhookDeliveryData delivery = NewDelivery();
+                    Data.WebhookDeliveryData delivery = NewDelivery();
                     delivery.WebhookId = webhook.Id;
                     var webhookEvent = new WebhookInvoiceEvent();
                     webhookEvent.InvoiceId = invoiceEvent.InvoiceId;
@@ -293,9 +293,9 @@ namespace BTCPayServer.HostedServices
             return bytes;
         }
 
-        private static WebhookDeliveryData NewDelivery()
+        private static Data.WebhookDeliveryData NewDelivery()
         {
-            var delivery = new WebhookDeliveryData();
+            var delivery = new Data.WebhookDeliveryData();
             delivery.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16));
             delivery.Timestamp = DateTimeOffset.UtcNow;
             return delivery;

@@ -553,12 +553,14 @@
                     "enabled": {
                         "type": "boolean",
                         "description": "Whether this webhook is enabled or not",
-                        "nullable": false
+                        "nullable": false,
+                        "default": true
                     },
                     "automaticRedelivery": {
                         "type": "boolean",
                         "description": "If true, BTCPay Server will retry to redeliver any failed delivery after 10 seconds, 1 minutes and up to 6 times after 10 minutes.",
-                        "nullable": false
+                        "nullable": false,
+                        "default": true
                     },
                     "url": {
                         "type": "string",
@@ -572,7 +574,8 @@
                             "everything": {
                                 "type": "string",
                                 "description": "If true, the endpoint will receive all events related to the store.",
-                                "nullable": false
+                                "nullable": false,
+                                "default": true
                             },
                             "specificEvents": {
                                 "type": "string",

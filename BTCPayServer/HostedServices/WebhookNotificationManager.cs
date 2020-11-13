@@ -43,10 +43,7 @@ namespace BTCPayServer.HostedServices
         public readonly static JsonSerializerSettings DefaultSerializerSettings;
         static WebhookNotificationManager()
         {
-            DefaultSerializerSettings = new JsonSerializerSettings();
-            DefaultSerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
-            NBitcoin.JsonConverters.Serializer.RegisterFrontConverters(DefaultSerializerSettings);
-            DefaultSerializerSettings.Formatting = Formatting.None;
+            DefaultSerializerSettings = WebhookEvent.DefaultSerializerSettings;
         }
         public const string OnionNamedClient = "greenfield-webhook.onion";
         public const string ClearnetNamedClient = "greenfield-webhook.clearnet";
@@ -113,7 +110,6 @@ namespace BTCPayServer.HostedServices
             var webhookEvent = newDeliveryBlob.ReadRequestAs<WebhookEvent>();
             webhookEvent.DeliveryId = newDelivery.Id;
             webhookEvent.OrignalDeliveryId ??= deliveryId;
-            webhookEvent.Timestamp = newDelivery.Timestamp;
             newDeliveryBlob.Request = ToBytes(webhookEvent);
             newDelivery.SetBlob(newDeliveryBlob);
             return new WebhookDeliveryRequest(webhookDelivery.Webhook.Id, webhookEvent, newDelivery, webhookDelivery.Webhook.GetBlob());
@@ -126,16 +122,14 @@ namespace BTCPayServer.HostedServices
                 foreach (var webhook in webhooks)
                 {
                     var webhookBlob = webhook.GetBlob();
-                    if (!(GetWebhookEvent(invoiceEvent.EventCode) is WebhookEventType webhookEventType))
+                    if (!(GetWebhookEvent(invoiceEvent) is WebhookInvoiceEvent webhookEvent))
                         continue;
-                    if (!ShouldDeliver(webhookEventType, webhookBlob))
+                    if (!ShouldDeliver(webhookEvent.Type, webhookBlob))
                         continue;
                     Data.WebhookDeliveryData delivery = NewDelivery();
                     delivery.WebhookId = webhook.Id;
-                    var webhookEvent = new WebhookInvoiceEvent();
                     webhookEvent.InvoiceId = invoiceEvent.InvoiceId;
                     webhookEvent.StoreId = invoiceEvent.Invoice.StoreId;
-                    webhookEvent.Type = webhookEventType;
                     webhookEvent.DeliveryId = delivery.Id;
                     webhookEvent.OrignalDeliveryId = delivery.Id;
                     webhookEvent.Timestamp = delivery.Timestamp;
@@ -158,28 +152,45 @@ namespace BTCPayServer.HostedServices
             _ = Process(context.WebhookId, channel);
         }
 
-        private WebhookEventType? GetWebhookEvent(InvoiceEventCode eventCode)
+        private WebhookInvoiceEvent GetWebhookEvent(InvoiceEvent invoiceEvent)
         {
+            var eventCode = invoiceEvent.EventCode;
             switch (eventCode)
             {
                 case InvoiceEventCode.Completed:
                     return null;
                 case InvoiceEventCode.Confirmed:
                 case InvoiceEventCode.MarkedCompleted:
-                    return WebhookEventType.InvoiceConfirmed;
+                    return new WebhookInvoiceConfirmedEvent(WebhookEventType.InvoiceConfirmed)
+                    {
+                        ManuallyMarked = eventCode == InvoiceEventCode.MarkedCompleted
+                    };
                 case InvoiceEventCode.Created:
-                    return WebhookEventType.InvoiceCreated;
+                    return new WebhookInvoiceEvent(WebhookEventType.InvoiceCreated);
                 case InvoiceEventCode.Expired:
                 case InvoiceEventCode.ExpiredPaidPartial:
-                    return WebhookEventType.InvoiceExpired;
+                    return new WebhookInvoiceExpiredEvent(WebhookEventType.InvoiceExpired)
+                    {
+                        PartiallyPaid = eventCode == InvoiceEventCode.ExpiredPaidPartial
+                    };
                 case InvoiceEventCode.FailedToConfirm:
                 case InvoiceEventCode.MarkedInvalid:
-                    return WebhookEventType.InvoiceInvalid;
+                    return new WebhookInvoiceInvalidEvent(WebhookEventType.InvoiceInvalid)
+                    {
+                        ManuallyMarked = eventCode == InvoiceEventCode.MarkedInvalid
+                    };
                 case InvoiceEventCode.PaidInFull:
-                    return WebhookEventType.InvoicePaidInFull;
-                case InvoiceEventCode.ReceivedPayment:
                 case InvoiceEventCode.PaidAfterExpiration:
-                    return WebhookEventType.InvoiceReceivedPayment;
+                    return new WebhookInvoicePaidEvent(WebhookEventType.InvoicePaidInFull)
+                    {
+                        OverPaid = invoiceEvent.Invoice.ExceptionStatus == InvoiceExceptionStatus.PaidOver,
+                        PaidAfterExpiration = eventCode == InvoiceEventCode.PaidAfterExpiration
+                    };
+                case InvoiceEventCode.ReceivedPayment:
+                    return new WebhookInvoiceReceivedPaymentEvent(WebhookEventType.InvoiceReceivedPayment)
+                    {
+                        AfterExpiration = invoiceEvent.Invoice.Status == InvoiceStatus.Expired || invoiceEvent.Invoice.Status == InvoiceStatus.Invalid
+                    };
                 default:
                     return null;
             }

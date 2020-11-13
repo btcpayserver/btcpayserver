@@ -9,6 +9,14 @@ namespace BTCPayServer.Client.Models
 {
     public class WebhookEvent
     {
+        public readonly static JsonSerializerSettings DefaultSerializerSettings;
+        static WebhookEvent()
+        {
+            DefaultSerializerSettings = new JsonSerializerSettings();
+            DefaultSerializerSettings.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver();
+            NBitcoin.JsonConverters.Serializer.RegisterFrontConverters(DefaultSerializerSettings);
+            DefaultSerializerSettings.Formatting = Formatting.None;
+        }
         public string DeliveryId { get; set; }
         public string OrignalDeliveryId { get; set; }
         [JsonConverter(typeof(StringEnumConverter))]

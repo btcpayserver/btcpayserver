@@ -36,73 +36,34 @@ namespace BTCPayServer.Services.Invoices
         }
         public string OrderId { get; set; }
         [JsonProperty(PropertyName = "buyerName")]
-        public string BuyerName
-        {
-            get; set;
-        }
+        public string BuyerName { get; set; }
         [JsonProperty(PropertyName = "buyerEmail")]
-        public string BuyerEmail
-        {
-            get; set;
-        }
+        public string BuyerEmail { get; set; }
         [JsonProperty(PropertyName = "buyerCountry")]
-        public string BuyerCountry
-        {
-            get; set;
-        }
+        public string BuyerCountry { get; set; }
         [JsonProperty(PropertyName = "buyerZip")]
-        public string BuyerZip
-        {
-            get; set;
-        }
+        public string BuyerZip { get; set; }
         [JsonProperty(PropertyName = "buyerState")]
-        public string BuyerState
-        {
-            get; set;
-        }
+        public string BuyerState { get; set; }
         [JsonProperty(PropertyName = "buyerCity")]
-        public string BuyerCity
-        {
-            get; set;
-        }
+        public string BuyerCity { get; set; }
         [JsonProperty(PropertyName = "buyerAddress2")]
-        public string BuyerAddress2
-        {
-            get; set;
-        }
+        public string BuyerAddress2 { get; set; }
         [JsonProperty(PropertyName = "buyerAddress1")]
-        public string BuyerAddress1
-        {
-            get; set;
-        }
+        public string BuyerAddress1 { get; set; }
 
         [JsonProperty(PropertyName = "buyerPhone")]
-        public string BuyerPhone
-        {
-            get; set;
-        }
+        public string BuyerPhone { get; set; }
 
         [JsonProperty(PropertyName = "itemDesc")]
-        public string ItemDesc
-        {
-            get; set;
-        }
+        public string ItemDesc { get; set; }
         [JsonProperty(PropertyName = "itemCode")]
-        public string ItemCode
-        {
-            get; set;
-        }
+        public string ItemCode { get; set; }
         [JsonProperty(PropertyName = "physical")]
-        public bool? Physical
-        {
-            get; set;
-        }
+        public bool? Physical { get; set; }
 
         [JsonProperty(PropertyName = "taxIncluded", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public decimal? TaxIncluded
-        {
-            get; set;
-        }
+        public decimal? TaxIncluded { get; set; }
         public string PosData { get; set; }
         [JsonExtensionData]
         public IDictionary<string, JToken> AdditionalData { get; set; }
@@ -122,133 +83,64 @@ namespace BTCPayServer.Services.Invoices
         class BuyerInformation
         {
             [JsonProperty(PropertyName = "buyerName")]
-            public string BuyerName
-            {
-                get; set;
-            }
+            public string BuyerName { get; set; }
             [JsonProperty(PropertyName = "buyerEmail")]
-            public string BuyerEmail
-            {
-                get; set;
-            }
+            public string BuyerEmail { get; set; }
             [JsonProperty(PropertyName = "buyerCountry")]
-            public string BuyerCountry
-            {
-                get; set;
-            }
+            public string BuyerCountry { get; set; }
             [JsonProperty(PropertyName = "buyerZip")]
-            public string BuyerZip
-            {
-                get; set;
-            }
+            public string BuyerZip { get; set; }
             [JsonProperty(PropertyName = "buyerState")]
-            public string BuyerState
-            {
-                get; set;
-            }
+            public string BuyerState { get; set; }
             [JsonProperty(PropertyName = "buyerCity")]
-            public string BuyerCity
-            {
-                get; set;
-            }
+            public string BuyerCity { get; set; }
             [JsonProperty(PropertyName = "buyerAddress2")]
-            public string BuyerAddress2
-            {
-                get; set;
-            }
+            public string BuyerAddress2 { get; set; }
             [JsonProperty(PropertyName = "buyerAddress1")]
-            public string BuyerAddress1
-            {
-                get; set;
-            }
+            public string BuyerAddress1 { get; set; }
 
             [JsonProperty(PropertyName = "buyerPhone")]
-            public string BuyerPhone
-            {
-                get; set;
-            }
+            public string BuyerPhone { get; set; }
         }
+
         class ProductInformation
         {
             [JsonProperty(PropertyName = "itemDesc")]
-            public string ItemDesc
-            {
-                get; set;
-            }
+            public string ItemDesc { get; set; }
             [JsonProperty(PropertyName = "itemCode")]
-            public string ItemCode
-            {
-                get; set;
-            }
+            public string ItemCode { get; set; }
             [JsonProperty(PropertyName = "physical")]
-            public bool Physical
-            {
-                get; set;
-            }
+            public bool Physical { get; set; }
 
             [JsonProperty(PropertyName = "price")]
-            public decimal Price
-            {
-                get; set;
-            }
+            public decimal Price { get; set; }
 
             [JsonProperty(PropertyName = "taxIncluded", DefaultValueHandling = DefaultValueHandling.Ignore)]
-            public decimal TaxIncluded
-            {
-                get; set;
-            }
+            public decimal TaxIncluded { get; set; }
 
             [JsonProperty(PropertyName = "currency")]
-            public string Currency
-            {
-                get; set;
-            }
+            public string Currency { get; set; }
         }
+
         [JsonIgnore]
         public BTCPayNetworkProvider Networks { get; set; }
         public const int InternalTagSupport_Version = 1;
         public const int GreenfieldInvoices_Version = 2;
         public const int Lastest_Version = 2;
         public int Version { get; set; }
-        public string Id
-        {
-            get; set;
-        }
-        public string StoreId
-        {
-            get; set;
-        }
+        public string Id { get; set; }
+        public string StoreId { get; set; }
 
-        public SpeedPolicy SpeedPolicy
-        {
-            get; set;
-        }
+        public SpeedPolicy SpeedPolicy { get; set; }
         [Obsolete("Use GetPaymentMethod(network) instead")]
-        public decimal Rate
-        {
-            get; set;
-        }
-        public DateTimeOffset InvoiceTime
-        {
-            get; set;
-        }
-        public DateTimeOffset ExpirationTime
-        {
-            get; set;
-        }
+        public decimal Rate { get; set; }
+        public DateTimeOffset InvoiceTime { get; set; }
+        public DateTimeOffset ExpirationTime { get; set; }
 
         [Obsolete("Use GetPaymentMethod(network).GetPaymentMethodDetails().GetDestinationAddress() instead")]
-        public string DepositAddress
-        {
-            get; set;
-        }
+        public string DepositAddress { get; set; }
 
-        public InvoiceMetadata Metadata
-        {
-            get;
-            set;
-        }
-
+        public InvoiceMetadata Metadata { get; set; }
 
         public decimal Price { get; set; }
         public string Currency { get; set; }
@@ -267,18 +159,10 @@ namespace BTCPayServer.Services.Invoices
         }
 
         [Obsolete("Use GetDerivationStrategies instead")]
-        public string DerivationStrategy
-        {
-            get;
-            set;
-        }
+        public string DerivationStrategy { get; set; }
 
         [Obsolete("Use GetPaymentMethodFactories() instead")]
-        public string DerivationStrategies
-        {
-            get;
-            set;
-        }
+        public string DerivationStrategies { get; set; }
         public IEnumerable<T> GetSupportedPaymentMethod<T>(PaymentMethodId paymentMethodId) where T : ISupportedPaymentMethod
         {
             return
@@ -335,28 +219,18 @@ namespace BTCPayServer.Services.Invoices
         }
 
         [JsonIgnore]
-        public InvoiceStatus Status
-        {
-            get;
-            set;
-        }
+        public InvoiceStatus Status { get; set; }
         [JsonProperty(PropertyName = "status")]
         [Obsolete("Use Status instead")]
         public string StatusString => InvoiceState.ToString(Status);
         [JsonIgnore]
-        public InvoiceExceptionStatus ExceptionStatus
-        {
-            get; set;
-        }
+        public InvoiceExceptionStatus ExceptionStatus { get; set; }
         [JsonProperty(PropertyName = "exceptionStatus")]
         [Obsolete("Use ExceptionStatus instead")]
         public string ExceptionStatusString => InvoiceState.ToString(ExceptionStatus);
 
         [Obsolete("Use GetPayments instead")]
-        public List<PaymentEntity> Payments
-        {
-            get; set;
-        }
+        public List<PaymentEntity> Payments { get; set; }
 
 #pragma warning disable CS0618
         public List<PaymentEntity> GetPayments()
@@ -372,22 +246,10 @@ namespace BTCPayServer.Services.Invoices
             return GetPayments(network.CryptoCode);
         }
 #pragma warning restore CS0618
-        public bool Refundable
-        {
-            get;
-            set;
-        }
-        public string RefundMail
-        {
-            get;
-            set;
-        }
+        public bool Refundable { get; set; }
+        public string RefundMail { get; set; }
         [JsonProperty("redirectURL")]
-        public string RedirectURLTemplate
-        {
-            get;
-            set;
-        }
+        public string RedirectURLTemplate { get; set; }
 
         [JsonIgnore]
         public Uri RedirectURL => FillPlaceholdersUri(RedirectURLTemplate);
@@ -401,65 +263,29 @@ namespace BTCPayServer.Services.Invoices
             return null;
         }
 
-        public bool RedirectAutomatically
-        {
-            get;
-            set;
-        }
+        public bool RedirectAutomatically { get; set; }
 
         [Obsolete("Use GetPaymentMethod(network).GetTxFee() instead")]
-        public Money TxFee
-        {
-            get;
-            set;
-        }
-        public bool FullNotifications
-        {
-            get;
-            set;
-        }
-        public string NotificationEmail
-        {
-            get;
-            set;
-        }
+        public Money TxFee { get; set; }
+        public bool FullNotifications { get; set; }
+        public string NotificationEmail { get; set; }
 
         [JsonProperty("notificationURL")]
-        public string NotificationURLTemplate
-        {
-            get;
-            set;
-        }
+        public string NotificationURLTemplate { get; set; }
 
         [JsonIgnore]
         public Uri NotificationURL => FillPlaceholdersUri(NotificationURLTemplate);
-        public string ServerUrl
-        {
-            get;
-            set;
-        }
+        public string ServerUrl { get; set; }
 
         [Obsolete("Use Set/GetPaymentMethod() instead")]
         [JsonProperty(PropertyName = "cryptoData")]
         public JObject PaymentMethod { get; set; }
 
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
-        public DateTimeOffset MonitoringExpiration
-        {
-            get;
-            set;
-        }
-        public HistoricalAddressInvoiceData[] HistoricalAddresses
-        {
-            get;
-            set;
-        }
+        public DateTimeOffset MonitoringExpiration { get; set; }
+        public HistoricalAddressInvoiceData[] HistoricalAddresses { get; set; }
 
-        public HashSet<string> AvailableAddressHashes
-        {
-            get;
-            set;
-        }
+        public HashSet<string> AvailableAddressHashes { get; set; }
         public bool ExtendedNotifications { get; set; }
         public List<InvoiceEventData> Events { get; internal set; }
         public double PaymentTolerance { get; set; }
@@ -559,7 +385,7 @@ namespace BTCPayServer.Services.Invoices
                 {
                     var minerInfo = new MinerFeeInfo();
                     minerInfo.TotalFee = accounting.NetworkFee.Satoshi;
-                    minerInfo.SatoshiPerBytes = ((BitcoinLikeOnChainPaymentMethod) details).FeeRate
+                    minerInfo.SatoshiPerBytes = ((BitcoinLikeOnChainPaymentMethod)details).FeeRate
                         .GetFee(1).Satoshi;
                     dto.MinerFees.TryAdd(cryptoInfo.CryptoCode, minerInfo);
                     cryptoInfo.PaymentUrls = new InvoicePaymentUrls()
@@ -1181,7 +1007,7 @@ namespace BTCPayServer.Services.Invoices
                 {
                     return null;
                 }
-                
+
                 paymentData.Network = Network;
                 if (paymentData is BitcoinLikePaymentData bitcoin)
                 {
@@ -1229,9 +1055,10 @@ namespace BTCPayServer.Services.Invoices
             PaymentType paymentType;
             if (string.IsNullOrEmpty(CryptoPaymentDataType))
             {
-                paymentType = BitcoinPaymentType.Instance;;
+                paymentType = BitcoinPaymentType.Instance;
+                ;
             }
-            else if(!PaymentTypes.TryParse(CryptoPaymentDataType, out paymentType))
+            else if (!PaymentTypes.TryParse(CryptoPaymentDataType, out paymentType))
             {
                 return null;
             }

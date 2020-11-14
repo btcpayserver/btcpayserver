@@ -1,4 +1,4 @@
-﻿@using BTCPayServer.Payments
+@using BTCPayServer.Payments
 @model CheckoutExperienceViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
@@ -36,9 +36,9 @@
                     @for (var index = 0; index < Model.PaymentMethodCriteria.Count; index++)
                     {
                         var criteria = Model.PaymentMethodCriteria[index];
-                        <tr >
+                        <tr>
                             <td class="border-right-0 border-left-0 pt-3">
-                                <input type="hidden" asp-for="PaymentMethodCriteria[index].PaymentMethod"/>
+                                <input type="hidden" asp-for="PaymentMethodCriteria[index].PaymentMethod" />
                                 @PaymentMethodId.Parse(criteria.PaymentMethod).ToPrettyString()
                             </td>
                             <td class="border-right-0  border-left-0 ">
@@ -49,43 +49,46 @@
 
                             </td>
                             <td class="border-right-0  border-left-0">
-                                <input placeholder="6.15 USD" asp-for="PaymentMethodCriteria[index].Value" class="form-control my-0" style="max-width: 20ch;"/>
+                                <input placeholder="6.15 USD" asp-for="PaymentMethodCriteria[index].Value" class="form-control my-0" style="max-width: 20ch;" />
                             </td>
                         </tr>
                     }
                 </table>
             }
 
-            <div class="form-group mb-4">
+            <div class="form-group">
                 <div class="form-check">
-                    <input asp-for="RequiresRefundEmail" type="checkbox" class="form-check-input"/>
+                    <input asp-for="RequiresRefundEmail" type="checkbox" class="form-check-input" />
                     <label asp-for="RequiresRefundEmail" class="form-check-label"></label>
                 </div>
             </div>
             <div class="form-group">
                 <div class="form-check">
-                    <input asp-for="LightningAmountInSatoshi" type="checkbox" class="form-check-input"/>
+                    <input asp-for="LightningAmountInSatoshi" type="checkbox" class="form-check-input" />
                     <label asp-for="LightningAmountInSatoshi" class="form-check-label"></label>
-                    <span asp-validation-for="LightningAmountInSatoshi" class="text-danger"></span>
                 </div>
             </div>
             <div class="form-group">
                 <div class="form-check">
-                    <input asp-for="LightningPrivateRouteHints" type="checkbox" class="form-check-input"/>
+                    <input asp-for="LightningPrivateRouteHints" type="checkbox" class="form-check-input" />
                     <label asp-for="LightningPrivateRouteHints" class="form-check-label"></label>
-                    <span asp-validation-for="LightningPrivateRouteHints" class="text-danger"></span>
                 </div>
             </div>
             <div class="form-group">
                 <div class="form-check">
-                    <input asp-for="RedirectAutomatically" type="checkbox" class="form-check-input"/>
+                    <input asp-for="OnChainWithLnInvoiceFallback" type="checkbox" class="form-check-input" />
+                    <label asp-for="OnChainWithLnInvoiceFallback" class="form-check-label"></label>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="form-check">
+                    <input asp-for="RedirectAutomatically" type="checkbox" class="form-check-input" />
                     <label asp-for="RedirectAutomatically" class="form-check-label"></label>
-                    <span asp-validation-for="RedirectAutomatically" class="text-danger"></span>
                 </div>
             </div>
             <div class="form-group">
                 <div class="form-check">
-                    <input asp-for="ShowRecommendedFee" type="checkbox" class="form-check-input"/>
+                    <input asp-for="ShowRecommendedFee" type="checkbox" class="form-check-input" />
                     <label asp-for="ShowRecommendedFee" class="form-check-label"></label>
                     <p class="form-text text-muted">Fee will be shown for BTC and LTC onchain payments only.</p>
                 </div>
@@ -103,19 +106,19 @@
             </div>
             <div class="form-group">
                 <label asp-for="HtmlTitle"></label>
-                <input asp-for="HtmlTitle" class="form-control"/>
+                <input asp-for="HtmlTitle" class="form-control" />
                 <span asp-validation-for="HtmlTitle" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="CustomLogo"></label>
                 <a href="https://docs.btcpayserver.org/Theme/#checkout-page-themes" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
-                <input asp-for="CustomLogo" class="form-control"/>
+                <input asp-for="CustomLogo" class="form-control" />
                 <span asp-validation-for="CustomLogo" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="CustomCSS"></label>
                 <a href="https://docs.btcpayserver.org/Theme/#checkout-page-themes" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
-                <input asp-for="CustomCSS" class="form-control"/>
+                <input asp-for="CustomCSS" class="form-control" />
                 <span asp-validation-for="CustomCSS" class="text-danger"></span>
                 <p class="form-text text-muted">
                     Bundled Themes:

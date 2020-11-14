@@ -31,7 +31,6 @@ namespace BTCPayServer.Client.Models
         public bool AnyoneCanCreateInvoice { get; set; }
 
 
-        //
         public bool RequiresRefundEmail { get; set; }
         public bool LightningAmountInSatoshi { get; set; }
         public bool LightningPrivateRouteHints { get; set; }
@@ -43,7 +42,7 @@ namespace BTCPayServer.Client.Models
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public int RecommendedFeeBlockTarget { get; set; } = 1;
 
-        //
+        
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string DefaultLang { get; set; } = "en";
 

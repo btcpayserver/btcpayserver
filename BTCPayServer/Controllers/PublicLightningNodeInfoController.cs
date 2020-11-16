@@ -49,7 +49,8 @@ namespace BTCPayServer.Controllers
                     Available = true,
                     NodeInfo = nodeInfo.ToString(),
                     CryptoCode = cryptoCode,
-                    CryptoImage = GetImage(paymentMethodDetails.PaymentId, network)
+                    CryptoImage = GetImage(paymentMethodDetails.PaymentId, network),
+                    StoreName = store.StoreName
                 });
             }
             catch (Exception)
@@ -83,5 +84,6 @@ namespace BTCPayServer.Controllers
         public bool Available { get; set; }
         public string CryptoCode { get; set; }
         public string CryptoImage { get; set; }
+        public string StoreName { get; set; }
     }
 }

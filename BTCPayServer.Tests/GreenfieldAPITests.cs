@@ -16,6 +16,7 @@ using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
+using NBitcoin.OpenAsset;
 using NBitpayClient;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -670,6 +671,9 @@ namespace BTCPayServer.Tests
                 var newDelivery = await clientProfile.GetWebhookDelivery(user.StoreId, hook.Id, newDeliveryId);
                 Assert.NotNull(newDelivery);
                 Assert.Equal(404, newDelivery.HttpCode);
+                var req = await clientProfile.GetWebhookDeliveryRequest(user.StoreId, hook.Id, newDeliveryId);
+                Assert.Equal(delivery.Id, req.OrignalDeliveryId);
+                Assert.True(req.IsRedelivery);
                 Assert.Equal(WebhookDeliveryStatus.HttpError, newDelivery.Status);
             });
             deliveries = await clientProfile.GetWebhookDeliveries(user.StoreId, hook.Id);
@@ -995,12 +999,13 @@ namespace BTCPayServer.Tests
                     if (marked == InvoiceStatus.Invalid)
                     {
                         Assert.Equal(InvoiceStatus.Invalid, result.Status);
-                        user.AssertHasWebhookEvent<WebhookInvoiceInvalidEvent>(WebhookEventType.InvoiceInvalid,
+                        var evt = user.AssertHasWebhookEvent<WebhookInvoiceInvalidEvent>(WebhookEventType.InvoiceInvalid,
                             o =>
                             {
                                 Assert.Equal(inv.Id, o.InvoiceId);
                                 Assert.True(o.ManuallyMarked);
                             });
+                        Assert.NotNull(await client.GetWebhookDelivery(evt.StoreId, evt.WebhookId, evt.DeliveryId));
                     }
                 }
             }

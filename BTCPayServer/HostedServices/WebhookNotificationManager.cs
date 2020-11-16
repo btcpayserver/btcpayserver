@@ -109,7 +109,10 @@ namespace BTCPayServer.HostedServices
             newDeliveryBlob.Request = oldDeliveryBlob.Request;
             var webhookEvent = newDeliveryBlob.ReadRequestAs<WebhookEvent>();
             webhookEvent.DeliveryId = newDelivery.Id;
+            webhookEvent.WebhookId = webhookDelivery.Webhook.Id;
+            // if we redelivered a redelivery, we still want the initial delivery here
             webhookEvent.OrignalDeliveryId ??= deliveryId;
+            webhookEvent.IsRedelivery = true;
             newDeliveryBlob.Request = ToBytes(webhookEvent);
             newDelivery.SetBlob(newDeliveryBlob);
             return new WebhookDeliveryRequest(webhookDelivery.Webhook.Id, webhookEvent, newDelivery, webhookDelivery.Webhook.GetBlob());
@@ -131,7 +134,9 @@ namespace BTCPayServer.HostedServices
                     webhookEvent.InvoiceId = invoiceEvent.InvoiceId;
                     webhookEvent.StoreId = invoiceEvent.Invoice.StoreId;
                     webhookEvent.DeliveryId = delivery.Id;
+                    webhookEvent.WebhookId = webhook.Id;
                     webhookEvent.OrignalDeliveryId = delivery.Id;
+                    webhookEvent.IsRedelivery = false;
                     webhookEvent.Timestamp = delivery.Timestamp;
                     var context = new WebhookDeliveryRequest(webhook.Id, webhookEvent, delivery, webhookBlob);
                     EnqueueDelivery(context);

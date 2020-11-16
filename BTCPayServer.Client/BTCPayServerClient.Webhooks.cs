@@ -54,12 +54,12 @@ namespace BTCPayServer.Client
             return await HandleResponse<string>(response);
         }
 
-        public async Task<JObject> GetWebhookDeliveryRequest(string storeId, string webhookId, string deliveryId, CancellationToken token = default)
+        public async Task<WebhookEvent> GetWebhookDeliveryRequest(string storeId, string webhookId, string deliveryId, CancellationToken token = default)
         {
             var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/webhooks/{webhookId}/deliveries/{deliveryId}/request"), token);
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                 return null;
-            return await HandleResponse<JObject>(response);
+            return await HandleResponse<WebhookEvent>(response);
         }
     }
 }

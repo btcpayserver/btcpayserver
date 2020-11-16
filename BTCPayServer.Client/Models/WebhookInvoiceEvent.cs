@@ -20,12 +20,6 @@ namespace BTCPayServer.Client.Models
         public string StoreId { get; set; }
         [JsonProperty(Order = 2)]
         public string InvoiceId { get; set; }
-
-        public T ReadAs<T>()
-        {
-            var str = JsonConvert.SerializeObject(this, DefaultSerializerSettings);
-            return JsonConvert.DeserializeObject<T>(str, DefaultSerializerSettings);
-        }
     }
 
     public class WebhookInvoiceConfirmedEvent : WebhookInvoiceEvent

@@ -534,7 +534,7 @@
                         "properties": {
                             "secret": {
                                 "type": "string",
-                                "description": "Must be used by the callback receiver to ensure the delivery comes from BTCPay Server. BTCPay Server includes the `BTCPay-Sig` HTTP header, whose format is `sha256=[HMAC256(secret,bodyBytes)]`. The pattern to authenticate the webhook is similar to [how to secure webhooks in Github](https://developer.github.com/webhooks/securing/) but with sha256 instead of sha1.",
+                                "description": "Must be used by the callback receiver to ensure the delivery comes from BTCPay Server. BTCPay Server includes the `BTCPay-Sig` HTTP header, whose format is `sha256=HMAC256(UTF8(webhook's secret), body)`. The pattern to authenticate the webhook is similar to [how to secure webhooks in Github](https://developer.github.com/webhooks/securing/) but with sha256 instead of sha1.",
                                 "nullable": false
                             }
                         }
@@ -581,6 +581,341 @@
                                 "type": "string",
                                 "description": "If `everything` is false, the specific events that the endpoint is interested in. Current events are: `InvoiceCreated`, `InvoiceReceivedPayment`, `InvoicePaidInFull`, `InvoiceExpired`, `InvoiceConfirmed`, `InvoiceInvalid`.",
                                 "nullable": false
+                            }
+                        }
+                    }
+                }
+            },
+            "WebhookEvent": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "deliveryId": {
+                        "type": "string",
+                        "nullable": false,
+                        "description": "The delivery id of the webhook"
+                    },
+                    "webhookId": {
+                        "type": "string",
+                        "nullable": false,
+                        "description": "The id of the webhook"
+                    },
+                    "originalDeliveryId": {
+                        "type": "string",
+                        "nullable": false,
+                        "description": "If this delivery is a redelivery, the is the delivery id of the original delivery."
+                    },
+                    "isRedelivery": {
+                        "type": "boolean",
+                        "nullable": false,
+                        "description": "True if this delivery is a redelivery"
+                    },
+                    "type": {
+                        "type": "string",
+                        "nullable": false,
+                        "description": "The type of this event, current available are `InvoiceCreated`, `InvoiceReceivedPayment`, `InvoicePaidInFull`, `InvoiceExpired`, `InvoiceConfirmed`, and `InvoiceInvalid`."
+                    },
+                    "timestamp": {
+                        "type": "number",
+                        "format": "int64",
+                        "description": "The timestamp when this delivery has been created"
+                    }
+                }
+            },
+            "WebhookInvoiceEvent": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/WebhookEvent"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "storeId": {
+                                "type": "string",
+                                "description": "The store id of the invoice's event",
+                                "nullable": false
+                            },
+                            "invoiceId": {
+                                "type": "string",
+                                "description": "The invoice id of the invoice's event",
+                                "nullable": false
+                            }
+                        }
+                    }
+                ]
+            },
+            "WebhookInvoiceConfirmedEvent": {
+                "description": "Callback sent if the `type` is `InvoiceConfirmed`",
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/WebhookInvoiceEvent"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "manuallyMarked": {
+                                "type": "boolean",
+                                "description": "Whether the invoice have been manually marked as confirmed",
+                                "nullable": false
+                            }
+                        }
+                    }
+                ]
+            },
+            "WebhookInvoiceInvalidEvent": {
+                "description": "Callback sent if the `type` is `InvoiceInvalid`",
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/WebhookInvoiceEvent"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "manuallyMarked": {
+                                "type": "boolean",
+                                "description": "Whether the invoice have been manually marked as confirmed. If false, this invoice has received payments which could not confirm in time.",
+                                "nullable": false
+                            }
+                        }
+                    }
+                ]
+            },
+            "WebhookInvoicePaidEvent": {
+                "description": "Callback sent if the `type` is `InvoicePaidInFull`",
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/WebhookInvoiceEvent"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "overPaid": {
+                                "type": "boolean",
+                                "description": "Whether this invoice has received more money than expected",
+                                "nullable": false
+                            },
+                            "paidAfterExpiration": {
+                                "type": "boolean",
+                                "description": "Whether this invoice has been paid too late",
+                                "nullable": false
+                            }
+                        }
+                    }
+                ]
+            },
+            "WebhookInvoiceReceivedPaymentEvent": {
+                "description": "Callback sent if the `type` is `InvoiceReceivedPayment`",
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/WebhookInvoiceEvent"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "afterExpiration": {
+                                "type": "boolean",
+                                "description": "Whether this payment has been sent after expiration of the invoice",
+                                "nullable": false
+                            }
+                        }
+                    }
+                ]
+            },
+            "WebhookInvoiceExpiredEvent": {
+                "description": "Callback sent if the `type` is `InvoiceExpired`",
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/WebhookInvoiceEvent"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "partiallyPaid": {
+                                "type": "boolean",
+                                "description": "Whether the invoice received some payments before being expired.",
+                                "nullable": false
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "x-webhooks": {
+        "Invoice created": {
+            "post": {
+                "summary": "Invoice created",
+                "description": "A new invoice has been created",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "BTCPay-Sig",
+                        "required": true,
+                        "description": "The HMAC of the body's byte with the secret's of the webhook. `sha256=HMAC256(UTF8(webhook's secret), body)`",
+                        "schema": {
+                            "type": "string",
+                            "example": "sha256=b438519edde5c8144a4f9bcec51a9d346eca6506887c2ceeae1c0092884a97b9"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Webhooks"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WebhookInvoiceEvent"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "Invoice expired": {
+            "post": {
+                "summary": "Invoice expired",
+                "description": "An invoice expired",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "BTCPay-Sig",
+                        "required": true,
+                        "description": "The HMAC of the body's byte with the secret's of the webhook. `sha256=HMAC256(UTF8(webhook's secret), body)`",
+                        "schema": {
+                            "type": "string",
+                            "example": "sha256=b438519edde5c8144a4f9bcec51a9d346eca6506887c2ceeae1c0092884a97b9"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Webhooks"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WebhookInvoiceExpiredEvent"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "Payment received": {
+            "post": {
+                "summary": "Payment received",
+                "description": "An invoice received a payment",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "BTCPay-Sig",
+                        "required": true,
+                        "description": "The HMAC of the body's byte with the secret's of the webhook. `sha256=HMAC256(UTF8(webhook's secret), body)`",
+                        "schema": {
+                            "type": "string",
+                            "example": "sha256=b438519edde5c8144a4f9bcec51a9d346eca6506887c2ceeae1c0092884a97b9"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Webhooks"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WebhookInvoiceReceivedPaymentEvent"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "Invoice paid": {
+            "post": {
+                "summary": "Invoice paid",
+                "description": "An invoice has been fully paid",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "BTCPay-Sig",
+                        "required": true,
+                        "description": "The HMAC of the body's byte with the secret's of the webhook. `sha256=HMAC256(UTF8(webhook's secret), body)`",
+                        "schema": {
+                            "type": "string",
+                            "example": "sha256=b438519edde5c8144a4f9bcec51a9d346eca6506887c2ceeae1c0092884a97b9"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Webhooks"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WebhookInvoicePaidEvent"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "Invoice invalid": {
+            "post": {
+                "summary": "Invoice invalid",
+                "description": "An invoice became invalid",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "BTCPay-Sig",
+                        "required": true,
+                        "description": "The HMAC of the body's byte with the secret's of the webhook. `sha256=HMAC256(UTF8(webhook's secret), body)`",
+                        "schema": {
+                            "type": "string",
+                            "example": "sha256=b438519edde5c8144a4f9bcec51a9d346eca6506887c2ceeae1c0092884a97b9"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Webhooks"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WebhookInvoiceInvalidEvent"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "Invoice confirmed": {
+            "post": {
+                "summary": "Invoice confirmed",
+                "description": "An invoice has been confirmed, order considered settled",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "BTCPay-Sig",
+                        "required": true,
+                        "description": "The HMAC of the body's byte with the secret's of the webhook. `sha256=HMAC256(UTF8(webhook's secret), body)`",
+                        "schema": {
+                            "type": "string",
+                            "example": "sha256=b438519edde5c8144a4f9bcec51a9d346eca6506887c2ceeae1c0092884a97b9"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Webhooks"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WebhookInvoiceConfirmedEvent"
                             }
                         }
                     }

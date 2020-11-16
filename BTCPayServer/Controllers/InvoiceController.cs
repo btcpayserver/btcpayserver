@@ -217,7 +217,7 @@ namespace BTCPayServer.Controllers
                                                 .Where(c => c != null))
             {
                 currencyPairsToFetch.Add(new CurrencyPair(network.CryptoCode, entity.Currency));
-                foreach (var paymentMethodCriteria in store.GetPaymentMethodCriteria(_NetworkProvider, storeBlob))
+                foreach (var paymentMethodCriteria in storeBlob.PaymentMethodCriteria)
                 {
                     if (paymentMethodCriteria.Value != null)
                     {
@@ -341,7 +341,7 @@ namespace BTCPayServer.Controllers
                     paymentMethod.SetPaymentMethodDetails(paymentDetails);
                 }
 
-                var criteria = store.GetPaymentMethodCriteria(_NetworkProvider, storeBlob)?.Find(methodCriteria => methodCriteria.PaymentMethod == supportedPaymentMethod.PaymentId);
+                var criteria = storeBlob.PaymentMethodCriteria?.Find(methodCriteria => methodCriteria.PaymentMethod == supportedPaymentMethod.PaymentId);
                 if (criteria?.Value != null)
                 {
                     var currentRateToCrypto =

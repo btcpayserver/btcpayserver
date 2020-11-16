@@ -6,7 +6,6 @@
     Layout = null;
 }
 <!DOCTYPE html>
-
 <html>
 <head>
     <title>@Model.CryptoCode LN Node Info</title>
@@ -15,21 +14,17 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="apple-touch-icon" href="~/img/icons/icon-512x512.png" asp-append-version="true">
     <link rel="apple-touch-startup-image" href="~/img/splash.png" asp-append-version="true">
-
     <link rel="manifest" href="~/manifest.json">
-
-    <link href="@this.Context.Request.GetRelativePathOrAbsolute(themeManager.BootstrapUri)" rel="stylesheet" asp-append-version="true" />
-    <link href="@this.Context.Request.GetRelativePathOrAbsolute(themeManager.ThemeUri)" rel="stylesheet" asp-append-version="true" />
+    <link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.BootstrapUri)" rel="stylesheet" asp-append-version="true" />
+    <link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.ThemeUri)" rel="stylesheet" asp-append-version="true" />
     <link href="~/vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" asp-append-version="true" />
-
     <bundle name="wwwroot/bundles/lightning-node-info-bundle.min.js" asp-append-version="true" />
     <script type="text/javascript">
         var srvModel = @Safe.Json(Model);
 
-
         window.onload = function() {
             Vue.use(Toasted);
-            var app = new Vue({
+            new Vue({
                 el: '#app',
                 components: {
                     qrcode: VueQrcode
@@ -38,24 +33,18 @@
                     srvModel: srvModel
                 },
                 mounted: function() {
-
                     this.$nextTick(function() {
                         var copyInput = new Clipboard('.copy');
-
-                        copyInput.on("success",
-                            function(e) {
-                                Vue.toasted.show('Copied',
-                                    {
-                                        iconPack: "fontawesome",
-                                        icon: "copy",
-                                        duration: 5000
-                                    });
+                        copyInput.on("success", function() {
+                            Vue.toasted.show('Copied', {
+                                iconPack: "fontawesome",
+                                icon: "copy",
+                                duration: 5000
                             });
+                        });
                     });
                 }
             });
-
-
         }
     </script>
     <style>
@@ -75,10 +64,10 @@
             text-align: center;
         }
 
-            .qr-container svg {
-                width: 256px;
-                height: 256px;
-            }
+        .qr-container svg {
+            width: 256px;
+            height: 256px;
+        }
 
         .copy {
             cursor: copy;
@@ -118,8 +107,8 @@
         </div>
     </noscript>
     <div id="app" class="container">
-        <div class="row " style="height: 100vh">
-            <div class="col-md-8 col-sm-12 col-lg-6 mx-auto my-auto ">
+        <div class="row" style="height:100vh">
+            <div class="col-md-8 col-sm-12 col-lg-6 mx-auto my-auto">
                 <div class="card border-0">
                     <div class="row"></div>
                     <h1 class="card-title text-center">

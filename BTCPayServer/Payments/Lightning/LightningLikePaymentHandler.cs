@@ -79,7 +79,7 @@ namespace BTCPayServer.Payments.Lightning
                 }
                 catch (OperationCanceledException) when (cts.IsCancellationRequested)
                 {
-                    throw new PaymentMethodUnavailableException($"The lightning node did not reply in a timely manner");
+                    throw new PaymentMethodUnavailableException("The lightning node did not reply in a timely manner");
                 }
                 catch (Exception ex)
                 {
@@ -87,7 +87,7 @@ namespace BTCPayServer.Payments.Lightning
                 }
             }
             var nodeInfo = await test;
-            return new LightningLikePaymentMethodDetails()
+            return new LightningLikePaymentMethodDetails
             {
                 BOLT11 = lightningInvoice.BOLT11,
                 InvoiceId = lightningInvoice.Id,
@@ -98,19 +98,19 @@ namespace BTCPayServer.Payments.Lightning
         public async Task<NodeInfo> GetNodeInfo(bool preferOnion, LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network)
         {
             if (!_Dashboard.IsFullySynched(network.CryptoCode, out var summary))
-                throw new PaymentMethodUnavailableException($"Full node not available");
+                throw new PaymentMethodUnavailableException("Full node not available");
 
             using (var cts = new CancellationTokenSource(LIGHTNING_TIMEOUT))
             {
                 var client = _lightningClientFactory.Create(supportedPaymentMethod.GetLightningUrl(), network);
-                LightningNodeInformation info = null;
+                LightningNodeInformation info;
                 try
                 {
                     info = await client.GetInfo(cts.Token);
                 }
                 catch (OperationCanceledException) when (cts.IsCancellationRequested)
                 {
-                    throw new PaymentMethodUnavailableException($"The lightning node did not reply in a timely manner");
+                    throw new PaymentMethodUnavailableException("The lightning node did not reply in a timely manner");
                 }
                 catch (Exception ex)
                 {
@@ -119,7 +119,7 @@ namespace BTCPayServer.Payments.Lightning
                 var nodeInfo = info.NodeInfoList.FirstOrDefault(i => i.IsTor == preferOnion) ?? info.NodeInfoList.FirstOrDefault();
                 if (nodeInfo == null)
                 {
-                    throw new PaymentMethodUnavailableException($"No lightning node public address has been configured");
+                    throw new PaymentMethodUnavailableException("No lightning node public address has been configured");
                 }
 
                 var blocksGap = summary.Status.ChainHeight - info.BlockHeight;

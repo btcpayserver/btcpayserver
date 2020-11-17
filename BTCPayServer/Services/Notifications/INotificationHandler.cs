@@ -1,5 +1,5 @@
 using System;
-using BTCPayServer.Contracts;
+using BTCPayServer.Abstractions.Contracts;
 
 namespace BTCPayServer.Services.Notifications
 {

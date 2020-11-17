@@ -4,7 +4,7 @@ using BTCPayServer.Abstractions.Converters;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace BTCPayServer.Contracts
+namespace BTCPayServer.Abstractions.Contracts
 {
     public interface IBTCPayServerPlugin
     {

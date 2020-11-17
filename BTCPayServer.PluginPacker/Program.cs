@@ -4,7 +4,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
-using BTCPayServer.Contracts;
+using BTCPayServer.Abstractions.Contracts;
 
 namespace BTCPayServer.PluginPacker
 {

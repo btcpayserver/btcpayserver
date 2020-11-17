@@ -7,6 +7,8 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Mail;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
@@ -33,11 +35,12 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using Renci.SshNet;
+using AuthenticationSchemes = BTCPayServer.Abstractions.Constants.AuthenticationSchemes;
 
 namespace BTCPayServer.Controllers
 {
     [Authorize(Policy = BTCPayServer.Client.Policies.CanModifyServerSettings,
-               AuthenticationSchemes = BTCPayServer.Security.AuthenticationSchemes.Cookie)]
+               AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public partial class ServerController : Controller
     {
         private readonly UserManager<ApplicationUser> _UserManager;

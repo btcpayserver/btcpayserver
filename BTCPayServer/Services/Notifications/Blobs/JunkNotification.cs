@@ -1,6 +1,6 @@
 #if DEBUG
 using System.Data;
-using BTCPayServer.Contracts;
+using BTCPayServer.Abstractions.Contracts;
 
 namespace BTCPayServer.Services.Notifications.Blobs
 {

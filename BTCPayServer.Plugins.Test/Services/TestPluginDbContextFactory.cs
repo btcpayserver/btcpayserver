@@ -1,5 +1,7 @@
+using System.Reflection;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Plugins.Test.Migrations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
@@ -21,7 +23,7 @@ namespace BTCPayServer.Plugins.Test
 
     public class TestPluginDbContextFactory : BaseDbContextFactory<TestPluginDbContext>
     {
-        public TestPluginDbContextFactory(DatabaseOptions options) : base(options, "BTCPayServer.Plugins.Test", "BTCPayServer.Plugins.Test")
+        public TestPluginDbContextFactory(DatabaseOptions options) : base(options, "BTCPayServer.Plugins.Test")
         {
         }
 

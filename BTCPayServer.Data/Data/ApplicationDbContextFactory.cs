@@ -6,8 +6,7 @@ namespace BTCPayServer.Data
 {
     public class ApplicationDbContextFactory : BaseDbContextFactory<ApplicationDbContext>
     {
-        public ApplicationDbContextFactory(DatabaseOptions options) : base(options,
-            "BTCPayServer.Data", "")
+        public ApplicationDbContextFactory(DatabaseOptions options) : base(options, "")
         {
         }
 

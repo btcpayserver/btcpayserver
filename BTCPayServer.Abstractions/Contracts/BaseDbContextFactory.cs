@@ -11,13 +11,11 @@ namespace BTCPayServer.Abstractions.Contracts
     public abstract class BaseDbContextFactory<T> where T: DbContext
     {
         private readonly DatabaseOptions _options;
-        private readonly string _migrationAssembly;
         private readonly string _schemaPrefix;
 
-        public BaseDbContextFactory(DatabaseOptions options, string migrationAssembly, string schemaPrefix)
+        public BaseDbContextFactory(DatabaseOptions options, string schemaPrefix)
         {
             _options = options;
-            _migrationAssembly = migrationAssembly;
             _schemaPrefix = schemaPrefix;
         }
 
@@ -72,7 +70,6 @@ namespace BTCPayServer.Abstractions.Contracts
                 case DatabaseType.Sqlite:
                     builder.UseSqlite(_options.ConnectionString, o =>
                     {
-                        o.MigrationsAssembly(_migrationAssembly);
                         if (!string.IsNullOrEmpty(_schemaPrefix))
                         {
                             o.MigrationsHistoryTable(_schemaPrefix);
@@ -83,8 +80,7 @@ namespace BTCPayServer.Abstractions.Contracts
                     builder
                         .UseNpgsql(_options.ConnectionString, o =>
                         {
-                            o.MigrationsAssembly(_migrationAssembly).EnableRetryOnFailure(10);
-                            
+                            o.EnableRetryOnFailure(10);
                             if (!string.IsNullOrEmpty(_schemaPrefix))
                             {
                                 o.MigrationsHistoryTable(_schemaPrefix);
@@ -95,7 +91,7 @@ namespace BTCPayServer.Abstractions.Contracts
                 case DatabaseType.MySQL:
                     builder.UseMySql(_options.ConnectionString, o =>
                     {
-                        o.MigrationsAssembly(_migrationAssembly).EnableRetryOnFailure(10);
+                        o.EnableRetryOnFailure(10);
                             
                         if (!string.IsNullOrEmpty(_schemaPrefix))
                         {

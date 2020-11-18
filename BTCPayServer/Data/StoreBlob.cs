@@ -31,22 +31,17 @@ namespace BTCPayServer.Data
 
         [Obsolete("Use NetworkFeeMode instead")]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public bool? NetworkFeeDisabled
-        {
-            get; set;
-        }
+        public bool? NetworkFeeDisabled { get; set; }
 
         [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        public NetworkFeeMode NetworkFeeMode
-        {
-            get;
-            set;
-        }
+        public NetworkFeeMode NetworkFeeMode { get; set; }
 
         public bool RequiresRefundEmail { get; set; }
-
+        public bool LightningAmountInSatoshi { get; set; }
+        public bool LightningPrivateRouteHints { get; set; }
+        public bool OnChainWithLnInvoiceFallback { get; set; }
+        public bool RedirectAutomatically { get; set; }
         public bool ShowRecommendedFee { get; set; }
-
         public int RecommendedFeeBlockTarget { get; set; }
 
         CurrencyPair[] _DefaultCurrencyPairs;
@@ -81,11 +76,7 @@ namespace BTCPayServer.Data
         [DefaultValue(typeof(TimeSpan), "00:15:00")]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         [JsonConverter(typeof(TimeSpanJsonConverter.Minutes))]
-        public TimeSpan InvoiceExpiration
-        {
-            get;
-            set;
-        }
+        public TimeSpan InvoiceExpiration { get; set; }
 
         public decimal Spread { get; set; } = 0.0m;
 
@@ -106,8 +97,6 @@ namespace BTCPayServer.Data
         [Obsolete]
         [JsonConverter(typeof(CurrencyValueJsonConverter))]
         public CurrencyValue LightningMaxValue { get; set; }
-        public bool LightningAmountInSatoshi { get; set; }
-        public bool LightningPrivateRouteHints { get; set; }
 
         public string CustomCSS { get; set; }
         public string CustomLogo { get; set; }
@@ -185,10 +174,10 @@ namespace BTCPayServer.Data
         public Dictionary<string, string> WalletKeyPathRoots { get; set; }
 
         public EmailSettings EmailSettings { get; set; }
-        public bool RedirectAutomatically { get; set; }
         public bool PayJoinEnabled { get; set; }
 
         public StoreHints Hints { get; set; }
+
         public class StoreHints
         {
             public bool Wallet { get; set; }
@@ -229,7 +218,7 @@ namespace BTCPayServer.Data
         public CurrencyValue Value { get; set; }
         public bool Above { get; set; }
     }
-    
+
     public class RateRule_Obsolete
     {
         public RateRule_Obsolete()

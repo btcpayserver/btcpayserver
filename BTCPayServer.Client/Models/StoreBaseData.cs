@@ -30,14 +30,21 @@ namespace BTCPayServer.Client.Models
         public double PaymentTolerance { get; set; } = 0;
         public bool AnyoneCanCreateInvoice { get; set; }
 
+
+        public bool RequiresRefundEmail { get; set; }
+        public bool LightningAmountInSatoshi { get; set; }
+        public bool LightningPrivateRouteHints { get; set; }
+        public bool OnChainWithLnInvoiceFallback { get; set; }
+        public bool RedirectAutomatically { get; set; }
+
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public bool ShowRecommendedFee { get; set; } = true;
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public int RecommendedFeeBlockTarget { get; set; } = 1;
 
+        
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string DefaultLang { get; set; } = "en";
-        public bool LightningAmountInSatoshi { get; set; }
 
         public string CustomLogo { get; set; }
 
@@ -45,16 +52,13 @@ namespace BTCPayServer.Client.Models
 
         public string HtmlTitle { get; set; }
 
-        public bool RedirectAutomatically { get; set; }
 
-        public bool RequiresRefundEmail { get; set; }
 
         [JsonConverter(typeof(StringEnumConverter))]
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public NetworkFeeMode NetworkFeeMode { get; set; } = NetworkFeeMode.Never;
 
         public bool PayJoinEnabled { get; set; }
-        public bool LightningPrivateRouteHints { get; set; }
 
 
         [JsonExtensionData]

@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Logging;
 using BTCPayServer.Models.InvoicingModels;
+using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
 using DBriize;
 using Microsoft.EntityFrameworkCore;
@@ -59,6 +61,15 @@ retry:
             _eventAggregator = eventAggregator;
         }
 
+        public async Task<Data.WebhookDeliveryData> GetWebhookDelivery(string invoiceId, string deliveryId)
+        {
+            using var ctx = _ContextFactory.CreateContext();
+            return await ctx.InvoiceWebhookDeliveries
+                .Where(d => d.InvoiceId == invoiceId && d.DeliveryId == deliveryId)
+                .Select(d => d.Delivery)
+                .FirstOrDefaultAsync();
+        }
+
         public InvoiceEntity CreateNewInvoice()
         {
             return new InvoiceEntity()
@@ -105,6 +116,16 @@ retry:
             {
                 return await ctx.PendingInvoices.AsQueryable().Select(data => data.Id).ToArrayAsync();
             }
+        }
+
+        public async Task<List<Data.WebhookDeliveryData>> GetWebhookDeliveries(string invoiceId)
+        {
+            using var ctx = _ContextFactory.CreateContext();
+            return await ctx.InvoiceWebhookDeliveries
+                .Where(s => s.InvoiceId == invoiceId)
+                .Select(s => s.Delivery)
+                .OrderByDescending(s => s.Timestamp)
+                .ToListAsync();
         }
 
         public async Task<AppData[]> GetAppsTaggingStore(string storeId)

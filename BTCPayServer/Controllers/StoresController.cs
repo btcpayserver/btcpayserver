@@ -63,7 +63,8 @@ namespace BTCPayServer.Controllers
             EventAggregator eventAggregator,
             CssThemeManager cssThemeManager,
             AppService appService,
-            IWebHostEnvironment webHostEnvironment)
+            IWebHostEnvironment webHostEnvironment,
+            WebhookNotificationManager webhookNotificationManager)
         {
             _RateFactory = rateFactory;
             _Repo = repo;
@@ -78,6 +79,7 @@ namespace BTCPayServer.Controllers
             _CssThemeManager = cssThemeManager;
             _appService = appService;
             _webHostEnvironment = webHostEnvironment;
+            WebhookNotificationManager = webhookNotificationManager;
             _EventAggregator = eventAggregator;
             _NetworkProvider = networkProvider;
             _ExplorerProvider = explorerProvider;
@@ -791,6 +793,7 @@ namespace BTCPayServer.Controllers
         }
 
         public string GeneratedPairingCode { get; set; }
+        public WebhookNotificationManager WebhookNotificationManager { get; }
 
         [HttpGet]
         [Route("{storeId}/Tokens/Create")]

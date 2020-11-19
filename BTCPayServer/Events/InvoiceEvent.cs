@@ -38,7 +38,7 @@ namespace BTCPayServer.Events
             {ReceivedPayment, InvoiceEventCode.ReceivedPayment},
             {PaidInFull, InvoiceEventCode.PaidInFull},
             {Expired, InvoiceEventCode.Expired},
-            {Confirmed, InvoiceEventCode.Completed},
+            {Confirmed, InvoiceEventCode.Confirmed},
             {Completed, InvoiceEventCode.Completed},
             {MarkedInvalid, InvoiceEventCode.MarkedInvalid},
             {FailedToConfirm, InvoiceEventCode.FailedToConfirm},

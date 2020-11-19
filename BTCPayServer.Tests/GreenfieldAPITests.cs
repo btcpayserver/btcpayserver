@@ -16,6 +16,7 @@ using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
+using NBitcoin.OpenAsset;
 using NBitpayClient;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -149,12 +150,12 @@ namespace BTCPayServer.Tests
                 var user1 = await unauthClient.CreateUser(
                     new CreateApplicationUserRequest() { Email = "test@gmail.com", Password = "abceudhqw" });
                 Assert.Empty(user1.Roles);
-                
+
                 // We have no admin, so it should work
                 var user2 = await unauthClient.CreateUser(
                     new CreateApplicationUserRequest() { Email = "test2@gmail.com", Password = "abceudhqw" });
                 Assert.Empty(user2.Roles);
-                
+
                 // Duplicate email
                 await AssertValidationError(new[] { "Email" },
                     async () => await unauthClient.CreateUser(
@@ -170,7 +171,7 @@ namespace BTCPayServer.Tests
                 Assert.Contains("ServerAdmin", admin.Roles);
                 Assert.NotNull(admin.Created);
                 Assert.True((DateTimeOffset.Now - admin.Created).Value.Seconds < 10);
-                
+
                 // Creating a new user without proper creds is now impossible (unauthorized) 
                 // Because if registration are locked and that an admin exists, we don't accept unauthenticated connection
                 await AssertHttpError(401,
@@ -613,6 +614,101 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
+        public async Task CanUseWebhooks()
+        {
+            void AssertHook(FakeServer fakeServer, Client.Models.StoreWebhookData hook)
+            {
+                Assert.True(hook.Enabled);
+                Assert.True(hook.AuthorizedEvents.Everything);
+                Assert.False(hook.AutomaticRedelivery);
+                Assert.Equal(fakeServer.ServerUri.AbsoluteUri, hook.Url);
+            }
+            using var tester = ServerTester.Create();
+            using var fakeServer = new FakeServer();
+            await fakeServer.Start();
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            user.GrantAccess();
+            user.RegisterDerivationScheme("BTC");
+            var clientProfile = await user.CreateClient(Policies.CanModifyStoreWebhooks, Policies.CanCreateInvoice);
+            var hook = await clientProfile.CreateWebhook(user.StoreId, new CreateStoreWebhookRequest()
+            {
+                Url = fakeServer.ServerUri.AbsoluteUri,
+                AutomaticRedelivery = false
+            });
+            Assert.NotNull(hook.Secret);
+            AssertHook(fakeServer, hook);
+            hook = await clientProfile.GetWebhook(user.StoreId, hook.Id);
+            AssertHook(fakeServer, hook);
+            var hooks = await clientProfile.GetWebhooks(user.StoreId);
+            hook = Assert.Single(hooks);
+            AssertHook(fakeServer, hook);
+            await clientProfile.CreateInvoice(user.StoreId,
+                        new CreateInvoiceRequest() { Currency = "USD", Amount = 100 });
+            var req = await fakeServer.GetNextRequest();
+            req.Response.StatusCode = 200;
+            fakeServer.Done();
+            hook = await clientProfile.UpdateWebhook(user.StoreId, hook.Id, new UpdateStoreWebhookRequest()
+            {
+                Url = hook.Url,
+                Secret = "lol",
+                AutomaticRedelivery = false
+            });
+            Assert.Null(hook.Secret);
+            AssertHook(fakeServer, hook);
+            var deliveries = await clientProfile.GetWebhookDeliveries(user.StoreId, hook.Id);
+            var delivery = Assert.Single(deliveries);
+            delivery = await clientProfile.GetWebhookDelivery(user.StoreId, hook.Id, delivery.Id);
+            Assert.NotNull(delivery);
+            Assert.Equal(WebhookDeliveryStatus.HttpSuccess, delivery.Status);
+
+            var newDeliveryId = await clientProfile.RedeliverWebhook(user.StoreId, hook.Id, delivery.Id);
+            req = await fakeServer.GetNextRequest();
+            req.Response.StatusCode = 404;
+            fakeServer.Done();
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                var newDelivery = await clientProfile.GetWebhookDelivery(user.StoreId, hook.Id, newDeliveryId);
+                Assert.NotNull(newDelivery);
+                Assert.Equal(404, newDelivery.HttpCode);
+                var req = await clientProfile.GetWebhookDeliveryRequest(user.StoreId, hook.Id, newDeliveryId);
+                Assert.Equal(delivery.Id, req.OrignalDeliveryId);
+                Assert.True(req.IsRedelivery);
+                Assert.Equal(WebhookDeliveryStatus.HttpError, newDelivery.Status);
+            });
+            deliveries = await clientProfile.GetWebhookDeliveries(user.StoreId, hook.Id);
+            Assert.Equal(2, deliveries.Length);
+            Assert.Equal(newDeliveryId, deliveries[0].Id);
+            var jObj = await clientProfile.GetWebhookDeliveryRequest(user.StoreId, hook.Id, newDeliveryId);
+            Assert.NotNull(jObj);
+
+            Logs.Tester.LogInformation("Should not be able to access webhook without proper auth");
+            var unauthorized = await user.CreateClient(Policies.CanCreateInvoice);
+            await AssertHttpError(403, async () =>
+            {
+                await unauthorized.GetWebhookDeliveryRequest(user.StoreId, hook.Id, newDeliveryId);
+            });
+
+            Logs.Tester.LogInformation("Can use btcpay.store.canmodifystoresettings to query webhooks");
+            clientProfile = await user.CreateClient(Policies.CanModifyStoreSettings, Policies.CanCreateInvoice);
+            await clientProfile.GetWebhookDeliveryRequest(user.StoreId, hook.Id, newDeliveryId);
+
+            Logs.Tester.LogInformation("Testing corner cases");
+            Assert.Null(await clientProfile.GetWebhookDeliveryRequest(user.StoreId, "lol", newDeliveryId));
+            Assert.Null(await clientProfile.GetWebhookDeliveryRequest(user.StoreId, hook.Id, "lol"));
+            Assert.Null(await clientProfile.GetWebhookDeliveryRequest(user.StoreId, "lol", "lol"));
+            Assert.Null(await clientProfile.GetWebhook(user.StoreId, "lol"));
+            await AssertHttpError(404, async () =>
+            {
+                await clientProfile.UpdateWebhook(user.StoreId, "lol", new UpdateStoreWebhookRequest() { Url = hook.Url });
+            });
+
+            Assert.True(await clientProfile.DeleteWebhook(user.StoreId, hook.Id));
+            Assert.False(await clientProfile.DeleteWebhook(user.StoreId, hook.Id));
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
         public async Task HealthControllerTests()
         {
             using (var tester = ServerTester.Create())
@@ -821,6 +917,7 @@ namespace BTCPayServer.Tests
                 var user = tester.NewAccount();
                 await user.GrantAccessAsync();
                 await user.MakeAdmin();
+                await user.SetupWebhook();
                 var client = await user.CreateClient(Policies.Unrestricted);
                 var viewOnly = await user.CreateClient(Policies.CanViewInvoices);
 
@@ -878,10 +975,43 @@ namespace BTCPayServer.Tests
                 await client.UnarchiveInvoice(user.StoreId, invoice.Id);
                 Assert.NotNull(await client.GetInvoice(user.StoreId, invoice.Id));
 
+
+                foreach (var marked in new[] { InvoiceStatus.Complete, InvoiceStatus.Invalid })
+                {
+                    var inv = await client.CreateInvoice(user.StoreId,
+                    new CreateInvoiceRequest() { Currency = "USD", Amount = 100 });
+                    await user.PayInvoice(inv.Id);
+                    await client.MarkInvoiceStatus(user.StoreId, inv.Id, new MarkInvoiceStatusRequest()
+                    {
+                        Status = marked
+                    });
+                    var result = await client.GetInvoice(user.StoreId, inv.Id);
+                    if (marked == InvoiceStatus.Complete)
+                    {
+                        Assert.Equal(InvoiceStatus.Complete, result.Status);
+                        user.AssertHasWebhookEvent<WebhookInvoiceConfirmedEvent>(WebhookEventType.InvoiceConfirmed,
+                            o =>
+                            {
+                                Assert.Equal(inv.Id, o.InvoiceId);
+                                Assert.True(o.ManuallyMarked);
+                            });
+                    }
+                    if (marked == InvoiceStatus.Invalid)
+                    {
+                        Assert.Equal(InvoiceStatus.Invalid, result.Status);
+                        var evt = user.AssertHasWebhookEvent<WebhookInvoiceInvalidEvent>(WebhookEventType.InvoiceInvalid,
+                            o =>
+                            {
+                                Assert.Equal(inv.Id, o.InvoiceId);
+                                Assert.True(o.ManuallyMarked);
+                            });
+                        Assert.NotNull(await client.GetWebhookDelivery(evt.StoreId, evt.WebhookId, evt.DeliveryId));
+                    }
+                }
             }
         }
-        
-         [Fact(Timeout = 60 * 2 * 1000)]
+
+        [Fact(Timeout = 60 * 2 * 1000)]
         [Trait("Integration", "Integration")]
         [Trait("Lightning", "Lightning")]
         public async Task CanUseLightningAPI()
@@ -907,7 +1037,7 @@ namespace BTCPayServer.Tests
                 var info = await client.GetLightningNodeInfo("BTC");
                 Assert.Single(info.NodeURIs);
                 Assert.NotEqual(0, info.BlockHeight);
-                
+
                 var err = await Assert.ThrowsAsync<HttpRequestException>(async () => await client.GetLightningNodeChannels("BTC"));
                 Assert.Contains("503", err.Message);
                 // Not permission for the store!

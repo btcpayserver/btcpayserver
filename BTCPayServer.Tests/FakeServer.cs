@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using ExchangeSharp;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server.Features;
@@ -62,9 +63,9 @@ namespace BTCPayServer.Tests
             semaphore.Dispose();
         }
 
-        public async Task<HttpContext> GetNextRequest()
+        public async Task<HttpContext> GetNextRequest(CancellationToken cancellationToken = default)
         {
-            return await _channel.Reader.ReadAsync();
+            return await _channel.Reader.ReadAsync(cancellationToken);
         }
     }
 }

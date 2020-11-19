@@ -1000,7 +1000,6 @@ namespace BTCPayServer.Tests
                             }
                         }
                     }
-
                     var invoice2 = acc.BitPay.GetInvoice(invoice.Id);
                     Assert.NotNull(invoice2);
                 }
@@ -2581,6 +2580,7 @@ namespace BTCPayServer.Tests
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
+                await user.SetupWebhook();
                 var invoice = user.BitPay.CreateInvoice(
                     new Invoice()
                     {
@@ -2637,7 +2637,6 @@ namespace BTCPayServer.Tests
                 var cashCow = tester.ExplorerNode;
 
                 var invoiceAddress = BitcoinAddress.Create(invoice.BitcoinAddress, cashCow.Network);
-                var iii = ctx.AddressInvoices.ToArray();
                 Assert.True(IsMapped(invoice, ctx));
                 cashCow.SendToAddress(invoiceAddress, firstPayment);
 
@@ -2741,6 +2740,23 @@ namespace BTCPayServer.Tests
                     Assert.Equal(Money.Zero, localInvoice.BtcDue);
                     Assert.Equal("paidOver", (string)((JValue)localInvoice.ExceptionStatus).Value);
                 });
+
+                // Test on the webhooks
+                user.AssertHasWebhookEvent<WebhookInvoiceConfirmedEvent>(WebhookEventType.InvoiceConfirmed,
+                    c =>
+                    {
+                        Assert.False(c.ManuallyMarked);
+                    });
+                user.AssertHasWebhookEvent<WebhookInvoicePaidEvent>(WebhookEventType.InvoicePaidInFull,
+                    c =>
+                    {
+                        Assert.True(c.OverPaid);
+                    });
+                user.AssertHasWebhookEvent<WebhookInvoiceReceivedPaymentEvent>(WebhookEventType.InvoiceReceivedPayment,
+                    c =>
+                    {
+                        Assert.False(c.AfterExpiration);
+                    });
             }
         }
 

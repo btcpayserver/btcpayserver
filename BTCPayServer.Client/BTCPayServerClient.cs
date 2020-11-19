@@ -65,7 +65,8 @@ namespace BTCPayServer.Client
         protected async Task<T> HandleResponse<T>(HttpResponseMessage message)
         {
             await HandleResponse(message);
-            return JsonConvert.DeserializeObject<T>(await message.Content.ReadAsStringAsync());
+            var str = await message.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<T>(str);
         }
 
         protected virtual HttpRequestMessage CreateHttpRequest(string path,

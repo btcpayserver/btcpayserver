@@ -336,11 +336,11 @@
         @if (Model.CanDelete)
         {
             <h4 class="mt-5 mb-3">Other actions</h4>
-            <button class="btn btn-link text-secondary mb-3 p-0" type="button" data-toggle="collapse" data-target="#danger-zone">
+            <button id="danger-zone-expander" class="btn btn-link text-secondary mb-3 p-0" type="button" data-toggle="collapse" data-target="#danger-zone">
                 See more actions
             </button>
             <div id="danger-zone" class="collapse">
-                <a class="btn btn-outline-danger mb-5" asp-action="DeleteStore" asp-route-storeId="@Model.Id">Delete this store</a>
+                <a id="delete-store" class="btn btn-outline-danger mb-5" asp-action="DeleteStore" asp-route-storeId="@Model.Id">Delete this store</a>
             </div>
         }
     </div>

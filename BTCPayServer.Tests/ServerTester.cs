@@ -23,6 +23,7 @@ namespace BTCPayServer.Tests
             return new ServerTester(scope, newDb);
         }
 
+        public List<IDisposable> Resources = new List<IDisposable>();
         readonly string _Directory;
         public ServerTester(string scope, bool newDb)
         {
@@ -145,7 +146,7 @@ namespace BTCPayServer.Tests
             var tcs = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
             var sub = PayTester.GetService<EventAggregator>().Subscribe<T>(evt =>
             {
-                if(correctEvent is null)
+                if (correctEvent is null)
                     tcs.TrySetResult(evt);
                 else if (correctEvent(evt))
                 {
@@ -207,6 +208,8 @@ namespace BTCPayServer.Tests
 
         public void Dispose()
         {
+            foreach (var r in this.Resources)
+                r.Dispose();
             Logs.Tester.LogInformation("Disposing the BTCPayTester...");
             foreach (var store in Stores)
             {

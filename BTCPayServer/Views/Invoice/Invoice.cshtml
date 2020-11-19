@@ -57,7 +57,7 @@
 
         <div class="row">
             <div class="col-md-6">
-                <h3>Information</h3>
+                <h3 class="mb-3">Information</h3>
                 <table class="table table-sm table-responsive-md removetopborder">
                     <tr>
                         <th>Store</th>
@@ -110,7 +110,7 @@
                 </table>
             </div>
             <div class="col-md-6">
-                <h3>Buyer information</h3>
+                <h3 class="mb-3">Buyer information</h3>
                 <table class="table table-sm table-responsive-md removetopborder">
                     <tr>
                         <th>Name</th>
@@ -151,7 +151,7 @@
                 </table>
                 @if (Model.PosData.Count == 0)
                 {
-                    <h3>Product information</h3>
+                    <h3 class="mb-3">Product information</h3>
                     <table class="table table-sm table-responsive-md removetopborder">
                         <tr>
                             <th>Item code</th>
@@ -178,7 +178,7 @@
         {
             <div class="row">
                 <div class="col-md-6">
-                    <h3>Product information</h3>
+                    <h3 class="mb-3">Product information</h3>
                     <table class="table table-sm table-responsive-md removetopborder">
                         <tr>
                             <th>Item code</th>
@@ -199,17 +199,69 @@
                     </table>
                 </div>
                 <div class="col-md-6">
-                    <h3>Point of Sale Data</h3>
+                    <h3 class="mb-3">Point of Sale Data</h3>
                     <partial name="PosData" model="@Model.PosData" />
                 </div>
             </div>
         }
 
         <partial name="ListInvoicesPaymentsPartial" model="(Model, true)" />
+        @if (Model.Deliveries.Count != 0)
+        {
+            <h3 class="mb-3">Webhook deliveries</h3>
+            <ul class="list-group mb-5">
+                @foreach (var delivery in Model.Deliveries)
+                {
+                    <li class="list-group-item ">
+                        <form
+                              asp-action="RedeliverWebhook"
+                              asp-route-storeId="@Model.StoreId"
+                              asp-route-invoiceId="@Model.Id"
+                              asp-route-deliveryId="@delivery.Id"
+                              method="post">
+                            <div class="d-flex align-items-center">
+                                <span class="d-flex align-items-center flex-fill mr-3">
+                                    @if (delivery.Success)
+                                    {
+                                        <span class="d-flex align-items-center fa fa-check text-success" title="Success"></span>
+                                    }
+                                    else
+                                    {
+                                        <span class="d-flex align-items-center fa fa-times text-danger" title="@delivery.ErrorMessage"></span>
+                                    }
+                                <span class="ml-3">
+                                    <a 
+                                       asp-action="WebhookDelivery"
+                                       asp-route-invoiceId="@Model.Id"
+                                       asp-route-deliveryId="@delivery.Id"
+                                       class="btn btn-link delivery-content" target="_blank">
+                                        @delivery.Id
+                                    </a>
+                                    <span class="text-light mx-2">|</span>
+                                    <span class="small text-muted">@delivery.Type</span>
+                                </span>
+                                </span>
+                                <span class="d-flex align-items-center">
+                                    <strong class="d-flex align-items-center text-muted small">
+                                        @delivery.Time.ToBrowserDate()
+                                    </strong>
+
+                                    <button id="#redeliver-@delivery.Id"
+                                            type="submit"
+                                            class="btn btn-info py-1 ml-3 redeliver">
+                                        Redeliver
+                                    </button>
+                                </span>
+                            </div>
+                        </form>
+                    </li>
+                }
+            </ul>
+        }
 
         <div class="row">
             <div class="col-md-12">
-                <h3>Events</h3>
+                <h3 class="mb-3">Events</h3>
                 <table class="table table-sm table-responsive-md">
                     <thead class="thead-inverse">
                         <tr>

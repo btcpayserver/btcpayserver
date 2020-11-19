@@ -1,3 +1,4 @@
+using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Models;
 
 namespace BTCPayServer.Plugins

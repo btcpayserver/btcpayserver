@@ -1,6 +1,6 @@
 using System;
 
-namespace BTCPayServer.Contracts
+namespace BTCPayServer.Abstractions.Contracts
 {
     public abstract class BaseNotification
     {

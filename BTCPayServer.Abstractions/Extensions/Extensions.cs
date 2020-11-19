@@ -1,8 +1,8 @@
 using System.Text.Json;
-using BTCPayServer.Models;
+using BTCPayServer.Abstractions.Models;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 
-namespace BTCPayServer
+namespace BTCPayServer.Abstractions.Extensions
 {
     public static class SetStatusMessageModelExtensions
     {

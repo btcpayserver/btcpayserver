@@ -1,7 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace BTCPayServer.Hosting
+namespace BTCPayServer.Abstractions.Contracts
 {
     public interface IStartupTask
     {

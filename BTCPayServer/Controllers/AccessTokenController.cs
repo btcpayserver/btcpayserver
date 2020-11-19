@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Filters;
 using BTCPayServer.Models;
 using BTCPayServer.Security.Bitpay;
@@ -9,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Controllers
 {
-    [Authorize(AuthenticationSchemes = Security.AuthenticationSchemes.Bitpay)]
+    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Bitpay)]
     [BitpayAPIConstraint()]
     public class AccessTokenController : Controller
     {

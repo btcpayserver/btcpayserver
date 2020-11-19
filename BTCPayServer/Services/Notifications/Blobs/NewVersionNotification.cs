@@ -1,4 +1,4 @@
-using BTCPayServer.Contracts;
+using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Models.NotificationViewModels;
 
 namespace BTCPayServer.Services.Notifications.Blobs

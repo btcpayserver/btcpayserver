@@ -79,6 +79,6 @@ namespace BTCPayServer.Payments
             return bip21;
         }
 
-        public override string InvoiceViewPaymentPartialName { get; } = "ViewBitcoinLikePaymentData";
+        public override string InvoiceViewPaymentPartialName { get; } = "Bitcoin/ViewBitcoinLikePaymentData";
     }
 }

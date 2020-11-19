@@ -58,6 +58,6 @@ namespace BTCPayServer.Payments
             return $"lightning:{lnInvoiceTrimmedOfScheme}";
         }
 
-        public override string InvoiceViewPaymentPartialName { get; } = "ViewLightningLikePaymentData";
+        public override string InvoiceViewPaymentPartialName { get; } = "Lightning/ViewLightningLikePaymentData";
     }
 }

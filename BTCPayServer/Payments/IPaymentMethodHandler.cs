@@ -76,10 +76,10 @@ namespace BTCPayServer.Payments
         {
             return new CheckoutUIPaymentMethodSettings()
             {
-                ExtensionPartial = "Bitcoin_Lightning_LikeMethodCheckout",
-                CheckoutBodyVueComponentName = "BitcoinLightningLikeMethodCheckout",
-                CheckoutHeaderVueComponentName = "BitcoinLightningLikeMethodCheckoutHeader",
-                NoScriptPartialName = "Bitcoin_Lightning_LikeMethodCheckoutNoScript"
+                ExtensionPartial = "Bitcoin/BitcoinLikeMethodCheckout",
+                CheckoutBodyVueComponentName = "BitcoinLikeMethodCheckout",
+                CheckoutHeaderVueComponentName = "BitcoinLikeMethodCheckoutHeader",
+                NoScriptPartialName = "Bitcoin/BitcoinLikeMethodCheckoutNoScript"
             };
         }
 

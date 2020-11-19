@@ -1,25 +1,9 @@
 @using BTCPayServer.Services
 @model BTCPayServer.Models.InvoicingModels.PaymentModel
 
-<script type="text/x-template" id="bitcoin-lightning-method-checkout-template">
+<script type="text/x-template" id="bitcoin-method-checkout-template">
     <div>
         <div class="bp-view payment scan" id="scan" v-bind:class="{ 'active': currentTab == 'scan'}">
-            <div class="wrapBtnGroup" v-bind:class="{ invisible: !srvModel.isLightning || !scanDisplayQr }">
-                <div class="btnGroupLnd">
-                    <button 
-                            v-on:click="toggleLightningData('bolt11')" 
-                            v-bind:class="{ active: currentLightningDisplay === 'bolt11' }"
-                            v-bind:title="$t('BOLT 11 Invoice')">
-                            {{$t("BOLT 11 Invoice")}}
-                    </button>
-                    <button 
-                        v-on:click="toggleLightningData('node')" 
-                        v-bind:class="{ active: currentLightningDisplay === 'node' }"
-                        v-bind:title="$t('Node Info')">
-                        {{$t("Node Info")}}
-                    </button>
-                </div>
-            </div>
             <div class="payment__scan">
                 <img v-bind:src="srvModel.cryptoImage" class="qr_currency_icon" v-if="scanDisplayQr"/>
                 <qrcode v-bind:value="scanDisplayQr" :options="{ width: 256, margin: 1, color: {dark:'#000', light:'#f5f5f7'} }" tag="svg" v-if="scanDisplayQr"></qrcode>
@@ -40,24 +24,7 @@
             <div class="copyLabelPopup">
                 <span>{{$t("Copied")}}</span>
             </div>
-            <nav v-if="srvModel.isLightning" class="copyBox">
-                <div class="copySectionBox bottomBorder">
-                    <label>{{$t("BOLT 11 Invoice")}}</label>
-                    <div class="inputWithIcon _copyInput">
-                        <input type="text" class="checkoutTextbox" v-bind:value="srvModel.btcAddress" readonly="readonly"/>
-                        <img v-bind:src="srvModel.cryptoImage"/>
-                    </div>
-                </div>
-                <div class="separatorGem"></div>
-                <div class="copySectionBox">
-                    <label>{{$t("Node Info")}}</label>
-                    <div class="inputWithIcon _copyInput">
-                        <input type="text" class="checkoutTextbox" v-bind:value="srvModel.peerInfo" readonly="readonly"/>
-                        <img v-bind:src="srvModel.cryptoImage"/>
-                    </div>
-                </div>
-            </nav>
-            <nav v-else class="copyBox">
+            <nav class="copyBox">
                 <div class="copySectionBox bottomBorder">
                     <label>{{$t("Amount")}}</label>
                     <div class="copyAmountText copy-cursor _copySpan">
@@ -86,14 +53,7 @@
         @if (Model.CoinSwitchEnabled)
         {
             <div id="altcoins" class="bp-view payment manual-flow" v-bind:class="{ 'active': currentTab == 'altcoins'}">
-                <nav v-if="srvModel.isLightning">
-                    <div class="manual__step-two__instructions">
-                        <span>
-                            {{$t("ConversionTab_Lightning")}}
-                        </span>
-                    </div>
-                </nav>
-                <nav v-else>
+                <nav>
                     <div class="manual__step-two__instructions">
                         <span>
                             {{$t("ConversionTab_BodyTop", srvModel)}}
@@ -143,7 +103,7 @@
     </div>          
 </script>
 
-<script type="text/x-template" id="bitcoin-lightning-method-checkout-header-template">
+<script type="text/x-template" id="bitcoin-method-checkout-header-template">
     <div class="payment-tabs">
         <div class="payment-tabs__tab " id="scan-tab" v-on:click="switchTab('scan')"  v-bind:class="{ 'active': currentTab == 'scan'}" >
             <span>{{$t("Scan")}}</span>
@@ -166,17 +126,16 @@
 </script>
 
 <script type="text/javascript">
-    Vue.component('BitcoinLightningLikeMethodCheckout',
+    Vue.component('BitcoinLikeMethodCheckout',
         {
             props: ["srvModel"],
-            template: "#bitcoin-lightning-method-checkout-template",
+            template: "#bitcoin-method-checkout-template",
             components: {
                 qrcode: VueQrcode,
                 coinswitch: CoinSwitchComponent
             },
             data: function() {
                 return {
-                    currentLightningDisplay: "bolt11",
                     selectedThirdPartyProcessor: "",
                     currentTab: "scan"
                 }
@@ -191,18 +150,7 @@
                         : this.srvModel.btcDue;
                 },
                 scanDisplayQr: function() {
-                    if (this.srvModel.isLightning && this.currentLightningDisplay === "node") {
-                        return this.srvModel.peerInfo;
-                    }
                     return this.srvModel.invoiceBitcoinUrlQR;
-                }
-            },
-            methods: {
-                toggleLightningData: function(display) {
-                    if (!this.srvModel.isLightning) {
-                        return;
-                    }
-                    this.currentLightningDisplay = display;
                 }
             },
             mounted: function() {
@@ -214,9 +162,9 @@
         }
     });
 
-    Vue.component('BitcoinLightningLikeMethodCheckoutHeader', {
+    Vue.component('BitcoinLikeMethodCheckoutHeader', {
         props: ["srvModel"],
-        template: "#bitcoin-lightning-method-checkout-header-template",
+        template: "#bitcoin-method-checkout-header-template",
         data: function() {
             return {
                 currentTab: "scan"

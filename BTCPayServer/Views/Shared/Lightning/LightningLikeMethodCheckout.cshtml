@@ -1,0 +1,174 @@
+@using BTCPayServer.Services
+@model BTCPayServer.Models.InvoicingModels.PaymentModel
+
+<script type="text/x-template" id="lightning-method-checkout-template">
+    <div>
+        <div class="bp-view payment scan" id="scan" v-bind:class="{ 'active': currentTab == 'scan'}">
+            <div class="wrapBtnGroup" v-bind:class="{ invisible: !scanDisplayQr }">
+                <div class="btnGroupLnd">
+                    <button 
+                            v-on:click="toggleLightningData('bolt11')" 
+                            v-bind:class="{ active: currentLightningDisplay === 'bolt11' }"
+                            v-bind:title="$t('BOLT 11 Invoice')">
+                            {{$t("BOLT 11 Invoice")}}
+                    </button>
+                    <button 
+                        v-on:click="toggleLightningData('node')" 
+                        v-bind:class="{ active: currentLightningDisplay === 'node' }"
+                        v-bind:title="$t('Node Info')">
+                        {{$t("Node Info")}}
+                    </button>
+                </div>
+            </div>
+            <div class="payment__scan">
+                <img v-bind:src="srvModel.cryptoImage" class="qr_currency_icon" v-if="scanDisplayQr"/>
+                <qrcode v-bind:value="scanDisplayQr" :options="{ width: 256, margin: 1, color: {dark:'#000', light:'#f5f5f7'} }" tag="svg" v-if="scanDisplayQr"></qrcode>
+                <div class="payment__spinner qr_currency_icon" style="padding-right: 20px;">
+                    <partial name="Checkout-Spinner"/>
+                </div>
+            </div>
+            <div class="payment__details__instruction__open-wallet" v-if="srvModel.invoiceBitcoinUrl">
+                <a class="payment__details__instruction__open-wallet__btn action-button" target="_top" v-bind:href="srvModel.invoiceBitcoinUrl">
+                    <span>{{$t("Open in wallet")}}</span>
+                </a>
+            </div>
+        </div>
+        <div class="bp-view payment manual-flow" id="copy" v-bind:class="{ 'active': currentTab == 'copy'}">
+            <div class="manual__step-two__instructions">
+                <span v-html="$t('CompletePay_Body', srvModel)"></span>
+            </div>
+            <div class="copyLabelPopup">
+                <span>{{$t("Copied")}}</span>
+            </div>
+            <nav  class="copyBox">
+                <div class="copySectionBox bottomBorder">
+                    <label>{{$t("BOLT 11 Invoice")}}</label>
+                    <div class="inputWithIcon _copyInput">
+                        <input type="text" class="checkoutTextbox" v-bind:value="srvModel.btcAddress" readonly="readonly"/>
+                        <img v-bind:src="srvModel.cryptoImage"/>
+                    </div>
+                </div>
+                <div class="separatorGem"></div>
+                <div class="copySectionBox">
+                    <label>{{$t("Node Info")}}</label>
+                    <div class="inputWithIcon _copyInput">
+                        <input type="text" class="checkoutTextbox" v-bind:value="srvModel.peerInfo" readonly="readonly"/>
+                        <img v-bind:src="srvModel.cryptoImage"/>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </div>          
+</script>
+
+<script type="text/x-template" id="lightning-method-checkout-header-template">
+    <div class="payment-tabs">
+        <div class="payment-tabs__tab " id="scan-tab" v-on:click="switchTab('scan')"  v-bind:class="{ 'active': currentTab == 'scan'}" >
+            <span>{{$t("Scan")}}</span>
+        </div>
+        <div class="payment-tabs__tab" id="copy-tab" v-on:click="switchTab('copy')"  v-bind:class="{ 'active': currentTab == 'copy'}" >
+            <span>{{$t("Copy")}}</span>
+        </div>
+        <div id="tabsSlider" class="payment-tabs__slider"  v-bind:class="['slide-'+currentTab]"></div>
+    </div>
+</script>
+
+<script type="text/javascript">
+    Vue.component('LightningLikeMethodCheckout',
+        {
+            props: ["srvModel"],
+            template: "#lightning-method-checkout-template",
+            components: {
+                qrcode: VueQrcode
+            },
+            data: function() {
+                return {
+                    currentLightningDisplay: "bolt11",
+                    selectedThirdPartyProcessor: "",
+                    currentTab: "scan"
+                }
+            },
+            computed: {
+                scanDisplayQr: function() {
+                    if (this.currentLightningDisplay === "node") {
+                        return this.srvModel.peerInfo;
+                    }
+                    return this.srvModel.invoiceBitcoinUrlQR;
+                }
+            },
+            methods: {
+                toggleLightningData: function(display) {
+                    this.currentLightningDisplay = display;
+                }
+            },
+            mounted: function() {
+                var self = this;
+                eventBus.$on("tab-switched",
+                    function(tab) {
+                        self.currentTab = tab;
+            });
+        }
+    });
+
+    Vue.component('LightningLikeMethodCheckoutHeader', {
+        props: ["srvModel"],
+        template: "#lightning-method-checkout-header-template",
+        data: function() {
+            return {
+                currentTab: "scan"
+            };
+        },
+        methods: {
+            switchTab: function(tab) {
+                this.currentTab = tab;
+                eventBus.$emit("tab-switched", tab);
+            }
+        }
+    });
+
+    $(document).ready(function() {
+        // Clipboard Copy
+        var copySpan = new Clipboard('._copySpan', {
+                target: function(trigger) {
+                    return copyElement(trigger, 0, 65).firstChild;
+                }
+        });
+        var copyInput = new Clipboard('._copyInput', {
+                target: function(trigger) {
+                    return copyElement(trigger, 4, 65).firstChild;
+                }
+        });
+
+        function copyElement(trigger, popupLeftModifier, popupTopModifier) {
+            var elm = $(trigger);
+            var position = elm.offset();
+            position.top -= popupLeftModifier + $(window).scrollTop();
+            position.left += (elm.width() / 2) - popupTopModifier;
+            $(".copyLabelPopup").css(position).addClass("copied");
+            elm.removeClass("copy-cursor").addClass("clipboardCopied");
+            setTimeout(clearSelection, 100);
+            setTimeout(function() {
+                    elm.removeClass("clipboardCopied").addClass("copy-cursor");
+                    $(".copyLabelPopup").removeClass("copied");
+                },
+                1000);
+            return trigger;
+        }
+
+        function clearSelection() {
+            if (window.getSelection) {
+                window.getSelection().removeAllRanges();
+            } else if (document.selection) {
+                document.selection.empty();
+            }
+        }
+        // Disable enter key
+        $(document).keypress(
+            function(event) {
+                if (event.which === '13') {
+                    event.preventDefault();
+                }
+            }
+        );
+    });
+</script>

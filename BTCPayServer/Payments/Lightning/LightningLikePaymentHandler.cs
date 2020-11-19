@@ -199,6 +199,17 @@ namespace BTCPayServer.Payments.Lightning
             return GetPaymentMethodName(network);
         }
 
+        public override CheckoutUIPaymentMethodSettings GetCheckoutUISettings()
+        {
+            return new CheckoutUIPaymentMethodSettings()
+            {
+                ExtensionPartial = "Lightning/LightningLikeMethodCheckout",
+                CheckoutBodyVueComponentName = "LightningLikeMethodCheckout",
+                CheckoutHeaderVueComponentName = "LightningLikeMethodCheckoutHeader",
+                NoScriptPartialName = "Lightning/LightningLikeMethodCheckoutNoScript"
+            };
+        }
+
         private string GetPaymentMethodName(BTCPayNetworkBase network)
         {
             return $"{network.DisplayName} (Lightning)";

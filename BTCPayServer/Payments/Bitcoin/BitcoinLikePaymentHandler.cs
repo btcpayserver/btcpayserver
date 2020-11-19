@@ -8,10 +8,8 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
 using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
-using BTCPayServer.Rating;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
-using BTCPayServer.Services.Rates;
 using NBitcoin;
 using NBXplorer.Models;
 using StoreData = BTCPayServer.Data.StoreData;
@@ -46,13 +44,14 @@ namespace BTCPayServer.Payments.Bitcoin
             public Task<KeyPathInformation> ReserveAddress;
         }
 
-        public override void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse, StoreBlob storeBlob)
+        public override void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse,
+            StoreBlob storeBlob, IPaymentMethod paymentMethod)
         {
-            var paymentMethodId = new PaymentMethodId(model.CryptoCode, PaymentTypes.BTCLike);
-
+            var paymentMethodId = paymentMethod.GetId();
             var cryptoInfo = invoiceResponse.CryptoInfo.First(o => o.GetpaymentMethodId() == paymentMethodId);
             var network = _networkProvider.GetNetwork<BTCPayNetwork>(model.CryptoCode);
-            model.IsLightning = false;
+            model.ShowRecommendedFee = storeBlob.ShowRecommendedFee;
+            model.FeeRate = ((BitcoinLikeOnChainPaymentMethod) paymentMethod.GetPaymentMethodDetails()).GetFeeRate();
             model.PaymentMethodName = GetPaymentMethodName(network);
 
 

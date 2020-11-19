@@ -734,7 +734,14 @@ namespace BTCPayServer.Services.Invoices
         public Money MinimumTotalDue { get; set; }
     }
 
-    public class PaymentMethod
+    public interface IPaymentMethod
+    {
+        PaymentMethodId GetId();
+        decimal Rate { get; set; }
+        IPaymentMethodDetails GetPaymentMethodDetails();
+    }
+
+    public class PaymentMethod : IPaymentMethod
     {
         [JsonIgnore]
         public InvoiceEntity ParentEntity { get; set; }

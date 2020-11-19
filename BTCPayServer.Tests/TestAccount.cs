@@ -479,7 +479,7 @@ namespace BTCPayServer.Tests
                         assert(typedEvt);
                         return typedEvt;
                     }
-                    catch (XunitException ex)
+                    catch (XunitException)
                     {
                     }
                 }

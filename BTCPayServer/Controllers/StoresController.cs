@@ -5,6 +5,9 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
@@ -63,7 +66,8 @@ namespace BTCPayServer.Controllers
             EventAggregator eventAggregator,
             CssThemeManager cssThemeManager,
             AppService appService,
-            IWebHostEnvironment webHostEnvironment)
+            IWebHostEnvironment webHostEnvironment,
+            WebhookNotificationManager webhookNotificationManager)
         {
             _RateFactory = rateFactory;
             _Repo = repo;
@@ -78,6 +82,7 @@ namespace BTCPayServer.Controllers
             _CssThemeManager = cssThemeManager;
             _appService = appService;
             _webHostEnvironment = webHostEnvironment;
+            WebhookNotificationManager = webhookNotificationManager;
             _EventAggregator = eventAggregator;
             _NetworkProvider = networkProvider;
             _ExplorerProvider = explorerProvider;
@@ -791,6 +796,7 @@ namespace BTCPayServer.Controllers
         }
 
         public string GeneratedPairingCode { get; set; }
+        public WebhookNotificationManager WebhookNotificationManager { get; }
 
         [HttpGet]
         [Route("{storeId}/Tokens/Create")]

@@ -1,4 +1,6 @@
-namespace BTCPayServer.Contracts
+using BTCPayServer.Abstractions.Contracts;
+
+namespace BTCPayServer.Abstractions.Services
 {
     public class UIExtension: IUIExtension
     {

@@ -12,6 +12,7 @@ namespace BTCPayServer.Client
         public const string CanUseLightningNodeInStore = "btcpay.store.canuselightningnode";
         public const string CanModifyServerSettings = "btcpay.server.canmodifyserversettings";
         public const string CanModifyStoreSettings = "btcpay.store.canmodifystoresettings";
+        public const string CanModifyStoreWebhooks = "btcpay.store.webhooks.canmodifywebhooks";
         public const string CanModifyStoreSettingsUnscoped = "btcpay.store.canmodifystoresettings:";
         public const string CanViewStoreSettings = "btcpay.store.canviewstoresettings";
         public const string CanViewInvoices = "btcpay.store.canviewinvoices";
@@ -29,6 +30,7 @@ namespace BTCPayServer.Client
             {
                 yield return CanViewInvoices;
                 yield return CanCreateInvoice;
+                yield return CanModifyStoreWebhooks;
                 yield return CanModifyServerSettings;
                 yield return CanModifyStoreSettings;
                 yield return CanViewStoreSettings;
@@ -156,6 +158,7 @@ namespace BTCPayServer.Client
             switch (subpolicy)
             {
                 case Policies.CanViewInvoices when this.Policy == Policies.CanModifyStoreSettings:
+                case Policies.CanModifyStoreWebhooks when this.Policy == Policies.CanModifyStoreSettings:
                 case Policies.CanViewInvoices when this.Policy == Policies.CanViewStoreSettings:
                 case Policies.CanViewStoreSettings when this.Policy == Policies.CanModifyStoreSettings:
                 case Policies.CanCreateInvoice when this.Policy == Policies.CanModifyStoreSettings:

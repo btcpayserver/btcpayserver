@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Contracts;
 
-namespace BTCPayServer.Contracts
+namespace BTCPayServer.Abstractions.Services
 {
     public abstract class PluginHookFilter<T>:IPluginHookFilter
     {

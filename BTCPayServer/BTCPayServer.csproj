@@ -21,10 +21,6 @@
     <None Remove="Build\**" />
     <None Remove="wwwroot\bundles\jqueryvalidate\**" />
     <None Remove="wwwroot\vendor\jquery-nice-select\**" />
-    <Content Update="Views\Shared\NBXSyncSummary.cshtml">
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
   </ItemGroup>
   <ItemGroup>
     <None Remove="Currencies.txt" />
@@ -251,5 +247,5 @@
 	  <_ContentIncludedByDefault Remove="Views\Components\NotificationsDropdown\Default.cshtml" />
 	</ItemGroup>
 
-	<ProjectExtensions><VisualStudio><UserProperties wwwroot_4swagger_4v1_4swagger_1template_1invoices_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" wwwroot_4swagger_4v1_4swagger_1template_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" wwwroot_4swagger_4v1_4swagger_1template_1pull-payments_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" wwwroot_4swagger_4v1_4swagger_1template_1serverinfo_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" wwwroot_4swagger_4v1_4swagger_1template_1stores_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" /></VisualStudio></ProjectExtensions>
+	<ProjectExtensions><VisualStudio><UserProperties wwwroot_4swagger_4v1_4swagger_1template_1invoices_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" wwwroot_4swagger_4v1_4swagger_1template_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" wwwroot_4swagger_4v1_4swagger_1template_1pull-payments_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" wwwroot_4swagger_4v1_4swagger_1template_1serverinfo_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" wwwroot_4swagger_4v1_4swagger_1template_1stores_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" wwwroot_4swagger_4v1_4swagger_1template_1users_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" wwwroot_4swagger_4v1_4swagger_1template_1webhooks_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" /></VisualStudio></ProjectExtensions>
 </Project>

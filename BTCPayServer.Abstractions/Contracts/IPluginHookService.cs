@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace BTCPayServer.Contracts
+namespace BTCPayServer.Abstractions.Contracts
 {
     public interface IPluginHookService
     {

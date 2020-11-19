@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using BTCPayServer.Contracts;
+using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -97,7 +97,9 @@ namespace BTCPayServer.Services.Notifications
             {
                 // Cannot specify StringComparison as EF core does not support it and would attempt client-side evaluation 
                 // ReSharper disable once CA1307
-                query = query.Where(user => user.DisabledNotifications == null ||  !user.DisabledNotifications.Contains(term ));
+#pragma warning disable CA1307 // Specify StringComparison
+                query = query.Where(user => user.DisabledNotifications == null ||  !user.DisabledNotifications.Contains(term));
+#pragma warning restore CA1307 // Specify StringComparison
             }
 
             return query.Select(user => user.Id).ToArray();

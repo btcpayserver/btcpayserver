@@ -1,8 +1,9 @@
 #if ALTCOINS
 using System;
 using System.Linq;
+using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Abstractions.Services;
 using BTCPayServer.Configuration;
-using BTCPayServer.Contracts;
 using BTCPayServer.Payments;
 using BTCPayServer.Services.Altcoins.Monero.Configuration;
 using BTCPayServer.Services.Altcoins.Monero.Payments;

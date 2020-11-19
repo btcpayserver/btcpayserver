@@ -108,7 +108,7 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Payments
                 ExtensionPartial = "Ethereum/EthereumLikeMethodCheckout",
                 CheckoutBodyVueComponentName = "EthereumLikeMethodCheckout",
                 CheckoutHeaderVueComponentName = "EthereumLikeMethodCheckoutHeader",
-                NoScriptPartialName = "Bitcoin_Lightning_LikeMethodCheckoutNoScript"
+                NoScriptPartialName = "Bitcoin/BitcoinLikeMethodCheckoutNoScript"
             };
         }
 

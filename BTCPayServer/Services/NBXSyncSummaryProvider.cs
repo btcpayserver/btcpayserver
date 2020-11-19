@@ -1,4 +1,4 @@
-using BTCPayServer.Contracts;
+using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.HostedServices;
 
 namespace BTCPayServer.Services
@@ -17,6 +17,6 @@ namespace BTCPayServer.Services
             return _nbXplorerDashboard.IsFullySynched();
         }
 
-        public string Partial { get; } = "NBXSyncSummary";
+        public string Partial { get; } = "Bitcoin/NBXSyncSummary";
     }
 }

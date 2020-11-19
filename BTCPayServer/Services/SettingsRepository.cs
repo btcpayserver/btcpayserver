@@ -1,5 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using Microsoft.EntityFrameworkCore;

@@ -1,5 +1,5 @@
 #if ALTCOINS
-using BTCPayServer.Contracts;
+using BTCPayServer.Abstractions.Contracts;
 
 namespace BTCPayServer.Services.Altcoins.Ethereum.Services
 {

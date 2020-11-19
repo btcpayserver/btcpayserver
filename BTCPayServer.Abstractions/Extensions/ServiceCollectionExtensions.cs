@@ -1,6 +1,7 @@
-using BTCPayServer.Hosting;
+using BTCPayServer.Abstractions.Contracts;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace Microsoft.Extensions.DependencyInjection
+namespace BTCPayServer.Abstractions.Extensions
 {
     public static class ServiceCollectionExtensions
     {

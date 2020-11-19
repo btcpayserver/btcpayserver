@@ -52,9 +52,33 @@ namespace BTCPayServer.Payments.Bitcoin
             model.ShowRecommendedFee = storeBlob.ShowRecommendedFee;
             model.FeeRate = ((BitcoinLikeOnChainPaymentMethod) paymentMethod.GetPaymentMethodDetails()).GetFeeRate();
             model.PaymentMethodName = GetPaymentMethodName(network);
-            model.InvoiceBitcoinUrl = cryptoInfo.PaymentUrls.BIP21;
-            model.InvoiceBitcoinUrlQR = cryptoInfo.PaymentUrls.BIP21;
+
+
+            var lightningFallback = "";
+            if (storeBlob.OnChainWithLnInvoiceFallback)
+            {
+                var lightningInfo = invoiceResponse.CryptoInfo.FirstOrDefault(a =>
+                    a.GetpaymentMethodId() == new PaymentMethodId(model.CryptoCode, PaymentTypes.LightningLike));
+                if (!String.IsNullOrEmpty(lightningInfo?.PaymentUrls?.BOLT11))
+                    lightningFallback = "&" + lightningInfo.PaymentUrls.BOLT11.Replace("lightning:", "lightning=", StringComparison.OrdinalIgnoreCase);
+            }
+
+            model.InvoiceBitcoinUrl = cryptoInfo.PaymentUrls.BIP21 + lightningFallback;
+            // We're trying to make as many characters uppercase to make QR smaller
+            // Ref: https://github.com/btcpayserver/btcpayserver/pull/2060#issuecomment-723828348
+            model.InvoiceBitcoinUrlQR = cryptoInfo.PaymentUrls.BIP21
+                .Replace("bitcoin:", "BITCOIN:", StringComparison.OrdinalIgnoreCase)
+                + lightningFallback.ToUpperInvariant().Replace("LIGHTNING=", "lightning=", StringComparison.OrdinalIgnoreCase);
+
+            if (bech32Prefixes.Any(a => model.BtcAddress.StartsWith(a, StringComparison.OrdinalIgnoreCase)))
+            {
+                model.InvoiceBitcoinUrlQR = model.InvoiceBitcoinUrlQR.Replace(
+                    $"BITCOIN:{model.BtcAddress}", $"BITCOIN:{model.BtcAddress.ToUpperInvariant()}", 
+                    StringComparison.OrdinalIgnoreCase
+                );
+            }
         }
+        private static string[] bech32Prefixes = new[] { "bc1", "tb1", "bcrt1" };
 
         public override string GetCryptoImage(PaymentMethodId paymentMethodId)
         {

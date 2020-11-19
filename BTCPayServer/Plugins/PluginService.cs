@@ -6,8 +6,8 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Configuration;
-using BTCPayServer.Contracts;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,18 +15,21 @@ using Newtonsoft.Json;
 
 namespace BTCPayServer.Plugins
 {
-    public class PluginService
+    public class PluginService: IPluginHookService
     {
         private readonly BTCPayServerOptions _btcPayServerOptions;
         private readonly HttpClient _githubClient;
-
+        private readonly IEnumerable<IPluginHookAction> _actions;
+        private readonly IEnumerable<IPluginHookFilter> _filters;
         public PluginService(IEnumerable<IBTCPayServerPlugin> btcPayServerPlugins,
-            IHttpClientFactory httpClientFactory, BTCPayServerOptions btcPayServerOptions)
+            IHttpClientFactory httpClientFactory, BTCPayServerOptions btcPayServerOptions,IEnumerable<IPluginHookAction> actions, IEnumerable<IPluginHookFilter> filters)
         {
             LoadedPlugins = btcPayServerPlugins;
             _githubClient = httpClientFactory.CreateClient();
             _githubClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("btcpayserver", "1"));
             _btcPayServerOptions = btcPayServerOptions;
+            _actions = actions;
+            _filters = filters;
         }
 
         public IEnumerable<IBTCPayServerPlugin> LoadedPlugins { get; }
@@ -127,6 +130,28 @@ namespace BTCPayServer.Plugins
         public  void CancelCommands(string plugin)
         {
             PluginManager.CancelCommands(_btcPayServerOptions.PluginDir, plugin);
+        }
+        
+        public async Task ApplyAction(string hook, object args)
+        {
+            var filters = _actions
+                .Where(filter => filter.Hook.Equals(hook, StringComparison.InvariantCultureIgnoreCase)).ToList();
+            foreach (IPluginHookAction pluginHookFilter in filters)
+            {
+                await pluginHookFilter.Execute(args);
+            }
+        }
+
+        public async Task<object> ApplyFilter(string hook, object args)
+        {
+            var filters = _filters
+                .Where(filter => filter.Hook.Equals(hook, StringComparison.InvariantCultureIgnoreCase)).ToList();
+            foreach (IPluginHookFilter pluginHookFilter in filters)
+            {
+                args = await pluginHookFilter.Execute(args);
+            }
+
+            return args;
         }
     }
 }

@@ -1,4 +1,4 @@
-namespace BTCPayServer.Contracts
+namespace BTCPayServer.Abstractions.Contracts
 {
     public interface ISyncSummaryProvider
     {

@@ -1,12 +1,7 @@
-namespace BTCPayServer.Contracts
-{
-    public interface IUIExtension
-    {
-        string Partial { get; }
-        
-        string Location { get; }
-    }
+using BTCPayServer.Abstractions.Contracts;
 
+namespace BTCPayServer.Abstractions.Services
+{
     public class UIExtension: IUIExtension
     {
         public UIExtension(string partial, string location)

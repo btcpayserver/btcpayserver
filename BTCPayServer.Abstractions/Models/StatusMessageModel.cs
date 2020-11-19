@@ -1,6 +1,6 @@
 using System;
 
-namespace BTCPayServer.Models
+namespace BTCPayServer.Abstractions.Models
 {
     public class StatusMessageModel
     {

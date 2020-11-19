@@ -13,7 +13,10 @@ namespace BTCPayServer.Services.Stores
     public class StoreRepository
     {
         private readonly ApplicationDbContextFactory _ContextFactory;
-
+        public ApplicationDbContext CreateDbContext()
+        {
+            return _ContextFactory.CreateContext();
+        }
         public StoreRepository(ApplicationDbContextFactory contextFactory)
         {
             _ContextFactory = contextFactory ?? throw new ArgumentNullException(nameof(contextFactory));
@@ -177,7 +180,7 @@ namespace BTCPayServer.Services.Stores
                 ctx.Add(userStore);
                 await ctx.SaveChangesAsync();
             }
-        }
+        }        
 
         public async Task<StoreData> CreateStore(string ownerId, string name)
         {
@@ -191,6 +194,112 @@ namespace BTCPayServer.Services.Stores
             store.SetStoreBlob(blob);
             await CreateStore(ownerId, store);
             return store;
+        }
+
+        public async Task<WebhookData[]> GetWebhooks(string storeId)
+        {
+            using var ctx = _ContextFactory.CreateContext();
+            return await ctx.StoreWebhooks
+                            .Where(s => s.StoreId == storeId)
+                            .Select(s => s.Webhook).ToArrayAsync();
+        }
+
+        public async Task<WebhookDeliveryData> GetWebhookDelivery(string storeId, string webhookId, string deliveryId)
+        {
+            using var ctx = _ContextFactory.CreateContext();
+            return await ctx.StoreWebhooks
+                .Where(d => d.StoreId == storeId && d.WebhookId == webhookId)
+                .SelectMany(d => d.Webhook.Deliveries)
+                .Where(d => d.Id == deliveryId)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task AddWebhookDelivery(WebhookDeliveryData delivery)
+        {
+            using var ctx = _ContextFactory.CreateContext();
+            ctx.WebhookDeliveries.Add(delivery);
+            var invoiceWebhookDelivery = delivery.GetBlob().ReadRequestAs<InvoiceWebhookDeliveryData>();
+            if (invoiceWebhookDelivery.InvoiceId != null)
+            {
+                ctx.InvoiceWebhookDeliveries.Add(new InvoiceWebhookDeliveryData()
+                {
+                    InvoiceId = invoiceWebhookDelivery.InvoiceId,
+                    DeliveryId = delivery.Id
+                });
+            }
+            await ctx.SaveChangesAsync();
+        }
+
+        public async Task<WebhookDeliveryData[]> GetWebhookDeliveries(string storeId, string webhookId, int? count)
+        {
+            using var ctx = _ContextFactory.CreateContext();
+            IQueryable<WebhookDeliveryData> req = ctx.StoreWebhooks
+                .Where(s => s.StoreId == storeId && s.WebhookId == webhookId)
+                .SelectMany(s => s.Webhook.Deliveries)
+                .OrderByDescending(s => s.Timestamp);
+            if (count is int c)
+                req = req.Take(c);
+            return await req
+                .ToArrayAsync();
+        }
+
+        public async Task<string> CreateWebhook(string storeId, WebhookBlob blob)
+        {
+            using var ctx = _ContextFactory.CreateContext();
+            WebhookData data = new WebhookData();
+            data.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16));
+            if (string.IsNullOrEmpty(blob.Secret))
+                blob.Secret = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16));
+            data.SetBlob(blob);
+            StoreWebhookData storeWebhook = new StoreWebhookData();
+            storeWebhook.StoreId = storeId;
+            storeWebhook.WebhookId = data.Id;
+            ctx.StoreWebhooks.Add(storeWebhook);
+            ctx.Webhooks.Add(data);
+            await ctx.SaveChangesAsync();
+            return data.Id;
+        }
+
+        public async Task<WebhookData> GetWebhook(string storeId, string webhookId)
+        {
+            var ctx = _ContextFactory.CreateContext();
+            return await ctx.StoreWebhooks
+                .Where(s => s.StoreId == storeId && s.WebhookId == webhookId)
+                .Select(s => s.Webhook)
+                .FirstOrDefaultAsync();
+        }
+        public async Task<WebhookData> GetWebhook(string webhookId)
+        {
+            var ctx = _ContextFactory.CreateContext();
+            return await ctx.StoreWebhooks
+                .Where(s => s.WebhookId == webhookId)
+                .Select(s => s.Webhook)
+                .FirstOrDefaultAsync();
+        }
+        public async Task DeleteWebhook(string storeId, string webhookId)
+        {
+            var ctx = _ContextFactory.CreateContext();
+            var hook = await ctx.StoreWebhooks
+                .Where(s => s.StoreId == storeId && s.WebhookId == webhookId)
+                .Select(s => s.Webhook)
+                .FirstOrDefaultAsync();
+            if (hook is null)
+                return;
+            ctx.Webhooks.Remove(hook);
+            await ctx.SaveChangesAsync();
+        }
+
+        public async Task UpdateWebhook(string storeId, string webhookId, WebhookBlob webhookBlob)
+        {
+            var ctx = _ContextFactory.CreateContext();
+            var hook = await ctx.StoreWebhooks
+                .Where(s => s.StoreId == storeId && s.WebhookId == webhookId)
+                .Select(s => s.Webhook)
+                .FirstOrDefaultAsync();
+            if (hook is null)
+                return;
+            hook.SetBlob(webhookBlob);
+            await ctx.SaveChangesAsync();
         }
 
         public async Task RemoveStore(string storeId, string userId)
@@ -225,6 +334,11 @@ namespace BTCPayServer.Services.Stores
                 var store = await ctx.Stores.FindAsync(storeId);
                 if (store == null)
                     return false;
+                var webhooks = await ctx.StoreWebhooks
+                    .Select(o => o.Webhook)
+                    .ToArrayAsync();
+                foreach (var w in webhooks)
+                    ctx.Webhooks.Remove(w);
                 ctx.Stores.Remove(store);
                 await ctx.SaveChangesAsync();
                 return true;

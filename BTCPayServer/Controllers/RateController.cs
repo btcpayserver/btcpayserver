@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Models;
@@ -20,7 +21,7 @@ using Newtonsoft.Json;
 namespace BTCPayServer.Controllers
 {
     [EnableCors(CorsPolicies.All)]
-    [Authorize(Policy = ServerPolicies.CanGetRates.Key, AuthenticationSchemes = Security.AuthenticationSchemes.Bitpay)]
+    [Authorize(Policy = ServerPolicies.CanGetRates.Key, AuthenticationSchemes = AuthenticationSchemes.Bitpay)]
     public class RateController : Controller
     {
         public StoreData CurrentStore

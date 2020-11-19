@@ -11,6 +11,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
@@ -770,30 +771,31 @@ namespace BTCPayServer.Tests
                     BitcoinAddress.Create(invoice.BitcoinAddress, Network.RegTest), Money.Coins(0.00005m));
             });
             await tester.ExplorerNode.GenerateAsync(1);
+            await Task.Delay(100); // wait a bit for payment to process before fetching new invoice
             var newInvoice = await user.BitPay.GetInvoiceAsync(invoice.Id);
-            var newBolt11  = newInvoice.CryptoInfo.First(o => o.PaymentUrls.BOLT11 != null).PaymentUrls.BOLT11;
-            var  oldBolt11= invoice.CryptoInfo.First(o => o.PaymentUrls.BOLT11 != null).PaymentUrls.BOLT11;
-            Assert.NotEqual(newBolt11,oldBolt11);
+            var newBolt11 = newInvoice.CryptoInfo.First(o => o.PaymentUrls.BOLT11 != null).PaymentUrls.BOLT11;
+            var oldBolt11 = invoice.CryptoInfo.First(o => o.PaymentUrls.BOLT11 != null).PaymentUrls.BOLT11;
+            Assert.NotEqual(newBolt11, oldBolt11);
             Assert.Equal(newInvoice.BtcDue.GetValue(), BOLT11PaymentRequest.Parse(newBolt11, Network.RegTest).MinimumAmount.ToDecimal(LightMoneyUnit.BTC));
-            
-            Logs.Tester.LogInformation($"Paying invoice {newInvoice.Id} remaining due amount {newInvoice.BtcDue.GetValue()} via lightning" );
+
+            Logs.Tester.LogInformation($"Paying invoice {newInvoice.Id} remaining due amount {newInvoice.BtcDue.GetValue()} via lightning");
             var evt = await tester.WaitForEvent<InvoiceDataChangedEvent>(async () =>
             {
                 await tester.SendLightningPaymentAsync(newInvoice);
             }, evt => evt.InvoiceId == invoice.Id);
 
             var fetchedInvoice = await tester.PayTester.InvoiceRepository.GetInvoice(evt.InvoiceId);
-            Assert.Contains(fetchedInvoice.Status, new []{InvoiceStatus.Complete, InvoiceStatus.Confirmed});
+            Assert.Contains(fetchedInvoice.Status, new[] { InvoiceStatus.Complete, InvoiceStatus.Confirmed });
             Assert.Equal(InvoiceExceptionStatus.None, fetchedInvoice.ExceptionStatus);
-            
-            Logs.Tester.LogInformation($"Paying invoice {invoice.Id} original full amount bolt11 invoice " );
+
+            Logs.Tester.LogInformation($"Paying invoice {invoice.Id} original full amount bolt11 invoice ");
             evt = await tester.WaitForEvent<InvoiceDataChangedEvent>(async () =>
             {
                 await tester.SendLightningPaymentAsync(invoice);
             }, evt => evt.InvoiceId == invoice.Id);
             Assert.Equal(evt.InvoiceId, invoice.Id);
             fetchedInvoice = await tester.PayTester.InvoiceRepository.GetInvoice(evt.InvoiceId);
-            Assert.Equal( 3,fetchedInvoice.Payments.Count);
+            Assert.Equal(3, fetchedInvoice.Payments.Count);
         }
 
         [Fact(Timeout = 60 * 2 * 1000)]
@@ -999,7 +1001,6 @@ namespace BTCPayServer.Tests
                             }
                         }
                     }
-
                     var invoice2 = acc.BitPay.GetInvoice(invoice.Id);
                     Assert.NotNull(invoice2);
                 }
@@ -1508,7 +1509,7 @@ namespace BTCPayServer.Tests
                 );
             }
         }
-        
+
         // [Fact(Timeout = TestTimeout)]
         [Fact()]
         [Trait("Integration", "Integration")]
@@ -1527,9 +1528,9 @@ namespace BTCPayServer.Tests
                     BitcoinAddress.Create(invoice.BitcoinAddress, Network.RegTest),
                     Money.Coins(0.01m));
             });
-           
 
-            
+
+
             var payments = Assert.IsType<InvoiceDetailsModel>(
                     Assert.IsType<ViewResult>(await user.GetController<InvoiceController>().Invoice(invoice.Id)).Model)
                 .Payments;
@@ -1990,7 +1991,60 @@ namespace BTCPayServer.Tests
                 };
                 var criteriaCompat = store.GetPaymentMethodCriteria(tester.NetworkProvider, blob);
                 Assert.Single(criteriaCompat);
-                Assert.NotNull(criteriaCompat.FirstOrDefault(methodCriteria => methodCriteria.Value.ToString() == "2 USD" && methodCriteria.Above && methodCriteria.PaymentMethod == new PaymentMethodId("BTC", BitcoinPaymentType.Instance) ));
+                Assert.NotNull(criteriaCompat.FirstOrDefault(methodCriteria => methodCriteria.Value.ToString() == "2 USD" && methodCriteria.Above && methodCriteria.PaymentMethod == new PaymentMethodId("BTC", BitcoinPaymentType.Instance)));
+            }
+        }
+
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public async Task CanSetUnifiedQrCode()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.ActivateLightning();
+                await tester.StartAsync();
+                await tester.EnsureChannelsSetup();
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                user.RegisterDerivationScheme("BTC", ScriptPubKeyType.Segwit);
+                user.RegisterLightningNode("BTC", LightningConnectionType.CLightning);
+
+                var invoice = user.BitPay.CreateInvoice(
+                    new Invoice()
+                    {
+                        Price = 5.5m,
+                        Currency = "USD",
+                        PosData = "posData",
+                        OrderId = "orderId",
+                        ItemDesc = "Some description",
+                        FullNotifications = true
+                    }, Facade.Merchant);
+
+                // validate that invoice data model doesn't have lightning string initially
+                var res = await user.GetController<InvoiceController>().Checkout(invoice.Id);
+                var paymentMethodFirst = Assert.IsType<PaymentModel>(
+                    Assert.IsType<ViewResult>(res).Model
+                );
+                Assert.DoesNotContain("&lightning=", paymentMethodFirst.InvoiceBitcoinUrlQR);
+
+                // enable unified QR code in settings
+                var vm = Assert.IsType<CheckoutExperienceViewModel>(Assert
+                    .IsType<ViewResult>(user.GetController<StoresController>().CheckoutExperience()).Model
+                );
+                vm.OnChainWithLnInvoiceFallback = true;
+                Assert.IsType<RedirectToActionResult>(
+                    user.GetController<StoresController>().CheckoutExperience(vm).Result
+                );
+
+                // validate that QR code now has both onchain and offchain payment urls
+                res = await user.GetController<InvoiceController>().Checkout(invoice.Id);
+                var paymentMethodSecond = Assert.IsType<PaymentModel>(
+                    Assert.IsType<ViewResult>(res).Model
+                );
+                Assert.Contains("&lightning=", paymentMethodSecond.InvoiceBitcoinUrlQR);
+                Assert.StartsWith("BITCOIN:", paymentMethodSecond.InvoiceBitcoinUrlQR);
+                var split = paymentMethodSecond.InvoiceBitcoinUrlQR.Split('?')[0];
+                Assert.True($"BITCOIN:{paymentMethodSecond.BtcAddress.ToUpperInvariant()}" == split);
             }
         }
 
@@ -2030,7 +2084,7 @@ namespace BTCPayServer.Tests
 
                 Assert.Single(invoice.CryptoInfo);
                 Assert.Equal(PaymentTypes.LightningLike.ToString(), invoice.CryptoInfo[0].PaymentType);
-                
+
                 //test backward compat
                 var store = await tester.PayTester.StoreRepository.FindStore(user.StoreId);
                 var blob = store.GetStoreBlob();
@@ -2044,8 +2098,8 @@ namespace BTCPayServer.Tests
                 };
                 var criteriaCompat = store.GetPaymentMethodCriteria(tester.NetworkProvider, blob);
                 Assert.Single(criteriaCompat);
-                Assert.NotNull(criteriaCompat.FirstOrDefault(methodCriteria => methodCriteria.Value.ToString() == "2 USD" && !methodCriteria.Above && methodCriteria.PaymentMethod == new PaymentMethodId("BTC", LightningPaymentType.Instance) ));
-                
+                Assert.NotNull(criteriaCompat.FirstOrDefault(methodCriteria => methodCriteria.Value.ToString() == "2 USD" && !methodCriteria.Above && methodCriteria.PaymentMethod == new PaymentMethodId("BTC", LightningPaymentType.Instance)));
+
             }
         }
 
@@ -2527,6 +2581,7 @@ namespace BTCPayServer.Tests
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
+                await user.SetupWebhook();
                 var invoice = user.BitPay.CreateInvoice(
                     new Invoice()
                     {
@@ -2583,7 +2638,6 @@ namespace BTCPayServer.Tests
                 var cashCow = tester.ExplorerNode;
 
                 var invoiceAddress = BitcoinAddress.Create(invoice.BitcoinAddress, cashCow.Network);
-                var iii = ctx.AddressInvoices.ToArray();
                 Assert.True(IsMapped(invoice, ctx));
                 cashCow.SendToAddress(invoiceAddress, firstPayment);
 
@@ -2687,6 +2741,23 @@ namespace BTCPayServer.Tests
                     Assert.Equal(Money.Zero, localInvoice.BtcDue);
                     Assert.Equal("paidOver", (string)((JValue)localInvoice.ExceptionStatus).Value);
                 });
+
+                // Test on the webhooks
+                user.AssertHasWebhookEvent<WebhookInvoiceConfirmedEvent>(WebhookEventType.InvoiceConfirmed,
+                    c =>
+                    {
+                        Assert.False(c.ManuallyMarked);
+                    });
+                user.AssertHasWebhookEvent<WebhookInvoicePaidEvent>(WebhookEventType.InvoicePaidInFull,
+                    c =>
+                    {
+                        Assert.True(c.OverPaid);
+                    });
+                user.AssertHasWebhookEvent<WebhookInvoiceReceivedPaymentEvent>(WebhookEventType.InvoiceReceivedPayment,
+                    c =>
+                    {
+                        Assert.False(c.AfterExpiration);
+                    });
             }
         }
 

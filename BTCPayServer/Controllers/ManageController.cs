@@ -1,6 +1,7 @@
 using System;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Data;
 using BTCPayServer.Models.ManageViewModels;
 using BTCPayServer.Security;

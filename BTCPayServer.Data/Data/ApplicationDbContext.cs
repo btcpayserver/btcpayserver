@@ -63,6 +63,11 @@ namespace BTCPayServer.Data
         public DbSet<U2FDevice> U2FDevices { get; set; }
         public DbSet<NotificationData> Notifications { get; set; }
 
+        public DbSet<StoreWebhookData> StoreWebhooks { get; set; }
+        public DbSet<WebhookData> Webhooks { get; set; }
+        public DbSet<WebhookDeliveryData> WebhookDeliveries { get; set; }
+        public DbSet<InvoiceWebhookDeliveryData> InvoiceWebhookDeliveries { get; set; }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             var isConfigured = optionsBuilder.Options.Extensions.OfType<RelationalOptionsExtension>().Any();
@@ -73,6 +78,7 @@ namespace BTCPayServer.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+            Data.UserStore.OnModelCreating(builder);
             NotificationData.OnModelCreating(builder);
             InvoiceData.OnModelCreating(builder);
             PaymentData.OnModelCreating(builder);
@@ -91,7 +97,11 @@ namespace BTCPayServer.Data
             PayoutData.OnModelCreating(builder);
             RefundData.OnModelCreating(builder);
             U2FDevice.OnModelCreating(builder);
-            
+
+            Data.WebhookDeliveryData.OnModelCreating(builder);
+            Data.StoreWebhookData.OnModelCreating(builder);
+            Data.InvoiceWebhookDeliveryData.OnModelCreating(builder);
+
             if (Database.IsSqlite() && !_designTime)
             {
                 // SQLite does not have proper support for DateTimeOffset via Entity Framework Core, see the limitations

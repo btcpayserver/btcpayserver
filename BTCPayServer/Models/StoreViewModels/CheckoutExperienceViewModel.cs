@@ -31,6 +31,31 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Default payment method on checkout")]
         public string DefaultPaymentMethod { get; set; }
+
+
+        [Display(Name = "Requires a refund email")]
+        public bool RequiresRefundEmail { get; set; }
+
+        [Display(Name = "Display lightning payment amounts in Satoshis")]
+        public bool LightningAmountInSatoshi { get; set; }
+
+        [Display(Name = "Add hop hints for private channels to the lightning invoice")]
+        public bool LightningPrivateRouteHints { get; set; }
+
+        [Display(Name = "Include lightning invoice fallback to on-chain BIP21 payment url")]
+        public bool OnChainWithLnInvoiceFallback { get; set; }
+
+        [Display(Name = "Redirect invoice to redirect url automatically after paid")]
+        public bool RedirectAutomatically { get; set; }
+
+        [Display(Name = "Show recommended fee")]
+        public bool ShowRecommendedFee { get; set; }
+
+        [Display(Name = "Recommended fee confirmation target blocks")]
+        [Range(1, double.PositiveInfinity)]
+        public int RecommendedFeeBlockTarget { get; set; }
+
+
         [Display(Name = "Default language on checkout")]
         public string DefaultLang { get; set; }
 
@@ -41,25 +66,6 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Custom HTML title to display on Checkout page")]
         public string HtmlTitle { get; set; }
-
-        [Display(Name = "Requires a refund email")]
-        public bool RequiresRefundEmail { get; set; }
-
-        [Display(Name = "Show recommended fee")]
-        public bool ShowRecommendedFee { get; set; }
-
-        [Display(Name = "Recommended fee confirmation target blocks")]
-        [Range(1, double.PositiveInfinity)]
-        public int RecommendedFeeBlockTarget { get; set; }
-        
-        [Display(Name = "Display lightning payment amounts in Satoshis")]
-        public bool LightningAmountInSatoshi { get; set; }
-
-        [Display(Name = "Add hop hints for private channels to the lightning invoice")]
-        public bool LightningPrivateRouteHints { get; set; }
-
-        [Display(Name = "Redirect invoice to redirect url automatically after paid")]
-        public bool RedirectAutomatically { get; set; }
 
         public List<PaymentMethodCriteriaViewModel> PaymentMethodCriteria { get; set; }
     }

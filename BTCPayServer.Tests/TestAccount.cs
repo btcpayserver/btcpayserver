@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
@@ -23,8 +25,10 @@ using NBitcoin.Payment;
 using NBitpayClient;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;
+using Xunit.Sdk;
 
 namespace BTCPayServer.Tests
 {
@@ -426,6 +430,87 @@ namespace BTCPayServer.Tests
             if (!parsedBip21.TryGetPayjoinEndpoint(out var endpoint))
                 return null;
             return parsedBip21;
+        }
+
+        class WebhookListener : IDisposable
+        {
+            private Client.Models.StoreWebhookData _wh;
+            private FakeServer _server;
+            private readonly List<WebhookInvoiceEvent> _webhookEvents;
+            private CancellationTokenSource _cts;
+            public WebhookListener(Client.Models.StoreWebhookData wh, FakeServer server, List<WebhookInvoiceEvent> webhookEvents)
+            {
+                _wh = wh;
+                _server = server;
+                _webhookEvents = webhookEvents;
+                _cts = new CancellationTokenSource();
+                _ = Listen(_cts.Token);
+            }
+
+            async Task Listen(CancellationToken cancellation)
+            {
+                while (!cancellation.IsCancellationRequested)
+                {
+                    var req = await _server.GetNextRequest(cancellation);
+                    var bytes = await req.Request.Body.ReadBytesAsync((int)req.Request.Headers.ContentLength);
+                    var callback = Encoding.UTF8.GetString(bytes);
+                    _webhookEvents.Add(JsonConvert.DeserializeObject<WebhookInvoiceEvent>(callback));
+                    req.Response.StatusCode = 200;
+                    _server.Done();
+                }
+            }
+            public void Dispose()
+            {
+                _cts.Cancel();
+                _server.Dispose();
+            }
+        }
+
+        public List<WebhookInvoiceEvent> WebhookEvents { get; set; } = new List<WebhookInvoiceEvent>();
+        public TEvent AssertHasWebhookEvent<TEvent>(WebhookEventType eventType, Action<TEvent> assert) where TEvent : class
+        {
+            foreach (var evt in WebhookEvents)
+            {
+                if (evt.Type == eventType)
+                {
+                    var typedEvt = evt.ReadAs<TEvent>();
+                    try
+                    {
+                        assert(typedEvt);
+                        return typedEvt;
+                    }
+                    catch (XunitException)
+                    {
+                    }
+                }
+            }
+            Assert.True(false, "No webhook event match the assertion");
+            return null;
+        }
+        public async Task SetupWebhook()
+        {
+            FakeServer server = new FakeServer();
+            await server.Start();
+            var client = await CreateClient(Policies.CanModifyStoreWebhooks);
+            var wh = await client.CreateWebhook(StoreId, new CreateStoreWebhookRequest()
+            {
+                AutomaticRedelivery = false,
+                Url = server.ServerUri.AbsoluteUri
+            });
+
+            parent.Resources.Add(new WebhookListener(wh, server, WebhookEvents));
+        }
+
+        public async Task PayInvoice(string invoiceId)
+        {
+            var inv = await BitPay.GetInvoiceAsync(invoiceId);
+            var net = parent.ExplorerNode.Network;
+            this.parent.ExplorerNode.SendToAddress(BitcoinAddress.Create(inv.BitcoinAddress, net), inv.BtcDue);
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                var localInvoice = await BitPay.GetInvoiceAsync(invoiceId, Facade.Merchant);
+                Assert.Equal("paid", localInvoice.Status);
+            });
         }
     }
 }

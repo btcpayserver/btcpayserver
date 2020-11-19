@@ -6,6 +6,9 @@ using System.Net.Mime;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
@@ -39,6 +42,51 @@ namespace BTCPayServer.Controllers
 {
     public partial class InvoiceController
     {
+
+        [HttpGet]
+        [Route("invoices/{invoiceId}/deliveries/{deliveryId}/request")]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        public async Task<IActionResult> WebhookDelivery(string invoiceId, string deliveryId)
+        {
+            var invoice = (await _InvoiceRepository.GetInvoices(new InvoiceQuery()
+            {
+                InvoiceId = new[] { invoiceId },
+                UserId = GetUserId()
+            })).FirstOrDefault();
+            if (invoice is null)
+                return NotFound();
+            var delivery = await _InvoiceRepository.GetWebhookDelivery(invoiceId, deliveryId);
+            if (delivery is null)
+                return NotFound();
+            return this.File(delivery.GetBlob().Request, "application/json");
+        }
+        [HttpPost]
+        [Route("invoices/{invoiceId}/deliveries/{deliveryId}/redeliver")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        public async Task<IActionResult> RedeliverWebhook(string storeId, string invoiceId, string deliveryId)
+        {
+            var invoice = (await _InvoiceRepository.GetInvoices(new InvoiceQuery()
+            {
+                InvoiceId = new[] { invoiceId },
+                StoreId = new[] { storeId },
+                UserId = GetUserId()
+            })).FirstOrDefault();
+            if (invoice is null)
+                return NotFound();
+            var delivery = await _InvoiceRepository.GetWebhookDelivery(invoiceId, deliveryId);
+            if (delivery is null)
+                return NotFound();
+            var newDeliveryId = await WebhookNotificationManager.Redeliver(deliveryId);
+            if (newDeliveryId is null)
+                return NotFound();
+            TempData[WellKnownTempData.SuccessMessage] = "Successfully planned a redelivery";
+            return RedirectToAction(nameof(Invoice),
+                new
+                {
+                    invoiceId
+                });
+        }
+
         [HttpGet]
         [Route("invoices/{invoiceId}")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
@@ -58,6 +106,7 @@ namespace BTCPayServer.Controllers
             var store = await _StoreRepository.FindStore(invoice.StoreId);
             var model = new InvoiceDetailsModel()
             {
+                StoreId = store.Id,
                 StoreName = store.StoreName,
                 StoreLink = Url.Action(nameof(StoresController.UpdateStore), "Stores", new { storeId = store.Id }),
                 Id = invoice.Id,
@@ -80,6 +129,9 @@ namespace BTCPayServer.Controllers
                 PosData = PosDataParser.ParsePosData(invoice.Metadata.PosData),
                 Archived = invoice.Archived,
                 CanRefund = CanRefund(invoice.GetInvoiceState()),
+                Deliveries = (await _InvoiceRepository.GetWebhookDeliveries(invoiceId))
+                                    .Select(c => new Models.StoreViewModels.DeliveryViewModel(c))
+                                    .ToList()
             };
             model.Addresses = invoice.HistoricalAddresses.Select(h =>
                 new InvoiceDetailsModel.AddressModel

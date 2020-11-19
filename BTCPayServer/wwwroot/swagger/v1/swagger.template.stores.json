@@ -320,6 +320,31 @@
                         "default": false,
                         "description": "If true, then no authentication is needed to create invoices on this store."
                     },
+                    "requiresRefundEmail": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "If true, the checkout page will ask to enter an email address before accessing payment information."
+                    },
+                    "lightningAmountInSatoshi": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "If true, lightning payment methods show amount in satoshi in the checkout page."
+                    },
+                    "lightningPrivateRouteHints": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Should private route hints be included in the lightning payment of the checkout page."
+                    },
+                    "onChainWithLnInvoiceFallback": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Include lightning invoice fallback to on-chain BIP21 payment url."
+                    },
+                    "redirectAutomatically": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "After successfull payment, should the checkout page redirect the user automatically to the redirect URL of the invoice?"
+                    },
                     "showRecommendedFee": {
                         "type": "boolean",
                         "default": true
@@ -334,11 +359,6 @@
                         "type": "string",
                         "default": "en",
                         "description": "The default language to use in the checkout page. (The different translations available are listed [here](https://github.com/btcpayserver/btcpayserver/tree/master/BTCPayServer/wwwroot/locales)"
-                    },
-                    "lightningAmountInSatoshi": {
-                        "type": "boolean",
-                        "default": false,
-                        "description": "If true, lightning payment methods show amount in satoshi in the checkout page."
                     },
                     "customLogo": {
                         "type": "string",
@@ -355,16 +375,6 @@
                         "nullable": true,
                         "description": "The HTML title of the checkout page (when you over the tab in your browser)"
                     },
-                    "redirectAutomatically": {
-                        "type": "boolean",
-                        "default": false,
-                        "description": "After successfull payment, should the checkout page redirect the user automatically to the redirect URL of the invoice?"
-                    },
-                    "requiresRefundEmail": {
-                        "type": "boolean",
-                        "default": false,
-                        "description": "If true, the checkout page will ask to enter an email address before accessing payment information."
-                    },
                     "networkFeeMode": {
                         "$ref": "#/components/schemas/NetworkFeeMode"
                     },
@@ -372,11 +382,6 @@
                         "type": "boolean",
                         "default": false,
                         "description": "If true, payjoin will be proposed in the checkout page if possible. ([More information](https://docs.btcpayserver.org/Payjoin/))"
-                    },
-                    "lightningPrivateRouteHints": {
-                        "type": "boolean",
-                        "default": false,
-                        "description": "Should private route hints be included in the lightning payment of the checkout page."
                     }
                 }
             },

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
@@ -120,21 +121,22 @@ namespace BTCPayServer.Controllers.GreenField
                 //we do not include OnChainMinValue and LightningMaxValue because moving the CurrencyValueJsonConverter to the Client csproj is hard and requires a refactor (#1571 & #1572)
                 NetworkFeeMode = storeBlob.NetworkFeeMode,
                 RequiresRefundEmail = storeBlob.RequiresRefundEmail,
+                LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi,
+                LightningPrivateRouteHints = storeBlob.LightningPrivateRouteHints,
+                OnChainWithLnInvoiceFallback = storeBlob.OnChainWithLnInvoiceFallback,
+                RedirectAutomatically = storeBlob.RedirectAutomatically,
                 ShowRecommendedFee = storeBlob.ShowRecommendedFee,
                 RecommendedFeeBlockTarget = storeBlob.RecommendedFeeBlockTarget,
                 DefaultLang = storeBlob.DefaultLang,
                 MonitoringExpiration = storeBlob.MonitoringExpiration,
                 InvoiceExpiration = storeBlob.InvoiceExpiration,
-                LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi,
                 CustomLogo = storeBlob.CustomLogo,
                 CustomCSS = storeBlob.CustomCSS,
                 HtmlTitle = storeBlob.HtmlTitle,
                 AnyoneCanCreateInvoice = storeBlob.AnyoneCanInvoice,
                 LightningDescriptionTemplate = storeBlob.LightningDescriptionTemplate,
                 PaymentTolerance = storeBlob.PaymentTolerance,
-                RedirectAutomatically = storeBlob.RedirectAutomatically,
-                PayJoinEnabled = storeBlob.PayJoinEnabled,
-                LightningPrivateRouteHints = storeBlob.LightningPrivateRouteHints
+                PayJoinEnabled = storeBlob.PayJoinEnabled
             };
         }
 
@@ -155,21 +157,22 @@ namespace BTCPayServer.Controllers.GreenField
             //we do not include OnChainMinValue and LightningMaxValue because moving the CurrencyValueJsonConverter to the Client csproj is hard and requires a refactor (#1571 & #1572)
             blob.NetworkFeeMode = restModel.NetworkFeeMode;
             blob.RequiresRefundEmail = restModel.RequiresRefundEmail;
+            blob.LightningAmountInSatoshi = restModel.LightningAmountInSatoshi;
+            blob.LightningPrivateRouteHints = restModel.LightningPrivateRouteHints;
+            blob.OnChainWithLnInvoiceFallback = restModel.OnChainWithLnInvoiceFallback;
+            blob.RedirectAutomatically = restModel.RedirectAutomatically;
             blob.ShowRecommendedFee = restModel.ShowRecommendedFee;
             blob.RecommendedFeeBlockTarget = restModel.RecommendedFeeBlockTarget;
             blob.DefaultLang = restModel.DefaultLang;
             blob.MonitoringExpiration = restModel.MonitoringExpiration;
             blob.InvoiceExpiration = restModel.InvoiceExpiration;
-            blob.LightningAmountInSatoshi = restModel.LightningAmountInSatoshi;
             blob.CustomLogo = restModel.CustomLogo;
             blob.CustomCSS = restModel.CustomCSS;
             blob.HtmlTitle = restModel.HtmlTitle;
             blob.AnyoneCanInvoice = restModel.AnyoneCanCreateInvoice;
             blob.LightningDescriptionTemplate = restModel.LightningDescriptionTemplate;
             blob.PaymentTolerance = restModel.PaymentTolerance;
-            blob.RedirectAutomatically = restModel.RedirectAutomatically;
             blob.PayJoinEnabled = restModel.PayJoinEnabled;
-            blob.LightningPrivateRouteHints = restModel.LightningPrivateRouteHints;
             model.SetStoreBlob(blob);
         }
 

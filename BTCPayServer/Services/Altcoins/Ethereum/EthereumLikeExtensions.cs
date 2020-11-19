@@ -1,7 +1,8 @@
 #if ALTCOINS
 using System.Net;
 using System.Net.Http;
-using BTCPayServer.Contracts;
+using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Abstractions.Services;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Payments;
 using BTCPayServer.Services.Altcoins.Ethereum.Payments;

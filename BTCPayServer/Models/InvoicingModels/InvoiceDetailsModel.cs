@@ -79,9 +79,12 @@ namespace BTCPayServer.Models.InvoicingModels
             get;
             set;
         }
+
+        public List<StoreViewModels.DeliveryViewModel> Deliveries { get; set; } = new List<StoreViewModels.DeliveryViewModel>();
         public string TaxIncluded { get; set; }
 
         public string TransactionSpeed { get; set; }
+        public string StoreId { get; set; }
         public object StoreName
         {
             get;

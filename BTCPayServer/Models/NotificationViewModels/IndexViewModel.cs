@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using BTCPayServer.Contracts;
+using BTCPayServer.Abstractions.Contracts;
 
 namespace BTCPayServer.Models.NotificationViewModels
 {

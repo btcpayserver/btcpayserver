@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
@@ -465,6 +467,8 @@ namespace BTCPayServer.Controllers
                     {BTCPayServer.Client.Policies.CanCreateUser, ("Create new users", "The app will be able to create new users on this server.")},
                     {BTCPayServer.Client.Policies.CanModifyStoreSettings, ("Modify your stores", "The app will be able to view, modify, delete and create new invoices on all your stores.")},
                     {$"{BTCPayServer.Client.Policies.CanModifyStoreSettings}:", ("Manage selected stores", "The app will be able to view, modify, delete and create new invoices on the selected stores.")},
+                    {BTCPayServer.Client.Policies.CanModifyStoreWebhooks, ("Modify stores webhooks", "The app will be mofidy the webhooks of all your stores.")},
+                    {$"{BTCPayServer.Client.Policies.CanModifyStoreWebhooks}:", ("Modify selected stores' webhooks", "The app will be mofidy the webhooks of the selected stores.")},
                     {BTCPayServer.Client.Policies.CanViewStoreSettings, ("View your stores", "The app will be able to view stores settings.")},
                     {$"{BTCPayServer.Client.Policies.CanViewStoreSettings}:", ("View your stores", "The app will be able to view the selected stores' settings.")},
                     {BTCPayServer.Client.Policies.CanModifyServerSettings, ("Manage your server", "The app will have total control on the server settings of your server")},

@@ -521,7 +521,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/PayLightningInvoiceRequest"
+                                "$ref": "#/components/schemas/CreateLightningInvoiceRequest"
                             }
                         }
                     }

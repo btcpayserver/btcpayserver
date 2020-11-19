@@ -1,5 +1,10 @@
-﻿using BTCPayServer.Contracts;
-using BTCPayServer.Models;
+﻿using System;
+using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Abstractions.Services;
+using BTCPayServer.Plugins.Test.Services;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BTCPayServer.Plugins.Test
@@ -14,6 +19,21 @@ namespace BTCPayServer.Plugins.Test
         {
             services.AddSingleton<IUIExtension>(new UIExtension("TestExtensionNavExtension", "header-nav"));
             services.AddHostedService<ApplicationPartsLogger>();
+            services.AddSingleton<TestPluginService>();
+            services.AddSingleton<TestPluginDbContextFactory>();
+            services.AddDbContext<TestPluginDbContext>((provider, o) =>
+            {
+                var factory = provider.GetRequiredService<TestPluginDbContextFactory>();
+                factory.ConfigureBuilder(o);
+            });
+        }
+
+        public override void Execute(IApplicationBuilder applicationBuilder, IServiceProvider applicationBuilderApplicationServices)
+        {
+            base.Execute(applicationBuilder, applicationBuilderApplicationServices);
+            applicationBuilderApplicationServices.GetService<TestPluginDbContextFactory>().CreateContext().Database.Migrate();
+            applicationBuilderApplicationServices.GetService<TestPluginService>().AddTestDataRecord().GetAwaiter().GetResult();
+            
         }
     }
 }

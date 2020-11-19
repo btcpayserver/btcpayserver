@@ -257,6 +257,25 @@ namespace BTCPayServer.Migrations
                     b.ToTable("InvoiceEvents");
                 });
 
+            modelBuilder.Entity("BTCPayServer.Data.InvoiceWebhookDeliveryData", b =>
+                {
+                    b.Property<string>("InvoiceId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DeliveryId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("InvoiceId", "DeliveryId");
+
+                    b.HasIndex("DeliveryId")
+                        .IsUnique();
+
+                    b.HasIndex("InvoiceId")
+                        .IsUnique();
+
+                    b.ToTable("InvoiceWebhookDeliveries");
+                });
+
             modelBuilder.Entity("BTCPayServer.Data.NotificationData", b =>
                 {
                     b.Property<string>("Id")
@@ -588,6 +607,25 @@ namespace BTCPayServer.Migrations
                     b.ToTable("Stores");
                 });
 
+            modelBuilder.Entity("BTCPayServer.Data.StoreWebhookData", b =>
+                {
+                    b.Property<string>("StoreId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("WebhookId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("StoreId", "WebhookId");
+
+                    b.HasIndex("StoreId")
+                        .IsUnique();
+
+                    b.HasIndex("WebhookId")
+                        .IsUnique();
+
+                    b.ToTable("StoreWebhooks");
+                });
+
             modelBuilder.Entity("BTCPayServer.Data.StoredFile", b =>
                 {
                     b.Property<string>("Id")
@@ -694,6 +732,46 @@ namespace BTCPayServer.Migrations
                     b.HasKey("WalletDataId", "TransactionId");
 
                     b.ToTable("WalletTransactions");
+                });
+
+            modelBuilder.Entity("BTCPayServer.Data.WebhookData", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("TEXT")
+                        .HasMaxLength(25);
+
+                    b.Property<byte[]>("Blob")
+                        .IsRequired()
+                        .HasColumnType("BLOB");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Webhooks");
+                });
+
+            modelBuilder.Entity("BTCPayServer.Data.WebhookDeliveryData", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("TEXT")
+                        .HasMaxLength(25);
+
+                    b.Property<byte[]>("Blob")
+                        .IsRequired()
+                        .HasColumnType("BLOB");
+
+                    b.Property<DateTimeOffset>("Timestamp")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("WebhookId")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasMaxLength(25);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WebhookId");
+
+                    b.ToTable("WebhookDeliveries");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -883,6 +961,21 @@ namespace BTCPayServer.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("BTCPayServer.Data.InvoiceWebhookDeliveryData", b =>
+                {
+                    b.HasOne("BTCPayServer.Data.WebhookDeliveryData", "Delivery")
+                        .WithOne()
+                        .HasForeignKey("BTCPayServer.Data.InvoiceWebhookDeliveryData", "DeliveryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BTCPayServer.Data.InvoiceData", "Invoice")
+                        .WithOne()
+                        .HasForeignKey("BTCPayServer.Data.InvoiceWebhookDeliveryData", "InvoiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("BTCPayServer.Data.NotificationData", b =>
                 {
                     b.HasOne("BTCPayServer.Data.ApplicationUser", "ApplicationUser")
@@ -956,6 +1049,21 @@ namespace BTCPayServer.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("BTCPayServer.Data.StoreWebhookData", b =>
+                {
+                    b.HasOne("BTCPayServer.Data.StoreData", "Store")
+                        .WithOne()
+                        .HasForeignKey("BTCPayServer.Data.StoreWebhookData", "StoreId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BTCPayServer.Data.WebhookData", "Webhook")
+                        .WithOne()
+                        .HasForeignKey("BTCPayServer.Data.StoreWebhookData", "WebhookId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("BTCPayServer.Data.StoredFile", b =>
                 {
                     b.HasOne("BTCPayServer.Data.ApplicationUser", "ApplicationUser")
@@ -991,6 +1099,15 @@ namespace BTCPayServer.Migrations
                     b.HasOne("BTCPayServer.Data.WalletData", "WalletData")
                         .WithMany("WalletTransactions")
                         .HasForeignKey("WalletDataId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("BTCPayServer.Data.WebhookDeliveryData", b =>
+                {
+                    b.HasOne("BTCPayServer.Data.WebhookData", "Webhook")
+                        .WithMany("Deliveries")
+                        .HasForeignKey("WebhookId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

@@ -3,7 +3,21 @@ using BTCPayServer.Services.Invoices;
 
 namespace BTCPayServer.Events
 {
-    public class InvoiceEvent
+    public enum InvoiceEventCode : int
+    {
+        Created = 1001,
+        ReceivedPayment = 1002,
+        PaidInFull = 1003,
+        Expired = 1004,
+        Confirmed = 1005,
+        Completed = 1006,
+        MarkedInvalid = 1008,
+        FailedToConfirm = 1013,
+        PaidAfterExpiration = 1009,
+        ExpiredPaidPartial = 2000,
+        MarkedCompleted = 2008,
+    }
+    public class InvoiceEvent : IHasInvoiceId
     {
         public const string Created = "invoice_created";
         public const string ReceivedPayment = "invoice_receivedPayment";
@@ -16,20 +30,21 @@ namespace BTCPayServer.Events
         public const string FailedToConfirm = "invoice_failedToConfirm";
         public const string Confirmed = "invoice_confirmed";
         public const string Completed = "invoice_completed";
-        
-        public static Dictionary<string, int> EventCodes = new Dictionary<string, int>()
+
+        public string InvoiceId => Invoice.Id;
+        public static Dictionary<string, InvoiceEventCode> EventCodes = new Dictionary<string, InvoiceEventCode>()
         {
-            {Created, 1001},
-            {ReceivedPayment, 1002},
-            {PaidInFull, 1003},
-            {Expired, 1004},
-            {Confirmed, 1005},
-            {Completed, 1006},
-            {MarkedInvalid, 1008},
-            {FailedToConfirm, 1013},
-            {PaidAfterExpiration, 1009},
-            {ExpiredPaidPartial, 2000},
-            {MarkedCompleted, 2008},
+            {Created, InvoiceEventCode.Created},
+            {ReceivedPayment, InvoiceEventCode.ReceivedPayment},
+            {PaidInFull, InvoiceEventCode.PaidInFull},
+            {Expired, InvoiceEventCode.Expired},
+            {Confirmed, InvoiceEventCode.Confirmed},
+            {Completed, InvoiceEventCode.Completed},
+            {MarkedInvalid, InvoiceEventCode.MarkedInvalid},
+            {FailedToConfirm, InvoiceEventCode.FailedToConfirm},
+            {PaidAfterExpiration, InvoiceEventCode.PaidAfterExpiration},
+            {ExpiredPaidPartial, InvoiceEventCode.ExpiredPaidPartial},
+            {MarkedCompleted, InvoiceEventCode.MarkedCompleted},
         };
 
         public InvoiceEvent(InvoiceEntity invoice, string name)
@@ -40,14 +55,14 @@ namespace BTCPayServer.Events
         }
 
         public InvoiceEntity Invoice { get; set; }
-        public int EventCode { get; set; }
+        public InvoiceEventCode EventCode { get; set; }
         public string Name { get; set; }
 
         public PaymentEntity Payment { get; set; }
 
         public override string ToString()
         {
-            return $"Invoice {Invoice.Id} new event: {Name} ({EventCode})";
+            return $"Invoice {Invoice.Id} new event: {Name} ({(int)EventCode})";
         }
     }
 }

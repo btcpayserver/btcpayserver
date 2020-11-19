@@ -5,7 +5,8 @@
     var storeIds = string.Join("", Model.StoreIds.Select(storeId => $",storeid:{storeId}"));
 }
 @section HeadScripts {
-    <script src="~/modal/btcpay.js" asp-append-version="true"></script>
+    @*Without async, somehow selenium do not manage to click on links in this page*@
+    <script src="~/modal/btcpay.js" asp-append-version="true" async></script>
 }
 @Html.HiddenFor(a => a.Count)
 <section>
@@ -54,20 +55,20 @@
                             </button>
 
                             <div class="dropdown-menu dropdown-menu-right">
-                                <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=status%3Ainvalid@{@storeIds}">Invalid Invoices</a>
-                                <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=status%3Apaid%2Cstatus%3Aconfirmed%2Cstatus%3Acomplete@{@storeIds}">Paid Invoices</a>
-                                <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=exceptionstatus%3ApaidLate@{@storeIds}s">Paid Late Invoices</a>
-                                <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=exceptionstatus%3ApaidPartial@{@storeIds}">Paid Partial Invoices</a>
-                                <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=exceptionstatus%3ApaidOver@{@storeIds}">Paid Over Invoices</a>
-                                <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=unusual%3Atrue@{@storeIds}">Unusual Invoices</a>
-                                <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=includearchived%3Atrue@{@storeIds}">Archived Invoices</a>
+                                <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="status:invalid@{@storeIds}">Invalid Invoices</a>
+                                <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="status:paid,status:confirmed,status:complete@{@storeIds}">Paid Invoices</a>
+                                <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="exceptionstatus:paidLate@{@storeIds}">Paid Late Invoices</a>
+                                <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="exceptionstatus:paidPartial@{@storeIds}">Paid Partial Invoices</a>
+                                <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="exceptionstatus:paidOver@{@storeIds}">Paid Over Invoices</a>
+                                <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="unusual:true@{@storeIds}">Unusual Invoices</a>
+                                <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="includearchived:true@{@storeIds}">Archived Invoices</a>
                                 <div role="separator" class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="/invoices?Count=@Model.Count&timezoneoffset=0&SearchTerm=startDate%3A-24h@{@storeIds}">Last 24 hours</a>
-                                <a class="dropdown-item" href="/invoices?Count=@Model.Count&timezoneoffset=0&SearchTerm=startDate%3A-3d@{@storeIds}">Last 3 days</a>
-                                <a class="dropdown-item" href="/invoices?Count=@Model.Count&timezoneoffset=0&SearchTerm=startDate%3A-7d@{@storeIds}">Last 7 days</a>
+                                <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-timezoneoffset="0" asp-route-searchTerm="startDate:-24h@{@storeIds}">Last 24 hours</a>
+                                <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-timezoneoffset="0" asp-route-searchTerm="startDate:-3d@{@storeIds}">Last 3 days</a>
+                                <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-timezoneoffset="0" asp-route-searchTerm="startDate:-7d@{@storeIds}">Last 7 days</a>
                                 <button type="button" class="dropdown-item" data-toggle="modal" data-target="#customRangeModal" data-backdrop="static">Custom Range</button>
                                 <div role="separator" class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="/invoices?SearchTerm=">Unfiltered</a>
+                                <a class="dropdown-item" href="?searchTerm=">Unfiltered</a>
                             </div>
                         </div>
 

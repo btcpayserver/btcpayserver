@@ -26,6 +26,13 @@ namespace BTCPayServer.Client
                 CreateHttpRequest($"api/v1/stores/{storeId}/invoices/{invoiceId}"), token);
             return await HandleResponse<InvoiceData>(response);
         }
+        public virtual async Task<InvoicePaymentMethodDataModel[]> GetInvoicePaymentMethods(string storeId, string invoiceId,
+            CancellationToken token = default)
+        {
+            var response = await _httpClient.SendAsync(
+                CreateHttpRequest($"api/v1/stores/{storeId}/invoices/{invoiceId}/payment-methods"), token);
+            return await HandleResponse<InvoicePaymentMethodDataModel[]>(response);
+        }
 
         public virtual async Task ArchiveInvoice(string storeId, string invoiceId,
             CancellationToken token = default)

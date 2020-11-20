@@ -213,8 +213,71 @@ namespace BTCPayServer.Controllers.GreenField
             await _invoiceRepository.ToggleInvoiceArchival(invoiceId, false, storeId);
             return await GetInvoice(storeId, invoiceId);
         }
+        
+        [Authorize(Policy = Policies.CanViewInvoices,
+            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpGet("~/api/v1/stores/{storeId}/invoices/{invoiceId}/payment-methods")]
+        public async Task<IActionResult> GetInvoicePaymentMethods(string storeId, string invoiceId)
+        {
+            var store = HttpContext.GetStoreData();
+            if (store == null)
+            {
+                return NotFound();
+            }
 
+            var invoice = await _invoiceRepository.GetInvoice(invoiceId, true);
+            if (invoice.StoreId != store.Id)
+            {
+                return NotFound();
+            }
 
+            return Ok(ToPaymentMethodModels(invoice));
+        }
+        
+        private InvoicePaymentMethodDataModel[] ToPaymentMethodModels(InvoiceEntity entity)
+        {
+            return entity.GetPaymentMethods().Select(
+                method =>
+                {
+                    var accounting = method.Calculate();
+                    var details = method.GetPaymentMethodDetails();
+                    var payments = method.ParentEntity.GetPayments().Where(paymentEntity =>
+                        paymentEntity.GetPaymentMethodId() == method.GetId());
+
+                    return new InvoicePaymentMethodDataModel()
+                    {
+                        PaymentMethod = method.GetId().ToStringNormalized(),
+                        Destination = details.GetPaymentDestination(),
+                        Rate = method.Rate,
+                        Due = accounting.Due.ToDecimal(MoneyUnit.BTC),
+                        TotalPaid = accounting.Paid.ToDecimal(MoneyUnit.BTC),
+                        PaymentMethodPaid = accounting.CryptoPaid.ToDecimal(MoneyUnit.BTC),
+                        Amount = accounting.Due.ToDecimal(MoneyUnit.BTC),
+                        NetworkFee = accounting.NetworkFee.ToDecimal(MoneyUnit.BTC),
+                        PaymentLink =
+                            method.GetId().PaymentType.GetPaymentLink(method.Network, details, accounting.Due,
+                                Request.GetAbsoluteRoot()),
+                        Payments = payments.Select(paymentEntity =>
+                        {
+                            var data = paymentEntity.GetCryptoPaymentData();
+                            return new InvoicePaymentMethodDataModel.Payment()
+                            {
+                                Destination = data.GetDestination(),
+                                Id = data.GetPaymentId(),
+                                Status = !paymentEntity.Accounted
+                                    ? InvoicePaymentMethodDataModel.Payment.PaymentStatus.Invalid
+                                    : data.PaymentConfirmed(paymentEntity, entity.SpeedPolicy) ||
+                                      data.PaymentCompleted(paymentEntity)
+                                        ? InvoicePaymentMethodDataModel.Payment.PaymentStatus.Complete
+                                        : InvoicePaymentMethodDataModel.Payment.PaymentStatus.AwaitingCompletion,
+                                Fee = paymentEntity.NetworkFee,
+                                Value = data.GetValue(),
+                                ReceivedDate = paymentEntity.ReceivedTime.DateTime
+                            };
+                        }).ToList()
+                    };
+                }).ToArray();
+        }
         private InvoiceData ToModel(InvoiceEntity entity)
         {
             return new InvoiceData()

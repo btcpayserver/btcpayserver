@@ -216,6 +216,123 @@
                 ]
             }
         },
+        "/api/v1/stores/{storeId}/invoices/{invoiceId}/payment-methods": {
+            "get": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "Get invoice payment methods",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "invoiceId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The invoice to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "View information about the specified invoice's payment methods",
+                "operationId": "Invoices_GetInvoicePaymentMethods",
+                "responses": {
+                    "200": {
+                        "description": "specified invoice payment methods data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "nullable": false,
+                                    "items": {
+                                        "$ref": "#/components/schemas/InvoicePaymentMethodDataModel"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified invoie"
+                    },
+                    "404": {
+                        "description": "The key is not found for this invoice"
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canviewinvoices"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "Archive invoice",
+                "description": "Archives the specified invoice.",
+                "operationId": "Invoices_ArchiveInvoice",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store the invoice belongs to",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "invoiceId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The invoice to remove",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The invoice has been archived"
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when archiving the invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to archive the specified invoice"
+                    },
+                    "404": {
+                        "description": "The key is not found for this invoice"
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
         "/api/v1/stores/{storeId}/invoices/{invoiceId}/status": {
             "post": {
                 "tags": [
@@ -564,6 +681,110 @@
                     "MediumSpeed",
                     "LowSpeed",
                     "LowMediumSpeed"
+                ]
+            },
+            "InvoicePaymentMethodDataModel": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "paymentMethod": {
+                        "type": "string",
+                        "description": "The payment method"
+                    },
+                    "destination": {
+                        "type": "string",
+                        "description": "The destination the payment must be made to"
+                    },
+                    "paymentLink": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "A payment link that helps pay to the payment destination"
+                    },
+                    "rate": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The rate between this payment method's currency and the invoice currency"
+                    },
+                    "paymentMethodPaid": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The amount paid by this payment method"
+                    },
+                    "totalPaid": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The total amount paid by all payment methods to the invoice, converted to this payment method's currency"
+                    },
+                    "due": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The total amount left to be paid, converted to this payment method's currency"
+                    },
+                    "amount": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The invoice amount, converted to this payment method's currency"
+                    },
+                    "networkFee": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The added merchant fee to pay for network costs of this payment method."
+                    },
+                    "payments": {
+                        "type": "array",
+                        "nullable": false,
+                        "items": {
+                            "$ref": "#/components/schemas/Payment"
+                        },
+                        "description": "Payments made with this payment method."
+                    }
+                }
+            },
+            "Payment": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "A unique identifier for this payment"
+                    },
+                    "receivedDate": {
+                        "type": "string",
+                        "format": "int64",
+                        "description": "The date the payment was recorded"
+                    },
+                    "value": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The value of the payment"
+                    },
+                    "fee": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The fee paid for the payment"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/PaymentStatus",
+                        "description": "The status of the payment"
+                    },
+                    "destination": {
+                        "type": "string",
+                        "description": "The destination the payment was made to"
+                    }
+                }
+            },
+            "PaymentStatus": {
+                "type": "string",
+                "description": "",
+                "x-enumNames": [
+                    "Invalid",
+                    "AwaitingCompletion",
+                    "Complete"
+                ],
+                "enum": [
+                    "Invalid",
+                    "AwaitingCompletion",
+                    "Complete"
                 ]
             }
         }

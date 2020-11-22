@@ -107,15 +107,21 @@ namespace BTCPayServer.Controllers
             _pullPaymentService = pullPaymentService;
         }
 
-        // Borrowed from https://github.com/ManageIQ/guides/blob/master/labels.md
+        // Borrowed from https://github.com/ManageIQ/guides/blob/master/labels.md and https://sashamaps.net/docs/resources/20-colors/
         readonly string[] LabelColorScheme = new string[]
         {
             "#fbca04",
             "#0e8a16",
             "#ff7619",
             "#84b6eb",
+            "#4363d8",
+            "#fabed4",
+            "#42d4f4",
+            "#9a6324",
+            "#800000",
+            "#808000",
             "#5319e7",
-            "#000000",
+            "#cdcdcd",
             "#cc317c",
         };
 

@@ -179,7 +179,12 @@ namespace BTCPayServer.Controllers
                         allColors
                         .GroupBy(k => k)
                         .OrderBy(k => k.Count())
-                        .ThenBy(k => Array.IndexOf(LabelColorScheme, k.Key))
+                        .ThenBy(k => {
+                            var indexInColorScheme = Array.IndexOf(LabelColorScheme, k.Key);
+
+                            // Ensures that any label color which may not be in our label color scheme is given the least priority
+                            return indexInColorScheme == -1 ? double.PositiveInfinity : indexInColorScheme;
+                        })
                         .First().Key;
                     walletBlobInfo.LabelColors.Add(addlabel, chosenColor);
                     await WalletRepository.SetWalletInfo(walletId, walletBlobInfo);

@@ -785,7 +785,7 @@ namespace BTCPayServer.Tests
             }, evt => evt.InvoiceId == invoice.Id);
 
             var fetchedInvoice = await tester.PayTester.InvoiceRepository.GetInvoice(evt.InvoiceId);
-            Assert.Contains(fetchedInvoice.Status, new[] { InvoiceStatus.Complete, InvoiceStatus.Confirmed });
+            Assert.Contains(fetchedInvoice.Status, new[] { InvoiceStatusLegacy.Complete, InvoiceStatusLegacy.Confirmed });
             Assert.Equal(InvoiceExceptionStatus.None, fetchedInvoice.ExceptionStatus);
 
             Logs.Tester.LogInformation($"Paying invoice {invoice.Id} original full amount bolt11 invoice ");
@@ -1090,7 +1090,7 @@ namespace BTCPayServer.Tests
                 response.EnsureSuccessStatusCode();
                 AssertConnectionDropped();
 
-                Logs.Tester.LogInformation("Querying an onion address which can't be found should send http 500");
+                Logs.Tester.LogInformation("Querying an onin address which can't be found should send http 500");
                 response = await client.GetAsync("http://dwoduwoi.onion/");
                 Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
                 AssertConnectionDropped();
@@ -1460,7 +1460,7 @@ namespace BTCPayServer.Tests
                 await TestUtils.EventuallyAsync(async () =>
                 {
                     var i = await tester.PayTester.InvoiceRepository.GetInvoice(invoice2.Id);
-                    Assert.Equal(InvoiceStatus.New, i.Status);
+                    Assert.Equal(InvoiceStatusLegacy.New, i.Status);
                     Assert.Single(i.GetPayments());
                     Assert.False(i.GetPayments().First().Accounted);
                 });
@@ -2743,12 +2743,12 @@ namespace BTCPayServer.Tests
                 });
 
                 // Test on the webhooks
-                user.AssertHasWebhookEvent<WebhookInvoiceConfirmedEvent>(WebhookEventType.InvoiceConfirmed,
+                user.AssertHasWebhookEvent<WebhookInvoiceSettledEvent>(WebhookEventType.InvoiceSettled,
                     c =>
                     {
                         Assert.False(c.ManuallyMarked);
                     });
-                user.AssertHasWebhookEvent<WebhookInvoicePaidEvent>(WebhookEventType.InvoicePaidInFull,
+                user.AssertHasWebhookEvent<WebhookInvoiceProcessingEvent>(WebhookEventType.InvoiceProcessing,
                     c =>
                     {
                         Assert.True(c.OverPaid);

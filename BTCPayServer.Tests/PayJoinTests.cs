@@ -270,7 +270,7 @@ namespace BTCPayServer.Tests
                     await TestUtils.EventuallyAsync(async () =>
                     {
                         var invoice = await s.Server.PayTester.GetService<InvoiceRepository>().GetInvoice(invoiceId);
-                        Assert.Equal(InvoiceStatus.Paid, invoice.Status);
+                        Assert.Equal(InvoiceStatusLegacy.Paid, invoice.Status);
                     });
 
                     s.GoToInvoices();
@@ -330,7 +330,7 @@ namespace BTCPayServer.Tests
                     {
                         var invoice = await s.Server.PayTester.GetService<InvoiceRepository>().GetInvoice(invoiceId);
                         var dto = invoice.EntityToDTO();
-                        Assert.Equal(InvoiceStatus.Paid, invoice.Status);
+                        Assert.Equal(InvoiceStatusLegacy.Paid, invoice.Status);
                     });
                     s.GoToInvoices();
                     paymentValueRowColumn = s.Driver.FindElement(By.Id($"invoice_{invoiceId}"))
@@ -720,7 +720,7 @@ retry:
                 await TestUtils.EventuallyAsync(async () =>
                 {
                     var invoice = await tester.PayTester.GetService<InvoiceRepository>().GetInvoice(lastInvoiceId);
-                    Assert.Equal(InvoiceStatus.Paid, invoice.Status);
+                    Assert.Equal(InvoiceStatusLegacy.Paid, invoice.Status);
                     Assert.Equal(InvoiceExceptionStatus.None, invoice.ExceptionStatus);
                     var coins = await btcPayWallet.GetUnspentCoins(receiverUser.DerivationScheme);
                     foreach (var coin in coins)
@@ -1047,7 +1047,7 @@ retry:
                 await TestUtils.EventuallyAsync(async () =>
                 {
                     var invoiceEntity = await tester.PayTester.GetService<InvoiceRepository>().GetInvoice(invoice7.Id);
-                    Assert.Equal(InvoiceStatus.Paid, invoiceEntity.Status);
+                    Assert.Equal(InvoiceStatusLegacy.Paid, invoiceEntity.Status);
                     Assert.Contains(invoiceEntity.GetPayments(), p => p.Accounted &&
                                                                       ((BitcoinLikePaymentData)p.GetCryptoPaymentData()).PayjoinInformation is null);
                 });
@@ -1076,7 +1076,7 @@ retry:
                 await TestUtils.EventuallyAsync(async () =>
                 {
                     var invoiceEntity = await tester.PayTester.GetService<InvoiceRepository>().GetInvoice(invoice7.Id);
-                    Assert.Equal(InvoiceStatus.New, invoiceEntity.Status);
+                    Assert.Equal(InvoiceStatusLegacy.New, invoiceEntity.Status);
                     Assert.True(invoiceEntity.GetPayments().All(p => !p.Accounted));
                     ourOutpoint = invoiceEntity.GetAllBitcoinPaymentData().First().PayjoinInformation.ContributedOutPoints[0];
                 });

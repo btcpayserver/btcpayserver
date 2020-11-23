@@ -18,4 +18,12 @@ namespace BTCPayServer.Client.Models
         [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
         public DateTimeOffset CreatedTime { get; set; }
     }
+    public enum InvoiceStatus
+    {
+        New,
+        Processing,
+        Expired,
+        Invalid,
+        Settled
+    }
 }

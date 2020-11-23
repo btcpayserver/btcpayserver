@@ -200,7 +200,7 @@ namespace BTCPayServer.Controllers
                     throw new BitpayHttpException(400, "Invalid email");
                 entity.RefundMail = entity.Metadata.BuyerEmail;
             }
-            entity.Status = InvoiceStatus.New;
+            entity.Status = InvoiceStatusLegacy.New;
             HashSet<CurrencyPair> currencyPairsToFetch = new HashSet<CurrencyPair>();
             var rules = storeBlob.GetRateRules(_NetworkProvider);
             var excludeFilter = storeBlob.GetExcludedPaymentMethods(); // Here we can compose filters from other origin with PaymentFilter.Any()

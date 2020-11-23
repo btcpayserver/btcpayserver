@@ -142,7 +142,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             public decimal Amount { get; set; }
             public string AmountFormatted { get; set; }
             public InvoiceState State { get; set; }
-            public InvoiceStatus Status { get; set; }
+            public InvoiceStatusLegacy Status { get; set; }
             public string StateFormatted { get; set; }
 
             public List<PaymentRequestInvoicePayment> Payments { get; set; }

@@ -22,13 +22,13 @@ namespace BTCPayServer.Client.Models
         public string InvoiceId { get; set; }
     }
 
-    public class WebhookInvoiceConfirmedEvent : WebhookInvoiceEvent
+    public class WebhookInvoiceSettledEvent : WebhookInvoiceEvent
     {
-        public WebhookInvoiceConfirmedEvent()
+        public WebhookInvoiceSettledEvent()
         {
 
         }
-        public WebhookInvoiceConfirmedEvent(WebhookEventType evtType) : base(evtType)
+        public WebhookInvoiceSettledEvent(WebhookEventType evtType) : base(evtType)
         {
         }
 
@@ -46,18 +46,17 @@ namespace BTCPayServer.Client.Models
 
         public bool ManuallyMarked { get; set; }
     }
-    public class WebhookInvoicePaidEvent : WebhookInvoiceEvent
+    public class WebhookInvoiceProcessingEvent : WebhookInvoiceEvent
     {
-        public WebhookInvoicePaidEvent()
+        public WebhookInvoiceProcessingEvent()
         {
 
         }
-        public WebhookInvoicePaidEvent(WebhookEventType evtType) : base(evtType)
+        public WebhookInvoiceProcessingEvent(WebhookEventType evtType) : base(evtType)
         {
         }
 
         public bool OverPaid { get; set; }
-        public bool PaidAfterExpiration { get; set; }
     }
     public class WebhookInvoiceReceivedPaymentEvent : WebhookInvoiceEvent
     {

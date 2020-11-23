@@ -53,8 +53,8 @@ namespace BTCPayServer.Client.Models
             public enum PaymentStatus
             {
                 Invalid,
-                AwaitingCompletion,
-                Complete
+                Processing,
+                Settled
             }
         }
     }

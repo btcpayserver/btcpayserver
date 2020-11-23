@@ -150,13 +150,13 @@ namespace BTCPayServer.Controllers
 
         bool CanRefund(InvoiceState invoiceState)
         {
-            return invoiceState.Status == InvoiceStatus.Confirmed ||
-                invoiceState.Status == InvoiceStatus.Complete ||
-                (invoiceState.Status == InvoiceStatus.Expired &&
+            return invoiceState.Status == InvoiceStatusLegacy.Confirmed ||
+                invoiceState.Status == InvoiceStatusLegacy.Complete ||
+                (invoiceState.Status == InvoiceStatusLegacy.Expired &&
                 (invoiceState.ExceptionStatus == InvoiceExceptionStatus.PaidLate ||
                 invoiceState.ExceptionStatus == InvoiceExceptionStatus.PaidOver ||
                 invoiceState.ExceptionStatus == InvoiceExceptionStatus.PaidPartial)) ||
-                invoiceState.Status == InvoiceStatus.Invalid;
+                invoiceState.Status == InvoiceStatusLegacy.Invalid;
         }
 
         [HttpGet]
@@ -638,7 +638,7 @@ namespace BTCPayServer.Controllers
             if (!HttpContext.WebSockets.IsWebSocketRequest)
                 return NotFound();
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
-            if (invoice == null || invoice.Status == InvoiceStatus.Complete || invoice.Status == InvoiceStatus.Invalid || invoice.Status == InvoiceStatus.Expired)
+            if (invoice == null || invoice.Status == InvoiceStatusLegacy.Complete || invoice.Status == InvoiceStatusLegacy.Invalid || invoice.Status == InvoiceStatusLegacy.Expired)
                 return NotFound();
             var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
             CompositeDisposable leases = new CompositeDisposable();
@@ -715,7 +715,7 @@ namespace BTCPayServer.Controllers
                 model.Invoices.Add(new InvoiceModel()
                 {
                     Status = state,
-                    ShowCheckout = invoice.Status == InvoiceStatus.New,
+                    ShowCheckout = invoice.Status == InvoiceStatusLegacy.New,
                     Date = invoice.InvoiceTime,
                     InvoiceId = invoice.Id,
                     OrderId = invoice.Metadata.OrderId ?? string.Empty,
@@ -873,7 +873,7 @@ namespace BTCPayServer.Controllers
             }
             else if (newState == "complete")
             {
-                await _InvoiceRepository.MarkInvoiceStatus(invoiceId, InvoiceStatus.Complete);
+                await _InvoiceRepository.MarkInvoiceStatus(invoiceId, InvoiceStatus.Settled);
                 model.StatusString = new InvoiceState("complete", "marked").ToString();
             }
 

@@ -268,8 +268,8 @@ namespace BTCPayServer.Controllers.GreenField
                                     ? InvoicePaymentMethodDataModel.Payment.PaymentStatus.Invalid
                                     : data.PaymentConfirmed(paymentEntity, entity.SpeedPolicy) ||
                                       data.PaymentCompleted(paymentEntity)
-                                        ? InvoicePaymentMethodDataModel.Payment.PaymentStatus.Complete
-                                        : InvoicePaymentMethodDataModel.Payment.PaymentStatus.AwaitingCompletion,
+                                        ? InvoicePaymentMethodDataModel.Payment.PaymentStatus.Settled
+                                        : InvoicePaymentMethodDataModel.Payment.PaymentStatus.Processing,
                                 Fee = paymentEntity.NetworkFee,
                                 Value = data.GetValue(),
                                 ReceivedDate = paymentEntity.ReceivedTime.DateTime
@@ -287,7 +287,7 @@ namespace BTCPayServer.Controllers.GreenField
                 CreatedTime = entity.InvoiceTime,
                 Amount = entity.Price,
                 Id = entity.Id,
-                Status = entity.Status,
+                Status = entity.Status.ToModernStatus(),
                 AdditionalStatus = entity.ExceptionStatus,
                 Currency = entity.Currency,
                 Metadata = entity.Metadata.ToJObject(),

@@ -521,19 +521,17 @@
                 "description": "",
                 "x-enumNames": [
                     "New",
-                    "Paid",
+                    "Processing",
                     "Expired",
                     "Invalid",
-                    "Complete",
-                    "Confirmed"
+                    "Settled"
                 ],
                 "enum": [
                     "New",
-                    "Paid",
+                    "Processing",
                     "Expired",
                     "Invalid",
-                    "Complete",
-                    "Confirmed"
+                    "Settled"
                 ]
             },
             "InvoiceAdditionalStatus": {
@@ -778,13 +776,13 @@
                 "description": "",
                 "x-enumNames": [
                     "Invalid",
-                    "AwaitingCompletion",
-                    "Complete"
+                    "Processing",
+                    "Settled"
                 ],
                 "enum": [
                     "Invalid",
-                    "AwaitingCompletion",
-                    "Complete"
+                    "Processing",
+                    "Settled"
                 ]
             }
         }

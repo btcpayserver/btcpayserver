@@ -949,10 +949,10 @@ namespace BTCPayServer.Tests
                 var invoice = await viewOnly.GetInvoice(user.StoreId, newInvoice.Id);
                 Assert.Equal(newInvoice.Metadata, invoice.Metadata);
                 var paymentMethods = await viewOnly.GetInvoicePaymentMethods(user.StoreId, newInvoice.Id);
-                Assert.Equal(1, paymentMethods.Length);
+                Assert.Single(paymentMethods);
                 var paymentMethod = paymentMethods.First();
                 Assert.Equal("BTC", paymentMethod.PaymentMethod);
-                Assert.Equal(0, paymentMethod.Payments.Count);
+                Assert.Empty(paymentMethod.Payments);
                 
 
                 //update
@@ -962,7 +962,7 @@ namespace BTCPayServer.Tests
                 {
                     await client.MarkInvoiceStatus(user.StoreId, invoice.Id, new MarkInvoiceStatusRequest()
                     {
-                        Status = InvoiceStatus.Complete
+                        Status = InvoiceStatus.Settled
                     });
                 });
 
@@ -982,7 +982,7 @@ namespace BTCPayServer.Tests
                 Assert.NotNull(await client.GetInvoice(user.StoreId, invoice.Id));
 
 
-                foreach (var marked in new[] { InvoiceStatus.Complete, InvoiceStatus.Invalid })
+                foreach (var marked in new[] { InvoiceStatus.Settled, InvoiceStatus.Invalid })
                 {
                     var inv = await client.CreateInvoice(user.StoreId,
                     new CreateInvoiceRequest() { Currency = "USD", Amount = 100 });
@@ -992,10 +992,10 @@ namespace BTCPayServer.Tests
                         Status = marked
                     });
                     var result = await client.GetInvoice(user.StoreId, inv.Id);
-                    if (marked == InvoiceStatus.Complete)
+                    if (marked == InvoiceStatus.Settled)
                     {
-                        Assert.Equal(InvoiceStatus.Complete, result.Status);
-                        user.AssertHasWebhookEvent<WebhookInvoiceConfirmedEvent>(WebhookEventType.InvoiceConfirmed,
+                        Assert.Equal(InvoiceStatus.Settled, result.Status);
+                        user.AssertHasWebhookEvent<WebhookInvoiceSettledEvent>(WebhookEventType.InvoiceSettled,
                             o =>
                             {
                                 Assert.Equal(inv.Id, o.InvoiceId);

@@ -89,9 +89,9 @@ namespace BTCPayServer.Services.Apps
             }
 
             var invoices = await GetInvoicesForApp(appData, lastResetDate);
-            var completeInvoices = invoices.Where(entity => entity.Status == InvoiceStatus.Complete || entity.Status == InvoiceStatus.Confirmed).ToArray();
-            var pendingInvoices = invoices.Where(entity => !(entity.Status == InvoiceStatus.Complete || entity.Status == InvoiceStatus.Confirmed)).ToArray();
-            var paidInvoices = invoices.Where(entity => entity.Status == InvoiceStatus.Complete || entity.Status == InvoiceStatus.Confirmed || entity.Status == InvoiceStatus.Paid).ToArray();
+            var completeInvoices = invoices.Where(entity => entity.Status == InvoiceStatusLegacy.Complete || entity.Status == InvoiceStatusLegacy.Confirmed).ToArray();
+            var pendingInvoices = invoices.Where(entity => !(entity.Status == InvoiceStatusLegacy.Complete || entity.Status == InvoiceStatusLegacy.Confirmed)).ToArray();
+            var paidInvoices = invoices.Where(entity => entity.Status == InvoiceStatusLegacy.Complete || entity.Status == InvoiceStatusLegacy.Confirmed || entity.Status == InvoiceStatusLegacy.Paid).ToArray();
 
             var pendingPayments = GetContributionsByPaymentMethodId(settings.TargetCurrency, pendingInvoices, !settings.EnforceTargetAmount);
             var currentPayments = GetContributionsByPaymentMethodId(settings.TargetCurrency, completeInvoices, !settings.EnforceTargetAmount);
@@ -176,10 +176,10 @@ namespace BTCPayServer.Services.Apps
                 StoreId = new[] { appData.StoreData.Id },
                 OrderId = appData.TagAllInvoices ? null : new[] { GetCrowdfundOrderId(appData.Id) },
                 Status = new string[]{
-                    InvoiceState.ToString(InvoiceStatus.New),
-                    InvoiceState.ToString(InvoiceStatus.Paid),
-                    InvoiceState.ToString(InvoiceStatus.Confirmed),
-                    InvoiceState.ToString(InvoiceStatus.Complete)},
+                    InvoiceState.ToString(InvoiceStatusLegacy.New),
+                    InvoiceState.ToString(InvoiceStatusLegacy.Paid),
+                    InvoiceState.ToString(InvoiceStatusLegacy.Confirmed),
+                    InvoiceState.ToString(InvoiceStatusLegacy.Complete)},
                 StartDate = startDate
             });
 
@@ -340,7 +340,7 @@ namespace BTCPayServer.Services.Apps
                     contribution.Value = contribution.CurrencyValue;
 
                     // For hardcap, we count newly created invoices as part of the contributions
-                    if (!softcap && p.Status == InvoiceStatus.New)
+                    if (!softcap && p.Status == InvoiceStatusLegacy.New)
                         return new[] { contribution };
 
                     // If the user get a donation via other mean, he can register an invoice manually for such amount
@@ -348,7 +348,7 @@ namespace BTCPayServer.Services.Apps
                     var payments = p.GetPayments();
                     if (payments.Count == 0 &&
                         p.ExceptionStatus == InvoiceExceptionStatus.Marked &&
-                        p.Status == InvoiceStatus.Complete)
+                        p.Status == InvoiceStatusLegacy.Complete)
                         return new[] { contribution };
 
                     contribution.CurrencyValue = 0m;
@@ -356,7 +356,7 @@ namespace BTCPayServer.Services.Apps
 
                     // If an invoice has been marked invalid, remove the contribution
                     if (p.ExceptionStatus == InvoiceExceptionStatus.Marked &&
-                        p.Status == InvoiceStatus.Invalid)
+                        p.Status == InvoiceStatusLegacy.Invalid)
                         return new[] { contribution };
 
 

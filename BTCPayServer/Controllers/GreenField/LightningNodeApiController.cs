@@ -276,15 +276,7 @@ namespace BTCPayServer.Controllers.GreenField
             }
             catch (Exception ex)
             {
-                var nameSpace = ex.GetType().Namespace;
-                var isLnClientError = nameSpace != null &&
-                                      nameSpace.StartsWith("BTCPayServer.Lightning",
-                                          StringComparison.OrdinalIgnoreCase);
-                if (isLnClientError)
-                {
-                    return this.CreateAPIError("invoice-error", ex.Message);
-                }
-                throw;
+                return this.CreateAPIError("generic-error", ex.Message);
             }
         }
 

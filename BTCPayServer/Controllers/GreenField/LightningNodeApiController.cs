@@ -263,13 +263,29 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 return this.CreateValidationError(ModelState);
             }
-            var invoice = await lightningClient.CreateInvoice(
-                new CreateInvoiceParams(request.Amount, request.Description, request.Expiry)
+
+            try
+            {
+                var invoice = await lightningClient.CreateInvoice(
+                    new CreateInvoiceParams(request.Amount, request.Description, request.Expiry)
+                    {
+                        PrivateRouteHints = request.PrivateRouteHints
+                    },
+                    CancellationToken.None);
+                return Ok(ToModel(invoice));
+            }
+            catch (Exception ex)
+            {
+                var nameSpace = ex.GetType().Namespace;
+                var isLnClientError = nameSpace != null &&
+                                      nameSpace.StartsWith("BTCPayServer.Lightning",
+                                          StringComparison.OrdinalIgnoreCase);
+                if (isLnClientError)
                 {
-                    PrivateRouteHints = request.PrivateRouteHints
-                },
-                CancellationToken.None);
-            return Ok(ToModel(invoice));
+                    return this.CreateAPIError("invoice-error", ex.Message);
+                }
+                throw;
+            }
         }
 
         private LightningInvoiceData ToModel(LightningInvoice invoice)

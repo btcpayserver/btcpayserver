@@ -509,6 +509,16 @@
                             }
                         }
                     },
+                    "400": {
+                        "description": "Wellknown error codes are: `invoice-error`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
                     "503": {
                         "description": "Unable to access the lightning node"
                     },

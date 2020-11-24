@@ -238,8 +238,8 @@ namespace BTCPayServer.Controllers
 
             var stateAllowedToDisplay = new HashSet<InvoiceState>()
             {
-                new InvoiceState(InvoiceStatus.New, InvoiceExceptionStatus.None),
-                new InvoiceState(InvoiceStatus.New, InvoiceExceptionStatus.PaidPartial),
+                new InvoiceState(InvoiceStatusLegacy.New, InvoiceExceptionStatus.None),
+                new InvoiceState(InvoiceStatusLegacy.New, InvoiceExceptionStatus.PaidPartial),
             };
             var currentInvoice = result
                 .Invoices
@@ -303,7 +303,7 @@ namespace BTCPayServer.Controllers
             }
 
             var invoices = result.Invoices.Where(requestInvoice =>
-                requestInvoice.State.Status == InvoiceStatus.New && !requestInvoice.Payments.Any());
+                requestInvoice.State.Status == InvoiceStatusLegacy.New && !requestInvoice.Payments.Any());
 
             if (!invoices.Any())
             {

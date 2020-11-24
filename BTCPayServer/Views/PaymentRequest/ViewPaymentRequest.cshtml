@@ -11,11 +11,10 @@
 
     string StatusTextClass(InvoiceState state)
     {
-        switch (state.Status)
+        switch (state.Status.ToModernStatus())
         {
-            case InvoiceStatus.Confirmed:
-            case InvoiceStatus.Complete:
-            case InvoiceStatus.Paid:
+            case InvoiceStatus.Settled:
+            case InvoiceStatus.Processing:
                 return "text-success";
             case InvoiceStatus.Expired:
                 switch (state.ExceptionStatus)

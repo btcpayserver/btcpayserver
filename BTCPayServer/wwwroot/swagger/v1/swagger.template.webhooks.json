@@ -579,7 +579,7 @@
                             },
                             "specificEvents": {
                                 "type": "string",
-                                "description": "If `everything` is false, the specific events that the endpoint is interested in. Current events are: `InvoiceCreated`, `InvoiceReceivedPayment`, `InvoicePaidInFull`, `InvoiceExpired`, `InvoiceConfirmed`, `InvoiceInvalid`.",
+                                "description": "If `everything` is false, the specific events that the endpoint is interested in. Current events are: `InvoiceCreated`, `InvoiceReceivedPayment`, `InvoiceProcessing`, `InvoiceExpired`, `InvoiceSettled`, `InvoiceInvalid`.",
                                 "nullable": false
                             }
                         }
@@ -644,8 +644,8 @@
                     }
                 ]
             },
-            "WebhookInvoiceConfirmedEvent": {
-                "description": "Callback sent if the `type` is `InvoiceConfirmed`",
+            "WebhookInvoiceSettledEvent": {
+                "description": "Callback sent if the `type` is `InvoiceSettled`",
                 "allOf": [
                     {
                         "$ref": "#/components/schemas/WebhookInvoiceEvent"
@@ -680,8 +680,8 @@
                     }
                 ]
             },
-            "WebhookInvoicePaidEvent": {
-                "description": "Callback sent if the `type` is `InvoicePaidInFull`",
+            "WebhookInvoiceProcessingEvent": {
+                "description": "Callback sent if the `type` is `InvoiceProcessing`",
                 "allOf": [
                     {
                         "$ref": "#/components/schemas/WebhookInvoiceEvent"
@@ -692,11 +692,6 @@
                             "overPaid": {
                                 "type": "boolean",
                                 "description": "Whether this invoice has received more money than expected",
-                                "nullable": false
-                            },
-                            "paidAfterExpiration": {
-                                "type": "boolean",
-                                "description": "Whether this invoice has been paid too late",
                                 "nullable": false
                             }
                         }
@@ -832,9 +827,9 @@
                 }
             }
         },
-        "Invoice paid": {
+        "Invoice processing": {
             "post": {
-                "summary": "Invoice paid",
+                "summary": "Invoice processing",
                 "description": "An invoice has been fully paid",
                 "parameters": [
                     {
@@ -855,7 +850,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/WebhookInvoicePaidEvent"
+                                "$ref": "#/components/schemas/WebhookInvoiceProcessingEvent"
                             }
                         }
                     }
@@ -892,10 +887,10 @@
                 }
             }
         },
-        "Invoice confirmed": {
+        "Invoice settled": {
             "post": {
-                "summary": "Invoice confirmed",
-                "description": "An invoice has been confirmed, order considered settled",
+                "summary": "Invoice settled",
+                "description": "An invoice has been settled",
                 "parameters": [
                     {
                         "in": "header",
@@ -915,7 +910,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/WebhookInvoiceConfirmedEvent"
+                                "$ref": "#/components/schemas/WebhookInvoiceSettledEvent"
                             }
                         }
                     }

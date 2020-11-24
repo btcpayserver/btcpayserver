@@ -624,7 +624,7 @@ namespace BTCPayServer.Tests
                     new SelectElement(s.Driver.FindElement(By.Name("Everything")))
                         .SelectByValue("false");
                     s.Driver.FindElement(By.Id("InvoiceCreated")).Click();
-                    s.Driver.FindElement(By.Id("InvoicePaidInFull")).Click();
+                    s.Driver.FindElement(By.Id("InvoiceProcessing")).Click();
                     s.Driver.FindElement(By.Name("add")).Click();
                 }
 
@@ -657,7 +657,7 @@ namespace BTCPayServer.Tests
                     Assert.Contains($"value=\"{value}\"", s.Driver.PageSource);
                 }
                 // This one should be checked
-                Assert.Contains($"value=\"InvoicePaidInFull\" checked", s.Driver.PageSource);
+                Assert.Contains($"value=\"InvoiceProcessing\" checked", s.Driver.PageSource);
                 Assert.Contains($"value=\"InvoiceCreated\" checked", s.Driver.PageSource);
                 // This one never been checked
                 Assert.DoesNotContain($"value=\"InvoiceReceivedPayment\" checked", s.Driver.PageSource);

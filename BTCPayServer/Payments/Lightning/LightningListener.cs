@@ -144,7 +144,7 @@ namespace BTCPayServer.Payments.Lightning
                     _CheckInvoices.Writer.TryWrite(inv.Invoice.Id);
                 }
 
-                if (inv.Name == InvoiceEvent.ReceivedPayment && inv.Invoice.Status == InvoiceStatus.New && inv.Invoice.ExceptionStatus == InvoiceExceptionStatus.PaidPartial)
+                if (inv.Name == InvoiceEvent.ReceivedPayment && inv.Invoice.Status == InvoiceStatusLegacy.New && inv.Invoice.ExceptionStatus == InvoiceExceptionStatus.PaidPartial)
                 {
                     var pm = inv.Invoice.GetPaymentMethods().First();
                     if (pm.Calculate().Due.GetValue(pm.Network as BTCPayNetwork) > 0m)
@@ -155,7 +155,7 @@ namespace BTCPayServer.Payments.Lightning
             }));
             leases.Add(_Aggregator.Subscribe<Events.InvoiceDataChangedEvent>(async inv =>
             {
-                if (inv.State.Status == InvoiceStatus.New &&
+                if (inv.State.Status == InvoiceStatusLegacy.New &&
                     inv.State.ExceptionStatus == InvoiceExceptionStatus.PaidPartial)
                 {
                     

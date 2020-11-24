@@ -17,6 +17,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Logging;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Microsoft.CodeAnalysis.Operations;
 using Microsoft.EntityFrameworkCore;
@@ -163,10 +164,11 @@ namespace BTCPayServer.HostedServices
             switch (eventCode)
             {
                 case InvoiceEventCode.Completed:
+                case InvoiceEventCode.PaidAfterExpiration:
                     return null;
                 case InvoiceEventCode.Confirmed:
                 case InvoiceEventCode.MarkedCompleted:
-                    return new WebhookInvoiceConfirmedEvent(WebhookEventType.InvoiceConfirmed)
+                    return new WebhookInvoiceSettledEvent(WebhookEventType.InvoiceSettled)
                     {
                         ManuallyMarked = eventCode == InvoiceEventCode.MarkedCompleted
                     };
@@ -185,16 +187,14 @@ namespace BTCPayServer.HostedServices
                         ManuallyMarked = eventCode == InvoiceEventCode.MarkedInvalid
                     };
                 case InvoiceEventCode.PaidInFull:
-                case InvoiceEventCode.PaidAfterExpiration:
-                    return new WebhookInvoicePaidEvent(WebhookEventType.InvoicePaidInFull)
+                    return new WebhookInvoiceProcessingEvent(WebhookEventType.InvoiceProcessing)
                     {
                         OverPaid = invoiceEvent.Invoice.ExceptionStatus == InvoiceExceptionStatus.PaidOver,
-                        PaidAfterExpiration = eventCode == InvoiceEventCode.PaidAfterExpiration
                     };
                 case InvoiceEventCode.ReceivedPayment:
                     return new WebhookInvoiceReceivedPaymentEvent(WebhookEventType.InvoiceReceivedPayment)
                     {
-                        AfterExpiration = invoiceEvent.Invoice.Status == InvoiceStatus.Expired || invoiceEvent.Invoice.Status == InvoiceStatus.Invalid
+                        AfterExpiration = invoiceEvent.Invoice.Status.ToModernStatus() == InvoiceStatus.Expired || invoiceEvent.Invoice.Status.ToModernStatus() == InvoiceStatus.Invalid
                     };
                 default:
                     return null;

@@ -219,7 +219,7 @@ namespace BTCPayServer.Services.Invoices
         }
 
         [JsonIgnore]
-        public InvoiceStatus Status { get; set; }
+        public InvoiceStatusLegacy Status { get; set; }
         [JsonProperty(PropertyName = "status")]
         [Obsolete("Use Status instead")]
         public string StatusString => InvoiceState.ToString(Status);
@@ -578,24 +578,54 @@ namespace BTCPayServer.Services.Invoices
         }
     }
 
-
+    public enum InvoiceStatusLegacy
+    {
+        New,
+        Paid,
+        Expired,
+        Invalid,
+        Complete,
+        Confirmed
+    }
+    public static class InvoiceStatusLegacyExtensions
+    {
+        public static InvoiceStatus ToModernStatus(this InvoiceStatusLegacy legacy)
+        {
+            switch (legacy)
+            {
+                case InvoiceStatusLegacy.Complete:
+                case InvoiceStatusLegacy.Confirmed:
+                    return InvoiceStatus.Settled;
+                case InvoiceStatusLegacy.Expired:
+                    return InvoiceStatus.Expired;
+                case InvoiceStatusLegacy.Invalid:
+                    return InvoiceStatus.Invalid;
+                case InvoiceStatusLegacy.Paid:
+                    return InvoiceStatus.Processing;
+                case InvoiceStatusLegacy.New:
+                    return InvoiceStatus.New;
+                default:
+                    throw new NotSupportedException();
+            }
+        }
+    }
     public class InvoiceState
     {
-        static readonly Dictionary<string, InvoiceStatus> _StringToInvoiceStatus;
-        static readonly Dictionary<InvoiceStatus, string> _InvoiceStatusToString;
+        static readonly Dictionary<string, InvoiceStatusLegacy> _StringToInvoiceStatus;
+        static readonly Dictionary<InvoiceStatusLegacy, string> _InvoiceStatusToString;
 
         static readonly Dictionary<string, InvoiceExceptionStatus> _StringToExceptionStatus;
         static readonly Dictionary<InvoiceExceptionStatus, string> _ExceptionStatusToString;
 
         static InvoiceState()
         {
-            _StringToInvoiceStatus = new Dictionary<string, InvoiceStatus>();
-            _StringToInvoiceStatus.Add("paid", InvoiceStatus.Paid);
-            _StringToInvoiceStatus.Add("expired", InvoiceStatus.Expired);
-            _StringToInvoiceStatus.Add("invalid", InvoiceStatus.Invalid);
-            _StringToInvoiceStatus.Add("complete", InvoiceStatus.Complete);
-            _StringToInvoiceStatus.Add("new", InvoiceStatus.New);
-            _StringToInvoiceStatus.Add("confirmed", InvoiceStatus.Confirmed);
+            _StringToInvoiceStatus = new Dictionary<string, InvoiceStatusLegacy>();
+            _StringToInvoiceStatus.Add("paid", InvoiceStatusLegacy.Paid);
+            _StringToInvoiceStatus.Add("expired", InvoiceStatusLegacy.Expired);
+            _StringToInvoiceStatus.Add("invalid", InvoiceStatusLegacy.Invalid);
+            _StringToInvoiceStatus.Add("complete", InvoiceStatusLegacy.Complete);
+            _StringToInvoiceStatus.Add("new", InvoiceStatusLegacy.New);
+            _StringToInvoiceStatus.Add("confirmed", InvoiceStatusLegacy.Confirmed);
             _InvoiceStatusToString = _StringToInvoiceStatus.ToDictionary(kv => kv.Value, kv => kv.Key);
 
             _StringToExceptionStatus = new Dictionary<string, InvoiceExceptionStatus>();
@@ -612,16 +642,16 @@ namespace BTCPayServer.Services.Invoices
             Status = _StringToInvoiceStatus[status];
             ExceptionStatus = _StringToExceptionStatus[exceptionStatus ?? string.Empty];
         }
-        public InvoiceState(InvoiceStatus status, InvoiceExceptionStatus exceptionStatus)
+        public InvoiceState(InvoiceStatusLegacy status, InvoiceExceptionStatus exceptionStatus)
         {
             Status = status;
             ExceptionStatus = exceptionStatus;
         }
 
-        public InvoiceStatus Status { get; }
+        public InvoiceStatusLegacy Status { get; }
         public InvoiceExceptionStatus ExceptionStatus { get; }
 
-        public static string ToString(InvoiceStatus status)
+        public static string ToString(InvoiceStatusLegacy status)
         {
             return _InvoiceStatusToString[status];
         }
@@ -633,20 +663,20 @@ namespace BTCPayServer.Services.Invoices
 
         public bool CanMarkComplete()
         {
-            return (Status == InvoiceStatus.Paid) ||
-                   ((Status == InvoiceStatus.New || Status == InvoiceStatus.Expired) && ExceptionStatus == InvoiceExceptionStatus.PaidPartial) ||
-                   ((Status == InvoiceStatus.New || Status == InvoiceStatus.Expired) && ExceptionStatus == InvoiceExceptionStatus.PaidLate) ||
-                   (Status != InvoiceStatus.Complete && ExceptionStatus == InvoiceExceptionStatus.Marked) ||
-                   (Status == InvoiceStatus.Invalid);
+            return (Status == InvoiceStatusLegacy.Paid) ||
+                   ((Status == InvoiceStatusLegacy.New || Status == InvoiceStatusLegacy.Expired) && ExceptionStatus == InvoiceExceptionStatus.PaidPartial) ||
+                   ((Status == InvoiceStatusLegacy.New || Status == InvoiceStatusLegacy.Expired) && ExceptionStatus == InvoiceExceptionStatus.PaidLate) ||
+                   (Status != InvoiceStatusLegacy.Complete && ExceptionStatus == InvoiceExceptionStatus.Marked) ||
+                   (Status == InvoiceStatusLegacy.Invalid);
         }
 
         public bool CanMarkInvalid()
         {
-            return (Status == InvoiceStatus.Paid) ||
-                   (Status == InvoiceStatus.New) ||
-                   ((Status == InvoiceStatus.New || Status == InvoiceStatus.Expired) && ExceptionStatus == InvoiceExceptionStatus.PaidPartial) ||
-                   ((Status == InvoiceStatus.New || Status == InvoiceStatus.Expired) && ExceptionStatus == InvoiceExceptionStatus.PaidLate) ||
-                   (Status != InvoiceStatus.Invalid && ExceptionStatus == InvoiceExceptionStatus.Marked);
+            return (Status == InvoiceStatusLegacy.Paid) ||
+                   (Status == InvoiceStatusLegacy.New) ||
+                   ((Status == InvoiceStatusLegacy.New || Status == InvoiceStatusLegacy.Expired) && ExceptionStatus == InvoiceExceptionStatus.PaidPartial) ||
+                   ((Status == InvoiceStatusLegacy.New || Status == InvoiceStatusLegacy.Expired) && ExceptionStatus == InvoiceExceptionStatus.PaidLate) ||
+                   (Status != InvoiceStatusLegacy.Invalid && ExceptionStatus == InvoiceExceptionStatus.Marked);
         }
 
         public override int GetHashCode()
@@ -734,7 +764,14 @@ namespace BTCPayServer.Services.Invoices
         public Money MinimumTotalDue { get; set; }
     }
 
-    public class PaymentMethod
+    public interface IPaymentMethod
+    {
+        PaymentMethodId GetId();
+        decimal Rate { get; set; }
+        IPaymentMethodDetails GetPaymentMethodDetails();
+    }
+
+    public class PaymentMethod : IPaymentMethod
     {
         [JsonIgnore]
         public InvoiceEntity ParentEntity { get; set; }

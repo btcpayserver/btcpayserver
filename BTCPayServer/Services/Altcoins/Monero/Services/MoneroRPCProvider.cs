@@ -63,8 +63,9 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
                 var daemonResult =
                     await daemonRpcClient.SendCommandAsync<JsonRpcClient.NoRequestModel, SyncInfoResponse>("sync_info",
                         JsonRpcClient.NoRequestModel.Instance);
-                summary.TargetHeight = daemonResult.TargetHeight ?? daemonResult.Height;
-                summary.Synced = daemonResult.Height >= summary.TargetHeight && (summary.TargetHeight > 0 || _btcPayServerEnvironment.IsDeveloping);
+                summary.TargetHeight = daemonResult.TargetHeight.GetValueOrDefault(0);
+                summary.TargetHeight = summary.TargetHeight == 0 ? summary.CurrentHeight : summary.TargetHeight;
+                summary.Synced = daemonResult.Height >= summary.TargetHeight && summary.CurrentHeight > 0;
                 summary.CurrentHeight = daemonResult.Height;
                 summary.UpdatedAt = DateTime.Now;
                 summary.DaemonAvailable = true;

@@ -74,7 +74,13 @@ namespace BTCPayServer
             catch
             {
                 result.Source = "GenericFile";
-                return TryParseXpub(fileContents, derivationSchemeParser, ref result);
+                if (TryParseXpub(fileContents, derivationSchemeParser, ref result) ||
+                    TryParseXpub(fileContents, derivationSchemeParser, ref result, false))
+                {
+                    settings = result;
+                    settings.Network = network;
+                    return true;
+                }
             }
 
             //electrum

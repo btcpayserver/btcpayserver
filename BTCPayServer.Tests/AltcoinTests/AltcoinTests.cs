@@ -875,7 +875,7 @@ normal:
             var paymentMethodHandlerDictionary = new PaymentMethodHandlerDictionary(new IPaymentMethodHandler[]
             {
                 new BitcoinLikePaymentHandler(null, networkProvider, null, null, null),
-                new LightningLikePaymentHandler(null, null, networkProvider, null),
+                new LightningLikePaymentHandler(null, null, networkProvider, null, null),
             });
             var networkBTC = networkProvider.GetNetwork("BTC");
             var networkLTC = networkProvider.GetNetwork("LTC");

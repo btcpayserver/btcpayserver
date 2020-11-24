@@ -453,15 +453,17 @@ retry:
 
                 context.Attach(invoiceData);
                 string eventName;
+                string legacyStatus;
                 switch (status)
                 {
-                    case InvoiceStatus.Complete:
+                    case InvoiceStatus.Settled:
                         if (!invoiceData.GetInvoiceState().CanMarkComplete())
                         {
                             return false;
                         }
 
                         eventName = InvoiceEvent.MarkedCompleted;
+                        legacyStatus = InvoiceStatusLegacy.Complete.ToString();
                         break;
                     case InvoiceStatus.Invalid:
                         if (!invoiceData.GetInvoiceState().CanMarkInvalid())
@@ -469,12 +471,13 @@ retry:
                             return false;
                         }
                         eventName = InvoiceEvent.MarkedInvalid;
+                        legacyStatus = InvoiceStatusLegacy.Invalid.ToString();
                         break;
                     default:
                         return false;
                 }
 
-                invoiceData.Status = status.ToString().ToLowerInvariant();
+                invoiceData.Status = legacyStatus.ToLowerInvariant();
                 invoiceData.ExceptionStatus = InvoiceExceptionStatus.Marked.ToString().ToLowerInvariant();
                 _eventAggregator.Publish(new InvoiceEvent(ToEntity(invoiceData), eventName));
                 await context.SaveChangesAsync();

@@ -8,9 +8,9 @@ namespace BTCPayServer.Client.Models
     {
         InvoiceCreated,
         InvoiceReceivedPayment,
-        InvoicePaidInFull,
+        InvoiceProcessing,
         InvoiceExpired,
-        InvoiceConfirmed,
+        InvoiceSettled,
         InvoiceInvalid
     }
 }

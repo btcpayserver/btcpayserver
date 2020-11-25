@@ -1,5 +1,64 @@
 # Changelog
 
+## 1.0.6.0:
+
+### Important security fix
+
+* Due to a privacy leak vulnerability, users of the payment button are strongly encouraged to update as soon as possible.
+
+### New features
+
+* Add QR code scan/show for PSBT  + Import wallet via QR [spec](https://github.com/BlockchainCommons/Research/blob/master/papers/bcr-2020-005-ur.md) (supported by Cobo vault / Blue wallet) (#1931)
+* Checkout experience: Unified QR Code for on-chain and offchain payment (ref #2060) (@rockstardev)
+* Greenfield: Clean webhook API github-like (ref #2058) (@NicolasDorier @Kukks)
+* Greenfield: Can query invoice payment data (@Kukks)
+* Allow users to select block explorers from a list or specify their own URL  (@Kukks)
+* Allow disabling live notifications globally and disabling specific notifications per user (ref #1991) (@Kukks)
+* Allow custom redirect_url for PoS (ref #1924) (@mariodian)
+* A new experimental plugin system (@Kukks)
+
+### Improvements
+
+* UI: Make store setup more intuitive (ref #2011) (@dennisreimann @dstrukt)
+* UI: Improve payment request design (ref #2011) (@dennisreimann @dstrukt) (ref #2011) (@dennisreimann @dstrukt)
+* UI: Improve pull payments design (ref #2011) (@dennisreimann @dstrukt)
+* UI: Improvement of the modal checkout overlay  (see [this comment](https://github.com/btcpayserver/btcpayserver/pull/1930#issuecomment-701298441)) (@dennisreimann)
+* BTCPay Server vault operations can now be retried without having to refresh the page (@NicolasDorier)
+* UX: Warning and hint system for stores not completely set up (@dennisreimann @rockstardev)
+* Greenfield (Breaking change): Invoice state renamed `Confirmed/Complete` to `Settled`. (@NicolasDorier)
+* Greenfield (Breaking change): Invoice state renamed `Paid` to `Processing`. (@NicolasDorier)
+* Breaking change: Remove SQLite as the default database option (@Kukks)
+* UI: Make sure transaction labels display correctly when there are many (ref #2076) (@ubolator)
+* UI: Properly center payment button content (@ubolator)
+* UI: Improvement of the lightning node info view (ref #2066) (@dennisreimann)
+* Share the link of a pay button so one can embed in a QR code (fix #635) (@Kukks)
+* Checkout experience: Make QR codes with bech32 uppercase again (@rockstardev)
+* Add warning if the merchant setup invoice confirmation to zero conf (@ubolator)
+* Adds a warning to configure the e-mail server before "Requires a confirmation mail for registering" checkbox can be checked if e-mail server is not configured. (@ubolator)
+* Payment requests: Partially paid invoices are reused for future payments in payment requests. (@NicolasDorier)
+* API Keys UI: Properly align form items (@dennisreimann)
+* Wallets: By default, created PSBT were including previous transactions. Some hardware wallets ended up returning timeouts, so we reverted this decision. (@NicolasDorier)
+
+### Bug fixes:
+
+* Fix payment button page title (ref #1952) (@sgracia13)
+* Do not log the database connection string (@Kukks)
+* Payjoin: Use base64 instead of hex for BIP78 (fix #1984) (@Kukks)
+* If a password fail to be reset by mail, show proper error (fix #1986) (@NicolasDorier)
+* Email was not included in the invoice text search (@Kukks)
+* Greenfield: The create invoice route should not sending back generic errors if it fails (@dennisreimann)
+* Fix-up links which were ignoring custom root path (@ubolator)
+* Greenfield: Opening a channel with lightning was not working properly (ref #2054) (@dennisreimann)
+* Docs: Create invoice route was referencing the wrong type in the doc (@dennisreimann)
+* Payment Request user input rounding issue (ref #2014) (@Kukks)
+* In store settings, the create new token button was returning an error (@NicolasDorier)
+* Wallet: When clicking on the app's label of a transaction, an error 404 occured (@Kukks)
+* Checkout experience: If coinswitch was activated, the altcoin tab was missing (@Kukks)
+* If Email verification is turned off but you requested a forgot password form, it would ignore the request internally. (@Kukks)
+* Docs: Fix swagger format for dates (@Kukks)
+* Payjoin: Do not include maxadditionalfeecontribution if there is no change. (ref #2007) (@NicolasDorier)
+* Checkout: If an invoice accepting lightning payments was partially paid, the payment of the new lightning invoice was buggy. (@Kukks)
+
 ## 1.0.5.9:
 
 ### Bug fixes:
@@ -71,6 +130,7 @@
 * Add store sort (#1861) @bolatovumar
 
 ### Improvements:
+
 * Update PSBT and PSBT sent to Hardware wallet will include `non_witness_utxo` by default, when possible, to match Bitcoin Core 0.20.1 behavior. @NicolasDorier
 * Adjust invoice badge styling (#1906) @bolatovumar
 * Invoice notification email improvements (#1875) @dennisreimann

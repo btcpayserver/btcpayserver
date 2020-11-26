@@ -165,7 +165,7 @@
                             <td style="text-align:right; color:red;" class="text-right">@transaction.Balance</td>
                         }
                         <td class="text-right">
-                            <div class="dropdown d-inline-block" >
+                            <div class="dropleft d-inline-block" >
                                 <span class="fa fa-tags cursor-pointer" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></span>
                                 <div class="dropdown-menu">
                                     <form asp-action="ModifyTransaction" method="post"
@@ -195,7 +195,7 @@
                                     </form>
                                 </div>
                             </div>
-                            <div class="dropdown d-inline-block">
+                            <div class="dropleft d-inline-block">
                                 @if (string.IsNullOrEmpty(transaction.Comment))
                                 {
                                     <span class="fa fa-comment cursor-pointer" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></span>

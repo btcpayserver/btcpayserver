@@ -312,7 +312,7 @@ namespace BTCPayServer.Tests
                 await s.StartAsync();
                 var alice = s.RegisterNewUser();
                 var storeData = s.CreateNewStore();
-                var onchainHint = "A store requires a wallet to receive payments. Set up your wallet.";
+                var onchainHint = "Set up your wallet to receive payments at your store.";
                 var offchainHint = "A connection to a Lightning node is required to receive Lightning payments.";
 
                 // verify that hints are displayed on the store page

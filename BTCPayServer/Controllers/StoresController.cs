@@ -996,29 +996,5 @@ namespace BTCPayServer.Controllers
                 storeId = CurrentStore.Id
             });
         }
-
-        [HttpPost]
-        [Route("{storeId}/dismissHint")]
-        [IgnoreAntiforgeryToken]
-        public async Task<IActionResult> DismissHint(string id)
-        {
-            var blob = CurrentStore.GetStoreBlob();
-            if (id == "Wallet" || id == "Lightning")
-            {
-                try
-                {
-                    var prop = blob.Hints.GetType().GetProperty(id);
-                    prop.SetValue(blob.Hints, false);
-                }
-                // disregard parse errors 
-                catch { }
-
-                if (CurrentStore.SetStoreBlob(blob))
-                {
-                    await _Repo.UpdateStore(CurrentStore);
-                }
-            }
-            return Content("ack");
-        }
     }
 }

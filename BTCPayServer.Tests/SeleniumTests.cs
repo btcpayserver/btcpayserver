@@ -324,12 +324,13 @@ namespace BTCPayServer.Tests
                     "Warning hint on list not present");
 
                 s.GoToStore(storeData.storeId);
+                Assert.True(s.Driver.PageSource.Contains(onchainHint), "Wallet hint should be present at this point");
+                Assert.True(s.Driver.PageSource.Contains(offchainHint), "Lightning hint should be present at this point");
+
                 s.AddDerivationScheme(); // wallet hint should be dismissed
                 s.Driver.AssertNoError();
                 Assert.False(s.Driver.PageSource.Contains(onchainHint),
-                    "Wallet hint not dismissed on derivation scheme add");
-
-                s.Driver.FindElement(By.Id("dismissLightningHint")).Click(); // dismiss lightning hint
+                    "Wallet hint not dismissed on derivation scheme add");// dismiss lightning hint
 
                 Assert.Contains(storeData.storeName, s.Driver.PageSource);
                 var storeUrl = s.Driver.Url;

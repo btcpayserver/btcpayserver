@@ -34,20 +34,22 @@
 @section Scripts {
     <script src="~/vendor/u2f/u2f-api-1.1.1.js" asp-append-version="true"></script>
     <script type="text/javascript">
-        window.u2fApi.register([{
-            appId: @Safe.Json(Model.AppId),
-            version: @Safe.Json(Model.Version),
-            challenge: @Safe.Json(Model.Challenge)
-        }])
-        .then(data => {
-            document.getElementById("DeviceResponse").value = JSON.stringify(data);
-            document.getElementById("registerForm").submit();
-        })
-        .catch(message => {
-            document.getElementById("error-message").classList.remove("d-none");
-            document.getElementById("error-message").innerText = message;
-            document.getElementById("btn-back").innerText = "Retry";
-            document.getElementById("spinner").classList.add("d-none");
+        document.addEventListener("DOMContentLoaded", () => {
+            window.u2fApi.register([{
+                appId: @Safe.Json(Model.AppId),
+                version: @Safe.Json(Model.Version),
+                challenge: @Safe.Json(Model.Challenge)
+            }])
+            .then(data => {
+                document.getElementById("DeviceResponse").value = JSON.stringify(data);
+                document.getElementById("registerForm").submit();
+            })
+            .catch(message => {
+                document.getElementById("error-message").classList.remove("d-none");
+                document.getElementById("error-message").innerText = message;
+                document.getElementById("btn-back").innerText = "Retry";
+                document.getElementById("spinner").classList.add("d-none");
+            });
         });
     </script>
 }

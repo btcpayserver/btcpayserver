@@ -32,19 +32,21 @@
 
 <script src="~/vendor/u2f/u2f-api-1.1.1.js" asp-append-version="true"></script>
 <script type="text/javascript">
-    window.u2fApi.sign(
-        @Safe.Json(Model.Challenges)
-    )
-    .then(data => {
-        document.getElementById("DeviceResponse").value = JSON.stringify(data);
-        document.getElementById("u2fForm").submit();
-    })
-    .catch(error => {
-        document.getElementById("error-message").innerText = error.message;
-        document.getElementById("error-message").classList.remove("d-none");
-        document.getElementById("spinner").classList.add("d-none");
-        if (!error.message.endsWith("not supported")) {
-            document.getElementById("btn-retry").classList.remove("d-none");
-        }
+    document.addEventListener("DOMContentLoaded", () => {
+        window.u2fApi.sign(
+            @Safe.Json(Model.Challenges)
+        )
+        .then(data => {
+            document.getElementById("DeviceResponse").value = JSON.stringify(data);
+            document.getElementById("u2fForm").submit();
+        })
+        .catch(error => {
+            document.getElementById("error-message").innerText = error.message;
+            document.getElementById("error-message").classList.remove("d-none");
+            document.getElementById("spinner").classList.add("d-none");
+            if (!error.message.endsWith("not supported")) {
+                document.getElementById("btn-retry").classList.remove("d-none");
+            }
+        });
     });
 </script>

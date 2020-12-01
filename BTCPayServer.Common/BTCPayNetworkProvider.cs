@@ -48,7 +48,7 @@ namespace BTCPayServer
             InitLitecoin();
             InitBitcore();
             InitDogecoin();
-            InitBitcoinGold();
+            InitBGold();
             InitMonacoin();
             InitDash();
             InitFeathercoin();
@@ -79,7 +79,7 @@ namespace BTCPayServer
             }
 
             // Disabled because of https://twitter.com/Cryptopia_NZ/status/1085084168852291586
-            //InitBitcoinplus();
+            //InitBPlus();
             //InitUfo();
 #endif
         }

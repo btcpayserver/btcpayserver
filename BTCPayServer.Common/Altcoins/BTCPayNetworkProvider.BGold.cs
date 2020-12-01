@@ -4,14 +4,14 @@ namespace BTCPayServer
 {
     public partial class BTCPayNetworkProvider
     {
-        public void InitBitcoinGold()
+        public void InitBGold()
         {
             var nbxplorerNetwork = NBXplorerNetworkProvider.GetFromCryptoCode("BTG");
             Add(new BTCPayNetwork()
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
                 DisplayName = "BGold",
-                BlockExplorerLink = NetworkType == NetworkType.Mainnet ? "https://explorer.bitcoingold.org/insight/tx/{0}/" : "https://test-explorer.bitcoingold.org/insight/tx/{0}",
+                BlockExplorerLink = NetworkType == NetworkType.Mainnet ? "https://btgexplorer.com/tx/{0}" : "https://testnet.btgexplorer.com/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "bitcoingold",
                 DefaultRateRules = new[]

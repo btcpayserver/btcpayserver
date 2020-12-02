@@ -62,6 +62,10 @@ ul li {
     padding-bottom: .2em;
 }
 
+.bg-tile {
+    background-color: var(--btcpay-bg-tile);
+}
+
 .navbar .onion {
     margin-right: auto;
 }

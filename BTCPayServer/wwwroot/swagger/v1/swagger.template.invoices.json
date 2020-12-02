@@ -214,6 +214,80 @@
                         "Basic": []
                     }
                 ]
+            },
+            "put": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "Update invoice",
+                "description": "Updates the specified invoice.",
+                "operationId": "Invoices_UpdateInvoice",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store the invoice belongs to",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "invoiceId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The invoice to update",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The invoice that has been updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InvoiceData"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when updating the invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to update the specified invoice"
+                    },
+                    "404": {
+                        "description": "The key is not found for this invoice"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateInvoiceRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
             }
         },
         "/api/v1/stores/{storeId}/invoices/{invoiceId}/payment-methods": {
@@ -609,7 +683,7 @@
                         "description": "The currency the invoice will use"
                     },
                     "metadata": {
-                        "type": "string",
+                        "type": "object",
                         "nullable": true,
                         "description": "Additional information around the invoice that can be supplied."
                     },
@@ -621,6 +695,17 @@
                             }
                         ],
                         "description": "Additional settings to customize the checkout flow"
+                    }
+                }
+            },
+            "UpdateInvoiceRequest": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "metadata": {
+                        "type": "object",
+                        "nullable": true,
+                        "description": "Additional information around the invoice that can be supplied."
                     }
                 }
             },

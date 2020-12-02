@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
@@ -18,6 +19,7 @@ using NBitcoin.RPC;
 using NBXplorer.Models;
 using Newtonsoft.Json;
 using NewBlockEvent = BTCPayServer.Events.NewBlockEvent;
+using PayoutData = BTCPayServer.Data.PayoutData;
 
 public class BitcoinLikePayoutHandler : IPayoutHandler
 {

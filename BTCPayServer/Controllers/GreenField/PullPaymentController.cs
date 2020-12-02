@@ -182,7 +182,7 @@ namespace BTCPayServer.Controllers.GreenField
                 return NotFound();
             using var ctx = _dbContextFactory.CreateContext();
             var payouts = await ctx.Payouts.Where(p => p.PullPaymentDataId == pullPaymentId)
-                        .Where(p => p.State != Data.PayoutState.Cancelled || includeCancelled)
+                        .Where(p => p.State != PayoutState.Cancelled || includeCancelled)
                        .ToListAsync();
             var cd = _currencyNameTable.GetCurrencyData(pp.GetBlob().Currency, false);
             return base.Ok(payouts
@@ -200,11 +200,11 @@ namespace BTCPayServer.Controllers.GreenField
                 Amount = blob.Amount,
                 PaymentMethodAmount = blob.CryptoAmount,
                 Revision = blob.Revision,
-                State = p.State == Data.PayoutState.AwaitingPayment ? Client.Models.PayoutState.AwaitingPayment :
-                                            p.State == Data.PayoutState.AwaitingApproval ? Client.Models.PayoutState.AwaitingApproval :
-                                            p.State == Data.PayoutState.Cancelled ? Client.Models.PayoutState.Cancelled :
-                                            p.State == Data.PayoutState.Completed ? Client.Models.PayoutState.Completed :
-                                            p.State == Data.PayoutState.InProgress ? Client.Models.PayoutState.InProgress :
+                State = p.State == PayoutState.AwaitingPayment ? PayoutState.AwaitingPayment :
+                                            p.State == PayoutState.AwaitingApproval ? PayoutState.AwaitingApproval :
+                                            p.State == PayoutState.Cancelled ? PayoutState.Cancelled :
+                                            p.State == PayoutState.Completed ? PayoutState.Completed :
+                                            p.State == PayoutState.InProgress ? PayoutState.InProgress :
                                             throw new NotSupportedException(),
             };
             model.Destination = blob.Destination;

@@ -1019,7 +1019,7 @@ namespace BTCPayServer.Tests
                 {
                     using var ctx = s.Server.PayTester.GetService<ApplicationDbContextFactory>().CreateContext();
                     var payoutsData = await ctx.Payouts.Where(p => p.PullPaymentDataId == pullPaymentId).ToListAsync();
-                    Assert.True(payoutsData.All(p => p.State == Data.PayoutState.Completed));
+                    Assert.True(payoutsData.All(p => p.State == PayoutState.Completed));
                 });
             }
         }

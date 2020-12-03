@@ -312,7 +312,7 @@ namespace BTCPayServer.Tests
                 await s.StartAsync();
                 var alice = s.RegisterNewUser();
                 var storeData = s.CreateNewStore();
-                var onchainHint = "A store requires a wallet to receive payments. Set up your wallet.";
+                var onchainHint = "Set up your wallet to receive payments at your store.";
                 var offchainHint = "A connection to a Lightning node is required to receive Lightning payments.";
 
                 // verify that hints are displayed on the store page
@@ -324,12 +324,13 @@ namespace BTCPayServer.Tests
                     "Warning hint on list not present");
 
                 s.GoToStore(storeData.storeId);
+                Assert.True(s.Driver.PageSource.Contains(onchainHint), "Wallet hint should be present at this point");
+                Assert.True(s.Driver.PageSource.Contains(offchainHint), "Lightning hint should be present at this point");
+
                 s.AddDerivationScheme(); // wallet hint should be dismissed
                 s.Driver.AssertNoError();
                 Assert.False(s.Driver.PageSource.Contains(onchainHint),
-                    "Wallet hint not dismissed on derivation scheme add");
-
-                s.Driver.FindElement(By.Id("dismissLightningHint")).Click(); // dismiss lightning hint
+                    "Wallet hint not dismissed on derivation scheme add");// dismiss lightning hint
 
                 Assert.Contains(storeData.storeName, s.Driver.PageSource);
                 var storeUrl = s.Driver.Url;

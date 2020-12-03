@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.6.1:
+
+### Bug fixes:
+
+* The sync popup when the nodes are synching was not showing up (@Kukks)
+
 ## 1.0.6.0:
 
 ### Important security fix

@@ -71,15 +71,17 @@ namespace BTCPayServer.Payments.Bitcoin
                 .Replace("bitcoin:", "BITCOIN:", StringComparison.OrdinalIgnoreCase)
                 + lightningFallback.ToUpperInvariant().Replace("LIGHTNING=", "lightning=", StringComparison.OrdinalIgnoreCase);
 
-            if (bech32Prefixes.Any(a => model.BtcAddress.StartsWith(a, StringComparison.OrdinalIgnoreCase)))
-            {
-                model.InvoiceBitcoinUrlQR = model.InvoiceBitcoinUrlQR.Replace(
-                    $"BITCOIN:{model.BtcAddress}", $"BITCOIN:{model.BtcAddress.ToUpperInvariant()}", 
-                    StringComparison.OrdinalIgnoreCase
-                );
-            }
+            // Standard for uppercase Bech32 addresses in QR codes is still not implemented in all wallets
+            // When it is widely propagated consider uncommenting these lines
+            //if (bech32Prefixes.Any(a => model.BtcAddress.StartsWith(a, StringComparison.OrdinalIgnoreCase)))
+            //{
+            //    model.InvoiceBitcoinUrlQR = model.InvoiceBitcoinUrlQR.Replace(
+            //        $"BITCOIN:{model.BtcAddress}", $"BITCOIN:{model.BtcAddress.ToUpperInvariant()}", 
+            //        StringComparison.OrdinalIgnoreCase
+            //    );
+            //}
         }
-        private static string[] bech32Prefixes = new[] { "bc1", "tb1", "bcrt1" };
+        //private static string[] bech32Prefixes = new[] { "bc1", "tb1", "bcrt1" };
 
         public override string GetCryptoImage(PaymentMethodId paymentMethodId)
         {

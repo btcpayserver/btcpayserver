@@ -2094,7 +2094,11 @@ namespace BTCPayServer.Tests
                 Assert.Contains("&lightning=", paymentMethodSecond.InvoiceBitcoinUrlQR);
                 Assert.StartsWith("BITCOIN:", paymentMethodSecond.InvoiceBitcoinUrlQR);
                 var split = paymentMethodSecond.InvoiceBitcoinUrlQR.Split('?')[0];
-                Assert.True($"BITCOIN:{paymentMethodSecond.BtcAddress.ToUpperInvariant()}" == split);
+
+                // Standard for uppercase Bech32 addresses in QR codes is still not implemented in all wallets
+                // When it is widely propagated consider uncommenting these lines
+                //Assert.True($"BITCOIN:{paymentMethodSecond.BtcAddress.ToUpperInvariant()}" == split);
+                Assert.True($"BITCOIN:{paymentMethodSecond.BtcAddress}" == split);
             }
         }
 

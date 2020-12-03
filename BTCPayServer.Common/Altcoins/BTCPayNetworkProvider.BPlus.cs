@@ -5,22 +5,22 @@ namespace BTCPayServer
 {
     public partial class BTCPayNetworkProvider
     {
-        public void InitBitcoinplus()
+        public void InitBPlus()
         {
             var nbxplorerNetwork = NBXplorerNetworkProvider.GetFromCryptoCode("XBC");
             Add(new BTCPayNetwork()
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
-                DisplayName = "Bitcoinplus",
+                DisplayName = "BPlus",
                 BlockExplorerLink = NetworkType == NetworkType.Mainnet ? "https://chainz.cryptoid.info/xbc/tx.dws?{0}" : "https://chainz.cryptoid.info/xbc/tx.dws?{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
-                UriScheme = "bitcoinplus",
+                UriScheme = "bplus-fix-it",
                 DefaultRateRules = new[]
                 {
-                                "XBC_X = XBC_BTC * BTC_X",
-                                "XBC_BTC = cryptopia(XBC_BTC)"
+                    "XBC_X = XBC_BTC * BTC_X",
+                    "XBC_BTC = cryptopia(XBC_BTC)"
                 },
-                CryptoImagePath = "imlegacy/bitcoinplus.png",
+                CryptoImagePath = "imlegacy/xbc.png",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),
                 CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("65'") : new KeyPath("1'")
             });

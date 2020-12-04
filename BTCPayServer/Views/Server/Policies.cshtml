@@ -63,6 +63,16 @@
             <label asp-for="DisableInstantNotifications" class="form-check-label"></label>
             <span asp-validation-for="DisableInstantNotifications" class="text-danger"></span>
         </div>
+        <div class="form-check">
+            <input asp-for="DisableStoresToUseServerEmailSettings" type="checkbox" class="form-check-input"/>
+            <label asp-for="DisableStoresToUseServerEmailSettings" class="form-check-label"></label>
+            <span asp-validation-for="DisableStoresToUseServerEmailSettings" class="text-danger"></span>
+        </div>
+        <div class="form-check">
+            <input asp-for="DisableUnauthenticatedUserApi" type="checkbox" class="form-check-input"/>
+            <label asp-for="DisableUnauthenticatedUserApi" class="form-check-label"></label>
+            <span asp-validation-for="DisableUnauthenticatedUserApi" class="text-danger"></span>
+        </div>
         @if (ViewBag.UpdateUrlPresent)
         {
             <div class="form-check">

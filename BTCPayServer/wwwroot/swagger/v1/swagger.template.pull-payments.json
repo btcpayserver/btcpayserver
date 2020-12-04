@@ -11,7 +11,6 @@
                 }
             ],
             "get": {
-                
                 "operationId": "PullPayments_GetPullPayments",
                 "summary": "Get store's pull payments",
                 "parameters": [

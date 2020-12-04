@@ -11,6 +11,7 @@
                 }
             ],
             "get": {
+                "operationId": "PullPayments_GetPullPayments",
                 "summary": "Get store's pull payments",
                 "parameters": [
                     {
@@ -48,6 +49,7 @@
                 ]
             },
             "post": {
+                "operationId": "PullPayments_CreatePullPayment",
                 "summary": "Create a new pull payment",
                 "description": "A pull payment allows its receiver to ask for payouts up to `amount` of `currency` every `period`.",
                 "requestBody": {
@@ -148,6 +150,8 @@
                 }
             ],
             "get": {
+                "summary": "Get Pull Payment",
+                "operationId": "PullPayments_GetPullPayment",
                 "description": "Get a pull payment",
                 "responses": {
                     "200": {
@@ -186,6 +190,7 @@
                 }
             ],
             "delete": {
+                "operationId": "PullPayments_ArchivePullPayment",
                 "summary": "Archive a pull payment",
                 "description": "Archive this pull payment (Will cancel all payouts awaiting for payment)",
                 "responses": {
@@ -218,6 +223,8 @@
                 }
             ],
             "get": {
+                "summary": "Get Payouts",
+                "operationId": "PullPayments_GetPayouts",
                 "description": "Get payouts",
                 "parameters": [
                     {
@@ -250,7 +257,21 @@
                 "security": []
             },
             "post": {
+                "summary": "Create Payout",
                 "description": "Create a new payout",
+                "operationId": "PullPayments_CreatePayout",
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreatePayoutRequest"
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
                 "responses": {
                     "200": {
                         "description": "A new payout has been created",
@@ -308,6 +329,9 @@
                 }
             ],
             "post": {
+
+                "summary": "Approve Payout",
+                "operationId": "PullPayments_ApprovePayout",
                 "description": "Approve a payout",
                 "requestBody": {
                     "content": {
@@ -376,7 +400,9 @@
                 ]
             },
             "delete": {
+                "summary": "Cancel Payout",
                 "description": "Cancel the payout",
+                "operationId": "PullPayments_CancelPayout",
                 "responses": {
                     "200": {
                         "description": "The payout has been cancelled"
@@ -410,6 +436,27 @@
                 "items": {
                     "$ref": "#/components/schemas/PayoutData"
                 }
+            },
+            "CreatePayoutRequest": {
+                "type": "object",
+                "properties":{
+                    "destination": {
+                        "type": "string",
+                        "example": "1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2",
+                        "description": "The destination of the payout (can be an address or a BIP21 url)"
+                    },
+                    "amount": {
+                        "type": "string",
+                        "format": "decimal",
+                        "example": "10399.18",
+                        "description": "The amount of the payout in the currency of the pull payment (eg. USD)."
+                    },
+                    "paymentMethod": {
+                        "type": "string",
+                        "example": "BTC",
+                        "description": "The payment method of the payout"
+                    }
+                }                
             },
             "PayoutData": {
                 "type": "object",

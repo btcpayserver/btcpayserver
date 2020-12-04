@@ -65,14 +65,17 @@ namespace BTCPayServer.Payments.Bitcoin
             }
 
             model.InvoiceBitcoinUrl = cryptoInfo.PaymentUrls.BIP21 + lightningFallback;
-            // We're trying to make as many characters uppercase to make QR smaller
-            // Ref: https://github.com/btcpayserver/btcpayserver/pull/2060#issuecomment-723828348
-            model.InvoiceBitcoinUrlQR = cryptoInfo.PaymentUrls.BIP21
-                .Replace("bitcoin:", "BITCOIN:", StringComparison.OrdinalIgnoreCase)
-                + lightningFallback.ToUpperInvariant().Replace("LIGHTNING=", "lightning=", StringComparison.OrdinalIgnoreCase);
+            model.InvoiceBitcoinUrlQR = model.InvoiceBitcoinUrl;
 
             // Standard for uppercase Bech32 addresses in QR codes is still not implemented in all wallets
             // When it is widely propagated consider uncommenting these lines
+
+            // We're trying to make as many characters uppercase to make QR smaller
+            // Ref: https://github.com/btcpayserver/btcpayserver/pull/2060#issuecomment-723828348
+            //model.InvoiceBitcoinUrlQR = cryptoInfo.PaymentUrls.BIP21
+            //    .Replace("bitcoin:", "BITCOIN:", StringComparison.OrdinalIgnoreCase)
+            //    + lightningFallback.ToUpperInvariant().Replace("LIGHTNING=", "lightning=", StringComparison.OrdinalIgnoreCase);
+
             //if (bech32Prefixes.Any(a => model.BtcAddress.StartsWith(a, StringComparison.OrdinalIgnoreCase)))
             //{
             //    model.InvoiceBitcoinUrlQR = model.InvoiceBitcoinUrlQR.Replace(

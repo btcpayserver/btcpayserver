@@ -81,6 +81,8 @@ namespace BTCPayServer
                     settings.Network = network;
                     return true;
                 }
+
+                return false;
             }
 
             //electrum

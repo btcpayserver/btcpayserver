@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.0.6.2:
+
+*  Reverting uppercasing of Bech32 addresses in QR code (@Rockstardev)
+
+It turns out this is not compatible with every wallets.
+
+## 1.0.6.1:
+
+### Bug fixes:
+
+* The sync popup when the nodes are synching was not showing up (@Kukks)
+
 ## 1.0.6.0:
 
 ### Important security fix

@@ -173,6 +173,24 @@ namespace BTCPayServer.Tests
                 
                 s.Driver.Navigate().GoToUrl(authUrl);
                 Assert.False(s.Driver.Url.StartsWith("https://international.com/callback"));
+
+                // Make sure we can check all permissions when not an admin
+                await user.MakeAdmin(false);
+                s.Logout();
+                s.GoToLogin();
+                s.Login(user.RegisterDetails.Email, user.RegisterDetails.Password);
+                s.GoToProfile(ManageNavPages.APIKeys);
+                s.Driver.FindElement(By.Id("AddApiKey")).Click();
+                int checkedPermissionCount = 0;
+                foreach (var checkbox in s.Driver.FindElements(By.ClassName("form-check-input")))
+                {
+                    checkedPermissionCount++;
+                    checkbox.Click();
+                }
+                s.Driver.FindElement(By.Id("Generate")).Click();
+                var allAPIKey = s.AssertHappyMessage().FindElement(By.TagName("code")).Text;
+                var apikeydata = await TestApiAgainstAccessToken<ApiKeyData>(allAPIKey, $"api/v1/api-keys/current", tester.PayTester.HttpClient);
+                Assert.Equal(checkedPermissionCount, apikeydata.Permissions.Length);
             }
         }
 

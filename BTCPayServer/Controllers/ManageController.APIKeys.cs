@@ -437,7 +437,7 @@ namespace BTCPayServer.Controllers
 
             if (!isAdmin)
             {
-                foreach (var p in viewModel.PermissionValues.Where(item => Policies.IsServerPolicy(item.Permission)))
+                foreach (var p in viewModel.PermissionValues.Where(item => item.Permission is null || Policies.IsServerPolicy(item.Permission)))
                 {
                     p.Forbidden = true;
                 }

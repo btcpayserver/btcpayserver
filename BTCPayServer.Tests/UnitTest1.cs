@@ -819,7 +819,7 @@ namespace BTCPayServer.Tests
             {
                 await tester.ExplorerNode.SendToAddressAsync(
                     BitcoinAddress.Create(invoice.BitcoinAddress, Network.RegTest), Money.Coins(0.00005m));
-            });
+            }, e => e.InvoiceId == invoice.Id && e.PaymentMethodId.PaymentType == LightningPaymentType.Instance );
             await tester.ExplorerNode.GenerateAsync(1);
             await Task.Delay(100); // wait a bit for payment to process before fetching new invoice
             var newInvoice = await user.BitPay.GetInvoiceAsync(invoice.Id);

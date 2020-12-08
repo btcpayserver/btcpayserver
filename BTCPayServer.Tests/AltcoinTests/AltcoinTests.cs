@@ -788,7 +788,7 @@ noninventoryitem:
                 Assert.IsType<RedirectToActionResult>(apps.UpdatePointOfSale(appId, vmpos).Result);
 
                 //inventoryitem has 1 item available
-                await tester.WaitForEvent<InvoiceEvent>(() =>
+                await tester.WaitForEvent<AppInventoryUpdaterHostedService.UpdateAppInventory>(() =>
                 {
                     Assert.IsType<RedirectToActionResult>(publicApps
                         .ViewPointOfSale(appId, PosViewType.Cart, 1, null, null, null, null, "inventoryitem").Result);

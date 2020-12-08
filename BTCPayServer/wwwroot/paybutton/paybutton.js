@@ -197,7 +197,7 @@ function inputChanges(event, buttonSize) {
         }
     });
     url = url.href;
-    $("#preview-link").append(`<a href="${url}">${url}</a>`)
+    $("#preview-link").html(`<a href="${url}">${url}</a>`)
     
     $('pre code').each(function (i, block) {
         hljs.highlightBlock(block);

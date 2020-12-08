@@ -69,9 +69,9 @@
             <span asp-validation-for="DisableStoresToUseServerEmailSettings" class="text-danger"></span>
         </div>
         <div class="form-check">
-            <input asp-for="DisableUnauthenticatedUserApi" type="checkbox" class="form-check-input"/>
-            <label asp-for="DisableUnauthenticatedUserApi" class="form-check-label"></label>
-            <span asp-validation-for="DisableUnauthenticatedUserApi" class="text-danger"></span>
+            <input asp-for="DisableNonAdminCreateUserApi" type="checkbox" class="form-check-input"/>
+            <label asp-for="DisableNonAdminCreateUserApi" class="form-check-label"></label>
+            <span asp-validation-for="DisableNonAdminCreateUserApi" class="text-danger"></span>
         </div>
         @if (ViewBag.UpdateUrlPresent)
         {

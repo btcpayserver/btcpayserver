@@ -35,6 +35,7 @@ using BTCPayServer.Security.Bitpay;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Tests.Logging;
 using BTCPayServer.U2F.Models;
@@ -3345,5 +3346,57 @@ namespace BTCPayServer.Tests
                 Assert.False(fn.Seen);
             }
         }
+       
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task EmailSenderTests()
+        {
+            using (var tester = ServerTester.Create(newDb: true))
+            {
+                await tester.StartAsync();
+
+                var acc = tester.NewAccount();
+                acc.GrantAccess(true);
+
+                var settings = tester.PayTester.GetService<SettingsRepository>();
+                var emailSenderFactory = tester.PayTester.GetService<EmailSenderFactory>();
+                
+                Assert.Null(await Assert.IsType<ServerEmailSender>(emailSenderFactory.GetEmailSender()).GetEmailSettings());
+                Assert.Null(await Assert.IsType<StoreEmailSender>(emailSenderFactory.GetEmailSender(acc.StoreId)).GetEmailSettings());
+
+                
+                await settings.UpdateSetting(new PoliciesSettings() { DisableStoresToUseServerEmailSettings = false });
+                await settings.UpdateSetting(new EmailSettings()
+                {
+                 From   = "admin@admin.com",
+                 Login = "admin@admin.com",
+                 Password = "admin@admin.com",
+                 Port = 1234,
+                 Server = "admin.com",
+                 EnableSSL = true
+                });
+                Assert.Equal("admin@admin.com",(await Assert.IsType<ServerEmailSender>(emailSenderFactory.GetEmailSender()).GetEmailSettings()).Login);
+                Assert.Equal("admin@admin.com",(await Assert.IsType<StoreEmailSender>(emailSenderFactory.GetEmailSender(acc.StoreId)).GetEmailSettings()).Login);
+
+                await settings.UpdateSetting(new PoliciesSettings() { DisableStoresToUseServerEmailSettings = true });
+                Assert.Equal("admin@admin.com",(await Assert.IsType<ServerEmailSender>(emailSenderFactory.GetEmailSender()).GetEmailSettings()).Login);
+                Assert.Null(await Assert.IsType<StoreEmailSender>(emailSenderFactory.GetEmailSender(acc.StoreId)).GetEmailSettings());
+
+                Assert.IsType<RedirectToActionResult>(await acc.GetController<StoresController>().Emails(acc.StoreId, new EmailsViewModel(new EmailSettings()
+                {
+                    From   = "store@store.com",
+                    Login = "store@store.com",
+                    Password = "store@store.com",
+                    Port = 1234,
+                    Server = "store.com",
+                    EnableSSL = true
+                }), ""));
+                
+                Assert.Equal("store@store.com",(await Assert.IsType<StoreEmailSender>(emailSenderFactory.GetEmailSender(acc.StoreId)).GetEmailSettings()).Login);
+
+            }
+        }
+        
+        
     }
 }

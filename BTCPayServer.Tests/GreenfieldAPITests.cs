@@ -31,9 +31,6 @@ namespace BTCPayServer.Tests
     public class GreenfieldAPITests
     {
         public const int TestTimeout = TestUtils.TestTimeout;
-
-        public const string TestApiPath = "api/test/apikey";
-
         public GreenfieldAPITests(ITestOutputHelper helper)
         {
             Logs.Tester = new XUnitLog(helper) { Name = "Tests" };
@@ -247,6 +244,20 @@ namespace BTCPayServer.Tests
                         Password = "afewfoiewiou",
                         IsAdministrator = true
                     }));
+                
+                // If we set DisableNonAdminCreateUserApi = true, it should always fail to create a user unless you are an admin
+                await settings.UpdateSetting(new PoliciesSettings() { LockSubscription = false, DisableNonAdminCreateUserApi = true});
+                await AssertHttpError(403,
+                    async () =>
+                        await unauthClient.CreateUser(
+                            new CreateApplicationUserRequest() {Email = "test9@gmail.com", Password = "afewfoiewiou"}));              
+                await AssertHttpError(403,
+                    async () =>
+                        await user1Client.CreateUser(
+                            new CreateApplicationUserRequest() {Email = "test9@gmail.com", Password = "afewfoiewiou"}));
+                await adminClient.CreateUser(
+                    new CreateApplicationUserRequest() {Email = "test9@gmail.com", Password = "afewfoiewiou"});
+
             }
         }
 

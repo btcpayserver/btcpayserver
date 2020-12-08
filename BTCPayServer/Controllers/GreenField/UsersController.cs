@@ -104,7 +104,7 @@ namespace BTCPayServer.Controllers.GreenField
             if (request.IsAdministrator is true && !isAdmin)
                 return Forbid(AuthenticationSchemes.GreenfieldBasic);
 
-            if (!isAdmin && (policies.LockSubscription || _themeManager.Policies.DisableUnauthenticatedUserApi))
+            if (!isAdmin && (policies.LockSubscription || _themeManager.Policies.DisableNonAdminCreateUserApi))
             {
                 // If we are not admin and subscriptions are locked, we need to check the Policies.CanCreateUser.Key permission
                 var canCreateUser = (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanCreateUser))).Succeeded;

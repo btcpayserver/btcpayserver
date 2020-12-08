@@ -30,8 +30,8 @@ namespace BTCPayServer.Services
         public bool DisableInstantNotifications { get; set; }
         [Display(Name = "Disable stores falling back to using the server's email settings")]
         public bool DisableStoresToUseServerEmailSettings { get; set; }
-        [Display(Name = "Disable unauthenticated Create User API")]
-        public bool DisableUnauthenticatedUserApi { get; set; }
+        [Display(Name = "Only allow admins to use the user creation API")]
+        public bool DisableNonAdminCreateUserApi { get; set; }
 
         [Display(Name = "Display app on website root")]
         public string RootAppId { get; set; }

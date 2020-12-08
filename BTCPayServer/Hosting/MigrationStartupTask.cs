@@ -272,11 +272,13 @@ retry:
             using (var t = engine.GetTransaction())
             {
                 var textSearch = t.TextGetDocumentsSearchables("InvoiceSearch", invoiceIds);
-                
                 foreach (var el in textSearch)
                 {
                     var invoice = invoices.Single(data => data.Id == Encoders.Base58.EncodeData(el.Key));
-                    invoice.TextSearch = string.Join(' ', el.Value);
+                    await ctx.AddRangeAsync(el.Value.Distinct().Select(s => new InvoiceSearchData()
+                    {
+                        InvoiceData = invoice, Value = s
+                    }));
                 }
             }
             await ctx.SaveChangesAsync();

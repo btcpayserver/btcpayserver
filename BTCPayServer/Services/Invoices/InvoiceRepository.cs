@@ -129,7 +129,7 @@ namespace BTCPayServer.Services.Invoices
                 if (invoiceData.CustomerEmail == null && data.Email != null)
                 {
                     invoiceData.CustomerEmail = data.Email;
-                    AddToTextSearch(invoiceData, invoiceData.CustomerEmail);
+                    await AddToTextSearch(ctx, invoiceData, invoiceData.CustomerEmail);
                 }
                 await ctx.SaveChangesAsync().ConfigureAwait(false);
             }
@@ -208,7 +208,7 @@ namespace BTCPayServer.Services.Invoices
                 textSearch.Add(ToString(invoice.Metadata, null));
                 textSearch.Add(invoice.StoreId);
                 textSearch.Add(invoice.Metadata.BuyerEmail);
-                AddToTextSearch(invoiceData, textSearch.ToArray());
+                await AddToTextSearch(context, invoiceData, textSearch.ToArray());
                 
                 await context.SaveChangesAsync().ConfigureAwait(false);
             }
@@ -292,7 +292,7 @@ namespace BTCPayServer.Services.Invoices
                 Assigned = DateTimeOffset.UtcNow
             }.SetAddress(paymentMethodDetails.GetPaymentDestination(), network.CryptoCode));
 
-            AddToTextSearch(invoice, paymentMethodDetails.GetPaymentDestination());
+            await AddToTextSearch(context, invoice, paymentMethodDetails.GetPaymentDestination());
             await context.SaveChangesAsync();
             return true;
         }
@@ -358,9 +358,10 @@ namespace BTCPayServer.Services.Invoices
             catch (DbUpdateException) { } //Possibly, it was unassigned before
         }
 
-        void AddToTextSearch(InvoiceData invoice, params string[] terms)
+        async Task AddToTextSearch(ApplicationDbContext context, InvoiceData invoice, params string[] terms)
         {
-            invoice.TextSearch += string.Join(" ", terms.Where(t => !string.IsNullOrWhiteSpace(t)));
+            await context.AddRangeAsync(terms.Where(t => !string.IsNullOrWhiteSpace(t) && (invoice.InvoiceSearchData == null  || invoice.InvoiceSearchData.All(data => data.Value != t))).Distinct()
+                .Select(s => new InvoiceSearchData() {InvoiceData = invoice, Value = s}));
         }
 
         public async Task UpdateInvoiceStatus(string invoiceId, InvoiceState invoiceState)
@@ -563,7 +564,9 @@ namespace BTCPayServer.Services.Invoices
         {
             IQueryable<Data.InvoiceData> query = queryObject.UserId is null 
                 ? context.Invoices
-                : context.UserStore.Where(u => u.ApplicationUserId == queryObject.UserId).SelectMany(c => c.StoreData.Invoices);
+                : context.UserStore
+                    .Where(u => u.ApplicationUserId == queryObject.UserId)
+                    .SelectMany(c => c.StoreData.Invoices);
 
             if (!queryObject.IncludeArchived)
             {
@@ -584,7 +587,9 @@ namespace BTCPayServer.Services.Invoices
 
             if (!string.IsNullOrEmpty(queryObject.TextSearch))
             {
-                query = query.Where(i => i.TextSearch.Contains(queryObject.TextSearch));
+#pragma warning disable CA1307 // Specify StringComparison
+                query = query.Where(i => i.InvoiceSearchData.Any(data => data.Value.StartsWith(queryObject.TextSearch)));
+#pragma warning restore CA1307 // Specify StringComparison
             }
 
             if (queryObject.StartDate != null)
@@ -730,7 +735,7 @@ namespace BTCPayServer.Services.Invoices
 
                 await context.Payments.AddAsync(data);
 
-                AddToTextSearch(invoice, paymentData.GetSearchTerms());
+                await AddToTextSearch(context, invoice, paymentData.GetSearchTerms());
                 try
                 {
                     await context.SaveChangesAsync().ConfigureAwait(false);

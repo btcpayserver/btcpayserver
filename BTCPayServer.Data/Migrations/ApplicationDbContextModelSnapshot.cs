@@ -226,9 +226,6 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("StoreDataId")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("TextSearch")
-                        .HasColumnType("TEXT");
-
                     b.HasKey("Id");
 
                     b.HasIndex("OrderId");
@@ -260,6 +257,27 @@ namespace BTCPayServer.Migrations
                     b.HasKey("InvoiceDataId", "UniqueId");
 
                     b.ToTable("InvoiceEvents");
+                });
+
+            modelBuilder.Entity("BTCPayServer.Data.InvoiceSearchData", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("InvoiceDataId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Value");
+
+                    b.HasIndex("InvoiceDataId", "Value");
+
+                    b.ToTable("InvoiceSearchDatas");
                 });
 
             modelBuilder.Entity("BTCPayServer.Data.InvoiceWebhookDeliveryData", b =>
@@ -964,6 +982,14 @@ namespace BTCPayServer.Migrations
                         .HasForeignKey("InvoiceDataId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("BTCPayServer.Data.InvoiceSearchData", b =>
+                {
+                    b.HasOne("BTCPayServer.Data.InvoiceData", "InvoiceData")
+                        .WithMany("InvoiceSearchData")
+                        .HasForeignKey("InvoiceDataId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("BTCPayServer.Data.InvoiceWebhookDeliveryData", b =>

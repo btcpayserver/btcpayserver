@@ -85,6 +85,7 @@ namespace BTCPayServer.Data
                 .HasOne(o => o.StoreData)
                 .WithMany(a => a.Invoices).OnDelete(DeleteBehavior.Cascade);
             builder.Entity<InvoiceData>().HasIndex(o => o.StoreDataId);
+            builder.Entity<InvoiceData>().HasIndex(o => o.OrderId);
             builder.Entity<InvoiceData>()
                 .HasOne(o => o.CurrentRefund);
         }

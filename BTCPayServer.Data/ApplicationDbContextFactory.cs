@@ -1,12 +1,13 @@
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace BTCPayServer.Data
 {
     public class ApplicationDbContextFactory : BaseDbContextFactory<ApplicationDbContext>
     {
-        public ApplicationDbContextFactory(DatabaseOptions options) : base(options, "")
+        public ApplicationDbContextFactory(IOptions<DatabaseOptions> options) : base(options, "")
         {
         }
 

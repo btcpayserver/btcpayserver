@@ -28,7 +28,7 @@ namespace BTCPayServer.Plugins
             IConfiguration config, ILoggerFactory loggerFactory)
         {
             _logger = loggerFactory.CreateLogger(typeof(PluginManager));
-            var pluginsFolder = new DataDirectories(config).PluginDir;
+            var pluginsFolder = new DataDirectories().Configure(config).PluginDir;
             var plugins = new List<IBTCPayServerPlugin>();
 
 

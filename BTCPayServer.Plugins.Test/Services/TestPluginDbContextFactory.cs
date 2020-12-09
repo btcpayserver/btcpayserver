@@ -23,7 +23,7 @@ namespace BTCPayServer.Plugins.Test
 
     public class TestPluginDbContextFactory : BaseDbContextFactory<TestPluginDbContext>
     {
-        public TestPluginDbContextFactory(DatabaseOptions options) : base(options, "BTCPayServer.Plugins.Test")
+        public TestPluginDbContextFactory(IOptions<DatabaseOptions> options) : base(options, "BTCPayServer.Plugins.Test")
         {
         }
 

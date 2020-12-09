@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.WebSockets;
@@ -375,15 +376,6 @@ namespace BTCPayServer
                     request.Host.ToUriComponent()) + relativeOrAbsolute.ToString().WithStartingSlash(), UriKind.Absolute);
         }
 
-        public static IServiceCollection ConfigureBTCPayServer(this IServiceCollection services, IConfiguration conf)
-        {
-            services.Configure<BTCPayServerOptions>(o =>
-            {
-                o.LoadArgs(conf);
-            });
-            return services;
-        }
-
         public static string GetSIN(this ClaimsPrincipal principal)
         {
             return principal.Claims.Where(c => c.Type == Security.Bitpay.BitpayClaims.SIN).Select(c => c.Value).FirstOrDefault();
@@ -495,6 +487,17 @@ namespace BTCPayServer
             Logs.Configuration.LogInformation(
                 "Supported chains: " + String.Join(',', supportedChains.ToArray()));
             return result;
+        }
+
+        public static DataDirectories Configure(this DataDirectories dataDirectories, IConfiguration configuration)
+        {
+            var networkType = DefaultConfiguration.GetNetworkType(configuration);
+            var defaultSettings = BTCPayDefaultSettings.GetDefaultSettings(networkType);
+            dataDirectories.DataDir = configuration["datadir"] ?? defaultSettings.DefaultDataDirectory;
+            dataDirectories.PluginDir = configuration["plugindir"] ?? defaultSettings.DefaultPluginDirectory;
+            dataDirectories.StorageDir = Path.Combine(dataDirectories.DataDir , Storage.Services.Providers.FileSystemStorage.FileSystemFileProviderService.LocalStorageDirectoryName);
+            dataDirectories.TempStorageDir = Path.Combine(dataDirectories.StorageDir, "tmp");
+            return dataDirectories;
         }
 
         private static object Private(this object obj, string privateField) => obj?.GetType().GetField(privateField, BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(obj);

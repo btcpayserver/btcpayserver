@@ -1,17 +1,21 @@
 using System;
 using System.IO;
-using System.Runtime.InteropServices.ComTypes;
+using BTCPayServer.Configuration;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace BTCPayServer.Abstractions.Models
 {
     public class DatabaseOptions
     {
-        public DatabaseOptions(IConfiguration conf, string dataDir)
+        public DatabaseType DatabaseType { get; set; }
+        public string ConnectionString { get; set; }
+
+        public void Configure(IConfiguration configuration, IOptions<DataDirectories> dataDirectories)
         {
-            var postgresConnectionString = conf["postgres"];
-            var mySQLConnectionString = conf["mysql"];
-            var sqliteFileName = conf["sqlitefile"];
+            var postgresConnectionString = configuration["postgres"];
+            var mySQLConnectionString = configuration["mysql"];
+            var sqliteFileName = configuration["sqlitefile"];
 
             if (!string.IsNullOrEmpty(postgresConnectionString))
             {
@@ -27,7 +31,7 @@ namespace BTCPayServer.Abstractions.Models
             {
                 var connStr = "Data Source=" + (Path.IsPathRooted(sqliteFileName)
                     ? sqliteFileName
-                    : Path.Combine(dataDir, sqliteFileName));
+                    : Path.Combine(dataDirectories.Value.DataDir, sqliteFileName));
 
                 DatabaseType = DatabaseType.Sqlite;
                 ConnectionString = sqliteFileName;
@@ -37,8 +41,5 @@ namespace BTCPayServer.Abstractions.Models
                 throw new InvalidOperationException("No database option was configured.");
             }
         }
-
-        public DatabaseType DatabaseType { get; set; }
-        public string ConnectionString { get; set; }
     }
 }

@@ -105,7 +105,6 @@ namespace BTCPayServer.Hosting
             services.AddStartupTask<BlockExplorerLinkStartupTask>();
             services.TryAddSingleton<InvoiceRepository>(o =>
             {
-                var datadirs = o.GetRequiredService<DataDirectories>();
                 var dbContext = o.GetRequiredService<ApplicationDbContextFactory>();
                 return new InvoiceRepository(dbContext, o.GetRequiredService<BTCPayNetworkProvider>(), o.GetService<EventAggregator>());
             });
@@ -115,41 +114,27 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<EventAggregator>();
             services.TryAddSingleton<PaymentRequestService>();
             services.TryAddSingleton<U2FService>();
-            services.TryAddSingleton<DataDirectories>();
-            services.TryAddSingleton<DatabaseOptions>(o =>
-            {
-                try
-                {
-                    var dbOptions = new DatabaseOptions(o.GetRequiredService<IConfiguration>(),
-                        o.GetRequiredService<DataDirectories>().DataDir);
-                    if (dbOptions.DatabaseType == DatabaseType.Postgres)
-                    {
-                        Logs.Configuration.LogInformation($"Postgres DB used");
-                    }
-                    else if (dbOptions.DatabaseType == DatabaseType.MySQL)
-                    {
-                        Logs.Configuration.LogInformation($"MySQL DB used");
-                        Logs.Configuration.LogWarning("MySQL is not widely tested and should be considered experimental, we advise you to use postgres instead.");
-                    }
-                    else if (dbOptions.DatabaseType == DatabaseType.Sqlite)
-                    {
-                        Logs.Configuration.LogInformation($"SQLite DB used");
-                        Logs.Configuration.LogWarning("SQLite is not widely tested and should be considered experimental, we advise you to use postgres instead.");
-                    }
-                    return dbOptions;
-                }
-                catch (Exception ex)
-                {
-                    throw new ConfigException($"No database option was configured. ({ex.Message})");
-                }
-            });
             services.AddSingleton<ApplicationDbContextFactory>();
+            services.AddOptions<BTCPayServerOptions>().Configure(
+                (options) =>
+                {
+                    options.LoadArgs(configuration);
+                });
+            services.AddOptions<DataDirectories>().Configure(
+                (options) =>
+                {
+                    options.Configure(configuration);
+                });
+            services.AddOptions<DatabaseOptions>().Configure<IOptions<DataDirectories>>(
+                (options, datadirs) =>
+                {
+                    options.Configure(configuration, datadirs);
+                });
             services.AddOptions<NBXplorerOptions>().Configure<BTCPayNetworkProvider>(
                 (options, btcPayNetworkProvider) =>
                 {
                     options.Configure(configuration, btcPayNetworkProvider);
                 });
-            
             services.AddOptions<LightningNetworkOptions>().Configure<BTCPayNetworkProvider>(
                 (options, btcPayNetworkProvider) =>
                 {

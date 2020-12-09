@@ -611,7 +611,7 @@
                     "metadata": {
                         "type": "object",
                         "nullable": true,
-                        "description": "Additional information around the invoice that can be supplied."
+                        "description": "Additional information around the invoice that can be supplied. Some metadata are treated differently by BTCPay Server: \n * `orderId`: A string, you can use this property to store the ID of an external system. We allow you to search in the invoice list based on this ID."
                     },
                     "checkout": {
                         "nullable": true,
@@ -642,7 +642,7 @@
                         "nullable": true,
                         "items": {
                             "type": "string"
-                        }, 
+                        },
                         "description": "A specific set of payment methods to use for this invoice (ie. BTC, BTC-LightningNetwork). By default, select all payment methods activated in the store."
                     },
                     "expirationMinutes": {
@@ -662,6 +662,11 @@
                         "minimum": 0,
                         "maximum": 100,
                         "description": "A percentage determining whether to count the invoice as paid when the invoice is paid within the specified margin of error. Default to the store's settings. (The default store settings is 100)"
+                    },
+                    "redirectURL": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "When the customer paid the invoice, the URL where the customer will be redirected when clicking on the `return to store` button. You can use placeholders `{InvoiceId}` or `{OrderId}` in the URL, BTCPay Server will replace those with this invoice `id` or `metadata.orderId` respectively."
                     }
                 }
             },

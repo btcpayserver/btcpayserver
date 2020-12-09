@@ -48,26 +48,26 @@
                                     }
                                 }
                             </span>
-                            <span class="d-flex align-items-center">
+                            <span class="d-flex align-items-center fw-semibold">
                                 @if (scheme.Enabled)
                                 {
-                                    <strong class="d-flex align-items-center text-success">
+                                    <span class="d-flex align-items-center text-success">
                                         <span class="mr-2 btcpay-status btcpay-status--enabled"></span>
                                         Enabled
-                                    </strong>
+                                    </span>
                                 }
                                 else
                                 {
-                                    <strong class="d-flex align-items-center text-danger">
+                                    <span class="d-flex align-items-center text-danger">
                                         <span class="mr-2 btcpay-status btcpay-status--disabled"></span>
                                         Disabled
-                                    </strong>
+                                    </span>
                                 }
                                 @if (isSetUp)
                                 {
                                     <span class="text-light ml-3 mr-2">|</span>
                                 }
-                                <a asp-action="AddDerivationScheme" asp-route-cryptoCode="@scheme.Crypto" asp-route-storeId="@Context.GetRouteValue("storeId")" id="@($"Modify{scheme.Crypto}")" class="btn btn-sm btn-@(isSetUp ? "link" : "primary ml-4 px-3") py-1">
+                                <a asp-action="AddDerivationScheme" asp-route-cryptoCode="@scheme.Crypto" asp-route-storeId="@Context.GetRouteValue("storeId")" id="@($"Modify{scheme.Crypto}")" class="btn btn-@(isSetUp ? "link px-1" : "primary btn-sm ml-4 px-3") py-1 fw-semibold">
                                     @(isSetUp ? "Modify" : "Setup")
                                 </a>
                             </span>
@@ -109,26 +109,26 @@
                                     <span class="smMaxWidth text-truncate text-secondary mr-3">@scheme.Address</span>
                                 }
                             </span>
-                            <span class="d-flex align-items-center">
+                            <span class="d-flex align-items-center fw-semibold">
                                 @if (scheme.Enabled)
                                 {
-                                    <strong class="d-flex align-items-center text-success">
+                                    <span class="d-flex align-items-center text-success">
                                         <span class="mr-2 btcpay-status btcpay-status--enabled"></span>
                                         Enabled
-                                    </strong>
+                                    </span>
                                 }
                                 else
                                 {
-                                    <strong class="d-flex align-items-center text-danger">
+                                    <span class="d-flex align-items-center text-danger">
                                         <span class="mr-2 btcpay-status btcpay-status--disabled"></span>
                                         Disabled
-                                    </strong>
+                                    </span>
                                 }
                                 @if (isSetUp)
                                 {
                                     <span class="text-light ml-3 mr-2">|</span>
                                 }
-                                <a asp-action="AddLightningNode" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@Context.GetRouteValue("storeId")" id="@($"Modify-Lightning{scheme.CryptoCode}")" class="btn btn-sm btn-@(isSetUp ? "link" : "primary ml-4 px-3") py-1">
+                                <a asp-action="AddLightningNode" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@Context.GetRouteValue("storeId")" id="@($"Modify-Lightning{scheme.CryptoCode}")" class="btn btn-@(isSetUp ? "link px-1" : "primary btn-sm ml-4 px-3") py-1 fw-semibold">
                                     @(isSetUp ? "Modify" : "Setup")
                                 </a>
                             </span>

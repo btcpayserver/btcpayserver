@@ -609,7 +609,7 @@
                         "description": "The currency the invoice will use"
                     },
                     "metadata": {
-                        "type": "string",
+                        "type": "object",
                         "nullable": true,
                         "description": "Additional information around the invoice that can be supplied."
                     },

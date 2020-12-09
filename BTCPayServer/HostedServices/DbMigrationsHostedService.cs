@@ -7,6 +7,7 @@ using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
+using Microsoft.Extensions.Options;
 
 namespace BTCPayServer.HostedServices
 {
@@ -18,9 +19,9 @@ namespace BTCPayServer.HostedServices
         private readonly InvoiceRepository _invoiceRepository;
         private readonly SettingsRepository _settingsRepository;
         private readonly ApplicationDbContextFactory _dbContextFactory;
-        private readonly DataDirectories _datadirs;
+        private readonly IOptions<DataDirectories> _datadirs;
 
-        public DbMigrationsHostedService(InvoiceRepository invoiceRepository, SettingsRepository settingsRepository, ApplicationDbContextFactory dbContextFactory, DataDirectories datadirs)
+        public DbMigrationsHostedService(InvoiceRepository invoiceRepository, SettingsRepository settingsRepository, ApplicationDbContextFactory dbContextFactory, IOptions<DataDirectories> datadirs)
         {
             _invoiceRepository = invoiceRepository;
             _settingsRepository = settingsRepository;
@@ -48,7 +49,7 @@ namespace BTCPayServer.HostedServices
         private async Task MigratedInvoiceTextSearchToDb(int startFromPage)
         {
             // deleting legacy DBriize database if present
-            var dbpath = Path.Combine(_datadirs.DataDir, "InvoiceDB");
+            var dbpath = Path.Combine(_datadirs.Value.DataDir, "InvoiceDB");
             if (Directory.Exists(dbpath))
             {
                 Directory.Delete(dbpath, true);

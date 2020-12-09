@@ -5,7 +5,7 @@ namespace BTCPayServer.Abstractions.Services
 {
     public abstract class PluginAction<T>:IPluginHookAction
     {
-        public string Hook { get; }
+        public abstract string Hook { get; }
         public Task Execute(object args)
         {
             return Execute(args is T args1 ? args1 : default);

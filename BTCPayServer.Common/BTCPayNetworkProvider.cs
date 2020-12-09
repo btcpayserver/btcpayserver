@@ -8,8 +8,7 @@ namespace BTCPayServer
 {
     public partial class BTCPayNetworkProvider
     {
-        readonly Dictionary<string, BTCPayNetworkBase> _Networks = new Dictionary<string, BTCPayNetworkBase>();
-
+        protected readonly Dictionary<string, BTCPayNetworkBase> _Networks = new Dictionary<string, BTCPayNetworkBase>();
 
         private readonly NBXplorerNetworkProvider _NBXplorerNetworkProvider;
         public NBXplorerNetworkProvider NBXplorerNetworkProvider

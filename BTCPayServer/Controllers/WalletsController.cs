@@ -1186,7 +1186,7 @@ namespace BTCPayServer.Controllers
             var res = paymentMethodId.PaymentType == PaymentTypes.BTCLike
                 ? Url.Content(network.CryptoImagePath)
                 : Url.Content(network.LightningImagePath);
-            return "/" + res;
+            return Request.GetRelativePathOrAbsolute(res);
         }
     }
 

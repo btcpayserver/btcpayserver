@@ -10,6 +10,7 @@ using BTCPayServer.Controllers;
 using BTCPayServer.Events;
 using BTCPayServer.JsonConverters;
 using BTCPayServer.Lightning;
+using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Tests.Logging;
@@ -244,19 +245,19 @@ namespace BTCPayServer.Tests
                         Password = "afewfoiewiou",
                         IsAdministrator = true
                     }));
-                
+
                 // If we set DisableNonAdminCreateUserApi = true, it should always fail to create a user unless you are an admin
-                await settings.UpdateSetting(new PoliciesSettings() { LockSubscription = false, DisableNonAdminCreateUserApi = true});
+                await settings.UpdateSetting(new PoliciesSettings() { LockSubscription = false, DisableNonAdminCreateUserApi = true });
                 await AssertHttpError(403,
                     async () =>
                         await unauthClient.CreateUser(
-                            new CreateApplicationUserRequest() {Email = "test9@gmail.com", Password = "afewfoiewiou"}));              
+                            new CreateApplicationUserRequest() { Email = "test9@gmail.com", Password = "afewfoiewiou" }));
                 await AssertHttpError(403,
                     async () =>
                         await user1Client.CreateUser(
-                            new CreateApplicationUserRequest() {Email = "test9@gmail.com", Password = "afewfoiewiou"}));
+                            new CreateApplicationUserRequest() { Email = "test9@gmail.com", Password = "afewfoiewiou" }));
                 await adminClient.CreateUser(
-                    new CreateApplicationUserRequest() {Email = "test9@gmail.com", Password = "afewfoiewiou"});
+                    new CreateApplicationUserRequest() { Email = "test9@gmail.com", Password = "afewfoiewiou" });
 
             }
         }
@@ -964,7 +965,7 @@ namespace BTCPayServer.Tests
                 var paymentMethod = paymentMethods.First();
                 Assert.Equal("BTC", paymentMethod.PaymentMethod);
                 Assert.Empty(paymentMethod.Payments);
-                
+
 
                 //update
                 invoice = await viewOnly.GetInvoice(user.StoreId, newInvoice.Id);
@@ -1024,6 +1025,42 @@ namespace BTCPayServer.Tests
                             });
                         Assert.NotNull(await client.GetWebhookDelivery(evt.StoreId, evt.WebhookId, evt.DeliveryId));
                     }
+                }
+
+
+                newInvoice = await client.CreateInvoice(user.StoreId,
+                    new CreateInvoiceRequest()
+                    {
+                        Currency = "USD",
+                        Amount = 1,
+                        Checkout = new CreateInvoiceRequest.CheckoutOptions()
+                        {
+                            DefaultLanguage = "it-it ",
+                            RedirectURL = "http://toto.com/lol"
+                        }
+                    });
+                Assert.EndsWith($"/i/{newInvoice.Id}", newInvoice.CheckoutLink);
+                var controller = tester.PayTester.GetController<InvoiceController>(user.UserId, user.StoreId);
+                var model = (PaymentModel)((ViewResult)await controller.Checkout(newInvoice.Id)).Model;
+                Assert.Equal("it-IT", model.DefaultLang);
+                Assert.Equal("http://toto.com/lol", model.MerchantRefLink);
+
+                var langs = tester.PayTester.GetService<LanguageService>();
+                foreach (var match in new[] { "it", "it-IT", "it-LOL" })
+                {
+                    Assert.Equal("it-IT", langs.FindBestMatch(match).Code);
+                }
+                foreach (var match in new[] { "pt-BR" })
+                {
+                    Assert.Equal("pt-BR", langs.FindBestMatch(match).Code);
+                }
+                foreach (var match in new[] { "en", "en-US" })
+                {
+                    Assert.Equal("en", langs.FindBestMatch(match).Code);
+                }
+                foreach (var match in new[] { "pt", "pt-pt", "pt-PT" })
+                {
+                    Assert.Equal("pt-PT", langs.FindBestMatch(match).Code);
                 }
             }
         }

@@ -54,6 +54,15 @@ namespace Microsoft.AspNetCore.Mvc
                 scheme, host, pathbase);
         }
 
+        public static string CheckoutLink(this LinkGenerator urlHelper, string invoiceId, string scheme, HostString host, string pathbase)
+        {
+            return urlHelper.GetUriByAction(
+                action: nameof(InvoiceController.Checkout),
+                controller: "Invoice",
+                values: new { invoiceId = invoiceId },
+                scheme, host, pathbase);
+        }
+
         public static string PayoutLink(this LinkGenerator urlHelper, string walletId,string pullPaymentId, string scheme, HostString host, string pathbase)
         {
             return urlHelper.GetUriByAction(

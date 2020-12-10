@@ -31,9 +31,9 @@ namespace BTCPayServer.Client.Models
             public TimeSpan? Monitoring { get; set; }
 
             public double? PaymentTolerance { get; set; }
-
             [JsonProperty("redirectURL")]
             public string RedirectURL { get; set; }
+            public string DefaultLanguage { get; set; }
         }
     }
 }

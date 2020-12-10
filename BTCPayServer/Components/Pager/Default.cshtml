@@ -1,6 +1,6 @@
 @model BasePagingViewModel
 
-@if (Model.Total > 0)
+@if (Model.Total > Model.Count)
 {
     <nav aria-label="..." class="w-100">
         <ul class="pagination float-left">
@@ -74,8 +74,8 @@
         {
             searchTerm = Model.SearchTerm,
             timezoneOffset = Model.TimezoneOffset,
-            skip = skip,
-            count = count,
+            skip,
+            count,
         });
 
         return act;

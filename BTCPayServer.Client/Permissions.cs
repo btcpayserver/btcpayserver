@@ -172,6 +172,7 @@ namespace BTCPayServer.Client
                 case Policies.CanViewPaymentRequests when this.Policy == Policies.CanViewStoreSettings:
                 case Policies.CanCreateLightningInvoiceInternalNode when this.Policy == Policies.CanUseInternalLightningNode:
                 case Policies.CanCreateLightningInvoiceInStore when this.Policy == Policies.CanUseLightningNodeInStore:
+                case Policies.CanViewNotificationsForUser when this.Policy == Policies.CanManageNotificationsForUser:
                     return true;
                 default:
                     return false;

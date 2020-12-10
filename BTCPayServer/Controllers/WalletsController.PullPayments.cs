@@ -30,7 +30,9 @@ namespace BTCPayServer.Controllers
             return View(new NewPullPaymentModel()
             {
                 Name = "",
-                Currency = "BTC"
+                Currency = "BTC",
+                CustomCSSLink = "",
+                EmbeddedCSS = "",
             });
         }
 
@@ -65,7 +67,9 @@ namespace BTCPayServer.Controllers
                 Amount = model.Amount,
                 Currency = model.Currency,
                 StoreId = walletId.StoreId,
-                PaymentMethodIds = new[] { paymentMethodId }
+                PaymentMethodIds = new[] { paymentMethodId },
+                EmbeddedCSS = model.EmbeddedCSS,
+                CustomCSSLink = model.CustomCSSLink
             });
             this.TempData.SetStatusMessageModel(new StatusMessageModel()
             {

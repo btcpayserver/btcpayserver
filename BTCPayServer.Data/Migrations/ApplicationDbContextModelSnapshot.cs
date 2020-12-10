@@ -228,6 +228,8 @@ namespace BTCPayServer.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("OrderId");
+
                     b.HasIndex("StoreDataId");
 
                     b.HasIndex("Id", "CurrentRefundId");

@@ -17,43 +17,36 @@
     <div>
         <div class="row">
             <div class="col-lg-12 section-heading">
-                <h2>
-                    U2F Authentication
-                </h2>
+                <h2>U2F Authentication</h2>
                 <hr class="primary">
                 <div>
-                    <span class="fa fa-spinner fa-spin float-right ml-3 mr-5 mt-1" style="font-size:2.5em"></span>
+                    <span id="spinner" class="fa fa-spinner fa-spin float-right ml-3 mr-5 mt-1" style="font-size:2.5em"></span>
                     <p>Insert your U2F device or hardware wallet into your computer's USB port. If it has a button, tap on it.</p>
                 </div>
-
-                <a id="error-response" class="text-danger" href="javascript:window.location.reload()"> </a>
+                <p id="error-message" class="d-none alert alert-danger"></p>
+                <a id="btn-retry"  class="btn btn-secondary d-none" href="javascript:window.location.reload()">Retry</a>
             </div>
         </div>
     </div>
 </section>
 
-<script src="~/vendor/u2f/u2f-api-1.1.js" asp-append-version="true"></script>
+<script src="~/vendor/u2f/u2f-api-1.1.1.js" asp-append-version="true"></script>
 <script type="text/javascript">
-    var errorMap = {
-        1: 'Unknown error, try again',
-        2: "Bad request error, try again",
-        3: "This key isn't supported, please try another one",
-        4: 'The device is not registered, please try another one',
-        5: 'Authentication timed out. Please reload to try again.'
-    };
-    setTimeout(function() {
-        window.u2f.sign(
-            @Safe.Json(Model.AppId),
-            @Safe.Json(Model.Challenge),
-            @Safe.Json(Model.Challenges), function (data) {
-                if (data.errorCode) {
-                    $("#error-response").text(errorMap[data.errorCode]);
-                    return;
-                }
-                $('#DeviceResponse').val(JSON.stringify(data));
-                $('#u2fForm').submit();
-
-                return "";
-            });
-    }, 1000);
+    document.addEventListener("DOMContentLoaded", () => {
+        window.u2fApi.sign(
+            @Safe.Json(Model.Challenges)
+        )
+        .then(data => {
+            document.getElementById("DeviceResponse").value = JSON.stringify(data);
+            document.getElementById("u2fForm").submit();
+        })
+        .catch(error => {
+            document.getElementById("error-message").innerText = error.message;
+            document.getElementById("error-message").classList.remove("d-none");
+            document.getElementById("spinner").classList.add("d-none");
+            if (!error.message.endsWith("not supported")) {
+                document.getElementById("btn-retry").classList.remove("d-none");
+            }
+        });
+    });
 </script>

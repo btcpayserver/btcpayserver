@@ -70,14 +70,22 @@
             skip = Model.Skip + count;
         }
 
-        var act = Url.Action(null, new
+        var query = new Dictionary<string, object>
         {
-            searchTerm = Model.SearchTerm,
-            timezoneOffset = Model.TimezoneOffset,
-            skip,
-            count,
-        });
+            { "searchTerm", Model.SearchTerm },
+            { "timezoneOffset", Model.TimezoneOffset },
+            { "skip", skip },
+            { "count", count }
+        };
 
-        return act;
+        if (Model.PaginationQuery != null)
+        {
+            // merge both, prefering the `query` properties in case of duplicate keys
+            query = query.Concat(Model.PaginationQuery)
+                .GroupBy(e => e.Key)
+                .ToDictionary(g => g.Key, g => g.First().Value);
+        }
+
+        return Url.Action(null, query);
     }
 }

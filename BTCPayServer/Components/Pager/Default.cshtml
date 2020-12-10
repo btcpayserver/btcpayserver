@@ -4,7 +4,7 @@
     var pageSizeOptions = new [] { 50, 100, 250, 500 };
 }
 
-@if (Model.Total > pageSizeOptions[0])
+@if (Model.Total > pageSizeOptions.Min())
 {
     <nav aria-label="..." class="w-100">
         @if (Model.Total > Model.Count)
@@ -33,7 +33,7 @@
             </ul>
         }
 
-        @if (Model.Total >= pageSizeOptions[0])
+        @if (Model.Total >= pageSizeOptions.Min())
         {
             <ul class="pagination float-right">
                 <li class="page-item disabled">

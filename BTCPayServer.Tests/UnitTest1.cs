@@ -35,6 +35,7 @@ using BTCPayServer.Security.Bitpay;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Tests.Logging;
@@ -584,6 +585,95 @@ namespace BTCPayServer.Tests
                 Assert.True(response.IsSuccessStatusCode);
             }
         }
+
+        [Fact]
+        [Trait("Fast", "Fast")]
+        public void CanParseLegacyLabels()
+        {
+            static void AssertContainsRawLabel(WalletTransactionInfo info)
+            {
+                foreach (var item in new[] { "blah", "lol", "hello" })
+                {
+                    Assert.True(info.Labels.ContainsKey(item));
+                    var rawLabel = Assert.IsType<RawLabel>(info.Labels[item]);
+                    Assert.Equal("raw", rawLabel.Type);
+                    Assert.Equal(item, rawLabel.Text);
+                }
+            }
+            var data = new WalletTransactionData();
+            data.Labels = "blah,lol,hello,lol";
+            var info = data.GetBlobInfo();
+            Assert.Equal(3, info.Labels.Count);
+            AssertContainsRawLabel(info);
+            data.SetBlobInfo(info);
+            Assert.Contains("raw", data.Labels);
+            Assert.Contains("{", data.Labels);
+            Assert.Contains("[", data.Labels);
+            info = data.GetBlobInfo();
+            AssertContainsRawLabel(info);
+
+
+            data = new WalletTransactionData()
+            {
+                Labels = "pos",
+                Blob = Encoders.Hex.DecodeData("1f8b08000000000000037abf7b7fb592737e6e6e6a5e89929592522d000000ffff030036bc6ad911000000")
+            };
+            info = data.GetBlobInfo();
+            var label = Assert.Single(info.Labels);
+            Assert.Equal("raw", label.Value.Type);
+            Assert.Equal("pos", label.Value.Text);
+            Assert.Equal("pos", label.Key);
+
+
+            static void AssertContainsLabel(WalletTransactionInfo info)
+            {
+                Assert.Equal(2, info.Labels.Count);
+                var invoiceLabel = Assert.IsType<ReferenceLabel>(info.Labels["invoice"]);
+                Assert.Equal("BFm1MCJPBCDeRoWXvPcwnM", invoiceLabel.Reference);
+                Assert.Equal("invoice", invoiceLabel.Text);
+                Assert.Equal("invoice", invoiceLabel.Type);
+
+                var appLabel = Assert.IsType<ReferenceLabel>(info.Labels["app"]);
+                Assert.Equal("87kj5yKay8mB4UUZcJhZH5TqDKMD3CznjwLjiu1oYZXe", appLabel.Reference);
+                Assert.Equal("app", appLabel.Text);
+                Assert.Equal("app", appLabel.Type);
+            }
+            data = new WalletTransactionData()
+            {
+                Labels = "[\"{\\n  \\\"value\\\": \\\"invoice\\\",\\n  \\\"id\\\": \\\"BFm1MCJPBCDeRoWXvPcwnM\\\"\\n}\",\"{\\n  \\\"value\\\": \\\"app\\\",\\n  \\\"id\\\": \\\"87kj5yKay8mB4UUZcJhZH5TqDKMD3CznjwLjiu1oYZXe\\\"\\n}\"]",
+            };
+            info = data.GetBlobInfo();
+            AssertContainsLabel(info);
+            data.SetBlobInfo(info);
+            info = data.GetBlobInfo();
+            AssertContainsLabel(info);
+
+            static void AssertPayoutLabel(WalletTransactionInfo info)
+            {
+                Assert.Single(info.Labels);
+                var l = Assert.IsType<PayoutLabel>(info.Labels["payout"]);
+                Assert.Equal("pullPaymentId", l.PullPaymentId);
+                Assert.Equal("walletId", l.WalletId);
+                Assert.Equal("payoutId", l.PayoutId);
+            }
+
+            var payoutId = "payoutId";
+            var pullPaymentId = "pullPaymentId";
+            var walletId = "walletId";
+            // How it was serialized before
+
+            data = new WalletTransactionData()
+            {
+                Labels = new JArray(JObject.FromObject(new { value = "payout", id = payoutId, pullPaymentId, walletId })).ToString()
+            };
+            info = data.GetBlobInfo();
+            AssertPayoutLabel(info);
+            data.SetBlobInfo(info);
+            info = data.GetBlobInfo();
+            AssertPayoutLabel(info);
+        }
+
+        
 
         [Fact]
         [Trait("Fast", "Fast")]
@@ -1234,8 +1324,8 @@ namespace BTCPayServer.Tests
                 tx = Assert.Single(transactions.Transactions);
 
                 Assert.Equal("hello", tx.Comment);
-                Assert.Contains("test", tx.Labels.Select(l => l.Value));
-                Assert.Contains("test2", tx.Labels.Select(l => l.Value));
+                Assert.Contains("test", tx.Labels.Select(l => l.Text));
+                Assert.Contains("test2", tx.Labels.Select(l => l.Text));
                 Assert.Equal(2, tx.Labels.GroupBy(l => l.Color).Count());
 
                 Assert.IsType<RedirectToActionResult>(
@@ -1246,8 +1336,8 @@ namespace BTCPayServer.Tests
                 tx = Assert.Single(transactions.Transactions);
 
                 Assert.Equal("hello", tx.Comment);
-                Assert.Contains("test", tx.Labels.Select(l => l.Value));
-                Assert.DoesNotContain("test2", tx.Labels.Select(l => l.Value));
+                Assert.Contains("test", tx.Labels.Select(l => l.Text));
+                Assert.DoesNotContain("test2", tx.Labels.Select(l => l.Text));
                 Assert.Single(tx.Labels.GroupBy(l => l.Color));
 
                 var walletInfo = await tester.PayTester.GetService<WalletRepository>().GetWalletInfo(walletId);

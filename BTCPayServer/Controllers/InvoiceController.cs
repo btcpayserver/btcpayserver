@@ -172,6 +172,7 @@ namespace BTCPayServer.Controllers
             entity.Currency = invoice.Currency;
             entity.Price = invoice.Amount;
             entity.SpeedPolicy = invoice.Checkout.SpeedPolicy ?? store.SpeedPolicy;
+            entity.DefaultLanguage = invoice.Checkout.DefaultLanguage;
             IPaymentFilter excludeFilter = null;
             if (invoice.Checkout.PaymentMethods != null)
             {

@@ -433,14 +433,14 @@ namespace BTCPayServer.Controllers
         [XFrameOptionsAttribute(null)]
         [ReferrerPolicyAttribute("origin")]
         public async Task<IActionResult> Checkout(string invoiceId, string id = null, string paymentMethodId = null,
-            [FromQuery] string view = null)
+            [FromQuery] string view = null, [FromQuery] string lang = null)
         {
             //Keep compatibility with Bitpay
             invoiceId = invoiceId ?? id;
             id = invoiceId;
             //
 
-            var model = await GetInvoiceModel(invoiceId, paymentMethodId == null ? null : PaymentMethodId.Parse(paymentMethodId));
+            var model = await GetInvoiceModel(invoiceId, paymentMethodId == null ? null : PaymentMethodId.Parse(paymentMethodId), lang);
             if (model == null)
                 return NotFound();
 
@@ -465,21 +465,21 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("invoice-noscript")]
-        public async Task<IActionResult> CheckoutNoScript(string invoiceId, string id = null, string paymentMethodId = null)
+        public async Task<IActionResult> CheckoutNoScript(string invoiceId, string id = null, string paymentMethodId = null, [FromQuery] string lang = null)
         {
             //Keep compatibility with Bitpay
             invoiceId = invoiceId ?? id;
             id = invoiceId;
             //
 
-            var model = await GetInvoiceModel(invoiceId, paymentMethodId == null ? null : PaymentMethodId.Parse(paymentMethodId));
+            var model = await GetInvoiceModel(invoiceId, paymentMethodId == null ? null : PaymentMethodId.Parse(paymentMethodId), lang);
             if (model == null)
                 return NotFound();
 
             return View(model);
         }
 
-        private async Task<PaymentModel> GetInvoiceModel(string invoiceId, PaymentMethodId paymentMethodId)
+        private async Task<PaymentModel> GetInvoiceModel(string invoiceId, PaymentMethodId paymentMethodId, string lang)
         {
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
             if (invoice == null)
@@ -534,7 +534,7 @@ namespace BTCPayServer.Controllers
                 RootPath = this.Request.PathBase.Value.WithTrailingSlash(),
                 OrderId = invoice.Metadata.OrderId,
                 InvoiceId = invoice.Id,
-                DefaultLang = storeBlob.DefaultLang ?? "en",
+                DefaultLang = lang ?? invoice.DefaultLanguage ?? storeBlob.DefaultLang ?? "en",
                 CustomCSSLink = storeBlob.CustomCSS,
                 CustomLogoLink = storeBlob.CustomLogo,
                 HtmlTitle = storeBlob.HtmlTitle ?? "BTCPay Invoice",
@@ -619,9 +619,9 @@ namespace BTCPayServer.Controllers
         [Route("invoice/{invoiceId}/status")]
         [Route("invoice/{invoiceId}/{paymentMethodId}/status")]
         [Route("invoice/status")]
-        public async Task<IActionResult> GetStatus(string invoiceId, string paymentMethodId = null)
+        public async Task<IActionResult> GetStatus(string invoiceId, string paymentMethodId = null, [FromQuery] string lang = null)
         {
-            var model = await GetInvoiceModel(invoiceId, paymentMethodId == null ? null : PaymentMethodId.Parse(paymentMethodId));
+            var model = await GetInvoiceModel(invoiceId, paymentMethodId == null ? null : PaymentMethodId.Parse(paymentMethodId), lang);
             if (model == null)
                 return NotFound();
             return Json(model);

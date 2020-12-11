@@ -4,54 +4,55 @@
     ViewData.SetActivePageAndTitle(ManageNavPages.APIKeys, "Manage your API Keys");
 }
 
-<partial name="_StatusMessage"/>
+<partial name="_StatusMessage" />
 
+<p>The <a asp-controller="Home" asp-action="SwaggerDocs" target="_blank">BTCPay Server Greenfield API</a> offers programmatic access to your instance. You can manage your BTCPay Server (e.g. stores, invoices, users) as well as automate workflows and integrations (see some use case examples). For that you need the API keys, which can be generated here. Find more information in the <a href="@Url.Action("SwaggerDocs", "Home")#section/Authentication" target="_blank">API authentication docs</a>.</p>
 <table class="table table-lg">
     <thead>
-    <tr>
-        <th>Label</th>
-        <th>Key</th>
-        <th>Permissions</th>
-        <th class="text-right">Actions</th>
-    </tr>
+        <tr>
+            <th>Label</th>
+            <th>Key</th>
+            <th>Permissions</th>
+            <th class="text-right">Actions</th>
+        </tr>
     </thead>
     <tbody>
-    @foreach (var keyData in Model.ApiKeyDatas)
-    {
-        <tr>
-            <td>@keyData.Label</td>
-            <td><code>@keyData.Id</code></td>
-            <td>
-                @{
-                    var permissions = keyData.GetBlob().Permissions;
-                }
-                @if (!permissions.Any())
-                {
-                    <span class="text-warning">No permissions</span>
-                }
-                else
-                {
-                    <ul>
-                        @foreach (var permission in Permission.ToPermissions(permissions).Select(c => c.ToString()).Distinct().ToArray())
-                        {
-                            <li><code>@permission</code></li>
-                        }
-                    </ul>
-                }
-            </td>
-            <td class="text-right">
-                <a asp-action="RemoveAPIKey" asp-route-id="@keyData.Id" asp-controller="Manage">Remove</a>
-            </td>
-        </tr>
-    }
-    @if (!Model.ApiKeyDatas.Any())
-    {
-        <tr>
-            <td colspan="4" class="text-center h5 py-2">
-                No API keys
-            </td>
-        </tr>
-    }
+        @foreach (var keyData in Model.ApiKeyDatas)
+        {
+            <tr>
+                <td>@keyData.Label</td>
+                <td><code>@keyData.Id</code></td>
+                <td>
+                    @{
+                        var permissions = keyData.GetBlob().Permissions;
+                    }
+                    @if (!permissions.Any())
+                    {
+                        <span class="text-warning">No permissions</span>
+                    }
+                    else
+                    {
+                        <ul>
+                            @foreach (var permission in Permission.ToPermissions(permissions).Select(c => c.ToString()).Distinct().ToArray())
+                            {
+                                <li><code>@permission</code></li>
+                            }
+                        </ul>
+                    }
+                </td>
+                <td class="text-right">
+                    <a asp-action="RemoveAPIKey" asp-route-id="@keyData.Id" asp-controller="Manage">Remove</a>
+                </td>
+            </tr>
+        }
+        @if (!Model.ApiKeyDatas.Any())
+        {
+            <tr>
+                <td colspan="4" class="text-center h5 py-2">
+                    No API keys
+                </td>
+            </tr>
+        }
     </tbody>
 </table>
 <a class="btn btn-primary" asp-action="AddApiKey" id="AddApiKey">

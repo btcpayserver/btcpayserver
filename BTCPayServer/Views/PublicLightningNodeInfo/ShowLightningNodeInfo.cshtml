@@ -51,10 +51,10 @@
                                 <img  alt="@Model.CryptoCode" class="qr-icon" src="@Model.CryptoImage" />
                                 <vc:qr-code data="@Model.NodeInfo"> </vc:qr-code>
                             </div>
-                            <div data-clipboard="@Model.NodeInfo" class="input-group copy d-flex" style="cursor: copy">
-                                <input type="text" class="form-control" readonly="readonly" asp-for="NodeInfo" id="peer-info" />
+                            <div class="input-group  d-flex" data-clipboard="@Model.NodeInfo">
+                                <input type="text" class="form-control" style="cursor: copy" readonly="readonly" value="@Model.NodeInfo" id="peer-info"/>
                                 <div class="input-group-append">
-                                    <span class="input-group-text fa fa-copy py-2"></span>
+                                    <button type="button" class="btn btn-outline-secondary" data-clipboard-confirm>Copy node info</button>
                                 </div>
                             </div>
                         }

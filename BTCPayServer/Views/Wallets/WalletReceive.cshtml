@@ -48,10 +48,10 @@
                             <img src="@Model.CryptoImage" class="qr-icon"/>
                             <vc:qr-code data="@Model.Address"/>
                         </div>
-                        <div style="cursor: copy" class="input-group" data-clipboard="@Model.Address" data-clipboard-confirm="Copied Address ✔">
-                            <input type="text" class=" form-control " readonly="readonly" value="@Model.Address" id="address"/>
+                        <div class="input-group" data-clipboard="@Model.Address">
+                            <input type="text" class="form-control" style="cursor: copy" readonly="readonly" value="@Model.Address" id="address"/>
                             <div class="input-group-append">
-                                <span class="input-group-text fa fa-copy"> </span>
+                                <button type="button" class="btn btn-outline-secondary" data-clipboard-confirm>Copy address</button>
                             </div>
                         </div>
                         <div class="row mt-4">
@@ -71,9 +71,9 @@
 
 @section HeadScripts
 {
-    <link href="~/main/qrcode.css" rel="stylesheet" asp-append-version="true" />
-        <script src="~/js/copy-to-clipboard.js"></script>
-        <script>
+    <link href="~/main/qrcode.css" rel="stylesheet" asp-append-version="true"/>
+    <script src="~/js/copy-to-clipboard.js"></script>
+    <script>
         window.onload = function (){        
             document.querySelectorAll('[data-clipboard]').forEach(value => value.addEventListener('click', window.copyToClipboard));
         }

@@ -20,6 +20,7 @@ using BTCPayServer.Services.Wallets;
 using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis.Operations;
 using NBitcoin;
 using NBitcoin.Payment;
 using NBitpayClient;
@@ -469,6 +470,8 @@ namespace BTCPayServer.Tests
         public List<WebhookInvoiceEvent> WebhookEvents { get; set; } = new List<WebhookInvoiceEvent>();
         public TEvent AssertHasWebhookEvent<TEvent>(WebhookEventType eventType, Action<TEvent> assert) where TEvent : class
         {
+            int retry = 0;
+            retry:
             foreach (var evt in WebhookEvents)
             {
                 if (evt.Type == eventType)
@@ -483,6 +486,12 @@ namespace BTCPayServer.Tests
                     {
                     }
                 }
+            }
+            if (retry < 3)
+            {
+                Thread.Sleep(1000);
+                retry++;
+                goto retry;
             }
             Assert.True(false, "No webhook event match the assertion");
             return null;

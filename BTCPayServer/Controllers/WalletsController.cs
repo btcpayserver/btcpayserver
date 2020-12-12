@@ -290,6 +290,13 @@ namespace BTCPayServer.Controllers
                 Count = count,
                 Total = 0
             };
+            if (labelFilter != null)
+            {
+                model.PaginationQuery = new Dictionary<string, object>
+                {
+                    {"labelFilter", labelFilter}
+                };
+            }
             if (transactions == null)
             {
                 TempData.SetStatusMessageModel(new StatusMessageModel()

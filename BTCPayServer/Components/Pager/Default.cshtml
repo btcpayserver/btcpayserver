@@ -1,57 +1,52 @@
 @model BasePagingViewModel
 
-@if (Model.Total > 0)
+@{
+    var pageSizeOptions = new [] { 50, 100, 250, 500 };
+}
+
+@if (Model.Total > pageSizeOptions.Min())
 {
     <nav aria-label="..." class="w-100">
-        <ul class="pagination float-left">
-            <li class="page-item @(Model.Skip == 0 ? "disabled" : null)">
-                <a class="page-link" tabindex="-1" href="@NavigatePages(-1, Model.Count)">&laquo;</a>
-            </li>
-            <li class="page-item disabled">
-                @if (Model.Total <= Model.Count)
-                {
-                    <span class="page-link">
-                        1–@Model.Total
-                    </span>
-                }
-                else
-                {
-                    <span class="page-link">
-                        @(Model.Skip + 1)–@(Model.Skip + Model.Count), Total: @Model.Total
-                    </span>
-                }
-            </li>
-            <li class="page-item @(Model.Total > (Model.Skip + Model.Count) ? null : "disabled")">
-                <a class="page-link" href="@NavigatePages(1, Model.Count)">&raquo;</a>
-            </li>
-        </ul>
+        @if (Model.Total > Model.Count)
+        {
+            <ul class="pagination float-left">
+                <li class="page-item @(Model.Skip == 0 ? "disabled" : null)">
+                    <a class="page-link" tabindex="-1" href="@NavigatePages(-1, Model.Count)">&laquo;</a>
+                </li>
+                <li class="page-item disabled">
+                    @if (Model.Total <= Model.Count)
+                    {
+                        <span class="page-link">
+                            1–@Model.Total
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="page-link">
+                            @(Model.Skip + 1)–@(Model.Skip + Model.Count), Total: @Model.Total
+                        </span>
+                    }
+                </li>
+                <li class="page-item @(Model.Total > (Model.Skip + Model.Count) ? null : "disabled")">
+                    <a class="page-link" href="@NavigatePages(1, Model.Count)">&raquo;</a>
+                </li>
+            </ul>
+        }
 
-        @if (Model.Total >= 50)
+        @if (Model.Total >= pageSizeOptions.Min())
         {
             <ul class="pagination float-right">
                 <li class="page-item disabled">
                     <span class="page-link">Page Size:</span>
                 </li>
-                <li class="page-item @(Model.Count == 50 ? "active" : null)">
-                    <a class="page-link" href="@NavigatePages(0, 50)">50</a>
-                </li>
-                @if (Model.Total >= 100)
+                @foreach (int pageSize in pageSizeOptions)
                 {
-                    <li class="page-item @(Model.Count == 100 ? "active" : null)">
-                        <a class="page-link" href="@NavigatePages(0, 100)">100</a>
-                    </li>
-                }
-                @if (Model.Total >= 250)
-                {
-                    <li class="page-item @(Model.Count == 250 ? "active" : null)">
-                        <a class="page-link" href="@NavigatePages(0, 250)">250</a>
-                    </li>
-                }
-                @if (Model.Total >= 500)
-                {
-                    <li class="page-item @(Model.Count == 500 ? "active" : null)">
-                        <a class="page-link" href="@NavigatePages(0, 500)">500</a>
-                    </li>
+                    if (Model.Total >= pageSize)
+                    {
+                        <li class="page-item @(Model.Count == pageSize ? "active" : null)">
+                            <a class="page-link" href="@NavigatePages(0, pageSize)">@pageSize</a>
+                        </li>
+                    }
                 }
             </ul>
         }
@@ -70,14 +65,22 @@
             skip = Model.Skip + count;
         }
 
-        var act = Url.Action(null, new
+        var query = new Dictionary<string, object>
         {
-            searchTerm = Model.SearchTerm,
-            timezoneOffset = Model.TimezoneOffset,
-            skip = skip,
-            count = count,
-        });
+            { "searchTerm", Model.SearchTerm },
+            { "timezoneOffset", Model.TimezoneOffset },
+            { "skip", skip },
+            { "count", count }
+        };
 
-        return act;
+        if (Model.PaginationQuery != null)
+        {
+            // merge both, prefering the `query` properties in case of duplicate keys
+            query = query.Concat(Model.PaginationQuery)
+                .GroupBy(e => e.Key)
+                .ToDictionary(g => g.Key, g => g.First().Value);
+        }
+
+        return Url.Action(null, query);
     }
 }

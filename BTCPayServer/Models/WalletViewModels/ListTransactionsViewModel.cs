@@ -4,7 +4,7 @@ using BTCPayServer.Services.Labels;
 
 namespace BTCPayServer.Models.WalletViewModels
 {
-    public class ListTransactionsViewModel
+    public class ListTransactionsViewModel : BasePagingViewModel
     {
         public class TransactionViewModel
         {
@@ -19,8 +19,5 @@ namespace BTCPayServer.Models.WalletViewModels
         }
         public HashSet<ColoredLabel> Labels { get; set; } = new HashSet<ColoredLabel>();
         public List<TransactionViewModel> Transactions { get; set; } = new List<TransactionViewModel>();
-        public int Skip { get; set; }
-        public int Count { get; set; }
-        public int Total { get; set; }
     }
 }

@@ -261,6 +261,10 @@ pre {
 .w-175px { width: 175px; }
 .w-200px { width: 200px; }
 
+.fw-semibold {
+    font-weight: 600;
+}
+
 /* Chrome, Safari, Edge, Opera */
 input[type=number].hide-number-spin::-webkit-outer-spin-button,
 input[type=number].hide-number-spin::-webkit-inner-spin-button {

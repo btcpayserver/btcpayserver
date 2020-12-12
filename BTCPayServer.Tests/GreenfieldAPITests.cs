@@ -10,8 +10,10 @@ using BTCPayServer.Controllers;
 using BTCPayServer.Events;
 using BTCPayServer.JsonConverters;
 using BTCPayServer.Lightning;
+using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Services;
-using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Notifications;
+using BTCPayServer.Services.Notifications.Blobs;
 using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -20,7 +22,6 @@ using NBitcoin.OpenAsset;
 using NBitpayClient;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using NUglify.Helpers;
 using Xunit;
 using Xunit.Abstractions;
 using CreateApplicationUserRequest = BTCPayServer.Client.Models.CreateApplicationUserRequest;
@@ -31,9 +32,6 @@ namespace BTCPayServer.Tests
     public class GreenfieldAPITests
     {
         public const int TestTimeout = TestUtils.TestTimeout;
-
-        public const string TestApiPath = "api/test/apikey";
-
         public GreenfieldAPITests(ITestOutputHelper helper)
         {
             Logs.Tester = new XUnitLog(helper) { Name = "Tests" };
@@ -247,6 +245,20 @@ namespace BTCPayServer.Tests
                         Password = "afewfoiewiou",
                         IsAdministrator = true
                     }));
+
+                // If we set DisableNonAdminCreateUserApi = true, it should always fail to create a user unless you are an admin
+                await settings.UpdateSetting(new PoliciesSettings() { LockSubscription = false, DisableNonAdminCreateUserApi = true });
+                await AssertHttpError(403,
+                    async () =>
+                        await unauthClient.CreateUser(
+                            new CreateApplicationUserRequest() { Email = "test9@gmail.com", Password = "afewfoiewiou" }));
+                await AssertHttpError(403,
+                    async () =>
+                        await user1Client.CreateUser(
+                            new CreateApplicationUserRequest() { Email = "test9@gmail.com", Password = "afewfoiewiou" }));
+                await adminClient.CreateUser(
+                    new CreateApplicationUserRequest() { Email = "test9@gmail.com", Password = "afewfoiewiou" });
+
             }
         }
 
@@ -953,7 +965,7 @@ namespace BTCPayServer.Tests
                 var paymentMethod = paymentMethods.First();
                 Assert.Equal("BTC", paymentMethod.PaymentMethod);
                 Assert.Empty(paymentMethod.Payments);
-                
+
 
                 //update
                 invoice = await viewOnly.GetInvoice(user.StoreId, newInvoice.Id);
@@ -1028,6 +1040,42 @@ namespace BTCPayServer.Tests
                             });
                         Assert.NotNull(await client.GetWebhookDelivery(evt.StoreId, evt.WebhookId, evt.DeliveryId));
                     }
+                }
+
+
+                newInvoice = await client.CreateInvoice(user.StoreId,
+                    new CreateInvoiceRequest()
+                    {
+                        Currency = "USD",
+                        Amount = 1,
+                        Checkout = new CreateInvoiceRequest.CheckoutOptions()
+                        {
+                            DefaultLanguage = "it-it ",
+                            RedirectURL = "http://toto.com/lol"
+                        }
+                    });
+                Assert.EndsWith($"/i/{newInvoice.Id}", newInvoice.CheckoutLink);
+                var controller = tester.PayTester.GetController<InvoiceController>(user.UserId, user.StoreId);
+                var model = (PaymentModel)((ViewResult)await controller.Checkout(newInvoice.Id)).Model;
+                Assert.Equal("it-IT", model.DefaultLang);
+                Assert.Equal("http://toto.com/lol", model.MerchantRefLink);
+
+                var langs = tester.PayTester.GetService<LanguageService>();
+                foreach (var match in new[] { "it", "it-IT", "it-LOL" })
+                {
+                    Assert.Equal("it-IT", langs.FindBestMatch(match).Code);
+                }
+                foreach (var match in new[] { "pt-BR" })
+                {
+                    Assert.Equal("pt-BR", langs.FindBestMatch(match).Code);
+                }
+                foreach (var match in new[] { "en", "en-US" })
+                {
+                    Assert.Equal("en", langs.FindBestMatch(match).Code);
+                }
+                foreach (var match in new[] { "pt", "pt-pt", "pt-PT" })
+                {
+                    Assert.Equal("pt-PT", langs.FindBestMatch(match).Code);
                 }
             }
         }
@@ -1121,6 +1169,46 @@ namespace BTCPayServer.Tests
                 Assert.NotEqual(0, info.BlockHeight);
             }
         }
+        
+        
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task NotificationAPITests()
+        {
+            using var tester = ServerTester.Create();
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync(true);
+            var client = await user.CreateClient(Policies.CanManageNotificationsForUser);
+            var viewOnlyClient = await user.CreateClient(Policies.CanViewNotificationsForUser);
+            await tester.PayTester.GetService<NotificationSender>()
+                .SendNotification(new UserScope(user.UserId), new NewVersionNotification());
+
+            Assert.Single(await viewOnlyClient.GetNotifications());
+            Assert.Single(await viewOnlyClient.GetNotifications(false));
+            Assert.Empty(await viewOnlyClient.GetNotifications(true));
+
+            Assert.Single(await client.GetNotifications());
+            Assert.Single(await client.GetNotifications(false));
+            Assert.Empty(await client.GetNotifications(true));
+            var notification = (await client.GetNotifications()).First();
+            notification = await client.GetNotification(notification.Id);
+            Assert.False(notification.Seen);
+            await AssertHttpError(403, async () =>
+            {
+                await viewOnlyClient.UpdateNotification(notification.Id, true);
+            });
+            await AssertHttpError(403, async () =>
+            {
+                await viewOnlyClient.RemoveNotification(notification.Id);
+            });
+            Assert.True((await client.UpdateNotification(notification.Id, true)).Seen);
+            Assert.Single(await viewOnlyClient.GetNotifications(true));
+            Assert.Empty(await viewOnlyClient.GetNotifications(false));
+            await client.RemoveNotification(notification.Id);
+            Assert.Empty(await viewOnlyClient.GetNotifications(true));
+            Assert.Empty(await viewOnlyClient.GetNotifications(false));
+        }
 
 
 
@@ -1164,5 +1252,6 @@ namespace BTCPayServer.Tests
             Assert.Equal(1.2, jsonConverter.ReadJson(Get(stringJson), typeof(double), null, null));
             Assert.Equal(1.2, jsonConverter.ReadJson(Get(stringJson), typeof(double?), null, null));
         }
+
     }
 }

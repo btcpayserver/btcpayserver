@@ -2,6 +2,7 @@
 @inject UserManager<ApplicationUser> UserManager
 @inject CssThemeManager CssThemeManager
 @using BTCPayServer.HostedServices
+@using Microsoft.AspNetCore.Http.Extensions
 @model BTCPayServer.Components.NotificationsDropdown.NotificationSummaryViewModel
 
 @if (Model.UnseenCount > 0)
@@ -24,6 +25,9 @@
                 </a>
             }
             <a class="dropdown-item text-secondary" asp-controller="Notifications" asp-action="Index">See All</a>
+            <form asp-controller="Notifications" asp-action="MarkAllAsSeen" asp-route-returnUrl="@Context.Request.GetDisplayUrl()" method="post">
+                <button class="dropdown-item text-secondary" type="submit"><i class="fa fa-eye"></i> Mark all as seen</button>
+            </form>
         </div>
     </li>
 }

@@ -437,7 +437,7 @@ namespace BTCPayServer.Controllers
 
             if (!isAdmin)
             {
-                foreach (var p in viewModel.PermissionValues.Where(item => Policies.IsServerPolicy(item.Permission)))
+                foreach (var p in viewModel.PermissionValues.Where(item => item.Permission is null || Policies.IsServerPolicy(item.Permission)))
                 {
                     p.Forbidden = true;
                 }
@@ -474,6 +474,8 @@ namespace BTCPayServer.Controllers
                     {BTCPayServer.Client.Policies.CanModifyServerSettings, ("Manage your server", "The app will have total control on the server settings of your server")},
                     {BTCPayServer.Client.Policies.CanViewProfile, ("View your profile", "The app will be able to view your user profile.")},
                     {BTCPayServer.Client.Policies.CanModifyProfile, ("Manage your profile", "The app will be able to view and modify your user profile.")},
+                    {BTCPayServer.Client.Policies.CanManageNotificationsForUser, ("Manage your notifications", "The app will be able to view and modify your user notifications.")},
+                    {BTCPayServer.Client.Policies.CanViewNotificationsForUser, ("View your notifications", "The app will be able to view your user notifications.")},
                     {BTCPayServer.Client.Policies.CanCreateInvoice, ("Create an invoice", "The app will be able to create new invoices.")},
                     {$"{BTCPayServer.Client.Policies.CanCreateInvoice}:", ("Create an invoice", "The app will be able to create new invoices on the selected stores.")},
                     {BTCPayServer.Client.Policies.CanViewInvoices, ("View invoices", "The app will be able to view invoices.")},

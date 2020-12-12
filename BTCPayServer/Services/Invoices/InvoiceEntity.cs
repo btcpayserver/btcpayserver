@@ -132,6 +132,7 @@ namespace BTCPayServer.Services.Invoices
         public string StoreId { get; set; }
 
         public SpeedPolicy SpeedPolicy { get; set; }
+        public string DefaultLanguage { get; set; }
         [Obsolete("Use GetPaymentMethod(network) instead")]
         public decimal Rate { get; set; }
         public DateTimeOffset InvoiceTime { get; set; }

@@ -5,10 +5,14 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Payments;
+using BTCPayServer.Security;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using NBitcoin;
 using CreateInvoiceRequest = BTCPayServer.Client.Models.CreateInvoiceRequest;
 using InvoiceData = BTCPayServer.Client.Models.InvoiceData;
@@ -22,11 +26,16 @@ namespace BTCPayServer.Controllers.GreenField
     {
         private readonly InvoiceController _invoiceController;
         private readonly InvoiceRepository _invoiceRepository;
+        private readonly LinkGenerator _linkGenerator;
 
-        public GreenFieldInvoiceController(InvoiceController invoiceController, InvoiceRepository invoiceRepository)
+        public LanguageService LanguageService { get; }
+
+        public GreenFieldInvoiceController(InvoiceController invoiceController, InvoiceRepository invoiceRepository, LinkGenerator linkGenerator, LanguageService languageService)
         {
             _invoiceController = invoiceController;
             _invoiceRepository = invoiceRepository;
+            _linkGenerator = linkGenerator;
+            LanguageService = languageService;
         }
 
         [Authorize(Policy = Policies.CanViewInvoices,
@@ -126,7 +135,7 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 ModelState.AddModelError(nameof(request.Currency), "Currency is required");
             }
-
+            request.Checkout = request.Checkout ?? new CreateInvoiceRequest.CheckoutOptions();
             if (request.Checkout.PaymentMethods?.Any() is true)
             {
                 for (int i = 0; i < request.Checkout.PaymentMethods.Length; i++)
@@ -150,6 +159,21 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 request.AddModelError(invoiceRequest => invoiceRequest.Checkout.PaymentTolerance,
                     "PaymentTolerance can only be between 0 and 100 percent", this);
+            }
+
+            if (request.Checkout.DefaultLanguage != null)
+            {
+                var lang = LanguageService.FindBestMatch(request.Checkout.DefaultLanguage);
+                if (lang == null)
+                {
+                    request.AddModelError(invoiceRequest => invoiceRequest.Checkout.DefaultLanguage,
+                    "The requested defaultLang does not exists, Browse the ~/misc/lang page of your BTCPay Server instance to see the list of supported languages.", this);
+                }
+                else
+                {
+                    // Ensure this is good case
+                    request.Checkout.DefaultLanguage = lang.Code;
+                }
             }
 
             if (!ModelState.IsValid)
@@ -300,6 +324,7 @@ namespace BTCPayServer.Controllers.GreenField
                 CreatedTime = entity.InvoiceTime,
                 Amount = entity.Price,
                 Id = entity.Id,
+                CheckoutLink = _linkGenerator.CheckoutLink(entity.Id, Request.Scheme, Request.Host, Request.PathBase),
                 Status = entity.Status.ToModernStatus(),
                 AdditionalStatus = entity.ExceptionStatus,
                 Currency = entity.Currency,
@@ -311,7 +336,8 @@ namespace BTCPayServer.Controllers.GreenField
                     PaymentTolerance = entity.PaymentTolerance,
                     PaymentMethods =
                         entity.GetPaymentMethods().Select(method => method.GetId().ToStringNormalized()).ToArray(),
-                    SpeedPolicy = entity.SpeedPolicy
+                    SpeedPolicy = entity.SpeedPolicy,
+                    DefaultLanguage = entity.DefaultLanguage
                 }
             };
         }

@@ -11,6 +11,7 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Security;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
@@ -31,15 +32,18 @@ namespace BTCPayServer.Controllers
         private readonly IFileProvider _fileProvider;
 
         public IHttpClientFactory HttpClientFactory { get; }
+        public LanguageService LanguageService { get; }
         SignInManager<ApplicationUser> SignInManager { get; }
 
         public HomeController(IHttpClientFactory httpClientFactory,
                               CssThemeManager cachedServerSettings,
                               IWebHostEnvironment webHostEnvironment,
+                              LanguageService languageService,
                               SignInManager<ApplicationUser> signInManager)
         {
             HttpClientFactory = httpClientFactory;
             _cachedServerSettings = cachedServerSettings;
+            LanguageService = languageService;
             _fileProvider = webHostEnvironment.WebRootFileProvider;
             SignInManager = signInManager;
         }
@@ -115,6 +119,12 @@ namespace BTCPayServer.Controllers
         public IActionResult BitpayTranslator()
         {
             return View(new BitpayTranslatorViewModel());
+        }
+        [Route("misc/lang")]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        public IActionResult Languages()
+        {
+            return Json(LanguageService.GetLanguages(), new JsonSerializerSettings() { Formatting = Formatting.Indented });
         }
 
         [Route("swagger/v1/swagger.json")]

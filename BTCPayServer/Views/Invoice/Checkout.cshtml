@@ -1,4 +1,4 @@
-﻿@addTagHelper *, BundlerMinifier.TagHelpers
+@addTagHelper *, BundlerMinifier.TagHelpers
 @inject BTCPayServer.Services.LanguageService langService
 @inject PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary
 @model PaymentModel
@@ -114,7 +114,7 @@
     </invoice>
     <script type="text/javascript">
     var availableLanguages = @Safe.Json(langService.GetLanguages().Select((language) => language.Code));;
-    var storeDefaultLang = @Safe.Json(@Model.DefaultLang);
+    var storeDefaultLang = @Safe.Json(langService.FindBestMatch(Model.DefaultLang)?.Code ?? Model.DefaultLang);
     var fallbackLanguage = "en";
     startingLanguage = computeStartingLanguage();
     i18next

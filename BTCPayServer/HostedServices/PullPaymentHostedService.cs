@@ -29,6 +29,8 @@ namespace BTCPayServer.HostedServices
         public string Name { get; set; }
         public decimal Amount { get; set; }
         public string Currency { get; set; }
+        public string CustomCSSLink { get; set; }
+        public string EmbeddedCSS { get; set; }
         public PaymentMethodId[] PaymentMethodIds { get; set; }
         public TimeSpan? Period { get; set; }
     }
@@ -110,9 +112,9 @@ namespace BTCPayServer.HostedServices
                 {
                     Title = create.Name ?? string.Empty,
                     Description = string.Empty,
-                    CustomCSSLink = null,
+                    CustomCSSLink = create.CustomCSSLink,
                     Email = null,
-                    EmbeddedCSS = null,
+                    EmbeddedCSS = create.EmbeddedCSS,
                 }
             });
             ctx.PullPayments.Add(o);

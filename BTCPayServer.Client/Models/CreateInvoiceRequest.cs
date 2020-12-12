@@ -17,6 +17,7 @@ namespace BTCPayServer.Client.Models
 
         public class CheckoutOptions
         {
+
             [JsonConverter(typeof(StringEnumConverter))]
             public SpeedPolicy? SpeedPolicy { get; set; }
 
@@ -30,6 +31,9 @@ namespace BTCPayServer.Client.Models
             public TimeSpan? Monitoring { get; set; }
 
             public double? PaymentTolerance { get; set; }
+            [JsonProperty("redirectURL")]
+            public string RedirectURL { get; set; }
+            public string DefaultLanguage { get; set; }
         }
     }
 }

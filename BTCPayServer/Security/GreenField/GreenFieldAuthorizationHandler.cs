@@ -89,6 +89,8 @@ namespace BTCPayServer.Security.GreenField
                         success = true;
                     }
                     break;
+                case Policies.CanManageNotificationsForUser:
+                case Policies.CanViewNotificationsForUser:
                 case Policies.CanModifyProfile:
                 case Policies.CanViewProfile:
                 case Policies.Unrestricted:

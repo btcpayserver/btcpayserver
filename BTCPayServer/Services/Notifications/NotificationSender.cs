@@ -13,6 +13,10 @@ namespace BTCPayServer.Services.Notifications
     public class UserNotificationsUpdatedEvent
     {
         public string UserId { get; set; }
+        public override string ToString()
+        {
+            return string.Empty;
+        }
     }
     public class NotificationSender
     {
@@ -34,7 +38,7 @@ namespace BTCPayServer.Services.Notifications
             if (notification == null)
                 throw new ArgumentNullException(nameof(notification));
             var users = await GetUsers(scope, notification.Identifier);
-            using (var db = _contextFactory.CreateContext())
+            await using (var db = _contextFactory.CreateContext())
             {
                 foreach (var uid in users)
                 {
@@ -48,7 +52,7 @@ namespace BTCPayServer.Services.Notifications
                         Blob = ZipUtils.Zip(obj),
                         Seen = false
                     };
-                    db.Notifications.Add(data);
+                    await db.Notifications.AddAsync(data);
                 }
                 await db.SaveChangesAsync();
             }

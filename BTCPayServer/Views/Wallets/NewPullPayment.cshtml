@@ -1,8 +1,7 @@
 ﻿@model NewPullPaymentModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["Title"] = "Manage pull payments";
-    ViewData.SetActivePageAndTitle(WalletsNavPages.PullPayments);
+    ViewData["Title"] = "New pull payment";
 }
 <style type="text/css">
     .smMaxWidth {
@@ -78,6 +77,19 @@
                     <input asp-for="Currency" class="form-control" />
                     <span asp-validation-for="Currency" class="text-danger"></span>
                 </div>
+            </div>
+            <div class="form-group">
+                <label asp-for="CustomCSSLink" class="control-label"></label>
+                <a href="https://docs.btcpayserver.org/Theme/#2-bootstrap-themes" target="_blank">
+                    <span class="fa fa-question-circle-o" title="More information..."></span>
+                </a>
+                <input asp-for="CustomCSSLink" class="form-control" />
+                <span asp-validation-for="CustomCSSLink" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="EmbeddedCSS" class="control-label"></label>
+                <textarea asp-for="EmbeddedCSS" rows="10" cols="40" class="form-control"></textarea>
+                <span asp-validation-for="EmbeddedCSS" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" id="Create" />

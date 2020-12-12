@@ -46,6 +46,14 @@
     {
         <noscript>
             @await Html.PartialAsync("/Views/AppsPublic/Crowdfund/MinimalCrowdfund.cshtml", Model)
+
+            <style>
+                /* Hide the below canvas or else user will be staring "Loading..." text when JS is disabled */
+                #fireworks,
+                #app {
+                    display:none;
+                }
+            </style>
         </noscript>
 
         if (Model.AnimationsEnabled)

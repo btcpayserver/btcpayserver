@@ -68,7 +68,7 @@
 }
 <div class="row">
     <div class="col-md-12">
-        If BTCPay Server shows you an invalid balance, <a asp-action="WalletRescan" asp-route-walletId="@this.Context.GetRouteValue("walletId")">rescan your wallet</a>. <br />
+        If BTCPay Server shows you an invalid balance, <a asp-action="WalletRescan" asp-route-walletId="@Context.GetRouteValue("walletId")">rescan your wallet</a>. <br />
         If some transactions appear in BTCPay Server, but are missing on Electrum or another wallet, <a href="https://docs.btcpayserver.org/FAQ/FAQ-Wallet/#missing-payments-in-my-software-or-hardware-wallet">follow those instructions</a>.
     </div>
 </div>
@@ -81,8 +81,8 @@
                 <span class="mr-2">Filter by label:</span>
                 @foreach (var label in Model.Labels)
                 {
-                    <a asp-route-labelFilter="@label.Value" class="badge mr-2 my-1 position-relative text-white d-block"
-                       style="background-color: @label.Color;"><span class="text-white">@label.Value</span></a>
+                    <a asp-route-labelFilter="@label.Text" class="badge mr-2 my-1 position-relative text-white d-block"
+                       style="background-color: @label.Color;"><span class="text-white">@label.Text</span></a>
                 }
             </div>
         </div>
@@ -123,10 +123,10 @@
                                         style="background-color: @label.Color; padding-right: 16px; z-index: 1;"
                                         data-toggle="tooltip"
                                         title="@label.Tooltip">
-                                        <a asp-route-labelFilter="@label.Value" class="text-white">@label.Value</a>
+                                        <a asp-route-labelFilter="@label.Text" class="text-white">@label.Text</a>
 
                                         <form
-                                            asp-route-walletId="@this.Context.GetRouteValue("walletId")"
+                                            asp-route-walletId="@Context.GetRouteValue("walletId")"
                                             asp-action="ModifyTransaction"
                                             method="post"
                                             class="removeTransactionLabelForm">
@@ -135,7 +135,7 @@
                                                 name="removelabel"
                                                 style="color: @label.Color; filter: brightness(0.5);"
                                                 type="submit"
-                                                value="@label.RawValue">
+                                                value="@label.Text">
                                                 <span class="fa fa-close"></span>
                                             </button>
                                         </form>
@@ -169,7 +169,7 @@
                                 <span class="fa fa-tags cursor-pointer" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></span>
                                 <div class="dropdown-menu">
                                     <form asp-action="ModifyTransaction" method="post"
-                                        asp-route-walletId="@this.Context.GetRouteValue("walletId")">
+                                        asp-route-walletId="@Context.GetRouteValue("walletId")">
                                         <input type="hidden" name="transactionId" value="@transaction.Id" />
                                         <div class="input-group p-2">
                                             <input name="addlabel" placeholder="Label name" maxlength="20" type="text" class="form-control form-control-sm" />
@@ -184,11 +184,11 @@
                                             {
                                                 @if (transaction.Labels.Contains(label))
                                                 {
-                                                    <button name="removelabel" class="btn btn-sm" type="submit" value="@label.Value"><span class="badge" style="display:block;background-color:@label.Color;color:white;text-align:left;"><span class="fa fa-check"></span> @label.Value</span></button>
+                                                    <button name="removelabel" class="btn btn-sm" type="submit" value="@label.Text"><span class="badge" style="display:block;background-color:@label.Color;color:white;text-align:left;"><span class="fa fa-check"></span> @label.Text</span></button>
                                                 }
                                                 else
                                                 {
-                                                    <button name="addlabelclick" class="btn btn-sm" type="submit" value="@label.Value"><span class="badge" style="display:block;background-color:@label.Color;color:white;text-align:left;">@label.Value</span></button>
+                                                    <button name="addlabelclick" class="btn btn-sm" type="submit" value="@label.Text"><span class="badge" style="display:block;background-color:@label.Color;color:white;text-align:left;">@label.Text</span></button>
                                                 }
                                             }
                                         }
@@ -206,7 +206,7 @@
                                 }
                                 <div class="dropdown-menu">
                                     <form asp-action="ModifyTransaction" method="post"
-                                        asp-route-walletId="@this.Context.GetRouteValue("walletId")">
+                                        asp-route-walletId="@Context.GetRouteValue("walletId")">
                                         <input type="hidden" name="transactionId" value="@transaction.Id" />
                                         <div class="input-group p-2">
                                             <textarea name="addcomment" maxlength="200" rows="2" cols="20" class="form-control form-control-sm">@transaction.Comment</textarea>
@@ -222,72 +222,6 @@
                 }
             </tbody>
         </table>
-        <nav class="w-100">
-            @if (Model.Total != 0)
-            {
-                <ul class="pagination float-left">
-                    <li class="page-item @(Model.Skip == 0 ? "disabled" : null)">
-                        <a class="page-link" tabindex="-1" href="@ListTransactionsPage(-1, Model.Count)">&laquo;</a>
-                    </li>
-                    <li class="page-item disabled">
-                        @if (Model.Total <= Model.Count)
-                        {
-                            <span class="page-link">
-                                1–@Model.Transactions.Count
-                            </span>
-                        }
-                        else
-                        {
-                            <span class="page-link">
-                                @(Model.Skip + 1)–@(Model.Skip + Model.Transactions.Count), Total: @Model.Total
-                            </span>
-                        }
-                    </li>
-                    <li class="page-item @(Model.Total > (Model.Skip + Model.Transactions.Count) ? null : "disabled")">
-                        <a class="page-link" href="@ListTransactionsPage(1, Model.Count)">&raquo;</a>
-                    </li>
-                </ul>
-            }
-            <ul class="pagination float-right">
-                <li class="page-item disabled">
-                    <span class="page-link">Page Size:</span>
-                </li>
-                <li class="page-item @(Model.Count == 50 ? "active" : null)">
-                    <a class="page-link" href="@ListTransactionsPage(0, 50)">50</a>
-                </li>
-                <li class="page-item @(Model.Count == 100 ? "active" : null)">
-                    <a class="page-link" href="@ListTransactionsPage(0, 100)">100</a>
-                </li>
-                <li class="page-item @(Model.Count == 250 ? "active" : null)">
-                    <a class="page-link" href="@ListTransactionsPage(0, 250)">250</a>
-                </li>
-                <li class="page-item @(Model.Count == 500 ? "active" : null)">
-                    <a class="page-link" href="@ListTransactionsPage(0, 500)">500</a>
-                </li>
-            </ul>
-        </nav>
-        @{
-            string ListTransactionsPage(int prevNext, int count)
-            {
-                var skip = Model.Skip;
-                if (prevNext == -1)
-                {
-                    skip = Math.Max(0, Model.Skip - Model.Count);
-                }
-                else if (prevNext == 1)
-                {
-                    skip = Model.Skip + count;
-                }
-
-                var act = Url.Action("WalletTransactions", new
-                {
-                    labelFilter = Context.Request.Query["labelFilter"],
-                    skip = skip,
-                    count = count,
-                });
-
-                return act;
-            }
-        }
+        <vc:pager view-model="Model" />
     </div>
 </div>

@@ -68,9 +68,9 @@ namespace BTCPayServer.Models.AppViewModels
             public decimal TotalCurrency { get; }
         }
 
-        public bool Started => !StartDate.HasValue || DateTime.Now.ToUniversalTime() > StartDate;
+        public bool Started => !StartDate.HasValue || DateTime.UtcNow > StartDate;
 
-        public bool Ended => !EndDate.HasValue || DateTime.Now.ToUniversalTime() > EndDate;
+        public bool Ended => EndDate.HasValue && DateTime.UtcNow > EndDate;
         public bool DisplayPerksRanking { get; set; }
         public bool Enabled { get; set; }
         public string ResetEvery { get; set; }

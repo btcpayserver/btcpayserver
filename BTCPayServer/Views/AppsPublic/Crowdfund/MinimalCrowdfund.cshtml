@@ -87,7 +87,7 @@
                         </h5>
                         <h5 class="text-muted">Contributors</h5>
                     </div>
-                    @if (Model.Started && !Model.Ended)
+                    @if (Model.Started && !Model.Ended && Model.EndDate.HasValue)
                     {
                         <div class="col-sm">
                             <h5>

@@ -159,12 +159,12 @@ namespace BTCPayServer.Controllers
             if (addlabel != null)
             {
                 addlabel = addlabel.Trim().TrimStart('{').ToLowerInvariant().Replace(',', ' ').Truncate(MaxLabelSize);
-                var labels = _labelFactory.GetLabels(walletBlobInfo, Request);
+                var labels = _labelFactory.GetWalletColoredLabels(walletBlobInfo, Request);
                 if (!walletTransactionsInfo.TryGetValue(transactionId, out var walletTransactionInfo))
                 {
                     walletTransactionInfo = new WalletTransactionInfo();
                 }
-                if (!labels.Any(l => l.Value.Equals(addlabel, StringComparison.OrdinalIgnoreCase)))
+                if (!labels.Any(l => l.Text.Equals(addlabel, StringComparison.OrdinalIgnoreCase)))
                 {
                     List<string> allColors = new List<string>();
                     allColors.AddRange(LabelColorScheme);
@@ -183,7 +183,8 @@ namespace BTCPayServer.Controllers
                     walletBlobInfo.LabelColors.Add(addlabel, chosenColor);
                     await WalletRepository.SetWalletInfo(walletId, walletBlobInfo);
                 }
-                if (walletTransactionInfo.Labels.Add(addlabel))
+                var rawLabel = new RawLabel(addlabel);
+                if (walletTransactionInfo.Labels.TryAdd(rawLabel.Text, rawLabel))
                 {
                     await WalletRepository.SetWalletTransactionInfo(walletId, transactionId, walletTransactionInfo);
                 }
@@ -195,8 +196,8 @@ namespace BTCPayServer.Controllers
                 {
                     if (walletTransactionInfo.Labels.Remove(removelabel))
                     {
-                        var canDelete = !walletTransactionsInfo.SelectMany(txi => txi.Value.Labels).Any(l => l == removelabel);
-                        if (canDelete)
+                        var canDeleteColor = !walletTransactionsInfo.Any(txi => txi.Value.Labels.ContainsKey(removelabel));
+                        if (canDeleteColor)
                         {
                             walletBlobInfo.LabelColors.Remove(removelabel);
                             await WalletRepository.SetWalletInfo(walletId, walletBlobInfo);
@@ -289,6 +290,13 @@ namespace BTCPayServer.Controllers
                 Count = count,
                 Total = 0
             };
+            if (labelFilter != null)
+            {
+                model.PaginationQuery = new Dictionary<string, object>
+                {
+                    {"labelFilter", labelFilter}
+                };
+            }
             if (transactions == null)
             {
                 TempData.SetStatusMessageModel(new StatusMessageModel()
@@ -315,14 +323,14 @@ namespace BTCPayServer.Controllers
 
                     if (walletTransactionsInfo.TryGetValue(tx.TransactionId.ToString(), out var transactionInfo))
                     {
-                        var labels = _labelFactory.GetLabels(walletBlob, transactionInfo, Request);
+                        var labels = _labelFactory.ColorizeTransactionLabels(walletBlob, transactionInfo, Request);
                         vm.Labels.AddRange(labels);
                         model.Labels.AddRange(labels);
                         vm.Comment = transactionInfo.Comment;
                     }
 
                     if (labelFilter == null ||
-                        vm.Labels.Any(l => l.Value.Equals(labelFilter, StringComparison.OrdinalIgnoreCase)))
+                        vm.Labels.Any(l => l.Text.Equals(labelFilter, StringComparison.OrdinalIgnoreCase)))
                         model.Transactions.Add(vm);
                 }
 
@@ -547,7 +555,7 @@ namespace BTCPayServer.Controllers
                         Outpoint = coin.OutPoint.ToString(),
                         Amount = coin.Value.GetValue(network),
                         Comment = info?.Comment,
-                        Labels = info == null ? null : _labelFactory.GetLabels(walletBlobAsync, info, Request),
+                        Labels = info == null ? null : _labelFactory.ColorizeTransactionLabels(walletBlobAsync, info, Request),
                         Link = string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink, coin.OutPoint.Hash.ToString())
                     };
                 }).ToArray();

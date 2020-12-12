@@ -48,14 +48,14 @@
                         class="badge badge-primary badge-pill ml-2"
                         v-for="label of item.labels"
                         v-bind:style="{ 'background-color': label.color}"
-                        key="label.value">
+                        key="label.text">
 
                         <span v-if="!label.link" data-toggle="tooltip" v-tooltip="label.tooltip">
-                            {{label.value}}
+                            {{label.text}}
                         </span>
 
-                        <a :href="label.link" target="_blank"v-if="label.link" data-toggle="tooltip" v-tooltip="label.tooltip">
-                            {{label.value}}
+                        <a :href="label.link" target="_blank" v-if="label.link" data-toggle="tooltip" v-tooltip="label.tooltip">
+                            {{label.text}}
                             <i class="fa fa-info-circle"></i>
                         </a>
                     </span>

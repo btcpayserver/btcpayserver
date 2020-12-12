@@ -26,11 +26,4 @@ namespace BTCPayServer.Data
                 .WithMany(w => w.WalletTransactions).OnDelete(DeleteBehavior.Cascade);
         }
     }
-
-    public class WalletTransactionInfo
-    {
-        public string Comment { get; set; } = string.Empty;
-        [JsonIgnore]
-        public HashSet<string> Labels { get; set; } = new HashSet<string>();
-    }
 }

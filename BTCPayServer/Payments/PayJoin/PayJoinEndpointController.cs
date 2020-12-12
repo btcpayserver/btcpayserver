@@ -12,6 +12,7 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Cors;
@@ -462,8 +463,8 @@ namespace BTCPayServer.Payments.PayJoin
             {
                 WalletId = new WalletId(invoice.StoreId, network.CryptoCode),
                 TransactionLabels = selectedUTXOs.GroupBy(pair => pair.Key.Hash).Select(utxo =>
-                       new KeyValuePair<uint256, List<(string color, string label)>>(utxo.Key,
-                           new List<(string color, string label)>()
+                       new KeyValuePair<uint256, List<(string color, Label label)>>(utxo.Key,
+                           new List<(string color, Label label)>()
                            {
                                 UpdateTransactionLabel.PayjoinExposedLabelTemplate(invoice.Id)
                            }))

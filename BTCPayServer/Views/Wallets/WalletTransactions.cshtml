@@ -81,8 +81,8 @@
                 <span class="mr-2">Filter by label:</span>
                 @foreach (var label in Model.Labels)
                 {
-                    <a asp-route-labelFilter="@label.Value" class="badge mr-2 my-1 position-relative text-white d-block"
-                       style="background-color: @label.Color;"><span class="text-white">@label.Value</span></a>
+                    <a asp-route-labelFilter="@label.Text" class="badge mr-2 my-1 position-relative text-white d-block"
+                       style="background-color: @label.Color;"><span class="text-white">@label.Text</span></a>
                 }
             </div>
         </div>
@@ -123,7 +123,7 @@
                                         style="background-color: @label.Color; padding-right: 16px; z-index: 1;"
                                         data-toggle="tooltip"
                                         title="@label.Tooltip">
-                                        <a asp-route-labelFilter="@label.Value" class="text-white">@label.Value</a>
+                                        <a asp-route-labelFilter="@label.Text" class="text-white">@label.Text</a>
 
                                         <form
                                             asp-route-walletId="@this.Context.GetRouteValue("walletId")"
@@ -135,7 +135,7 @@
                                                 name="removelabel"
                                                 style="color: @label.Color; filter: brightness(0.5);"
                                                 type="submit"
-                                                value="@label.RawValue">
+                                                value="@label.Text">
                                                 <span class="fa fa-close"></span>
                                             </button>
                                         </form>
@@ -184,11 +184,11 @@
                                             {
                                                 @if (transaction.Labels.Contains(label))
                                                 {
-                                                    <button name="removelabel" class="btn btn-sm" type="submit" value="@label.Value"><span class="badge" style="display:block;background-color:@label.Color;color:white;text-align:left;"><span class="fa fa-check"></span> @label.Value</span></button>
+                                                    <button name="removelabel" class="btn btn-sm" type="submit" value="@label.Text"><span class="badge" style="display:block;background-color:@label.Color;color:white;text-align:left;"><span class="fa fa-check"></span> @label.Text</span></button>
                                                 }
                                                 else
                                                 {
-                                                    <button name="addlabelclick" class="btn btn-sm" type="submit" value="@label.Value"><span class="badge" style="display:block;background-color:@label.Color;color:white;text-align:left;">@label.Value</span></button>
+                                                    <button name="addlabelclick" class="btn btn-sm" type="submit" value="@label.Text"><span class="badge" style="display:block;background-color:@label.Color;color:white;text-align:left;">@label.Text</span></button>
                                                 }
                                             }
                                         }

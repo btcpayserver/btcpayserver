@@ -978,7 +978,22 @@ namespace BTCPayServer.Tests
                     });
                 });
 
+                await AssertHttpError(403, async () =>
+                {
+                    await viewOnly.UpdateInvoice(user.StoreId, newInvoice.Id,
+                        new UpdateInvoiceRequest()
+                        {
+                            Metadata = JObject.Parse("{\"itemCode\": \"updated\", newstuff: [1,2,3,4,5]}")
+                        });
+                });
+                invoice = await client.UpdateInvoice(user.StoreId, newInvoice.Id,
+                    new UpdateInvoiceRequest()
+                    {
+                        Metadata = JObject.Parse("{\"itemCode\": \"updated\", newstuff: [1,2,3,4,5]}")
+                    });
 
+                Assert.Equal("updated",invoice.Metadata["itemCode"].Value<string>());
+                Assert.Equal(15,((JArray) invoice.Metadata["newstuff"]).Values<int>().Sum());
                 //archive 
                 await AssertHttpError(403, async () =>
                 {

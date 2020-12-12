@@ -4,21 +4,16 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
-using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Security;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
-using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using NBitcoin;
-using NBitpayClient;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using CreateInvoiceRequest = BTCPayServer.Client.Models.CreateInvoiceRequest;
 using InvoiceData = BTCPayServer.Client.Models.InvoiceData;
 
@@ -98,6 +93,26 @@ namespace BTCPayServer.Controllers.GreenField
 
             await _invoiceRepository.ToggleInvoiceArchival(invoiceId, true, storeId);
             return Ok();
+        }
+
+        [Authorize(Policy = Policies.CanModifyStoreSettings,
+            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpPut("~/api/v1/stores/{storeId}/invoices/{invoiceId}")]
+        public async Task<IActionResult> UpdateInvoice(string storeId, string invoiceId, UpdateInvoiceRequest request)
+        {
+            var store = HttpContext.GetStoreData();
+            if (store == null)
+            {
+                return NotFound();
+            }
+
+            var result = await _invoiceRepository.UpdateInvoiceMetadata(invoiceId, storeId, request.Metadata);
+            if (result != null)
+            {
+                return Ok(ToModel(result));
+            }
+
+            return NotFound();
         }
 
         [Authorize(Policy = Policies.CanCreateInvoice,

@@ -441,6 +441,22 @@ retry:
                 await context.SaveChangesAsync().ConfigureAwait(false);
             }
         }
+        public async Task<InvoiceEntity> UpdateInvoiceMetadata(string invoiceId,  string storeId, JObject metadata)
+        {
+            using (var context = _ContextFactory.CreateContext())
+            {
+                var invoiceData = await GetInvoiceRaw(invoiceId);
+                if (invoiceData == null || (storeId != null &&
+                                            !invoiceData.StoreDataId.Equals(storeId,
+                                                StringComparison.InvariantCultureIgnoreCase)))
+                    return null;
+                var blob = invoiceData.GetBlob(_Networks);
+                blob.Metadata =  InvoiceMetadata.FromJObject(metadata);
+                invoiceData.Blob = ToBytes(blob);
+                await context.SaveChangesAsync().ConfigureAwait(false);
+                return ToEntity(invoiceData);
+            }
+        }
         public async Task<bool> MarkInvoiceStatus(string invoiceId, InvoiceStatus status)
         {
             using (var context = _ContextFactory.CreateContext())

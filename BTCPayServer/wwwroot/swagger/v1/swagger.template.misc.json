@@ -1,25 +1,5 @@
 {
     "paths": {
-        "/translate": {
-            "get": {
-                "tags": [
-                    "Miscalleneous"
-                ],
-                "summary": "Bitpay translator",
-                "description": "Bitpay is using a deprecated standard in their invoices that most wallets do not support. Use this tool to transform their invoices to a regular address/amount.",
-                "responses": {
-                    "200": {
-                        "description": "The page to the Bitpay translator",
-                        "content": {
-                            "text/html": {
-                                "example": "The HTML page of the Bitpay translator tool"
-                            }
-                        }
-                    }
-                },
-                "security": []
-            }
-        },
         "/misc/lang": {
             "get": {
                 "tags": [

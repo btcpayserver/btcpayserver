@@ -13,6 +13,10 @@ namespace BTCPayServer.Services.Notifications
     public class UserNotificationsUpdatedEvent
     {
         public string UserId { get; set; }
+        public override string ToString()
+        {
+            return string.Empty;
+        }
     }
     public class NotificationSender
     {

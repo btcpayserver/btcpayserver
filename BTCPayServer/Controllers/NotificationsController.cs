@@ -206,6 +206,17 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [HttpPost]
+        public async Task<IActionResult> MarkAllAsSeen(string returnUrl)
+        {
+            if (!ValidUserClaim(out var userId))
+            {
+                return NotFound();
+            }
+            await _notificationManager.ToggleSeen(new NotificationsQuery() {Seen = false, UserId = userId}, true);
+            return Redirect(returnUrl);
+        }
+
         private bool ValidUserClaim(out string userId)
         {
             userId = _userManager.GetUserId(User);

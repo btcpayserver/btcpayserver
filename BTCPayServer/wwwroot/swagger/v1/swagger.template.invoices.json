@@ -675,7 +675,7 @@
                     "defaultLanguage": {
                         "type": "string",
                         "nullable": true,
-                        "description": "The language code (eg. en-US, en, fr-FR...) of the language presented to your customer in the checkout page. BTCPay Server tries to match the best language available. If null or not set, will fallback on the store's default language. Browse the [/misc/lang](/misc/lang) page of your BTCPay Server instance to see the list of supported languages."
+                        "description": "The language code (eg. en-US, en, fr-FR...) of the language presented to your customer in the checkout page. BTCPay Server tries to match the best language available. If null or not set, will fallback on the store's default language. You can see the list of language codes with [this operation](#operation/langCodes)."
                     }
                 }
             },

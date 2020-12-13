@@ -1,10 +1,10 @@
 blank_issues_enabled: false
 contact_links: 
   - name: 🚀 Discussions  
-    url: https://chat.btcpayserver.org/
+    url: https://github.com/btcpayserver/btcpayserver/discussions
     about: Technical discussions, questions and feature requests    
   - name: 📝 Official Documentation
-    url: https://github.com/btcpayserver/btcpayserver/discussions
+    url: https://docs.btcpayserver.org
     about: Check our documentation for answers to common questions 
   - name: 💬 Community Support Chat  
     url: https://chat.btcpayserver.org/

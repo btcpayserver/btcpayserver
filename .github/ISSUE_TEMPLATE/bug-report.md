@@ -17,7 +17,7 @@ Please fill in as much of the template below as you're able.
 **Describe the bug**
 A clear and concise description of what the bug is.
 
-**To Reproduce a bug**
+**To Reproduce the bug**
 Steps to reproduce the reported bug:
 1. Go to '...'
 2. Click on '....'

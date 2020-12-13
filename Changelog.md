@@ -1,5 +1,47 @@
 # Changelog
 
+## 1.0.6.3:
+
+### New features
+
+* Greenfield API: Can update invoice metadata @Kukks
+* Greenfield API: User notifications API @Kukks 
+* Greenfield API: Can specify the preferred language when creating an invoice @NicolasDorier
+* Greenfield API: Can specify the URL to redirect customer to when he paid when creating an invoice @NicolasDorier
+* Greenfield API: Expose the `checkoutLink` of the created invoice, where you need to redirect your customer to pay in BTC @NicolasDorier
+* Add a `Mark all as seen` button to the notification dropdown @ubolator
+* Support of Armenian language in checkout page. Thanks to Mash Mashok
+* Add ability to add custom CSS to pull payments @ubolator
+* Introduce some basic spam protection for hosts with open registration (see #2106) @Kukks
+
+
+### Improvements
+
+* Hide pagination & page size when not necessary (#2122) @dennisreimann @dstrukt
+* Document in `/docs` miscellaneous features of BTCPay (such as optional arguments of the checkout page) @NicolasDorier
+* UI: Improve mobile store setup view @dennisreimann @dstrukt
+* Improve U2F support, should leverage OS support and now work properly on mobile Safari (See #2086) @dennisreimann
+* Improve how new label picked their color (See #2072) @ubolator
+* Improve the design of transaction's label dropdown to fix display issue when there are too many (see #2078) @ubolator
+
+### Bug fixes:
+
+* Ensure campaign status is shown correctly in minimal crowdfund app (#2062) @ubolator
+* Can remove automatic labels from invoices @NicolasDorier
+* Fix Pay Button Link preview when app mode chosen (#2115) @Kukks
+* If the user was not admin, the API Keys page was ignoring some of the checked permissions @NicolasDorier
+* Greenfield API: If invoice creation failed for some reason, BTCPay would give a HTTP 500 error without details helping the user. @NicolasDorier
+* Fix performance issue: Some invoice queries were causing a full table scan on all invoices rather than using an index. @NicolasDorier
+* Fix: Importing an incorrect wallet from BlueWallet was crashing (#2098) @Kukks
+* Fix classic theme for payment requests (Fix #2084) @dennisreimann
+
+### Miscellaneous:
+
+* Removing the bitpay invoice translator @NicolasDorier
+* Improve the documentation of API Keys page @NicolasDorier
+* Fix doc for create invoice request's metadata @NicolasDorier
+* Fix docs for pull payments @Kukks
+
 ## 1.0.6.2:
 
 *  Reverting uppercasing of Bech32 addresses in QR code (@Rockstardev)

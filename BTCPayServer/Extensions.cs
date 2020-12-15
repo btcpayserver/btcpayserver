@@ -298,6 +298,10 @@ namespace BTCPayServer
                         request.PathBase.ToUriComponent(),
                         request.Path.ToUriComponent());
         }
+        public static string GetCurrentPathWithQueryString(this HttpRequest request)
+        {
+            return request.PathBase + request.Path + request.QueryString;
+        }
 
         /// <summary>
         /// If 'toto' and RootPath is 'rootpath' returns '/rootpath/toto'

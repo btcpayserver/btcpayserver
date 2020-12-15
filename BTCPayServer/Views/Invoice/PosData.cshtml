@@ -1,34 +1,43 @@
-@model Dictionary<string, object>
+@model (Dictionary<string, object> Items, int Level)
 
-<table class="table table-sm table-responsive-md">
-    @foreach (var posDataItem in Model)
+<table class="table table-sm table-responsive-md removetopborder">
+    @foreach (var (key, value) in Model.Items)
     {
         <tr>
-            @if (!string.IsNullOrEmpty(posDataItem.Key))
+            @if (value is Dictionary<string, object>subItems)
             {
-                <th>@posDataItem.Key</th>
-                <td>
-                    @if (posDataItem.Value is string)
+                <td colspan="2">
+                    @if (key == "_urls")
                     {
-                        @posDataItem.Value
+                        @Html.Raw($"<h{Model.Level + 3} class='mt-3'>Links</h{Model.Level + 3}>")
+                        <ul>
+                            @foreach (var (title, url) in subItems)
+                            {
+                                <li>
+                                    <a href="@url" target="_blank">@title</a>
+                                </li>
+                            }
+                        </ul>
+
                     }
                     else
                     {
-                        <partial name="PosData" model="@posDataItem.Value"/>
+                        @Html.Raw($"<h{Model.Level + 3} class='mt-3 mb-n3'>{key}</h{Model.Level + 3}>")
+                        <partial name="PosData" model="(subItems, Model.Level + 1)"/>
                     }
-
                 </td>
             }
             else
             {
-                <td colspan="2">
-                    @if (posDataItem.Value is string)
+                <th class="w-150px">@key</th>
+                <td>
+                    @if (value is string && ((string) value).StartsWith("http"))
                     {
-                        @posDataItem.Value
+                        <a href="@value" target="_blank">@value</a>
                     }
                     else
                     {
-                        <partial name="PosData" model="@posDataItem.Value"/>
+                        @value
                     }
                 </td>
             }

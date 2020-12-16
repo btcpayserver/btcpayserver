@@ -1,37 +1,52 @@
-@model Dictionary<string, object>
+@model (Dictionary<string, object> Items, int Level)
 
-<table class="table table-sm table-responsive-md">
-    @foreach (var posDataItem in Model)
+@functions{
+    void DisplayValue(object value)
+    {
+        if (value is string str && str.StartsWith("http"))
+        {
+            <a href="@str" target="_blank">@str</a>
+        }
+        else
+        {
+            @value
+        }
+    }
+}
+
+<table class="table table-sm table-responsive-md removetopborder">
+    @foreach (var (key, value) in Model.Items)
     {
         <tr>
-            @if (!string.IsNullOrEmpty(posDataItem.Key))
+            @if (value is string)
             {
-                <th>@posDataItem.Key</th>
+                if (!string.IsNullOrEmpty(key))
+                {
+                    <th class="w-150px">@key</th>
+                }
                 <td>
-                    @if (posDataItem.Value is string)
-                    {
-                        @posDataItem.Value
-                    }
-                    else
-                    {
-                        <partial name="PosData" model="@posDataItem.Value"/>
-                    }
-
+                    @{ DisplayValue(value); }
                 </td>
             }
-            else
+            else if (value is Dictionary<string, object>subItems)
             {
-                <td colspan="2">
-                    @if (posDataItem.Value is string)
-                    {
-                        @posDataItem.Value
-                    }
-                    else
-                    {
-                        <partial name="PosData" model="@posDataItem.Value"/>
-                    }
-                </td>
+                @* This is the array case *@
+                if (subItems.Count == 1 && subItems.First().Value is string)
+                {
+                    <th class="w-150px">@key</th>
+                    <td>
+                        @{ DisplayValue(subItems.First().Value); }
+                    </td>
+                }
+                else
+                {
+                    <td colspan="2">
+                        @Html.Raw($"<h{Model.Level + 3} class='mt-3'>{key}</h{Model.Level + 3}>")
+                        <partial name="PosData" model="(subItems, Model.Level + 1)"/>
+                    </td>
+                }
             }
         </tr>
     }
 </table>
+

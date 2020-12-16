@@ -5,6 +5,7 @@ using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using NBitcoin;
+using BIP78.Sender;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Payments
@@ -71,7 +72,7 @@ namespace BTCPayServer.Payments
         {
             var bip21 = ((BTCPayNetwork)network).GenerateBIP21(paymentMethodDetails.GetPaymentDestination(), cryptoInfoDue);
 
-            if ((paymentMethodDetails as BitcoinLikeOnChainPaymentMethod)?.PayjoinEnabled is true)
+            if ((paymentMethodDetails as BitcoinLikeOnChainPaymentMethod)?.PayjoinEnabled is true && serverUri != null)
             {
                 bip21 += $"&{PayjoinClient.BIP21EndpointKey}={serverUri.WithTrailingSlash()}{network.CryptoCode}/{PayjoinClient.BIP21EndpointKey}";
             }

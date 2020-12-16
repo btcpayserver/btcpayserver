@@ -32,6 +32,7 @@ using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Payments.PayJoin.Sender;
 using BTCPayServer.Rating;
 using BTCPayServer.Security.Bitpay;
 using BTCPayServer.Services;
@@ -1201,7 +1202,7 @@ namespace BTCPayServer.Tests
                     });
                 }
                 var httpFactory = tester.PayTester.GetService<IHttpClientFactory>();
-                var client = httpFactory.CreateClient(PayjoinClient.PayjoinOnionNamedClient);
+                var client = httpFactory.CreateClient(PayjoinServerCommunicator.PayjoinOnionNamedClient);
                 Assert.NotNull(client);
                 var response = await client.GetAsync("https://check.torproject.org/");
                 response.EnsureSuccessStatusCode();
@@ -1220,7 +1221,7 @@ namespace BTCPayServer.Tests
                 AssertConnectionDropped();
                 client.Dispose();
                 AssertConnectionDropped();
-                client = httpFactory.CreateClient(PayjoinClient.PayjoinOnionNamedClient);
+                client = httpFactory.CreateClient(PayjoinServerCommunicator.PayjoinOnionNamedClient);
                 response = await client.GetAsync("http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/");
                 response.EnsureSuccessStatusCode();
                 AssertConnectionDropped();

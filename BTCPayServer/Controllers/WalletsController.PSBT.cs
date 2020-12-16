@@ -9,9 +9,11 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.ModelBinders;
 using BTCPayServer.Models;
 using BTCPayServer.Models.WalletViewModels;
+using BTCPayServer.Payments.PayJoin.Sender;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
+using BIP78.Sender;
 using NBitcoin.Payment;
 using NBXplorer;
 using NBXplorer.Models;
@@ -171,7 +173,7 @@ namespace BTCPayServer.Controllers
             var cloned = psbt.Clone();
             cloned = cloned.Finalize();
             await _broadcaster.Schedule(DateTimeOffset.UtcNow + TimeSpan.FromMinutes(2.0), cloned.ExtractTransaction(), btcPayNetwork);
-            return await _payjoinClient.RequestPayjoin(bip21, derivationSchemeSettings, psbt, cancellationToken);
+            return await _payjoinClient.RequestPayjoin(bip21, new PayjoinWallet(derivationSchemeSettings), psbt, cancellationToken);
         }
 
         [HttpGet]

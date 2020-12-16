@@ -11,6 +11,7 @@ using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using NBitcoin;
+using BIP78.Sender;
 using NBXplorer.Models;
 using StoreData = BTCPayServer.Data.StoreData;
 
@@ -169,8 +170,8 @@ namespace BTCPayServer.Payments.Bitcoin
             onchainMethod.DepositAddress = reserved.Address.ToString();
             onchainMethod.KeyPath = reserved.KeyPath;
             onchainMethod.PayjoinEnabled = blob.PayJoinEnabled &&
-                                           PayjoinClient.SupportedFormats.Contains(supportedPaymentMethod
-                                               .AccountDerivation.ScriptPubKeyType()) &&
+                                           supportedPaymentMethod
+                                               .AccountDerivation.ScriptPubKeyType() != ScriptPubKeyType.Legacy &&
                                            network.SupportPayJoin;
             if (onchainMethod.PayjoinEnabled)
             {

@@ -14,6 +14,7 @@ using BTCPayServer.Lightning;
 using BTCPayServer.Lightning.CLightning;
 using BTCPayServer.Models.AccountViewModels;
 using BTCPayServer.Models.StoreViewModels;
+using BTCPayServer.Payments.PayJoin.Sender;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
@@ -22,6 +23,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.Operations;
 using NBitcoin;
+using BIP78.Sender;
 using NBitcoin.Payment;
 using NBitpayClient;
 using NBXplorer.DerivationStrategy;
@@ -358,7 +360,7 @@ namespace BTCPayServer.Tests
             Logs.Tester.LogInformation($"Proposing {psbt.GetGlobalTransaction().GetHash()}");
             if (expectedError is null && !senderError)
             {
-                var proposed = await pjClient.RequestPayjoin(endpoint, settings, psbt, default);
+                var proposed = await pjClient.RequestPayjoin(endpoint, new PayjoinWallet(settings), psbt, default);
                 Logs.Tester.LogInformation($"Proposed payjoin is {proposed.GetGlobalTransaction().GetHash()}");
                 Assert.NotNull(proposed);
                 return proposed;
@@ -367,11 +369,11 @@ namespace BTCPayServer.Tests
             {
                 if (senderError)
                 {
-                    await Assert.ThrowsAsync<PayjoinSenderException>(async () => await pjClient.RequestPayjoin(endpoint, settings, psbt, default));
+                    await Assert.ThrowsAsync<PayjoinSenderException>(async () => await pjClient.RequestPayjoin(endpoint, new PayjoinWallet(settings), psbt, default));
                 }
                 else
                 {
-                    var ex = await Assert.ThrowsAsync<PayjoinReceiverException>(async () => await pjClient.RequestPayjoin(endpoint, settings, psbt, default));
+                    var ex = await Assert.ThrowsAsync<PayjoinReceiverException>(async () => await pjClient.RequestPayjoin(endpoint, new PayjoinWallet(settings), psbt, default));
                     var split = expectedError.Split('|');
                     Assert.Equal(split[0], ex.ErrorCode);
                     if (split.Length > 1)

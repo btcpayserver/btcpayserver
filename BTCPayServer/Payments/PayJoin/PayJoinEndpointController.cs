@@ -19,6 +19,7 @@ using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
+using NBitcoin.BIP78.Client;
 using NBitcoin.Crypto;
 using NBitcoin.DataEncoders;
 using NBXplorer;
@@ -255,11 +256,6 @@ namespace BTCPayServer.Payments.PayJoin
                     continue;
 
                 var receiverInputsType = derivationSchemeSettings.AccountDerivation.ScriptPubKeyType();
-                if (receiverInputsType == ScriptPubKeyType.Legacy)
-                {
-                    //this should never happen, unless the store owner changed the wallet mid way through an invoice
-                    return CreatePayjoinErrorAndLog(503, PayjoinReceiverWellknownErrors.Unavailable, "Our wallet does not support payjoin");
-                }
                 if (sendersInputType is ScriptPubKeyType t1 && t1 != receiverInputsType)
                 {
                     return CreatePayjoinErrorAndLog(503, PayjoinReceiverWellknownErrors.Unavailable, "We do not have any UTXO available for making a payjoin with the sender's inputs type");

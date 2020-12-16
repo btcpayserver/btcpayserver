@@ -176,8 +176,6 @@ namespace BTCPayServer.Payments.Bitcoin
             onchainMethod.DepositAddress = reserved.Address.ToString();
             onchainMethod.KeyPath = reserved.KeyPath;
             onchainMethod.PayjoinEnabled = blob.PayJoinEnabled &&
-                                           supportedPaymentMethod
-                                               .AccountDerivation.ScriptPubKeyType() != ScriptPubKeyType.Legacy &&
                                            network.SupportPayJoin;
             if (onchainMethod.PayjoinEnabled)
             {

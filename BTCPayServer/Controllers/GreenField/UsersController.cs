@@ -153,6 +153,10 @@ namespace BTCPayServer.Controllers.GreenField
                 await _userManager.AddToRoleAsync(user, Roles.ServerAdmin);
                 if (!anyAdmin)
                 {
+                    var settings = await _settingsRepository.GetSettingAsync<ThemeSettings>();
+                    settings.FirstRun = false;
+                    await _settingsRepository.UpdateSetting(settings);
+
                     await _settingsRepository.FirstAdminRegistered(policies, _options.UpdateUrl != null, _options.DisableRegistration);
                 }
             }

@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore;
@@ -52,16 +53,13 @@ namespace BTCPayServer.Payments.PayJoin
 
         public async Task<bool> TryLockInputs(OutPoint[] outPoints)
         {
-            using var ctx = _dbContextFactory.CreateContext();
-            foreach (OutPoint outPoint in outPoints)
+            await using var ctx = _dbContextFactory.CreateContext();
+            await ctx.PayjoinLocks.AddRangeAsync(outPoints.Select(point => new PayjoinLock()
             {
-                ctx.PayjoinLocks.Add(new PayjoinLock()
-                {
-                    // Random flag so it does not lock same id
-                    // as the lock utxo
-                    Id = "K-" + outPoint.ToString()
-                });
-            }
+                // Random flag so it does not lock same id
+                // as the lock utxo
+                Id = $"K-{point}"
+            }));
             try
             {
                 return await ctx.SaveChangesAsync() == outPoints.Length;

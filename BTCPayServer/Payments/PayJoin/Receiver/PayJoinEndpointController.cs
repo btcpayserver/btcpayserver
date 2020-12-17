@@ -10,6 +10,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Filters;
 using BTCPayServer.HostedServices;
+using BTCPayServer.Logging;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
@@ -29,6 +30,10 @@ using NicolasDorier.RateLimits;
 
 namespace BTCPayServer.Payments.PayJoin
 {
+    
+    
+    
+    
     [Route("{cryptoCode}/" + PayjoinClient.BIP21EndpointKey)]
     public class PayJoinEndpointController : ControllerBase
     {
@@ -92,6 +97,7 @@ namespace BTCPayServer.Payments.PayJoin
         private readonly DelayedTransactionBroadcaster _broadcaster;
         private readonly WalletRepository _walletRepository;
         private readonly BTCPayServerEnvironment _env;
+        private readonly BTCPayPayjoinReceiverWallet _btcPayPayjoinReceiverWallet;
 
         public PayJoinEndpointController(BTCPayNetworkProvider btcPayNetworkProvider,
             InvoiceRepository invoiceRepository, ExplorerClientProvider explorerClientProvider,
@@ -101,7 +107,8 @@ namespace BTCPayServer.Payments.PayJoin
             NBXplorerDashboard dashboard,
             DelayedTransactionBroadcaster broadcaster,
             WalletRepository walletRepository,
-            BTCPayServerEnvironment env)
+            BTCPayServerEnvironment env,
+            BTCPayPayjoinReceiverWallet btcPayPayjoinReceiverWallet)
         {
             _btcPayNetworkProvider = btcPayNetworkProvider;
             _invoiceRepository = invoiceRepository;
@@ -114,6 +121,7 @@ namespace BTCPayServer.Payments.PayJoin
             _broadcaster = broadcaster;
             _walletRepository = walletRepository;
             _env = env;
+            _btcPayPayjoinReceiverWallet = btcPayPayjoinReceiverWallet;
         }
 
         [HttpPost("")]
@@ -142,12 +150,8 @@ namespace BTCPayServer.Payments.PayJoin
                 });
             }
 
-            await using var ctx = new PayjoinReceiverContext(_invoiceRepository, _explorerClientProvider.GetExplorerClient(network), _payJoinRepository);
-            ObjectResult CreatePayjoinErrorAndLog(int httpCode, PayjoinReceiverWellknownErrors err, string debug)
-            {
-                ctx.Logs.Write($"Payjoin error: {debug}", InvoiceEventData.EventSeverity.Error);
-                return StatusCode(httpCode, CreatePayjoinError(err, debug));
-            }
+            // await using var ctx = new PayjoinReceiverContext(_invoiceRepository, _explorerClientProvider.GetExplorerClient(network), _payJoinRepository);
+            
             var explorer = _explorerClientProvider.GetExplorerClient(network);
             if (Request.ContentLength is long length)
             {
@@ -168,22 +172,13 @@ namespace BTCPayServer.Payments.PayJoin
                 rawBody = (await reader.ReadToEndAsync()) ?? string.Empty;
             }
 
-            FeeRate originalFeeRate = null;
             bool psbtFormat = true;
 
-            if (PSBT.TryParse(rawBody, network.NBitcoinNetwork, out var psbt))
-            {
-                if (!psbt.IsAllFinalized())
-                    return BadRequest(CreatePayjoinError("original-psbt-rejected", "The PSBT should be finalized"));
-                ctx.OriginalTransaction = psbt.ExtractTransaction();
-            }
-            // BTCPay Server implementation support a transaction instead of PSBT
-            else
+            if (!PSBT.TryParse(rawBody, network.NBitcoinNetwork, out var psbt))
             {
                 psbtFormat = false;
                 if (!Transaction.TryParse(rawBody, network.NBitcoinNetwork, out var tx))
                     return BadRequest(CreatePayjoinError("original-psbt-rejected", "invalid transaction or psbt"));
-                ctx.OriginalTransaction = tx;
                 psbt = PSBT.FromTransaction(tx, network.NBitcoinNetwork);
                 psbt = (await explorer.UpdatePSBTAsync(new UpdatePSBTRequest() { PSBT = psbt })).PSBT;
                 for (int i = 0; i < tx.Inputs.Count; i++)
@@ -193,47 +188,33 @@ namespace BTCPayServer.Payments.PayJoin
                 }
             }
 
-            FeeRate senderMinFeeRate = minfeerate >= 0.0m ? new FeeRate(minfeerate) : null;
-            Money allowedSenderFeeContribution = Money.Satoshis(maxadditionalfeecontribution is long t && t >= 0 ? t : 0);
+            var ctx = new BTCPayPayjoinProposalContext(psbt, new PayjoinClientParameters()
+            {
+                Version = v,
+                DisableOutputSubstitution = disableoutputsubstitution,
+                MinFeeRate = minfeerate >= 0.0m ? new FeeRate(minfeerate) : null,
+                MaxAdditionalFeeContribution =
+                    Money.Satoshis(maxadditionalfeecontribution is long t && t >= 0 ? t : 0),
+                AdditionalFeeOutputIndex = additionalfeeoutputindex
+            });
+            try
+            {
+                ObjectResult CreatePayjoinErrorAndLog(int httpCode, PayjoinReceiverWellknownErrors err, string debug)
+                {
+                    ctx.InvoiceLogs.Write($"Payjoin error: {debug}", InvoiceEventData.EventSeverity.Error);
+                    return StatusCode(httpCode, CreatePayjoinError(err, debug));
+                }
 
-            var sendersInputType = psbt.GetInputsScriptPubKeyType();
-            if (psbt.CheckSanity() is var errors && errors.Count != 0)
-            {
-                return BadRequest(CreatePayjoinError("original-psbt-rejected", $"This PSBT is insane ({errors[0]})"));
+                await _btcPayPayjoinReceiverWallet.Initiate(ctx);
             }
-            if (!psbt.TryGetEstimatedFeeRate(out originalFeeRate))
+            catch (PayjoinReceiverException e)
             {
-                return BadRequest(CreatePayjoinError("original-psbt-rejected",
-                    "You need to provide Witness UTXO information to the PSBT."));
+                return BadRequest(CreatePayjoinError(e.ErrorCode, e.ReceiverMessage));
             }
-
-            // This is actually not a mandatory check, but we don't want implementers
-            // to leak global xpubs
-            if (psbt.GlobalXPubs.Any())
-            {
-                return BadRequest(CreatePayjoinError("original-psbt-rejected",
-                    "GlobalXPubs should not be included in the PSBT"));
-            }
-
-            if (psbt.Outputs.Any(o => o.HDKeyPaths.Count != 0) || psbt.Inputs.Any(o => o.HDKeyPaths.Count != 0))
-            {
-                return BadRequest(CreatePayjoinError("original-psbt-rejected",
-                    "Keypath information should not be included in the PSBT"));
-            }
-
-            if (psbt.Inputs.Any(o => !o.IsFinalized()))
-            {
-                return BadRequest(CreatePayjoinError("original-psbt-rejected", "The PSBT Should be finalized"));
-            }
-            ////////////
-
-            var mempool = await explorer.BroadcastAsync(ctx.OriginalTransaction, true);
-            if (!mempool.Success)
-            {
-                ctx.DoNotBroadcast();
-                return BadRequest(CreatePayjoinError("original-psbt-rejected",
-                    $"Provided transaction isn't mempool eligible {mempool.RPCCodeMessage}"));
-            }
+            
+            
+            
+            
             var enforcedLowR = ctx.OriginalTransaction.Inputs.All(IsLowR);
             var paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
             bool paidSomething = false;

@@ -185,10 +185,12 @@ namespace BTCPayServer.Payments.PayJoin.Receiver
             {
                 var accountKey = context.SigningKey;
                 var newPsbt = PSBT.FromTransaction(newTx, context.Network.NBitcoinNetwork);
+                var ourCoins = new List<ICoin>();
                 foreach (var selectedUtxo in selectedUTXOs.Select(o => o.Value))
                 {
                     var signedInput = newPsbt.Inputs.FindIndexedInput(selectedUtxo.Outpoint);
                     var coin = selectedUtxo.AsCoin(context.PaymentMethod.AccountDerivation);
+                    ourCoins.Add(coin);
                     signedInput.UpdateFromCoin(coin);
                     var privateKey = accountKey.Derive(selectedUtxo.KeyPath).PrivateKey;
                     signedInput.Sign(privateKey, new SigningOptions() {EnforceLowR = enforcedLowR});
@@ -200,10 +202,9 @@ namespace BTCPayServer.Payments.PayJoin.Receiver
 
                 context.PayjoinReceiverWalletProposal = new PayjoinReceiverWalletProposal()
                 {
+                    PayjoinTransactionHash = GetExpectedHash(newPsbt,  coins.Concat(ourCoins).ToArray()),
                     PayjoinPSBT = newPsbt,
-                    ContributedInputs =
-                        selectedUTXOs.Select(pair => pair.Value.AsCoin(context.PaymentMethod.AccountDerivation))
-                            .ToArray(),
+                    ContributedInputs =ourCoins.ToArray(),
                     ContributedOutputs = Array.Empty<TxOut>(),
                     ModifiedPaymentRequest = ourNewOutput,
                     ExtraFeeFromAdditionalFeeOutput = feeFromOutputIndex,
@@ -213,14 +214,25 @@ namespace BTCPayServer.Payments.PayJoin.Receiver
 
             if (context.PayjoinReceiverWalletProposal is null)
                 await _payJoinRepository.TryUnlock(
-                    context.OriginalPSBT.Inputs.Select(input => input.PrevOut).Concat(selectedUTXOs.Select(pair => pair.Key)).ToArray()
-                    .ToArray());
+                    context.OriginalPSBT.Inputs.Select(input => input.PrevOut)
+                        .Concat(selectedUTXOs.Select(pair => pair.Key)).ToArray()
+                        .ToArray());
             if (notEnoughMoney)
             {
                 throw new PayjoinReceiverException(
                     PayjoinReceiverHelper.GetErrorCode(PayjoinReceiverWellknownErrors.NotEnoughMoney),
                     "Not enough money is sent to pay for the additional payjoin inputs");
             }
+        }
+
+
+        private uint256 GetExpectedHash(PSBT psbt, ICoin[] coins)
+        {
+            psbt = psbt.Clone();
+            psbt.AddCoins(coins);
+            if (!psbt.TryGetFinalizedHash(out var hash))
+                throw new InvalidOperationException("Unable to get the finalized hash");
+            return hash;
         }
 
         protected override async Task<PayjoinPaymentRequest> FindMatchingPaymentRequests(

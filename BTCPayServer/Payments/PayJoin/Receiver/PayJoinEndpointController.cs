@@ -148,9 +148,7 @@ namespace BTCPayServer.Payments.PayJoin.Receiver
             originalPaymentData.ConfirmationCount = -1;
             originalPaymentData.PayjoinInformation = new PayjoinInformation()
             {
-                CoinjoinTransactionHash =
-                    GetExpectedHash(ctx.PayjoinReceiverWalletProposal.PayjoinPSBT,
-                        ctx.PayjoinReceiverWalletProposal.ContributedInputs),
+                CoinjoinTransactionHash = ctx.PayjoinReceiverWalletProposal.PayjoinTransactionHash,
                 CoinjoinValue = ctx.PayjoinReceiverWalletProposal.ModifiedPaymentRequest.Value,
                 ContributedOutPoints = ctx.PayjoinReceiverWalletProposal.ContributedInputs.Select(o => o.Outpoint)
                     .ToArray()
@@ -191,16 +189,6 @@ namespace BTCPayServer.Payments.PayJoin.Receiver
             // BTCPay Server should returns transaction if received transaction
             return Ok(ctx.PayjoinReceiverWalletProposal.PayjoinPSBT.ExtractTransaction().ToHex());
         }
-
-        private uint256 GetExpectedHash(PSBT psbt, ICoin[] coins)
-        {
-            psbt = psbt.Clone();
-            psbt.AddCoins(coins);
-            if (!psbt.TryGetFinalizedHash(out var hash))
-                throw new InvalidOperationException("Unable to get the finalized hash");
-            return hash;
-        }
-
         private JObject CreatePayjoinError(string errorCode, string friendlyMessage)
         {
             var o = new JObject();

@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.0.6.4:
+
+### Bug fixes:
+
+* Fix coin selection label filter (@Kukks)
+* Greenfield: Fix behaviour after first admin signup (see #2150) @dennisreimann
+* Greenfield: If invoice is not found, error 404 should be returned rather than a crash @dennisreimann
+* Attempt to fix sometimes broken Mark as Seen button @NicolasDorier
+
+### Improvements
+
+* Improve the invoice details view (see #2144) @dennisreimann
+
+### Miscellaneous
+
+* API Keys: Add usage examples link to docs @dennisreimann
+
 ## 1.0.6.3:
 
 ### New features

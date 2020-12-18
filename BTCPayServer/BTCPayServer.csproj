@@ -142,8 +142,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\NBitcoin.BIP78\NBitcoin.BIP78\NBitcoin.BIP78.Client\NBitcoin.BIP78.Client.csproj" />
-	  <ProjectReference Include="..\..\NBitcoin.BIP78\NBitcoin.BIP78\NBitcoin.BIP78.Server\NBitcoin.BIP78.Server.csproj" />
+	  <ProjectReference Include="..\..\NBitcoin.BIP78\NBitcoin.BIP78\BIP78.Receiver\BIP78.Receiver.csproj" />
 	  <ProjectReference Include="..\BTCPayServer.Abstractions\BTCPayServer.Abstractions.csproj" />
 	  <ProjectReference Include="..\BTCPayServer.Client\BTCPayServer.Client.csproj" />
 	  <ProjectReference Include="..\BTCPayServer.Data\BTCPayServer.Data.csproj" />

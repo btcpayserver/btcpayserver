@@ -4,7 +4,7 @@ using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 
-namespace BTCPayServer.Payments.PayJoin
+namespace BTCPayServer.Payments.PayJoin.Receiver
 {
     public class PayJoinRepository
     {

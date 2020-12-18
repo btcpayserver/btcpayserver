@@ -678,7 +678,7 @@ namespace BTCPayServer.Tests
             {
                 return new UTXO() { Outpoint = new OutPoint(RandomUtils.GetUInt256(), RandomUtils.GetUInt32() % 0xff) };
             }
-            var comparer = Payments.PayJoin.PayJoinEndpointController.UTXODeterministicComparer.Instance;
+            var comparer = PayJoinEndpointController.UTXODeterministicComparer.Instance;
             var utxos = Enumerable.Range(0, 100).Select(_ => CreateRandomUTXO()).ToArray();
             Array.Sort(utxos, comparer);
             var utxo53 = utxos[53];

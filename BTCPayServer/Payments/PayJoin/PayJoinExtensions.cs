@@ -16,6 +16,7 @@ namespace BTCPayServer.Payments.PayJoin
             services.AddSingleton<HostedServices.Socks5HttpProxyServer>();
             services.AddSingleton<IHostedService, HostedServices.Socks5HttpProxyServer>(s => s.GetRequiredService<Socks5HttpProxyServer>());
             services.AddSingleton<PayJoinRepository>();
+            services.AddSingleton<BTCPayPayjoinReceiverWallet>();
             services.AddSingleton<IPayjoinServerCommunicator, PayjoinServerCommunicator>();
             services.AddSingleton<PayjoinClient>();
             services.AddTransient<Socks5HttpClientHandler>();

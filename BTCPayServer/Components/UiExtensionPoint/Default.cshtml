@@ -1,0 +1,6 @@
+@model IEnumerable<string> 
+
+@foreach (var partial in Model)
+{
+    await Html.RenderPartialAsync(partial);
+}

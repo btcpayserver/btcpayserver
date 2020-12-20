@@ -2,20 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Logging;
 using BTCPayServer.Models.InvoicingModels;
-using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
-using DBriize;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Encoders = NBitcoin.DataEncoders.Encoders;
 using InvoiceData = BTCPayServer.Data.InvoiceData;
 
@@ -408,7 +406,7 @@ namespace BTCPayServer.Services.Invoices
                 await context.SaveChangesAsync().ConfigureAwait(false);
             }
         }
-        public async Task<InvoiceEntity> UpdateInvoiceMetadata(string invoiceId,  string storeId, JObject metadata)
+        public async Task<InvoiceEntity> UpdateInvoiceMetadata(string invoiceId, string storeId, JObject metadata)
         {
             using (var context = _ContextFactory.CreateContext())
             {

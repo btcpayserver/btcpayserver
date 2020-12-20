@@ -17,14 +17,14 @@ namespace BTCPayServer.Controllers.GreenField
 {
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-    public class StoreBtcLikePaymentMethodController : ControllerBase
+    public class StoreOnChainPaymentMethodsController : ControllerBase
     {
         private StoreData Store => HttpContext.GetStoreData();
         private readonly StoreRepository _storeRepository;
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly BTCPayWalletProvider _walletProvider;
 
-        public StoreBtcLikePaymentMethodController(
+        public StoreOnChainPaymentMethodsController(
             StoreRepository storeRepository,
             BTCPayNetworkProvider btcPayNetworkProvider,
             BTCPayWalletProvider walletProvider)

@@ -121,6 +121,6 @@
   border-top: none;
 }
 
-#mainNav:not(.navbar-shrink) {
+#mainNav.sticky-top {
   background: var(--btcpay-color-white);
 }

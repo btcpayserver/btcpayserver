@@ -91,10 +91,9 @@ namespace BTCPayServer.Configuration
                 .Select(t => t.ToUpperInvariant()).ToHashSet();
 
             var networkProvider = new BTCPayNetworkProvider(NetworkType);
-            var filtered = networkProvider.Filter(supportedChains.ToArray());
 #if ALTCOINS
-            supportedChains.AddRange(filtered.GetAllElementsSubChains(networkProvider));
-            supportedChains.AddRange(filtered.GetAllEthereumSubChains(networkProvider));
+            supportedChains.AddRange(networkProvider.GetAllElementsSubChains(networkProvider));
+            supportedChains.AddRange(networkProvider.GetAllEthereumSubChains(networkProvider));
 #endif
 #if !ALTCOINS
             var onlyBTC = supportedChains.Count == 1 && supportedChains.First() == "BTC";

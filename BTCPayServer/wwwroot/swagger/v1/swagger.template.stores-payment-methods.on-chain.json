@@ -245,9 +245,8 @@
                     },
                     {
                         "name": "offset",
-                        "in": "path",
+                        "in": "query",
                         "required": false,
-                        "default": 0,
                         "description": "From which index to fetch the addresses",
                         "schema": {
                             "type": "number"
@@ -255,9 +254,8 @@
                     },
                     {
                         "name": "amount",
-                        "in": "path",
+                        "in": "query",
                         "required": false,
-                        "default": 10,
                         "description": "Number of addresses to preview",
                         "schema": {
                             "type": "number"
@@ -319,9 +317,8 @@
                     },
                     {
                         "name": "offset",
-                        "in": "path",
+                        "in": "query",
                         "required": false,
-                        "default": 0,
                         "description": "From which index to fetch the addresses",
                         "schema": {
                             "type": "number"
@@ -329,9 +326,8 @@
                     },
                     {
                         "name": "amount",
-                        "in": "path",
+                        "in": "query",
                         "required": false,
-                        "default": 10,
                         "description": "Number of addresses to preview",
                         "schema": {
                             "type": "number"

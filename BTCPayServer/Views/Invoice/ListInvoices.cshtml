@@ -217,7 +217,7 @@
                     }
                 </script>
 
-                <table class="table table-sm table-responsive-md">
+                <table id="invoices" class="table table-sm table-responsive-md">
                     <thead>
                     <tr>
                         <th style="width:2rem;" class="only-for-js">
@@ -239,7 +239,7 @@
                     <tbody>
                     @foreach (var invoice in Model.Invoices)
                     {
-                        <tr>
+                        <tr id="invoice_@invoice.InvoiceId" class="invoice-row">
                             <td class="only-for-js">
                                 <input name="selectedItems" type="checkbox" class="selector" value="@invoice.InvoiceId"/>
                             </td>
@@ -312,12 +312,12 @@
                                 }
                                 &nbsp;
                                 <a asp-action="Invoice" class="invoice-details-link" asp-route-invoiceId="@invoice.InvoiceId">Details</a>
-                                <a href="javascript:void(0);" onclick="detailsToggle(this, '@invoice.InvoiceId')">
+                                <a class="only-for-js invoice-details-toggle" href="#">
                                     <span title="Invoice Details Toggle" class="fa fa-1x fa-angle-double-down"></span>
                                 </a>
                             </td>
                         </tr>
-                        <tr id="invoice_@invoice.InvoiceId" style="display:none;">
+                        <tr id="invoice_details_@invoice.InvoiceId" class="invoice-details-row" style="display:none;">
                             <td colspan="99" class="border-top-0">
                                 <div style="margin-left: 15px; margin-bottom: 0;">
                                     @* Leaving this as partial because it abstracts complexity of Invoice Payments *@
@@ -340,32 +340,11 @@
         }
     </div>
     <script type="text/javascript">
-        $(function () {
-            var timezoneOffset = new Date().getTimezoneOffset();
-            $(".export-link, a.dropdown-item").each(function () {
-                this.href = this.href.replace("timezoneoffset=0", "timezoneoffset=" + timezoneOffset);
-            });
-
-        });
-
         function getDateStringWithOffset(hoursDiff) {
             var datenow = new Date();
             var newDate = new Date(datenow.getTime() - (hoursDiff * 60 * 60 * 1000));
             var str = newDate.toLocaleDateString() + " " + newDate.toLocaleTimeString();
             return str;
-        }
-
-        function detailsToggle(sender, invoiceId) {
-            $("#invoice_" + invoiceId).toggle(0, function () {
-                var detailsRow = $(this);
-                var btnToggle = $(sender).children().first();
-                if (detailsRow.is(':visible')) {
-                    btnToggle.removeClass('fa-angle-double-down').addClass('fa-angle-double-up');
-                } else {
-                    btnToggle.removeClass('fa-angle-double-up').addClass('fa-angle-double-down');
-                }
-            });
-            return false;
         }
 
         function changeInvoiceState(sender, invoiceId, newState) {
@@ -383,6 +362,38 @@
                     alert("Invoice state update failed");
                 });
         }
+
+        $(function () {
+            var timezoneOffset = new Date().getTimezoneOffset();
+            $(".export-link, a.dropdown-item").each(function () {
+                this.href = this.href.replace("timezoneoffset=0", "timezoneoffset=" + timezoneOffset);
+            });
+
+            $("#invoices")
+                .on("click", ".invoice-row .invoice-details-toggle", function(e) {
+                    e.preventDefault();
+                    e.stopPropagation(true);
+
+                    const $btnToggle = $(e.currentTarget);
+                    const $invoiceRow = $btnToggle.parents(".invoice-row");
+                    const $detailsRow = $invoiceRow.next(".invoice-details-row");
+
+                    $detailsRow.toggle(0, function () {
+                        const $icon = $btnToggle.children().first();
+                        if ($(this).is(':visible')) {
+                            $icon.removeClass('fa-angle-double-down').addClass('fa-angle-double-up');
+                        } else {
+                            $icon.removeClass('fa-angle-double-up').addClass('fa-angle-double-down');
+                        }
+                    });
+                })
+                .on("click", ".invoice-row", function(e) {
+                    const $invoiceRow = $(e.currentTarget);
+                    if (!$(e.target).is("a,.badge,.selector")) {
+                        $invoiceRow.find(".selector").trigger("click");
+                    }
+                });
+        });
     </script>
     <style type="text/css">
         .invoice-payments {

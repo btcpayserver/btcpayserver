@@ -34,15 +34,13 @@
                 </div>
             </div>
             
-            <h5>Restart</h5>
+            <h5 class="mt-5">Restart</h5>
             <p class="text-secondary mb-2">Restart BTCPay server and related services.</p>
             <div class="form-group">
                 <div class="input-group">
                     <button name="command" type="submit" class="btn btn-primary" value="restart" disabled="@(Model.CanUseSSH ? null : "disabled")">Restart</button>
                 </div>
             </div>
-            
-            
 
             <h5 class="mt-5">Clean</h5>
             <p class="text-secondary mb-2">Delete unused docker images present on your system.</p>

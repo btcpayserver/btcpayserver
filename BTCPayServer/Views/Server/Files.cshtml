@@ -11,37 +11,41 @@
     <span>Change your <a asp-action="Services" asp-route-returnurl="@ViewData["ReturnUrl"]">external storage service</a> provider</span>
     <a href="https://docs.btcpayserver.org/FAQ/FAQ-ServerSettings/#how-to-upload-files-to-btcpay" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
 </div>
-<table class="table table-sm table-responsive-md">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Timestamp</th>
-            <th>User</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var file in Model.Files)
-        {
+
+@if (Model.Files.Any())
+{
+    <table class="table table-sm table-responsive-md">
+        <thead>
             <tr>
-                <td>@file.FileName</td>
-                <td>@file.Timestamp.ToBrowserDate2()</td>
-                <td>@file.ApplicationUser.UserName</td>
-                <td>
-                    <a asp-action="Files" asp-route-fileId="@file.Id">Get Link</a>
-                    - <a asp-action="CreateTemporaryFileUrl" asp-route-fileId="@file.Id">Get Temp Link</a>
-                    - <a asp-action="DeleteFile" asp-route-fileId="@file.Id">Remove</a>
-                </td>
+                <th>Name</th>
+                <th>Timestamp</th>
+                <th>User</th>
+                <th></th>
             </tr>
-        }
-        @if (!Model.Files.Any())
-        {
-            <tr>
-                <td colspan="4" class="text-center">No files</td>
-            </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var file in Model.Files)
+            {
+                <tr>
+                    <td>@file.FileName</td>
+                    <td>@file.Timestamp.ToBrowserDate2()</td>
+                    <td>@file.ApplicationUser.UserName</td>
+                    <td>
+                        <a asp-action="Files" asp-route-fileId="@file.Id">Get Link</a>
+                        - <a asp-action="CreateTemporaryFileUrl" asp-route-fileId="@file.Id">Get Temp Link</a>
+                        - <a asp-action="DeleteFile" asp-route-fileId="@file.Id">Remove</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p class="text-secondary mt-3">
+        There are no files yet.
+    </p>
+}
 
 @if (!string.IsNullOrEmpty(Model.SelectedFileId))
 {

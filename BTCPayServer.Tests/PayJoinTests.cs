@@ -274,7 +274,7 @@ namespace BTCPayServer.Tests
                     });
 
                     s.GoToInvoices();
-                    var paymentValueRowColumn = s.Driver.FindElement(By.Id($"invoice_{invoiceId}"))
+                    var paymentValueRowColumn = s.Driver.FindElement(By.Id($"invoice_details_{invoiceId}"))
                         .FindElement(By.ClassName("payment-value"));
                     Assert.False(paymentValueRowColumn.Text.Contains("payjoin",
                         StringComparison.InvariantCultureIgnoreCase));
@@ -333,7 +333,7 @@ namespace BTCPayServer.Tests
                         Assert.Equal(InvoiceStatusLegacy.Paid, invoice.Status);
                     });
                     s.GoToInvoices();
-                    paymentValueRowColumn = s.Driver.FindElement(By.Id($"invoice_{invoiceId}"))
+                    paymentValueRowColumn = s.Driver.FindElement(By.Id($"invoice_details_{invoiceId}"))
                         .FindElement(By.ClassName("payment-value"));
                     Assert.False(paymentValueRowColumn.Text.Contains("payjoin",
                         StringComparison.InvariantCultureIgnoreCase));

@@ -4,6 +4,10 @@
     ViewData["Title"] = "Your recovery phrase";
 }
 
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}
+
 <style>
     @@media (min-width: 476px) { ol#recovery-phrase {max-height:16em;} }
     @@media (min-width: 768px) { ol#recovery-phrase {max-height:12em;} }

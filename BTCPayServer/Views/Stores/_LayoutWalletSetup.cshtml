@@ -1,0 +1,55 @@
+﻿@{
+    Layout = "_LayoutSimple";
+    ViewData["Title"] = ViewData["Title"] ?? "Wallet Setup";
+}
+
+@section HeadScripts {
+    @await RenderSectionAsync("HeadScripts", false)
+}
+@section HeaderContent {
+    @await RenderSectionAsync("HeaderContent", false)
+    <style>
+        #wizard-navbar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+        }
+        #wizard-navbar a {
+            color: var(--btcpay-body-color);
+        }
+        #wizard-navbar a:hover {
+            color: var(--btcpay-body-color-link-accent);
+        }
+        #wizard-navbar .cancel {
+            margin-left: auto;
+        }
+    </style>
+}
+@section Scripts {
+    @await RenderSectionAsync("Scripts", false)
+}
+
+<partial name="~/wwwroot/img/icon-sprite.svg" />
+
+<nav id="wizard-navbar">
+    @RenderSection("Navbar", false)
+
+    <a asp-controller="Stores" asp-action="UpdateStore" asp-route-storeId="@Context.GetRouteValue("storeId")" class="cancel">
+        <vc:icon symbol="close" />
+    </a>
+</nav>
+
+<div class="row justify-content-md-center">
+    <main class="col-md-10 col-lg-8 col-xl-6">
+        @RenderBody()
+    </main>
+</div>
+
+
+

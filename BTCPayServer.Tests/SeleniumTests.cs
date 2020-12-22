@@ -560,7 +560,7 @@ namespace BTCPayServer.Tests
                 var walletId = new WalletId(storeId, "BTC");
                 s.GoToWallet(walletId, WalletsNavPages.Receive);
                 s.Driver.FindElement(By.Id("generateButton")).Click();
-                var addressStr = s.Driver.FindElement(By.Id("vue-address")).GetProperty("value");
+                var addressStr = s.Driver.FindElement(By.Id("address")).GetProperty("value");
                 var address = BitcoinAddress.Create(addressStr, ((BTCPayNetwork)s.Server.NetworkProvider.GetNetwork("BTC")).NBitcoinNetwork);
                 await s.Server.ExplorerNode.GenerateAsync(1);
                 for (int i = 0; i < 6; i++)
@@ -761,13 +761,13 @@ namespace BTCPayServer.Tests
                 //generate a receiving address
                 s.Driver.FindElement(By.CssSelector("button[value=generate-new-address]")).Click();
                 Assert.True(s.Driver.FindElement(By.ClassName("qr-container")).Displayed);
-                var receiveAddr = s.Driver.FindElement(By.Id("vue-address")).GetAttribute("value");
+                var receiveAddr = s.Driver.FindElement(By.Id("address")).GetAttribute("value");
                 //unreserve
                 s.Driver.FindElement(By.CssSelector("button[value=unreserve-current-address]")).Click();
                 //generate it again, should be the same one as before as nothign got used in the meantime
                 s.Driver.FindElement(By.CssSelector("button[value=generate-new-address]")).Click();
                 Assert.True(s.Driver.FindElement(By.ClassName("qr-container")).Displayed);
-                Assert.Equal(receiveAddr, s.Driver.FindElement(By.Id("vue-address")).GetAttribute("value"));
+                Assert.Equal(receiveAddr, s.Driver.FindElement(By.Id("address")).GetAttribute("value"));
 
                 //send money to addr and ensure it changed
                 var sess = await s.Server.ExplorerClient.CreateWebsocketNotificationSessionAsync();
@@ -779,8 +779,8 @@ namespace BTCPayServer.Tests
                 await Task.Delay(200);
                 s.Driver.Navigate().Refresh();
                 s.Driver.FindElement(By.CssSelector("button[value=generate-new-address]")).Click();
-                Assert.NotEqual(receiveAddr, s.Driver.FindElement(By.Id("vue-address")).GetAttribute("value"));
-                receiveAddr = s.Driver.FindElement(By.Id("vue-address")).GetAttribute("value");
+                Assert.NotEqual(receiveAddr, s.Driver.FindElement(By.Id("address")).GetAttribute("value"));
+                receiveAddr = s.Driver.FindElement(By.Id("address")).GetAttribute("value");
 
                 //change the wallet and ensure old address is not there and generating a new one does not result in the prev one
                 s.GoToStore(storeId.storeId);
@@ -789,7 +789,7 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.LinkText("Manage")).Click();
                 s.Driver.FindElement(By.Id("WalletReceive")).Click();
                 s.Driver.FindElement(By.CssSelector("button[value=generate-new-address]")).Click();
-                Assert.NotEqual(receiveAddr, s.Driver.FindElement(By.Id("vue-address")).GetAttribute("value"));
+                Assert.NotEqual(receiveAddr, s.Driver.FindElement(By.Id("address")).GetAttribute("value"));
 
                 var invoiceId = s.CreateInvoice(storeId.storeName);
                 var invoice = await s.Server.PayTester.InvoiceRepository.GetInvoice(invoiceId);

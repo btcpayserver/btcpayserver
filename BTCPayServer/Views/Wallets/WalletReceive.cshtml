@@ -1,5 +1,4 @@
-﻿
-@addTagHelper *, BundlerMinifier.TagHelpers
+﻿@addTagHelper *, BundlerMinifier.TagHelpers
 @model BTCPayServer.Controllers.WalletReceiveViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
@@ -10,7 +9,7 @@
 {
     <div class="row">
         <div class="col-md-12 text-center">
-            <partial name="_StatusMessage" />
+            <partial name="_StatusMessage"/>
         </div>
     </div>
 }
@@ -20,7 +19,6 @@
             <div class="card-body">
                 @if (string.IsNullOrEmpty(Model.Address))
                 {
-
                     <h3 class="card-title mb-3">Receive @Model.CryptoCode</h3>
                     <button id="generateButton" class="btn btn-lg btn-primary" type="submit" name="command" value="generate-new-address">Generate @Model.CryptoCode address</button>
                 }
@@ -30,7 +28,7 @@
                     <noscript>
                         <div class="card-body m-sm-0 p-sm-0">
                             <div class="input-group">
-                                <input type="text" class="form-control " readonly="readonly" asp-for="Address" id="address" />
+                                <input type="text" class="form-control " readonly="readonly" asp-for="Address" id="address"/>
                                 <div class="input-group-append">
                                     <span class="input-group-text fa fa-copy"> </span>
                                 </div>
@@ -47,14 +45,13 @@
                     </noscript>
                     <div class="only-for-js card-body m-sm-0 p-sm-0" id="app">
                         <div class="qr-container mb-4">
-                            <img v-bind:src="srvModel.cryptoImage" class="qr-icon" />
-                            <qrcode v-bind:value="srvModel.address" :options="{ width: 256, margin: 1, color: {dark:'#000', light:'#f5f5f7'} }" tag="svg">
-                            </qrcode>
+                            <img src="@Model.CryptoImage" class="qr-icon"/>
+                            <vc:qr-code data="@Model.Address"/>
                         </div>
-                        <div class="input-group copy" data-clipboard-target="#vue-address">
-                            <input type="text" class=" form-control " readonly="readonly" :value="srvModel.address" id="vue-address" />
+                        <div class="input-group" data-clipboard="@Model.Address">
+                            <input type="text" class="form-control" style="cursor: copy" readonly="readonly" value="@Model.Address" id="address"/>
                             <div class="input-group-append">
-                                <span class="input-group-text fa fa-copy"> </span>
+                                <button type="button" class="btn btn-outline-secondary" data-clipboard-confirm>Copy address</button>
                             </div>
                         </div>
                         <div class="row mt-4">
@@ -73,69 +70,12 @@
 </div>
 
 @section HeadScripts
-
 {
-    <bundle name="wwwroot/bundles/lightning-node-info-bundle.min.js" asp-append-version="true" />
-    <script type="text/javascript">
-        var srvModel = @Safe.Json(Model);
-        window.onload = function() {
-            if($("#app").length <1){
-                return;
-            }
-            Vue.use(Toasted);
-            var app = new Vue({
-                el: '#app',
-                components: {
-                    qrcode: VueQrcode
-                },
-                data: {
-                    srvModel: srvModel
-                },
-                mounted: function() {
-
-                    this.$nextTick(function() {
-                        var copyInput = new Clipboard('.copy');
-
-                        copyInput.on("success",
-                            function(e) {
-                                Vue.toasted.show('Copied',
-                                    {
-                                        iconPack: "fontawesome",
-                                        icon: "copy",
-                                        duration: 5000
-                                    });
-                            });
-                    });
-                }
-            });
+    <link href="~/main/qrcode.css" rel="stylesheet" asp-append-version="true"/>
+    <script src="~/js/copy-to-clipboard.js"></script>
+    <script>
+        window.onload = function (){        
+            document.querySelectorAll('[data-clipboard]').forEach(value => value.addEventListener('click', window.copyToClipboard));
         }
-    </script>
-
-    <style>
-
-        .qr-icon {
-            height: 64px;
-            width: 64px;
-            position: absolute;
-            left: 0;
-            top: 0;
-            right: 0;
-            bottom: 0;
-            margin: auto;
-        }
-
-        .qr-container {
-            position: relative;
-            text-align: center;
-        }
-
-            .qr-container svg {
-                width: 256px;
-                height: 256px;
-            }
-
-        .copy {
-            cursor: copy;
-        }
-    </style>
+        </script>
 }

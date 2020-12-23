@@ -119,7 +119,7 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 return NotFound();
             }
-            if (string.IsNullOrEmpty(paymentMethodData.DerivationScheme))
+            if (string.IsNullOrEmpty(paymentMethodData?.DerivationScheme))
             {
                 ModelState.AddModelError(nameof(OnChainPaymentMethodData.DerivationScheme),
                     "Missing derivationScheme");
@@ -187,6 +187,14 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 return NotFound();
             }
+
+            if (string.IsNullOrEmpty(paymentMethodData?.DerivationScheme))
+            {
+                ModelState.AddModelError(nameof(OnChainPaymentMethodData.DerivationScheme),
+                    "Missing derivationScheme");
+            }
+            if (!ModelState.IsValid)
+                return this.CreateValidationError(ModelState);
 
             try
             {

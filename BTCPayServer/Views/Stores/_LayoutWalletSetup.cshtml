@@ -47,6 +47,14 @@
 
 <div class="row justify-content-md-center">
     <main class="col-md-10 col-lg-8 col-xl-6">
+        @if (TempData.HasStatusMessage())
+        {
+            <partial name="_StatusMessage"/>
+        }
+        @if (!ViewContext.ModelState.IsValid)
+        {
+            <div asp-validation-summary="All" class="text-danger"></div>
+        }
         @RenderBody()
     </main>
 </div>

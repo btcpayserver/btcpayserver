@@ -23,8 +23,8 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
-        [Route("{storeId}/wallet/{cryptoCode}/import")]
-        public async Task<IActionResult> ImportWallet(ImportWalletViewModel vm)
+        [Route("{storeId}/wallet/{cryptoCode}/import/{method?}")]
+        public ActionResult ImportWallet(ImportWalletViewModel vm)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
@@ -34,24 +34,23 @@ namespace BTCPayServer.Controllers
             {
                 return NotFound();
             }
-
-            vm.RootKeyPath = network.GetRootKeyPath();
             vm.Network = network;
-            var derivation = GetExistingDerivationStrategy(vm.CryptoCode, store);
-            if (derivation != null)
+            vm.RootKeyPath = network.GetRootKeyPath();
+
+            var view = vm.Method switch
             {
-                vm.DerivationScheme = derivation.AccountDerivation.ToString();
-                vm.Config = derivation.ToJson();
-            }
-            vm.Enabled = !store.GetStoreBlob().IsExcluded(new PaymentMethodId(vm.CryptoCode, PaymentTypes.BTCLike));
-            var hotWallet = await CanUseHotWallet();
-            vm.CanUseHotWallet = hotWallet.HotWallet;
-            vm.CanUseRPCImport = hotWallet.RPCImport;
-            return View(vm);
+                WalletImportMethod.Hardware => "ImportWallet/Hardware",
+                WalletImportMethod.Enter => "ImportWallet/Enter",
+                WalletImportMethod.File => "ImportWallet/File",
+                WalletImportMethod.Scan => "ImportWallet/Scan",
+                _ => "ImportWallet"
+            };
+
+            return View(view, vm);
         }
 
         [HttpPost]
-        [Route("{storeId}/wallet/{cryptoCode}/import")]
+        [Route("{storeId}/wallet/{cryptoCode}/import/{method}")]
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> ImportWallet(string storeId, string cryptoCode, [FromForm] ImportWalletViewModel vm)
         {

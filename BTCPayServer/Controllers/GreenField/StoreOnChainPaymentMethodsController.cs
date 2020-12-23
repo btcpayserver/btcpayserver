@@ -35,7 +35,7 @@ namespace BTCPayServer.Controllers.GreenField
         }
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/" + BitcoinPaymentType.GreenFieldApiId)]
+        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/onchain")]
         public ActionResult<IEnumerable<OnChainPaymentMethodData>> GetOnChainPaymentMethods(
             [FromQuery] bool enabledOnly = false)
         {
@@ -55,7 +55,7 @@ namespace BTCPayServer.Controllers.GreenField
         }
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/" + BitcoinPaymentType.GreenFieldApiId + "/{cryptoCode}")]
+        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}")]
         public ActionResult<OnChainPaymentMethodData> GetOnChainPaymentMethod(string cryptoCode)
         {
             if (!GetCryptoCodeWallet(cryptoCode, out BTCPayNetwork _, out BTCPayWallet _))
@@ -72,8 +72,7 @@ namespace BTCPayServer.Controllers.GreenField
         }
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/" + BitcoinPaymentType.GreenFieldApiId +
-                 "/{cryptoCode}/preview")]
+        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/preview")]
         public ActionResult<OnChainPaymentMethodPreviewResultData> GetOnChainPaymentMethodPreview(
             string cryptoCode,
             int offset = 0, int amount = 10)
@@ -111,8 +110,7 @@ namespace BTCPayServer.Controllers.GreenField
         
         
          [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpPost("~/api/v1/stores/{storeId}/payment-methods/" + BitcoinPaymentType.GreenFieldApiId +
-                  "/{cryptoCode}/preview")]
+        [HttpPost("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/preview")]
         public IActionResult GetProposedOnChainPaymentMethodPreview(string cryptoCode,
             [FromBody] OnChainPaymentMethodData paymentMethodData,
             int offset = 0, int amount = 10)
@@ -121,7 +119,13 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 return NotFound();
             }
-
+            if (string.IsNullOrEmpty(paymentMethodData.DerivationScheme))
+            {
+                ModelState.AddModelError(nameof(OnChainPaymentMethodData.DerivationScheme),
+                    "Missing derivationScheme");
+            }
+            if (!ModelState.IsValid)
+                return this.CreateValidationError(ModelState);
             try
             {
                 var strategy = DerivationSchemeSettings.Parse(paymentMethodData.DerivationScheme, network);
@@ -155,8 +159,7 @@ namespace BTCPayServer.Controllers.GreenField
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpDelete("~/api/v1/stores/{storeId}/payment-methods/" + BitcoinPaymentType.GreenFieldApiId +
-                 "/{cryptoCode}")]
+        [HttpDelete("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}")]
         public async Task<ActionResult<OnChainPaymentMethodPreviewResultData>> RemoveOnChainPaymentMethod(
             string cryptoCode,
             int offset = 0, int amount = 10)
@@ -174,7 +177,7 @@ namespace BTCPayServer.Controllers.GreenField
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpPut("~/api/v1/stores/{storeId}/payment-methods/" + BitcoinPaymentType.GreenFieldApiId + "/{cryptoCode}")]
+        [HttpPut("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}")]
         public async Task<IActionResult> UpdateOnChainPaymentMethod(string cryptoCode,
             [FromBody] OnChainPaymentMethodData paymentMethodData)
         {

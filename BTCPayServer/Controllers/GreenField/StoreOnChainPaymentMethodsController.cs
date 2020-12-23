@@ -10,6 +10,7 @@ using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using NBitcoin;
 using NBXplorer.DerivationStrategy;
 using StoreData = BTCPayServer.Data.StoreData;
 
@@ -203,6 +204,18 @@ namespace BTCPayServer.Controllers.GreenField
                 var strategy = DerivationSchemeSettings.Parse(paymentMethodData.DerivationScheme, network);
                 if (strategy != null)
                     await wallet.TrackAsync(strategy.AccountDerivation);
+                strategy.Label = paymentMethodData.Label;
+                var signing = strategy.GetSigningAccountKeySettings();
+                if (paymentMethodData.AccountKeyPath is RootedKeyPath r)
+                {
+                    signing.AccountKeyPath = r.KeyPath;
+                    signing.RootFingerprint = r.MasterFingerprint;
+                }
+                else
+                {
+                    signing.AccountKeyPath = null;
+                    signing.RootFingerprint = null;
+                }
                 store.SetSupportedPaymentMethod(id, strategy);
                 storeBlob.SetExcluded(id, !paymentMethodData.Enabled);
                 store.SetStoreBlob(storeBlob);
@@ -240,7 +253,11 @@ namespace BTCPayServer.Controllers.GreenField
                 ? null
                 : new OnChainPaymentMethodData(paymentMethod.PaymentId.CryptoCode,
                     paymentMethod.AccountDerivation.ToString(), !excluded,
-                    defaultPaymentMethod == paymentMethod.PaymentId);
+                    defaultPaymentMethod == paymentMethod.PaymentId)
+                {
+                    Label = paymentMethod.Label,
+                    AccountKeyPath = paymentMethod.GetSigningAccountKeySettings().GetRootedKeyPath()
+                };
         }
     }
 }

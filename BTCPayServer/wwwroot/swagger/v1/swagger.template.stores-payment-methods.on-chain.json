@@ -403,7 +403,17 @@
                     },
                     "derivationScheme": {
                         "type": "string",
-                        "description": "The derivation scheme"
+                        "description": "The derivation scheme",
+                        "example": "xpub..."
+                    },
+                    "label": {
+                        "type": "string",
+                        "description": "A label that will be shown in the UI"
+                    },
+                    "accountKeyPath": {
+                        "type": "string",
+                        "description": "The wallet fingerprint followed by the keypath to derive the account key used for signing operation or creating PSBTs",
+                        "example": "abcd82a1/84'/0'/0'"
                     }
                 }
             },

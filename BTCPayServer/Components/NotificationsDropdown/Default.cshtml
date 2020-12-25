@@ -32,7 +32,7 @@
         </a>
         <span class="alerts-badge badge badge-pill badge-danger">@Model.UnseenCount</span>
         <div class="dropdown-menu dropdown-menu-right text-center notification-dropdown" aria-labelledby="navbarDropdown">
-            <div class="d-flex align-items-center justify-content-between py-3 px-4 border-bottom"> 
+            <div class="d-flex align-items-center justify-content-between py-3 px-4 border-bottom border-light"> 
                 <div role="heading" aria-level="3" class="font-weight-semibold" style="font-size: 20px;">Notifications</div>
                 <form asp-controller="Notifications" asp-action="MarkAllAsSeen" asp-route-returnUrl="@Context.Request.GetCurrentPathWithQueryString()" method="post">
                     <button class="btn btn-link p-0 font-weight-semibold" type="submit">Mark all as seen</button>
@@ -40,7 +40,7 @@
             </div>
             @foreach (var notif in Model.Last5)
             {
-                <a asp-action="NotificationPassThrough" asp-controller="Notifications" asp-route-id="@notif.Id" class="notification d-flex align-items-center dropdown-item border-bottom py-3 px-4">
+                <a asp-action="NotificationPassThrough" asp-controller="Notifications" asp-route-id="@notif.Id" class="notification d-flex align-items-center dropdown-item border-bottom border-light py-3 px-4">
                     <div class="mr-3">
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M14.2 16H1.8C0.808 16 0 15.192 0 14.2V1.8C0 0.808 0.808 0 1.8 0H14.2C15.192 0 16 0.808 16 1.8V14.2C16 15.192 15.192 16 14.2 16ZM1.8 1.2C1.4688 1.2 1.2 1.4696 1.2 1.8V14.2C1.2 14.5304 1.4688 14.8 1.8 14.8H14.2C14.5312 14.8 14.8 14.5304 14.8 14.2V1.8C14.8 1.4696 14.5312 1.2 14.2 1.2H1.8Z" fill="#8D8D8F"/>

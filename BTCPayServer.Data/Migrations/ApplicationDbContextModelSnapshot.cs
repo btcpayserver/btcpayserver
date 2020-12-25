@@ -259,27 +259,6 @@ namespace BTCPayServer.Migrations
                     b.ToTable("InvoiceEvents");
                 });
 
-            modelBuilder.Entity("BTCPayServer.Data.InvoiceSearchData", b =>
-                {
-                    b.Property<string>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("InvoiceDataId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Value")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Value");
-
-                    b.HasIndex("InvoiceDataId", "Value");
-
-                    b.ToTable("InvoiceSearchDatas");
-                });
-
             modelBuilder.Entity("BTCPayServer.Data.InvoiceWebhookDeliveryData", b =>
                 {
                     b.Property<string>("InvoiceId")
@@ -982,14 +961,6 @@ namespace BTCPayServer.Migrations
                         .HasForeignKey("InvoiceDataId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("BTCPayServer.Data.InvoiceSearchData", b =>
-                {
-                    b.HasOne("BTCPayServer.Data.InvoiceData", "InvoiceData")
-                        .WithMany("InvoiceSearchData")
-                        .HasForeignKey("InvoiceDataId")
-                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("BTCPayServer.Data.InvoiceWebhookDeliveryData", b =>

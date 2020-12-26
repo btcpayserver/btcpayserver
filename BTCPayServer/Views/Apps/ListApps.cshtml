@@ -25,7 +25,7 @@
                 <p>Create and manage apps.</p>
             </div>
         </div>
-        <div class="row button-row">
+        <div class="row button-row mb-3">
             <div class="col-lg-12">
                 <a asp-action="CreateApp" class="btn btn-primary" role="button" id="CreateNewApp"><span class="fa fa-plus"></span> Create a new app</a>
                 <a href="https://docs.btcpayserver.org/Apps/" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
@@ -33,8 +33,10 @@
         </div>
         <div class="row">
             <div class="col-lg-12">
-                <table class="table table-sm table-responsive-md">
-                    <thead>
+                @if (Model.Apps.Any())
+                {
+                    <table class="table table-sm table-responsive-md">
+                        <thead>
                         <tr>
                             <th>
                                 <a
@@ -74,8 +76,8 @@
                             </th>
                             <th style="text-align:right">Actions</th>
                         </tr>
-                    </thead>
-                    <tbody>
+                        </thead>
+                        <tbody>
                         @foreach (var app in Model.Apps)
                         {
                             <tr>
@@ -105,8 +107,15 @@
                                 </td>
                             </tr>
                         }
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <p class="text-secondary mt-3">
+                        There are no apps yet.
+                    </p>
+                }
             </div>
         </div>
     </div>

@@ -98,8 +98,13 @@ namespace BTCPayServer.Controllers
             permissions ??= Array.Empty<string>();
 
             var requestPermissions = Permission.ToPermissions(permissions);
+            if (redirect?.IsAbsoluteUri is false)
+            {
+                redirect = null;
+            }
             if (!string.IsNullOrEmpty(applicationIdentifier) && redirect != null)
             {
+                
                 //check if there is an app identifier that matches and belongs to the current user
                 var keys = await _apiKeyRepository.GetKeys(new APIKeyRepository.APIKeyQuery()
                 {
@@ -110,7 +115,7 @@ namespace BTCPayServer.Controllers
                     var blob = key.GetBlob();
 
                     if (blob.ApplicationIdentifier != applicationIdentifier ||
-                        blob.ApplicationAuthority != redirect.Authority)
+                        blob.ApplicationAuthority != redirect.AbsoluteUri)
                     {
                         continue;
                     }
@@ -190,7 +195,7 @@ namespace BTCPayServer.Controllers
 
         private void AdjustVMForAuthorization(AuthorizeApiKeysViewModel vm)
         {
-            var parsedPermissions = Permission.ToPermissions(vm.Permissions.Split(';')).GroupBy(permission => permission.Policy);
+            var parsedPermissions = Permission.ToPermissions(vm.Permissions?.Split(';')??Array.Empty<string>()).GroupBy(permission => permission.Policy);
 
             for (var index = vm.PermissionValues.Count - 1; index >= 0; index--)
             {
@@ -266,7 +271,7 @@ namespace BTCPayServer.Controllers
                 case "authorize":
                 case "confirm":
                     var key = command == "authorize"
-                        ? await CreateKey(viewModel, (viewModel.ApplicationIdentifier, viewModel.RedirectUrl?.Authority))
+                        ? await CreateKey(viewModel, (viewModel.ApplicationIdentifier, viewModel.RedirectUrl.AbsoluteUri))
                         : await _apiKeyRepository.GetKey(viewModel.ApiKey);
     
                     if (viewModel.RedirectUrl != null)
@@ -274,7 +279,7 @@ namespace BTCPayServer.Controllers
                         var permissions = key.GetBlob().Permissions;
                         var redirectVm = new PostRedirectViewModel()
                         {
-                            FormUrl = viewModel.RedirectUrl.ToString(),
+                            FormUrl = viewModel.RedirectUrl.AbsoluteUri,
                             Parameters =
                             {
                                 new KeyValuePair<string, string>("apiKey", key.Id),

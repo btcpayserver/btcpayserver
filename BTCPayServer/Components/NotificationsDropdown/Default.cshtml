@@ -25,7 +25,7 @@
                 </a>
             }
             <a class="dropdown-item text-secondary" asp-controller="Notifications" asp-action="Index">See All</a>
-            <form asp-controller="Notifications" asp-action="MarkAllAsSeen" asp-route-returnUrl="@Context.Request.GetDisplayUrl()" method="post">
+            <form asp-controller="Notifications" asp-action="MarkAllAsSeen" asp-route-returnUrl="@Context.Request.GetCurrentPathWithQueryString()" method="post">
                 <button class="dropdown-item text-secondary" type="submit"><i class="fa fa-eye"></i> Mark all as seen</button>
             </form>
         </div>

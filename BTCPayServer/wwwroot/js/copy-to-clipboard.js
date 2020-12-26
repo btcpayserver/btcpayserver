@@ -7,7 +7,7 @@ window.copyToClipboard = function (e, text) {
         var message = confirm.getAttribute('data-clipboard-confirm') || 'Copied ✔';
         if (!confirm.dataset.clipboardInitialText) {
             confirm.dataset.clipboardInitialText = confirm.innerText;
-            confirm.style.minWidth = confirm.clientWidth + 'px';
+            confirm.style.minWidth = confirm.getBoundingClientRect().width + 'px';
         }
         navigator.clipboard.writeText(data).then(function () {
             confirm.innerText = message;

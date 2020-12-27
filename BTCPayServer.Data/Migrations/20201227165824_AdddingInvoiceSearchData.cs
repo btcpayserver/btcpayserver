@@ -1,6 +1,4 @@
-using System;
 using BTCPayServer.Data;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -8,8 +6,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BTCPayServer.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20201225065556_AddingInvoiceSearchData")]
-    public partial class AddingInvoiceSearchData : Migration
+    [Migration("20201227165824_AdddingInvoiceSearchData")]
+    public partial class AdddingInvoiceSearchData : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {

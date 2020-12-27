@@ -15,7 +15,6 @@ namespace BTCPayServer.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
                 .HasAnnotation("ProductVersion", "3.1.4");
 
             modelBuilder.Entity("BTCPayServer.Data.APIKeyData", b =>
@@ -265,12 +264,10 @@ namespace BTCPayServer.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        // manually added
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
+                        .HasColumnType("INTEGER")
                         .HasAnnotation("MySql:ValueGeneratedOnAdd", true)
-                        .HasAnnotation("Sqlite:Autoincrement", true)
-                        // eof manually added
-                        .HasColumnType("INTEGER");
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
+                        .HasAnnotation("Sqlite:Autoincrement", true);
 
                     b.Property<string>("InvoiceDataId")
                         .HasColumnType("TEXT");

@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace BTCPayServer.Data
 {
@@ -26,6 +27,12 @@ namespace BTCPayServer.Data
 
             builder.Entity<InvoiceSearchData>()
                 .HasIndex(data => data.Value);
+
+            builder.Entity<InvoiceSearchData>()
+                .Property(a => a.Id)
+                .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
+                .HasAnnotation("MySql:ValueGeneratedOnAdd", true)
+                .HasAnnotation("Sqlite:Autoincrement", true);
         }
     }
 }

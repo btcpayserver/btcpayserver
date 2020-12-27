@@ -35,12 +35,12 @@ namespace BTCPayServer.HostedServices
             var settings = (await _settingsRepository.GetSettingAsync<MigrationSettings>()) ?? new MigrationSettings();
             if (settings.MigratedInvoiceTextSearchPages != int.MaxValue)
             {
-                // need to mark process started because of how SettingsRepository.UpdateSetting insert/update detection works
-                if (settings.MigratedInvoiceTextSearchPages == null)
-                {
-                    settings.MigratedInvoiceTextSearchPages = 0;
-                    await _settingsRepository.UpdateSetting(settings);
-                }
+                // we depend on Settings already initalized in db by MigrationStartupTask.cs
+                //if (settings.MigratedInvoiceTextSearchPages == null)
+                //{
+                //    settings.MigratedInvoiceTextSearchPages = 0;
+                //    await _settingsRepository.UpdateSetting(settings);
+                //}
 
                 await MigratedInvoiceTextSearchToDb(settings.MigratedInvoiceTextSearchPages.Value);
             }

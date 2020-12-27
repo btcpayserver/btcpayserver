@@ -127,7 +127,7 @@ namespace BTCPayServer.Services.Invoices
                 if (invoiceData.CustomerEmail == null && data.Email != null)
                 {
                     invoiceData.CustomerEmail = data.Email;
-                    await AddToTextSearch(ctx, invoiceData, invoiceData.CustomerEmail);
+                    AddToTextSearch(ctx, invoiceData, invoiceData.CustomerEmail);
                 }
                 await ctx.SaveChangesAsync().ConfigureAwait(false);
             }
@@ -149,7 +149,7 @@ namespace BTCPayServer.Services.Invoices
 
         public async Task<InvoiceEntity> CreateInvoiceAsync(string storeId, InvoiceEntity invoice)
         {
-            List<string> textSearch = new List<string>();
+            var textSearch = new List<string>();
             invoice = Clone(invoice);
             invoice.Networks = _Networks;
             invoice.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16));
@@ -174,7 +174,7 @@ namespace BTCPayServer.Services.Invoices
                     Archived = false
                 };
                 await context.Invoices.AddAsync(invoiceData);
-               
+
 
                 foreach (var paymentMethod in invoice.GetPaymentMethods())
                 {
@@ -198,7 +198,7 @@ namespace BTCPayServer.Services.Invoices
                     textSearch.Add(paymentMethod.Calculate().TotalDue.ToString());
                 }
                 await context.PendingInvoices.AddAsync(new PendingInvoiceData() { Id = invoice.Id });
-                
+
                 textSearch.Add(invoice.Id);
                 textSearch.Add(invoice.InvoiceTime.ToString(CultureInfo.InvariantCulture));
                 textSearch.Add(invoice.Price.ToString(CultureInfo.InvariantCulture));
@@ -206,12 +206,12 @@ namespace BTCPayServer.Services.Invoices
                 textSearch.Add(ToString(invoice.Metadata, null));
                 textSearch.Add(invoice.StoreId);
                 textSearch.Add(invoice.Metadata.BuyerEmail);
-                await AddToTextSearch(context, invoiceData, textSearch.ToArray());
-                
+                AddToTextSearch(context, invoiceData, textSearch.ToArray());
+
                 await context.SaveChangesAsync().ConfigureAwait(false);
             }
 
-            
+
             return invoice;
         }
 
@@ -279,10 +279,10 @@ namespace BTCPayServer.Services.Invoices
             invoice.Blob = ToBytes(invoiceEntity, network);
 
             await context.AddressInvoices.AddAsync(new AddressInvoiceData()
-                {
-                    InvoiceDataId = invoiceId,
-                    CreatedTime = DateTimeOffset.UtcNow
-                }
+            {
+                InvoiceDataId = invoiceId,
+                CreatedTime = DateTimeOffset.UtcNow
+            }
                 .Set(GetDestination(paymentMethod), paymentMethod.GetId()));
             await context.HistoricalAddressInvoices.AddAsync(new HistoricalAddressInvoiceData()
             {
@@ -290,7 +290,7 @@ namespace BTCPayServer.Services.Invoices
                 Assigned = DateTimeOffset.UtcNow
             }.SetAddress(paymentMethodDetails.GetPaymentDestination(), network.CryptoCode));
 
-            await AddToTextSearch(context, invoice, paymentMethodDetails.GetPaymentDestination());
+            AddToTextSearch(context, invoice, paymentMethodDetails.GetPaymentDestination());
             await context.SaveChangesAsync();
             return true;
         }
@@ -341,7 +341,7 @@ namespace BTCPayServer.Services.Invoices
                 data.UnAssigned == null);
             foreach (var historicalAddressInvoiceData in addresses)
             {
-                historicalAddressInvoiceData.UnAssigned = DateTimeOffset.UtcNow;   
+                historicalAddressInvoiceData.UnAssigned = DateTimeOffset.UtcNow;
             }
         }
 
@@ -356,10 +356,13 @@ namespace BTCPayServer.Services.Invoices
             catch (DbUpdateException) { } //Possibly, it was unassigned before
         }
 
-        async Task AddToTextSearch(ApplicationDbContext context, InvoiceData invoice, params string[] terms)
+        public static void AddToTextSearch(ApplicationDbContext context, InvoiceData invoice, params string[] terms)
         {
-            await context.AddRangeAsync(terms.Where(t => !string.IsNullOrWhiteSpace(t) && (invoice.InvoiceSearchData == null  || invoice.InvoiceSearchData.All(data => data.Value != t))).Distinct()
-                .Select(s => new InvoiceSearchData() {InvoiceData = invoice, Value = s}));
+            var filteredTerms = terms.Where(t => !string.IsNullOrWhiteSpace(t)
+                && (invoice.InvoiceSearchData == null || invoice.InvoiceSearchData.All(data => data.Value != t)))
+                .Distinct()
+                .Select(s => new InvoiceSearchData() { InvoiceData = invoice, Value = s });
+            context.AddRange(filteredTerms);
         }
 
         public async Task UpdateInvoiceStatus(string invoiceId, InvoiceState invoiceState)
@@ -380,7 +383,8 @@ namespace BTCPayServer.Services.Invoices
             using (var context = _ContextFactory.CreateContext())
             {
                 var items = context.Invoices.Where(a => invoiceIds.Contains(a.Id));
-                if (items == null) {
+                if (items == null)
+                {
                     return;
                 }
 
@@ -388,7 +392,7 @@ namespace BTCPayServer.Services.Invoices
                 {
                     invoice.Archived = true;
                 }
-                
+
                 await context.SaveChangesAsync();
             }
         }
@@ -416,7 +420,7 @@ namespace BTCPayServer.Services.Invoices
                                                 StringComparison.InvariantCultureIgnoreCase)))
                     return null;
                 var blob = invoiceData.GetBlob(_Networks);
-                blob.Metadata =  InvoiceMetadata.FromJObject(metadata);
+                blob.Metadata = InvoiceMetadata.FromJObject(metadata);
                 invoiceData.Blob = ToBytes(blob);
                 await context.SaveChangesAsync().ConfigureAwait(false);
                 return ToEntity(invoiceData);
@@ -560,7 +564,7 @@ namespace BTCPayServer.Services.Invoices
 
         private IQueryable<Data.InvoiceData> GetInvoiceQuery(ApplicationDbContext context, InvoiceQuery queryObject)
         {
-            IQueryable<Data.InvoiceData> query = queryObject.UserId is null 
+            IQueryable<Data.InvoiceData> query = queryObject.UserId is null
                 ? context.Invoices
                 : context.UserStore
                     .Where(u => u.ApplicationUserId == queryObject.UserId)
@@ -733,7 +737,7 @@ namespace BTCPayServer.Services.Invoices
 
                 await context.Payments.AddAsync(data);
 
-                await AddToTextSearch(context, invoice, paymentData.GetSearchTerms());
+                AddToTextSearch(context, invoice, paymentData.GetSearchTerms());
                 try
                 {
                     await context.SaveChangesAsync().ConfigureAwait(false);

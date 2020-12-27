@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Runtime.InteropServices.ComTypes;
 using BTCPayServer.Configuration;
 using BTCPayServer.Storage.Services;
 using BTCPayServer.Storage.Services.Providers;
@@ -27,30 +28,28 @@ namespace BTCPayServer.Storage
             //            serviceCollection.AddSingleton<IStorageProviderService, GoogleCloudStorageFileProviderService>();
         }
 
-        public static void UseProviderStorage(this IApplicationBuilder builder, BTCPayServerOptions options)
+        public static void UseProviderStorage(this IApplicationBuilder builder, DataDirectories datadirs)
         {
             try
             {
-                var dir = FileSystemFileProviderService.GetStorageDir(options);
-                var tmpdir = FileSystemFileProviderService.GetTempStorageDir(options);
                 DirectoryInfo dirInfo;
-                if (!Directory.Exists(dir))
+                if (!Directory.Exists(datadirs.StorageDir))
                 {
-                    dirInfo = Directory.CreateDirectory(dir);
+                    dirInfo = Directory.CreateDirectory(datadirs.StorageDir);
                 }
                 else
                 {
-                    dirInfo = new DirectoryInfo(dir);
+                    dirInfo = new DirectoryInfo(datadirs.StorageDir);
                 }
 
                 DirectoryInfo tmpdirInfo;
-                if (!Directory.Exists(tmpdir))
+                if (!Directory.Exists(datadirs.TempStorageDir))
                 {
-                    tmpdirInfo = Directory.CreateDirectory(tmpdir);
+                    tmpdirInfo = Directory.CreateDirectory(datadirs.TempStorageDir);
                 }
                 else
                 {
-                    tmpdirInfo = new DirectoryInfo(tmpdir);
+                    tmpdirInfo = new DirectoryInfo(datadirs.TempStorageDir);
                 }
 
                 builder.UseStaticFiles(new StaticFileOptions()

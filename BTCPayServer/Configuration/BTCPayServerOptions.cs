@@ -38,11 +38,6 @@ namespace BTCPayServer.Configuration
             get;
             private set;
         }
-        public string DataDir
-        {
-            get;
-            private set;
-        }
         public EndPoint SocksEndpoint { get; set; }
 
         public List<NBXplorerConnectionSetting> NBXplorerConnectionSettings
@@ -64,8 +59,7 @@ namespace BTCPayServer.Configuration
             {
                 if (!Path.IsPathRooted(logfile))
                 {
-                    var networkType = DefaultConfiguration.GetNetworkType(configuration);
-                    logfile = Path.Combine(configuration.GetDataDir(networkType), logfile);
+                    logfile = Path.Combine(new DataDirectories(configuration).DataDir, logfile);
                 }
             }
             return logfile;
@@ -79,8 +73,7 @@ namespace BTCPayServer.Configuration
         public void LoadArgs(IConfiguration conf)
         {
             NetworkType = DefaultConfiguration.GetNetworkType(conf);
-            DataDir = conf.GetDataDir(NetworkType);
-            PluginDir = conf.GetPluginDir(NetworkType);
+            
             Logs.Configuration.LogInformation("Network: " + NetworkType.ToString());
 
             if (conf.GetOrDefault<bool>("launchsettings", false) && NetworkType != NetworkType.Regtest)
@@ -163,10 +156,6 @@ namespace BTCPayServer.Configuration
                         OtherExternalServices.AddOrReplace(service.Name, uri);
                 }
             }
-
-            PostgresConnectionString = conf.GetOrDefault<string>("postgres", null);
-            MySQLConnectionString = conf.GetOrDefault<string>("mysql", null);
-            SQLiteFileName = conf.GetOrDefault<string>("sqlitefile", null);
             
             BundleJsCss = conf.GetOrDefault<bool>("bundlejscss", true);
             DockerDeployment = conf.GetOrDefault<bool>("dockerdeployment", true);
@@ -245,7 +234,6 @@ namespace BTCPayServer.Configuration
             RecommendedPlugins = conf.GetOrDefault("recommended-plugins", "").ToLowerInvariant().Split('\r','\n','\t',' ').Where(s => !string.IsNullOrEmpty(s)).Distinct().ToArray();
         }
 
-        public string PluginDir { get; set; }
         public string PluginRemote { get; set; }
         public string[] RecommendedPlugins { get; set; }
 
@@ -292,21 +280,6 @@ namespace BTCPayServer.Configuration
 
         public BTCPayNetworkProvider NetworkProvider { get; set; }
         public bool DockerDeployment { get; set; }
-        public string PostgresConnectionString
-        {
-            get;
-            set;
-        }
-        public string MySQLConnectionString
-        {
-            get;
-            set;
-        }
-        public string SQLiteFileName
-        {
-            get;
-            set;
-        }
         public bool BundleJsCss
         {
             get;

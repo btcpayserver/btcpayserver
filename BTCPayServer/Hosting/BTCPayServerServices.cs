@@ -105,10 +105,7 @@ namespace BTCPayServer.Hosting
             {
                 var datadirs = o.GetRequiredService<DataDirectories>();
                 var dbContext = o.GetRequiredService<ApplicationDbContextFactory>();
-                var dbpath = Path.Combine(datadirs.DataDir, "InvoiceDB");
-                if (!Directory.Exists(dbpath))
-                    Directory.CreateDirectory(dbpath);
-                return new InvoiceRepository(dbContext, dbpath, o.GetRequiredService<BTCPayNetworkProvider>(), o.GetService<EventAggregator>());
+                return new InvoiceRepository(dbContext, o.GetRequiredService<BTCPayNetworkProvider>(), o.GetService<EventAggregator>());
             });
             services.AddSingleton<BTCPayServerEnvironment>();
             services.TryAddSingleton<TokenRepository>();

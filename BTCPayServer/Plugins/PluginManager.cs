@@ -5,6 +5,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices.ComTypes;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Configuration;
 using McMaster.NETCore.Plugins;
@@ -27,7 +28,7 @@ namespace BTCPayServer.Plugins
             IConfiguration config, ILoggerFactory loggerFactory)
         {
             _logger = loggerFactory.CreateLogger(typeof(PluginManager));
-            var pluginsFolder = config.GetPluginDir(DefaultConfiguration.GetNetworkType(config));
+            var pluginsFolder = new DataDirectories(config).PluginDir;
             var plugins = new List<IBTCPayServerPlugin>();
 
 

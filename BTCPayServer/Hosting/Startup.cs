@@ -48,7 +48,7 @@ namespace BTCPayServer.Hosting
             services.AddMemoryCache();
             services.AddDataProtection()
                 .SetApplicationName("BTCPay Server")
-                .PersistKeysToFileSystem(GetDataDir());
+                .PersistKeysToFileSystem(new DirectoryInfo(new DataDirectories(Configuration).DataDir));
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
@@ -156,27 +156,23 @@ namespace BTCPayServer.Hosting
             IWebHostEnvironment env,
             IServiceProvider prov,
             BTCPayServerOptions options,
+            DataDirectories dataDirectories,
             ILoggerFactory loggerFactory)
         {
             Logs.Configuration.LogInformation($"Root Path: {options.RootPath}");
             if (options.RootPath.Equals("/", StringComparison.OrdinalIgnoreCase))
             {
-                ConfigureCore(app, env, prov, loggerFactory, options);
+                ConfigureCore(app, env, prov, loggerFactory, dataDirectories);
             }
             else
             {
                 app.Map(options.RootPath, appChild =>
                 {
-                    ConfigureCore(appChild, env, prov, loggerFactory, options);
+                    ConfigureCore(appChild, env, prov, loggerFactory, dataDirectories);
                 });
             }
         }
-        private DirectoryInfo GetDataDir()
-        {
-            return new DirectoryInfo(Configuration.GetDataDir(DefaultConfiguration.GetNetworkType(Configuration)));
-        }
-
-        private static void ConfigureCore(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider prov, ILoggerFactory loggerFactory, BTCPayServerOptions options)
+        private static void ConfigureCore(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider prov, ILoggerFactory loggerFactory, DataDirectories dataDirectories)
         {
             Logs.Configure(loggerFactory);
             app.UsePlugins();
@@ -212,7 +208,7 @@ namespace BTCPayServer.Hosting
                 }
             });
 
-            app.UseProviderStorage(options);
+            app.UseProviderStorage(dataDirectories);
             app.UseAuthentication();
             app.UseAuthorization();
             app.UseSession();

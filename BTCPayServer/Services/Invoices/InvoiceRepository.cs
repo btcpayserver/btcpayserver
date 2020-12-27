@@ -634,8 +634,8 @@ namespace BTCPayServer.Services.Invoices
             if (queryObject.Skip != null)
                 query = query.Skip(queryObject.Skip.Value);
 
-            if (queryObject.Count != null)
-                query = query.Take(queryObject.Count.Value);
+            if (queryObject.Take != null)
+                query = query.Take(queryObject.Take.Value);
             return query;
         }
 
@@ -812,7 +812,7 @@ namespace BTCPayServer.Services.Invoices
             get; set;
         }
 
-        public int? Count
+        public int? Take
         {
             get; set;
         }

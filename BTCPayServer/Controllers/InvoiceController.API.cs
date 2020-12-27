@@ -69,7 +69,7 @@ namespace BTCPayServer.Controllers
 
             var query = new InvoiceQuery()
             {
-                Count = limit,
+                Take = limit,
                 Skip = offset,
                 EndDate = dateEnd,
                 StartDate = dateStart,

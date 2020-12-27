@@ -203,7 +203,7 @@ namespace BTCPayServer.Services.Invoices
                 textSearch.Add(invoice.InvoiceTime.ToString(CultureInfo.InvariantCulture));
                 textSearch.Add(invoice.Price.ToString(CultureInfo.InvariantCulture));
                 textSearch.Add(invoice.Metadata.OrderId);
-                textSearch.Add(ToString(invoice.Metadata, null));
+                textSearch.Add(ToJsonString(invoice.Metadata, null));
                 textSearch.Add(invoice.StoreId);
                 textSearch.Add(invoice.Metadata.BuyerEmail);
                 AddToTextSearch(context, invoiceData, textSearch.ToArray());
@@ -361,7 +361,7 @@ namespace BTCPayServer.Services.Invoices
             var filteredTerms = terms.Where(t => !string.IsNullOrWhiteSpace(t)
                 && (invoice.InvoiceSearchData == null || invoice.InvoiceSearchData.All(data => data.Value != t)))
                 .Distinct()
-                .Select(s => new InvoiceSearchData() { InvoiceData = invoice, Value = s });
+                .Select(s => new InvoiceSearchData() { InvoiceDataId = invoice.Id, Value = s });
             context.AddRange(filteredTerms);
         }
 
@@ -768,12 +768,12 @@ namespace BTCPayServer.Services.Invoices
             }
         }
 
-        private byte[] ToBytes<T>(T obj, BTCPayNetworkBase network = null)
+        private static byte[] ToBytes<T>(T obj, BTCPayNetworkBase network = null)
         {
-            return ZipUtils.Zip(ToString(obj, network));
+            return ZipUtils.Zip(ToJsonString(obj, network));
         }
 
-        private string ToString<T>(T data, BTCPayNetworkBase network)
+        public static string ToJsonString<T>(T data, BTCPayNetworkBase network)
         {
             if (network == null)
             {

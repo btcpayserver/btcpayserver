@@ -94,7 +94,6 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<InvoicePaymentNotification>();
             services.TryAddSingleton<BTCPayServerOptions>(o =>
                 o.GetRequiredService<IOptions<BTCPayServerOptions>>().Value);
-            services.AddStartupTask<MigrationStartupTask>();
             services.AddStartupTask<BlockExplorerLinkStartupTask>();
             services.TryAddSingleton<InvoiceRepository>();
             services.AddSingleton<BTCPayServerEnvironment>();
@@ -251,6 +250,9 @@ namespace BTCPayServer.Hosting
 
             services.AddSingleton<INotificationHandler, InvoiceEventNotification.Handler>();
             services.AddSingleton<INotificationHandler, PayoutNotification.Handler>();
+
+            services.AddStartupTask<MigrationStartupTask>();
+            services.AddSingleton<IHostedService, DbMigrationsHostedService>();
 
             services.AddShopify();
 #if DEBUG

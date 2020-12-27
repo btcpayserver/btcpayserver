@@ -2,7 +2,6 @@ namespace BTCPayServer.Services
 {
     public class MigrationSettings
     {
-        public bool MigratedInvoiceTextSearchToDb { get; set; }
         public bool UnreachableStoreCheck { get; set; }
         public bool DeprecatedLightningConnectionStringCheck { get; set; }
         public bool ConvertMultiplierToSpread { get; set; }
@@ -14,5 +13,8 @@ namespace BTCPayServer.Services
         {
             return string.Empty;
         }
+        
+        // Done in DbMigrationsHostedService
+        public int? MigratedInvoiceTextSearchPages { get; set; }
     }
 }

@@ -32,16 +32,9 @@ namespace BTCPayServer.HostedServices
 
         protected async Task ProcessMigration()
         {
-            var settings = (await _settingsRepository.GetSettingAsync<MigrationSettings>()) ?? new MigrationSettings();
+            var settings = await _settingsRepository.GetSettingAsync<MigrationSettings>();
             if (settings.MigratedInvoiceTextSearchPages != int.MaxValue)
             {
-                // we depend on Settings already initalized in db by MigrationStartupTask.cs
-                //if (settings.MigratedInvoiceTextSearchPages == null)
-                //{
-                //    settings.MigratedInvoiceTextSearchPages = 0;
-                //    await _settingsRepository.UpdateSetting(settings);
-                //}
-
                 await MigratedInvoiceTextSearchToDb(settings.MigratedInvoiceTextSearchPages.Value);
             }
 
@@ -104,6 +97,8 @@ namespace BTCPayServer.HostedServices
                     settings.MigratedInvoiceTextSearchPages = int.MaxValue;
                 }
 
+                // this call triggers update; we're sure that MigrationSettings is already initialized in db 
+                // because of logic executed in MigrationStartupTask.cs
                 _settingsRepository.UpdateSettingInContext(ctx, settings);
                 await ctx.SaveChangesAsync();
             }

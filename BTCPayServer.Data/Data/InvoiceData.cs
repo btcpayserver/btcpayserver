@@ -75,6 +75,7 @@ namespace BTCPayServer.Data
         }
         public bool Archived { get; set; }
         public List<PendingInvoiceData> PendingInvoices { get; set; }
+        public List<InvoiceSearchData> InvoiceSearchData { get; set; }
         public List<RefundData> Refunds { get; set; }
         public string CurrentRefundId { get; set; }
         [ForeignKey("Id,CurrentRefundId")]

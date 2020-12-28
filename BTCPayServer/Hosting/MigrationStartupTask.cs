@@ -1,16 +1,23 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Logging;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
+using DBriize;
+using DBriize.Utils;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using NBitcoin.DataEncoders;
 
 namespace BTCPayServer.Hosting
 {
@@ -20,18 +27,21 @@ namespace BTCPayServer.Hosting
         private readonly StoreRepository _StoreRepository;
         private readonly BTCPayNetworkProvider _NetworkProvider;
         private readonly SettingsRepository _Settings;
+        private readonly BTCPayServerOptions _btcPayServerOptions;
         private readonly UserManager<ApplicationUser> _userManager;
         public MigrationStartupTask(
             BTCPayNetworkProvider networkProvider,
             StoreRepository storeRepository,
             ApplicationDbContextFactory dbContextFactory,
             UserManager<ApplicationUser> userManager,
-            SettingsRepository settingsRepository)
+            SettingsRepository settingsRepository,
+            BTCPayServerOptions btcPayServerOptions)
         {
             _DBContextFactory = dbContextFactory;
             _StoreRepository = storeRepository;
             _NetworkProvider = networkProvider;
             _Settings = settingsRepository;
+            _btcPayServerOptions = btcPayServerOptions;
             _userManager = userManager;
         }
         public async Task ExecuteAsync(CancellationToken cancellationToken = default)

@@ -2,16 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Logging;
 using BTCPayServer.Models.InvoicingModels;
-using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
-using DBriize;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
@@ -22,7 +19,7 @@ using InvoiceData = BTCPayServer.Data.InvoiceData;
 
 namespace BTCPayServer.Services.Invoices
 {
-    public class InvoiceRepository : IDisposable
+    public class InvoiceRepository
     {
         static JsonSerializerSettings DefaultSerializerSettings;
         static InvoiceRepository()
@@ -31,31 +28,13 @@ namespace BTCPayServer.Services.Invoices
             NBitcoin.JsonConverters.Serializer.RegisterFrontConverters(DefaultSerializerSettings);
         }
 
-        private readonly DBriizeEngine _Engine;
-        public DBriizeEngine Engine
-        {
-            get
-            {
-                return _Engine;
-            }
-        }
-
         private readonly ApplicationDbContextFactory _ContextFactory;
         private readonly EventAggregator _eventAggregator;
         private readonly BTCPayNetworkProvider _Networks;
-        private readonly CustomThreadPool _IndexerThread;
 
-        public InvoiceRepository(ApplicationDbContextFactory contextFactory, string dbreezePath,
+        public InvoiceRepository(ApplicationDbContextFactory contextFactory,
             BTCPayNetworkProvider networks, EventAggregator eventAggregator)
         {
-            int retryCount = 0;
-retry:
-            try
-            {
-                _Engine = new DBriizeEngine(dbreezePath);
-            }
-            catch when (retryCount++ < 5) { goto retry; }
-            _IndexerThread = new CustomThreadPool(1, "Invoice Indexer");
             _ContextFactory = contextFactory;
             _Networks = networks;
             _eventAggregator = eventAggregator;
@@ -148,7 +127,7 @@ retry:
                 if (invoiceData.CustomerEmail == null && data.Email != null)
                 {
                     invoiceData.CustomerEmail = data.Email;
-                    AddToTextSearch(invoiceId, invoiceData.CustomerEmail);
+                    AddToTextSearch(ctx, invoiceData, invoiceData.CustomerEmail);
                 }
                 await ctx.SaveChangesAsync().ConfigureAwait(false);
             }
@@ -170,7 +149,7 @@ retry:
 
         public async Task<InvoiceEntity> CreateInvoiceAsync(string storeId, InvoiceEntity invoice)
         {
-            List<string> textSearch = new List<string>();
+            var textSearch = new List<string>();
             invoice = Clone(invoice);
             invoice.Networks = _Networks;
             invoice.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16));
@@ -180,7 +159,7 @@ retry:
             invoice.StoreId = storeId;
             using (var context = _ContextFactory.CreateContext())
             {
-                context.Invoices.Add(new Data.InvoiceData()
+                var invoiceData = new Data.InvoiceData()
                 {
                     StoreDataId = storeId,
                     Id = invoice.Id,
@@ -193,7 +172,9 @@ retry:
                     ItemCode = invoice.Metadata.ItemCode,
                     CustomerEmail = invoice.RefundMail,
                     Archived = false
-                });
+                };
+                await context.Invoices.AddAsync(invoiceData);
+
 
                 foreach (var paymentMethod in invoice.GetPaymentMethods())
                 {
@@ -202,13 +183,13 @@ retry:
                     var paymentDestination = paymentMethod.GetPaymentMethodDetails().GetPaymentDestination();
 
                     string address = GetDestination(paymentMethod);
-                    context.AddressInvoices.Add(new AddressInvoiceData()
+                    await context.AddressInvoices.AddAsync(new AddressInvoiceData()
                     {
                         InvoiceDataId = invoice.Id,
                         CreatedTime = DateTimeOffset.UtcNow,
                     }.Set(address, paymentMethod.GetId()));
 
-                    context.HistoricalAddressInvoices.Add(new HistoricalAddressInvoiceData()
+                    await context.HistoricalAddressInvoices.AddAsync(new HistoricalAddressInvoiceData()
                     {
                         InvoiceDataId = invoice.Id,
                         Assigned = DateTimeOffset.UtcNow
@@ -216,18 +197,21 @@ retry:
                     textSearch.Add(paymentDestination);
                     textSearch.Add(paymentMethod.Calculate().TotalDue.ToString());
                 }
-                context.PendingInvoices.Add(new PendingInvoiceData() { Id = invoice.Id });
+                await context.PendingInvoices.AddAsync(new PendingInvoiceData() { Id = invoice.Id });
+
+                textSearch.Add(invoice.Id);
+                textSearch.Add(invoice.InvoiceTime.ToString(CultureInfo.InvariantCulture));
+                textSearch.Add(invoice.Price.ToString(CultureInfo.InvariantCulture));
+                textSearch.Add(invoice.Metadata.OrderId);
+                textSearch.Add(ToJsonString(invoice.Metadata, null));
+                textSearch.Add(invoice.StoreId);
+                textSearch.Add(invoice.Metadata.BuyerEmail);
+                AddToTextSearch(context, invoiceData, textSearch.ToArray());
+
                 await context.SaveChangesAsync().ConfigureAwait(false);
             }
 
-            textSearch.Add(invoice.Id);
-            textSearch.Add(invoice.InvoiceTime.ToString(CultureInfo.InvariantCulture));
-            textSearch.Add(invoice.Price.ToString(CultureInfo.InvariantCulture));
-            textSearch.Add(invoice.Metadata.OrderId);
-            textSearch.Add(ToString(invoice.Metadata, null));
-            textSearch.Add(invoice.StoreId);
-            textSearch.Add(invoice.Metadata.BuyerEmail);
-            AddToTextSearch(invoice.Id, textSearch.ToArray());
+
             return invoice;
         }
 
@@ -295,10 +279,10 @@ retry:
             invoice.Blob = ToBytes(invoiceEntity, network);
 
             await context.AddressInvoices.AddAsync(new AddressInvoiceData()
-                {
-                    InvoiceDataId = invoiceId,
-                    CreatedTime = DateTimeOffset.UtcNow
-                }
+            {
+                InvoiceDataId = invoiceId,
+                CreatedTime = DateTimeOffset.UtcNow
+            }
                 .Set(GetDestination(paymentMethod), paymentMethod.GetId()));
             await context.HistoricalAddressInvoices.AddAsync(new HistoricalAddressInvoiceData()
             {
@@ -306,8 +290,8 @@ retry:
                 Assigned = DateTimeOffset.UtcNow
             }.SetAddress(paymentMethodDetails.GetPaymentDestination(), network.CryptoCode));
 
+            AddToTextSearch(context, invoice, paymentMethodDetails.GetPaymentDestination());
             await context.SaveChangesAsync();
-            AddToTextSearch(invoice.Id, paymentMethodDetails.GetPaymentDestination());
             return true;
         }
 
@@ -357,7 +341,7 @@ retry:
                 data.UnAssigned == null);
             foreach (var historicalAddressInvoiceData in addresses)
             {
-                historicalAddressInvoiceData.UnAssigned = DateTimeOffset.UtcNow;   
+                historicalAddressInvoiceData.UnAssigned = DateTimeOffset.UtcNow;
             }
         }
 
@@ -372,29 +356,13 @@ retry:
             catch (DbUpdateException) { } //Possibly, it was unassigned before
         }
 
-        private string[] SearchInvoice(string searchTerms)
+        public static void AddToTextSearch(ApplicationDbContext context, InvoiceData invoice, params string[] terms)
         {
-            using (var tx = _Engine.GetTransaction())
-            {
-                var terms = searchTerms.Split(null);
-                searchTerms = string.Join(' ', terms.Select(t => t.Length > 50 ? t.Substring(0, 50) : t).ToArray());
-                return tx.TextSearch("InvoiceSearch").Block(searchTerms)
-                    .GetDocumentIDs()
-                    .Select(id => Encoders.Base58.EncodeData(id))
-                    .ToArray();
-            }
-        }
-
-        void AddToTextSearch(string invoiceId, params string[] terms)
-        {
-            _IndexerThread.DoAsync(() =>
-            {
-                using (var tx = _Engine.GetTransaction())
-                {
-                    tx.TextAppend("InvoiceSearch", Encoders.Base58.DecodeData(invoiceId), string.Join(" ", terms.Where(t => !string.IsNullOrWhiteSpace(t))));
-                    tx.Commit();
-                }
-            });
+            var filteredTerms = terms.Where(t => !string.IsNullOrWhiteSpace(t)
+                && (invoice.InvoiceSearchData == null || invoice.InvoiceSearchData.All(data => data.Value != t)))
+                .Distinct()
+                .Select(s => new InvoiceSearchData() { InvoiceDataId = invoice.Id, Value = s });
+            context.AddRange(filteredTerms);
         }
 
         public async Task UpdateInvoiceStatus(string invoiceId, InvoiceState invoiceState)
@@ -415,7 +383,8 @@ retry:
             using (var context = _ContextFactory.CreateContext())
             {
                 var items = context.Invoices.Where(a => invoiceIds.Contains(a.Id));
-                if (items == null) {
+                if (items == null)
+                {
                     return;
                 }
 
@@ -423,7 +392,7 @@ retry:
                 {
                     invoice.Archived = true;
                 }
-                
+
                 await context.SaveChangesAsync();
             }
         }
@@ -441,7 +410,7 @@ retry:
                 await context.SaveChangesAsync().ConfigureAwait(false);
             }
         }
-        public async Task<InvoiceEntity> UpdateInvoiceMetadata(string invoiceId,  string storeId, JObject metadata)
+        public async Task<InvoiceEntity> UpdateInvoiceMetadata(string invoiceId, string storeId, JObject metadata)
         {
             using (var context = _ContextFactory.CreateContext())
             {
@@ -451,7 +420,7 @@ retry:
                                                 StringComparison.InvariantCultureIgnoreCase)))
                     return null;
                 var blob = invoiceData.GetBlob(_Networks);
-                blob.Metadata =  InvoiceMetadata.FromJObject(metadata);
+                blob.Metadata = InvoiceMetadata.FromJObject(metadata);
                 invoiceData.Blob = ToBytes(blob);
                 await context.SaveChangesAsync().ConfigureAwait(false);
                 return ToEntity(invoiceData);
@@ -595,9 +564,11 @@ retry:
 
         private IQueryable<Data.InvoiceData> GetInvoiceQuery(ApplicationDbContext context, InvoiceQuery queryObject)
         {
-            IQueryable<Data.InvoiceData> query = queryObject.UserId is null 
+            IQueryable<Data.InvoiceData> query = queryObject.UserId is null
                 ? context.Invoices
-                : context.UserStore.Where(u => u.ApplicationUserId == queryObject.UserId).SelectMany(c => c.StoreData.Invoices);
+                : context.UserStore
+                    .Where(u => u.ApplicationUserId == queryObject.UserId)
+                    .SelectMany(c => c.StoreData.Invoices);
 
             if (!queryObject.IncludeArchived)
             {
@@ -618,14 +589,9 @@ retry:
 
             if (!string.IsNullOrEmpty(queryObject.TextSearch))
             {
-                var ids = new HashSet<string>(SearchInvoice(queryObject.TextSearch)).ToArray();
-                if (ids.Length == 0)
-                {
-                    // Hacky way to return an empty query object. The nice way is much too elaborate:
-                    // https://stackoverflow.com/questions/33305495/how-to-return-empty-iqueryable-in-an-async-repository-method
-                    return query.Where(x => false);
-                }
-                query = query.Where(i => ids.Contains(i.Id));
+#pragma warning disable CA1307 // Specify StringComparison
+                query = query.Where(i => i.InvoiceSearchData.Any(data => data.Value.StartsWith(queryObject.TextSearch)));
+#pragma warning restore CA1307 // Specify StringComparison
             }
 
             if (queryObject.StartDate != null)
@@ -668,8 +634,8 @@ retry:
             if (queryObject.Skip != null)
                 query = query.Skip(queryObject.Skip.Value);
 
-            if (queryObject.Count != null)
-                query = query.Take(queryObject.Count.Value);
+            if (queryObject.Take != null)
+                query = query.Take(queryObject.Take.Value);
             return query;
         }
 
@@ -771,12 +737,12 @@ retry:
 
                 await context.Payments.AddAsync(data);
 
+                AddToTextSearch(context, invoice, paymentData.GetSearchTerms());
                 try
                 {
                     await context.SaveChangesAsync().ConfigureAwait(false);
                 }
                 catch (DbUpdateException) { return null; } // Already exists
-                AddToTextSearch(invoiceId, paymentData.GetSearchTerms());
                 return entity;
             }
         }
@@ -802,26 +768,18 @@ retry:
             }
         }
 
-        private byte[] ToBytes<T>(T obj, BTCPayNetworkBase network = null)
+        private static byte[] ToBytes<T>(T obj, BTCPayNetworkBase network = null)
         {
-            return ZipUtils.Zip(ToString(obj, network));
+            return ZipUtils.Zip(ToJsonString(obj, network));
         }
 
-        private string ToString<T>(T data, BTCPayNetworkBase network)
+        public static string ToJsonString<T>(T data, BTCPayNetworkBase network)
         {
             if (network == null)
             {
                 return JsonConvert.SerializeObject(data, DefaultSerializerSettings);
             }
             return network.ToString(data);
-        }
-
-        public void Dispose()
-        {
-            if (_Engine != null)
-                _Engine.Dispose();
-            if (_IndexerThread != null)
-                _IndexerThread.Dispose();
         }
     }
 
@@ -854,7 +812,7 @@ retry:
             get; set;
         }
 
-        public int? Count
+        public int? Take
         {
             get; set;
         }

@@ -67,6 +67,7 @@ namespace BTCPayServer.Data
         public DbSet<WebhookData> Webhooks { get; set; }
         public DbSet<WebhookDeliveryData> WebhookDeliveries { get; set; }
         public DbSet<InvoiceWebhookDeliveryData> InvoiceWebhookDeliveries { get; set; }
+        public DbSet<InvoiceSearchData> InvoiceSearchDatas { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -81,6 +82,7 @@ namespace BTCPayServer.Data
             Data.UserStore.OnModelCreating(builder);
             NotificationData.OnModelCreating(builder);
             InvoiceData.OnModelCreating(builder);
+            InvoiceSearchData.OnModelCreating(builder);
             PaymentData.OnModelCreating(builder);
             Data.UserStore.OnModelCreating(builder);
             APIKeyData.OnModelCreating(builder);

@@ -5,25 +5,6 @@
 @using Microsoft.AspNetCore.Http.Extensions
 @model BTCPayServer.Components.NotificationsDropdown.NotificationSummaryViewModel
 
-<style>
-    .notification-dropdown {
-        border: 0;
-        border-radius: 4px;
-        box-shadow: 0px 2px 16px rgba(0, 0, 0, 0.08);
-        padding: 0;
-    }
-
-    @@media (min-width: 992px) {
-        .notification-dropdown {
-            width: 420px;
-        }
-    }
-
-    .notification:hover {
-        background-color: var(--btcpay-body-bg);
-    }
-</style>
-
 @if (Model.UnseenCount > 0)
 {
     <li class="nav-item dropdown" id="notifications-nav-item">

@@ -357,3 +357,19 @@ html[data-devenv]:before {
 .btcpay-status--disabled:before {
     background-color: #FB383D;
 }
+
+/* Custom notification dropdown styling */
+.notification-dropdown {
+    border: 0;
+    border-radius: 4px;
+    box-shadow: 0px 2px 16px rgba(0, 0, 0, 0.08);
+    padding: 0;
+}
+@media (min-width: 992px) {
+    .notification-dropdown {
+        width: 420px;
+    }
+}
+.notification:hover {
+    background-color: var(--btcpay-body-bg);
+}

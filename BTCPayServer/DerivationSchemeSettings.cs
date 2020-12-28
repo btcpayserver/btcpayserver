@@ -18,8 +18,15 @@ namespace BTCPayServer
                 throw new ArgumentNullException(nameof(network));
             if (derivationStrategy == null)
                 throw new ArgumentNullException(nameof(derivationStrategy));
-            var result = network.NBXplorerNetwork.DerivationStrategyFactory.Parse(derivationStrategy);
-            return new DerivationSchemeSettings(result, network) { AccountOriginal = derivationStrategy.Trim() };
+            var result = new DerivationSchemeSettings();
+            var parser = new DerivationSchemeParser(network);
+            if (TryParseXpub(derivationStrategy, parser, ref result, false) || TryParseXpub(derivationStrategy, parser, ref result, false))
+            {
+                return result;
+            }
+
+            throw new FormatException();
+
         }
 
         public static bool TryParseFromJson(string config, BTCPayNetwork network, out DerivationSchemeSettings strategy)
@@ -40,6 +47,26 @@ namespace BTCPayServer
 
         private static bool TryParseXpub(string xpub, DerivationSchemeParser derivationSchemeParser, ref DerivationSchemeSettings derivationSchemeSettings, bool electrum = true)
         {
+            if (!electrum)
+            {
+                try
+                {
+                    var result = derivationSchemeParser.ParseOutputDescriptor(xpub);
+                    derivationSchemeSettings.AccountOriginal = xpub.Trim();
+                    derivationSchemeSettings.AccountDerivation = result.Item1;
+                    derivationSchemeSettings.AccountKeySettings = result.Item2.Select((path, i) => new AccountKeySettings()
+                    {
+                        RootFingerprint = path?.MasterFingerprint,
+                        AccountKeyPath = path?.KeyPath,
+                        AccountKey = result.Item1.GetExtPubKeys().ElementAt(i).GetWif(derivationSchemeParser.Network)
+                    }).ToArray();
+                    return true;
+                }
+                catch (Exception)
+                {
+                    // ignored
+                }
+            }
             try
             {
                 derivationSchemeSettings.AccountOriginal = xpub.Trim();

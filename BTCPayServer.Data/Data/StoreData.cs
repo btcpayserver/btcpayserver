@@ -5,7 +5,6 @@ using BTCPayServer.Client.Models;
 
 namespace BTCPayServer.Data
 {
-
     public class StoreData
     {
         public string Id { get; set; }
@@ -43,6 +42,4 @@ namespace BTCPayServer.Data
         public List<PairedSINData> PairedSINs { get; set; }
         public IEnumerable<APIKeyData> APIKeys { get; set; }
     }
-
-
 }

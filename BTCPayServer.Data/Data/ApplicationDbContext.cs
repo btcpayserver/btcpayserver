@@ -30,15 +30,8 @@ namespace BTCPayServer.Data
             _designTime = designTime;
         }
 
-        public DbSet<InvoiceData> Invoices
-        {
-            get; set;
-        }
-        public DbSet<RefundData> Refunds
-        {
-            get; set;
-        }
-
+        public DbSet<InvoiceData> Invoices { get; set; }
+        public DbSet<RefundData> Refunds { get; set; }
         public DbSet<PlannedTransaction> PlannedTransactions { get; set; }
         public DbSet<PayjoinLock> PayjoinLocks { get; set; }
         public DbSet<AppData> Apps { get; set; }
@@ -84,7 +77,6 @@ namespace BTCPayServer.Data
             InvoiceData.OnModelCreating(builder);
             InvoiceSearchData.OnModelCreating(builder);
             PaymentData.OnModelCreating(builder);
-            Data.UserStore.OnModelCreating(builder);
             APIKeyData.OnModelCreating(builder);
             AppData.OnModelCreating(builder);
             AddressInvoiceData.OnModelCreating(builder);

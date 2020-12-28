@@ -1,6 +1,4 @@
-using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
 
 namespace BTCPayServer.Data
 {
@@ -11,6 +9,8 @@ namespace BTCPayServer.Data
         public string TransactionId { get; set; }
         public string Labels { get; set; }
         public byte[] Blob { get; set; }
+
+
         internal static void OnModelCreating(ModelBuilder builder)
         {
             builder.Entity<WalletTransactionData>()

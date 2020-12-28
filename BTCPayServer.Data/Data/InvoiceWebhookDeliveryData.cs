@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Data
@@ -11,6 +8,8 @@ namespace BTCPayServer.Data
         public InvoiceData Invoice { get; set; }
         public string DeliveryId { get; set; }
         public WebhookDeliveryData Delivery { get; set; }
+
+
         internal static void OnModelCreating(ModelBuilder builder)
         {
             builder.Entity<InvoiceWebhookDeliveryData>()

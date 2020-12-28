@@ -6,15 +6,13 @@ namespace BTCPayServer.Data
     public class APIKeyData
     {
         [MaxLength(50)]
-        public string Id
-        {
-            get;
-            set;
-        }
+        public string Id { get; set; }
 
-        [MaxLength(50)] public string StoreId { get; set; }
+        [MaxLength(50)] 
+        public string StoreId { get; set; }
 
-        [MaxLength(50)] public string UserId { get; set; }
+        [MaxLength(50)] 
+        public string UserId { get; set; }
 
         public APIKeyType Type { get; set; } = APIKeyType.Legacy;
 
@@ -22,6 +20,7 @@ namespace BTCPayServer.Data
         public StoreData StoreData { get; set; }
         public ApplicationUser User { get; set; }
         public string Label { get; set; }
+
 
         internal static void OnModelCreating(ModelBuilder builder)
         {

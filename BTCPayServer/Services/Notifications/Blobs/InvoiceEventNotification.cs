@@ -41,7 +41,7 @@ namespace BTCPayServer.Services.Notifications.Blobs
                 {InvoiceEvent.ExpiredPaidPartial, "expired with partial payments"},
                 {InvoiceEvent.FailedToConfirm, "has payments that failed to confirm on time"},
                 // {InvoiceEvent.ReceivedPayment, "received a payment"},
-                {InvoiceEvent.Confirmed, "has been paid"}
+                {InvoiceEvent.Confirmed, "was confirmed paid"}
             };
 
             protected override void FillViewModel(InvoiceEventNotification notification,

@@ -125,7 +125,7 @@ namespace BTCPayServer.Hosting
                 blob.AdditionalData.Remove("walletKeyPathRoots");
                 blob.AdditionalData.Remove("onChainMinValue");
                 blob.AdditionalData.Remove("lightningMaxValue");
-                blob.AdditionalData.Remove("networkFeeMode");
+                blob.AdditionalData.Remove("networkFeeDisabled");
                 blob.AdditionalData.Remove("rateRules");
                 store.SetStoreBlob(blob);
             }
@@ -271,7 +271,7 @@ retry:
                 foreach (var store in await ctx.Stores.AsQueryable().ToArrayAsync())
                 {
                     var blob = store.GetStoreBlob();
-                    if (blob.AdditionalData.TryGetValue("networkFeeMode", out var networkFeeModeJToken))
+                    if (blob.AdditionalData.TryGetValue("networkFeeDisabled", out var networkFeeModeJToken))
                     {
                         var networkFeeMode = networkFeeModeJToken.ToObject<bool?>();
                         if (networkFeeMode != null)
@@ -279,7 +279,7 @@ retry:
                             blob.NetworkFeeMode = networkFeeMode.Value ? NetworkFeeMode.Never : NetworkFeeMode.Always;
                         }
 
-                        blob.AdditionalData.Remove("networkFeeMode");
+                        blob.AdditionalData.Remove("networkFeeDisabled");
                         store.SetStoreBlob(blob);
                     }
                 }

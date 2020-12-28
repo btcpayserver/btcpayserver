@@ -159,7 +159,7 @@ namespace BTCPayServer.Data
         public StoreHints Hints { get; set; }
 
         [JsonExtensionData]
-        public IDictionary<string, JToken> AdditionalData { get; set; } 
+        public IDictionary<string, JToken> AdditionalData { get; set; } = new Dictionary<string, JToken>();
         
         public class StoreHints
         {

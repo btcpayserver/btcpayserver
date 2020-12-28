@@ -36,7 +36,7 @@ namespace BTCPayServer.Data
         public DbSet<StoredFile> Files { get; set; }
         public DbSet<HistoricalAddressInvoiceData> HistoricalAddressInvoices { get; set; }
         public DbSet<InvoiceEventData> InvoiceEvents { get; set; }
-        public DbSet<InvoiceSearchData> InvoiceSearchDatas { get; set; }
+        public DbSet<InvoiceSearchData> InvoiceSearches { get; set; }
         public DbSet<InvoiceWebhookDeliveryData> InvoiceWebhookDeliveries { get; set; }
         public DbSet<InvoiceData> Invoices { get; set; }
         public DbSet<NotificationData> Notifications { get; set; }

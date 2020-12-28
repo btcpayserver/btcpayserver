@@ -13,5 +13,8 @@ namespace BTCPayServer.Services
         {
             return string.Empty;
         }
+        
+        // Done in DbMigrationsHostedService
+        public int? MigratedInvoiceTextSearchPages { get; set; }
     }
 }

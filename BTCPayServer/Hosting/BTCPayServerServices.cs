@@ -97,16 +97,15 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<InvoicePaymentNotification>();
             services.TryAddSingleton<BTCPayServerOptions>(o =>
                 o.GetRequiredService<IOptions<BTCPayServerOptions>>().Value);
+            // Don't move this StartupTask, we depend on it being right here
             services.AddStartupTask<MigrationStartupTask>();
+            // 
             services.AddStartupTask<BlockExplorerLinkStartupTask>();
             services.TryAddSingleton<InvoiceRepository>(o =>
             {
                 var datadirs = o.GetRequiredService<DataDirectories>();
                 var dbContext = o.GetRequiredService<ApplicationDbContextFactory>();
-                var dbpath = Path.Combine(datadirs.DataDir, "InvoiceDB");
-                if (!Directory.Exists(dbpath))
-                    Directory.CreateDirectory(dbpath);
-                return new InvoiceRepository(dbContext, dbpath, o.GetRequiredService<BTCPayNetworkProvider>(), o.GetService<EventAggregator>());
+                return new InvoiceRepository(dbContext, o.GetRequiredService<BTCPayNetworkProvider>(), o.GetService<EventAggregator>());
             });
             services.AddSingleton<BTCPayServerEnvironment>();
             services.TryAddSingleton<TokenRepository>();
@@ -263,6 +262,8 @@ namespace BTCPayServer.Hosting
 
             services.AddSingleton<INotificationHandler, InvoiceEventNotification.Handler>();
             services.AddSingleton<INotificationHandler, PayoutNotification.Handler>();
+
+            services.AddSingleton<IHostedService, DbMigrationsHostedService>();
 
             services.AddShopify();
 #if DEBUG

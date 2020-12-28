@@ -30,17 +30,11 @@ namespace BTCPayServer.Services
                 return Deserialize<T>(data.Value);
             }
         }
-
         public async Task UpdateSetting<T>(T obj, string name = null)
         {
-            name ??= obj.GetType().FullName;
             using (var ctx = _ContextFactory.CreateContext())
             {
-                var settings = new SettingData();
-                settings.Id = name;
-                settings.Value = Serialize(obj);
-                ctx.Attach(settings);
-                ctx.Entry(settings).State = EntityState.Modified;
+                var settings = UpdateSettingInContext<T>(ctx, obj, name);
                 try
                 {
                     await ctx.SaveChangesAsync();
@@ -55,7 +49,19 @@ namespace BTCPayServer.Services
             {
                 Settings = obj
             });
+        }
 
+        public SettingData UpdateSettingInContext<T>(ApplicationDbContext ctx, T obj, string name = null)
+        {
+            name ??= obj.GetType().FullName;
+            var settings = new SettingData();
+            settings.Id = name;
+            settings.Value = Serialize(obj);
+
+            ctx.Attach(settings);
+            ctx.Entry(settings).State = EntityState.Modified;
+            
+            return settings;
         }
 
         private T Deserialize<T>(string value)

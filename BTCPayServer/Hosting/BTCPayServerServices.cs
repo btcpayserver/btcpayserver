@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Runtime.InteropServices.ComTypes;
 using System.Security.Cryptography;
 using System.Threading;
 using BTCPayServer.Abstractions.Contracts;
@@ -67,6 +68,7 @@ namespace BTCPayServer.Hosting
         }
         public static IServiceCollection AddBTCPayServer(this IServiceCollection services, IConfiguration configuration)
         {
+            services.AddSingleton<DataDirectories>();
             services.AddSingleton<MvcNewtonsoftJsonOptions>(o => o.GetRequiredService<IOptions<MvcNewtonsoftJsonOptions>>().Value);
             services.AddDbContext<ApplicationDbContext>((provider, o) =>
             {
@@ -100,9 +102,9 @@ namespace BTCPayServer.Hosting
             services.AddStartupTask<BlockExplorerLinkStartupTask>();
             services.TryAddSingleton<InvoiceRepository>(o =>
             {
-                var opts = o.GetRequiredService<BTCPayServerOptions>();
+                var datadirs = o.GetRequiredService<DataDirectories>();
                 var dbContext = o.GetRequiredService<ApplicationDbContextFactory>();
-                var dbpath = Path.Combine(opts.DataDir, "InvoiceDB");
+                var dbpath = Path.Combine(datadirs.DataDir, "InvoiceDB");
                 if (!Directory.Exists(dbpath))
                     Directory.CreateDirectory(dbpath);
                 return new InvoiceRepository(dbContext, dbpath, o.GetRequiredService<BTCPayNetworkProvider>(), o.GetService<EventAggregator>());
@@ -113,32 +115,33 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<EventAggregator>();
             services.TryAddSingleton<PaymentRequestService>();
             services.TryAddSingleton<U2FService>();
+            services.TryAddSingleton<DataDirectories>();
             services.TryAddSingleton<DatabaseOptions>(o =>
             {
                 var opts = o.GetRequiredService<BTCPayServerOptions>();
-                if (!string.IsNullOrEmpty(opts.PostgresConnectionString))
+                try
                 {
-                    Logs.Configuration.LogInformation($"Postgres DB used");
-                    return  new DatabaseOptions(DatabaseType.Postgres, opts.PostgresConnectionString);
+                    var dbOptions = new DatabaseOptions(o.GetRequiredService<IConfiguration>(),
+                        o.GetRequiredService<DataDirectories>().DataDir);
+                    if (dbOptions.DatabaseType == DatabaseType.Postgres)
+                    {
+                        Logs.Configuration.LogInformation($"Postgres DB used");
+                    }
+                    else if (dbOptions.DatabaseType == DatabaseType.MySQL)
+                    {
+                        Logs.Configuration.LogInformation($"MySQL DB used");
+                        Logs.Configuration.LogWarning("MySQL is not widely tested and should be considered experimental, we advise you to use postgres instead.");
+                    }
+                    else if (dbOptions.DatabaseType == DatabaseType.Sqlite)
+                    {
+                        Logs.Configuration.LogInformation($"SQLite DB used");
+                        Logs.Configuration.LogWarning("SQLite is not widely tested and should be considered experimental, we advise you to use postgres instead.");
+                    }
+                    return dbOptions;
                 }
-                else if (!string.IsNullOrEmpty(opts.MySQLConnectionString))
+                catch (Exception ex)
                 {
-                    Logs.Configuration.LogInformation($"MySQL DB used");
-                    Logs.Configuration.LogWarning("MySQL is not widely tested and should be considered experimental, we advise you to use postgres instead.");
-                    return  new DatabaseOptions(DatabaseType.MySQL, opts.MySQLConnectionString);
-                }
-                else if (!string.IsNullOrEmpty(opts.SQLiteFileName))
-                {
-                    var connStr = "Data Source=" +(Path.IsPathRooted(opts.SQLiteFileName)
-                        ? opts.SQLiteFileName
-                        : Path.Combine(opts.DataDir, opts.SQLiteFileName));
-                    Logs.Configuration.LogInformation($"SQLite DB used");
-                    Logs.Configuration.LogWarning("SQLite is not widely tested and should be considered experimental, we advise you to use postgres instead.");
-                    return  new DatabaseOptions(DatabaseType.Sqlite, connStr);
-                }
-                else
-                {
-                    throw new ConfigException("No database option was configured.");
+                    throw new ConfigException($"No database option was configured. ({ex.Message})");
                 }
             });
             services.AddSingleton<ApplicationDbContextFactory>();

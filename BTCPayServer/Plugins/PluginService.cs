@@ -17,17 +17,19 @@ namespace BTCPayServer.Plugins
 {
     public class PluginService: IPluginHookService
     {
-        private readonly BTCPayServerOptions _btcPayServerOptions;
+        private readonly DataDirectories _datadirs;
+        private readonly BTCPayServerOptions _options;
         private readonly HttpClient _githubClient;
         private readonly IEnumerable<IPluginHookAction> _actions;
         private readonly IEnumerable<IPluginHookFilter> _filters;
         public PluginService(IEnumerable<IBTCPayServerPlugin> btcPayServerPlugins,
-            IHttpClientFactory httpClientFactory, BTCPayServerOptions btcPayServerOptions,IEnumerable<IPluginHookAction> actions, IEnumerable<IPluginHookFilter> filters)
+            IHttpClientFactory httpClientFactory, DataDirectories datadirs, BTCPayServerOptions options, IEnumerable<IPluginHookAction> actions, IEnumerable<IPluginHookFilter> filters)
         {
             LoadedPlugins = btcPayServerPlugins;
             _githubClient = httpClientFactory.CreateClient();
             _githubClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("btcpayserver", "1"));
-            _btcPayServerOptions = btcPayServerOptions;
+            _datadirs = datadirs;
+            _options = options;
             _actions = actions;
             _filters = filters;
         }
@@ -37,7 +39,7 @@ namespace BTCPayServer.Plugins
         public async Task<IEnumerable<AvailablePlugin>> GetRemotePlugins()
         {
             var resp = await _githubClient
-                .GetStringAsync(new Uri($"https://api.github.com/repos/{_btcPayServerOptions.PluginRemote}/contents"));
+                .GetStringAsync(new Uri($"https://api.github.com/repos/{_options.PluginRemote}/contents"));
             var files = JsonConvert.DeserializeObject<GithubFile[]>(resp);
             return await Task.WhenAll(files.Where(file => file.Name.EndsWith($"{PluginManager.BTCPayPluginSuffix}.json", StringComparison.InvariantCulture)).Select(async file =>
             {
@@ -48,9 +50,9 @@ namespace BTCPayServer.Plugins
 
         public async Task DownloadRemotePlugin(string plugin)
         {
-            var dest = _btcPayServerOptions.PluginDir;
+            var dest = _datadirs.PluginDir;
             var resp = await _githubClient
-                .GetStringAsync(new Uri($"https://api.github.com/repos/{_btcPayServerOptions.PluginRemote}/contents"));
+                .GetStringAsync(new Uri($"https://api.github.com/repos/{_options.PluginRemote}/contents"));
             var files = JsonConvert.DeserializeObject<GithubFile[]>(resp);
             var ext = files.SingleOrDefault(file => file.Name == $"{plugin}{PluginManager.BTCPayPluginSuffix}");
             if (ext is null)
@@ -65,19 +67,19 @@ namespace BTCPayServer.Plugins
 
         public void InstallPlugin(string plugin)
         {
-            var dest = _btcPayServerOptions.PluginDir;
+            var dest = _datadirs.PluginDir;
             UninstallPlugin(plugin);
             PluginManager.QueueCommands(dest, ("install", plugin));
         }
         public void UpdatePlugin(string plugin)
         {
-            var dest = _btcPayServerOptions.PluginDir;
+            var dest = _datadirs.PluginDir;
             PluginManager.QueueCommands(dest, ("update", plugin));
         }
 
         public async Task UploadPlugin(IFormFile plugin)
         {
-            var dest = _btcPayServerOptions.PluginDir;
+            var dest = _datadirs.PluginDir;
             var filedest = Path.Combine(dest, plugin.FileName);
             Directory.CreateDirectory(Path.GetDirectoryName(filedest));
             if (Path.GetExtension(filedest) == PluginManager.BTCPayPluginSuffix)
@@ -89,7 +91,7 @@ namespace BTCPayServer.Plugins
 
         public void UninstallPlugin(string plugin)
         {
-            var dest = _btcPayServerOptions.PluginDir;
+            var dest = _datadirs.PluginDir;
             PluginManager.QueueCommands(dest, ("delete", plugin));
         }
 
@@ -124,12 +126,12 @@ namespace BTCPayServer.Plugins
 
         public (string command, string plugin)[] GetPendingCommands()
         {
-            return PluginManager.GetPendingCommands(_btcPayServerOptions.PluginDir);
+            return PluginManager.GetPendingCommands(_datadirs.PluginDir);
         }
 
         public  void CancelCommands(string plugin)
         {
-            PluginManager.CancelCommands(_btcPayServerOptions.PluginDir, plugin);
+            PluginManager.CancelCommands(_datadirs.PluginDir, plugin);
         }
         
         public async Task ApplyAction(string hook, object args)

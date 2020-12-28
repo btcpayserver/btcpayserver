@@ -11,11 +11,6 @@ namespace BTCPayServer.Client.Models
         public bool Enabled { get; set; }
 
         /// <summary>
-        /// Whether the payment method is the default
-        /// </summary>
-        public bool Default { get; set; }
-
-        /// <summary>
         /// Crypto code of the payment method
         /// </summary>
         public string CryptoCode { get; set; }
@@ -34,11 +29,9 @@ namespace BTCPayServer.Client.Models
         {
         }
 
-        public OnChainPaymentMethodData(string cryptoCode, string derivationScheme, bool enabled,
-            bool defaultMethod)
+        public OnChainPaymentMethodData(string cryptoCode, string derivationScheme, bool enabled)
         {
             Enabled = enabled;
-            Default = defaultMethod;
             CryptoCode = cryptoCode;
             DerivationScheme = derivationScheme;
         }

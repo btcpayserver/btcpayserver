@@ -40,6 +40,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -339,7 +340,15 @@ namespace BTCPayServer.Hosting
                     logBuilder.AddProvider(new Serilog.Extensions.Logging.SerilogLoggerProvider(Log.Logger));
                 }
             });
+
+            services.AddSingleton<IObjectModelValidator, SkippableObjectValidatorProvider>();
+            services.SkipModelValidation<RootedKeyPath>();
             return services;
+        }
+
+        public static void SkipModelValidation<T>(this IServiceCollection services)
+        {
+            services.AddSingleton<SkippableObjectValidatorProvider.ISkipValidation, SkippableObjectValidatorProvider.SkipValidationType<T>>();
         }
         private const long MAX_DEBUG_LOG_FILE_SIZE = 2000000; // If debug log is in use roll it every N MB.
         private static void AddBtcPayServerAuthenticationSchemes(this IServiceCollection services)

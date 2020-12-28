@@ -1,3 +1,6 @@
+using NBitcoin;
+using Newtonsoft.Json;
+
 namespace BTCPayServer.Client.Models
 {
     public class OnChainPaymentMethodData
@@ -21,6 +24,11 @@ namespace BTCPayServer.Client.Models
         /// The derivation scheme
         /// </summary>
         public string DerivationScheme { get; set; }
+
+        public string Label { get; set; }
+
+        [JsonConverter(typeof(NBitcoin.JsonConverters.KeyPathJsonConverter))]
+        public RootedKeyPath AccountKeyPath { get; set; }
 
         public OnChainPaymentMethodData()
         {

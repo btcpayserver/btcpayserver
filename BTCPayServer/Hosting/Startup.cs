@@ -22,6 +22,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Net.Http.Headers;
+using NBitcoin;
 
 namespace BTCPayServer.Hosting
 {
@@ -75,7 +76,6 @@ namespace BTCPayServer.Hosting
             .ConfigureApiBehaviorOptions(options =>
             {
                 var builtInFactory = options.InvalidModelStateResponseFactory;
-
                 options.InvalidModelStateResponseFactory = context =>
                 {
                     context.HttpContext.Response.StatusCode = (int)HttpStatusCode.UnprocessableEntity;

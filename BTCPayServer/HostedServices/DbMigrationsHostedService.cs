@@ -49,7 +49,7 @@ namespace BTCPayServer.HostedServices
             var totalCount = await _invoiceRepository.GetInvoicesTotal(invoiceQuery);
             const int PAGE_SIZE = 1000;
             var totalPages = Math.Ceiling(totalCount * 1.0m / PAGE_SIZE);
-            for (int i = startFromPage; i < totalPages; i++)
+            for (int i = startFromPage; i < totalPages && !CancellationToken.IsCancellationRequested; i++)
             {
                 invoiceQuery.Skip = i * PAGE_SIZE;
                 invoiceQuery.Take = PAGE_SIZE;

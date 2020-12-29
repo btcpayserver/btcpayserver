@@ -3412,7 +3412,7 @@ namespace BTCPayServer.Tests
        
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
-        public async Task CanDoMigrations()
+        public async Task CanDoInvoiceMigrations()
         {
             using (var tester = ServerTester.Create(newDb: true))
             {
@@ -3474,7 +3474,7 @@ namespace BTCPayServer.Tests
                 
                 blob = store.GetStoreBlob();
                 Assert.Empty(blob.AdditionalData);
-                Assert.Equal(1, blob.PaymentMethodCriteria.Count());
+                Assert.Single(blob.PaymentMethodCriteria);
                 Assert.Contains(blob.PaymentMethodCriteria,
                     criteria => criteria.PaymentMethod == new PaymentMethodId("BTC", BitcoinPaymentType.Instance) &&
                                 criteria.Above && criteria.Value.Value == 5m && criteria.Value.Currency == "USD");

@@ -372,15 +372,31 @@ namespace BTCPayServer.Controllers
             var storeBlob = CurrentStore.GetStoreBlob();
             var vm = new CheckoutExperienceViewModel();
             SetCryptoCurrencies(vm, CurrentStore);
-            vm.PaymentMethodCriteria =
-                CurrentStore.GetPaymentMethodCriteria(_NetworkProvider, storeBlob).Select(criteria =>
-                    new PaymentMethodCriteriaViewModel()
+            vm.PaymentMethodCriteria = CurrentStore.GetSupportedPaymentMethods(_NetworkProvider).Select(method =>
+            {
+                var existing =
+                    storeBlob.PaymentMethodCriteria.SingleOrDefault(criteria =>
+                        criteria.PaymentMethod == method.PaymentId);
+                if (existing is null)
+                {
+                    return new PaymentMethodCriteriaViewModel()
                     {
-                        PaymentMethod = criteria.PaymentMethod.ToString(),
-                        Type = criteria.Above ? PaymentMethodCriteriaViewModel.CriteriaType.GreaterThan : PaymentMethodCriteriaViewModel.CriteriaType.LessThan,
-                        Value = criteria.Value?.ToString() ?? ""
-                    }).ToList();
-
+                        PaymentMethod = method.PaymentId.ToString(),
+                        Value = ""
+                    };
+                }
+                else
+                {
+                    return new PaymentMethodCriteriaViewModel()
+                    {
+                        PaymentMethod = existing.PaymentMethod.ToString(),
+                        Type = existing.Above
+                            ? PaymentMethodCriteriaViewModel.CriteriaType.GreaterThan
+                            : PaymentMethodCriteriaViewModel.CriteriaType.LessThan,
+                        Value = existing.Value?.ToString() ?? ""
+                    };
+                }
+            }).ToList();
             vm.RequiresRefundEmail = storeBlob.RequiresRefundEmail;
             vm.LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi;
             vm.LightningPrivateRouteHints = storeBlob.LightningPrivateRouteHints;
@@ -454,10 +470,6 @@ namespace BTCPayServer.Controllers
                     CurrencyValue.TryParse(viewModel.Value, out var cv);
                     return new PaymentMethodCriteria() { Above = viewModel.Type == PaymentMethodCriteriaViewModel.CriteriaType.GreaterThan, Value = cv, PaymentMethod = PaymentMethodId.Parse(viewModel.PaymentMethod) };
                 }).ToList();
-#pragma warning disable 612
-            blob.LightningMaxValue = null;
-            blob.OnChainMinValue = null;
-#pragma warning restore 612
 
             blob.RequiresRefundEmail = model.RequiresRefundEmail;
             blob.LightningAmountInSatoshi = model.LightningAmountInSatoshi;

@@ -11,6 +11,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
@@ -19,6 +20,7 @@ using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
+using BTCPayServer.Hosting;
 using BTCPayServer.Lightning;
 using BTCPayServer.Models;
 using BTCPayServer.Models.AccountViewModels;
@@ -45,10 +47,12 @@ using DBriize.Utils;
 using ExchangeSharp;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitcoin.Payment;
 using NBitpayClient;
+using NBXplorer;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json;
@@ -2118,21 +2122,6 @@ namespace BTCPayServer.Tests
 
                 Assert.Single(invoice.CryptoInfo);
                 Assert.Equal(PaymentTypes.BTCLike.ToString(), invoice.CryptoInfo[0].PaymentType);
-
-                //test backward compat
-                var store = await tester.PayTester.StoreRepository.FindStore(user.StoreId);
-                var blob = store.GetStoreBlob();
-                blob.PaymentMethodCriteria = new List<PaymentMethodCriteria>();
-#pragma warning disable 612
-                blob.OnChainMinValue = new CurrencyValue()
-#pragma warning restore 612
-                {
-                    Currency = "USD",
-                    Value = 2m
-                };
-                var criteriaCompat = store.GetPaymentMethodCriteria(tester.NetworkProvider, blob);
-                Assert.Single(criteriaCompat);
-                Assert.NotNull(criteriaCompat.FirstOrDefault(methodCriteria => methodCriteria.Value.ToString() == "2 USD" && methodCriteria.Above && methodCriteria.PaymentMethod == new PaymentMethodId("BTC", BitcoinPaymentType.Instance)));
             }
         }
 
@@ -2229,22 +2218,6 @@ namespace BTCPayServer.Tests
 
                 Assert.Single(invoice.CryptoInfo);
                 Assert.Equal(PaymentTypes.LightningLike.ToString(), invoice.CryptoInfo[0].PaymentType);
-
-                //test backward compat
-                var store = await tester.PayTester.StoreRepository.FindStore(user.StoreId);
-                var blob = store.GetStoreBlob();
-                blob.PaymentMethodCriteria = new List<PaymentMethodCriteria>();
-#pragma warning disable 612
-                blob.LightningMaxValue = new CurrencyValue()
-#pragma warning restore 612
-                {
-                    Currency = "USD",
-                    Value = 2m
-                };
-                var criteriaCompat = store.GetPaymentMethodCriteria(tester.NetworkProvider, blob);
-                Assert.Single(criteriaCompat);
-                Assert.NotNull(criteriaCompat.FirstOrDefault(methodCriteria => methodCriteria.Value.ToString() == "2 USD" && !methodCriteria.Above && methodCriteria.PaymentMethod == new PaymentMethodId("BTC", LightningPaymentType.Instance)));
-
             }
         }
 
@@ -3434,6 +3407,83 @@ namespace BTCPayServer.Tests
                 Assert.Equal($"New version {newVersion} released!", fn.Body);
                 Assert.Equal($"https://github.com/btcpayserver/btcpayserver/releases/tag/v{newVersion}", fn.ActionLink);
                 Assert.False(fn.Seen);
+            }
+        }
+       
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CanDoInvoiceMigrations()
+        {
+            using (var tester = ServerTester.Create(newDb: true))
+            {
+                await tester.StartAsync();
+
+                var acc = tester.NewAccount();
+                await acc.GrantAccessAsync(true);
+                await acc.CreateStoreAsync();
+                await acc.RegisterDerivationSchemeAsync("BTC");
+                var store = await tester.PayTester.StoreRepository.FindStore(acc.StoreId);
+                
+                var blob = store.GetStoreBlob();
+                var serializer = new Serializer(null);
+
+                blob.AdditionalData = new Dictionary<string, JToken>();
+                blob.AdditionalData.Add("rateRules", JToken.Parse(
+                    serializer.ToString(new List<MigrationStartupTask.RateRule_Obsolete>()
+                    {
+                        new MigrationStartupTask.RateRule_Obsolete()
+                        {
+                            Multiplier = 2
+                        }
+                    })));
+                blob.AdditionalData.Add("walletKeyPathRoots", JToken.Parse(
+                    serializer.ToString(new Dictionary<string, string>()
+                    {
+                        {
+                            new PaymentMethodId("BTC", BitcoinPaymentType.Instance).ToString(),
+                            new KeyPath("44'/0'/0'").ToString()
+                        }
+                    })));
+                
+                blob.AdditionalData.Add("networkFeeDisabled", JToken.Parse(
+                    serializer.ToString((bool?)true)));
+                
+                blob.AdditionalData.Add("onChainMinValue", JToken.Parse(
+                    serializer.ToString(new CurrencyValue()
+                    {
+                        Currency = "USD",
+                        Value = 5m
+                    }.ToString())));
+                blob.AdditionalData.Add("lightningMaxValue", JToken.Parse(
+                    serializer.ToString(new CurrencyValue()
+                    {
+                        Currency = "USD",
+                        Value = 5m
+                    }.ToString())));
+                
+                store.SetStoreBlob(blob);
+                await tester.PayTester.StoreRepository.UpdateStore(store);
+                var settings = tester.PayTester.GetService<SettingsRepository>();
+                await settings.UpdateSetting<MigrationSettings>(new MigrationSettings());
+                var migrationStartupTask = tester.PayTester.GetService<IServiceProvider>().GetServices<IStartupTask>()
+                    .Single(task => task is MigrationStartupTask);
+                await migrationStartupTask.ExecuteAsync();
+                
+                
+                store = await tester.PayTester.StoreRepository.FindStore(acc.StoreId);
+                
+                blob = store.GetStoreBlob();
+                Assert.Empty(blob.AdditionalData);
+                Assert.Single(blob.PaymentMethodCriteria);
+                Assert.Contains(blob.PaymentMethodCriteria,
+                    criteria => criteria.PaymentMethod == new PaymentMethodId("BTC", BitcoinPaymentType.Instance) &&
+                                criteria.Above && criteria.Value.Value == 5m && criteria.Value.Currency == "USD");
+                Assert.Equal(NetworkFeeMode.Never, blob.NetworkFeeMode);
+                Assert.Contains(store.GetSupportedPaymentMethods(tester.NetworkProvider), method =>
+                    method is DerivationSchemeSettings dss &&
+                    method.PaymentId == new PaymentMethodId("BTC", BitcoinPaymentType.Instance) &&
+                    dss.AccountKeyPath == new KeyPath("44'/0'/0'"));
+
             }
         }
        

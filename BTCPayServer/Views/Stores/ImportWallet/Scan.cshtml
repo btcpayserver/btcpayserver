@@ -15,6 +15,11 @@
     <h1>@ViewData["Title"]</h1>
 </header>
 
+@if (!ViewContext.ModelState.IsValid)
+{
+    <div asp-validation-summary="All" class="text-danger"></div>
+}
+
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
     <script src="~/js/StoreAddDerivationScheme.js" type="text/javascript" defer="defer" asp-append-version="true"></script>

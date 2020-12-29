@@ -2,7 +2,7 @@
 @addTagHelper *, BundlerMinifier.TagHelpers
 @{
     Layout = "_LayoutWalletSetup";
-    ViewData["Title"] = "Connect hardware wallet";
+    ViewData["Title"] = "Connect your hardware wallet";
 }
 
 @section Navbar {
@@ -11,201 +11,109 @@
     </a>
 }
 
-<div class="modal fade" id="btcpayservervault" tabindex="-1" role="dialog" aria-labelledby="btcpayservervault" aria-hidden="true"></div>
-<div id="WebsocketPath" style="display:none;">@Url.Action("VaultBridgeConnection", "Vault", new { cryptoCode = Model.CryptoCode })</div>
-
-<partial name="VaultElements" />
-
 <header class="text-center">
     <h1>@ViewData["Title"]</h1>
+    <p class="lead text-secondary mt-3">In order to securely connect to your hardware wallet you must first download, install, and run the BTCPay Server Vault.</p>
 </header>
 
-@if (!Model.Confirmation)
+@if (!ViewContext.ModelState.IsValid)
 {
-    <partial name="AddDerivationSchemes_HardwareWalletDialogs" model="@Model" />
+    <div asp-validation-summary="All" class="text-danger"></div>
 }
-else
-{
-    <template id="btcpayservervault_template">
-        <div class="modal-dialog" role="document">
-            <form class="modal-content"  method="post" enctype="multipart/form-data">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Address verification</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <p>Confirm on the device that you see address <b id="displayedAddress"></b></p>
-                    <div class="form-group">
-                        <div id="vaultPlaceholder"></div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button id="vault-confirm" class="btn btn-primary" style="display:none;"></button>
-                </div>
-            </form>
-        </div>
-    </template>
-}
-<form method="post" asp-action="AddDerivationScheme"
-      asp-route-cryptoCode="@Model.CryptoCode"
-      asp-route-storeId="@this.Context.GetRouteValue("storeId")">
 
-    <input id="Config" asp-for="Config" type="hidden" />
-
-    @if (!Model.Confirmation)
-    {
-        <input id="CryptoCurrency" asp-for="CryptoCode" type="hidden" />
-        <input id="DerivationSchemeFormat" asp-for="DerivationSchemeFormat" type="hidden" />
-        <input id="AccountKey" asp-for="AccountKey" type="hidden" />
-        <div class="form-group">
-            <h5>
-                Derivation scheme
-                <a href="https://docs.btcpayserver.org/FAQ/FAQ-Wallet/#what-is-a-derivation-scheme" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
-            </h5>
-            <p>
-                A derivation scheme facilitates generation of the destination addresses for your invoices so funds can be received on-chain.
-            </p>
-        </div>
-        <div class="form-group">
-            <label asp-for="DerivationScheme"></label>
-            <textarea asp-for="DerivationScheme" class="form-control store-derivation-scheme text-monospace py-2" rows="2"></textarea>
-            <span asp-validation-for="DerivationScheme" class="text-danger"></span>
-
-            <div class="dropdown mt-2 text-right">
-                <div class="btn-group">
-                    <button class="btn btn-link dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="import-from-btn">
-                        Import from...
-                    </button>
-                    <div class="dropdown-menu  dropdown-menu-right">
-                        @if (Model.CryptoCode == "BTC")
-                        {
-                            <button class="dropdown-item check-for-vault" type="button">... a hardware wallet</button>
-                        }
-                        <button class="dropdown-item" type="button" data-toggle="modal" data-target="#electrumimport">... a wallet file (Electrum, Wasabi, Cobo Vault, ColdCard)</button>
-                        <button class="dropdown-item" type="button" data-toggle="modal" data-target="#scanqrModal">... a QR code</button>
-                        @if (Model.CanUseHotWallet)
-                        {
-                            <button class="dropdown-item" data-toggle="modal" data-target="#nbxplorergeneratewallet" type="button" id="nbxplorergeneratewalletbtn">... a new/existing seed.</button>
-                        }
-                    </div>
-                </div>
+<div class="row mb-4">
+    <div class="col-md-8 mx-auto">
+        <div id="vault-status" class="mb-4"></div>
+        <div id="vault-xpub" class="mt-4" style="display:none;">
+            <div class="form-group">
+                <label for="addressType">Address type</label>
+                <select id="addressType" name="addressType" class="form-control w-auto">
+                    <option value="segwit">Segwit (Recommended, cheapest fee)</option>
+                    <option value="segwitWrapped">Segwit wrapped (Compatible with old wallets)</option>
+                    <option value="legacy">Legacy (Not recommended)</option>
+                </select>
             </div>
-        </div>
-        <table class="table table-sm table-responsive-md">
-            <thead>
-            <tr>
-                <th>Address type</th>
-                <th>Example</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-                <td>P2WPKH</td>
-                <td>xpub...</td>
-            </tr>
-            <tr>
-                <td>P2SH-P2WPKH</td>
-                <td>xpub...-[p2sh]</td>
-            </tr>
-            <tr>
-                <td>P2PKH</td>
-                <td>xpub...-[legacy]</td>
-            </tr>
-            <tr>
-                <td>Multi-sig P2WSH</td>
-                <td>2-of-xpub1...-xpub2...</td>
-            </tr>
-            <tr>
-                <td>Multi-sig P2SH-P2WSH</td>
-                <td>2-of-xpub1...-xpub2...-[p2sh]</td>
-            </tr>
-            <tr>
-                <td>Multi-sig P2SH</td>
-                <td>2-of-xpub1...-xpub2...-[legacy]</td>
-            </tr>
-            </tbody>
-        </table>
-
-        <div class="form-group hw-fields">
-            <h5>Additional pairing information</h5>
-        </div>
-        <div class="form-group hw-fields">
-            <label asp-for="Source"></label>
-            <input asp-for="Source" class="form-control" readonly />
-        </div>
-        <div class="form-group hw-fields">
-            <label asp-for="RootFingerprint"></label>
-            <input asp-for="RootFingerprint" class="form-control" readonly />
-        </div>
-        <div class="form-group hw-fields">
-            <label asp-for="KeyPath"></label>
-            <input asp-for="KeyPath" class="form-control" readonly />
-        </div>
-        <div class="form-group">
-            <div class="form-check">
-                <input asp-for="Enabled" type="checkbox" class="form-check-input" />
-                <label asp-for="Enabled" class="form-check-label"></label>
-            </div>
-        </div>
-        <button name="command" type="submit" class="btn btn-primary" value="save" id="Continue">Continue</button>
-    }
-    else
-    {
-        <div class="form-group">
-            <h5>Confirm the addresses (@Model.CryptoCode)</h5>
-            <span>Please check that your @Model.CryptoCode wallet is generating the same addresses as below.</span>
-        </div>
-        <input asp-for="Confirmation" type="hidden" />
-        <input type="hidden" asp-for="DerivationScheme" />
-        <input type="hidden" asp-for="Enabled" />
-        <div class="form-group">
-            <table class="table table-sm table-responsive-md">
-                <thead>
-                <tr>
-                    <th>Key path</th>
-                    <th>Address</th>
-                    @if (Model.Source == "Vault")
+            <div class="form-group">
+                <label for="accountNumber">Account</label>
+                <select id="accountNumber" name="accountNumber" class="form-control w-auto">
+                    @for (int i = 0; i < 20; i++)
                     {
-                        <th>Actions</th>
+                        <option value="@i">@i</option>
                     }
-                </tr>
-                </thead>
-                <tbody>
-                @foreach (var sample in Model.AddressSamples)
-                {
-                    <tr>
-                        <td>@sample.KeyPath</td>
-                        <td>@sample.Address</td>
-                        @if (Model.Source == "Vault")
-                        {
-                            <td><a class="showaddress" href="#" onclick='showAddress(@Safe.Json(sample.RootedKeyPath.ToString()), @Safe.Json(sample.Address)); return false;'>Show on device</a></td>
-                        }
-                    </tr>
-                }
-                </tbody>
-            </table>
+                </select>
+            </div>
         </div>
+        <div>
+            <button type="submit" id="vault-confirm" class="btn btn-primary" style="display:none;"></button>
+            <button type="button" id="vault-retry" class="btn btn-secondary" style="display:none;">Retry</button>
+        </div>
+    </div>
+</div>
 
-        <div class="form-group">
-            <h5>Wrong addresses?</h5>
-            <span>Help us to find the correct settings by telling us the first address of your wallet</span>
+<form method="post" id="walletInfo" style="display:none;">
+    <input asp-for="Config" type="hidden" />
+    <input asp-for="CryptoCode" type="hidden" />
+    <input asp-for="AccountKey" type="hidden" />
+    <input asp-for="Source" type="hidden" value="Vault"/>
+    <input asp-for="DerivationSchemeFormat" type="hidden" value="BTCPay" />
+
+    <div class="row mb-5">
+        <div class="col-md-8 mx-auto">
+            <h4 class="mb-3">Public Key Information</h4>
+
+            <div class="form-group">
+                <label asp-for="DerivationScheme"></label>
+                <textarea asp-for="DerivationScheme" class="form-control store-derivation-scheme text-monospace py-2" rows="3" readonly></textarea>
+            </div>
+            <div class="form-group">
+                <label asp-for="RootFingerprint"></label>
+                <input asp-for="RootFingerprint" class="form-control" readonly />
+            </div>
+            <div class="form-group">
+                <label asp-for="KeyPath"></label>
+                <input asp-for="KeyPath" class="form-control" readonly />
+            </div>
+            <div class="form-group">
+                <div class="form-check">
+                    <input asp-for="Enabled" type="checkbox" class="form-check-input" />
+                    <label asp-for="Enabled" class="form-check-label"></label>
+                </div>
+            </div>
+            <button name="command" type="submit" class="btn btn-primary" value="save" id="Continue">Continue</button>
         </div>
-        <div class="form-group">
-            <label asp-for="HintAddress"></label>
-            <input asp-for="HintAddress" class="form-control" />
-            <span asp-validation-for="HintAddress" class="text-danger"></span>
-        </div>
-        <button name="command" type="submit" class="btn btn-primary" value="save" id="Confirm">Confirm</button>
-    }
+    </div>
 </form>
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
-    <script src="~/js/StoreAddDerivationScheme.js" type="text/javascript" defer="defer" asp-append-version="true"></script>
-    <script src="~/js/vaultbridge.js" type="text/javascript" defer="defer" asp-append-version="true"></script>
-    <script src="~/js/vaultbridge.ui.js" type="text/javascript" defer="defer" asp-append-version="true"></script>
+    @await Html.PartialAsync("VaultElements")
+
+    <script src="~/js/vaultbridge.js" defer asp-append-version="true"></script>
+    <script src="~/js/vaultbridge.ui.js" defer asp-append-version="true"></script>
+
+    <script type="text/javascript">
+        window.addEventListener("load", async () => {
+            const wsPath = "@Url.Action("VaultBridgeConnection", "Vault", new {cryptoCode = Model.CryptoCode})";
+            const wsProto = location.protocol.replace(/^http/, "ws");
+            const vaultUI = new vaultui.VaultBridgeUI(`${wsProto}//${location.host}${wsPath}`);
+
+            document.getElementById("vault-status").innerHTML = document.getElementById("VaultConnection").innerHTML;
+
+            window.addEventListener("beforeunload", () => {
+                vaultUI.closeBridge();
+            });
+
+            while (!await vaultUI.askForDevice() || !await vaultUI.askForXPubs()) {};
+
+            const { xpub: { strategy, fingerprint, accountKey, keyPath } } = vaultUI;
+
+            document.getElementById("DerivationScheme").value = strategy;
+            document.getElementById("RootFingerprint").value = fingerprint;
+            document.getElementById("AccountKey").value = accountKey;
+            document.getElementById("KeyPath").value = keyPath;
+
+            document.getElementById("walletInfo").style = null;
+        });
+    </script>
 }
 

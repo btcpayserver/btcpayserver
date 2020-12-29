@@ -265,6 +265,12 @@ pre {
     font-weight: 600;
 }
 
+input.w-auto,
+select.w-auto,
+textarea.w-auto {
+    max-width: 100%;
+}
+
 /* Chrome, Safari, Edge, Opera */
 input[type=number].hide-number-spin::-webkit-outer-spin-button,
 input[type=number].hide-number-spin::-webkit-inner-spin-button {

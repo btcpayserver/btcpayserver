@@ -13,19 +13,30 @@
 
 <header class="text-center">
     <h1>Choose your import method</h1>
+    <p class="lead text-secondary mt-3">Select an option to get started</p>
 </header>
 <br>
 
-<div class="mt-5">
-    <div class="list-group">
-        <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="hardware" class="list-group-item list-group-item-action p-4 text-center">
-            <h4>Connect hardware wallet</h4>
-            <p class="mb-0">Some subtext that explains this method</p>
-        </a>
-    </div>
-</div>
 
-<hr class="d-block my-5" />
+@if (Model.CryptoCode == "BTC")
+{
+    <div class="mt-5">
+        <div class="list-group">
+            <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="hardware" class="list-group-item list-group-item-action p-4 text-center only-for-js">
+                <h4>Connect hardware wallet</h4>
+                <p class="mb-0">Import your keys with the BTCPay Server Vault</p>
+            </a>
+            <noscript>
+                <div class="list-group-item p-4 text-center text-muted hide-when-js">
+                    <h4>Connect hardware wallet</h4>
+                    <p class="mb-0">Please enable JavaScript for this option to be available</p>
+                </div>
+            </noscript>
+        </div>
+    </div>
+
+    <hr class="d-block my-5" />
+}
 
 <div>
     <div class="list-group">

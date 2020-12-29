@@ -14,3 +14,8 @@
 <header class="text-center">
     <h1>@ViewData["Title"]</h1>
 </header>
+
+@if (!ViewContext.ModelState.IsValid)
+{
+    <div asp-validation-summary="All" class="text-danger"></div>
+}

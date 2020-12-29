@@ -15,35 +15,11 @@
     <h1>@ViewData["Title"]</h1>
 </header>
 
-@if (!Model.Confirmation)
+@if (!ViewContext.ModelState.IsValid)
 {
-    <partial name="AddDerivationSchemes_HardwareWalletDialogs" model="@Model" />
+    <div asp-validation-summary="All" class="text-danger"></div>
 }
-else
-{
-    <template id="btcpayservervault_template">
-        <div class="modal-dialog" role="document">
-            <form class="modal-content"  method="post" enctype="multipart/form-data">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Address verification</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <p>Confirm on the device that you see address <b id="displayedAddress"></b></p>
-                    <div class="form-group">
-                        <div id="vaultPlaceholder"></div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button id="vault-confirm" class="btn btn-primary" style="display:none;"></button>
-                </div>
-            </form>
-        </div>
-    </template>
-}
+
 <form method="post" asp-action="AddDerivationScheme"
       asp-route-cryptoCode="@Model.CryptoCode"
       asp-route-storeId="@this.Context.GetRouteValue("storeId")">

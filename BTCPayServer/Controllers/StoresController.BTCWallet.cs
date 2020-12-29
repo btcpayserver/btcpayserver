@@ -9,6 +9,7 @@ using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
+using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 
 namespace BTCPayServer.Controllers
@@ -17,14 +18,18 @@ namespace BTCPayServer.Controllers
     {
         [HttpGet]
         [Route("{storeId}/wallet/{cryptoCode}")]
-        public ActionResult SetupWallet(SetupWalletViewModel vm)
+        public async Task<IActionResult> SetupWallet(SetupWalletViewModel vm)
         {
+            var hotWallet = await CanUseHotWallet();
+            vm.CanUseHotWallet = hotWallet.HotWallet;
+            vm.CanUseRPCImport = hotWallet.RPCImport;
+
             return View(vm);
         }
 
         [HttpGet]
         [Route("{storeId}/wallet/{cryptoCode}/import/{method?}")]
-        public ActionResult ImportWallet(ImportWalletViewModel vm)
+        public ActionResult ImportWalletOptions(ImportWalletViewModel vm)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
@@ -37,29 +42,19 @@ namespace BTCPayServer.Controllers
             vm.Network = network;
             vm.RootKeyPath = network.GetRootKeyPath();
 
-            var view = vm.Method switch
-            {
-                WalletImportMethod.Hardware => "ImportWallet/Hardware",
-                WalletImportMethod.Enter => "ImportWallet/Enter",
-                WalletImportMethod.File => "ImportWallet/File",
-                WalletImportMethod.Scan => "ImportWallet/Scan",
-                _ => "ImportWallet"
-            };
-
-            return View(view, vm);
+            return View(vm.ViewName, vm);
         }
 
         [HttpPost]
         [Route("{storeId}/wallet/{cryptoCode}/import/{method}")]
         [ApiExplorerSettings(IgnoreApi = true)]
-        public async Task<IActionResult> ImportWallet(string storeId, string cryptoCode, [FromForm] ImportWalletViewModel vm)
+        public async Task<IActionResult> ImportWallet(ImportWalletViewModel vm)
         {
-            vm.CryptoCode = cryptoCode;
             var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
 
-            var network = cryptoCode == null ? null : _ExplorerProvider.GetNetwork(cryptoCode);
+            var network = vm.CryptoCode == null ? null : _ExplorerProvider.GetNetwork(vm.CryptoCode);
             if (network == null)
             {
                 return NotFound();
@@ -84,8 +79,7 @@ namespace BTCPayServer.Controllers
                         Severity = StatusMessageModel.StatusSeverity.Error,
                         Message = "Config file was not in the correct format"
                     });
-                    vm.Confirmation = false;
-                    return View(nameof(AddDerivationScheme), vm);
+                    return View(vm.ViewName, vm);
                 }
             }
 
@@ -99,8 +93,7 @@ namespace BTCPayServer.Controllers
                         Severity = StatusMessageModel.StatusSeverity.Error,
                         Message = "Wallet file was not in the correct format"
                     });
-                    vm.Confirmation = false;
-                    return View(nameof(AddDerivationScheme), vm);
+                    return View(vm.ViewName, vm);
                 }
             }
             else if (!string.IsNullOrEmpty(vm.WalletFileContent))
@@ -112,8 +105,7 @@ namespace BTCPayServer.Controllers
                         Severity = StatusMessageModel.StatusSeverity.Error,
                         Message = "QR import was not in the correct format"
                     });
-                    vm.Confirmation = false;
-                    return View(nameof(AddDerivationScheme), vm);
+                    return View(vm.ViewName, vm);
                 }
             }
             else
@@ -156,19 +148,14 @@ namespace BTCPayServer.Controllers
                 catch
                 {
                     ModelState.AddModelError(nameof(vm.DerivationScheme), "Invalid Derivation Scheme");
-                    vm.Confirmation = false;
-                    return View(nameof(AddDerivationScheme), vm);
+                    return View(vm.ViewName, vm);
                 }
             }
 
             var oldConfig = vm.Config;
-            vm.Config = strategy == null ? null : strategy.ToJson();
+            vm.Config = strategy?.ToJson();
 
             PaymentMethodId paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
-            var exisingStrategy = store.GetSupportedPaymentMethods(_NetworkProvider)
-                .Where(c => c.PaymentId == paymentMethodId)
-                .OfType<DerivationSchemeSettings>()
-                .FirstOrDefault();
             var storeBlob = store.GetStoreBlob();
             var wasExcluded = storeBlob.GetExcludedPaymentMethods().Match(paymentMethodId);
             var willBeExcluded = !vm.Enabled;
@@ -196,11 +183,11 @@ namespace BTCPayServer.Controllers
                 catch
                 {
                     ModelState.AddModelError(nameof(vm.DerivationScheme), "Invalid Derivation Scheme");
-                    return View(vm);
+                    return View(vm.ViewName, vm);
                 }
 
                 await _Repo.UpdateStore(store);
-                _EventAggregator.Publish(new WalletChangedEvent() {WalletId = new WalletId(storeId, cryptoCode)});
+                _EventAggregator.Publish(new WalletChangedEvent {WalletId = new WalletId(vm.StoreId, vm.CryptoCode)});
 
                 if (willBeExcluded != wasExcluded)
                 {
@@ -215,12 +202,12 @@ namespace BTCPayServer.Controllers
                 }
 
                 // This is success case when derivation scheme is added to the store
-                return RedirectToAction(nameof(UpdateStore), new {storeId = storeId});
+                return RedirectToAction(nameof(UpdateStore), new {storeId = vm.StoreId});
             }
 
             if (!string.IsNullOrEmpty(vm.HintAddress))
             {
-                BitcoinAddress address = null;
+                BitcoinAddress address;
                 try
                 {
                     address = BitcoinAddress.Create(vm.HintAddress, network.NBitcoinNetwork);
@@ -228,7 +215,7 @@ namespace BTCPayServer.Controllers
                 catch
                 {
                     ModelState.AddModelError(nameof(vm.HintAddress), "Invalid hint address");
-                    return ShowAddresses(vm, strategy);
+                    return ConfirmAddresses(vm, strategy);
                 }
 
                 try
@@ -243,7 +230,7 @@ namespace BTCPayServer.Controllers
                 catch
                 {
                     ModelState.AddModelError(nameof(vm.HintAddress), "Impossible to find a match with this address");
-                    return ShowAddresses(vm, strategy);
+                    return ConfirmAddresses(vm, strategy);
                 }
 
                 vm.HintAddress = "";
@@ -253,7 +240,7 @@ namespace BTCPayServer.Controllers
                 ModelState.Remove(nameof(vm.DerivationScheme));
             }
 
-            return ShowAddresses(vm, strategy);
+            return ConfirmAddresses(vm, strategy);
         }
 
         [HttpGet]
@@ -308,7 +295,7 @@ namespace BTCPayServer.Controllers
                     Severity = StatusMessageModel.StatusSeverity.Error,
                     Html = $"There was an error generating your wallet: {e.Message}"
                 });
-                return RedirectToAction(nameof(AddDerivationScheme), new {storeId, cryptoCode});
+                return RedirectToAction(nameof(ImportWallet), new {storeId, cryptoCode});
             }
 
             if (response == null)
@@ -318,7 +305,7 @@ namespace BTCPayServer.Controllers
                     Severity = StatusMessageModel.StatusSeverity.Error,
                     Html = "There was an error generating your wallet. Is your node available?"
                 });
-                return RedirectToAction(nameof(AddDerivationScheme), new {storeId, cryptoCode});
+                return RedirectToAction(nameof(ImportWallet), new {storeId, cryptoCode});
             }
 
             var store = HttpContext.GetStoreData();
@@ -364,6 +351,33 @@ namespace BTCPayServer.Controllers
                 Html = "Please check your addresses and confirm"
             });
             return result;
+        }
+
+        private IActionResult ConfirmAddresses(ImportWalletViewModel vm, DerivationSchemeSettings strategy)
+        {
+            vm.DerivationScheme = strategy.AccountDerivation.ToString();
+            var deposit = new NBXplorer.KeyPathTemplates(null).GetKeyPathTemplate(DerivationFeature.Deposit);
+
+            if (!string.IsNullOrEmpty(vm.DerivationScheme))
+            {
+                var line = strategy.AccountDerivation.GetLineFor(deposit);
+
+                for (uint i = 0; i < 10; i++)
+                {
+                    var keyPath = deposit.GetKeyPath(i);
+                    var rootedKeyPath = vm.GetAccountKeypath()?.Derive(keyPath);
+                    var derivation = line.Derive(i);
+                    var address = strategy.Network.NBXplorerNetwork.CreateAddress(strategy.AccountDerivation,
+                        line.KeyPathTemplate.GetKeyPath(i),
+                        derivation.ScriptPubKey).ToString();
+                    vm.AddressSamples.Add((keyPath.ToString(), address, rootedKeyPath));
+                }
+            }
+
+            vm.Confirmation = true;
+            ModelState.Remove(nameof(vm.Config)); // Remove the cached value
+
+            return View("ImportWallet/ConfirmAddresses", vm);
         }
     }
 }

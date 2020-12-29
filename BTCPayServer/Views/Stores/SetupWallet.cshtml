@@ -6,14 +6,14 @@
 
 <header class="text-center">
     <h1>Let's get started</h1>
-    <h2 class="lead text-secondary">Select an option to get started</h2>
+    <p class="lead text-secondary mt-3">Select an option to get started</p>
 </header>
 <br>
 
 <div class="mt-5">
     <h3 class="my-4">I have a wallet</h3>
     <div class="list-group">
-        <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" class="list-group-item list-group-item-action p-5">
+        <a asp-controller="Stores" asp-action="ImportWalletOptions" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" class="list-group-item list-group-item-action p-4">
             <h4>Connect an existing wallet</h4>
             <p class="mb-0">Connect, import, or scan an existing hardware or software wallet</p>
         </a>
@@ -24,9 +24,19 @@
 <div class="mt-5">
     <h3 class="my-4">I don't have a wallet</h3>
     <div class="list-group">
-        <a asp-controller="Stores" asp-action="GenerateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" class="list-group-item list-group-item-action p-5">
-            <h4>Create a new wallet</h4>
-            <p class="mb-0">Create a brand-new wallet to use</p>
-        </a>
+        @if (Model.CanUseHotWallet)
+        {
+            <a asp-controller="Stores" asp-action="GenerateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" class="list-group-item list-group-item-action p-4">
+                <h4>Create a new wallet</h4>
+                <p class="mb-0">Create a brand-new wallet to use</p>
+            </a>
+        }
+        else
+        {
+            <div class="list-group-item p-4 text-muted">
+                <h4>Create a new wallet</h4>
+                <p class="mb-0">Please note that creating a wallet is not supported by your instance.</p>
+            </div>
+        }
     </div>
 </div>

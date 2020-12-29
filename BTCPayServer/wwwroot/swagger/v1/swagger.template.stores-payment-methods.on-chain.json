@@ -393,10 +393,6 @@
                         "type": "boolean",
                         "description": "Whether the payment method is enabled"
                     },
-                    "default": {
-                        "type": "boolean",
-                        "description": "Whether the payment method is the default"
-                    },
                     "cryptoCode": {
                         "type": "string",
                         "description": "Crypto code of the payment method"

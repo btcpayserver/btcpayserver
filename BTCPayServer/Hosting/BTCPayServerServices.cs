@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices.ComTypes;
 using System.Security.Cryptography;
 using System.Threading;
@@ -117,7 +118,6 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<DataDirectories>();
             services.TryAddSingleton<DatabaseOptions>(o =>
             {
-                var opts = o.GetRequiredService<BTCPayServerOptions>();
                 try
                 {
                     var dbOptions = new DatabaseOptions(o.GetRequiredService<IConfiguration>(),
@@ -144,12 +144,23 @@ namespace BTCPayServer.Hosting
                 }
             });
             services.AddSingleton<ApplicationDbContextFactory>();
-
-            services.TryAddSingleton<BTCPayNetworkProvider>(o =>
-            {
-                var opts = o.GetRequiredService<BTCPayServerOptions>();
-                return opts.NetworkProvider;
-            });
+            services.AddOptions<NBXplorerOptions>().Configure<BTCPayNetworkProvider>(
+                (options, btcPayNetworkProvider) =>
+                {
+                    options.Configure(configuration, btcPayNetworkProvider);
+                });
+            
+            services.AddOptions<LightningNetworkOptions>().Configure<BTCPayNetworkProvider>(
+                (options, btcPayNetworkProvider) =>
+                {
+                    options.Configure(configuration, btcPayNetworkProvider);
+                });
+            services.AddOptions<ExternalServicesOptions>().Configure<BTCPayNetworkProvider>(
+                (options, btcPayNetworkProvider) =>
+                {
+                    options.Configure(configuration, btcPayNetworkProvider);
+                });
+            services.TryAddSingleton(o => configuration.ConfigureNetworkProvider());
 
             services.TryAddSingleton<AppService>();
             services.AddSingleton<PluginService>();

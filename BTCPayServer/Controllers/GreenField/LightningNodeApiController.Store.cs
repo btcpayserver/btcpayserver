@@ -14,6 +14,7 @@ using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace BTCPayServer.Controllers.GreenField
 {
@@ -23,17 +24,17 @@ namespace BTCPayServer.Controllers.GreenField
     [EnableCors(CorsPolicies.All)]
     public class StoreLightningNodeApiController : LightningNodeApiController
     {
-        private readonly BTCPayServerOptions _btcPayServerOptions;
+        private readonly IOptions<LightningNetworkOptions> _lightningNetworkOptions;
         private readonly LightningClientFactoryService _lightningClientFactory;
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
 
         public StoreLightningNodeApiController(
-            BTCPayServerOptions btcPayServerOptions,
+            IOptions<LightningNetworkOptions> lightningNetworkOptions,
             LightningClientFactoryService lightningClientFactory, BTCPayNetworkProvider btcPayNetworkProvider,
             BTCPayServerEnvironment btcPayServerEnvironment, CssThemeManager cssThemeManager) : base(
             btcPayNetworkProvider, btcPayServerEnvironment, cssThemeManager)
         {
-            _btcPayServerOptions = btcPayServerOptions;
+            _lightningNetworkOptions = lightningNetworkOptions;
             _lightningClientFactory = lightningClientFactory;
             _btcPayNetworkProvider = btcPayNetworkProvider;
         }
@@ -102,7 +103,7 @@ namespace BTCPayServer.Controllers.GreenField
         protected override Task<ILightningClient> GetLightningClient(string cryptoCode,
             bool doingAdminThings)
         {
-            _btcPayServerOptions.InternalLightningByCryptoCode.TryGetValue(cryptoCode,
+            _lightningNetworkOptions.Value.InternalLightningByCryptoCode.TryGetValue(cryptoCode,
                 out var internalLightningNode);
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
 

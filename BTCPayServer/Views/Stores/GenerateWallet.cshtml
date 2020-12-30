@@ -1,3 +1,4 @@
+@using NBitcoin
 @model GenerateWalletViewModel
 @addTagHelper *, BundlerMinifier.TagHelpers
 @{
@@ -6,211 +7,113 @@
 }
 
 @section Navbar {
-    <a asp-controller="Stores" asp-action="SetupWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
+    <a asp-controller="Stores" asp-action="ImportWalletOptions" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="">
         <vc:icon symbol="back" />
     </a>
 }
 
-<div class="row justify-content-md-center">
-    <div class="col-lg-10 text-center">
-        @if (!Model.Confirmation)
+<header class="text-center">
+    <h1>@ViewData["Title"]</h1>
+    <p class="lead text-secondary mt-3">Configure your wallet settings</p>
+</header>
+
+@if (Model.CanUseHotWallet)
+{
+    ViewData.Add(nameof(Model.CanUseRPCImport), Model.CanUseRPCImport);
+
+    <form method="post" id="generate-form" enctype="multipart/form-data">
+        @if (!User.IsInRole(Roles.ServerAdmin))
         {
-            <partial name="AddDerivationSchemes_HardwareWalletDialogs" model="@Model" />
+            <div class="alert alert-warning">
+                You are not an admin on this server. While you are able to import or generate a wallet via seed with your account, please understand that you are trusting the server admins not just with your <a href="https://docs.btcpayserver.org/ThirdPartyHosting/#privacy-concerns" target="_blank" class="alert-link">privacy</a> but also with <a href="https://docs.btcpayserver.org/ThirdPartyHosting/#trust-concerns" target="_blank"  class="alert-link">trivial access to your funds.</a> If you NEED to use this feature, please reconsider hosting your own BTCPay Server instance.
+            </div>
         }
-        else
+        <p>You may generate a wallet with a seed and import the xpub into BTCPay. You can optionally also tell NBX to import the keys to the node wallet to be able to view & spend received funds from it.</p>
+
+        <div class="form-group">
+            <label asp-for="Request.ExistingMnemonic">Existing Seed</label>
+            <input type="text" asp-for="Request.ExistingMnemonic" class="form-control" autocomplete="off"/>
+            <span asp-validation-for="Request.ExistingMnemonic" class="text-danger"></span>
+            <small class="form-text text-muted">
+                You can choose to import an existing mnemonic seed phrase.<br/>
+                If you leave it blank, we will generate one for you.
+            </small>
+        </div>
+        <div class="form-group">
+            <label asp-for="Request.Passphrase">Passphrase (optional)</label>
+            <input type="text" asp-for="Request.Passphrase" class="form-control" autocomplete="off"/>
+            <span asp-validation-for="Request.Passphrase" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label for="passphrase_conf">Passphrase confirmation</label>
+            <input type="text" name="passphrase_conf" id="passphrase_conf" class="form-control"/>
+            <span class="text-danger field-validation-valid" id="passphrase_conf_validation"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="Request.ScriptPubKeyType">Address type</label>
+            <select class="form-control" asp-for="Request.ScriptPubKeyType">
+                <option value="@ScriptPubKeyType.Segwit">Segwit (Recommended, cheapest transaction fee)</option>
+                <option value="@ScriptPubKeyType.SegwitP2SH">Segwit wrapped (less cheap but compatible with old wallets)</option>
+                <option value="@ScriptPubKeyType.Legacy">Legacy (Not recommended)</option>
+            </select>
+            <span asp-validation-for="Request.ScriptPubKeyType" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="Request.AccountNumber">Account</label>
+            <select asp-for="Request.AccountNumber" class="form-control">
+                @for (int i = 0; i < 20; i++)
+                {
+                    <option value="@i">@i</option>
+                }
+            </select>
+            <span asp-validation-for="Request.AccountNumber" class="text-danger"></span>
+        </div>
+
+        <div class="form-group form-check">
+            <input type="checkbox" class="form-check-input" asp-for="Request.SavePrivateKeys"/>
+            <label asp-for="Request.SavePrivateKeys" class="form-check-label">Is hot wallet</label>
+            <span asp-validation-for="Request.SavePrivateKeys" class="text-danger"></span>
+            <small class="form-text text-danger">
+                If checked, each private key associated with an address generated will be stored as metadata in NBXplorer. While convenient, this means that anyone with access to your server will have access to your private keys and will be able to steal your funds.
+            </small>
+        </div>
+        @if (ViewData["CanUseRPCImport"] is true)
         {
-            <template id="btcpayservervault_template">
-                <div class="modal-dialog" role="document">
-                    <form class="modal-content"  method="post" enctype="multipart/form-data">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="exampleModalLabel">Address verification</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <div class="modal-body">
-                            <p>Confirm on the device that you see address <b id="displayedAddress"></b></p>
-                            <div class="form-group">
-                                <div id="vaultPlaceholder"></div>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                            <button id="vault-confirm" class="btn btn-primary" style="display:none;"></button>
-                        </div>
-                    </form>
-                </div>
-            </template>
+            <div class="form-group form-check">
+                <input type="checkbox" class="form-check-input" asp-for="Request.ImportKeysToRPC"/>
+                <label asp-for="Request.ImportKeysToRPC" class="form-check-label">Import keys to RPC</label>
+                <span asp-validation-for="Request.ImportKeysToRPC" class="text-danger"></span>
+                <small class="form-text text-muted">
+                    If checked, each address generated will be imported into the node wallet so that you can view your balance through your node. When this is enabled alongside <code>Is hot wallet</code>, you're also able to use the node wallet to spend (this works pretty well in conjunction with apps such as FullyNoded).
+                </small>
+            </div>
         }
-        <form method="post" asp-action="AddDerivationScheme"
-              asp-route-cryptoCode="@Model.CryptoCode"
-              asp-route-storeId="@this.Context.GetRouteValue("storeId")">
+        <button type="submit" class="btn btn-primary" id="btn-generate">Generate</button>
+    </form>
+}
+else
+{
+    <p class="mb-0">Please note that creating a wallet is not supported by your instance.</p>
+}
 
-            <input id="Config" asp-for="Config" type="hidden" />
-
-            @if (!Model.Confirmation)
-            {
-                <input id="CryptoCurrency" asp-for="CryptoCode" type="hidden" />
-                <input id="DerivationSchemeFormat" asp-for="DerivationSchemeFormat" type="hidden" />
-                <input id="AccountKey" asp-for="AccountKey" type="hidden" />
-                <div class="form-group">
-                    <h5>
-                        Derivation scheme
-                        <a href="https://docs.btcpayserver.org/FAQ/FAQ-Wallet/#what-is-a-derivation-scheme" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
-                    </h5>
-                    <p>
-                        A derivation scheme facilitates generation of the destination addresses for your invoices so funds can be received on-chain.
-                    </p>
-                </div>
-                <div class="form-group">
-                    <label asp-for="DerivationScheme"></label>
-                    <textarea asp-for="DerivationScheme" class="form-control store-derivation-scheme text-monospace py-2" rows="2"></textarea>
-                    <span asp-validation-for="DerivationScheme" class="text-danger"></span>
-
-                    <div class="dropdown mt-2 text-right">
-                        <div class="btn-group">
-                            <button class="btn btn-link dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="import-from-btn">
-                                Import from...
-                            </button>
-                            <div class="dropdown-menu  dropdown-menu-right">
-                                @if (Model.CryptoCode == "BTC")
-                                {
-                                    <button class="dropdown-item check-for-vault" type="button">... a hardware wallet</button>
-                                }
-                                <button class="dropdown-item" type="button" data-toggle="modal" data-target="#electrumimport">... a wallet file (Electrum, Wasabi, Cobo Vault, ColdCard)</button>
-                                <button class="dropdown-item" type="button" data-toggle="modal" data-target="#scanqrModal">... a QR code</button>
-                                @if (Model.CanUseHotWallet)
-                                {
-                                    <button class="dropdown-item" data-toggle="modal" data-target="#nbxplorergeneratewallet" type="button" id="nbxplorergeneratewalletbtn">... a new/existing seed.</button>
-                                }
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <table class="table table-sm table-responsive-md">
-                    <thead>
-                        <tr>
-                            <th>Address type</th>
-                            <th>Example</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>P2WPKH</td>
-                            <td>xpub...</td>
-                        </tr>
-                        <tr>
-                            <td>P2SH-P2WPKH</td>
-                            <td>xpub...-[p2sh]</td>
-                        </tr>
-                        <tr>
-                            <td>P2PKH</td>
-                            <td>xpub...-[legacy]</td>
-                        </tr>
-                        <tr>
-                            <td>Multi-sig P2WSH</td>
-                            <td>2-of-xpub1...-xpub2...</td>
-                        </tr>
-                        <tr>
-                            <td>Multi-sig P2SH-P2WSH</td>
-                            <td>2-of-xpub1...-xpub2...-[p2sh]</td>
-                        </tr>
-                        <tr>
-                            <td>Multi-sig P2SH</td>
-                            <td>2-of-xpub1...-xpub2...-[legacy]</td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <div class="form-group hw-fields">
-                    <h5>Additional pairing information</h5>
-                </div>
-                <div class="form-group hw-fields">
-                    <label asp-for="Source"></label>
-                    <input asp-for="Source" class="form-control" readonly />
-                </div>
-                <div class="form-group hw-fields">
-                    <label asp-for="RootFingerprint"></label>
-                    <input asp-for="RootFingerprint" class="form-control" readonly />
-                </div>
-                <div class="form-group hw-fields">
-                    <label asp-for="KeyPath"></label>
-                    <input asp-for="KeyPath" class="form-control" readonly />
-                </div>
-                <div class="form-group">
-                    <div class="form-check">
-                        <input asp-for="Enabled" type="checkbox" class="form-check-input" />
-                        <label asp-for="Enabled" class="form-check-label"></label>
-                    </div>
-                </div>
-                <button name="command" type="submit" class="btn btn-primary" value="save" id="Continue">Continue</button>
-            }
-            else
-            {
-                <div class="form-group">
-                    <h5>Confirm the addresses (@Model.CryptoCode)</h5>
-                    <span>Please check that your @Model.CryptoCode wallet is generating the same addresses as below.</span>
-                </div>
-                <input asp-for="Confirmation" type="hidden" />
-                <input type="hidden" asp-for="DerivationScheme" />
-                <input type="hidden" asp-for="Enabled" />
-                <div class="form-group">
-                    <table class="table table-sm table-responsive-md">
-                        <thead>
-                            <tr>
-                                <th>Key path</th>
-                                <th>Address</th>
-                                @if (Model.Source == "Vault")
-                                {
-                                    <th>Actions</th>
-                                }
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var sample in Model.AddressSamples)
-                            {
-                                <tr>
-                                    <td>@sample.KeyPath</td>
-                                    <td>@sample.Address</td>
-                                    @if (Model.Source == "Vault")
-                                    {
-                                        <td><a class="showaddress" href="#" onclick='showAddress(@Safe.Json(sample.RootedKeyPath.ToString()), @Safe.Json(sample.Address)); return false;'>Show on device</a></td>
-                                    }
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="form-group">
-                    <h5>Wrong addresses?</h5>
-                    <span>Help us to find the correct settings by telling us the first address of your wallet</span>
-                </div>
-                <div class="form-group">
-                    <label asp-for="HintAddress"></label>
-                    <input asp-for="HintAddress" class="form-control" />
-                    <span asp-validation-for="HintAddress" class="text-danger"></span>
-                </div>
-                <button name="command" type="submit" class="btn btn-primary" value="save" id="Confirm">Confirm</button>
-            }
-        </form>
-    </div>
-</div>
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
-    <script src="~/js/StoreAddDerivationScheme.js" type="text/javascript" defer="defer" asp-append-version="true"></script>
-    <script src="~/js/vaultbridge.js" type="text/javascript" defer="defer" asp-append-version="true"></script>
-    <script src="~/js/vaultbridge.ui.js" type="text/javascript" defer="defer" asp-append-version="true"></script>
-    <bundle name="wwwroot/bundles/camera-bundle.min.js"></bundle>
-    <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true"/>
-    <script>
-        window.coinName = "@Model.Network.DisplayName.ToLowerInvariant()";
-        $(function () {
-            initCameraScanningApp("Scan wallet QR", function(data){
-                $("#WalletFileContent").val(data);
-                $("#qr-import-form").submit();
-            },"scanqrModal");
-        });
 
+    <script type="text/javascript">
+        window.addEventListener("load", async () => {
+            document.getElementById("generate-form").addEventListener("submit", event => {
+                event.preventDefault();
+                const $form = event.currentTarget;
+
+                if ($form.elements["passphrase_conf"].value !== $form.elements["Passphrase"].value) {
+                    const $validation = document.getElementById("passphrase_conf_validation");
+                    $validation.classList.remove("field-validation-valid");
+                    $validation.innerText = "Invalid passphrase confirmation";
+                    return false;
+                }
+
+                return true;
+            });
+        });
     </script>
 }

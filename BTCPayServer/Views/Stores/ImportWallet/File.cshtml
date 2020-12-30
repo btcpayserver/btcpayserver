@@ -6,16 +6,52 @@
 }
 
 @section Navbar {
-    <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="">
+    <a asp-controller="Stores" asp-action="ImportWalletOptions" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="">
         <vc:icon symbol="back" />
     </a>
 }
 
 <header class="text-center">
     <h1>@ViewData["Title"]</h1>
+    <p class="lead text-secondary mt-3">Import your air-gapped hardware wallet by exporting a file and uploading it here.</p>
 </header>
 
 @if (!ViewContext.ModelState.IsValid)
 {
     <div asp-validation-summary="All" class="text-danger"></div>
 }
+
+<form method="post" enctype="multipart/form-data">
+    <table class="table table-sm table-responsive-md">
+        <thead>
+            <tr>
+                <th>Wallet</th>
+                <th>Instructions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="text-nowrap">Cobo Vault</td>
+                <td>Settings ❯ Watch-Only Wallet ❯ BTCPay ❯ Export Wallet</td>
+            </tr>
+            <tr>
+                <td>ColdCard</td>
+                <td>Advanced ❯ MicroSD Card ❯ Electrum Wallet or Wasabi Wallet</td>
+            </tr>
+            <tr>
+                <td>Electrum</td>
+                <td>File ❯ Save backup</td>
+            </tr>
+            <tr>
+                <td>Wasabi</td>
+                <td>Tools ❯ Wallet Manager ❯ Open Wallets Folder</td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="form-group">
+        <label asp-for="WalletFile"></label>
+        <input asp-for="WalletFile" type="file" class="form-control-file" required>
+        <span asp-validation-for="WalletFile" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>

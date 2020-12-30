@@ -74,25 +74,16 @@ namespace BTCPayServer.Controllers
             {
                 if (!DerivationSchemeSettings.TryParseFromJson(vm.Config, network, out strategy))
                 {
-                    TempData.SetStatusMessageModel(new StatusMessageModel()
-                    {
-                        Severity = StatusMessageModel.StatusSeverity.Error,
-                        Message = "Config file was not in the correct format"
-                    });
+                    ModelState.AddModelError(nameof(vm.Config), "Config file was not in the correct format");
                     return View(vm.ViewName, vm);
                 }
             }
 
             if (vm.WalletFile != null)
             {
-                if (!DerivationSchemeSettings.TryParseFromWalletFile(await ReadAllText(vm.WalletFile), network,
-                    out strategy))
+                if (!DerivationSchemeSettings.TryParseFromWalletFile(await ReadAllText(vm.WalletFile), network, out strategy))
                 {
-                    TempData.SetStatusMessageModel(new StatusMessageModel()
-                    {
-                        Severity = StatusMessageModel.StatusSeverity.Error,
-                        Message = "Wallet file was not in the correct format"
-                    });
+                    ModelState.AddModelError(nameof(vm.WalletFile), "Wallet file was not in the correct format");
                     return View(vm.ViewName, vm);
                 }
             }
@@ -100,11 +91,7 @@ namespace BTCPayServer.Controllers
             {
                 if (!DerivationSchemeSettings.TryParseFromWalletFile(vm.WalletFileContent, network, out strategy))
                 {
-                    TempData.SetStatusMessageModel(new StatusMessageModel()
-                    {
-                        Severity = StatusMessageModel.StatusSeverity.Error,
-                        Message = "QR import was not in the correct format"
-                    });
+                    ModelState.AddModelError(nameof(vm.WalletFileContent), "QR import was not in the correct format");
                     return View(vm.ViewName, vm);
                 }
             }

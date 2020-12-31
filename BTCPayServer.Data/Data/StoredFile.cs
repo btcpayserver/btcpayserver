@@ -12,9 +12,6 @@ namespace BTCPayServer.Data
         public string StorageFileName { get; set; }
         public DateTime Timestamp { get; set; }
         public string ApplicationUserId { get; set; }
-        public ApplicationUser ApplicationUser
-        {
-            get; set;
-        }
+        public ApplicationUser ApplicationUser { get; set; }
     }
 }

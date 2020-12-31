@@ -13,6 +13,7 @@ namespace BTCPayServer.Data
         public PullPaymentData PullPaymentData { get; set; }
         public InvoiceData InvoiceData { get; set; }
 
+
         internal static void OnModelCreating(ModelBuilder builder)
         {
             builder.Entity<RefundData>()

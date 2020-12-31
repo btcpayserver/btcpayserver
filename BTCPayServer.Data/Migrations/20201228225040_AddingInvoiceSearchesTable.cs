@@ -1,8 +1,12 @@
+using BTCPayServer.Data;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace BTCPayServer.Migrations
 {
+    [DbContext(typeof(ApplicationDbContext))]
+    [Migration("20201228225040_AddingInvoiceSearchesTable")]
     public partial class AddingInvoiceSearchesTable : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)

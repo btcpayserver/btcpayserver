@@ -6,13 +6,13 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BTCPayServer.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20201227165824_AdddingInvoiceSearchData")]
-    public partial class AdddingInvoiceSearchData : Migration
+    [Migration("20201228225040_AddingInvoiceSearchesTable")]
+    public partial class AddingInvoiceSearchesTable : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "InvoiceSearchDatas",
+                name: "InvoiceSearches",
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
@@ -26,9 +26,9 @@ namespace BTCPayServer.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_InvoiceSearchDatas", x => x.Id);
+                    table.PrimaryKey("PK_InvoiceSearches", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_InvoiceSearchDatas_Invoices_InvoiceDataId",
+                        name: "FK_InvoiceSearches_Invoices_InvoiceDataId",
                         column: x => x.InvoiceDataId,
                         principalTable: "Invoices",
                         principalColumn: "Id",
@@ -36,20 +36,20 @@ namespace BTCPayServer.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_InvoiceSearchDatas_InvoiceDataId",
-                table: "InvoiceSearchDatas",
+                name: "IX_InvoiceSearches_InvoiceDataId",
+                table: "InvoiceSearches",
                 column: "InvoiceDataId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_InvoiceSearchDatas_Value",
-                table: "InvoiceSearchDatas",
+                name: "IX_InvoiceSearches_Value",
+                table: "InvoiceSearches",
                 column: "Value");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "InvoiceSearchDatas");
+                name: "InvoiceSearches");
         }
     }
 }

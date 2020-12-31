@@ -4,28 +4,13 @@ namespace BTCPayServer.Data
 {
     public class UserStore
     {
-        public string ApplicationUserId
-        {
-            get; set;
-        }
-        public ApplicationUser ApplicationUser
-        {
-            get; set;
-        }
+        public string ApplicationUserId { get; set; }
+        public ApplicationUser ApplicationUser { get; set; }
 
-        public string StoreDataId
-        {
-            get; set;
-        }
-        public StoreData StoreData
-        {
-            get; set;
-        }
-        public string Role
-        {
-            get;
-            set;
-        }
+        public string StoreDataId { get; set; }
+        public StoreData StoreData { get; set; }
+        public string Role { get; set; }
+
 
         internal static void OnModelCreating(ModelBuilder builder)
         {

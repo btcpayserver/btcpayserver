@@ -21,18 +21,7 @@ namespace BTCPayServer.Data
         public string Destination { get; set; }
         public byte[] Blob { get; set; }
         public byte[] Proof { get; set; }
-        public bool IsInPeriod(PullPaymentData pp, DateTimeOffset now)
-        {
-            var period = pp.GetPeriod(now);
-            if (period is { } p)
-            {
-                return p.Start <= Date && (p.End is DateTimeOffset end ? Date < end : true);
-            }
-            else
-            {
-                return false;
-            }
-        }
+
 
         internal static void OnModelCreating(ModelBuilder builder)
         {
@@ -48,6 +37,20 @@ namespace BTCPayServer.Data
                 .IsUnique();
             builder.Entity<PayoutData>()
                 .HasIndex(o => o.State);
+        }
+
+        // utility methods
+        public bool IsInPeriod(PullPaymentData pp, DateTimeOffset now)
+        {
+            var period = pp.GetPeriod(now);
+            if (period is { } p)
+            {
+                return p.Start <= Date && (p.End is DateTimeOffset end ? Date < end : true);
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 

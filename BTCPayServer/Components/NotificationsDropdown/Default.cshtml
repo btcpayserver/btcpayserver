@@ -4,6 +4,7 @@
 @using BTCPayServer.HostedServices
 @using Microsoft.AspNetCore.Http.Extensions
 @model BTCPayServer.Components.NotificationsDropdown.NotificationSummaryViewModel
+@addTagHelper *, BundlerMinifier.TagHelpers
 
 @if (Model.UnseenCount > 0)
 {
@@ -22,11 +23,8 @@
             @foreach (var notif in Model.Last5)
             {
                 <a asp-action="NotificationPassThrough" asp-controller="Notifications" asp-route-id="@notif.Id" class="notification d-flex align-items-center dropdown-item border-bottom border-light py-3 px-4">
-                    <div class="mr-3">
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M14.2 16H1.8C0.808 16 0 15.192 0 14.2V1.8C0 0.808 0.808 0 1.8 0H14.2C15.192 0 16 0.808 16 1.8V14.2C16 15.192 15.192 16 14.2 16ZM1.8 1.2C1.4688 1.2 1.2 1.4696 1.2 1.8V14.2C1.2 14.5304 1.4688 14.8 1.8 14.8H14.2C14.5312 14.8 14.8 14.5304 14.8 14.2V1.8C14.8 1.4696 14.5312 1.2 14.2 1.2H1.8Z" fill="#8D8D8F"/>
-                            <path d="M12.0004 5.31182H4.00039C3.66919 5.31182 3.40039 5.04222 3.40039 4.71182C3.40039 4.38142 3.66919 4.11182 4.00039 4.11182H12.0004C12.3316 4.11182 12.6004 4.37982 12.6004 4.71182C12.6004 5.04382 12.3316 5.31182 12.0004 5.31182ZM12.0004 8.59982H4.00039C3.66919 8.59982 3.40039 8.33102 3.40039 7.99982C3.40039 7.66862 3.66919 7.39982 4.00039 7.39982H12.0004C12.3316 7.39982 12.6004 7.66862 12.6004 7.99982C12.6004 8.33102 12.3316 8.59982 12.0004 8.59982ZM8.00039 11.8878H4.00039C3.66919 11.8878 3.40039 11.6198 3.40039 11.2878C3.40039 10.9558 3.66919 10.6878 4.00039 10.6878H8.00039C8.33159 10.6878 8.60039 10.9574 8.60039 11.2878C8.60039 11.6182 8.33159 11.8878 8.00039 11.8878Z" fill="#8D8D8F"/>
-                        </svg>
+                    <div class="d-flex mr-3" style="width: 16px; height: 16px; color: #8D8D8F;">
+                        <vc:icon symbol="note" />
                     </div>
 
                     <div class="notification-item__content">

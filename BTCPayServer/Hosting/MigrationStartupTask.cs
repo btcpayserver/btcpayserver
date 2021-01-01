@@ -119,7 +119,7 @@ namespace BTCPayServer.Hosting
         private async Task TransitionToStoreBlobAdditionalData()
         {
             await using var ctx = _DBContextFactory.CreateContext();
-            foreach (var store in await ctx.Stores.AsNoTracking().ToArrayAsync())
+            foreach (var store in await ctx.Stores.AsQueryable().ToArrayAsync())
             {
                 var blob = store.GetStoreBlob();
                 blob.AdditionalData.Remove("walletKeyPathRoots");
@@ -161,7 +161,7 @@ retry:
             bool save = false;
             using (var ctx = _DBContextFactory.CreateContext())
             {
-                foreach (var store in await ctx.Stores.AsNoTracking().ToArrayAsync())
+                foreach (var store in await ctx.Stores.AsQueryable().ToArrayAsync())
                 {
 #pragma warning disable CS0618 // Type or member is obsolete
                     var blob = store.GetStoreBlob();
@@ -216,7 +216,7 @@ retry:
         {
             using (var ctx = _DBContextFactory.CreateContext())
             {
-                foreach (var store in await ctx.Stores.AsNoTracking().ToArrayAsync())
+                foreach (var store in await ctx.Stores.AsQueryable().ToArrayAsync())
                 {
                     var blob = store.GetStoreBlob();
 
@@ -291,7 +291,7 @@ retry:
         {
             using (var ctx = _DBContextFactory.CreateContext())
             {
-                foreach (var store in await ctx.Stores.AsNoTracking().ToArrayAsync())
+                foreach (var store in await ctx.Stores.AsQueryable().ToArrayAsync())
                 {
                     var blob = store.GetStoreBlob();
                     decimal multiplier = 1.0m;
@@ -340,7 +340,7 @@ retry:
         {
             using (var ctx = _DBContextFactory.CreateContext())
             {
-                foreach (var store in await ctx.Stores.AsNoTracking().ToArrayAsync())
+                foreach (var store in await ctx.Stores.AsQueryable().ToArrayAsync())
                 {
                     foreach (var method in store.GetSupportedPaymentMethods(_NetworkProvider).OfType<Payments.Lightning.LightningSupportedPaymentMethod>())
                     {

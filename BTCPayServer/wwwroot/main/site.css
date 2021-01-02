@@ -358,6 +358,12 @@ html[data-devenv]:before {
     background-color: #FB383D;
 }
 
+svg.icon {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+}
+
 /* Custom notification dropdown styling */
 .notification-dropdown {
     border: 0;

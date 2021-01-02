@@ -32,6 +32,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBXplorer;
@@ -67,7 +68,8 @@ namespace BTCPayServer.Controllers
             CssThemeManager cssThemeManager,
             AppService appService,
             IWebHostEnvironment webHostEnvironment,
-            WebhookNotificationManager webhookNotificationManager)
+            WebhookNotificationManager webhookNotificationManager,
+            IOptions<LightningNetworkOptions> lightningNetworkOptions)
         {
             _RateFactory = rateFactory;
             _Repo = repo;
@@ -82,6 +84,7 @@ namespace BTCPayServer.Controllers
             _CssThemeManager = cssThemeManager;
             _appService = appService;
             _webHostEnvironment = webHostEnvironment;
+            _lightningNetworkOptions = lightningNetworkOptions;
             WebhookNotificationManager = webhookNotificationManager;
             _EventAggregator = eventAggregator;
             _NetworkProvider = networkProvider;
@@ -108,6 +111,7 @@ namespace BTCPayServer.Controllers
         private readonly CssThemeManager _CssThemeManager;
         private readonly AppService _appService;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly IOptions<LightningNetworkOptions> _lightningNetworkOptions;
         private readonly EventAggregator _EventAggregator;
 
         [TempData]

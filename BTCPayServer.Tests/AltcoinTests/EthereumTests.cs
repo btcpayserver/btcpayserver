@@ -28,17 +28,17 @@ namespace BTCPayServer.Tests
         [Trait("Altcoins", "Altcoins")]
         public void LoadSubChainsAlways()
         {
-            var options = new BTCPayServerOptions();
-            options.LoadArgs(new ConfigurationRoot(new List<IConfigurationProvider>()
+            var config = new ConfigurationRoot(new List<IConfigurationProvider>()
             {
                 new MemoryConfigurationProvider(new MemoryConfigurationSource()
                 {
                     InitialData = new[] {new KeyValuePair<string, string>("chains", "usdt20"),}
                 })
-            }));
-
-            Assert.NotNull(options.NetworkProvider.GetNetwork("ETH"));
-            Assert.NotNull(options.NetworkProvider.GetNetwork("USDT20"));
+            });
+            
+            var networkProvider = config.ConfigureNetworkProvider();
+            Assert.NotNull(networkProvider.GetNetwork("ETH"));
+            Assert.NotNull(networkProvider.GetNetwork("USDT20"));
         }
 
         [Fact]

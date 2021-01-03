@@ -23,7 +23,7 @@
             @foreach (var notif in Model.Last5)
             {
                 <a asp-action="NotificationPassThrough" asp-controller="Notifications" asp-route-id="@notif.Id" class="notification d-flex align-items-center dropdown-item border-bottom border-light py-3 px-4">
-                    <div class="mr-3">
+                    <div class="mr-3" style="color: #8D8D8F;">
                         <vc:icon symbol="note" />
                     </div>
 

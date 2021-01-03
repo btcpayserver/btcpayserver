@@ -86,6 +86,8 @@ namespace BTCPayServer.HostedServices
         public async Task<string> Redeliver(string deliveryId)
         {
             var deliveryRequest = await CreateRedeliveryRequest(deliveryId);
+            if (deliveryRequest is null)
+                return null;
             EnqueueDelivery(deliveryRequest);
             return deliveryRequest.Delivery.Id;
         }
@@ -208,8 +210,8 @@ namespace BTCPayServer.HostedServices
                 try
                 {
                     var ctx = originalCtx;
-                    var wh = (await StoreRepository.GetWebhook(ctx.WebhookId)).GetBlob();
-                    if (!ShouldDeliver(ctx.WebhookEvent.Type, wh))
+                    var wh = (await StoreRepository.GetWebhook(ctx.WebhookId))?.GetBlob();
+                    if (wh is null || !ShouldDeliver(ctx.WebhookEvent.Type, wh))
                         continue;
                     var result = await SendDelivery(ctx);
                     if (ctx.WebhookBlob.AutomaticRedelivery &&

@@ -32,6 +32,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using Renci.SshNet;
@@ -54,6 +55,7 @@ namespace BTCPayServer.Controllers
         private readonly CheckConfigurationHostedService _sshState;
         private readonly EventAggregator _eventAggregator;
         private readonly CssThemeManager _cssThemeManager;
+        private readonly IOptions<ExternalServicesOptions> _externalServiceOptions;
         private readonly StoredFileRepository _StoredFileRepository;
         private readonly FileService _FileService;
         private readonly IEnumerable<IStorageProviderService> _StorageProviderServices;
@@ -72,7 +74,8 @@ namespace BTCPayServer.Controllers
             AppService appService,
             CheckConfigurationHostedService sshState,
             EventAggregator eventAggregator,
-            CssThemeManager cssThemeManager)    
+            CssThemeManager cssThemeManager,
+            IOptions<ExternalServicesOptions> externalServiceOptions)    
         {
             _Options = options;
             _StoredFileRepository = storedFileRepository;
@@ -89,6 +92,7 @@ namespace BTCPayServer.Controllers
             _sshState = sshState;
             _eventAggregator = eventAggregator;
             _cssThemeManager = cssThemeManager;
+            _externalServiceOptions = externalServiceOptions;
         }
 
         [Route("server/maintenance")]
@@ -338,10 +342,10 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> Services()
         {
             var result = new ServicesViewModel();
-            result.ExternalServices = _Options.ExternalServices.ToList();
+            result.ExternalServices = _externalServiceOptions.Value.ExternalServices.ToList();
 
             // other services
-            foreach (var externalService in _Options.OtherExternalServices)
+            foreach (var externalService in _externalServiceOptions.Value.OtherExternalServices)
             {
                 result.OtherExternalServices.Add(new ServicesViewModel.OtherExternalService()
                 {
@@ -434,7 +438,7 @@ namespace BTCPayServer.Controllers
 
         private ExternalService GetService(string serviceName, string cryptoCode)
         {
-            var result = _Options.ExternalServices.GetService(serviceName, cryptoCode);
+            var result = _externalServiceOptions.Value.ExternalServices.GetService(serviceName, cryptoCode);
             if (result != null)
                 return result;
             foreach (var torService in _torServices.Services)

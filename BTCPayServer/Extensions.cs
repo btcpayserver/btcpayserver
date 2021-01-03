@@ -13,6 +13,7 @@ using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Lightning;
+using BTCPayServer.Logging;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
@@ -25,6 +26,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.Payment;
 using NBitpayClient;
@@ -464,6 +466,37 @@ namespace BTCPayServer
             string sql = command.CommandText;
             return sql;
         }
+
+        public static BTCPayNetworkProvider ConfigureNetworkProvider(this IConfiguration configuration)
+        {
+            var _networkType = DefaultConfiguration.GetNetworkType(configuration);
+            var supportedChains = configuration.GetOrDefault<string>("chains", "btc")
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(t => t.ToUpperInvariant()).ToHashSet();
+
+            var networkProvider = new BTCPayNetworkProvider(_networkType);
+            var filtered = networkProvider.Filter(supportedChains.ToArray());
+#if ALTCOINS
+            supportedChains.AddRange(filtered.GetAllElementsSubChains(networkProvider));
+            supportedChains.AddRange(filtered.GetAllEthereumSubChains(networkProvider));
+#endif
+#if !ALTCOINS
+            var onlyBTC = supportedChains.Count == 1 && supportedChains.First() == "BTC";
+            if (!onlyBTC)
+                throw new ConfigException($"This build of BTCPay Server does not support altcoins");
+#endif
+            var result = networkProvider.Filter(supportedChains.ToArray());
+            foreach (var chain in supportedChains)
+            {
+                if (result.GetNetwork<BTCPayNetworkBase>(chain) == null)
+                    throw new ConfigException($"Invalid chains \"{chain}\"");
+            }
+
+            Logs.Configuration.LogInformation(
+                "Supported chains: " + String.Join(',', supportedChains.ToArray()));
+            return result;
+        }
+
         private static object Private(this object obj, string privateField) => obj?.GetType().GetField(privateField, BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(obj);
         private static T Private<T>(this object obj, string privateField) => (T)obj?.GetType().GetField(privateField, BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(obj);
     }

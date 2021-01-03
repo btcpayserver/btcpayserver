@@ -50,20 +50,16 @@ namespace BTCPayServer.Tests
         [Trait("Fast", "Fast")]
         public void LoadSubChainsAlways()
         {
-            var options = new BTCPayServerOptions();
-            options.LoadArgs(new ConfigurationRoot(new List<IConfigurationProvider>()
+            var config = new ConfigurationRoot(new List<IConfigurationProvider>()
             {
                 new MemoryConfigurationProvider(new MemoryConfigurationSource()
                 {
-                    InitialData = new[]
-                    {
-                        new KeyValuePair<string, string>("chains", "usdt"),
-                    }
+                    InitialData = new[] {new KeyValuePair<string, string>("chains", "usdt"),}
                 })
-            }));
-
-            Assert.NotNull(options.NetworkProvider.GetNetwork("LBTC"));
-            Assert.NotNull(options.NetworkProvider.GetNetwork("USDT"));
+            });
+            var networkProvider = config.ConfigureNetworkProvider();
+            Assert.NotNull(networkProvider.GetNetwork("LBTC"));
+            Assert.NotNull(networkProvider.GetNetwork("USDT"));
         }
 
 

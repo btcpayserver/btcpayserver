@@ -208,8 +208,8 @@ namespace BTCPayServer.HostedServices
                 try
                 {
                     var ctx = originalCtx;
-                    var wh = (await StoreRepository.GetWebhook(ctx.WebhookId)).GetBlob();
-                    if (!ShouldDeliver(ctx.WebhookEvent.Type, wh))
+                    var wh = (await StoreRepository.GetWebhook(ctx.WebhookId))?.GetBlob();
+                    if (wh is null || !ShouldDeliver(ctx.WebhookEvent.Type, wh))
                         continue;
                     var result = await SendDelivery(ctx);
                     if (ctx.WebhookBlob.AutomaticRedelivery &&

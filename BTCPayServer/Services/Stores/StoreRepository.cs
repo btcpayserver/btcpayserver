@@ -206,6 +206,10 @@ namespace BTCPayServer.Services.Stores
 
         public async Task<WebhookDeliveryData> GetWebhookDelivery(string storeId, string webhookId, string deliveryId)
         {
+            if (webhookId == null)
+                throw new ArgumentNullException(nameof(webhookId));
+            if (storeId == null)
+                throw new ArgumentNullException(nameof(storeId));
             using var ctx = _ContextFactory.CreateContext();
             return await ctx.StoreWebhooks
                 .Where(d => d.StoreId == storeId && d.WebhookId == webhookId)
@@ -232,6 +236,10 @@ namespace BTCPayServer.Services.Stores
 
         public async Task<WebhookDeliveryData[]> GetWebhookDeliveries(string storeId, string webhookId, int? count)
         {
+            if (webhookId == null)
+                throw new ArgumentNullException(nameof(webhookId));
+            if (storeId == null)
+                throw new ArgumentNullException(nameof(storeId));
             using var ctx = _ContextFactory.CreateContext();
             IQueryable<WebhookDeliveryData> req = ctx.StoreWebhooks
                 .Where(s => s.StoreId == storeId && s.WebhookId == webhookId)
@@ -245,6 +253,10 @@ namespace BTCPayServer.Services.Stores
 
         public async Task<string> CreateWebhook(string storeId, WebhookBlob blob)
         {
+            if (storeId == null)
+                throw new ArgumentNullException(nameof(storeId));
+            if (blob == null)
+                throw new ArgumentNullException(nameof(blob));
             using var ctx = _ContextFactory.CreateContext();
             WebhookData data = new WebhookData();
             data.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16));
@@ -262,7 +274,11 @@ namespace BTCPayServer.Services.Stores
 
         public async Task<WebhookData> GetWebhook(string storeId, string webhookId)
         {
-            var ctx = _ContextFactory.CreateContext();
+            if (webhookId == null)
+                throw new ArgumentNullException(nameof(webhookId));
+            if (storeId == null)
+                throw new ArgumentNullException(nameof(storeId));
+            using var ctx = _ContextFactory.CreateContext();
             return await ctx.StoreWebhooks
                 .Where(s => s.StoreId == storeId && s.WebhookId == webhookId)
                 .Select(s => s.Webhook)
@@ -270,7 +286,9 @@ namespace BTCPayServer.Services.Stores
         }
         public async Task<WebhookData> GetWebhook(string webhookId)
         {
-            var ctx = _ContextFactory.CreateContext();
+            if (webhookId == null)
+                throw new ArgumentNullException(nameof(webhookId));
+            using var ctx = _ContextFactory.CreateContext();
             return await ctx.StoreWebhooks
                 .Where(s => s.WebhookId == webhookId)
                 .Select(s => s.Webhook)
@@ -278,7 +296,11 @@ namespace BTCPayServer.Services.Stores
         }
         public async Task DeleteWebhook(string storeId, string webhookId)
         {
-            var ctx = _ContextFactory.CreateContext();
+            if (webhookId == null)
+                throw new ArgumentNullException(nameof(webhookId));
+            if (storeId == null)
+                throw new ArgumentNullException(nameof(storeId));
+            using var ctx = _ContextFactory.CreateContext();
             var hook = await ctx.StoreWebhooks
                 .Where(s => s.StoreId == storeId && s.WebhookId == webhookId)
                 .Select(s => s.Webhook)
@@ -291,7 +313,13 @@ namespace BTCPayServer.Services.Stores
 
         public async Task UpdateWebhook(string storeId, string webhookId, WebhookBlob webhookBlob)
         {
-            var ctx = _ContextFactory.CreateContext();
+            if (webhookId == null)
+                throw new ArgumentNullException(nameof(webhookId));
+            if (storeId == null)
+                throw new ArgumentNullException(nameof(storeId));
+            if (webhookBlob == null)
+                throw new ArgumentNullException(nameof(webhookBlob));
+            using var ctx = _ContextFactory.CreateContext();
             var hook = await ctx.StoreWebhooks
                 .Where(s => s.StoreId == storeId && s.WebhookId == webhookId)
                 .Select(s => s.Webhook)

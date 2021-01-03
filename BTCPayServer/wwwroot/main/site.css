@@ -364,6 +364,10 @@ svg.icon {
     height: 16px;
 }
 
+svg.icon-note {
+  color: var(--btcpay-color-neutral-500);
+}
+
 /* Custom notification dropdown styling */
 .notification-dropdown {
     border: 0;

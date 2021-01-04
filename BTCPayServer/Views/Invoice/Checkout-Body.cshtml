@@ -190,7 +190,7 @@
         </component>
         <div v-else-if="!srvModel.activated" class="bp-view payment manual-flow active">
             <bp-loading-button>
-                <button v-on:click="activatePaymentMethod" type="submit" class="action-button" style="margin-top: 15px;" v-bind:disabled="activatingPaymentMethod" v-bind:class="{ 'loading': activatingPaymentMethod }">
+                <button id="activate-payment-method" v-on:click="activatePaymentMethod" type="submit" class="action-button" style="margin-top: 15px;" v-bind:disabled="activatingPaymentMethod" v-bind:class="{ 'loading': activatingPaymentMethod }">
                     <span class="button-text">{{$t("Activate payment method")}}</span>
                     <div class="loader-wrapper">
                         <partial name="Checkout-Spinner"/>

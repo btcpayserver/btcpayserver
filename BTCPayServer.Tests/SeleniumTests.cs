@@ -11,6 +11,7 @@ using BTCPayServer.Services.Wallets;
 using BTCPayServer.Tests.Logging;
 using BTCPayServer.Views.Manage;
 using BTCPayServer.Views.Server;
+using BTCPayServer.Views.Stores;
 using BTCPayServer.Views.Wallets;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -1050,6 +1051,28 @@ namespace BTCPayServer.Tests
             if (checkboxElement.Selected != subtract)
             {
                 checkboxElement.Click();
+        }
+        
+        [Fact]
+        [Trait("Selenium", "Selenium")]
+        public async Task CanUseLazyPaymentMethods()
+        {
+            using (var s = SeleniumTester.Create())
+            {
+                await s.StartAsync();
+                s.RegisterNewUser(true);
+                s.GoToStores();
+                var store = s.CreateNewStore();
+                s.AddDerivationScheme();
+                s.GoToStore(store.storeId, StoreNavPages.Checkout);
+                s.SetCheckbox(s, "LazyPaymentMethods", true);
+                s.Driver.FindElement(By.Name("command")).Click();
+                s.AssertHappyMessage();
+                var invoice = s.CreateInvoice(store.storeName);
+                s.GoToInvoiceCheckout(invoice);
+                s.Driver.FindElement(By.Id("activate-payment-method")).Click();
+                s.Driver.AssertElementNotFound(By.Id("activate-payment-method"));
+                s.Driver.FindElement(By.ClassName("payment__details__instruction__open-wallet"));
             }
         }
     }

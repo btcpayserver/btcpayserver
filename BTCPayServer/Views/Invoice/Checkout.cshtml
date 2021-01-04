@@ -216,8 +216,17 @@
                     return;
                 }
                 this.activatingPaymentMethod = true;
+                debugger;
+                var url = window.location.pathname;
+                if(url.endsWith("/")) {
+                    url = url.substr(0, url.length-1);
+                }
+                if (url.toLowerCase().indexOf(this.srvModel.paymentMethodId.toLowerCase()) === -1){
+                    url += "/"+ this.srvModel.paymentMethodId
+                }
+                url +="/activate";
                  $.ajax({
-                     url: window.location.pathname + "/"+ this.srvModel.paymentMethodId+"/activate",
+                     url: url,
                      type: "POST",
                  }).done(function() {
                    self.fetchData();

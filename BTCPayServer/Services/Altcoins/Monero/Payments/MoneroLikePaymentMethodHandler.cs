@@ -86,15 +86,22 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
             StoreBlob storeBlob, IPaymentMethod paymentMethod)
         {
             var paymentMethodId = paymentMethod.GetId();
-            var cryptoInfo = invoiceResponse.CryptoInfo.First(o => o.GetpaymentMethodId() == paymentMethodId);
             var network = _networkProvider.GetNetwork<MoneroLikeSpecificBtcPayNetwork>(model.CryptoCode);
             model.PaymentMethodName = GetPaymentMethodName(network);
             model.CryptoImage = GetCryptoImage(network);
-            model.InvoiceBitcoinUrl = MoneroPaymentType.Instance.GetPaymentLink(network, new MoneroLikeOnChainPaymentMethodDetails()
+            if (model.Activated)
             {
-                DepositAddress = cryptoInfo.Address
-            }, cryptoInfo.Due, null);
-            model.InvoiceBitcoinUrlQR = model.InvoiceBitcoinUrl;
+                var cryptoInfo = invoiceResponse.CryptoInfo.First(o => o.GetpaymentMethodId() == paymentMethodId);
+                model.InvoiceBitcoinUrl = MoneroPaymentType.Instance.GetPaymentLink(network,
+                    new MoneroLikeOnChainPaymentMethodDetails() {DepositAddress = cryptoInfo.Address}, cryptoInfo.Due,
+                    null);
+                model.InvoiceBitcoinUrlQR = model.InvoiceBitcoinUrl;
+            }
+            else
+            {
+                model.InvoiceBitcoinUrl = "";
+                model.InvoiceBitcoinUrlQR = "";
+            }
         }
         public override string GetCryptoImage(PaymentMethodId paymentMethodId)
         {

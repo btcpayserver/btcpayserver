@@ -56,16 +56,24 @@ namespace BTCPayServer.Payments.Bitcoin
 
 
             var lightningFallback = "";
-            if (storeBlob.OnChainWithLnInvoiceFallback)
+            if (model.Activated && storeBlob.OnChainWithLnInvoiceFallback)
             {
                 var lightningInfo = invoiceResponse.CryptoInfo.FirstOrDefault(a =>
                     a.GetpaymentMethodId() == new PaymentMethodId(model.CryptoCode, PaymentTypes.LightningLike));
-                if (!String.IsNullOrEmpty(lightningInfo?.PaymentUrls?.BOLT11))
+                if (!string.IsNullOrEmpty(lightningInfo?.PaymentUrls?.BOLT11))
                     lightningFallback = "&" + lightningInfo.PaymentUrls.BOLT11.Replace("lightning:", "lightning=", StringComparison.OrdinalIgnoreCase);
             }
 
-            model.InvoiceBitcoinUrl = cryptoInfo.PaymentUrls.BIP21 + lightningFallback;
-            model.InvoiceBitcoinUrlQR = model.InvoiceBitcoinUrl;
+            if (model.Activated)
+            {
+                model.InvoiceBitcoinUrl = (cryptoInfo.PaymentUrls?.BIP21 ?? "") + lightningFallback;
+                model.InvoiceBitcoinUrlQR = model.InvoiceBitcoinUrl;
+            }
+            else
+            {
+                model.InvoiceBitcoinUrl = "";
+                model.InvoiceBitcoinUrlQR = "";
+            }
 
             // Standard for uppercase Bech32 addresses in QR codes is still not implemented in all wallets
             // When it is widely propagated consider uncommenting these lines

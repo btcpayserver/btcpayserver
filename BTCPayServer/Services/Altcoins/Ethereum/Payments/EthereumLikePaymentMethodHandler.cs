@@ -79,7 +79,7 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Payments
             model.PaymentMethodName = GetPaymentMethodName(network);
             model.CryptoImage = GetCryptoImage(network);
             model.InvoiceBitcoinUrl = "";
-            model.InvoiceBitcoinUrlQR = cryptoInfo.Address;
+            model.InvoiceBitcoinUrlQR = cryptoInfo.Address ?? "";
         }
 
         public override string GetCryptoImage(PaymentMethodId paymentMethodId)

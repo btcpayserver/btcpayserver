@@ -732,7 +732,7 @@
                         "items": {
                             "type": "string"
                         },
-                        "description": "A specific set of payment methods to use for this invoice (ie. BTC, BTC-LightningNetwork). By default, select all payment methods activated in the store."
+                        "description": "A specific set of payment methods to use for this invoice (ie. BTC, BTC-LightningNetwork). By default, select all payment methods enabled in the store."
                     },
                     "expirationMinutes": {
                         "type": "integer",
@@ -834,6 +834,10 @@
                             "$ref": "#/components/schemas/Payment"
                         },
                         "description": "Payments made with this payment method."
+                    },
+                    "activated": {
+                        "type": "boolean",
+                        "description": "If the payment method is activated (when lazy payments option is enabled"
                     }
                 }
             },

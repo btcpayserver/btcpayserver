@@ -5,14 +5,12 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Payments;
-using BTCPayServer.Security;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using NBitcoin;
 using CreateInvoiceRequest = BTCPayServer.Client.Models.CreateInvoiceRequest;
 using InvoiceData = BTCPayServer.Client.Models.InvoiceData;
@@ -27,14 +25,22 @@ namespace BTCPayServer.Controllers.GreenField
         private readonly InvoiceController _invoiceController;
         private readonly InvoiceRepository _invoiceRepository;
         private readonly LinkGenerator _linkGenerator;
+        private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
+        private readonly EventAggregator _eventAggregator;
+        private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
 
         public LanguageService LanguageService { get; }
 
-        public GreenFieldInvoiceController(InvoiceController invoiceController, InvoiceRepository invoiceRepository, LinkGenerator linkGenerator, LanguageService languageService)
+        public GreenFieldInvoiceController(InvoiceController invoiceController, InvoiceRepository invoiceRepository,
+            LinkGenerator linkGenerator, LanguageService languageService, BTCPayNetworkProvider btcPayNetworkProvider,
+            EventAggregator eventAggregator, PaymentMethodHandlerDictionary paymentMethodHandlerDictionary)
         {
             _invoiceController = invoiceController;
             _invoiceRepository = invoiceRepository;
             _linkGenerator = linkGenerator;
+            _btcPayNetworkProvider = btcPayNetworkProvider;
+            _eventAggregator = eventAggregator;
+            _paymentMethodHandlerDictionary = paymentMethodHandlerDictionary;
             LanguageService = languageService;
         }
 
@@ -269,6 +275,32 @@ namespace BTCPayServer.Controllers.GreenField
             }
 
             return Ok(ToPaymentMethodModels(invoice));
+        }
+
+        [Authorize(Policy = Policies.CanViewInvoices,
+            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpPost("~/api/v1/stores/{storeId}/invoices/{invoiceId}/payment-methods/{paymentMethod}/activate")]
+        public async Task<IActionResult> ActivateInvoicePaymentMethod(string storeId, string invoiceId, string paymentMethod)
+        {
+            var store = HttpContext.GetStoreData();
+            if (store == null)
+            {
+                return NotFound();
+            }
+
+            var invoice = await _invoiceRepository.GetInvoice(invoiceId, true);
+            if (invoice?.StoreId != store.Id)
+            {
+                return NotFound();
+            }
+
+            if (PaymentMethodId.TryParse(paymentMethod, out var paymentMethodId))
+            {
+                await _invoiceRepository.ActivateInvoicePaymentMethod(_eventAggregator, _btcPayNetworkProvider,
+                    _paymentMethodHandlerDictionary, store, invoice, paymentMethodId);
+                return Ok();
+            }
+            return BadRequest();
         }
         
         private InvoicePaymentMethodDataModel[] ToPaymentMethodModels(InvoiceEntity entity)

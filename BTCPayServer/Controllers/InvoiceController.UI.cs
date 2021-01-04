@@ -433,46 +433,18 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> ActivatePaymentMethod(string invoiceId, string paymentMethodId)
         {
             var paymentMethodParsed = PaymentMethodId.Parse(paymentMethodId);
-            
+
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
             if (invoice == null)
                 return NotFound();
-
-            var eligibleMethodToActivate = invoice.GetPaymentMethod(paymentMethodParsed);
-            if (!eligibleMethodToActivate.GetPaymentMethodDetails().Activated)
+            var store = await _StoreRepository.FindStore(invoice.StoreId);
+            if (store is null)
             {
-                
-                var store = await _StoreRepository.FindStore(invoice.StoreId);
-                var payHandler = _paymentMethodHandlerDictionary[paymentMethodParsed];
-                var supportPayMethod = invoice.GetSupportedPaymentMethod()
-                    .Single(method => method.PaymentId == paymentMethodParsed);
-                var paymentMethod = invoice.GetPaymentMethod(paymentMethodParsed);
-                var network = this._NetworkProvider.GetNetwork(paymentMethodParsed.CryptoCode);
-                var prepare = payHandler.PreparePayment(supportPayMethod, store, network);
-                InvoiceLogs logs = new InvoiceLogs();
-                try
-                {
-                    logs.Write($"{paymentMethodId}: Activating", InvoiceEventData.EventSeverity.Info);
-                    var newDetails = await
-                        payHandler.CreatePaymentMethodDetails(logs, supportPayMethod, paymentMethod, store, network,
-                            prepare);
-                    eligibleMethodToActivate.SetPaymentMethodDetails(newDetails);
-                    await _InvoiceRepository.UpdateInvoicePaymentMethod(invoiceId, eligibleMethodToActivate);
-                }
-                
-                catch (PaymentMethodUnavailableException ex)
-                {
-                    logs.Write($"{paymentMethodId}: Payment method unavailable ({ex.Message})", InvoiceEventData.EventSeverity.Error);
-                }
-                catch (Exception ex)
-                {
-                    logs.Write($"{paymentMethodId}: Unexpected exception ({ex.ToString()})", InvoiceEventData.EventSeverity.Error);
-                }
-                
-                
-                await _InvoiceRepository.AddInvoiceLogs(invoiceId, logs);
-                _EventAggregator.Publish(new Events.InvoiceNeedUpdateEvent(invoice.Id));
+                return NotFound();
             }
+
+            await _InvoiceRepository.ActivateInvoicePaymentMethod(_EventAggregator, _NetworkProvider,
+                _paymentMethodHandlerDictionary, store, invoice, paymentMethodParsed);
 
             return Ok();
         }

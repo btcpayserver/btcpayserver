@@ -44,12 +44,10 @@ namespace BTCPayServer.Controllers
         private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
         private readonly ApplicationDbContextFactory _dbContextFactory;
         private readonly PullPaymentHostedService _paymentHostedService;
-        readonly IServiceProvider _ServiceProvider;
 
         public WebhookNotificationManager WebhookNotificationManager { get; }
 
         public InvoiceController(
-            IServiceProvider serviceProvider,
             InvoiceRepository invoiceRepository,
             CurrencyNameTable currencyNameTable,
             UserManager<ApplicationUser> userManager,
@@ -63,7 +61,6 @@ namespace BTCPayServer.Controllers
             PullPaymentHostedService paymentHostedService,
             WebhookNotificationManager webhookNotificationManager)
         {
-            _ServiceProvider = serviceProvider;
             _CurrencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
             _StoreRepository = storeRepository ?? throw new ArgumentNullException(nameof(storeRepository));
             _InvoiceRepository = invoiceRepository ?? throw new ArgumentNullException(nameof(invoiceRepository));

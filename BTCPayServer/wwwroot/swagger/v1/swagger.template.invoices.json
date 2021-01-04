@@ -542,6 +542,71 @@
                     }
                 ]
             }
+        },
+        "/api/v1/stores/{storeId}/invoices/{invoiceId}/payment-methods/{paymentMethod}/activate": {
+            "post": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "Activate Payment Method",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "invoiceId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The invoice to update",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "paymentMethod",
+                        "in": "path",
+                        "required": true,
+                        "description": "The payment method to activate",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "Activate an invoice payment method (if lazy payments mode is enabled)",
+                "operationId": "Invoices_ActivatePaymentMethod",
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when updating the invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to activate the invoice payment method"
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canviewinvoices"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
         }
     },
     "components": {

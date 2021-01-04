@@ -332,8 +332,8 @@ namespace BTCPayServer.Services.Invoices
                 }
                 invoiceEntity.SetPaymentMethod(paymentMethod);
                 invoice.Blob = ToBytes(invoiceEntity, network);
+                AddToTextSearch(context, invoice, paymentMethod.GetPaymentMethodDetails().GetPaymentDestination());
                 await context.SaveChangesAsync();
-                AddToTextSearch(invoice.Id, paymentMethod.GetPaymentMethodDetails().GetPaymentDestination());
                 
             }
         }

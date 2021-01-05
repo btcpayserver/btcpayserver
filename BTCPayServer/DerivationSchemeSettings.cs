@@ -20,13 +20,12 @@ namespace BTCPayServer
                 throw new ArgumentNullException(nameof(derivationStrategy));
             var result = new DerivationSchemeSettings();
             var parser = new DerivationSchemeParser(network);
-            if (TryParseXpub(derivationStrategy, parser, ref result, false) || TryParseXpub(derivationStrategy, parser, ref result, false))
+            if (TryParseXpub(derivationStrategy, parser, ref result, false) || TryParseXpub(derivationStrategy, parser, ref result, true))
             {
                 return result;
             }
 
-            throw new FormatException();
-
+            throw new FormatException("Invalid Derivation Scheme");
         }
 
         public static bool TryParseFromJson(string config, BTCPayNetwork network, out DerivationSchemeSettings strategy)

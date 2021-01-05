@@ -135,36 +135,37 @@ namespace BTCPayServer.Controllers.GreenField
             }
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
+            DerivationSchemeSettings strategy;
             try
             {
-                var strategy = DerivationSchemeSettings.Parse(paymentMethodData.DerivationScheme, network);
-                var deposit = new NBXplorer.KeyPathTemplates(null).GetKeyPathTemplate(DerivationFeature.Deposit);
-                var line = strategy.AccountDerivation.GetLineFor(deposit);
-                var result = new OnChainPaymentMethodPreviewResultData();
-                for (var i = offset; i < amount; i++)
-                {
-                    var derivation = line.Derive((uint)i);
-                    result.Addresses.Add(
-                        new
-                            OnChainPaymentMethodPreviewResultData.
-                            OnChainPaymentMethodPreviewResultAddressItem()
-                            {
-                                KeyPath = deposit.GetKeyPath((uint)i).ToString(),
-                                Address = strategy.Network.NBXplorerNetwork.CreateAddress(strategy.AccountDerivation,
-                                    line.KeyPathTemplate.GetKeyPath((uint)i),
-                                    derivation.ScriptPubKey).ToString()
-                            });
-                }
-
-                return Ok(result);
+                strategy = DerivationSchemeSettings.Parse(paymentMethodData.DerivationScheme, network);
             }
-
             catch
             {
                 ModelState.AddModelError(nameof(OnChainPaymentMethodData.DerivationScheme),
                     "Invalid Derivation Scheme");
                 return this.CreateValidationError(ModelState);
             }
+
+            var deposit = new NBXplorer.KeyPathTemplates(null).GetKeyPathTemplate(DerivationFeature.Deposit);
+            var line = strategy.AccountDerivation.GetLineFor(deposit);
+            var result = new OnChainPaymentMethodPreviewResultData();
+            for (var i = offset; i < amount; i++)
+            {
+                var derivation = line.Derive((uint)i);
+                result.Addresses.Add(
+                    new
+                        OnChainPaymentMethodPreviewResultData.
+                        OnChainPaymentMethodPreviewResultAddressItem()
+                        {
+                            KeyPath = deposit.GetKeyPath((uint)i).ToString(),
+                            Address = strategy.Network.NBXplorerNetwork.CreateAddress(strategy.AccountDerivation,
+                                line.KeyPathTemplate.GetKeyPath((uint)i),
+                                derivation.ScriptPubKey).ToString()
+                        });
+            }
+
+                return Ok(result);
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]

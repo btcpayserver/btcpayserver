@@ -19,6 +19,7 @@ namespace BTCPayServer
             if (derivationStrategy == null)
                 throw new ArgumentNullException(nameof(derivationStrategy));
             var result = new DerivationSchemeSettings();
+            result.Network = network;
             var parser = new DerivationSchemeParser(network);
             if (TryParseXpub(derivationStrategy, parser, ref result, false) || TryParseXpub(derivationStrategy, parser, ref result, true))
             {

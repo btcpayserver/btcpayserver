@@ -403,10 +403,10 @@ namespace BTCPayServer.Controllers
                 }
             }).ToList();
             vm.RequiresRefundEmail = storeBlob.RequiresRefundEmail;
-            vm.LazyPaymentMethods = storeBlob.LazyPaymentMethods;
             vm.LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi;
             vm.LightningPrivateRouteHints = storeBlob.LightningPrivateRouteHints;
             vm.OnChainWithLnInvoiceFallback = storeBlob.OnChainWithLnInvoiceFallback;
+            vm.LazyPaymentMethods = storeBlob.LazyPaymentMethods;
             vm.RedirectAutomatically = storeBlob.RedirectAutomatically;
             vm.ShowRecommendedFee = storeBlob.ShowRecommendedFee;
             vm.RecommendedFeeBlockTarget = storeBlob.RecommendedFeeBlockTarget;

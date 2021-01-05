@@ -168,8 +168,8 @@ namespace BTCPayServer.Controllers.GreenField
             blob.LightningAmountInSatoshi = restModel.LightningAmountInSatoshi;
             blob.LightningPrivateRouteHints = restModel.LightningPrivateRouteHints;
             blob.OnChainWithLnInvoiceFallback = restModel.OnChainWithLnInvoiceFallback;
-            blob.RedirectAutomatically = restModel.RedirectAutomatically;
             blob.LazyPaymentMethods = restModel.LazyPaymentMethods;
+            blob.RedirectAutomatically = restModel.RedirectAutomatically;
             blob.ShowRecommendedFee = restModel.ShowRecommendedFee;
             blob.RecommendedFeeBlockTarget = restModel.RecommendedFeeBlockTarget;
             blob.DefaultLang = restModel.DefaultLang;

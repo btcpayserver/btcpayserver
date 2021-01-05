@@ -34,12 +34,11 @@ namespace BTCPayServer.Data
         [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
         public NetworkFeeMode NetworkFeeMode { get; set; }
 
-        public bool LazyPaymentMethods { get; set; } = false;
-
         public bool RequiresRefundEmail { get; set; }
         public bool LightningAmountInSatoshi { get; set; }
         public bool LightningPrivateRouteHints { get; set; }
         public bool OnChainWithLnInvoiceFallback { get; set; }
+        public bool LazyPaymentMethods { get; set; }
         public bool RedirectAutomatically { get; set; }
         public bool ShowRecommendedFee { get; set; }
         public int RecommendedFeeBlockTarget { get; set; }

@@ -44,6 +44,9 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Include lightning invoice fallback to on-chain BIP21 payment url")]
         public bool OnChainWithLnInvoiceFallback { get; set; }
 
+        [Display(Name = "Only enable the payment method after user explicitly activates it")]
+        public bool LazyPaymentMethods { get; set; }
+
         [Display(Name = "Redirect invoice to redirect url automatically after paid")]
         public bool RedirectAutomatically { get; set; }
 
@@ -65,9 +68,6 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Custom HTML title to display on Checkout page")]
         public string HtmlTitle { get; set; }
-
-        [Display(Name = "Only enable the payment method after user explicitly activates it")]
-        public bool LazyPaymentMethods { get; set; }
 
         public List<PaymentMethodCriteriaViewModel> PaymentMethodCriteria { get; set; }
     }

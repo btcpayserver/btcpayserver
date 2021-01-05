@@ -39,7 +39,7 @@ namespace BTCPayServer.HostedServices
             var settings = await _settingsRepository.GetSettingAsync<MigrationSettings>();
             if (settings.MigratedInvoiceTextSearchPages != int.MaxValue)
             {
-                await MigratedInvoiceTextSearchToDb(settings.MigratedInvoiceTextSearchPages.Value);
+                await MigratedInvoiceTextSearchToDb(settings.MigratedInvoiceTextSearchPages ?? 0);
             }
 
             // Refresh settings since these operations may run for very long time

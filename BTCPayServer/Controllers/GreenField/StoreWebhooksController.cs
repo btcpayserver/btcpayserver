@@ -36,36 +36,39 @@ namespace BTCPayServer.Controllers.GreenField
         public WebhookNotificationManager WebhookNotificationManager { get; }
 
         [HttpGet("~/api/v1/stores/{storeId}/webhooks/{webhookId?}")]
-        public async Task<IActionResult> ListWebhooks(string storeId, string webhookId)
+        public async Task<IActionResult> ListWebhooks(string webhookId)
         {
             if (webhookId is null)
             {
-                var store = HttpContext.GetStoreData();
-                if (store == null)
-                    return NotFound();
-                return Ok((await StoreRepository.GetWebhooks(storeId))
+                return Ok((await StoreRepository.GetWebhooks(CurrentStoreId))
                         .Select(o => FromModel(o, false))
                         .ToList());
             }
             else
             {
-                var w = await StoreRepository.GetWebhook(storeId, webhookId);
+                var w = await StoreRepository.GetWebhook(CurrentStoreId, webhookId);
                 if (w is null)
                     return NotFound();
                 return Ok(FromModel(w, false));
             }
         }
-        [HttpPost("~/api/v1/stores/{storeId}/webhooks")]
-        public async Task<IActionResult> CreateWebhook(string storeId, Client.Models.CreateStoreWebhookRequest create)
+
+        string CurrentStoreId
         {
-            var store = HttpContext.GetStoreData();
-            if (store == null)
-                return NotFound();
+            get
+            {
+                return this.HttpContext.GetStoreData()?.Id;
+            }
+        }
+
+        [HttpPost("~/api/v1/stores/{storeId}/webhooks")]
+        public async Task<IActionResult> CreateWebhook(Client.Models.CreateStoreWebhookRequest create)
+        {
             ValidateWebhookRequest(create);
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
-            var webhookId = await StoreRepository.CreateWebhook(storeId, ToModel(create));
-            var w = await StoreRepository.GetWebhook(storeId, webhookId);
+            var webhookId = await StoreRepository.CreateWebhook(CurrentStoreId, ToModel(create));
+            var w = await StoreRepository.GetWebhook(CurrentStoreId, webhookId);
             if (w is null)
                 return NotFound();
             return Ok(FromModel(w, true));
@@ -83,25 +86,19 @@ namespace BTCPayServer.Controllers.GreenField
             ValidateWebhookRequest(update);
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
-            var store = HttpContext.GetStoreData();
-            if (store == null)
-                return NotFound();
-            var w = await StoreRepository.GetWebhook(storeId, webhookId);
+            var w = await StoreRepository.GetWebhook(CurrentStoreId, webhookId);
             if (w is null)
                 return NotFound();
             await StoreRepository.UpdateWebhook(storeId, webhookId, ToModel(update));
-            return await ListWebhooks(storeId, webhookId);
+            return await ListWebhooks(webhookId);
         }
         [HttpDelete("~/api/v1/stores/{storeId}/webhooks/{webhookId}")]
-        public async Task<IActionResult> DeleteWebhook(string storeId, string webhookId)
+        public async Task<IActionResult> DeleteWebhook(string webhookId)
         {
-            var store = HttpContext.GetStoreData();
-            if (store == null)
-                return NotFound();
-            var w = await StoreRepository.GetWebhook(storeId, webhookId);
+            var w = await StoreRepository.GetWebhook(CurrentStoreId, webhookId);
             if (w is null)
                 return NotFound();
-            await StoreRepository.DeleteWebhook(storeId, webhookId);
+            await StoreRepository.DeleteWebhook(CurrentStoreId, webhookId);
             return Ok();
         }
         private WebhookBlob ToModel(StoreWebhookBaseData create)
@@ -124,41 +121,35 @@ namespace BTCPayServer.Controllers.GreenField
 
         
         [HttpGet("~/api/v1/stores/{storeId}/webhooks/{webhookId}/deliveries/{deliveryId?}")]
-        public async Task<IActionResult> ListDeliveries(string storeId, string webhookId, string deliveryId, int? count = null)
+        public async Task<IActionResult> ListDeliveries(string webhookId, string deliveryId, int? count = null)
         {
             if (deliveryId is null)
             {
-                var store = HttpContext.GetStoreData();
-                if (store == null)
-                    return NotFound();
-                return Ok((await StoreRepository.GetWebhookDeliveries(storeId, webhookId, count))
+                return Ok((await StoreRepository.GetWebhookDeliveries(CurrentStoreId, webhookId, count))
                         .Select(o => FromModel(o))
                         .ToList());
             }
             else
             {
-                var delivery = await StoreRepository.GetWebhookDelivery(storeId, webhookId, deliveryId);
+                var delivery = await StoreRepository.GetWebhookDelivery(CurrentStoreId, webhookId, deliveryId);
                 if (delivery is null)
                     return NotFound();
                 return Ok(FromModel(delivery));
             }
         }
         [HttpPost("~/api/v1/stores/{storeId}/webhooks/{webhookId}/deliveries/{deliveryId}/redeliver")]
-        public async Task<IActionResult> RedeliverWebhook(string storeId, string webhookId, string deliveryId)
+        public async Task<IActionResult> RedeliverWebhook(string webhookId, string deliveryId)
         {
-            var delivery = await StoreRepository.GetWebhookDelivery(HttpContext.GetStoreData().Id, webhookId, deliveryId);
+            var delivery = await StoreRepository.GetWebhookDelivery(CurrentStoreId, webhookId, deliveryId);
             if (delivery is null)
                 return NotFound();
             return this.Ok(new JValue(await WebhookNotificationManager.Redeliver(deliveryId)));
         }
 
         [HttpGet("~/api/v1/stores/{storeId}/webhooks/{webhookId}/deliveries/{deliveryId}/request")]
-        public async Task<IActionResult> GetDeliveryRequest(string storeId, string webhookId, string deliveryId)
+        public async Task<IActionResult> GetDeliveryRequest(string webhookId, string deliveryId)
         {
-            var store = HttpContext.GetStoreData();
-            if (store == null)
-                return NotFound();
-            var delivery = await StoreRepository.GetWebhookDelivery(storeId, webhookId, deliveryId);
+            var delivery = await StoreRepository.GetWebhookDelivery(CurrentStoreId, webhookId, deliveryId);
             if (delivery is null)
                 return NotFound();
             return File(delivery.GetBlob().Request, "application/json");

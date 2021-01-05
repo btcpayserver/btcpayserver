@@ -17,7 +17,6 @@
 </header>
 <br>
 
-
 @if (Model.CryptoCode == "BTC")
 {
     <div class="mt-5">
@@ -42,15 +41,7 @@
     <div class="list-group">
         <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="file" class="list-group-item list-group-item-action p-4 text-center">
             <h4>Import wallet file</h4>
-            <p class="mb-0">Some subtext that explains this method</p>
-        </a>
-    </div>
-</div>
-<div class="mt-4">
-    <div class="list-group">
-        <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="enter" class="list-group-item list-group-item-action p-4 text-center">
-            <h4>Manually enter</h4>
-            <p class="mb-0">Some subtext that explains this method</p>
+            <p class="mb-0">Air-gapped import by uploading a file exported from your wallet</p>
         </a>
     </div>
 </div>
@@ -60,6 +51,35 @@
             <h4>Scan wallet QR code</h4>
             <p class="mb-0">Some subtext that explains this method</p>
         </a>
+    </div>
+</div>
+
+<hr class="d-block my-5" />
+
+<div class="mt-4">
+    <div class="list-group">
+        <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="xpub" class="list-group-item list-group-item-action p-4 text-center">
+            <h4>Enter extended public key</h4>
+            <p class="mb-0">Manually enter the xpub key</p>
+        </a>
+    </div>
+</div>
+<div class="mt-4">
+    <div class="list-group">
+        @if (Model.CanUseHotWallet)
+        {
+            <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="seed" class="list-group-item list-group-item-action p-4 text-center">
+                <h4>Enter the seed</h4>
+                <p class="mb-0">Manually enter your wallet recovery seed</p>
+            </a>
+        }
+        else
+        {
+            <div class="list-group-item p-4 text-muted text-center">
+                <h4>Enter the seed</h4>
+                <p class="mb-0">This import method is not supported by your instance</p>
+            </div>
+        }
     </div>
 </div>
 

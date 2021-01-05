@@ -5,7 +5,8 @@ namespace BTCPayServer.Models.StoreViewModels
         SelectMethod, // needs to be first to cover the null case
         Hardware,
         File,
-        Enter,
+        Xpub,
+        Seed,
         Scan
     }
 
@@ -18,9 +19,10 @@ namespace BTCPayServer.Models.StoreViewModels
             Method switch
             {
                 WalletImportMethod.Hardware => "ImportWallet/Hardware",
-                WalletImportMethod.Enter => "ImportWallet/Enter",
+                WalletImportMethod.Xpub => "ImportWallet/Xpub",
                 WalletImportMethod.File => "ImportWallet/File",
                 WalletImportMethod.Scan => "ImportWallet/Scan",
+                WalletImportMethod.Seed => "ImportWallet/Seed",
                 WalletImportMethod.SelectMethod => "ImportWallet",
                 _ => "ImportWallet"
             };

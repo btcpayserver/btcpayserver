@@ -29,7 +29,7 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("{storeId}/wallet/{cryptoCode}/import/{method?}")]
-        public ActionResult ImportWalletOptions(ImportWalletViewModel vm)
+        public async Task<IActionResult> ImportWalletOptions(ImportWalletViewModel vm)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
@@ -41,6 +41,10 @@ namespace BTCPayServer.Controllers
             }
             vm.Network = network;
             vm.RootKeyPath = network.GetRootKeyPath();
+
+            var hotWallet = await CanUseHotWallet();
+            vm.CanUseHotWallet = hotWallet.HotWallet;
+            vm.CanUseRPCImport = hotWallet.RPCImport;
 
             return View(vm.ViewName, vm);
         }
@@ -263,11 +267,12 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> GenerateWallet(string storeId, string cryptoCode, GenerateWalletRequest request)
         {
             var hotWallet = await CanUseHotWallet();
-            if (!hotWallet.HotWallet || (!hotWallet.RPCImport && request.ImportKeysToRPC))
+            if (!hotWallet.HotWallet || !hotWallet.RPCImport && request.ImportKeysToRPC)
             {
                 return NotFound();
             }
 
+            bool shouldUseExistingMnemonic = request.ExistingMnemonic != null;
             var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
             var client = _ExplorerProvider.GetExplorerClient(cryptoCode);
             GenerateWalletResponse response;
@@ -297,7 +302,7 @@ namespace BTCPayServer.Controllers
 
             var store = HttpContext.GetStoreData();
             var result = await AddDerivationScheme(storeId,
-                new DerivationSchemeViewModel()
+                new DerivationSchemeViewModel
                 {
                     Confirmation = string.IsNullOrEmpty(request.ExistingMnemonic),
                     Network = network,

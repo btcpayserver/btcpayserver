@@ -1,9 +1,9 @@
 @using NBXplorer.Models
-@model GenerateWalletViewModel
+@model ImportWalletViewModel
 @addTagHelper *, BundlerMinifier.TagHelpers
 @{
     Layout = "_LayoutWalletSetup";
-    ViewData["Title"] = $"Generate {Model.CryptoCode} Wallet";
+    ViewData["Title"] = "Enter the seed";
 }
 
 @section Navbar {
@@ -14,14 +14,14 @@
 
 <header class="text-center">
     <h1>@ViewData["Title"]</h1>
-    <p class="lead text-secondary mt-3">Configure your wallet settings</p>
+    <p class="lead text-secondary mt-3">Manually enter your wallet recovery seed</p>
 </header>
 
 @if (Model.CanUseHotWallet)
 {
     ViewData.Add(nameof(Model.CanUseRPCImport), Model.CanUseRPCImport);
 
-    @await Html.PartialAsync("_GenerateWalletForm", new ImportWalletRequest { AcceptExistingMnemonic = false })
+    @await Html.PartialAsync("_GenerateWalletForm", new ImportWalletRequest { AcceptExistingMnemonic = true })
 }
 else
 {

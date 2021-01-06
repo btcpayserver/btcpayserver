@@ -18,33 +18,40 @@ namespace BTCPayServer.Controllers
     {
         [HttpGet]
         [Route("{storeId}/wallet/{cryptoCode}")]
-        public async Task<IActionResult> SetupWallet(SetupWalletViewModel vm)
+        public async Task<IActionResult> SetupWallet(WalletSetupViewModel vm)
         {
-            var hotWallet = await CanUseHotWallet();
-            vm.CanUseHotWallet = hotWallet.HotWallet;
-            vm.CanUseRPCImport = hotWallet.RPCImport;
+            var (hotWallet, rpcImport) = await CanUseHotWallet();
+            vm.CanUseHotWallet = hotWallet;
+            vm.CanUseRPCImport = rpcImport;
 
             return View(vm);
         }
 
         [HttpGet]
         [Route("{storeId}/wallet/{cryptoCode}/import/{method?}")]
-        public async Task<IActionResult> ImportWalletOptions(ImportWalletViewModel vm)
+        public async Task<IActionResult> ImportWalletOptions(WalletSetupViewModel vm)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
+
             var network = vm.CryptoCode == null ? null : _ExplorerProvider.GetNetwork(vm.CryptoCode);
             if (network == null)
             {
                 return NotFound();
             }
+
+            var (hotWallet, rpcImport) = await CanUseHotWallet();
+
             vm.Network = network;
             vm.RootKeyPath = network.GetRootKeyPath();
+            vm.CanUseHotWallet = hotWallet;
+            vm.CanUseRPCImport = rpcImport;
 
-            var hotWallet = await CanUseHotWallet();
-            vm.CanUseHotWallet = hotWallet.HotWallet;
-            vm.CanUseRPCImport = hotWallet.RPCImport;
+            if (vm.Method == WalletSetupMethod.Seed)
+            {
+                vm.SetupRequest = new WalletSetupRequest {RequireExistingMnemonic = true};
+            }
 
             return View(vm.ViewName, vm);
         }
@@ -52,7 +59,7 @@ namespace BTCPayServer.Controllers
         [HttpPost]
         [Route("{storeId}/wallet/{cryptoCode}/import/{method}")]
         [ApiExplorerSettings(IgnoreApi = true)]
-        public async Task<IActionResult> ImportWallet(ImportWalletViewModel vm)
+        public async Task<IActionResult> ImportWallet(WalletSetupViewModel vm)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
@@ -236,98 +243,115 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("{storeId}/wallet/{cryptoCode}/generate")]
-        public async Task<IActionResult> GenerateWallet(GenerateWalletViewModel vm)
+        public async Task<IActionResult> GenerateWallet(WalletSetupViewModel vm)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
+
             var network = vm.CryptoCode == null ? null : _ExplorerProvider.GetNetwork(vm.CryptoCode);
             if (network == null)
             {
                 return NotFound();
             }
 
-            vm.RootKeyPath = network.GetRootKeyPath();
-            vm.Network = network;
             var derivation = GetExistingDerivationStrategy(vm.CryptoCode, store);
             if (derivation != null)
             {
                 vm.DerivationScheme = derivation.AccountDerivation.ToString();
                 vm.Config = derivation.ToJson();
             }
+
+            var (hotWallet, rpcImport) = await CanUseHotWallet();
+
             vm.Enabled = !store.GetStoreBlob().IsExcluded(new PaymentMethodId(vm.CryptoCode, PaymentTypes.BTCLike));
-            var hotWallet = await CanUseHotWallet();
-            vm.CanUseHotWallet = hotWallet.HotWallet;
-            vm.CanUseRPCImport = hotWallet.RPCImport;
+            vm.CanUseHotWallet = hotWallet;
+            vm.CanUseRPCImport = rpcImport;
+            vm.RootKeyPath = network.GetRootKeyPath();
+            vm.Network = network;
+            vm.SetupRequest = new WalletSetupRequest();
+
             return View(vm);
         }
 
         [HttpPost]
         [Route("{storeId}/wallet/{cryptoCode}/generate")]
-        public async Task<IActionResult> GenerateWallet(string storeId, string cryptoCode, GenerateWalletRequest request)
+        public async Task<IActionResult> GenerateWallet(string storeId, string cryptoCode, WalletSetupRequest request)
         {
-            var hotWallet = await CanUseHotWallet();
-            if (!hotWallet.HotWallet || !hotWallet.RPCImport && request.ImportKeysToRPC)
+            var store = HttpContext.GetStoreData();
+            if (store == null)
+                return NotFound();
+
+            var (hotWallet, rpcImport) = await CanUseHotWallet();
+            if (!hotWallet || !rpcImport && request.ImportKeysToRPC)
             {
                 return NotFound();
             }
 
-            bool shouldUseExistingMnemonic = request.ExistingMnemonic != null;
             var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
             var client = _ExplorerProvider.GetExplorerClient(cryptoCode);
+            var vm = new WalletSetupViewModel
+            {
+                StoreId = storeId,
+                CryptoCode = cryptoCode,
+                Method = request.RequireExistingMnemonic ? WalletSetupMethod.Seed : WalletSetupMethod.Generate,
+                SetupRequest = request,
+                Confirmation = string.IsNullOrEmpty(request.ExistingMnemonic),
+                Network = network,
+                RootKeyPath = network.GetRootKeyPath(),
+                Enabled = !store.GetStoreBlob().IsExcluded(new PaymentMethodId(cryptoCode, PaymentTypes.BTCLike)),
+                Source = "NBXplorer",
+                DerivationSchemeFormat = "BTCPay",
+                CanUseHotWallet = true,
+                CanUseRPCImport = rpcImport
+            };
+
+            if (request.RequireExistingMnemonic && string.IsNullOrEmpty(request.ExistingMnemonic))
+            {
+                ModelState.AddModelError(nameof(request.ExistingMnemonic), "Please provide your existing seed.");
+                return View(vm.ViewName, vm);
+            }
+
             GenerateWalletResponse response;
             try
             {
                 response = await client.GenerateWalletAsync(request);
+                if (response == null)
+                {
+                    throw new Exception("Node unavailable");
+                }
             }
             catch (Exception e)
             {
-                TempData.SetStatusMessageModel(new StatusMessageModel()
+                TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Error,
                     Html = $"There was an error generating your wallet: {e.Message}"
                 });
-                return RedirectToAction(nameof(ImportWallet), new {storeId, cryptoCode});
+                return View(vm.ViewName, vm);
             }
 
-            if (response == null)
-            {
-                TempData.SetStatusMessageModel(new StatusMessageModel()
-                {
-                    Severity = StatusMessageModel.StatusSeverity.Error,
-                    Html = "There was an error generating your wallet. Is your node available?"
-                });
-                return RedirectToAction(nameof(ImportWallet), new {storeId, cryptoCode});
-            }
+            // Set wallet properties from generate response
+            vm.RootFingerprint = response.AccountKeyPath.MasterFingerprint.ToString();
+            vm.DerivationScheme = response.DerivationScheme.ToString();
+            vm.AccountKey = response.AccountHDKey.Neuter().ToWif();
+            vm.KeyPath = response.AccountKeyPath.KeyPath.ToString();
 
-            var store = HttpContext.GetStoreData();
-            var result = await AddDerivationScheme(storeId,
-                new DerivationSchemeViewModel
-                {
-                    Confirmation = string.IsNullOrEmpty(request.ExistingMnemonic),
-                    Network = network,
-                    RootFingerprint = response.AccountKeyPath.MasterFingerprint.ToString(),
-                    RootKeyPath = network.GetRootKeyPath(),
-                    CryptoCode = cryptoCode,
-                    DerivationScheme = response.DerivationScheme.ToString(),
-                    Source = "NBXplorer",
-                    AccountKey = response.AccountHDKey.Neuter().ToWif(),
-                    DerivationSchemeFormat = "BTCPay",
-                    KeyPath = response.AccountKeyPath.KeyPath.ToString(),
-                    Enabled = !store.GetStoreBlob()
-                        .IsExcluded(new PaymentMethodId(cryptoCode, PaymentTypes.BTCLike))
-                }, cryptoCode);
+            var result = await ImportWallet(vm);
+
             if (!ModelState.IsValid || !(result is RedirectToActionResult))
                 return result;
+
             TempData.Clear();
-            if (string.IsNullOrEmpty(request.ExistingMnemonic))
+
+            if (!request.RequireExistingMnemonic)
             {
-                TempData.SetStatusMessageModel(new StatusMessageModel()
+                TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Success,
-                    Html = $"<span class='text-centered'>Your wallet has been generated.</span>"
+                    Html = "<span class='text-centered'>Your wallet has been generated.</span>"
                 });
-                var vm = new RecoverySeedBackupViewModel()
+                var seedVm = new RecoverySeedBackupViewModel
                 {
                     CryptoCode = cryptoCode,
                     Mnemonic = response.Mnemonic,
@@ -335,17 +359,18 @@ namespace BTCPayServer.Controllers
                     IsStored = request.SavePrivateKeys,
                     ReturnUrl = Url.Action(nameof(UpdateStore), new {storeId})
                 };
-                return this.RedirectToRecoverySeedBackup(vm);
+                return this.RedirectToRecoverySeedBackup(seedVm);
             }
-            TempData.SetStatusMessageModel(new StatusMessageModel()
+
+            TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Warning,
-                Html = "Please check your addresses and confirm"
+                Html = "Please check your addresses and confirm."
             });
             return result;
         }
 
-        private IActionResult ConfirmAddresses(ImportWalletViewModel vm, DerivationSchemeSettings strategy)
+        private IActionResult ConfirmAddresses(WalletSetupViewModel vm, DerivationSchemeSettings strategy)
         {
             vm.DerivationScheme = strategy.AccountDerivation.ToString();
             var deposit = new NBXplorer.KeyPathTemplates(null).GetKeyPathTemplate(DerivationFeature.Deposit);

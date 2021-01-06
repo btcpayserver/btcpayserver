@@ -1,5 +1,9 @@
 @using NBitcoin
-@model ImportWalletRequest
+@model WalletSetupRequest
+
+@{
+    var canUseRpcImport = ViewData["CanUseRPCImport"] is true;
+}
 
 @if (!User.IsInRole(Roles.ServerAdmin))
 {
@@ -13,12 +17,14 @@
 }
 
 <form id="generate-wallet-form" method="post" asp-action="GenerateWallet" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-cryptoCode="@Context.GetRouteValue("cryptoCode")">
-    @if (Model.AcceptExistingMnemonic)
+    @if (Model.RequireExistingMnemonic)
     {
+        <input type="hidden" asp-for="RequireExistingMnemonic" value="true" />
+
         <div class="form-group">
             <label asp-for="ExistingMnemonic">Existing Seed</label>
-            <textarea asp-for="ExistingMnemonic" class="form-control" autocomplete="off"></textarea>
-            <div asp-validation-for="ExistingMnemonic" class="text-danger"></div>
+            <textarea asp-for="ExistingMnemonic" class="form-control" autocomplete="off" rows="3"></textarea>
+            <span asp-validation-for="ExistingMnemonic" class="text-danger"></span>
         </div>
     }
 
@@ -29,24 +35,24 @@
             <option value="@ScriptPubKeyType.SegwitP2SH">Segwit wrapped (Compatible with old wallets)</option>
             <option value="@ScriptPubKeyType.Legacy">Legacy (Not recommended)</option>
         </select>
-        <div asp-validation-for="ScriptPubKeyType" class="text-danger"></div>
+        <span asp-validation-for="ScriptPubKeyType" class="text-danger"></span>
     </div>
 
     <div class="form-group">
         <label asp-for="AccountNumber">Account</label>
         <select asp-for="AccountNumber" class="form-control w-auto">
-            @for (int i = 0; i < 20; i++)
+            @for (var i = 0; i < 20; i++)
             {
                 <option value="@i">@i</option>
             }
         </select>
-        <div asp-validation-for="AccountNumber" class="text-danger"></div>
+        <span asp-validation-for="AccountNumber" class="text-danger"></span>
     </div>
 
     <div class="form-group mt-5">
         <label asp-for="SavePrivateKeys">Is hot wallet</label>
         <input type="checkbox" asp-for="SavePrivateKeys" class="ml-1" />
-        <div asp-validation-for="SavePrivateKeys" class="text-danger"></div>
+        <span asp-validation-for="SavePrivateKeys" class="text-danger"></span>
         <p class="text-muted">
             If checked, each private key associated with an address generated will be stored as metadata
             and would be accessible to anyone with access to your server.<br>Enable at your own risk!
@@ -57,12 +63,12 @@
         <button class="btn btn-link px-0" type="button" data-toggle="collapse" data-target="#advanced-settings" aria-expanded="false" aria-controls="advanced-settings">
             Advanced settings
         </button>
-        <div id="advanced-settings" class="collapse @(ViewContext.ModelState.IsValid ? "" : "show")">
+        <div id="advanced-settings" class="collapse @(string.IsNullOrEmpty(Model.Passphrase) && !Model.ImportKeysToRPC ? "" : "show")">
             <div class="pt-3 pb-1">
                 <div class="form-group">
                     <label asp-for="Passphrase">Optional passphrase</label>
                     <input type="text" asp-for="Passphrase" class="form-control" autocomplete="off"/>
-                    <div asp-validation-for="Passphrase" class="text-danger"></div>
+                    <span asp-validation-for="Passphrase" class="text-danger"></span>
                 </div>
                 <div class="form-group">
                     <label for="passphrase_conf">Confirm passphrase</label>
@@ -70,12 +76,12 @@
                     <span class="text-danger field-validation-valid" id="passphrase_conf_validation"></span>
                 </div>
 
-                @if (ViewData["CanUseRPCImport"] is true)
+                @if (canUseRpcImport)
                 {
                     <div class="form-group mt-5">
                         <label asp-for="ImportKeysToRPC">Import keys to RPC</label>
                         <input type="checkbox" asp-for="ImportKeysToRPC" class="ml-1" />
-                        <div asp-validation-for="ImportKeysToRPC" class="text-danger"></div>
+                        <span asp-validation-for="ImportKeysToRPC" class="text-danger"></span>
                         <p class="text-muted">
                             If checked, each address generated will be imported into the node wallet so that you can
                             view your balance through your node. When this is enabled alongside "Is hot wallet", you
@@ -87,22 +93,18 @@
         </div>
     </div>
 
-
     <button type="submit" class="btn btn-primary" id="btn-generate">Generate</button>
 </form>
 
 <script type="text/javascript">
     document.getElementById("generate-wallet-form").addEventListener("submit", event => {
-        event.preventDefault();
         const $form = event.currentTarget;
 
         if ($form.elements["passphrase_conf"].value !== $form.elements["Passphrase"].value) {
             const $validation = document.getElementById("passphrase_conf_validation");
             $validation.classList.remove("field-validation-valid");
             $validation.innerText = "Invalid passphrase confirmation";
-            return false;
+            event.preventDefault();
         }
-
-        return true;
     });
 </script>

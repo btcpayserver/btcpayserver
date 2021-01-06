@@ -1,5 +1,4 @@
-@using NBXplorer.Models
-@model ImportWalletViewModel
+@model WalletSetupViewModel
 @addTagHelper *, BundlerMinifier.TagHelpers
 @{
     Layout = "_LayoutWalletSetup";
@@ -21,7 +20,7 @@
 {
     ViewData.Add(nameof(Model.CanUseRPCImport), Model.CanUseRPCImport);
 
-    @await Html.PartialAsync("_GenerateWalletForm", new ImportWalletRequest { AcceptExistingMnemonic = true })
+    @await Html.PartialAsync("_GenerateWalletForm", Model.SetupRequest)
 }
 else
 {

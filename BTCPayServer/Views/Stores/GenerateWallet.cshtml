@@ -1,5 +1,4 @@
-@using NBXplorer.Models
-@model GenerateWalletViewModel
+@model WalletSetupViewModel
 @addTagHelper *, BundlerMinifier.TagHelpers
 @{
     Layout = "_LayoutWalletSetup";
@@ -7,7 +6,7 @@
 }
 
 @section Navbar {
-    <a asp-controller="Stores" asp-action="ImportWalletOptions" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="">
+    <a asp-controller="Stores" asp-action="SetupWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
         <vc:icon symbol="back" />
     </a>
 }
@@ -21,7 +20,7 @@
 {
     ViewData.Add(nameof(Model.CanUseRPCImport), Model.CanUseRPCImport);
 
-    @await Html.PartialAsync("_GenerateWalletForm", new ImportWalletRequest { AcceptExistingMnemonic = false })
+    @await Html.PartialAsync("_GenerateWalletForm", Model.SetupRequest)
 }
 else
 {

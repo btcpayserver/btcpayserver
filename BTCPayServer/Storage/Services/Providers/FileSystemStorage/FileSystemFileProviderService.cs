@@ -5,6 +5,7 @@ using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Storage.Models;
 using BTCPayServer.Storage.Services.Providers.FileSystemStorage.Configuration;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using TwentyTwenty.Storage;
 using TwentyTwenty.Storage.Local;
@@ -14,9 +15,9 @@ namespace BTCPayServer.Storage.Services.Providers.FileSystemStorage
     public class
         FileSystemFileProviderService : BaseTwentyTwentyStorageFileProviderServiceBase<FileSystemStorageConfiguration>
     {
-        private readonly DataDirectories _datadirs;
+        private readonly IOptions<DataDirectories> _datadirs;
 
-        public FileSystemFileProviderService(DataDirectories datadirs)
+        public FileSystemFileProviderService(IOptions<DataDirectories> datadirs)
         {
             _datadirs = datadirs;
         }
@@ -30,14 +31,14 @@ namespace BTCPayServer.Storage.Services.Providers.FileSystemStorage
         protected override Task<IStorageProvider> GetStorageProvider(FileSystemStorageConfiguration configuration)
         {
             return Task.FromResult<IStorageProvider>(
-                new LocalStorageProvider(new DirectoryInfo(_datadirs.StorageDir).FullName));
+                new LocalStorageProvider(new DirectoryInfo(_datadirs.Value.StorageDir).FullName));
         }
 
         public override async Task<string> GetFileUrl(Uri baseUri, StoredFile storedFile, StorageSettings configuration)
         {
             var baseResult = await base.GetFileUrl(baseUri, storedFile, configuration);
             var url = new Uri(baseUri, LocalStorageDirectoryName);
-            return baseResult.Replace(new DirectoryInfo(_datadirs.StorageDir).FullName, url.AbsoluteUri,
+            return baseResult.Replace(new DirectoryInfo(_datadirs.Value.StorageDir).FullName, url.AbsoluteUri,
                 StringComparison.InvariantCultureIgnoreCase);
         }
 
@@ -53,13 +54,13 @@ namespace BTCPayServer.Storage.Services.Providers.FileSystemStorage
                 IsDownload = isDownload
             };
             var name = Guid.NewGuid().ToString();
-            var fullPath = Path.Combine(_datadirs.TempStorageDir, name);
+            var fullPath = Path.Combine(_datadirs.Value.TempStorageDir, name);
             if (!File.Exists(fullPath))
             {
                 File.Create(fullPath).Dispose();
             }
 
-            await File.WriteAllTextAsync(Path.Combine(_datadirs.TempStorageDir, name), JsonConvert.SerializeObject(localFileDescriptor));
+            await File.WriteAllTextAsync(Path.Combine(_datadirs.Value.TempStorageDir, name), JsonConvert.SerializeObject(localFileDescriptor));
 
             return new Uri(baseUri, $"{LocalStorageDirectoryName}tmp/{name}{(isDownload ? "?download" : string.Empty)}").AbsoluteUri;
         }

@@ -3,6 +3,7 @@ using BTCPayServer.Abstractions.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.Extensions.Options;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Migrations.Operations;
 
@@ -10,10 +11,10 @@ namespace BTCPayServer.Abstractions.Contracts
 {
     public abstract class BaseDbContextFactory<T> where T: DbContext
     {
-        private readonly DatabaseOptions _options;
+        private readonly IOptions<DatabaseOptions> _options;
         private readonly string _schemaPrefix;
 
-        public BaseDbContextFactory(DatabaseOptions options, string schemaPrefix)
+        public BaseDbContextFactory(IOptions<DatabaseOptions> options, string schemaPrefix)
         {
             _options = options;
             _schemaPrefix = schemaPrefix;
@@ -65,10 +66,10 @@ namespace BTCPayServer.Abstractions.Contracts
 
         public void ConfigureBuilder(DbContextOptionsBuilder builder)
         {
-            switch (_options.DatabaseType)
+            switch (_options.Value.DatabaseType)
             {
                 case DatabaseType.Sqlite:
-                    builder.UseSqlite(_options.ConnectionString, o =>
+                    builder.UseSqlite(_options.Value.ConnectionString, o =>
                     {
                         if (!string.IsNullOrEmpty(_schemaPrefix))
                         {
@@ -78,7 +79,7 @@ namespace BTCPayServer.Abstractions.Contracts
                     break;
                 case DatabaseType.Postgres:
                     builder
-                        .UseNpgsql(_options.ConnectionString, o =>
+                        .UseNpgsql(_options.Value.ConnectionString, o =>
                         {
                             o.EnableRetryOnFailure(10);
                             if (!string.IsNullOrEmpty(_schemaPrefix))
@@ -89,7 +90,7 @@ namespace BTCPayServer.Abstractions.Contracts
                         .ReplaceService<IMigrationsSqlGenerator, CustomNpgsqlMigrationsSqlGenerator>();
                     break;
                 case DatabaseType.MySQL:
-                    builder.UseMySql(_options.ConnectionString, o =>
+                    builder.UseMySql(_options.Value.ConnectionString, o =>
                     {
                         o.EnableRetryOnFailure(10);
                             

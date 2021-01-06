@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using NBitcoin.Logging;
 
 namespace BTCPayServer.Storage
@@ -28,28 +29,28 @@ namespace BTCPayServer.Storage
             //            serviceCollection.AddSingleton<IStorageProviderService, GoogleCloudStorageFileProviderService>();
         }
 
-        public static void UseProviderStorage(this IApplicationBuilder builder, DataDirectories datadirs)
+        public static void UseProviderStorage(this IApplicationBuilder builder, IOptions<DataDirectories> datadirs)
         {
             try
             {
                 DirectoryInfo dirInfo;
-                if (!Directory.Exists(datadirs.StorageDir))
+                if (!Directory.Exists(datadirs.Value.StorageDir))
                 {
-                    dirInfo = Directory.CreateDirectory(datadirs.StorageDir);
+                    dirInfo = Directory.CreateDirectory(datadirs.Value.StorageDir);
                 }
                 else
                 {
-                    dirInfo = new DirectoryInfo(datadirs.StorageDir);
+                    dirInfo = new DirectoryInfo(datadirs.Value.StorageDir);
                 }
 
                 DirectoryInfo tmpdirInfo;
-                if (!Directory.Exists(datadirs.TempStorageDir))
+                if (!Directory.Exists(datadirs.Value.TempStorageDir))
                 {
-                    tmpdirInfo = Directory.CreateDirectory(datadirs.TempStorageDir);
+                    tmpdirInfo = Directory.CreateDirectory(datadirs.Value.TempStorageDir);
                 }
                 else
                 {
-                    tmpdirInfo = new DirectoryInfo(datadirs.TempStorageDir);
+                    tmpdirInfo = new DirectoryInfo(datadirs.Value.TempStorageDir);
                 }
 
                 builder.UseStaticFiles(new StaticFileOptions()

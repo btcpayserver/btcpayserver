@@ -21,6 +21,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
 using NBitcoin;
 
@@ -45,11 +46,10 @@ namespace BTCPayServer.Hosting
         public void ConfigureServices(IServiceCollection services)
         {
             Logs.Configure(LoggerFactory);
-            services.ConfigureBTCPayServer(Configuration);
             services.AddMemoryCache();
             services.AddDataProtection()
                 .SetApplicationName("BTCPay Server")
-                .PersistKeysToFileSystem(new DirectoryInfo(new DataDirectories(Configuration).DataDir));
+                .PersistKeysToFileSystem(new DirectoryInfo(new DataDirectories().Configure(Configuration).DataDir));
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
@@ -156,7 +156,7 @@ namespace BTCPayServer.Hosting
             IWebHostEnvironment env,
             IServiceProvider prov,
             BTCPayServerOptions options,
-            DataDirectories dataDirectories,
+            IOptions<DataDirectories> dataDirectories,
             ILoggerFactory loggerFactory)
         {
             Logs.Configuration.LogInformation($"Root Path: {options.RootPath}");
@@ -172,7 +172,7 @@ namespace BTCPayServer.Hosting
                 });
             }
         }
-        private static void ConfigureCore(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider prov, ILoggerFactory loggerFactory, DataDirectories dataDirectories)
+        private static void ConfigureCore(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider prov, ILoggerFactory loggerFactory, IOptions<DataDirectories> dataDirectories)
         {
             Logs.Configure(loggerFactory);
             app.UsePlugins();

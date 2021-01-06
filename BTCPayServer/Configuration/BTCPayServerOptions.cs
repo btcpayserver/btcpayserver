@@ -44,7 +44,7 @@ namespace BTCPayServer.Configuration
             {
                 if (!Path.IsPathRooted(logfile))
                 {
-                    logfile = Path.Combine(new DataDirectories(configuration).DataDir, logfile);
+                    logfile = Path.Combine(new DataDirectories().Configure(configuration).DataDir, logfile);
                 }
             }
             return logfile;

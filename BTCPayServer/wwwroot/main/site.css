@@ -375,11 +375,15 @@ svg.icon-note {
     box-shadow: 0px 2px 16px rgba(0, 0, 0, 0.08);
     padding: 0;
 }
+
 @media (min-width: 992px) {
     .notification-dropdown {
         width: 420px;
+        top: 64px;
+        right: -32px;
     }
 }
+
 .notification:hover {
     background-color: var(--btcpay-body-bg);
 }

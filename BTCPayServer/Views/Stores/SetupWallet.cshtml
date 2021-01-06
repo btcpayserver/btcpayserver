@@ -13,7 +13,7 @@
 <div class="mt-5">
     <h3 class="my-4">I have a wallet</h3>
     <div class="list-group">
-        <a asp-controller="Stores" asp-action="ImportWalletOptions" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" class="list-group-item list-group-item-action p-4">
+        <a asp-controller="Stores" asp-action="ImportWalletOptions" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="import-wallet-options-link" class="list-group-item list-group-item-action p-4">
             <h4>Connect an existing wallet</h4>
             <p class="mb-0">Connect, import, or scan an existing hardware or software wallet</p>
         </a>
@@ -26,7 +26,7 @@
     <div class="list-group">
         @if (Model.CanUseHotWallet)
         {
-            <a asp-controller="Stores" asp-action="GenerateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" class="list-group-item list-group-item-action p-4">
+            <a asp-controller="Stores" asp-action="GenerateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="generate-wallet-link" class="list-group-item list-group-item-action p-4">
                 <h4>Create a new wallet</h4>
                 <p class="mb-0">Create a brand-new wallet to use</p>
             </a>

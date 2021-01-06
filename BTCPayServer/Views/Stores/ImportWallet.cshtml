@@ -21,7 +21,7 @@
 {
     <div class="mt-5">
         <div class="list-group">
-            <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="hardware" class="list-group-item list-group-item-action p-4 text-center only-for-js">
+            <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="hardware" id="import-hardware-link" class="list-group-item list-group-item-action p-4 text-center only-for-js">
                 <h4>Connect hardware wallet</h4>
                 <p class="mb-0">Import your keys with the BTCPay Server Vault</p>
             </a>
@@ -39,7 +39,7 @@
 
 <div>
     <div class="list-group">
-        <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="file" class="list-group-item list-group-item-action p-4 text-center">
+        <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="file" id="import-file-link" class="list-group-item list-group-item-action p-4 text-center">
             <h4>Import wallet file</h4>
             <p class="mb-0">Air-gapped import by uploading a file exported from your wallet</p>
         </a>
@@ -47,7 +47,7 @@
 </div>
 <div class="mt-4">
     <div class="list-group">
-        <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="scan" class="list-group-item list-group-item-action p-4 text-center">
+        <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="scan" id="import-scan-link" class="list-group-item list-group-item-action p-4 text-center">
             <h4>Scan wallet QR code</h4>
             <p class="mb-0">Some subtext that explains this method</p>
         </a>
@@ -58,7 +58,7 @@
 
 <div class="mt-4">
     <div class="list-group">
-        <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="xpub" class="list-group-item list-group-item-action p-4 text-center">
+        <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="xpub" id="import-xpub-link" class="list-group-item list-group-item-action p-4 text-center">
             <h4>Enter extended public key</h4>
             <p class="mb-0">Manually enter the xpub key</p>
         </a>
@@ -66,20 +66,10 @@
 </div>
 <div class="mt-4">
     <div class="list-group">
-        @if (Model.CanUseHotWallet)
-        {
-            <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="seed" class="list-group-item list-group-item-action p-4 text-center">
-                <h4>Enter the seed</h4>
-                <p class="mb-0">Manually enter your wallet recovery seed</p>
-            </a>
-        }
-        else
-        {
-            <div class="list-group-item p-4 text-muted text-center">
-                <h4>Enter the seed</h4>
-                <p class="mb-0">This import method is not supported by your instance</p>
-            </div>
-        }
+        <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="seed" id="import-seed-link" class="list-group-item list-group-item-action p-4 text-center">
+            <h4>Enter the seed</h4>
+            <p class="mb-0">Manually enter your wallet recovery seed</p>
+        </a>
     </div>
 </div>
 

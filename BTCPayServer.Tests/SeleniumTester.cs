@@ -116,15 +116,16 @@ namespace BTCPayServer.Tests
         public Mnemonic GenerateWallet(string cryptoCode = "BTC", string seed = "", bool importkeys = false, bool privkeys = false, ScriptPubKeyType format = ScriptPubKeyType.Segwit)
         {
             Driver.FindElement(By.Id($"Modify{cryptoCode}")).Click();
-            Driver.FindElement(By.Id("import-from-btn")).Click();
-            Driver.FindElement(By.Id("nbxplorergeneratewalletbtn")).Click();
+            Driver.FindElement(By.Id("import-wallet-options-link")).Click();
+            Driver.FindElement(By.Id("import-seed-link")).Click();
+            Driver.FindElement(By.Id("advanced-settings-button")).Click();
             Driver.FindElement(By.Id("ExistingMnemonic")).SendKeys(seed);
             SetCheckbox(Driver.FindElement(By.Id("SavePrivateKeys")), privkeys);
             SetCheckbox(Driver.FindElement(By.Id("ImportKeysToRPC")), importkeys);
             Driver.FindElement(By.Id("ScriptPubKeyType")).Click();
             Driver.FindElement(By.CssSelector($"#ScriptPubKeyType option[value={format}]")).Click();
-            Logs.Tester.LogInformation("Trying to click btn-generate");
-            Driver.FindElement(By.Id("btn-generate")).Click();
+            Logs.Tester.LogInformation("Trying to click Continue button");
+            Driver.FindElement(By.Id("Continue")).Click();
             // Seed backup page
             FindAlertMessage();
             if (string.IsNullOrEmpty(seed))
@@ -142,7 +143,9 @@ namespace BTCPayServer.Tests
         public void AddDerivationScheme(string cryptoCode = "BTC", string derivationScheme = "xpub661MyMwAqRbcGABgHMUXDzPzH1tU7eZaAaJQXhDXsSxsqyQzQeU6kznNfSuAyqAK9UaWSaZaMFdNiY5BCF4zBPAzSnwfUAwUhwttuAKwfRX-[legacy]")
         {
             Driver.FindElement(By.Id($"Modify{cryptoCode}")).Click();
-            Driver.FindElement(By.ClassName("store-derivation-scheme")).SendKeys(derivationScheme);
+            Driver.FindElement(By.Id("import-wallet-options-link")).Click();
+            Driver.FindElement(By.Id("import-xpub-link")).Click();
+            Driver.FindElement(By.Id("DerivationScheme")).SendKeys(derivationScheme);
             Driver.FindElement(By.Id("Continue")).Click();
             Driver.FindElement(By.Id("Confirm")).Click();
             FindAlertMessage();

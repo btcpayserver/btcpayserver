@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Threading.Tasks;
+using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
@@ -16,12 +18,14 @@ namespace BTCPayServer.HostedServices
         private readonly InvoiceRepository _invoiceRepository;
         private readonly SettingsRepository _settingsRepository;
         private readonly ApplicationDbContextFactory _dbContextFactory;
+        private readonly DataDirectories _datadirs;
 
-        public DbMigrationsHostedService(InvoiceRepository invoiceRepository, SettingsRepository settingsRepository, ApplicationDbContextFactory dbContextFactory)
+        public DbMigrationsHostedService(InvoiceRepository invoiceRepository, SettingsRepository settingsRepository, ApplicationDbContextFactory dbContextFactory, DataDirectories datadirs)
         {
             _invoiceRepository = invoiceRepository;
             _settingsRepository = settingsRepository;
             _dbContextFactory = dbContextFactory;
+            _datadirs = datadirs;
         }
         
 
@@ -35,7 +39,7 @@ namespace BTCPayServer.HostedServices
             var settings = await _settingsRepository.GetSettingAsync<MigrationSettings>();
             if (settings.MigratedInvoiceTextSearchPages != int.MaxValue)
             {
-                await MigratedInvoiceTextSearchToDb(settings.MigratedInvoiceTextSearchPages.Value);
+                await MigratedInvoiceTextSearchToDb(settings.MigratedInvoiceTextSearchPages ?? 0);
             }
 
             // Refresh settings since these operations may run for very long time
@@ -43,6 +47,14 @@ namespace BTCPayServer.HostedServices
 
         private async Task MigratedInvoiceTextSearchToDb(int startFromPage)
         {
+            // deleting legacy DBriize database if present
+            var dbpath = Path.Combine(_datadirs.DataDir, "InvoiceDB");
+            if (Directory.Exists(dbpath))
+            {
+                Directory.Delete(dbpath, true);
+            }
+            
+            // migrate data to new table using invoices from database
             using var ctx = _dbContextFactory.CreateContext();
 
             var invoiceQuery = new InvoiceQuery { IncludeArchived = true };

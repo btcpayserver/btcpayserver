@@ -23,7 +23,7 @@
 
         <div class="form-group">
             <label asp-for="ExistingMnemonic">Existing Seed</label>
-            <input asp-for="ExistingMnemonic" class="form-control" autocomplete="off" />
+            <textarea asp-for="ExistingMnemonic" class="form-control text-monospace py-2" rows="2" autocomplete="off"></textarea>
             <span asp-validation-for="ExistingMnemonic" class="text-danger"></span>
         </div>
     }

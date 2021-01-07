@@ -53,7 +53,7 @@ namespace BTCPayServer
         public bool SupportRBF { get; internal set; }
         public string LightningImagePath { get; set; }
         public BTCPayDefaultSettings DefaultSettings { get; set; }
-        public KeyPath CoinType { get; internal set; }
+        public KeyPath CoinType { get; set; }
 
         public Dictionary<uint, DerivationType> ElectrumMapping = new Dictionary<uint, DerivationType>();
 
@@ -132,7 +132,7 @@ namespace BTCPayServer
     {
         private string _blockExplorerLink;
         public bool ShowSyncSummary { get; set; } = true;
-        public string CryptoCode { get; internal set; }
+        public string CryptoCode { get; set; }
 
         public string BlockExplorerLink
         {
@@ -161,7 +161,7 @@ namespace BTCPayServer
         }
 
         public string CryptoImagePath { get; set; }
-        public string[] DefaultRateRules { get; internal set; } = Array.Empty<string>();
+        public string[] DefaultRateRules { get; set; } = Array.Empty<string>();
         public override string ToString()
         {
             return CryptoCode;

@@ -43,6 +43,7 @@ namespace BTCPayServer.PluginPacker
             }
             ZipFile.CreateFromDirectory(directory, outputFile + ".btcpay", CompressionLevel.Optimal, false);
             File.WriteAllText(outputFile + ".btcpay.json", json);
+            Console.WriteLine($"Created {outputFile}.btcpay at {directory}");
         }
         
         private static Type[] GetAllExtensionTypesFromAssembly(Assembly assembly)

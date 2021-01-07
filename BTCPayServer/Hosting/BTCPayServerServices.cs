@@ -70,7 +70,6 @@ namespace BTCPayServer.Hosting
         }
         public static IServiceCollection AddBTCPayServer(this IServiceCollection services, IConfiguration configuration)
         {
-            services.AddSingleton<DataDirectories>();
             services.AddSingleton<MvcNewtonsoftJsonOptions>(o => o.GetRequiredService<IOptions<MvcNewtonsoftJsonOptions>>().Value);
             services.AddDbContext<ApplicationDbContext>((provider, o) =>
             {
@@ -244,7 +243,7 @@ namespace BTCPayServer.Hosting
 
             services.TryAddSingleton<AppService>();
             services.AddSingleton<PluginService>();
-            services.AddSingleton<IPluginHookService>(provider => provider.GetService<PluginService>());
+            services.AddSingleton<IPluginHookService, PluginHookService>();
             services.TryAddTransient<Safe>();
             services.TryAddSingleton<Ganss.XSS.HtmlSanitizer>(o =>
             {

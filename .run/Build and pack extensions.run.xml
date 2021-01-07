@@ -1,6 +1,0 @@
-<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Build and pack plugins" type="CompoundRunConfigurationType">
-    <toRun name="Pack Test Plugin" type="DotNetProject" />
-    <method v="2" />
-  </configuration>
-</component>

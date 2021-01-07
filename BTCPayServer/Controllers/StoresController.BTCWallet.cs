@@ -140,12 +140,13 @@ namespace BTCPayServer.Controllers
                     }
                     else
                     {
-                        strategy = null;
+                        ModelState.AddModelError(nameof(vm.DerivationScheme), "Please provide your extended public key");
+                        return View(vm.ViewName, vm);
                     }
                 }
                 catch
                 {
-                    ModelState.AddModelError(nameof(vm.DerivationScheme), "Invalid Derivation Scheme");
+                    ModelState.AddModelError(nameof(vm.DerivationScheme), "Invalid extended public key");
                     return View(vm.ViewName, vm);
                 }
             }
@@ -180,7 +181,7 @@ namespace BTCPayServer.Controllers
                 }
                 catch
                 {
-                    ModelState.AddModelError(nameof(vm.DerivationScheme), "Invalid Derivation Scheme");
+                    ModelState.AddModelError(nameof(vm.DerivationScheme), "Invalid derivation scheme");
                     return View(vm.ViewName, vm);
                 }
 
@@ -308,7 +309,7 @@ namespace BTCPayServer.Controllers
 
             if (request.RequireExistingMnemonic && string.IsNullOrEmpty(request.ExistingMnemonic))
             {
-                ModelState.AddModelError(nameof(request.ExistingMnemonic), "Please provide your existing seed.");
+                ModelState.AddModelError(nameof(request.ExistingMnemonic), "Please provide your existing seed");
                 return View(vm.ViewName, vm);
             }
 

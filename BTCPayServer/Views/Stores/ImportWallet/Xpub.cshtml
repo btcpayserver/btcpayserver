@@ -19,11 +19,6 @@
     </p>
 </header>
 
-@if (!ViewContext.ModelState.IsValid)
-{
-    <div asp-validation-summary="All" class="text-danger"></div>
-}
-
 <form method="post">
     <input asp-for="Config" type="hidden" />
     <input asp-for="CryptoCode" type="hidden" />

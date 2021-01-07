@@ -36,12 +36,12 @@ namespace BTCPayServer.Services.Notifications.Blobs
 
             internal static Dictionary<string, string> TextMapping = new Dictionary<string, string>()
             {
-                // {InvoiceEvent.PaidInFull, "was fully paid."},
-                {InvoiceEvent.PaidAfterExpiration, "was paid after expiration."},
-                {InvoiceEvent.ExpiredPaidPartial, "expired with partial payments."},
-                {InvoiceEvent.FailedToConfirm, "has payments that failed to confirm on time."},
-                // {InvoiceEvent.ReceivedPayment, "received a payment."},
-                {InvoiceEvent.Confirmed, "was confirmed paid."}
+                // {InvoiceEvent.PaidInFull, "was fully paid"},
+                {InvoiceEvent.PaidAfterExpiration, "was paid after expiration"},
+                {InvoiceEvent.ExpiredPaidPartial, "expired with partial payments"},
+                {InvoiceEvent.FailedToConfirm, "has payments that failed to confirm on time"},
+                // {InvoiceEvent.ReceivedPayment, "received a payment"},
+                {InvoiceEvent.Confirmed, "was confirmed paid"}
             };
 
             protected override void FillViewModel(InvoiceEventNotification notification,

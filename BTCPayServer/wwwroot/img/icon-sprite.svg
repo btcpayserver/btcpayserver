@@ -1,0 +1,3 @@
+<svg width="0" height="0" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<symbol id="note" viewBox="0 0 16 16"><path d="M14.2 16H1.8C.808 16 0 15.192 0 14.2V1.8C0 .808.808 0 1.8 0h12.4c.992 0 1.8.808 1.8 1.8v12.4c0 .992-.808 1.8-1.8 1.8zM1.8 1.2a.6.6 0 00-.6.6v12.4c0 .33.269.6.6.6h12.4a.6.6 0 00.6-.6V1.8a.6.6 0 00-.6-.6H1.8z" fill="currentColor"/><path d="M12 5.312H4a.6.6 0 010-1.2h8a.6.6 0 110 1.2zM12 8.6H4a.6.6 0 010-1.2h8a.6.6 0 010 1.2zm-4 3.288H4a.6.6 0 110-1.2h4a.6.6 0 010 1.2z" fill="currentColor"/></symbol>
+</svg>

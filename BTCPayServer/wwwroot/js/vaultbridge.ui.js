@@ -77,7 +77,7 @@ var vaultui = (function () {
         this.retryShowing = false;
 
         function showRetry() {
-            var button = $(".vault-retry");
+            var button = $("#vault-retry");
             self.retryShowing = true;
             button.show();
         }
@@ -160,7 +160,7 @@ var vaultui = (function () {
         }
 
         this.waitRetryPushed = function () {
-            var button = $(".vault-retry");
+            var button = $("#vault-retry");
             return new Promise(function (resolve) {
                 button.click(function () {
                     // Cleanup old feedback

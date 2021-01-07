@@ -38,24 +38,13 @@
         <span asp-validation-for="ScriptPubKeyType" class="text-danger"></span>
     </div>
 
-    <div class="form-group">
-        <label asp-for="AccountNumber">Account</label>
-        <select asp-for="AccountNumber" class="form-control w-auto">
-            @for (var i = 0; i < 20; i++)
-            {
-                <option value="@i">@i</option>
-            }
-        </select>
-        <span asp-validation-for="AccountNumber" class="text-danger"></span>
-    </div>
-
     <div class="form-group mt-5">
         <label asp-for="SavePrivateKeys">Is hot wallet</label>
         <input type="checkbox" asp-for="SavePrivateKeys" class="ml-1" />
         <span asp-validation-for="SavePrivateKeys" class="text-danger"></span>
         <p class="text-muted">
             If checked, each private key associated with an address generated will be stored as metadata
-            and would be accessible to anyone with access to your server.<br>Enable at your own risk!
+            and would be accessible to anyone with admin access to your server.<br>Enable at your own risk!
         </p>
     </div>
 
@@ -66,7 +55,17 @@
         <div id="advanced-settings" class="collapse @(string.IsNullOrEmpty(Model.Passphrase) && !Model.ImportKeysToRPC ? "" : "show")">
             <div class="pt-3 pb-1">
                 <div class="form-group">
-                    <label asp-for="Passphrase">Optional passphrase</label>
+                    <label asp-for="AccountNumber">Account</label>
+                    <select asp-for="AccountNumber" class="form-control w-auto">
+                        @for (var i = 0; i < 20; i++)
+                        {
+                            <option value="@i">@i</option>
+                        }
+                    </select>
+                    <span asp-validation-for="AccountNumber" class="text-danger"></span>
+                </div>
+                <div class="form-group mt-5">
+                    <label asp-for="Passphrase">Optional passphrase (BIP39)</label>
                     <input type="text" asp-for="Passphrase" class="form-control" autocomplete="off"/>
                     <span asp-validation-for="Passphrase" class="text-danger"></span>
                 </div>

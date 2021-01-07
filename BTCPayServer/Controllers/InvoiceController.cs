@@ -98,8 +98,7 @@ namespace BTCPayServer.Controllers
             {
                 throw new BitpayHttpException(400, "The expirationTime is set too soon");
             }
-            invoice.Currency = invoice.Currency?.ToUpperInvariant() ?? "USD";
-            entity.Currency = invoice.Currency;
+            invoice.Currency = invoice.Currency?.Trim().ToUpperInvariant() ?? "USD";
             entity.Metadata.OrderId = invoice.OrderId;
             entity.Metadata.PosData = invoice.PosData;
             entity.ServerUrl = serverUrl;
@@ -169,6 +168,7 @@ namespace BTCPayServer.Controllers
             if (invoice.Metadata != null)
                 entity.Metadata = InvoiceMetadata.FromJObject(invoice.Metadata);
             invoice.Checkout ??= new CreateInvoiceRequest.CheckoutOptions();
+            invoice.Currency = invoice.Currency?.Trim().ToUpperInvariant() ?? "USD";
             entity.Currency = invoice.Currency;
             entity.Price = invoice.Amount;
             entity.SpeedPolicy = invoice.Checkout.SpeedPolicy ?? store.SpeedPolicy;

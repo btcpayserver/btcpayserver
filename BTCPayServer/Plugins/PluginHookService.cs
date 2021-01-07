@@ -21,6 +21,7 @@ namespace BTCPayServer.Plugins
             _logger = logger;
         }
 
+        // Trigger simple action hook for registered plugins
         public async Task ApplyAction(string hook, object args)
         {
             var filters = _actions

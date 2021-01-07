@@ -116,14 +116,27 @@ namespace BTCPayServer.Tests
         public Mnemonic GenerateWallet(string cryptoCode = "BTC", string seed = "", bool importkeys = false, bool privkeys = false, ScriptPubKeyType format = ScriptPubKeyType.Segwit)
         {
             Driver.FindElement(By.Id($"Modify{cryptoCode}")).Click();
-            Driver.FindElement(By.Id("import-wallet-options-link")).Click();
-            Driver.FindElement(By.Id("import-seed-link")).Click();
-            Driver.FindElement(By.Id("advanced-settings-button")).Click();
-            Driver.FindElement(By.Id("ExistingMnemonic")).SendKeys(seed);
-            SetCheckbox(Driver.FindElement(By.Id("SavePrivateKeys")), privkeys);
-            SetCheckbox(Driver.FindElement(By.Id("ImportKeysToRPC")), importkeys);
+
+            if (string.IsNullOrEmpty(seed))
+            {
+                Logs.Tester.LogInformation("Generating new seed");
+                Driver.FindElement(By.Id("generate-wallet-link")).Click();
+            }
+            else
+            {
+                Logs.Tester.LogInformation("Progressing with existing seed");
+                Driver.FindElement(By.Id("import-wallet-options-link")).Click();
+                Driver.FindElement(By.Id("import-seed-link")).Click();
+                Driver.FindElement(By.Id("ExistingMnemonic")).SendKeys(seed);
+            }
+
             Driver.FindElement(By.Id("ScriptPubKeyType")).Click();
             Driver.FindElement(By.CssSelector($"#ScriptPubKeyType option[value={format}]")).Click();
+
+            Driver.FindElement(By.Id("advanced-settings-button")).Click();
+            SetCheckbox(Driver.FindElement(By.Id("SavePrivateKeys")), privkeys);
+            SetCheckbox(Driver.FindElement(By.Id("ImportKeysToRPC")), importkeys);
+
             Logs.Tester.LogInformation("Trying to click Continue button");
             Driver.FindElement(By.Id("Continue")).Click();
             // Seed backup page
@@ -132,6 +145,7 @@ namespace BTCPayServer.Tests
             {
                 seed = Driver.FindElements(By.Id("recovery-phrase")).First().GetAttribute("data-mnemonic");
             }
+
             // Confirm seed backup
             Driver.FindElement(By.Id("confirm")).Click();
             Driver.FindElement(By.Id("submit")).Click();

@@ -39,6 +39,7 @@ namespace BTCPayServer.Plugins
             }
         }
 
+        // Trigger hook on which registered plugins can optionally return modified args or new object back
         public async Task<object> ApplyFilter(string hook, object args)
         {
             var filters = _filters

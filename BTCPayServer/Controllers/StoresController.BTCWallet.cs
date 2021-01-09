@@ -192,12 +192,12 @@ namespace BTCPayServer.Controllers
                 {
                     var label = willBeExcluded ? "disabled" : "enabled";
                     TempData[WellKnownTempData.SuccessMessage] =
-                        $"On-Chain payments for {network.CryptoCode} has been {label}.";
+                        $"On-Chain payments for {network.CryptoCode} have been {label}.";
                 }
                 else
                 {
                     TempData[WellKnownTempData.SuccessMessage] =
-                        $"Derivation settings for {network.CryptoCode} has been modified.";
+                        $"Derivation settings for {network.CryptoCode} have been modified.";
                 }
 
                 // This is success case when derivation scheme is added to the store
@@ -358,7 +358,7 @@ namespace BTCPayServer.Controllers
                     Mnemonic = response.Mnemonic,
                     Passphrase = response.Passphrase,
                     IsStored = request.SavePrivateKeys,
-                    ReturnUrl = Url.Action(nameof(UpdateStore), new {storeId})
+                    ReturnUrl = Url.Action(nameof(GenerateWalletConfirm), new {storeId, cryptoCode})
                 };
                 return this.RedirectToRecoverySeedBackup(seedVm);
             }
@@ -369,6 +369,28 @@ namespace BTCPayServer.Controllers
                 Html = "Please check your addresses and confirm."
             });
             return result;
+        }
+
+        // The purpose of this action is to show the user a success message, which confirms
+        // that the store settings have been updated after generating a new wallet.
+        [HttpGet]
+        [Route("{storeId}/wallet/{cryptoCode}/generate/confirm")]
+        public ActionResult GenerateWalletConfirm(string storeId, string cryptoCode)
+        {
+            var store = HttpContext.GetStoreData();
+            if (store == null)
+                return NotFound();
+
+            var network = cryptoCode == null ? null : _ExplorerProvider.GetNetwork(cryptoCode);
+            if (network == null)
+            {
+                return NotFound();
+            }
+
+            TempData[WellKnownTempData.SuccessMessage] =
+                $"Derivation settings for {network.CryptoCode} have been modified.";
+
+            return RedirectToAction(nameof(UpdateStore), new {storeId});
         }
 
         private IActionResult ConfirmAddresses(WalletSetupViewModel vm, DerivationSchemeSettings strategy)

@@ -16,11 +16,6 @@
     <p class="lead text-secondary mt-3">Air-gapped import by uploading a file exported from your wallet.</p>
 </header>
 
-@if (!ViewContext.ModelState.IsValid)
-{
-    <div asp-validation-summary="All" class="text-danger"></div>
-}
-
 <form method="post" enctype="multipart/form-data">
     <table class="table table-sm table-responsive-md">
         <thead>

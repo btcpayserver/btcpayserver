@@ -281,7 +281,7 @@ namespace BTCPayServer.Migrations
 
                     b.HasIndex("Value");
 
-                    b.ToTable("InvoiceSearchDatas");
+                    b.ToTable("InvoiceSearches");
                 });
 
             modelBuilder.Entity("BTCPayServer.Data.InvoiceWebhookDeliveryData", b =>

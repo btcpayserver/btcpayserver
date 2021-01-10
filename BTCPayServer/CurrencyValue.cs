@@ -11,6 +11,10 @@ namespace BTCPayServer
         public static bool TryParse(string str, out CurrencyValue value)
         {
             value = null;
+            if (string.IsNullOrEmpty(str))
+            {
+                return false;
+            }
             var match = _Regex.Match(str);
             if (!match.Success ||
                 !decimal.TryParse(match.Groups[1].Value, out var v))

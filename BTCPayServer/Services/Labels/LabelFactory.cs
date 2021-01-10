@@ -23,10 +23,8 @@ namespace BTCPayServer.Services.Labels
         {
             foreach (var label in transactionInfo.Labels)
             {
-                if (walletBlobInfo.LabelColors.TryGetValue(label.Value.Text, out var color))
-                {
-                    yield return CreateLabel(label.Value, color, request);
-                }
+                walletBlobInfo.LabelColors.TryGetValue(label.Value.Text, out var color);
+                yield return CreateLabel(label.Value, color, request);
             }
         }
 
@@ -38,12 +36,12 @@ namespace BTCPayServer.Services.Labels
             }
         }
 
+        const string DefaultColor = "#000";
         private ColoredLabel CreateLabel(Label uncoloredLabel, string color, HttpRequest request)
         {
             if (uncoloredLabel == null)
                 throw new ArgumentNullException(nameof(uncoloredLabel));
-            if (color == null)
-                throw new ArgumentNullException(nameof(color));
+            color = color ?? DefaultColor;
 
             ColoredLabel coloredLabel = new ColoredLabel()
             {

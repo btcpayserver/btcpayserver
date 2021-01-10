@@ -98,7 +98,7 @@
 
 <partial name="ShowQR"/>
 <script>
-    var wallets = @Safe.Json(Model.AccountKeys.Select(model =>  Encoders.Hex.EncodeData(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(model)))));
+    var wallets = @Safe.Json(Model.AccountKeys.Select(model =>  Encoders.Hex.EncodeData(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(model, Formatting.None)))));
     $(document).ready(function(){        
         var qrApp = initQRShow("Wallet QR", "", "scan-qr-modal");
         $("button[data-wallet]").on("click", function (){

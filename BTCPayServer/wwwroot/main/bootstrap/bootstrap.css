@@ -6685,6 +6685,9 @@ button.bg-dark:focus {
 .font-weight-normal {
   font-weight: 400 !important; }
 
+.font-weight-semibold {
+    font-weight: 600 !important; }
+
 .font-weight-bold {
   font-weight: 700 !important; }
 

@@ -58,7 +58,14 @@ namespace BTCPayServer.Hosting
                     return;
                 }
 
-                if (!httpContext.Request.IsOnion() && (httpContext.Request.Headers["Accept"].ToString().StartsWith("text/html", StringComparison.InvariantCulture)))
+                var isHtml = httpContext.Request.Headers.TryGetValue("Accept", out var accept)
+                            && accept.ToString().StartsWith("text/html", StringComparison.OrdinalIgnoreCase);
+                var isModal = httpContext.Request.Query.TryGetValue("view", out var view)
+                            && view.ToString().Equals("modal", StringComparison.OrdinalIgnoreCase);
+                if (!string.IsNullOrEmpty(_Env.OnionUrl) &&
+                    !httpContext.Request.IsOnion() && 
+                    isHtml &&
+                    !isModal)
                 {
                     var onionLocation = _Env.OnionUrl + httpContext.Request.GetEncodedPathAndQuery();
                     httpContext.Response.SetHeader("Onion-Location", onionLocation);

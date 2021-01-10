@@ -36,7 +36,7 @@ namespace BTCPayServer.Data
 
         public static void SetDefaultPaymentId(this StoreData storeData, PaymentMethodId defaultPaymentId)
         {
-            storeData.DefaultCrypto = defaultPaymentId.ToString();
+            storeData.DefaultCrypto = defaultPaymentId?.ToString();
         }
 #pragma warning restore CS0618
 
@@ -50,46 +50,6 @@ namespace BTCPayServer.Data
             if (result.Hints == null)
                 result.Hints = new StoreBlob.StoreHints();
             return result;
-        }
-
-        public static List<PaymentMethodCriteria> GetPaymentMethodCriteria(this StoreData storeData, BTCPayNetworkProvider networkProvider,StoreBlob storeBlob = null)
-        {
-#pragma warning disable 612
-            storeBlob ??= storeData.GetStoreBlob();
-
-            return storeData.GetEnabledPaymentIds(networkProvider).Select(paymentMethodId=>
-            {
-                var matchedFromBlob =
-#pragma warning disable CS0618 // Type or member is obsolete
-                    storeBlob.PaymentMethodCriteria?.SingleOrDefault(criteria => criteria.PaymentMethod == paymentMethodId && criteria.Value != null);
-#pragma warning restore CS0618 // Type or member is obsolete
-                if (matchedFromBlob is null && paymentMethodId.PaymentType == LightningPaymentType.Instance && storeBlob.LightningMaxValue != null)
-                {
-                    return new PaymentMethodCriteria()
-                    {
-                        Above = false,
-                        PaymentMethod = paymentMethodId,
-                        Value = storeBlob.LightningMaxValue
-                    };
-                }
-                if (matchedFromBlob is null && paymentMethodId.PaymentType == BitcoinPaymentType.Instance && storeBlob.OnChainMinValue != null)
-                {
-                    return new PaymentMethodCriteria()
-                    {
-                        Above = true,
-                        PaymentMethod = paymentMethodId,
-                        Value = storeBlob.OnChainMinValue
-                    };
-                }
-
-                return new PaymentMethodCriteria()
-                {
-                    PaymentMethod = paymentMethodId,
-                    Above = matchedFromBlob?.Above??true,
-                    Value = matchedFromBlob?.Value
-                };
-            }).ToList();
-#pragma warning restore 612
         }
 
         public static bool SetStoreBlob(this StoreData storeData, StoreBlob storeBlob)

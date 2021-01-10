@@ -10,6 +10,7 @@ using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using NBitcoin;
 using NBXplorer.DerivationStrategy;
 using StoreData = BTCPayServer.Data.StoreData;
 
@@ -41,14 +42,12 @@ namespace BTCPayServer.Controllers.GreenField
         {
             var blob = Store.GetStoreBlob();
             var excludedPaymentMethods = blob.GetExcludedPaymentMethods();
-            var defaultPaymentId = Store.GetDefaultPaymentId(_btcPayNetworkProvider);
             return Ok(Store.GetSupportedPaymentMethods(_btcPayNetworkProvider)
                 .Where((method) => method.PaymentId.PaymentType == PaymentTypes.BTCLike)
                 .OfType<DerivationSchemeSettings>()
                 .Select(strategy =>
                     new OnChainPaymentMethodData(strategy.PaymentId.CryptoCode,
-                        strategy.AccountDerivation.ToString(), !excludedPaymentMethods.Match(strategy.PaymentId),
-                        defaultPaymentId == strategy.PaymentId))
+                        strategy.AccountDerivation.ToString(), !excludedPaymentMethods.Match(strategy.PaymentId)))
                 .Where((result) => !enabledOnly || result.Enabled)
                 .ToList()
             );
@@ -203,6 +202,18 @@ namespace BTCPayServer.Controllers.GreenField
                 var strategy = DerivationSchemeSettings.Parse(paymentMethodData.DerivationScheme, network);
                 if (strategy != null)
                     await wallet.TrackAsync(strategy.AccountDerivation);
+                strategy.Label = paymentMethodData.Label;
+                var signing = strategy.GetSigningAccountKeySettings();
+                if (paymentMethodData.AccountKeyPath is RootedKeyPath r)
+                {
+                    signing.AccountKeyPath = r.KeyPath;
+                    signing.RootFingerprint = r.MasterFingerprint;
+                }
+                else
+                {
+                    signing.AccountKeyPath = null;
+                    signing.RootFingerprint = null;
+                }
                 store.SetSupportedPaymentMethod(id, strategy);
                 storeBlob.SetExcluded(id, !paymentMethodData.Enabled);
                 store.SetStoreBlob(storeBlob);
@@ -228,7 +239,6 @@ namespace BTCPayServer.Controllers.GreenField
         {
             store ??= Store;
             var storeBlob = store.GetStoreBlob();
-            var defaultPaymentMethod = store.GetDefaultPaymentId(_btcPayNetworkProvider);
             var id = new PaymentMethodId(cryptoCode, PaymentTypes.BTCLike);
             var paymentMethod = store
                 .GetSupportedPaymentMethods(_btcPayNetworkProvider)
@@ -239,8 +249,11 @@ namespace BTCPayServer.Controllers.GreenField
             return paymentMethod == null
                 ? null
                 : new OnChainPaymentMethodData(paymentMethod.PaymentId.CryptoCode,
-                    paymentMethod.AccountDerivation.ToString(), !excluded,
-                    defaultPaymentMethod == paymentMethod.PaymentId);
+                    paymentMethod.AccountDerivation.ToString(), !excluded)
+                {
+                    Label = paymentMethod.Label,
+                    AccountKeyPath = paymentMethod.GetSigningAccountKeySettings().GetRootedKeyPath()
+                };
         }
     }
 }

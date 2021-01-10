@@ -8,53 +8,6 @@ using NBitcoin;
 
 namespace BTCPayServer.Data
 {
-    public static class PayoutExtensions
-    {
-        public static IQueryable<PayoutData> GetPayoutInPeriod(this IQueryable<PayoutData> payouts, PullPaymentData pp)
-        {
-            return GetPayoutInPeriod(payouts, pp, DateTimeOffset.UtcNow);
-        }
-        public static IQueryable<PayoutData> GetPayoutInPeriod(this IQueryable<PayoutData> payouts, PullPaymentData pp, DateTimeOffset now)
-        {
-            var request = payouts.Where(p => p.PullPaymentDataId == pp.Id);
-            var period = pp.GetPeriod(now);
-            if (period is { } p)
-            {
-                var start = p.Start;
-                if (p.End is DateTimeOffset end)
-                {
-                    return request.Where(p => p.Date >= start && p.Date < end);
-                }
-                else
-                {
-                    return request.Where(p => p.Date >= start);
-                }
-            }
-            else
-            {
-                return request.Where(p => false);
-            }
-        }
-
-        public static string GetStateString(this PayoutState state)
-        {
-            switch (state)
-            {
-                case PayoutState.AwaitingApproval:
-                    return "Awaiting Approval";
-                case PayoutState.AwaitingPayment:
-                    return "Awaiting Payment";
-                case PayoutState.InProgress:
-                    return "In Progress";
-                case PayoutState.Completed:
-                    return "Completed";
-                case PayoutState.Cancelled:
-                    return "Cancelled";
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(state), state, null);
-            }
-        }
-    }
     public class PullPaymentData
     {
         [Key]
@@ -70,6 +23,16 @@ namespace BTCPayServer.Data
         public bool Archived { get; set; }
         public List<PayoutData> Payouts { get; set; }
         public byte[] Blob { get; set; }
+
+
+        internal static void OnModelCreating(ModelBuilder builder)
+        {
+            builder.Entity<PullPaymentData>()
+                .HasIndex(o => o.StoreId);
+            builder.Entity<PullPaymentData>()
+                .HasOne(o => o.StoreData)
+                .WithMany(o => o.PullPayments).OnDelete(DeleteBehavior.Cascade);
+        }
 
         public (DateTimeOffset Start, DateTimeOffset? End)? GetPeriod(DateTimeOffset now)
         {
@@ -121,14 +84,54 @@ namespace BTCPayServer.Data
         {
             return !Archived && !IsExpired(now) && HasStarted(now);
         }
+    }
 
-        internal static void OnModelCreating(ModelBuilder builder)
+
+    public static class PayoutExtensions
+    {
+        public static IQueryable<PayoutData> GetPayoutInPeriod(this IQueryable<PayoutData> payouts, PullPaymentData pp)
         {
-            builder.Entity<PullPaymentData>()
-                .HasIndex(o => o.StoreId);
-            builder.Entity<PullPaymentData>()
-                .HasOne(o => o.StoreData)
-                .WithMany(o => o.PullPayments).OnDelete(DeleteBehavior.Cascade);
+            return GetPayoutInPeriod(payouts, pp, DateTimeOffset.UtcNow);
+        }
+        public static IQueryable<PayoutData> GetPayoutInPeriod(this IQueryable<PayoutData> payouts, PullPaymentData pp, DateTimeOffset now)
+        {
+            var request = payouts.Where(p => p.PullPaymentDataId == pp.Id);
+            var period = pp.GetPeriod(now);
+            if (period is { } p)
+            {
+                var start = p.Start;
+                if (p.End is DateTimeOffset end)
+                {
+                    return request.Where(p => p.Date >= start && p.Date < end);
+                }
+                else
+                {
+                    return request.Where(p => p.Date >= start);
+                }
+            }
+            else
+            {
+                return request.Where(p => false);
+            }
+        }
+
+        public static string GetStateString(this PayoutState state)
+        {
+            switch (state)
+            {
+                case PayoutState.AwaitingApproval:
+                    return "Awaiting Approval";
+                case PayoutState.AwaitingPayment:
+                    return "Awaiting Payment";
+                case PayoutState.InProgress:
+                    return "In Progress";
+                case PayoutState.Completed:
+                    return "Completed";
+                case PayoutState.Cancelled:
+                    return "Cancelled";
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(state), state, null);
+            }
         }
     }
 }

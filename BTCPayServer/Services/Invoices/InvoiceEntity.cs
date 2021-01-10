@@ -569,7 +569,7 @@ namespace BTCPayServer.Services.Invoices
                     wellknown.OrderId = val2.Value<string>();
                 }
                 Metadata = wellknown;
-                Currency = productInformation.Currency;
+                Currency = productInformation.Currency?.Trim().ToUpperInvariant();
                 Price = productInformation.Price;
             }
             else

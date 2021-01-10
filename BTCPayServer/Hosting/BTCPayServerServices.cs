@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices.ComTypes;
 using System.Security.Cryptography;
 using System.Threading;
@@ -10,6 +11,7 @@ using BTCPayServer.Configuration;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
+using BTCPayServer.Lightning;
 using BTCPayServer.Logging;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Payments;
@@ -40,6 +42,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -67,7 +70,6 @@ namespace BTCPayServer.Hosting
         }
         public static IServiceCollection AddBTCPayServer(this IServiceCollection services, IConfiguration configuration)
         {
-            services.AddSingleton<DataDirectories>();
             services.AddSingleton<MvcNewtonsoftJsonOptions>(o => o.GetRequiredService<IOptions<MvcNewtonsoftJsonOptions>>().Value);
             services.AddDbContext<ApplicationDbContext>((provider, o) =>
             {
@@ -103,7 +105,6 @@ namespace BTCPayServer.Hosting
             services.AddStartupTask<BlockExplorerLinkStartupTask>();
             services.TryAddSingleton<InvoiceRepository>(o =>
             {
-                var datadirs = o.GetRequiredService<DataDirectories>();
                 var dbContext = o.GetRequiredService<ApplicationDbContextFactory>();
                 return new InvoiceRepository(dbContext, o.GetRequiredService<BTCPayNetworkProvider>(), o.GetService<EventAggregator>());
             });
@@ -113,46 +114,136 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<EventAggregator>();
             services.TryAddSingleton<PaymentRequestService>();
             services.TryAddSingleton<U2FService>();
-            services.TryAddSingleton<DataDirectories>();
-            services.TryAddSingleton<DatabaseOptions>(o =>
-            {
-                var opts = o.GetRequiredService<BTCPayServerOptions>();
-                try
-                {
-                    var dbOptions = new DatabaseOptions(o.GetRequiredService<IConfiguration>(),
-                        o.GetRequiredService<DataDirectories>().DataDir);
-                    if (dbOptions.DatabaseType == DatabaseType.Postgres)
-                    {
-                        Logs.Configuration.LogInformation($"Postgres DB used");
-                    }
-                    else if (dbOptions.DatabaseType == DatabaseType.MySQL)
-                    {
-                        Logs.Configuration.LogInformation($"MySQL DB used");
-                        Logs.Configuration.LogWarning("MySQL is not widely tested and should be considered experimental, we advise you to use postgres instead.");
-                    }
-                    else if (dbOptions.DatabaseType == DatabaseType.Sqlite)
-                    {
-                        Logs.Configuration.LogInformation($"SQLite DB used");
-                        Logs.Configuration.LogWarning("SQLite is not widely tested and should be considered experimental, we advise you to use postgres instead.");
-                    }
-                    return dbOptions;
-                }
-                catch (Exception ex)
-                {
-                    throw new ConfigException($"No database option was configured. ({ex.Message})");
-                }
-            });
             services.AddSingleton<ApplicationDbContextFactory>();
+            services.AddOptions<BTCPayServerOptions>().Configure(
+                (options) =>
+                {
+                    options.LoadArgs(configuration);
+                });
+            services.AddOptions<DataDirectories>().Configure(
+                (options) =>
+                {
+                    options.Configure(configuration);
+                });
+            services.AddOptions<DatabaseOptions>().Configure<IOptions<DataDirectories>>(
+                (options, datadirs) =>
+                {
+                    var postgresConnectionString = configuration["postgres"];
+                    var mySQLConnectionString = configuration["mysql"];
+                    var sqliteFileName = configuration["sqlitefile"];
 
-            services.TryAddSingleton<BTCPayNetworkProvider>(o =>
-            {
-                var opts = o.GetRequiredService<BTCPayServerOptions>();
-                return opts.NetworkProvider;
-            });
+                    if (!string.IsNullOrEmpty(postgresConnectionString))
+                    {
+                        options.DatabaseType = DatabaseType.Postgres;
+                        options.ConnectionString = postgresConnectionString;
+                    }
+                    else if (!string.IsNullOrEmpty(mySQLConnectionString))
+                    {
+                        options.DatabaseType = DatabaseType.MySQL;
+                        options.ConnectionString = mySQLConnectionString;
+                    }
+                    else if (!string.IsNullOrEmpty(sqliteFileName))
+                    {
+                        var connStr = "Data Source=" + (Path.IsPathRooted(sqliteFileName)
+                            ? sqliteFileName
+                            : Path.Combine(datadirs.Value.DataDir, sqliteFileName));
+
+                        options.DatabaseType = DatabaseType.Sqlite;
+                        options.ConnectionString = sqliteFileName;
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("No database option was configured.");
+                    }
+                });
+            services.AddOptions<NBXplorerOptions>().Configure<BTCPayNetworkProvider>(
+                (options, btcPayNetworkProvider) =>
+                {
+                    foreach (BTCPayNetwork btcPayNetwork in btcPayNetworkProvider.GetAll().OfType<BTCPayNetwork>())
+                    {
+                        NBXplorerConnectionSetting setting =
+                            new NBXplorerConnectionSetting
+                            {
+                                CryptoCode = btcPayNetwork.CryptoCode,
+                                ExplorerUri = configuration.GetOrDefault<Uri>(
+                                    $"{btcPayNetwork.CryptoCode}.explorer.url",
+                                    btcPayNetwork.NBXplorerNetwork.DefaultSettings.DefaultUrl),
+                                CookieFile = configuration.GetOrDefault<string>(
+                                    $"{btcPayNetwork.CryptoCode}.explorer.cookiefile",
+                                    btcPayNetwork.NBXplorerNetwork.DefaultSettings.DefaultCookieFile)
+                            };
+                        options.NBXplorerConnectionSettings.Add(setting);
+                    }
+                });
+            services.AddOptions<LightningNetworkOptions>().Configure<BTCPayNetworkProvider>(
+                (options, btcPayNetworkProvider) =>
+                {
+                    foreach (var net in btcPayNetworkProvider.GetAll().OfType<BTCPayNetwork>())
+                    {
+                        var lightning = configuration.GetOrDefault<string>($"{net.CryptoCode}.lightning", string.Empty);
+                        if (lightning.Length != 0)
+                        {
+                            if (!LightningConnectionString.TryParse(lightning, true, out var connectionString,
+                                out var error))
+                            {
+                                Logs.Configuration.LogWarning($"Invalid setting {net.CryptoCode}.lightning, " +
+                                                              Environment.NewLine +
+                                                              $"If you have a c-lightning server use: 'type=clightning;server=/root/.lightning/lightning-rpc', " +
+                                                              Environment.NewLine +
+                                                              $"If you have a lightning charge server: 'type=charge;server=https://charge.example.com;api-token=yourapitoken'" +
+                                                              Environment.NewLine +
+                                                              $"If you have a lnd server: 'type=lnd-rest;server=https://lnd:lnd@lnd.example.com;macaroon=abf239...;certthumbprint=2abdf302...'" +
+                                                              Environment.NewLine +
+                                                              $"              lnd server: 'type=lnd-rest;server=https://lnd:lnd@lnd.example.com;macaroonfilepath=/root/.lnd/admin.macaroon;certthumbprint=2abdf302...'" +
+                                                              Environment.NewLine +
+                                                              $"If you have an eclair server: 'type=eclair;server=http://eclair.com:4570;password=eclairpassword;bitcoin-host=bitcoind:37393;bitcoin-auth=bitcoinrpcuser:bitcoinrpcpassword" +
+                                                              Environment.NewLine +
+                                                              $"               eclair server: 'type=eclair;server=http://eclair.com:4570;password=eclairpassword;bitcoin-host=bitcoind:37393" +
+                                                              Environment.NewLine +
+                                                              $"Error: {error}" + Environment.NewLine +
+                                                              "This service will not be exposed through BTCPay Server");
+                            }
+                            else
+                            {
+                                if (connectionString.IsLegacy)
+                                {
+                                    Logs.Configuration.LogWarning(
+                                        $"Setting {net.CryptoCode}.lightning is a deprecated format, it will work now, but please replace it for future versions with '{connectionString.ToString()}'");
+                                }
+                                options.InternalLightningByCryptoCode.Add(net.CryptoCode, connectionString);
+                            }
+                        }
+                    }
+                });
+            services.AddOptions<ExternalServicesOptions>().Configure<BTCPayNetworkProvider>(
+                (options, btcPayNetworkProvider) =>
+                {
+                    foreach (var net in btcPayNetworkProvider.GetAll().OfType<BTCPayNetwork>())
+                    {
+                        options.ExternalServices.Load(net.CryptoCode, configuration);
+                    }
+
+                    options.ExternalServices.LoadNonCryptoServices(configuration);
+
+                    var services = configuration.GetOrDefault<string>("externalservices", null);
+                    if (services != null)
+                    {
+                        foreach (var service in services.Split(new[] {';', ','}, StringSplitOptions.RemoveEmptyEntries)
+                            .Select(p => (p, SeparatorIndex: p.IndexOf(':', StringComparison.OrdinalIgnoreCase)))
+                            .Where(p => p.SeparatorIndex != -1)
+                            .Select(p => (Name: p.p.Substring(0, p.SeparatorIndex),
+                                Link: p.p.Substring(p.SeparatorIndex + 1))))
+                        {
+                            if (Uri.TryCreate(service.Link, UriKind.RelativeOrAbsolute, out var uri))
+                                options.OtherExternalServices.AddOrReplace(service.Name, uri);
+                        }
+                    }
+                });
+            services.TryAddSingleton(o => configuration.ConfigureNetworkProvider());
 
             services.TryAddSingleton<AppService>();
             services.AddSingleton<PluginService>();
-            services.AddSingleton<IPluginHookService>(provider => provider.GetService<PluginService>());
+            services.AddSingleton<IPluginHookService, PluginHookService>();
             services.TryAddTransient<Safe>();
             services.TryAddSingleton<Ganss.XSS.HtmlSanitizer>(o =>
             {
@@ -339,7 +430,15 @@ namespace BTCPayServer.Hosting
                     logBuilder.AddProvider(new Serilog.Extensions.Logging.SerilogLoggerProvider(Log.Logger));
                 }
             });
+
+            services.AddSingleton<IObjectModelValidator, SkippableObjectValidatorProvider>();
+            services.SkipModelValidation<RootedKeyPath>();
             return services;
+        }
+
+        public static void SkipModelValidation<T>(this IServiceCollection services)
+        {
+            services.AddSingleton<SkippableObjectValidatorProvider.ISkipValidation, SkippableObjectValidatorProvider.SkipValidationType<T>>();
         }
         private const long MAX_DEBUG_LOG_FILE_SIZE = 2000000; // If debug log is in use roll it every N MB.
         private static void AddBtcPayServerAuthenticationSchemes(this IServiceCollection services)

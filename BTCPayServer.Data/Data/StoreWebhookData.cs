@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
 
 namespace BTCPayServer.Data
 {
@@ -12,6 +8,7 @@ namespace BTCPayServer.Data
         public string WebhookId { get; set; }
         public WebhookData Webhook { get; set; }
         public StoreData Store { get; set; }
+
 
         internal static void OnModelCreating(ModelBuilder builder)
         {

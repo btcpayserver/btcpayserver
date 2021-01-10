@@ -13,6 +13,7 @@ using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Shopify.Models;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Data
 {
@@ -25,13 +26,10 @@ namespace BTCPayServer.Data
             PaymentTolerance = 0;
             ShowRecommendedFee = true;
             RecommendedFeeBlockTarget = 1;
+            PaymentMethodCriteria = new List<PaymentMethodCriteria>();
         }
 
         public ShopifySettings Shopify { get; set; }
-
-        [Obsolete("Use NetworkFeeMode instead")]
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public bool? NetworkFeeDisabled { get; set; }
 
         [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
         public NetworkFeeMode NetworkFeeMode { get; set; }
@@ -80,24 +78,9 @@ namespace BTCPayServer.Data
 
         public decimal Spread { get; set; } = 0.0m;
 
-        [Obsolete]
-        public List<RateRule_Obsolete> RateRules { get; set; } = new List<RateRule_Obsolete>();
         public string PreferredExchange { get; set; }
 
-        public List<PaymentMethodCriteria> PaymentMethodCriteria
-        {
-            [Obsolete("Use GetPaymentMethodCriteria instead")]
-            get;
-            set;
-        }
-
-        [Obsolete]
-        [JsonConverter(typeof(CurrencyValueJsonConverter))]
-        public CurrencyValue OnChainMinValue { get; set; }
-        [Obsolete]
-        [JsonConverter(typeof(CurrencyValueJsonConverter))]
-        public CurrencyValue LightningMaxValue { get; set; }
-
+        public List<PaymentMethodCriteria> PaymentMethodCriteria { get; set; }
         public string CustomCSS { get; set; }
         public string CustomLogo { get; set; }
         public string HtmlTitle { get; set; }
@@ -170,14 +153,14 @@ namespace BTCPayServer.Data
         [Obsolete("Use GetExcludedPaymentMethods instead")]
         public string[] ExcludedPaymentMethods { get; set; }
 
-        [Obsolete("Use DerivationSchemeSettings instead")]
-        public Dictionary<string, string> WalletKeyPathRoots { get; set; }
-
         public EmailSettings EmailSettings { get; set; }
         public bool PayJoinEnabled { get; set; }
 
         public StoreHints Hints { get; set; }
 
+        [JsonExtensionData]
+        public IDictionary<string, JToken> AdditionalData { get; set; } = new Dictionary<string, JToken>();
+        
         public class StoreHints
         {
             public bool Wallet { get; set; }
@@ -217,21 +200,5 @@ namespace BTCPayServer.Data
         [JsonConverter(typeof(CurrencyValueJsonConverter))]
         public CurrencyValue Value { get; set; }
         public bool Above { get; set; }
-    }
-
-    public class RateRule_Obsolete
-    {
-        public RateRule_Obsolete()
-        {
-            RuleName = "Multiplier";
-        }
-        public string RuleName { get; set; }
-
-        public double Multiplier { get; set; }
-
-        public decimal Apply(BTCPayNetworkBase network, decimal rate)
-        {
-            return rate * (decimal)Multiplier;
-        }
     }
 }

@@ -39,7 +39,8 @@
  			data: data,
  			fragments: [],
  			active: false,
- 			modalId: modalId
+ 			modalId: modalId,
+ 			useBCUR: true
  		},
  		computed:
  		{
@@ -78,7 +79,11 @@
  					this.fragments = [];
  					return;
  				}
- 				this.fragments = window.bcur.encodeUR(this.data.toString(), 200);
+ 				if (this.useBCUR){
+ 				    this.fragments = window.bcur.encodeUR(this.data.toString(), 200);
+ 				}else{
+ 				    this.fragments = [this.data.toString()];
+ 				}
  			},
  			start: function ()
  			{

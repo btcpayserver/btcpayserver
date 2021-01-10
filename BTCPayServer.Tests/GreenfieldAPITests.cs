@@ -1238,15 +1238,20 @@ namespace BTCPayServer.Tests
             });
             
             Assert.Equal(firstAddress, (await viewOnlyClient.PreviewProposedStoreOnChainPaymentMethodAddresses(store.Id, "BTC",
-                new OnChainPaymentMethodData() {Default = true, Enabled = true, DerivationScheme = xpub})).Addresses.First().Address);
+                new OnChainPaymentMethodData() {Enabled = true, DerivationScheme = xpub})).Addresses.First().Address);
             
             var method = await client.UpdateStoreOnChainPaymentMethod(store.Id, "BTC",
-                new OnChainPaymentMethodData() {Default = true, Enabled = true, DerivationScheme = xpub});
+                new OnChainPaymentMethodData() { Enabled = true, DerivationScheme = xpub});
             
             Assert.Equal(xpub,method.DerivationScheme);
-            
+
+            method = await client.UpdateStoreOnChainPaymentMethod(store.Id, "BTC",
+                new OnChainPaymentMethodData() {  Enabled = true, DerivationScheme = xpub, Label = "lol", AccountKeyPath = RootedKeyPath.Parse("01020304/1/2/3") });
+
             method = await client.GetStoreOnChainPaymentMethod(store.Id, "BTC");
-            
+
+            Assert.Equal("lol", method.Label);
+            Assert.Equal(RootedKeyPath.Parse("01020304/1/2/3"), method.AccountKeyPath);
             Assert.Equal(xpub,method.DerivationScheme);
             
             

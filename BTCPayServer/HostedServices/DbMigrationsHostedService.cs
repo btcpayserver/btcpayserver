@@ -5,9 +5,11 @@ using System.IO;
 using System.Threading.Tasks;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
+using BTCPayServer.Logging;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
 
 namespace BTCPayServer.HostedServices
 {
@@ -54,16 +56,17 @@ namespace BTCPayServer.HostedServices
             {
                 Directory.Delete(dbpath, true);
             }
-            
-            // migrate data to new table using invoices from database
-            using var ctx = _dbContextFactory.CreateContext();
 
             var invoiceQuery = new InvoiceQuery { IncludeArchived = true };
             var totalCount = await _invoiceRepository.GetInvoicesTotal(invoiceQuery);
             const int PAGE_SIZE = 1000;
             var totalPages = Math.Ceiling(totalCount * 1.0m / PAGE_SIZE);
+            Logs.PayServer.LogInformation($"Importing {totalCount} invoices into the text search table in {totalPages - startFromPage} pages");
             for (int i = startFromPage; i < totalPages && !CancellationToken.IsCancellationRequested; i++)
             {
+                Logs.PayServer.LogInformation($"Import to text search table progress: {i}/{totalPages} pages");
+                // migrate data to new table using invoices from database
+                using var ctx = _dbContextFactory.CreateContext();
                 invoiceQuery.Skip = i * PAGE_SIZE;
                 invoiceQuery.Take = PAGE_SIZE;
                 var invoices = await _invoiceRepository.GetInvoices(invoiceQuery);

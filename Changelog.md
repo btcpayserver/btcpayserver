@@ -16,7 +16,7 @@
 * Always normalize the invoice's currency in uppercase @NicolasDorier
 * If a label on a wallet's transaction does not have color, it should still show it @NicolasDorier
 * Do not include Tor Location header when querying the modal checkout (see #2180) @Kukks
-* Webhooks should not be randomly being deleted anymore. @NicolasDorier
+* Webhooks should not be randomly deleted anymore. @NicolasDorier
 * Fix header not showing properly after login to BTCPay Server (see #2155) @dennisreimann
 
 

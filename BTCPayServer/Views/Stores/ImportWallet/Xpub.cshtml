@@ -6,7 +6,7 @@
 }
 
 @section Navbar {
-    <a asp-controller="Stores" asp-action="ImportWalletOptions" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="">
+    <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="">
         <vc:icon symbol="back" />
     </a>
 }
@@ -65,13 +65,6 @@
         </tr>
         </tbody>
     </table>
-
-    <div class="form-group">
-        <div class="form-check">
-            <input asp-for="Enabled" type="checkbox" class="form-check-input" />
-            <label asp-for="Enabled" class="form-check-label"></label>
-        </div>
-    </div>
 
     <button name="command" type="submit" class="btn btn-primary" value="save" id="Continue">Continue</button>
 </form>

@@ -1,0 +1,93 @@
+@model WalletSetupViewModel
+@{
+    Layout = "_LayoutWalletSetup";
+    ViewData["Title"] = $"Modify {Model.CryptoCode} Wallet";
+}
+
+@section Navbar {
+    <a asp-controller="Stores" asp-action="UpdateStore" asp-route-storeId="@Model.StoreId">
+        <vc:icon symbol="back" />
+    </a>
+}
+
+<header class="text-center">
+    <h1>@ViewData["Title"]</h1>
+    <p class="lead text-secondary mt-3">Change your current wallet settings</p>
+</header>
+<br>
+
+<div class="mt-5">
+    <h3 class="my-4">Current wallet settings</h3>
+
+    <table class="table table-sm table-responsive-md removetopborder">
+        <tbody>
+        <tr>
+            <th class="w-150px">Derivation Scheme</th>
+            <td class="text-break">@Model.DerivationScheme</td>
+        </tr>
+        <tr>
+            <th>Root Fingerprint</th>
+            <td>@Model.RootFingerprint</td>
+        </tr>
+        @if (!string.IsNullOrEmpty(Model.KeyPath))
+        {
+            <tr>
+                <th>KeyPath</th>
+                <td>@Model.KeyPath</td>
+            </tr>
+        }
+        <tr>
+            <th>Source</th>
+            <td>@Model.Source</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<hr class="d-block my-5" />
+
+<div class="mt-5">
+    <h3 class="my-4">Modify wallet</h3>
+    <div class="list-group">
+        <div class="list-group-item p-4">
+            <h4>Adjust wallet status</h4>
+            <form method="post" class="form-inline pt-2">
+                <input asp-for="Config" type="hidden" />
+                <input asp-for="DerivationScheme" type="hidden" />
+
+                <div class="form-check mr-3">
+                    <input asp-for="Enabled" type="checkbox" class="form-check-input mr-2"/>
+                    <label asp-for="Enabled" class="form-check-label"></label>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-sm" id="Modify">Modify</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="list-group mt-4">
+        <a asp-controller="Stores" asp-action="SetupWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="import-wallet-options-link" class="list-group-item list-group-item-action p-4">
+            <h4>Change wallet</h4>
+            <p class="mb-0">Update settings, changes take effect on setup completion</p>
+        </a>
+    </div>
+</div>
+
+<hr class="d-block my-5" />
+
+<div class="mt-5">
+    <h3 class="my-4 text-danger">Danger Zone</h3>
+    <div class="list-group">
+        <div class="list-group-item p-4">
+            <h4 class="text-danger">Delete wallet</h4>
+            <form method="post" asp-controller="Stores" asp-action="DeleteWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" class="form-inline pt-2">
+                <div class="form-check mr-3">
+                    <input id="ConfirmDelete" name="ConfirmDelete" type="checkbox" value="true" class="form-check-input mr-2" required/>
+                    <label for="ConfirmDelete" class="form-check-label">Remove wallet settings and current onchain payment option</label>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-danger btn-sm" id="Delete">Delete</button>
+            </form>
+        </div>
+    </div>
+</div>

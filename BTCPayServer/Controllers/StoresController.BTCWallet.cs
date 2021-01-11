@@ -29,7 +29,7 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("{storeId}/wallet/{cryptoCode}/import/{method?}")]
-        public async Task<IActionResult> ImportWalletOptions(WalletSetupViewModel vm)
+        public async Task<IActionResult> ImportWallet(WalletSetupViewModel vm)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
@@ -57,9 +57,10 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost]
+        [Route("{storeId}/wallet/{cryptoCode}/modify")]
         [Route("{storeId}/wallet/{cryptoCode}/import/{method}")]
         [ApiExplorerSettings(IgnoreApi = true)]
-        public async Task<IActionResult> ImportWallet(WalletSetupViewModel vm)
+        public async Task<IActionResult> UpdateWallet(WalletSetupViewModel vm)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
@@ -338,7 +339,7 @@ namespace BTCPayServer.Controllers
             vm.AccountKey = response.AccountHDKey.Neuter().ToWif();
             vm.KeyPath = response.AccountKeyPath.KeyPath.ToString();
 
-            var result = await ImportWallet(vm);
+            var result = await UpdateWallet(vm);
 
             if (!ModelState.IsValid || !(result is RedirectToActionResult))
                 return result;
@@ -387,8 +388,108 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
+            var wallet = _WalletProvider.GetWallet(network);
+            if (wallet == null)
+            {
+                return NotFound();
+            }
+
             TempData[WellKnownTempData.SuccessMessage] =
                 $"Derivation settings for {network.CryptoCode} have been modified.";
+
+            return RedirectToAction(nameof(UpdateStore), new {storeId});
+        }
+
+        [HttpGet]
+        [Route("{storeId}/wallet/{cryptoCode}/modify")]
+        public async Task<IActionResult> ModifyWallet(WalletSetupViewModel vm)
+        {
+            var store = HttpContext.GetStoreData();
+            if (store == null)
+                return NotFound();
+
+            var network = vm.CryptoCode == null ? null : _ExplorerProvider.GetNetwork(vm.CryptoCode);
+            if (network == null)
+            {
+                return NotFound();
+            }
+
+            var wallet = _WalletProvider.GetWallet(network);
+            if (wallet == null)
+            {
+                return NotFound();
+            }
+
+            var derivation = GetExistingDerivationStrategy(vm.CryptoCode, store);
+            if (derivation == null)
+            {
+                return NotFound();
+            }
+
+            var (hotWallet, rpcImport) = await CanUseHotWallet();
+
+            vm.CanUseHotWallet = hotWallet;
+            vm.CanUseRPCImport = rpcImport;
+            vm.RootKeyPath = network.GetRootKeyPath();
+            vm.Network = network;
+            vm.Source = derivation.Source;
+            vm.RootFingerprint = derivation.GetSigningAccountKeySettings().RootFingerprint.ToString();
+            vm.DerivationScheme = derivation.AccountDerivation.ToString();
+            vm.KeyPath = derivation.GetSigningAccountKeySettings().AccountKeyPath?.ToString();
+            vm.Config = derivation.ToJson();
+            vm.Enabled = !store.GetStoreBlob().IsExcluded(new PaymentMethodId(vm.CryptoCode, PaymentTypes.BTCLike));
+
+            return View(vm);
+        }
+
+        [HttpPost]
+        [Route("{storeId}/wallet/{cryptoCode}/delete")]
+        public async Task<IActionResult> DeleteWallet(string storeId, string cryptoCode, [FromForm] bool confirmDelete)
+        {
+            var store = HttpContext.GetStoreData();
+            if (store == null)
+                return NotFound();
+
+            var network = cryptoCode == null ? null : _ExplorerProvider.GetNetwork(cryptoCode);
+            if (network == null)
+            {
+                return NotFound();
+            }
+
+            var wallet = _WalletProvider.GetWallet(network);
+            if (wallet == null)
+            {
+                return NotFound();
+            }
+
+            var derivation = GetExistingDerivationStrategy(cryptoCode, store);
+            if (derivation == null)
+            {
+                return NotFound();
+            }
+
+            if (!confirmDelete)
+            {
+                return UnprocessableEntity();
+            }
+
+            // TODO: Verify this is correct and sufficient
+            try
+            {
+                PaymentMethodId paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
+                store.SetSupportedPaymentMethod(paymentMethodId, null);
+
+                await _Repo.UpdateStore(store);
+                _EventAggregator.Publish(new WalletChangedEvent {WalletId = new WalletId(storeId, cryptoCode)});
+
+                TempData[WellKnownTempData.SuccessMessage] =
+                    $"On-Chain payment for {network.CryptoCode} has been removed.";
+            }
+            catch
+            {
+                TempData[WellKnownTempData.ErrorMessage] =
+                    $"On-Chain payment for {network.CryptoCode} could not be removed.";
+            }
 
             return RedirectToAction(nameof(UpdateStore), new {storeId});
         }

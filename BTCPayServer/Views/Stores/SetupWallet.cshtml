@@ -4,6 +4,12 @@
     ViewData["Title"] = $"Setup {Model.CryptoCode} Wallet";
 }
 
+@section Navbar {
+    <a asp-controller="Stores" asp-action="UpdateStore" asp-route-storeId="@Model.StoreId">
+        <vc:icon symbol="back" />
+    </a>
+}
+
 <header class="text-center">
     <h1>Let's get started</h1>
     <p class="lead text-secondary mt-3">Select an option to get started</p>
@@ -13,7 +19,7 @@
 <div class="mt-5">
     <h3 class="my-4">I have a wallet</h3>
     <div class="list-group">
-        <a asp-controller="Stores" asp-action="ImportWalletOptions" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="import-wallet-options-link" class="list-group-item list-group-item-action p-4">
+        <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="import-wallet-options-link" class="list-group-item list-group-item-action p-4">
             <h4>Connect an existing wallet</h4>
             <p class="mb-0">Connect, import, or scan an existing hardware or software wallet</p>
         </a>

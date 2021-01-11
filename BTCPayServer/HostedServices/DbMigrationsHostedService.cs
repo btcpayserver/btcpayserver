@@ -90,13 +90,11 @@ namespace BTCPayServer.HostedServices
                     textSearch.Add(invoice.InvoiceTime.ToString(CultureInfo.InvariantCulture));
                     textSearch.Add(invoice.Price.ToString(CultureInfo.InvariantCulture));
                     textSearch.Add(invoice.Metadata.OrderId);
-                    textSearch.Add(InvoiceRepository.ToJsonString(invoice.Metadata, null));
                     textSearch.Add(invoice.StoreId);
                     textSearch.Add(invoice.Metadata.BuyerEmail);
                     //
                     textSearch.Add(invoice.RefundMail);
                     // TODO: Are there more things to cache? PaymentData?
-
                     InvoiceRepository.AddToTextSearch(ctx, 
                         new InvoiceData { Id = invoice.Id, InvoiceSearchData = new List<InvoiceSearchData>() }, 
                         textSearch.ToArray());

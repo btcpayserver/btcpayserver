@@ -203,7 +203,6 @@ namespace BTCPayServer.Services.Invoices
                 textSearch.Add(invoice.InvoiceTime.ToString(CultureInfo.InvariantCulture));
                 textSearch.Add(invoice.Price.ToString(CultureInfo.InvariantCulture));
                 textSearch.Add(invoice.Metadata.OrderId);
-                textSearch.Add(ToJsonString(invoice.Metadata, null));
                 textSearch.Add(invoice.StoreId);
                 textSearch.Add(invoice.Metadata.BuyerEmail);
                 AddToTextSearch(context, invoiceData, textSearch.ToArray());

@@ -274,23 +274,23 @@ namespace BTCPayServer
         [JsonIgnore]
         public bool IsHotWallet => Source == "NBXplorer";
 
-        [Obsolete("Use GetAccountKeySettings().AccountKeyPath instead")]
+        [Obsolete("Use GetSigningAccountKeySettings().AccountKeyPath instead")]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public KeyPath AccountKeyPath { get; set; }
 
         public DerivationStrategyBase AccountDerivation { get; set; }
         public string AccountOriginal { get; set; }
 
-        [Obsolete("Use GetAccountKeySettings().RootFingerprint instead")]
+        [Obsolete("Use GetSigningAccountKeySettings().RootFingerprint instead")]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public HDFingerprint? RootFingerprint { get; set; }
 
-        [Obsolete("Use GetAccountKeySettings().AccountKey instead")]
+        [Obsolete("Use GetSigningAccountKeySettings().AccountKey instead")]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public BitcoinExtPubKey ExplicitAccountKey { get; set; }
 
         [JsonIgnore]
-        [Obsolete("Use GetAccountKeySettings().AccountKey instead")]
+        [Obsolete("Use GetSigningAccountKeySettings().AccountKey instead")]
         public BitcoinExtPubKey AccountKey
         {
             get

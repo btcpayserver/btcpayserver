@@ -71,9 +71,11 @@ namespace BTCPayServer
             {
                 derivationSchemeSettings.AccountOriginal = xpub.Trim();
                 derivationSchemeSettings.AccountDerivation = electrum ? derivationSchemeParser.ParseElectrum(derivationSchemeSettings.AccountOriginal) : derivationSchemeParser.Parse(derivationSchemeSettings.AccountOriginal);
-                derivationSchemeSettings.AccountKeySettings = new AccountKeySettings[1];
-                derivationSchemeSettings.AccountKeySettings[0] = new AccountKeySettings();
-                derivationSchemeSettings.AccountKeySettings[0].AccountKey = derivationSchemeSettings.AccountDerivation.GetExtPubKeys().Single().GetWif(derivationSchemeParser.Network);
+                derivationSchemeSettings.AccountKeySettings = derivationSchemeSettings.AccountDerivation.GetExtPubKeys()
+                    .Select(key => new AccountKeySettings()
+                    {
+                        AccountKey = key.GetWif(derivationSchemeParser.Network)
+                    }).ToArray();
                 if (derivationSchemeSettings.AccountDerivation is DirectDerivationStrategy direct && !direct.Segwit)
                     derivationSchemeSettings.AccountOriginal = null; // Saving this would be confusing for user, as xpub of electrum is legacy derivation, but for btcpay, it is segwit derivation
                 return true;

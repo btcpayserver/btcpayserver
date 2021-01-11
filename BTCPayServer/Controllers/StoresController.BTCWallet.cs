@@ -42,13 +42,16 @@ namespace BTCPayServer.Controllers
             }
 
             var (hotWallet, rpcImport) = await CanUseHotWallet();
-
             vm.Network = network;
             vm.RootKeyPath = network.GetRootKeyPath();
             vm.CanUseHotWallet = hotWallet;
             vm.CanUseRPCImport = rpcImport;
 
-            if (vm.Method == WalletSetupMethod.Seed)
+            if (vm.Method == null)
+            {
+                vm.Method = WalletSetupMethod.Import;
+            }
+            else if (vm.Method == WalletSetupMethod.Seed)
             {
                 vm.SetupRequest = new WalletSetupRequest {RequireExistingMnemonic = true};
             }
@@ -272,6 +275,7 @@ namespace BTCPayServer.Controllers
             vm.RootKeyPath = network.GetRootKeyPath();
             vm.Network = network;
             vm.SetupRequest = new WalletSetupRequest();
+            vm.Method = WalletSetupMethod.Generate;
 
             return View(vm);
         }

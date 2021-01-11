@@ -2,7 +2,7 @@ namespace BTCPayServer.Models.StoreViewModels
 {
     public enum WalletSetupMethod
     {
-        Undefined, // needs to be present and first to cover the null case
+        Import,
         Hardware,
         File,
         Xpub,
@@ -13,14 +13,14 @@ namespace BTCPayServer.Models.StoreViewModels
 
     public class WalletSetupViewModel : DerivationSchemeViewModel
     {
-        public WalletSetupMethod Method { get; set; }
+        public WalletSetupMethod? Method { get; set; }
         public WalletSetupRequest SetupRequest { get; set; }
         public string StoreId { get; set; }
 
         public string ViewName =>
             Method switch
             {
-                WalletSetupMethod.Undefined => "ImportWallet",
+                WalletSetupMethod.Import => "ImportWallet",
                 WalletSetupMethod.Hardware => "ImportWallet/Hardware",
                 WalletSetupMethod.Xpub => "ImportWallet/Xpub",
                 WalletSetupMethod.File => "ImportWallet/File",

@@ -18,7 +18,7 @@
 * Do not include Tor Location header when querying the modal checkout (see #2180) @Kukks
 * Webhooks should not be randomly deleted anymore. @NicolasDorier
 * Fix header not showing properly after login to BTCPay Server (see #2155) @dennisreimann
-
+* Bug: Searching invoices was timing out if there was too much invoices @rockstardev @Kukks
 
 ### Miscellaneous:
 

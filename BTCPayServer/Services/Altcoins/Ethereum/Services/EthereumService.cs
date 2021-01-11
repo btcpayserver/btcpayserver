@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
@@ -12,17 +11,17 @@ using BTCPayServer.Logging;
 using BTCPayServer.Services.Altcoins.Ethereum.Payments;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Altcoins.Ethereum.Configuration;
-using BTCPayServer.Services.Altcoins.Ethereum.UI;
 using BTCPayServer.Services.Invoices;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using Nethereum.RPC.Eth.DTOs;
+using Nethereum.Web3;
 
 namespace BTCPayServer.Services.Altcoins.Ethereum.Services
 {
     public class EthereumService : EventHostedServiceBase
     {
-        private readonly IHttpClientFactory _httpClientFactory;
         private readonly EventAggregator _eventAggregator;
         private readonly StoreRepository _storeRepository;
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
@@ -35,7 +34,6 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
             new Dictionary<int, CancellationTokenSource>();
 
         public EthereumService(
-            IHttpClientFactory httpClientFactory,
             EventAggregator eventAggregator,
             StoreRepository storeRepository,
             BTCPayNetworkProvider btcPayNetworkProvider,
@@ -44,7 +42,6 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
             IConfiguration configuration) : base(
             eventAggregator)
         {
-            _httpClientFactory = httpClientFactory;
             _eventAggregator = eventAggregator;
             _storeRepository = storeRepository;
             _btcPayNetworkProvider = btcPayNetworkProvider;
@@ -308,6 +305,25 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
                 return string.IsNullOrEmpty(watcher.GlobalError);
             }
             return false;
+        }
+
+        public Web3 GetWeb3(int chainId)
+        {
+            if (_chainHostedServices.TryGetValue(chainId, out var watcher) && string.IsNullOrEmpty(watcher.GlobalError))
+            {
+                return watcher.Web3;
+            }
+
+            return null;
+        } 
+        public async Task<ulong?> GetBalance(EthereumBTCPayNetwork network, string address)
+        {
+            if (_chainHostedServices.TryGetValue(network.ChainId, out var watcher) && string.IsNullOrEmpty(watcher.GlobalError))
+            {
+                return await watcher.GetBalance(network, BlockParameter.CreateLatest(), address);
+            }
+
+            return null;
         }
     }
 }

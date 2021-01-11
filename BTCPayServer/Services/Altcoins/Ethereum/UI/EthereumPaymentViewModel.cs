@@ -14,6 +14,7 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.UI
         public string BalanceLink { get; set; }
         public bool Replaced { get; set; }
         public long Index { get; set; }
+        public string Sweep { get; set; }
     }
 }
 #endif

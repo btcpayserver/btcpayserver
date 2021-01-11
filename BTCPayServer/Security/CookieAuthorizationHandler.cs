@@ -37,7 +37,7 @@ namespace BTCPayServer.Security
                     return;
             }
 
-            string storeId = _HttpContext.GetImplicitStoreId();
+            string storeId = _HttpContext.GetImplicitStoreId() ?? context.Resource?.ToString();
             if (storeId == null)
                 return;
 

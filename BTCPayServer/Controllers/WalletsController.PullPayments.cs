@@ -27,7 +27,10 @@ namespace BTCPayServer.Controllers
         public IActionResult NewPullPayment([ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId)
         {
-            return View(new NewPullPaymentModel()
+            if (GetDerivationSchemeSettings(walletId) == null)
+                return NotFound();
+
+            return View(new NewPullPaymentModel
             {
                 Name = "",
                 Currency = "BTC",
@@ -41,6 +44,9 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> NewPullPayment([ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, NewPullPaymentModel model)
         {
+            if (GetDerivationSchemeSettings(walletId) == null)
+                return NotFound();
+
             model.Name ??= string.Empty;
             model.Currency = model.Currency.ToUpperInvariant().Trim();
             if (_currencyTable.GetCurrencyData(model.Currency, false) is null)
@@ -99,7 +105,10 @@ namespace BTCPayServer.Controllers
                                                         .Where(p => p.State == PayoutState.Completed || p.State == PayoutState.InProgress)
                                       })
                                       .ToListAsync();
-            var vm = new PullPaymentsModel();
+
+            var vm = new PullPaymentsModel
+                { HasDerivationSchemeSettings = GetDerivationSchemeSettings(walletId) != null };
+
             foreach (var o in pps)
             {
                 var pp = o.PullPayment;
@@ -175,8 +184,9 @@ namespace BTCPayServer.Controllers
             [ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, PayoutsModel vm, CancellationToken cancellationToken)
         {
-            if (vm is null)
+            if (vm is null || GetDerivationSchemeSettings(walletId) == null)
                 return NotFound();
+
             var storeId = walletId.StoreId;
             var paymentMethodId = new PaymentMethodId(walletId.CryptoCode, PaymentTypes.BTCLike);
             var payoutIds = vm.WaitingForApproval.Where(p => p.Selected).Select(p => p.PayoutId).ToArray();

@@ -2,9 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using BTCPayServer;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client.Models;
@@ -34,7 +32,7 @@ namespace BTCPayServer.Controllers
             BTCPayNetworkProvider networkProvider,
             CurrencyNameTable currencyNameTable,
             PullPaymentHostedService pullPaymentHostedService,
-            BTCPayServer.Services.BTCPayNetworkJsonSerializerSettings serializerSettings,
+            BTCPayNetworkJsonSerializerSettings serializerSettings,
             IEnumerable<IPayoutHandler> payoutHandlers)
         {
             _dbContextFactory = dbContextFactory;

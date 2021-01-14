@@ -18,13 +18,19 @@
 </script>
 
 <form method="post">
+    @if (!Model.PayoutStateSets.Any())
+    {
+        <p class="text-secondary mt-3">
+            There are no payouts yet.
+        </p>
+    }
     <div class="row">
         <ul class="nav col-md-10 col-sm-12">
             @for (var index = 0; index < Model.PayoutStateSets.Count; index++)
             {
                 var state = Model.PayoutStateSets[index];
                 <li class="nav-item py-0">
-                    <a class="nav-link btn btn-secondary btn-sm mr-1 @(index == 0? "active": "")" data-toggle="tab" href="#@state.State" role="tab">@state.State.GetStateString() (@state.Payouts.Count)</a>
+                    <a class="nav-link btn btn-secondary btn-sm mr-1 @(index == 0 ? "active" : "")" data-toggle="tab" href="#@state.State" role="tab">@state.State.GetStateString() (@state.Payouts.Count)</a>
                 </li>
             }
         </ul>
@@ -48,23 +54,23 @@
                         stateActions.Add(("cancel", "Cancel selected payouts"));
                         break;
                 }
-                <div class="tab-pane @(index ==0? "active": "") " id="@state.State" role="tabpanel">
+                <div class="tab-pane @(index == 0 ? "active" : "") " id="@state.State" role="tabpanel">
                     <input type="hidden" asp-for="PayoutStateSets[index].State"/>
                     <input type="hidden" asp-for="PaymentMethodId"/>
-                    
+
                     <div class="row mt-2 ml-2">
-                            @if (state.Payouts.Any() && stateActions.Any())
-                            {
-                                <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" id="@state.State-actions">
-                                    Actions
-                                </button>
-                                <div class="dropdown-menu">
-                                    @foreach (var action in stateActions)
-                                    {
-                                        <button type="submit" id="@state.State-@action.Action" name="Command" class="dropdown-item" role="button" value="@state.State-@action.Action">@action.Text</button>
-                                    }
-                                </div>
-                            }
+                        @if (state.Payouts.Any() && stateActions.Any())
+                        {
+                            <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" id="@state.State-actions">
+                                Actions
+                            </button>
+                            <div class="dropdown-menu">
+                                @foreach (var action in stateActions)
+                                {
+                                    <button type="submit" id="@state.State-@action.Action" name="Command" class="dropdown-item" role="button" value="@state.State-@action.Action">@action.Text</button>
+                                }
+                            </div>
+                        }
                     </div>
                     <div class="row">
                         <div class="col-md-12">

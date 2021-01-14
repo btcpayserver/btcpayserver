@@ -1,4 +1,5 @@
 using System;
+using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -988,17 +989,17 @@ namespace BTCPayServer.Tests
                     s.Driver.Navigate().Refresh();
                     Assert.Contains("badge transactionLabel", s.Driver.PageSource);
                 });
-                Assert.Equal("Payout", s.Driver.FindElement(By.ClassName("transactionLabel")).Text);
+                Assert.Equal("payout", s.Driver.FindElement(By.ClassName("transactionLabel")).Text);
 
                 s.GoToWallet(navPages: WalletsNavPages.Payouts);
+                ReadOnlyCollection<IWebElement> txs;
                 TestUtils.Eventually(() =>
                 {
                     s.Driver.Navigate().Refresh();
-                    Assert.NotNull(s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-no-payouts")));
-                    Assert.NotNull(s.Driver.FindElement(By.Id($"{PayoutState.AwaitingPayment}-no-payouts")));
+                    
+                    txs = s.Driver.FindElements(By.ClassName("transaction-link"));
+                    Assert.Equal(2, txs.Count);
                 });
-                var txs = s.Driver.FindElements(By.ClassName("transaction-link"));
-                Assert.Equal(2, txs.Count);
 
                 s.Driver.Navigate().GoToUrl(viewPullPaymentUrl);
                 txs = s.Driver.FindElements(By.ClassName("transaction-link"));

@@ -243,10 +243,10 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
                     if (proof.Accounted is true)
                     {
                         payout.State = PayoutState.InProgress;
-                        _eventAggregator.Publish(new UpdateTransactionLabel(
-                            new WalletId(payout.PullPaymentData.StoreId, newTransaction.CryptoCode),
-                            newTransaction.NewTransactionEvent.TransactionData.TransactionHash,
-                            ("#3F88AF", "Payout")));
+                        var walletId = new WalletId(payout.PullPaymentData.StoreId, newTransaction.CryptoCode);
+                        _eventAggregator.Publish(new UpdateTransactionLabel(walletId,	
+                            newTransaction.NewTransactionEvent.TransactionData.TransactionHash,	
+                            UpdateTransactionLabel.PayoutTemplate(payout.Id,payout.PullPaymentDataId, walletId.ToString())));	
                     }
                     if (proof.TransactionId is null)
                         proof.TransactionId = txId;

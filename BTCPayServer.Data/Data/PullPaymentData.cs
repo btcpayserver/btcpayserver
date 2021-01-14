@@ -3,39 +3,13 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using BTCPayServer.Client.Models;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 
 namespace BTCPayServer.Data
 {
-    public static class PayoutExtensions
-    {
-        public static IQueryable<PayoutData> GetPayoutInPeriod(this IQueryable<PayoutData> payouts, PullPaymentData pp)
-        {
-            return GetPayoutInPeriod(payouts, pp, DateTimeOffset.UtcNow);
-        }
-        public static IQueryable<PayoutData> GetPayoutInPeriod(this IQueryable<PayoutData> payouts, PullPaymentData pp, DateTimeOffset now)
-        {
-            var request = payouts.Where(p => p.PullPaymentDataId == pp.Id);
-            var period = pp.GetPeriod(now);
-            if (period is { } p)
-            {
-                var start = p.Start;
-                if (p.End is DateTimeOffset end)
-                {
-                    return request.Where(p => p.Date >= start && p.Date < end);
-                }
-                else
-                {
-                    return request.Where(p => p.Date >= start);
-                }
-            }
-            else
-            {
-                return request.Where(p => false);
-            }
-        }
-    }
+
     public class PullPaymentData
     {
         [Key]
@@ -113,7 +87,6 @@ namespace BTCPayServer.Data
             return !Archived && !IsExpired(now) && HasStarted(now);
         }
     }
-
 
     public static class PayoutExtensions
     {

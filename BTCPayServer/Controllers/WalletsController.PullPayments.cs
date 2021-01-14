@@ -381,7 +381,7 @@ namespace BTCPayServer.Controllers
                 }
             }
 
-            vm.PayoutStateSets = vm.PayoutStateSets.OrderByDescending(set => set.Payouts.Any()).ThenBy(set => set.State).ToList();
+            vm.PayoutStateSets = vm.PayoutStateSets.Where(set => set.Payouts?.Any() is true).ToList();
             return View(vm);
         }
     }

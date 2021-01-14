@@ -320,7 +320,7 @@
                     "connectionString": {
                         "type": "string",
                         "description": "The lightning connection string",
-                        "example": "xpub..."
+                        "example": "type=clightning;server=..."
                     }
                 }
             }

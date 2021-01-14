@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using OpenQA.Selenium;
+using OpenQA.Selenium.Support.UI;
 using Xunit;
 
 namespace BTCPayServer.Tests
@@ -30,6 +31,29 @@ namespace BTCPayServer.Tests
         public static void ForceClick(this IWebElement element)
         {
             element.SendKeys(Keys.Return);
+        }
+
+        /// <summary>
+        /// Utility method to wait until timeout for element to be present (optionally displayed)
+        /// </summary>
+        /// <param name="context">Wait context</param>
+        /// <param name="by">How we search for element</param>
+        /// <param name="displayed">Flag to wait for element to be displayed or just present</param>
+        /// <param name="timeout">How long to wait for element to be present/displayed</param>
+        /// <returns>Element we were waiting for</returns>
+        public static IWebElement WaitForElement(this IWebDriver context, By by, bool displayed = true, uint timeout = 10)
+        {
+            var wait = new DefaultWait<IWebDriver>(context);
+            wait.Timeout = TimeSpan.FromSeconds(timeout);
+            wait.IgnoreExceptionTypes(typeof(NoSuchElementException));
+            return wait.Until(ctx =>
+            {
+                var elem = ctx.FindElement(by);
+                if (displayed && !elem.Displayed)
+                    return null;
+
+                return elem;
+            });
         }
         public static void AssertNoError(this IWebDriver driver)
         {

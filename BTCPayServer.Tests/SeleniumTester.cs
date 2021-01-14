@@ -116,6 +116,11 @@ namespace BTCPayServer.Tests
         public Mnemonic GenerateWallet(string cryptoCode = "BTC", string seed = "", bool importkeys = false, bool privkeys = false, ScriptPubKeyType format = ScriptPubKeyType.Segwit)
         {
             Driver.FindElement(By.Id($"Modify{cryptoCode}")).Click();
+            // Modify case
+            if (Driver.PageSource.Contains("id=\"change-wallet-link\""))
+            {
+                Driver.FindElement(By.Id("change-wallet-link")).Click();
+            }
 
             if (string.IsNullOrEmpty(seed))
             {

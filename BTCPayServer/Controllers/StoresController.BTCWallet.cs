@@ -477,23 +477,14 @@ namespace BTCPayServer.Controllers
                 return UnprocessableEntity();
             }
 
-            // TODO: Verify this is correct and sufficient
-            try
-            {
-                PaymentMethodId paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
-                store.SetSupportedPaymentMethod(paymentMethodId, null);
+            PaymentMethodId paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
+            store.SetSupportedPaymentMethod(paymentMethodId, null);
 
-                await _Repo.UpdateStore(store);
-                _EventAggregator.Publish(new WalletChangedEvent {WalletId = new WalletId(storeId, cryptoCode)});
+            await _Repo.UpdateStore(store);
+            _EventAggregator.Publish(new WalletChangedEvent {WalletId = new WalletId(storeId, cryptoCode)});
 
-                TempData[WellKnownTempData.SuccessMessage] =
-                    $"On-Chain payment for {network.CryptoCode} has been removed.";
-            }
-            catch
-            {
-                TempData[WellKnownTempData.ErrorMessage] =
-                    $"On-Chain payment for {network.CryptoCode} could not be removed.";
-            }
+            TempData[WellKnownTempData.SuccessMessage] =
+                $"On-Chain payment for {network.CryptoCode} has been removed.";
 
             return RedirectToAction(nameof(UpdateStore), new {storeId});
         }

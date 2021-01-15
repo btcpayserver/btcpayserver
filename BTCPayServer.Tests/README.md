@@ -63,4 +63,8 @@ The `./docker-lightning-channel-teardown.sh` script closes any existing lightnin
 2. Run `docker-compose pull` (this will ensure you have the lastest images)
 3. Run again with `docker-compose up dev`
 
+How to run the Altcoin environment?
+
+`docker-compose -f docker-compose.altcoins.yml up dev`
+
 If you still have issues, try to restart docker.

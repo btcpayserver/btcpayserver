@@ -413,7 +413,7 @@ namespace BTCPayServer.Services.Invoices
         {
             using (var context = _ContextFactory.CreateContext())
             {
-                var invoiceData = await GetInvoiceRaw(invoiceId);
+                var invoiceData = await GetInvoiceRaw(invoiceId, context);
                 if (invoiceData == null || (storeId != null &&
                                             !invoiceData.StoreDataId.Equals(storeId,
                                                 StringComparison.InvariantCultureIgnoreCase)))
@@ -429,7 +429,7 @@ namespace BTCPayServer.Services.Invoices
         {
             using (var context = _ContextFactory.CreateContext())
             {
-                var invoiceData = await GetInvoiceRaw(invoiceId);
+                var invoiceData = await GetInvoiceRaw(invoiceId, context);
                 if (invoiceData == null)
                 {
                     return false;
@@ -472,8 +472,11 @@ namespace BTCPayServer.Services.Invoices
 
         public async Task<InvoiceEntity> GetInvoice(string id, bool inludeAddressData = false)
         {
-            var res = await GetInvoiceRaw(id, inludeAddressData);
-            return res == null ? null : ToEntity(res);
+            using (var context = _ContextFactory.CreateContext())
+            {
+                var res = await GetInvoiceRaw(id, context, inludeAddressData);
+                return res == null ? null : ToEntity(res);
+            }            
         }
         public async Task<InvoiceEntity[]> GetInvoices(string[] invoiceIds)
         {
@@ -490,24 +493,21 @@ namespace BTCPayServer.Services.Invoices
             }
         }
 
-        private async Task<InvoiceData> GetInvoiceRaw(string id, bool inludeAddressData = false)
+        private async Task<InvoiceData> GetInvoiceRaw(string id, ApplicationDbContext dbContext, bool inludeAddressData = false)
         {
-            using (var context = _ContextFactory.CreateContext())
-            {
-                IQueryable<Data.InvoiceData> query =
-                    context
+            IQueryable<Data.InvoiceData> query =
+                    dbContext
                     .Invoices
                     .Include(o => o.Payments);
-                if (inludeAddressData)
-                    query = query.Include(o => o.HistoricalAddressInvoices).Include(o => o.AddressInvoices);
-                query = query.Where(i => i.Id == id);
+            if (inludeAddressData)
+                query = query.Include(o => o.HistoricalAddressInvoices).Include(o => o.AddressInvoices);
+            query = query.Where(i => i.Id == id);
 
-                var invoice = (await query.ToListAsync()).FirstOrDefault();
-                if (invoice == null)
-                    return null;
+            var invoice = (await query.ToListAsync()).FirstOrDefault();
+            if (invoice == null)
+                return null;
 
-                return invoice;
-            }
+            return invoice;
         }
 
         private InvoiceEntity ToEntity(Data.InvoiceData invoice)

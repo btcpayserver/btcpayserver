@@ -1,6 +1,3 @@
-using NBitcoin;
-using Newtonsoft.Json;
-
 namespace BTCPayServer.Client.Models
 {
     public class LightningNetworkPaymentMethodData

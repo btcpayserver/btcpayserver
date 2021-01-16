@@ -75,9 +75,14 @@ namespace BTCPayServer.Controllers
         {
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             vm.CryptoCode = network.CryptoCode;
+
+            var derivationSchemeSettings = GetDerivationSchemeSettings(walletId);
+            if (derivationSchemeSettings == null)
+                return NotFound();
+
             vm.NBXSeedAvailable = await CanUseHotWallet() && !string.IsNullOrEmpty(await ExplorerClientProvider.GetExplorerClient(network)
-                .GetMetadataAsync<string>(GetDerivationSchemeSettings(walletId).AccountDerivation,
-                    WellknownMetadataKeys.Mnemonic));
+                .GetMetadataAsync<string>(derivationSchemeSettings.AccountDerivation, WellknownMetadataKeys.Mnemonic));
+
             if (await vm.GetPSBT(network.NBitcoinNetwork) is PSBT psbt)
             {
                 vm.Decoded = psbt.ToString();
@@ -98,9 +103,13 @@ namespace BTCPayServer.Controllers
                 return await WalletPSBT(walletId, vm);
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             vm.CryptoCode = network.CryptoCode;
+
+            var derivationSchemeSettings = GetDerivationSchemeSettings(walletId);
+            if (derivationSchemeSettings == null)
+                return NotFound();
+
             vm.NBXSeedAvailable = await CanUseHotWallet() && !string.IsNullOrEmpty(await ExplorerClientProvider.GetExplorerClient(network)
-                .GetMetadataAsync<string>(GetDerivationSchemeSettings(walletId).AccountDerivation,
-                    WellknownMetadataKeys.Mnemonic));
+                .GetMetadataAsync<string>(derivationSchemeSettings.AccountDerivation, WellknownMetadataKeys.Mnemonic));
             var psbt = await vm.GetPSBT(network.NBitcoinNetwork);
             if (psbt == null)
             {
@@ -127,7 +136,6 @@ namespace BTCPayServer.Controllers
                     return View(vm);
 
                 case "update":
-                    var derivationSchemeSettings = GetDerivationSchemeSettings(walletId);
                     psbt = await ExplorerClientProvider.UpdatePSBT(derivationSchemeSettings, psbt);
                     if (psbt == null)
                     {

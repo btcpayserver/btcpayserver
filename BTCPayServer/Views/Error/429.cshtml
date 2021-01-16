@@ -1,16 +1,20 @@
-﻿@{
+@{
     ViewData["Title"] = "429 - Too Many Requests";
 }
 
-<div class="row justify-content-center mb-2">
-    <div class="col text-center">
+<div class="row">
+    <div class="col-12 col-head" style="justify-content:center; flex-direction: row; display:flex; flex-direction:row; text-align:center;">
         <a asp-controller="Home" asp-action="Index">
-            <img src="~/img/btcpay-logo.svg" alt="BTCPay Server" class="mb-4" height="70" asp-append-version="true"/>
+            <img src="~/img/btcpay-logo.svg" alt="BTCPay Server" class="head-logo" height="70" asp-append-version="true" />
         </a>
 
-        <h1 class="h2 mb-3">@ViewData["Title"]</h1>
+        <h1 class="text-uppercase mt-3 ml-4">@ViewData["Title"]</h1>
     </div>
 </div>
+
+<center>
+    <hr class="primary" />
+</center>
 
 <p class="lead text-center">
     Please send requests slower. Or face the wrath of <a href="https://twitter.com/r0ckstardev" target="_blank">Vin Diesel</a>.
@@ -24,8 +28,12 @@
     Slowly <a href="/">navigate back to home</a>.
 </p>
 
+<center>
+    <hr class="primary" />
+</center>
+
 <div class="row justify-content-center mt-5">
     <div class="col">
-        <partial name="_BTCPaySupporters"/>
+        <partial name="_BTCPaySupporters" />
     </div>
 </div>

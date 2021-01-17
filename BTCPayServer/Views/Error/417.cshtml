@@ -1,0 +1,37 @@
+@{
+    ViewData["Title"] = "417 - Expectation Failed";
+}
+
+<div class="row">
+    <div class="col-12 col-head" style="justify-content:center; flex-direction: row; display:flex; flex-direction:row; text-align:center;">
+        <a asp-controller="Home" asp-action="Index">
+            <img src="~/img/btcpay-logo.svg" alt="BTCPay Server" class="head-logo" height="70" asp-append-version="true" />
+        </a>
+
+        <h1 class="text-uppercase mt-3 ml-4">@ViewData["Title"]</h1>
+    </div>
+</div>
+
+<center>
+    <hr class="primary" />
+</center>
+
+<p class="lead text-center">
+    You've unfortunately failed expecations of manager <a href="https://twitter.com/pavlenex" target="_blank">Pavlenex</a>. Poor you.
+    <br /><br />
+    <a href="https://twitter.com/pavlenex" target="_blank">
+        <img src="~/img/errorpages/417_pavlenex.png" alt="Pavelnex avatar" title="Pavlenex fightning the system, while building better systems" asp-append-version="true" />
+    </a>
+    <br /><br />
+    Check your request `Except` header and do better.
+</p>
+
+<center>
+    <hr class="primary" />
+</center>
+
+<div class="row justify-content-center mt-5">
+    <div class="col">
+        <partial name="_BTCPaySupporters" />
+    </div>
+</div>

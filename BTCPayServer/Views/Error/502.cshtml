@@ -1,0 +1,38 @@
+@{
+    ViewData["Title"] = "502 - Bad Gateway";
+}
+
+<div class="row">
+    <div class="col-12 col-head" style="justify-content:center; flex-direction: row; display:flex; flex-direction:row; text-align:center;">
+        <a asp-controller="Home" asp-action="Index">
+            <img src="~/img/btcpay-logo.svg" alt="BTCPay Server" class="head-logo" height="70" asp-append-version="true" />
+        </a>
+
+        <h1 class="text-uppercase mt-3 ml-4">@ViewData["Title"]</h1>
+    </div>
+</div>
+
+<center>
+    <hr class="primary" />
+</center>
+
+<p class="lead text-center">
+    The life is all about finding the right Gateways.<br />
+    Unfortunatelly, this time you've found a bad one.
+    <br /><br />
+    <a href="https://twitter.com/milessuter" target="_blank">
+        <img src="~/img/errorpages/502_milessuter.jpg" alt="Miles obfuscated profile pic" title="But full name is not obfuscated" asp-append-version="true" />
+    </a>
+    <br /><br />
+    Maybe <a href="https://twitter.com/milessuter">Gateway Tzar Miles</a> can help you out?
+</p>
+
+<center>
+    <hr class="primary" />
+</center>
+
+<div class="row justify-content-center mt-5">
+    <div class="col">
+        <partial name="_BTCPaySupporters" />
+    </div>
+</div>

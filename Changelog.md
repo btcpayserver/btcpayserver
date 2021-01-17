@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.6.6
+
+### Bug fixes:
+
+* Load correct connection string when using SQLite @Kukks
+* Greenfeld API: Invoice Metadata update was not updating @saliehendricks
+* Prevent access to wallet pags if wallet not set @dennisreimann
+
 ## 1.0.6.5:
 
 ### Improvements:

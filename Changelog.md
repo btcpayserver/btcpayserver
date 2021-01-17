@@ -8,6 +8,10 @@
 * Greenfeld API: Invoice Metadata update was not updating @saliehendricks
 * Prevent access to wallet pags if wallet not set @dennisreimann
 
+### New features
+
+* Greenfield API: Can configure lightning payment methods @Kukks
+
 ## 1.0.6.5:
 
 ### Improvements:

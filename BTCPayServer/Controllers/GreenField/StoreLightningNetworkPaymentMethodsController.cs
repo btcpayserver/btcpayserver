@@ -53,10 +53,10 @@ namespace BTCPayServer.Controllers.GreenField
             var excludedPaymentMethods = blob.GetExcludedPaymentMethods();
             return Ok(Store.GetSupportedPaymentMethods(_btcPayNetworkProvider)
                 .Where((method) => method.PaymentId.PaymentType == PaymentTypes.LightningLike)
-                .OfType<LightningSupportedPaymentMethod>()
-                .Select(paymentMethod =>
-                    new LightningNetworkPaymentMethodData(paymentMethod.PaymentId.CryptoCode,
-                        paymentMethod.GetLightningUrl().ToString(), !excludedPaymentMethods.Match(paymentMethod.PaymentId)))
+                .OfType<DerivationSchemeSettings>()
+                .Select(strategy =>
+                    new LightningNetworkPaymentMethodData(strategy.PaymentId.CryptoCode,
+                        strategy.AccountDerivation.ToString(), !excludedPaymentMethods.Match(strategy.PaymentId)))
                 .Where((result) => !enabledOnly || result.Enabled)
                 .ToList()
             );

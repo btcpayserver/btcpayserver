@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.6.7
+
+### Bug fixes:
+
+* Reverted the new Greenfield API: Can configure lightning payment methods @NicolasDorier
+
 ## 1.0.6.6
 
 ### Bug fixes:

@@ -1272,10 +1272,70 @@ namespace BTCPayServer.Tests
                await client.GetStoreOnChainPaymentMethod(store.Id, "BTC");
            });
         }
-
-
         
+        
+        
+        [Fact(Timeout = 60 * 2 * 1000)]
+        [Trait("Lightning", "Lightning")]
+        [Trait("Integration", "Integration")]
+        public async Task LightningNetworkPaymentMethodAPITests()
+        {
+            using var tester = ServerTester.Create();
+            tester.ActivateLightning();
+            await tester.StartAsync();
+            await tester.EnsureChannelsSetup();
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync(true);
+            var client = await user.CreateClient(Policies.CanModifyStoreSettings);
+            var viewOnlyClient = await user.CreateClient(Policies.CanViewStoreSettings);
+            tester.PayTester.GetService<BTCPayServerEnvironment>().DevelopmentOverride = false;
+            var store = await client.GetStore(user.StoreId);
 
+            Assert.Empty(await client.GetStoreLightningNetworkPaymentMethods(store.Id));
+            await AssertHttpError(403, async () =>
+            {
+                await viewOnlyClient.UpdateStoreLightningNetworkPaymentMethod(store.Id, "BTC", new LightningNetworkPaymentMethodData() { });
+            });
+            await AssertHttpError(404, async () =>
+            {
+                await client.GetStoreLightningNetworkPaymentMethod(store.Id, "BTC");
+            });
+            await user.RegisterLightningNodeAsync("BTC", LightningConnectionType.CLightning, false);
+            
+            var method = await client.GetStoreLightningNetworkPaymentMethod(store.Id, "BTC");
+            await AssertHttpError(403, async () =>
+            {
+                await viewOnlyClient.RemoveStoreOnChainPaymentMethod(store.Id, "BTC");
+            });
+            await  client.RemoveStoreOnChainPaymentMethod(store.Id, "BTC");
+            await AssertHttpError(404, async () =>
+            {
+                await client.GetStoreOnChainPaymentMethod(store.Id, "BTC");
+            });
+
+            var settings = (await tester.PayTester.GetService<SettingsRepository>().GetSettingAsync<PoliciesSettings>())?? new PoliciesSettings();
+            settings.AllowLightningInternalNodeForAll = false;
+            await tester.PayTester.GetService<SettingsRepository>().UpdateSetting(settings);
+            var nonAdminUser = tester.NewAccount();
+            await nonAdminUser.GrantAccessAsync(false);
+            var nonAdminUserClient= await nonAdminUser.CreateClient(Policies.CanModifyStoreSettings);
+            
+            await AssertHttpError(404, async () =>
+            {
+                 await nonAdminUserClient.GetStoreLightningNetworkPaymentMethod(nonAdminUser.StoreId, "BTC");
+            });
+            await Assert.ThrowsAsync<GreenFieldValidationException>(async () =>
+            {
+                await nonAdminUserClient.UpdateStoreLightningNetworkPaymentMethod(nonAdminUser.StoreId, "BTC", method);
+            });
+            
+            settings = await tester.PayTester.GetService<SettingsRepository>().GetSettingAsync<PoliciesSettings>();
+            settings.AllowLightningInternalNodeForAll = true;
+            await tester.PayTester.GetService<SettingsRepository>().UpdateSetting(settings);
+
+            await nonAdminUserClient.UpdateStoreLightningNetworkPaymentMethod(nonAdminUser.StoreId, "BTC", method);
+        }
+        
         [Fact(Timeout = TestTimeout)]
         [Trait("Fast", "Fast")]
         public void NumericJsonConverterTests()

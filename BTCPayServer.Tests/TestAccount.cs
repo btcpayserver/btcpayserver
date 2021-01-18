@@ -257,7 +257,7 @@ namespace BTCPayServer.Tests
             RegisterLightningNodeAsync(cryptoCode, connectionType, isMerchant).GetAwaiter().GetResult();
         }
 
-        public async Task RegisterLightningNodeAsync(string cryptoCode, LightningConnectionType connectionType, bool isMerchant = true)
+        public async Task RegisterLightningNodeAsync(string cryptoCode, LightningConnectionType connectionType, bool isMerchant = true, string storeId = null)
         {
             var storeController = this.GetController<StoresController>();
 
@@ -288,8 +288,8 @@ namespace BTCPayServer.Tests
             else
                 throw new NotSupportedException(connectionType.ToString());
 
-            await storeController.AddLightningNode(StoreId,
-                new LightningNodeViewModel() { ConnectionString = connectionString, SkipPortTest = true }, "save", "BTC");
+            await storeController.AddLightningNode(storeId ?? StoreId,
+                new LightningNodeViewModel() {ConnectionString = connectionString, SkipPortTest = true}, "save", "BTC");
             if (storeController.ModelState.ErrorCount != 0)
                 Assert.False(true, storeController.ModelState.FirstOrDefault().Value.Errors[0].ErrorMessage);
         }

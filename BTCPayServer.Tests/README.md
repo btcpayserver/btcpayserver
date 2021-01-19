@@ -30,7 +30,7 @@ You can also generate blocks:
 
 - Install and run [Polar](https://lightningpolar.com/). Setup a small network of nodes.
 -Goto your Store's General Settings and enable Lightning
--Build you connection string using the Connect infomation in the Polar app
+- Build you connection string using the Connect information in the Polar app
 
 LND Connection string example: 
 type=lnd-rest;server=https://127.0.0.1:8084/;macaroonfilepath="local path to admin.macaroon on your computer, without these quotes";allowinsecure=true

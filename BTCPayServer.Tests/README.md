@@ -29,8 +29,8 @@ You can also generate blocks:
 ### Using Polar to test Lightning payments
 
 - Install and run [Polar](https://lightningpolar.com/). Setup a small network of nodes.
-- Go to your Store's General Settings and enable Lightning
-- Build you connection string using the Connect information in the Polar app
+- Go to your store's General Settings and enable Lightning.
+- Build your connection string using the Connect information in the Polar app.
 
 LND Connection string example: 
 type=lnd-rest;server=https://127.0.0.1:8084/;macaroonfilepath="local path to admin.macaroon on your computer, without these quotes";allowinsecure=true

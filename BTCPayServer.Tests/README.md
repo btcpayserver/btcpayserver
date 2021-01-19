@@ -26,6 +26,17 @@ You can also generate blocks:
 .\docker-bitcoin-generate.ps1 3
 ```
 
+### Using Polar to test Lightning payments
+
+-Install and run [Polar](https://lightningpolar.com/). Setup a small network of nodes.
+-Goto your Store's General Settings and enable Lightning
+-Build you connection string using the Connect infomation in the Polar app
+
+LND Connection string example: 
+type=lnd-rest;server=https://127.0.0.1:8084/;macaroonfilepath="local path to admin.macaroon on your computer, without these quotes";allowinsecure=true
+
+Now you can create a lightning invoice on BTCPayserver regtest and make payment through polar
+PLEASE NOTE: 
 ### Using the test litecoin-cli
 
 Same as bitcoin-cli, but with `.\docker-litecoin-cli.ps1` and `.\docker-litecoin-cli.sh` instead.

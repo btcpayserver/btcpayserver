@@ -28,15 +28,19 @@ You can also generate blocks:
 
 ### Using Polar to test Lightning payments
 
--Install and run [Polar](https://lightningpolar.com/). Setup a small network of nodes.
--Goto your Store's General Settings and enable Lightning
--Build you connection string using the Connect infomation in the Polar app
+- Install and run [Polar](https://lightningpolar.com/). Setup a small network of nodes.
+- Go to your store's General Settings and enable Lightning.
+- Build your connection string using the Connect infomation in the Polar app.
 
 LND Connection string example: 
 type=lnd-rest;server=https://127.0.0.1:8084/;macaroonfilepath="local path to admin.macaroon on your computer, without these quotes";allowinsecure=true
 
-Now you can create a lightning invoice on BTCPayserver regtest and make payment through polar
-PLEASE NOTE: 
+Now you can create a lightning invoice on BTCPayserver regtest and make a payment through polar.
+
+PLEASE NOTE: You may get an exception break in Visual Studio. You must quickly click "Continue" in VS so the invoice is generated.
+Or, uncheck the box that says, "Break when this exceptiontype is thrown".
+
+
 ### Using the test litecoin-cli
 
 Same as bitcoin-cli, but with `.\docker-litecoin-cli.ps1` and `.\docker-litecoin-cli.sh` instead.

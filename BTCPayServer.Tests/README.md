@@ -29,7 +29,7 @@ You can also generate blocks:
 ### Using Polar to test Lightning payments
 
 - Install and run [Polar](https://lightningpolar.com/). Setup a small network of nodes.
--Goto your Store's General Settings and enable Lightning
+- Goto your Store's General Settings and enable Lightning
 - Build you connection string using the Connect information in the Polar app
 
 LND Connection string example: 

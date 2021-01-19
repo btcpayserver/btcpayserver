@@ -149,7 +149,7 @@ namespace BTCPayServer.Hosting
                             : Path.Combine(datadirs.Value.DataDir, sqliteFileName));
 
                         options.DatabaseType = DatabaseType.Sqlite;
-                        options.ConnectionString = sqliteFileName;
+                        options.ConnectionString = connStr;
                     }
                     else
                     {

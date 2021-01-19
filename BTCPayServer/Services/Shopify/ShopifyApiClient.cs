@@ -5,7 +5,6 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Services.Shopify.ApiModels;
-using DBriize.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -30,7 +29,7 @@ namespace BTCPayServer.Services.Shopify
             _credentials = credentials;
 
             var bearer = $"{_credentials.ApiKey}:{_credentials.ApiPassword}";
-            bearer = Encoding.UTF8.GetBytes(bearer).ToBase64String();
+            bearer = NBitcoin.DataEncoders.Encoders.Base64.EncodeData(Encoding.UTF8.GetBytes(bearer));
 
             _httpClient.DefaultRequestHeaders.Add("Authorization", "Basic " + bearer);
         }

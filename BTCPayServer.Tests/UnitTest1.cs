@@ -43,7 +43,6 @@ using BTCPayServer.Services.Rates;
 using BTCPayServer.Tests.Logging;
 using BTCPayServer.U2F.Models;
 using BTCPayServer.Validation;
-using DBriize.Utils;
 using ExchangeSharp;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -263,21 +262,12 @@ namespace BTCPayServer.Tests
                     ManageController.AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions.Where(pair =>
                         !Policies.IsStorePolicy(pair.Key) && !Policies.IsServerPolicy(pair.Key));
 
-                description = description.ReplaceMultiple(new Dictionary<string, string>()
-                {
-                    {
-                        "#OTHERPERMISSIONS#",
-                        string.Join("\n", otherPolicies.Select(pair => $"* `{pair.Key}`: {pair.Value.Title}"))
-                    },
-                    {
-                        "#SERVERPERMISSIONS#",
-                        string.Join("\n", serverPolicies.Select(pair => $"* `{pair.Key}`: {pair.Value.Title}"))
-                    },
-                    {
-                        "#STOREPERMISSIONS#",
-                        string.Join("\n", storePolicies.Select(pair => $"* `{pair.Key}`: {pair.Value.Title}"))
-                    }
-                });
+                description = description.Replace("#OTHERPERMISSIONS#",
+                        string.Join("\n", otherPolicies.Select(pair => $"* `{pair.Key}`: {pair.Value.Title}")))
+                    .Replace("#SERVERPERMISSIONS#",
+                        string.Join("\n", serverPolicies.Select(pair => $"* `{pair.Key}`: {pair.Value.Title}")))
+                    .Replace("#STOREPERMISSIONS#",
+                        string.Join("\n", storePolicies.Select(pair => $"* `{pair.Key}`: {pair.Value.Title}")));
                 Logs.Tester.LogInformation(description);
                                 
                 var sresp = Assert

@@ -20,9 +20,21 @@ namespace BTCPayServer.Controllers
         [Route("{storeId}/wallet/{cryptoCode}")]
         public async Task<IActionResult> SetupWallet(WalletSetupViewModel vm)
         {
+            var store = HttpContext.GetStoreData();
+            if (store == null)
+                return NotFound();
+
+            var network = vm.CryptoCode == null ? null : _ExplorerProvider.GetNetwork(vm.CryptoCode);
+            if (network == null)
+            {
+                return NotFound();
+            }
+
+            var derivation = GetExistingDerivationStrategy(vm.CryptoCode, store);
             var (hotWallet, rpcImport) = await CanUseHotWallet();
             vm.CanUseHotWallet = hotWallet;
             vm.CanUseRPCImport = rpcImport;
+            vm.DerivationScheme = derivation.AccountDerivation.ToString();
 
             return View(vm);
         }

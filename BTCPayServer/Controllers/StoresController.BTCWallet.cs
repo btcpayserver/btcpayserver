@@ -169,7 +169,7 @@ namespace BTCPayServer.Controllers
 
             var oldConfig = vm.Config;
             vm.Config = strategy?.ToJson();
-
+            var configChanged = oldConfig != vm.Config;
             PaymentMethodId paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
             var storeBlob = store.GetStoreBlob();
             var wasExcluded = storeBlob.GetExcludedPaymentMethods().Match(paymentMethodId);
@@ -179,9 +179,7 @@ namespace BTCPayServer.Controllers
                 // - If the user is testing the hint address in confirmation screen
                 (vm.Confirmation && !string.IsNullOrWhiteSpace(vm.HintAddress)) ||
                 // - The user is clicking on continue after changing the config
-                (!vm.Confirmation && oldConfig != vm.Config) ||
-                // - The user is clicking on continue without changing config nor enabling/disabling
-                (!vm.Confirmation && oldConfig == vm.Config && willBeExcluded == wasExcluded);
+                (!vm.Confirmation && configChanged);
 
             showAddress = showAddress && strategy != null;
             if (!showAddress)
@@ -443,7 +441,6 @@ namespace BTCPayServer.Controllers
             }
 
             var (hotWallet, rpcImport) = await CanUseHotWallet();
-
             vm.CanUseHotWallet = hotWallet;
             vm.CanUseRPCImport = rpcImport;
             vm.RootKeyPath = network.GetRootKeyPath();

@@ -15,7 +15,7 @@ namespace BTCPayServer.Services
         {
             emailSender.SendEmail(email,
                 $"Update Password",
-                $"A request has been made for you to update the password for your BTCPay Server account. Please click <a href='{HtmlEncoder.Default.Encode(link)}'>here</a> to update your password. <br/><br/> Alternatively copy and paste this URL into your browser: <br/><br/> {HtmlEncoder.Default.Encode(link)}");            
+                $"A request has been made for you to update the password for your BTCPay Server account. Please click <a href='{HtmlEncoder.Default.Encode(link)}'>here</a> to update your password. <br/><br/> Alternatively, copy and paste this URL into your browser: <br/><br/> {HtmlEncoder.Default.Encode(link)}");            
         }
     }
 }

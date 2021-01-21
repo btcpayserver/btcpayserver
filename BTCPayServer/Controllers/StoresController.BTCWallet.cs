@@ -34,7 +34,7 @@ namespace BTCPayServer.Controllers
             var (hotWallet, rpcImport) = await CanUseHotWallet();
             vm.CanUseHotWallet = hotWallet;
             vm.CanUseRPCImport = rpcImport;
-            vm.DerivationScheme = derivation.AccountDerivation.ToString();
+            vm.DerivationScheme = derivation?.AccountDerivation.ToString();
 
             return View(vm);
         }

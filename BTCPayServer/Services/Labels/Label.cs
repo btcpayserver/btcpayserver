@@ -1,16 +1,14 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services.Labels
 {
-    public abstract class Label
+   
+    public abstract class Label: LabelData
     {
-        public string Type { get; set; }
-        public string Text { get; set; }
         static void FixLegacy(JObject jObj, ReferenceLabel refLabel)
         {
             if (refLabel.Reference is null)

@@ -46,11 +46,11 @@
 </template>
 <div id="btcpayservervault" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="btcpayservervault" aria-hidden="true"></div>
 
-<form method="post">
-    <input asp-for="Config" type="hidden" />
-    <input asp-for="Confirmation" type="hidden" />
-    <input asp-for="DerivationScheme" type="hidden" />
-    <input asp-for="Enabled" type="hidden" />
+<form method="post" asp-controller="Stores" asp-action="UpdateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
+    <input asp-for="Config" type="hidden"/>
+    <input asp-for="Confirmation" type="hidden"/>
+    <input asp-for="DerivationScheme" type="hidden"/>
+    <input asp-for="Enabled" type="hidden"/>
 
     <div class="form-group">
         <table class="table table-sm table-responsive-md">

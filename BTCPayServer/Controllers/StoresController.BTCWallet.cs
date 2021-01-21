@@ -174,6 +174,7 @@ namespace BTCPayServer.Controllers
             var storeBlob = store.GetStoreBlob();
             var wasExcluded = storeBlob.GetExcludedPaymentMethods().Match(paymentMethodId);
             var willBeExcluded = !vm.Enabled;
+            var excludedChanged = willBeExcluded != wasExcluded;
 
             var showAddress = // Show addresses if:
                 // - If the user is testing the hint address in confirmation screen
@@ -202,13 +203,13 @@ namespace BTCPayServer.Controllers
                 await _Repo.UpdateStore(store);
                 _EventAggregator.Publish(new WalletChangedEvent {WalletId = new WalletId(vm.StoreId, vm.CryptoCode)});
 
-                if (willBeExcluded != wasExcluded)
+                if (excludedChanged)
                 {
                     var label = willBeExcluded ? "disabled" : "enabled";
                     TempData[WellKnownTempData.SuccessMessage] =
                         $"On-Chain payments for {network.CryptoCode} have been {label}.";
                 }
-                else
+                else if (configChanged)
                 {
                     TempData[WellKnownTempData.SuccessMessage] =
                         $"Derivation settings for {network.CryptoCode} have been modified.";

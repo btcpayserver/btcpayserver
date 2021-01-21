@@ -209,7 +209,7 @@ namespace BTCPayServer.Controllers
                     TempData[WellKnownTempData.SuccessMessage] =
                         $"On-Chain payments for {network.CryptoCode} have been {label}.";
                 }
-                else if (configChanged)
+                else
                 {
                     TempData[WellKnownTempData.SuccessMessage] =
                         $"Derivation settings for {network.CryptoCode} have been modified.";
@@ -458,7 +458,7 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("{storeId}/wallet/{cryptoCode}/delete")]
-        public async Task<IActionResult> DeleteWallet(string storeId, string cryptoCode, [FromForm] bool confirmDelete)
+        public async Task<IActionResult> DeleteWallet(string storeId, string cryptoCode)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
@@ -480,11 +480,6 @@ namespace BTCPayServer.Controllers
             if (derivation == null)
             {
                 return NotFound();
-            }
-
-            if (!confirmDelete)
-            {
-                return UnprocessableEntity();
             }
 
             PaymentMethodId paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);

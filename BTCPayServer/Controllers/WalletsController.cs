@@ -415,11 +415,8 @@ namespace BTCPayServer.Controllers
 
         private async Task<bool> CanUseHotWallet()
         {
-            var isAdmin = (await _authorizationService.AuthorizeAsync(User, Policies.CanModifyServerSettings)).Succeeded;
-            if (isAdmin)
-                return true;
             var policies = await _settingsRepository.GetSettingAsync<PoliciesSettings>();
-            return policies?.AllowHotWalletForAll is true;
+            return (await _authorizationService.CanUseHotWallet(policies, User)).HotWallet;
         }
 
         [HttpGet]

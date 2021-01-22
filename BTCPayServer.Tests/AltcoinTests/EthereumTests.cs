@@ -86,7 +86,7 @@ namespace BTCPayServer.Tests
 
             var invoiceId = s.CreateInvoice(store.storeName, 10);
             s.GoToInvoiceCheckout(invoiceId);
-            var currencyDropdownButton = s.Driver.WaitForElement(By.ClassName("payment__currencies"));
+            var currencyDropdownButton = s.Driver.FindElement(By.ClassName("payment__currencies"));
             Assert.Contains("ETH", currencyDropdownButton.Text);
             s.Driver.FindElement(By.Id("copy-tab")).Click();
 

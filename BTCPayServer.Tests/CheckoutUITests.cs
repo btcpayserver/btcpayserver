@@ -33,7 +33,7 @@ namespace BTCPayServer.Tests
                 s.AddDerivationScheme("BTC");
                 s.GoToStore(store.storeId, StoreNavPages.Checkout);
                 s.Driver.FindElement(By.Id("RequiresRefundEmail")).Click();
-                s.Driver.FindElement(By.Name("command")).ForceClick();
+                s.Driver.FindElement(By.Name("command")).Click();
 
                 var emailAlreadyThereInvoiceId = s.CreateInvoice(store.storeName, 100, "USD", "a@g.com");
                 s.GoToInvoiceCheckout(emailAlreadyThereInvoiceId);
@@ -116,7 +116,7 @@ namespace BTCPayServer.Tests
                 s.SetCheckbox(s, "LightningAmountInSatoshi", true);
                 var command = s.Driver.FindElement(By.Name("command"));
 
-                command.ForceClick();
+                command.Click();
                 var invoiceId = s.CreateInvoice(store.storeName, 10, "USD", "a@g.com");
                 s.GoToInvoiceCheckout(invoiceId);
                 Assert.Contains("Sats", s.Driver.FindElement(By.ClassName("payment__currencies_noborder")).Text);

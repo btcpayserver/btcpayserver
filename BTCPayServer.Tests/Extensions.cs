@@ -20,41 +20,25 @@ namespace BTCPayServer.Tests
             var res = JsonConvert.SerializeObject(o, Formatting.None, jsonSettings);
             return res;
         }
-        public static void ScrollTo(this IWebDriver driver, By by)
+
+        public static void WaitForPageLoad(this IWebDriver driver)
         {
-            var element = driver.FindElement(by);
-        }
-        /// <summary>
-        /// Sometimes the chrome driver is fucked up and we need some magic to click on the element.
-        /// </summary>
-        /// <param name="element"></param>
-        public static void ForceClick(this IWebElement element)
-        {
-            element.SendKeys(Keys.Return);
+            // Yes, this sucks big time, but it ensures that the JS after it
+            // does not get executed in the old page context. Bad, I know.
+            // Thread.Sleep(TimeSpan.FromMilliseconds(250));
+            //
+            // new WebDriverWait(driver, SeleniumTester.ImplicitWait)
+            //     .Until(d=>((IJavaScriptExecutor)d).ExecuteScript("return (document.readyState === 'complete' && (typeof(jQuery) === 'undefined' || jQuery.isReady))").Equals(true));
         }
 
-        /// <summary>
-        /// Utility method to wait until timeout for element to be present (optionally displayed)
-        /// </summary>
-        /// <param name="context">Wait context</param>
-        /// <param name="by">How we search for element</param>
-        /// <param name="displayed">Flag to wait for element to be displayed or just present</param>
-        /// <param name="timeout">How long to wait for element to be present/displayed</param>
-        /// <returns>Element we were waiting for</returns>
-        public static IWebElement WaitForElement(this IWebDriver context, By by, bool displayed = true, uint timeout = 10)
+        public static void LogIn(this SeleniumTester s, string email)
         {
-            var wait = new DefaultWait<IWebDriver>(context);
-            wait.Timeout = TimeSpan.FromSeconds(timeout);
-            wait.IgnoreExceptionTypes(typeof(NoSuchElementException));
-            return wait.Until(ctx =>
-            {
-                var elem = ctx.FindElement(by);
-                if (displayed && !elem.Displayed)
-                    return null;
-
-                return elem;
-            });
+            s.Driver.FindElement(By.Id("Email")).SendKeys(email);
+            s.Driver.FindElement(By.Id("Password")).SendKeys("123456");
+            s.Driver.FindElement(By.Id("LoginButton")).Click();
+            s.Driver.AssertNoError();
         }
+
         public static void AssertNoError(this IWebDriver driver)
         {
             try

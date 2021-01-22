@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Labels;
@@ -14,6 +17,8 @@ using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
+using NBitcoin.Payment;
+using NBXplorer;
 using NBXplorer.Models;
 using StoreData = BTCPayServer.Data.StoreData;
 
@@ -24,18 +29,27 @@ namespace BTCPayServer.Controllers.GreenField
     public class StoreOnChainWalletsController : Controller
     {
         private StoreData Store => HttpContext.GetStoreData();
+        private readonly IAuthorizationService _authorizationService;
         private readonly BTCPayWalletProvider _btcPayWalletProvider;
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly WalletRepository _walletRepository;
-        private readonly LabelFactory _labelFactory;
+        private readonly ExplorerClientProvider _explorerClientProvider;
+        private readonly CssThemeManager _cssThemeManager;
 
-        public StoreOnChainWalletsController(BTCPayWalletProvider btcPayWalletProvider,
-            BTCPayNetworkProvider btcPayNetworkProvider, WalletRepository walletRepository, LabelFactory labelFactory)
+        public StoreOnChainWalletsController(
+            IAuthorizationService authorizationService,
+            BTCPayWalletProvider btcPayWalletProvider,
+            BTCPayNetworkProvider btcPayNetworkProvider,
+            WalletRepository walletRepository,
+            ExplorerClientProvider explorerClientProvider,
+            CssThemeManager cssThemeManager)
         {
+            _authorizationService = authorizationService;
             _btcPayWalletProvider = btcPayWalletProvider;
             _btcPayNetworkProvider = btcPayNetworkProvider;
             _walletRepository = walletRepository;
-            _labelFactory = labelFactory;
+            _explorerClientProvider = explorerClientProvider;
+            _cssThemeManager = cssThemeManager;
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -123,7 +137,6 @@ namespace BTCPayServer.Controllers.GreenField
             var wallet = _btcPayWalletProvider.GetWallet(network);
 
             var walletId = new WalletId(storeId, cryptoCode);
-            var walletBlobAsync = await _walletRepository.GetWalletInfo(walletId);
             var walletTransactionsInfoAsync = await _walletRepository.GetWalletTransactionsInfo(walletId);
             var utxos = await wallet.GetUnspentCoins(derivationScheme.AccountDerivation);
             return Ok(utxos.Select(coin =>
@@ -134,10 +147,7 @@ namespace BTCPayServer.Controllers.GreenField
                         Outpoint = coin.OutPoint.ToString(),
                         Amount = coin.Value.GetValue(network),
                         Comment = info?.Comment,
-                        // Labels =
-                        //     info == null
-                        //         ? null
-                        //         :  _labelFactory.ColorizeTransactionLabels(walletBlobAsync, info, Request),
+                        Labels = info?.Labels,
                         Link = string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink,
                             coin.OutPoint.Hash.ToString())
                     };
@@ -158,23 +168,72 @@ namespace BTCPayServer.Controllers.GreenField
                     $"{cryptoCode} sending services are not currently available");
             }
 
+            if (!(await CanUseHotWallet()).HotWallet)
+            {
+                return Unauthorized();
+            }
+
+            var wallet = _btcPayWalletProvider.GetWallet(network);
+
+            var utxos = await wallet.GetUnspentCoins(derivationScheme.AccountDerivation);
+            if (request.SelectedInputs?.Any() is true)
+            {
+                utxos = utxos.Where(coin => request.SelectedInputs.Contains(coin.OutPoint.ToString())).ToArray();
+                if (utxos.Any() is false)
+                {
+                    //no valid utxos selected
+                }
+            }
+
+            var balanceAvailable = utxos.Sum(coin => coin.Value.GetValue(network));
+            var payjoinEndpoint = "";
+            foreach (var destination in request.Destinations)
+            {
+                if (destination.Amount is null)
+                {
+                    try
+                    {
+                        var bip21 = new BitcoinUrlBuilder(destination.Destination, network.NBitcoinNetwork);
+                        if (destination.SubtractFromAmount)
+                        {
+                            //cant subtract from amount if using bip21
+                        }
+
+                        //
+                        // if (request.ProceedWithPayjoin && string.IsNullOrEmpty(payjoinEndpoint) && bip21.)
+                        // {
+                        //     
+                        // }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                        throw;
+                    }
+                }
+            }
+
             return NotFound();
         }
 
-        public class CreateOnChainTransactionRequest
-        {
-            public class CreateOnChainTransactionRequestDestination
-            {
-                public string Destination { get; set; }
-                public decimal Amount { get; set; }
-                public bool SubtractFromAmount { get; set; }
-            }
 
-            public decimal? FeeSatoshiPerByte { get; set; }
-            public bool ProceedWithPayjoin { get; set; }
-            public bool NoChange { get; set; }
-            public IEnumerable<string> SelectedInputs { get; set; }
+        private async Task<(bool HotWallet, bool RPCImport)> CanUseHotWallet()
+        {
+            return await _authorizationService.CanUseHotWallet(_cssThemeManager.Policies, User);
         }
+
+
+        private async Task<ExtKey> GetWallet(DerivationSchemeSettings derivationScheme)
+        {
+            if (!derivationScheme.IsHotWallet)
+                return null;
+
+            var result = await _explorerClientProvider.GetExplorerClient(derivationScheme.Network.CryptoCode)
+                .GetMetadataAsync<string>(derivationScheme.AccountDerivation,
+                    WellknownMetadataKeys.MasterHDKey);
+            return string.IsNullOrEmpty(result) ? null : ExtKey.Parse(result, derivationScheme.Network.NBitcoinNetwork);
+        }
+
 
         private bool IsValidWalletRequest(string cryptoCode, out BTCPayNetwork network,
             out DerivationSchemeSettings derivationScheme, out IActionResult actionResult)
@@ -189,6 +248,7 @@ namespace BTCPayServer.Controllers.GreenField
                     return true;
                 }
             }
+
             if (!network.WalletSupported || !_btcPayWalletProvider.IsAvailable(network))
             {
                 {

@@ -62,15 +62,14 @@ namespace BTCPayServer.Models.WalletViewModels
         [Display(Name = "PayJoin BIP21")]
         public string PayJoinBIP21 { get; set; }
         public bool InputSelection { get; set; }
-        public OnChainWalletUTXOData[] InputsAvailable { get; set; }
+        public AvailableInput[] InputsAvailable { get; set; }
 
         [Display(Name = "UTXOs to spend from")]
         public IEnumerable<string> SelectedInputs { get; set; }
 
         public class AvailableInput: OnChainWalletUTXOData
         {
-            
-            public IEnumerable<ColoredLabel> Labels { get; set; }
+            public new IEnumerable<ColoredLabel> Labels { get; set; }
         }
 
     }

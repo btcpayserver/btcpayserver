@@ -8,5 +8,7 @@ namespace BTCPayServer.Client.Models
         public decimal Amount { get; set; }
         public string Outpoint { get; set; }
         public string Link { get; set; }
+
+        public Dictionary<string, LabelData> Labels { get; set; }
     }
 }

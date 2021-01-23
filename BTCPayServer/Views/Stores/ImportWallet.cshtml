@@ -13,7 +13,6 @@
 
 <header class="text-center">
     <h1>Choose your import method</h1>
-    <p class="lead text-secondary mt-3">Select an option to get started</p>
 </header>
 <br>
 
@@ -22,8 +21,8 @@
     <div class="mt-5">
         <div class="list-group">
             <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="hardware" id="import-hardware-link" class="list-group-item list-group-item-action p-4 text-center only-for-js">
-                <h4>Connect hardware wallet</h4>
-                <p class="mb-0">Import your keys with the BTCPay Server Vault</p>
+                <h4>Connect hardware wallet <span class="badge bg-primary ml-2">Recommended</span></h4>
+                <p class="mb-0 text-secondary">Import your keys with the BTCPay Server Vault</p>
             </a>
             <noscript>
                 <div class="list-group-item p-4 text-center text-muted hide-when-js">
@@ -33,37 +32,33 @@
             </noscript>
         </div>
     </div>
-
-    <hr class="d-block my-5" />
 }
 
-<div class="list-group">
+<div class="list-group mt-4">
     <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="file" id="import-file-link" class="list-group-item list-group-item-action p-4 text-center">
-        <h4>Import wallet file</h4>
-        <p class="mb-0">Air-gapped import by uploading a file exported from your wallet</p>
+        <h4>Import wallet file <span class="badge bg-primary ml-2">Recommended</span></h4>
+        <p class="mb-0 text-secondary">Upload a file exported from your wallet</p>
+    </a>
+</div>
+
+<div class="list-group mt-4">
+    <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="xpub" id="import-xpub-link" class="list-group-item list-group-item-action p-4 text-center">
+        <h4>Enter extended public key</h4>
+        <p class="mb-0 text-secondary">Setup a watch-only wallet</p>
     </a>
 </div>
 
 <div class="list-group mt-4">
     <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="scan" id="import-scan-link" class="list-group-item list-group-item-action p-4 text-center">
         <h4>Scan wallet QR code</h4>
-        <p class="mb-0">Air-gapped import by scanning a QR code shown on your wallets display</p>
-    </a>
-</div>
-
-<hr class="d-block my-5" />
-
-<div class="list-group mt-4">
-    <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="xpub" id="import-xpub-link" class="list-group-item list-group-item-action p-4 text-center">
-        <h4>Enter extended public key</h4>
-        <p class="mb-0">Manually enter the xpub key</p>
+        <p class="mb-0 text-secondary">Supported by BlueWallet and Cobo Vault</p>
     </a>
 </div>
 
 <div class="list-group mt-4">
     <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="seed" id="import-seed-link" class="list-group-item list-group-item-action p-4 text-center">
-        <h4>Enter the seed</h4>
-        <p class="mb-0">Manually enter your wallet recovery seed</p>
+        <h4>Enter the seed <span class="badge bg-danger ml-2">Not recommended</span></h4>
+        <p class="mb-0 text-secondary">Your wallet recovery seed are the 12 or 24 words</p>
     </a>
 </div>
 

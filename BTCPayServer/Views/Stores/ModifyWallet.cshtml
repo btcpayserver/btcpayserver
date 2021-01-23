@@ -17,7 +17,7 @@
 <br>
 
 <div class="mt-5 position-relative">
-    <h3 class="my-4">Current wallet settings</h3>
+    <h3 class="my-4">Current settings</h3>
 
     <form method="post">
         <input asp-for="Config" type="hidden" />
@@ -54,18 +54,12 @@
             </tr>
             </tbody>
         </table>
-        <button type="submit" class="btn btn-primary" id="Modify">Modify status</button>
+        <button type="submit" class="btn btn-primary" id="Modify">Save</button>
     </form>
     <form method="post" asp-controller="Stores" asp-action="DeleteWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" class="position-absolute" style="right:0;bottom:0;">
+        <a asp-controller="Stores" asp-action="SetupWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="change-wallet-link" class="btn btn-secondary mr-2">
+            Replace wallet
+        </a>
         <button type="submit" class="btn btn-danger" id="Delete">Remove wallet</button>
     </form>
-</div>
-
-<br>
-
-<div class="list-group mt-5">
-    <a asp-controller="Stores" asp-action="SetupWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="change-wallet-link" class="list-group-item list-group-item-action p-4">
-        <h4>Change wallet</h4>
-        <p class="mb-0">Update settings, changes take effect on setup completion</p>
-    </a>
 </div>

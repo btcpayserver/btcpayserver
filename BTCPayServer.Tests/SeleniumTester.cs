@@ -16,6 +16,7 @@ using BTCPayServer.Views.Wallets;
 using NBitcoin;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium.Firefox;
 using Xunit;
 
 namespace BTCPayServer.Tests
@@ -34,27 +35,46 @@ namespace BTCPayServer.Tests
         public async Task StartAsync()
         {
             await Server.StartAsync();
-            ChromeOptions options = new ChromeOptions();
-            if (Server.PayTester.InContainer)
-            {
-                // this must be first option https://stackoverflow.com/questions/53073411/selenium-webdriverexceptionchrome-failed-to-start-crashed-as-google-chrome-is#comment102570662_53073789
-                options.AddArgument("no-sandbox");
-            }
             var isDebug = !Server.PayTester.InContainer;
-            if (!isDebug)
+            var runHeadless = true; // Set to false to view in browser
+            var useFirefox = !runHeadless;
+            var windowSize = (Width: 1200, Height: 1000);
+
+            if (useFirefox)
             {
-                options.AddArguments("headless"); // Comment to view browser
-                options.AddArguments("window-size=1200x1000"); // Comment to view browser
+                var options = new FirefoxOptions();
+                if (runHeadless)
+                {
+                    options.AddArguments("-headless");
+                }
+                options.AddArguments($"--window-size {windowSize.Width},{windowSize.Height}");
+                Driver = new FirefoxDriver(options);
             }
-            options.AddArgument("shm-size=2g");
-            Driver = new ChromeDriver(Server.PayTester.InContainer ? "/usr/bin" : Directory.GetCurrentDirectory(), options);
-            if (isDebug)
+            else
             {
-                //when running locally, depending on your resolution, the website may go into mobile responsive mode and screw with navigation of tests
+                var options = new ChromeOptions();
+                if (Server.PayTester.InContainer)
+                {
+                    // this must be first option https://stackoverflow.com/questions/53073411/selenium-webdriverexceptionchrome-failed-to-start-crashed-as-google-chrome-is#comment102570662_53073789
+                    options.AddArgument("no-sandbox");
+                }
+                if (runHeadless)
+                {
+                    options.AddArguments("-headless");
+                }
+                options.AddArguments($"window-size={windowSize.Width}x{windowSize.Height}");
+                options.AddArgument("shm-size=2g");
+                Driver = new ChromeDriver(Server.PayTester.InContainer ? "/usr/bin" : Directory.GetCurrentDirectory(), options);
+            }
+
+            if (!runHeadless)
+            {
+                // when running in the browser, depending on your resolution, the website
+                // may go into mobile responsive mode and screw with navigation of tests
                 Driver.Manage().Window.Maximize();
             }
-            Logs.Tester.LogInformation("Selenium: Using chrome driver");
-            Logs.Tester.LogInformation("Selenium: Browsing to " + Server.PayTester.ServerUri);
+            Logs.Tester.LogInformation($"Selenium: Using {Driver.GetType()}");
+            Logs.Tester.LogInformation($"Selenium: Browsing to {Server.PayTester.ServerUri}");
             Logs.Tester.LogInformation($"Selenium: Resolution {Driver.Manage().Window.Size}");
             Driver.Manage().Timeouts().ImplicitWait = ImplicitWait;
             GoToRegister();

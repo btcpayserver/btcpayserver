@@ -7,29 +7,14 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using OpenQA.Selenium;
-using OpenQA.Selenium.Support.UI;
 using Xunit;
 
 namespace BTCPayServer.Tests
 {
     public static class Extensions
     {
-        private static readonly JsonSerializerSettings jsonSettings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
-        public static string ToJson(this object o)
-        {
-            var res = JsonConvert.SerializeObject(o, Formatting.None, jsonSettings);
-            return res;
-        }
-
-        public static void WaitForPageLoad(this IWebDriver driver)
-        {
-            // Yes, this sucks big time, but it ensures that the JS after it
-            // does not get executed in the old page context. Bad, I know.
-            // Thread.Sleep(TimeSpan.FromMilliseconds(250));
-            //
-            // new WebDriverWait(driver, SeleniumTester.ImplicitWait)
-            //     .Until(d=>((IJavaScriptExecutor)d).ExecuteScript("return (document.readyState === 'complete' && (typeof(jQuery) === 'undefined' || jQuery.isReady))").Equals(true));
-        }
+        private static readonly JsonSerializerSettings JsonSettings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
+        public static string ToJson(this object o) => JsonConvert.SerializeObject(o, Formatting.None, JsonSettings);
 
         public static void LogIn(this SeleniumTester s, string email)
         {
@@ -65,14 +50,18 @@ namespace BTCPayServer.Tests
                             builder.AppendLine($"[{entry.Level}]: {entry.Message}");
                         }
                     }
-                    catch { }
-                    builder.AppendLine($"---------");
+                    catch
+                    {
+                        // ignored
+                    }
+
+                    builder.AppendLine("---------");
                 }
                 Logs.Tester.LogInformation(builder.ToString());
                 builder = new StringBuilder();
-                builder.AppendLine($"Selenium [Sources]:");
+                builder.AppendLine("Selenium [Sources]:");
                 builder.AppendLine(driver.PageSource);
-                builder.AppendLine($"---------");
+                builder.AppendLine("---------");
                 Logs.Tester.LogInformation(builder.ToString());
                 throw;
             }

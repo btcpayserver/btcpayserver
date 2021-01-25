@@ -13,6 +13,7 @@ using BTCPayServer.Views.Manage;
 using BTCPayServer.Views.Server;
 using BTCPayServer.Views.Stores;
 using BTCPayServer.Views.Wallets;
+using Microsoft.Extensions.Configuration;
 using NBitcoin;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
@@ -32,18 +33,25 @@ namespace BTCPayServer.Tests
         public static SeleniumTester Create([CallerMemberNameAttribute] string scope = null, bool newDb = false) =>
             new SeleniumTester { Server = ServerTester.Create(scope, newDb) };
 
+
         public async Task StartAsync()
         {
             await Server.StartAsync();
-            var isDebug = !Server.PayTester.InContainer;
-            var runHeadless = true; // Set to false to view in browser
-            var useFirefox = !runHeadless;
-            var windowSize = (Width: 1200, Height: 1000);
 
-            if (useFirefox)
+            var windowSize = (Width: 1200, Height: 1000);
+            var builder = new ConfigurationBuilder();
+            var config = builder.Build();
+
+            // Run `dotnet user-secrets set RunSeleniumInBrowser true` to run tests in browser
+            var runInBrowser = config["RunSeleniumInBrowser"] == "true";
+            // Run `dotnet user-secrets set RunSeleniumInFirefox true` to run tests in browser
+            var runInFirefox = config["RunSeleniumInFirefox"] == "true";
+            // Reset this using `dotnet user-secrets remove RunSeleniumInBrowser` (or `...Firefox`)
+
+            if (runInFirefox)
             {
                 var options = new FirefoxOptions();
-                if (runHeadless)
+                if (!runInBrowser)
                 {
                     options.AddArguments("-headless");
                 }
@@ -58,21 +66,21 @@ namespace BTCPayServer.Tests
                     // this must be first option https://stackoverflow.com/questions/53073411/selenium-webdriverexceptionchrome-failed-to-start-crashed-as-google-chrome-is#comment102570662_53073789
                     options.AddArgument("no-sandbox");
                 }
-                if (runHeadless)
+                if (!runInBrowser)
                 {
-                    options.AddArguments("-headless");
+                    options.AddArguments("headless");
                 }
                 options.AddArguments($"window-size={windowSize.Width}x{windowSize.Height}");
                 options.AddArgument("shm-size=2g");
                 Driver = new ChromeDriver(Server.PayTester.InContainer ? "/usr/bin" : Directory.GetCurrentDirectory(), options);
             }
 
-            if (!runHeadless)
+            if (runInBrowser)
             {
-                // when running in the browser, depending on your resolution, the website
-                // may go into mobile responsive mode and screw with navigation of tests
+                // ensure maximized window size
                 Driver.Manage().Window.Maximize();
             }
+
             Logs.Tester.LogInformation($"Selenium: Using {Driver.GetType()}");
             Logs.Tester.LogInformation($"Selenium: Browsing to {Server.PayTester.ServerUri}");
             Logs.Tester.LogInformation($"Selenium: Resolution {Driver.Manage().Window.Size}");

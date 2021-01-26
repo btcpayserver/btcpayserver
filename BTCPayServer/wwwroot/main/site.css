@@ -364,6 +364,46 @@ html[data-devenv]:before {
     background-color: #FB383D;
 }
 
+
+.btcpay-toggle {
+    --border-size: 2px;
+    --toggle-width: 40px;
+    --toggle-height: 24px;
+    --switch-size: calc(var(--toggle-height) - 2 * var(--border-size));
+
+    position: relative;
+    display: inline-block;
+    width: var(--toggle-width);
+    height: var(--toggle-height);
+    border: 0;
+    border-radius: calc(var(--toggle-height) / 2);
+    background: var(--btcpay-color-neutral-500);
+    font-size: 0;
+}
+
+.btcpay-toggle.btcpay-toggle--active {
+    background: var(--btcpay-color-primary);
+}
+
+.btcpay-toggle::before {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    top: var(--border-size);
+    left: var(--border-size);
+    width: var(--switch-size);
+    height: var(--switch-size);
+    background-color: var(--btcpay-color-white);
+}
+
+/* indicate switch on hover */
+.btcpay-toggle,
+.btcpay-toggle::before { transition: all 0.2s; }
+.btcpay-toggle:hover::before { left: calc(var(--toggle-width) - var(--switch-size) - var(--border-size)); }
+.btcpay-toggle.btcpay-toggle--active::before { left: calc(var(--toggle-width) - var(--switch-size) - var(--border-size)); }
+.btcpay-toggle.btcpay-toggle--active:hover::before { left: var(--border-size); }
+
+
 svg.icon {
     display: inline-block;
     width: 16px;

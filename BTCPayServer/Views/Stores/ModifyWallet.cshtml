@@ -46,17 +46,17 @@
             </tr>
             <tr>
                 <th>
-                    <label asp-for="Enabled" class="mb-0"></label>
+                    Enabled
                 </th>
                 <td>
-                    <input asp-for="Enabled" type="checkbox"/>
+                    <button type="submit" class="btcpay-toggle @if (Model.Enabled) { @("btcpay-toggle--active") }" id="Modify" name="Enabled" value="@(Model.Enabled ? "false" : "true")">Save</button>
                 </td>
             </tr>
             </tbody>
         </table>
-        <button type="submit" class="btn btn-primary" id="Modify">Save</button>
     </form>
-    <form method="post" asp-controller="Stores" asp-action="DeleteWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" class="position-absolute" style="right:0;bottom:0;">
+    <br>
+    <form method="post" asp-controller="Stores" asp-action="DeleteWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" class="mt-5">
         <a asp-controller="Stores" asp-action="SetupWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="change-wallet-link" class="btn btn-secondary mr-2">
             Replace wallet
         </a>

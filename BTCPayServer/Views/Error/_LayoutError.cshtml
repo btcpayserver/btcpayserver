@@ -1,0 +1,31 @@
+@{
+    Layout = "_LayoutSimple";
+}
+
+<div class="row">
+    <div class="col-12 col-head" style="justify-content:center; flex-direction: row; display:flex; flex-direction:row; text-align:center;">
+        <a asp-controller="Home" asp-action="Index">
+            <img src="~/img/btcpay-logo.svg" alt="BTCPay Server" class="head-logo" height="70" asp-append-version="true" />
+        </a>
+
+        <h1 class="text-uppercase mt-3 ml-4">@ViewData["Title"]</h1>
+    </div>
+</div>
+
+<center>
+    <hr class="primary" />
+</center>
+
+<p class="lead text-center">
+    @RenderBody()
+</p>
+
+<center>
+    <hr class="primary" />
+</center>
+
+<div class="row justify-content-center mt-5">
+    <div class="col">
+        <partial name="_BTCPaySupporters" />
+    </div>
+</div>

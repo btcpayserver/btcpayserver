@@ -66,12 +66,14 @@ services:
         - "sshd_datadir:/root/.ssh"
 
   devlnd: 
-    image: btcpayserver/bitcoin:0.20.1
+    image: btcpayserver/bitcoin:0.21.0
     environment:
       BITCOIN_NETWORK: regtest
+      BITCOIN_WALLETDIR: "/data/wallets"
       BITCOIN_EXTRA_ARGS: |
         deprecatedrpc=signrawtransaction
         connect=bitcoind:39388
+        rpcallowip=0.0.0.0/0
         fallbackfee=0.0002
     links:
       - nbxplorer
@@ -79,7 +81,7 @@ services:
       - customer_lnd
       - merchant_lnd
   nbxplorer:
-    image: nicolasdorier/nbxplorer:2.1.45
+    image: nicolasdorier/nbxplorer:2.1.49
     restart: unless-stopped
     ports:
       - "32838:32838"
@@ -103,14 +105,16 @@ services:
 
   bitcoind:
     restart: unless-stopped
-    image: btcpayserver/bitcoin:0.20.1
+    image: btcpayserver/bitcoin:0.21.0
     environment:
       BITCOIN_NETWORK: regtest
+      BITCOIN_WALLETDIR: "/data/wallets"
       BITCOIN_EXTRA_ARGS: |-
         rpcuser=ceiwHEbqWI83
         rpcpassword=DwubwWsoo3
         rpcport=43782
         rpcbind=0.0.0.0:43782
+        rpcallowip=0.0.0.0/0
         port=39388
         whitelist=0.0.0.0/0
         zmqpubrawblock=tcp://0.0.0.0:28332
@@ -129,7 +133,7 @@ services:
       - "bitcoin_datadir:/data"
 
   customer_lightningd:
-    image: btcpayserver/lightning:v0.9.0-1-dev
+    image: btcpayserver/lightning:v0.9.3-1-dev
     stop_signal: SIGKILL
     restart: unless-stopped
     environment: 
@@ -176,7 +180,7 @@ services:
       - merchant_lightningd
 
   merchant_lightningd:
-    image: btcpayserver/lightning:v0.9.0-1-dev
+    image: btcpayserver/lightning:v0.9.3-1-dev
     stop_signal: SIGKILL
     environment: 
       EXPOSE_TCP: "true"

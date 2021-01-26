@@ -5,6 +5,7 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
+using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
 using Microsoft.AspNetCore.Mvc;
@@ -456,9 +457,31 @@ namespace BTCPayServer.Controllers
             return View(vm);
         }
 
+        [HttpGet]
+        [Route("{storeId}/wallet/{cryptoCode}/delete")]
+        public IActionResult DeleteWallet(string storeId, string cryptoCode)
+        {
+            var store = HttpContext.GetStoreData();
+            if (store == null)
+                return NotFound();
+
+            var network = cryptoCode == null ? null : _ExplorerProvider.GetNetwork(cryptoCode);
+            if (network == null)
+            {
+                return NotFound();
+            }
+
+            return View("Confirm", new ConfirmModel
+            {
+                Title = $"Remove {network.CryptoCode} wallet",
+                Description = $"This will erase the wallet data from the server. Do not remove the wallet if you have not backed it up. The store won't be able to receive {network.CryptoCode} onchain payments until a new wallet is set up.",
+                Action = "Remove"
+            });
+        }
+
         [HttpPost]
         [Route("{storeId}/wallet/{cryptoCode}/delete")]
-        public async Task<IActionResult> DeleteWallet(string storeId, string cryptoCode)
+        public async Task<IActionResult> ConfirmDeleteWallet(string storeId, string cryptoCode)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)

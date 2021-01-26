@@ -91,12 +91,10 @@
 
         $(function (){
             initQRShow("Scan PSBT", @Json.Serialize(Model.PSBTHex), "scan-qr-modal");
-            if (typeof(initCameraScanningApp) === "function") {
-                initCameraScanningApp("Scan PSBT", function (data){
-                   $("textarea[name=PSBT]").val(data);
-                   $("#Decode").click();
-                }, "scanModal");
-            }
+            initCameraScanningApp("Scan PSBT", function (data){
+               $("textarea[name=PSBT]").val(data);
+               $("#Decode").click();
+            }, "scanModal");
         });
     </script>
 }

@@ -225,12 +225,10 @@
     <script>
         window.coinName = "@Model.Network.DisplayName.ToLowerInvariant()";
         $(function () {
-            if (typeof(initCameraScanningApp) === "function") {
-                initCameraScanningApp("Scan wallet QR", function(data){
-                    $("#WalletFileContent").val(data);
-                    $("#qr-import-form").submit();
-                },"scanqrModal");
-            }
+            initCameraScanningApp("Scan wallet QR", function(data){
+                $("#WalletFileContent").val(data);
+                $("#qr-import-form").submit();
+            },"scanqrModal");
         });
     </script>
 }

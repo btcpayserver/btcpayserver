@@ -40,6 +40,7 @@ namespace BTCPayServer.Tests
 
             var windowSize = (Width: 1200, Height: 1000);
             var builder = new ConfigurationBuilder();
+            builder.AddUserSecrets("AB0AC1DD-9D26-485B-9416-56A33F268117");
             var config = builder.Build();
 
             // Run `dotnet user-secrets set RunSeleniumInBrowser true` to run tests in browser

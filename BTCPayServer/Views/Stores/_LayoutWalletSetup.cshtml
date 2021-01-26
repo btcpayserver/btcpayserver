@@ -8,28 +8,7 @@
 }
 @section HeaderContent {
     @await RenderSectionAsync("HeaderContent", false)
-    <style>
-        #wizard-navbar {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            padding: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-
-        }
-        #wizard-navbar a {
-            color: var(--btcpay-body-color);
-        }
-        #wizard-navbar a:hover {
-            color: var(--btcpay-body-color-link-accent);
-        }
-        #wizard-navbar .cancel {
-            margin-left: auto;
-        }
-    </style>
+    <link href="~/main/wallet-setup.css" rel="stylesheet" asp-append-version="true" />
 }
 @section Scripts {
     @await RenderSectionAsync("Scripts", false)

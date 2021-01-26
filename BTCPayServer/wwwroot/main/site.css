@@ -403,7 +403,6 @@ html[data-devenv]:before {
 .btcpay-toggle.btcpay-toggle--active::before { left: calc(var(--toggle-width) - var(--switch-size) - var(--border-size)); }
 .btcpay-toggle.btcpay-toggle--active:hover::before { left: var(--border-size); }
 
-
 svg.icon {
     display: inline-block;
     width: 16px;
@@ -414,16 +413,11 @@ svg.icon-note {
   color: var(--btcpay-color-neutral-500);
 }
 
-svg.icon-back {
-    width: 19px;
-    height: 16px;
-}
-
 /* Custom notification dropdown styling */
 .notification-dropdown {
     border: 0;
     border-radius: 4px;
-    box-shadow: 0px 2px 16px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
     padding: 0;
 }
 

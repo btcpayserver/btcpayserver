@@ -35,7 +35,7 @@ namespace BTCPayServer.Services
             transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
         }
         </style>";
-        private static string BTCPAYSERVER_LOGO = @"<h2><img src='https://docs.btcpayserver.org/img/btcpay-logo.svg' alt='BTCPay Server' style='height: 1.2em; min-width: 0.5em; margin-right: .8rem; vertical-align: top;'>BTCPay Server</h2>";
+        private static string BTCPAYSERVER_LOGO = @"<h2><img src='/img/btcpay-logo.svg' alt='BTCPay Server' style='height: 1.2em; min-width: 0.5em; margin-right: .8rem; vertical-align: top;'>BTCPay Server</h2>";
         //TODO Base64 the logo so that there is no dependency on the logo.
         private static string EMAIL_BUTTON = "<a href='{button_link}' type='submit' class='btn btn-primary'>{button_description}</a>";
 
@@ -45,6 +45,7 @@ namespace BTCPayServer.Services
             button = button.Replace("{button_link}", actionLink, System.StringComparison.InvariantCulture);
             return button;
         }
+
         public static void SendEmailConfirmation(this IEmailSender emailSender, string email, string link)
         {
             emailSender.SendEmail(email, "Confirm your email",
@@ -53,9 +54,10 @@ namespace BTCPayServer.Services
         
         public static void SendSetPasswordConfirmation(this IEmailSender emailSender, string email, string link, bool newPassword)
         {
+            var subject = $"{(newPassword ? "Set" : "Update")}  Password";
             var body = $"A request has been made to update your BTCPay Server password. Please confirm your password by clicking below. <br/><br/> {CallToAction("Update Password", HtmlEncoder.Default.Encode(link))}";
             emailSender.SendEmail(email,
-                $"Update Password",
+                subject,
                 $"<html><head>{EMAIL_STYLE}</head>{BTCPAYSERVER_LOGO}<body>{body}</body></html>");
         }
     }

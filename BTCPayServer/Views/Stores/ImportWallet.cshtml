@@ -34,7 +34,7 @@
                 <vc:icon symbol="caret-right" />
             </a>
             <noscript>
-                <div class="list-group-item list-group-item-action list-group-item-wallet-setup text-muted hide-when-js">
+                <div class="list-group-item list-group-item-wallet-setup disabled walletsetupcss">
                     <div class="image">
                         <vc:icon symbol="hardware-wallet"/>
                     </div>
@@ -45,7 +45,6 @@
                         </h4>
                         <p class="mb-0">Please enable JavaScript for this option to be available</p>
                     </div>
-                    <vc:icon symbol="caret-right" />
                 </div>
             </noscript>
         </div>
@@ -82,7 +81,7 @@
 </div>
 
 <div class="list-group mt-4">
-    <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="scan" id="import-scan-link" class="list-group-item list-group-item-action list-group-item-wallet-setup">
+    <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="scan" id="import-scan-link" class="list-group-item list-group-item-action list-group-item-wallet-setup only-for-js">
         <div class="image">
             <vc:icon symbol="scan-qr"/>
         </div>
@@ -92,6 +91,17 @@
         </div>
         <vc:icon symbol="caret-right" />
     </a>
+    <noscript>
+        <div class="list-group-item list-group-item-action list-group-item-wallet-setup disabled hide-when-js">
+            <div class="image">
+                <vc:icon symbol="scan-qr"/>
+            </div>
+            <div class="content">
+                <h4>Scan wallet QR code</h4>
+                <p class="mb-0">Please enable JavaScript for this option to be available</p>
+            </div>
+        </div>
+    </noscript>
 </div>
 
 <div class="list-group mt-4">

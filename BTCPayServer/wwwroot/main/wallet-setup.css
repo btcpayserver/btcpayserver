@@ -43,6 +43,10 @@ body {
     padding: 0;
 }
 
+.list-group-item-wallet-setup.hide-when-js {
+    display: flex !important;
+}
+
 .list-group-item-wallet-setup:active,
 .list-group-item-wallet-setup.active {
     background-color: transparent;

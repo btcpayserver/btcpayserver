@@ -30,12 +30,12 @@ namespace BTCPayServer.Configuration
         /// Return a connectionString which does not depends on external resources or information like relative path or file path
         /// </summary>
         /// <returns></returns>
-        public async Task<ExternalConnectionString> Expand(Uri absoluteUrlBase, ExternalServiceTypes serviceType, NetworkType network)
+        public async Task<ExternalConnectionString> Expand(Uri absoluteUrlBase, ExternalServiceTypes serviceType, ChainName network)
         {
             var connectionString = this.Clone();
             // Transform relative URI into absolute URI
             var serviceUri = connectionString.Server.IsAbsoluteUri ? connectionString.Server : ToRelative(absoluteUrlBase, connectionString.Server.ToString());
-            var isSecure = network != NetworkType.Mainnet ||
+            var isSecure = network != ChainName.Mainnet ||
                        serviceUri.Scheme == "https" ||
                        serviceUri.DnsSafeHost.EndsWith(".onion", StringComparison.OrdinalIgnoreCase) ||
                        Extensions.IsLocalNetwork(serviceUri.DnsSafeHost);

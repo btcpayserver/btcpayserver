@@ -13,17 +13,19 @@ namespace BTCPayServer
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
                 DisplayName = "Bitcoin",
-                BlockExplorerLink = NetworkType == NetworkType.Mainnet ? "https://blockstream.info/tx/{0}" : "https://blockstream.info/testnet/tx/{0}",
+                BlockExplorerLink = NetworkType == ChainName.Mainnet ? "https://blockstream.info/tx/{0}" :
+                                    NetworkType == Bitcoin.Instance.Signet.ChainName ? "https://explorer.bc-2.jp/"
+                                    : "https://blockstream.info/testnet/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "bitcoin",
                 CryptoImagePath = "imlegacy/bitcoin.svg",
                 LightningImagePath = "imlegacy/bitcoin-lightning.svg",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),
-                CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("0'") : new KeyPath("1'"),
+                CoinType = NetworkType == ChainName.Mainnet ? new KeyPath("0'") : new KeyPath("1'"),
                 SupportRBF = true,
                 SupportPayJoin = true,
                 //https://github.com/spesmilo/electrum/blob/11733d6bc271646a00b69ff07657119598874da4/electrum/constants.py
-                ElectrumMapping = NetworkType == NetworkType.Mainnet
+                ElectrumMapping = NetworkType == ChainName.Mainnet
                     ? new Dictionary<uint, DerivationType>()
                     {
                         {0x0488b21eU, DerivationType.Legacy }, // xpub

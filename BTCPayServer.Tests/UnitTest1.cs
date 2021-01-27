@@ -407,7 +407,7 @@ namespace BTCPayServer.Tests
         [Trait("Fast", "Fast")]
         public void CanCalculateCryptoDue()
         {
-            var networkProvider = new BTCPayNetworkProvider(NetworkType.Regtest);
+            var networkProvider = new BTCPayNetworkProvider(ChainName.Regtest);
             var paymentMethodHandlerDictionary = new PaymentMethodHandlerDictionary(new IPaymentMethodHandler[]
             {
                 new BitcoinLikePaymentHandler(null, networkProvider, null, null, null),
@@ -695,7 +695,7 @@ namespace BTCPayServer.Tests
         [Trait("Fast", "Fast")]
         public void CanAcceptInvoiceWithTolerance()
         {
-            var networkProvider = new BTCPayNetworkProvider(NetworkType.Regtest);
+            var networkProvider = new BTCPayNetworkProvider(ChainName.Regtest);
             var paymentMethodHandlerDictionary = new PaymentMethodHandlerDictionary(new IPaymentMethodHandler[]
             {
                 new BitcoinLikePaymentHandler(null, networkProvider, null, null, null),
@@ -873,7 +873,7 @@ namespace BTCPayServer.Tests
         [Trait("Fast", "Fast")]
         public async Task CanEnumerateTorServices()
         {
-            var tor = new TorServices(new BTCPayNetworkProvider(NetworkType.Regtest),
+            var tor = new TorServices(new BTCPayNetworkProvider(ChainName.Regtest),
                 new BTCPayServerOptions() { TorrcFile = TestUtils.GetTestDataFullPath("Tor/torrc") });
             await tor.Refresh();
 
@@ -1170,7 +1170,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public void CanSolveTheDogesRatesOnKraken()
         {
-            var provider = new BTCPayNetworkProvider(NetworkType.Mainnet);
+            var provider = new BTCPayNetworkProvider(ChainName.Mainnet);
             var factory = CreateBTCPayRateFactory();
             var fetcher = new RateFetcher(factory);
 
@@ -2048,7 +2048,7 @@ namespace BTCPayServer.Tests
         [Trait("Fast", "Fast")]
         public void HasCurrencyDataForNetworks()
         {
-            var btcPayNetworkProvider = new BTCPayNetworkProvider(NetworkType.Regtest);
+            var btcPayNetworkProvider = new BTCPayNetworkProvider(ChainName.Regtest);
             foreach (var network in btcPayNetworkProvider.GetAll())
             {
                 var cd = CurrencyNameTable.Instance.GetCurrencyData(network.CryptoCode, false);
@@ -2986,7 +2986,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public void CanGetRateCryptoCurrenciesByDefault()
         {
-            var provider = new BTCPayNetworkProvider(NetworkType.Mainnet);
+            var provider = new BTCPayNetworkProvider(ChainName.Mainnet);
             var factory = CreateBTCPayRateFactory();
             var fetcher = new RateFetcher(factory);
             var pairs =
@@ -3058,35 +3058,35 @@ namespace BTCPayServer.Tests
             var unusedUri = new Uri("https://toto.com");
             Assert.True(ExternalConnectionString.TryParse("server=/test", out var connStr, out var error));
             var expanded = await connStr.Expand(new Uri("https://toto.com"), ExternalServiceTypes.Charge,
-                NetworkType.Mainnet);
+                ChainName.Mainnet);
             Assert.Equal(new Uri("https://toto.com/test"), expanded.Server);
             expanded = await connStr.Expand(new Uri("http://toto.onion"), ExternalServiceTypes.Charge,
-                NetworkType.Mainnet);
+                ChainName.Mainnet);
             Assert.Equal(new Uri("http://toto.onion/test"), expanded.Server);
             await Assert.ThrowsAsync<SecurityException>(() =>
-                connStr.Expand(new Uri("http://toto.com"), ExternalServiceTypes.Charge, NetworkType.Mainnet));
-            await connStr.Expand(new Uri("http://toto.com"), ExternalServiceTypes.Charge, NetworkType.Testnet);
+                connStr.Expand(new Uri("http://toto.com"), ExternalServiceTypes.Charge, ChainName.Mainnet));
+            await connStr.Expand(new Uri("http://toto.com"), ExternalServiceTypes.Charge, ChainName.Testnet);
 
             // Make sure absolute paths are not expanded
             Assert.True(ExternalConnectionString.TryParse("server=https://tow/test", out connStr, out error));
             expanded = await connStr.Expand(new Uri("https://toto.com"), ExternalServiceTypes.Charge,
-                NetworkType.Mainnet);
+                ChainName.Mainnet);
             Assert.Equal(new Uri("https://tow/test"), expanded.Server);
 
             // Error if directory not exists
             Assert.True(ExternalConnectionString.TryParse($"server={unusedUri};macaroondirectorypath=pouet",
                 out connStr, out error));
             await Assert.ThrowsAsync<DirectoryNotFoundException>(() =>
-                connStr.Expand(unusedUri, ExternalServiceTypes.LNDGRPC, NetworkType.Mainnet));
+                connStr.Expand(unusedUri, ExternalServiceTypes.LNDGRPC, ChainName.Mainnet));
             await Assert.ThrowsAsync<DirectoryNotFoundException>(() =>
-                connStr.Expand(unusedUri, ExternalServiceTypes.LNDRest, NetworkType.Mainnet));
-            await connStr.Expand(unusedUri, ExternalServiceTypes.Charge, NetworkType.Mainnet);
+                connStr.Expand(unusedUri, ExternalServiceTypes.LNDRest, ChainName.Mainnet));
+            await connStr.Expand(unusedUri, ExternalServiceTypes.Charge, ChainName.Mainnet);
 
             var macaroonDirectory = CreateDirectory();
             Assert.True(ExternalConnectionString.TryParse(
                 $"server={unusedUri};macaroondirectorypath={macaroonDirectory}", out connStr, out error));
-            await connStr.Expand(unusedUri, ExternalServiceTypes.LNDGRPC, NetworkType.Mainnet);
-            expanded = await connStr.Expand(unusedUri, ExternalServiceTypes.LNDRest, NetworkType.Mainnet);
+            await connStr.Expand(unusedUri, ExternalServiceTypes.LNDGRPC, ChainName.Mainnet);
+            expanded = await connStr.Expand(unusedUri, ExternalServiceTypes.LNDRest, ChainName.Mainnet);
             Assert.NotNull(expanded.Macaroons);
             Assert.Null(expanded.MacaroonFilePath);
             Assert.Null(expanded.Macaroons.AdminMacaroon);
@@ -3096,7 +3096,7 @@ namespace BTCPayServer.Tests
             File.WriteAllBytes($"{macaroonDirectory}/admin.macaroon", new byte[] { 0xaa });
             File.WriteAllBytes($"{macaroonDirectory}/invoice.macaroon", new byte[] { 0xab });
             File.WriteAllBytes($"{macaroonDirectory}/readonly.macaroon", new byte[] { 0xac });
-            expanded = await connStr.Expand(unusedUri, ExternalServiceTypes.LNDRest, NetworkType.Mainnet);
+            expanded = await connStr.Expand(unusedUri, ExternalServiceTypes.LNDRest, ChainName.Mainnet);
             Assert.NotNull(expanded.Macaroons.AdminMacaroon);
             Assert.NotNull(expanded.Macaroons.InvoiceMacaroon);
             Assert.Equal("ab", expanded.Macaroons.InvoiceMacaroon.Hex);
@@ -3106,7 +3106,7 @@ namespace BTCPayServer.Tests
             Assert.True(ExternalConnectionString.TryParse(
                 $"server={unusedUri};cookiefilepath={macaroonDirectory}/charge.cookie", out connStr, out error));
             File.WriteAllText($"{macaroonDirectory}/charge.cookie", "apitoken");
-            expanded = await connStr.Expand(unusedUri, ExternalServiceTypes.Charge, NetworkType.Mainnet);
+            expanded = await connStr.Expand(unusedUri, ExternalServiceTypes.Charge, ChainName.Mainnet);
             Assert.Equal("apitoken", expanded.APIToken);
         }
 
@@ -3191,7 +3191,7 @@ namespace BTCPayServer.Tests
         [Trait("Fast", "Fast")]
         public void ParseDerivationSchemeSettings()
         {
-            var mainnet = new BTCPayNetworkProvider(NetworkType.Mainnet).GetNetwork<BTCPayNetwork>("BTC");
+            var mainnet = new BTCPayNetworkProvider(ChainName.Mainnet).GetNetwork<BTCPayNetwork>("BTC");
             var root = new Mnemonic(
                     "usage fever hen zero slide mammal silent heavy donate budget pulse say brain thank sausage brand craft about save attract muffin advance illegal cabbage")
                 .DeriveExtKey();
@@ -3209,7 +3209,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(root.Derive(new KeyPath("m/49'/0'/0'")).Neuter().PubKey.WitHash.ScriptPubKey.Hash.ScriptPubKey,
                 settings.AccountDerivation.GetDerivation().ScriptPubKey);
 
-            var testnet = new BTCPayNetworkProvider(NetworkType.Testnet).GetNetwork<BTCPayNetwork>("BTC");
+            var testnet = new BTCPayNetworkProvider(ChainName.Testnet).GetNetwork<BTCPayNetwork>("BTC");
 
             // Should be legacy
             Assert.True(DerivationSchemeSettings.TryParseFromWalletFile(

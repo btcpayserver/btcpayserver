@@ -12,7 +12,7 @@ namespace BTCPayServer
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
                 DisplayName = "Viacoin",
-                BlockExplorerLink = NetworkType == NetworkType.Mainnet ? "https://explorer.viacoin.org/tx/{0}" : "https://explorer.viacoin.org/tx/{0}",
+                BlockExplorerLink = NetworkType == ChainName.Mainnet ? "https://explorer.viacoin.org/tx/{0}" : "https://explorer.viacoin.org/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "viacoin",
                 DefaultRateRules = new[]
@@ -22,7 +22,7 @@ namespace BTCPayServer
                 },
                 CryptoImagePath = "imlegacy/viacoin.png",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),
-                CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("14'") : new KeyPath("1'")
+                CoinType = NetworkType == ChainName.Mainnet ? new KeyPath("14'") : new KeyPath("1'")
             });
         }
     }

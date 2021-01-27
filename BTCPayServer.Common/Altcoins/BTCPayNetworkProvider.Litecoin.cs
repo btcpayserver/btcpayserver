@@ -13,7 +13,7 @@ namespace BTCPayServer
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
                 DisplayName = "Litecoin",
-                BlockExplorerLink = NetworkType == NetworkType.Mainnet
+                BlockExplorerLink = NetworkType == ChainName.Mainnet
                     ? "https://live.blockcypher.com/ltc/tx/{0}/"
                     : "http://explorer.litecointools.com/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
@@ -26,9 +26,9 @@ namespace BTCPayServer
                 CryptoImagePath = "imlegacy/litecoin.svg",
                 LightningImagePath = "imlegacy/litecoin-lightning.svg",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),
-                CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("2'") : new KeyPath("1'"),
+                CoinType = NetworkType == ChainName.Mainnet ? new KeyPath("2'") : new KeyPath("1'"),
                 //https://github.com/pooler/electrum-ltc/blob/0d6989a9d2fb2edbea421c116e49d1015c7c5a91/electrum_ltc/constants.py
-                ElectrumMapping = NetworkType == NetworkType.Mainnet
+                ElectrumMapping = NetworkType == ChainName.Mainnet
                     ? new Dictionary<uint, DerivationType>()
                     {
                         {0x0488b21eU, DerivationType.Legacy },

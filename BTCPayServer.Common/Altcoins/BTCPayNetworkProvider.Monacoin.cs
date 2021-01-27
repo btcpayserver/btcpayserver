@@ -12,7 +12,7 @@ namespace BTCPayServer
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
                 DisplayName = "Monacoin",
-                BlockExplorerLink = NetworkType == NetworkType.Mainnet ? "https://mona.insight.monaco-ex.org/insight/tx/{0}" : "https://testnet-mona.insight.monaco-ex.org/insight/tx/{0}",
+                BlockExplorerLink = NetworkType == ChainName.Mainnet ? "https://mona.insight.monaco-ex.org/insight/tx/{0}" : "https://testnet-mona.insight.monaco-ex.org/insight/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "monacoin",
                 DefaultRateRules = new[]
@@ -23,7 +23,7 @@ namespace BTCPayServer
                 CryptoImagePath = "imlegacy/monacoin.png",
                 LightningImagePath = "imlegacy/mona-lightning.svg",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),
-                CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("22'") : new KeyPath("1'")
+                CoinType = NetworkType == ChainName.Mainnet ? new KeyPath("22'") : new KeyPath("1'")
             });
         }
     }

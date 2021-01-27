@@ -12,7 +12,7 @@ namespace BTCPayServer.Configuration
     {
         protected override CommandLineApplication CreateCommandLineApplicationCore()
         {
-            var provider = new BTCPayNetworkProvider(NetworkType.Mainnet);
+            var provider = new BTCPayNetworkProvider(ChainName.Mainnet);
             var chains = string.Join(",", provider.GetAll().Select(n => n.CryptoCode.ToLowerInvariant()).ToArray());
             CommandLineApplication app = new CommandLineApplication(true)
             {
@@ -23,6 +23,7 @@ namespace BTCPayServer.Configuration
             app.Option("-n | --network", $"Set the network among (mainnet,testnet,regtest) (default: mainnet)", CommandOptionType.SingleValue);
             app.Option("--testnet | -testnet", $"Use testnet (deprecated, use --network instead)", CommandOptionType.BoolValue);
             app.Option("--regtest | -regtest", $"Use regtest (deprecated, use --network instead)", CommandOptionType.BoolValue);
+            app.Option("--signet | -signet", $"Use signet (deprecated, use --network instead)", CommandOptionType.BoolValue);
             app.Option("--allow-admin-registration", $"For debug only, will show a checkbox when a new user register to add himself as admin. (default: false)", CommandOptionType.BoolValue);
             app.Option("--chains | -c", $"Chains to support as a comma separated (default: btc; available: {chains})", CommandOptionType.SingleValue);
             app.Option("--postgres", $"Connection string to a PostgreSQL database", CommandOptionType.SingleValue);
@@ -89,7 +90,7 @@ namespace BTCPayServer.Configuration
             return Path.Combine(chainDir, fileName);
         }
 
-        public static NetworkType GetNetworkType(IConfiguration conf)
+        public static ChainName GetNetworkType(IConfiguration conf)
         {
             var network = conf.GetOrDefault<string>("network", null);
             if (network != null)
@@ -99,10 +100,12 @@ namespace BTCPayServer.Configuration
                 {
                     throw new ConfigException($"Invalid network parameter '{network}'");
                 }
-                return n.NetworkType;
+                return n.ChainName;
             }
-            var net = conf.GetOrDefault<bool>("regtest", false) ? NetworkType.Regtest :
-                        conf.GetOrDefault<bool>("testnet", false) ? NetworkType.Testnet : NetworkType.Mainnet;
+            var net = conf.GetOrDefault<bool>("regtest", false) ? ChainName.Regtest :
+                        conf.GetOrDefault<bool>("testnet", false) ? ChainName.Testnet :
+                        conf.GetOrDefault<bool>("signet", false) ? Bitcoin.Instance.Signet.ChainName :
+                        ChainName.Mainnet;
 
             return net;
         }

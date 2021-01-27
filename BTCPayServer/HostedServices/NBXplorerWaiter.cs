@@ -189,8 +189,8 @@ namespace BTCPayServer.HostedServices
 
             if (status != null && error == null)
             {
-                if (status.NetworkType != _Network.NBitcoinNetwork.NetworkType)
-                    error = $"{_Network.CryptoCode}: NBXplorer is on a different ChainType (actual: {status.NetworkType}, expected: {_Network.NBitcoinNetwork.NetworkType})";
+                if (status.NetworkType != _Network.NBitcoinNetwork.ChainName)
+                    error = $"{_Network.CryptoCode}: NBXplorer is on a different ChainType (actual: {status.NetworkType}, expected: {_Network.NBitcoinNetwork.ChainName})";
             }
 
             if (error != null)

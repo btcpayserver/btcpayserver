@@ -13,7 +13,7 @@ namespace BTCPayServer.Configuration
 {
     public class BTCPayServerOptions
     {
-        public NetworkType NetworkType
+        public ChainName NetworkType
         {
             get; set;
         }
@@ -61,7 +61,7 @@ namespace BTCPayServer.Configuration
             
             Logs.Configuration.LogInformation("Network: " + NetworkType.ToString());
 
-            if (conf.GetOrDefault<bool>("launchsettings", false) && NetworkType != NetworkType.Regtest)
+            if (conf.GetOrDefault<bool>("launchsettings", false) && NetworkType != ChainName.Regtest)
                 throw new ConfigException($"You need to run BTCPayServer with the run.sh or run.ps1 script");
 
           

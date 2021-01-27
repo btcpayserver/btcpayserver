@@ -18,25 +18,29 @@ namespace BTCPayServer
     {
         static BTCPayDefaultSettings()
         {
-            _Settings = new Dictionary<NetworkType, BTCPayDefaultSettings>();
-            foreach (var chainType in new[] { NetworkType.Mainnet, NetworkType.Testnet, NetworkType.Regtest })
+            _Settings = new Dictionary<ChainName, BTCPayDefaultSettings>();
+        }
+
+        static readonly Dictionary<ChainName, BTCPayDefaultSettings> _Settings;
+
+        public static BTCPayDefaultSettings GetDefaultSettings(ChainName chainType)
+        {
+            if (_Settings.TryGetValue(chainType, out var v))
+                return v;
+            lock (_Settings)
             {
+                if (_Settings.TryGetValue(chainType, out v))
+                    return v;
                 var settings = new BTCPayDefaultSettings();
                 _Settings.Add(chainType, settings);
                 settings.DefaultDataDirectory = StandardConfiguration.DefaultDataDirectory.GetDirectory("BTCPayServer", NBXplorerDefaultSettings.GetFolderName(chainType));
                 settings.DefaultPluginDirectory =
                     StandardConfiguration.DefaultDataDirectory.GetDirectory("BTCPayServer", "Plugins");
                 settings.DefaultConfigurationFile = Path.Combine(settings.DefaultDataDirectory, "settings.config");
-                settings.DefaultPort = (chainType == NetworkType.Mainnet ? 23000 :
-                                                      chainType == NetworkType.Regtest ? 23002 :
-                                                      chainType == NetworkType.Testnet ? 23001 : throw new NotSupportedException(chainType.ToString()));
+                settings.DefaultPort = (chainType == ChainName.Mainnet ? 23000 :
+                                                      chainType == ChainName.Regtest ? 23002
+                                                                                     : 23001);
             }
-        }
-
-        static readonly Dictionary<NetworkType, BTCPayDefaultSettings> _Settings;
-
-        public static BTCPayDefaultSettings GetDefaultSettings(NetworkType chainType)
-        {
             return _Settings[chainType];
         }
 

@@ -13,20 +13,20 @@ namespace BTCPayServer
                 DisplayName = "Ethereum",
                 DefaultRateRules = new[] {"ETH_X = ETH_BTC * BTC_X", "ETH_BTC = kraken(ETH_BTC)"},
                 BlockExplorerLink =
-                    NetworkType == NetworkType.Mainnet
+                    NetworkType == ChainName.Mainnet
                         ? "https://etherscan.io/address/{0}"
                         : "https://ropsten.etherscan.io/address/{0}",
                 CryptoImagePath = "/imlegacy/eth.png",
                 ShowSyncSummary = true,
-                CoinType = NetworkType == NetworkType.Mainnet? 60 : 1,
-                ChainId = NetworkType == NetworkType.Mainnet ? 1 : 3,
+                CoinType = NetworkType == ChainName.Mainnet? 60 : 1,
+                ChainId = NetworkType == ChainName.Mainnet ? 1 : 3,
                 Divisibility = 18,
             });
         }
         
         public void InitERC20()
         {
-            if (NetworkType != NetworkType.Mainnet)
+            if (NetworkType != ChainName.Mainnet)
             {
                 Add(new ERC20BTCPayNetwork()
                 {
@@ -60,13 +60,13 @@ namespace BTCPayServer
                         "USDT20_BTC = bitfinex(UST_BTC)",
                     },
                     BlockExplorerLink =
-                        NetworkType == NetworkType.Mainnet
+                        NetworkType == ChainName.Mainnet
                             ? "https://etherscan.io/address/{0}#tokentxns"
                             : "https://ropsten.etherscan.io/address/{0}#tokentxns",
                     CryptoImagePath = "/imlegacy/liquid-tether.svg",
                     ShowSyncSummary = false,
-                    CoinType = NetworkType == NetworkType.Mainnet? 60 : 1,
-                    ChainId = NetworkType == NetworkType.Mainnet ? 1 : 3,
+                    CoinType = NetworkType == ChainName.Mainnet? 60 : 1,
+                    ChainId = NetworkType == ChainName.Mainnet ? 1 : 3,
                     SmartContractAddress = "0xdAC17F958D2ee523a2206206994597C13D831ec7",
                     Divisibility = 6
                 });

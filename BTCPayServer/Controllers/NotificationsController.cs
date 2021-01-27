@@ -119,7 +119,7 @@ namespace BTCPayServer.Controllers
         [HttpGet]
         public async Task<IActionResult> Generate(string version)
         {
-            if (_env.NetworkType != NBitcoin.NetworkType.Regtest)
+            if (_env.NetworkType != NBitcoin.ChainName.Regtest)
                 return NotFound();
             await _notificationSender.SendNotification(new AdminScope(), new NewVersionNotification(version));
             return RedirectToAction(nameof(Index));

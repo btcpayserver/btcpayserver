@@ -27,7 +27,7 @@
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
   </ItemGroup>
     <ItemGroup>
-      <PackageReference Include="NBitcoin" Version="5.0.68" />
+      <PackageReference Include="NBitcoin" Version="5.0.73" />
       <PackageReference Include="BTCPayServer.Lightning.Common" Version="1.2.0" />
       <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     </ItemGroup>

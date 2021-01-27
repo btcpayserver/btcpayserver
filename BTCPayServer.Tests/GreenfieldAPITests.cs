@@ -1080,7 +1080,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact(Timeout = 60 * 2 * 1000)]
+        [Fact(Timeout = 60 * 20 * 1000)]
         [Trait("Integration", "Integration")]
         [Trait("Lightning", "Lightning")]
         public async Task CanUseLightningAPI()
@@ -1098,7 +1098,7 @@ namespace BTCPayServer.Tests
                 merchant.GrantAccess(true);
                 merchant.RegisterLightningNode("BTC", LightningConnectionType.LndREST);
                 var merchantClient = await merchant.CreateClient($"{Policies.CanUseLightningNodeInStore}:{merchant.StoreId}");
-                var merchantInvoice = await merchantClient.CreateLightningInvoice(merchant.StoreId, "BTC", new CreateLightningInvoiceRequest(new LightMoney(1_000), "hey", TimeSpan.FromSeconds(60)));
+                var merchantInvoice = await merchantClient.CreateLightningInvoice(merchant.StoreId, "BTC", new CreateLightningInvoiceRequest(LightMoney.Satoshis(1_000), "hey", TimeSpan.FromSeconds(60)));
                 tester.PayTester.GetService<BTCPayServerEnvironment>().DevelopmentOverride = false;
                 // The default client is using charge, so we should not be able to query channels
                 var client = await user.CreateClient(Policies.CanUseInternalLightningNode);

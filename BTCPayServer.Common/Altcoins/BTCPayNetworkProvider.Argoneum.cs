@@ -11,7 +11,7 @@ namespace BTCPayServer
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
                 DisplayName = "Argoneum",
-                BlockExplorerLink = NetworkType == NetworkType.Mainnet
+                BlockExplorerLink = NetworkType == ChainName.Mainnet
                     ? "https://chainz.cryptoid.info/agm/tx.dws?{0}"
                     : "https://chainz.cryptoid.info/agm-test/tx.dws?{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
@@ -23,7 +23,7 @@ namespace BTCPayServer
                     },
                 CryptoImagePath = "imlegacy/argoneum.png",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),
-                CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("421'")
+                CoinType = NetworkType == ChainName.Mainnet ? new KeyPath("421'")
                     : new KeyPath("1'")
             });
         }

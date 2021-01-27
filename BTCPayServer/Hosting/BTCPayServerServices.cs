@@ -363,7 +363,7 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<ExplorerClientProvider>();
             services.TryAddSingleton<Bitpay>(o =>
             {
-                if (o.GetRequiredService<BTCPayServerOptions>().NetworkType == NetworkType.Mainnet)
+                if (o.GetRequiredService<BTCPayServerOptions>().NetworkType == ChainName.Mainnet)
                     return new Bitpay(new Key(), new Uri("https://bitpay.com/"));
                 else
                     return new Bitpay(new Key(), new Uri("https://test.bitpay.com/"));

@@ -91,7 +91,7 @@ namespace BTCPayServer.Tests
         {
             if (!Directory.Exists(_Directory))
                 Directory.CreateDirectory(_Directory);
-            string chain = NBXplorerDefaultSettings.GetFolderName(NetworkType.Regtest);
+            string chain = NBXplorerDefaultSettings.GetFolderName(ChainName.Regtest);
             string chainDirectory = Path.Combine(_Directory, chain);
             if (!Directory.Exists(chainDirectory))
                 Directory.CreateDirectory(chainDirectory);

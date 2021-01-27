@@ -872,7 +872,7 @@ normal:
         {
 #pragma warning disable CS0618
             var dummy = new Key().PubKey.GetAddress(ScriptPubKeyType.Legacy, Network.RegTest).ToString();
-            var networkProvider = new BTCPayNetworkProvider(NetworkType.Regtest);
+            var networkProvider = new BTCPayNetworkProvider(ChainName.Regtest);
             var paymentMethodHandlerDictionary = new PaymentMethodHandlerDictionary(new IPaymentMethodHandler[]
             {
                 new BitcoinLikePaymentHandler(null, networkProvider, null, null, null),
@@ -952,9 +952,9 @@ normal:
         [Trait("Altcoins", "Altcoins")]
         public void CanParseDerivationScheme()
         {
-            var testnetNetworkProvider = new BTCPayNetworkProvider(NetworkType.Testnet);
-            var regtestNetworkProvider = new BTCPayNetworkProvider(NetworkType.Regtest);
-            var mainnetNetworkProvider = new BTCPayNetworkProvider(NetworkType.Mainnet);
+            var testnetNetworkProvider = new BTCPayNetworkProvider(ChainName.Testnet);
+            var regtestNetworkProvider = new BTCPayNetworkProvider(ChainName.Regtest);
+            var mainnetNetworkProvider = new BTCPayNetworkProvider(ChainName.Mainnet);
             var testnetParser = new DerivationSchemeParser(testnetNetworkProvider.GetNetwork<BTCPayNetwork>("BTC"));
             var mainnetParser = new DerivationSchemeParser(mainnetNetworkProvider.GetNetwork<BTCPayNetwork>("BTC"));
             NBXplorer.DerivationStrategy.DerivationStrategyBase result;

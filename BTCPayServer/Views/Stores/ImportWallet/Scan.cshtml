@@ -13,6 +13,7 @@
 
 <header class="text-center">
     <h1>@ViewData["Title"]</h1>
+    <p class="lead text-secondary mt-3">Scan the master public key show on your wallet's display</p>
 </header>
 
 @if (!ViewContext.ModelState.IsValid)
@@ -38,9 +39,7 @@
             initCameraScanningApp("Scan wallet QR", data => {
                 document.getElementById("WalletFileContent").value = data;
                 document.getElementById("qr-import-form").submit();
-            }, "scanqrModal");
-
-            $("#scanqrModal").modal();
+            });
         });
     </script>
 }

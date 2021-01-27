@@ -74,5 +74,3 @@ If you still have issues, try to restart docker.
 Run `dotnet user-secrets set RunSeleniumInBrowser true` to run tests in browser.
 
 To switch back to headless mode (recommended) you can run `dotnet user-secrets remove RunSeleniumInBrowser`.
-
-To run the tests using Firefox (default is Chrome), run `dotnet user-secrets set RunSeleniumInFirefox true`.

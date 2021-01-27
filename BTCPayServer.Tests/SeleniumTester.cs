@@ -17,7 +17,6 @@ using Microsoft.Extensions.Configuration;
 using NBitcoin;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium.Firefox;
 using Xunit;
 
 namespace BTCPayServer.Tests
@@ -45,36 +44,21 @@ namespace BTCPayServer.Tests
 
             // Run `dotnet user-secrets set RunSeleniumInBrowser true` to run tests in browser
             var runInBrowser = config["RunSeleniumInBrowser"] == "true";
-            // Run `dotnet user-secrets set RunSeleniumInFirefox true` to run tests in browser
-            var runInFirefox = config["RunSeleniumInFirefox"] == "true";
-            // Reset this using `dotnet user-secrets remove RunSeleniumInBrowser` (or `...Firefox`)
+            // Reset this using `dotnet user-secrets remove RunSeleniumInBrowser`
 
-            if (runInFirefox)
+            var options = new ChromeOptions();
+            if (Server.PayTester.InContainer)
             {
-                var options = new FirefoxOptions();
-                if (!runInBrowser)
-                {
-                    options.AddArguments("-headless");
-                }
-                options.AddArguments($"--window-size {windowSize.Width},{windowSize.Height}");
-                Driver = new FirefoxDriver(options);
+                // this must be first option https://stackoverflow.com/questions/53073411/selenium-webdriverexceptionchrome-failed-to-start-crashed-as-google-chrome-is#comment102570662_53073789
+                options.AddArgument("no-sandbox");
             }
-            else
+            if (!runInBrowser)
             {
-                var options = new ChromeOptions();
-                if (Server.PayTester.InContainer)
-                {
-                    // this must be first option https://stackoverflow.com/questions/53073411/selenium-webdriverexceptionchrome-failed-to-start-crashed-as-google-chrome-is#comment102570662_53073789
-                    options.AddArgument("no-sandbox");
-                }
-                if (!runInBrowser)
-                {
-                    options.AddArguments("headless");
-                }
-                options.AddArguments($"window-size={windowSize.Width}x{windowSize.Height}");
-                options.AddArgument("shm-size=2g");
-                Driver = new ChromeDriver(Server.PayTester.InContainer ? "/usr/bin" : Directory.GetCurrentDirectory(), options);
+                options.AddArguments("headless");
             }
+            options.AddArguments($"window-size={windowSize.Width}x{windowSize.Height}");
+            options.AddArgument("shm-size=2g");
+            Driver = new ChromeDriver(Server.PayTester.InContainer ? "/usr/bin" : Directory.GetCurrentDirectory(), options);
 
             if (runInBrowser)
             {

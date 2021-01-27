@@ -86,17 +86,15 @@
     <script src="~/vendor/highlightjs/highlight.min.js" asp-append-version="true"></script>
     <bundle name="wwwroot/bundles/camera-bundle.min.js"></bundle>
     <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true"/>
-    <script>hljs.initHighlightingOnLoad();</script>
-
     <script>
-    
-    $(function (){
-        initQRShow("Scan PSBT", @Json.Serialize(Model.PSBTHex), "scan-qr-modal");
-        
-       initCameraScanningApp("Scan PSBT", function (data){
-           $("textarea[name=PSBT]").val(data);
-           $("#Decode").click();
-       }, "scanModal") 
-    });
-</script>
+        hljs.initHighlightingOnLoad();
+
+        $(function (){
+            initQRShow("Scan PSBT", @Json.Serialize(Model.PSBTHex), "scan-qr-modal");
+            initCameraScanningApp("Scan PSBT", function (data){
+               $("textarea[name=PSBT]").val(data);
+               $("#Decode").click();
+            }, "scanModal");
+        });
+    </script>
 }

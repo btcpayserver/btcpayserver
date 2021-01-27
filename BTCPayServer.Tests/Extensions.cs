@@ -13,24 +13,17 @@ namespace BTCPayServer.Tests
 {
     public static class Extensions
     {
-        private static readonly JsonSerializerSettings jsonSettings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
-        public static string ToJson(this object o)
+        private static readonly JsonSerializerSettings JsonSettings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
+        public static string ToJson(this object o) => JsonConvert.SerializeObject(o, Formatting.None, JsonSettings);
+
+        public static void LogIn(this SeleniumTester s, string email)
         {
-            var res = JsonConvert.SerializeObject(o, Formatting.None, jsonSettings);
-            return res;
+            s.Driver.FindElement(By.Id("Email")).SendKeys(email);
+            s.Driver.FindElement(By.Id("Password")).SendKeys("123456");
+            s.Driver.FindElement(By.Id("LoginButton")).Click();
+            s.Driver.AssertNoError();
         }
-        public static void ScrollTo(this IWebDriver driver, By by)
-        {
-            var element = driver.FindElement(by);
-        }
-        /// <summary>
-        /// Sometimes the chrome driver is fucked up and we need some magic to click on the element.
-        /// </summary>
-        /// <param name="element"></param>
-        public static void ForceClick(this IWebElement element)
-        {
-            element.SendKeys(Keys.Return);
-        }
+
         public static void AssertNoError(this IWebDriver driver)
         {
             try
@@ -57,14 +50,18 @@ namespace BTCPayServer.Tests
                             builder.AppendLine($"[{entry.Level}]: {entry.Message}");
                         }
                     }
-                    catch { }
-                    builder.AppendLine($"---------");
+                    catch
+                    {
+                        // ignored
+                    }
+
+                    builder.AppendLine("---------");
                 }
                 Logs.Tester.LogInformation(builder.ToString());
                 builder = new StringBuilder();
-                builder.AppendLine($"Selenium [Sources]:");
+                builder.AppendLine("Selenium [Sources]:");
                 builder.AppendLine(driver.PageSource);
-                builder.AppendLine($"---------");
+                builder.AppendLine("---------");
                 Logs.Tester.LogInformation(builder.ToString());
                 throw;
             }

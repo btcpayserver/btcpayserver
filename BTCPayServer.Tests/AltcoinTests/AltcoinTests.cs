@@ -479,21 +479,21 @@ namespace BTCPayServer.Tests
                 //there should be three now
                 invoiceId = s.CreateInvoice(store.storeName, 10, "USD", "a@g.com");
                 s.GoToInvoiceCheckout(invoiceId);
-                var currencyDropdownButton = s.Driver.WaitForElement(By.ClassName("payment__currencies"));
+                var currencyDropdownButton = s.Driver.FindElement(By.ClassName("payment__currencies"));
                 Assert.Contains("BTC", currencyDropdownButton.Text);
                 currencyDropdownButton.Click();
 
                 var elements = s.Driver.FindElement(By.ClassName("vex-content")).FindElements(By.ClassName("vexmenuitem"));
                 Assert.Equal(3, elements.Count);
                 elements.Single(element => element.Text.Contains("LTC")).Click();
-                currencyDropdownButton = s.Driver.WaitForElement(By.ClassName("payment__currencies"));
+                currencyDropdownButton = s.Driver.FindElement(By.ClassName("payment__currencies"));
                 Assert.Contains("LTC", currencyDropdownButton.Text);
                 currencyDropdownButton.Click();
 
                 elements = s.Driver.FindElement(By.ClassName("vex-content")).FindElements(By.ClassName("vexmenuitem"));
                 elements.Single(element => element.Text.Contains("Lightning")).Click();
 
-                currencyDropdownButton = s.Driver.WaitForElement(By.ClassName("payment__currencies"));
+                currencyDropdownButton = s.Driver.FindElement(By.ClassName("payment__currencies"));
                 Assert.Contains("Lightning", currencyDropdownButton.Text);
 
                 s.Driver.Quit();

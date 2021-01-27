@@ -57,14 +57,20 @@ The `./docker-lightning-channel-teardown.sh` script closes any existing lightnin
 
 ## FAQ
 
-`docker-compose up dev` failed or tests are not passing, what should I do?
+### `docker-compose up dev` failed or tests are not passing, what should I do?
 
 1. Run `docker-compose down --v` (this will reset your test environment)
 2. Run `docker-compose pull` (this will ensure you have the lastest images)
 3. Run again with `docker-compose up dev`
 
-How to run the Altcoin environment?
+### How to run the Altcoin environment?
 
 `docker-compose -f docker-compose.altcoins.yml up dev`
 
 If you still have issues, try to restart docker.
+
+### How to run the Selenium test with a browser?
+
+Run `dotnet user-secrets set RunSeleniumInBrowser true` to run tests in browser.
+
+To switch back to headless mode (recommended) you can run `dotnet user-secrets remove RunSeleniumInBrowser`.

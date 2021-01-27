@@ -35,7 +35,7 @@ namespace BTCPayServer.Tests
                     InitialData = new[] {new KeyValuePair<string, string>("chains", "usdt20"),}
                 })
             });
-            
+
             var networkProvider = config.ConfigureNetworkProvider();
             Assert.NotNull(networkProvider.GetNetwork("ETH"));
             Assert.NotNull(networkProvider.GetNetwork("USDT20"));
@@ -60,7 +60,7 @@ namespace BTCPayServer.Tests
             web3Link.Click();
             s.Driver.FindElement(By.Id("Web3ProviderUrl")).SendKeys("https://ropsten-rpc.linkpool.io");
             s.Driver.FindElement(By.Id("saveButton")).Click();
-            s.AssertHappyMessage();
+            s.FindAlertMessage();
             TestUtils.Eventually(() =>
             {
                 s.Driver.Navigate().Refresh();
@@ -76,17 +76,17 @@ namespace BTCPayServer.Tests
             s.SetCheckbox(s.Driver.FindElement(By.Id("StoreSeed")), true);
             s.SetCheckbox(s.Driver.FindElement(By.Id("Enabled")), true);
             s.Driver.FindElement(By.Id("SaveButton")).Click();
-            s.AssertHappyMessage();
+            s.FindAlertMessage();
             s.Driver.FindElement(By.Id("ModifyUSDT20")).Click();
             s.Driver.FindElement(By.Id("Seed")).SendKeys(seed.ToString());
             s.SetCheckbox(s.Driver.FindElement(By.Id("StoreSeed")), true);
             s.SetCheckbox(s.Driver.FindElement(By.Id("Enabled")), true);
             s.Driver.FindElement(By.Id("SaveButton")).Click();
-            s.AssertHappyMessage();
+            s.FindAlertMessage();
 
             var invoiceId = s.CreateInvoice(store.storeName, 10);
             s.GoToInvoiceCheckout(invoiceId);
-            var currencyDropdownButton = s.Driver.WaitForElement(By.ClassName("payment__currencies"));
+            var currencyDropdownButton = s.Driver.FindElement(By.ClassName("payment__currencies"));
             Assert.Contains("ETH", currencyDropdownButton.Text);
             s.Driver.FindElement(By.Id("copy-tab")).Click();
 

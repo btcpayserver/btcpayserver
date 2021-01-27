@@ -1,13 +1,10 @@
 using System;
-using System.Linq;
 using System.Threading.Tasks;
-using BTCPayServer.Lightning;
 using BTCPayServer.Payments;
 using BTCPayServer.Tests.Logging;
 using BTCPayServer.Views.Stores;
 using NBitcoin;
 using OpenQA.Selenium;
-using OpenQA.Selenium.Support.UI;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -36,7 +33,7 @@ namespace BTCPayServer.Tests
                 s.AddDerivationScheme("BTC");
                 s.GoToStore(store.storeId, StoreNavPages.Checkout);
                 s.Driver.FindElement(By.Id("RequiresRefundEmail")).Click();
-                s.Driver.FindElement(By.Name("command")).ForceClick();
+                s.Driver.FindElement(By.Name("command")).Click();
 
                 var emailAlreadyThereInvoiceId = s.CreateInvoice(store.storeName, 100, "USD", "a@g.com");
                 s.GoToInvoiceCheckout(emailAlreadyThereInvoiceId);
@@ -119,7 +116,7 @@ namespace BTCPayServer.Tests
                 s.SetCheckbox(s, "LightningAmountInSatoshi", true);
                 var command = s.Driver.FindElement(By.Name("command"));
 
-                command.ForceClick();
+                command.Click();
                 var invoiceId = s.CreateInvoice(store.storeName, 10, "USD", "a@g.com");
                 s.GoToInvoiceCheckout(invoiceId);
                 Assert.Contains("Sats", s.Driver.FindElement(By.ClassName("payment__currencies_noborder")).Text);
@@ -164,32 +161,6 @@ namespace BTCPayServer.Tests
                 Assert.Equal(s.Driver.Url,
                     new Uri(s.Server.PayTester.ServerUri, $"tests/index.html?invoice={invoiceId}").ToString());
             }
-        }
-    }
-
-    public static class SeleniumExtensions
-    {
-        /// <summary>
-        /// Utility method to wait until timeout for element to be present (optionally displayed)
-        /// </summary>
-        /// <param name="context">Wait context</param>
-        /// <param name="by">How we search for element</param>
-        /// <param name="displayed">Flag to wait for element to be displayed or just present</param>
-        /// <param name="timeout">How long to wait for element to be present/displayed</param>
-        /// <returns>Element we were waiting for</returns>
-        public static IWebElement WaitForElement(this IWebDriver context, By by, bool displayed = true, uint timeout = 3)
-        {
-            var wait = new DefaultWait<IWebDriver>(context);
-            wait.Timeout = TimeSpan.FromSeconds(timeout);
-            wait.IgnoreExceptionTypes(typeof(NoSuchElementException));
-            return wait.Until(ctx =>
-            {
-                var elem = ctx.FindElement(by);
-                if (displayed && !elem.Displayed)
-                    return null;
-
-                return elem;
-            });
         }
     }
 }

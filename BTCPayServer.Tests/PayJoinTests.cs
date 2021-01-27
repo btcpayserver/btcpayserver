@@ -25,6 +25,7 @@ using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json.Linq;
 using OpenQA.Selenium;
+using OpenQA.Selenium.Support.UI;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -239,6 +240,7 @@ namespace BTCPayServer.Tests
                     s.SetCheckbox(s, "PayJoinEnabled", true);
                     s.Driver.FindElement(By.Id("Save")).Click();
                     Assert.True(s.Driver.FindElement(By.Id("PayJoinEnabled")).Selected);
+
                     var sender = s.CreateNewStore();
                     var senderSeed = s.GenerateWallet("BTC", "", true, true, format);
                     var senderWalletId = new WalletId(sender.storeId, "BTC");
@@ -257,16 +259,17 @@ namespace BTCPayServer.Tests
                     s.Driver.SwitchTo().Alert().Accept();
                     Assert.False(string.IsNullOrEmpty(s.Driver.FindElement(By.Id("PayJoinBIP21"))
                         .GetAttribute("value")));
-                    s.Driver.ScrollTo(By.Id("SendMenu"));
-                    s.Driver.FindElement(By.Id("SendMenu")).ForceClick();
-                    s.Driver.FindElement(By.CssSelector("button[value=nbx-seed]")).Click();
+                    s.Driver.FindElement(By.Id("SendMenu")).Click();
+                    var nbxSeedButton = s.Driver.FindElement(By.CssSelector("button[value=nbx-seed]"));
+                    new WebDriverWait(s.Driver, SeleniumTester.ImplicitWait).Until(d=> nbxSeedButton.Enabled);
+                    nbxSeedButton.Click();
                     await s.Server.WaitForEvent<NewOnChainTransactionEvent>(() =>
                     {
-                        s.Driver.FindElement(By.CssSelector("button[value=payjoin]")).ForceClick();
+                        s.Driver.FindElement(By.CssSelector("button[value=payjoin]")).Click();
                         return Task.CompletedTask;
                     });
                     //no funds in receiver wallet to do payjoin
-                    s.AssertHappyMessage(StatusMessageModel.StatusSeverity.Warning);
+                    s.FindAlertMessage(StatusMessageModel.StatusSeverity.Warning);
                     await TestUtils.EventuallyAsync(async () =>
                     {
                         var invoice = await s.Server.PayTester.GetService<InvoiceRepository>().GetInvoice(invoiceId);
@@ -294,15 +297,14 @@ namespace BTCPayServer.Tests
                         .GetAttribute("value")));
                     s.Driver.FindElement(By.Id("FeeSatoshiPerByte")).Clear();
                     s.Driver.FindElement(By.Id("FeeSatoshiPerByte")).SendKeys("2");
-                    s.Driver.ScrollTo(By.Id("SendMenu"));
-                    s.Driver.FindElement(By.Id("SendMenu")).ForceClick();
+                    s.Driver.FindElement(By.Id("SendMenu")).Click();
                     s.Driver.FindElement(By.CssSelector("button[value=nbx-seed]")).Click();
                     var txId = await s.Server.WaitForEvent<NewOnChainTransactionEvent>(() =>
                     {
-                        s.Driver.FindElement(By.CssSelector("button[value=payjoin]")).ForceClick();
+                        s.Driver.FindElement(By.CssSelector("button[value=payjoin]")).Click();
                         return Task.CompletedTask;
                     });
-                    s.AssertHappyMessage(StatusMessageModel.StatusSeverity.Success);
+                    s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success);
                     await TestUtils.EventuallyAsync(async () =>
                     {
                         var invoice = await invoiceRepository.GetInvoice(invoiceId);

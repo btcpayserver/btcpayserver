@@ -59,13 +59,36 @@ body {
 .list-group-item-wallet-setup .image .icon,
 .list-group-item-wallet-setup .image .icon-new-wallet,
 .list-group-item-wallet-setup .image .icon-existing-wallet {
-    width: 48px;
     height: 48px;
+}
+
+.list-group-item-wallet-setup .image .icon-new-wallet,
+.list-group-item-wallet-setup .image .icon-existing-wallet,
+.list-group-item-wallet-setup .image .icon-xpub,
+.list-group-item-wallet-setup .image .icon-seed {
+    width: 48px;
+}
+
+.list-group-item-wallet-setup .image .icon-hardware-wallet {
+    width: 40px;
+}
+.list-group-item-wallet-setup .image .icon-scan-qr {
+    width: 32px;
+}
+
+.list-group-item-wallet-setup .image .icon-wallet-file {
+    width: 24px;
 }
 
 .list-group-item-wallet-setup .content {
     flex: 1;
     padding: 1.5rem;
+}
+
+.list-group-item-wallet-setup .content .badge {
+    position: relative;
+    top: -1px;
+    font-size: 60%;
 }
 
 .list-group-item-wallet-setup .image + .content {

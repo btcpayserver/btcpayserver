@@ -66,7 +66,8 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [AllowAnonymous]
-        [Route("/login")]
+        [Route("~/login", Order = 1)]
+        [Route("~/Account/Login", Order = 2)]
         public async Task<IActionResult> Login(string returnUrl = null, string email = null)
         {
 
@@ -90,7 +91,8 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [AllowAnonymous]
-        [Route("/login")]
+        [Route("~/login", Order = 1)]
+        [Route("~/Account/Login", Order = 2)]
         [ValidateAntiForgeryToken]
         [RateLimitsFilter(ZoneLimits.Login, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> Login(LoginViewModel model, string returnUrl = null)
@@ -398,7 +400,8 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [AllowAnonymous]
-        [Route("/register")]
+        [Route("~/register", Order = 1)]
+        [Route("~/Account/Register", Order = 2)]
         [RateLimitsFilter(ZoneLimits.Register, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> Register(string returnUrl = null, bool logon = true)
         {
@@ -416,7 +419,8 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [AllowAnonymous]
-        [Route("/register")]
+        [Route("~/register", Order = 1)]
+        [Route("~/Account/Register", Order = 2)]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel model, string returnUrl = null, bool logon = true)
         {
@@ -483,7 +487,6 @@ namespace BTCPayServer.Controllers
         public bool RegisteredAdmin { get; set; }
 
         [HttpGet]
-        [Route("/logout")]
         public async Task<IActionResult> Logout()
         {
             await _signInManager.SignOutAsync();
@@ -532,7 +535,6 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [AllowAnonymous]
-        [Route("/forgot-password")]
         public IActionResult ForgotPassword()
         {
             return View();
@@ -540,7 +542,6 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [AllowAnonymous]
-        [Route("/forgot-password")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
         {

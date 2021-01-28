@@ -66,6 +66,8 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [AllowAnonymous]
+        [Route("~/login", Order = 1)]
+        [Route("~/Account/Login", Order = 2)]
         public async Task<IActionResult> Login(string returnUrl = null, string email = null)
         {
 
@@ -89,6 +91,8 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [AllowAnonymous]
+        [Route("~/login", Order = 1)]
+        [Route("~/Account/Login", Order = 2)]
         [ValidateAntiForgeryToken]
         [RateLimitsFilter(ZoneLimits.Login, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> Login(LoginViewModel model, string returnUrl = null)
@@ -396,6 +400,8 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [AllowAnonymous]
+        [Route("~/register", Order = 1)]
+        [Route("~/Account/Register", Order = 2)]
         [RateLimitsFilter(ZoneLimits.Register, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> Register(string returnUrl = null, bool logon = true)
         {
@@ -413,6 +419,8 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [AllowAnonymous]
+        [Route("~/register", Order = 1)]
+        [Route("~/Account/Register", Order = 2)]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel model, string returnUrl = null, bool logon = true)
         {

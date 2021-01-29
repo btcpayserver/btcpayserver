@@ -14,12 +14,12 @@
 <header class="text-center">
     <h1>@ViewData["Title"]</h1>
     <p class="lead text-secondary mt-3">
-        The extended public key facilitates generation of the destination addresses for your invoices so funds can be received on-chain.
+        This key, also called "xpub", is used to generate individual destination addresses for your invoices.
         <a href="https://docs.btcpayserver.org/FAQ/FAQ-Wallet/#what-is-a-derivation-scheme" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
     </p>
 </header>
 
-<form method="post">
+<form method="post" class="my-5">
     <input asp-for="Config" type="hidden" />
     <input asp-for="CryptoCode" type="hidden" />
     <input asp-for="DerivationSchemeFormat" type="hidden" />
@@ -31,43 +31,43 @@
         <span asp-validation-for="DerivationScheme" class="text-danger"></span>
     </div>
 
-    <table class="table table-sm table-responsive-md">
-        <thead>
-        <tr>
-            <th>Address type</th>
-            <th class="text-right">Example</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr>
-            <td>P2WPKH</td>
-            <td class="text-right"><code>xpub...</code></td>
-        </tr>
-        <tr>
-            <td>P2SH-P2WPKH</td>
-            <td class="text-right"><code>xpub...-[p2sh]</code></td>
-        </tr>
-        <tr>
-            <td>P2PKH</td>
-            <td class="text-right"><code>xpub...-[legacy]</code></td>
-        </tr>
-        <tr>
-            <td>Multi-sig P2WSH</td>
-            <td class="text-right"><code>2-of-xpub1...-xpub2...</code></td>
-        </tr>
-        <tr>
-            <td>Multi-sig P2SH-P2WSH</td>
-            <td class="text-right"><code>2-of-xpub1...-xpub2...-[p2sh]</code></td>
-        </tr>
-        <tr>
-            <td>Multi-sig P2SH</td>
-            <td class="text-right"><code>2-of-xpub1...-xpub2...-[legacy]</code></td>
-        </tr>
-        </tbody>
-    </table>
-
     <button name="command" type="submit" class="btn btn-primary" value="save" id="Continue">Continue</button>
 </form>
+
+<table class="table table-sm table-responsive-md">
+    <thead>
+    <tr>
+        <th>Address type</th>
+        <th class="text-right">Example</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>P2WPKH</td>
+        <td class="text-right text-monospace">xpub...</td>
+    </tr>
+    <tr>
+        <td>P2SH-P2WPKH</td>
+        <td class="text-right text-monospace">xpub...-[p2sh]</td>
+    </tr>
+    <tr>
+        <td>P2PKH</td>
+        <td class="text-right text-monospace">xpub...-[legacy]</td>
+    </tr>
+    <tr>
+        <td>Multi-sig P2WSH</td>
+        <td class="text-right text-monospace">2-of-xpub1...-xpub2...</td>
+    </tr>
+    <tr>
+        <td>Multi-sig P2SH-P2WSH</td>
+        <td class="text-right text-monospace">2-of-xpub1...-xpub2...-[p2sh]</td>
+    </tr>
+    <tr>
+        <td>Multi-sig P2SH</td>
+        <td class="text-right text-monospace">2-of-xpub1...-xpub2...-[legacy]</td>
+    </tr>
+    </tbody>
+</table>
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")

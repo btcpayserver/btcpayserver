@@ -22,7 +22,7 @@
         <input type="hidden" asp-for="RequireExistingMnemonic" value="true" />
 
         <div class="form-group">
-            <label asp-for="ExistingMnemonic">Existing Seed</label>
+            <label asp-for="ExistingMnemonic">Wallet Recovery Seed</label>
             <textarea asp-for="ExistingMnemonic" class="form-control text-monospace py-2" rows="2" autocomplete="off"></textarea>
             <span asp-validation-for="ExistingMnemonic" class="text-danger"></span>
         </div>

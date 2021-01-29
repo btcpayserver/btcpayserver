@@ -13,7 +13,7 @@
 
 <header class="text-center">
     <h1>@ViewData["Title"]</h1>
-    <p class="lead text-secondary mt-3">Scan the master public key show on your wallet's display</p>
+    <p class="lead text-secondary mt-3">Scan the extended public key, also called "xpub", shown on your wallet's display.</p>
 </header>
 
 @if (!ViewContext.ModelState.IsValid)
@@ -21,11 +21,41 @@
     <div asp-validation-summary="All" class="text-danger"></div>
 }
 
-<partial name="CameraScanner"/>
+<div class="my-5">
+    <partial name="CameraScanner"/>
+    <form id="qr-import-form" method="post">
+        <input asp-for="WalletFileContent" type="hidden" />
+    </form>
+</div>
 
-<form id="qr-import-form" method="post">
-    <input asp-for="WalletFileContent" type="hidden" />
-</form>
+<p class="mt-5">
+    Generate a QR code of the extended public key in your wallet (see instructions for supported wallets below).
+    Allow the browser access to your camera and hold the code to the camera when the scan prompt appears.
+</p>
+
+<table class="table table-sm table-responsive-md">
+    <thead>
+    <tr>
+        <th>Wallet</th>
+        <th>Instructions</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td class="text-nowrap">Cobo Vault</td>
+        <td>Open Wallet Settings ❯ Show/Export XPUB</td>
+    </tr>
+    <tr>
+        <td>BlueWallet</td>
+        <td>Open Wallet Settings ❯ Show Wallet XPUB</td>
+    </tr>
+    <tr>
+        <td>Specter DIY</td>
+        <td>Master public keys ❯ Select key ❯ Disable "Show derivation path"</td>
+    </tr>
+    </tbody>
+</table>
+
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")

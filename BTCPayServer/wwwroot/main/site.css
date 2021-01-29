@@ -265,6 +265,10 @@ pre {
     font-weight: 600;
 }
 
+.text-monospace {
+    font-size: .95rem;
+}
+
 input.w-auto,
 select.w-auto,
 textarea.w-auto {

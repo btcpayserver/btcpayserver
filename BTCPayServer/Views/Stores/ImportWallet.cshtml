@@ -13,8 +13,8 @@
 
 <header class="text-center">
     <h1>Choose your import method</h1>
+    <p class="lead text-secondary mt-3">The following methods assume that you already have an existing&nbsp;wallet created and backed up.</p>
 </header>
-<br>
 
 @if (Model.CryptoCode == "BTC")
 {
@@ -29,7 +29,7 @@
                         <span class="mr-2">Connect hardware&nbsp;wallet</span>
                         <span class="badge bg-primary">Recommended</span>
                     </h4>
-                    <p class="mb-0 text-secondary">Import your keys with the BTCPay Server Vault</p>
+                    <p class="mb-0 text-secondary">Import your keys using our Vault application</p>
                 </div>
                 <vc:icon symbol="caret-right" />
             </a>
@@ -74,7 +74,7 @@
         </div>
         <div class="content">
             <h4>Enter extended public key</h4>
-            <p class="mb-0 text-secondary">Setup a watch-only wallet</p>
+            <p class="mb-0 text-secondary">Input the key string manually</p>
         </div>
         <vc:icon symbol="caret-right" />
     </a>
@@ -87,7 +87,7 @@
         </div>
         <div class="content">
             <h4>Scan wallet QR code</h4>
-            <p class="mb-0 text-secondary">Supported by BlueWallet and Cobo Vault</p>
+            <p class="mb-0 text-secondary">Supported by BlueWallet, Cobo Vault and Specter DIY</p>
         </div>
         <vc:icon symbol="caret-right" />
     </a>
@@ -111,10 +111,10 @@
         </div>
         <div class="content">
             <h4>
-                <span class="mr-2">Enter the seed</span>
+                <span class="mr-2">Enter wallet seed</span>
                 <span class="badge bg-danger">Not recommended</span>
             </h4>
-            <p class="mb-0 text-secondary">Your wallet recovery seed are the 12 or 24 words</p>
+            <p class="mb-0 text-secondary">Provide the 12 or 24 word recovery seed</p>
         </div>
         <vc:icon symbol="caret-right" />
     </a>

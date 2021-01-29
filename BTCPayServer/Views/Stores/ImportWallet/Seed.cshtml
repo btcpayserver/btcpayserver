@@ -2,7 +2,7 @@
 @addTagHelper *, BundlerMinifier.TagHelpers
 @{
     Layout = "_LayoutWalletSetup";
-    ViewData["Title"] = "Enter the seed";
+    ViewData["Title"] = "Enter the wallet seed";
 }
 
 @section Navbar {
@@ -13,19 +13,21 @@
 
 <header class="text-center">
     <h1>@ViewData["Title"]</h1>
-    <p class="lead text-secondary mt-3">Manually enter your wallet recovery seed</p>
+    <p class="lead text-secondary mt-3">Manually enter your 12 or 24 word recovery seed.</p>
 </header>
 
-@if (Model.CanUseHotWallet)
-{
-    ViewData.Add(nameof(Model.CanUseRPCImport), Model.CanUseRPCImport);
+<div class="my-5">
+    @if (Model.CanUseHotWallet)
+    {
+        ViewData.Add(nameof(Model.CanUseRPCImport), Model.CanUseRPCImport);
 
-    @await Html.PartialAsync("_GenerateWalletForm", Model.SetupRequest)
-}
-else
-{
-    <p class="mb-0">Please note that creating a wallet is not supported by your instance.</p>
-}
+        @await Html.PartialAsync("_GenerateWalletForm", Model.SetupRequest)
+    }
+    else
+    {
+        <p class="mb-0">Please note that creating a wallet is not supported by your instance.</p>
+    }
+</div>
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")

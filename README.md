@@ -113,7 +113,7 @@ After successful deployment, make sure to check our [getting started](https://do
 
 Please check out our [official website](https://btcpayserver.org/), our [complete documentation](https://docs.btcpayserver.org/) and [FAQ](https://docs.btcpayserver.org/FAQ/) for more details.
 
-If you have trouble using BTCPay, consider joining [communities listed on the official website](https://btcpayserver.org/#communityCTA) to get help from the BTCPay community members. Only file [Github issue](https://github.com/btcpayserver/btcpayserver/issues) for technical issues you can't resolve through other channels or feature requests you've validated with other members of the community.
+If you have trouble using BTCPay Server, consider joining [communities listed on the official website](https://btcpayserver.org/#communityCTA) to get help from the members. Only file [Github issue](https://github.com/btcpayserver/btcpayserver/issues/new/choose) for technical issues you can't resolve through other channels or feature requests you've validated with other members of the community.
 
 ## 🤝 Contributing
 
@@ -127,7 +127,7 @@ There are many other ways to get involved with the project. Check our [contribut
 
 ## 🧑‍💻 Developing
 
-To begin developing locally, visit [local development guide](https://docs.btcpayserver.org/LocalDevelopment/). There are also several video-tutorials:
+To begin developing locally, visit our [local development guide](https://docs.btcpayserver.org/LocalDevelopment/). There are also several video-tutorials:
 
 * [Setting up development environment on Windows](https://www.youtube.com/watch?v=ZePbMPSIvHM)
 * [Setting up development environment Linux (Ubuntu)](https://www.youtube.com/watch?v=j486T_Rk-yw&t)
@@ -137,7 +137,7 @@ To begin developing locally, visit [local development guide](https://docs.btcpay
 
 While the documentation advises using docker-compose, you may want to build BTCPay Server yourself.
 
-First, install .NET Core SDK v3.1 as specified by [Microsoft website](https://dotnet.microsoft.com/download/dotnet-core/3.1).
+First, install .NET Core SDK v3.1 as specified by the [Microsoft website](https://dotnet.microsoft.com/download/dotnet-core/3.1).
 
 On Powershell:
 
@@ -190,7 +190,7 @@ For more information, see the documentation:
 
 ### 🧪 API
 
-BTCPay Server has two APIs:
+BTCPay Server has two API's:
 
 - **Greenfield API (New)**
   - [Greenfield API documentation](https://docs.btcpayserver.org/API/Greenfield/v1/)
@@ -198,11 +198,11 @@ BTCPay Server has two APIs:
 - **Legacy API**
 
 The **Greenfield API** is our brand-new API which is still in development. Once complete, it will allow you to run BTCPay Server heedlessly.
-The **legacy API**, is fully compatible with [BitPay's API](https://bitpay.com/api/). It has limited features, but allows instant migration from BitPay.
+The **Legacy API**, is fully compatible with [BitPay's API](https://bitpay.com/api/). It has limited features, but allows instant migration from BitPay.
 
 ## 💚 Community
 
-Our community is ❤️ of the project. To chat with other community members in real-time, join our [Mattermost chat](https://chat.btcpayserver.org). We're also on [GitHub discussions](https://github.com/btcpayserver/btcpayserver/discussions).
+Our community is the ❤️ of the project. To chat with other community members in real-time, join our [Mattermost chat](https://chat.btcpayserver.org). We're also on [GitHub discussions](https://github.com/btcpayserver/btcpayserver/discussions).
 
 ## 📝 License
 

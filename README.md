@@ -117,8 +117,6 @@ Please check out our [official website](https://btcpayserver.org/), our [complet
 
 If you have trouble using BTCPay, consider joining [communities listed on the official website](https://btcpayserver.org/#communityCTA) to get help from the BTCPay community members. Only file [Github issue](https://github.com/btcpayserver/btcpayserver/issues) for technical issues you can't resolve through other channels or feature requests you've validated with other members of the community.
 
-The main community chat is located on [Mattermost](https://chat.btcpayserver.org/).
-
 ## 🤝 Contributing
 
 BTCPay Server is built and maintained entirely by volunteer contributors around the internet. We welcome and appreciate new contributions.

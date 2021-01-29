@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.6.8
+
+This release is trying some improvement to decrease the chances of being falsy flagged by Google Safe Browsing.
+
+* Remove Tor URL from login page (useless now thanks to the url bar link)
+* Remove allowtransparency from checkout overlay
+* Remove clipboard code from the login page (was used to copy the tor url)
+* Rename some pages from PascalCase to lowercase. (Register => register, Login => login)
+
 ## 1.0.6.7
 
 ### Bug fixes:

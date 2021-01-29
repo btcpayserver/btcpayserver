@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.0.6.8
+
+This release is trying some improvement to decrease the chances of being falsy flagged by Google Safe Browsing.
+
+* Remove Tor URL from login page (useless now thanks to the url bar link) @dennisreimann
+* Remove allowtransparency from checkout overlay @dennisreimann
+* Remove clipboard code from the login page (was used to copy the tor url) @dennisreimann
+* Rename some pages from PascalCase to lowercase. (Register => register, Login => login) @dennisreimann
+
+## 1.0.6.7
+
+### Bug fixes:
+
+* Reverted the new Greenfield API: Can configure lightning payment methods @NicolasDorier
+
 ## 1.0.6.6
 
 ### Bug fixes:

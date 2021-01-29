@@ -124,8 +124,10 @@ namespace BTCPayServer.Tests
 
             if (string.IsNullOrEmpty(seed))
             {
-                Logs.Tester.LogInformation("Generating new seed");
+                var option = privkeys ? "hotwallet" : "watchonly";
+                Logs.Tester.LogInformation($"Generating new seed ({option})");
                 Driver.FindElement(By.Id("generate-wallet-link")).Click();
+                Driver.FindElement(By.Id($"generate-{option}-link")).Click();
             }
             else
             {
@@ -133,13 +135,13 @@ namespace BTCPayServer.Tests
                 Driver.FindElement(By.Id("import-wallet-options-link")).Click();
                 Driver.FindElement(By.Id("import-seed-link")).Click();
                 Driver.FindElement(By.Id("ExistingMnemonic")).SendKeys(seed);
+                SetCheckbox(Driver.FindElement(By.Id("SavePrivateKeys")), privkeys);
             }
 
             Driver.FindElement(By.Id("ScriptPubKeyType")).Click();
             Driver.FindElement(By.CssSelector($"#ScriptPubKeyType option[value={format}]")).Click();
-
             Driver.FindElement(By.Id("advanced-settings-button")).Click();
-            SetCheckbox(Driver.FindElement(By.Id("SavePrivateKeys")), privkeys);
+
             SetCheckbox(Driver.FindElement(By.Id("ImportKeysToRPC")), importkeys);
 
             Logs.Tester.LogInformation("Trying to click Continue button");

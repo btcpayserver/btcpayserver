@@ -62,11 +62,11 @@ namespace BTCPayServer.Controllers
 
             if (vm.Method == null)
             {
-                vm.Method = WalletSetupMethod.Import;
+                vm.Method = WalletSetupMethod.ImportOptions;
             }
             else if (vm.Method == WalletSetupMethod.Seed)
             {
-                vm.SetupRequest = new WalletSetupRequest {RequireExistingMnemonic = true};
+                vm.SetupRequest = new GenerateWalletRequest();
             }
 
             return View(vm.ViewName, vm);
@@ -259,7 +259,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
-        [Route("{storeId}/wallet/{cryptoCode}/generate")]
+        [Route("{storeId}/wallet/{cryptoCode}/generate/{method?}")]
         public async Task<IActionResult> GenerateWallet(WalletSetupViewModel vm)
         {
             var store = HttpContext.GetStoreData();
@@ -272,6 +272,13 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
+            var isHotWallet = vm.Method == WalletSetupMethod.HotWallet;
+            var (hotWallet, rpcImport) = await CanUseHotWallet();
+            if (isHotWallet && !hotWallet)
+            {
+                return NotFound();
+            }
+
             var derivation = GetExistingDerivationStrategy(vm.CryptoCode, store);
             if (derivation != null)
             {
@@ -279,40 +286,46 @@ namespace BTCPayServer.Controllers
                 vm.Config = derivation.ToJson();
             }
 
-            var (hotWallet, rpcImport) = await CanUseHotWallet();
-
             vm.Enabled = !store.GetStoreBlob().IsExcluded(new PaymentMethodId(vm.CryptoCode, PaymentTypes.BTCLike));
             vm.CanUseHotWallet = hotWallet;
             vm.CanUseRPCImport = rpcImport;
             vm.RootKeyPath = network.GetRootKeyPath();
             vm.Network = network;
-            vm.SetupRequest = new WalletSetupRequest();
-            vm.Method = WalletSetupMethod.Generate;
 
-            return View(vm);
+            if (vm.Method == null)
+            {
+                vm.Method = WalletSetupMethod.GenerateOptions;
+            }
+            else
+            {
+                vm.SetupRequest = new GenerateWalletRequest { SavePrivateKeys = isHotWallet };
+            }
+
+            return View(vm.ViewName, vm);
         }
 
         [HttpPost]
-        [Route("{storeId}/wallet/{cryptoCode}/generate")]
-        public async Task<IActionResult> GenerateWallet(string storeId, string cryptoCode, WalletSetupRequest request)
+        [Route("{storeId}/wallet/{cryptoCode}/generate/{method}")]
+        public async Task<IActionResult> GenerateWallet(string storeId, string cryptoCode, WalletSetupMethod method, GenerateWalletRequest request)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
 
             var (hotWallet, rpcImport) = await CanUseHotWallet();
-            if (!hotWallet || !rpcImport && request.ImportKeysToRPC)
+            if (!hotWallet && request.SavePrivateKeys || !rpcImport && request.ImportKeysToRPC)
             {
                 return NotFound();
             }
 
             var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
             var client = _ExplorerProvider.GetExplorerClient(cryptoCode);
+            var isImport = method == WalletSetupMethod.Seed;
             var vm = new WalletSetupViewModel
             {
                 StoreId = storeId,
                 CryptoCode = cryptoCode,
-                Method = request.RequireExistingMnemonic ? WalletSetupMethod.Seed : WalletSetupMethod.Generate,
+                Method = method,
                 SetupRequest = request,
                 Confirmation = string.IsNullOrEmpty(request.ExistingMnemonic),
                 Network = network,
@@ -324,7 +337,7 @@ namespace BTCPayServer.Controllers
                 CanUseRPCImport = rpcImport
             };
 
-            if (request.RequireExistingMnemonic && string.IsNullOrEmpty(request.ExistingMnemonic))
+            if (isImport && string.IsNullOrEmpty(request.ExistingMnemonic))
             {
                 ModelState.AddModelError(nameof(request.ExistingMnemonic), "Please provide your existing seed");
                 return View(vm.ViewName, vm);
@@ -362,7 +375,7 @@ namespace BTCPayServer.Controllers
 
             TempData.Clear();
 
-            if (!request.RequireExistingMnemonic)
+            if (!isImport)
             {
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {

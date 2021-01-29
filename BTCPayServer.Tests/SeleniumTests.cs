@@ -687,8 +687,8 @@ namespace BTCPayServer.Tests
                 s.RegisterNewUser(true);
                 var storeId = s.CreateNewStore();
 
-                // In this test, we try to spend from a manual seed. We import the xpub 49'/0'/0', then try to use the seed 
-                // to sign the transaction
+                // In this test, we try to spend from a manual seed. We import the xpub 49'/0'/0',
+                // then try to use the seed to sign the transaction
                 s.GenerateWallet("BTC", "", true);
 
                 //let's test quickly the receive wallet page

@@ -1,32 +1,38 @@
+using NBXplorer.Models;
+
 namespace BTCPayServer.Models.StoreViewModels
 {
     public enum WalletSetupMethod
     {
-        Import,
+        ImportOptions,
         Hardware,
         File,
         Xpub,
         Scan,
         Seed,
-        Generate
+        GenerateOptions,
+        HotWallet,
+        WatchOnly
     }
 
     public class WalletSetupViewModel : DerivationSchemeViewModel
     {
         public WalletSetupMethod? Method { get; set; }
-        public WalletSetupRequest SetupRequest { get; set; }
+        public GenerateWalletRequest SetupRequest { get; set; }
         public string StoreId { get; set; }
 
         public string ViewName =>
             Method switch
             {
-                WalletSetupMethod.Import => "ImportWallet",
+                WalletSetupMethod.ImportOptions => "ImportWalletOptions",
                 WalletSetupMethod.Hardware => "ImportWallet/Hardware",
                 WalletSetupMethod.Xpub => "ImportWallet/Xpub",
                 WalletSetupMethod.File => "ImportWallet/File",
                 WalletSetupMethod.Scan => "ImportWallet/Scan",
                 WalletSetupMethod.Seed => "ImportWallet/Seed",
-                WalletSetupMethod.Generate => "GenerateWallet",
+                WalletSetupMethod.GenerateOptions => "GenerateWalletOptions",
+                WalletSetupMethod.HotWallet => "GenerateWallet",
+                WalletSetupMethod.WatchOnly => "GenerateWallet",
                 _ => "SetupWallet"
             };
     }

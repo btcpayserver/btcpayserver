@@ -21,7 +21,6 @@
             "wwwroot/vendor/flatpickr/flatpickr.js",
             "wwwroot/main/bootstrap/bootstrap.js",
             "wwwroot/main/bootstrap4-creativestart/creative.js",
-            "wwwroot/js/copy-to-clipboard.js",
             "wwwroot/main/site.js"
         ]
     },

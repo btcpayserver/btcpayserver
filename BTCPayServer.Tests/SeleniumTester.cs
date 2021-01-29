@@ -85,7 +85,7 @@ namespace BTCPayServer.Tests
 
         public void GoToRegister()
         {
-            Driver.Navigate().GoToUrl(Link("/Account/Register"));
+            Driver.Navigate().GoToUrl(Link("/register"));
         }
 
         public string RegisterNewUser(bool isAdmin = false)
@@ -285,7 +285,7 @@ namespace BTCPayServer.Tests
 
         public void GoToLogin()
         {
-            Driver.Navigate().GoToUrl(new Uri(Server.PayTester.ServerUri, "Account/Login"));
+            Driver.Navigate().GoToUrl(new Uri(Server.PayTester.ServerUri, "/login"));
         }
 
         public string CreateInvoice(string storeName, decimal amount = 100, string currency = "USD", string refundEmail = "")

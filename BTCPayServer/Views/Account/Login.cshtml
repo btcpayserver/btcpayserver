@@ -24,17 +24,8 @@
 <div class="row justify-content-center mb-5">
     <div class="col account-form">
         <div class="modal-content border-0 p-3">
-            <div class="modal-header align-items-center border-0 py-2">
+            <div class="modal-header border-0 py-2">
                 <h4 class="modal-title">Sign In</h4>
-                @if (env.OnionUrl != null)
-                {
-                    <div class="text-center">
-                        <a href="@env.OnionUrl" target="_onion" class="btn btn-sm btn-outline-onion d-inline-flex align-items-center text-nowrap p-2" data-clipboard="@env.OnionUrl" style="min-width:117px;">
-                            <img src="~/img/icons/onion-purple.svg" height="20" class="mr-2" asp-append-version="true" />
-                            <span data-clipboard-confirm="Copied URL ✔">Copy Tor URL</span>
-                        </a>
-                    </div>
-                }
             </div>
             <div class="modal-body">
                 <form asp-route-returnurl="@ViewData["ReturnUrl"]" method="post">

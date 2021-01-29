@@ -92,13 +92,13 @@
 * No transaction fees (other than the [network fee](https://en.bitcoin.it/wiki/Miner_fees))
 * No fees, middleman or KYC
 * Non-custodial (complete control over the private key)
-* Enhanced privacy & privacy
+* Enhanced privacy & security
 * Self-hosted
 * SegWit support
 * Lightning Network support (LND, c-lightning, Eclair, and Ptarmigan)
 * Tor support
 * Bitcoin-only build
-* Share your instance with friends
+* Share your instance with friends (multi-tenant)
 * Invoice management
 * Point of sale $ crowdfunding app
 * Payment requests and donation button
@@ -194,7 +194,7 @@ For more information, see the documentation:
 
 ### 🧪 API
 
-BTCPay Server has two API:
+BTCPay Server has two APIs:
 
 - **Greenfield API (New)**
   - [Greenfield API documentation](https://docs.btcpayserver.org/API/Greenfield/v1/)

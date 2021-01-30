@@ -105,7 +105,7 @@
 
 ## 🚀 Getting Started
 
-Firstly, decide if you want to host an instance yourself or use a [third-party host](https://docs.btcpayserver.org/ThirdPartyHosting/). If you've chosen to self-host, we documented plenty of [ways to deploy BTCPay Server](https://docs.btcpayserver.org/Deployment/).
+Firstly, decide if you want to host an instance yourself or use a [third-party host](https://docs.btcpayserver.org/ThirdPartyHosting/). If you've chosen to self-host, there are plenty of documented [ways to deploy BTCPay Server](https://docs.btcpayserver.org/Deployment/).
 
 After successful deployment, make sure to check our [getting started](https://docs.btcpayserver.org/RegisterAccount/) and [walkthrough](https://docs.btcpayserver.org/Walkthrough/) guides. In case you would like to use Lightning Network, see [Lightning guide](https://docs.btcpayserver.org/LightningNetwork/).
 
@@ -113,7 +113,7 @@ After successful deployment, make sure to check our [getting started](https://do
 
 Please check out our [official website](https://btcpayserver.org/), [complete documentation](https://docs.btcpayserver.org/) and [FAQ](https://docs.btcpayserver.org/FAQ/) for more details.
 
-If you have trouble using BTCPay Server, consider joining [communities listed on the official website](https://btcpayserver.org/#communityCTA) to get help from the members. Only file [Github issue](https://github.com/btcpayserver/btcpayserver/issues/new/choose) for technical issues you can't resolve through other channels or feature requests you've validated with other members of the community.
+If you have trouble using BTCPay Server, consider joining [communities listed on the official website](https://btcpayserver.org/#communityCTA) to get help from other contributors. Only create a [GitHub issue](https://github.com/btcpayserver/btcpayserver/issues/new/choose) for technical issues you can't resolve through other channels or feature requests you've validated with other members of the community.
 
 ## 🤝 Contributing
 
@@ -197,7 +197,7 @@ BTCPay Server has two API's:
   - [Greenfield API examples with CURL](https://docs.btcpayserver.org/GreenFieldExample/)
 - **Legacy API**
 
-The **Greenfield API** is our brand-new API which is still in development. Once complete, it will allow you to run BTCPay Server heedlessly.
+The **Greenfield API** is our brand-new API which is still in development. Once complete, it will allow you to run BTCPay Server headlessly.
 The **Legacy API**, is fully compatible with [BitPay's API](https://bitpay.com/api/). It has limited features, but allows instant migration from BitPay.
 
 ## 💚 Community

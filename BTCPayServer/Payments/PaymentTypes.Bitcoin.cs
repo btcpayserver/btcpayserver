@@ -17,7 +17,7 @@ namespace BTCPayServer.Payments
 
         public override string ToPrettyString() => "On-Chain";
         public override string GetId() => "BTCLike";
-        public override string GetBadge() => "🔗";
+        public override string GetBadge() => "";
         public override string ToStringNormalized() => "OnChain";
         public override CryptoPaymentData DeserializePaymentData(BTCPayNetworkBase network, string str)
         {

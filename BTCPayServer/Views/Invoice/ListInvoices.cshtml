@@ -292,7 +292,7 @@
                                         @invoice.Status.ToString().ToLower()
                                     </span>
                                 }
-                                @foreach (var paymentType in  invoice.Details.Payments.Select(payment => payment.GetPaymentMethodId()?.PaymentType).Distinct().Where(type => type != null && !string.IsNullOrEmpty(type.GetBadge())))
+                                @foreach (var paymentType in invoice.Details.Payments.Select(payment => payment.GetPaymentMethodId()?.PaymentType).Distinct().Where(type => type != null && !string.IsNullOrEmpty(type.GetBadge())))
                                 {
                                     <span class="badge">@paymentType.GetBadge()</span>
                                 }

@@ -141,8 +141,8 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.Id("ScriptPubKeyType")).Click();
             Driver.FindElement(By.CssSelector($"#ScriptPubKeyType option[value={format}]")).Click();
             Driver.FindElement(By.Id("advanced-settings-button")).Click();
-
             SetCheckbox(Driver.FindElement(By.Id("ImportKeysToRPC")), importkeys);
+            Driver.FindElement(By.Id("advanced-settings-button")).Click(); // close settings again , otherwise the button might not be clickable for Selenium
 
             Logs.Tester.LogInformation("Trying to click Continue button");
             Driver.FindElement(By.Id("Continue")).Click();

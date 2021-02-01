@@ -5,6 +5,7 @@
     var method = ViewData["Method"];
     var isImport = method is WalletSetupMethod.Seed;
     var isHotWallet = method is WalletSetupMethod.HotWallet;
+    var canUseHotWallet = ViewData["CanUseHotWallet"] is true;
     var canUseRpcImport = ViewData["CanUseRPCImport"] is true;
 }
 
@@ -39,7 +40,7 @@
         <span asp-validation-for="ScriptPubKeyType" class="text-danger"></span>
     </div>
 
-    @if (isImport)
+    @if (isImport && canUseHotWallet)
     {
         <div class="form-group mt-5">
             <label asp-for="SavePrivateKeys">Is hot wallet</label>

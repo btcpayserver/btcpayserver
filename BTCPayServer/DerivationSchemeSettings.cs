@@ -114,7 +114,7 @@ namespace BTCPayServer
                 return false;
             }
 
-            //electrum
+            // Electrum
             if (jobj.ContainsKey("keystore"))
             {
                 result.Source = "ElectrumFile";
@@ -153,10 +153,29 @@ namespace BTCPayServer
                     catch { return false; }
                 }
             }
+            // Specter
+            else if (jobj.ContainsKey("descriptor") && jobj.ContainsKey("blockheight"))
+            {
+                result.Source = "SpecterFile";
+
+                if (!TryParseXpub(jobj["descriptor"].Value<string>(), derivationSchemeParser, ref result, false))
+                {
+                    return false;
+                }
+
+                if (jobj.ContainsKey("label"))
+                {
+                    try
+                    {
+                        result.Label = jobj["label"].Value<string>();
+                    }
+                    catch { return false; }
+                }
+            }
+            // Wasabi
             else
             {
                 result.Source = "WasabiFile";
-                //wasabi format 
                 if (!jobj.ContainsKey("ExtPubKey") ||
                     !TryParseXpub(jobj["ExtPubKey"].Value<string>(), derivationSchemeParser, ref result, false))
                 {

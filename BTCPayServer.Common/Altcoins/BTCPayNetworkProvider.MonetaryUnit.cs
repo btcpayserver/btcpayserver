@@ -12,7 +12,7 @@ namespace BTCPayServer
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
                 DisplayName = "MonetaryUnit",
-                BlockExplorerLink = NetworkType == NetworkType.Mainnet ? "https://explorer.monetaryunit.org/#/MUE/mainnet/tx/{0}" : "https://explorer.monetaryunit.org/#/MUE/mainnet/tx/{0}",
+                BlockExplorerLink = NetworkType == ChainName.Mainnet ? "https://explorer.monetaryunit.org/#/MUE/mainnet/tx/{0}" : "https://explorer.monetaryunit.org/#/MUE/mainnet/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "monetaryunit",
                 DefaultRateRules = new[]
@@ -22,7 +22,7 @@ namespace BTCPayServer
                 },
                 CryptoImagePath = "imlegacy/monetaryunit.png",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),
-                CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("31'") : new KeyPath("1'")
+                CoinType = NetworkType == ChainName.Mainnet ? new KeyPath("31'") : new KeyPath("1'")
             });
         }
     }

@@ -30,7 +30,7 @@
             <a class="navbar-brand js-scroll-trigger" href="~/">
                 <img width="50" src="https://console.cryptodeploy.io/assets/img/logo.png" alt="CryptoPay" 
 
-                @if (env.NetworkType != NBitcoin.NetworkType.Mainnet)
+                @if (env.NetworkType != NBitcoin.ChainName.Mainnet)
                 {
                     <span class="badge badge-warning" style="font-size:10px;">@env.NetworkType.ToString()</span>
                 }

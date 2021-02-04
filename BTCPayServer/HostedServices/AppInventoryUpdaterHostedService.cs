@@ -136,6 +136,11 @@ namespace BTCPayServer.HostedServices
             public string[] AppId { get; set; }
             public Dictionary<string, int> Items { get; set; }
             public bool Deduct { get; set; }
+
+            public override string ToString()
+            {
+                return string.Empty;
+            }
         }
     }
 }

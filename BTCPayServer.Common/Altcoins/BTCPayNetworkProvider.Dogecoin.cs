@@ -12,7 +12,7 @@ namespace BTCPayServer
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
                 DisplayName = "Dogecoin",
-                BlockExplorerLink = NetworkType == NetworkType.Mainnet ? "https://dogechain.info/tx/{0}" : "https://dogechain.info/tx/{0}",
+                BlockExplorerLink = NetworkType == ChainName.Mainnet ? "https://dogechain.info/tx/{0}" : "https://dogechain.info/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "dogecoin",
                 DefaultRateRules = new[]
@@ -22,7 +22,7 @@ namespace BTCPayServer
                 },
                 CryptoImagePath = "imlegacy/dogecoin.png",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),
-                CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("3'") : new KeyPath("1'")
+                CoinType = NetworkType == ChainName.Mainnet ? new KeyPath("3'") : new KeyPath("1'")
             });
         }
     }

@@ -24,7 +24,7 @@ services:
       TEST_MERCHANTLIGHTNINGD: "type=clightning;server=unix://etc/merchant_lightningd_datadir/lightning-rpc"
       TEST_CUSTOMERLIGHTNINGD: "type=clightning;server=unix://etc/customer_lightningd_datadir/lightning-rpc"
       TEST_MERCHANTCHARGE: "type=charge;server=http://lightning-charged:9112/;api-token=foiewnccewuify;allowinsecure=true"
-      TEST_MERCHANTLND: "https://lnd:lnd@merchant_lnd:8080/"
+      TEST_MERCHANTLND: "http://lnd:lnd@merchant_lnd:8080/"
       TESTS_INCONTAINER: "true"
       TESTS_SSHCONNECTION: "root@sshd:22"
       TESTS_SSHPASSWORD: ""
@@ -69,20 +69,22 @@ services:
         - "sshd_datadir:/root/.ssh"
 
   devlnd: 
-    image: btcpayserver/bitcoin:0.20.1
+    image: btcpayserver/bitcoin:0.21.0
     environment:
       BITCOIN_NETWORK: regtest
+      BITCOIN_WALLETDIR: "/data/wallets"
       BITCOIN_EXTRA_ARGS: |
         deprecatedrpc=signrawtransaction
         connect=bitcoind:39388
         fallbackfee=0.0002
+        rpcallowip=0.0.0.0/0
     links:
       - nbxplorer
       - postgres
       - customer_lnd
       - merchant_lnd
   nbxplorer:
-    image: nicolasdorier/nbxplorer:2.1.45
+    image: nicolasdorier/nbxplorer:2.1.49
     restart: unless-stopped
     ports:
       - "32838:32838"
@@ -116,14 +118,16 @@ services:
 
   bitcoind:
     restart: unless-stopped
-    image: btcpayserver/bitcoin:0.20.1
+    image: btcpayserver/bitcoin:0.21.0
     environment:
       BITCOIN_NETWORK: regtest
+      BITCOIN_WALLETDIR: "/data/wallets"
       BITCOIN_EXTRA_ARGS: |-
         rpcuser=ceiwHEbqWI83
         rpcpassword=DwubwWsoo3
         rpcport=43782
         rpcbind=0.0.0.0:43782
+        rpcallowip=0.0.0.0/0
         port=39388
         whitelist=0.0.0.0/0
         zmqpubrawblock=tcp://0.0.0.0:28332
@@ -142,7 +146,7 @@ services:
       - "bitcoin_datadir:/data"
 
   customer_lightningd:
-    image: btcpayserver/lightning:v0.9.0-1-dev
+    image: btcpayserver/lightning:v0.9.3-1-dev
     stop_signal: SIGKILL
     restart: unless-stopped
     environment: 
@@ -189,7 +193,7 @@ services:
       - merchant_lightningd
 
   merchant_lightningd:
-    image: btcpayserver/lightning:v0.9.0-1-dev
+    image: btcpayserver/lightning:v0.9.3-1-dev
     stop_signal: SIGKILL
     environment: 
       EXPOSE_TCP: "true"
@@ -221,18 +225,21 @@ services:
       - "5432"
 
   merchant_lnd:
-    image: btcpayserver/lnd:v0.11.0-beta
+    image: btcpayserver/lnd:v0.12.0-beta
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
       LND_ENVIRONMENT: "regtest"
       LND_EXPLORERURL: "http://nbxplorer:32838/"
+      LND_REST_LISTEN_HOST: http://merchant_lnd:8080
       LND_EXTRA_ARGS: |
-        restlisten=0.0.0.0:8080
+        restlisten=merchant_lnd:8080
         rpclisten=127.0.0.1:10008
-        rpclisten=0.0.0.0:10009
+        rpclisten=merchant_lnd:10009
         bitcoin.node=bitcoind
         bitcoind.rpchost=bitcoind:43782
+        bitcoind.rpcuser=ceiwHEbqWI83
+        bitcoind.rpcpass=DwubwWsoo3
         bitcoind.zmqpubrawblock=tcp://bitcoind:28332
         bitcoind.zmqpubrawtx=tcp://bitcoind:28333
         externalip=merchant_lnd:9735
@@ -240,6 +247,7 @@ services:
         no-macaroons=1
         debuglevel=debug
         trickledelay=1000
+        no-rest-tls=1
     ports:
       - "35531:8080"
     expose:
@@ -251,18 +259,21 @@ services:
       - bitcoind
 
   customer_lnd:
-    image: btcpayserver/lnd:v0.11.0-beta
+    image: btcpayserver/lnd:v0.12.0-beta
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
       LND_ENVIRONMENT: "regtest"
       LND_EXPLORERURL: "http://nbxplorer:32838/"
+      LND_REST_LISTEN_HOST: http://customer_lnd:8080
       LND_EXTRA_ARGS: |
-        restlisten=0.0.0.0:8080
+        restlisten=customer_lnd:8080
         rpclisten=127.0.0.1:10008
-        rpclisten=0.0.0.0:10009
+        rpclisten=customer_lnd:10009
         bitcoin.node=bitcoind
         bitcoind.rpchost=bitcoind:43782
+        bitcoind.rpcuser=ceiwHEbqWI83
+        bitcoind.rpcpass=DwubwWsoo3
         bitcoind.zmqpubrawblock=tcp://bitcoind:28332
         bitcoind.zmqpubrawtx=tcp://bitcoind:28333
         externalip=customer_lnd:10009
@@ -270,6 +281,7 @@ services:
         no-macaroons=1
         debuglevel=debug
         trickledelay=1000
+        no-rest-tls=1
     ports:
       - "35532:8080"
     expose:

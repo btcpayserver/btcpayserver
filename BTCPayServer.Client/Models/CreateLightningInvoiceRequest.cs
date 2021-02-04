@@ -17,7 +17,7 @@ namespace BTCPayServer.Client.Models
             Description = description;
             Expiry = expiry;
         }
-        [JsonConverter(typeof(LightMoneyJsonConverter))]
+        [JsonConverter(typeof(BTCPayServer.Client.JsonConverters.LightMoneyJsonConverter))]
         public LightMoney Amount { get; set; }
         public string Description { get; set; }
         [JsonConverter(typeof(JsonConverters.TimeSpanJsonConverter.Seconds))]

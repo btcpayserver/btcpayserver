@@ -13,8 +13,6 @@ using BTCPayServer.Logging;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
-using DBriize;
-using DBriize.Utils;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

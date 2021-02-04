@@ -1,31 +1,14 @@
-﻿@{
+@{
+    Layout = "_LayoutError";
     ViewData["Title"] = "500 - Internal Server Error";
 }
 
-<div class="row justify-content-center mb-2">
-    <div class="col text-center">
-        <a asp-controller="Home" asp-action="Index">
-            <img src="~/img/btcpay-logo.svg" alt="BTCPay Server" class="mb-4" height="70" asp-append-version="true"/>
-        </a>
-
-        <h1 class="h2 mb-3">@ViewData["Title"]</h1>
-    </div>
-</div>
-
-<p class="lead text-center">
-    Whoops, something really went wrong! <a href="https://twitter.com/mrkukks">Mr Kukks</a> is so sorry.
-    <br /><br />
-    <a href="https://twitter.com/mrkukks" target="_blank">
-        <img src="~/img/errorpages/500_mrkukks.jpg" alt="Mr Kukks puppy eyes" title="The most innocent look you'll ever see" asp-append-version="true" />
-    </a>
-    <br /><br />
-    Consult server log and consider submitting issue on BTCPayServer GitHub.
-    <br /><br />
-    <a href="/">Navigate back to home</a>.
-</p>
-
-<div class="row justify-content-center mt-5">
-    <div class="col">
-        <partial name="_BTCPaySupporters"/>
-    </div>
-</div>
+Whoops, something really went wrong! <a href="https://twitter.com/mrkukks">Mr Kukks</a> is so sorry.
+<br /><br />
+<a href="https://twitter.com/mrkukks" target="_blank">
+    <img src="~/img/errorpages/500_mrkukks.jpg" alt="Mr Kukks puppy eyes" title="The most innocent look you'll ever see" asp-append-version="true" />
+</a>
+<br /><br />
+Consult server log and consider submitting issue on BTCPayServer GitHub.
+<br /><br />
+<a href="/">Navigate back to home</a>.

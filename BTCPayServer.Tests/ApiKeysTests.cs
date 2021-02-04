@@ -65,7 +65,7 @@ namespace BTCPayServer.Tests
                 s.SetCheckbox(s, "btcpay.store.canmodifystoresettings", true);
                 s.SetCheckbox(s, "btcpay.user.canviewprofile", true);
                 s.Driver.FindElement(By.Id("Generate")).Click();
-                var superApiKey = s.AssertHappyMessage().FindElement(By.TagName("code")).Text;
+                var superApiKey = s.FindAlertMessage().FindElement(By.TagName("code")).Text;
 
                 //this api key has access to everything
                 await TestApiAgainstAccessToken(superApiKey, tester, user, Policies.CanModifyServerSettings, Policies.CanModifyStoreSettings, Policies.CanViewProfile);
@@ -74,7 +74,7 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("AddApiKey")).Click();
                 s.SetCheckbox(s, "btcpay.server.canmodifyserversettings", true);
                 s.Driver.FindElement(By.Id("Generate")).Click();
-                var serverOnlyApiKey = s.AssertHappyMessage().FindElement(By.TagName("code")).Text;
+                var serverOnlyApiKey = s.FindAlertMessage().FindElement(By.TagName("code")).Text;
                 await TestApiAgainstAccessToken(serverOnlyApiKey, tester, user,
                     Policies.CanModifyServerSettings);
 
@@ -82,7 +82,7 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("AddApiKey")).Click();
                 s.SetCheckbox(s, "btcpay.store.canmodifystoresettings", true);
                 s.Driver.FindElement(By.Id("Generate")).Click();
-                var allStoreOnlyApiKey = s.AssertHappyMessage().FindElement(By.TagName("code")).Text;
+                var allStoreOnlyApiKey = s.FindAlertMessage().FindElement(By.TagName("code")).Text;
                 await TestApiAgainstAccessToken(allStoreOnlyApiKey, tester, user,
                     Policies.CanModifyStoreSettings);
 
@@ -94,13 +94,13 @@ namespace BTCPayServer.Tests
                 var storeId = option.GetAttribute("value");
                 option.Click();
                 s.Driver.FindElement(By.Id("Generate")).Click();
-                var selectiveStoreApiKey = s.AssertHappyMessage().FindElement(By.TagName("code")).Text;
+                var selectiveStoreApiKey = s.FindAlertMessage().FindElement(By.TagName("code")).Text;
                 await TestApiAgainstAccessToken(selectiveStoreApiKey, tester, user,
                     Permission.Create(Policies.CanModifyStoreSettings, storeId).ToString());
 
                 s.Driver.FindElement(By.Id("AddApiKey")).Click();
                 s.Driver.FindElement(By.Id("Generate")).Click();
-                var noPermissionsApiKey = s.AssertHappyMessage().FindElement(By.TagName("code")).Text;
+                var noPermissionsApiKey = s.FindAlertMessage().FindElement(By.TagName("code")).Text;
                 await TestApiAgainstAccessToken(noPermissionsApiKey, tester, user);
 
                 await Assert.ThrowsAnyAsync<HttpRequestException>(async () =>
@@ -188,7 +188,7 @@ namespace BTCPayServer.Tests
                     checkbox.Click();
                 }
                 s.Driver.FindElement(By.Id("Generate")).Click();
-                var allAPIKey = s.AssertHappyMessage().FindElement(By.TagName("code")).Text;
+                var allAPIKey = s.FindAlertMessage().FindElement(By.TagName("code")).Text;
                 var apikeydata = await TestApiAgainstAccessToken<ApiKeyData>(allAPIKey, $"api/v1/api-keys/current", tester.PayTester.HttpClient);
                 Assert.Equal(checkedPermissionCount, apikeydata.Permissions.Length);
             }

@@ -11,7 +11,7 @@ namespace BTCPayServer
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
                 DisplayName = "BGold",
-                BlockExplorerLink = NetworkType == NetworkType.Mainnet ? "https://btgexplorer.com/tx/{0}" : "https://testnet.btgexplorer.com/tx/{0}",
+                BlockExplorerLink = NetworkType == ChainName.Mainnet ? "https://btgexplorer.com/tx/{0}" : "https://testnet.btgexplorer.com/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "bitcoingold",
                 DefaultRateRules = new[]
@@ -22,7 +22,7 @@ namespace BTCPayServer
                 CryptoImagePath = "imlegacy/btg.svg",
                 LightningImagePath = "imlegacy/btg-lightning.svg",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),
-                CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("156'") : new KeyPath("1'")
+                CoinType = NetworkType == ChainName.Mainnet ? new KeyPath("156'") : new KeyPath("1'")
             });
         }
     }

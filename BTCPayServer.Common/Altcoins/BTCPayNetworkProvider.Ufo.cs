@@ -12,7 +12,7 @@ namespace BTCPayServer
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
                 DisplayName = "Ufo",
-                BlockExplorerLink = NetworkType == NetworkType.Mainnet ? "https://chainz.cryptoid.info/ufo/tx.dws?{0}" : "https://chainz.cryptoid.info/ufo/tx.dws?{0}",
+                BlockExplorerLink = NetworkType == ChainName.Mainnet ? "https://chainz.cryptoid.info/ufo/tx.dws?{0}" : "https://chainz.cryptoid.info/ufo/tx.dws?{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "ufo",
                 DefaultRateRules = new[]
@@ -22,7 +22,7 @@ namespace BTCPayServer
                 },
                 CryptoImagePath = "imlegacy/ufo.png",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),
-                CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("202'") : new KeyPath("1'")
+                CoinType = NetworkType == ChainName.Mainnet ? new KeyPath("202'") : new KeyPath("1'")
             });
         }
     }

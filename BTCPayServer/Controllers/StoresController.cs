@@ -36,6 +36,7 @@ using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBXplorer;
+using NBXplorer.DerivationStrategy;
 using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers
@@ -699,6 +700,26 @@ namespace BTCPayServer.Controllers
         {
             var parser = new DerivationSchemeParser(network);
             parser.HintScriptPubKey = hint;
+            try
+            {
+                var derivationSchemeSettings = new DerivationSchemeSettings();
+                derivationSchemeSettings.Network = network;
+                var result = parser.ParseOutputDescriptor(derivationScheme);
+                derivationSchemeSettings.AccountOriginal = derivationScheme.Trim();
+                derivationSchemeSettings.AccountDerivation = result.Item1;
+                derivationSchemeSettings.AccountKeySettings = result.Item2?.Select((path, i) => new AccountKeySettings()
+                {
+                    RootFingerprint = path?.MasterFingerprint,
+                    AccountKeyPath = path?.KeyPath,
+                    AccountKey = result.Item1.GetExtPubKeys().ElementAt(i).GetWif(parser.Network)
+                }).ToArray() ?? new AccountKeySettings[result.Item1.GetExtPubKeys().Count()];
+                return derivationSchemeSettings;
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
+            
             return new DerivationSchemeSettings(parser.Parse(derivationScheme), network);
         }
 

@@ -35,8 +35,8 @@ namespace BTCPayServer
         }
 
 
-        public NetworkType NetworkType { get; private set; }
-        public BTCPayNetworkProvider(NetworkType networkType)
+        public ChainName NetworkType { get; private set; }
+        public BTCPayNetworkProvider(ChainName networkType)
         {
             _NBXplorerNetworkProvider = new NBXplorerNetworkProvider(networkType);
             NetworkType = networkType;

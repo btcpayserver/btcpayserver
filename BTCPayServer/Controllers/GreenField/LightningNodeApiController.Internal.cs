@@ -107,7 +107,7 @@ namespace BTCPayServer.Controllers.GreenField
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
             if (network == null || !CanUseInternalLightning(doingAdminThings) || internalLightningNode == null)
             {
-                return null;
+                return Task.FromResult<ILightningClient>(null);
             }
 
             return Task.FromResult(_lightningClientFactory.Create(internalLightningNode, network));

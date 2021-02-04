@@ -120,7 +120,7 @@ namespace BTCPayServer.Controllers.GreenField
             if (existing == null || (existing.GetLightningUrl().IsInternalNode(internalLightningNode) &&
                                      !CanUseInternalLightning(doingAdminThings)))
             {
-                return null;
+                return Task.FromResult<ILightningClient>(null);
             }
 
             return Task.FromResult(_lightningClientFactory.Create(existing.GetLightningUrl(), network));

@@ -18,14 +18,17 @@
     </div>
 }
 
-<div class="row button-row">
-    <div class="col-lg-12">
-        <a asp-action="NewPullPayment"
-           asp-route-walletId="@this.Context.GetRouteValue("walletId")"
-           class="btn btn-primary" role="button" id="NewPullPayment"><span class="fa fa-plus"></span> Create a new pull payment</a>
-        <a href="https://docs.btcpayserver.org/PullPayments/" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+@if (Model.HasDerivationSchemeSettings)
+{
+    <div class="row button-row">
+        <div class="col-lg-12">
+            <a asp-action="NewPullPayment"
+               asp-route-walletId="@Context.GetRouteValue("walletId")"
+               class="btn btn-primary" role="button" id="NewPullPayment"><span class="fa fa-plus"></span> Create a new pull payment</a>
+            <a href="https://docs.btcpayserver.org/PullPayments/" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+        </div>
     </div>
-</div>
+}
 
 <div class="row">
     @foreach (var pp in Model.PullPayments)

@@ -43,7 +43,7 @@ namespace BTCPayServer.Services
         public string OnionUrl => this.torServices.Services.Where(s => s.ServiceType == TorServiceType.BTCPayServer)
                                                            .Select(s => $"http://{s.OnionHost}").FirstOrDefault();
 
-        public NetworkType NetworkType { get; set; }
+        public ChainName NetworkType { get; set; }
         public string Version
         {
             get; set;
@@ -58,7 +58,7 @@ namespace BTCPayServer.Services
         {
             get
             {
-                return DevelopmentOverride?? NetworkType == NetworkType.Regtest && Environment.IsDevelopment();
+                return DevelopmentOverride?? NetworkType == ChainName.Regtest && Environment.IsDevelopment();
             }
         }
 
@@ -66,7 +66,7 @@ namespace BTCPayServer.Services
         {
             get
             {
-                return NetworkType != NetworkType.Mainnet ||
+                return NetworkType != ChainName.Mainnet ||
                        httpContext.HttpContext.Request.Scheme == "https" ||
                        httpContext.HttpContext.Request.Host.Host.EndsWith(".onion", StringComparison.OrdinalIgnoreCase) ||
                        Extensions.IsLocalNetwork(httpContext.HttpContext.Request.Host.Host);

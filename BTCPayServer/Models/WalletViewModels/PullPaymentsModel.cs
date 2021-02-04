@@ -28,6 +28,8 @@ namespace BTCPayServer.Models.WalletViewModels
         }
 
         public List<PullPaymentModel> PullPayments { get; set; } = new List<PullPaymentModel>();
+
+        public bool HasDerivationSchemeSettings { get; set; }
     }
 
     public class NewPullPaymentModel

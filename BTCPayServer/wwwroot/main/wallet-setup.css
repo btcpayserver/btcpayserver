@@ -103,6 +103,7 @@ body {
     position: relative;
     top: -1px;
     font-size: 60%;
+    color: var(--btcpay-color-white);
 }
 
 .list-group-item-wallet-setup .image + .content {

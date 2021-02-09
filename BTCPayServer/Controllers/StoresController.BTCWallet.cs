@@ -17,8 +17,7 @@ namespace BTCPayServer.Controllers
 {
     public partial class StoresController
     {
-        [HttpGet]
-        [Route("{storeId}/wallet/{cryptoCode}")]
+        [HttpGet("{storeId}/onchain/{cryptoCode}")]
         public ActionResult SetupWallet(WalletSetupViewModel vm)
         {
             var store = HttpContext.GetStoreData();
@@ -37,8 +36,7 @@ namespace BTCPayServer.Controllers
             return View(vm);
         }
 
-        [HttpGet]
-        [Route("{storeId}/wallet/{cryptoCode}/import/{method?}")]
+        [HttpGet("{storeId}/onchain/{cryptoCode}/import/{method?}")]
         public async Task<IActionResult> ImportWallet(WalletSetupViewModel vm)
         {
             var store = HttpContext.GetStoreData();
@@ -69,10 +67,8 @@ namespace BTCPayServer.Controllers
             return View(vm.ViewName, vm);
         }
 
-        [HttpPost]
-        [Route("{storeId}/wallet/{cryptoCode}/modify")]
-        [Route("{storeId}/wallet/{cryptoCode}/import/{method}")]
-        [ApiExplorerSettings(IgnoreApi = true)]
+        [HttpPost("{storeId}/onchain/{cryptoCode}/modify")]
+        [HttpPost("{storeId}/onchain/{cryptoCode}/import/{method}")]
         public async Task<IActionResult> UpdateWallet(WalletSetupViewModel vm)
         {
             var store = HttpContext.GetStoreData();
@@ -255,8 +251,7 @@ namespace BTCPayServer.Controllers
             return ConfirmAddresses(vm, strategy);
         }
 
-        [HttpGet]
-        [Route("{storeId}/wallet/{cryptoCode}/generate/{method?}")]
+        [HttpGet("{storeId}/onchain/{cryptoCode}/generate/{method?}")]
         public async Task<IActionResult> GenerateWallet(WalletSetupViewModel vm)
         {
             var store = HttpContext.GetStoreData();
@@ -301,8 +296,7 @@ namespace BTCPayServer.Controllers
             return View(vm.ViewName, vm);
         }
 
-        [HttpPost]
-        [Route("{storeId}/wallet/{cryptoCode}/generate/{method}")]
+        [HttpPost("{storeId}/onchain/{cryptoCode}/generate/{method}")]
         public async Task<IActionResult> GenerateWallet(string storeId, string cryptoCode, WalletSetupMethod method, GenerateWalletRequest request)
         {
             var store = HttpContext.GetStoreData();
@@ -400,8 +394,7 @@ namespace BTCPayServer.Controllers
 
         // The purpose of this action is to show the user a success message, which confirms
         // that the store settings have been updated after generating a new wallet.
-        [HttpGet]
-        [Route("{storeId}/wallet/{cryptoCode}/generate/confirm")]
+        [HttpGet("{storeId}/onchain/{cryptoCode}/generate/confirm")]
         public ActionResult GenerateWalletConfirm(string storeId, string cryptoCode)
         {
             var store = HttpContext.GetStoreData();
@@ -426,8 +419,7 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(UpdateStore), new {storeId});
         }
 
-        [HttpGet]
-        [Route("{storeId}/wallet/{cryptoCode}/modify")]
+        [HttpGet("{storeId}/onchain/{cryptoCode}/modify")]
         public async Task<IActionResult> ModifyWallet(WalletSetupViewModel vm)
         {
             var store = HttpContext.GetStoreData();
@@ -467,8 +459,7 @@ namespace BTCPayServer.Controllers
             return View(vm);
         }
 
-        [HttpGet]
-        [Route("{storeId}/wallet/{cryptoCode}/delete")]
+        [HttpGet("{storeId}/onchain/{cryptoCode}/delete")]
         public IActionResult DeleteWallet(string storeId, string cryptoCode)
         {
             var store = HttpContext.GetStoreData();
@@ -489,8 +480,7 @@ namespace BTCPayServer.Controllers
             });
         }
 
-        [HttpPost]
-        [Route("{storeId}/wallet/{cryptoCode}/delete")]
+        [HttpPost("{storeId}/onchain/{cryptoCode}/delete")]
         public async Task<IActionResult> ConfirmDeleteWallet(string storeId, string cryptoCode)
         {
             var store = HttpContext.GetStoreData();

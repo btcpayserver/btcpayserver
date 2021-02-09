@@ -8,6 +8,7 @@ using BTCPayServer.Events;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
+using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBXplorer.DerivationStrategy;
@@ -20,14 +21,10 @@ namespace BTCPayServer.Controllers
         [HttpGet("{storeId}/onchain/{cryptoCode}")]
         public ActionResult SetupWallet(WalletSetupViewModel vm)
         {
-            var store = HttpContext.GetStoreData();
-            if (store == null)
-                return NotFound();
-
-            var network = vm.CryptoCode == null ? null : _ExplorerProvider.GetNetwork(vm.CryptoCode);
-            if (network == null)
+            var checkResult = IsAvailable(vm.CryptoCode, out var store, out _);
+            if (checkResult != null)
             {
-                return NotFound();
+                return checkResult;
             }
 
             var derivation = GetExistingDerivationStrategy(vm.CryptoCode, store);
@@ -39,14 +36,10 @@ namespace BTCPayServer.Controllers
         [HttpGet("{storeId}/onchain/{cryptoCode}/import/{method?}")]
         public async Task<IActionResult> ImportWallet(WalletSetupViewModel vm)
         {
-            var store = HttpContext.GetStoreData();
-            if (store == null)
-                return NotFound();
-
-            var network = vm.CryptoCode == null ? null : _ExplorerProvider.GetNetwork(vm.CryptoCode);
-            if (network == null)
+            var checkResult = IsAvailable(vm.CryptoCode, out _, out var network);
+            if (checkResult != null)
             {
-                return NotFound();
+                return checkResult;
             }
 
             var (hotWallet, rpcImport) = await CanUseHotWallet();
@@ -71,14 +64,10 @@ namespace BTCPayServer.Controllers
         [HttpPost("{storeId}/onchain/{cryptoCode}/import/{method}")]
         public async Task<IActionResult> UpdateWallet(WalletSetupViewModel vm)
         {
-            var store = HttpContext.GetStoreData();
-            if (store == null)
-                return NotFound();
-
-            var network = vm.CryptoCode == null ? null : _ExplorerProvider.GetNetwork(vm.CryptoCode);
-            if (network == null)
+            var checkResult = IsAvailable(vm.CryptoCode, out var store, out var network);
+            if (checkResult != null)
             {
-                return NotFound();
+                return checkResult;
             }
 
             vm.Network = network;
@@ -254,14 +243,10 @@ namespace BTCPayServer.Controllers
         [HttpGet("{storeId}/onchain/{cryptoCode}/generate/{method?}")]
         public async Task<IActionResult> GenerateWallet(WalletSetupViewModel vm)
         {
-            var store = HttpContext.GetStoreData();
-            if (store == null)
-                return NotFound();
-
-            var network = vm.CryptoCode == null ? null : _ExplorerProvider.GetNetwork(vm.CryptoCode);
-            if (network == null)
+            var checkResult = IsAvailable(vm.CryptoCode, out var store, out var network);
+            if (checkResult != null)
             {
-                return NotFound();
+                return checkResult;
             }
 
             var isHotWallet = vm.Method == WalletSetupMethod.HotWallet;
@@ -299,9 +284,11 @@ namespace BTCPayServer.Controllers
         [HttpPost("{storeId}/onchain/{cryptoCode}/generate/{method}")]
         public async Task<IActionResult> GenerateWallet(string storeId, string cryptoCode, WalletSetupMethod method, GenerateWalletRequest request)
         {
-            var store = HttpContext.GetStoreData();
-            if (store == null)
-                return NotFound();
+            var checkResult = IsAvailable(cryptoCode, out var store, out var network);
+            if (checkResult != null)
+            {
+                return checkResult;
+            }
 
             var (hotWallet, rpcImport) = await CanUseHotWallet();
             if (!hotWallet && request.SavePrivateKeys || !rpcImport && request.ImportKeysToRPC)
@@ -309,7 +296,6 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
-            var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
             var client = _ExplorerProvider.GetExplorerClient(cryptoCode);
             var isImport = method == WalletSetupMethod.Seed;
             var vm = new WalletSetupViewModel
@@ -395,20 +381,10 @@ namespace BTCPayServer.Controllers
         [HttpGet("{storeId}/onchain/{cryptoCode}/generate/confirm")]
         public ActionResult GenerateWalletConfirm(string storeId, string cryptoCode)
         {
-            var store = HttpContext.GetStoreData();
-            if (store == null)
-                return NotFound();
-
-            var network = cryptoCode == null ? null : _ExplorerProvider.GetNetwork(cryptoCode);
-            if (network == null)
+            var checkResult = IsAvailable(cryptoCode, out _, out var network);
+            if (checkResult != null)
             {
-                return NotFound();
-            }
-
-            var wallet = _WalletProvider.GetWallet(network);
-            if (wallet == null)
-            {
-                return NotFound();
+                return checkResult;
             }
 
             TempData[WellKnownTempData.SuccessMessage] =
@@ -420,20 +396,10 @@ namespace BTCPayServer.Controllers
         [HttpGet("{storeId}/onchain/{cryptoCode}/modify")]
         public async Task<IActionResult> ModifyWallet(WalletSetupViewModel vm)
         {
-            var store = HttpContext.GetStoreData();
-            if (store == null)
-                return NotFound();
-
-            var network = vm.CryptoCode == null ? null : _ExplorerProvider.GetNetwork(vm.CryptoCode);
-            if (network == null)
+            var checkResult = IsAvailable(vm.CryptoCode, out var store, out var network);
+            if (checkResult != null)
             {
-                return NotFound();
-            }
-
-            var wallet = _WalletProvider.GetWallet(network);
-            if (wallet == null)
-            {
-                return NotFound();
+                return checkResult;
             }
 
             var derivation = GetExistingDerivationStrategy(vm.CryptoCode, store);
@@ -460,14 +426,10 @@ namespace BTCPayServer.Controllers
         [HttpGet("{storeId}/onchain/{cryptoCode}/delete")]
         public IActionResult DeleteWallet(string storeId, string cryptoCode)
         {
-            var store = HttpContext.GetStoreData();
-            if (store == null)
-                return NotFound();
-
-            var network = cryptoCode == null ? null : _ExplorerProvider.GetNetwork(cryptoCode);
-            if (network == null)
+            var checkResult = IsAvailable(cryptoCode, out _, out var network);
+            if (checkResult != null)
             {
-                return NotFound();
+                return checkResult;
             }
 
             return View("Confirm", new ConfirmModel
@@ -481,20 +443,10 @@ namespace BTCPayServer.Controllers
         [HttpPost("{storeId}/onchain/{cryptoCode}/delete")]
         public async Task<IActionResult> ConfirmDeleteWallet(string storeId, string cryptoCode)
         {
-            var store = HttpContext.GetStoreData();
-            if (store == null)
-                return NotFound();
-
-            var network = cryptoCode == null ? null : _ExplorerProvider.GetNetwork(cryptoCode);
-            if (network == null)
+            var checkResult = IsAvailable(cryptoCode, out var store, out var network);
+            if (checkResult != null)
             {
-                return NotFound();
-            }
-
-            var wallet = _WalletProvider.GetWallet(network);
-            if (wallet == null)
-            {
-                return NotFound();
+                return checkResult;
             }
 
             var derivation = GetExistingDerivationStrategy(cryptoCode, store);
@@ -540,6 +492,14 @@ namespace BTCPayServer.Controllers
             ModelState.Remove(nameof(vm.Config)); // Remove the cached value
 
             return View("ImportWallet/ConfirmAddresses", vm);
+        }
+
+        private ActionResult IsAvailable(string cryptoCode, out StoreData store, out BTCPayNetwork network)
+        {
+            store = HttpContext.GetStoreData();
+            network = cryptoCode == null ? null : _ExplorerProvider.GetNetwork(cryptoCode);
+
+            return store == null || network == null ? NotFound() : null;
         }
     }
 }

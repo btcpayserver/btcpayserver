@@ -426,16 +426,24 @@ namespace BTCPayServer.Controllers
         [HttpGet("{storeId}/onchain/{cryptoCode}/delete")]
         public IActionResult DeleteWallet(string storeId, string cryptoCode)
         {
-            var checkResult = IsAvailable(cryptoCode, out _, out var network);
+            var checkResult = IsAvailable(cryptoCode, out var store, out var network);
             if (checkResult != null)
             {
                 return checkResult;
             }
 
+            var derivation = GetExistingDerivationStrategy(cryptoCode, store);
+            var description =
+                (derivation.IsHotWallet ? "<p class=\"text-danger font-weight-bold\">Please note that this is a hot wallet!</p> " : "") +
+                "<p class=\"text-danger font-weight-bold\">Do not remove the wallet if you have not backed it up!</p>" +
+                "<p class=\"text-left mb-0\">Removing the wallet will erase the wallet data from the server. " +
+                $"The store won't be able to receive {network.CryptoCode} onchain payments until a new wallet is set up.</p>";
+
             return View("Confirm", new ConfirmModel
             {
                 Title = $"Remove {network.CryptoCode} wallet",
-                Description = $"This will erase the wallet data from the server. Do not remove the wallet if you have not backed it up. The store won't be able to receive {network.CryptoCode} onchain payments until a new wallet is set up.",
+                Description = description,
+                DescriptionHtml = true,
                 Action = "Remove"
             });
         }

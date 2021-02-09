@@ -156,7 +156,7 @@ namespace BTCPayServer.Controllers
                 }
                 catch
                 {
-                    ModelState.AddModelError(nameof(vm.DerivationScheme), "Invalid extended public key");
+                    ModelState.AddModelError(nameof(vm.DerivationScheme), "Invalid wallet format");
                     return View(vm.ViewName, vm);
                 }
             }
@@ -237,7 +237,7 @@ namespace BTCPayServer.Controllers
                 }
                 catch
                 {
-                    ModelState.AddModelError(nameof(vm.HintAddress), "Impossible to find a match with this address");
+                    ModelState.AddModelError(nameof(vm.HintAddress), "Impossible to find a match with this address. Are you sure the wallet and address provided are correct and from the same source?");
                     return ConfirmAddresses(vm, strategy);
                 }
 
@@ -363,8 +363,6 @@ namespace BTCPayServer.Controllers
 
             if (!ModelState.IsValid || !(result is RedirectToActionResult))
                 return result;
-
-            TempData.Clear();
 
             if (!isImport)
             {

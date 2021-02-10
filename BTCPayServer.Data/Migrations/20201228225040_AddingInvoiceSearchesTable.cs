@@ -21,8 +21,8 @@ namespace BTCPayServer.Migrations
                         .Annotation("MySql:ValueGeneratedOnAdd", true)
                         .Annotation("Sqlite:Autoincrement", true),
                         // eof manually added
-                    InvoiceDataId = table.Column<string>(nullable: true),
-                    Value = table.Column<string>(nullable: true)
+                    InvoiceDataId = table.Column<string>(maxLength: 255, nullable: true),
+                    Value = table.Column<string>(maxLength: 512, nullable: true)
                 },
                 constraints: table =>
                 {

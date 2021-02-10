@@ -27,8 +27,8 @@ namespace BTCPayServer.Migrations
                 name: "StoreWebhooks",
                 columns: table => new
                 {
-                    StoreId = table.Column<string>(nullable: false),
-                    WebhookId = table.Column<string>(nullable: false)
+                    StoreId = table.Column<string>(maxLength: 50, nullable: false),
+                    WebhookId = table.Column<string>(maxLength: 25, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -71,8 +71,8 @@ namespace BTCPayServer.Migrations
                 name: "InvoiceWebhookDeliveries",
                 columns: table => new
                 {
-                    InvoiceId = table.Column<string>(nullable: false),
-                    DeliveryId = table.Column<string>(nullable: false)
+                    InvoiceId = table.Column<string>(maxLength: 255, nullable: false),
+                    DeliveryId = table.Column<string>(maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {

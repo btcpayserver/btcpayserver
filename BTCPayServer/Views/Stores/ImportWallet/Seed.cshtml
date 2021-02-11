@@ -1,0 +1,35 @@
+@model WalletSetupViewModel
+@addTagHelper *, BundlerMinifier.TagHelpers
+@{
+    Layout = "_LayoutWalletSetup";
+    ViewData["Title"] = "Enter the wallet seed";
+}
+
+@section Navbar {
+    <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="">
+        <vc:icon symbol="back" />
+    </a>
+}
+
+<header class="text-center">
+    <h1>@ViewData["Title"]</h1>
+    <p class="lead text-secondary mt-3">Manually enter your 12 or 24 word recovery seed.</p>
+</header>
+
+<div class="my-5">
+    @if (Model.CanUseHotWallet)
+    {
+        ViewData.Add(nameof(Model.CanUseRPCImport), Model.CanUseRPCImport);
+        ViewData.Add(nameof(Model.Method), Model.Method);
+
+        @await Html.PartialAsync("_GenerateWalletForm", Model.SetupRequest)
+    }
+    else
+    {
+        <p class="mb-0">Please note that creating a wallet is not supported by your instance.</p>
+    }
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

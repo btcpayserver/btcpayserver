@@ -1,0 +1,113 @@
+@model WalletSetupViewModel
+@addTagHelper *, BundlerMinifier.TagHelpers
+@{
+    Layout = "_LayoutWalletSetup";
+    ViewData["Title"] = "Connect your hardware wallet";
+}
+
+@section Navbar {
+    <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="">
+        <vc:icon symbol="back" />
+    </a>
+}
+
+<header class="text-center">
+    <h1>@ViewData["Title"]</h1>
+    <p class="lead text-secondary mt-3">In order to securely connect to your hardware wallet you must first download, install, and run the BTCPay Server Vault.</p>
+</header>
+
+@if (!ViewContext.ModelState.IsValid)
+{
+    <div asp-validation-summary="All" class="text-danger"></div>
+}
+
+<div class="row mt-5 mb-4">
+    <div class="col-md-8 mx-auto">
+        <div id="vault-status" class="mb-4"></div>
+        <div id="vault-xpub" class="mt-4" style="display:none;">
+            <div class="form-group">
+                <label for="addressType">Address type</label>
+                <select id="addressType" name="addressType" class="form-control w-auto">
+                    <option value="segwit">Segwit (Recommended, cheapest fee)</option>
+                    <option value="segwitWrapped">Segwit wrapped (Compatible with old wallets)</option>
+                    <option value="legacy">Legacy (Not recommended)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="accountNumber">Account</label>
+                <select id="accountNumber" name="accountNumber" class="form-control w-auto">
+                    @for (int i = 0; i < 20; i++)
+                    {
+                        <option value="@i">@i</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <div>
+            <button type="submit" id="vault-confirm" class="btn btn-primary" style="display:none;"></button>
+            <button type="button" id="vault-retry" class="btn btn-secondary" style="display:none;">Retry</button>
+        </div>
+    </div>
+</div>
+
+<form method="post" id="walletInfo" style="display:none;">
+    <input asp-for="Config" type="hidden" />
+    <input asp-for="CryptoCode" type="hidden" />
+    <input asp-for="AccountKey" type="hidden" />
+    <input asp-for="Source" type="hidden" value="Vault"/>
+    <input asp-for="DerivationSchemeFormat" type="hidden" value="BTCPay" />
+
+    <div class="row mb-5">
+        <div class="col-md-8 mx-auto">
+            <h4 class="mb-3">Public Key Information</h4>
+
+            <div class="form-group">
+                <label asp-for="DerivationScheme"></label>
+                <textarea asp-for="DerivationScheme" class="form-control store-derivation-scheme text-monospace py-2" rows="3" readonly></textarea>
+            </div>
+            <div class="form-group">
+                <label asp-for="RootFingerprint"></label>
+                <input asp-for="RootFingerprint" class="form-control" readonly />
+            </div>
+            <div class="form-group">
+                <label asp-for="KeyPath"></label>
+                <input asp-for="KeyPath" class="form-control" readonly />
+            </div>
+            <button name="command" type="submit" class="btn btn-primary" value="save" id="Continue">Continue</button>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+    @await Html.PartialAsync("VaultElements")
+
+    <script src="~/js/vaultbridge.js" defer asp-append-version="true"></script>
+    <script src="~/js/vaultbridge.ui.js" defer asp-append-version="true"></script>
+
+    <script type="text/javascript">
+        window.addEventListener("load", async () => {
+            const wsPath = "@Url.Action("VaultBridgeConnection", "Vault", new {cryptoCode = Model.CryptoCode})";
+            const wsProto = location.protocol.replace(/^http/, "ws");
+            const vaultUI = new vaultui.VaultBridgeUI(`${wsProto}//${location.host}${wsPath}`);
+
+            document.getElementById("vault-status").innerHTML = document.getElementById("VaultConnection").innerHTML;
+
+            window.addEventListener("beforeunload", () => {
+                vaultUI.closeBridge();
+            });
+
+            while (!await vaultUI.askForDevice() || !await vaultUI.askForXPubs()) {};
+
+            const { xpub: { strategy, fingerprint, accountKey, keyPath } } = vaultUI;
+
+            document.getElementById("DerivationScheme").value = strategy;
+            document.getElementById("RootFingerprint").value = fingerprint;
+            document.getElementById("AccountKey").value = accountKey;
+            document.getElementById("KeyPath").value = keyPath;
+
+            document.getElementById("walletInfo").style = null;
+        });
+    </script>
+}
+

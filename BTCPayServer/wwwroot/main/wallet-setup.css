@@ -1,0 +1,118 @@
+body {
+    color: var(--btcpay-wizard-color);
+    background-color: var(--btcpay-wizard-bg);
+}
+
+#wizard-navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+@media (max-width: 575px) {
+    #wizard-navbar {
+        margin-top: -35px;
+    }
+}
+@media (min-width: 576px) {
+    #wizard-navbar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        padding: 30px;
+    }
+}
+
+#wizard-navbar a {
+    color: var(--btcpay-body-color);
+    background-color: var(--btcpay-border-color-light);
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+}
+
+#wizard-navbar a svg.icon {
+    width: 19px;
+    height: 16px;
+}
+
+#wizard-navbar a:hover {
+    background-color: var(--btcpay-border-color-medium);
+}
+
+#wizard-navbar .cancel {
+    margin-left: auto;
+}
+
+.list-group-item-wallet-setup {
+    display: flex;
+    padding: 0;
+}
+
+.list-group-item-wallet-setup.hide-when-js {
+    display: flex !important;
+}
+
+.list-group-item-wallet-setup:active,
+.list-group-item-wallet-setup.active {
+    background-color: transparent;
+}
+
+.list-group-item-wallet-setup .image {
+    display: flex;
+    flex: 0 0 90px;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+}
+
+.list-group-item-wallet-setup .image .icon,
+.list-group-item-wallet-setup .image .icon-new-wallet,
+.list-group-item-wallet-setup .image .icon-existing-wallet {
+    height: 48px;
+}
+
+.list-group-item-wallet-setup .image .icon-new-wallet,
+.list-group-item-wallet-setup .image .icon-existing-wallet,
+.list-group-item-wallet-setup .image .icon-xpub,
+.list-group-item-wallet-setup .image .icon-seed {
+    width: 48px;
+}
+
+.list-group-item-wallet-setup .image .icon-hardware-wallet {
+    width: 40px;
+}
+.list-group-item-wallet-setup .image .icon-scan-qr {
+    width: 32px;
+}
+
+.list-group-item-wallet-setup .image .icon-wallet-file {
+    width: 24px;
+}
+
+.list-group-item-wallet-setup .content {
+    flex: 1;
+    padding: 1.5rem;
+}
+
+.list-group-item-wallet-setup .content .badge {
+    position: relative;
+    top: -1px;
+    font-size: 60%;
+    color: var(--btcpay-color-white);
+}
+
+.list-group-item-wallet-setup .image + .content {
+    padding-left: .5rem;
+}
+
+.list-group-item-wallet-setup .icon-caret-right {
+    width: 24px;
+    height: 24px;
+    align-self: center;
+    margin-right: 1.5rem;
+}

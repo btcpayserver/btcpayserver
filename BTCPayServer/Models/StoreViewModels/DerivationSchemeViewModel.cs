@@ -8,15 +8,8 @@ namespace BTCPayServer.Models.StoreViewModels
     public class DerivationSchemeViewModel
     {
 
-        public DerivationSchemeViewModel()
-        {
-        }
-
         [Display(Name = "Derivation scheme")]
-        public string DerivationScheme
-        {
-            get; set;
-        }
+        public string DerivationScheme { get; set; }
 
         public List<(string KeyPath, string Address, RootedKeyPath RootedKeyPath)> AddressSamples
         {
@@ -25,6 +18,7 @@ namespace BTCPayServer.Models.StoreViewModels
 
         public string CryptoCode { get; set; }
         public string KeyPath { get; set; }
+        [Display(Name = "Root fingerprint")]
         public string RootFingerprint { get; set; }
         [Display(Name = "Hint address")]
         public string HintAddress { get; set; }
@@ -33,16 +27,20 @@ namespace BTCPayServer.Models.StoreViewModels
 
         public KeyPath RootKeyPath { get; set; }
 
-        [Display(Name = "Wallet File")]
+        [Display(Name = "Wallet file")]
         public IFormFile WalletFile { get; set; }
-        [Display(Name = "Wallet File Content")]
+        [Display(Name = "Wallet file content")]
         public string WalletFileContent { get; set; }
         public string Config { get; set; }
         public string Source { get; set; }
+        [Display(Name = "Derivation scheme format")]
         public string DerivationSchemeFormat { get; set; }
+        [Display(Name = "Account key")]
         public string AccountKey { get; set; }
         public BTCPayNetwork Network { get; set; }
+        [Display(Name = "Can use hot wallet")]
         public bool CanUseHotWallet { get; set; }
+        [Display(Name = "Can use RPC import")]
         public bool CanUseRPCImport { get; set; }
 
         public RootedKeyPath GetAccountKeypath()

@@ -1,0 +1,36 @@
+﻿@{
+    Layout = "_LayoutSimple";
+    ViewData["Title"] = ViewData["Title"] ?? "Wallet Setup";
+}
+
+@section HeadScripts {
+    @await RenderSectionAsync("HeadScripts", false)
+}
+@section HeaderContent {
+    @await RenderSectionAsync("HeaderContent", false)
+    <link href="~/main/wallet-setup.css" rel="stylesheet" asp-append-version="true" />
+}
+@section Scripts {
+    @await RenderSectionAsync("Scripts", false)
+}
+
+<nav id="wizard-navbar">
+    @RenderSection("Navbar", false)
+
+    <a asp-controller="Stores" asp-action="UpdateStore" asp-route-storeId="@Context.GetRouteValue("storeId")" class="cancel">
+        <vc:icon symbol="close" />
+    </a>
+</nav>
+
+<div class="row justify-content-md-center mt-5">
+    <main class="col-md-10 col-lg-8 col-xl-6">
+        @if (TempData.HasStatusMessage())
+        {
+            <partial name="_StatusMessage"/>
+        }
+        @RenderBody()
+    </main>
+</div>
+
+
+

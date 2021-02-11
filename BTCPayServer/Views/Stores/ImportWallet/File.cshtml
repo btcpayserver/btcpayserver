@@ -1,0 +1,58 @@
+@model WalletSetupViewModel
+@addTagHelper *, BundlerMinifier.TagHelpers
+@{
+    Layout = "_LayoutWalletSetup";
+    ViewData["Title"] = "Import your wallet file";
+}
+
+@section Navbar {
+    <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="">
+        <vc:icon symbol="back" />
+    </a>
+}
+
+<header class="text-center">
+    <h1>@ViewData["Title"]</h1>
+    <p class="lead text-secondary mt-3">Upload the file exported from your wallet.</p>
+</header>
+
+<form method="post" enctype="multipart/form-data" class="my-5">
+    <div class="form-group">
+        <label asp-for="WalletFile"></label>
+        <input asp-for="WalletFile" type="file" class="form-control-file" required>
+        <span asp-validation-for="WalletFile" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Continue</button>
+</form>
+
+<table class="table table-sm">
+    <thead>
+    <tr>
+        <th>Wallet</th>
+        <th>Instructions</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td class="text-nowrap">Cobo Vault</td>
+        <td>Settings ❯ Watch-Only Wallet ❯ BTCPay ❯ Export Wallet</td>
+    </tr>
+    <tr>
+        <td>ColdCard</td>
+        <td>Advanced ❯ MicroSD Card ❯ Electrum Wallet</td>
+    </tr>
+    <tr>
+        <td>Electrum</td>
+        <td>File ❯ Save backup (not encrypted with a password)</td>
+    </tr>
+    <tr>
+        <td>Wasabi</td>
+        <td>Tools ❯ Wallet Manager ❯ Open Wallets Folder</td>
+    </tr>
+     <tr>
+        <td>Specter</td>
+        <td><kbd>Wallet ❯ Settings ❯ Export ❯ Export To Wallet Software ❯ Save wallet file</kbd></td>
+    </tr>
+    </tbody>
+</table>

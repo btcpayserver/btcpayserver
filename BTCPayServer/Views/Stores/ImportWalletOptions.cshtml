@@ -1,0 +1,123 @@
+@model WalletSetupViewModel
+@addTagHelper *, BundlerMinifier.TagHelpers
+@{
+    Layout = "_LayoutWalletSetup";
+    ViewData["Title"] = $"Import {Model.CryptoCode} Wallet";
+}
+
+@section Navbar {
+    <a asp-controller="Stores" asp-action="SetupWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
+        <vc:icon symbol="back" />
+    </a>
+}
+
+<header class="text-center">
+    <h1>Choose your import method</h1>
+    <p class="lead text-secondary mt-3">The following methods assume that you already have an existing&nbsp;wallet created and backed up.</p>
+</header>
+
+@if (Model.CryptoCode == "BTC")
+{
+    <div class="mt-5">
+        <div class="list-group">
+            <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="hardware" id="import-hardware-link" class="list-group-item list-group-item-action list-group-item-wallet-setup only-for-js">
+                <div class="image">
+                    <vc:icon symbol="hardware-wallet"/>
+                </div>
+                <div class="content">
+                    <h4>
+                        <span class="mr-2">Connect hardware&nbsp;wallet</span>
+                        <span class="badge bg-primary">Recommended</span>
+                    </h4>
+                    <p class="mb-0 text-secondary">Import your keys using our Vault application</p>
+                </div>
+                <vc:icon symbol="caret-right" />
+            </a>
+            <noscript>
+                <div class="list-group-item list-group-item-wallet-setup disabled walletsetupcss">
+                    <div class="image">
+                        <vc:icon symbol="hardware-wallet"/>
+                    </div>
+                    <div class="content">
+                        <h4>
+                            <span class="mr-2">Connect hardware wallet</span>
+                            <span class="badge bg-primary">Recommended</span>
+                        </h4>
+                        <p class="mb-0">Please enable JavaScript for this option to be available</p>
+                    </div>
+                </div>
+            </noscript>
+        </div>
+    </div>
+}
+
+<div class="list-group mt-4">
+    <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="file" id="import-file-link" class="list-group-item list-group-item-action list-group-item-wallet-setup">
+        <div class="image">
+            <vc:icon symbol="wallet-file"/>
+        </div>
+        <div class="content">
+            <h4>
+                <span class="mr-2">Import wallet file</span>
+                <span class="badge bg-primary">Recommended</span>
+            </h4>
+            <p class="mb-0 text-secondary">Upload a file exported from your wallet</p>
+        </div>
+        <vc:icon symbol="caret-right" />
+    </a>
+</div>
+
+<div class="list-group mt-4">
+    <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="xpub" id="import-xpub-link" class="list-group-item list-group-item-action list-group-item-wallet-setup">
+        <div class="image">
+            <vc:icon symbol="xpub"/>
+        </div>
+        <div class="content">
+            <h4>Enter extended public key</h4>
+            <p class="mb-0 text-secondary">Input the key string manually</p>
+        </div>
+        <vc:icon symbol="caret-right" />
+    </a>
+</div>
+
+<div class="list-group mt-4">
+    <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="scan" id="import-scan-link" class="list-group-item list-group-item-action list-group-item-wallet-setup only-for-js">
+        <div class="image">
+            <vc:icon symbol="scan-qr"/>
+        </div>
+        <div class="content">
+            <h4>Scan wallet QR code</h4>
+            <p class="mb-0 text-secondary">Supported by BlueWallet, Cobo Vault and Specter DIY</p>
+        </div>
+        <vc:icon symbol="caret-right" />
+    </a>
+    <noscript>
+        <div class="list-group-item list-group-item-action list-group-item-wallet-setup disabled hide-when-js">
+            <div class="image">
+                <vc:icon symbol="scan-qr"/>
+            </div>
+            <div class="content">
+                <h4>Scan wallet QR code</h4>
+                <p class="mb-0">Please enable JavaScript for this option to be available</p>
+            </div>
+        </div>
+    </noscript>
+</div>
+
+<div class="list-group mt-4">
+    <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="seed" id="import-seed-link" class="list-group-item list-group-item-action list-group-item-wallet-setup">
+        <div class="image">
+            <vc:icon symbol="seed"/>
+        </div>
+        <div class="content">
+            <h4>
+                <span class="mr-2">Enter wallet seed</span>
+                <span class="badge bg-danger" data-toggle="tooltip" data-placement="top" title="You really should not type your seed into a device that is connected to the internet.">Not recommended <span class="fa fa-question-circle-o" title="More information..."></span></span>
+            </h4>
+            <p class="mb-0 text-secondary">Provide the 12 or 24 word recovery seed</p>
+        </div>
+        <vc:icon symbol="caret-right" />
+    </a>
+</div>
+
+

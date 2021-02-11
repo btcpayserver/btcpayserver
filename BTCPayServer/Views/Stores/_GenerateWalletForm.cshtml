@@ -1,0 +1,123 @@
+@using NBitcoin
+@model NBXplorer.Models.GenerateWalletRequest
+
+@{
+    var method = ViewData["Method"];
+    var isImport = method is WalletSetupMethod.Seed;
+    var isHotWallet = method is WalletSetupMethod.HotWallet;
+    var canUseHotWallet = ViewData["CanUseHotWallet"] is true;
+    var canUseRpcImport = ViewData["CanUseRPCImport"] is true;
+}
+
+@if (!User.IsInRole(Roles.ServerAdmin))
+{
+    <div class="alert alert-warning">
+        You are not an admin on this server. While you are able to import or generate a wallet via seed with
+        your account, please understand that you are trusting the server admins not just with your
+        <a href="https://docs.btcpayserver.org/ThirdPartyHosting/#privacy-concerns" target="_blank" class="alert-link">privacy</a>
+        but also with <a href="https://docs.btcpayserver.org/ThirdPartyHosting/#trust-concerns" target="_blank"  class="alert-link">trivial access to your funds.</a>
+        If you NEED to use this feature, please reconsider hosting your own BTCPay Server instance.
+    </div>
+}
+
+<form id="generate-wallet-form" method="post" asp-action="GenerateWallet" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-cryptoCode="@Context.GetRouteValue("cryptoCode")" asp-route-method="@method">
+    @if (isImport)
+    {
+        <div class="form-group">
+            <label asp-for="ExistingMnemonic">Wallet Recovery Seed</label>
+            <textarea asp-for="ExistingMnemonic" class="form-control text-monospace py-2" rows="2" autocomplete="off"></textarea>
+            <span asp-validation-for="ExistingMnemonic" class="text-danger"></span>
+        </div>
+    }
+
+    <div class="form-group">
+        <label asp-for="ScriptPubKeyType">Address type</label>
+        <select class="form-control w-auto" asp-for="ScriptPubKeyType">
+            <option value="@ScriptPubKeyType.Segwit">Segwit (Recommended, cheapest transaction fee)</option>
+            <option value="@ScriptPubKeyType.SegwitP2SH">Segwit wrapped (Compatible with old wallets)</option>
+            <option value="@ScriptPubKeyType.Legacy">Legacy (Not recommended)</option>
+        </select>
+        <span asp-validation-for="ScriptPubKeyType" class="text-danger"></span>
+    </div>
+
+    @if (isImport && canUseHotWallet)
+    {
+        <div class="form-group mt-5">
+            <label asp-for="SavePrivateKeys">Is hot wallet</label>
+            <input type="checkbox" asp-for="SavePrivateKeys" class="btcpay-toggle ml-2" />
+            <span asp-validation-for="SavePrivateKeys" class="text-danger"></span>
+            <p class="text-muted pt-2">
+                If checked, each private key associated with an address generated will be stored as metadata
+                and would be accessible to anyone with admin access to your server. Enable at your own risk!
+            </p>
+        </div>
+    }
+    else
+    {
+        <input asp-for="SavePrivateKeys" type="hidden" value="@isHotWallet" />
+    }
+
+    <div class="mb-4">
+        <button class="btn btn-link px-0" type="button" id="advanced-settings-button" data-toggle="collapse" data-target="#advanced-settings" aria-expanded="false" aria-controls="advanced-settings">
+            Advanced settings
+        </button>
+        <div id="advanced-settings" class="collapse @(string.IsNullOrEmpty(Model.Passphrase) && !Model.ImportKeysToRPC ? "" : "show")">
+            <div class="pt-3 pb-1">
+                @if (isImport) // hide account option when creating a wallet
+                {
+                    <div class="form-group mb-5">
+                        <label asp-for="AccountNumber">Account</label>
+                        <select asp-for="AccountNumber" class="form-control w-auto">
+                            @for (var i = 0; i < 20; i++)
+                            {
+                                <option value="@i">@i</option>
+                            }
+                        </select>
+                        <span asp-validation-for="AccountNumber" class="text-danger"></span>
+                    </div>
+                }
+                <div class="form-group">
+                    <label asp-for="Passphrase">Optional passphrase (BIP39)</label>
+                    <input type="text" asp-for="Passphrase" class="form-control" autocomplete="off"/>
+                    <span asp-validation-for="Passphrase" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label for="passphrase_conf">Confirm passphrase</label>
+                    <input type="text" name="passphrase_conf" id="passphrase_conf" class="form-control"/>
+                    <span class="text-danger field-validation-valid" id="passphrase_conf_validation"></span>
+                </div>
+
+                @if (canUseRpcImport)
+                {
+                    <div class="form-group mt-5">
+                        <label asp-for="ImportKeysToRPC">Import keys to RPC</label>
+                        <input type="checkbox" asp-for="ImportKeysToRPC" class="btcpay-toggle ml-2" />
+                        <span asp-validation-for="ImportKeysToRPC" class="text-danger"></span>
+                        <p class="text-muted pt-2">
+                            Each address generated will be imported into the node wallet and you can view your balance through the node.
+                            @if (isImport || isHotWallet)
+                            {
+                                <span>When this is enabled for a hot wallet, you are also able to use the node wallet to spend.</span>
+                            }
+                        </p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary" id="Continue">Continue</button>
+</form>
+
+<script type="text/javascript">
+    document.getElementById("generate-wallet-form").addEventListener("submit", event => {
+        const $form = event.currentTarget;
+
+        if ($form.elements["passphrase_conf"].value !== $form.elements["Passphrase"].value) {
+            const $validation = document.getElementById("passphrase_conf_validation");
+            $validation.classList.remove("field-validation-valid");
+            $validation.innerText = "Invalid passphrase confirmation";
+            event.preventDefault();
+        }
+    });
+</script>

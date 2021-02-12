@@ -74,3 +74,12 @@ If you still have issues, try to restart docker.
 Run `dotnet user-secrets set RunSeleniumInBrowser true` to run tests in browser.
 
 To switch back to headless mode (recommended) you can run `dotnet user-secrets remove RunSeleniumInBrowser`.
+
+### Session not created: This version of ChromeDriver only supports Chrome version 88
+
+When you run tests for selenium, you may end up with this error.
+This happen when we update the selenium packages on BTCPay Server while you did not update your chrome version.
+
+If you want to use a older chrome driver on [this page](https://chromedriver.chromium.org/downloads) then point to it with
+
+`dotnet user-secrets set ChromeDriverDirectory "path/to/the/driver/directory"`

@@ -46,6 +46,10 @@ namespace BTCPayServer.Tests
             var runInBrowser = config["RunSeleniumInBrowser"] == "true";
             // Reset this using `dotnet user-secrets remove RunSeleniumInBrowser`
 
+
+            var chromeDriverPath = config["ChromeDriverDirectory"] ??
+                                    (Server.PayTester.InContainer ? "/usr/bin" : Directory.GetCurrentDirectory());
+
             var options = new ChromeOptions();
             if (Server.PayTester.InContainer)
             {
@@ -58,7 +62,7 @@ namespace BTCPayServer.Tests
             }
             options.AddArguments($"window-size={windowSize.Width}x{windowSize.Height}");
             options.AddArgument("shm-size=2g");
-            Driver = new ChromeDriver(Server.PayTester.InContainer ? "/usr/bin" : Directory.GetCurrentDirectory(), options);
+            Driver = new ChromeDriver(chromeDriverPath, options);
 
             if (runInBrowser)
             {
@@ -74,8 +78,13 @@ namespace BTCPayServer.Tests
             Driver.AssertNoError();
         }
 
-        internal IWebElement FindAlertMessage(StatusMessageModel.StatusSeverity severity = StatusMessageModel.StatusSeverity.Success) =>
-            Driver.FindElement(By.ClassName($"alert-{StatusMessageModel.ToString(severity)}"));
+        internal IWebElement FindAlertMessage(StatusMessageModel.StatusSeverity severity = StatusMessageModel.StatusSeverity.Success)
+        {
+            var el = Driver.FindElements(By.ClassName($"alert-{StatusMessageModel.ToString(severity)}")).FirstOrDefault(e => e.Displayed);
+            if (el is null)
+                throw new NoSuchElementException($"Unable to find alert-{StatusMessageModel.ToString(severity)}");
+            return el;
+        }
 
         public static readonly TimeSpan ImplicitWait = TimeSpan.FromSeconds(5);
         public string Link(string relativeLink)

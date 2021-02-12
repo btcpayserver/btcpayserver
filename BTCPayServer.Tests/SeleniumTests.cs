@@ -9,8 +9,10 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Tests.Logging;
+using BTCPayServer.Views.Manage;
 using BTCPayServer.Views.Server;
 using BTCPayServer.Views.Wallets;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitcoin.DataEncoders;
@@ -84,6 +86,45 @@ namespace BTCPayServer.Tests
                 s.FindAlertMessage();
                 seedEl = s.Driver.FindElement(By.Id("SeedTextArea"));
                 Assert.Contains("Seed removed", seedEl.Text, StringComparison.OrdinalIgnoreCase);
+            }
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Selenium", "Selenium")]
+        public async Task CanChangeUserMail()
+        {
+            using (var s = SeleniumTester.Create())
+            {
+                await s.StartAsync();
+
+                var tester = s.Server;
+                var u1 = tester.NewAccount();
+                u1.GrantAccess();
+                await u1.MakeAdmin(false);
+
+                var u2 = tester.NewAccount();
+                u2.GrantAccess();
+                await u2.MakeAdmin(false);
+
+                s.GoToLogin();
+                s.Login(u1.RegisterDetails.Email, u1.RegisterDetails.Password);
+                s.GoToProfile(ManageNavPages.Index);
+                s.Driver.FindElement(By.Id("Email")).Clear();
+                s.Driver.FindElement(By.Id("Email")).SendKeys(u2.RegisterDetails.Email);
+                s.Driver.FindElement(By.Id("save")).Click();
+
+                s.FindAlertMessage(Abstractions.Models.StatusMessageModel.StatusSeverity.Error);
+
+                s.GoToProfile(ManageNavPages.Index);
+                s.Driver.FindElement(By.Id("Email")).Clear();
+                var changedEmail = Guid.NewGuid() + "@lol.com";
+                s.Driver.FindElement(By.Id("Email")).SendKeys(changedEmail);
+                s.Driver.FindElement(By.Id("save")).Click();
+                s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success);
+
+                var manager = tester.PayTester.GetService<UserManager<ApplicationUser>>();
+                Assert.NotNull(await manager.FindByNameAsync(changedEmail));
+                Assert.NotNull(await manager.FindByEmailAsync(changedEmail));
             }
         }
 

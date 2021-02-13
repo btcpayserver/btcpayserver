@@ -17,8 +17,8 @@ namespace BTCPayServer
                 UriScheme = "htmlcoin",
                 DefaultRateRules = new[]
                 {
-                                "HTML_X = HTML_BTC * HTML_X",
-                                "HTML_BTC = coingecko(HTML_BTC)"
+                                "HTML_X = HTML_USD",
+                                "HTML_USD = hitbtc(HTML_USD)"
                 },
                 CryptoImagePath = "imlegacy/althash.png",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),

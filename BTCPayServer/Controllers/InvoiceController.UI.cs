@@ -425,30 +425,6 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(ListInvoices));
         }
 
-        [AllowAnonymous]
-        [HttpPost("i/{invoiceId}/{paymentMethodId}/activate")]
-        [AcceptMediaTypeConstraint("application/bitcoin-paymentrequest", false)]
-        [XFrameOptionsAttribute(null)]
-        [ReferrerPolicyAttribute("origin")]
-        public async Task<IActionResult> ActivatePaymentMethod(string invoiceId, string paymentMethodId)
-        {
-            var paymentMethodParsed = PaymentMethodId.Parse(paymentMethodId);
-
-            var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
-            if (invoice == null)
-                return NotFound();
-            var store = await _StoreRepository.FindStore(invoice.StoreId);
-            if (store is null)
-            {
-                return NotFound();
-            }
-
-            await _InvoiceRepository.ActivateInvoicePaymentMethod(_EventAggregator, _NetworkProvider,
-                _paymentMethodHandlerDictionary, store, invoice, paymentMethodParsed);
-
-            return Ok();
-        }
-
         [HttpGet]
         [Route("i/{invoiceId}")]
         [Route("i/{invoiceId}/{paymentMethodId}")]
@@ -528,9 +504,9 @@ namespace BTCPayServer.Controllers
             {
                 if (!isDefaultPaymentId)
                     return null;
-                var paymentMethodTemp = invoice.GetPaymentMethods()
-                                               .Where(c => paymentMethodId.CryptoCode == c.GetId().CryptoCode)
-                                               .FirstOrDefault();
+                var paymentMethodTemp = invoice
+                    .GetPaymentMethods()
+                    .FirstOrDefault(c => paymentMethodId.CryptoCode == c.GetId().CryptoCode);
                 if (paymentMethodTemp == null)
                     paymentMethodTemp = invoice.GetPaymentMethods().First();
                 network = paymentMethodTemp.Network;
@@ -539,6 +515,12 @@ namespace BTCPayServer.Controllers
 
             var paymentMethod = invoice.GetPaymentMethod(paymentMethodId);
             var paymentMethodDetails = paymentMethod.GetPaymentMethodDetails();
+            if (!paymentMethodDetails.Activated)
+            {
+                await _InvoiceRepository.ActivateInvoicePaymentMethod(_EventAggregator, _NetworkProvider,
+                    _paymentMethodHandlerDictionary, store, invoice, paymentMethod.GetId());
+                return await GetInvoiceModel(invoiceId, paymentMethodId, lang);
+            }
             var dto = invoice.EntityToDTO();
             var storeBlob = store.GetStoreBlob();
             var accounting = paymentMethod.Calculate();

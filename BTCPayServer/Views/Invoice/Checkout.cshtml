@@ -170,7 +170,6 @@
             emailAddressInputDirty: false,
             emailAddressInputInvalid: false,
             emailAddressFormSubmitting: false,
-            activatingPaymentMethod: false,
             lineItemsExpanded: false,
             changingCurrencies: false,
             loading: true,
@@ -209,31 +208,6 @@
             this.loading = false;
         },
         methods: {
-            activatePaymentMethod: function(){
-                var self = this;
-                if(this.srvModel.activated){
-                    this.activatingPaymentMethod = false;
-                    return;
-                }
-                this.activatingPaymentMethod = true;
-                var url = window.location.pathname;
-                if(url.endsWith("/")) {
-                    url = url.substr(0, url.length-1);
-                }
-                if (url.toLowerCase().indexOf(this.srvModel.paymentMethodId.toLowerCase()) === -1){
-                    url += "/"+ this.srvModel.paymentMethodId
-                }
-                url +="/activate";
-                 $.ajax({
-                     url: url,
-                     type: "POST",
-                 }).done(function() {
-                   self.fetchData();
-                 })
-                 .always(function () {
-                     self.activatingPaymentMethod = false;
-                 });
-            },
             onlyExpandLineItems: function() {
                 if (!this.lineItemsExpanded) {
                     this.toggleLineItems();

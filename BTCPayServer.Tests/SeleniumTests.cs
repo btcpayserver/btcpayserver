@@ -1053,28 +1053,5 @@ namespace BTCPayServer.Tests
                 checkboxElement.Click();
             }
         }
-        
-        [Fact]
-        [Trait("Selenium", "Selenium")]
-        public async Task CanUseLazyPaymentMethods()
-        {
-            using (var s = SeleniumTester.Create())
-            {
-                await s.StartAsync();
-                s.RegisterNewUser(true);
-                s.GoToStores();
-                var store = s.CreateNewStore();
-                s.AddDerivationScheme();
-                s.GoToStore(store.storeId, StoreNavPages.Checkout);
-                s.SetCheckbox(s, "LazyPaymentMethods", true);
-                s.Driver.FindElement(By.Name("command")).Click();
-                s.FindAlertMessage(Abstractions.Models.StatusMessageModel.StatusSeverity.Success);
-                var invoice = s.CreateInvoice(store.storeName);
-                s.GoToInvoiceCheckout(invoice);
-                s.Driver.FindElement(By.Id("activate-payment-method")).Click();
-                s.Driver.AssertElementNotFound(By.Id("activate-payment-method"));
-                s.Driver.FindElement(By.ClassName("payment__details__instruction__open-wallet"));
-            }
-        }
     }
 }

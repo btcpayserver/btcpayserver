@@ -35,6 +35,13 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Payments
             EthereumSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod,
             StoreData store, EthereumBTCPayNetwork network, object preparePaymentObject)
         {
+            if (preparePaymentObject is null)
+            {
+                return new EthereumLikeOnChainPaymentMethodDetails()
+                {
+                    Activated = false
+                };
+            }
             if (!_ethereumService.IsAvailable(network.CryptoCode, out var error))
                 throw new PaymentMethodUnavailableException(error??$"Not configured yet");
             var invoice = paymentMethod.ParentEntity;
@@ -47,7 +54,7 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Payments
             
             return new EthereumLikeOnChainPaymentMethodDetails()
             {
-                DepositAddress = address.Address, Index = address.Index, XPub = address.XPub
+                DepositAddress = address.Address, Index = address.Index, XPub = address.XPub, Activated = true
             };
         }
 

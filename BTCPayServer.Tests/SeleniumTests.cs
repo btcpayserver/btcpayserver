@@ -1051,6 +1051,7 @@ namespace BTCPayServer.Tests
             if (checkboxElement.Selected != subtract)
             {
                 checkboxElement.Click();
+            }
         }
         
         [Fact]
@@ -1067,7 +1068,7 @@ namespace BTCPayServer.Tests
                 s.GoToStore(store.storeId, StoreNavPages.Checkout);
                 s.SetCheckbox(s, "LazyPaymentMethods", true);
                 s.Driver.FindElement(By.Name("command")).Click();
-                s.AssertHappyMessage();
+                s.FindAlertMessage(Abstractions.Models.StatusMessageModel.StatusSeverity.Success);
                 var invoice = s.CreateInvoice(store.storeName);
                 s.GoToInvoiceCheckout(invoice);
                 s.Driver.FindElement(By.Id("activate-payment-method")).Click();

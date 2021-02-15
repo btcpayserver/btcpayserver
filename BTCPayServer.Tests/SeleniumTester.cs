@@ -17,6 +17,7 @@ using Microsoft.Extensions.Configuration;
 using NBitcoin;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium.Support.UI;
 using Xunit;
 
 namespace BTCPayServer.Tests
@@ -151,10 +152,13 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.CssSelector($"#ScriptPubKeyType option[value={format}]")).Click();
             Driver.FindElement(By.Id("advanced-settings-button")).Click();
             SetCheckbox(Driver.FindElement(By.Id("ImportKeysToRPC")), importkeys);
-            Driver.FindElement(By.Id("advanced-settings-button")).Click(); // close settings again , otherwise the button might not be clickable for Selenium
 
-            Logs.Tester.LogInformation("Trying to click Continue button");
-            Driver.FindElement(By.Id("Continue")).Click();
+            // close settings again, otherwise the button might not be clickable for Selenium
+            Driver.FindElement(By.Id("advanced-settings-button")).Click();
+            var continueButton = Driver.FindElement(By.Id("Continue"));
+            new WebDriverWait(Driver, ImplicitWait).Until(driver => continueButton.Displayed && continueButton.Enabled);
+            continueButton.Click();
+
             // Seed backup page
             FindAlertMessage();
             if (string.IsNullOrEmpty(seed))

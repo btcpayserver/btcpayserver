@@ -977,8 +977,7 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-actions")).Click();
                 s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-approve-pay")).Click();
                 
-                s.Driver.ScrollTo(By.Id("SendMenu"));
-                s.Driver.FindElement(By.Id("SendMenu")).ForceClick();
+                s.Driver.FindElement(By.Id("SendMenu")).Click();
                 s.Driver.FindElement(By.CssSelector("button[value=nbx-seed]")).Click();
                 s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).Click();
 

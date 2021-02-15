@@ -11,6 +11,7 @@ using BTCPayServer.Configuration;
 using McMaster.NETCore.Plugins;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
@@ -31,7 +32,10 @@ namespace BTCPayServer.Plugins
             var pluginsFolder = new DataDirectories().Configure(config).PluginDir;
             var plugins = new List<IBTCPayServerPlugin>();
 
-
+            serviceCollection.Configure<KestrelServerOptions>(options =>
+            {
+                options.Limits.MaxRequestBodySize = int.MaxValue; // if don't set default value is: 30 MB
+            });
             _logger.LogInformation($"Loading plugins from {pluginsFolder}");
             Directory.CreateDirectory(pluginsFolder);
             ExecuteCommands(pluginsFolder);

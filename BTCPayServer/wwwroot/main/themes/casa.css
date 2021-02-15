@@ -54,20 +54,23 @@
   --btcpay-color-dark-text:          var(--btcpay-color-neutral-800);
 
   /* Color definitions for specific sections - try to reuse colors defined above */
-  --btcpay-body-bg: var(--btcpay-brand-darkest);
   --btcpay-bg-dark: var(--btcpay-brand-dark);
   --btcpay-bg-tile: var(--btcpay-brand-tertiary);
   --btcpay-bg-cta:  var(--btcpay-brand-tertiary);
 
+  --btcpay-body-bg: var(--btcpay-brand-darkest);
   --btcpay-body-color: var(--btcpay-color-neutral-100);
   --btcpay-body-color-link: var(--btcpay-color-primary);
   --btcpay-body-color-link-accent: var(--btcpay-color-primary-accent);
 
+  --btcpay-header-bg: var(--btcpay-brand-dark);
+
+  --btcpay-wizard-bg: var(--btcpay-body-bg);
+  --btcpay-wizard-color: var(--btcpay-body-color);
+
   --btcpay-nav-color-link-accent: var(--btcpay-color-neutral-100);
 
-  --btcpay-header-bg: var(--btcpay-brand-dark);
   --btcpay-footer-bg: var(--btcpay-brand-darkest);
-
   --btcpay-footer-color: var(--btcpay-color-neutral-600);
 
   --btcpay-preformatted-text-color: var(--btcpay-color-white);

@@ -84,8 +84,7 @@
                                 <div class="col-sm-3">
                                     <label>Custom price</label>
                                     <select class="form-control" v-model="editingItem.custom">
-                                        <option v-bind:value="false">No</option>
-                                        <option v-bind:value="true">Yes</option>
+                                        <option v-for="option in customPriceOptions" :value="option.value">{{option.text}}</option>
                                     </select>
                                 </div>
                             </div>
@@ -134,6 +133,10 @@ $(function() {
             errors: [],
             items: [],
             editingItem: null,
+            customPriceOptions: [
+                { text: 'No', value: false },
+                { text: 'Yes', value: true },
+            ],
             elementId: "@Model.templateId"
         },
         computed: {
@@ -210,7 +213,7 @@ $(function() {
                             image = productProperty.replace('image:', '').trim();
                         }
                         if (productProperty.indexOf('custom:') !== -1) {
-                            custom =productProperty.replace('custom:', '').trim();
+                            custom = productProperty.replace('custom:', '').trim();
                         }
                         if (productProperty.indexOf('inventory:') !== -1) {
                             inventory = parseInt(productProperty.replace('inventory:', '').trim(),10);
@@ -228,7 +231,7 @@ $(function() {
                             price: price,
                             image: image || null,
                             description: description || '',
-                            custom: Boolean(custom),
+                            custom: custom === "true",
                             inventory: isNaN(inventory)? null: inventory,
                             paymentMethods: paymentMethods
                         });
@@ -263,8 +266,8 @@ $(function() {
                         if (inventory) {
                             template += '  inventory: ' + inventory + '\n';
                         }
-                        if (custom) {
-                            template += '  custom: true\n';
+                        if (custom != null) {
+                            template += '  custom: ' + custom + '\n';
                         }
                         if(paymentMethods != null && paymentMethods.length > 0){
                             template+= '  payment_methods:\n';
@@ -376,6 +379,11 @@ $(function() {
                 return item;
             },
             unEscapeKey : function(k){
+                // Without this check a `false` boolean value will always be returned as an empty string
+                if (k === false) {
+                    return "false";
+                }
+
                 return $('<div/>').html(k).text();
             }
         }

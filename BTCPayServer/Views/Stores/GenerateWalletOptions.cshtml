@@ -1,0 +1,60 @@
+@model WalletSetupViewModel
+@addTagHelper *, BundlerMinifier.TagHelpers
+@{
+    Layout = "_LayoutWalletSetup";
+    ViewData["Title"] = $"Generate {Model.CryptoCode} Wallet";
+}
+
+@section Navbar {
+    <a asp-controller="Stores" asp-action="SetupWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
+        <vc:icon symbol="back" />
+    </a>
+}
+
+<h1 class="text-center">Choose your wallet option</h1>
+
+<div class="list-group mt-5">
+    @if (Model.CanUseHotWallet)
+    {
+        <a asp-controller="Stores" asp-action="GenerateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="hotwallet" id="generate-hotwallet-link" class="list-group-item list-group-item-action list-group-item-wallet-setup">
+            <div class="image">
+                <vc:icon symbol="seed"/>
+            </div>
+            <div class="content">
+                <h4>Hot wallet</h4>
+                <p class="mb-0 text-secondary">
+                    Allows spending directly from your BTCPay Server.
+                    Each private key associated with an address generated will be stored as metadata and would be accessible to anyone with admin access to your server. Use at your own risk!
+                </p>
+            </div>
+            <vc:icon symbol="caret-right"/>
+        </a>
+    }
+    else
+    {
+        <div class="list-group-item list-group-item-wallet-setup text-muted">
+            <div class="image">
+                <vc:icon symbol="new-wallet"/>
+            </div>
+            <div class="content">
+                <h4>Hot wallet</h4>
+                <p class="mb-0">Please note that creating a hot wallet is not supported by this instance for non administrators.</p>
+            </div>
+        </div>
+    }
+</div>
+
+<div class="list-group mt-4">
+    <a asp-controller="Stores" asp-action="GenerateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="watchonly" id="generate-watchonly-link" class="list-group-item list-group-item-action list-group-item-wallet-setup">
+        <div class="image">
+            <vc:icon symbol="xpub"/>
+        </div>
+        <div class="content">
+            <h4>Watch-only wallet</h4>
+            <p class="mb-0 text-secondary">Needs to be imported into an external wallet to spend or provide the seed while spending.</p>
+        </div>
+        <vc:icon symbol="caret-right" />
+    </a>
+</div>
+
+

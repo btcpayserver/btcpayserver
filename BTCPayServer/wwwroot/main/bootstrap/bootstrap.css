@@ -3574,9 +3574,8 @@ input[type="button"].btn-block {
     border-bottom-right-radius: 0.25rem;
     border-bottom-left-radius: 0.25rem; }
   .list-group-item.disabled, .list-group-item:disabled {
-    color: var(--btcpay-color-neutral-600);
-    pointer-events: none;
-    background-color: var(--btcpay-color-white); }
+    opacity: .5;
+    pointer-events: none; }
   .list-group-item.active {
     z-index: 2;
     color: var(--btcpay-color-white);

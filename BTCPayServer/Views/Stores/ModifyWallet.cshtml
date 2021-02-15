@@ -1,0 +1,65 @@
+@model WalletSetupViewModel
+@{
+    Layout = "_LayoutWalletSetup";
+    ViewData["Title"] = $"Modify {Model.CryptoCode} Wallet";
+}
+
+@section Navbar {
+    <a asp-controller="Stores" asp-action="UpdateStore" asp-route-storeId="@Model.StoreId">
+        <vc:icon symbol="back" />
+    </a>
+}
+
+<header class="text-center">
+    <h1>@ViewData["Title"]</h1>
+    <p class="lead text-secondary mt-3">Change your current wallet settings</p>
+</header>
+<br>
+
+<div class="mt-5 position-relative">
+    <h3 class="my-4">Current settings</h3>
+
+    <form method="post">
+        <input asp-for="Config" type="hidden" />
+        <input asp-for="DerivationScheme" type="hidden" />
+
+        <table class="table table-sm table-borderless table-responsive-md">
+            <tbody>
+            <tr>
+                <th class="w-150px">Derivation Scheme</th>
+                <td class="text-break">@Model.DerivationScheme</td>
+            </tr>
+            <tr>
+                <th>Root Fingerprint</th>
+                <td>@Model.RootFingerprint</td>
+            </tr>
+            @if (!string.IsNullOrEmpty(Model.KeyPath))
+            {
+                <tr>
+                    <th>KeyPath</th>
+                    <td>@Model.KeyPath</td>
+                </tr>
+            }
+            <tr>
+                <th>Source</th>
+                <td>@Model.Source</td>
+            </tr>
+            <tr>
+                <th>
+                    Enabled
+                </th>
+                <td>
+                    <button type="submit" class="btcpay-toggle @if (Model.Enabled) { @("btcpay-toggle--active") }" id="Modify" name="Enabled" value="@(Model.Enabled ? "false" : "true")">Save</button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </form>
+    <br>
+    <form method="get" asp-controller="Stores" asp-action="DeleteWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" class="mt-5">
+        <a asp-controller="Stores" asp-action="SetupWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="change-wallet-link" class="btn btn-secondary mr-2">
+            Replace wallet
+        </a>
+        <button type="submit" class="btn btn-danger" id="Delete">Remove wallet</button>
+    </form>
+</div>

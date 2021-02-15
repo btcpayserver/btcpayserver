@@ -3,98 +3,99 @@
 
 <script type="text/x-template" id="bitcoin-method-checkout-template">
     <div>
-        <div class="bp-view payment scan" id="scan" v-bind:class="{ 'active': currentTab == 'scan'}">
-            <div class="payment__scan">
-                <img v-bind:src="srvModel.cryptoImage" class="qr_currency_icon" v-if="scanDisplayQr"/>
-                <qrcode v-bind:value="scanDisplayQr" :options="{ width: 256, margin: 1, color: {dark:'#000', light:'#f5f5f7'} }" tag="svg" v-if="scanDisplayQr"></qrcode>
-                <div class="payment__spinner qr_currency_icon" style="padding-right: 20px;">
-                    <partial name="Checkout-Spinner"/>
-                </div>
-            </div>
-            <div class="payment__details__instruction__open-wallet" v-if="srvModel.invoiceBitcoinUrl">
-                <a class="payment__details__instruction__open-wallet__btn action-button" target="_top" v-bind:href="srvModel.invoiceBitcoinUrl">
-                    <span>{{$t("Open in wallet")}}</span>
-                </a>
-            </div>
-        </div>
-        <div class="bp-view payment manual-flow" id="copy" v-bind:class="{ 'active': currentTab == 'copy'}">
-            <div class="manual__step-two__instructions">
-                <span v-html="$t('CompletePay_Body', srvModel)"></span>
-            </div>
-            <div class="copyLabelPopup">
-                <span>{{$t("Copied")}}</span>
-            </div>
-            <nav class="copyBox">
-                <div class="copySectionBox bottomBorder">
-                    <label>{{$t("Amount")}}</label>
-                    <div class="copyAmountText copy-cursor _copySpan">
-                        <span>{{srvModel.btcDue}}</span> {{ srvModel.cryptoCode }}
+        <div class="bp-views">
+            <div class="bp-view payment scan" id="scan" v-bind:class="{ 'active': currentTab == 'scan'}">
+                <div class="payment__scan">
+                    <img v-bind:src="srvModel.cryptoImage" class="qr_currency_icon" v-if="scanDisplayQr"/>
+                    <qrcode v-bind:value="scanDisplayQr" :options="{ width: 256, margin: 1, color: {dark:'#000', light:'#f5f5f7'} }" tag="svg" v-if="scanDisplayQr"></qrcode>
+                    <div class="payment__spinner qr_currency_icon" style="padding-right: 20px;">
+                        <partial name="Checkout-Spinner"/>
                     </div>
                 </div>
-                <div class="separatorGem"></div>
-                <div class="copySectionBox bottomBorder">
-                    <label>{{$t("Address")}}</label>
-                    <div class="inputWithIcon _copyInput">
-                        <input type="text" class="checkoutTextbox" v-bind:value="srvModel.btcAddress" readonly="readonly"/>
-                        <img v-bind:src="srvModel.cryptoImage"/>
-                    </div>
+                <div class="payment__details__instruction__open-wallet" v-if="srvModel.invoiceBitcoinUrl">
+                    <a class="payment__details__instruction__open-wallet__btn action-button" target="_top" v-bind:href="srvModel.invoiceBitcoinUrl">
+                        <span>{{$t("Open in wallet")}}</span>
+                    </a>
                 </div>
-                <div class="separatorGem" v-if="srvModel.invoiceBitcoinUrl"></div>
-                <div class="copySectionBox" v-if="srvModel.invoiceBitcoinUrl" :title="$t(hasPayjoin? 'BIP21 payment link' : 'BIP21 payment link with payjoin support') " >
-                    <label>{{$t("Payment link")}}</label>
-                    <div class="inputWithIcon _copyInput">
-                        <input type="text" class="checkoutTextbox" v-bind:value="srvModel.invoiceBitcoinUrl" readonly="readonly"/>
-                        <img v-bind:src="srvModel.cryptoImage" v-if="hasPayjoin"/>
-                        <i class="fa fa-user-secret" v-else/>
-                    </div>
+            </div>
+            <div class="bp-view payment manual-flow" id="copy" v-bind:class="{ 'active': currentTab == 'copy'}">
+                <div class="manual__step-two__instructions">
+                    <span v-html="$t('CompletePay_Body', srvModel)"></span>
                 </div>
-            </nav>
-        </div>
-        @if (Model.CoinSwitchEnabled)
-        {
-            <div id="altcoins" class="bp-view payment manual-flow" v-bind:class="{ 'active': currentTab == 'altcoins'}">
-                <nav>
-                    <div class="manual__step-two__instructions">
-                        <span>
-                            {{$t("ConversionTab_BodyTop", srvModel)}}
-                            <br/><br/>
-                            {{$t("ConversionTab_BodyDesc", srvModel)}}
-                        </span>
+                <div class="copyLabelPopup">
+                    <span>{{$t("Copied")}}</span>
+                </div>
+                <nav class="copyBox">
+                    <div class="copySectionBox bottomBorder">
+                        <label>{{$t("Amount")}}</label>
+                        <div class="copyAmountText copy-cursor _copySpan">
+                            <span>{{srvModel.btcDue}}</span> {{ srvModel.cryptoCode }}
+                        </div>
                     </div>
-                    <center>
-                        @if (Model.CoinSwitchEnabled)
-                        {
-                            <template v-if="!selectedThirdPartyProcessor">
-                                <button v-on:click="selectedThirdPartyProcessor = 'coinswitch'" class="action-button">{{$t("Pay with CoinSwitch")}}</button>
-                            </template>
-                        }
-                        @if (Model.CoinSwitchEnabled)
-                        {
-                            <coinswitch inline-template
-                                    v-if="selectedThirdPartyProcessor === 'coinswitch'"
-                                    :mode="srvModel.coinSwitchMode"
-                                    :merchant-id="srvModel.coinSwitchMerchantId"
-                                    :to-currency="srvModel.paymentMethodId"
-                                    :to-currency-due="coinswitchAmountDue"
-                                    :autoload="selectedThirdPartyProcessor === 'coinswitch'"
-                                    :to-currency-address="srvModel.btcAddress">
-                                <div>
-                                    <a v-on:click="openDialog($event)" :href="url" class="action-button" v-show="url && !opened">{{$t("Pay with CoinSwitch")}}</a>
-                                    <iframe
-                                        v-if="showInlineIFrame"
-                                        v-on:load="onLoadIframe"
-                                        style="height: 100%; position: fixed; top: 0; width: 100%; left: 0;"
-                                        sandbox="allow-scripts allow-forms allow-popups allow-same-origin"
-                                        :src="url">
-                                    </iframe>
-                                </div>
-                            </coinswitch>                                                                                
-                        }
-                    </center>
+                    <div class="separatorGem"></div>
+                    <div class="copySectionBox bottomBorder">
+                        <label>{{$t("Address")}}</label>
+                        <div class="inputWithIcon _copyInput">
+                            <input type="text" class="checkoutTextbox" v-bind:value="srvModel.btcAddress" readonly="readonly"/>
+                            <img v-bind:src="srvModel.cryptoImage"/>
+                        </div>
+                    </div>
+                    <div class="separatorGem" v-if="srvModel.invoiceBitcoinUrl"></div>
+                    <div class="copySectionBox" v-if="srvModel.invoiceBitcoinUrl" :title="$t(hasPayjoin? 'BIP21 payment link' : 'BIP21 payment link with payjoin support') " >
+                        <label>{{$t("Payment link")}}</label>
+                        <div class="inputWithIcon _copyInput">
+                            <input type="text" class="checkoutTextbox" v-bind:value="srvModel.invoiceBitcoinUrl" readonly="readonly"/>
+                            <img v-bind:src="srvModel.cryptoImage" v-if="hasPayjoin"/>
+                            <i class="fa fa-user-secret" v-else/>
+                        </div>
+                    </div>
                 </nav>
             </div>
-        }
-
+            @if (Model.CoinSwitchEnabled)
+            {
+                <div id="altcoins" class="bp-view payment manual-flow" v-bind:class="{ 'active': currentTab == 'altcoins'}">
+                    <nav>
+                        <div class="manual__step-two__instructions">
+                            <span>
+                                {{$t("ConversionTab_BodyTop", srvModel)}}
+                                <br/><br/>
+                                {{$t("ConversionTab_BodyDesc", srvModel)}}
+                            </span>
+                        </div>
+                        <center>
+                            @if (Model.CoinSwitchEnabled)
+                            {
+                                <template v-if="!selectedThirdPartyProcessor">
+                                    <button v-on:click="selectedThirdPartyProcessor = 'coinswitch'" class="action-button">{{$t("Pay with CoinSwitch")}}</button>
+                                </template>
+                            }
+                            @if (Model.CoinSwitchEnabled)
+                            {
+                                <coinswitch inline-template
+                                        v-if="selectedThirdPartyProcessor === 'coinswitch'"
+                                        :mode="srvModel.coinSwitchMode"
+                                        :merchant-id="srvModel.coinSwitchMerchantId"
+                                        :to-currency="srvModel.paymentMethodId"
+                                        :to-currency-due="coinswitchAmountDue"
+                                        :autoload="selectedThirdPartyProcessor === 'coinswitch'"
+                                        :to-currency-address="srvModel.btcAddress">
+                                    <div>
+                                        <a v-on:click="openDialog($event)" :href="url" class="action-button" v-show="url && !opened">{{$t("Pay with CoinSwitch")}}</a>
+                                        <iframe
+                                            v-if="showInlineIFrame"
+                                            v-on:load="onLoadIframe"
+                                            style="height: 100%; position: fixed; top: 0; width: 100%; left: 0;"
+                                            sandbox="allow-scripts allow-forms allow-popups allow-same-origin"
+                                            :src="url">
+                                        </iframe>
+                                    </div>
+                                </coinswitch>
+                            }
+                        </center>
+                    </nav>
+                </div>
+            }
+        </div>
         @if (Model.ShowRecommendedFee) {
             <div id="recommended-fee" class="recommended-fee" v-bind:class="{ hide: !srvModel.feeRate }">
                 <span v-html="$t('Recommended_Fee', srvModel)"></span>
@@ -121,7 +122,7 @@
         else
         {
             <div id="tabsSlider" class="payment-tabs__slider"  v-bind:class="['slide-'+currentTab]"></div>
-        } 
+        }
     </div>
 </script>
 

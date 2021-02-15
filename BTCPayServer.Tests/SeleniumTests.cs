@@ -9,8 +9,10 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Tests.Logging;
+using BTCPayServer.Views.Manage;
 using BTCPayServer.Views.Server;
 using BTCPayServer.Views.Wallets;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitcoin.DataEncoders;
@@ -84,6 +86,45 @@ namespace BTCPayServer.Tests
                 s.FindAlertMessage();
                 seedEl = s.Driver.FindElement(By.Id("SeedTextArea"));
                 Assert.Contains("Seed removed", seedEl.Text, StringComparison.OrdinalIgnoreCase);
+            }
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Selenium", "Selenium")]
+        public async Task CanChangeUserMail()
+        {
+            using (var s = SeleniumTester.Create())
+            {
+                await s.StartAsync();
+
+                var tester = s.Server;
+                var u1 = tester.NewAccount();
+                u1.GrantAccess();
+                await u1.MakeAdmin(false);
+
+                var u2 = tester.NewAccount();
+                u2.GrantAccess();
+                await u2.MakeAdmin(false);
+
+                s.GoToLogin();
+                s.Login(u1.RegisterDetails.Email, u1.RegisterDetails.Password);
+                s.GoToProfile(ManageNavPages.Index);
+                s.Driver.FindElement(By.Id("Email")).Clear();
+                s.Driver.FindElement(By.Id("Email")).SendKeys(u2.RegisterDetails.Email);
+                s.Driver.FindElement(By.Id("save")).Click();
+
+                s.FindAlertMessage(Abstractions.Models.StatusMessageModel.StatusSeverity.Error);
+
+                s.GoToProfile(ManageNavPages.Index);
+                s.Driver.FindElement(By.Id("Email")).Clear();
+                var changedEmail = Guid.NewGuid() + "@lol.com";
+                s.Driver.FindElement(By.Id("Email")).SendKeys(changedEmail);
+                s.Driver.FindElement(By.Id("save")).Click();
+                s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success);
+
+                var manager = tester.PayTester.GetService<UserManager<ApplicationUser>>();
+                Assert.NotNull(await manager.FindByNameAsync(changedEmail));
+                Assert.NotNull(await manager.FindByEmailAsync(changedEmail));
             }
         }
 
@@ -685,10 +726,10 @@ namespace BTCPayServer.Tests
             {
                 await s.StartAsync();
                 s.RegisterNewUser(true);
-                var storeId = s.CreateNewStore();
+                var (storeName, storeId) = s.CreateNewStore();
 
-                // In this test, we try to spend from a manual seed. We import the xpub 49'/0'/0', then try to use the seed 
-                // to sign the transaction
+                // In this test, we try to spend from a manual seed. We import the xpub 49'/0'/0',
+                // then try to use the seed to sign the transaction
                 s.GenerateWallet("BTC", "", true);
 
                 //let's test quickly the receive wallet page
@@ -697,7 +738,7 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("WalletSend")).Click();
                 s.Driver.FindElement(By.Id("SendMenu")).Click();
 
-                //you cant use the Sign with NBX option without saving private keys when generating the wallet.
+                //you cannot use the Sign with NBX option without saving private keys when generating the wallet.
                 Assert.DoesNotContain("nbx-seed", s.Driver.PageSource);
 
                 s.Driver.FindElement(By.Id("WalletReceive")).Click();
@@ -714,10 +755,9 @@ namespace BTCPayServer.Tests
 
                 //send money to addr and ensure it changed
                 var sess = await s.Server.ExplorerClient.CreateWebsocketNotificationSessionAsync();
-                sess.ListenAllTrackedSource();
+                await sess.ListenAllTrackedSourceAsync();
                 var nextEvent = sess.NextEventAsync();
-                s.Server.ExplorerNode.SendToAddress(BitcoinAddress.Create(receiveAddr, Network.RegTest),
-                    Money.Parse("0.1"));
+                await s.Server.ExplorerNode.SendToAddressAsync(BitcoinAddress.Create(receiveAddr, Network.RegTest), Money.Parse("0.1"));
                 await nextEvent;
                 await Task.Delay(200);
                 s.Driver.Navigate().Refresh();
@@ -726,7 +766,7 @@ namespace BTCPayServer.Tests
                 receiveAddr = s.Driver.FindElement(By.Id("address")).GetAttribute("value");
 
                 //change the wallet and ensure old address is not there and generating a new one does not result in the prev one
-                s.GoToStore(storeId.storeId);
+                s.GoToStore(storeId);
                 s.GenerateWallet("BTC", "", true);
                 s.Driver.FindElement(By.Id("Wallets")).Click();
                 s.Driver.FindElement(By.LinkText("Manage")).Click();
@@ -735,19 +775,19 @@ namespace BTCPayServer.Tests
 
                 Assert.NotEqual(receiveAddr, s.Driver.FindElement(By.Id("address")).GetAttribute("value"));
 
-                var invoiceId = s.CreateInvoice(storeId.storeName);
+                var invoiceId = s.CreateInvoice(storeName);
                 var invoice = await s.Server.PayTester.InvoiceRepository.GetInvoice(invoiceId);
                 var address = invoice.EntityToDTO().Addresses["BTC"];
 
                 //wallet should have been imported to bitcoin core wallet in watch only mode.
                 var result = await s.Server.ExplorerNode.GetAddressInfoAsync(BitcoinAddress.Create(address, Network.RegTest));
                 Assert.True(result.IsWatchOnly);
-                s.GoToStore(storeId.storeId);
+                s.GoToStore(storeId);
                 var mnemonic = s.GenerateWallet("BTC", "", true, true);
 
                 //lets import and save private keys
                 var root = mnemonic.DeriveExtKey();
-                invoiceId = s.CreateInvoice(storeId.storeName);
+                invoiceId = s.CreateInvoice(storeName);
                 invoice = await s.Server.PayTester.InvoiceRepository.GetInvoice(invoiceId);
                 address = invoice.EntityToDTO().Addresses["BTC"];
                 result = await s.Server.ExplorerNode.GetAddressInfoAsync(BitcoinAddress.Create(address, Network.RegTest));
@@ -831,7 +871,7 @@ namespace BTCPayServer.Tests
                 Assert.Equal(parsedBip21.Amount.ToString(false), s.Driver.FindElement(By.Id($"Outputs_0__Amount")).GetAttribute("value"));
                 Assert.Equal(parsedBip21.Address.ToString(), s.Driver.FindElement(By.Id($"Outputs_0__DestinationAddress")).GetAttribute("value"));
 
-                s.GoToWallet(new WalletId(storeId.storeId, "BTC"), WalletsNavPages.Settings);
+                s.GoToWallet(new WalletId(storeId, "BTC"), WalletsNavPages.Settings);
                 var walletUrl = s.Driver.Url;
 
                 s.Driver.FindElement(By.Id("SettingsMenu")).Click();

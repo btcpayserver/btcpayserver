@@ -1,0 +1,156 @@
+@model WalletSetupViewModel
+@addTagHelper *, BundlerMinifier.TagHelpers
+@{
+    Layout = "_LayoutWalletSetup";
+    ViewData["Title"] = "Confirm addresses";
+}
+
+@section Navbar {
+    <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="@Model.Method">
+        <vc:icon symbol="back" />
+    </a>
+}
+
+<header class="text-center">
+    <h1>@ViewData["Title"]</h1>
+    <p class="lead text-secondary mt-3">Please check that your @Model.CryptoCode wallet is generating the same addresses as below.</p>
+</header>
+
+@if (!ViewContext.ModelState.IsValid)
+{
+    <div asp-validation-summary="All" class="text-danger"></div>
+}
+
+<template id="modal-template">
+    <div class="modal-dialog" role="document">
+        <form class="modal-content"  method="post" enctype="multipart/form-data">
+            <div class="modal-header">
+                <h5 class="modal-title" Fid="exampleModalLabel">Address verification</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>
+                    Confirm that you see the following address on the device:
+                    <code id="displayed-address"></code>
+                </p>
+                <div id="vault-status"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button id="vault-confirm" class="btn btn-primary" style="display:none;"></button>
+            </div>
+        </form>
+    </div>
+</template>
+<div id="btcpayservervault" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="btcpayservervault" aria-hidden="true"></div>
+
+<form method="post" asp-controller="Stores" asp-action="UpdateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
+    <input asp-for="Config" type="hidden"/>
+    <input asp-for="Confirmation" type="hidden"/>
+    <input asp-for="DerivationScheme" type="hidden"/>
+    <input asp-for="Enabled" type="hidden"/>
+
+    <div class="form-group">
+        <table class="table table-sm table-responsive-md">
+            <thead>
+            <tr>
+                <th>Key path</th>
+                <th>Address</th>
+                @if (Model.Source == "Vault")
+                {
+                    <th></th>
+                }
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var sample in Model.AddressSamples)
+            {
+                <tr>
+                    <td>@sample.KeyPath</td>
+                    <td><code>@sample.Address</code></td>
+                    @if (Model.Source == "Vault")
+                    {
+                        <td class="text-right">
+                            @* Using single quotes for the data attributes on purpose *@
+                            <a href="#" data-address='@Safe.Json(sample.Address)' data-rooted-key-path='@Safe.Json(sample.RootedKeyPath.ToString())'>Show on device</a>
+                        </td>
+                    }
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="text-center mb-4">
+        <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#wrong-addresses" aria-expanded="false" aria-controls="wrong-addresses">
+            Wrong addresses?
+        </button>
+        <div id="wrong-addresses" class="collapse @(ViewContext.ModelState.IsValid ? "" : "show")">
+            <div class="pb-1">
+                <label asp-for="HintAddress">Help us to find the correct settings by telling us the first address of your wallet.</label>
+                <div class="form-group">
+                    <input asp-for="HintAddress" class="form-control"/>
+                    <span asp-validation-for="HintAddress" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center">
+        <button name="command" type="submit" class="btn btn-primary" value="save" id="Confirm">Confirm</button>
+    </div>
+</form>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+    @await Html.PartialAsync("VaultElements")
+
+    <script src="~/js/vaultbridge.js" type="text/javascript" defer asp-append-version="true"></script>
+    <script src="~/js/vaultbridge.ui.js" type="text/javascript" defer asp-append-version="true"></script>
+
+    <script type="text/javascript">
+        window.addEventListener("load", async () => {
+            const wsPath = "@Url.Action("VaultBridgeConnection", "Vault", new {cryptoCode = Model.CryptoCode})";
+            const wsProto = location.protocol.replace(/^http/, "ws");
+
+            const statusHTML = document.getElementById("VaultConnection").innerHTML;
+            const modalHTML = document.getElementById("modal-template").innerHTML;
+            const $modal = document.getElementById("btcpayservervault");
+
+            document.querySelectorAll("[data-address]").forEach(link => {
+                link.addEventListener("click", async event => {
+                    event.preventDefault();
+
+                    const $link = event.currentTarget;
+                    const address = JSON.parse($link.dataset.address);
+                    const rootedKeyPath = JSON.parse($link.dataset.rootedKeyPath);
+
+                    $modal.innerHTML = modalHTML;
+
+                    const $address = document.getElementById("displayed-address");
+                    const $status = document.getElementById("vault-status");
+
+                    $status.innerHTML = statusHTML;
+                    $address.innerText = address;
+
+                    const vaultUI = new vaultui.VaultBridgeUI(`${wsProto}//${location.host}${wsPath}`);
+
+                    const $$modal = $($modal)
+                    $$modal.modal();
+                    $$modal.on('hidden.bs.modal', () => {
+                        vaultUI.closeBridge();
+                    });
+
+                    while (!await vaultUI.askForDevice()) {}
+
+                    await vaultUI.askForDisplayAddress(rootedKeyPath);
+
+                    $$modal.modal("hide");
+                });
+            });
+        });
+    </script>
+}
+

@@ -5,6 +5,10 @@
     Layout = "_LayoutSimple";
 }
 
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}
+
 <div class="row justify-content-center mb-2">
     <div class="col text-center">
         <a asp-controller="Home" asp-action="Index">
@@ -37,7 +41,7 @@
                         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                         <div class="form-group">
                             <label asp-for="Email"></label>
-                            <input asp-for="Email" class="form-control" required />
+                            <input asp-for="Email" class="form-control" required autofocus />
                             <span asp-validation-for="Email" class="text-danger"></span>
                         </div>
                         <div class="form-group">

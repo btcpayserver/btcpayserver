@@ -10,7 +10,17 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateIndex(
+            if (!migrationBuilder.IsSqlite())
+            {
+                migrationBuilder.AlterColumn<string>(
+                    name: "OrderId",
+                    table: "Invoices",
+                    maxLength: 100,
+                    nullable: true,
+                    oldClrType: typeof(string));
+            }
+
+	        migrationBuilder.CreateIndex(
                 name: "IX_Invoices_OrderId",
                 table: "Invoices",
                 column: "OrderId");

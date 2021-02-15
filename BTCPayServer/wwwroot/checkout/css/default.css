@@ -9226,13 +9226,15 @@ strong {
         font-size: 13px;
     }
 
+.bp-views {
+    position: relative;
+    overflow: hidden;
+}
+
 .bp-view {
-    padding-top: 1em;
-    padding-bottom: 2em;
     position: absolute;
-    padding-left: 30px;
-    padding-right: 30px;
     width: 100%;
+    padding: 1em 30px;
 }
 
     .bp-view#paid {
@@ -9263,6 +9265,7 @@ strong {
 
     .bp-view.active {
         z-index: 9999;
+        position: relative;
     }
 
     .bp-view.paid-full {
@@ -9279,12 +9282,8 @@ strong {
     box-sizing: border-box;
     font-size: smaller;
     color: #515664;
-    position: absolute;
-    top: calc(100% - 40px);
-    left: 50%;
-    padding: 0 16px;
+    padding: 0 1em 1em;
     text-align: center;
-    transform: translateX(-50%);
     width: 100%;
 }
 

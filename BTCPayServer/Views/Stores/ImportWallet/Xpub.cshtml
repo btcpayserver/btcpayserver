@@ -1,0 +1,107 @@
+@model WalletSetupViewModel
+@addTagHelper *, BundlerMinifier.TagHelpers
+@{
+    Layout = "_LayoutWalletSetup";
+    ViewData["Title"] = $"Enter your extended public key";
+}
+
+@section Navbar {
+    <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="">
+        <vc:icon symbol="back" />
+    </a>
+}
+
+<header class="text-center">
+    <h1>@ViewData["Title"]</h1>
+    <p class="lead text-secondary mt-3">
+        This key, also called "xpub", is used to generate individual destination addresses for your invoices.
+        <a href="https://docs.btcpayserver.org/FAQ/FAQ-Wallet/#what-is-a-derivation-scheme" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+    </p>
+</header>
+
+<form method="post" class="my-5">
+    <input asp-for="Config" type="hidden" />
+    <input asp-for="CryptoCode" type="hidden" />
+    <input asp-for="DerivationSchemeFormat" type="hidden" />
+    <input asp-for="AccountKey" type="hidden" />
+
+    <div class="form-group">
+        <label asp-for="DerivationScheme">Extended public key</label>
+        <textarea asp-for="DerivationScheme" class="form-control store-derivation-scheme text-monospace py-2" rows="2"></textarea>
+        <span asp-validation-for="DerivationScheme" class="text-danger"></span>
+    </div>
+
+    <button name="command" type="submit" class="btn btn-primary" value="save" id="Continue">Continue</button>
+</form>
+
+<table class="table table-sm">
+    <thead>
+    <tr>
+        <th>Address type</th>
+        <th>Example</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td rowspan="4">P2WPKH</td>
+        <td class="text-monospace">xpub…</td>
+    </tr>
+    <tr>
+        <td class="text-monospace">zpub…</td>
+    </tr>
+    <tr>
+        <td class="text-monospace">wpkh(xpub…/0/*)</td>
+    </tr>
+    <tr>
+        <td class="text-monospace">wpkh([…/84'/0'/0']xpub…/0/*)</td>
+    </tr>
+    <tr>
+        <td rowspan="4">P2SH-P2WPKH</td>
+        <td class="text-monospace">xpub…-[p2sh]</td>
+    </tr>
+    <tr>
+        <td class="text-monospace">ypub…</td>
+    </tr>
+    <tr>
+        <td class="text-monospace">sh(wpkh(xpub…/0/*)</td>
+    </tr>
+    <tr>
+        <td class="text-monospace">sh(wpkh([…/49'/0'/0']xpub…/0/*)</td>
+    </tr>
+    <tr>
+        <td rowspan="3">P2PKH</td>
+        <td class="text-monospace">xpub…-[legacy]</td>
+    </tr>
+    <tr>
+        <td class="text-monospace">pkh([…/44'/0'/0']xpub…/0/*)</td>
+    </tr>
+    <tr>
+        <td class="text-monospace">pkh(xpub…/0/*)</td>
+    </tr>
+    <tr>
+        <td class="text-nowrap" rowspan="2">Multi-sig P2WSH</td>
+        <td class="text-monospace">2-of-xpub1…-xpub2…</td>
+    </tr>
+    <tr>
+        <td class="text-monospace">wsh(multi(2,<br>[…/48'/0'/0'/2']xpub…/0/*,<br>[…/48'/0'/0'/2']xpub…/0/*))</td>
+    </tr>
+    <tr>
+        <td class="text-nowrap" rowspan="2">Multi-sig P2SH-P2WSH</td>
+        <td class="text-monospace">2-of-xpub1…-xpub2…-[p2sh]</td>
+    </tr>
+    <tr>
+        <td class="text-monospace">sh(wsh(multi(2,<br>[…/48'/0'/0'/1']xpub…/0/*,<br>[…/48'/0'/0'/1']xpub…/0/*)))</td>
+    </tr>
+    <tr>
+        <td class="text-nowrap" rowspan="2">Multi-sig P2SH</td>
+        <td class="text-monospace">2-of-xpub1…-xpub2…-[legacy]</td>
+    </tr>
+    <tr>
+        <td class="text-monospace">sh(multi(2,<br>[…/45'/0]xpub…/0/*,<br>[…/45'/0]xpub…/0/*))</td>
+    </tr>
+    </tbody>
+</table>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

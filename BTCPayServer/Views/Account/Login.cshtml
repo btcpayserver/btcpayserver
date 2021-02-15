@@ -6,9 +6,13 @@
     Layout = "_LayoutSimple";
 }
 
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}
+
 <div class="row justify-content-center mb-2">
     <div class="col text-center">
-        <a asp-controller="Home" asp-action="Index">
+        <a asp-controller="Home" asp-action="Index" tabindex="-1">
             <img src="~/img/btcpay-logo.svg" alt="BTCPay Server" class="mb-4" height="70" asp-append-version="true"/>
         </a>
 
@@ -33,26 +37,26 @@
                         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                         <div class="form-group">
                             <label asp-for="Email"></label>
-                            <input asp-for="Email" class="form-control" required />
+                            <input asp-for="Email" class="form-control" required tabindex="1" autofocus />
                             <span asp-validation-for="Email" class="text-danger"></span>
                         </div>
                         <div class="form-group">
                             <div class="d-flex justify-content-between">
                                 <label asp-for="Password"></label>
-                                <a asp-action="ForgotPassword">Forgot password?</a>
+                                <a asp-action="ForgotPassword" tabindex="5">Forgot password?</a>
                             </div>
-                            <input asp-for="Password" class="form-control" required />
+                            <input asp-for="Password" class="form-control" required tabindex="2" />
                             <span asp-validation-for="Password" class="text-danger"></span>
                         </div>
                         <div class="form-group mt-4">
-                            <button type="submit" class="btn btn-primary btn-block btn-lg" id="LoginButton">Sign in</button>
+                            <button type="submit" class="btn btn-primary btn-block btn-lg" id="LoginButton" tabindex="3">Sign in</button>
                         </div>
                     </fieldset>
                 </form>
                 @if (themeManager.ShowRegister)
                 {
                     <p class="text-center mt-2 mb-0">
-                        <a id="Register" style="font-size:1.15rem" asp-action="Register" asp-route-returnurl="@ViewData["ReturnUrl"]">Create your account</a>
+                        <a id="Register" style="font-size:1.15rem" asp-action="Register" asp-route-returnurl="@ViewData["ReturnUrl"]" tabindex="4">Create your account</a>
                     </p>
                 }
             </div>

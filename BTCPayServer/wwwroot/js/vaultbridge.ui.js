@@ -77,7 +77,7 @@ var vaultui = (function () {
         this.retryShowing = false;
 
         function showRetry() {
-            var button = $(".vault-retry");
+            var button = $("#vault-retry");
             self.retryShowing = true;
             button.show();
         }
@@ -88,7 +88,7 @@ var vaultui = (function () {
         function show(feedback) {
             var icon = $(".vault-feedback." + feedback.category + " " + ".vault-feedback-icon");
             icon.removeClass();
-            icon.addClass("vault-feedback-icon");
+            icon.addClass("vault-feedback-icon mt-1 mr-2");
             if (feedback.type == "?") {
                 icon.addClass("fa fa-question-circle feedback-icon-loading");
             }
@@ -160,7 +160,7 @@ var vaultui = (function () {
         }
 
         this.waitRetryPushed = function () {
-            var button = $(".vault-retry");
+            var button = $("#vault-retry");
             return new Promise(function (resolve) {
                 button.click(function () {
                     // Cleanup old feedback

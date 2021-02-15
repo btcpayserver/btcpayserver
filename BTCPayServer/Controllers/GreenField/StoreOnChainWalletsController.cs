@@ -195,7 +195,7 @@ namespace BTCPayServer.Controllers.GreenField
             var wallet = _btcPayWalletProvider.GetWallet(network);
 
             var utxos = await wallet.GetUnspentCoins(derivationScheme.AccountDerivation);
-            if (request.SelectedInputs?.Any() is true || !utxos.Any())
+            if (request.SelectedInputs != null || !utxos.Any())
             {
                 utxos = utxos.Where(coin => request.SelectedInputs?.Contains(coin.OutPoint) ?? true)
                     .ToArray();
@@ -302,14 +302,14 @@ namespace BTCPayServer.Controllers.GreenField
 
             var minRelayFee = this._nbXplorerDashboard.Get(network.CryptoCode).Status.BitcoinStatus?.MinRelayTxFee ??
                               new FeeRate(1.0m);
-            if (request.FeeSatoshiPerByte is null)
+            if (request.FeeRate is null)
             {
                 var feeRate = await explorerClient.GetFeeRateAsync(1);
-                request.FeeSatoshiPerByte = feeRate.FeeRate;
+                request.FeeRate = feeRate.FeeRate;
             }
-            else if (request.FeeSatoshiPerByte < minRelayFee)
+            else if (request.FeeRate < minRelayFee)
             {
-                ModelState.AddModelError(nameof(request.FeeSatoshiPerByte),
+                ModelState.AddModelError(nameof(request.FeeRate),
                     "The fee rate specified is lower than the current minimum relay fee");
             }
 
@@ -332,7 +332,7 @@ namespace BTCPayServer.Controllers.GreenField
                             !request.RBF.HasValue ? WalletSendModel.ThreeStateBool.Maybe :
                             request.RBF.Value ? WalletSendModel.ThreeStateBool.Yes :
                             WalletSendModel.ThreeStateBool.No,
-                        FeeSatoshiPerByte = request.FeeSatoshiPerByte?.SatoshiPerByte,
+                        FeeSatoshiPerByte = request.FeeRate?.SatoshiPerByte,
                         NoChange = request.NoChange
                     },
                     CancellationToken.None);
@@ -363,8 +363,7 @@ namespace BTCPayServer.Controllers.GreenField
                     WellknownMetadataKeys.MasterHDKey), network.NBitcoinNetwork);
 
             var signingKeySettings = derivationScheme.GetSigningAccountKeySettings();
-            if (signingKeySettings.RootFingerprint is null)
-                signingKeySettings.RootFingerprint = signingKey.GetPublicKey().GetHDFingerPrint();
+            signingKeySettings.RootFingerprint ??= signingKey.GetPublicKey().GetHDFingerPrint();
             RootedKeyPath rootedKeyPath = signingKeySettings.GetRootedKeyPath();
             psbt.PSBT.RebaseKeyPaths(signingKeySettings.AccountKey, rootedKeyPath);
             var accountKey = signingKey.Derive(rootedKeyPath.KeyPath);
@@ -411,6 +410,10 @@ namespace BTCPayServer.Controllers.GreenField
                 }
             }
 
+            if (!request.ProceedWithBroadcast)
+            {
+                return Ok(transaction.ToHex());
+            }
             broadcastResult = await explorerClient.BroadcastAsync(transaction);
             if (broadcastResult.Success)
             {

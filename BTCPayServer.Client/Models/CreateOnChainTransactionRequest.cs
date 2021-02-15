@@ -15,12 +15,14 @@ namespace BTCPayServer.Client.Models
             public bool SubtractFromAmount { get; set; }
         }
         [JsonConverter(typeof(FeeRateJsonConverter))]
-        public FeeRate FeeSatoshiPerByte { get; set; }
-        public bool ProceedWithPayjoin { get; set; }
-        public bool NoChange { get; set; }
-        [JsonProperty( ItemConverterType = typeof(OutpointJsonConverter))]
-        public List<OutPoint> SelectedInputs { get; set; }
+        public FeeRate FeeRate { get; set; }
+        public bool ProceedWithPayjoin { get; set; }= true;
+        public bool ProceedWithBroadcast { get; set; } = true;
+        public bool NoChange { get; set; } = false;
+
+        [JsonProperty(ItemConverterType = typeof(OutpointJsonConverter))]
+        public List<OutPoint> SelectedInputs { get; set; } = null;
         public List<CreateOnChainTransactionRequestDestination> Destinations { get; set; }
-        public bool? RBF { get; set; }
+        public bool? RBF { get; set; } = null;
     }
 }

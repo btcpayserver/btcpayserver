@@ -10,6 +10,7 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Security;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
@@ -27,21 +28,18 @@ namespace BTCPayServer.Controllers.GreenField
         private readonly StoreRepository _storeRepository;
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly IOptions<LightningNetworkOptions> _lightningNetworkOptions;
-        private readonly CssThemeManager _cssThemeManager;
-        private readonly BTCPayServerEnvironment _btcPayServerEnvironment;
+        private readonly IAuthorizationService _authorizationService;
 
         public StoreLightningNetworkPaymentMethodsController(
             StoreRepository storeRepository,
             BTCPayNetworkProvider btcPayNetworkProvider,
             IOptions<LightningNetworkOptions> lightningNetworkOptions,
-            CssThemeManager cssThemeManager,
-            BTCPayServerEnvironment btcPayServerEnvironment)
+            IAuthorizationService authorizationService)
         {
             _storeRepository = storeRepository;
             _btcPayNetworkProvider = btcPayNetworkProvider;
             _lightningNetworkOptions = lightningNetworkOptions;
-            _cssThemeManager = cssThemeManager;
-            _btcPayServerEnvironment = btcPayServerEnvironment;
+            _authorizationService = authorizationService;
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -102,14 +100,14 @@ namespace BTCPayServer.Controllers.GreenField
         public async Task<IActionResult> UpdateLightningNetworkPaymentMethod(string cryptoCode,
             [FromBody] LightningNetworkPaymentMethodData paymentMethodData)
         {
-            var id = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
+            var paymentMethodId = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
 
             if (!GetNetwork(cryptoCode, out var network))
             {
                 return NotFound();
             }
 
-            var internalLightning = GetInternalLightningNode(network.CryptoCode);
+            var internalLightning = await GetInternalLightningNode(network.CryptoCode);
 
             if (string.IsNullOrEmpty(paymentMethodData?.ConnectionString))
             {
@@ -120,9 +118,7 @@ namespace BTCPayServer.Controllers.GreenField
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
 
-
-            PaymentMethodId paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.LightningLike);
-            Payments.Lightning.LightningSupportedPaymentMethod paymentMethod = null;
+            LightningSupportedPaymentMethod paymentMethod = null;
             if (!string.IsNullOrEmpty(paymentMethodData.ConnectionString))
             {
                 if (!LightningConnectionString.TryParse(paymentMethodData.ConnectionString, false,
@@ -152,7 +148,7 @@ namespace BTCPayServer.Controllers.GreenField
 
                 if (connectionString.MacaroonFilePath != null)
                 {
-                    if (!CanUseInternalLightning())
+                    if (!await CanUseInternalLightning())
                     {
                         ModelState.AddModelError(nameof(paymentMethodData.ConnectionString),
                             "You are not authorized to use macaroonfilepath");
@@ -174,7 +170,7 @@ namespace BTCPayServer.Controllers.GreenField
                     }
                 }
 
-                if (isInternalNode && !CanUseInternalLightning())
+                if (isInternalNode && !await CanUseInternalLightning())
                 {
                     ModelState.AddModelError(nameof(paymentMethodData.ConnectionString), "Unauthorized url");
                     return this.CreateValidationError(ModelState);
@@ -189,20 +185,11 @@ namespace BTCPayServer.Controllers.GreenField
 
             var store = Store;
             var storeBlob = store.GetStoreBlob();
-            store.SetSupportedPaymentMethod(id, paymentMethod);
-            storeBlob.SetExcluded(id, !paymentMethodData.Enabled);
+            store.SetSupportedPaymentMethod(paymentMethodId, paymentMethod);
+            storeBlob.SetExcluded(paymentMethodId, !paymentMethodData.Enabled);
             store.SetStoreBlob(storeBlob);
             await _storeRepository.UpdateStore(store);
             return Ok(GetExistingLightningLikePaymentMethod(cryptoCode, store));
-        }
-
-
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpPut("~/api/v1/stores/{storeId}/payment-methods/LightningNetwork/{cryptoCode}/internal")]
-        public Task<IActionResult> UpdateLightningNetworkPaymentMethodToInternalNode(string cryptoCode)
-        {
-            return UpdateLightningNetworkPaymentMethod(cryptoCode,
-                new LightningNetworkPaymentMethodData(cryptoCode, GetInternalLightningNode(cryptoCode).ToString(), true));
         }
 
         private LightningNetworkPaymentMethodData GetExistingLightningLikePaymentMethod(string cryptoCode, StoreData store = null)
@@ -229,18 +216,20 @@ namespace BTCPayServer.Controllers.GreenField
             return network != null;
         }
         
-        private LightningConnectionString GetInternalLightningNode(string cryptoCode)
+        private async Task<LightningConnectionString> GetInternalLightningNode(string cryptoCode)
         {
             if (_lightningNetworkOptions.Value.InternalLightningByCryptoCode.TryGetValue(cryptoCode, out var connectionString))
             {
-                return CanUseInternalLightning() ? connectionString : null;
+                return await CanUseInternalLightning() ? connectionString : null;
             }
             return null;
         }
         
-        private bool CanUseInternalLightning()
+        private async Task<bool> CanUseInternalLightning()
         {
-            return (_btcPayServerEnvironment.IsDeveloping || User.IsInRole(Roles.ServerAdmin) || _cssThemeManager.AllowLightningInternalNodeForAll);
+            return 
+                (await _authorizationService.AuthorizeAsync(User, null,
+                    new PolicyRequirement(Policies.CanUseInternalLightningNode))).Succeeded;
         }
     }
 }

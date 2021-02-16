@@ -120,5 +120,20 @@ namespace BTCPayServer.Tests
             wait.Until(d=>((IJavaScriptExecutor)d).ExecuteScript("return document.readyState").Equals("complete"));
             wait.Until(d=>((IJavaScriptExecutor)d).ExecuteScript("return jQuery && jQuery.active==0").Equals(true));
         }
+
+        public static void SetCheckbox(this IWebDriver driver, By selector, bool value)
+        {
+            var element = driver.FindElement(selector);
+            if ((value && !element.Selected) || (!value && element.Selected))
+            {
+                driver.WaitForAndClick(selector);
+            }
+
+            if (value != element.Selected)
+            {
+                Logs.Tester.LogInformation("SetCheckbox recursion, trying to click again");
+                driver.SetCheckbox(selector, value);
+            }
+        }
     }
 }

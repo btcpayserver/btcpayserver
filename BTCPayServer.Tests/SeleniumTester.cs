@@ -144,13 +144,13 @@ namespace BTCPayServer.Tests
                 Driver.FindElement(By.Id("ImportWalletOptionsLink")).Click();
                 Driver.FindElement(By.Id("ImportSeedLink")).Click();
                 Driver.FindElement(By.Id("ExistingMnemonic")).SendKeys(seed);
-                SetCheckbox(Driver.FindElement(By.Id("SavePrivateKeys")), privkeys);
+                Driver.SetCheckbox(By.Id("SavePrivateKeys"), privkeys);
             }
 
             Driver.FindElement(By.Id("ScriptPubKeyType")).Click();
             Driver.FindElement(By.CssSelector($"#ScriptPubKeyType option[value={format}]")).Click();
             Driver.FindElement(By.Id("AdvancedSettingsButton")).Click();
-            SetCheckbox(Driver.FindElement(By.Id("ImportKeysToRPC")), importkeys);
+            Driver.SetCheckbox(By.Id("ImportKeysToRPC"), importkeys);
             Driver.FindElement(By.Id("Continue")).Click();
 
             // Seed backup page
@@ -278,26 +278,6 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.Id("Invoices")).Click();
             Driver.FindElement(By.Id($"invoice-checkout-{invoiceId}")).Click();
             CheckForJSErrors();
-        }
-
-
-        public void SetCheckbox(IWebElement element, bool value)
-        {
-            if ((value && !element.Selected) || (!value && element.Selected))
-            {
-                element.Click();
-            }
-
-            if (value != element.Selected)
-            {
-                Logs.Tester.LogInformation("SetCheckbox recursion, trying to click again");
-                SetCheckbox(element, value);
-            }
-        }
-
-        public void SetCheckbox(SeleniumTester s, string checkboxId, bool value)
-        {
-            SetCheckbox(s.Driver.FindElement(By.Id(checkboxId)), value);
         }
 
         public void GoToInvoices()

@@ -578,7 +578,7 @@ namespace BTCPayServer.Tests
                 await s.Server.ExplorerNode.GenerateAsync(1);
                 s.GoToWallet(walletId);
                 s.Driver.FindElement(By.Id("advancedSettings")).Click();
-                s.Driver.FindElement(By.Id("toggleInputSelection")).Click();
+                s.Driver.WaitForAndClick(By.Id("toggleInputSelection"));
                 s.Driver.FindElement(By.Id(spentOutpoint.ToString()));
                 Assert.Equal("true", s.Driver.FindElement(By.Name("InputSelection")).GetAttribute("value").ToLowerInvariant());
                 var el = s.Driver.FindElement(By.Id(spentOutpoint.ToString()));

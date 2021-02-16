@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using OpenQA.Selenium;
+using OpenQA.Selenium.Support.UI;
 using Xunit;
 
 namespace BTCPayServer.Tests
@@ -104,6 +105,20 @@ namespace BTCPayServer.Tests
                 Thread.Sleep(50);
             }
             Assert.False(true, "Elements was found");
+        }
+
+        public static void WaitForAndClick(this IWebDriver driver, By selector)
+        {
+            var wait = new WebDriverWait(driver, SeleniumTester.ImplicitWait);
+            wait.Until(d=>((IJavaScriptExecutor)d).ExecuteScript("return document.readyState").Equals("complete"));
+            wait.Until(d=>((IJavaScriptExecutor)d).ExecuteScript("return jQuery && jQuery.active==0").Equals(true));
+
+            var el = driver.FindElement(selector);
+            wait.Until(d => el.Displayed && el.Enabled);
+            el.Click();
+
+            wait.Until(d=>((IJavaScriptExecutor)d).ExecuteScript("return document.readyState").Equals("complete"));
+            wait.Until(d=>((IJavaScriptExecutor)d).ExecuteScript("return jQuery && jQuery.active==0").Equals(true));
         }
     }
 }

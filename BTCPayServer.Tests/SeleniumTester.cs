@@ -17,6 +17,7 @@ using Microsoft.Extensions.Configuration;
 using NBitcoin;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium.Support.UI;
 using Xunit;
 
 namespace BTCPayServer.Tests
@@ -81,9 +82,10 @@ namespace BTCPayServer.Tests
 
         internal IWebElement FindAlertMessage(StatusMessageModel.StatusSeverity severity = StatusMessageModel.StatusSeverity.Success)
         {
-            var el = Driver.FindElements(By.ClassName($"alert-{StatusMessageModel.ToString(severity)}")).FirstOrDefault(e => e.Displayed);
+            var className = $"alert-{StatusMessageModel.ToString(severity)}";
+            var el = Driver.WaitForElement(By.ClassName(className));
             if (el is null)
-                throw new NoSuchElementException($"Unable to find alert-{StatusMessageModel.ToString(severity)}");
+                throw new NoSuchElementException($"Unable to find {className}");
             return el;
         }
 

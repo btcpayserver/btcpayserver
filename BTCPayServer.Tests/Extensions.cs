@@ -107,11 +107,16 @@ namespace BTCPayServer.Tests
             Assert.False(true, "Elements was found");
         }
 
+        public static void UntilJsIsReady(this WebDriverWait wait)
+        {
+            wait.Until(d=>((IJavaScriptExecutor)d).ExecuteScript("return document.readyState").Equals("complete"));
+            wait.Until(d=>((IJavaScriptExecutor)d).ExecuteScript("return typeof(jQuery) === 'undefined' || jQuery.active === 0").Equals(true));
+        }
+
         public static IWebElement WaitForElement(this IWebDriver driver, By selector)
         {
             var wait = new WebDriverWait(driver, SeleniumTester.ImplicitWait);
-            wait.Until(d=>((IJavaScriptExecutor)d).ExecuteScript("return document.readyState").Equals("complete"));
-            wait.Until(d=>((IJavaScriptExecutor)d).ExecuteScript("return typeof(jQuery) === 'undefined' || jQuery.active === 0").Equals(true));
+            wait.UntilJsIsReady();
 
             var el = driver.FindElement(selector);
             wait.Until(d => el.Displayed);
@@ -122,15 +127,13 @@ namespace BTCPayServer.Tests
         public static void WaitForAndClick(this IWebDriver driver, By selector)
         {
             var wait = new WebDriverWait(driver, SeleniumTester.ImplicitWait);
-            wait.Until(d=>((IJavaScriptExecutor)d).ExecuteScript("return document.readyState").Equals("complete"));
-            wait.Until(d=>((IJavaScriptExecutor)d).ExecuteScript("return typeof(jQuery) === 'undefined' || jQuery.active === 0").Equals(true));
+            wait.UntilJsIsReady();
 
             var el = driver.FindElement(selector);
             wait.Until(d => el.Displayed && el.Enabled);
             el.Click();
 
-            wait.Until(d=>((IJavaScriptExecutor)d).ExecuteScript("return document.readyState").Equals("complete"));
-            wait.Until(d=>((IJavaScriptExecutor)d).ExecuteScript("return typeof(jQuery) === 'undefined' || jQuery.active === 0").Equals(true));
+            wait.UntilJsIsReady();
         }
 
         public static void SetCheckbox(this IWebDriver driver, By selector, bool value)

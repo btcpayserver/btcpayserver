@@ -33,6 +33,7 @@ namespace BTCPayServer.Tests
         public static SeleniumTester Create([CallerMemberNameAttribute] string scope = null, bool newDb = false) =>
             new SeleniumTester { Server = ServerTester.Create(scope, newDb) };
 
+        public static readonly TimeSpan ImplicitWait = TimeSpan.FromSeconds(5);
 
         public async Task StartAsync()
         {
@@ -74,7 +75,7 @@ namespace BTCPayServer.Tests
             Logs.Tester.LogInformation($"Selenium: Using {Driver.GetType()}");
             Logs.Tester.LogInformation($"Selenium: Browsing to {Server.PayTester.ServerUri}");
             Logs.Tester.LogInformation($"Selenium: Resolution {Driver.Manage().Window.Size}");
-            Driver.Manage().Timeouts().ImplicitWait = ImplicitWait;
+            // Driver.Manage().Timeouts().ImplicitWait = ImplicitWait;
             GoToRegister();
             Driver.AssertNoError();
         }
@@ -87,7 +88,6 @@ namespace BTCPayServer.Tests
             return el;
         }
 
-        public static readonly TimeSpan ImplicitWait = TimeSpan.FromSeconds(5);
         public string Link(string relativeLink)
         {
             return Server.PayTester.ServerUri.AbsoluteUri.WithoutEndingSlash() + relativeLink.WithStartingSlash();

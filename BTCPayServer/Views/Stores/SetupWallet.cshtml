@@ -21,7 +21,7 @@
 <div class="mt-5">
     <h3 class="my-4">I have a wallet</h3>
     <div class="list-group">
-        <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="import-wallet-options-link" class="list-group-item list-group-item-action list-group-item-wallet-setup">
+        <a asp-controller="Stores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="ImportWalletOptionsLink" class="list-group-item list-group-item-action list-group-item-wallet-setup">
             <div class="image">
                 <vc:icon symbol="existing-wallet"/>
             </div>
@@ -38,7 +38,7 @@
 <div class="mt-5">
     <h3 class="my-4">I don't have a wallet</h3>
     <div class="list-group">
-        <a asp-controller="Stores" asp-action="GenerateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="generate-wallet-link" class="list-group-item list-group-item-action list-group-item-wallet-setup">
+        <a asp-controller="Stores" asp-action="GenerateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="GenerateWalletLink" class="list-group-item list-group-item-action list-group-item-wallet-setup">
             <div class="image">
                 <vc:icon symbol="new-wallet"/>
             </div>

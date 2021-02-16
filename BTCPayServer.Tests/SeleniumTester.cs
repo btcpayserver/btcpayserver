@@ -127,43 +127,42 @@ namespace BTCPayServer.Tests
         {
             Driver.FindElement(By.Id($"Modify{cryptoCode}")).Click();
             // Modify case
-            if (Driver.PageSource.Contains("id=\"change-wallet-link\""))
+            if (Driver.PageSource.Contains("id=\"ChangeWalletLink\""))
             {
-                Driver.FindElement(By.Id("change-wallet-link")).Click();
+                Driver.FindElement(By.Id("ChangeWalletLink")).Click();
             }
 
             if (string.IsNullOrEmpty(seed))
             {
-                var option = privkeys ? "hotwallet" : "watchonly";
+                var option = privkeys ? "Hotwallet" : "Watchonly";
                 Logs.Tester.LogInformation($"Generating new seed ({option})");
-                Driver.FindElement(By.Id("generate-wallet-link")).Click();
-                Driver.FindElement(By.Id($"generate-{option}-link")).Click();
+                Driver.FindElement(By.Id("GenerateWalletLink")).Click();
+                Driver.FindElement(By.Id($"Generate{option}Link")).Click();
             }
             else
             {
                 Logs.Tester.LogInformation("Progressing with existing seed");
-                Driver.FindElement(By.Id("import-wallet-options-link")).Click();
-                Driver.FindElement(By.Id("import-seed-link")).Click();
+                Driver.FindElement(By.Id("ImportWalletOptionsLink")).Click();
+                Driver.FindElement(By.Id("ImportSeedLink")).Click();
                 Driver.FindElement(By.Id("ExistingMnemonic")).SendKeys(seed);
                 SetCheckbox(Driver.FindElement(By.Id("SavePrivateKeys")), privkeys);
             }
 
             Driver.FindElement(By.Id("ScriptPubKeyType")).Click();
             Driver.FindElement(By.CssSelector($"#ScriptPubKeyType option[value={format}]")).Click();
-            Driver.FindElement(By.Id("advanced-settings-button")).Click();
+            Driver.FindElement(By.Id("AdvancedSettingsButton")).Click();
             SetCheckbox(Driver.FindElement(By.Id("ImportKeysToRPC")), importkeys);
 
             // close settings again, otherwise the button might not be clickable for Selenium
-            Driver.FindElement(By.Id("advanced-settings-button")).Click();
-            var continueButton = Driver.FindElement(By.Id("Continue"));
-            new WebDriverWait(Driver, ImplicitWait).Until(driver => continueButton.Displayed && continueButton.Enabled);
-            continueButton.Click();
+            Driver.WaitForAndClick(By.Id("AdvancedSettingsButton"));
+            Thread.Sleep(100); // wait for closing animation
+            Driver.WaitForAndClick(By.Id("Continue"));
 
             // Seed backup page
             FindAlertMessage();
             if (string.IsNullOrEmpty(seed))
             {
-                seed = Driver.FindElements(By.Id("recovery-phrase")).First().GetAttribute("data-mnemonic");
+                seed = Driver.FindElements(By.Id("RecoveryPhrase")).First().GetAttribute("data-mnemonic");
             }
 
             // Confirm seed backup
@@ -177,8 +176,8 @@ namespace BTCPayServer.Tests
         public void AddDerivationScheme(string cryptoCode = "BTC", string derivationScheme = "xpub661MyMwAqRbcGABgHMUXDzPzH1tU7eZaAaJQXhDXsSxsqyQzQeU6kznNfSuAyqAK9UaWSaZaMFdNiY5BCF4zBPAzSnwfUAwUhwttuAKwfRX-[legacy]")
         {
             Driver.FindElement(By.Id($"Modify{cryptoCode}")).Click();
-            Driver.FindElement(By.Id("import-wallet-options-link")).Click();
-            Driver.FindElement(By.Id("import-xpub-link")).Click();
+            Driver.FindElement(By.Id("ImportWalletOptionsLink")).Click();
+            Driver.FindElement(By.Id("ImportXpubLink")).Click();
             Driver.FindElement(By.Id("DerivationScheme")).SendKeys(derivationScheme);
             Driver.FindElement(By.Id("Continue")).Click();
             Driver.FindElement(By.Id("Confirm")).Click();

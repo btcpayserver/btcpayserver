@@ -17,7 +17,6 @@ using Microsoft.Extensions.Configuration;
 using NBitcoin;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium.Support.UI;
 using Xunit;
 
 namespace BTCPayServer.Tests
@@ -75,7 +74,6 @@ namespace BTCPayServer.Tests
             Logs.Tester.LogInformation($"Selenium: Using {Driver.GetType()}");
             Logs.Tester.LogInformation($"Selenium: Browsing to {Server.PayTester.ServerUri}");
             Logs.Tester.LogInformation($"Selenium: Resolution {Driver.Manage().Window.Size}");
-            // Driver.Manage().Timeouts().ImplicitWait = ImplicitWait;
             GoToRegister();
             Driver.AssertNoError();
         }
@@ -83,7 +81,7 @@ namespace BTCPayServer.Tests
         internal IWebElement FindAlertMessage(StatusMessageModel.StatusSeverity severity = StatusMessageModel.StatusSeverity.Success)
         {
             var className = $"alert-{StatusMessageModel.ToString(severity)}";
-            var el = Driver.WaitForElement(By.ClassName(className));
+            var el = Driver.FindElement(By.ClassName(className)) ?? Driver.WaitForElement(By.ClassName(className));
             if (el is null)
                 throw new NoSuchElementException($"Unable to find {className}");
             return el;
@@ -153,7 +151,16 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.CssSelector($"#ScriptPubKeyType option[value={format}]")).Click();
             Driver.FindElement(By.Id("AdvancedSettingsButton")).Click();
             Driver.SetCheckbox(By.Id("ImportKeysToRPC"), importkeys);
-            Driver.FindElement(By.Id("Continue")).Click();
+            Driver.FindElement(By.Id("AdvancedSettingsButton")).Click(); // close again
+
+            try
+            {
+                Driver.FindElement(By.Id("Continue")).Click();
+            }
+            catch (ElementClickInterceptedException)
+            {
+                Driver.WaitForAndClick(By.Id("Continue"));
+            }
 
             // Seed backup page
             FindAlertMessage();

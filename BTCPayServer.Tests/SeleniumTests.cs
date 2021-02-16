@@ -113,7 +113,7 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("Email")).SendKeys(u2.RegisterDetails.Email);
                 s.Driver.FindElement(By.Id("save")).Click();
 
-                s.FindAlertMessage(Abstractions.Models.StatusMessageModel.StatusSeverity.Error);
+                s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error);
 
                 s.GoToProfile(ManageNavPages.Index);
                 s.Driver.FindElement(By.Id("Email")).Clear();

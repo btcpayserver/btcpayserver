@@ -3,6 +3,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Lightning;
@@ -151,16 +152,11 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.CssSelector($"#ScriptPubKeyType option[value={format}]")).Click();
             Driver.FindElement(By.Id("AdvancedSettingsButton")).Click();
             Driver.SetCheckbox(By.Id("ImportKeysToRPC"), importkeys);
-            Driver.FindElement(By.Id("AdvancedSettingsButton")).Click(); // close again
 
-            try
-            {
-                Driver.FindElement(By.Id("Continue")).Click();
-            }
-            catch (ElementClickInterceptedException)
-            {
-                Driver.WaitForAndClick(By.Id("Continue"));
-            }
+            // close again and wait for close
+            Driver.FindElement(By.Id("AdvancedSettingsButton")).Click();
+            Thread.Sleep(250);
+            Driver.FindElement(By.Id("Continue")).Click();
 
             // Seed backup page
             FindAlertMessage();

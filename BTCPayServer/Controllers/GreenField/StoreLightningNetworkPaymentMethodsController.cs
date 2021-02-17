@@ -29,17 +29,20 @@ namespace BTCPayServer.Controllers.GreenField
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly IOptions<LightningNetworkOptions> _lightningNetworkOptions;
         private readonly IAuthorizationService _authorizationService;
+        private readonly CssThemeManager _cssThemeManager;
 
         public StoreLightningNetworkPaymentMethodsController(
             StoreRepository storeRepository,
             BTCPayNetworkProvider btcPayNetworkProvider,
             IOptions<LightningNetworkOptions> lightningNetworkOptions,
-            IAuthorizationService authorizationService)
+            IAuthorizationService authorizationService,
+            CssThemeManager cssThemeManager)
         {
             _storeRepository = storeRepository;
             _btcPayNetworkProvider = btcPayNetworkProvider;
             _lightningNetworkOptions = lightningNetworkOptions;
             _authorizationService = authorizationService;
+            _cssThemeManager = cssThemeManager;
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -227,7 +230,7 @@ namespace BTCPayServer.Controllers.GreenField
         
         private async Task<bool> CanUseInternalLightning()
         {
-            return 
+            return _cssThemeManager.AllowLightningInternalNodeForAll ||
                 (await _authorizationService.AuthorizeAsync(User, null,
                     new PolicyRequirement(Policies.CanUseInternalLightningNode))).Succeeded;
         }

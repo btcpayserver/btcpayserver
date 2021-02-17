@@ -3,7 +3,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Lightning;
@@ -18,6 +17,7 @@ using Microsoft.Extensions.Configuration;
 using NBitcoin;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium.Support.Extensions;
 using Xunit;
 
 namespace BTCPayServer.Tests
@@ -48,9 +48,7 @@ namespace BTCPayServer.Tests
             var runInBrowser = config["RunSeleniumInBrowser"] == "true";
             // Reset this using `dotnet user-secrets remove RunSeleniumInBrowser`
 
-
-            var chromeDriverPath = config["ChromeDriverDirectory"] ??
-                                    (Server.PayTester.InContainer ? "/usr/bin" : Directory.GetCurrentDirectory());
+            var chromeDriverPath = config["ChromeDriverDirectory"] ?? (Server.PayTester.InContainer ? "/usr/bin" : Directory.GetCurrentDirectory());
 
             var options = new ChromeOptions();
             if (Server.PayTester.InContainer)
@@ -150,12 +148,12 @@ namespace BTCPayServer.Tests
 
             Driver.FindElement(By.Id("ScriptPubKeyType")).Click();
             Driver.FindElement(By.CssSelector($"#ScriptPubKeyType option[value={format}]")).Click();
-            Driver.FindElement(By.Id("AdvancedSettingsButton")).Click();
-            Driver.SetCheckbox(By.Id("ImportKeysToRPC"), importkeys);
 
-            // close again and wait for close
-            Driver.FindElement(By.Id("AdvancedSettingsButton")).Click();
-            Thread.Sleep(250);
+            // Open advanced settings via JS, because if we click the link it triggers the toggle animation.
+            // This leads to Selenium trying to click the button while it is moving resulting in an error.
+            Driver.ExecuteJavaScript("document.getElementById('AdvancedSettings').classList.add('show')");
+
+            Driver.SetCheckbox(By.Id("ImportKeysToRPC"), importkeys);
             Driver.FindElement(By.Id("Continue")).Click();
 
             // Seed backup page

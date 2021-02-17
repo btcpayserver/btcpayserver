@@ -58,7 +58,7 @@
     }
 
     <div class="mb-4">
-        <button class="btn btn-link px-0" type="button" id="advanced-settings-button" data-toggle="collapse" data-target="#advanced-settings" aria-expanded="false" aria-controls="advanced-settings">
+        <button class="btn btn-link px-0" type="button" id="AdvancedSettingsButton" data-toggle="collapse" data-target="#advanced-settings" aria-expanded="false" aria-controls="advanced-settings">
             Advanced settings
         </button>
         <div id="advanced-settings" class="collapse @(string.IsNullOrEmpty(Model.Passphrase) && !Model.ImportKeysToRPC ? "" : "show")">

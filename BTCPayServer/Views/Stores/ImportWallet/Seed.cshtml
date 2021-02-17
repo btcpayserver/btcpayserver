@@ -19,6 +19,7 @@
 <div class="my-5">
     @if (Model.CanUseHotWallet)
     {
+        ViewData.Add(nameof(Model.CanUseHotWallet), Model.CanUseHotWallet);
         ViewData.Add(nameof(Model.CanUseRPCImport), Model.CanUseRPCImport);
         ViewData.Add(nameof(Model.Method), Model.Method);
 

@@ -113,7 +113,7 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("Email")).SendKeys(u2.RegisterDetails.Email);
                 s.Driver.FindElement(By.Id("save")).Click();
 
-                s.FindAlertMessage(Abstractions.Models.StatusMessageModel.StatusSeverity.Error);
+                s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error);
 
                 s.GoToProfile(ManageNavPages.Index);
                 s.Driver.FindElement(By.Id("Email")).Clear();
@@ -578,7 +578,7 @@ namespace BTCPayServer.Tests
                 await s.Server.ExplorerNode.GenerateAsync(1);
                 s.GoToWallet(walletId);
                 s.Driver.FindElement(By.Id("advancedSettings")).Click();
-                s.Driver.FindElement(By.Id("toggleInputSelection")).Click();
+                s.Driver.WaitForAndClick(By.Id("toggleInputSelection"));
                 s.Driver.FindElement(By.Id(spentOutpoint.ToString()));
                 Assert.Equal("true", s.Driver.FindElement(By.Name("InputSelection")).GetAttribute("value").ToLowerInvariant());
                 var el = s.Driver.FindElement(By.Id(spentOutpoint.ToString()));
@@ -878,7 +878,7 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.CssSelector("button[value=view-seed]")).Click();
 
                 // Seed backup page
-                var recoveryPhrase = s.Driver.FindElements(By.Id("recovery-phrase")).First().GetAttribute("data-mnemonic");
+                var recoveryPhrase = s.Driver.FindElements(By.Id("RecoveryPhrase")).First().GetAttribute("data-mnemonic");
                 Assert.Equal(mnemonic.ToString(), recoveryPhrase);
                 Assert.Contains("The recovery phrase will also be stored on the server as a hot wallet.", s.Driver.PageSource);
 

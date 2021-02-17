@@ -237,7 +237,7 @@ namespace BTCPayServer.Tests
                     s.GoToStore(receiver.storeId);
                     //payjoin is not enabled by default.
                     Assert.False(s.Driver.FindElement(By.Id("PayJoinEnabled")).Selected);
-                    s.SetCheckbox(s, "PayJoinEnabled", true);
+                    s.Driver.SetCheckbox(By.Id("PayJoinEnabled"), true);
                     s.Driver.FindElement(By.Id("Save")).Click();
                     Assert.True(s.Driver.FindElement(By.Id("PayJoinEnabled")).Selected);
 

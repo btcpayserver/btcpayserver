@@ -32,6 +32,7 @@ namespace BTCPayServer.Tests
         public static SeleniumTester Create([CallerMemberNameAttribute] string scope = null, bool newDb = false) =>
             new SeleniumTester { Server = ServerTester.Create(scope, newDb) };
 
+        public static readonly TimeSpan ImplicitWait = TimeSpan.FromSeconds(5);
 
         public async Task StartAsync()
         {
@@ -73,20 +74,19 @@ namespace BTCPayServer.Tests
             Logs.Tester.LogInformation($"Selenium: Using {Driver.GetType()}");
             Logs.Tester.LogInformation($"Selenium: Browsing to {Server.PayTester.ServerUri}");
             Logs.Tester.LogInformation($"Selenium: Resolution {Driver.Manage().Window.Size}");
-            Driver.Manage().Timeouts().ImplicitWait = ImplicitWait;
             GoToRegister();
             Driver.AssertNoError();
         }
 
         internal IWebElement FindAlertMessage(StatusMessageModel.StatusSeverity severity = StatusMessageModel.StatusSeverity.Success)
         {
-            var el = Driver.FindElements(By.ClassName($"alert-{StatusMessageModel.ToString(severity)}")).FirstOrDefault(e => e.Displayed);
+            var className = $"alert-{StatusMessageModel.ToString(severity)}";
+            var el = Driver.FindElement(By.ClassName(className)) ?? Driver.WaitForElement(By.ClassName(className));
             if (el is null)
-                throw new NoSuchElementException($"Unable to find alert-{StatusMessageModel.ToString(severity)}");
+                throw new NoSuchElementException($"Unable to find {className}");
             return el;
         }
 
-        public static readonly TimeSpan ImplicitWait = TimeSpan.FromSeconds(5);
         public string Link(string relativeLink)
         {
             return Server.PayTester.ServerUri.AbsoluteUri.WithoutEndingSlash() + relativeLink.WithStartingSlash();
@@ -126,40 +126,47 @@ namespace BTCPayServer.Tests
         {
             Driver.FindElement(By.Id($"Modify{cryptoCode}")).Click();
             // Modify case
-            if (Driver.PageSource.Contains("id=\"change-wallet-link\""))
+            if (Driver.PageSource.Contains("id=\"ChangeWalletLink\""))
             {
-                Driver.FindElement(By.Id("change-wallet-link")).Click();
+                Driver.FindElement(By.Id("ChangeWalletLink")).Click();
             }
 
             if (string.IsNullOrEmpty(seed))
             {
-                var option = privkeys ? "hotwallet" : "watchonly";
+                var option = privkeys ? "Hotwallet" : "Watchonly";
                 Logs.Tester.LogInformation($"Generating new seed ({option})");
-                Driver.FindElement(By.Id("generate-wallet-link")).Click();
-                Driver.FindElement(By.Id($"generate-{option}-link")).Click();
+                Driver.FindElement(By.Id("GenerateWalletLink")).Click();
+                Driver.FindElement(By.Id($"Generate{option}Link")).Click();
             }
             else
             {
                 Logs.Tester.LogInformation("Progressing with existing seed");
-                Driver.FindElement(By.Id("import-wallet-options-link")).Click();
-                Driver.FindElement(By.Id("import-seed-link")).Click();
+                Driver.FindElement(By.Id("ImportWalletOptionsLink")).Click();
+                Driver.FindElement(By.Id("ImportSeedLink")).Click();
                 Driver.FindElement(By.Id("ExistingMnemonic")).SendKeys(seed);
-                SetCheckbox(Driver.FindElement(By.Id("SavePrivateKeys")), privkeys);
+                Driver.SetCheckbox(By.Id("SavePrivateKeys"), privkeys);
             }
 
             Driver.FindElement(By.Id("ScriptPubKeyType")).Click();
             Driver.FindElement(By.CssSelector($"#ScriptPubKeyType option[value={format}]")).Click();
-            Driver.FindElement(By.Id("advanced-settings-button")).Click();
-            SetCheckbox(Driver.FindElement(By.Id("ImportKeysToRPC")), importkeys);
-            Driver.FindElement(By.Id("advanced-settings-button")).Click(); // close settings again , otherwise the button might not be clickable for Selenium
+            Driver.FindElement(By.Id("AdvancedSettingsButton")).Click();
+            Driver.SetCheckbox(By.Id("ImportKeysToRPC"), importkeys);
+            Driver.FindElement(By.Id("AdvancedSettingsButton")).Click(); // close again
 
-            Logs.Tester.LogInformation("Trying to click Continue button");
-            Driver.FindElement(By.Id("Continue")).Click();
+            try
+            {
+                Driver.FindElement(By.Id("Continue")).Click();
+            }
+            catch (ElementClickInterceptedException)
+            {
+                Driver.WaitForAndClick(By.Id("Continue"));
+            }
+
             // Seed backup page
             FindAlertMessage();
             if (string.IsNullOrEmpty(seed))
             {
-                seed = Driver.FindElements(By.Id("recovery-phrase")).First().GetAttribute("data-mnemonic");
+                seed = Driver.FindElements(By.Id("RecoveryPhrase")).First().GetAttribute("data-mnemonic");
             }
 
             // Confirm seed backup
@@ -173,8 +180,8 @@ namespace BTCPayServer.Tests
         public void AddDerivationScheme(string cryptoCode = "BTC", string derivationScheme = "xpub661MyMwAqRbcGABgHMUXDzPzH1tU7eZaAaJQXhDXsSxsqyQzQeU6kznNfSuAyqAK9UaWSaZaMFdNiY5BCF4zBPAzSnwfUAwUhwttuAKwfRX-[legacy]")
         {
             Driver.FindElement(By.Id($"Modify{cryptoCode}")).Click();
-            Driver.FindElement(By.Id("import-wallet-options-link")).Click();
-            Driver.FindElement(By.Id("import-xpub-link")).Click();
+            Driver.FindElement(By.Id("ImportWalletOptionsLink")).Click();
+            Driver.FindElement(By.Id("ImportXpubLink")).Click();
             Driver.FindElement(By.Id("DerivationScheme")).SendKeys(derivationScheme);
             Driver.FindElement(By.Id("Continue")).Click();
             Driver.FindElement(By.Id("Confirm")).Click();
@@ -280,26 +287,6 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.Id("Invoices")).Click();
             Driver.FindElement(By.Id($"invoice-checkout-{invoiceId}")).Click();
             CheckForJSErrors();
-        }
-
-
-        public void SetCheckbox(IWebElement element, bool value)
-        {
-            if ((value && !element.Selected) || (!value && element.Selected))
-            {
-                element.Click();
-            }
-
-            if (value != element.Selected)
-            {
-                Logs.Tester.LogInformation("SetCheckbox recursion, trying to click again");
-                SetCheckbox(element, value);
-            }
-        }
-
-        public void SetCheckbox(SeleniumTester s, string checkboxId, bool value)
-        {
-            SetCheckbox(s.Driver.FindElement(By.Id(checkboxId)), value);
         }
 
         public void GoToInvoices()

@@ -11,7 +11,6 @@ using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using NBitcoin;
-using BIP78.Sender;
 using NBXplorer.Models;
 using StoreData = BTCPayServer.Data.StoreData;
 

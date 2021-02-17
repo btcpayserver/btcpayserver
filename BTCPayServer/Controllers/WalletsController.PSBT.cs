@@ -13,7 +13,7 @@ using BTCPayServer.Payments.PayJoin.Sender;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
-using BIP78.Sender;
+using BTCPayServer.BIP78.Sender;
 using NBitcoin.Payment;
 using NBXplorer;
 using NBXplorer.Models;

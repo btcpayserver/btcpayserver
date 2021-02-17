@@ -1,4 +1,4 @@
-using BIP78.Sender;
+using BTCPayServer.BIP78.Sender;
 using NBitcoin;
 
 namespace BTCPayServer.Payments.PayJoin.Sender

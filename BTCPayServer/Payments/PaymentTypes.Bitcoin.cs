@@ -5,7 +5,7 @@ using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using NBitcoin;
-using BIP78.Sender;
+using BTCPayServer.BIP78.Sender;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Payments

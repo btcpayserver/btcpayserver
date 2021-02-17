@@ -28,7 +28,7 @@ using NicolasDorier.RateLimits;
 
 namespace BTCPayServer.Payments.PayJoin
 {
-    [Route("{cryptoCode}/" + BIP78.Sender.PayjoinClient.BIP21EndpointKey)]
+    [Route("{cryptoCode}/" + PayjoinClient.BIP21EndpointKey)]
     public class PayJoinEndpointController : ControllerBase
     {
         /// <summary>

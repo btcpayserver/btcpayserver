@@ -1,14 +1,19 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Wallets;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBXplorer.DerivationStrategy;
@@ -508,6 +513,34 @@ namespace BTCPayServer.Controllers
             network = cryptoCode == null ? null : _ExplorerProvider.GetNetwork(cryptoCode);
 
             return store == null || network == null ? NotFound() : null;
+        }
+
+        private DerivationSchemeSettings GetExistingDerivationStrategy(string cryptoCode, StoreData store)
+        {
+            var id = new PaymentMethodId(cryptoCode, PaymentTypes.BTCLike);
+            var existing = store.GetSupportedPaymentMethods(_NetworkProvider)
+                .OfType<DerivationSchemeSettings>()
+                .FirstOrDefault(d => d.PaymentId == id);
+            return existing;
+        }
+
+        private async Task<(bool HotWallet, bool RPCImport)> CanUseHotWallet()
+        {
+            var isAdmin = (await _authorizationService.AuthorizeAsync(User, Policies.CanModifyServerSettings))
+                .Succeeded;
+            if (isAdmin)
+                return (true, true);
+            var policies = await _settingsRepository.GetSettingAsync<PoliciesSettings>();
+            var hotWallet = policies?.AllowHotWalletForAll is true;
+            return (hotWallet, hotWallet && policies?.AllowHotWalletRPCImportForAll is true);
+        }
+
+        private async Task<string> ReadAllText(IFormFile file)
+        {
+            using (var stream = new StreamReader(file.OpenReadStream()))
+            {
+                return await stream.ReadToEndAsync();
+            }
         }
     }
 }

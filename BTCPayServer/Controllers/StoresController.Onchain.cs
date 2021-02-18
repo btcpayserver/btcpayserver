@@ -110,42 +110,34 @@ namespace BTCPayServer.Controllers
                     return View(vm.ViewName, vm);
                 }
             }
-            else
+            else if (!string.IsNullOrEmpty(vm.DerivationScheme))
             {
                 try
                 {
-                    if (!string.IsNullOrEmpty(vm.DerivationScheme))
+                    var newStrategy = ParseDerivationStrategy(vm.DerivationScheme, null, network);
+                    if (newStrategy.AccountDerivation != strategy?.AccountDerivation)
                     {
-                        var newStrategy = ParseDerivationStrategy(vm.DerivationScheme, null, network);
-                        if (newStrategy.AccountDerivation != strategy?.AccountDerivation)
+                        var accountKey = string.IsNullOrEmpty(vm.AccountKey)
+                            ? null
+                            : new BitcoinExtPubKey(vm.AccountKey, network.NBitcoinNetwork);
+                        if (accountKey != null)
                         {
-                            var accountKey = string.IsNullOrEmpty(vm.AccountKey)
-                                ? null
-                                : new BitcoinExtPubKey(vm.AccountKey, network.NBitcoinNetwork);
-                            if (accountKey != null)
+                            var accountSettings =
+                                newStrategy.AccountKeySettings.FirstOrDefault(a => a.AccountKey == accountKey);
+                            if (accountSettings != null)
                             {
-                                var accountSettings =
-                                    newStrategy.AccountKeySettings.FirstOrDefault(a => a.AccountKey == accountKey);
-                                if (accountSettings != null)
-                                {
-                                    accountSettings.AccountKeyPath =
-                                        vm.KeyPath == null ? null : KeyPath.Parse(vm.KeyPath);
-                                    accountSettings.RootFingerprint = string.IsNullOrEmpty(vm.RootFingerprint)
-                                        ? (HDFingerprint?)null
-                                        : new HDFingerprint(
-                                            NBitcoin.DataEncoders.Encoders.Hex.DecodeData(vm.RootFingerprint));
-                                }
+                                accountSettings.AccountKeyPath =
+                                    vm.KeyPath == null ? null : KeyPath.Parse(vm.KeyPath);
+                                accountSettings.RootFingerprint = string.IsNullOrEmpty(vm.RootFingerprint)
+                                    ? (HDFingerprint?)null
+                                    : new HDFingerprint(
+                                        NBitcoin.DataEncoders.Encoders.Hex.DecodeData(vm.RootFingerprint));
                             }
-
-                            strategy = newStrategy;
-                            strategy.Source = vm.Source;
-                            vm.DerivationScheme = strategy.AccountDerivation.ToString();
                         }
-                    }
-                    else
-                    {
-                        ModelState.AddModelError(nameof(vm.DerivationScheme), "Please provide your extended public key");
-                        return View(vm.ViewName, vm);
+
+                        strategy = newStrategy;
+                        strategy.Source = vm.Source;
+                        vm.DerivationScheme = strategy.AccountDerivation.ToString();
                     }
                 }
                 catch
@@ -153,6 +145,11 @@ namespace BTCPayServer.Controllers
                     ModelState.AddModelError(nameof(vm.DerivationScheme), "Invalid wallet format");
                     return View(vm.ViewName, vm);
                 }
+            }
+            else
+            {
+                ModelState.AddModelError(nameof(vm.DerivationScheme), "Please provide your extended public key");
+                return View(vm.ViewName, vm);
             }
 
             var oldConfig = vm.Config;

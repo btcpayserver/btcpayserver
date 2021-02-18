@@ -478,12 +478,21 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("SelectedStore")).SendKeys(storeName);
                 s.Driver.FindElement(By.Id("Create")).Click();
                 s.Driver.FindElement(By.Id("DefaultView")).SendKeys("Cart");
+                s.Driver.FindElement(By.CssSelector(".template-item:nth-of-type(1) .btn-primary")).Click();
+                s.Driver.FindElement(By.Id("BuyButtonText")).SendKeys("Take my money");
+                s.Driver.FindElement(By.Id("SaveItemChanges")).Click();
+                s.Driver.FindElement(By.Id("ToggleRawEditor")).Click();
+
+                var template = s.Driver.FindElement(By.Id("Template")).GetAttribute("value");
+                Assert.Contains("buyButtonText: Take my money", template);
+
                 s.Driver.FindElement(By.Id("SaveSettings")).Click();
                 s.Driver.FindElement(By.Id("ViewApp")).Click();
 
                 var posBaseUrl = s.Driver.Url.Replace("/Cart", "");
                 Assert.True(s.Driver.PageSource.Contains("Tea shop"), "Unable to create PoS");
                 Assert.True(s.Driver.PageSource.Contains("Cart"), "PoS not showing correct default view");
+                Assert.True(s.Driver.PageSource.Contains("Take my money"), "PoS not showing correct default view");
 
                 s.Driver.Url = posBaseUrl + "/static";
                 Assert.False(s.Driver.PageSource.Contains("Cart"), "Static PoS not showing correct view");

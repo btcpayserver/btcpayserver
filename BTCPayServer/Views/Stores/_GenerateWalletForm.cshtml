@@ -58,10 +58,10 @@
     }
 
     <div class="mb-4">
-        <button class="btn btn-link px-0" type="button" id="AdvancedSettingsButton" data-toggle="collapse" data-target="#advanced-settings" aria-expanded="false" aria-controls="advanced-settings">
+        <button class="btn btn-link px-0" type="button" id="AdvancedSettingsButton" data-toggle="collapse" data-target="#AdvancedSettings" aria-expanded="false" aria-controls="advanced-settings">
             Advanced settings
         </button>
-        <div id="advanced-settings" class="collapse @(string.IsNullOrEmpty(Model.Passphrase) && !Model.ImportKeysToRPC ? "" : "show")">
+        <div id="AdvancedSettings" class="collapse @(string.IsNullOrEmpty(Model.Passphrase) && !Model.ImportKeysToRPC ? "" : "show")">
             <div class="pt-3 pb-1">
                 @if (isImport) // hide account option when creating a wallet
                 {

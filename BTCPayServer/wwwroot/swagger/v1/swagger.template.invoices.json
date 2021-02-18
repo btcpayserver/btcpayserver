@@ -732,7 +732,7 @@
                         "items": {
                             "type": "string"
                         },
-                        "description": "A specific set of payment methods to use for this invoice (ie. BTC, BTC-LightningNetwork). By default, select all payment methods activated in the store."
+                        "description": "A specific set of payment methods to use for this invoice (ie. BTC, BTC-OffChain). By default, select all payment methods activated in the store."
                     },
                     "expirationMinutes": {
                         "type": "integer",

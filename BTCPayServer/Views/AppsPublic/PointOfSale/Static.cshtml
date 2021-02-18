@@ -59,7 +59,7 @@
                                 {
                                     <form method="post" asp-controller="AppsPublic" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false">
                                         <button type="submit" name="choiceKey" class="js-add-cart btn btn-primary" value="@item.Id">
-                                            @Model.ButtonText.Replace("{0}",item.Price.Formatted).Replace("{Price}",item.Price.Formatted)
+                                            @((item.BuyButtonText ?? Model.ButtonText).Replace("{0}",item.Price.Formatted).Replace("{Price}",item.Price.Formatted))
                                         </button>
                                     </form>
                                 }

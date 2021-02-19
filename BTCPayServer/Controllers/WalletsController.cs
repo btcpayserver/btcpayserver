@@ -52,7 +52,7 @@ namespace BTCPayServer.Controllers
         private readonly IAuthorizationService _authorizationService;
         private readonly IFeeProviderFactory _feeRateProvider;
         private readonly BTCPayWalletProvider _walletProvider;
-        private readonly WalletReceiveStateService _WalletReceiveStateService;
+        private readonly WalletReceiveService _walletReceiveService;
         private readonly EventAggregator _EventAggregator;
         private readonly SettingsRepository _settingsRepository;
         private readonly DelayedTransactionBroadcaster _broadcaster;
@@ -77,7 +77,7 @@ namespace BTCPayServer.Controllers
                                  ExplorerClientProvider explorerProvider,
                                  IFeeProviderFactory feeRateProvider,
                                  BTCPayWalletProvider walletProvider,
-                                 WalletReceiveStateService walletReceiveStateService,
+                                 WalletReceiveService walletReceiveService,
                                  EventAggregator eventAggregator,
                                  SettingsRepository settingsRepository,
                                  DelayedTransactionBroadcaster broadcaster,
@@ -99,7 +99,7 @@ namespace BTCPayServer.Controllers
             ExplorerClientProvider = explorerProvider;
             _feeRateProvider = feeRateProvider;
             _walletProvider = walletProvider;
-            _WalletReceiveStateService = walletReceiveStateService;
+            _walletReceiveService = walletReceiveService;
             _EventAggregator = eventAggregator;
             _settingsRepository = settingsRepository;
             _broadcaster = broadcaster;
@@ -363,7 +363,7 @@ namespace BTCPayServer.Controllers
             if (network == null)
                 return NotFound();
 
-            var address = _WalletReceiveStateService.Get(walletId)?.Address;
+            var address = _walletReceiveService.Get(walletId)?.Address;
             return View(new WalletReceiveViewModel()
             {
                 CryptoCode = walletId.CryptoCode,
@@ -385,29 +385,22 @@ namespace BTCPayServer.Controllers
             var network = this.NetworkProvider.GetNetwork<BTCPayNetwork>(walletId?.CryptoCode);
             if (network == null)
                 return NotFound();
-            var wallet = _walletProvider.GetWallet(network);
             switch (command)
             {
                 case "unreserve-current-address":
-                    KeyPathInformation cachedAddress = _WalletReceiveStateService.Get(walletId);
-                    if (cachedAddress == null)
+                    var address = await _walletReceiveService.UnReserveAddress(walletId);
+                    if (!string.IsNullOrEmpty(address))
                     {
-                        break;
+                        TempData.SetStatusMessageModel(new StatusMessageModel()
+                        {
+                            AllowDismiss = true,
+                            Message = $"Address {address} was unreserved.",
+                            Severity = StatusMessageModel.StatusSeverity.Success,
+                        });
                     }
-                    var address = cachedAddress.ScriptPubKey.GetDestinationAddress(network.NBitcoinNetwork);
-                    ExplorerClientProvider.GetExplorerClient(network)
-                        .CancelReservation(cachedAddress.DerivationStrategy, new[] { cachedAddress.KeyPath });
-                    this.TempData.SetStatusMessageModel(new StatusMessageModel()
-                    {
-                        AllowDismiss = true,
-                        Message = $"Address {address} was unreserved.",
-                        Severity = StatusMessageModel.StatusSeverity.Success,
-                    });
-                    _WalletReceiveStateService.Remove(walletId);
                     break;
                 case "generate-new-address":
-                    var reserve = (await wallet.ReserveAddressAsync(paymentMethod.AccountDerivation));
-                    _WalletReceiveStateService.Set(walletId, reserve);
+                    await _walletReceiveService.GetOrGenerate(walletId, true);
                     break;
             }
             return RedirectToAction(nameof(WalletReceive), new { walletId });
@@ -1026,11 +1019,7 @@ namespace BTCPayServer.Controllers
 
         internal DerivationSchemeSettings GetDerivationSchemeSettings(WalletId walletId)
         {
-            var paymentMethod = CurrentStore
-                            .GetSupportedPaymentMethods(NetworkProvider)
-                            .OfType<DerivationSchemeSettings>()
-                            .FirstOrDefault(p => p.PaymentId.PaymentType == Payments.PaymentTypes.BTCLike && p.PaymentId.CryptoCode == walletId.CryptoCode);
-            return paymentMethod;
+            return CurrentStore.GetDerivationSchemeSettings(NetworkProvider, walletId.CryptoCode);
         }
 
         private static async Task<string> GetBalanceString(BTCPayWallet wallet, DerivationStrategyBase derivationStrategy)

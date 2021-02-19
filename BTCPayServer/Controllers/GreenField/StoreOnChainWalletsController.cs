@@ -4,24 +4,22 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer;
 using BTCPayServer.Abstractions.Constants;
-using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.Services;
-using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
+using NBitcoin.JsonConverters;
 using NBitcoin.Payment;
 using NBXplorer;
-using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
+using Newtonsoft.Json;
 using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers.GreenField
@@ -42,6 +40,7 @@ namespace BTCPayServer.Controllers.GreenField
         private readonly PayjoinClient _payjoinClient;
         private readonly DelayedTransactionBroadcaster _delayedTransactionBroadcaster;
         private readonly EventAggregator _eventAggregator;
+        private readonly WalletReceiveService _walletReceiveService;
 
         public StoreOnChainWalletsController(
             IAuthorizationService authorizationService,
@@ -54,7 +53,8 @@ namespace BTCPayServer.Controllers.GreenField
             WalletsController walletsController,
             PayjoinClient payjoinClient,
             DelayedTransactionBroadcaster delayedTransactionBroadcaster,
-            EventAggregator eventAggregator)
+            EventAggregator eventAggregator, 
+            WalletReceiveService walletReceiveService)
         {
             _authorizationService = authorizationService;
             _btcPayWalletProvider = btcPayWalletProvider;
@@ -67,6 +67,7 @@ namespace BTCPayServer.Controllers.GreenField
             _payjoinClient = payjoinClient;
             _delayedTransactionBroadcaster = delayedTransactionBroadcaster;
             _eventAggregator = eventAggregator;
+            _walletReceiveService = walletReceiveService;
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -81,6 +82,40 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 Balance = await wallet.GetBalance(derivationScheme.AccountDerivation)
             });
+        }
+        
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/address")]
+        public async Task<IActionResult> GetOnChainWalletReceiveAddress(string storeId, string cryptoCode, bool forceGenerate = false)
+        {
+            if (IsInvalidWalletRequest(cryptoCode, out BTCPayNetwork network,
+                out DerivationSchemeSettings derivationScheme, out IActionResult actionResult)) return actionResult;
+
+            var kpi = await _walletReceiveService.GetOrGenerate(new WalletId(storeId, cryptoCode), forceGenerate);
+            if (kpi is null)
+            {
+                return BadRequest();
+            }
+            return Ok(new OnChainWalletAddressData()
+            {
+                Address = kpi.Address.ToString(),
+                KeyPath = kpi.KeyPath
+            });
+        }
+        
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpDelete("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/address")]
+        public async Task<IActionResult> UnReserveOnChainWalletReceiveAddress(string storeId, string cryptoCode)
+        {
+            if (IsInvalidWalletRequest(cryptoCode, out BTCPayNetwork network,
+                out DerivationSchemeSettings derivationScheme, out IActionResult actionResult)) return actionResult;
+
+            var addr = await _walletReceiveService.UnReserveAddress(new WalletId(storeId, cryptoCode));
+            if (addr is null)
+            {
+                return NotFound();
+            }
+            return Ok();
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -414,6 +449,7 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 return Ok(transaction.ToHex());
             }
+
             broadcastResult = await explorerClient.BroadcastAsync(transaction);
             if (broadcastResult.Success)
             {
@@ -450,28 +486,23 @@ namespace BTCPayServer.Controllers.GreenField
             network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
             if (network is null)
             {
-                {
-                    actionResult = NotFound();
-                    return true;
-                }
+                actionResult = NotFound();
+                return true;
             }
+
 
             if (!network.WalletSupported || !_btcPayWalletProvider.IsAvailable(network))
             {
-                {
-                    actionResult = this.CreateAPIError("not-available",
-                        $"{cryptoCode} services are not currently available");
-                    return true;
-                }
+                actionResult = this.CreateAPIError("not-available",
+                    $"{cryptoCode} services are not currently available");
+                return true;
             }
 
             derivationScheme = GetDerivationSchemeSettings(cryptoCode);
             if (derivationScheme?.AccountDerivation is null)
             {
-                {
-                    actionResult = NotFound();
-                    return true;
-                }
+                actionResult = NotFound();
+                return true;
             }
 
             return false;

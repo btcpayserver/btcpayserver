@@ -19,7 +19,10 @@ namespace BTCPayServer.Controllers
     public partial class ServerController
     {
         [Route("server/users")]
-        public async Task<IActionResult> ListUsers(UsersViewModel model)
+        public async Task<IActionResult> ListUsers(
+            UsersViewModel model,
+            string sortOrder = null
+        )
         {
             model = this.ParseListQuery(model ?? new UsersViewModel());
             var users = _UserManager.Users;
@@ -34,6 +37,22 @@ namespace BTCPayServer.Controllers
                     Verified = u.EmailConfirmed || !u.RequiresEmailConfirmation,
                     Created = u.Created
                 }).ToListAsync();
+
+            if (sortOrder != null) 
+            {
+                model.Users = model.Users.OrderByDescending(user => user.Email).ToList();
+
+                switch (sortOrder)
+                {
+                    case "desc":
+                        ViewData["UserEmailSortOrder"] = "asc";
+                        break;
+                    case "asc":
+                        model.Users = model.Users.ToArray().Reverse().ToList();
+                        ViewData["UserEmailSortOrder"] = "desc";
+                        break;
+                }
+            }
              
             return View(model);
         }

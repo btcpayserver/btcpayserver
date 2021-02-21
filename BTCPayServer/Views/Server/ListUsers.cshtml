@@ -1,6 +1,9 @@
 ﻿@model UsersViewModel
 @{
     ViewData.SetActivePageAndTitle(ServerNavPages.Users);
+    var userEmailSortOrder = (string)ViewData["UserEmailSortOrder"];
+    var sortByDesc = "Sort by descending...";
+    var sortByAsc = "Sort by ascending...";
 }
 
 <partial name="_StatusMessage"/>
@@ -22,7 +25,17 @@
         <table class="table table-sm">
             <thead>
             <tr>
-                <th>Email</th>
+                <th>
+                    <a
+                        asp-action="ListUsers"
+                        asp-route-sortOrder="@(userEmailSortOrder ?? "asc")"
+                        class="text-nowrap"
+                        title="@(userEmailSortOrder == "desc" ? sortByDesc : sortByAsc)"
+                    >
+                        Email
+                        <span class="fa @(userEmailSortOrder == "asc" ? "fa-sort-alpha-desc" : userEmailSortOrder == "desc" ? "fa-sort-alpha-asc" : "fa-sort")" />
+                    </a>
+                </th>
                 <th>Created</th>
                 <th>Verified</th>
                 <th class="text-right">Actions</th>

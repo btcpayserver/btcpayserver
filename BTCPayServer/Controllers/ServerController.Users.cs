@@ -25,10 +25,31 @@ namespace BTCPayServer.Controllers
         )
         {
             model = this.ParseListQuery(model ?? new UsersViewModel());
-            var users = _UserManager.Users;
-             model.Total = await users.CountAsync();   
-             model.Users = await users  
-                .Skip(model.Skip).Take(model.Count)
+            
+            var usersQuery = _UserManager.Users;
+            if (!string.IsNullOrWhiteSpace(model.SearchTerm))
+            {
+                usersQuery = usersQuery.Where(u => u.Email.Contains(model.SearchTerm));
+            }
+
+            if (sortOrder != null) 
+            {
+                switch (sortOrder)
+                {
+                    case "desc":
+                        ViewData["NextUserEmailSortOrder"] = "asc";
+                        usersQuery = usersQuery.OrderByDescending(user => user.Email);
+                        break;
+                    case "asc":
+                        usersQuery = usersQuery.OrderBy(user => user.Email);
+                        ViewData["NextUserEmailSortOrder"] = "desc";
+                        break;
+                }
+            }
+
+            model.Users = await usersQuery
+                .Skip(model.Skip)
+                .Take(model.Count)
                 .Select(u => new UsersViewModel.UserViewModel
                 {
                     Name = u.UserName,
@@ -36,23 +57,9 @@ namespace BTCPayServer.Controllers
                     Id = u.Id,
                     Verified = u.EmailConfirmed || !u.RequiresEmailConfirmation,
                     Created = u.Created
-                }).ToListAsync();
-
-            if (sortOrder != null) 
-            {
-                model.Users = model.Users.OrderByDescending(user => user.Email).ToList();
-
-                switch (sortOrder)
-                {
-                    case "desc":
-                        ViewData["UserEmailSortOrder"] = "asc";
-                        break;
-                    case "asc":
-                        model.Users = model.Users.ToArray().Reverse().ToList();
-                        ViewData["UserEmailSortOrder"] = "desc";
-                        break;
-                }
-            }
+                })
+                .ToListAsync();
+            model.Total = await usersQuery.CountAsync();
              
             return View(model);
         }

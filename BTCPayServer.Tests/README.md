@@ -55,6 +55,20 @@ Please, run the test `CanSetLightningServer`, this will establish a channel betw
 Alternatively you can run the `./docker-lightning-channel-setup.sh` script to establish the channel connection.
 The `./docker-lightning-channel-teardown.sh` script closes any existing lightning channels.
 
+### Alternative Lightning testing: Using Polar to test Lightning payments
+
+- Install and run [Polar](https://lightningpolar.com/). Setup a small network of nodes.
+- Go to your store's General Settings and enable Lightning.
+- Build your connection string using the Connect information in the Polar app.
+
+LND Connection string example: 
+type=lnd-rest;server=https://127.0.0.1:8084/;macaroonfilepath="local path to admin.macaroon on your computer, without these quotes";allowinsecure=true
+
+Now you can create a lightning invoice on BTCPay Server regtest and make a payment through Polar.
+
+PLEASE NOTE: You may get an exception break in Visual Studio. You must quickly click "Continue" in VS so the invoice is generated.
+Or, uncheck the box that says, "Break when this exception type is thrown".
+
 ## FAQ
 
 ### `docker-compose up dev` failed or tests are not passing, what should I do?

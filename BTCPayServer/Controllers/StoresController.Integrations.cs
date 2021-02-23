@@ -238,7 +238,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> NewWebhook(string storeId, EditWebhookViewModel viewModel)
         {
             if (!ModelState.IsValid)
-                return View(viewModel);
+                return View(nameof(ModifyWebhook), viewModel);
 
             var webhookId = await _Repo.CreateWebhook(CurrentStore.Id, viewModel.CreateBlob());
             TempData[WellKnownTempData.SuccessMessage] = "The webhook has been created";

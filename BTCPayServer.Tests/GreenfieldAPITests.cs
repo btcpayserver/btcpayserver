@@ -968,25 +968,28 @@ namespace BTCPayServer.Tests
 
 
                 //update
-                invoice = await viewOnly.GetInvoice(user.StoreId, newInvoice.Id);
-
-                await AssertValidationError(new[] { nameof(MarkInvoiceStatusRequest.Status) }, async () =>
+                newInvoice = await client.CreateInvoice(user.StoreId,
+                    new CreateInvoiceRequest() { Currency = "USD", Amount = 1 });
+                await client.MarkInvoiceStatus(user.StoreId, newInvoice.Id, new MarkInvoiceStatusRequest()
                 {
-                    await client.MarkInvoiceStatus(user.StoreId, invoice.Id, new MarkInvoiceStatusRequest()
-                    {
-                        Status = InvoiceStatus.Settled
-                    });
+                    Status = InvoiceStatus.Settled
                 });
-
+                newInvoice = await client.CreateInvoice(user.StoreId,
+                    new CreateInvoiceRequest() { Currency = "USD", Amount = 1 });
+                await client.MarkInvoiceStatus(user.StoreId, newInvoice.Id, new MarkInvoiceStatusRequest()
+                {
+                    Status = InvoiceStatus.Invalid
+                });
+               
                 await AssertHttpError(403, async () =>
                 {
-                    await viewOnly.UpdateInvoice(user.StoreId, newInvoice.Id,
+                    await viewOnly.UpdateInvoice(user.StoreId, invoice.Id,
                         new UpdateInvoiceRequest()
                         {
                             Metadata = JObject.Parse("{\"itemCode\": \"updated\", newstuff: [1,2,3,4,5]}")
                         });
                 });
-                invoice = await client.UpdateInvoice(user.StoreId, newInvoice.Id,
+                invoice = await client.UpdateInvoice(user.StoreId, invoice.Id,
                     new UpdateInvoiceRequest()
                     {
                         Metadata = JObject.Parse("{\"itemCode\": \"updated\", newstuff: [1,2,3,4,5]}")
@@ -996,7 +999,7 @@ namespace BTCPayServer.Tests
                 Assert.Equal(15,((JArray) invoice.Metadata["newstuff"]).Values<int>().Sum());
 
                 //also test the the metadata actually got saved
-                invoice = await client.GetInvoice(user.StoreId, newInvoice.Id);
+                invoice = await client.GetInvoice(user.StoreId, invoice.Id);
                 Assert.Equal("updated",invoice.Metadata["itemCode"].Value<string>());
                 Assert.Equal(15,((JArray) invoice.Metadata["newstuff"]).Values<int>().Sum());
                 

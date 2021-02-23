@@ -665,6 +665,7 @@ namespace BTCPayServer.Services.Invoices
         public bool CanMarkComplete()
         {
             return (Status == InvoiceStatusLegacy.Paid) ||
+                   (Status == InvoiceStatusLegacy.New) ||
                    ((Status == InvoiceStatusLegacy.New || Status == InvoiceStatusLegacy.Expired) && ExceptionStatus == InvoiceExceptionStatus.PaidPartial) ||
                    ((Status == InvoiceStatusLegacy.New || Status == InvoiceStatusLegacy.Expired) && ExceptionStatus == InvoiceExceptionStatus.PaidLate) ||
                    (Status != InvoiceStatusLegacy.Complete && ExceptionStatus == InvoiceExceptionStatus.Marked) ||

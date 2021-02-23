@@ -188,12 +188,10 @@ $(function() {
             
                 // Split products from the template
                 for (var kl in lines) {
-                    var line = lines[kl],
-                        product = line.split("\n"),
-                        id, price, title, description, image = null,
-                        custom, buyButtonText, inventory=null, paymentMethods = [];
-            
-                    var goingThroughMethods = false;
+                    var line = lines[kl], product = line.split("\n"), goingThroughMethods = false,
+                        id = null, price = null, title = null, description = null, image = null,
+                        custom = null, buyButtonText = null, inventory = null, paymentMethods = [];
+
                     for (var kp in product) {
                         var productProperty = product[kp].trim();
             

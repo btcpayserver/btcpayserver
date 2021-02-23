@@ -162,30 +162,29 @@ $(function() {
             },
             getImage: function(item){
                 return {
-                    "background-image" : "url('"+(this.unEscapeKey(item.image) || "/img/img-placeholder.svg") +"')",
+                    "background-image" : "url('" + (this.unEscapeKey(item.image) || "/img/img-placeholder.svg") +"')",
                     "opacity": item.image? 1: 0.5
                 }
             },
-            getInputElement : function(){ return $("#"+this.elementId); },
+            getInputElement : function(){ return $("#" + this.elementId); },
             getModalElement : function(){ return $("#product-modal"); },
             loadYml: function(){
                 var result = [];
                 var template = this.getInputElement().val().trim();
-    
                 var lines = [];
                 var items = template.split("\n");
+
                 for (var i = 0; i < items.length; i++) {
-                    if(items[i] === ""){
+                    if (items[i] === ""){
                         continue;
                     }
-                    if(items[i].startsWith("  ")){
+                    if (items[i].startsWith("  ")){
                         lines[lines.length-1]+=items[i] + "\n";
-                    }else{
-                       
+                    } else {
                         lines.push(items[i] + "\n");
                     }
-                }            
-            
+                }
+
                 // Split products from the template
                 for (var kl in lines) {
                     var line = lines[kl], product = line.split("\n"), goingThroughMethods = false,
@@ -198,9 +197,9 @@ $(function() {
                         if (kp == 0) {
                             id = productProperty.replace(":", "");
                         }
-                        if(productProperty.startsWith("-") && goingThroughMethods){
+                        if (productProperty.startsWith("-") && goingThroughMethods) {
                             paymentMethods.push(productProperty.substr(1));
-                        }else{
+                        } else {
                             goingThroughMethods = false;
                         }
             

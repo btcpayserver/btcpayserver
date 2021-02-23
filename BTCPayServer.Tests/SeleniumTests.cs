@@ -711,8 +711,9 @@ namespace BTCPayServer.Tests
 
                 Logs.Tester.LogInformation("Let's see if we can delete store with some webhooks inside");
                 s.GoToStore(storeId);
-                s.Driver.ExecuteJavaScript("window.scrollBy(0,1000);");
-                s.Driver.FindElement(By.Id("danger-zone-expander")).Click();
+                // Open danger zone via JS, because if we click the link it triggers the toggle animation.
+                // This leads to Selenium trying to click the button while it is moving resulting in an error.
+                s.Driver.ExecuteJavaScript("document.getElementById('danger-zone').classList.add('show')");
                 s.Driver.FindElement(By.Id("delete-store")).Click();
                 s.Driver.FindElement(By.Id("continue")).Click();
                 s.FindAlertMessage();

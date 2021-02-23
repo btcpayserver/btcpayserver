@@ -8,11 +8,11 @@ namespace BTCPayServer.Services
 {
     public class PoliciesSettings
     {
-        [Display(Name = "Requires a confirmation mail for registering")]
+        [Display(Name = "Require a confirmation email for registering")]
         public bool RequiresConfirmedEmail { get; set; }
 
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
-        [Display(Name = "Disable registration")]
+        [Display(Name = "Disable new user registration on the server")]
         public bool LockSubscription { get; set; }
 
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
@@ -22,15 +22,15 @@ namespace BTCPayServer.Services
         public bool AllowLightningInternalNodeForAll { get; set; }
         [Display(Name = "Allow non-admins to create hot wallets for their stores")]
         public bool AllowHotWalletForAll { get; set; }
-        [Display(Name = "Allow non-admins to import their hot wallets to the node wallet")]
+        [Display(Name = "Allow non-admins to import hot wallets for their stores")]
         public bool AllowHotWalletRPCImportForAll { get; set; }
-        [Display(Name = "Check releases on GitHub and alert when new BTCPayServer version is available")]
+        [Display(Name = "Check releases on GitHub and notify when new BTCPay Server version is available")]
         public bool CheckForNewVersions { get; set; }        
-        [Display(Name = "Disable notifications automatically showing (no websockets)")]
+        [Display(Name = "Disable notifications from automatically showing (no websockets)")]
         public bool DisableInstantNotifications { get; set; }
-        [Display(Name = "Disable stores falling back to using the server's email settings")]
+        [Display(Name = "Disable stores from using the server's email settings as backup")]
         public bool DisableStoresToUseServerEmailSettings { get; set; }
-        [Display(Name = "Only allow admins to use the user creation API")]
+        [Display(Name = "Disable non-admins access to the user creation API endpoint")]
         public bool DisableNonAdminCreateUserApi { get; set; }
 
         [Display(Name = "Display app on website root")]

@@ -35,7 +35,7 @@ You can also generate blocks:
 LND Connection string example: 
 type=lnd-rest;server=https://127.0.0.1:8084/;macaroonfilepath="local path to admin.macaroon on your computer, without these quotes";allowinsecure=true
 
-Now you can create a lightning invoice on BTCPay Server regtest and make a payment through Polar.
+Now you can create a Lightning invoice on BTCPay Server regtest and make a payment through Polar.
 
 PLEASE NOTE: You may get an exception break in Visual Studio. You must quickly click "Continue" in VS so the invoice is generated.
 Or, uncheck the box that says, "Break when this exceptiontype is thrown".

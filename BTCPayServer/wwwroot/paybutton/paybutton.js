@@ -181,7 +181,7 @@ function inputChanges(event, buttonSize) {
     }else{
         var numheight = parseInt(height.replace("px", ""));
         html+= '<button type="submit" class="submit" name="submit" style="min-width:' + width + '; min-height:' + height + '; border-radius: 4px;border-style: none;background-color: #0f3b21;" alt="Pay with BtcPay, Self-Hosted Bitcoin Payment Processor"><span style="color:#fff">'+esc(srvModel.payButtonText)+'</span>\n' +
-            (srvModel.payButtonImageUrl? '<img src="'+esc(srvModel.payButtonImageUrl)+'" style="height:'+numheight+'px;display:inline-block;padding: 5% 0 5% 5px;">\n' : '')+
+            (srvModel.payButtonImageUrl? '<img src="'+esc(srvModel.payButtonImageUrl)+'" style="height:'+numheight+'px;display:inline-block;padding: 5% 0 5% 5px;vertical-align: middle;">\n' : '')+
             '</button>'
     }
     html += '</form>';

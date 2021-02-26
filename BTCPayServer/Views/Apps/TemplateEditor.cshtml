@@ -48,7 +48,7 @@
                 <button type="button" class="btn btn-secondary" v-on:click="editItem(-1)" id="btn-add">
                     <i class="fa fa-plus fa-fw"></i> Add
                 </button>
-                <button type="button" class="btn btn-secondary ml-2" v-on:click="toggleTemplateElement()">
+                <button type="button" class="btn btn-secondary ml-2" v-on:click="toggleTemplateElement()" id="ToggleRawEditor">
                     Toggle raw editor
                 </button>
             </div>
@@ -113,11 +113,17 @@
                                     <input type="text" required pattern="[^\*#]+"  class="form-control mb-2" v-model="editingItem.id" ref="txtId"/>
                                 </div>
                             </div>
+                            <div class="form-row">
+                                <div class="col">
+                                    <label>Buy Button Text</label>
+                                    <input type="text" id="BuyButtonText" class="form-control mb-2" v-model="editingItem.buyButtonText" ref="txtBuyButtonText"/>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal" v-on:click="clearEditingItem()">Close</button>
-                        <button type="button" class="btn btn-primary" v-on:click="saveEditingItem()">Save Changes</button>
+                        <button type="button" class="btn btn-primary" v-on:click="saveEditingItem()" id="SaveItemChanges">Save Changes</button>
                     </div>
                 </div>
             </div>
@@ -156,47 +162,44 @@ $(function() {
             },
             getImage: function(item){
                 return {
-                    "background-image" : "url('"+(this.unEscapeKey(item.image) || "/img/img-placeholder.svg") +"')",
+                    "background-image" : "url('" + (this.unEscapeKey(item.image) || "/img/img-placeholder.svg") +"')",
                     "opacity": item.image? 1: 0.5
                 }
             },
-            getInputElement : function(){ return $("#"+this.elementId); },
+            getInputElement : function(){ return $("#" + this.elementId); },
             getModalElement : function(){ return $("#product-modal"); },
             loadYml: function(){
                 var result = [];
                 var template = this.getInputElement().val().trim();
-    
                 var lines = [];
                 var items = template.split("\n");
+
                 for (var i = 0; i < items.length; i++) {
-                    if(items[i] === ""){
+                    if (items[i] === ""){
                         continue;
                     }
-                    if(items[i].startsWith("  ")){
+                    if (items[i].startsWith("  ")){
                         lines[lines.length-1]+=items[i] + "\n";
-                    }else{
-                       
+                    } else {
                         lines.push(items[i] + "\n");
                     }
-                }            
-            
+                }
+
                 // Split products from the template
                 for (var kl in lines) {
-                    var line = lines[kl],
-                        product = line.split("\n"),
-                        id, price, title, description, image = null,
-                        custom, inventory=null, paymentMethods = [];
-            
-                    var goingThroughMethods = false;
+                    var line = lines[kl], product = line.split("\n"), goingThroughMethods = false,
+                        id = null, price = null, title = null, description = null, image = null,
+                        custom = null, buyButtonText = null, inventory = null, paymentMethods = [];
+
                     for (var kp in product) {
                         var productProperty = product[kp].trim();
             
                         if (kp == 0) {
                             id = productProperty.replace(":", "");
                         }
-                        if(productProperty.startsWith("-") && goingThroughMethods){
+                        if (productProperty.startsWith("-") && goingThroughMethods) {
                             paymentMethods.push(productProperty.substr(1));
-                        }else{
+                        } else {
                             goingThroughMethods = false;
                         }
             
@@ -215,6 +218,9 @@ $(function() {
                         if (productProperty.indexOf('custom:') !== -1) {
                             custom = productProperty.replace('custom:', '').trim();
                         }
+                        if (productProperty.indexOf('buyButtonText:') !== -1) {
+                            buyButtonText = productProperty.replace('buyButtonText:', '').trim();
+                        }
                         if (productProperty.indexOf('inventory:') !== -1) {
                             inventory = parseInt(productProperty.replace('inventory:', '').trim(),10);
                         }
@@ -232,6 +238,7 @@ $(function() {
                             image: image || null,
                             description: description || '',
                             custom: custom === "true",
+                            buyButtonText: buyButtonText,
                             inventory: isNaN(inventory)? null: inventory,
                             paymentMethods: paymentMethods
                         });
@@ -250,6 +257,7 @@ $(function() {
                             image = product.image,
                             description = product.description,
                             custom = product.custom,
+                            buyButtonText = product.buyButtonText,
                             inventory = product.inventory,
                             paymentMethods = product.paymentMethods;
 
@@ -268,6 +276,9 @@ $(function() {
                         }
                         if (custom != null) {
                             template += '  custom: ' + custom + '\n';
+                        }
+                        if (buyButtonText != null && buyButtonText.length > 0) {
+                            template += '  buyButtonText: ' + buyButtonText + '\n';
                         }
                         if(paymentMethods != null && paymentMethods.length > 0){
                             template+= '  payment_methods:\n';

@@ -79,5 +79,9 @@ namespace BTCPayServer.Payments
         }
 
         public override string InvoiceViewPaymentPartialName { get; } = "Bitcoin/ViewBitcoinLikePaymentData";
+        public override bool IsPaymentType(string paymentType)
+        {
+            return string.IsNullOrEmpty(paymentType) || base.IsPaymentType(paymentType);
+        }
     }
 }

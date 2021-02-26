@@ -165,12 +165,12 @@ namespace BTCPayServer.Controllers.GreenField
                         });
             }
 
-                return Ok(result);
+            return Ok(result);
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpDelete("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}")]
-        public async Task<ActionResult<OnChainPaymentMethodPreviewResultData>> RemoveOnChainPaymentMethod(
+        public async Task<IActionResult> RemoveOnChainPaymentMethod(
             string cryptoCode,
             int offset = 0, int amount = 10)
         {

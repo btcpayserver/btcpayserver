@@ -342,8 +342,8 @@ retry:
                 {
                     foreach (var method in store.GetSupportedPaymentMethods(_NetworkProvider).OfType<Payments.Lightning.LightningSupportedPaymentMethod>())
                     {
-                        var lightning = method.GetLightningUrl();
-                        if (lightning.IsLegacy)
+                        var lightning = method.GetExternalLightningUrl();
+                        if (lightning?.IsLegacy is true)
                         {
                             method.SetLightningUrl(lightning);
                             store.SetSupportedPaymentMethod(method);

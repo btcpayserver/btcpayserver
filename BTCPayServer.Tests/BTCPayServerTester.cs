@@ -112,7 +112,7 @@ namespace BTCPayServer.Tests
 
             if (UseLightning)
             {
-                config.AppendLine($"btc.lightning={IntegratedLightning.AbsoluteUri}");
+                config.AppendLine($"btc.lightning={IntegratedLightning}");
                 var localLndBackupFile = Path.Combine(_Directory, "walletunlock.json");
                 File.Copy(TestUtils.GetTestDataFullPath("LndSeedBackup/walletunlock.json"), localLndBackupFile, true);
                 config.AppendLine($"btc.external.lndseedbackup={localLndBackupFile}");
@@ -269,7 +269,7 @@ namespace BTCPayServer.Tests
         public InvoiceRepository InvoiceRepository { get; private set; }
         public StoreRepository StoreRepository { get; private set; }
         public BTCPayNetworkProvider Networks { get; private set; }
-        public Uri IntegratedLightning { get; internal set; }
+        public string IntegratedLightning { get; internal set; }
         public bool InContainer { get; internal set; }
 
         public T GetService<T>()

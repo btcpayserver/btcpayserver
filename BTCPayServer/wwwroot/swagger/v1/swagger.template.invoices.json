@@ -433,7 +433,7 @@
                         }
                     }
                 ],
-                "description": "Mark an invoice as invalid or completed.",
+                "description": "Mark an invoice as invalid or settled.",
                 "operationId": "Invoices_MarkInvoiceStatus",
                 "responses": {
                     "200": {

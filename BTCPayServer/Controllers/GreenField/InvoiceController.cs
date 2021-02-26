@@ -212,7 +212,7 @@ namespace BTCPayServer.Controllers.GreenField
             if (!await _invoiceRepository.MarkInvoiceStatus(invoice.Id, request.Status))
             {
                 ModelState.AddModelError(nameof(request.Status),
-                    "Status can only be marked to invalid or complete within certain conditions.");
+                    "Status can only be marked to invalid or settled within certain conditions.");
             }
 
             if (!ModelState.IsValid)

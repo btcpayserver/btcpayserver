@@ -80,7 +80,7 @@ namespace BTCPayServer.Tests
                 tester.ActivateLightning();
                 await tester.StartAsync();
                 var user = tester.NewAccount();
-                user.GrantAccess();
+                user.GrantAccess(true);
                 user.RegisterDerivationScheme("BTC");
                 user.RegisterDerivationScheme("LTC");
                 user.RegisterLightningNode("BTC", LightningConnectionType.CLightning);
@@ -287,7 +287,7 @@ namespace BTCPayServer.Tests
                 await tester.StartAsync();
                 await tester.EnsureChannelsSetup();
                 var user = tester.NewAccount();
-                user.GrantAccess();
+                user.GrantAccess(true);
                 user.RegisterLightningNode("BTC", LightningConnectionType.Charge);
                 user.RegisterDerivationScheme("BTC");
                 user.RegisterDerivationScheme("LTC");

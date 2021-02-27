@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using BTCPayServer.Lightning;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Payments.Lightning
 {
@@ -9,16 +11,8 @@ namespace BTCPayServer.Payments.Lightning
         public const string InternalNode = "Internal Node";
         public string CryptoCode { get; set; }
 
-        [Obsolete("Use Get/SetLightningUrl")]
-        public string Username { get; set; }
-        [Obsolete("Use Get/SetLightningUrl")]
-        public string Password { get; set; }
-
-        // This property MUST be after CryptoCode or else JSON serialization fails
+        [JsonIgnore]
         public PaymentMethodId PaymentId => new PaymentMethodId(CryptoCode, PaymentTypes.LightningLike);
-
-        [Obsolete("Use Get/SetLightningUrl")]
-        public string LightningChargeUrl { get; set; }
 
         [Obsolete("Use Get/SetLightningUrl")]
         public string LightningConnectionString { get; set; }
@@ -26,25 +20,9 @@ namespace BTCPayServer.Payments.Lightning
         public LightningConnectionString GetExternalLightningUrl()
         {
 #pragma warning disable CS0618 // Type or member is obsolete
-            return GetLightningUrl();
-#pragma warning restore CS0618 // Type or member is obsolete
-        }
-        [Obsolete("TODO")]
-        public LightningConnectionString GetLightningUrl()
-        {
-#pragma warning disable CS0618 // Type or member is obsolete
             if (!string.IsNullOrEmpty(LightningConnectionString))
             {
                 if (!BTCPayServer.Lightning.LightningConnectionString.TryParse(LightningConnectionString, false, out var connectionString, out var error))
-                {
-                    throw new FormatException(error);
-                }
-                return connectionString;
-            }
-            else if (LightningChargeUrl != null)
-            {
-                var fullUri = new UriBuilder(LightningChargeUrl) { UserName = Username, Password = Password }.Uri.AbsoluteUri;
-                if (!BTCPayServer.Lightning.LightningConnectionString.TryParse(fullUri, true, out var connectionString, out var error))
                 {
                     throw new FormatException(error);
                 }
@@ -61,9 +39,6 @@ namespace BTCPayServer.Payments.Lightning
                 throw new ArgumentNullException(nameof(connectionString));
 #pragma warning disable CS0618 // Type or member is obsolete
             LightningConnectionString = connectionString.ToString();
-            Username = null;
-            Password = null;
-            LightningChargeUrl = null;
 #pragma warning restore CS0618 // Type or member is obsolete
         }
 
@@ -71,9 +46,6 @@ namespace BTCPayServer.Payments.Lightning
         {
 #pragma warning disable CS0618 // Type or member is obsolete
             LightningConnectionString = null;
-            Username = null;
-            Password = null;
-            LightningChargeUrl = null;
 #pragma warning restore CS0618 // Type or member is obsolete
         }
 
@@ -83,7 +55,7 @@ namespace BTCPayServer.Payments.Lightning
             get
             {
 #pragma warning disable CS0618 // Type or member is obsolete
-                return GetLightningUrl() is null;
+                return GetExternalLightningUrl() is null;
 #pragma warning restore CS0618 // Type or member is obsolete
             }
         }

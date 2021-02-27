@@ -11,6 +11,7 @@ namespace BTCPayServer.Services
         public bool CheckedFirstRun { get; set; }
         public bool PaymentMethodCriteria { get; set; }
         public bool TransitionToStoreBlobAdditionalData { get; set; }
+        public bool TransitionInternalNodeConnectionString { get; set; }
 
         public override string ToString()
         {

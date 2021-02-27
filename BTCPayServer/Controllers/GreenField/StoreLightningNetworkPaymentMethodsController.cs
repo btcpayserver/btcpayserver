@@ -151,7 +151,7 @@ namespace BTCPayServer.Controllers.GreenField
                     }
                     if (!await CanManageServer() && !connectionString.IsSafe())
                     {
-                        ModelState.AddModelError(nameof(paymentMethodData.ConnectionString), $"You do not have 'btcpay.server.canmodifyserversettings' rights, so the connection string should not contains 'cookiefilepath', 'macaroondirectorypath', 'macaroonfilepath', and should not point to a local ip or to a dns name ending with '.internal', '.local', '.lan' or '.'.");
+                        ModelState.AddModelError(nameof(paymentMethodData.ConnectionString), $"You do not have 'btcpay.server.canmodifyserversettings' rights, so the connection string should not contain 'cookiefilepath', 'macaroondirectorypath', 'macaroonfilepath', and should not point to a local ip or to a dns name ending with '.internal', '.local', '.lan' or '.'.");
                         return this.CreateValidationError(ModelState);
                     }
                     paymentMethod = new Payments.Lightning.LightningSupportedPaymentMethod()

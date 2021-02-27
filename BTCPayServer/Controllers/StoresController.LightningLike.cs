@@ -94,7 +94,7 @@ namespace BTCPayServer.Controllers
                 }
                 if (!User.IsInRole(Roles.ServerAdmin) && !connectionString.IsSafe())
                 {
-                    ModelState.AddModelError(nameof(vm.ConnectionString), $"You are not admin, so the connection string should not contains 'cookiefilepath', 'macaroondirectorypath', 'macaroonfilepath', and should not point to a local ip or to a dns name ending with '.internal', '.local', '.lan' or '.'.");
+                    ModelState.AddModelError(nameof(vm.ConnectionString), $"You are not a server admin, so the connection string should not contain 'cookiefilepath', 'macaroondirectorypath', 'macaroonfilepath', and should not point to a local ip or to a dns name ending with '.internal', '.local', '.lan' or '.'.");
                     return View(vm);
                 }
 

@@ -1,0 +1,667 @@
+{
+    "paths": {
+        "/api/v1/stores/{storeId}/payment-methods/OnChain/{cryptoCode}/wallet": {
+            "get": {
+                "tags": [
+                    "Store Wallet (On Chain)"
+                ],
+                "summary": "Get store on-chain wallet overview",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cryptoCode",
+                        "in": "path",
+                        "required": true,
+                        "description": "The crypto code of the payment method to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "View information about the specified wallet",
+                "operationId": "StoreOnChainWallets_ShowOnChainWalletOverview",
+                "responses": {
+                    "200": {
+                        "description": "specified wallet",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OnChainWalletOverviewData"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store/wallet"
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}/payment-methods/OnChain/{cryptoCode}/wallet/address": {
+            "get": {
+                "tags": [
+                    "Store Wallet (On Chain)"
+                ],
+                "summary": "Get store on-chain wallet address",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cryptoCode",
+                        "in": "path",
+                        "required": true,
+                        "description": "The crypto code of the payment method to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "forceGenerate",
+                        "in": "query",
+                        "required": false,
+                        "default": false,
+                        "description": "Whether to generate a new address for this request even if the previous one was not used",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "Get or generate address for wallet",
+                "operationId": "StoreOnChainWallets_GetOnChainWalletReceiveAddress",
+                "responses": {
+                    "200": {
+                        "description": "reserved address",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OnChainWalletAddressData"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store/wallet"
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Store Wallet (On Chain)"
+                ],
+                "summary": "UnReserve last store on-chain wallet address",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cryptoCode",
+                        "in": "path",
+                        "required": true,
+                        "description": "The crypto code of the payment method to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "forceGenerate",
+                        "in": "query",
+                        "required": false,
+                        "default": false,
+                        "description": "Whether to generate a new address for this request even if the previous one was not used",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "UnReserve address",
+                "operationId": "StoreOnChainWallets_UnReserveOnChainWalletReceiveAddress",
+                "responses": {
+                    "200": {
+                        "description": "address unreserved"
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store/wallet or there was no address reserved"
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}/payment-methods/OnChain/{cryptoCode}/wallet/transactions": {
+            "get": {
+                "tags": [
+                    "Store Wallet (On Chain)"
+                ],
+                "summary": "Get store on-chain wallet transactions",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cryptoCode",
+                        "in": "path",
+                        "required": true,
+                        "description": "The crypto code of the wallet to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "statusFilter",
+                        "in": "query",
+                        "required": false,
+                        "description": "statuses to filter the transactions with",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/components/schemas/TransactionStatus"
+                            }
+                        }
+                    }
+                ],
+                "description": "Get store on-chain wallet transactions",
+                "operationId": "StoreOnChainWallets_ShowOnChainWalletTransactions",
+                "responses": {
+                    "200": {
+                        "description": "transactions list",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/OnChainWalletTransactionData"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store/wallet"
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Store Wallet (On Chain)"
+                ],
+                "summary": "Create store on-chain wallet transaction",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cryptoCode",
+                        "in": "path",
+                        "required": true,
+                        "description": "The crypto code of the wallet",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateOnChainTransactionRequest"
+                            }
+                        }
+                    }
+                },
+                "description": "Create store on-chain wallet transaction",
+                "operationId": "StoreOnChainWallets_CreateOnChainTransaction",
+                "responses": {
+                    "200": {
+                        "description": "the tx",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "description": "The unbroadcasted transaction in hex format",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/OnChainWalletTransactionData"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store/wallet"
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}/payment-methods/OnChain/{cryptoCode}/wallet/transactions/{transactionId}": {
+            "get": {
+                "tags": [
+                    "Store Wallet (On Chain)"
+                ],
+                "summary": "Get store on-chain wallet transactions",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cryptoCode",
+                        "in": "path",
+                        "required": true,
+                        "description": "The crypto code of the wallet to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "transactionId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The transaction id to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "Get store on-chain wallet transaction",
+                "operationId": "StoreOnChainWallets_GetOnChainWalletTransaction",
+                "responses": {
+                    "200": {
+                        "description": "transaction",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OnChainWalletTransactionData"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store/wallet"
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}/payment-methods/OnChain/{cryptoCode}/wallet/utxos": {
+            "get": {
+                "tags": [
+                    "Store Wallet (On Chain)"
+                ],
+                "summary": "Get store on-chain wallet UTXOS",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cryptoCode",
+                        "in": "path",
+                        "required": true,
+                        "description": "The crypto code of the wallet to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "Get store on-chain wallet utxos",
+                "operationId": "StoreOnChainWallets_GetOnChainWalletUTXOs",
+                "responses": {
+                    "200": {
+                        "description": "utxo list",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/OnChainWalletUTXOData"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store/wallet"
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "OnChainWalletOverviewData": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "balance": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The current balance of the wallet"
+                    }
+                }
+            },
+            "OnChainWalletAddressData": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "address": {
+                        "type": "string",
+                        "description": "The bitcoin address"
+                    },
+                    "keyPath": {
+                        "type": "string",
+                        "format": "keypath",
+                        "description": "the derivation path in relation to the HD account"
+                    }
+                }
+            },
+            "OnChainPaymentMethodPreviewResultAddressItem": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "keyPath": {
+                        "type": "string",
+                        "description": "The key path relative to the account key path."
+                    },
+                    "address": {
+                        "type": "string",
+                        "description": "The address generated at the key path"
+                    }
+                }
+            },
+            "TransactionStatus": {
+                "type": "string",
+                "description": "",
+                "x-enumNames": [
+                    "Unconfirmed",
+                    "Confirmed",
+                    "Replaced"
+                ],
+                "enum": [
+                    "Unconfirmed",
+                    "Confirmed",
+                    "Replaced"
+                ]
+            },
+            "LabelData": {
+                "type": "object",
+                "additionalProperties": true,
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "description": "The type of label"
+                    },
+                    "text": {
+                        "type": "string",
+                        "description": "Information about this label"
+                    }
+                }
+            },
+            "OnChainWalletTransactionData": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "comment": {
+                        "type": "string",
+                        "description": "A comment linked to the transaction"
+                    },
+                    "amount": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The amount the wallet balance changed with this transaction"
+                    },
+                    "blockHash": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "The hash of the block that confirmed this transaction. Null if still unconfirmed."
+                    },
+                    "blockHeight": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "The height of the block that confirmed this transaction. Null if still unconfirmed."
+                    },
+                    "confirmations": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "The number of confirmations for this transaction"
+                    },
+                    "timestamp": {
+                        "type": "number",
+                        "format": "int64",
+                        "description": "The time of the transaction"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/TransactionStatus",
+                        "description": "The status for this transaction"
+                    },
+                    "labels": {
+                        "description": "Labels linked to this transaction",
+                        "type": "object",
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/LabelData"
+                        }
+                    }
+                }
+            },
+            "OnChainWalletUTXOData": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "comment": {
+                        "type": "string",
+                        "description": "A comment linked to this utxo"
+                    },
+                    "amount": {
+                        "type": "string",
+                        "description": "the value of this utxo"
+                    },
+                    "link": {
+                        "type": "string",
+                        "format": "url",
+                        "description": "a link to the configured blockchain explorer to view the utxo"
+                    },
+                    "outpoint": {
+                        "type": "string",
+                        "format": "{txid}:{outputIndex}",
+                        "description": "outpoint of this utxo"
+                    }
+                }
+            },
+            "CreateOnChainTransactionRequestDestination": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "destination": {
+                        "type": "string",
+                        "description": "A wallet address or a BIP21 payment link"
+                    },
+                    "amount": {
+                        "type": "string",
+                        "format": "decimal",
+                        "nullable": true,
+                        "description": "The amount to send. If `destination` is a BIP21 link, the amount must be the same or null."
+                    },
+                    "subtractFromAmount": {
+                        "type": "boolean",
+                        "description": "Whether to subtract from the provided amount. Must be false if `destination` is a BIP21 link"
+                    }
+                }
+            },
+            "CreateOnChainTransactionRequest": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "destinations": {
+                        "nullable": false,
+                        "description": "What and where to send money",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CreateOnChainTransactionRequestDestination"
+                        }
+                    },
+                    "feeRate": {
+                        "type": "string",
+                        "format": "decimal or long (sats/byte)",
+                        "description": "A wallet address or a BIP21 payment link"
+                    },
+                    "proceedWithPayjoin": {
+                        "type": "boolean",
+                        "required": false,
+                        "nullable": true,
+                        "description": "Whether to attempt to do a BIP78 payjoin if one of the destinations is a BIP21 with payjoin enabled"
+                    },
+                    "proceedWithBroadcast": {
+                        "type": "boolean",
+                        "required": false,
+                        "nullable": true,
+                        "description": "Whether to broadcast the transaction after creating it or to simply return the transaction in hex format."
+                    },
+                    "noChange": {
+                        "type": "boolean",
+                        "required": false,
+                        "nullable": true,
+                        "description": "Whether to send all the spent coins to the destinations (THIS CAN COST YOU SIGNIFICANT AMOUNTS OF MONEY, LEAVE FALSE UNLESS YOU KNOW WHAT YOU ARE DOING)."
+                    },
+                    "rbf": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "description": "Whether to enable RBF for the transaction. Leave blank to have it random (beneficial to privacy)"
+                    },
+                    "selectedInputs": {
+                        "nullable": true,
+                        "description": "Restrict the creation of the transactions from the outpoints provided ONLY (coin selection)",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Store Wallet (On Chain)"
+        }
+    ]
+}

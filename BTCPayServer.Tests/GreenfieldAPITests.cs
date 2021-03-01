@@ -948,8 +948,12 @@ namespace BTCPayServer.Tests
                 });
                 await user.RegisterDerivationSchemeAsync("BTC");
                 var newInvoice = await client.CreateInvoice(user.StoreId,
-                    new CreateInvoiceRequest() { Currency = "USD", Amount = 1, Metadata = JObject.Parse("{\"itemCode\": \"testitem\"}") });
-
+                    new CreateInvoiceRequest() { Currency = "USD", Amount = 1, Metadata = JObject.Parse("{\"itemCode\": \"testitem\"}"), Checkout = new CreateInvoiceRequest.CheckoutOptions()
+                    {
+                        RedirectAutomatically = true
+                    }});
+                Assert.True(newInvoice.Checkout.RedirectAutomatically);
+                
                 //list 
                 var invoices = await viewOnly.GetInvoices(user.StoreId);
 

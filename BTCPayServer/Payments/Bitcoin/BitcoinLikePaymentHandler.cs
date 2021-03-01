@@ -154,6 +154,8 @@ namespace BTCPayServer.Payments.Bitcoin
                     onchainMethod.NetworkFeeRate = (await prepare.GetNetworkFeeRate);
                     onchainMethod.NextNetworkFee =
                         onchainMethod.NetworkFeeRate.GetFee(100); // assume price for 100 bytes
+                    if (onchainMethod.NextNetworkFee == null)
+                        onchainMethod.NextNetworkFee = Money.Zero;
                     break;
                 case NetworkFeeMode.Never:
                     onchainMethod.NetworkFeeRate = FeeRate.Zero;

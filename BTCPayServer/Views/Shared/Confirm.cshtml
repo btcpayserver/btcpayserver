@@ -31,8 +31,8 @@
             @if (!String.IsNullOrEmpty(Model.Action))
             {
                 <form method="post" class="modal-footer justify-content-center" action="@Model.ActionUrl">
-                    <button type="submit" class="btn @Model.ButtonClass w-25 mx-2" id="continue">@Model.Action</button>
-                    <button type="submit" class="btn btn-secondary w-25 mx-2" onclick="history.back(); return false;">Go back</button>
+                    <button type="submit" class="btn @Model.ButtonClass xmx-2" id="continue" style="min-width:25%;">@Model.Action</button>
+                    <button type="submit" class="btn btn-secondary mx-2" onclick="history.back(); return false;" style="min-width:25%;">Go back</button>
                 </form>
             }
         </div>

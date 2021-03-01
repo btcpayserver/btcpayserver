@@ -20,6 +20,7 @@ namespace BTCPayServer.Models.StoreViewModels
         public WalletSetupMethod? Method { get; set; }
         public GenerateWalletRequest SetupRequest { get; set; }
         public string StoreId { get; set; }
+        public bool IsHotWallet { get; set; }
 
         public string ViewName =>
             Method switch

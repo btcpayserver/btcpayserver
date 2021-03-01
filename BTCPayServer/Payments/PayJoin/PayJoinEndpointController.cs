@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BTCPayServer.BIP78.Sender;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Filters;
@@ -254,7 +255,7 @@ namespace BTCPayServer.Payments.PayJoin
                     continue;
 
                 var receiverInputsType = derivationSchemeSettings.AccountDerivation.ScriptPubKeyType();
-                if (!PayjoinClient.SupportedFormats.Contains(receiverInputsType))
+                if (receiverInputsType == ScriptPubKeyType.Legacy)
                 {
                     //this should never happen, unless the store owner changed the wallet mid way through an invoice
                     return CreatePayjoinErrorAndLog(503, PayjoinReceiverWellknownErrors.Unavailable, "Our wallet does not support payjoin");

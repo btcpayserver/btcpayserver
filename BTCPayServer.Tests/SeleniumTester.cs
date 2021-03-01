@@ -15,6 +15,7 @@ using BTCPayServer.Views.Stores;
 using BTCPayServer.Views.Wallets;
 using Microsoft.Extensions.Configuration;
 using NBitcoin;
+using BTCPayServer.BIP78.Sender;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Support.Extensions;

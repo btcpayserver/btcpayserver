@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using BTCPayServer.JsonConverters;
 using NBitcoin;
 using NBitcoin.JsonConverters;
 using Newtonsoft.Json;
@@ -10,11 +11,13 @@ namespace BTCPayServer.Client.Models
     {
         public string Comment { get; set; }
         public Dictionary<string, LabelData> Labels { get; set; }
+        [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal Amount { get; set; }
 
         [JsonConverter(typeof(UInt256JsonConverter))]
         public uint256 BlockHash { get; set; }
 
+        [JsonConverter(typeof(NumericStringJsonConverter))]
         public int? BlockHeight { get; set; }
         public int Confirmations { get; set; }
 

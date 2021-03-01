@@ -19,7 +19,6 @@ namespace BTCPayServer.Client.Models
         public bool ProceedWithPayjoin { get; set; }= true;
         public bool ProceedWithBroadcast { get; set; } = true;
         public bool NoChange { get; set; } = false;
-
         [JsonProperty(ItemConverterType = typeof(OutpointJsonConverter))]
         public List<OutPoint> SelectedInputs { get; set; } = null;
         public List<CreateOnChainTransactionRequestDestination> Destinations { get; set; }

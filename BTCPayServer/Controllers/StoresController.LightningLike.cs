@@ -35,7 +35,7 @@ namespace BTCPayServer.Controllers
         {
             if (GetExistingLightningSupportedPaymentMethod(vm.CryptoCode, store) is LightningSupportedPaymentMethod paymentMethod)
             {
-                vm.ConnectionString = paymentMethod.GetExternalLightningUrl()?.ToString() ?? LightningSupportedPaymentMethod.InternalNode;
+                vm.ConnectionString = paymentMethod.GetDisplayableConnectionString();
             }
             vm.Enabled = !store.GetStoreBlob().IsExcluded(new PaymentMethodId(vm.CryptoCode, PaymentTypes.LightningLike));
             vm.CanUseInternalNode = CanUseInternalLightning();

@@ -3423,6 +3423,7 @@ namespace BTCPayServer.Tests
                 await acc.GrantAccessAsync(true);
                 await acc.CreateStoreAsync();
                 
+                // Test if legacy DerivationStrategy column is converted to DerivationStrategies
                 var store = await tester.PayTester.StoreRepository.FindStore(acc.StoreId);
                 var xpub = "tpubDDmH1briYfZcTDMEc7uMEA5hinzjUTzR9yMC1drxTMeiWyw1VyCqTuzBke6df2sqbfw9QG6wbgTLF5yLjcXsZNaXvJMZLwNEwyvmiFWcLav";
                 var derivation = $"{xpub}-[legacy]";
@@ -3447,6 +3448,7 @@ namespace BTCPayServer.Tests
                 lnMethod = store.GetSupportedPaymentMethods(tester.NetworkProvider).OfType<LightningSupportedPaymentMethod>().First();
                 Assert.Null(lnMethod.GetExternalLightningUrl());
 
+                // Test if legacy lightning charge settings are converted to LightningConnectionString
                 store.DerivationStrategies = new JObject()
                 {
                     new JProperty("BTC_LightningLike", new JObject()
@@ -3469,6 +3471,21 @@ namespace BTCPayServer.Tests
                 Assert.Equal(LightningConnectionType.Charge, url.ConnectionType);
                 Assert.Equal("pass", url.Password);
                 Assert.Equal("usr", url.Username);
+
+                // Test if lightning connection strings get migrated to internal
+                store.DerivationStrategies = new JObject()
+                {
+                    new JProperty("BTC_LightningLike", new JObject()
+                    {
+                        new JProperty("CryptoCode", "BTC"),
+                        new JProperty("LightningConnectionString", tester.PayTester.IntegratedLightning),
+                    })
+                }.ToString();
+                await tester.PayTester.StoreRepository.UpdateStore(store);
+                await RestartMigration(tester);
+                store = await tester.PayTester.StoreRepository.FindStore(acc.StoreId);
+                lnMethod = store.GetSupportedPaymentMethods(tester.NetworkProvider).OfType<LightningSupportedPaymentMethod>().First();
+                Assert.True(lnMethod.IsInternalNode);
             }
         }
 

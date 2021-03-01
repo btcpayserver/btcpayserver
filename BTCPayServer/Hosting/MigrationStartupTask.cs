@@ -21,6 +21,7 @@ using Microsoft.Extensions.Options;
 using NBitcoin.DataEncoders;
 using NBXplorer;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 
 namespace BTCPayServer.Hosting
 {
@@ -206,6 +207,12 @@ namespace BTCPayServer.Hosting
                     {
                         updated = true;
                         ln.Value = null;
+                        if (!(method.Property("InternalNodeRef", StringComparison.OrdinalIgnoreCase) is JProperty internalNode))
+                        {
+                            internalNode = new JProperty("InternalNodeRef", null);
+                            method.Add(internalNode);
+                        }
+                        internalNode.Value = new JValue(LightningSupportedPaymentMethod.InternalNode);
                     }
                 }
 

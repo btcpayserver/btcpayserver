@@ -1109,7 +1109,6 @@ namespace BTCPayServer.Tests
                 merchant.RegisterLightningNode("BTC", LightningConnectionType.LndREST);
                 var merchantClient = await merchant.CreateClient($"{Policies.CanUseLightningNodeInStore}:{merchant.StoreId}");
                 var merchantInvoice = await merchantClient.CreateLightningInvoice(merchant.StoreId, "BTC", new CreateLightningInvoiceRequest(LightMoney.Satoshis(1_000), "hey", TimeSpan.FromSeconds(60)));
-                tester.PayTester.GetService<BTCPayServerEnvironment>().DevelopmentOverride = false;
                 // The default client is using charge, so we should not be able to query channels
                 var client = await user.CreateClient(Policies.CanUseInternalLightningNode);
 
@@ -1295,7 +1294,6 @@ namespace BTCPayServer.Tests
             var adminClient = await admin.CreateClient(Policies.CanModifyStoreSettings);
             var admin2Client = await admin2.CreateClient(Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings);
             var viewOnlyClient = await admin.CreateClient(Policies.CanViewStoreSettings);
-            tester.PayTester.GetService<BTCPayServerEnvironment>().DevelopmentOverride = false;
             var store = await adminClient.GetStore(admin.StoreId);
 
             Assert.Empty(await adminClient.GetStoreLightningNetworkPaymentMethods(store.Id));
@@ -1330,6 +1328,8 @@ namespace BTCPayServer.Tests
                 "type=clightning;server=tcp://test.local",
                 "type=clightning;server=tcp://192.168.1.2",
                 "type=clightning;server=unix://8.8.8.8",
+                "type=clightning;server=unix://[::1]",
+                "type=clightning;server=unix://[0:0:0:0:0:0:0:1]",
             })
             {
                 var ex = await AssertValidationError(new[] { "ConnectionString" }, async () =>

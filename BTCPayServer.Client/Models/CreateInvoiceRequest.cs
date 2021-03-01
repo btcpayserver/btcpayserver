@@ -33,6 +33,8 @@ namespace BTCPayServer.Client.Models
             public double? PaymentTolerance { get; set; }
             [JsonProperty("redirectURL")]
             public string RedirectURL { get; set; }
+
+            public bool? RedirectAutomatically { get; set; }
             public string DefaultLanguage { get; set; }
         }
     }

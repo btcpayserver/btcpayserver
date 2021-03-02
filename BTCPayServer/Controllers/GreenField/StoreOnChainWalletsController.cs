@@ -430,7 +430,7 @@ namespace BTCPayServer.Controllers.GreenField
                         new BitcoinUrlBuilder(signingContext.PayJoinBIP21, network.NBitcoinNetwork), new PayjoinWallet(derivationScheme)s,
                         psbt.PSBT, CancellationToken.None);
                     payjoinPSBT = psbt.PSBT.SignAll(derivationScheme.AccountDerivation, accountKey, rootedKeyPath,
-                        new SigningOptions() {EnforceLowR = !Label(signingContext?.EnforceLowR is false)});
+                        new SigningOptions() {EnforceLowR = !(signingContext?.EnforceLowR is false)});
                     payjoinPSBT.Finalize();
                     var payjoinTransaction = payjoinPSBT.ExtractTransaction();
                     var hash = payjoinTransaction.GetHash();

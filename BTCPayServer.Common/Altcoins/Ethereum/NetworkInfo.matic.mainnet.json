@@ -1,0 +1,7 @@
+{
+    "name" : "Matic-Mainnet",
+    "chainId": 137,
+    "coinType": 1,
+    "explorer": "https://explorer-mainnet.maticvigil.com/address/{0}/transactions"
+   
+}

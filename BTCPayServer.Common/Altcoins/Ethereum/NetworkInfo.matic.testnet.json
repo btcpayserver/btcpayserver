@@ -1,0 +1,6 @@
+{
+    "name" : "Matic Testnet",
+    "chainId": 80001,
+    "coinType": 60,
+    "explorer": "https://explorer-mumbai.maticvigil.com/address/{0}/transactions"
+}

@@ -9,4 +9,17 @@
   <ItemGroup Condition="'$(Altcoins)' != 'true'">
     <Compile Remove="Altcoins\**\*.cs"></Compile>
   </ItemGroup>
+
+  <ItemGroup  Condition="'$(Altcoins)' == 'true'">
+    <EmbeddedResource Include="Altcoins/Ethereum/NetworkInfo.matic.testnet.json" />
+    <EmbeddedResource Include="Altcoins/Ethereum/NetworkInfo.matic.mainnet.json" />
+
+    <EmbeddedResource Include="Altcoins/Ethereum/Erc20.main.testnet.json" />
+    <EmbeddedResource Include="Altcoins/Ethereum/Erc20.main.mainnet.json" />
+
+    <EmbeddedResource Include="Altcoins/Ethereum/Erc20.matic.testnet.json" />
+    <EmbeddedResource Include="Altcoins/Ethereum/Erc20.matic.mainnet.json" />
+    
+  </ItemGroup>
+
 </Project>

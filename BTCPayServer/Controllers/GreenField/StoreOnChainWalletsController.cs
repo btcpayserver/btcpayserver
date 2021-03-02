@@ -427,7 +427,7 @@ namespace BTCPayServer.Controllers.GreenField
                     await _delayedTransactionBroadcaster.Schedule(DateTimeOffset.UtcNow + TimeSpan.FromMinutes(2.0),
                         transaction, network);
                     var payjoinPSBT = await _payjoinClient.RequestPayjoin(
-                        new BitcoinUrlBuilder(signingContext.PayJoinBIP21, network.NBitcoinNetwork), new PayjoinWallet(derivationScheme)s,
+                        new BitcoinUrlBuilder(signingContext.PayJoinBIP21, network.NBitcoinNetwork), new PayjoinWallet(derivationScheme),
                         psbt.PSBT, CancellationToken.None);
                     payjoinPSBT = psbt.PSBT.SignAll(derivationScheme.AccountDerivation, accountKey, rootedKeyPath,
                         new SigningOptions() {EnforceLowR = !(signingContext?.EnforceLowR is false)});

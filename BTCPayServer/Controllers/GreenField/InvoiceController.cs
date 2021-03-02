@@ -335,7 +335,9 @@ namespace BTCPayServer.Controllers.GreenField
                     PaymentMethods =
                         entity.GetPaymentMethods().Select(method => method.GetId().ToStringNormalized()).ToArray(),
                     SpeedPolicy = entity.SpeedPolicy,
-                    DefaultLanguage = entity.DefaultLanguage
+                    DefaultLanguage = entity.DefaultLanguage,
+                    RedirectAutomatically = entity.RedirectAutomatically,
+                    RedirectURL = entity.RedirectURLTemplate
                 }
             };
         }

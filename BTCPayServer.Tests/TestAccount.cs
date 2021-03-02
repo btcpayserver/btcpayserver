@@ -258,40 +258,18 @@ namespace BTCPayServer.Tests
         {
             RegisterLightningNodeAsync(cryptoCode, connectionType, isMerchant).GetAwaiter().GetResult();
         }
-
-        public async Task RegisterLightningNodeAsync(string cryptoCode, LightningConnectionType connectionType, bool isMerchant = true, string storeId = null)
+        public Task RegisterLightningNodeAsync(string cryptoCode, bool isMerchant = true, string storeId = null)
+        {
+            return RegisterLightningNodeAsync(cryptoCode, null, isMerchant, storeId);
+        }
+        public async Task RegisterLightningNodeAsync(string cryptoCode, LightningConnectionType? connectionType, bool isMerchant = true, string storeId = null)
         {
             var storeController = this.GetController<StoresController>();
 
-            string connectionString = null;
-            if (connectionType == LightningConnectionType.Charge)
-            {
-                if (isMerchant)
-                    connectionString = $"type=charge;server={parent.MerchantCharge.Client.Uri.AbsoluteUri};allowinsecure=true";
-                else
-                    throw new NotSupportedException();
-            }
-            else if (connectionType == LightningConnectionType.CLightning)
-            {
-                if (isMerchant)
-                    connectionString = "type=clightning;server=" +
-                                       ((CLightningClient)parent.MerchantLightningD).Address.AbsoluteUri;
-                else
-                    connectionString = "type=clightning;server=" +
-                                   ((CLightningClient)parent.CustomerLightningD).Address.AbsoluteUri;
-            }
-            else if (connectionType == LightningConnectionType.LndREST)
-            {
-                if (isMerchant)
-                    connectionString = $"type=lnd-rest;server={parent.MerchantLnd.Swagger.BaseUrl};allowinsecure=true";
-                else
-                    throw new NotSupportedException();
-            }
-            else
-                throw new NotSupportedException(connectionType.ToString());
+            string connectionString = parent.GetLightningConnectionString(connectionType, isMerchant);
 
             await storeController.AddLightningNode(storeId ?? StoreId,
-                new LightningNodeViewModel() {ConnectionString = connectionString, SkipPortTest = true}, "save", "BTC");
+                new LightningNodeViewModel() { ConnectionString = connectionString, SkipPortTest = true }, "save", "BTC");
             if (storeController.ModelState.ErrorCount != 0)
                 Assert.False(true, storeController.ModelState.FirstOrDefault().Value.Errors[0].ErrorMessage);
         }

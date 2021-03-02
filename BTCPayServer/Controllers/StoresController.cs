@@ -546,8 +546,8 @@ namespace BTCPayServer.Controllers
                         vm.LightningNodes.Add(new StoreViewModel.LightningNode()
                         {
                             CryptoCode = paymentMethodId.CryptoCode,
-                            Address = lightning?.GetLightningUrl()?.BaseUri.AbsoluteUri ?? string.Empty,
-                            Enabled = !excludeFilters.Match(paymentMethodId) && lightning?.GetLightningUrl() != null
+                            Address = lightning?.GetExternalLightningUrl()?.BaseUri.AbsoluteUri ?? "Internal node",
+                            Enabled = !excludeFilters.Match(paymentMethodId)
                         });
                         break;
                 }

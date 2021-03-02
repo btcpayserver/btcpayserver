@@ -57,7 +57,7 @@ namespace BTCPayServer.Controllers.GreenField
                 .OfType<LightningSupportedPaymentMethod>()
                 .Select(paymentMethod =>
                     new LightningNetworkPaymentMethodData(paymentMethod.PaymentId.CryptoCode,
-                        paymentMethod.GetLightningUrl().ToString(), !excludedPaymentMethods.Match(paymentMethod.PaymentId)))
+                        paymentMethod.GetExternalLightningUrl().ToString(), !excludedPaymentMethods.Match(paymentMethod.PaymentId)))
                 .Where((result) => !enabledOnly || result.Enabled)
                 .ToList()
             );
@@ -110,8 +110,6 @@ namespace BTCPayServer.Controllers.GreenField
                 return NotFound();
             }
 
-            var internalLightning = await GetInternalLightningNode(network.CryptoCode);
-
             if (string.IsNullOrEmpty(paymentMethodData?.ConnectionString))
             {
                 ModelState.AddModelError(nameof(LightningNetworkPaymentMethodData.ConnectionString),
@@ -124,66 +122,44 @@ namespace BTCPayServer.Controllers.GreenField
             LightningSupportedPaymentMethod paymentMethod = null;
             if (!string.IsNullOrEmpty(paymentMethodData.ConnectionString))
             {
-                if (!LightningConnectionString.TryParse(paymentMethodData.ConnectionString, false,
-                    out var connectionString, out var error))
-                {
-                    ModelState.AddModelError(nameof(paymentMethodData.ConnectionString), $"Invalid URL ({error})");
-                    return this.CreateValidationError(ModelState);
-                }
-
-                if (connectionString.ConnectionType == LightningConnectionType.LndGRPC)
-                {
-                    ModelState.AddModelError(nameof(paymentMethodData.ConnectionString),
-                        $"BTCPay does not support gRPC connections");
-                    return this.CreateValidationError(ModelState);
-                }
-
-                bool isInternalNode = connectionString.IsInternalNode(internalLightning);
-
-                if (connectionString.BaseUri.Scheme == "http")
-                {
-                    if (!isInternalNode && !connectionString.AllowInsecure)
-                    {
-                        ModelState.AddModelError(nameof(paymentMethodData.ConnectionString), "The url must be HTTPS");
-                        return this.CreateValidationError(ModelState);
-                    }
-                }
-
-                if (connectionString.MacaroonFilePath != null)
+                if (paymentMethodData.ConnectionString == LightningSupportedPaymentMethod.InternalNode)
                 {
                     if (!await CanUseInternalLightning())
                     {
-                        ModelState.AddModelError(nameof(paymentMethodData.ConnectionString),
-                            "You are not authorized to use macaroonfilepath");
+                        ModelState.AddModelError(nameof(paymentMethodData.ConnectionString), $"You are not authorized to use the internal lightning node");
                         return this.CreateValidationError(ModelState);
                     }
-
-                    if (!System.IO.File.Exists(connectionString.MacaroonFilePath))
+                    paymentMethod = new Payments.Lightning.LightningSupportedPaymentMethod()
+                    {
+                        CryptoCode = paymentMethodId.CryptoCode
+                    };
+                    paymentMethod.SetInternalNode();
+                }
+                else
+                {
+                    if (!LightningConnectionString.TryParse(paymentMethodData.ConnectionString, false,
+                        out var connectionString, out var error))
+                    {
+                        ModelState.AddModelError(nameof(paymentMethodData.ConnectionString), $"Invalid URL ({error})");
+                        return this.CreateValidationError(ModelState);
+                    }
+                    if (connectionString.ConnectionType == LightningConnectionType.LndGRPC)
                     {
                         ModelState.AddModelError(nameof(paymentMethodData.ConnectionString),
-                            "The macaroonfilepath file does not exist");
+                            $"BTCPay does not support gRPC connections");
                         return this.CreateValidationError(ModelState);
                     }
-
-                    if (!System.IO.Path.IsPathRooted(connectionString.MacaroonFilePath))
+                    if (!await CanManageServer() && !connectionString.IsSafe())
                     {
-                        ModelState.AddModelError(nameof(paymentMethodData.ConnectionString),
-                            "The macaroonfilepath should be fully rooted");
+                        ModelState.AddModelError(nameof(paymentMethodData.ConnectionString), $"You do not have 'btcpay.server.canmodifyserversettings' rights, so the connection string should not contain 'cookiefilepath', 'macaroondirectorypath', 'macaroonfilepath', and should not point to a local ip or to a dns name ending with '.internal', '.local', '.lan' or '.'.");
                         return this.CreateValidationError(ModelState);
                     }
+                    paymentMethod = new Payments.Lightning.LightningSupportedPaymentMethod()
+                    {
+                        CryptoCode = paymentMethodId.CryptoCode
+                    };
+                    paymentMethod.SetLightningUrl(connectionString);
                 }
-
-                if (isInternalNode && !await CanUseInternalLightning())
-                {
-                    ModelState.AddModelError(nameof(paymentMethodData.ConnectionString), "Unauthorized url");
-                    return this.CreateValidationError(ModelState);
-                }
-
-                paymentMethod = new Payments.Lightning.LightningSupportedPaymentMethod()
-                {
-                    CryptoCode = paymentMethodId.CryptoCode
-                };
-                paymentMethod.SetLightningUrl(connectionString);
             }
 
             var store = Store;
@@ -209,7 +185,7 @@ namespace BTCPayServer.Controllers.GreenField
             return paymentMethod == null
                 ? null
                 : new LightningNetworkPaymentMethodData(paymentMethod.PaymentId.CryptoCode,
-                    paymentMethod.GetLightningUrl().ToString(), !excluded);
+                    paymentMethod.GetDisplayableConnectionString(), !excluded);
         }
 
         private bool GetNetwork(string cryptoCode, out BTCPayNetwork network)
@@ -219,20 +195,17 @@ namespace BTCPayServer.Controllers.GreenField
             return network != null;
         }
         
-        private async Task<LightningConnectionString> GetInternalLightningNode(string cryptoCode)
-        {
-            if (_lightningNetworkOptions.Value.InternalLightningByCryptoCode.TryGetValue(cryptoCode, out var connectionString))
-            {
-                return await CanUseInternalLightning() ? connectionString : null;
-            }
-            return null;
-        }
-        
         private async Task<bool> CanUseInternalLightning()
         {
             return _cssThemeManager.AllowLightningInternalNodeForAll ||
                 (await _authorizationService.AuthorizeAsync(User, null,
                     new PolicyRequirement(Policies.CanUseInternalLightningNode))).Succeeded;
+        }
+        private async Task<bool> CanManageServer()
+        {
+            return 
+                (await _authorizationService.AuthorizeAsync(User, null,
+                    new PolicyRequirement(Policies.CanModifyServerSettings))).Succeeded;
         }
     }
 }

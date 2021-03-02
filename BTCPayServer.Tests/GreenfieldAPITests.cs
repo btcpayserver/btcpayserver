@@ -540,7 +540,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        private async Task AssertValidationError(string[] fields, Func<Task> act)
+        private async Task<GreenFieldValidationException> AssertValidationError(string[] fields, Func<Task> act)
         {
             var remainingFields = fields.ToHashSet();
             var ex = await Assert.ThrowsAsync<GreenFieldValidationException>(act);
@@ -550,6 +550,7 @@ namespace BTCPayServer.Tests
                 remainingFields.Remove(field);
             }
             Assert.Empty(remainingFields);
+            return ex;
         }
 
         private async Task AssertHttpError(int code, Func<Task> act)
@@ -1112,7 +1113,6 @@ namespace BTCPayServer.Tests
                 merchant.RegisterLightningNode("BTC", LightningConnectionType.LndREST);
                 var merchantClient = await merchant.CreateClient($"{Policies.CanUseLightningNodeInStore}:{merchant.StoreId}");
                 var merchantInvoice = await merchantClient.CreateLightningInvoice(merchant.StoreId, "BTC", new CreateLightningInvoiceRequest(LightMoney.Satoshis(1_000), "hey", TimeSpan.FromSeconds(60)));
-                tester.PayTester.GetService<BTCPayServerEnvironment>().DevelopmentOverride = false;
                 // The default client is using charge, so we should not be able to query channels
                 var client = await user.CreateClient(Policies.CanUseInternalLightningNode);
 
@@ -1291,33 +1291,86 @@ namespace BTCPayServer.Tests
             tester.ActivateLightning();
             await tester.StartAsync();
             await tester.EnsureChannelsSetup();
-            var user = tester.NewAccount();
-            await user.GrantAccessAsync(true);
-            var client = await user.CreateClient(Policies.CanModifyStoreSettings);
-            var viewOnlyClient = await user.CreateClient(Policies.CanViewStoreSettings);
-            tester.PayTester.GetService<BTCPayServerEnvironment>().DevelopmentOverride = false;
-            var store = await client.GetStore(user.StoreId);
+            var admin = tester.NewAccount();
+            await admin.GrantAccessAsync(true);
+            var admin2 = tester.NewAccount();
+            await admin2.GrantAccessAsync(true);
+            var adminClient = await admin.CreateClient(Policies.CanModifyStoreSettings);
+            var admin2Client = await admin2.CreateClient(Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings);
+            var viewOnlyClient = await admin.CreateClient(Policies.CanViewStoreSettings);
+            var store = await adminClient.GetStore(admin.StoreId);
 
-            Assert.Empty(await client.GetStoreLightningNetworkPaymentMethods(store.Id));
+            Assert.Empty(await adminClient.GetStoreLightningNetworkPaymentMethods(store.Id));
             await AssertHttpError(403, async () =>
             {
                 await viewOnlyClient.UpdateStoreLightningNetworkPaymentMethod(store.Id, "BTC", new LightningNetworkPaymentMethodData() { });
             });
             await AssertHttpError(404, async () =>
             {
-                await client.GetStoreLightningNetworkPaymentMethod(store.Id, "BTC");
+                await adminClient.GetStoreLightningNetworkPaymentMethod(store.Id, "BTC");
             });
-            await user.RegisterLightningNodeAsync("BTC", LightningConnectionType.CLightning, false);
+            await admin.RegisterLightningNodeAsync("BTC", false);
             
-            var method = await client.GetStoreLightningNetworkPaymentMethod(store.Id, "BTC");
+            var method = await adminClient.GetStoreLightningNetworkPaymentMethod(store.Id, "BTC");
             await AssertHttpError(403, async () =>
             {
                 await viewOnlyClient.RemoveStoreOnChainPaymentMethod(store.Id, "BTC");
             });
-            await  client.RemoveStoreOnChainPaymentMethod(store.Id, "BTC");
+            await  adminClient.RemoveStoreOnChainPaymentMethod(store.Id, "BTC");
             await AssertHttpError(404, async () =>
             {
-                await client.GetStoreOnChainPaymentMethod(store.Id, "BTC");
+                await adminClient.GetStoreOnChainPaymentMethod(store.Id, "BTC");
+            });
+
+
+            // Let's verify that the admin client can't change LN to unsafe connection strings without modify server settings rights
+            foreach (var forbidden in new string[]
+            {
+                "type=clightning;server=tcp://127.0.0.1",
+                "type=clightning;server=tcp://test",
+                "type=clightning;server=tcp://test.lan",
+                "type=clightning;server=tcp://test.local",
+                "type=clightning;server=tcp://192.168.1.2",
+                "type=clightning;server=unix://8.8.8.8",
+                "type=clightning;server=unix://[::1]",
+                "type=clightning;server=unix://[0:0:0:0:0:0:0:1]",
+            })
+            {
+                var ex = await AssertValidationError(new[] { "ConnectionString" }, async () =>
+                {
+                    await adminClient.UpdateStoreLightningNetworkPaymentMethod(store.Id, "BTC", new LightningNetworkPaymentMethodData()
+                    {
+                        ConnectionString = forbidden,
+                        CryptoCode = "BTC",
+                        Enabled = true
+                    });
+                });
+                Assert.Contains("btcpay.server.canmodifyserversettings", ex.Message);
+                // However, the other client should work because he has `btcpay.server.canmodifyserversettings`
+                await admin2Client.UpdateStoreLightningNetworkPaymentMethod(admin2.StoreId, "BTC", new LightningNetworkPaymentMethodData()
+                {
+                    ConnectionString = forbidden,
+                    CryptoCode = "BTC",
+                    Enabled = true
+                });
+            }
+            // Allowed ip should be ok
+            await adminClient.UpdateStoreLightningNetworkPaymentMethod(store.Id, "BTC", new LightningNetworkPaymentMethodData()
+            {
+                ConnectionString = "type=clightning;server=tcp://8.8.8.8",
+                CryptoCode = "BTC",
+                Enabled = true
+            });
+            // If we strip the admin's right, he should not be able to set unsafe anymore, even if the API key is still valid
+            await admin2.MakeAdmin(false);
+            await AssertValidationError(new[] { "ConnectionString" }, async () =>
+            {
+                await admin2Client.UpdateStoreLightningNetworkPaymentMethod(admin2.StoreId, "BTC", new LightningNetworkPaymentMethodData()
+                {
+                    ConnectionString = "type=clightning;server=tcp://127.0.0.1",
+                    CryptoCode = "BTC",
+                    Enabled = true
+                });
             });
 
             var settings = (await tester.PayTester.GetService<SettingsRepository>().GetSettingAsync<PoliciesSettings>())?? new PoliciesSettings();

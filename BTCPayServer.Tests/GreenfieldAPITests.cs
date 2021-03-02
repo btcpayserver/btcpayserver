@@ -1622,7 +1622,8 @@ namespace BTCPayServer.Tests
             Assert.True(jsonConverter.CanConvert(typeof(double)));
             Assert.True(jsonConverter.CanConvert(typeof(double?)));
             Assert.False(jsonConverter.CanConvert(typeof(float)));
-            Assert.False(jsonConverter.CanConvert(typeof(int)));
+            Assert.True(jsonConverter.CanConvert(typeof(int)));
+            Assert.True(jsonConverter.CanConvert(typeof(int?)));
             Assert.False(jsonConverter.CanConvert(typeof(string)));
 
             var numberJson = "1";
@@ -1634,6 +1635,7 @@ namespace BTCPayServer.Tests
             Assert.Equal((double)1.0, jsonConverter.ReadJson(Get(numberJson), typeof(double), null, null));
             Assert.Equal((double)1.2, jsonConverter.ReadJson(Get(numberDecimalJson), typeof(double), null, null));
             Assert.Null(jsonConverter.ReadJson(Get("null"), typeof(double?), null, null));
+            Assert.Null(jsonConverter.ReadJson(Get("null"), typeof(int?), null, null));
             Assert.Throws<JsonSerializationException>(() =>
             {
                 jsonConverter.ReadJson(Get("null"), typeof(decimal), null, null);
@@ -1646,6 +1648,8 @@ namespace BTCPayServer.Tests
             Assert.Equal(1.2m, jsonConverter.ReadJson(Get(stringJson), typeof(decimal?), null, null));
             Assert.Equal(1.2, jsonConverter.ReadJson(Get(stringJson), typeof(double), null, null));
             Assert.Equal(1.2, jsonConverter.ReadJson(Get(stringJson), typeof(double?), null, null));
+            Assert.Equal(1, jsonConverter.ReadJson(Get(numberJson), typeof(int?), null, null));
+            Assert.Equal(1, jsonConverter.ReadJson(Get(numberJson), typeof(int), null, null));
         }
 
     }

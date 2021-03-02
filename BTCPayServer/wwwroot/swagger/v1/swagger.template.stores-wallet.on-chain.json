@@ -85,7 +85,6 @@
                         "name": "forceGenerate",
                         "in": "query",
                         "required": false,
-                        "default": false,
                         "description": "Whether to generate a new address for this request even if the previous one was not used",
                         "schema": {
                             "type": "string"
@@ -141,16 +140,6 @@
                         "in": "path",
                         "required": true,
                         "description": "The crypto code of the payment method to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "forceGenerate",
-                        "in": "query",
-                        "required": false,
-                        "default": false,
-                        "description": "Whether to generate a new address for this request even if the previous one was not used",
                         "schema": {
                             "type": "string"
                         }
@@ -631,19 +620,19 @@
                     },
                     "proceedWithPayjoin": {
                         "type": "boolean",
-                        "required": false,
+                        "default": true,
                         "nullable": true,
                         "description": "Whether to attempt to do a BIP78 payjoin if one of the destinations is a BIP21 with payjoin enabled"
                     },
                     "proceedWithBroadcast": {
                         "type": "boolean",
-                        "required": false,
+                        "default": true,
                         "nullable": true,
                         "description": "Whether to broadcast the transaction after creating it or to simply return the transaction in hex format."
                     },
                     "noChange": {
                         "type": "boolean",
-                        "required": false,
+                        "default": false,
                         "nullable": true,
                         "description": "Whether to send all the spent coins to the destinations (THIS CAN COST YOU SIGNIFICANT AMOUNTS OF MONEY, LEAVE FALSE UNLESS YOU KNOW WHAT YOU ARE DOING)."
                     },

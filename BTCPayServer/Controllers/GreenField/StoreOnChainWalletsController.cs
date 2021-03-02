@@ -11,6 +11,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Models.WalletViewModels;
+using BTCPayServer.Payments.PayJoin.Sender;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Authorization;
@@ -426,10 +427,10 @@ namespace BTCPayServer.Controllers.GreenField
                     await _delayedTransactionBroadcaster.Schedule(DateTimeOffset.UtcNow + TimeSpan.FromMinutes(2.0),
                         transaction, network);
                     var payjoinPSBT = await _payjoinClient.RequestPayjoin(
-                        new BitcoinUrlBuilder(signingContext.PayJoinBIP21, network.NBitcoinNetwork), derivationScheme,
+                        new BitcoinUrlBuilder(signingContext.PayJoinBIP21, network.NBitcoinNetwork), new PayjoinWallet(derivationScheme)s,
                         psbt.PSBT, CancellationToken.None);
                     payjoinPSBT = psbt.PSBT.SignAll(derivationScheme.AccountDerivation, accountKey, rootedKeyPath,
-                        new SigningOptions() {EnforceLowR = !(signingContext?.EnforceLowR is false)});
+                        new SigningOptions() {EnforceLowR = !Label(signingContext?.EnforceLowR is false)});
                     payjoinPSBT.Finalize();
                     var payjoinTransaction = payjoinPSBT.ExtractTransaction();
                     var hash = payjoinTransaction.GetHash();
@@ -441,8 +442,9 @@ namespace BTCPayServer.Controllers.GreenField
                         return await GetOnChainWalletTransaction(storeId, cryptoCode, hash.ToString());
                     }
                 }
-                catch (PayjoinException e)
+                catch (PayjoinException)
                 {
+                    //not a critical thing, payjoin is great if possible, fine if not
                 }
             }
 

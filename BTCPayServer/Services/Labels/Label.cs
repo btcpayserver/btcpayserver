@@ -78,8 +78,6 @@ namespace BTCPayServer.Services.Labels
                 return new RawLabel(str);
             }
         }
-        [JsonExtensionData]
-        public IDictionary<string, JToken> AdditionalData { get; set; }
     }
 
     public class RawLabel : Label

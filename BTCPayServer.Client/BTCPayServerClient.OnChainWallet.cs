@@ -25,7 +25,10 @@ namespace BTCPayServer.Client
         {
             var response =
                 await _httpClient.SendAsync(
-                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/Onchain/{cryptoCode}/wallet/address"), token);
+                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/Onchain/{cryptoCode}/wallet/address", new Dictionary<string, object>()
+                    {
+                        {"forceGenerate", forceGenerate}
+                    }), token);
             return await HandleResponse<OnChainWalletAddressData>(response);
         }
         

@@ -1,6 +1,8 @@
 using System.Security.Claims;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
+using BTCPayServer.Security.Bitpay;
+using BTCPayServer.Security.GreenField;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authorization;
 
@@ -15,8 +17,14 @@ namespace BTCPayServer
         {
             var isAdmin = (await authorizationService.AuthorizeAsync(user, Policies.CanModifyServerSettings))
                 .Succeeded;
-            if (isAdmin)
-                return (true, true);
+            switch (isAdmin)
+            {
+                case false when user.Identity.AuthenticationType == GreenFieldConstants.AuthenticationType && user.IsInRole(Roles.ServerAdmin):
+                    return (true, true);
+                case true:
+                    return (true, true);
+            }
+
             var policies = policiesSettings;
             var hotWallet = policies?.AllowHotWalletForAll is true;
             return (hotWallet, hotWallet && policies?.AllowHotWalletRPCImportForAll is true);

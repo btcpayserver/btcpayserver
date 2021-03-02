@@ -13,6 +13,7 @@ using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBitcoin.JsonConverters;
@@ -26,6 +27,7 @@ namespace BTCPayServer.Controllers.GreenField
 {
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+    [EnableCors(CorsPolicies.All)]
     public class StoreOnChainWalletsController : Controller
     {
         private StoreData Store => HttpContext.GetStoreData();
@@ -121,7 +123,7 @@ namespace BTCPayServer.Controllers.GreenField
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/transactions")]
         public async Task<IActionResult> ShowOnChainWalletTransactions(string storeId, string cryptoCode,
-            TransactionStatus[] statusFilter = null)
+            [FromQuery]TransactionStatus[] statusFilter = null)
         {
             if (IsInvalidWalletRequest(cryptoCode, out BTCPayNetwork network,
                 out DerivationSchemeSettings derivationScheme, out IActionResult actionResult)) return actionResult;
@@ -133,27 +135,27 @@ namespace BTCPayServer.Controllers.GreenField
 
             var txs = await wallet.FetchTransactions(derivationScheme.AccountDerivation);
             var filteredFlatList = new List<TransactionInformation>();
-            if (statusFilter is null || statusFilter.Contains(TransactionStatus.Confirmed))
+            if (statusFilter is null || !statusFilter.Any() || statusFilter.Contains(TransactionStatus.Confirmed))
             {
                 filteredFlatList.AddRange(txs.ConfirmedTransactions.Transactions);
             }
 
-            if (statusFilter is null || statusFilter.Contains(TransactionStatus.Unconfirmed))
+            if (statusFilter is null || !statusFilter.Any() || statusFilter.Contains(TransactionStatus.Unconfirmed))
             {
                 filteredFlatList.AddRange(txs.UnconfirmedTransactions.Transactions);
             }
 
-            if (statusFilter is null || statusFilter.Contains(TransactionStatus.Replaced))
+            if (statusFilter is null ||  !statusFilter.Any() ||statusFilter.Contains(TransactionStatus.Replaced))
             {
                 filteredFlatList.AddRange(txs.ReplacedTransactions.Transactions);
             }
 
-
-            return Ok(filteredFlatList.Select(information =>
+            var result = filteredFlatList.Select(information =>
             {
                 walletTransactionsInfoAsync.TryGetValue(information.TransactionId.ToString(), out var transactionInfo);
                 return ToModel(transactionInfo, information, wallet);
-            }).ToList());
+            }).ToList();
+            return Ok(result);
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -209,7 +211,7 @@ namespace BTCPayServer.Controllers.GreenField
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPost("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/transactions")]
-        public async Task<IActionResult> CreateOnChainTransaction(string cryptoCode,
+        public async Task<IActionResult> CreateOnChainTransaction(string storeId, string cryptoCode,
             [FromBody] CreateOnChainTransactionRequest request)
         {
             if (IsInvalidWalletRequest(cryptoCode, out BTCPayNetwork network,
@@ -253,63 +255,57 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 var destination = request.Destinations[index];
 
-                var address = destination.Destination;
                 if (destination.SubtractFromAmount)
                 {
                     subtractFeesOutputsCount.Add(index);
                 }
 
-                if (destination.Amount is null)
+                BitcoinUrlBuilder bip21 = null;
+                var amount = destination.Amount;
+                if (amount.GetValueOrDefault(0) <= 0)
                 {
-                    //it is a bip21
+                    amount = null;
+                }
+                var address = string.Empty; 
+                try
+                {
+                    destination.Destination = destination.Destination.Replace(network.UriScheme+":", "bitcoin:", StringComparison.InvariantCultureIgnoreCase);
+                    bip21 = new BitcoinUrlBuilder(destination.Destination, network.NBitcoinNetwork);
+                    amount ??= bip21.Amount.GetValue(network);
+                    address = bip21.Address.ToString();
+                    if (destination.SubtractFromAmount)
+                    {
+                        request.AddModelError(transactionRequest => transactionRequest.Destinations[index],
+                            "You cannot use a BIP21 destination along with SubtractFromAmount", this);
+                    }
+                }
+                catch (FormatException)
+                {
                     try
                     {
-                        var bip21 = new BitcoinUrlBuilder(destination.Destination, network.NBitcoinNetwork);
-                        address = bip21.Address.ToString();
-                        if (destination.SubtractFromAmount)
-                        {
-                            request.AddModelError(transactionRequest => transactionRequest.Destinations[index],
-                                "You cannot use a BIP21 destination along with SubtractFromAmount", this);
-                            //cant subtract from amount if using bip21
-                        }
-
-                        var amount = bip21.Amount.GetValue(network);
-                        destination.Amount = amount;
-                        if (request.ProceedWithPayjoin && bip21.UnknowParameters.ContainsKey("pj"))
-                        {
-                            payjoinOutputIndex = index;
-                        }
+                        address = BitcoinAddress.Create(destination.Destination, network.NBitcoinNetwork).ToString();
                     }
-
-                    catch (FormatException e)
+                    catch (Exception e)
                     {
                         request.AddModelError(transactionRequest => transactionRequest.Destinations[index],
                             "Destination must be a BIP21 payment link or an address", this);
                     }
                 }
-                else if (destination.Amount > 0)
+
+                if (amount is null || amount <= 0)
                 {
-                    try
-                    {
-                        BitcoinAddress.Create(destination.Destination, network.NBitcoinNetwork);
-                        address = destination.Destination;
-                    }
-                    catch (FormatException formatException)
-                    {
-                        request.AddModelError(transactionRequest => transactionRequest.Destinations[index],
-                            "Destination must be a BIP21 payment link or an address", this);
-                    }
+                    request.AddModelError(transactionRequest => transactionRequest.Destinations[index],
+                        "Amount must be specified or destination must be a BIP21 payment link, and greater than 0", this);
                 }
-                else if (destination.Amount <= 0)
+                if (request.ProceedWithPayjoin && bip21?.UnknowParameters?.ContainsKey("pj") is true)
                 {
-                    request.AddModelError(transactionRequest => transactionRequest.Destinations[index].Amount,
-                        "Amount must be greater than 0", this);
+                    payjoinOutputIndex = index;
                 }
 
                 outputs.Add(new WalletSendModel.TransactionOutput()
                 {
                     DestinationAddress = address,
-                    Amount = destination.Amount,
+                    Amount = amount,
                     SubtractFeesFromOutput = destination.SubtractFromAmount
                 });
                 sum += destination.Amount ?? 0;
@@ -393,9 +389,16 @@ namespace BTCPayServer.Controllers.GreenField
                 ChangeAddress = psbt.ChangeAddress?.ToString()
             };
 
-            var signingKey = ExtKey.Parse(await explorerClient
+            var signingKeyStr = await explorerClient
                 .GetMetadataAsync<string>(derivationScheme.AccountDerivation,
-                    WellknownMetadataKeys.MasterHDKey), network.NBitcoinNetwork);
+                    WellknownMetadataKeys.MasterHDKey);
+            if (signingKeyStr is null)
+            {
+                return this.CreateAPIError("not-available",
+                    $"{cryptoCode} sending services are not currently available");
+            }
+            
+            var signingKey = ExtKey.Parse(signingKeyStr, network.NBitcoinNetwork);
 
             var signingKeySettings = derivationScheme.GetSigningAccountKeySettings();
             signingKeySettings.RootFingerprint ??= signingKey.GetPublicKey().GetHDFingerPrint();
@@ -436,8 +439,7 @@ namespace BTCPayServer.Controllers.GreenField
                     broadcastResult = await explorerClient.BroadcastAsync(payjoinTransaction);
                     if (broadcastResult.Success)
                     {
-                        return RedirectToAction("GetOnChainWalletTransaction",
-                            new {storeId = Store.Id, cryptoCode = cryptoCode, transactionId = hash.ToString()});
+                        return await GetOnChainWalletTransaction(storeId, cryptoCode, hash.ToString());
                     }
                 }
                 catch (PayjoinException e)
@@ -453,8 +455,7 @@ namespace BTCPayServer.Controllers.GreenField
             broadcastResult = await explorerClient.BroadcastAsync(transaction);
             if (broadcastResult.Success)
             {
-                return RedirectToAction("GetOnChainWalletTransaction",
-                    new {storeId = Store.Id, cryptoCode = cryptoCode, transactionId = transactionHash.ToString()});
+                return await GetOnChainWalletTransaction(storeId, cryptoCode, transactionHash.ToString());
             }
             else
             {
@@ -525,8 +526,9 @@ namespace BTCPayServer.Controllers.GreenField
         {
             return new OnChainWalletTransactionData()
             {
-                Comment = walletTransactionsInfoAsync?.Comment,
-                Labels = walletTransactionsInfoAsync?.Labels,
+                TransactionHash = tx.TransactionId,
+                Comment = walletTransactionsInfoAsync?.Comment?? string.Empty,
+                Labels = walletTransactionsInfoAsync?.Labels?? new Dictionary<string, LabelData>(),
                 Amount = tx.BalanceChange.GetValue(wallet.Network),
                 BlockHash = tx.BlockHash,
                 BlockHeight = tx.Height,

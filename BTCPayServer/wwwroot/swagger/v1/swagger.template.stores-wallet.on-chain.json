@@ -521,6 +521,11 @@
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
+                    "transactionHash": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "The transaction id"
+                    },
                     "comment": {
                         "type": "string",
                         "description": "A comment linked to the transaction"

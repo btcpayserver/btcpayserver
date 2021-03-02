@@ -2992,7 +2992,6 @@ namespace BTCPayServer.Tests
             var fetcher = new RateFetcher(factory);
             var pairs =
                 provider.GetAll()
-                    .Where(c => c.CryptoCode != "DASH") // ERR_RATE_UNAVAILABLE(bittrex, DASH_BTC)
                     .Select(c => new CurrencyPair(c.CryptoCode, "USD"))
                     .ToHashSet();
 

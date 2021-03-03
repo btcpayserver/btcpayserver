@@ -2,6 +2,8 @@
     "name" : "Matic-Mainnet",
     "chainId": 137,
     "coinType": 1,
+    "baseTokenSymbol" : "MATIC",
+    "baseTokenDivisibility" : 18,
     "explorer": "https://explorer-mainnet.maticvigil.com/address/{0}/transactions"
    
 }

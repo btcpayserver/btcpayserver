@@ -1,9 +1,9 @@
 [
     {
-        "cryptoCode" : "USDT20",
-        "displayName": "Tether USD (ERC20)",
+        "cryptoCode" : "DERC20",
+        "displayName": "Dummy ERC20",
         "cryptoImagePath" :"/imlegacy/liquid-tether.svg" ,
-        "cmartContractAddress": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
-        "divisibility": 6
+        "smartContractAddress": "0xfe4F5145f6e09952a5ba9e956ED0C25e3Fa4c7F1",
+        "divisibility": 18
     }
 ]

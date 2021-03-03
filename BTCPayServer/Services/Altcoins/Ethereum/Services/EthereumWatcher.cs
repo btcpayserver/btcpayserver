@@ -1,4 +1,6 @@
 #if ALTCOINS
+using Common.Logging;
+using Common.Logging.Simple;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,6 +8,7 @@ using System.Net.Http.Headers;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Specialized;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Payments;
@@ -364,7 +367,11 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
                     "Basic", Convert.ToBase64String(
                         System.Text.Encoding.ASCII.GetBytes(val)));
             }
-            Web3 = new Web3(config.Web3ProviderUrl, null, headerValue);
+            var debugLoggerFactoryAdapter = new DebugLoggerFactoryAdapter();
+            LogManager.Adapter = debugLoggerFactoryAdapter;
+          
+            var iLog = LogManager.GetLogger<ILog>();
+            Web3 = new Web3(config.Web3ProviderUrl, iLog, headerValue);
             Networks = btcPayNetworkProvider.GetAll()
                 .OfType<EthereumBTCPayNetwork>()
                 .Where(network => network.ChainId == chainId)

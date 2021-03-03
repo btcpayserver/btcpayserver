@@ -3,7 +3,7 @@
         "cryptoCode" : "USDT20",
         "displayName": "(PoS) Tether USD ",
         "cryptoImagePath" :"/imlegacy/liquid-tether.svg" ,
-        "cmartContractAddress": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
+        "smartContractAddress": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
         "divisibility": 6
     }
 ]

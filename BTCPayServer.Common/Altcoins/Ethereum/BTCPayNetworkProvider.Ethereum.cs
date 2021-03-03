@@ -15,20 +15,26 @@ namespace BTCPayServer
     {
         public void InitEthereum()
         {
+            // this will add the "base token" of the network
+            // EG:
+            // * on main Ethereum network --> ETH
+            // * on L2 Matic network --> MATIC 
+              
+            var ethereumNetwork = "matic"; // TODO remove hardcode and read from a config or env
+            string networkType = NetworkType == NetworkType.Mainnet? "mainnet" : "testnet";
+            var ethereumNetworkData = LoadEthereumNetworkData(networkType, ethereumNetwork);
+          
             Add(new EthereumBTCPayNetwork()
             {
-                CryptoCode = "ETH",
+                CryptoCode = ethereumNetworkData.BaseTokenSymbol,
                 DisplayName = "Ethereum",
                 DefaultRateRules = new[] {"ETH_X = ETH_BTC * BTC_X", "ETH_BTC = kraken(ETH_BTC)"},
-                BlockExplorerLink =
-                    NetworkType == NetworkType.Mainnet
-                        ? "https://etherscan.io/address/{0}"
-                        : "https://ropsten.etherscan.io/address/{0}",
+                BlockExplorerLink = ethereumNetworkData.Explorer,
                 CryptoImagePath = "/imlegacy/eth.png",
                 ShowSyncSummary = true,
-                CoinType = NetworkType == NetworkType.Mainnet ? 60 : 1,
-                ChainId = NetworkType == NetworkType.Mainnet ? 1 : 3,
-                Divisibility = 18,
+                CoinType = ethereumNetworkData.CoinType,
+                ChainId = ethereumNetworkData.ChainId,
+                Divisibility = ethereumNetworkData.BaseTokenDivisibility,
             });
         }
         
@@ -40,7 +46,6 @@ namespace BTCPayServer
             string explorer = ethereumNetworkData.Explorer;
             int chainId = ethereumNetworkData.ChainId;
             int coinType = ethereumNetworkData.CoinType;
-           
         
             var ERC20Tokens = LoadERC20Config(ethereumNetwork + "." + networkType).ToDictionary(k => k.CryptoCode);
             foreach(KeyValuePair<string, BTCPayServer.ERC20Data> entry in ERC20Tokens)
@@ -65,37 +70,12 @@ namespace BTCPayServer
                     Divisibility = token.Divisibility
                 });
             }
-/*
-                Add(new ERC20BTCPayNetwork()
-                {
-                    CryptoCode = "USDT20",
-                    DisplayName = "Tether USD (ERC20)",
-                    DefaultRateRules = new[]
-                    {
-                        "USDT20_UST = 1",
-                        "USDT20_X = USDT20_BTC * BTC_X",
-                        "USDT20_BTC = bitfinex(UST_BTC)",
-                    },
-                    BlockExplorerLink =
-                        NetworkType == NetworkType.Mainnet
-                            ? "https://etherscan.io/address/{0}#tokentxns"
-                            : "https://ropsten.etherscan.io/address/{0}#tokentxns",
-                    CryptoImagePath = "/imlegacy/liquid-tether.svg",
-                    ShowSyncSummary = false,
-                    CoinType = NetworkType == NetworkType.Mainnet? 60 : 1,
-                    ChainId = NetworkType == NetworkType.Mainnet ? 1 : 3,
-                    SmartContractAddress = "0xdAC17F958D2ee523a2206206994597C13D831ec7",
-                    Divisibility = 6
-                });
-                */
+
         }
 
         static ERC20Data[] LoadERC20Config(string networkName)
         {
-            //var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("BTCPayServer.Common.Ethereum.erc20_" + networkName + ".json");
-           
             var content = ReadResource("Erc20" + "." + networkName + ".json");
-
             var tokens = JsonConvert.DeserializeObject<ERC20Data[]>(content);
             return tokens;
         }
@@ -103,6 +83,7 @@ namespace BTCPayServer
         static EthereumNetworkData LoadEthereumNetworkData(string networkType, string ethereumNetwork)
         {
             string filename = "NetworkInfo" + "." + ethereumNetwork + "." + networkType + ".json";
+            
             var content = ReadResource(filename);
             var networkInfo = JsonConvert.DeserializeObject<EthereumNetworkData>(content);
             return networkInfo;
@@ -134,13 +115,14 @@ namespace BTCPayServer
         public string CryptoImagePath { get; set; }
         public string SmartContractAddress { get; set; }
         public int Divisibility { get; set; }
-        public string Explorer { get; set; }
     }
 
     public class EthereumNetworkData
     {
         public string Name { get; set; }
         public string DisplayName { get; set; }
+        public string BaseTokenSymbol { get; set; }
+        public int BaseTokenDivisibility { get; set; }
         public int ChainId {get; set; }
         public int CoinType {get; set; }
         public string Explorer { get; set; }

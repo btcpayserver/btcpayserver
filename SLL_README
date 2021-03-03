@@ -1,0 +1,4 @@
+to run MATIC in with logging of RPC requests:
+
+cd BTCPayServer
+COMPlus_DebugWriteToStdErr=1 dotnet run -c Altcoins-Debug --launch-profile MATIC-HTTPS

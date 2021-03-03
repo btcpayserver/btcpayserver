@@ -13,22 +13,22 @@ namespace BTCPayServer
 {
     public partial class BTCPayNetworkProvider
     {
-        public void InitEthereum()
+        public void InitMatic()
         {
             // this will add the "base token" of the network
             // EG:
-            // * on main Ethereum network --> ETH
-          
-            var ethereumNetwork = "ethereum";
+            // * on L2 Matic network --> MATIC 
+            // read from end variable   
+            var ethereumNetwork = "matic";
            
             string networkType = NetworkType == NetworkType.Mainnet? "mainnet" : "testnet";
             var ethereumNetworkData = LoadEthereumNetworkData(networkType, ethereumNetwork);
           
-            Add(new EthereumBTCPayNetwork()
+            Add(new MaticBTCPayNetwork()
             {
                 CryptoCode = ethereumNetworkData.BaseTokenSymbol,
                 DisplayName = "Ethereum",
-                DefaultRateRules = new[] {"ETH_X = ETH_BTC * BTC_X", "ETH_BTC = kraken(ETH_BTC)"},
+                DefaultRateRules = new[] {"MATIC_X = ETH_BTC * BTC_X", "MATIC_BTC = kraken(MATIC_BTC)"},
                 BlockExplorerLink = ethereumNetworkData.Explorer,
                 CryptoImagePath = "/imlegacy/eth.png",
                 ShowSyncSummary = true,
@@ -38,9 +38,9 @@ namespace BTCPayServer
             });
         }
         
-        public void InitERC20()
+        public void InitMaticERC20()
         {
-            var ethereumNetwork = "ethereum";
+            var ethereumNetwork = "matic";
             string networkType = NetworkType == NetworkType.Mainnet? "mainnet" : "testnet";
             var ethereumNetworkData = LoadEthereumNetworkData(networkType, ethereumNetwork);
             string explorer = ethereumNetworkData.Explorer;
@@ -51,7 +51,7 @@ namespace BTCPayServer
             foreach(KeyValuePair<string, BTCPayServer.ERC20Data> entry in ERC20Tokens)
             {
                 var token = entry.Value;
-                Add(new ERC20BTCPayNetwork()
+                Add(new ERC20MaticBTCPayNetwork()
                 {
                     CryptoCode = token.CryptoCode,
                     DisplayName = token.DisplayName,
@@ -73,60 +73,8 @@ namespace BTCPayServer
 
         }
 
-        static ERC20Data[] LoadERC20Config(string networkName)
-        {
-            var content = ReadResource("Erc20" + "." + networkName + ".json");
-            var tokens = JsonConvert.DeserializeObject<ERC20Data[]>(content);
-            return tokens;
-        }
-
-        static EthereumNetworkData LoadEthereumNetworkData(string networkType, string ethereumNetwork)
-        {
-            string filename = "NetworkInfo" + "." + ethereumNetwork + "." + networkType + ".json";
-            
-            var content = ReadResource(filename);
-            var networkInfo = JsonConvert.DeserializeObject<EthereumNetworkData>(content);
-            return networkInfo;
-        }
-
-        static string ReadResource(string name)
-        {
-            // Determine path
-            var assembly = Assembly.GetExecutingAssembly();
-            string resourcePath = name;
-            // Format: "{Namespace}.{Folder}.{filename}.{Extension}"
-          
-            resourcePath = assembly.GetManifestResourceNames()
-                .Single(str => str.EndsWith(name));
-            
-
-            using (Stream stream = assembly.GetManifestResourceStream(resourcePath))
-            using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
-            {
-                return reader.ReadToEnd();
-            }
-        }
     }
 
-    public class ERC20Data
-    {
-        public string CryptoCode { get; set; }
-        public string DisplayName {get; set; }
-        public string CryptoImagePath { get; set; }
-        public string SmartContractAddress { get; set; }
-        public int Divisibility { get; set; }
-    }
-
-    public class EthereumNetworkData
-    {
-        public string Name { get; set; }
-        public string DisplayName { get; set; }
-        public string BaseTokenSymbol { get; set; }
-        public int BaseTokenDivisibility { get; set; }
-        public int ChainId {get; set; }
-        public int CoinType {get; set; }
-        public string Explorer { get; set; }
-        
-    }
+    
 }
 #endif

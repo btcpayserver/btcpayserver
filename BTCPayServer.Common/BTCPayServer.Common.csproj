@@ -13,14 +13,14 @@
   <ItemGroup  Condition="'$(Altcoins)' == 'true'">
     <EmbeddedResource Include="Altcoins/Ethereum/NetworkInfo.ethereum.testnet.json" />
     <EmbeddedResource Include="Altcoins/Ethereum/NetworkInfo.ethereum.mainnet.json" />
-    <EmbeddedResource Include="Altcoins/Ethereum/NetworkInfo.matic.testnet.json" />
-    <EmbeddedResource Include="Altcoins/Ethereum/NetworkInfo.matic.mainnet.json" />
+    <EmbeddedResource Include="Altcoins/Matic/NetworkInfo.matic.testnet.json" />
+    <EmbeddedResource Include="Altcoins/Matic/NetworkInfo.matic.mainnet.json" />
 
     <EmbeddedResource Include="Altcoins/Ethereum/Erc20.ethereum.testnet.json" />
     <EmbeddedResource Include="Altcoins/Ethereum/Erc20.ethereum.mainnet.json" />
 
-    <EmbeddedResource Include="Altcoins/Ethereum/Erc20.matic.testnet.json" />
-    <EmbeddedResource Include="Altcoins/Ethereum/Erc20.matic.mainnet.json" />
+    <EmbeddedResource Include="Altcoins/Matic/Erc20.matic.testnet.json" />
+    <EmbeddedResource Include="Altcoins/Matic/Erc20.matic.mainnet.json" />
     
   </ItemGroup>
 

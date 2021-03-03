@@ -1,6 +1,6 @@
 [
     {
-        "cryptoCode" : "USDT20",
+        "cryptoCode" : "USDT20_Matic",
         "displayName": "(PoS) Tether USD ",
         "cryptoImagePath" :"/imlegacy/liquid-tether.svg" ,
         "smartContractAddress": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",

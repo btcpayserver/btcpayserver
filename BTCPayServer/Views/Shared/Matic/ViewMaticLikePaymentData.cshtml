@@ -1,0 +1,64 @@
+@using System.Globalization
+@using BTCPayServer.Services.Altcoins.Matic.Payments
+@using BTCPayServer.Services.Altcoins.Matic.UI
+@model IEnumerable<BTCPayServer.Services.Invoices.PaymentEntity>
+
+@{
+    var onchainPayments = Model.Where(entity => entity.GetPaymentMethodId().PaymentType == MaticPaymentType.Instance).Select(payment =>
+    {
+        var m = new MaticPaymentViewModel();
+        var onChainPaymentData = payment.GetCryptoPaymentData() as MaticLikePaymentData;
+        m.Crypto = payment.GetPaymentMethodId().CryptoCode;
+        m.DepositAddress = onChainPaymentData.GetDestination();
+
+        m.Amount = onChainPaymentData.GetValue().ToString(CultureInfo.InvariantCulture);
+        m.Confirmations = onChainPaymentData.BlockNumber.HasValue ? $"{onChainPaymentData.ConfirmationCount} (block {onChainPaymentData.BlockNumber})" : "pending";
+        m.Amount = onChainPaymentData.GetValue().ToString(CultureInfo.InvariantCulture);
+        m.BlockNumber = onChainPaymentData.BlockNumber;
+        m.ReceivedTime = payment.ReceivedTime;
+        m.BalanceLink = string.Format(CultureInfo.InvariantCulture, payment.Network.BlockExplorerLink, m.DepositAddress);
+        m.Replaced = !payment.Accounted;
+        m.Index = onChainPaymentData.AccountIndex;
+        return m;
+    });
+}
+
+@if (onchainPayments.Any())
+{
+    <div class="row">
+        <div class="col-md-12 invoice-payments">
+            <h3>Matic/ERC-20 payments</h3>
+            <table class="table table-sm table-responsive-lg">
+                <thead class="thead-inverse">
+                <tr>
+                    <th>Crypto</th>
+                    <th>Amount</th>
+                    <th>Address</th>
+                    <th>Index</th>
+                    <th class="text-right">Confirmations</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var payment in onchainPayments)
+                {
+                    
+                    <tr style="@(payment.Replaced ? "text-decoration: line-through" : "")">
+                        <td>@payment.Crypto</td>
+                        <td>@payment.Amount</td>
+                        <td>
+                            <div class="wraptextAuto">
+                                <a href="@payment.BalanceLink" target="_blank">
+
+                                    @payment.DepositAddress
+                                </a>
+                            </div>
+                        </td>
+                        <td>@payment.Index</td>
+                        <td class="text-right">@payment.Confirmations</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

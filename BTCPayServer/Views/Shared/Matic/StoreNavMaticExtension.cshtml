@@ -1,0 +1,11 @@
+@using BTCPayServer.Services.Altcoins.Matic.UI
+@inject SignInManager<ApplicationUser> SignInManager;
+@inject BTCPayNetworkProvider BTCPayNetworkProvider;
+@{
+    var controller = ViewContext.RouteData.Values["Controller"].ToString();
+    var isMatic = controller.Equals(nameof(MaticLikeStoreController), StringComparison.InvariantCultureIgnoreCase);
+}
+@if (SignInManager.IsSignedIn(User) && BTCPayNetworkProvider.GetAll().OfType<MaticBTCPayNetwork>().Any())
+{
+    <a class="nav-link @(isMatic ? "active" : string.Empty)" asp-route-storeId="@this.Context.GetRouteValue("storeId")" asp-action="GetStoreMaticLikePaymentMethods" asp-controller="MaticLikeStore">Matic</a>
+}

@@ -1,0 +1,76 @@
+
+@using BTCPayServer.Views.Stores
+@model BTCPayServer.Services.Altcoins.Matic.UI.ViewMaticStoreOptionsViewModel
+@inject SignInManager<ApplicationUser> SignInManager;
+@inject BTCPayNetworkProvider BTCPayNetworkProvider;
+@{
+    Layout = "../Shared/_NavLayout.cshtml";
+
+    ViewData.SetActivePageAndTitle(StoreNavPages.ActivePage, "Matic Settings");
+
+    ViewData["NavPartialName"] = "../Stores/_Nav";
+}
+
+
+<partial name="_StatusMessage"/>
+
+<div class="row">
+    <div class="col-md-6">
+        <div asp-validation-summary="All" class="text-danger"></div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-8">
+        <div class="form-group">
+            <table class="table table-sm table-responsive-md">
+                <thead>
+                <tr>
+                    <th>Crypto</th>
+                    <th>Root address</th>
+                    <th class="text-center">Enabled</th>
+                    <th class="text-right">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td>@item.CryptoCode</td>
+                        <td>@item.RootAddress</td>
+                        <td class="text-center">
+                            @if (item.Enabled)
+                            {
+                                <span class="text-success fa fa-check"></span>
+                            }
+                            else
+                            {
+                                <span class="text-danger fa fa-times"></span>
+                            }
+                        </td>
+                        <td class="text-right">
+                            <a id="Modify@(item.CryptoCode)" asp-action="GetStoreMaticLikePaymentMethod"
+                               asp-route-storeId="@this.Context.GetRouteValue("storeId")"
+                               asp-route-cryptoCode="@item.CryptoCode">
+                                Modify
+                            </a>
+                            
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+@if (SignInManager.IsSignedIn(User) && User.IsInRole(Roles.ServerAdmin))
+{
+    var chains = BTCPayNetworkProvider.GetAll().OfType<MaticBTCPayNetwork>().Select(network => network.ChainId).Distinct();
+    foreach (var chain in chains)
+    {
+        
+        <a asp-action="UpdateChainConfig" asp-controller="MaticConfig" asp-route-chainId="@chain">Configure Web3 for chain @chain</a>
+    }
+}
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

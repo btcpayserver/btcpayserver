@@ -1,0 +1,284 @@
+@using BTCPayServer.Services
+@model BTCPayServer.Models.InvoicingModels.PaymentModel
+@inject BTCPayNetworkProvider BTCPayNetworkProvider
+@{
+    var chains = BTCPayNetworkProvider.GetAll().OfType<MaticBTCPayNetwork>().ToDictionary(network => network.CryptoCode.ToLowerInvariant(), network => new
+    {
+        ChainId = network.ChainId,
+        SmartContractAddress = (network as ERC20MaticBTCPayNetwork)?.SmartContractAddress,
+        Divisibility = network.Divisibility
+    });
+}
+<script type="text/x-template" id="matic-method-checkout-template">
+    <div>
+        <div class="bp-view payment scan" id="scan" v-bind:class="{ 'active': currentTab == 'scan'}">
+
+            <div class="payment__scan">
+                <img v-bind:src="srvModel.cryptoImage" class="qr_currency_icon" v-if="scanDisplayQr"/>
+                <qrcode v-bind:value="scanDisplayQr" :options="{ width: 256, margin: 1, color: {dark:'#000', light:'#f5f5f7'} }" tag="svg" v-if="scanDisplayQr"></qrcode>
+                <div class="payment__spinner qr_currency_icon" style="padding-right: 20px;">
+                    <partial name="Checkout-Spinner"/>
+                </div>
+            </div>
+            <div class="payment__details__instruction__open-wallet" v-if="hasWeb3">
+                <button :disabled="web3Loading" class="payment__details__instruction__open-wallet__btn action-button" target="_top" v-on:click="payWithWeb3">
+                    <span>{{$t("Open in wallet")}}</span>
+                </button>
+            </div>
+        </div>
+        <div class="bp-view payment manual-flow" id="copy" v-bind:class="{ 'active': currentTab == 'copy'}">
+            <div class="manual__step-two__instructions">
+                <span v-html="$t('CompletePay_Body', srvModel)"></span>
+            </div>
+            <div class="copyLabelPopup">
+                <span>{{$t("Copied")}}</span>
+            </div>
+            <nav  class="copyBox">
+                <div class="copySectionBox bottomBorder">
+                    <label>{{$t("Amount")}}</label>
+                    <div class="copyAmountText copy-cursor _copySpan">
+                        <span>{{dueAmount}}</span> {{ srvModel.cryptoCode }}
+                    </div>
+                </div>
+                <div class="separatorGem"></div>
+                <div class="copySectionBox bottomBorder">
+                    <label>{{$t("Address")}}</label>
+                    <div class="inputWithIcon _copyInput">
+                        <input type="text" class="checkoutTextbox" v-bind:value="srvModel.btcAddress" readonly="readonly"/>
+                        <img v-bind:src="srvModel.cryptoImage"/>
+                    </div>
+                </div>
+            </nav>
+        </div>
+        @if (Model.CoinSwitchEnabled)
+        {
+            <div id="altcoins" class="bp-view payment manual-flow" v-bind:class="{ 'active': currentTab == 'altcoins'}">
+                <nav >
+                    <div class="manual__step-two__instructions">
+                        <span>
+                            {{$t("ConversionTab_BodyTop", srvModel)}}
+                            <br/><br/>
+                            {{$t("ConversionTab_BodyDesc", srvModel)}}
+                        </span>
+                    </div>
+                    <center>
+                        @if (Model.CoinSwitchEnabled)
+                        {
+                            <template v-if="!selectedThirdPartyProcessor">
+                                <button v-on:click="selectedThirdPartyProcessor = 'coinswitch'" class="action-button">{{$t("Pay with CoinSwitch")}}</button>
+                            </template>
+                        }
+                        @if (Model.CoinSwitchEnabled)
+                        {
+                            <coinswitch inline-template
+                                    v-if="selectedThirdPartyProcessor === 'coinswitch'"
+                                    :mode="srvModel.coinSwitchMode"
+                                    :merchant-id="srvModel.coinSwitchMerchantId"
+                                    :to-currency="srvModel.paymentMethodId"
+                                    :to-currency-due="coinswitchAmountDue"
+                                    :autoload="selectedThirdPartyProcessor === 'coinswitch'"
+                                    :to-currency-address="srvModel.btcAddress">
+                                <div>
+                                    <a v-on:click="openDialog($event)" :href="url" class="action-button" v-show="url && !opened">{{$t("Pay with CoinSwitch")}}</a>
+                                    <iframe
+                                        v-if="showInlineIFrame"
+                                        v-on:load="onLoadIframe"
+                                        style="height: 100%; position: fixed; top: 0; width: 100%; left: 0;"
+                                        sandbox="allow-scripts allow-forms allow-popups allow-same-origin"
+                                        :src="url">
+                                    </iframe>
+                                </div>
+                            </coinswitch>                                                                                
+                        }
+                    </center>
+                </nav>
+            </div>
+        }
+    </div>          
+</script>
+
+<script type="text/x-template" id="matic-method-checkout-header-template">
+    <div class="payment-tabs">
+        <div class="payment-tabs__tab " id="scan-tab" v-on:click="switchTab('scan')"  v-bind:class="{ 'active': currentTab == 'scan'}" >
+            <span>{{$t("Scan")}}</span>
+        </div>
+        <div class="payment-tabs__tab" id="copy-tab" v-on:click="switchTab('copy')"  v-bind:class="{ 'active': currentTab == 'copy'}" >
+            <span>{{$t("Copy")}}</span>
+        </div>
+        @if (Model.CoinSwitchEnabled)
+        {
+            <div class="payment-tabs__tab" id="altcoins-tab" v-on:click="switchTab('altcoins')"  v-bind:class="{ 'active': currentTab == 'altcoins'}" >
+                <span>{{$t("Conversion")}}</span>
+            </div>
+            <div id="tabsSlider" class="payment-tabs__slider three-tabs"  v-bind:class="['slide-'+currentTab]"></div>
+        }
+        else
+        {
+            <div id="tabsSlider" class="payment-tabs__slider"  v-bind:class="['slide-'+currentTab]"></div>
+        } 
+    </div>
+</script>
+
+<script type="text/javascript">
+    Vue.component('MaticLikeMethodCheckout',
+        {
+            props: ["srvModel"],
+            template: "#matic-method-checkout-template",
+            components: {
+                qrcode: VueQrcode,
+                coinswitch: CoinSwitchComponent
+            },
+            data: function() {
+                return {
+                    cryptoChains: @Safe.Json(chains),
+                    selectedThirdPartyProcessor: "",
+                    currentTab: "scan",
+                    hasWeb3: false,
+                    web3Loading: false
+                }
+            },
+            computed: {
+                dueAmount: function(){
+                    var r = this.srvModel.btcDue;
+                    while(r.charAt(r.length-1)=='0') {
+                        r = r.substring(0,r.length-1);
+                    }
+                    return r;
+                },
+                coinswitchAmountDue: function() {
+                    return this.srvModel.coinSwitchAmountMarkupPercentage
+                        ? this.srvModel.btcDue * (1 + (this.srvModel.coinSwitchAmountMarkupPercentage / 100))
+                        : this.srvModel.btcDue;
+                },
+                scanDisplayQr: function() {
+                    return this.srvModel.invoiceBitcoinUrlQR;
+                }
+            },
+            methods: {
+                payWithWeb3: function() {
+                    var self = this;
+                    self.web3Loading = true;
+                    var chainData = self.cryptoChains[self.srvModel.cryptoCode.toLowerCase()];
+                    var ptio = self.dueAmount.indexOf('.');                       
+                    var amt = self.dueAmount.substr(0,ptio) + web3.padRight(self.dueAmount.substr(ptio+1), chainData.divisibility);
+                    if(chainData.smartContractAddress){                        
+                        var abi = [
+                                  {
+                                    constant: false,
+                                    inputs: [
+                                      { name: "_to", type: "address" },
+                                      { name: "_value", type: "uint256" },
+                                    ],
+                                    name: "transfer",
+                                    outputs: [{ name: "", type: "bool" }],
+                                    type: "function",
+                                  },
+                                ];
+                        var contract = web3.eth.contract(abi).at(chainData.smartContractAddress);
+                        contract.transfer(self.srvModel.btcAddress, amt, (error, txHash) => {
+                            if(error){
+                                console.error(error);
+                            }
+                            self.web3Loading = false;
+                        });
+                    }else {
+                        web3.eth.sendTransaction({
+                              from : 0,
+                              to : self.srvModel.btcAddress,
+                              value: amt,
+                            },
+                            (error, txID) => {
+                            
+                                if(error){
+                                    console.error(error);
+                                }
+                                self.web3Loading = false;
+                            });
+                    }                    
+                }
+            },
+            mounted: function() {
+                var self = this;
+                eventBus.$on("tab-switched",
+                    function(tab) {
+                        self.currentTab = tab;
+                });
+                if (window.ethereum) {
+                    window.web3 = new Web3(ethereum);
+                }
+                
+                var chainData = self.cryptoChains[self.srvModel.cryptoCode.toLowerCase()];
+                if (typeof web3 !== "undefined"){
+                    if(ethereum && ethereum.chainId){
+                        self.hasWeb3 = chainData.chainId == parseInt(ethereum.chainId, 16);
+                    }else if (web3.eth.getChainId){
+                        web3.eth.getChainId(function(chainId){
+                            self.hasWeb3 = chainData.chainId == chainId;
+                        })
+                    }
+                }
+            }
+    });
+
+    Vue.component('MaticLikeMethodCheckoutHeader', {
+        props: ["srvModel"],
+        template: "#matic-method-checkout-header-template",
+        data: function() {
+            return {
+                currentTab: "scan"
+            };
+        },
+        methods: {
+            switchTab: function(tab) {
+                this.currentTab = tab;
+                eventBus.$emit("tab-switched", tab);
+            }
+        }
+    });
+
+    $(document).ready(function() {
+        // Clipboard Copy
+        var copySpan = new Clipboard('._copySpan', {
+                target: function(trigger) {
+                    return copyElement(trigger, 0, 65).firstChild;
+                }
+        });
+        var copyInput = new Clipboard('._copyInput', {
+                target: function(trigger) {
+                    return copyElement(trigger, 4, 65).firstChild;
+                }
+        });
+
+        function copyElement(trigger, popupLeftModifier, popupTopModifier) {
+            var elm = $(trigger);
+            var position = elm.offset();
+            position.top -= popupLeftModifier + $(window).scrollTop();
+            position.left += (elm.width() / 2) - popupTopModifier;
+            $(".copyLabelPopup").css(position).addClass("copied");
+            elm.removeClass("copy-cursor").addClass("clipboardCopied");
+            setTimeout(clearSelection, 100);
+            setTimeout(function() {
+                    elm.removeClass("clipboardCopied").addClass("copy-cursor");
+                    $(".copyLabelPopup").removeClass("copied");
+                },
+                1000);
+            return trigger;
+        }
+
+        function clearSelection() {
+            if (window.getSelection) {
+                window.getSelection().removeAllRanges();
+            } else if (document.selection) {
+                document.selection.empty();
+            }
+        }
+        // Disable enter key
+        $(document).keypress(
+            function(event) {
+                if (event.which === '13') {
+                    event.preventDefault();
+                }
+            }
+        );
+    });
+</script>

@@ -50,6 +50,7 @@ using Serilog;
 #if ALTCOINS
 using BTCPayServer.Services.Altcoins.Monero;
 using BTCPayServer.Services.Altcoins.Ethereum;
+using BTCPayServer.Services.Altcoins.Matic;
 #endif
 namespace BTCPayServer.Hosting
 {
@@ -81,6 +82,7 @@ namespace BTCPayServer.Hosting
 #if ALTCOINS
             services.AddMoneroLike();
             services.AddEthereumLike();
+            services.AddMaticLike();
 #endif
             services.TryAddSingleton<SettingsRepository>();
             services.TryAddSingleton<LabelFactory>();

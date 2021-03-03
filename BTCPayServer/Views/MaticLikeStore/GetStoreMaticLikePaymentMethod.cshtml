@@ -1,0 +1,100 @@
+
+@using BTCPayServer.Views.Stores
+@model BTCPayServer.Services.Altcoins.Matic.UI.EditMaticPaymentMethodViewModel
+
+@{
+    Layout = "../Shared/_NavLayout.cshtml";
+
+    ViewData["NavPartialName"] = "../Stores/_Nav";
+    ViewData.SetActivePageAndTitle(StoreNavPages.ActivePage, $"{this.Context.GetRouteValue("cryptoCode")} Settings");
+}
+
+
+<partial name="_StatusMessage"/>
+
+<div class="row">
+    <div class="col-md-6">
+        <div asp-validation-summary="All" class="text-danger"></div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-8">
+        <div class="alert alert-warning">DO NOT USE THE WALLET TO ACCEPT PAYMENTS OUTSIDE OF THIS STORE.<br/>If you spend funds received on invoices which have not been marked complete yet, the invoice will be marked as unpaid.
+        </div>
+        <form method="post" asp-action="GetStoreMaticLikePaymentMethod"
+              asp-route-storeId="@this.Context.GetRouteValue("storeId")"
+              asp-route-cryptoCode="@this.Context.GetRouteValue("cryptoCode")"
+              class="mt-4" enctype="multipart/form-data">
+
+            <input type="hidden" asp-for="OriginalIndex"/>
+            <div class="form-group">
+                <label asp-for="Seed"></label>
+                <input asp-for="Seed" type="text" class="form-control"/>
+                <span asp-validation-for="Seed" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Passphrase"></label>
+                <input type="text" asp-for="Passphrase" class="form-control" autocomplete="off"/>
+                <span asp-validation-for="Passphrase" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="KeyPath"></label>
+                <input asp-for="KeyPath" class="form-control"/>
+                <span class="text-muted">Please see <a href="https://medium.com/myetherwallet/hd-wallets-and-derivation-paths-explained-865a643c7bf2" target="_blank">this article.</a></span>
+                <span asp-validation-for="KeyPath" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="StoreSeed"></label>
+                <input asp-for="StoreSeed" type="checkbox" class="form-check"/>
+                <span class="text-muted">Store the seed/password on server if provided. If not checked, will generate the xpub and erase the seed/pass from server</span>
+                <span asp-validation-for="StoreSeed" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="XPub"></label>
+                <input asp-for="XPub" class="form-control"/>
+                <span class="text-muted">The public master key derived from a seed/pass/keypath. This allows you to generate addresses without private keys on the server.</span>
+                <span asp-validation-for="XPub" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Index"></label>
+                <input asp-for="Index" type="number" min="0" class="form-control"/>
+                <span class="text-muted">The index to generate the next address from. If you are using a wallet that you have used before, be sure to set this to the last index +1</span>
+                <span asp-validation-for="Index" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="AddressCheck"></label>
+                <div class="input-group">
+                    <input asp-for="AddressCheck" type="text" class="form-control"/>
+                    <div class="input-group-text">
+                        <input asp-for="AddressCheckLastUsed" type="checkbox" data-toggle="tooltip" class="form-check" title="Use this address to set the last used index for the wallet"/>
+                    </div>
+                </div>
+                <span class="text-muted">Check wallet by providing an address it can generate within the first 1000 indexes</span>
+                <span asp-validation-for="AddressCheck" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Enabled"></label>
+                <input asp-for="Enabled" type="checkbox" class="form-check"/>
+                <span asp-validation-for="Enabled" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary" id="SaveButton">Save</button>
+
+                <a class="btn btn-secondary" asp-action="GetStoreMaticLikePaymentMethods"
+                   asp-route-storeId="@this.Context.GetRouteValue("storeId")"
+                   asp-route-cryptoCode="@this.Context.GetRouteValue("cryptoCode")"
+                   asp-controller="MaticLikeStore">
+                    Back to list
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

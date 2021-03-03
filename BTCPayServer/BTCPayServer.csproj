@@ -39,8 +39,10 @@
   <ItemGroup Condition="'$(Altcoins)' != 'true'">
     <Content Remove="Services\Altcoins\**\*" />
     <Content Remove="Views\EthereumLikeStore\**\*" />
+	<Content Remove="Views\MaticLikeStore\**\*" />
     <Content Remove="Views\MoneroLikeStore\**\*" />
     <Content Remove="Views\Shared\Ethereum\**\*" />
+	<Content Remove="Views\Shared\Matic\**\*" />
     <Content Remove="Views\Shared\Monero\**\*" />
   </ItemGroup>
 

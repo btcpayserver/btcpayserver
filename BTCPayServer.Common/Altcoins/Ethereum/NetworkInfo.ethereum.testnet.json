@@ -1,0 +1,8 @@
+{
+    "name" : "Ethereum Testnet Ropsten",
+    "chainId": 3,
+    "coinType": 60,
+    "baseTokenSymbol" : "ETH",
+    "baseTokenDivisibility" : 18,
+    "explorer": "https://ropsten.etherscan.io/{0}#transactions"
+}

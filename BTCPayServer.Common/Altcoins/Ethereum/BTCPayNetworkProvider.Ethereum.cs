@@ -19,8 +19,9 @@ namespace BTCPayServer
             // EG:
             // * on main Ethereum network --> ETH
             // * on L2 Matic network --> MATIC 
-              
-            var ethereumNetwork = "matic"; // TODO remove hardcode and read from a config or env
+            // read from end variable ETHEREUM_NETWORK
+            var ethereumNetwork = EthereumNetwork();
+           
             string networkType = NetworkType == NetworkType.Mainnet? "mainnet" : "testnet";
             var ethereumNetworkData = LoadEthereumNetworkData(networkType, ethereumNetwork);
           
@@ -40,7 +41,7 @@ namespace BTCPayServer
         
         public void InitERC20()
         {
-            var ethereumNetwork = "matic"; // TODO remove hardcode and read from a config or env
+            var ethereumNetwork = EthereumNetwork();
             string networkType = NetworkType == NetworkType.Mainnet? "mainnet" : "testnet";
             var ethereumNetworkData = LoadEthereumNetworkData(networkType, ethereumNetwork);
             string explorer = ethereumNetworkData.Explorer;
@@ -71,6 +72,15 @@ namespace BTCPayServer
                 });
             }
 
+        }
+
+        private string EthereumNetwork()
+        {
+            var ethereumNetwork = Environment.GetEnvironmentVariable("ETHEREUM_NETWORK");
+            if (ethereumNetwork == null) {
+                ethereumNetwork = "ethereum";
+            }
+            return ethereumNetwork;
         }
 
         static ERC20Data[] LoadERC20Config(string networkName)

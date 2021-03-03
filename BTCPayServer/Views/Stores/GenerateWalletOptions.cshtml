@@ -18,7 +18,7 @@
     {
         <a asp-controller="Stores" asp-action="GenerateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="hotwallet" id="GenerateHotwalletLink" class="list-group-item list-group-item-action list-group-item-wallet-setup">
             <div class="image">
-                <vc:icon symbol="seed"/>
+                <vc:icon symbol="hot-wallet"/>
             </div>
             <div class="content">
                 <h4>Hot wallet</h4>
@@ -35,7 +35,7 @@
     {
         <div class="list-group-item list-group-item-wallet-setup text-muted">
             <div class="image">
-                <vc:icon symbol="new-wallet"/>
+                <vc:icon symbol="hot-wallet"/>
             </div>
             <div class="content">
                 <h4>Hot wallet</h4>
@@ -48,7 +48,7 @@
 <div class="list-group mt-4">
     <a asp-controller="Stores" asp-action="GenerateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="watchonly" id="GenerateWatchonlyLink" class="list-group-item list-group-item-action list-group-item-wallet-setup">
         <div class="image">
-            <vc:icon symbol="xpub"/>
+            <vc:icon symbol="watchonly-wallet"/>
         </div>
         <div class="content">
             <h4>Watch-only wallet</h4>

@@ -87,28 +87,9 @@ body {
     padding: 1.5rem;
 }
 
-.list-group-item-wallet-setup .image .icon,
-.list-group-item-wallet-setup .image .icon-new-wallet,
-.list-group-item-wallet-setup .image .icon-existing-wallet {
-    height: 48px;
-}
-
-.list-group-item-wallet-setup .image .icon-new-wallet,
-.list-group-item-wallet-setup .image .icon-existing-wallet,
-.list-group-item-wallet-setup .image .icon-xpub,
-.list-group-item-wallet-setup .image .icon-seed {
-    width: 48px;
-}
-
-.list-group-item-wallet-setup .image .icon-hardware-wallet {
-    width: 40px;
-}
-.list-group-item-wallet-setup .image .icon-scan-qr {
+.list-group-item-wallet-setup .image .icon {
     width: 32px;
-}
-
-.list-group-item-wallet-setup .image .icon-wallet-file {
-    width: 24px;
+    height: 32px;
 }
 
 .list-group-item-wallet-setup .content {

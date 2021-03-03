@@ -20,7 +20,7 @@ body {
         top: 0;
         left: 0;
         right: 0;
-        padding: 30px;
+        padding: 24px;
     }
 }
 
@@ -97,11 +97,10 @@ body {
     padding: 1.5rem;
 }
 
-.list-group-item-wallet-setup .content .badge {
-    position: relative;
-    top: -1px;
-    font-size: 60%;
-    color: var(--btcpay-color-white);
+.list-group-item-wallet-setup .content small {
+    font-size: 90%;
+    text-transform: uppercase;
+    white-space: nowrap;
 }
 
 .list-group-item-wallet-setup .image + .content {

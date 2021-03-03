@@ -25,14 +25,27 @@ body {
 }
 
 #wizard-navbar a {
+    position: relative;
     color: var(--btcpay-body-color);
-    background-color: var(--btcpay-border-color-light);
     display: inline-flex;
     justify-content: center;
     align-items: center;
-    width: 48px;
-    height: 48px;
+    width: 56px;
+    height: 56px;
     border-radius: 50%;
+}
+
+#wizard-navbar a::after {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -1;
+    content: "";
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    transition: background-color .2s, transform .2s;
+    background-color: transparent;
 }
 
 #wizard-navbar a svg.icon {
@@ -40,8 +53,12 @@ body {
     height: 16px;
 }
 
-#wizard-navbar a:hover {
+#wizard-navbar a:hover::after {
     background-color: var(--btcpay-border-color-medium);
+}
+
+#wizard-navbar a:active::after {
+    transform: scale(.825);
 }
 
 #wizard-navbar .cancel {

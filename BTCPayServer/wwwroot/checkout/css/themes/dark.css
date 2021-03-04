@@ -1,11 +1,11 @@
 /* based on https://github.com/btcpayserver/btcpayserver-doc/blob/master/Theme.md#blockstream */
 
 html {
-    background-color: #353535;
+    background-color: #0B0E11;
 }
 
 .modal.page {
-    background-color: #353535;
+    background-color: #0B0E11;
 }
 
 /* centering for new default design */

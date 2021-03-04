@@ -123,7 +123,7 @@ namespace BTCPayServer.HostedServices
         }
         public static (string color, Label label) PayjoinLabelTemplate()
         {
-            return ("#51b13e", new RawLabel("payjoin"));
+            return ("#F0B90B", new RawLabel("payjoin"));
         }
 
         public static (string color, Label label) InvoiceLabelTemplate(string invoice)
@@ -141,7 +141,7 @@ namespace BTCPayServer.HostedServices
 
         public static (string color, Label label) PayjoinExposedLabelTemplate(string invoice)
         {
-            return ("#51b13e", new ReferenceLabel("pj-exposed", invoice));
+            return ("#F0B90B", new ReferenceLabel("pj-exposed", invoice));
         }
 
         public static  (string color, Label label) PayoutTemplate(string payoutId, string pullPaymentId, string walletId)

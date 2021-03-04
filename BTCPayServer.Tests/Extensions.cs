@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using OpenQA.Selenium;
+using OpenQA.Selenium.Support.UI;
 using Xunit;
 
 namespace BTCPayServer.Tests
@@ -104,6 +105,50 @@ namespace BTCPayServer.Tests
                 Thread.Sleep(50);
             }
             Assert.False(true, "Elements was found");
+        }
+
+        public static void UntilJsIsReady(this WebDriverWait wait)
+        {
+            wait.Until(d=>((IJavaScriptExecutor)d).ExecuteScript("return document.readyState").Equals("complete"));
+            wait.Until(d=>((IJavaScriptExecutor)d).ExecuteScript("return typeof(jQuery) === 'undefined' || jQuery.active === 0").Equals(true));
+        }
+
+        public static IWebElement WaitForElement(this IWebDriver driver, By selector)
+        {
+            var wait = new WebDriverWait(driver, SeleniumTester.ImplicitWait);
+            wait.UntilJsIsReady();
+
+            var el = driver.FindElement(selector);
+            wait.Until(d => el.Displayed);
+
+            return el;
+        }
+
+        public static void WaitForAndClick(this IWebDriver driver, By selector)
+        {
+            var wait = new WebDriverWait(driver, SeleniumTester.ImplicitWait);
+            wait.UntilJsIsReady();
+
+            var el = driver.FindElement(selector);
+            wait.Until(d => el.Displayed && el.Enabled);
+            el.Click();
+
+            wait.UntilJsIsReady();
+        }
+
+        public static void SetCheckbox(this IWebDriver driver, By selector, bool value)
+        {
+            var element = driver.FindElement(selector);
+            if ((value && !element.Selected) || (!value && element.Selected))
+            {
+                driver.WaitForAndClick(selector);
+            }
+
+            if (value != element.Selected)
+            {
+                Logs.Tester.LogInformation("SetCheckbox recursion, trying to click again");
+                driver.SetCheckbox(selector, value);
+            }
         }
     }
 }

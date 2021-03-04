@@ -73,14 +73,14 @@ namespace BTCPayServer.Tests
             var seed = new Mnemonic(Wordlist.English);
             s.Driver.FindElement(By.Id("ModifyETH")).Click();
             s.Driver.FindElement(By.Id("Seed")).SendKeys(seed.ToString());
-            s.SetCheckbox(s.Driver.FindElement(By.Id("StoreSeed")), true);
-            s.SetCheckbox(s.Driver.FindElement(By.Id("Enabled")), true);
+            s.Driver.SetCheckbox(By.Id("StoreSeed"), true);
+            s.Driver.SetCheckbox(By.Id("Enabled"), true);
             s.Driver.FindElement(By.Id("SaveButton")).Click();
             s.FindAlertMessage();
             s.Driver.FindElement(By.Id("ModifyUSDT20")).Click();
             s.Driver.FindElement(By.Id("Seed")).SendKeys(seed.ToString());
-            s.SetCheckbox(s.Driver.FindElement(By.Id("StoreSeed")), true);
-            s.SetCheckbox(s.Driver.FindElement(By.Id("Enabled")), true);
+            s.Driver.SetCheckbox(By.Id("StoreSeed"), true);
+            s.Driver.SetCheckbox(By.Id("Enabled"), true);
             s.Driver.FindElement(By.Id("SaveButton")).Click();
             s.FindAlertMessage();
 

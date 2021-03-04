@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
@@ -14,6 +15,7 @@ using BTCPayServer.Rating;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
+using Microsoft.Extensions.Options;
 using NBitcoin;
 
 namespace BTCPayServer.Payments.Lightning
@@ -32,16 +34,21 @@ namespace BTCPayServer.Payments.Lightning
             LightningClientFactoryService lightningClientFactory,
             BTCPayNetworkProvider networkProvider,
             SocketFactory socketFactory, 
-            CurrencyNameTable currencyNameTable)
+            CurrencyNameTable currencyNameTable,
+            IOptions<LightningNetworkOptions> options)
         {
             _Dashboard = dashboard;
             _lightningClientFactory = lightningClientFactory;
             _networkProvider = networkProvider;
             _socketFactory = socketFactory;
             _currencyNameTable = currencyNameTable;
+            Options = options;
         }
 
         public override PaymentType PaymentType => PaymentTypes.LightningLike;
+
+        public IOptions<LightningNetworkOptions> Options { get; }
+
         public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(
             InvoiceLogs logs,
             LightningSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store,
@@ -61,7 +68,7 @@ namespace BTCPayServer.Payments.Lightning
             {
                 // ignored
             }
-            var client = _lightningClientFactory.Create(supportedPaymentMethod.GetLightningUrl(), network);
+            var client = CreateLightningClient(supportedPaymentMethod, network);
             var expiry = invoice.ExpirationTime - DateTimeOffset.UtcNow;
             if (expiry < TimeSpan.Zero)
                 expiry = TimeSpan.FromSeconds(1);
@@ -105,7 +112,7 @@ namespace BTCPayServer.Payments.Lightning
 
             using (var cts = new CancellationTokenSource(LIGHTNING_TIMEOUT))
             {
-                var client = _lightningClientFactory.Create(supportedPaymentMethod.GetLightningUrl(), network);
+                var client = CreateLightningClient(supportedPaymentMethod, network);
                 LightningNodeInformation info;
                 try
                 {
@@ -132,6 +139,21 @@ namespace BTCPayServer.Payments.Lightning
                 }
 
                 return nodeInfo;
+            }
+        }
+
+        private ILightningClient CreateLightningClient(LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network)
+        {
+            var external = supportedPaymentMethod.GetExternalLightningUrl();
+            if (external != null)
+            {
+                return _lightningClientFactory.Create(external, network);
+            }
+            else
+            {
+                if (!Options.Value.InternalLightningByCryptoCode.TryGetValue(network.CryptoCode, out var connectionString))
+                    throw new PaymentMethodUnavailableException("No internal node configured");
+                return _lightningClientFactory.Create(connectionString, network);
             }
         }
 

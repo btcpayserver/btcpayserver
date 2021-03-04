@@ -113,7 +113,7 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("Email")).SendKeys(u2.RegisterDetails.Email);
                 s.Driver.FindElement(By.Id("save")).Click();
 
-                s.FindAlertMessage(Abstractions.Models.StatusMessageModel.StatusSeverity.Error);
+                s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error);
 
                 s.GoToProfile(ManageNavPages.Index);
                 s.Driver.FindElement(By.Id("Email")).Clear();
@@ -478,12 +478,21 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("SelectedStore")).SendKeys(storeName);
                 s.Driver.FindElement(By.Id("Create")).Click();
                 s.Driver.FindElement(By.Id("DefaultView")).SendKeys("Cart");
+                s.Driver.FindElement(By.CssSelector(".template-item:nth-of-type(1) .btn-primary")).Click();
+                s.Driver.FindElement(By.Id("BuyButtonText")).SendKeys("Take my money");
+                s.Driver.FindElement(By.Id("SaveItemChanges")).Click();
+                s.Driver.FindElement(By.Id("ToggleRawEditor")).Click();
+
+                var template = s.Driver.FindElement(By.Id("Template")).GetAttribute("value");
+                Assert.Contains("buyButtonText: Take my money", template);
+
                 s.Driver.FindElement(By.Id("SaveSettings")).Click();
                 s.Driver.FindElement(By.Id("ViewApp")).Click();
 
                 var posBaseUrl = s.Driver.Url.Replace("/Cart", "");
                 Assert.True(s.Driver.PageSource.Contains("Tea shop"), "Unable to create PoS");
                 Assert.True(s.Driver.PageSource.Contains("Cart"), "PoS not showing correct default view");
+                Assert.True(s.Driver.PageSource.Contains("Take my money"), "PoS not showing correct default view");
 
                 s.Driver.Url = posBaseUrl + "/static";
                 Assert.False(s.Driver.PageSource.Contains("Cart"), "Static PoS not showing correct view");
@@ -578,7 +587,7 @@ namespace BTCPayServer.Tests
                 await s.Server.ExplorerNode.GenerateAsync(1);
                 s.GoToWallet(walletId);
                 s.Driver.FindElement(By.Id("advancedSettings")).Click();
-                s.Driver.FindElement(By.Id("toggleInputSelection")).Click();
+                s.Driver.WaitForAndClick(By.Id("toggleInputSelection"));
                 s.Driver.FindElement(By.Id(spentOutpoint.ToString()));
                 Assert.Equal("true", s.Driver.FindElement(By.Name("InputSelection")).GetAttribute("value").ToLowerInvariant());
                 var el = s.Driver.FindElement(By.Id(spentOutpoint.ToString()));
@@ -711,8 +720,9 @@ namespace BTCPayServer.Tests
 
                 Logs.Tester.LogInformation("Let's see if we can delete store with some webhooks inside");
                 s.GoToStore(storeId);
-                s.Driver.ExecuteJavaScript("window.scrollBy(0,1000);");
-                s.Driver.FindElement(By.Id("danger-zone-expander")).Click();
+                // Open danger zone via JS, because if we click the link it triggers the toggle animation.
+                // This leads to Selenium trying to click the button while it is moving resulting in an error.
+                s.Driver.ExecuteJavaScript("document.getElementById('danger-zone').classList.add('show')");
                 s.Driver.FindElement(By.Id("delete-store")).Click();
                 s.Driver.FindElement(By.Id("continue")).Click();
                 s.FindAlertMessage();
@@ -878,7 +888,7 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.CssSelector("button[value=view-seed]")).Click();
 
                 // Seed backup page
-                var recoveryPhrase = s.Driver.FindElements(By.Id("recovery-phrase")).First().GetAttribute("data-mnemonic");
+                var recoveryPhrase = s.Driver.FindElements(By.Id("RecoveryPhrase")).First().GetAttribute("data-mnemonic");
                 Assert.Equal(mnemonic.ToString(), recoveryPhrase);
                 Assert.Contains("The recovery phrase will also be stored on the server as a hot wallet.", s.Driver.PageSource);
 

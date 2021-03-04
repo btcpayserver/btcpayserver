@@ -292,10 +292,10 @@
                         v-bind:class="{ 'btn-disabled': loading}"
                         :disabled="!active || loading" 
                         type="submit">
-                         <div v-if="loading"  class="spinner-grow spinner-grow-sm"   role="status">
+                         <div v-if="loading"  class="spinner-grow spinner-grow-sm" role="status">
                             <span class="sr-only">Loading...</span>
                         </div>
-                        Continue
+                        {{perk.buyButtonText || 'Continue'}}
                     </button>
                 </div>
             </div>
@@ -304,7 +304,7 @@
            
             <span v-if="perk.inventory != null && perk.inventory > 0" class="text-center text-muted">{{perk.inventory}} left</span>
             <span v-if="perk.inventory != null && perk.inventory <= 0" class="text-center text-muted">Sold out</span>
-           <span v-if="perk.sold" >{{perk.sold}} Contributor{{perk.sold > 1? "s": ""}}</span>
+           <span v-if="perk.sold">{{perk.sold}} Contributor{{perk.sold > 1? "s": ""}}</span>
         </div>
     </form>
 </div> 

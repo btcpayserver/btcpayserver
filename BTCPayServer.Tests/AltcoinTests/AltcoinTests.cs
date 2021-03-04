@@ -80,7 +80,7 @@ namespace BTCPayServer.Tests
                 tester.ActivateLightning();
                 await tester.StartAsync();
                 var user = tester.NewAccount();
-                user.GrantAccess();
+                user.GrantAccess(true);
                 user.RegisterDerivationScheme("BTC");
                 user.RegisterDerivationScheme("LTC");
                 user.RegisterLightningNode("BTC", LightningConnectionType.CLightning);
@@ -287,7 +287,7 @@ namespace BTCPayServer.Tests
                 await tester.StartAsync();
                 await tester.EnsureChannelsSetup();
                 var user = tester.NewAccount();
-                user.GrantAccess();
+                user.GrantAccess(true);
                 user.RegisterLightningNode("BTC", LightningConnectionType.Charge);
                 user.RegisterDerivationScheme("BTC");
                 user.RegisterDerivationScheme("LTC");
@@ -876,7 +876,7 @@ normal:
             var paymentMethodHandlerDictionary = new PaymentMethodHandlerDictionary(new IPaymentMethodHandler[]
             {
                 new BitcoinLikePaymentHandler(null, networkProvider, null, null, null),
-                new LightningLikePaymentHandler(null, null, networkProvider, null, null),
+                new LightningLikePaymentHandler(null, null, networkProvider, null, null, null),
             });
             var networkBTC = networkProvider.GetNetwork("BTC");
             var networkLTC = networkProvider.GetNetwork("LTC");

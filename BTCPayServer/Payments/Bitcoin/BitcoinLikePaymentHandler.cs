@@ -143,9 +143,11 @@ namespace BTCPayServer.Payments.Bitcoin
             if (!_ExplorerProvider.IsAvailable(network))
                 throw new PaymentMethodUnavailableException($"Full node not available");
             var prepare = (Prepare)preparePaymentObject;
-            Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod onchainMethod =
-                new Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod();
+            var onchainMethod = new BitcoinLikeOnChainPaymentMethod();
             var blob = store.GetStoreBlob();
+
+            // TODO: this needs to be refactored to move this logic into BitcoinLikeOnChainPaymentMethod
+            // This is likely a constructor code
             onchainMethod.NetworkFeeMode = blob.NetworkFeeMode;
             onchainMethod.FeeRate = await prepare.GetFeeRate;
             switch (onchainMethod.NetworkFeeMode)
@@ -169,8 +171,8 @@ namespace BTCPayServer.Payments.Bitcoin
             onchainMethod.DepositAddress = reserved.Address.ToString();
             onchainMethod.KeyPath = reserved.KeyPath;
             onchainMethod.PayjoinEnabled = blob.PayJoinEnabled &&
-                                           PayjoinClient.SupportedFormats.Contains(supportedPaymentMethod
-                                               .AccountDerivation.ScriptPubKeyType()) &&
+                                           supportedPaymentMethod
+                                               .AccountDerivation.ScriptPubKeyType() != ScriptPubKeyType.Legacy &&
                                            network.SupportPayJoin;
             if (onchainMethod.PayjoinEnabled)
             {

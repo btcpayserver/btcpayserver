@@ -109,11 +109,11 @@ namespace BTCPayServer.Tests
                 s.Server.ActivateLightning();
                 await s.StartAsync();
                 s.GoToRegister();
-                s.RegisterNewUser();
+                s.RegisterNewUser(true);
                 var store = s.CreateNewStore();
                 s.AddInternalLightningNode("BTC");
                 s.GoToStore(store.storeId, StoreNavPages.Checkout);
-                s.SetCheckbox(s, "LightningAmountInSatoshi", true);
+                s.Driver.SetCheckbox(By.Id("LightningAmountInSatoshi"), true);
                 var command = s.Driver.FindElement(By.Name("command"));
 
                 command.Click();

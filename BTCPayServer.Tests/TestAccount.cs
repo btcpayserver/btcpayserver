@@ -14,6 +14,7 @@ using BTCPayServer.Lightning;
 using BTCPayServer.Lightning.CLightning;
 using BTCPayServer.Models.AccountViewModels;
 using BTCPayServer.Models.StoreViewModels;
+using BTCPayServer.Payments.PayJoin.Sender;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
@@ -22,6 +23,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.Operations;
 using NBitcoin;
+using BTCPayServer.BIP78.Sender;
 using NBitcoin.Payment;
 using NBitpayClient;
 using NBXplorer.DerivationStrategy;
@@ -256,39 +258,17 @@ namespace BTCPayServer.Tests
         {
             RegisterLightningNodeAsync(cryptoCode, connectionType, isMerchant).GetAwaiter().GetResult();
         }
-
-        public async Task RegisterLightningNodeAsync(string cryptoCode, LightningConnectionType connectionType, bool isMerchant = true)
+        public Task RegisterLightningNodeAsync(string cryptoCode, bool isMerchant = true, string storeId = null)
+        {
+            return RegisterLightningNodeAsync(cryptoCode, null, isMerchant, storeId);
+        }
+        public async Task RegisterLightningNodeAsync(string cryptoCode, LightningConnectionType? connectionType, bool isMerchant = true, string storeId = null)
         {
             var storeController = this.GetController<StoresController>();
 
-            string connectionString = null;
-            if (connectionType == LightningConnectionType.Charge)
-            {
-                if (isMerchant)
-                    connectionString = $"type=charge;server={parent.MerchantCharge.Client.Uri.AbsoluteUri};allowinsecure=true";
-                else
-                    throw new NotSupportedException();
-            }
-            else if (connectionType == LightningConnectionType.CLightning)
-            {
-                if (isMerchant)
-                    connectionString = "type=clightning;server=" +
-                                       ((CLightningClient)parent.MerchantLightningD).Address.AbsoluteUri;
-                else
-                    connectionString = "type=clightning;server=" +
-                                   ((CLightningClient)parent.CustomerLightningD).Address.AbsoluteUri;
-            }
-            else if (connectionType == LightningConnectionType.LndREST)
-            {
-                if (isMerchant)
-                    connectionString = $"type=lnd-rest;server={parent.MerchantLnd.Swagger.BaseUrl};allowinsecure=true";
-                else
-                    throw new NotSupportedException();
-            }
-            else
-                throw new NotSupportedException(connectionType.ToString());
+            string connectionString = parent.GetLightningConnectionString(connectionType, isMerchant);
 
-            await storeController.AddLightningNode(StoreId,
+            await storeController.AddLightningNode(storeId ?? StoreId,
                 new LightningNodeViewModel() { ConnectionString = connectionString, SkipPortTest = true }, "save", "BTC");
             if (storeController.ModelState.ErrorCount != 0)
                 Assert.False(true, storeController.ModelState.FirstOrDefault().Value.Errors[0].ErrorMessage);
@@ -358,7 +338,7 @@ namespace BTCPayServer.Tests
             Logs.Tester.LogInformation($"Proposing {psbt.GetGlobalTransaction().GetHash()}");
             if (expectedError is null && !senderError)
             {
-                var proposed = await pjClient.RequestPayjoin(endpoint, settings, psbt, default);
+                var proposed = await pjClient.RequestPayjoin(endpoint, new PayjoinWallet(settings), psbt, default);
                 Logs.Tester.LogInformation($"Proposed payjoin is {proposed.GetGlobalTransaction().GetHash()}");
                 Assert.NotNull(proposed);
                 return proposed;
@@ -367,11 +347,11 @@ namespace BTCPayServer.Tests
             {
                 if (senderError)
                 {
-                    await Assert.ThrowsAsync<PayjoinSenderException>(async () => await pjClient.RequestPayjoin(endpoint, settings, psbt, default));
+                    await Assert.ThrowsAsync<PayjoinSenderException>(async () => await pjClient.RequestPayjoin(endpoint, new PayjoinWallet(settings), psbt, default));
                 }
                 else
                 {
-                    var ex = await Assert.ThrowsAsync<PayjoinReceiverException>(async () => await pjClient.RequestPayjoin(endpoint, settings, psbt, default));
+                    var ex = await Assert.ThrowsAsync<PayjoinReceiverException>(async () => await pjClient.RequestPayjoin(endpoint, new PayjoinWallet(settings), psbt, default));
                     var split = expectedError.Split('|');
                     Assert.Equal(split[0], ex.ErrorCode);
                     if (split.Length > 1)

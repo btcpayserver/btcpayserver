@@ -433,7 +433,7 @@
                         }
                     }
                 ],
-                "description": "Mark an invoice as invalid or completed.",
+                "description": "Mark an invoice as invalid or settled.",
                 "operationId": "Invoices_MarkInvoiceStatus",
                 "responses": {
                     "200": {
@@ -737,12 +737,12 @@
                     "expirationMinutes": {
                         "type": "integer",
                         "nullable": true,
-                        "description": "The number of minutes after which an invoice becomes expired. Default to the store's settings. (The default store settings is 15)"
+                        "description": "The number of minutes after which an invoice becomes expired. Defaults to the store's settings. (The default store settings is 15)"
                     },
                     "monitoringMinutes": {
                         "type": "integer",
                         "nullable": true,
-                        "description": "The number of minutes after an invoice expired after which we are still monitoring for incoming payments. Default to the store's settings. (The default store settings is 1440, 1 day)"
+                        "description": "The number of minutes after an invoice expired after which we are still monitoring for incoming payments. Defaults to the store's settings. (The default store settings is 1440, 1 day)"
                     },
                     "paymentTolerance": {
                         "type": "number",
@@ -750,12 +750,17 @@
                         "nullable": true,
                         "minimum": 0,
                         "maximum": 100,
-                        "description": "A percentage determining whether to count the invoice as paid when the invoice is paid within the specified margin of error. Default to the store's settings. (The default store settings is 100)"
+                        "description": "A percentage determining whether to count the invoice as paid when the invoice is paid within the specified margin of error. Defaults to the store's settings. (The default store settings is 100)"
                     },
                     "redirectURL": {
                         "type": "string",
                         "nullable": true,
-                        "description": "When the customer paid the invoice, the URL where the customer will be redirected when clicking on the `return to store` button. You can use placeholders `{InvoiceId}` or `{OrderId}` in the URL, BTCPay Server will replace those with this invoice `id` or `metadata.orderId` respectively."
+                        "description": "When the customer has paid the invoice, the URL where the customer will be redirected when clicking on the `return to store` button. You can use placeholders `{InvoiceId}` or `{OrderId}` in the URL, BTCPay Server will replace those with this invoice `id` or `metadata.orderId` respectively."
+                    },
+                    "redirectAutomatically": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "description": "When the customer has paid the invoice, and a `redirectURL` is set, the checkout is redirected to `redirectURL` automatically if `redirectAutomatically` is true. Defaults to the store's settings. (The default store settings is false)"
                     },
                     "defaultLanguage": {
                         "type": "string",

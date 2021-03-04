@@ -5,14 +5,12 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Payments;
-using BTCPayServer.Security;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using NBitcoin;
 using CreateInvoiceRequest = BTCPayServer.Client.Models.CreateInvoiceRequest;
 using InvoiceData = BTCPayServer.Client.Models.InvoiceData;
@@ -212,7 +210,7 @@ namespace BTCPayServer.Controllers.GreenField
             if (!await _invoiceRepository.MarkInvoiceStatus(invoice.Id, request.Status))
             {
                 ModelState.AddModelError(nameof(request.Status),
-                    "Status can only be marked to invalid or complete within certain conditions.");
+                    "Status can only be marked to invalid or settled within certain conditions.");
             }
 
             if (!ModelState.IsValid)
@@ -337,7 +335,9 @@ namespace BTCPayServer.Controllers.GreenField
                     PaymentMethods =
                         entity.GetPaymentMethods().Select(method => method.GetId().ToStringNormalized()).ToArray(),
                     SpeedPolicy = entity.SpeedPolicy,
-                    DefaultLanguage = entity.DefaultLanguage
+                    DefaultLanguage = entity.DefaultLanguage,
+                    RedirectAutomatically = entity.RedirectAutomatically,
+                    RedirectURL = entity.RedirectURLTemplate
                 }
             };
         }

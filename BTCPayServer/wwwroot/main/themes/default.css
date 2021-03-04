@@ -27,9 +27,9 @@
   --btcpay-color-secondary-accent: var(--btcpay-color-neutral-700);
   --btcpay-color-secondary-backdrop: var(--btcpay-color-neutral-400);
   --btcpay-color-secondary-text: var(--btcpay-color-neutral-700);
-  --btcpay-color-success: #247e12;
+  --btcpay-color-success: #F0B90B;
   --btcpay-color-success-accent: var(--btcpay-brand-tertiary);
-  --btcpay-color-success-backdrop: #389725;
+  --btcpay-color-success-backdrop: #F0B90B;
   --btcpay-color-success-text: var(--btcpay-color-white);
   --btcpay-color-info: #17a2b8;
   --btcpay-color-info-accent: #117a8b;

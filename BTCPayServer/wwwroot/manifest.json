@@ -1,7 +1,7 @@
 {
     "name": "BTCPayServer Point of Sale",
     "short_name": "BTCPay POS",
-    "theme_color": "#1e7a44",
+    "theme_color": "#F0B90B",
     "background_color": "#ffffff",
     "display": "standalone",
     "icons": [

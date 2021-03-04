@@ -2,8 +2,8 @@
   /* General color definitions */
   --btcpay-brand-primary: #F0B90B;
   --btcpay-brand-secondary: #CEDC21;
-  --btcpay-brand-tertiary: #1e7a44;
-  --btcpay-brand-dark: #0F3B21;
+  --btcpay-brand-tertiary: #F0B90B;
+  --btcpay-brand-dark: #F0B90B;
 
   /* Color definitions for specific purposes - map the general colors or define additional ones */
   --btcpay-color-white: #fff;

@@ -20,7 +20,6 @@ namespace BTCPayServer.Models.StoreViewModels
 
         public bool SkipPortTest { get; set; }
 
-        [Display(Name="Lightning enabled")]
         public bool Enabled { get; set; } = true;
 
         public string StoreId { get; set; }

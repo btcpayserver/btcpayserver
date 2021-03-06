@@ -70,7 +70,7 @@ namespace BTCPayServer.Controllers.GreenField
             }
 
             var invoice = await _invoiceRepository.GetInvoice(invoiceId, true);
-            if (invoice.StoreId != store.Id)
+            if (invoice?.StoreId != store.Id)
             {
                 return NotFound();
             }

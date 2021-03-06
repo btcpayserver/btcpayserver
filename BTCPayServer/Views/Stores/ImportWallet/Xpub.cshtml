@@ -33,11 +33,14 @@
 
     <button name="command" type="submit" class="btn btn-primary" value="save" id="Continue">Continue</button>
 </form>
-
-<table class="table table-sm">
+<style>
+    #AddressTypes .additional { display: none; }
+    #AddressTypes.expanded .additional { display: table-row; }
+</style>
+<table id="AddressTypes" class="table table-sm table-sm-nohover">
     <thead>
     <tr>
-        <th>Address type</th>
+        <th class="w-175px">Address type</th>
         <th>Example</th>
     </tr>
     </thead>
@@ -78,30 +81,39 @@
     <tr>
         <td class="text-monospace">pkh(xpub…/0/*)</td>
     </tr>
-    <tr>
+    <tr class="additional">
         <td class="text-nowrap" rowspan="2">Multi-sig P2WSH</td>
         <td class="text-monospace">2-of-xpub1…-xpub2…</td>
     </tr>
-    <tr>
+    <tr class="additional">
         <td class="text-monospace">wsh(multi(2,<br>[…/48'/0'/0'/2']xpub…/0/*,<br>[…/48'/0'/0'/2']xpub…/0/*))</td>
     </tr>
-    <tr>
+    <tr class="additional">
         <td class="text-nowrap" rowspan="2">Multi-sig P2SH-P2WSH</td>
         <td class="text-monospace">2-of-xpub1…-xpub2…-[p2sh]</td>
     </tr>
-    <tr>
+    <tr class="additional">
         <td class="text-monospace">sh(wsh(multi(2,<br>[…/48'/0'/0'/1']xpub…/0/*,<br>[…/48'/0'/0'/1']xpub…/0/*)))</td>
     </tr>
-    <tr>
+    <tr class="additional">
         <td class="text-nowrap" rowspan="2">Multi-sig P2SH</td>
         <td class="text-monospace">2-of-xpub1…-xpub2…-[legacy]</td>
     </tr>
-    <tr>
+    <tr class="additional">
         <td class="text-monospace">sh(multi(2,<br>[…/45'/0]xpub…/0/*,<br>[…/45'/0]xpub…/0/*))</td>
     </tr>
     </tbody>
 </table>
 
+<a id="ToggleAdditional" href="#additional">Show multi-sig examples</a>
+
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
+
+    <script type="text/javascript">
+        document.getElementById('ToggleAdditional').addEventListener("click", function(e) {
+          e.preventDefault();
+          document.getElementById('AddressTypes').classList.toggle('expanded');
+        });
+    </script>
 }

@@ -1,16 +1,21 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
-using BTCPayServer.Services.Wallets;
+using BTCPayServer.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
+using NBXplorer;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 
@@ -105,42 +110,34 @@ namespace BTCPayServer.Controllers
                     return View(vm.ViewName, vm);
                 }
             }
-            else
+            else if (!string.IsNullOrEmpty(vm.DerivationScheme))
             {
                 try
                 {
-                    if (!string.IsNullOrEmpty(vm.DerivationScheme))
+                    var newStrategy = ParseDerivationStrategy(vm.DerivationScheme, null, network);
+                    if (newStrategy.AccountDerivation != strategy?.AccountDerivation)
                     {
-                        var newStrategy = ParseDerivationStrategy(vm.DerivationScheme, null, network);
-                        if (newStrategy.AccountDerivation != strategy?.AccountDerivation)
+                        var accountKey = string.IsNullOrEmpty(vm.AccountKey)
+                            ? null
+                            : new BitcoinExtPubKey(vm.AccountKey, network.NBitcoinNetwork);
+                        if (accountKey != null)
                         {
-                            var accountKey = string.IsNullOrEmpty(vm.AccountKey)
-                                ? null
-                                : new BitcoinExtPubKey(vm.AccountKey, network.NBitcoinNetwork);
-                            if (accountKey != null)
+                            var accountSettings =
+                                newStrategy.AccountKeySettings.FirstOrDefault(a => a.AccountKey == accountKey);
+                            if (accountSettings != null)
                             {
-                                var accountSettings =
-                                    newStrategy.AccountKeySettings.FirstOrDefault(a => a.AccountKey == accountKey);
-                                if (accountSettings != null)
-                                {
-                                    accountSettings.AccountKeyPath =
-                                        vm.KeyPath == null ? null : KeyPath.Parse(vm.KeyPath);
-                                    accountSettings.RootFingerprint = string.IsNullOrEmpty(vm.RootFingerprint)
-                                        ? (HDFingerprint?)null
-                                        : new HDFingerprint(
-                                            NBitcoin.DataEncoders.Encoders.Hex.DecodeData(vm.RootFingerprint));
-                                }
+                                accountSettings.AccountKeyPath =
+                                    vm.KeyPath == null ? null : KeyPath.Parse(vm.KeyPath);
+                                accountSettings.RootFingerprint = string.IsNullOrEmpty(vm.RootFingerprint)
+                                    ? (HDFingerprint?)null
+                                    : new HDFingerprint(
+                                        NBitcoin.DataEncoders.Encoders.Hex.DecodeData(vm.RootFingerprint));
                             }
-
-                            strategy = newStrategy;
-                            strategy.Source = vm.Source;
-                            vm.DerivationScheme = strategy.AccountDerivation.ToString();
                         }
-                    }
-                    else
-                    {
-                        ModelState.AddModelError(nameof(vm.DerivationScheme), "Please provide your extended public key");
-                        return View(vm.ViewName, vm);
+
+                        strategy = newStrategy;
+                        strategy.Source = vm.Source;
+                        vm.DerivationScheme = strategy.AccountDerivation.ToString();
                     }
                 }
                 catch
@@ -148,6 +145,11 @@ namespace BTCPayServer.Controllers
                     ModelState.AddModelError(nameof(vm.DerivationScheme), "Invalid wallet format");
                     return View(vm.ViewName, vm);
                 }
+            }
+            else
+            {
+                ModelState.AddModelError(nameof(vm.DerivationScheme), "Please provide your extended public key");
+                return View(vm.ViewName, vm);
             }
 
             var oldConfig = vm.Config;
@@ -409,6 +411,8 @@ namespace BTCPayServer.Controllers
             }
 
             var (hotWallet, rpcImport) = await CanUseHotWallet();
+            var isHotWallet = await IsHotWallet(vm.CryptoCode, derivation);
+
             vm.CanUseHotWallet = hotWallet;
             vm.CanUseRPCImport = rpcImport;
             vm.RootKeyPath = network.GetRootKeyPath();
@@ -419,12 +423,13 @@ namespace BTCPayServer.Controllers
             vm.KeyPath = derivation.GetSigningAccountKeySettings().AccountKeyPath?.ToString();
             vm.Config = derivation.ToJson();
             vm.Enabled = !store.GetStoreBlob().IsExcluded(new PaymentMethodId(vm.CryptoCode, PaymentTypes.BTCLike));
+            vm.IsHotWallet = isHotWallet;
 
             return View(vm);
         }
 
-        [HttpGet("{storeId}/onchain/{cryptoCode}/delete")]
-        public IActionResult DeleteWallet(string storeId, string cryptoCode)
+        [HttpGet("{storeId}/onchain/{cryptoCode}/replace")]
+        public async Task<IActionResult> ReplaceWallet(string storeId, string cryptoCode)
         {
             var checkResult = IsAvailable(cryptoCode, out var store, out var network);
             if (checkResult != null)
@@ -433,9 +438,62 @@ namespace BTCPayServer.Controllers
             }
 
             var derivation = GetExistingDerivationStrategy(cryptoCode, store);
+            var isHotWallet = await IsHotWallet(cryptoCode, derivation);
+            var walletType = isHotWallet ? "hot" : "watch-only";
+            var additionalText = isHotWallet
+                ? ""
+                : " or imported into an external wallet. If you no longer have access to your private key (recovery seed), immediately replace the wallet";
             var description =
-                (derivation.IsHotWallet ? "<p class=\"text-danger font-weight-bold\">Please note that this is a hot wallet!</p> " : "") +
-                "<p class=\"text-danger font-weight-bold\">Do not remove the wallet if you have not backed it up!</p>" +
+                $"<p class=\"text-danger font-weight-bold\">Please note that this is a {walletType} wallet!</p>" +
+                $"<p class=\"text-danger font-weight-bold\">Do not replace the wallet if you have not backed it up{additionalText}.</p>" +
+                "<p class=\"text-left mb-0\">Replacing the wallet will erase the current wallet data from the server. " +
+                "The current wallet will be replaced once you finish the setup of the new wallet. If you cancel the setup, the current wallet will stay active  .</p>";
+
+            return View("Confirm", new ConfirmModel
+            {
+                Title = $"Replace {network.CryptoCode} wallet",
+                Description = description,
+                DescriptionHtml = true,
+                Action = "Setup new wallet"
+            });
+        }
+
+        [HttpPost("{storeId}/onchain/{cryptoCode}/replace")]
+        public IActionResult ConfirmReplaceWallet(string storeId, string cryptoCode)
+        {
+            var checkResult = IsAvailable(cryptoCode, out var store, out _);
+            if (checkResult != null)
+            {
+                return checkResult;
+            }
+
+            var derivation = GetExistingDerivationStrategy(cryptoCode, store);
+            if (derivation == null)
+            {
+                return NotFound();
+            }
+
+            return RedirectToAction(nameof(SetupWallet), new {storeId, cryptoCode});
+        }
+
+        [HttpGet("{storeId}/onchain/{cryptoCode}/delete")]
+        public async Task<IActionResult> DeleteWallet(string storeId, string cryptoCode)
+        {
+            var checkResult = IsAvailable(cryptoCode, out var store, out var network);
+            if (checkResult != null)
+            {
+                return checkResult;
+            }
+
+            var derivation = GetExistingDerivationStrategy(cryptoCode, store);
+            var isHotWallet = await IsHotWallet(cryptoCode, derivation);
+            var walletType = isHotWallet ? "hot" : "watch-only";
+            var additionalText = isHotWallet
+                ? ""
+                : " or imported into an external wallet. If you no longer have access to your private key (recovery seed), immediately replace the wallet";
+            var description =
+                $"<p class=\"text-danger font-weight-bold\">Please note that this is a {walletType} wallet!</p>" +
+                $"<p class=\"text-danger font-weight-bold\">Do not remove the wallet if you have not backed it up{additionalText}.</p>" +
                 "<p class=\"text-left mb-0\">Removing the wallet will erase the wallet data from the server. " +
                 $"The store won't be able to receive {network.CryptoCode} onchain payments until a new wallet is set up.</p>";
 
@@ -478,7 +536,7 @@ namespace BTCPayServer.Controllers
         private IActionResult ConfirmAddresses(WalletSetupViewModel vm, DerivationSchemeSettings strategy)
         {
             vm.DerivationScheme = strategy.AccountDerivation.ToString();
-            var deposit = new NBXplorer.KeyPathTemplates(null).GetKeyPathTemplate(DerivationFeature.Deposit);
+            var deposit = new KeyPathTemplates(null).GetKeyPathTemplate(DerivationFeature.Deposit);
 
             if (!string.IsNullOrEmpty(vm.DerivationScheme))
             {
@@ -508,6 +566,40 @@ namespace BTCPayServer.Controllers
             network = cryptoCode == null ? null : _ExplorerProvider.GetNetwork(cryptoCode);
 
             return store == null || network == null ? NotFound() : null;
+        }
+
+        private DerivationSchemeSettings GetExistingDerivationStrategy(string cryptoCode, StoreData store)
+        {
+            var id = new PaymentMethodId(cryptoCode, PaymentTypes.BTCLike);
+            var existing = store.GetSupportedPaymentMethods(_NetworkProvider)
+                .OfType<DerivationSchemeSettings>()
+                .FirstOrDefault(d => d.PaymentId == id);
+            return existing;
+        }
+
+        private async Task<(bool HotWallet, bool RPCImport)> CanUseHotWallet()
+        {
+            var isAdmin = (await _authorizationService.AuthorizeAsync(User, Policies.CanModifyServerSettings))
+                .Succeeded;
+            if (isAdmin)
+                return (true, true);
+            var policies = await _settingsRepository.GetSettingAsync<PoliciesSettings>();
+            var hotWallet = policies?.AllowHotWalletForAll is true;
+            return (hotWallet, hotWallet && policies.AllowHotWalletRPCImportForAll is true);
+        }
+
+        private async Task<string> ReadAllText(IFormFile file)
+        {
+            using (var stream = new StreamReader(file.OpenReadStream()))
+            {
+                return await stream.ReadToEndAsync();
+            }
+        }
+
+        private async Task<bool> IsHotWallet(string cryptoCode, DerivationSchemeSettings derivation)
+        {
+            return derivation.IsHotWallet && await _ExplorerProvider.GetExplorerClient(cryptoCode)
+                .GetMetadataAsync<string>(derivation.AccountDerivation, WellknownMetadataKeys.MasterHDKey) != null;
         }
     }
 }

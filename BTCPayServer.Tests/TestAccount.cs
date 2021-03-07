@@ -184,9 +184,11 @@ namespace BTCPayServer.Tests
                 ScriptPubKeyType = segwit,
                 SavePrivateKeys = importKeysToNBX,
             });
-            await store.AddDerivationScheme(StoreId,
-                new DerivationSchemeViewModel()
+            await store.UpdateWallet(
+                new WalletSetupViewModel
                 {
+                    StoreId = StoreId,
+                    Method = importKeysToNBX ? WalletSetupMethod.HotWallet : WalletSetupMethod.WatchOnly,
                     Enabled = true,
                     CryptoCode = cryptoCode,
                     Network = SupportedNetwork,
@@ -198,7 +200,7 @@ namespace BTCPayServer.Tests
                     KeyPath = GenerateWalletResponseV.AccountKeyPath.KeyPath.ToString(),
                     DerivationScheme = DerivationScheme.ToString(),
                     Confirmation = true
-                }, cryptoCode);
+                });
             return new WalletId(StoreId, cryptoCode);
         }
 

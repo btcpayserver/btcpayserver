@@ -18,13 +18,14 @@
     {
         <a asp-controller="Stores" asp-action="GenerateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="hotwallet" id="GenerateHotwalletLink" class="list-group-item list-group-item-action list-group-item-wallet-setup">
             <div class="image">
-                <vc:icon symbol="seed"/>
+                <vc:icon symbol="hot-wallet"/>
             </div>
             <div class="content">
                 <h4>Hot wallet</h4>
                 <p class="mb-0 text-secondary">
-                    Allows spending directly from your BTCPay Server.
-                    Each private key associated with an address generated will be stored as metadata and would be accessible to anyone with admin access to your server. Use at your own risk!
+                    Wallet's private key is stored on the server.
+                    Spending the funds you received is convenient.
+                    To minimize the risk of theft, regularly withdraw funds to a different wallet.
                 </p>
             </div>
             <vc:icon symbol="caret-right"/>
@@ -34,7 +35,7 @@
     {
         <div class="list-group-item list-group-item-wallet-setup text-muted">
             <div class="image">
-                <vc:icon symbol="new-wallet"/>
+                <vc:icon symbol="hot-wallet"/>
             </div>
             <div class="content">
                 <h4>Hot wallet</h4>
@@ -47,11 +48,14 @@
 <div class="list-group mt-4">
     <a asp-controller="Stores" asp-action="GenerateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="watchonly" id="GenerateWatchonlyLink" class="list-group-item list-group-item-action list-group-item-wallet-setup">
         <div class="image">
-            <vc:icon symbol="xpub"/>
+            <vc:icon symbol="watchonly-wallet"/>
         </div>
         <div class="content">
             <h4>Watch-only wallet</h4>
-            <p class="mb-0 text-secondary">Needs to be imported into an external wallet to spend or provide the seed while spending.</p>
+            <p class="mb-0 text-secondary">
+                Wallet's private key is erased from the server. Higher security.
+                To spend, you have to manually input the private key or import it into an external wallet.
+            </p>
         </div>
         <vc:icon symbol="caret-right" />
     </a>

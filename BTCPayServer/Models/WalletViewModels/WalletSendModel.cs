@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using BTCPayServer.Client.Models;
 using BTCPayServer.Services.Labels;
 
 namespace BTCPayServer.Models.WalletViewModels
@@ -67,12 +66,12 @@ namespace BTCPayServer.Models.WalletViewModels
         public bool NBXSeedAvailable { get; set; }
         [Display(Name = "PayJoin BIP21")] public string PayJoinBIP21 { get; set; }
         public bool InputSelection { get; set; }
-        public AvailableInput[] InputsAvailable { get; set; }
+        public InputSelectionOption[] InputsAvailable { get; set; }
 
         [Display(Name = "UTXOs to spend from")]
         public IEnumerable<string> SelectedInputs { get; set; }
 
-        public class AvailableInput
+        public class InputSelectionOption
         {
             public IEnumerable<ColoredLabel> Labels { get; set; }
             public string Comment { get; set; }

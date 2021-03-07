@@ -1,4 +1,5 @@
 @model WalletSetupViewModel
+@inject BTCPayNetworkProvider BTCPayNetworkProvider
 @addTagHelper *, BundlerMinifier.TagHelpers
 @{
     Layout = "_LayoutWalletSetup";
@@ -16,7 +17,7 @@
     <p class="lead text-secondary mt-3">The following methods assume that you already have an existing&nbsp;wallet created and backed up.</p>
 </header>
 
-@if (Model.CryptoCode == "BTC")
+@if (BTCPayNetworkProvider.GetNetwork<BTCPayNetwork>(Model.CryptoCode).VaultSupported)
 {
     <div class="mt-5">
         <div class="list-group">

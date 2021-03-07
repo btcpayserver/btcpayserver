@@ -1,3 +1,4 @@
+@inject BTCPayNetworkProvider BTCPayNetworkProvider
 @model (string CryptoCode, bool NBXSeedAvailable)
 
 
@@ -6,7 +7,7 @@
         Sign with...
     </button>
     <div class="dropdown-menu" aria-labelledby="SendMenu">
-        @if (Model.CryptoCode == "BTC")
+        @if (BTCPayNetworkProvider.GetNetwork<BTCPayNetwork>(Model.CryptoCode).VaultSupported)
         {
             <button name="command" type="submit" class="dropdown-item" value="vault">... a hardware wallet</button>
         }

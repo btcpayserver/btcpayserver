@@ -290,7 +290,7 @@
                     <tbody>
                         @foreach (var evt in Model.Events)
                         {
-                            <tr class="alert alert-@evt.GetCssClass()">
+                            <tr class="text-@evt.GetCssClass()">
                                 <td>@evt.Timestamp.ToBrowserDate()</td>
                                 <td>@evt.Message</td>
                             </tr>

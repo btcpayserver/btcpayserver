@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,10 +10,11 @@ using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
-using BTCPayServer.Logging;
 using BTCPayServer.Security;
 using BTCPayServer.Security.GreenField;
 using BTCPayServer.Services;
+using BTCPayServer.Storage.Services;
+using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
@@ -35,6 +37,9 @@ namespace BTCPayServer.Controllers.GreenField
         private readonly BTCPayServerOptions _options;
         private readonly IAuthorizationService _authorizationService;
         private readonly CssThemeManager _themeManager;
+        private readonly FileService _fileService;
+        private readonly StoredFileRepository _storedFileRepository;
+        private readonly StoreRepository _storeRepository;
 
         public UsersController(UserManager<ApplicationUser> userManager, 
             RoleManager<IdentityRole> roleManager, 
@@ -44,7 +49,10 @@ namespace BTCPayServer.Controllers.GreenField
             RateLimitService throttleService,
             BTCPayServerOptions options,
             IAuthorizationService authorizationService,
-            CssThemeManager themeManager)
+            CssThemeManager themeManager,
+            FileService fileService,
+            StoredFileRepository storedFileRepository,
+            StoreRepository storeRepository)
         {
             _userManager = userManager;
             _roleManager = roleManager;
@@ -55,6 +63,9 @@ namespace BTCPayServer.Controllers.GreenField
             _options = options;
             _authorizationService = authorizationService;
             _themeManager = themeManager;
+            _fileService = fileService;
+            _storedFileRepository = storedFileRepository;
+            _storeRepository = storeRepository;
         }
 
         [Authorize(Policy = Policies.CanViewProfile, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -163,6 +174,75 @@ namespace BTCPayServer.Controllers.GreenField
             _eventAggregator.Publish(new UserRegisteredEvent() { RequestUri = Request.GetAbsoluteRootUri(), User = user, Admin = request.IsAdministrator is true });
             var model = await FromModel(user);
             return CreatedAtAction(string.Empty, model);
+        }
+
+        [HttpDelete("~/api/v1/users/{userId}")]
+        [Authorize(Policy = Policies.CanCreateUser, AuthenticationSchemes = AuthenticationSchemes.GreenfieldAPIKeys)]
+        public async Task<ActionResult<ApplicationUserData>> DeleteUser(string userId)
+        {
+            var isAdmin = await IsAdmin();
+            // Only admins should be allowed to delete users
+            if (!isAdmin)
+            {
+                return Forbid(AuthenticationSchemes.GreenfieldBasic);
+            }
+
+            var user = userId == null ? null : await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var roles = await _userManager.GetRolesAsync(user);
+            // We can safely delete the user if it's not an admin user
+            if (!IsAdmin(roles))
+            {
+                await DeleteUserAndAssociatedData(userId, user);
+
+                return Ok();
+            }
+
+            var admins = await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin);
+            // User shouldn't be deleted if it's the only admin
+            if (admins.Count == 1)
+            {
+                return Forbid(AuthenticationSchemes.GreenfieldBasic);
+            }
+
+            // Ok, this user is an admin but there are other admins as well so safe to delete
+            await DeleteUserAndAssociatedData(userId, user);
+
+            return Ok();
+        }
+
+        private async Task DeleteUserAndAssociatedData(string userId, ApplicationUser user) 
+        {
+            var files = await _storedFileRepository.GetFiles(new StoredFileRepository.FilesQuery()
+            {
+                UserIds = new[] { userId },
+            });
+
+            await Task.WhenAll(files.Select(file => _fileService.RemoveFile(file.Id, userId)));
+
+            await _userManager.DeleteAsync(user);
+            await _storeRepository.CleanUnreachableStores();
+        }
+
+        private async Task<Boolean> IsAdmin() 
+        {
+            var anyAdmin = (await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin)).Any();
+            var isAuth = User.Identity.AuthenticationType == GreenFieldConstants.AuthenticationType;
+            var isAdmin = anyAdmin ? (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanModifyServerSettings))).Succeeded
+                    && (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.Unrestricted))).Succeeded
+                    && isAuth
+                : true;
+
+            return isAdmin;
+        }
+
+        private static bool IsAdmin(IList<string> roles)
+        {
+            return roles.Contains(Roles.ServerAdmin, StringComparer.Ordinal);
         }
 
         private async Task<ApplicationUserData> FromModel(ApplicationUser data)

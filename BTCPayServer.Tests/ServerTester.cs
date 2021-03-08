@@ -7,6 +7,8 @@ using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using BTCPayServer.Lightning;
+using BTCPayServer.Lightning.CLightning;
+using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Tests.Lnd;
 using BTCPayServer.Tests.Logging;
 using NBitcoin;
@@ -87,13 +89,49 @@ namespace BTCPayServer.Tests
 #endif
         public void ActivateLightning()
         {
+            ActivateLightning(LightningConnectionType.Charge);
+        }
+        public void ActivateLightning(LightningConnectionType internalNode)
+        {
             var btc = NetworkProvider.GetNetwork<BTCPayNetwork>("BTC").NBitcoinNetwork;
             CustomerLightningD = LightningClientFactory.CreateClient(GetEnvironment("TEST_CUSTOMERLIGHTNINGD", "type=clightning;server=tcp://127.0.0.1:30992/"), btc);
             MerchantLightningD = LightningClientFactory.CreateClient(GetEnvironment("TEST_MERCHANTLIGHTNINGD", "type=clightning;server=tcp://127.0.0.1:30993/"), btc);
             MerchantCharge = new ChargeTester(this, "TEST_MERCHANTCHARGE", "type=charge;server=http://127.0.0.1:54938/;api-token=foiewnccewuify;allowinsecure=true", "merchant_lightningd", btc);
             MerchantLnd = new LndMockTester(this, "TEST_MERCHANTLND", "http://lnd:lnd@127.0.0.1:35531/", "merchant_lnd", btc);
             PayTester.UseLightning = true;
-            PayTester.IntegratedLightning = MerchantCharge.Client.Uri;
+            PayTester.IntegratedLightning = GetLightningConnectionString(internalNode, true);
+        }
+        public string GetLightningConnectionString(LightningConnectionType? connectionType, bool isMerchant)
+        {
+            string connectionString = null;
+            if (connectionType is null)
+                return LightningSupportedPaymentMethod.InternalNode;
+            if (connectionType == LightningConnectionType.Charge)
+            {
+                if (isMerchant)
+                    connectionString = $"type=charge;server={MerchantCharge.Client.Uri.AbsoluteUri};allowinsecure=true";
+                else
+                    throw new NotSupportedException();
+            }
+            else if (connectionType == LightningConnectionType.CLightning)
+            {
+                if (isMerchant)
+                    connectionString = "type=clightning;server=" +
+                                       ((CLightningClient)MerchantLightningD).Address.AbsoluteUri;
+                else
+                    connectionString = "type=clightning;server=" +
+                                   ((CLightningClient)CustomerLightningD).Address.AbsoluteUri;
+            }
+            else if (connectionType == LightningConnectionType.LndREST)
+            {
+                if (isMerchant)
+                    connectionString = $"type=lnd-rest;server={MerchantLnd.Swagger.BaseUrl};allowinsecure=true";
+                else
+                    throw new NotSupportedException();
+            }
+            else
+                throw new NotSupportedException(connectionType.ToString());
+            return connectionString;
         }
 
         public bool Dockerized

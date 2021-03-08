@@ -1,4 +1,4 @@
-﻿@model LightningNodeViewModel
+@model LightningNodeViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePageAndTitle(StoreNavPages.Index, "Add lightning node");
@@ -43,6 +43,14 @@
                 <p class="mb-2">The connection string encapsulates the configuration for connecting to your lightning node. BTCPay Server currently supports:</p>
                 <ul>
                     <li class="mb-2">
+                        <strong>Internal node</strong>, if you are administrator of the server:
+                        <ul>
+                            <li>
+                                <code>Internal Node</code>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="mb-2">
                         <strong>c-lightning</strong> via TCP or unix domain socket connection:
                         <ul>
                             <li>
@@ -78,9 +86,6 @@
                             <li>
                                 <code><b>type=</b>lnd-rest;<b>server=</b>https://mylnd:8080/;<b>macaroon=</b>abef263adfe...;<b>certthumbprint=</b>abef263adfe...</code>
                             </li>
-                            <li>
-                                <code><b>type=</b>lnd-rest;<b>server=</b>http://mylnd:8080/;<b>macaroonfilepath=</b>/root/.lnd/admin.macaroon;<b>allowinsecure=</b>true</code>
-                            </li>
                         </ul>
                         <a class="d-inline-block my-2 text-secondary text-decoration-none" data-toggle="collapse" href="#lnd-notes" role="button" aria-expanded="false" aria-controls="lnd-notes">
                             <span class="fa fa-question-circle-o" title="More information..."></span> More information on the LND settings
@@ -103,29 +108,28 @@
 
             <div class="form-group">
                 <label asp-for="ConnectionString"></label>
-                <input asp-for="ConnectionString" class="form-control"/>
+                <input asp-for="ConnectionString" class="form-control" />
                 <span asp-validation-for="ConnectionString" class="text-danger"></span>
-                @if (Model.InternalLightningNode != null)
+                @if (Model.CanUseInternalNode)
                 {
                     <p class="form-text text-muted">
                         Use the internal lightning node of this BTCPay Server instance by
-                        <a href="#" id="internal-ln-node-setter" onclick="$('#ConnectionString').val('@Model.InternalLightningNode');return false;">clicking here</a>.
+                        <a href="#" id="internal-ln-node-setter" onclick="$('#ConnectionString').val('Internal Node');return false;">clicking here</a>.
                     </p>
                 }
             </div>
             <div class="form-group form-check">
-                <input asp-for="Enabled" type="checkbox" class="form-check-input"/>
+                <input asp-for="Enabled" type="checkbox" class="form-check-input" />
                 <label asp-for="Enabled" class="form-check-label"></label>
             </div>
             <button id="save" name="command" type="submit" value="save" class="btn btn-primary">Submit</button>
             <button name="command" type="submit" value="test" class="btn btn-secondary mr-3">Test connection</button>
-            <a
-                class="text-secondary"
-                asp-controller="PublicLightningNodeInfo"
-                asp-action="ShowLightningNodeInfo"
-                asp-route-cryptoCode="@Model.CryptoCode"
-                asp-route-storeId="@Model.StoreId"
-                target="_blank">
+            <a class="text-secondary"
+               asp-controller="PublicLightningNodeInfo"
+               asp-action="ShowLightningNodeInfo"
+               asp-route-cryptoCode="@Model.CryptoCode"
+               asp-route-storeId="@Model.StoreId"
+               target="_blank">
                 <span class="fa fa-info-circle" title="More information..."></span>
                 Open Public Node Info Page
             </a>

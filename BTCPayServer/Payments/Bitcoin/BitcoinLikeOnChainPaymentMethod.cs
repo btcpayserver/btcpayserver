@@ -17,6 +17,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
         public decimal GetNextNetworkFee()
         {
+            // NextNetworkFee is sometimes not initialized properly, so we return 0 in that case
             return NextNetworkFee?.ToDecimal(MoneyUnit.BTC) ?? 0;
         }
 

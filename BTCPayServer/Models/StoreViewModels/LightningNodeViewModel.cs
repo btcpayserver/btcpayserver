@@ -16,7 +16,8 @@ namespace BTCPayServer.Models.StoreViewModels
             get;
             set;
         }
-        public string InternalLightningNode { get; internal set; }
+        public bool CanUseInternalNode { get; set; }
+
         public bool SkipPortTest { get; set; }
 
         [Display(Name="Lightning enabled")]

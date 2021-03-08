@@ -45,6 +45,10 @@
                 <td>@Model.Source</td>
             </tr>
             <tr>
+                <th>Type</th>
+                <td>@(Model.IsHotWallet ? "Hot wallet" : "Watch-only wallet")</td>
+            </tr>
+            <tr>
                 <th>
                     Enabled
                 </th>
@@ -57,7 +61,7 @@
     </form>
     <br>
     <form method="get" asp-controller="Stores" asp-action="DeleteWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" class="mt-5">
-        <a asp-controller="Stores" asp-action="SetupWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="ChangeWalletLink" class="btn btn-secondary mr-2">
+        <a asp-controller="Stores" asp-action="ReplaceWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="ChangeWalletLink" class="btn btn-secondary mr-2">
             Replace wallet
         </a>
         <button type="submit" class="btn btn-danger" id="Delete">Remove wallet</button>

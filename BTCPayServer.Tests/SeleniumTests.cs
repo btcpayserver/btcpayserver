@@ -479,12 +479,21 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("SelectedStore")).SendKeys(storeName);
                 s.Driver.FindElement(By.Id("Create")).Click();
                 s.Driver.FindElement(By.Id("DefaultView")).SendKeys("Cart");
+                s.Driver.FindElement(By.CssSelector(".template-item:nth-of-type(1) .btn-primary")).Click();
+                s.Driver.FindElement(By.Id("BuyButtonText")).SendKeys("Take my money");
+                s.Driver.FindElement(By.Id("SaveItemChanges")).Click();
+                s.Driver.FindElement(By.Id("ToggleRawEditor")).Click();
+
+                var template = s.Driver.FindElement(By.Id("Template")).GetAttribute("value");
+                Assert.Contains("buyButtonText: Take my money", template);
+
                 s.Driver.FindElement(By.Id("SaveSettings")).Click();
                 s.Driver.FindElement(By.Id("ViewApp")).Click();
 
                 var posBaseUrl = s.Driver.Url.Replace("/Cart", "");
                 Assert.True(s.Driver.PageSource.Contains("Tea shop"), "Unable to create PoS");
                 Assert.True(s.Driver.PageSource.Contains("Cart"), "PoS not showing correct default view");
+                Assert.True(s.Driver.PageSource.Contains("Take my money"), "PoS not showing correct default view");
 
                 s.Driver.Url = posBaseUrl + "/static";
                 Assert.False(s.Driver.PageSource.Contains("Cart"), "Static PoS not showing correct view");
@@ -712,8 +721,9 @@ namespace BTCPayServer.Tests
 
                 Logs.Tester.LogInformation("Let's see if we can delete store with some webhooks inside");
                 s.GoToStore(storeId);
-                s.Driver.ExecuteJavaScript("window.scrollBy(0,1000);");
-                s.Driver.FindElement(By.Id("danger-zone-expander")).Click();
+                // Open danger zone via JS, because if we click the link it triggers the toggle animation.
+                // This leads to Selenium trying to click the button while it is moving resulting in an error.
+                s.Driver.ExecuteJavaScript("document.getElementById('danger-zone').classList.add('show')");
                 s.Driver.FindElement(By.Id("delete-store")).Click();
                 s.Driver.FindElement(By.Id("continue")).Click();
                 s.FindAlertMessage();

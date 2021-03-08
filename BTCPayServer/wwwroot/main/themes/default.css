@@ -132,6 +132,10 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
   background-color: var(--btcpay-color-white);
 }
 
+.table-sm.table-sm-nohover tbody tr:hover {
+  background-color: transparent;
+}
+
 .removetopborder tr:first-child th,
 .removetopborder tr:first-child td {
   border-top: none;

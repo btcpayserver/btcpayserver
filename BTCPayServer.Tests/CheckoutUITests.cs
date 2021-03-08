@@ -109,7 +109,7 @@ namespace BTCPayServer.Tests
                 s.Server.ActivateLightning();
                 await s.StartAsync();
                 s.GoToRegister();
-                s.RegisterNewUser();
+                s.RegisterNewUser(true);
                 var store = s.CreateNewStore();
                 s.AddInternalLightningNode("BTC");
                 s.GoToStore(store.storeId, StoreNavPages.Checkout);

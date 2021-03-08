@@ -1,93 +1,115 @@
 @using BTCPayServer.Services
 @using BTCPayServer.Services.Mails;
 @model BTCPayServer.Services.PoliciesSettings
-@inject BTCPayServer.Services.SettingsRepository _SettingsRepository
+@inject SettingsRepository _SettingsRepository
 @{
     ViewData.SetActivePageAndTitle(ServerNavPages.Policies);
 }
 
-
 <partial name="_StatusMessage"/>
-@if (!this.ViewContext.ModelState.IsValid)
+
+@if (!ViewContext.ModelState.IsValid)
 {
     <div asp-validation-summary="All" class="text-danger"></div>
 }
 
 <form method="post">
-    <div class="form-group">
-        <div class="form-check">
-            @{
-                var emailSettings = (await _SettingsRepository.GetSettingAsync<EmailSettings>()) ?? new EmailSettings();
-                /**
-                 * The "|| Model.RequiresConfirmedEmail" check is for the case when a user had checked
-                 * the checkbox without first configuring the e-mail settings so that they can uncheck it.
-                 **/
-                var isEmailConfigured = emailSettings.IsComplete() || Model.RequiresConfirmedEmail;
-            }
-            <input asp-for="RequiresConfirmedEmail" type="checkbox" class="form-check-input" disabled="@(isEmailConfigured ? null : "disabled")" />
-            <label asp-for="RequiresConfirmedEmail" class="form-check-label"></label>
-            <span asp-validation-for="RequiresConfirmedEmail" class="text-danger"></span>
-            @if (!isEmailConfigured) {
-                <div>
-                    <span class="text-secondary">Your email server has not been configured. <a asp-controller="Server" asp-action="Emails">Please configure it first.</a></span>
-                </div>
-            }
-        </div>
-        <div class="form-check">
-            <input asp-for="LockSubscription" type="checkbox" class="form-check-input"/>
-            <label asp-for="LockSubscription" class="form-check-label"></label>
-            <span asp-validation-for="LockSubscription" class="text-danger"></span>
-        </div>
-        <div class="form-check">
-            <input asp-for="DiscourageSearchEngines" type="checkbox" class="form-check-input"/>
-            <label asp-for="DiscourageSearchEngines" class="form-check-label"></label>
-            <span asp-validation-for="DiscourageSearchEngines" class="text-danger"></span>
-        </div>
-        <div class="form-check">
+    <div class="form-group mb-4">
+        <h5>Existing User Settings</h5>
+        <div class="form-check my-1">
             <input asp-for="AllowLightningInternalNodeForAll" type="checkbox" class="form-check-input"/>
             <label asp-for="AllowLightningInternalNodeForAll" class="form-check-label"></label>
+            <a href="https://docs.btcpayserver.org/FAQ/FAQ-LightningNetwork/#how-many-users-can-use-lightning-network-in-btcpay" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
             <span asp-validation-for="AllowLightningInternalNodeForAll" class="text-danger"></span>
         </div>
-        <div class="form-check">
+        <div class="form-check my-1">
             <input asp-for="AllowHotWalletForAll" type="checkbox" class="form-check-input"/>
             <label asp-for="AllowHotWalletForAll" class="form-check-label"></label>
+            <a href="https://docs.btcpayserver.org/HotWallet/#requirements-for-hot-wallet" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
             <span asp-validation-for="AllowHotWalletForAll" class="text-danger"></span>
         </div>
-        <div class="form-check">
+        <div class="form-check my-1">
             <input asp-for="AllowHotWalletRPCImportForAll" type="checkbox" class="form-check-input"/>
             <label asp-for="AllowHotWalletRPCImportForAll" class="form-check-label"></label>
             <span asp-validation-for="AllowHotWalletRPCImportForAll" class="text-danger"></span>
         </div>
-        <div class="form-check">
-            <input asp-for="DisableInstantNotifications" type="checkbox" class="form-check-input"/>
-            <label asp-for="DisableInstantNotifications" class="form-check-label"></label>
-            <span asp-validation-for="DisableInstantNotifications" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-4">
+        <h5>New User Settings</h5>
+        <div class="form-check my-1">
+            @{
+                var emailSettings = (await _SettingsRepository.GetSettingAsync<EmailSettings>()) ?? new EmailSettings();
+                /* The "|| Model.RequiresConfirmedEmail" check is for the case when a user had checked
+                   the checkbox without first configuring the e-mail settings so that they can uncheck it. */
+                var isEmailConfigured = emailSettings.IsComplete() || Model.RequiresConfirmedEmail;
+            }
+            <input asp-for="RequiresConfirmedEmail" type="checkbox" class="form-check-input" disabled="@(isEmailConfigured ? null : "disabled")"/>
+            <label asp-for="RequiresConfirmedEmail" class="form-check-label"></label>
+            <a href="https://docs.btcpayserver.org/FAQ/FAQ-ServerSettings/#how-to-allow-registration-on-my-btcpay-server" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+            <span asp-validation-for="RequiresConfirmedEmail" class="text-danger"></span>
+            @if (!isEmailConfigured)
+            {
+                <div class="mb-2">
+                    <span class="text-secondary">Your email server has not been configured. <a asp-controller="Server" asp-action="Emails">Please configure it first.</a></span>
+                </div>
+            }
         </div>
-        <div class="form-check">
-            <input asp-for="DisableStoresToUseServerEmailSettings" type="checkbox" class="form-check-input"/>
-            <label asp-for="DisableStoresToUseServerEmailSettings" class="form-check-label"></label>
-            <span asp-validation-for="DisableStoresToUseServerEmailSettings" class="text-danger"></span>
+        <div class="form-check my-1">
+            <input asp-for="LockSubscription" type="checkbox" class="form-check-input"/>
+            <label asp-for="LockSubscription" class="form-check-label"></label>
+            <span asp-validation-for="LockSubscription" class="text-danger"></span>
         </div>
-        <div class="form-check">
+
+        <div class="form-check my-1">
             <input asp-for="DisableNonAdminCreateUserApi" type="checkbox" class="form-check-input"/>
             <label asp-for="DisableNonAdminCreateUserApi" class="form-check-label"></label>
             <span asp-validation-for="DisableNonAdminCreateUserApi" class="text-danger"></span>
         </div>
+    </div>
+
+    <div class="form-group mb-4">
+        <h5>Notification Settings</h5>
+        <div class="form-check my-1">
+            <input asp-for="DisableInstantNotifications" type="checkbox" class="form-check-input"/>
+            <label asp-for="DisableInstantNotifications" class="form-check-label"></label>
+            <a href="https://docs.btcpayserver.org/Notifications/#notifications" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+            <span asp-validation-for="DisableInstantNotifications" class="text-danger"></span>
+        </div>
+        <div class="form-check my-1">
+            <input asp-for="DisableStoresToUseServerEmailSettings" type="checkbox" class="form-check-input"/>
+            <label asp-for="DisableStoresToUseServerEmailSettings" class="form-check-label"></label>
+            <a href="https://docs.btcpayserver.org/Notifications/#server-emails" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+            <span asp-validation-for="DisableStoresToUseServerEmailSettings" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="form-group mb-4">
+        <h5>Maintenance Settings</h5>
         @if (ViewBag.UpdateUrlPresent)
         {
-            <div class="form-check">
+            <div class="form-check my-1">
                 <input asp-for="CheckForNewVersions" type="checkbox" class="form-check-input"/>
                 <label asp-for="CheckForNewVersions" class="form-check-label"></label>
                 <span asp-validation-for="CheckForNewVersions" class="text-danger"></span>
             </div>
         }
+        <div class="form-check my-1">
+            <input asp-for="DiscourageSearchEngines" type="checkbox" class="form-check-input"/>
+            <label asp-for="DiscourageSearchEngines" class="form-check-label"></label>
+            <a href="https://docs.btcpayserver.org/FAQ/FAQ-ServerSettings/#how-to-hide-my-btcpay-server-from-search-engines" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+            <span asp-validation-for="DiscourageSearchEngines" class="text-danger"></span>
+        </div>
     </div>
+
+    <h5>Customization Settings</h5>
+
     <div class="form-group">
         <label asp-for="RootAppId"></label>
-        <select asp-for="RootAppId" asp-items="@(new SelectList(ViewBag.AppsList, nameof(SelectListItem.Value), nameof(SelectListItem.Text), Model.RootAppId))" class="form-control"></select>
+        <select asp-for="RootAppId" asp-items="@(new SelectList(ViewBag.AppsList, nameof(SelectListItem.Value), nameof(SelectListItem.Text), Model.RootAppId))" class="form-control w-auto"></select>
         @if (!Model.DomainToAppMapping.Any())
         {
-            <button type="submit" name="command" value="add-domain" class="btn btn-link"> Map specific domains to specific apps</button>
+            <button type="submit" name="command" value="add-domain" class="btn btn-link px-0">Map specific domains to specific apps</button>
         }
     </div>
 
@@ -135,40 +157,43 @@
 
         </div>
     }
-    <div class="form-group card">
-        <div class="cursor-pointer p-2" data-target="#explorer-links" data-toggle="collapse">
-            <label asp-for="BlockExplorerLinks" class="pb-0 cursor-pointer"></label>
-            <span class="fa fa-chevron-down float-right pt-1"></span>
-        </div>
-        <ul class="list-group list-group-flush collapse show collapse-on-js" id="explorer-links">
-            @inject BTCPayNetworkProvider BTCPayNetworkProvider
-            @{
-                var networks = BTCPayNetworkProvider.GetAll().ToArray();
-            }
 
-            @for (int i = 0; i < networks.Count(); i++)
-            {
-                var network = networks.ElementAt(i);
-                var existingOverride = Model.BlockExplorerLinks?.SingleOrDefault(tuple => tuple.CryptoCode.Equals(network.CryptoCode, StringComparison.InvariantCultureIgnoreCase));
-                var linkValue = existingOverride?.Link ?? network.BlockExplorerLinkDefault;
-                if (Model.BlockExplorerLinks.Count < i + 1)
-                {
-                    Model.BlockExplorerLinks.Add(new PoliciesSettings.BlockExplorerOverrideItem() {CryptoCode = network.CryptoCode, Link = network.BlockExplorerLinkDefault});
+    <button class="btn btn-link px-0" type="button" id="ExplorerLinksButton" data-toggle="collapse" data-target="#explorer-links" aria-expanded="false" aria-controls="explorer-links">
+        Override the block explorers used
+    </button>
+
+    <div class="mb-3">
+        <div class="card collapse show collapse-on-js" id="explorer-links">
+            <ul class="list-group list-group-flush">
+                @inject BTCPayNetworkProvider BTCPayNetworkProvider
+                @{
+                    var networks = BTCPayNetworkProvider.GetAll().ToArray();
                 }
-                <li class="list-group-item">
-                    <label > @network.DisplayName (@network.CryptoCode)</label>
-                    <input type="hidden" asp-for="BlockExplorerLinks[i].CryptoCode" value="@network.CryptoCode"/>
-                    <div class="input-group">
-                        <input type="text" class="form-control" asp-for="BlockExplorerLinks[i].Link" value="@linkValue" data-default-link="@network.BlockExplorerLinkDefault"/>
-                        <div class="input-group-btn only-for-js">
-                            <button type="button" class="text-decoration-none btn btn-link revert-default fa fa-refresh " title="Revert to default"></button>
-                        </div>
-                    </div>
 
-                </li>
-            }
-        </ul>
+                @for (int i = 0; i < networks.Count(); i++)
+                {
+                    var network = networks.ElementAt(i);
+                    var existingOverride = Model.BlockExplorerLinks?.SingleOrDefault(tuple => tuple.CryptoCode.Equals(network.CryptoCode, StringComparison.InvariantCultureIgnoreCase));
+                    var linkValue = existingOverride?.Link ?? network.BlockExplorerLinkDefault;
+                    if (Model.BlockExplorerLinks.Count < i + 1)
+                    {
+                        Model.BlockExplorerLinks.Add(new PoliciesSettings.BlockExplorerOverrideItem() {CryptoCode = network.CryptoCode, Link = network.BlockExplorerLinkDefault});
+                    }
+                    <li class="list-group-item">
+                        <label > @network.DisplayName (@network.CryptoCode)</label>
+                        <input type="hidden" asp-for="BlockExplorerLinks[i].CryptoCode" value="@network.CryptoCode"/>
+                        <div class="input-group">
+                            <input type="text" class="form-control" asp-for="BlockExplorerLinks[i].Link" value="@linkValue" data-default-link="@network.BlockExplorerLinkDefault"/>
+                            <div class="input-group-btn only-for-js">
+                                <button type="button" class="text-decoration-none btn btn-link revert-default fa fa-refresh " title="Revert to default"></button>
+                            </div>
+                        </div>
+                    </li>
+                }
+            </ul>
+        </div>
     </div>
+
     <button type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
 </form>
 

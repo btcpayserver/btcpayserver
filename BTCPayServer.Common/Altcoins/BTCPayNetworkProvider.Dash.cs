@@ -20,7 +20,7 @@ namespace BTCPayServer
                 DefaultRateRules = new[]
                     {
                         "DASH_X = DASH_BTC * BTC_X",
-                        "DASH_BTC = bittrex(DASH_BTC)"
+                        "DASH_BTC = bitfinex(DSH_BTC)"
                     },
                 CryptoImagePath = "imlegacy/dash.png",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),

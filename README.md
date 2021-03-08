@@ -42,7 +42,7 @@
       API
     </a>
     <span> | </span>
-    <a href="https://docs.btcpayserver.org/Contribute/>"
+    <a href="https://docs.btcpayserver.org/Contribute/">
       Contribute
     </a>
     <span> | </span>

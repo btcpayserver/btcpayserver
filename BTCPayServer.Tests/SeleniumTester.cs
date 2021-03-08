@@ -15,6 +15,7 @@ using BTCPayServer.Views.Stores;
 using BTCPayServer.Views.Wallets;
 using Microsoft.Extensions.Configuration;
 using NBitcoin;
+using BTCPayServer.BIP78.Sender;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Support.Extensions;
@@ -124,10 +125,12 @@ namespace BTCPayServer.Tests
         public Mnemonic GenerateWallet(string cryptoCode = "BTC", string seed = "", bool importkeys = false, bool privkeys = false, ScriptPubKeyType format = ScriptPubKeyType.Segwit)
         {
             Driver.FindElement(By.Id($"Modify{cryptoCode}")).Click();
-            // Modify case
+
+            // Replace previous wallet case
             if (Driver.PageSource.Contains("id=\"ChangeWalletLink\""))
             {
                 Driver.FindElement(By.Id("ChangeWalletLink")).Click();
+                Driver.FindElement(By.Id("continue")).Click();
             }
 
             if (string.IsNullOrEmpty(seed))

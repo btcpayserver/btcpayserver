@@ -19,7 +19,6 @@ using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
-using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Http;
@@ -29,11 +28,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using BTCPayServer.BIP78.Sender;
 using NBitcoin.Payment;
 using NBitpayClient;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer
@@ -46,13 +45,20 @@ namespace BTCPayServer
             endpoint = bip21.UnknowParameters.TryGetValue($"{PayjoinClient.BIP21EndpointKey}", out var uri) ? new Uri(uri, UriKind.Absolute) : null;
             return endpoint != null;
         }
-        public static bool IsInternalNode(this LightningConnectionString connectionString, LightningConnectionString internalLightning)
-        {
-            var internalDomain = internalLightning?.BaseUri?.DnsSafeHost;
 
-            return connectionString.ConnectionType == LightningConnectionType.CLightning ||
-                                  connectionString.BaseUri.DnsSafeHost == internalDomain ||
-                                  (internalDomain == "127.0.0.1" || internalDomain == "localhost");
+        public static bool IsSafe(this LightningConnectionString connectionString)
+        {
+            if (connectionString.CookieFilePath != null ||
+                connectionString.MacaroonDirectoryPath != null ||
+                connectionString.MacaroonFilePath != null)
+                return false;
+
+            var uri = connectionString.BaseUri;
+            if (uri.Scheme.Equals("unix", StringComparison.OrdinalIgnoreCase))
+                return false;
+            if (!NBitcoin.Utils.TryParseEndpoint(uri.DnsSafeHost, 80, out var endpoint))
+                return false;
+            return !Extensions.IsLocalNetwork(uri.DnsSafeHost);
         }
 
         public static IQueryable<TEntity> Where<TEntity>(this Microsoft.EntityFrameworkCore.DbSet<TEntity> obj, System.Linq.Expressions.Expression<Func<TEntity, bool>> predicate) where TEntity : class

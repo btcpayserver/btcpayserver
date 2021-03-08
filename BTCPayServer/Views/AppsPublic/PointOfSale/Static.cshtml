@@ -6,7 +6,7 @@
 
 <div class="container d-flex h-100">
     <div class="justify-content-center align-self-center text-center mx-auto px-2 py-3 w-100" style="margin: auto;">
-        @if (this.TempData.HasStatusMessage())
+        @if (TempData.HasStatusMessage())
         {
             <partial name="_StatusMessage" />
         }
@@ -33,7 +33,6 @@
                         {
                             <p class="card-text">@System.Net.WebUtility.HtmlDecode(item.Description)</p>
                         }
-
                     </div>
                     <div class="card-footer bg-transparent border-0">
                         @if (!item.Inventory.HasValue || item.Inventory.Value > 0)
@@ -48,9 +47,11 @@
                                                 <span class="input-group-text">@Model.CurrencySymbol</span>
                                             </div>
                                             <input class="form-control" type="number" min="@item.Price.Value" step="@Model.Step" name="amount"
-                                                   value="@item.Price.Value" placeholder="Amount">
-                                            <div class="input-group-append">
-                                                <button class="btn btn-primary" type="submit">@Model.CustomButtonText</button>
+                                                   value="@item.Price.Value" placeholder="Amount" style="flex: 2 0 80px;">
+                                            <div class="input-group-append flex-fill">
+                                                <button class="btn btn-primary text-nowrap flex-fill" type="submit">
+                                                    @(item.BuyButtonText ?? Model.CustomButtonText)
+                                                </button>
                                             </div>
                                         </div>
                                     </form>
@@ -59,7 +60,7 @@
                                 {
                                     <form method="post" asp-controller="AppsPublic" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false">
                                         <button type="submit" name="choiceKey" class="js-add-cart btn btn-primary" value="@item.Id">
-                                            @Model.ButtonText.Replace("{0}",item.Price.Formatted).Replace("{Price}",item.Price.Formatted)
+                                            @((item.BuyButtonText ?? Model.ButtonText).Replace("{0}",item.Price.Formatted).Replace("{Price}",item.Price.Formatted))
                                         </button>
                                     </form>
                                 }

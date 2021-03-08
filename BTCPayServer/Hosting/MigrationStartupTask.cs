@@ -11,14 +11,17 @@ using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Logging;
 using BTCPayServer.Payments;
+using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using NBitcoin.DataEncoders;
 using NBXplorer;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 
 namespace BTCPayServer.Hosting
 {
@@ -29,11 +32,15 @@ namespace BTCPayServer.Hosting
         private readonly BTCPayNetworkProvider _NetworkProvider;
         private readonly SettingsRepository _Settings;
         private readonly UserManager<ApplicationUser> _userManager;
+
+        public IOptions<LightningNetworkOptions> LightningOptions { get; }
+
         public MigrationStartupTask(
             BTCPayNetworkProvider networkProvider,
             StoreRepository storeRepository,
             ApplicationDbContextFactory dbContextFactory,
             UserManager<ApplicationUser> userManager,
+            IOptions<LightningNetworkOptions> lightningOptions,
             SettingsRepository settingsRepository)
         {
             _DBContextFactory = dbContextFactory;
@@ -41,6 +48,7 @@ namespace BTCPayServer.Hosting
             _NetworkProvider = networkProvider;
             _Settings = settingsRepository;
             _userManager = userManager;
+            LightningOptions = lightningOptions;
         }
         public async Task ExecuteAsync(CancellationToken cancellationToken = default)
         {
@@ -106,12 +114,113 @@ namespace BTCPayServer.Hosting
                     settings.TransitionToStoreBlobAdditionalData = true;
                     await _Settings.UpdateSetting(settings);
                 }
+
+                if (!settings.TransitionInternalNodeConnectionString)
+                {
+                    await TransitionInternalNodeConnectionString();
+                    settings.TransitionInternalNodeConnectionString = true;
+                    await _Settings.UpdateSetting(settings);
+                }
             }
             catch (Exception ex)
             {
                 Logs.PayServer.LogError(ex, "Error on the MigrationStartupTask");
                 throw;
             }
+        }
+
+        private async Task TransitionInternalNodeConnectionString()
+        {
+            var nodes = LightningOptions.Value.InternalLightningByCryptoCode.Values.Select(c => c.ToString()).ToHashSet();
+            await using var ctx = _DBContextFactory.CreateContext();
+            foreach (var store in await ctx.Stores.AsQueryable().ToArrayAsync())
+            {
+#pragma warning disable CS0618 // Type or member is obsolete
+                if (!string.IsNullOrEmpty(store.DerivationStrategy))
+                {
+                    var noLabel = store.DerivationStrategy.Split('-')[0];
+                    JObject jObject = new JObject();
+                    jObject.Add("BTC", new JObject()
+                    {
+                        new JProperty("signingKey", noLabel),
+                        new JProperty("accountDerivation", store.DerivationStrategy),
+                        new JProperty("accountOriginal", store.DerivationStrategy),
+                        new JProperty("accountKeySettings", new JArray()
+                        {
+                            new JObject()
+                            {
+                                new JProperty("accountKey", noLabel)
+                            }
+                        })
+                    });
+                    store.DerivationStrategies = jObject.ToString();
+                    store.DerivationStrategy = null;
+                }
+                if (string.IsNullOrEmpty(store.DerivationStrategies))
+                    continue;
+
+                var strats = JObject.Parse(store.DerivationStrategies);
+                bool updated = false;
+                foreach (var prop in strats.Properties().Where(p => p.Name.EndsWith("LightningLike", StringComparison.OrdinalIgnoreCase)))
+                {
+                    var method = ((JObject)prop.Value);
+                    var lightningCharge = method.Property("LightningChargeUrl", StringComparison.OrdinalIgnoreCase);
+                    var ln = method.Property("LightningConnectionString", StringComparison.OrdinalIgnoreCase);
+                    if (lightningCharge != null)
+                    {
+                        var chargeUrl = lightningCharge.Value.Value<string>();
+                        var usr = method.Property("Username", StringComparison.OrdinalIgnoreCase)?.Value.Value<string>();
+                        var pass = method.Property("Password", StringComparison.OrdinalIgnoreCase)?.Value.Value<string>();
+                        updated = true;
+                        if (chargeUrl != null)
+                        {
+                            var fullUri = new UriBuilder(chargeUrl)
+                            {
+                                UserName = usr,
+                                Password = pass
+                            }.Uri.AbsoluteUri;
+                            var newStr = $"type=charge;server={fullUri};allowinsecure=true";
+                            if (ln is null)
+                            {
+                                ln = new JProperty("LightningConnectionString", newStr);
+                                method.Add(ln);
+                            }
+                            else
+                            {
+                                ln.Value = newStr;
+                            }
+                        }
+                        foreach (var p in new[] { "Username", "Password", "LightningChargeUrl" })
+                            method.Property(p, StringComparison.OrdinalIgnoreCase)?.Remove();
+                    }
+
+                    var paymentId = method.Property("PaymentId", StringComparison.OrdinalIgnoreCase);
+                    if (paymentId != null)
+                    {
+                        paymentId.Remove();
+                        updated = true;
+                    }
+
+                    if (ln is null)
+                        continue;
+                    if (nodes.Contains(ln.Value.Value<string>()))
+                    {
+                        updated = true;
+                        ln.Value = null;
+                        if (!(method.Property("InternalNodeRef", StringComparison.OrdinalIgnoreCase) is JProperty internalNode))
+                        {
+                            internalNode = new JProperty("InternalNodeRef", null);
+                            method.Add(internalNode);
+                        }
+                        internalNode.Value = new JValue(LightningSupportedPaymentMethod.InternalNode);
+                    }
+                }
+
+                if (updated)
+                    store.DerivationStrategies = strats.ToString();
+#pragma warning restore CS0618 // Type or member is obsolete
+            }
+            await ctx.SaveChangesAsync();
         }
 
         private async Task TransitionToStoreBlobAdditionalData()
@@ -342,8 +451,8 @@ retry:
                 {
                     foreach (var method in store.GetSupportedPaymentMethods(_NetworkProvider).OfType<Payments.Lightning.LightningSupportedPaymentMethod>())
                     {
-                        var lightning = method.GetLightningUrl();
-                        if (lightning.IsLegacy)
+                        var lightning = method.GetExternalLightningUrl();
+                        if (lightning?.IsLegacy is true)
                         {
                             method.SetLightningUrl(lightning);
                             store.SetSupportedPaymentMethod(method);

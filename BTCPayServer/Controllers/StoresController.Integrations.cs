@@ -166,7 +166,6 @@ namespace BTCPayServer.Controllers
             return NotFound();
         }
 
-
         [HttpGet]
         [Route("{storeId}/integrations")]
         [Route("{storeId}/integrations/shopify")]
@@ -179,11 +178,10 @@ namespace BTCPayServer.Controllers
             return View("Integrations", vm);
         }
 
-        [HttpGet]
-        [Route("{storeId}/webhooks")]
+        [HttpGet("{storeId}/webhooks")]
         public async Task<IActionResult> Webhooks()
         {
-            var webhooks = await this._Repo.GetWebhooks(CurrentStore.Id);
+            var webhooks = await _Repo.GetWebhooks(CurrentStore.Id);
             return View(nameof(Webhooks), new WebhooksViewModel()
             {
                 Webhooks = webhooks.Select(w => new WebhooksViewModel.WebhookViewModel()
@@ -193,11 +191,11 @@ namespace BTCPayServer.Controllers
                 }).ToArray()
             });
         }
-        [HttpGet]
-        [Route("{storeId}/webhooks/new")]
+
+        [HttpGet("{storeId}/webhooks/new")]
         public IActionResult NewWebhook()
         {
-            return View(nameof(ModifyWebhook), new EditWebhookViewModel()
+            return View(nameof(ModifyWebhook), new EditWebhookViewModel
             {
                 Active = true,
                 Everything = true,
@@ -206,14 +204,14 @@ namespace BTCPayServer.Controllers
             });
         }
 
-        [HttpGet]
-        [Route("{storeId}/webhooks/{webhookId}/remove")]
+        [HttpGet("{storeId}/webhooks/{webhookId}/remove")]
         public async Task<IActionResult> DeleteWebhook(string webhookId)
         {
             var webhook = await _Repo.GetWebhook(CurrentStore.Id, webhookId);
             if (webhook is null)
                 return NotFound();
-            return View("Confirm", new ConfirmModel()
+
+            return View("Confirm", new ConfirmModel
             {
                 Title = $"Delete a webhook",
                 Description = "This webhook will be removed from this store, do you wish to continue?",
@@ -221,36 +219,36 @@ namespace BTCPayServer.Controllers
             });
         }
 
-        [HttpPost]
-        [Route("{storeId}/webhooks/{webhookId}/remove")]
+        [HttpPost("{storeId}/webhooks/{webhookId}/remove")]
         public async Task<IActionResult> DeleteWebhookPost(string webhookId)
         {
             var webhook = await _Repo.GetWebhook(CurrentStore.Id, webhookId);
             if (webhook is null)
                 return NotFound();
+
             await _Repo.DeleteWebhook(CurrentStore.Id, webhookId);
             TempData[WellKnownTempData.SuccessMessage] = "Webhook successfully deleted";
             return RedirectToAction(nameof(Webhooks), new { storeId = CurrentStore.Id });
         }
 
-        [HttpPost]
-        [Route("{storeId}/webhooks/new")]
+        [HttpPost("{storeId}/webhooks/new")]
         public async Task<IActionResult> NewWebhook(string storeId, EditWebhookViewModel viewModel)
         {
             if (!ModelState.IsValid)
-                return View(viewModel);
+                return View(nameof(ModifyWebhook), viewModel);
 
-            var webhookId = await _Repo.CreateWebhook(CurrentStore.Id, viewModel.CreateBlob());
+            await _Repo.CreateWebhook(CurrentStore.Id, viewModel.CreateBlob());
             TempData[WellKnownTempData.SuccessMessage] = "The webhook has been created";
             return RedirectToAction(nameof(Webhooks), new { storeId });
         }
-        [HttpGet]
-        [Route("{storeId}/webhooks/{webhookId}")]
+
+        [HttpGet("{storeId}/webhooks/{webhookId}")]
         public async Task<IActionResult> ModifyWebhook(string webhookId)
         {
             var webhook = await _Repo.GetWebhook(CurrentStore.Id, webhookId);
             if (webhook is null)
                 return NotFound();
+
             var blob = webhook.GetBlob();
             var deliveries = await _Repo.GetWebhookDeliveries(CurrentStore.Id, webhookId, 20);
             return View(nameof(ModifyWebhook), new EditWebhookViewModel(blob)
@@ -259,8 +257,8 @@ namespace BTCPayServer.Controllers
                             .Select(s => new DeliveryViewModel(s)).ToList()
             });
         }
-        [HttpPost]
-        [Route("{storeId}/webhooks/{webhookId}")]
+
+        [HttpPost("{storeId}/webhooks/{webhookId}")]
         public async Task<IActionResult> ModifyWebhook(string webhookId, EditWebhookViewModel viewModel)
         {
             var webhook = await _Repo.GetWebhook(CurrentStore.Id, webhookId);
@@ -272,16 +270,17 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(Webhooks), new { storeId = CurrentStore.Id });
         }
 
-        [HttpPost]
-        [Route("{storeId}/webhooks/{webhookId}/deliveries/{deliveryId}/redeliver")]
+        [HttpPost("{storeId}/webhooks/{webhookId}/deliveries/{deliveryId}/redeliver")]
         public async Task<IActionResult> RedeliverWebhook(string webhookId, string deliveryId)
         {
             var delivery = await _Repo.GetWebhookDelivery(CurrentStore.Id, webhookId, deliveryId);
             if (delivery is null)
                 return NotFound();
+
             var newDeliveryId = await WebhookNotificationManager.Redeliver(deliveryId);
             if (newDeliveryId is null)
                 return NotFound();
+
             TempData[WellKnownTempData.SuccessMessage] = "Successfully planned a redelivery";
             return RedirectToAction(nameof(ModifyWebhook),
                 new
@@ -290,18 +289,18 @@ namespace BTCPayServer.Controllers
                     webhookId
                 });
         }
-        [HttpGet]
-        [Route("{storeId}/webhooks/{webhookId}/deliveries/{deliveryId}/request")]
+
+        [HttpGet("{storeId}/webhooks/{webhookId}/deliveries/{deliveryId}/request")]
         public async Task<IActionResult> WebhookDelivery(string webhookId, string deliveryId)
         {
             var delivery = await _Repo.GetWebhookDelivery(CurrentStore.Id, webhookId, deliveryId);
             if (delivery is null)
                 return NotFound();
-            return this.File(delivery.GetBlob().Request, "application/json");
+
+            return File(delivery.GetBlob().Request, "application/json");
         }
 
-        [HttpPost]
-        [Route("{storeId}/integrations/shopify")]
+        [HttpPost("{storeId}/integrations/shopify")]
         public async Task<IActionResult> Integrations([FromServices] IHttpClientFactory clientFactory,
             IntegrationsViewModel vm, string command = "", string exampleUrl = "")
         {

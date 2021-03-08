@@ -1,3 +1,4 @@
+#nullable enable
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
@@ -19,9 +20,9 @@ namespace BTCPayServer.Services
             _EventAggregator = eventAggregator;
         }
 
-        public async Task<T> GetSettingAsync<T>(string name = null)
+        public async Task<T?> GetSettingAsync<T>(string? name = null) where T : class
         {
-            name ??= typeof(T).FullName;
+            name ??= typeof(T).FullName ?? string.Empty;
             using (var ctx = _ContextFactory.CreateContext())
             {
                 var data = await ctx.Settings.Where(s => s.Id == name).FirstOrDefaultAsync();
@@ -30,7 +31,7 @@ namespace BTCPayServer.Services
                 return Deserialize<T>(data.Value);
             }
         }
-        public async Task UpdateSetting<T>(T obj, string name = null)
+        public async Task UpdateSetting<T>(T obj, string? name = null) where T : class
         {
             using (var ctx = _ContextFactory.CreateContext())
             {
@@ -51,9 +52,9 @@ namespace BTCPayServer.Services
             });
         }
 
-        public SettingData UpdateSettingInContext<T>(ApplicationDbContext ctx, T obj, string name = null)
+        public SettingData UpdateSettingInContext<T>(ApplicationDbContext ctx, T obj, string? name = null) where T : class
         {
-            name ??= obj.GetType().FullName;
+            name ??= obj.GetType().FullName ?? string.Empty;
             var settings = new SettingData();
             settings.Id = name;
             settings.Value = Serialize(obj);
@@ -74,7 +75,7 @@ namespace BTCPayServer.Services
             return JsonConvert.SerializeObject(obj);
         }
 
-        public async Task<T> WaitSettingsChanged<T>(CancellationToken cancellationToken = default)
+        public async Task<T> WaitSettingsChanged<T>(CancellationToken cancellationToken = default) where T : class
         {
             return (await _EventAggregator.WaitNext<SettingsChanged<T>>(cancellationToken)).Settings;
         }

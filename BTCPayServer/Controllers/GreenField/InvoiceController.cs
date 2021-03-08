@@ -78,7 +78,7 @@ namespace BTCPayServer.Controllers.GreenField
             }
 
             var invoice = await _invoiceRepository.GetInvoice(invoiceId, true);
-            if (invoice.StoreId != store.Id)
+            if (invoice?.StoreId != store.Id)
             {
                 return NotFound();
             }
@@ -218,7 +218,7 @@ namespace BTCPayServer.Controllers.GreenField
             if (!await _invoiceRepository.MarkInvoiceStatus(invoice.Id, request.Status))
             {
                 ModelState.AddModelError(nameof(request.Status),
-                    "Status can only be marked to invalid or complete within certain conditions.");
+                    "Status can only be marked to invalid or settled within certain conditions.");
             }
 
             if (!ModelState.IsValid)
@@ -370,7 +370,9 @@ namespace BTCPayServer.Controllers.GreenField
                     PaymentMethods =
                         entity.GetPaymentMethods().Select(method => method.GetId().ToStringNormalized()).ToArray(),
                     SpeedPolicy = entity.SpeedPolicy,
-                    DefaultLanguage = entity.DefaultLanguage
+                    DefaultLanguage = entity.DefaultLanguage,
+                    RedirectAutomatically = entity.RedirectAutomatically,
+                    RedirectURL = entity.RedirectURLTemplate
                 }
             };
         }

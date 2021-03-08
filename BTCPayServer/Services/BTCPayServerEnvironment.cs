@@ -58,7 +58,7 @@ namespace BTCPayServer.Services
         {
             get
             {
-                return DevelopmentOverride?? NetworkType == ChainName.Regtest && Environment.IsDevelopment();
+                return NetworkType == ChainName.Regtest && Environment.IsDevelopment();
             }
         }
 
@@ -87,7 +87,5 @@ namespace BTCPayServer.Services
             }
             return txt.ToString();
         }
-
-        public bool? DevelopmentOverride;
     }
 }

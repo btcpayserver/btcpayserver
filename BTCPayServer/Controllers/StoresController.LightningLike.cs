@@ -33,13 +33,15 @@ namespace BTCPayServer.Controllers
 
         private void SetExistingValues(StoreData store, LightningNodeViewModel vm)
         {
-            if (GetExistingLightningSupportedPaymentMethod(vm.CryptoCode, store) is LightningSupportedPaymentMethod paymentMethod)
+            var lightning = GetExistingLightningSupportedPaymentMethod(vm.CryptoCode, store);
+            if (lightning != null)
             {
-                vm.ConnectionString = paymentMethod.GetDisplayableConnectionString();
+                vm.ConnectionString = lightning.GetDisplayableConnectionString();
             }
-            vm.Enabled = !store.GetStoreBlob().IsExcluded(new PaymentMethodId(vm.CryptoCode, PaymentTypes.LightningLike));
+            vm.Enabled = !store.GetStoreBlob().IsExcluded(new PaymentMethodId(vm.CryptoCode, PaymentTypes.LightningLike)) && lightning != null;
             vm.CanUseInternalNode = CanUseInternalLightning();
         }
+
         private LightningSupportedPaymentMethod GetExistingLightningSupportedPaymentMethod(string cryptoCode, StoreData store)
         {
             var id = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
@@ -48,6 +50,7 @@ namespace BTCPayServer.Controllers
                 .FirstOrDefault(d => d.PaymentId == id);
             return existing;
         }
+
         [HttpPost]
         [Route("{storeId}/lightning/{cryptoCode}")]
         public async Task<IActionResult> AddLightningNode(string storeId, LightningNodeViewModel vm, string command, string cryptoCode)

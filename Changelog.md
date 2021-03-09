@@ -1,5 +1,40 @@
 # Changelog
 
+## 1.0.7.0
+
+### Features:
+
+* New Wallet Setup UI (see #2164, #2296) @dennisreimann @dstrukt
+* Greenfield: New on-chain wallet API @Kukks
+* Greenfield: Ability to configure store's lightning payment methods @Kukks
+* Allow an invoice to be marked invalid/complete even from the `new` state @Kukks
+* Point of Sale and Crowdfund: Allow custom buy button text (see #2299) @dennisreimann
+* Specter wallet file import (see #2252) @dennisreimann
+
+### Improvements:
+
+* Reenabling uppercase BECH32 in QR codes (see #2110) @rockstardev
+* If a store is set to internal node, use "Internal Node" as connection string rather than the actual connection string. @NicolasDorier
+* Improve Policies options UX in server settings (see #2307) @dstrukt @dennisreimann
+* Fix view payment request loading spinner alignment @bumbummen99 
+* Fix cart pay button loading spinner vertical alignment @bumbummen99
+* Invoices list: Remove icon indicator for onchain (see #2240) @dennisreimann
+* Login: Improve tab navigation for input fields (see #2258) @dennisreimann
+
+### Bug fixes:
+
+* Hovering the mouse pointer on invoice logs row would make them unreadable @ubolator
+* Remove exchange rates that lost support in Coingecko @NicolasDorier
+* Get invoice in greenfield was crashing if invoiceId did not exist @NicolasDorier
+* Getting a file from the storage service which did not exist would return http 500 instead of 404 @NicolasDorier
+* Fix direct URL for local storage with custom root path #2318 @ubolator
+* The pay button would not show up properly on some websites @ubolator
+* Profile email change should check email's availability @NicolasDorier
+* Fixed mysql/sqlite support @ketominer
+* Checkout: Fix scan/copy tab sizes with varying content (see #2264) @dennisreimann
+* Greenfield: Lightning API would return HTTP 500 if store owner did not set the connection string @dennisreimann
+* Point of Sale: The custom price was not properly working (see #2248) @ubolator
+
 ## 1.0.6.8
 
 This release is trying some improvement to decrease the chances of being falsy flagged by Google Safe Browsing.

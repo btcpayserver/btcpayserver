@@ -547,7 +547,7 @@ namespace BTCPayServer.Controllers
                         {
                             CryptoCode = paymentMethodId.CryptoCode,
                             Address = lightning?.GetDisplayableConnectionString(),
-                            Enabled = !excludeFilters.Match(paymentMethodId)
+                            Enabled = !excludeFilters.Match(paymentMethodId) && lightning != null
                         });
                         break;
                 }

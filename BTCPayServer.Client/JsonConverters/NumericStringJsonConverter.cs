@@ -12,9 +12,7 @@ namespace BTCPayServer.JsonConverters
             return objectType == typeof(decimal) ||
                    objectType == typeof(decimal?) ||
                    objectType == typeof(double) ||
-                   objectType == typeof(double?) ||
-                   objectType == typeof(int) ||
-                   objectType == typeof(int?);
+                   objectType == typeof(double?);
         }
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue,
@@ -30,8 +28,6 @@ namespace BTCPayServer.JsonConverters
                         return decimal.Parse(token.ToString(), CultureInfo.InvariantCulture);
                     if (objectType == typeof(double) || objectType == typeof(double?))
                         return double.Parse(token.ToString(), CultureInfo.InvariantCulture);
-                    if (objectType == typeof(int) || objectType == typeof(int?))
-                        return int.Parse(token.ToString(), CultureInfo.InvariantCulture);
 
                     throw new JsonSerializationException("Unexpected object type: " + objectType);
                 case JTokenType.Null when objectType == typeof(decimal?) || objectType == typeof(double?) || objectType == typeof(int?):
@@ -52,9 +48,6 @@ namespace BTCPayServer.JsonConverters
                     writer.WriteValue(x.ToString(CultureInfo.InvariantCulture));
                     break;
                 case double x:
-                    writer.WriteValue(x.ToString(CultureInfo.InvariantCulture));
-                    break;
-                case int x:
                     writer.WriteValue(x.ToString(CultureInfo.InvariantCulture));
                     break;
             }

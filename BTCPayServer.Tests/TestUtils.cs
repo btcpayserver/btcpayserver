@@ -107,7 +107,11 @@ namespace BTCPayServer.Tests
                 }
                 catch (XunitException) when (!cts.Token.IsCancellationRequested)
                 {
-                    await Task.Delay(500);
+                    await Task.Delay(500, cts.Token);
+                }
+                catch (HttpRequestException) when (!cts.Token.IsCancellationRequested)
+                {
+                    await Task.Delay(500, cts.Token);
                 }
             }
         }

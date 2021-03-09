@@ -335,8 +335,16 @@ namespace BTCPayServer.Controllers.GreenField
                               new FeeRate(1.0m);
             if (request.FeeRate is null)
             {
-                var feeRate = await explorerClient.GetFeeRateAsync(1);
-                request.FeeRate = feeRate.FeeRate;
+                try
+                {
+                    var feeRate = await explorerClient.GetFeeRateAsync(1);
+                    request.FeeRate = feeRate.FeeRate;
+                }
+                catch (NBXplorerException e)
+                {                    
+                    ModelState.AddModelError(nameof(request.FeeRate),
+                        $"The fee rate could not be determined automatically because: {e.Error.Message}");
+                }
             }
             else if (request.FeeRate < minRelayFee)
             {

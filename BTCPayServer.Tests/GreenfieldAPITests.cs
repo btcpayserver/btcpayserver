@@ -1481,9 +1481,19 @@ namespace BTCPayServer.Tests
                 await client.CreateOnChainTransaction(walletId.StoreId, walletId.CryptoCode,
                     createTxRequest);
             });
-            
-            var tx = await client.CreateOnChainTransactionButDoNotBroadcast(walletId.StoreId, walletId.CryptoCode,
-                createTxRequest, tester.ExplorerClient.Network.NBitcoinNetwork);
+            Transaction tx;
+            try
+            {
+                tx = await client.CreateOnChainTransactionButDoNotBroadcast(walletId.StoreId, walletId.CryptoCode,
+                    createTxRequest, tester.ExplorerClient.Network.NBitcoinNetwork);
+            }
+            catch (Exception e)
+            {
+                createTxRequest.FeeRate = new FeeRate(5m);
+                tx = await client.CreateOnChainTransactionButDoNotBroadcast(walletId.StoreId, walletId.CryptoCode,
+                    createTxRequest, tester.ExplorerClient.Network.NBitcoinNetwork);
+            }
+           
             Assert.NotNull(tx);
             Assert.Contains(tx.Outputs, txout => txout.IsTo(nodeAddress) && txout.Value.ToDecimal(MoneyUnit.BTC) == 0.001m);
             Assert.True((await tester.ExplorerNode.TestMempoolAcceptAsync(tx)).IsAllowed);

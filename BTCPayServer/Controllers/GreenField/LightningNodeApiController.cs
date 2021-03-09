@@ -192,7 +192,7 @@ namespace BTCPayServer.Controllers.GreenField
                 return NotFound();
             }
 
-            return Ok(new JValue((await lightningClient.GetDepositAddress()).ToString()));
+            return Ok((await lightningClient.GetDepositAddress()).ToString());
         }
 
         public virtual async Task<IActionResult> PayInvoice(string cryptoCode, PayLightningInvoiceRequest lightningInvoice)

@@ -24,7 +24,7 @@ namespace BTCPayServer.Payments.Bitcoin
         private readonly IFeeProviderFactory _FeeRateProviderFactory;
         private readonly NBXplorerDashboard _dashboard;
         private readonly Services.Wallets.BTCPayWalletProvider _WalletProvider;
-        private readonly string _bech32Prefix;
+        private readonly Dictionary<string, string> _bech32Prefix;
 
         public BitcoinLikePaymentHandler(ExplorerClientProvider provider,
             BTCPayNetworkProvider networkProvider,
@@ -38,11 +38,12 @@ namespace BTCPayServer.Payments.Bitcoin
             _dashboard = dashboard;
             _WalletProvider = walletProvider;
 
-
-            var currentNetwork = (BTCPayNetwork)networkProvider.GetNetwork("BTC");
-            _bech32Prefix = Encoders.ASCII.EncodeData(
-                currentNetwork.NBitcoinNetwork.GetBech32Encoder(Bech32Type.WITNESS_PUBKEY_ADDRESS, false).HumanReadablePart
-            );
+            _bech32Prefix = networkProvider.GetAll().OfType<BTCPayNetwork>()
+                .Where(network => network.NBitcoinNetwork?.Consensus?.SupportSegwit is true).ToDictionary(network => network.CryptoCode,
+                    network => Encoders.ASCII.EncodeData(
+                        network.NBitcoinNetwork.GetBech32Encoder(Bech32Type.WITNESS_PUBKEY_ADDRESS, false)
+                            .HumanReadablePart));
+            
         }
 
         class Prepare
@@ -62,9 +63,8 @@ namespace BTCPayServer.Payments.Bitcoin
             model.FeeRate = ((BitcoinLikeOnChainPaymentMethod) paymentMethod.GetPaymentMethodDetails()).GetFeeRate();
             model.PaymentMethodName = GetPaymentMethodName(network);
 
-
             var lightningFallback = "";
-            if (storeBlob.OnChainWithLnInvoiceFallback)
+            if (network.SupportLightning && storeBlob.OnChainWithLnInvoiceFallback)
             {
                 var lightningInfo = invoiceResponse.CryptoInfo.FirstOrDefault(a =>
                     a.GetpaymentMethodId() == new PaymentMethodId(model.CryptoCode, PaymentTypes.LightningLike));
@@ -82,10 +82,10 @@ namespace BTCPayServer.Payments.Bitcoin
             //    + lightningFallback.ToUpperInvariant().Replace("LIGHTNING=", "lightning=", StringComparison.OrdinalIgnoreCase);
 
             // We're leading the way in Bitcoin community with adding UPPERCASE Bech32 addresses in QR Code
-            if (model.BtcAddress.StartsWith(_bech32Prefix, StringComparison.OrdinalIgnoreCase))
+            if (_bech32Prefix.TryGetValue(model.CryptoCode, out var prefix) && model.BtcAddress.StartsWith(prefix,  StringComparison.OrdinalIgnoreCase))
             {
                 model.InvoiceBitcoinUrlQR = model.InvoiceBitcoinUrlQR.Replace(
-                    $"bitcoin:{model.BtcAddress}", $"bitcoin:{model.BtcAddress.ToUpperInvariant()}",
+                    $"{network.UriScheme}:{model.BtcAddress}", $"{network.UriScheme}:{model.BtcAddress.ToUpperInvariant()}",
                     StringComparison.OrdinalIgnoreCase
                 );
             }

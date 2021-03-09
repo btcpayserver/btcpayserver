@@ -4,7 +4,7 @@
 
 ### Features:
 
-* New Wallet Setup UI  (see #2164, #2296) @dennisreimann @dstrukt
+* New Wallet Setup UI (see #2164, #2296) @dennisreimann @dstrukt
 * Greenfield: New on-chain wallet API @Kukks
 * Greenfield: Ability to configure store's lightning payment methods @Kukks
 * Allow an invoice to be marked invalid/complete even from the `new` state @Kukks

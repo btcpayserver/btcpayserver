@@ -840,17 +840,24 @@ retry:
                         settings.PaymentId == paymentMethodId);
 
                 ReceivedCoin[] senderCoins = null;
+                ReceivedCoin coin = null;
+                ReceivedCoin coin2 = null;
+                ReceivedCoin coin3 = null;
+                ReceivedCoin coin4 = null;
+                ReceivedCoin coin5 = null;
+                ReceivedCoin coin6 = null;
                 await TestUtils.EventuallyAsync(async () =>
                 {
                     senderCoins = await btcPayWallet.GetUnspentCoins(senderUser.DerivationScheme);
                     Assert.Contains(senderCoins, coin => coin.Value.GetValue(btcPayNetwork) == 0.026m);
+                    coin = senderCoins.Single(coin => coin.Value.GetValue(btcPayNetwork) == 0.021m);
+                    coin2 = Assert.Single(senderCoins, coin => coin.Value.GetValue(btcPayNetwork) == 0.022m);
+                    coin3 = Assert.Single(senderCoins, coin => coin.Value.GetValue(btcPayNetwork) == 0.023m);
+                    coin4 = Assert.Single(senderCoins, coin => coin.Value.GetValue(btcPayNetwork) == 0.024m);
+                    coin5 = Assert.Single(senderCoins, coin => coin.Value.GetValue(btcPayNetwork) == 0.025m);
+                    coin6 = Assert.Single(senderCoins, coin => coin.Value.GetValue(btcPayNetwork) == 0.026m);
                 });
-                var coin = senderCoins.Single(coin => coin.Value.GetValue(btcPayNetwork) == 0.021m);
-                var coin2 = senderCoins.Single(coin => coin.Value.GetValue(btcPayNetwork) == 0.022m);
-                var coin3 = senderCoins.Single(coin => coin.Value.GetValue(btcPayNetwork) == 0.023m);
-                var coin4 = senderCoins.Single(coin => coin.Value.GetValue(btcPayNetwork) == 0.024m);
-                var coin5 = senderCoins.Single(coin => coin.Value.GetValue(btcPayNetwork) == 0.025m);
-                var coin6 = senderCoins.Single(coin => coin.Value.GetValue(btcPayNetwork) == 0.026m);
+                
 
                 var signingKeySettings = derivationSchemeSettings.GetSigningAccountKeySettings();
                 signingKeySettings.RootFingerprint =

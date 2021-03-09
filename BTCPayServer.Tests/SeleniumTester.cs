@@ -3,6 +3,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Lightning;
@@ -178,7 +179,15 @@ namespace BTCPayServer.Tests
         {
             Driver.FindElement(By.Id($"Modify{cryptoCode}")).Click();
             Driver.FindElement(By.Id("ImportWalletOptionsLink")).Click();
-            Driver.FindElement(By.Id("ImportXpubLink")).Click();
+            while (true)
+            {
+                if (Driver.PageSource.Contains("ImportXpubLink"))
+                {
+                    break;
+                }
+                Thread.Sleep(100);
+            }
+            Driver.WaitForAndClick(By.Id("ImportXpubLink"));
             Driver.FindElement(By.Id("DerivationScheme")).SendKeys(derivationScheme);
             Driver.FindElement(By.Id("Continue")).Click();
             Driver.FindElement(By.Id("Confirm")).Click();

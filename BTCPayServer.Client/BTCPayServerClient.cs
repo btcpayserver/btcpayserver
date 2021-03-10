@@ -66,10 +66,6 @@ namespace BTCPayServer.Client
         {
             await HandleResponse(message);
             var str = await message.Content.ReadAsStringAsync();
-            if (str is T t)
-            {
-                return t;
-            }
             return JsonConvert.DeserializeObject<T>(str);
         }
 

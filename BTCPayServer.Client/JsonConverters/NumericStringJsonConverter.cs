@@ -9,10 +9,10 @@ namespace BTCPayServer.JsonConverters
     {
         public override bool CanConvert(Type objectType)
         {
-            return objectType == typeof(decimal) ||
-                   objectType == typeof(decimal?) ||
-                   objectType == typeof(double) ||
-                   objectType == typeof(double?);
+            return (objectType == typeof(decimal) ||
+                    objectType == typeof(decimal?) ||
+                    objectType == typeof(double) ||
+                    objectType == typeof(double?));
         }
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue,
@@ -30,7 +30,7 @@ namespace BTCPayServer.JsonConverters
                         return double.Parse(token.ToString(), CultureInfo.InvariantCulture);
 
                     throw new JsonSerializationException("Unexpected object type: " + objectType);
-                case JTokenType.Null when objectType == typeof(decimal?) || objectType == typeof(double?) || objectType == typeof(int?):
+                case JTokenType.Null when objectType == typeof(decimal?) || objectType == typeof(double?):
                     return null;
                 default:
                     throw new JsonSerializationException("Unexpected token type: " +

@@ -13,13 +13,11 @@ namespace BTCPayServer.Models.WalletViewModels
             Yes,
             No
         }
-
         public class FeeRateOption
         {
             public TimeSpan Target { get; set; }
             public decimal FeeRate { get; set; }
         }
-
         public List<TransactionOutput> Outputs { get; set; } = new List<TransactionOutput>();
 
         public class TransactionOutput
@@ -36,7 +34,6 @@ namespace BTCPayServer.Models.WalletViewModels
             [Display(Name = "Subtract fees from amount")]
             public bool SubtractFeesFromOutput { get; set; }
         }
-
         public decimal CurrentBalance { get; set; }
 
         public string CryptoCode { get; set; }
@@ -49,22 +46,20 @@ namespace BTCPayServer.Models.WalletViewModels
 
         [Display(Name = "Don't create UTXO change")]
         public bool NoChange { get; set; }
-
         public decimal? Rate { get; set; }
         public int FiatDivisibility { get; set; }
         public int CryptoDivisibility { get; set; }
         public string Fiat { get; set; }
         public string RateError { get; set; }
         public bool SupportRBF { get; set; }
-
         [Display(Name = "Always include non-witness UTXO if available")]
         public bool AlwaysIncludeNonWitnessUTXO { get; set; }
-
         [Display(Name = "Allow fee increase (RBF)")]
         public ThreeStateBool AllowFeeBump { get; set; }
 
         public bool NBXSeedAvailable { get; set; }
-        [Display(Name = "PayJoin BIP21")] public string PayJoinBIP21 { get; set; }
+        [Display(Name = "PayJoin BIP21")]
+        public string PayJoinBIP21 { get; set; }
         public bool InputSelection { get; set; }
         public InputSelectionOption[] InputsAvailable { get; set; }
 

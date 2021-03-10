@@ -21,6 +21,7 @@ using NBitcoin;
 using NBitcoin.Payment;
 using NBXplorer;
 using NBXplorer.Models;
+using Newtonsoft.Json.Linq;
 using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers.GreenField
@@ -445,7 +446,7 @@ namespace BTCPayServer.Controllers.GreenField
 
             if (!request.ProceedWithBroadcast)
             {
-                return Ok(transaction.ToHex());
+                return Ok(new JValue(transaction.ToHex()));
             }
 
             broadcastResult = await explorerClient.BroadcastAsync(transaction);

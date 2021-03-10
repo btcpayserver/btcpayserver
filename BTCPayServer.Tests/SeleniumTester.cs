@@ -68,6 +68,7 @@ namespace BTCPayServer.Tests
             if (runInBrowser)
             {
                 // ensure maximized window size
+                // otherwise TESTS WILL FAIL because of different hierarchy in navigation menu
                 Driver.Manage().Window.Maximize();
             }
 
@@ -113,12 +114,12 @@ namespace BTCPayServer.Tests
 
         public (string storeName, string storeId) CreateNewStore()
         {
-            Driver.FindElement(By.Id("Stores")).Click();
-            Driver.FindElement(By.Id("CreateStore")).Click();
+            Driver.WaitForElement(By.Id("Stores")).Click();
+            Driver.WaitForElement(By.Id("CreateStore")).Click();
             var name = "Store" + RandomUtils.GetUInt64();
-            Driver.FindElement(By.Id("Name")).SendKeys(name);
-            Driver.FindElement(By.Id("Create")).Click();
-            StoreId = Driver.FindElement(By.Id("Id")).GetAttribute("value");
+            Driver.WaitForElement(By.Id("Name")).SendKeys(name);
+            Driver.WaitForElement(By.Id("Create")).Click();
+            StoreId = Driver.WaitForElement(By.Id("Id")).GetAttribute("value");
             return (name, StoreId);
         }
 
@@ -317,8 +318,7 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.Name("StoreId")).SendKeys(storeName);
             Driver.FindElement(By.Id("Create")).Click();
 
-            FindAlertMessage();
-            var statusElement = Driver.FindElement(By.ClassName("alert-success"));
+            var statusElement = FindAlertMessage();
             var id = statusElement.Text.Split(" ")[1];
             return id;
         }

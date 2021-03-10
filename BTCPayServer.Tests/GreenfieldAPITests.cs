@@ -1464,7 +1464,8 @@ namespace BTCPayServer.Tests
                         {
                             Destination = nodeAddress.ToString(), Amount = 0.001m
                         }
-                    }
+                    },
+                FeeRate = new FeeRate(5m) //only because regtest may fail but not required
             };
             await AssertHttpError(403, async () =>
             {
@@ -1482,17 +1483,10 @@ namespace BTCPayServer.Tests
                     createTxRequest);
             });
             Transaction tx;
-            try
-            {
+            
                 tx = await client.CreateOnChainTransactionButDoNotBroadcast(walletId.StoreId, walletId.CryptoCode,
                     createTxRequest, tester.ExplorerClient.Network.NBitcoinNetwork);
-            }
-            catch (Exception e)
-            {
-                createTxRequest.FeeRate = new FeeRate(5m);
-                tx = await client.CreateOnChainTransactionButDoNotBroadcast(walletId.StoreId, walletId.CryptoCode,
-                    createTxRequest, tester.ExplorerClient.Network.NBitcoinNetwork);
-            }
+           
            
             Assert.NotNull(tx);
             Assert.Contains(tx.Outputs, txout => txout.IsTo(nodeAddress) && txout.Value.ToDecimal(MoneyUnit.BTC) == 0.001m);

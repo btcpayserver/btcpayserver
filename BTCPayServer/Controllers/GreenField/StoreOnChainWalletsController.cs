@@ -333,20 +333,7 @@ namespace BTCPayServer.Controllers.GreenField
 
             var minRelayFee = this._nbXplorerDashboard.Get(network.CryptoCode).Status.BitcoinStatus?.MinRelayTxFee ??
                               new FeeRate(1.0m);
-            if (request.FeeRate is null)
-            {
-                try
-                {
-                    var feeRate = await explorerClient.GetFeeRateAsync(1);
-                    request.FeeRate = feeRate.FeeRate;
-                }
-                catch (NBXplorerException e)
-                {                    
-                    ModelState.AddModelError(nameof(request.FeeRate),
-                        $"The fee rate could not be determined automatically because: {e.Error.Message}");
-                }
-            }
-            else if (request.FeeRate < minRelayFee)
+            if (request.FeeRate != null && request.FeeRate < minRelayFee)
             {
                 ModelState.AddModelError(nameof(request.FeeRate),
                     "The fee rate specified is lower than the current minimum relay fee");

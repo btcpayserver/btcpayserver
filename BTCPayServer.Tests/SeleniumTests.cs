@@ -579,9 +579,10 @@ namespace BTCPayServer.Tests
                     var x = store.GetSupportedPaymentMethods(s.Server.NetworkProvider)
                         .OfType<DerivationSchemeSettings>()
                         .Single(settings => settings.PaymentId.CryptoCode == walletId.CryptoCode);
+                    var wallet = s.Server.PayTester.GetService<BTCPayWalletProvider>().GetWallet(walletId.CryptoCode);
+                    wallet.InvalidateCache(x.AccountDerivation);
                     Assert.Contains(
-                        await s.Server.PayTester.GetService<BTCPayWalletProvider>().GetWallet(walletId.CryptoCode)
-                            .GetUnspentCoins(x.AccountDerivation),
+                        await wallet.GetUnspentCoins(x.AccountDerivation),
                         coin => coin.OutPoint == spentOutpoint);
                 });
                 await s.Server.ExplorerNode.GenerateAsync(1);

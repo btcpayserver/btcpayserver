@@ -130,5 +130,10 @@ namespace BTCPayServer.Plugins
         {
             PluginManager.CancelCommands(_dataDirectories.Value.PluginDir, plugin);
         }
+
+        public string[] GetDisabledPlugins()
+        {
+            return PluginManager.GetDisabledPlugins(_dataDirectories.Value.PluginDir);
+        }
     }
 }

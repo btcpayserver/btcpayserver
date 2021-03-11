@@ -94,7 +94,15 @@
     .version-switch .nav-link { display: inline; }
     .version-switch .nav-link.active { display: none; }
 </style>
-
+@if (Model.Disabled.Any())
+{
+    <div class="alert alert-danger mb-5">
+        Some plugins were disabled due to fatal errors. They may be incompatible with this version of BTCPay Server.
+       <button class="btn btn-danger" data-toggle="collapse" data-target="#disabled-plugins">
+                    View disabled plugins
+                </button>
+    </div>
+}
 @if (Model.Commands.Any())
 {
     <div class="alert alert-info mb-5">
@@ -339,6 +347,36 @@
                                         <span class="my-2 mr-3">@extComm.Key</span>
                                         <form asp-action="CancelPluginCommands" asp-route-plugin="@extComm.Key">
                                             <button type="submit" class="btn btn-outline-secondary">Cancel pending @extComm.Last().command</button>
+                                        </form>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+@if (Model.Disabled.Any())
+{
+    <div class="mb-4">
+        <button class="btn btn-link text-secondary mb-2" type="button" data-toggle="collapse" data-target="#disabled-plugins">
+            Disabled plugins
+        </button>
+        <div class="row collapse" id="disabled-plugins">
+            <div class="col col-12 col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Disabled plugins</h4>
+                        <ul class="list-group list-group-flush">
+                            @foreach (var d in Model.Disabled)
+                            {
+                                <li class="list-group-item px-0">
+                                    <div class="d-flex flex-wrap align-items-center justify-content-between">
+                                        <span class="my-2 mr-3">@d</span>
+                                        <form asp-action="UnInstallPlugin" asp-route-plugin="@d">
+                                            <button type="submit" class="btn btn-outline-secondary">Uninstall</button>
                                         </form>
                                     </div>
                                 </li>

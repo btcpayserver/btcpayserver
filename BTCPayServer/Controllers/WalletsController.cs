@@ -477,9 +477,7 @@ namespace BTCPayServer.Controllers
                     })
                     .ToArray();
             var balance = _walletProvider.GetWallet(network).GetBalance(paymentMethod.AccountDerivation);
-            model.NBXSeedAvailable = await CanUseHotWallet() && !string.IsNullOrEmpty(await ExplorerClientProvider.GetExplorerClient(network)
-                .GetMetadataAsync<string>(GetDerivationSchemeSettings(walletId).AccountDerivation,
-                    WellknownMetadataKeys.MasterHDKey));
+            model.NBXSeedAvailable = await GetSeed(walletId, network) != null;
             model.CurrentBalance = await balance;
 
             await Task.WhenAll(recommendedFees);
@@ -512,6 +510,15 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
+        private async Task<string> GetSeed(WalletId walletId, BTCPayNetwork network)
+        {
+            return await CanUseHotWallet() &&
+                    GetDerivationSchemeSettings(walletId) is DerivationSchemeSettings s &&
+                    s.IsHotWallet &&
+                    ExplorerClientProvider.GetExplorerClient(network) is ExplorerClient client &&
+                    await client.GetMetadataAsync<string>(s.AccountDerivation, WellknownMetadataKeys.MasterHDKey) is string seed &&
+                    !string.IsNullOrEmpty(seed) ? seed : null;
+        }
 
         [HttpPost]
         [Route("{walletId}/send")]
@@ -528,9 +535,7 @@ namespace BTCPayServer.Controllers
             if (network == null || network.ReadonlyWallet)
                 return NotFound();
             vm.SupportRBF = network.SupportRBF;
-            vm.NBXSeedAvailable = await CanUseHotWallet() && !string.IsNullOrEmpty(await ExplorerClientProvider.GetExplorerClient(network)
-                .GetMetadataAsync<string>(GetDerivationSchemeSettings(walletId).AccountDerivation,
-                    WellknownMetadataKeys.MasterHDKey, cancellation));
+            vm.NBXSeedAvailable = await GetSeed(walletId, network) != null;
             if (!string.IsNullOrEmpty(bip21))
             {
                 LoadFromBIP21(vm, bip21, network);
@@ -1150,18 +1155,7 @@ namespace BTCPayServer.Controllers
             }
             else if (command == "view-seed" && await CanUseHotWallet())
             {
-                var seed = await ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode)
-                    .GetMetadataAsync<string>(derivationScheme.AccountDerivation,
-                        WellknownMetadataKeys.Mnemonic, cancellationToken);
-                if (string.IsNullOrEmpty(seed))
-                {
-                    TempData.SetStatusMessageModel(new StatusMessageModel()
-                    {
-                        Severity = StatusMessageModel.StatusSeverity.Error,
-                        Message = "The seed was not found"
-                    });
-                }
-                else
+                if (await GetSeed(walletId, derivationScheme.Network) is string seed)
                 {
                     var recoveryVm = new RecoverySeedBackupViewModel()
                     {
@@ -1172,6 +1166,14 @@ namespace BTCPayServer.Controllers
                         ReturnUrl = Url.Action(nameof(WalletSettings), new { walletId })
                     };
                     return this.RedirectToRecoverySeedBackup(recoveryVm);
+                }
+                else
+                {
+                    TempData.SetStatusMessageModel(new StatusMessageModel()
+                    {
+                        Severity = StatusMessageModel.StatusSeverity.Error,
+                        Message = "The seed was not found"
+                    });
                 }
 
                 return RedirectToAction(nameof(WalletSettings));

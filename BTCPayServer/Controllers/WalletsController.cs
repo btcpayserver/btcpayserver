@@ -1134,12 +1134,15 @@ namespace BTCPayServer.Controllers
             }
             else if (command == "view-seed" && await CanUseHotWallet())
             {
-                if (await GetSeed(walletId, derivationScheme.Network) is string seed)
+                if (await GetSeed(walletId, derivationScheme.Network) != null)
                 {
+                    var mnemonic = await ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode)
+                    .GetMetadataAsync<string>(derivationScheme.AccountDerivation,
+                        WellknownMetadataKeys.Mnemonic, cancellationToken);
                     var recoveryVm = new RecoverySeedBackupViewModel()
                     {
                         CryptoCode = walletId.CryptoCode,
-                        Mnemonic = seed,
+                        Mnemonic = mnemonic,
                         IsStored = true,
                         RequireConfirm = false,
                         ReturnUrl = Url.Action(nameof(WalletSettings), new { walletId })

@@ -388,7 +388,7 @@ namespace BTCPayServer.Controllers.GreenField
             var signingKeyStr = await explorerClient
                 .GetMetadataAsync<string>(derivationScheme.AccountDerivation,
                     WellknownMetadataKeys.MasterHDKey);
-            if (signingKeyStr is null)
+            if (!derivationScheme.IsHotWallet || signingKeyStr is null)
             {
                 return this.CreateAPIError("not-available",
                     $"{cryptoCode} sending services are not currently available");
@@ -403,7 +403,7 @@ namespace BTCPayServer.Controllers.GreenField
             var accountKey = signingKey.Derive(rootedKeyPath.KeyPath);
 
             var changed = psbt.PSBT.PSBTChanged(() => psbt.PSBT.SignAll(derivationScheme.AccountDerivation, accountKey,
-                rootedKeyPath, new SigningOptions() {EnforceLowR = !(signingContext?.EnforceLowR is false)}));
+                rootedKeyPath, new SigningOptions() {EnforceLowR = signingContext?.EnforceLowR is bool v ? v : psbt.Suggestions.ShouldEnforceLowR }));
 
             if (!changed)
             {
@@ -463,17 +463,6 @@ namespace BTCPayServer.Controllers.GreenField
         private async Task<(bool HotWallet, bool RPCImport)> CanUseHotWallet()
         {
             return await _authorizationService.CanUseHotWallet(_cssThemeManager.Policies, User);
-        }
-
-        private async Task<ExtKey> GetWallet(DerivationSchemeSettings derivationScheme)
-        {
-            if (!derivationScheme.IsHotWallet)
-                return null;
-
-            var result = await _explorerClientProvider.GetExplorerClient(derivationScheme.Network.CryptoCode)
-                .GetMetadataAsync<string>(derivationScheme.AccountDerivation,
-                    WellknownMetadataKeys.MasterHDKey);
-            return string.IsNullOrEmpty(result) ? null : ExtKey.Parse(result, derivationScheme.Network.NBitcoinNetwork);
         }
 
         private bool IsInvalidWalletRequest(string cryptoCode, out BTCPayNetwork network,

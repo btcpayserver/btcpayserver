@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Services.Labels;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -12,7 +13,7 @@ namespace BTCPayServer.Data
     {
         public string Comment { get; set; } = string.Empty;
         [JsonIgnore]
-        public Dictionary<string, Label> Labels { get; set; } = new Dictionary<string, Label>();
+        public Dictionary<string, LabelData> Labels { get; set; } = new Dictionary<string, LabelData>();
     }
     public static class WalletTransactionDataExtensions
     {

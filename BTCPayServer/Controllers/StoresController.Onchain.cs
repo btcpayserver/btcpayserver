@@ -579,13 +579,8 @@ namespace BTCPayServer.Controllers
 
         private async Task<(bool HotWallet, bool RPCImport)> CanUseHotWallet()
         {
-            var isAdmin = (await _authorizationService.AuthorizeAsync(User, Policies.CanModifyServerSettings))
-                .Succeeded;
-            if (isAdmin)
-                return (true, true);
             var policies = await _settingsRepository.GetSettingAsync<PoliciesSettings>();
-            var hotWallet = policies?.AllowHotWalletForAll is true;
-            return (hotWallet, hotWallet && policies.AllowHotWalletRPCImportForAll is true);
+            return await _authorizationService.CanUseHotWallet(policies, User);
         }
 
         private async Task<string> ReadAllText(IFormFile file)

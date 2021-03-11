@@ -183,6 +183,7 @@ namespace BTCPayServer.Tests
             {
                 ScriptPubKeyType = segwit,
                 SavePrivateKeys = importKeysToNBX,
+                ImportKeysToRPC = importKeysToNBX
             });
             await store.UpdateWallet(
                 new WalletSetupViewModel

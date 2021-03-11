@@ -24,30 +24,14 @@ namespace BTCPayServer
             });
         }
 
-        public override GetTransactionsResponse FilterValidTransactions(GetTransactionsResponse response)
+        public override List<TransactionInformation> FilterValidTransactions(List<TransactionInformation> transactionInformationSet)
         {
-            TransactionInformationSet Filter(TransactionInformationSet transactionInformationSet)
-            {
-                return new TransactionInformationSet()
-                {
-                    Transactions =
-                        transactionInformationSet.Transactions.FindAll(information =>
-                            information.Outputs.Any(output =>
-                                output.Value is AssetMoney assetMoney && assetMoney.AssetId == AssetId) ||
-                            information.Inputs.Any(output =>
-                                output.Value is AssetMoney assetMoney && assetMoney.AssetId == AssetId))
-                };
-            }
-
-            return new GetTransactionsResponse()
-            {
-                Height = response.Height,
-                ConfirmedTransactions = Filter(response.ConfirmedTransactions),
-                ReplacedTransactions = Filter(response.ReplacedTransactions),
-                UnconfirmedTransactions = Filter(response.UnconfirmedTransactions)
-            };
+            return transactionInformationSet.FindAll(information =>
+                information.Outputs.Any(output =>
+                    output.Value is AssetMoney assetMoney && assetMoney.AssetId == AssetId) ||
+                information.Inputs.Any(output =>
+                    output.Value is AssetMoney assetMoney && assetMoney.AssetId == AssetId));
         }
-
 
         public override string GenerateBIP21(string cryptoInfoAddress, Money cryptoInfoDue)
         {

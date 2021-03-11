@@ -1560,9 +1560,6 @@ namespace BTCPayServer.Tests
                 tx = await client.CreateOnChainTransactionButDoNotBroadcast(walletId.StoreId, walletId.CryptoCode,
                     createTxRequest, tester.ExplorerClient.Network.NBitcoinNetwork);
             });
-
-
-            createTxRequest.FeeRate = null;            
             
             createTxRequest.Destinations[0].Amount = 0.001m;
             createTxRequest.Destinations[0].Destination = nodeAddress.ToString();

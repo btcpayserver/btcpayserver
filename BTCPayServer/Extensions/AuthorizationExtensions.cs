@@ -15,19 +15,8 @@ namespace BTCPayServer
             PoliciesSettings policiesSettings,
             ClaimsPrincipal user)
         {
-            var isAdmin = (await authorizationService.AuthorizeAsync(user, Policies.CanModifyServerSettings))
-                .Succeeded;
-            switch (isAdmin)
-            {
-                case false when user.Identity.AuthenticationType == GreenFieldConstants.AuthenticationType && user.IsInRole(Roles.ServerAdmin):
-                    return (true, true);
-                case true:
-                    return (true, true);
-            }
-
-            var policies = policiesSettings;
-            var hotWallet = policies?.AllowHotWalletForAll is true;
-            return (hotWallet, hotWallet && policies?.AllowHotWalletRPCImportForAll is true);
+            return (await authorizationService.AuthorizeAsync(user, Policies.CanModifyServerSettings))
+                .Succeeded ? (true, true) : (policiesSettings?.AllowHotWalletForAll is true, policiesSettings?.AllowHotWalletRPCImportForAll is true);
         }
     }
 }

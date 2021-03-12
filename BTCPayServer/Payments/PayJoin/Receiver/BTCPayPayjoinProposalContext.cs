@@ -1,5 +1,5 @@
-using BIP78.Receiver;
-using BIP78.Sender;
+using BTCPayServer.BIP78.Receiver;
+using BTCPayServer.BIP78.Sender;
 using BTCPayServer.Logging;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services.Invoices;

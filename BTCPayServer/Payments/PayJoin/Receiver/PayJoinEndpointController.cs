@@ -16,7 +16,6 @@ using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
-using BIP78.Sender;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBXplorer.Models;

@@ -55,6 +55,7 @@ namespace BTCPayServer.Data
         public DbSet<StoreWebhookData> StoreWebhooks { get; set; }
         public DbSet<StoreData> Stores { get; set; }
         public DbSet<U2FDevice> U2FDevices { get; set; }
+        public DbSet<Fido2Credential> Fido2Credentials { get; set; }
         public DbSet<UserStore> UserStore { get; set; }
         public DbSet<WalletData> Wallets { get; set; }
         public DbSet<WalletTransactionData> WalletTransactions { get; set; }
@@ -99,6 +100,7 @@ namespace BTCPayServer.Data
             StoreWebhookData.OnModelCreating(builder);
             //StoreData.OnModelCreating(builder);
             U2FDevice.OnModelCreating(builder);
+            Fido2Credential.OnModelCreating(builder);
             Data.UserStore.OnModelCreating(builder);
             //WalletData.OnModelCreating(builder);
             WalletTransactionData.OnModelCreating(builder);

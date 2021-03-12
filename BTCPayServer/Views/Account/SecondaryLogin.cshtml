@@ -5,15 +5,15 @@
 
 <section>
     <div class="container">
-        @if (Model.LoginWith2FaViewModel != null && Model.LoginWithU2FViewModel != null)
+        @if (Model.LoginWith2FaViewModel != null && Model.LoginWithU2FViewModel != null && Model.LoginWithFido2ViewModel != null)
         {
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
         }
-        else if (Model.LoginWith2FaViewModel == null && Model.LoginWithU2FViewModel == null)
+        else if (Model.LoginWith2FaViewModel == null && Model.LoginWithU2FViewModel == null && Model.LoginWithFido2ViewModel == null)
         {
             <div class="row">
                 <div class="col-lg-12 section-heading">
-                    <h2 class="bg-danger">Both 2FA and U2F Authentication Methods are not available. Please go to the https endpoint</h2>
+                    <h2 class="bg-danger">Both 2FA and U2F/FIDO2 Authentication Methods are not available. Please go to the https endpoint</h2>
                     <hr class="danger">
                 </div>
             </div>
@@ -31,6 +31,12 @@
             {
                 <div class="col-sm-12 col-md-6">
                     <partial name="LoginWithU2F" model="@Model.LoginWithU2FViewModel"/>
+                </div>
+            }
+            @if (Model.LoginWithFido2ViewModel != null)
+            {
+                <div class="col-sm-12 col-md-6">
+                    <partial name="LoginWithFido2" model="@Model.LoginWithFido2ViewModel"/>
                 </div>
             }
         </div>

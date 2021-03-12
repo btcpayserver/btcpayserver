@@ -1,0 +1,45 @@
+@using ExchangeSharp
+@model BTCPayServer.U2F.Models.Fido2AuthenticationViewModel
+@{
+    ViewData.SetActivePageAndTitle(ManageNavPages.Fido2, "Registered FIDO2 Credentials");
+}
+
+<partial name="_StatusMessage"/>
+
+<table class="table table-lg mb-4">
+    <thead>
+    <tr>
+        <th>Name</th>
+        <th class="text-right">Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var device in Model.Credentials)
+    {
+        <tr>
+            <td>@device.Name</td>
+            <td class="text-right">
+                <a asp-action="Remove" asp-route-id="@device.Id">Remove</a>
+            </td>
+        </tr>
+    }
+    @if (!Model.Credentials.Any())
+    {
+        <tr>
+            <td colspan="2" class="text-center h5 py-2">
+                No registered credentials
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+<form asp-action="Create" method="get" class="form-inline">
+    <div class="form-group">
+        
+        <input type="text" class="form-control" name="Name" placeholder="New Credential Name"/>
+        <button type="submit" class="btn btn-primary ml-2">
+            <span class="fa fa-plus"></span>
+            Add New Credential
+        </button>
+    </div>
+</form>

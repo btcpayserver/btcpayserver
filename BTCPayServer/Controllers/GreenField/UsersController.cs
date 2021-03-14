@@ -198,7 +198,7 @@ namespace BTCPayServer.Controllers.GreenField
 
             var roles = await _userManager.GetRolesAsync(user);
             // We can safely delete the user if it's not an admin user
-            if (!IsAdmin(roles))
+            if (!_userService.IsRoleAdmin(roles))
             {
                 await _userService.DeleteUserAndAssociatedData(user);
 
@@ -218,8 +218,6 @@ namespace BTCPayServer.Controllers.GreenField
             return Ok();
         }
 
-        
-
         private async Task<Boolean> IsAdmin() 
         {
             var anyAdmin = (await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin)).Any();
@@ -233,11 +231,6 @@ namespace BTCPayServer.Controllers.GreenField
             return (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanModifyServerSettings))).Succeeded
                     && (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.Unrestricted))).Succeeded
                     && isAuth;
-        }
-
-        private static bool IsAdmin(IList<string> roles)
-        {
-            return roles.Contains(Roles.ServerAdmin, StringComparer.Ordinal);
         }
 
         private async Task<ApplicationUserData> FromModel(ApplicationUser data)

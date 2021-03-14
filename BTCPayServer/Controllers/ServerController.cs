@@ -46,6 +46,7 @@ namespace BTCPayServer.Controllers
     public partial class ServerController : Controller
     {
         private readonly UserManager<ApplicationUser> _UserManager;
+        private readonly UserService _userService;
         readonly SettingsRepository _SettingsRepository;
         private readonly NBXplorerDashboard _dashBoard;
         private readonly StoreRepository _StoreRepository;
@@ -61,7 +62,9 @@ namespace BTCPayServer.Controllers
         private readonly FileService _FileService;
         private readonly IEnumerable<IStorageProviderService> _StorageProviderServices;
 
-        public ServerController(UserManager<ApplicationUser> userManager,
+        public ServerController(
+            UserManager<ApplicationUser> userManager,
+            UserService userService,
             StoredFileRepository storedFileRepository,
             FileService fileService,
             IEnumerable<IStorageProviderService> storageProviderServices,
@@ -83,6 +86,7 @@ namespace BTCPayServer.Controllers
             _FileService = fileService;
             _StorageProviderServices = storageProviderServices;
             _UserManager = userManager;
+            _userService = userService;
             _SettingsRepository = settingsRepository;
             _dashBoard = dashBoard;
             HttpClientFactory = httpClientFactory;

@@ -40,6 +40,7 @@ namespace BTCPayServer.Controllers.GreenField
         private readonly FileService _fileService;
         private readonly StoredFileRepository _storedFileRepository;
         private readonly StoreRepository _storeRepository;
+        private readonly UserService _userService;
 
         public UsersController(UserManager<ApplicationUser> userManager, 
             RoleManager<IdentityRole> roleManager, 
@@ -52,7 +53,8 @@ namespace BTCPayServer.Controllers.GreenField
             CssThemeManager themeManager,
             FileService fileService,
             StoredFileRepository storedFileRepository,
-            StoreRepository storeRepository)
+            StoreRepository storeRepository,
+            UserService userService)
         {
             _userManager = userManager;
             _roleManager = roleManager;
@@ -66,6 +68,7 @@ namespace BTCPayServer.Controllers.GreenField
             _fileService = fileService;
             _storedFileRepository = storedFileRepository;
             _storeRepository = storeRepository;
+            _userService = userService;
         }
 
         [Authorize(Policy = Policies.CanViewProfile, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -197,7 +200,7 @@ namespace BTCPayServer.Controllers.GreenField
             // We can safely delete the user if it's not an admin user
             if (!IsAdmin(roles))
             {
-                await DeleteUserAndAssociatedData(userId, user);
+                await _userService.DeleteUserAndAssociatedData(user);
 
                 return Ok();
             }
@@ -210,34 +213,26 @@ namespace BTCPayServer.Controllers.GreenField
             }
 
             // Ok, this user is an admin but there are other admins as well so safe to delete
-            await DeleteUserAndAssociatedData(userId, user);
+            await _userService.DeleteUserAndAssociatedData(user);
 
             return Ok();
         }
 
-        private async Task DeleteUserAndAssociatedData(string userId, ApplicationUser user) 
-        {
-            var files = await _storedFileRepository.GetFiles(new StoredFileRepository.FilesQuery()
-            {
-                UserIds = new[] { userId },
-            });
-
-            await Task.WhenAll(files.Select(file => _fileService.RemoveFile(file.Id, userId)));
-
-            await _userManager.DeleteAsync(user);
-            await _storeRepository.CleanUnreachableStores();
-        }
+        
 
         private async Task<Boolean> IsAdmin() 
         {
             var anyAdmin = (await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin)).Any();
-            var isAuth = User.Identity.AuthenticationType == GreenFieldConstants.AuthenticationType;
-            var isAdmin = anyAdmin ? (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanModifyServerSettings))).Succeeded
-                    && (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.Unrestricted))).Succeeded
-                    && isAuth
-                : true;
+            // You are an admin if there are no other admins
+            if (!anyAdmin) 
+            {
+                return true;
+            }
 
-            return isAdmin;
+            var isAuth = User.Identity.AuthenticationType == GreenFieldConstants.AuthenticationType;
+            return (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanModifyServerSettings))).Succeeded
+                    && (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.Unrestricted))).Succeeded
+                    && isAuth;
         }
 
         private static bool IsAdmin(IList<string> roles)

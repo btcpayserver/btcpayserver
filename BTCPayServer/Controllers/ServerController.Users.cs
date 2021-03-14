@@ -236,15 +236,8 @@ namespace BTCPayServer.Controllers
             if (user == null)
                 return NotFound();
 
-            var files = await _StoredFileRepository.GetFiles(new StoredFileRepository.FilesQuery()
-            {
-                UserIds = new[] { userId },
-            });
+            await _userService.DeleteUserAndAssociatedData(user);
 
-            await Task.WhenAll(files.Select(file => _FileService.RemoveFile(file.Id, userId)));
-
-            await _UserManager.DeleteAsync(user);
-            await _StoreRepository.CleanUnreachableStores();
             TempData[WellKnownTempData.SuccessMessage] = "User deleted";
             return RedirectToAction(nameof(ListUsers));
         }

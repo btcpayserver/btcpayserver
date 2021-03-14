@@ -1,12 +1,13 @@
 ﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
-
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BTCPayServer.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20210313141415_Fido2Credentials")]
+    [Migration("20210314092253_Fido2Credentials")]
     public partial class Fido2Credentials : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -17,14 +18,9 @@ namespace BTCPayServer.Migrations
                 {
                     Id = table.Column<string>(nullable: false),
                     Name = table.Column<string>(nullable: true),
-                    DescriptorBlob = table.Column<byte[]>(nullable: true),
-                    PublicKey = table.Column<byte[]>(nullable: true),
-                    UserHandle = table.Column<byte[]>(nullable: true),
-                    SignatureCounter = table.Column<uint>(nullable: false),
-                    CredType = table.Column<string>(nullable: true),
-                    RegDate = table.Column<DateTimeOffset>(nullable: false),
-                    AaGuid = table.Column<string>(nullable: true),
-                    ApplicationUserId = table.Column<string>(nullable: true)
+                    ApplicationUserId = table.Column<string>(nullable: true),
+                    Blob = table.Column<byte[]>(nullable: true),
+                    Type = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
                 {

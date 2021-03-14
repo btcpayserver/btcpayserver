@@ -9,15 +9,16 @@ namespace BTCPayServer.Data
         public string Name { get; set; }
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public string Id { get; set; }
-        public byte[] DescriptorBlob { get; set; }
-        public byte[] PublicKey { get; set; }
-        public byte[] UserHandle { get; set; }
-        public uint SignatureCounter { get; set; }
-        public string CredType { get; set; }
-        public DateTimeOffset RegDate { get; set; }
-        public string AaGuid { get; set; }
-        
-        
+
+        public string ApplicationUserId { get; set; }
+
+        public byte[] Blob { get; set; }
+        public CredentialType Type { get; set; }
+        public enum CredentialType
+        {
+            FIDO2,
+            U2F
+        }
         public static void OnModelCreating(ModelBuilder builder)
         {
             builder.Entity<Fido2Credential>()
@@ -28,7 +29,5 @@ namespace BTCPayServer.Data
         }
 
         public ApplicationUser ApplicationUser { get; set; }
-
-        public string ApplicationUserId { get; set; }
     }
 }

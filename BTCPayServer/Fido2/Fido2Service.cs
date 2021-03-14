@@ -40,7 +40,8 @@ namespace BTCPayServer.Fido2
                 // 2. Get user existing keys by username
                 var existingKeys =
                     user.Fido2Credentials
-                        .Select(c => c.GetDescriptor()).ToList();
+                        .Where(credential => credential.Type == Fido2Credential.CredentialType.FIDO2)
+                        .Select(c => c.GetBlob().Descriptor).ToList();
 
                 // 3. Create options
                 var authenticatorSelection = new AuthenticatorSelection
@@ -80,25 +81,25 @@ namespace BTCPayServer.Fido2
             }
             
 
-                // 2. We want to allow users to have the same key (eg sharing a PC or device in a company)  
-                IsCredentialIdUniqueToUserAsyncDelegate callback = (IsCredentialIdUniqueToUserParams args) => Task.FromResult(true);
-
                 // 2. Verify and make the credentials
-                var success = await _fido2.MakeNewCredentialAsync(attestationResponse, options, callback);
+                var success = await _fido2.MakeNewCredentialAsync(attestationResponse, options, args => Task.FromResult(true));
 
                 // 3. Store the credentials in db
                 var newCredential = new Fido2Credential()
                 {
-                    Name = name,
+                    Name = name,                    
+                    ApplicationUserId = userId
+                };
+                
+                newCredential.SetBlob(new Fido2CredentialBlob()
+                {
+                    Descriptor = new PublicKeyCredentialDescriptor(success.Result.CredentialId),
                     PublicKey = success.Result.PublicKey,
                     UserHandle = success.Result.User.Id,
                     SignatureCounter = success.Result.Counter,
                     CredType = success.Result.CredType,
-                    RegDate = DateTime.Now,
                     AaGuid = success.Result.Aaguid.ToString(),
-                    ApplicationUserId = userId
-                };
-                newCredential.SetDescriptor(new PublicKeyCredentialDescriptor(success.Result.CredentialId));
+                });
 
                 await dbContext.Fido2Credentials.AddAsync(newCredential);
                 await dbContext.SaveChangesAsync();
@@ -144,7 +145,10 @@ namespace BTCPayServer.Fido2
             {
                 return null;
             }
-            var existingCredentials = user.Fido2Credentials.Select(c => c.GetDescriptor()).ToList();
+            var existingCredentials = user.Fido2Credentials
+                .Where(credential => credential.Type == Fido2Credential.CredentialType.FIDO2)
+                .Select(c => c.GetBlob().Descriptor)
+                .ToList();
             var exts = new AuthenticationExtensionsClientInputs()
             { 
                 SimpleTransactionAuthorization = "FIDO", 
@@ -177,19 +181,22 @@ namespace BTCPayServer.Fido2
                 return false;
             }
 
-            var credential = user.Fido2Credentials.FirstOrDefault(fido2Credential => fido2Credential.GetDescriptor().Id.SequenceEqual(response.Id));
-            if (credential is null)
+            var credential = user.Fido2Credentials
+                .Where(fido2Credential => fido2Credential.Type is Fido2Credential.CredentialType.FIDO2)
+                .Select(fido2Credential => (fido2Credential, fido2Credential.GetBlob()))
+                .FirstOrDefault(fido2Credential => fido2Credential.Item2.Descriptor.Id.SequenceEqual(response.Id));
+            if (credential.Item2 is null)
             {
                 return false;
             }
-            
-            var storedCounter = credential.SignatureCounter;
 
             // 5. Make the assertion
-            var res = await _fido2.MakeAssertionAsync(response, options, credential.PublicKey, storedCounter, x => Task.FromResult(true));
+            var res = await _fido2.MakeAssertionAsync(response, options, credential.Item2.PublicKey,
+                credential.Item2.SignatureCounter, x => Task.FromResult(true));
 
             // 6. Store the updated counter
-            credential.SignatureCounter =  res.Counter;
+            credential.Item2.SignatureCounter =  res.Counter;
+            credential.fido2Credential.SetBlob(credential.Item2);
             await dbContext.SaveChangesAsync();
             LoginStore.Remove(userId, out _);
 

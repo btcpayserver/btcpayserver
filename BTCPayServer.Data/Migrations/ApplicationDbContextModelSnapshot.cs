@@ -176,32 +176,17 @@ namespace BTCPayServer.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("AaGuid")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("ApplicationUserId")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("CredType")
-                        .HasColumnType("TEXT");
-
-                    b.Property<byte[]>("DescriptorBlob")
+                    b.Property<byte[]>("Blob")
                         .HasColumnType("BLOB");
 
                     b.Property<string>("Name")
                         .HasColumnType("TEXT");
 
-                    b.Property<byte[]>("PublicKey")
-                        .HasColumnType("BLOB");
-
-                    b.Property<DateTimeOffset>("RegDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<uint>("SignatureCounter")
+                    b.Property<int>("Type")
                         .HasColumnType("INTEGER");
-
-                    b.Property<byte[]>("UserHandle")
-                        .HasColumnType("BLOB");
 
                     b.HasKey("Id");
 

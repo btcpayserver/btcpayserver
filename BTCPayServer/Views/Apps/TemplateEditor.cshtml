@@ -31,7 +31,6 @@
                     <div v-if="anyImages" class="card-img-top border-bottom" v-bind:style="getImage(item)"></div>
                     <div class="card-body">
                         <h6 class="card-title" v-html="item.title"></h6>
-                        <p v-text="item.description" style="white-space: pre;"></p>
                         <button type="button" class="btn btn-primary" v-on:click="editItem(index)">Edit</button>
                         <button type="button" class="btn btn-danger" v-on:click="removeItem(index)">
                             <i class="fa fa-trash"></i>

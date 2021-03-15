@@ -214,6 +214,9 @@ namespace BTCPayServer.Tests
                 Driver.FindElement(By.Id("ConnectionString")).SendKeys(connectionString);
             }
 
+            var enabled = Driver.FindElement(By.Id("Enabled"));
+            if (!enabled.Selected) enabled.Click();
+
             Driver.FindElement(By.Id("test")).Click();
             Assert.Contains("Connection to the Lightning node succeeded.", FindAlertMessage().Text);
 

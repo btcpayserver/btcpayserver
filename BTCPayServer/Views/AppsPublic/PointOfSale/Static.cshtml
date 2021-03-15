@@ -31,7 +31,7 @@
                         <h5 class="card-title">@item.Title</h5>
                         @if (!String.IsNullOrWhiteSpace(item.Description))
                         {
-                            <p class="card-text">@System.Net.WebUtility.HtmlDecode(item.Description)</p>
+                            <p class="card-text">@Safe.Raw(System.Net.WebUtility.HtmlDecode(item.Description))</p>
                         }
                     </div>
                     <div class="card-footer bg-transparent border-0">

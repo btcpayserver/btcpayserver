@@ -31,6 +31,7 @@
                     <div v-if="anyImages" class="card-img-top border-bottom" v-bind:style="getImage(item)"></div>
                     <div class="card-body">
                         <h6 class="card-title" v-html="item.title"></h6>
+                        <p v-text="item.description" style="white-space: pre;"></p>
                         <button type="button" class="btn btn-primary" v-on:click="editItem(index)">Edit</button>
                         <button type="button" class="btn btn-danger" v-on:click="removeItem(index)">
                             <i class="fa fa-trash"></i>
@@ -211,6 +212,9 @@ $(function() {
                         }
                         if (productProperty.indexOf('description:') !== -1) {
                             description =productProperty.replace('description:', '').trim();
+                            if (description && description.startsWith('"') && description.endsWith('"')){
+                                description = description.substr(1, description.length-2);
+                            }
                         }
                         if (productProperty.indexOf('image:') !== -1) {
                             image = productProperty.replace('image:', '').trim();
@@ -236,7 +240,7 @@ $(function() {
                             title: title,
                             price: price,
                             image: image || null,
-                            description: description || '',
+                            description:  description? description.replaceAll("<br/>", "\n") : '',
                             custom: custom === "true",
                             buyButtonText: buyButtonText,
                             inventory: isNaN(inventory)? null: inventory,
@@ -266,7 +270,7 @@ $(function() {
                         '  title: ' + title + '\n';
 
                         if (description) {
-                            template += '  description: ' + description + '\n';
+                            template += '  description: "' + description.replaceAll("\n", "<br/>") + '"\n';
                         }
                         if (image) {
                             template += '  image: ' + image + '\n';

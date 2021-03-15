@@ -11,6 +11,7 @@ using BTCPayServer.Events;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.PayJoin;
+using BTCPayServer.Payments.PayJoin.Receiver;
 using BTCPayServer.Payments.PayJoin.Sender;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;

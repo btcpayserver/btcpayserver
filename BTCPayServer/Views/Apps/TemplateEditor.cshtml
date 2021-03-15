@@ -211,9 +211,10 @@ $(function() {
                         }
                         if (productProperty.indexOf('description:') !== -1) {
                             description =productProperty.replace('description:', '').trim();
-                            if (description && description.startsWith('"') && description.endsWith('"')){
+                            if (description.startsWith('"') && description.endsWith('"')){
                                 description = description.substr(1, description.length-2);
                             }
+                            description.replaceAll("<br/>", "\n").replaceAll('\"', '"')
                         }
                         if (productProperty.indexOf('image:') !== -1) {
                             image = productProperty.replace('image:', '').trim();
@@ -239,7 +240,7 @@ $(function() {
                             title: title,
                             price: price,
                             image: image || null,
-                            description:  description? description.replaceAll("<br/>", "\n") : '',
+                            description:  description || '',
                             custom: custom === "true",
                             buyButtonText: buyButtonText,
                             inventory: isNaN(inventory)? null: inventory,
@@ -269,7 +270,7 @@ $(function() {
                         '  title: ' + title + '\n';
 
                         if (description) {
-                            template += '  description: "' + description.replaceAll("\n", "<br/>") + '"\n';
+                            template += '  description: "' + description.replaceAll("\n", "<br/>").replaceAll('"', '\\"') + '"\n';
                         }
                         if (image) {
                             template += '  image: ' + image + '\n';

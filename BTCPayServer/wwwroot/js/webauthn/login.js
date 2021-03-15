@@ -1,5 +1,5 @@
 
-if (detectFIDOSupport()){
+if (detectFIDOSupport() && makeAssertionOptions){
 
     login(makeAssertionOptions);
 }

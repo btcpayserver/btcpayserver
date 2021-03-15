@@ -1,7 +1,6 @@
 
-if (detectFIDOSupport()){
-
-   await  register(makeCredentialOptions);
+if (detectFIDOSupport() && makeCredentialOptions){
+   register(makeCredentialOptions);
 }
 
 async function register(makeCredentialOptions) {

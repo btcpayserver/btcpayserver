@@ -3,7 +3,8 @@
     ViewData.SetActivePageAndTitle(ManageNavPages.Fido2, "Register FIDO2 Credentials");
 }
 <form asp-action="CreateResponse" id="registerForm" >
-    <input type="hidden" name="data" id="data" />
+    <input type="hidden" name="data" id="data"  />
+    <input type="hidden" name="name" id="name" value="@(ViewData.ContainsKey("CredentialName")? ViewData["CredentialName"] : string.Empty)" />
 </form>
 <div class="row">
     <div class="col-lg-12 section-heading">

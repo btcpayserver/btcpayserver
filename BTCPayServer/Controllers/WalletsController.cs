@@ -895,7 +895,7 @@ namespace BTCPayServer.Controllers
             }
             else
             {
-                ModelState.AddModelError(nameof(viewModel.SeedOrKey), "The master fingerprint does not match the one set in your wallet settings. Probable cause are: wrong seed, wrong passphrase or wrong fingerprint in your wallet settings.");
+                ModelState.AddModelError(nameof(viewModel.SeedOrKey), "The master fingerprint does not match the one set in your wallet settings. Probable causes are: wrong seed, wrong passphrase or wrong fingerprint in your wallet settings.");
                 return View(nameof(SignWithSeed), viewModel);
             }
 
@@ -905,7 +905,7 @@ namespace BTCPayServer.Controllers
             }));
             if (!changed)
             {
-                ModelState.AddModelError(nameof(viewModel.SeedOrKey), "Impossible to sign the transaction. Probable cause: Incorrect account key path in wallet settings, PSBT already signed.");
+                ModelState.AddModelError(nameof(viewModel.SeedOrKey), "Impossible to sign the transaction. Probable causes: Incorrect account key path in wallet settings or PSBT already signed.");
                 return View(nameof(SignWithSeed), viewModel);
             }
             ModelState.Remove(nameof(viewModel.SigningContext.PSBT));

@@ -446,6 +446,11 @@
                         "type": "string",
                         "format": "decimal",
                         "description": "The current balance of the wallet"
+                    },
+                    "feeRate": {
+                        "type": "number",
+                        "format": "decimal",
+                        "description": "The fee rate (sats per byte) based on the wallet's configured recommended block confirmation target"
                     }
                 }
             },

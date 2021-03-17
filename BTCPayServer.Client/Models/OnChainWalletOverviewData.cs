@@ -1,4 +1,6 @@
 using BTCPayServer.JsonConverters;
+using NBitcoin;
+using NBitcoin.JsonConverters;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.Client.Models
@@ -8,5 +10,8 @@ namespace BTCPayServer.Client.Models
         
         [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal Balance { get; set; }
+
+        [JsonConverter(typeof(FeeRateJsonConverter))]
+        public FeeRate FeeRate { get; set; }
     }
 }

@@ -44,6 +44,7 @@ namespace BTCPayServer.Controllers.GreenField
         private readonly DelayedTransactionBroadcaster _delayedTransactionBroadcaster;
         private readonly EventAggregator _eventAggregator;
         private readonly WalletReceiveService _walletReceiveService;
+        private readonly IFeeProviderFactory _feeProviderFactory;
 
         public StoreOnChainWalletsController(
             IAuthorizationService authorizationService,
@@ -57,7 +58,8 @@ namespace BTCPayServer.Controllers.GreenField
             PayjoinClient payjoinClient,
             DelayedTransactionBroadcaster delayedTransactionBroadcaster,
             EventAggregator eventAggregator, 
-            WalletReceiveService walletReceiveService)
+            WalletReceiveService walletReceiveService,
+            IFeeProviderFactory feeProviderFactory)
         {
             _authorizationService = authorizationService;
             _btcPayWalletProvider = btcPayWalletProvider;
@@ -71,6 +73,7 @@ namespace BTCPayServer.Controllers.GreenField
             _delayedTransactionBroadcaster = delayedTransactionBroadcaster;
             _eventAggregator = eventAggregator;
             _walletReceiveService = walletReceiveService;
+            _feeProviderFactory = feeProviderFactory;
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -81,9 +84,12 @@ namespace BTCPayServer.Controllers.GreenField
                 out DerivationSchemeSettings derivationScheme, out IActionResult actionResult)) return actionResult;
 
             var wallet = _btcPayWalletProvider.GetWallet(network);
+            var feeRateTarget = Store.GetStoreBlob().RecommendedFeeBlockTarget;
             return Ok(new OnChainWalletOverviewData()
             {
-                Balance = await wallet.GetBalance(derivationScheme.AccountDerivation)
+                Balance = await wallet.GetBalance(derivationScheme.AccountDerivation),
+                FeeRate =  await _feeProviderFactory.CreateFeeProvider(network)
+                    .GetFeeRateAsync(feeRateTarget),
             });
         }
         

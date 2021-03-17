@@ -451,3 +451,8 @@ svg.icon-note {
 .notification:hover {
     background-color: var(--btcpay-body-bg);
 }
+
+[data-required]::after {
+    content: "*";
+    color: var(--btcpay-color-danger);
+}

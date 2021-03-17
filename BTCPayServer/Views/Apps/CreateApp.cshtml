@@ -15,16 +15,16 @@
                 <form asp-action="CreateApp">
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                     <div class="form-group">
-                        <label asp-for="Name" class="control-label"></label>*
-                        <input asp-for="Name" class="form-control" />
+                        <label asp-for="Name" class="control-label" data-required></label>
+                        <input asp-for="Name" class="form-control" required />
                         <span asp-validation-for="Name" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="SelectedAppType" class="control-label"></label>*
+                        <label asp-for="SelectedAppType" class="control-label" data-required></label>
                         <select asp-for="SelectedAppType" asp-items="Model.AppTypes" class="form-control"></select>
                     </div>
                     <div class="form-group">
-                        <label asp-for="SelectedStore" class="control-label"></label>*
+                        <label asp-for="SelectedStore" class="control-label" data-required></label>
                         <select asp-for="SelectedStore" asp-items="Model.Stores" class="form-control"></select>
                     </div>
                     <div class="form-group">

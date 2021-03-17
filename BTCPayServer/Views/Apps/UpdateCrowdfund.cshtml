@@ -27,8 +27,8 @@
                     <input type="hidden" asp-for="StoreId" />
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                     <div class="form-group">
-                        <label asp-for="Title" class="control-label"></label>*
-                        <input asp-for="Title" class="form-control" />
+                        <label asp-for="Title" class="control-label" data-required></label>
+                        <input asp-for="Title" class="form-control" required />
                         <span asp-validation-for="Title" class="text-danger"></span>
                     </div>
                     <div class="form-group">
@@ -37,13 +37,13 @@
                         <span asp-validation-for="Tagline" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="Description" class="control-label"></label>*
+                        <label asp-for="Description" class="control-label" data-required></label>
                         <textarea asp-for="Description" rows="20" cols="40" class="form-control richtext"></textarea>
                         <span asp-validation-for="Description" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="TargetCurrency" class="control-label"></label>*
-                        <input asp-for="TargetCurrency" class="form-control" />
+                        <label asp-for="TargetCurrency" class="control-label" data-required></label>
+                        <input asp-for="TargetCurrency" class="form-control" required />
                         <span asp-validation-for="TargetCurrency" class="text-danger"></span>
                     </div>
                     <div class="form-group">

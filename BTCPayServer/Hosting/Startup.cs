@@ -190,7 +190,6 @@ namespace BTCPayServer.Hosting
             forwardingOptions.ForwardedHeaders = ForwardedHeaders.All;
             app.UseForwardedHeaders(forwardingOptions);
 
-
             app.UseStatusCodePagesWithReExecute("/Error/Handle", "?statusCode={0}");
 
             app.UsePayServer();
@@ -215,6 +214,7 @@ namespace BTCPayServer.Hosting
 
             app.UseWebSockets();
 
+            app.UseCookiePolicy(new CookiePolicyOptions() { HttpOnly = Microsoft.AspNetCore.CookiePolicy.HttpOnlyPolicy.Always });
             app.UseEndpoints(endpoints =>
             {
                 AppHub.Register(endpoints);

@@ -68,7 +68,8 @@
   --btcpay-header-bg: var(--btcpay-color-white);
   --btcpay-header-color: var(--btcpay-body-color);
   --btcpay-header-color-link: var(--btcpay-body-color);
-  --btcpay-header-color-link-accent: var(--btcpay-body-color);
+  --btcpay-header-color-link-accent: var(--btcpay-color-primary);
+  --btcpay-header-color-link-active: var(--btcpay-color-primary-accent);
 
   --btcpay-wizard-bg: var(--btcpay-color-white);
   --btcpay-wizard-color: var(--btcpay-body-color);

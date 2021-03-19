@@ -53,9 +53,7 @@ hr.light {
 #mainNav .navbar-nav > li.nav-item > a.nav-link {
   font-size: 13px;
   font-weight: bold;
-  text-transform: uppercase;
   color: var(--btcpay-header-color-link, var(--btcpay-color-neutral-100));
-  border: 2px solid transparent;
 }
 
 #mainNav .navbar-nav > li.nav-item > a.nav-link:focus,
@@ -148,6 +146,14 @@ header.masthead .header-content .header-content-inner p {
 }
 
 @media (min-width: 992px) {
+  #mainNav .navbar-nav > li.nav-item {
+    padding: 0 .5rem;
+  }
+
+  #mainNav .navbar-nav:last-child > li.nav-item {
+    padding-right: 0;
+  }
+
   .service-box {
     margin: 20px auto 0;
   }

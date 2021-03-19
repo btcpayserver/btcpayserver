@@ -214,7 +214,11 @@ namespace BTCPayServer.Hosting
 
             app.UseWebSockets();
 
-            app.UseCookiePolicy(new CookiePolicyOptions() { HttpOnly = Microsoft.AspNetCore.CookiePolicy.HttpOnlyPolicy.Always });
+            app.UseCookiePolicy(new CookiePolicyOptions()
+            {
+                HttpOnly = Microsoft.AspNetCore.CookiePolicy.HttpOnlyPolicy.Always,
+                Secure = Microsoft.AspNetCore.Http.CookieSecurePolicy.SameAsRequest
+            });
             app.UseEndpoints(endpoints =>
             {
                 AppHub.Register(endpoints);

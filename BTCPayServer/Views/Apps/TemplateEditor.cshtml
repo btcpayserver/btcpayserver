@@ -214,7 +214,10 @@ $(function() {
                             if (description.startsWith('"') && description.endsWith('"')){
                                 description = description.substr(1, description.length-2);
                             }
-                            description.replaceAll("<br/>", "\n").replaceAll('\"', '"')
+                            description = description
+                            .replaceAll("<br>", "\n")
+                            .replaceAll("<br/>", "\n")
+                            .replaceAll('\\"', '"')
                         }
                         if (productProperty.indexOf('image:') !== -1) {
                             image = productProperty.replace('image:', '').trim();

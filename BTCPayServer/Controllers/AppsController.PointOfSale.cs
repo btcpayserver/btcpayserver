@@ -165,7 +165,7 @@ namespace BTCPayServer.Controllers
                 ModelState.AddModelError(nameof(vm.Currency), "Invalid currency");
             try
             {
-                _AppService.Parse(vm.Template, vm.Currency);
+                vm.Template = _AppService.SerializeTemplate(_AppService.Parse(vm.Template, vm.Currency));
             }
             catch
             {

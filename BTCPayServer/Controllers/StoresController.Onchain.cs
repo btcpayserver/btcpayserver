@@ -96,6 +96,11 @@ namespace BTCPayServer.Controllers
 
             if (vm.WalletFile != null)
             {
+                if (!vm.WalletFile.IsValid())
+                {                    
+                    ModelState.AddModelError(nameof(vm.WalletFile), "Wallet file was invalid");
+                    return View(vm.ViewName, vm);
+                }
                 if (!DerivationSchemeSettings.TryParseFromWalletFile(await ReadAllText(vm.WalletFile), network, out strategy))
                 {
                     ModelState.AddModelError(nameof(vm.WalletFile), "Wallet file was not in the correct format");

@@ -36,7 +36,7 @@ namespace BTCPayServer.Models.WalletViewModels
 
         public async Task<PSBT> GetPSBT(Network network)
         {
-            if (UploadedPSBTFile != null)
+            if (UploadedPSBTFile?.IsValid() is true)
             {
                 if (UploadedPSBTFile.Length > 500 * 1024)
                     return null;

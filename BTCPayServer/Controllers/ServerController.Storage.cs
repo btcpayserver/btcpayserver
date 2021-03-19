@@ -1,8 +1,10 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Storage.Models;
@@ -146,13 +148,31 @@ namespace BTCPayServer.Controllers
         [HttpPost("server/files/upload")]
         public async Task<IActionResult> CreateFile(IFormFile file)
         {
-            var newFile = await _FileService.AddFile(file, GetUserId());
+            StoredFile newFile = null;
+            if (!file.IsValid())
+            {
+                TempData.SetStatusMessageModel(new StatusMessageModel()
+                {
+                    Message = "Invalid file",
+                    Severity = StatusMessageModel.StatusSeverity.Error
+                });
+            }
+            else
+            {
+                newFile = await _FileService.AddFile(file, GetUserId());
+                TempData.SetStatusMessageModel(new StatusMessageModel()
+                {
+                    Message = "File added!",
+                    Severity = StatusMessageModel.StatusSeverity.Success
+                });
+            }            
+            
             return RedirectToAction(nameof(Files), new
             {
-                statusMessage = "File added!",
-                fileId = newFile.Id
+                fileId = newFile?.Id
             });
         }
+            
 
         private string GetUserId()
         {

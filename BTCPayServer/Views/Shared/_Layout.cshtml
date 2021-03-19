@@ -1,4 +1,10 @@
 @using BTCPayServer.Views.Server
+@using BTCPayServer.Views.Stores
+@using BTCPayServer.Views.Apps
+@using BTCPayServer.Views.Invoice
+@using BTCPayServer.Views.Manage
+@using BTCPayServer.Views.PaymentRequest
+@using BTCPayServer.Views.Wallets
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
 @inject RoleManager<IdentityRole> RoleManager
@@ -53,18 +59,18 @@
                         <ul class="navbar-nav">
                             @if (User.IsInRole(Roles.ServerAdmin))
                             {
-                                <li class="nav-item"><a asp-area="" asp-controller="Server" asp-action="ListUsers" class="nav-link js-scroll-trigger" id="ServerSettings">Server settings</a></li>
+                                <li class="nav-item"><a asp-area="" asp-controller="Server" asp-action="ListUsers" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(ServerNavPages))" id="ServerSettings">Server settings</a></li>
                             }
-                            <li class="nav-item"><a asp-area="" asp-controller="UserStores" asp-action="ListStores" class="nav-link js-scroll-trigger" id="Stores">Stores</a></li>
-                            <li class="nav-item"><a asp-area="" asp-controller="Apps" asp-action="ListApps" class="nav-link js-scroll-trigger" id="Apps">Apps</a></li>
-                            <li class="nav-item"><a asp-area="" asp-controller="Wallets" asp-action="ListWallets" class="nav-link js-scroll-trigger" id="Wallets">Wallets</a></li>
-                            <li class="nav-item"><a asp-area="" asp-controller="Invoice" asp-action="ListInvoices" class="nav-link js-scroll-trigger" id="Invoices">Invoices</a></li>
-                            <li class="nav-item"><a asp-area="" asp-controller="PaymentRequest" asp-action="GetPaymentRequests" class="nav-link js-scroll-trigger" id="PaymentRequests">Payment Requests</a></li>
+                            <li class="nav-item"><a asp-area="" asp-controller="UserStores" asp-action="ListStores" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(StoreNavPages))" id="Stores">Stores</a></li>
+                            <li class="nav-item"><a asp-area="" asp-controller="Apps" asp-action="ListApps" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(AppsNavPages))" id="Apps">Apps</a></li>
+                            <li class="nav-item"><a asp-area="" asp-controller="Wallets" asp-action="ListWallets" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(WalletsNavPages))" id="Wallets">Wallets</a></li>
+                            <li class="nav-item"><a asp-area="" asp-controller="Invoice" asp-action="ListInvoices" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(InvoiceNavPages))" id="Invoices">Invoices</a></li>
+                            <li class="nav-item"><a asp-area="" asp-controller="PaymentRequest" asp-action="GetPaymentRequests" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(PaymentRequestsNavPages))" id="PaymentRequests">Payment Requests</a></li>
                             <vc:ui-extension-point location="header-nav"/>
                         </ul>
                         <ul class="navbar-nav">
                             <li class="nav-item">
-                                <a asp-area="" asp-controller="Manage" asp-action="Index" title="My settings" class="nav-link js-scroll-trigger" id="MySettings"><span class="d-lg-none d-sm-block">Account</span><i class="fa fa-user d-lg-inline-block d-none"></i></a>
+                                <a asp-area="" asp-controller="Manage" asp-action="Index" title="My settings" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(ManageNavPages))" id="MySettings"><span class="d-lg-none d-sm-block">Account</span><i class="fa fa-user d-lg-inline-block d-none"></i></a>
                             </li>
                             <vc:notifications-dropdown/>
                             <li class="nav-item">

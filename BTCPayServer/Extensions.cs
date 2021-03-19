@@ -46,6 +46,11 @@ namespace BTCPayServer
             return endpoint != null;
         }
 
+        public static bool IsValidFileName(this string fileName)
+        {
+            return !fileName.ToCharArray().Any(c => Path.GetInvalidFileNameChars().Contains(c));
+        }
+
         public static bool IsSafe(this LightningConnectionString connectionString)
         {
             if (connectionString.CookieFilePath != null ||

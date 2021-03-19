@@ -30,6 +30,8 @@ namespace BTCPayServer.Storage.Services
             var settings = await _SettingsRepository.GetSettingAsync<StorageSettings>();
             if (settings is null)
                 throw new InvalidOperationException("StoreSettings not configured");
+            if (!file.FileName.IsValidFileName())
+                throw new InvalidOperationException("Invalid file name");
             var provider = GetProvider(settings);
 
             var storedFile = await provider.AddFile(file, settings);

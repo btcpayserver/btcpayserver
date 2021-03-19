@@ -117,7 +117,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> UploadPlugin([FromServices] PluginService pluginService,
             List<IFormFile> files)
         {
-            foreach (var formFile in files.Where(file => file.Length > 0))
+            foreach (var formFile in files.Where(file => file.Length > 0).Where(file => file.FileName.IsValidFileName()))
             {
                 await pluginService.UploadPlugin(formFile);
                 pluginService.InstallPlugin(formFile.FileName.TrimEnd(PluginManager.BTCPayPluginSuffix,

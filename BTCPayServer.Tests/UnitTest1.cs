@@ -3119,6 +3119,22 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Fast", "Fast")]
+        public void CanCheckFileNameValid()
+        {
+            var tests = new[]
+            {
+                ("test.com", true),
+                ("/test.com", false),
+                ("\\test.com", false),
+            };
+            foreach(var t in tests)
+            {
+                Assert.Equal(t.Item2, t.Item1.IsValidFileName());
+            }
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Fast", "Fast")]
         public async Task CanCreateSqlitedb()
         {
             if (File.Exists("temp.db"))

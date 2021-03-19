@@ -248,7 +248,7 @@
                             <h6 class="card-title mb-0">@item.Title</h6>
                             @if (!String.IsNullOrWhiteSpace(description))
                             {
-                                <p class="card-text">@description</p>
+                                <p class="card-text">@Safe.Raw(description))</p>
                             }
                         </div>
                         <div class="card-footer pt-0 bg-transparent border-0">

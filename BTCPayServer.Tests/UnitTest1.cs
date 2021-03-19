@@ -3125,9 +3125,9 @@ namespace BTCPayServer.Tests
             {
                 ("test.com", true),
                 ("/test.com", false),
-                ("\\test.com", false),
-                ("te\\st.com", false),
                 ("te/st.com", false),
+                ("\\test.com", false),
+                ("te\\st.com", false)
             };
             foreach(var t in tests)
             {

@@ -1,5 +1,6 @@
+@using BTCPayServer.Services.Shopify
 @{
-    var shopify = Context.GetStoreData().GetStoreBlob().Shopify;
+    var shopify = Context.GetStoreData().GetStoreBlob().GetShopifySettings();
     
     var shopifyCredsSet = shopify?.IntegratedAt.HasValue is true;
     var shopifyUrl = shopify?.ShopifyUrl;

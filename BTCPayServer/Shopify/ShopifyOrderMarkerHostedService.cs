@@ -74,9 +74,10 @@ namespace BTCPayServer.Services.Shopify
 
             // ensure that store in question has shopify integration turned on 
             // and that invoice's orderId has shopify specific prefix
-            if (storeBlob.Shopify?.IntegratedAt.HasValue == true)
+            var settings = storeBlob.GetShopifySettings();
+            if (settings?.IntegratedAt.HasValue == true)
             {
-                var client = CreateShopifyApiClient(storeBlob.Shopify);
+                var client = CreateShopifyApiClient(settings);
                 if (!await client.OrderExists(shopifyOrderId))
                 {
                     // don't register transactions for orders that don't exist on shopify

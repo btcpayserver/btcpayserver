@@ -29,7 +29,6 @@ namespace BTCPayServer.Data
             PaymentMethodCriteria = new List<PaymentMethodCriteria>();
         }
 
-        public ShopifySettings Shopify { get; set; }
 
         [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
         public NetworkFeeMode NetworkFeeMode { get; set; }

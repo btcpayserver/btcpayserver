@@ -134,7 +134,7 @@ namespace BTCPayServer.Shopify
                             entity.GetInvoiceState().Status));
 
             var store = await _storeRepository.FindStore(storeId);
-            var shopify = store?.GetStoreBlob()?.Shopify;
+            var shopify = store?.GetStoreBlob()?.GetShopifySettings();
             ShopifyApiClient client = null;
             ShopifyOrder order = null;
             if (shopify?.IntegratedAt.HasValue is true)
@@ -204,7 +204,7 @@ namespace BTCPayServer.Shopify
         {
             var blob = CurrentStore.GetStoreBlob();
 
-            return View( blob.Shopify);
+            return View( blob.GetShopifySettings());
         }
 
 
@@ -271,7 +271,7 @@ namespace BTCPayServer.Shopify
                     shopify.IntegratedAt = DateTimeOffset.Now;
 
                     var blob = CurrentStore.GetStoreBlob();
-                    blob.Shopify = shopify;
+                    blob.SetShopifySettings(shopify);
                     if (CurrentStore.SetStoreBlob(blob))
                     {
                         await _storeRepository.UpdateStore(CurrentStore);
@@ -283,7 +283,7 @@ namespace BTCPayServer.Shopify
                 case "ShopifyClearCredentials":
                 {
                     var blob = CurrentStore.GetStoreBlob();
-                    blob.Shopify = null;
+                    blob.SetShopifySettings(null);
                     if (CurrentStore.SetStoreBlob(blob))
                     {
                         await _storeRepository.UpdateStore(CurrentStore);

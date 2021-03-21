@@ -6,6 +6,17 @@
                     "Store Payment Methods (Lightning Network)"
                 ],
                 "summary": "Get store Lightning Network payment methods",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "description": "View information about the stores' configured Lightning Network payment methods",
                 "operationId": "StoreLightningNetworkPaymentMethods_GetLightningNetworkPaymentMethods",
                 "responses": {

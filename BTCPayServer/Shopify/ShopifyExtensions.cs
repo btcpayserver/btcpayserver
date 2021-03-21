@@ -1,3 +1,5 @@
+using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Abstractions.Services;
 using BTCPayServer.Services.Shopify.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -19,6 +21,8 @@ namespace BTCPayServer.Services.Shopify
         public static void AddShopify(this IServiceCollection services)
         {
             services.AddSingleton<IHostedService, ShopifyOrderMarkerHostedService>();
+            
+            services.AddSingleton<IUIExtension>(new UIExtension("Shopify/StoreIntegrationShopifyOption", "store-integrations-list"));
         }
     }
 }

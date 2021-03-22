@@ -32,9 +32,9 @@ namespace BTCPayServer.Services.Shopify
 
         public static ShopifySettings GetShopifySettings(this StoreBlob storeBlob)
         {
-            if (storeBlob.AdditionalData.TryGetValue(StoreBlobKey, out var rawS))
+            if (storeBlob.AdditionalData.TryGetValue(StoreBlobKey, out var rawS) && rawS is JObject rawObj)
             {
-                return new Serializer(null).ToObject<ShopifySettings>(rawS as JObject);
+                return new Serializer(null).ToObject<ShopifySettings>(rawObj);
             }
 
             return null;

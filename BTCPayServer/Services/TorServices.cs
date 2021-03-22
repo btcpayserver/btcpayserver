@@ -52,19 +52,7 @@ namespace BTCPayServer.Services
                     try
                     {
                         var onionHost = (await service.ReadingLines)[0].Trim();
-                        var torService = new TorService()
-                        {
-                            Name = service.ServiceName,
-                            OnionHost = onionHost,
-                            VirtualPort = service.VirtualPort
-                        };
-                        if (service.ServiceName.Equals("BTCPayServer", StringComparison.OrdinalIgnoreCase))
-                            torService.ServiceType = TorServiceType.BTCPayServer;
-                        else if (TryParseP2PService(service.ServiceName, out var network, out var serviceType))
-                        {
-                            torService.ServiceType = serviceType;
-                            torService.Network = network;
-                        }
+                        var torService = ParseService(service.ServiceName, onionHost, service.VirtualPort);
                         result.Add(torService);
                     }
                     catch (Exception ex)
@@ -78,6 +66,24 @@ namespace BTCPayServer.Services
                 Logs.PayServer.LogWarning(ex, $"Error while reading torrc file");
             }
             Services = result.ToArray();
+        }
+
+        private TorService ParseService(string serviceName, string onionHost, int virtualPort)
+        {
+            var torService = new TorService()
+            {
+                Name = serviceName,
+                OnionHost = onionHost,
+                VirtualPort = virtualPort
+            };
+            if (serviceName.Equals("BTCPayServer", StringComparison.OrdinalIgnoreCase))
+                torService.ServiceType = TorServiceType.BTCPayServer;
+            else if (TryParseP2PService(serviceName, out var network, out var serviceType))
+            {
+                torService.ServiceType = serviceType;
+                torService.Network = network;
+            }
+            return torService;
         }
 
         private static DirectoryInfo GetDirectory(HiddenServiceDir hs, string relativeTo)

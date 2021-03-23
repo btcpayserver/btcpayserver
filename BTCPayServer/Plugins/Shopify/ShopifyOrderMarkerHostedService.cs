@@ -9,12 +9,12 @@ using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
+using BTCPayServer.Plugins.Shopify.Models;
 using BTCPayServer.Services.Invoices;
-using BTCPayServer.Services.Shopify.Models;
 using BTCPayServer.Services.Stores;
 using Microsoft.Extensions.Logging;
 
-namespace BTCPayServer.Services.Shopify
+namespace BTCPayServer.Plugins.Shopify
 {
     public class ShopifyOrderMarkerHostedService : EventHostedServiceBase
     {

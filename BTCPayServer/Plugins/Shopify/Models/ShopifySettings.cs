@@ -2,7 +2,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json;
 
-namespace BTCPayServer.Services.Shopify.Models
+namespace BTCPayServer.Plugins.Shopify.Models
 {
     public class ShopifySettings
     {

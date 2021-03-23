@@ -1,14 +1,14 @@
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Services;
 using BTCPayServer.Data;
-using BTCPayServer.Services.Shopify.Models;
+using BTCPayServer.Plugins.Shopify.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NBitcoin;
 using NBXplorer;
 using Newtonsoft.Json.Linq;
 
-namespace BTCPayServer.Services.Shopify
+namespace BTCPayServer.Plugins.Shopify
 {
     public static class ShopifyExtensions
     {
@@ -21,13 +21,6 @@ namespace BTCPayServer.Services.Shopify
                 ApiKey = shopify.ApiKey,
                 ApiPassword = shopify.Password
             };
-        }
-
-        public static void AddShopify(this IServiceCollection services)
-        {
-            services.AddSingleton<IHostedService, ShopifyOrderMarkerHostedService>();
-            
-            services.AddSingleton<IUIExtension>(new UIExtension("Shopify/StoreIntegrationShopifyOption", "store-integrations-list"));
         }
 
         public static ShopifySettings GetShopifySettings(this StoreBlob storeBlob)

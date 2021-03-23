@@ -11,11 +11,10 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
+using BTCPayServer.Plugins.Shopify.ApiModels;
+using BTCPayServer.Plugins.Shopify.Models;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
-using BTCPayServer.Services.Shopify;
-using BTCPayServer.Services.Shopify.ApiModels;
-using BTCPayServer.Services.Shopify.Models;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
@@ -26,7 +25,7 @@ using Newtonsoft.Json.Linq;
 using NicolasDorier.RateLimits;
 using StoreData = BTCPayServer.Data.StoreData;
 
-namespace BTCPayServer.Shopify
+namespace BTCPayServer.Plugins.Shopify
 {
     
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]

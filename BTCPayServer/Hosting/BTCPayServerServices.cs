@@ -448,7 +448,6 @@ namespace BTCPayServer.Hosting
         private static void AddBtcPayServerAuthenticationSchemes(this IServiceCollection services)
         {
             services.AddAuthentication()
-                .AddCookie()
                 .AddBitpayAuthentication()
                 .AddAPIKeyAuthentication();
         }

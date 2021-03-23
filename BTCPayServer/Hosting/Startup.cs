@@ -10,6 +10,7 @@ using BTCPayServer.Plugins;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Storage;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
@@ -53,6 +54,19 @@ namespace BTCPayServer.Hosting
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
+            services.Configure<AuthenticationOptions>(opts =>
+            {
+                opts.DefaultAuthenticateScheme = null;
+                opts.DefaultChallengeScheme = null;
+                opts.DefaultForbidScheme = null;
+                opts.DefaultScheme = IdentityConstants.ApplicationScheme;
+                opts.DefaultSignInScheme = null;
+                opts.DefaultSignOutScheme = null;
+            });
+            services.Configure<SecurityStampValidatorOptions>(opts =>
+            {
+                opts.ValidationInterval = TimeSpan.FromMinutes(5.0);
+            });
 
             services.AddBTCPayServer(Configuration);
             services.AddProviderStorage();

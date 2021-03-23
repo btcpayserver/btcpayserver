@@ -285,7 +285,6 @@ namespace BTCPayServer.Payments.PayJoin
 
                 if (!await _payJoinRepository.TryLockInputs(ctx.OriginalTransaction.Inputs.Select(i => i.PrevOut).ToArray()))
                 {
-                    ctx.DoNotBroadcast();
                     return CreatePayjoinErrorAndLog(503, PayjoinReceiverWellknownErrors.Unavailable, "Some of those inputs have already been used to make another payjoin transaction");
                 }
 

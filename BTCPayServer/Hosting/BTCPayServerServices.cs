@@ -92,7 +92,9 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<SettingsRepository>();
             services.TryAddSingleton<ISettingsRepository>(provider => provider.GetService<SettingsRepository>());
             services.TryAddSingleton<LabelFactory>();
-            services.TryAddSingleton<TorServices>();
+            services.TryAddSingleton<TorServices>(provider => 
+                new TorServices(provider.GetRequiredService<BTCPayNetworkProvider>(), provider.GetService<IOptions<BTCPayServerOptions>>(), configuration));
+            services.TryAddSingleton<IHostedService>(provider => provider.GetRequiredService<TorServices>());
             services.TryAddSingleton<SocketFactory>();
             services.TryAddSingleton<LightningClientFactoryService>();
             services.TryAddSingleton<InvoicePaymentNotification>();
@@ -346,7 +348,6 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IHostedService, TransactionLabelMarkerHostedService>();
             services.AddSingleton<IHostedService, UserEventHostedService>();
             services.AddSingleton<IHostedService, DynamicDnsHostedService>();
-            services.AddSingleton<IHostedService, TorServicesHostedService>();
             services.AddSingleton<IHostedService, PaymentRequestStreamer>();
             services.AddSingleton<IBackgroundJobClient, BackgroundJobClient>();
             services.AddScoped<IAuthorizationHandler, CookieAuthorizationHandler>();

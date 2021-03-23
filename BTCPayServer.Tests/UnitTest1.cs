@@ -48,6 +48,7 @@ using ExchangeSharp;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitcoin.Payment;
@@ -875,7 +876,10 @@ namespace BTCPayServer.Tests
         public async Task CanEnumerateTorServices()
         {
             var tor = new TorServices(new BTCPayNetworkProvider(ChainName.Regtest),
-                new BTCPayServerOptions() { TorrcFile = TestUtils.GetTestDataFullPath("Tor/torrc") });
+                new OptionsWrapper<BTCPayServerOptions>(new BTCPayServerOptions()
+                {
+                    TorrcFile = TestUtils.GetTestDataFullPath("Tor/torrc")
+                }), null);
             await tor.Refresh();
 
             Assert.Single(tor.Services.Where(t => t.ServiceType == TorServiceType.BTCPayServer));

@@ -553,15 +553,6 @@ namespace BTCPayServer.Controllers
                         break;
                 }
             }
-
-
-            var coinSwitchEnabled = storeBlob.CoinSwitchSettings != null && storeBlob.CoinSwitchSettings.Enabled;
-            vm.ThirdPartyPaymentMethods.Add(new StoreViewModel.AdditionalPaymentMethod()
-            {
-                Enabled = coinSwitchEnabled,
-                Action = nameof(UpdateCoinSwitchSettings),
-                Provider = "CoinSwitch"
-            });
         }
 
 

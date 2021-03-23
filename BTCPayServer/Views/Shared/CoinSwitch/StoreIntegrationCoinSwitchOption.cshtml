@@ -1,0 +1,40 @@
+@using BTCPayServer.Plugins.CoinSwitch
+@{
+    var settings = Context.GetStoreData().GetStoreBlob().GetCoinSwitchSettings();
+}
+<li class="list-group-item bg-tile ">
+    <div class="d-flex align-items-center">
+        <span class="d-flex flex-wrap flex-fill flex-column flex-sm-row">
+            <strong class="mr-3">
+                CoinSwitch
+            </strong>
+            <span title="" class="d-flex mr-3" >
+                <span class="text-nowrap text-secondary">Allows your customers to pay with altcoins that are not supported by BTC Pay Server.</span>
+            </span>
+        </span>
+        <span class="d-flex align-items-center fw-semibold">
+            @if (settings?.IsConfigured() is true)
+            {
+                <span class="d-flex align-items-center text-success">
+                    <span class="mr-2 btcpay-status btcpay-status--enabled"></span>
+                    Enabled
+                </span>
+
+                <span class="text-light ml-3 mr-2">|</span>
+                <a lass="btn btn-link px-1 py-1 fw-semibold" asp-controller="CoinSwitch" asp-action="UpdateCoinSwitchSettings" asp-route-storeId="@Context.GetRouteValue("storeId")">
+                    Modify
+                </a>
+            }
+            else
+            {
+                <span class="d-flex align-items-center text-danger">
+                    <span class="mr-2 btcpay-status btcpay-status--disabled"></span>
+                    Disabled
+                </span>
+                <a class="btn btn-primary btn-sm ml-4 px-3 py-1 fw-semibold" asp-controller="CoinSwitch" asp-action="UpdateCoinSwitchSettings" asp-route-storeId="@Context.GetRouteValue("storeId")">
+                    Setup
+                </a>
+            }
+        </span>
+    </div>
+</li>

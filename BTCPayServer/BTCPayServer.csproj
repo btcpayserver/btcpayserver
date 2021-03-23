@@ -134,7 +134,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Views\Stores\Integrations" />
 	  <Folder Include="wwwroot\vendor\clipboard.js\" />
 	  <Folder Include="wwwroot\vendor\highlightjs\" />
 	  <Folder Include="wwwroot\vendor\summernote" />

@@ -55,9 +55,6 @@ namespace BTCPayServer.Models.StoreViewModels
 
         public List<StoreViewModel.DerivationScheme> DerivationSchemes { get; set; } = new List<StoreViewModel.DerivationScheme>();
 
-        public List<AdditionalPaymentMethod> ThirdPartyPaymentMethods { get; set; } =
-            new List<AdditionalPaymentMethod>();
-
         [Display(Name = "Invoice expires if the full amount has not been paid after …")]
         [Range(1, 60 * 24 * 24)]
         public int InvoiceExpiration

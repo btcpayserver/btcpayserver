@@ -266,42 +266,6 @@
             <button name="command" type="submit" class="btn btn-primary" value="Save" id="Save">Save Store Settings</button>
         </form>
 
-        <h4 class="mt-5 mb-3">Additional payment methods</h4>
-        <div class="table-responsive-md">
-            <table class="table table-sm mt-1 mb-5">
-                <thead>
-                    <tr>
-                        <th>Provider</th>
-                        <th class="text-center w-100px">Enabled</th>
-                        <th class="text-right w-100px">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var scheme in Model.ThirdPartyPaymentMethods)
-                    {
-                        <tr>
-                            <td>@scheme.Provider</td>
-                            <td class="text-center">
-                                @if (scheme.Enabled)
-                                {
-                                    <span class="text-success fa fa-check"></span>
-                                }
-                                else
-                                {
-                                    <span class="text-danger fa fa-times"></span>
-                                }
-                            </td>
-                            <td class="text-right">
-                                <a asp-action="@scheme.Action" id='Modify-@scheme.Provider' asp-route-storeId="@Context.GetRouteValue("storeId")">
-                                    @(scheme.Enabled ? "Modify" : "Setup")
-                                </a>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-
         <h4 class="mt-5 mb-3">Services</h4>
         <div class="table-responsive-md">
             <table class="table table-sm mt-1 mb-5">

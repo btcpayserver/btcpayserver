@@ -350,13 +350,12 @@ namespace BTCPayServer.Payments.PayJoin
                 && feeOutputIndex < newTx.Outputs.Count
                 && !isOurOutput.Contains(newTx.Outputs[feeOutputIndex])
                 ? newTx.Outputs[feeOutputIndex] : null;
-            var rand = new Random();
             int senderInputCount = newTx.Inputs.Count;
             foreach (var selectedUTXO in selectedUTXOs.Select(o => o.Value))
             {
                 contributedAmount += (Money)selectedUTXO.Value;
                 var newInput = newTx.Inputs.Add(selectedUTXO.Outpoint);
-                newInput.Sequence = newTx.Inputs[rand.Next(0, senderInputCount)].Sequence;
+                newInput.Sequence = newTx.Inputs[(int)(RandomUtils.GetUInt32() % senderInputCount)].Sequence;
             }
             ourNewOutput.Value += contributedAmount;
             var minRelayTxFee = this._dashboard.Get(network.CryptoCode).Status.BitcoinStatus?.MinRelayTxFee ??

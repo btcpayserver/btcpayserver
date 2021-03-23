@@ -9,12 +9,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Plugins.CoinSwitch
 {
-    
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    
     [Route("plugins/{storeId}/coinswitch")]
-    public class CoinSwitchController:Controller
+    public class CoinSwitchController : Controller
     {
         private readonly StoreRepository _storeRepository;
 
@@ -22,7 +20,7 @@ namespace BTCPayServer.Plugins.CoinSwitch
         {
             _storeRepository = storeRepository;
         }
-        
+
         [HttpGet("")]
         public IActionResult UpdateCoinSwitchSettings(string storeId)
         {
@@ -36,7 +34,6 @@ namespace BTCPayServer.Plugins.CoinSwitch
 
         private void SetExistingValues(StoreData store, UpdateCoinSwitchSettingsViewModel vm)
         {
-
             var existing = store.GetStoreBlob().GetCoinSwitchSettings();
             if (existing == null)
                 return;
@@ -77,10 +74,7 @@ namespace BTCPayServer.Plugins.CoinSwitch
                     store.SetStoreBlob(storeBlob);
                     await _storeRepository.UpdateStore(store);
                     TempData[WellKnownTempData.SuccessMessage] = "CoinSwitch settings modified";
-                    return RedirectToAction("UpdateStore", "Stores",new
-                    {
-                        storeId
-                    });
+                    return RedirectToAction(nameof(UpdateCoinSwitchSettings), new {storeId});
 
                 default:
                     return View(vm);

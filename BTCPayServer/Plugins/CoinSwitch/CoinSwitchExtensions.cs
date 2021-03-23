@@ -25,7 +25,7 @@ namespace BTCPayServer.Plugins.CoinSwitch
             }
             else
             {
-                storeBlob.AdditionalData.AddOrReplace(StoreBlobKey, new Serializer(null).ToString(settings));
+                storeBlob.AdditionalData.AddOrReplace(StoreBlobKey, JObject.FromObject(settings));
             }
         }
     }

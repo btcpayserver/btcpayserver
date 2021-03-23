@@ -15,8 +15,19 @@ namespace BTCPayServer.Plugins.CoinSwitch
 
         public override void Execute(IServiceCollection applicationBuilder)
         {
+            applicationBuilder.AddSingleton<CoinSwitchService>();
             applicationBuilder.AddSingleton<IUIExtension>(new UIExtension("CoinSwitch/StoreIntegrationCoinSwitchOption",
                 "store-integrations-list"));
+            applicationBuilder.AddSingleton<IUIExtension>(new UIExtension("CoinSwitch/CheckoutContentExtension",
+                "checkout-bitcoin-post-content"));
+            applicationBuilder.AddSingleton<IUIExtension>(new UIExtension("CoinSwitch/CheckoutContentExtension",
+                "checkout-ethereum-post-content"));
+            applicationBuilder.AddSingleton<IUIExtension>(new UIExtension("CoinSwitch/CheckoutTabExtension",
+                "checkout-bitcoin-post-tabs"));
+            applicationBuilder.AddSingleton<IUIExtension>(new UIExtension("CoinSwitch/CheckoutTabExtension",
+                "checkout-ethereum-post-tabs"));
+            applicationBuilder.AddSingleton<IUIExtension>(new UIExtension("CoinSwitch/CheckoutEnd",
+                "checkout-end"));
             base.Execute(applicationBuilder);
         }
     }

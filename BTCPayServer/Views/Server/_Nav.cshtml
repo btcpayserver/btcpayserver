@@ -1,6 +1,6 @@
 ﻿@using BTCPayServer.Configuration
 @inject BTCPayServerOptions BTCPayServerOptions
-<div class="nav flex-column nav-pills mb-4">
+<div class="nav flex-column mb-4">
     <a asp-controller="Server" id="Server-@ServerNavPages.Users" class="nav-link @ViewData.IsActivePage(ServerNavPages.Users)" asp-action="ListUsers">Users</a>
     <a asp-controller="Server" id="Server-@ServerNavPages.Emails" class="nav-link @ViewData.IsActivePage(ServerNavPages.Emails)" asp-action="Emails">Email server</a>
     <a asp-controller="Server" id="Server-@ServerNavPages.Policies" class="nav-link @ViewData.IsActivePage(ServerNavPages.Policies)" asp-action="Policies">Policies</a>

@@ -2,7 +2,7 @@
 @addTagHelper *, BundlerMinifier.TagHelpers
 @{
     Layout = "_LayoutWalletSetup";
-    ViewData["Title"] = "Enter the wallet seed";
+    ViewData.SetActivePageAndTitle(StoreNavPages.Wallet, "Enter the wallet seed", Context.GetStoreData().StoreName);
 }
 
 @section Navbar {

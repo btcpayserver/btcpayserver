@@ -3,7 +3,7 @@
     ViewData.SetActivePageAndTitle(ManageNavPages.U2F, "Registered U2F devices");
 }
 
-<partial name="_StatusMessage" />
+@await Html.PartialAsync("_StatusMessage")
 
 <form asp-action="AddU2FDevice" method="get">
     <table class="table table-lg mb-4">

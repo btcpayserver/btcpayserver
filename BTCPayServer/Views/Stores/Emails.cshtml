@@ -1,8 +1,11 @@
 ﻿@model BTCPayServer.Models.ServerViewModels.EmailsViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePageAndTitle(StoreNavPages.Index, "Update Store Email Settings");
+    ViewData.SetActivePageAndTitle(StoreNavPages.Index, "Email Settings", Context.GetStoreData().StoreName);
 }
 
+@await Html.PartialAsync("EmailsBody", Model)
 
-<partial name="EmailsBody" model="@Model"/>
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

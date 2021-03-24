@@ -1,11 +1,9 @@
 ﻿@model BTCPayServer.Models.ServerViewModels.DynamicDnsViewModel[]
 @{
-    ViewData.SetActivePageAndTitle(ServerNavPages.Services);
+    ViewData.SetActivePageAndTitle(ServerNavPages.Services, "Dynamic DNS Settings");
 }
 
-
-<h4>Dynamic DNS Settings</h4>
-<partial name="_StatusMessage" />
+<h2 class="mb-4">@ViewData["PageTitle"]</h2>
 
 <div class="row">
     <div class="col-md-8">

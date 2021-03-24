@@ -9,6 +9,8 @@ namespace BTCPayServer.Models.AppViewModels
     public class UpdateCrowdfundViewModel
     {
         public string StoreId { get; set; }
+        public string StoreName { get; set; }
+
         [Required]
         [MaxLength(30)]
         public string Title { get; set; }
@@ -95,12 +97,7 @@ namespace BTCPayServer.Models.AppViewModels
         [Display(Name = "Colors to rotate between with animation when a payment is made. First color is the default background. One color per line. Can be any valid css color value.")]
         public string AnimationColors { get; set; }
 
-
         // NOTE: Improve validation if needed
-        public bool ModelWithMinimumData
-        {
-            get { return Description != null && Title != null && TargetCurrency != null; }
-        }
-
+        public bool ModelWithMinimumData => Description != null && Title != null && TargetCurrency != null;
     }
 }

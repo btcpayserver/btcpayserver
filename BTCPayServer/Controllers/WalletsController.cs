@@ -341,6 +341,8 @@ namespace BTCPayServer.Controllers
                 model.Transactions = model.Transactions.OrderByDescending(t => t.Timestamp).Skip(skip).Take(count).ToList();
             }
 
+            model.CryptoCode = walletId.CryptoCode;
+
             return View(model);
         }
 

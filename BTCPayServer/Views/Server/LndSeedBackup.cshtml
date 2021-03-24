@@ -1,23 +1,14 @@
 ﻿@model LndSeedBackupViewModel
 @{
-    ViewData.SetActivePageAndTitle(ServerNavPages.Services);
+    ViewData.SetActivePageAndTitle(ServerNavPages.Services, "LND Seed Backup");
 }
 
-<h4>LND Seed Backup</h4>
-
-@if (TempData.HasStatusMessage())
-{
-    <div class="row">
-        <div class="col-md-8 text-center">
-            <partial name="_StatusMessage" />
-        </div>
-    </div>
-}
+<h2 class="mb-4">@ViewData["Title"]</h2>
 
 @if (Model.IsWalletUnlockPresent)
 {
     <div class="row">
-        <div class="col-md-8">
+        <div class="col-lg-8">
             <div class="form-group">
                 <p>The LND seed backup is useful to recover funds of your LND wallet in case of a corruption of your server.</p>
                 <p>The recovering process is documented by LND on <a href="https://github.com/lightningnetwork/lnd/blob/master/docs/recovery.md">this page</a>.</p>

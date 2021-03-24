@@ -1,33 +1,21 @@
 ﻿@model PayoutsModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["Title"] = "Manage payouts";
-    ViewData.SetActivePageAndTitle(WalletsNavPages.Payouts);
-}
-
-@if (TempData.HasStatusMessage())
-{
-    <div class="row">
-        <div class="col-md-12 text-center">
-            <partial name="_StatusMessage" />
-        </div>
-    </div>
+    ViewData.SetActivePageAndTitle(WalletsNavPages.Payouts, "Manage payouts", Context.GetStoreData().StoreName);
 }
 
 <script type="text/javascript">
     function selectAll(e)
     {
-        var items = document.getElementsByClassName("selection-item");
-        for (var i = 0; i < items.length; i++) {
+        const items = document.getElementsByClassName("selection-item");
+        for (let i = 0; i < items.length; i++) {
             items[i].checked = e.checked;
         }
     }
 </script>
 <form method="post">
+    <h4 class="mb-3">Payouts to process</h4>
     <div class="row button-row">
-        <div class="col">
-            <h4 class="mb-3">Payouts to process</h4>
-        </div>
         @if (Model.WaitingForApproval.Any())
         {
             <div class="col text-right">
@@ -51,7 +39,7 @@
                     </tr>
                     </thead>
                     <tbody>
-                    @for (int i = 0; i < Model.WaitingForApproval.Count; i++)
+                    @for (var i = 0; i < Model.WaitingForApproval.Count; i++)
                     {
                         var pp = Model.WaitingForApproval[i];
                         <tr>
@@ -72,24 +60,20 @@
             }
             else
             {
-                <p class="mb-0">No payout waiting for approval.</p>
+                <p class="text-secondary mb-0">No payout waiting for approval.</p>
             }
         </div>
     </div>
 
-    <hr class="my-4"/>
-
+    <h4 class="mt-5 mb-3">Completed payouts</h4>
     <div class="row">
         <div class="col-md-12">
-            <h4 class="mb-3">Completed payouts</h4>
             @if (Model.Other.Any())
             {
                 <table class="table table-sm table-responsive-lg">
                     <thead class="thead-inverse">
                         <tr>
-                            <th style="min-width: 90px;" class="col-md-auto">
-                                Date
-                            </th>
+                            <th style="min-width: 90px;" class="col-md-auto">Date</th>
                             <th class="text-left">Source</th>
                             <th class="text-left">Destination</th>
                             <th class="text-right">Amount</th>
@@ -97,30 +81,29 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @for (int i = 0; i < Model.Other.Count; i++)
-                        {
-                            var pp = Model.Other[i];
-                            <tr>
-                                <td><span>@pp.Date.ToBrowserDate()</span></td>
-                                <td class="mw-100"><span>@pp.PullPaymentName</span></td>
-                                <td><span>@pp.Destination</span></td>
-                                <td class="text-right"><span>@pp.Amount</span></td>
-                                @if (pp.TransactionLink is null)
-                                {
-                                    <td class="text-right"><span>Cancelled</span></td>
-                                }
-                                else
-                                {
-                                    <td class="text-right"><span><a class="transaction-link" href="@pp.TransactionLink">Link</a></span></td>
-                                }
-                            </tr>
-                        }
+                    @foreach (var pp in Model.Other)
+                    {
+                        <tr>
+                            <td><span>@pp.Date.ToBrowserDate()</span></td>
+                            <td class="mw-100"><span>@pp.PullPaymentName</span></td>
+                            <td><span>@pp.Destination</span></td>
+                            <td class="text-right"><span>@pp.Amount</span></td>
+                            @if (pp.TransactionLink is null)
+                            {
+                                <td class="text-right"><span>Cancelled</span></td>
+                            }
+                            else
+                            {
+                                <td class="text-right"><span><a class="transaction-link" href="@pp.TransactionLink">Link</a></span></td>
+                            }
+                        </tr>
+                    }
                     </tbody>
                 </table>
             }
             else
             {
-                <p class="mb-0">No payout in history.</p>
+                <p class="text-secondary mb-0">No payout in history.</p>
             }
         </div>
     </div>

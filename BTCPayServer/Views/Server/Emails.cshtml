@@ -3,5 +3,9 @@
     ViewData.SetActivePageAndTitle(ServerNavPages.Emails);
 }
 
+@await Html.PartialAsync("EmailsBody", Model)
 
-<partial name="EmailsBody" model="@Model"/>
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}
+

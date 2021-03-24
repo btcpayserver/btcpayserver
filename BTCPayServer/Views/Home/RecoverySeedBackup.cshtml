@@ -20,7 +20,7 @@
 
 <div class="row justify-content-md-center">
     <div class="col-lg-10 text-center">
-        <partial name="_StatusMessage" />
+        @await Html.PartialAsync("_StatusMessage")
 
         <div class="d-flex flex-column align-items-center justify-content-center">
             <span class="fa fa-info-circle align-self-center p-3" style="font-size:4em;"></span>

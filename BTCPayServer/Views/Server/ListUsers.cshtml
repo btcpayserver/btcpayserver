@@ -23,79 +23,68 @@
     var sortByAsc = "Sort by ascending...";
 }
 
-<partial name="_StatusMessage"/>
-
-<div class="row button-row">
-    <div class="col-12 col-sm-4 col-lg-6 mb-3">
-        <a asp-action="CreateUser" class="btn btn-primary" role="button" id="CreateUser">
-            <span class="fa fa-plus"></span> Add User
-        </a>
-    </div>
-
-    <div class="col-12 col-sm-8 col-lg-6 mb-3">
-       <form
-            asp-action="ListUsers"
-            asp-route-sortOrder="@(userEmailSortOrder)"
-        >
-            <div class="input-group">
-                <input asp-for="SearchTerm" class="form-control" placeholder="Search by email..." />
-                <div class="input-group-append">
-                    <button type="submit" class="btn btn-secondary" title="Search by email">
-                        <span class="fa fa-search"></span> Search
-                    </button>
-                </div>
-            </div>
-            <span asp-validation-for="SearchTerm" class="text-danger"></span>
-        </form>
-    </div>
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <h2 class="mb-0">@ViewData["Title"]</h2>
+    <a asp-action="CreateUser" class="btn btn-primary" role="button" id="CreateUser">
+        <span class="fa fa-plus"></span> Add User
+    </a>
 </div>
-
-<div class="row">
-    <div class="col-lg-9 col-xl-8">
-        <table class="table table-sm">
-            <thead>
-            <tr>
-                <th>
-                    <a
-                        asp-action="ListUsers"
-                        asp-route-sortOrder="@(nextUserEmailSortOrder ?? "asc")"
-                        class="text-nowrap"
-                        title="@(nextUserEmailSortOrder == "desc" ? sortByAsc : sortByDesc)"
-                    >
-                        Email
-                        <span class="fa @(sortIconClass)" />
-                    </a>
-                </th>
-                <th>Created</th>
-                <th>Verified</th>
-                <th class="text-right">Actions</th>
-            </tr>
-            </thead>
-            <tbody>
-            @foreach (var user in Model.Users)
-            {
-                <tr>
-                    <td>@user.Email</td>
-                    <td>@user.Created?.ToBrowserDate()</td>
-                    <td class="text-center">
-                        @if (user.Verified)
-                        {
-                            <span class="text-success fa fa-check"></span>
-                        }
-                        else
-                        {
-                            <span class="text-danger fa fa-times"></span>
-                        }
-                    </td>
-                    <td class="text-right">
-                        <a asp-action="User" asp-route-userId="@user.Id">Edit</a> <span> - </span> <a asp-action="DeleteUser" asp-route-userId="@user.Id">Remove</a>
-                    </td>
-                </tr>
-            }
-            </tbody>
-        </table>
-
-
-        <vc:pager view-model="Model"></vc:pager>
+<form
+    asp-action="ListUsers"
+    asp-route-sortOrder="@(userEmailSortOrder)"
+>
+    <div class="input-group">
+        <input asp-for="SearchTerm" class="form-control" placeholder="Search by email..." />
+        <div class="input-group-append">
+            <button type="submit" class="btn btn-secondary" title="Search by email">
+                <span class="fa fa-search"></span> Search
+            </button>
+        </div>
     </div>
-</div>
+    <span asp-validation-for="SearchTerm" class="text-danger"></span>
+</form>
+
+<table class="table table-sm">
+    <thead>
+    <tr>
+        <th>
+            <a
+                asp-action="ListUsers"
+                asp-route-sortOrder="@(nextUserEmailSortOrder ?? "asc")"
+                class="text-nowrap"
+                title="@(nextUserEmailSortOrder == "desc" ? sortByAsc : sortByDesc)"
+            >
+                Email
+                <span class="fa @(sortIconClass)" />
+            </a>
+        </th>
+        <th>Created</th>
+        <th>Verified</th>
+        <th class="text-right">Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var user in Model.Users)
+    {
+        <tr>
+            <td>@user.Email</td>
+            <td>@user.Created?.ToBrowserDate()</td>
+            <td class="text-center">
+                @if (user.Verified)
+                {
+                    <span class="text-success fa fa-check"></span>
+                }
+                else
+                {
+                    <span class="text-danger fa fa-times"></span>
+                }
+            </td>
+            <td class="text-right">
+                <a asp-action="User" asp-route-userId="@user.Id">Edit</a> <span> - </span> <a asp-action="DeleteUser" asp-route-userId="@user.Id">Remove</a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<vc:pager view-model="Model"></vc:pager>

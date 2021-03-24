@@ -7,11 +7,11 @@
     ViewData.SetActivePageAndTitle(ManageNavPages.APIKeys, "Add API Key");
 }
 
-<h4>@ViewData["Title"]</h4>
-<partial name="_StatusMessage"/>
-<p>
-    Generate a new api key to use BTCPay through its API.
-</p>
+@await Html.PartialAsync("_StatusMessage")
+
+<h2 class="mb-4">@ViewData["PageTitle"]</h2>
+
+<p>Generate a new api key to use BTCPay through its API.</p>
 
 <form method="post" asp-action="AddApiKey">
     <div asp-validation-summary="All" class="text-danger"></div>

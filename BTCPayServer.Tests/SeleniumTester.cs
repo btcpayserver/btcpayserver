@@ -225,7 +225,7 @@ namespace BTCPayServer.Tests
 
         public void ClickOnAllSideMenus()
         {
-            var links = Driver.FindElements(By.CssSelector(".nav-pills .nav-link")).Select(c => c.GetAttribute("href")).ToList();
+            var links = Driver.FindElements(By.CssSelector(".nav .nav-link")).Select(c => c.GetAttribute("href")).ToList();
             Driver.AssertNoError();
             Assert.NotEmpty(links);
             foreach (var l in links)

@@ -22,10 +22,7 @@
             <span class="d-sm-block">It is secure, private, censorship-resistant and free.</span>
         </p>
 
-        @if (TempData.HasStatusMessage())
-        {
-            <partial name="_StatusMessage"/>
-        }
+        @await Html.PartialAsync("_StatusMessage")
     </div>
 </div>
 

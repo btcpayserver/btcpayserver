@@ -18,10 +18,7 @@
 
         <h1 class="h2 mb-3">Welcome to your BTCPay&nbsp;Server</h1>
 
-        @if (TempData.HasStatusMessage())
-        {
-            <partial name="_StatusMessage"/>
-        }
+        @await Html.PartialAsync("_StatusMessage")
     </div>
 </div>
 

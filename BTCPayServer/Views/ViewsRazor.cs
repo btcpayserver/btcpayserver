@@ -10,10 +10,15 @@ namespace BTCPayServer.Views
         private const string ACTIVE_CATEGORY_KEY = "ActiveCategory";
         private const string ACTIVE_PAGE_KEY = "ActivePage";
 
-        public static void SetActivePageAndTitle<T>(this ViewDataDictionary viewData, T activePage, string title = null)
+        public static void SetActivePageAndTitle<T>(this ViewDataDictionary viewData, T activePage, string title = null, string mainTitle = null)
             where T : IConvertible
         {
+            // Browser Title
             viewData["Title"] = title ?? activePage.ToString();
+            // Breadcrumb
+            viewData["MainTitle"] = mainTitle;
+            viewData["PageTitle"] = title;
+            // Navigation
             viewData[ACTIVE_PAGE_KEY] = activePage;
             SetActiveCategory(viewData, activePage.GetType());
         }

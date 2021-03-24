@@ -9,6 +9,8 @@ namespace BTCPayServer.Models.AppViewModels
     public class UpdatePointOfSaleViewModel
     {
         public string StoreId { get; set; }
+        public string StoreName { get; set; }
+
         [Required]
         [MaxLength(30)]
         public string Title { get; set; }

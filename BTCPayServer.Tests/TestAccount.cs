@@ -173,7 +173,7 @@ namespace BTCPayServer.Tests
         }
 
         public async Task<WalletId> RegisterDerivationSchemeAsync(string cryptoCode, ScriptPubKeyType segwit = ScriptPubKeyType.Legacy,
-            bool importKeysToNBX = false)
+            bool importKeysToNBX = false, bool importsKeysToBitcoinCore = false)
         {
             if (StoreId is null)
                 await CreateStoreAsync();
@@ -183,7 +183,7 @@ namespace BTCPayServer.Tests
             {
                 ScriptPubKeyType = segwit,
                 SavePrivateKeys = importKeysToNBX,
-                ImportKeysToRPC = importKeysToNBX
+                ImportKeysToRPC = importsKeysToBitcoinCore
             });
             await store.UpdateWallet(
                 new WalletSetupViewModel

@@ -7,6 +7,7 @@ using BTCPayServer;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Data;
+using BTCPayServer.Filters;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Models;
 using BTCPayServer.Payments;
@@ -40,6 +41,7 @@ namespace BTCPayServer.Controllers
             _serializerSettings = serializerSettings;
         }
         [Route("pull-payments/{pullPaymentId}")]
+        [ContentSecurityPolicyAttribute(Enabled = false)]
         public async Task<IActionResult> ViewPullPayment(string pullPaymentId)
         {
             using var ctx = _dbContextFactory.CreateContext();
@@ -90,6 +92,7 @@ namespace BTCPayServer.Controllers
 
         [Route("pull-payments/{pullPaymentId}/claim")]
         [HttpPost]
+        [ContentSecurityPolicyAttribute(Enabled = false)]
         public async Task<IActionResult> ClaimPullPayment(string pullPaymentId, ViewPullPaymentModel vm)
         {
             using var ctx = _dbContextFactory.CreateContext();

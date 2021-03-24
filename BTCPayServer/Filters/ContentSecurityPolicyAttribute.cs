@@ -22,6 +22,7 @@ namespace BTCPayServer.Filters
         public string DefaultSrc { get; set; }
         public string StyleSrc { get; set; }
         public string ScriptSrc { get; set; }
+        public string ManifestSrc { get; set; }
 
         public void OnActionExecuting(ActionExecutingContext context)
         {
@@ -41,6 +42,10 @@ namespace BTCPayServer.Filters
             if (!string.IsNullOrEmpty(FontSrc))
             {
                 policies.Add(new ConsentSecurityPolicy("font-src", FontSrc));
+            }
+            if (!string.IsNullOrEmpty(ManifestSrc))
+            {
+                policies.Add(new ConsentSecurityPolicy("manifest-src", FontSrc));
             }
 
             if (!string.IsNullOrEmpty(ImgSrc))
@@ -84,14 +89,6 @@ namespace BTCPayServer.Filters
                                            g.Value.Contains("*", StringComparison.OrdinalIgnoreCase)))
                         {
                             policies.Add(new ConsentSecurityPolicy(group.Key, "'self'"));
-                            hasSelf = true;
-                        }
-                        if (hasSelf)
-                        {
-                            foreach (var authorized in policies.Authorized)
-                            {
-                                policies.Add(new ConsentSecurityPolicy(group.Key, authorized));
-                            }
                         }
                     }
                 }

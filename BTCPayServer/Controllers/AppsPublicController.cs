@@ -12,6 +12,7 @@ using BTCPayServer.Filters;
 using BTCPayServer.ModelBinders;
 using BTCPayServer.Models;
 using BTCPayServer.Models.AppViewModels;
+using BTCPayServer.Security;
 using BTCPayServer.Services.Apps;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http.Extensions;
@@ -27,18 +28,21 @@ namespace BTCPayServer.Controllers
         public AppsPublicController(AppService appService,
             BTCPayServerOptions btcPayServerOptions,
             InvoiceController invoiceController,
+            ContentSecurityPolicies csp,
             UserManager<ApplicationUser> userManager)
         {
             _AppService = appService;
             _BtcPayServerOptions = btcPayServerOptions;
             _InvoiceController = invoiceController;
             _UserManager = userManager;
+            _CSP = csp;
         }
 
         private readonly AppService _AppService;
         private readonly BTCPayServerOptions _BtcPayServerOptions;
         private readonly InvoiceController _InvoiceController;
         private readonly UserManager<ApplicationUser> _UserManager;
+        private readonly ContentSecurityPolicies _CSP;
 
         [HttpGet("/apps/{appId}")]
         public async Task<IActionResult> RedirectToApp(string appId)
@@ -60,7 +64,6 @@ namespace BTCPayServer.Controllers
         [Route("/")]
         [Route("/apps/{appId}/pos/{viewType?}")]
         [XFrameOptionsAttribute(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
-        [ContentSecurityPolicyAttribute(Enabled = false)]
         [DomainMappingConstraint(AppType.PointOfSale)]
         public async Task<IActionResult> ViewPointOfSale(string appId, PosViewType? viewType = null)
         {
@@ -73,6 +76,26 @@ namespace BTCPayServer.Controllers
             viewType ??= settings.EnableShoppingCart ? PosViewType.Cart : settings.DefaultView;
             var store = await _AppService.GetStore(app);
             var storeBlob = store.GetStoreBlob();
+
+            if (!string.IsNullOrEmpty(settings.CustomCSSLink) &&
+                Uri.TryCreate(settings.CustomCSSLink, UriKind.Absolute, out var uri))
+            {
+                _CSP.Add("style-src", uri.Authority);
+                _CSP.Add("font-src", uri.Authority);
+            }
+
+            if (!string.IsNullOrEmpty(storeBlob.CustomLogo) &&
+                Uri.TryCreate(storeBlob.CustomLogo, UriKind.Absolute, out uri))
+            {
+                _CSP.Add("img-src", uri.Authority);
+            }
+
+            var items = _AppService.Parse(settings.Template, settings.Currency);
+            foreach (var item in items)
+            {
+                if (Uri.TryCreate(item.Image ?? string.Empty, UriKind.Absolute, out var imageUri))
+                    _CSP.Add("img-src", imageUri.Authority);
+            }
 
             return View("PointOfSale/" + viewType, new ViewPointOfSaleViewModel()
             {
@@ -93,7 +116,7 @@ namespace BTCPayServer.Controllers
                     Prefixed = new[] { 0, 2 }.Contains(numberFormatInfo.CurrencyPositivePattern),
                     SymbolSpace = new[] { 2, 3 }.Contains(numberFormatInfo.CurrencyPositivePattern)
                 },
-                Items = _AppService.Parse(settings.Template, settings.Currency),
+                Items = items,
                 ButtonText = settings.ButtonText,
                 CustomButtonText = settings.CustomButtonText,
                 CustomTipText = settings.CustomTipText,
@@ -107,7 +130,6 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost]
-        [ContentSecurityPolicyAttribute(Enabled = false)]
         [Route("/")]
         [Route("/apps/{appId}/pos/{viewType?}")]
         [XFrameOptionsAttribute(XFrameOptionsAttribute.XFrameOptions.AllowAll)]

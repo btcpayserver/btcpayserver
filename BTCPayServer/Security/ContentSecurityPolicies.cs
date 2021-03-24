@@ -9,6 +9,8 @@ namespace BTCPayServer.Security
     {
         public ConsentSecurityPolicy(string name, string value)
         {
+            if (value.Contains(';', StringComparison.OrdinalIgnoreCase))
+                throw new FormatException();
             _Value = value;
             _Name = name;
         }
@@ -67,6 +69,10 @@ namespace BTCPayServer.Security
         }
 
         readonly HashSet<ConsentSecurityPolicy> _Policies = new HashSet<ConsentSecurityPolicy>();
+        public void Add(string name, string value)
+        {
+            Add(new ConsentSecurityPolicy(name, value));
+        }
         public void Add(ConsentSecurityPolicy policy)
         {
             if (_Policies.Any(p => p.Name == policy.Name && p.Value == policy.Name))
@@ -87,15 +93,11 @@ namespace BTCPayServer.Security
                 {
                     value.Append(';');
                 }
-                List<string> values = new List<string>();
+                HashSet<string> values = new HashSet<string>();
                 values.Add(group.Key);
                 foreach (var v in group)
                 {
                     values.Add(v.Value);
-                }
-                foreach (var i in authorized)
-                {
-                    values.Add(i);
                 }
                 value.Append(String.Join(" ", values.OfType<object>().ToArray()));
                 firstGroup = false;
@@ -105,16 +107,7 @@ namespace BTCPayServer.Security
 
         internal void Clear()
         {
-            authorized.Clear();
             _Policies.Clear();
         }
-
-        readonly HashSet<string> authorized = new HashSet<string>();
-        internal void AddAllAuthorized(string v)
-        {
-            authorized.Add(v);
-        }
-
-        public IEnumerable<string> Authorized => authorized;
     }
 }

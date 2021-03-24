@@ -89,9 +89,11 @@ namespace BTCPayServer.Hosting
                     ImgSrc = "'self' data:",
                     DefaultSrc = "'none'",
                     StyleSrc = "'self' 'unsafe-inline'",
-                    ScriptSrc = "'self' 'unsafe-inline'",
+                    // Unsafe eval is needed by Vue
+                    ScriptSrc = "'self' 'unsafe-inline' 'unsafe-eval'",
                     FontSrc = "'self'",
                     AutoSelf = true,
+                    ManifestSrc = "'self'",
                     FixWebsocket = true
                 });
             })

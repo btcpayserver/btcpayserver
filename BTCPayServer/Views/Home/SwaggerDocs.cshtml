@@ -1,5 +1,7 @@
+@inject BTCPayServer.Security.ContentSecurityPolicies csp
 @{
     Layout = null;
+    csp.Add("script-src", "cdn.jsdelivr.net blob:");
 }
 <!DOCTYPE html>
 <html>

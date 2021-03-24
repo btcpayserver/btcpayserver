@@ -30,6 +30,7 @@ namespace BTCPayServer.Controllers
     public class HomeController : Controller
     {
         private readonly CssThemeManager _cachedServerSettings;
+        private readonly ContentSecurityPolicies _csp;
         private readonly IFileProvider _fileProvider;
 
         public IHttpClientFactory HttpClientFactory { get; }

@@ -431,7 +431,6 @@ namespace BTCPayServer.Controllers
         [AcceptMediaTypeConstraint("application/bitcoin-paymentrequest", false)]
         [XFrameOptionsAttribute(null)]
         [ReferrerPolicyAttribute("origin")]
-        [ContentSecurityPolicyAttribute(Enabled = false)] // Disable the top level filter
         public async Task<IActionResult> Checkout(string invoiceId, string id = null, string paymentMethodId = null,
             [FromQuery] string view = null, [FromQuery] string lang = null)
         {
@@ -447,17 +446,17 @@ namespace BTCPayServer.Controllers
             if (view == "modal")
                 model.IsModal = true;
 
-            _CSP.Add(new ConsentSecurityPolicy("script-src", "'unsafe-eval'")); // Needed by Vue
             if (!string.IsNullOrEmpty(model.CustomCSSLink) &&
                 Uri.TryCreate(model.CustomCSSLink, UriKind.Absolute, out var uri))
             {
-                _CSP.Clear();
+                _CSP.Add("style-src", uri.Authority);
+                _CSP.Add("font-src", uri.Authority);
             }
 
             if (!string.IsNullOrEmpty(model.CustomLogoLink) &&
                 Uri.TryCreate(model.CustomLogoLink, UriKind.Absolute, out uri))
             {
-                _CSP.Clear();
+                _CSP.Add("img-src", uri.Authority);
             }
 
             return View(nameof(Checkout), model);

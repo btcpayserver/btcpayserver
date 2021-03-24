@@ -286,7 +286,7 @@ namespace BTCPayServer.Controllers.GreenField
                     {
                         address = BitcoinAddress.Create(destination.Destination, network.NBitcoinNetwork).ToString();
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                         request.AddModelError(transactionRequest => transactionRequest.Destinations[index],
                             "Destination must be a BIP21 payment link or an address", this);

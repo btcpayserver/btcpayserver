@@ -378,19 +378,14 @@ namespace BTCPayServer.Tests
                 await alice.RegisterDerivationSchemeAsync("BTC", ScriptPubKeyType.Segwit, true);
                 await notifications.ListenDerivationSchemesAsync(new[] { alice.DerivationScheme });
 
-                BitcoinAddress aliceAddress = null;
-                for (int i = 0; i < 3; i++)
+                BitcoinAddress address = null;
+                for (int i = 0; i < 5; i++)
                 {
-                    await tester.WaitForEvent<NewOnChainTransactionEvent>(async () =>
-                    {
-                        aliceAddress = (await nbx.GetUnusedAsync(alice.DerivationScheme, DerivationFeature.Deposit)).Address;
-                        await tester.ExplorerNode.GenerateAsync(1);
-                        tester.ExplorerNode.SendToAddress(aliceAddress, Money.Coins(1.0m));
-                    });
+                    address = (await nbx.GetUnusedAsync(alice.DerivationScheme, DerivationFeature.Deposit)).Address;
+                    await tester.ExplorerNode.GenerateAsync(1);
+                    tester.ExplorerNode.SendToAddress(address, Money.Coins(1.0m));
+                    await notifications.NextEventAsync();
                 }
-
-                await notifications.NextEventAsync();
-
                 var paymentAddress = new Key().PubKey.GetAddress(ScriptPubKeyType.Legacy, Network.RegTest);
                 var otherAddress = new Key().PubKey.GetAddress(ScriptPubKeyType.Legacy, Network.RegTest);
                 var psbt = (await nbx.CreatePSBTAsync(alice.DerivationScheme, new CreatePSBTRequest()
@@ -457,7 +452,6 @@ namespace BTCPayServer.Tests
                 fakeServer.Done();
                 ex = await Assert.ThrowsAsync<PayjoinSenderException>(async () => await requesting);
                 Assert.Contains("The receiver decreased the value of one", ex.Message);
-
                 Logs.Tester.LogInformation("The payjoin receiver tries to pocket the fee");
                 requesting = pjClient.RequestPayjoin(bip21, new PayjoinWallet(derivationSchemeSettings), psbt, default);
                 request = await fakeServer.GetNextRequest();
@@ -505,7 +499,6 @@ namespace BTCPayServer.Tests
                 ex = await Assert.ThrowsAsync<PayjoinSenderException>(async () => await requesting);
                 Assert.Contains("is not only paying fee", ex.Message);
                 pjClient.MaxFeeBumpContribution = null;
-
                 Logs.Tester.LogInformation("The payjoin receiver can't use additional fee without adding inputs");
                 pjClient.MinimumFeeRate = new FeeRate(50m);
                 requesting = pjClient.RequestPayjoin(bip21, new PayjoinWallet(derivationSchemeSettings), psbt, default);
@@ -523,15 +516,19 @@ namespace BTCPayServer.Tests
                 var bob = tester.NewAccount();
                 await bob.GrantAccessAsync();
                 await bob.RegisterDerivationSchemeAsync("BTC", ScriptPubKeyType.Segwit, true);
+
+                await notifications.DisposeAsync();
+                notifications = await nbx.CreateWebsocketNotificationSessionAsync();
                 await notifications.ListenDerivationSchemesAsync(new[] { bob.DerivationScheme });
-                aliceAddress = (await nbx.GetUnusedAsync(bob.DerivationScheme, DerivationFeature.Deposit)).Address;
-                tester.ExplorerNode.SendToAddress(aliceAddress, Money.Coins(1.1m));
+                address = (await nbx.GetUnusedAsync(bob.DerivationScheme, DerivationFeature.Deposit)).Address;
+                tester.ExplorerNode.SendToAddress(address, Money.Coins(1.1m));
                 await notifications.NextEventAsync();
                 bob.ModifyStore(s => s.PayJoinEnabled = true);
                 var invoice = bob.BitPay.CreateInvoice(
                     new Invoice() { Price = 0.1m, Currency = "BTC", FullNotifications = true });
                 var invoiceBIP21 = new BitcoinUrlBuilder(invoice.CryptoInfo.First().PaymentUrls.BIP21,
                     tester.ExplorerClient.Network.NBitcoinNetwork);
+
                 psbt = (await nbx.CreatePSBTAsync(alice.DerivationScheme, new CreatePSBTRequest()
                 {
                     Destinations =
@@ -823,16 +820,32 @@ retry:
                 //give the cow some cash
                 await cashCow.GenerateAsync(1);
                 //let's get some more utxos first
-                await receiverUser.ReceiveUTXO(Money.Coins(0.011m), btcPayNetwork);
-                await receiverUser.ReceiveUTXO(Money.Coins(0.012m), btcPayNetwork);
-                await receiverUser.ReceiveUTXO(Money.Coins(0.013m), btcPayNetwork);
-                await receiverUser.ReceiveUTXO(Money.Coins(0.014m), btcPayNetwork);
-                await senderUser.ReceiveUTXO(Money.Coins(0.021m), btcPayNetwork);
-                await senderUser.ReceiveUTXO(Money.Coins(0.022m), btcPayNetwork);
-                await senderUser.ReceiveUTXO(Money.Coins(0.023m), btcPayNetwork);
-                await senderUser.ReceiveUTXO(Money.Coins(0.024m), btcPayNetwork);
-                await senderUser.ReceiveUTXO(Money.Coins(0.025m), btcPayNetwork);
-                await senderUser.ReceiveUTXO(Money.Coins(0.026m), btcPayNetwork);
+                foreach (var m in new []
+                {
+                    Money.Coins(0.011m),
+                    Money.Coins(0.012m),
+                    Money.Coins(0.013m),
+                    Money.Coins(0.014m),
+                    Money.Coins(0.015m),
+                    Money.Coins(0.016m)
+                })
+                {
+                    await receiverUser.ReceiveUTXO(m, btcPayNetwork);
+                }
+
+                foreach (var m in new[]
+                {
+                    Money.Coins(0.021m),
+                    Money.Coins(0.022m),
+                    Money.Coins(0.023m),
+                    Money.Coins(0.024m),
+                    Money.Coins(0.025m),
+                    Money.Coins(0.026m)
+                })
+                {
+                    await senderUser.ReceiveUTXO(m, btcPayNetwork);
+                }
+
                 var senderChange = await senderUser.GetNewAddress(btcPayNetwork);
 
                 //Let's start the harassment
@@ -873,7 +886,7 @@ retry:
                 {
                     senderCoins = await btcPayWallet.GetUnspentCoins(senderUser.DerivationScheme);
                     Assert.Contains(senderCoins, coin => coin.Value.GetValue(btcPayNetwork) == 0.026m);
-                    coin = senderCoins.Single(coin => coin.Value.GetValue(btcPayNetwork) == 0.021m);
+                    coin = Assert.Single(senderCoins, coin => coin.Value.GetValue(btcPayNetwork) == 0.021m);
                     coin2 = Assert.Single(senderCoins, coin => coin.Value.GetValue(btcPayNetwork) == 0.022m);
                     coin3 = Assert.Single(senderCoins, coin => coin.Value.GetValue(btcPayNetwork) == 0.023m);
                     coin4 = Assert.Single(senderCoins, coin => coin.Value.GetValue(btcPayNetwork) == 0.024m);

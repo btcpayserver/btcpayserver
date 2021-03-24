@@ -377,10 +377,17 @@ namespace BTCPayServer.Tests
                 var alice = tester.NewAccount();
                 await alice.RegisterDerivationSchemeAsync("BTC", ScriptPubKeyType.Segwit, true);
                 await notifications.ListenDerivationSchemesAsync(new[] { alice.DerivationScheme });
-                var address = (await nbx.GetUnusedAsync(alice.DerivationScheme, DerivationFeature.Deposit)).Address;
-                await tester.ExplorerNode.GenerateAsync(1);
-                tester.ExplorerNode.SendToAddress(address, Money.Coins(1.0m));
+
+                BitcoinAddress aliceAddress = null;
+                await tester.WaitForEvent<NewOnChainTransactionEvent>(async() =>
+                {
+                    aliceAddress = (await nbx.GetUnusedAsync(alice.DerivationScheme, DerivationFeature.Deposit)).Address;
+                    await tester.ExplorerNode.GenerateAsync(1);
+                    tester.ExplorerNode.SendToAddress(aliceAddress, Money.Coins(1.0m));
+                });
+
                 await notifications.NextEventAsync();
+
                 var paymentAddress = new Key().PubKey.GetAddress(ScriptPubKeyType.Legacy, Network.RegTest);
                 var otherAddress = new Key().PubKey.GetAddress(ScriptPubKeyType.Legacy, Network.RegTest);
                 var psbt = (await nbx.CreatePSBTAsync(alice.DerivationScheme, new CreatePSBTRequest()
@@ -514,8 +521,8 @@ namespace BTCPayServer.Tests
                 await bob.GrantAccessAsync();
                 await bob.RegisterDerivationSchemeAsync("BTC", ScriptPubKeyType.Segwit, true);
                 await notifications.ListenDerivationSchemesAsync(new[] { bob.DerivationScheme });
-                address = (await nbx.GetUnusedAsync(bob.DerivationScheme, DerivationFeature.Deposit)).Address;
-                tester.ExplorerNode.SendToAddress(address, Money.Coins(1.1m));
+                aliceAddress = (await nbx.GetUnusedAsync(bob.DerivationScheme, DerivationFeature.Deposit)).Address;
+                tester.ExplorerNode.SendToAddress(aliceAddress, Money.Coins(1.1m));
                 await notifications.NextEventAsync();
                 bob.ModifyStore(s => s.PayJoinEnabled = true);
                 var invoice = bob.BitPay.CreateInvoice(

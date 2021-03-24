@@ -150,10 +150,3 @@ header.masthead::before,
 .service-box img {
   filter: hue-rotate(318deg);
 }
-
-@media (min-width: 992px) {
-    #mainNav .navbar-nav > li.nav-item > a.nav-link:focus,
-    #mainNav .navbar-nav > li.nav-item > a.nav-link:hover {
-        border-bottom-color: var(--btcpay-header-color-link-accent);
-    }
-}

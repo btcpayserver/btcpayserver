@@ -379,12 +379,15 @@ namespace BTCPayServer.Tests
                 await notifications.ListenDerivationSchemesAsync(new[] { alice.DerivationScheme });
 
                 BitcoinAddress aliceAddress = null;
-                await tester.WaitForEvent<NewOnChainTransactionEvent>(async() =>
+                for (int i = 0; i < 3; i++)
                 {
-                    aliceAddress = (await nbx.GetUnusedAsync(alice.DerivationScheme, DerivationFeature.Deposit)).Address;
-                    await tester.ExplorerNode.GenerateAsync(1);
-                    tester.ExplorerNode.SendToAddress(aliceAddress, Money.Coins(1.0m));
-                });
+                    await tester.WaitForEvent<NewOnChainTransactionEvent>(async () =>
+                    {
+                        aliceAddress = (await nbx.GetUnusedAsync(alice.DerivationScheme, DerivationFeature.Deposit)).Address;
+                        await tester.ExplorerNode.GenerateAsync(1);
+                        tester.ExplorerNode.SendToAddress(aliceAddress, Money.Coins(1.0m));
+                    });
+                }
 
                 await notifications.NextEventAsync();
 

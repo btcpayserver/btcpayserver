@@ -87,6 +87,19 @@ namespace BTCPayServer.Tests
                 Assert.True(await repo.TryLock(outpoint));
                 Assert.True(await repo.TryUnlock(outpoint));
                 Assert.False(await repo.TryUnlock(outpoint));
+
+                // Make sure that if any can't be locked, all are not locked
+                var outpoint1 = RandomOutpoint();
+                var outpoint2 = RandomOutpoint();
+                Assert.True(await repo.TryLockInputs(new[] { outpoint1 }));
+                Assert.False(await repo.TryLockInputs(new[] { outpoint1, outpoint2 }));
+                Assert.True(await repo.TryLockInputs(new[] { outpoint2 }));
+
+                outpoint1 = RandomOutpoint();
+                outpoint2 = RandomOutpoint();
+                Assert.True(await repo.TryLockInputs(new[] { outpoint1 }));
+                Assert.False(await repo.TryLockInputs(new[] { outpoint2, outpoint1 }));
+                Assert.True(await repo.TryLockInputs(new[] { outpoint2 }));
             }
         }
 
@@ -901,10 +914,6 @@ retry:
                     .SendEstimatedFees(new FeeRate(100m))
                     .BuildTransaction(true);
 
-                //Attempt 1: Send a signed tx to invoice 1 that does not pay the invoice at all 
-                //Result: reject
-                // Assert.False((await tester.PayTester.HttpClient.PostAsync(endpoint,
-                //     new StringContent(Invoice2Coin1.ToHex(), Encoding.UTF8, "text/plain"))).IsSuccessStatusCode);
 
                 //Attempt 2: Create two transactions using different inputs and send them to the same invoice. 
                 //Result: Second Tx should be rejected. 

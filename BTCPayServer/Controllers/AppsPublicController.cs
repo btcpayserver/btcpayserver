@@ -60,6 +60,7 @@ namespace BTCPayServer.Controllers
         [Route("/")]
         [Route("/apps/{appId}/pos/{viewType?}")]
         [XFrameOptionsAttribute(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
+        [ContentSecurityPolicyAttribute(Enabled = false)]
         [DomainMappingConstraint(AppType.PointOfSale)]
         public async Task<IActionResult> ViewPointOfSale(string appId, PosViewType? viewType = null)
         {
@@ -106,6 +107,8 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost]
+        [ContentSecurityPolicyAttribute(Enabled = false)]
+        [Route("/")]
         [Route("/apps/{appId}/pos/{viewType?}")]
         [XFrameOptionsAttribute(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
         [IgnoreAntiforgeryToken]
@@ -238,6 +241,7 @@ namespace BTCPayServer.Controllers
         [Route("/")]
         [Route("/apps/{appId}/crowdfund")]
         [XFrameOptionsAttribute(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
+        [ContentSecurityPolicyAttribute(Enabled = false)]
         [DomainMappingConstraintAttribute(AppType.Crowdfund)]
         public async Task<IActionResult> ViewCrowdfund(string appId, string statusMessage)
         {
@@ -273,6 +277,7 @@ namespace BTCPayServer.Controllers
         [XFrameOptionsAttribute(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
         [IgnoreAntiforgeryToken]
         [EnableCors(CorsPolicies.All)]
+        [ContentSecurityPolicyAttribute(Enabled = false)]
         [DomainMappingConstraintAttribute(AppType.Crowdfund)]
         public async Task<IActionResult> ContributeToCrowdfund(string appId, ContributeToCrowdfund request, CancellationToken cancellationToken)
         {

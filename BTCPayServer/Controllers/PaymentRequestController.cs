@@ -176,6 +176,7 @@ namespace BTCPayServer.Controllers
         [HttpGet]
         [Route("{id}")]
         [AllowAnonymous]
+        [ContentSecurityPolicyAttribute(Enabled = false)]
         public async Task<IActionResult> ViewPaymentRequest(string id)
         {
             var result = await _PaymentRequestService.GetPaymentRequest(id, GetUserId());
@@ -191,6 +192,7 @@ namespace BTCPayServer.Controllers
         [HttpGet]
         [Route("{id}/pay")]
         [AllowAnonymous]
+        [ContentSecurityPolicyAttribute(Enabled = false)]
         public async Task<IActionResult> PayPaymentRequest(string id, bool redirectToInvoice = true,
             decimal? amount = null, CancellationToken cancellationToken = default)
         {

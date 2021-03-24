@@ -431,6 +431,7 @@ namespace BTCPayServer.Controllers
         [AcceptMediaTypeConstraint("application/bitcoin-paymentrequest", false)]
         [XFrameOptionsAttribute(null)]
         [ReferrerPolicyAttribute("origin")]
+        [ContentSecurityPolicyAttribute(Enabled = false)] // Disable the top level filter
         public async Task<IActionResult> Checkout(string invoiceId, string id = null, string paymentMethodId = null,
             [FromQuery] string view = null, [FromQuery] string lang = null)
         {

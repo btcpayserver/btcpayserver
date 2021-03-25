@@ -31,11 +31,11 @@ namespace BTCPayServer.Tests
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
-                user.GrantAccess();
+                await user.GrantAccess();
                 var user2 = tester.NewAccount();
-                user2.GrantAccess();
-                var apps = user.GetController<AppsController>();
-                var apps2 = user2.GetController<AppsController>();
+                await user2.GrantAccess();
+                var apps = await user.GetController<AppsController>();
+                var apps2 = await user2.GetController<AppsController>();
                 var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp().Result).Model);
                 Assert.NotNull(vm.SelectedAppType);
                 Assert.Null(vm.Name);
@@ -71,9 +71,9 @@ namespace BTCPayServer.Tests
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
-                user.GrantAccess();
-                user.RegisterDerivationScheme("BTC");
-                var apps = user.GetController<AppsController>();
+                await user.GrantAccess();
+                await user.RegisterDerivationScheme("BTC");
+                var apps = await user.GetController<AppsController>();
                 var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp().Result).Model);
                 vm.Name = "test";
                 vm.SelectedAppType = AppType.Crowdfund.ToString();
@@ -90,8 +90,8 @@ namespace BTCPayServer.Tests
 
                 Assert.IsType<RedirectToActionResult>(apps.UpdateCrowdfund(appId, crowdfundViewModel, "save").Result);
 
-                var anonAppPubsController = tester.PayTester.GetController<AppsPublicController>();
-                var publicApps = user.GetController<AppsPublicController>();
+                var anonAppPubsController = await tester.PayTester.GetController<AppsPublicController>();
+                var publicApps = await user.GetController<AppsPublicController>();
 
 
                 Assert.IsType<NotFoundObjectResult>(await anonAppPubsController.ContributeToCrowdfund(appId, new ContributeToCrowdfund()
@@ -163,10 +163,10 @@ namespace BTCPayServer.Tests
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
-                user.GrantAccess();
-                user.RegisterDerivationScheme("BTC");
-                user.ModifyStore(s => s.NetworkFeeMode = NetworkFeeMode.Never);
-                var apps = user.GetController<AppsController>();
+                await user.GrantAccess();
+                await user.RegisterDerivationScheme("BTC");
+                await user.ModifyStore(s => s.NetworkFeeMode = NetworkFeeMode.Never);
+                var apps = await user.GetController<AppsController>();
                 var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp().Result).Model);
                 vm.Name = "test";
                 vm.SelectedAppType = AppType.Crowdfund.ToString();
@@ -185,8 +185,8 @@ namespace BTCPayServer.Tests
                 crowdfundViewModel.EnforceTargetAmount = true;
                 Assert.IsType<RedirectToActionResult>(apps.UpdateCrowdfund(appId, crowdfundViewModel, "save").Result);
 
-                var anonAppPubsController = tester.PayTester.GetController<AppsPublicController>();
-                var publicApps = user.GetController<AppsPublicController>();
+                var anonAppPubsController = await tester.PayTester.GetController<AppsPublicController>();
+                var publicApps = await user.GetController<AppsPublicController>();
 
                 var model = Assert.IsType<ViewCrowdfundViewModel>(Assert
                     .IsType<ViewResult>(publicApps.ViewCrowdfund(appId, String.Empty).Result).Model);
@@ -236,7 +236,7 @@ namespace BTCPayServer.Tests
                 });
 
                 Logs.Tester.LogInformation("Because UseAllStoreInvoices is true, let's make sure the invoice is tagged");
-                var invoiceEntity = tester.PayTester.InvoiceRepository.GetInvoice(invoice.Id).GetAwaiter().GetResult();
+                var invoiceEntity = await tester.PayTester.InvoiceRepository.GetInvoice(invoice.Id);
                 Assert.True(invoiceEntity.Version >= InvoiceEntity.InternalTagSupport_Version);
                 Assert.Contains(AppService.GetAppInternalTag(appId), invoiceEntity.InternalTags);
 
@@ -254,7 +254,7 @@ namespace BTCPayServer.Tests
                     TransactionSpeed = "high",
                     FullNotifications = true
                 }, Facade.Merchant);
-                invoiceEntity = tester.PayTester.InvoiceRepository.GetInvoice(invoice.Id).GetAwaiter().GetResult();
+                invoiceEntity = await tester.PayTester.InvoiceRepository.GetInvoice(invoice.Id);
                 Assert.DoesNotContain(AppService.GetAppInternalTag(appId), invoiceEntity.InternalTags);
 
                 Logs.Tester.LogInformation("After turning setting a softcap, let's check that only actual payments are counted");

@@ -99,11 +99,11 @@ namespace BTCPayServer.Tests
 
                 var tester = s.Server;
                 var u1 = tester.NewAccount();
-                u1.GrantAccess();
+                await u1.GrantAccess();
                 await u1.MakeAdmin(false);
 
                 var u2 = tester.NewAccount();
-                u2.GrantAccess();
+                await u2.GrantAccess();
                 await u2.MakeAdmin(false);
 
                 s.GoToLogin();

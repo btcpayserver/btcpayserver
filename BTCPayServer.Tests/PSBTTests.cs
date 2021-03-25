@@ -28,8 +28,8 @@ namespace BTCPayServer.Tests
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
-                user.GrantAccess();
-                user.RegisterDerivationScheme("BTC");
+                await user.GrantAccess();
+                await user.RegisterDerivationScheme("BTC");
                 var invoice = user.BitPay.CreateInvoice(new Invoice()
                 {
                     Price = 10,
@@ -48,7 +48,7 @@ namespace BTCPayServer.Tests
                     Assert.Equal("paid", invoice.Status);
                 });
 
-                var walletController = user.GetController<WalletsController>();
+                var walletController = await user.GetController<WalletsController>();
                 var walletId = new WalletId(user.StoreId, "BTC");
                 var sendDestination = new Key().PubKey.Hash.GetAddress(user.SupportedNetwork.NBitcoinNetwork).ToString();
                 var sendModel = new WalletSendModel()

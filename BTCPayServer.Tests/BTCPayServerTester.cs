@@ -282,7 +282,7 @@ namespace BTCPayServer.Tests
         public string SSHPassword { get; internal set; }
         public string SSHKeyFile { get; internal set; }
         public string SSHConnection { get; set; }
-        public T GetController<T>(string userId = null, string storeId = null, bool isAdmin = false) where T : Controller
+        public async Task<T> GetController<T>(string userId = null, string storeId = null, bool isAdmin = false) where T : Controller
         {
             var context = new DefaultHttpContext();
             context.Request.Host = new HostString("127.0.0.1", Port);
@@ -298,17 +298,12 @@ namespace BTCPayServer.Tests
             }
             if (storeId != null)
             {
-                context.SetStoreData(GetService<StoreRepository>().FindStore(storeId, userId).GetAwaiter().GetResult());
+                context.SetStoreData(await GetService<StoreRepository>().FindStore(storeId, userId));
             }
             var scope = (IServiceScopeFactory)_Host.Services.GetService(typeof(IServiceScopeFactory));
-            var provider = scope.CreateScope().ServiceProvider;
+            var provider = new InterceptorServiceProvider(scope.CreateScope().ServiceProvider, context);
             context.RequestServices = provider;
-
-            var httpAccessor = provider.GetRequiredService<IHttpContextAccessor>();
-            httpAccessor.HttpContext = context;
-
             var controller = (T)ActivatorUtilities.CreateInstance(provider, typeof(T));
-
             controller.Url = new UrlHelperMock(new Uri($"http://{HostName}:{Port}/"));
             controller.ControllerContext = new ControllerContext()
             {

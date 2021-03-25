@@ -48,7 +48,7 @@ namespace BTCPayServer.Tests
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
-                user.GrantAccess();
+                await user.GrantAccess();
                 await user.MakeAdmin();
                 var client = await user.CreateClient(Policies.CanViewProfile);
                 var clientBasic = await user.CreateClient();
@@ -78,7 +78,7 @@ namespace BTCPayServer.Tests
             {
                 await tester.StartAsync();
                 var acc = tester.NewAccount();
-                await acc.GrantAccessAsync();
+                await acc.GrantAccess();
                 var unrestricted = await acc.CreateClient();
                 var response = await unrestricted.CreateStore(new CreateStoreRequest() { Name = "mystore" });
                 var apiKey = (await unrestricted.CreateAPIKey(new CreateApiKeyRequest() { Permissions = new[] { Permission.Create("btcpay.store.canmodifystoresettings", response.Id) } })).ApiKey;
@@ -103,7 +103,7 @@ namespace BTCPayServer.Tests
             {
                 await tester.StartAsync();
                 var acc = tester.NewAccount();
-                await acc.GrantAccessAsync();
+                await acc.GrantAccess();
                 var unrestricted = await acc.CreateClient();
                 var apiKey = await unrestricted.CreateAPIKey(new CreateApiKeyRequest()
                 {
@@ -272,9 +272,9 @@ namespace BTCPayServer.Tests
             {
                 await tester.StartAsync();
                 var acc = tester.NewAccount();
-                acc.Register();
-                acc.CreateStore();
-                var storeId = (await acc.RegisterDerivationSchemeAsync("BTC", importKeysToNBX: true)).StoreId;
+                await acc.Register();
+                await acc.CreateStore();
+                var storeId = (await acc.RegisterDerivationScheme("BTC", importKeysToNBX: true)).StoreId;
                 var client = await acc.CreateClient();
                 var result = await client.CreatePullPayment(storeId, new Client.Models.CreatePullPaymentRequest()
                 {
@@ -471,6 +471,7 @@ namespace BTCPayServer.Tests
                 {
                     Revision = payout.Revision
                 }));
+                await tester.AssertCanDeleteStores();
             }
         }
 
@@ -493,7 +494,7 @@ namespace BTCPayServer.Tests
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
-                user.GrantAccess();
+                await user.GrantAccess();
                 await user.MakeAdmin();
                 var client = await user.CreateClient(Policies.Unrestricted);
 
@@ -570,7 +571,7 @@ namespace BTCPayServer.Tests
                 tester.PayTester.DisableRegistration = true;
                 await tester.StartAsync();
                 var user = tester.NewAccount();
-                user.GrantAccess();
+                await user.GrantAccess();
                 await user.MakeAdmin();
                 var clientProfile = await user.CreateClient(Policies.CanModifyProfile);
                 var clientServer = await user.CreateClient(Policies.CanCreateUser, Policies.CanViewProfile);
@@ -643,8 +644,8 @@ namespace BTCPayServer.Tests
             await fakeServer.Start();
             await tester.StartAsync();
             var user = tester.NewAccount();
-            user.GrantAccess();
-            user.RegisterDerivationScheme("BTC");
+            await user.GrantAccess();
+            await user.RegisterDerivationScheme("BTC");
             var clientProfile = await user.CreateClient(Policies.CanModifyStoreWebhooks, Policies.CanCreateInvoice);
             var hook = await clientProfile.CreateWebhook(user.StoreId, new CreateStoreWebhookRequest()
             {
@@ -748,7 +749,7 @@ namespace BTCPayServer.Tests
                 await AssertHttpError(401, async () => await unauthClient.GetServerInfo());
 
                 var user = tester.NewAccount();
-                user.GrantAccess();
+                await user.GrantAccess();
                 var clientBasic = await user.CreateClient();
                 var serverInfoData = await clientBasic.GetServerInfo();
                 Assert.NotNull(serverInfoData);
@@ -770,7 +771,7 @@ namespace BTCPayServer.Tests
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
-                user.GrantAccess();
+                await user.GrantAccess();
                 await user.MakeAdmin();
                 var client = await user.CreateClient(Policies.Unrestricted);
                 var viewOnly = await user.CreateClient(Policies.CanViewPaymentRequests);
@@ -833,11 +834,11 @@ namespace BTCPayServer.Tests
                     (await client.GetPaymentRequests(user.StoreId)).Select(data => data.Id));
 
                 //let's test some payment stuff
-                await user.RegisterDerivationSchemeAsync("BTC");
+                await user.RegisterDerivationScheme("BTC");
                 var paymentTestPaymentRequest = await client.CreatePaymentRequest(user.StoreId,
                     new CreatePaymentRequestRequest() { Amount = 0.1m, Currency = "BTC", Title = "Payment test title" });
 
-                var invoiceId = Assert.IsType<string>(Assert.IsType<OkObjectResult>(await user.GetController<PaymentRequestController>()
+                var invoiceId = Assert.IsType<string>(Assert.IsType<OkObjectResult>(await (await user.GetController<PaymentRequestController>())
                     .PayPaymentRequest(paymentTestPaymentRequest.Id, false)).Value);
                 var invoice = user.BitPay.GetInvoice(invoiceId);
                 await tester.WaitForEvent<InvoiceDataChangedEvent>(async () =>
@@ -861,8 +862,8 @@ namespace BTCPayServer.Tests
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
-                await user.GrantAccessAsync();
-                user.RegisterDerivationScheme("BTC");
+                await user.GrantAccess();
+                await user.RegisterDerivationScheme("BTC");
                 var client = await user.CreateClient(Policies.Unrestricted);
                 var oldBitpay = user.BitPay;
 
@@ -930,7 +931,7 @@ namespace BTCPayServer.Tests
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
-                await user.GrantAccessAsync();
+                await user.GrantAccess();
                 await user.MakeAdmin();
                 await user.SetupWebhook();
                 var client = await user.CreateClient(Policies.Unrestricted);
@@ -949,7 +950,7 @@ namespace BTCPayServer.Tests
                     await viewOnly.CreateInvoice(user.StoreId,
                         new CreateInvoiceRequest() { Currency = "helloinvalid", Amount = 1 });
                 });
-                await user.RegisterDerivationSchemeAsync("BTC");
+                await user.RegisterDerivationScheme("BTC");
                 var newInvoice = await client.CreateInvoice(user.StoreId,
                     new CreateInvoiceRequest() { Currency = "USD", Amount = 1, Metadata = JObject.Parse("{\"itemCode\": \"testitem\"}"), Checkout = new CreateInvoiceRequest.CheckoutOptions()
                     {
@@ -1071,7 +1072,7 @@ namespace BTCPayServer.Tests
                         }
                     });
                 Assert.EndsWith($"/i/{newInvoice.Id}", newInvoice.CheckoutLink);
-                var controller = tester.PayTester.GetController<InvoiceController>(user.UserId, user.StoreId);
+                var controller = await tester.PayTester.GetController<InvoiceController>(user.UserId, user.StoreId);
                 var model = (PaymentModel)((ViewResult)await controller.Checkout(newInvoice.Id)).Model;
                 Assert.Equal("it-IT", model.DefaultLang);
                 Assert.Equal("http://toto.com/lol", model.MerchantRefLink);
@@ -1107,12 +1108,12 @@ namespace BTCPayServer.Tests
                 await tester.StartAsync();
                 await tester.EnsureChannelsSetup();
                 var user = tester.NewAccount();
-                user.GrantAccess(true);
-                user.RegisterLightningNode("BTC", LightningConnectionType.CLightning, false);
+                await user.GrantAccess(true);
+                await user.RegisterLightningNode("BTC", LightningConnectionType.CLightning, false);
 
                 var merchant = tester.NewAccount();
-                merchant.GrantAccess(true);
-                merchant.RegisterLightningNode("BTC", LightningConnectionType.LndREST);
+                await merchant.GrantAccess(true);
+                await merchant.RegisterLightningNode("BTC", LightningConnectionType.LndREST);
                 var merchantClient = await merchant.CreateClient($"{Policies.CanUseLightningNodeInStore}:{merchant.StoreId}");
                 var merchantInvoice = await merchantClient.CreateLightningInvoice(merchant.StoreId, "BTC", new CreateLightningInvoiceRequest(LightMoney.Satoshis(1_000), "hey", TimeSpan.FromSeconds(60)));
                 // The default client is using charge, so we should not be able to query channels
@@ -1192,7 +1193,7 @@ namespace BTCPayServer.Tests
             using var tester = ServerTester.Create();
             await tester.StartAsync();
             var user = tester.NewAccount();
-            await user.GrantAccessAsync(true);
+            await user.GrantAccess(true);
             var client = await user.CreateClient(Policies.CanManageNotificationsForUser);
             var viewOnlyClient = await user.CreateClient(Policies.CanViewNotificationsForUser);
             await tester.PayTester.GetService<NotificationSender>()
@@ -1231,7 +1232,7 @@ namespace BTCPayServer.Tests
             using var tester = ServerTester.Create();
             await tester.StartAsync();
             var user = tester.NewAccount();
-            await user.GrantAccessAsync(true);
+            await user.GrantAccess(true);
             var client = await user.CreateClient(Policies.CanModifyStoreSettings);
             var viewOnlyClient = await user.CreateClient(Policies.CanViewStoreSettings);
 
@@ -1291,9 +1292,9 @@ namespace BTCPayServer.Tests
             await tester.StartAsync();
             await tester.EnsureChannelsSetup();
             var admin = tester.NewAccount();
-            await admin.GrantAccessAsync(true);
+            await admin.GrantAccess(true);
             var admin2 = tester.NewAccount();
-            await admin2.GrantAccessAsync(true);
+            await admin2.GrantAccess(true);
             var adminClient = await admin.CreateClient(Policies.CanModifyStoreSettings);
             var admin2Client = await admin2.CreateClient(Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings);
             var viewOnlyClient = await admin.CreateClient(Policies.CanViewStoreSettings);
@@ -1308,7 +1309,7 @@ namespace BTCPayServer.Tests
             {
                 await adminClient.GetStoreLightningNetworkPaymentMethod(store.Id, "BTC");
             });
-            await admin.RegisterLightningNodeAsync("BTC", false);
+            await admin.RegisterLightningNode("BTC", false);
             
             var method = await adminClient.GetStoreLightningNetworkPaymentMethod(store.Id, "BTC");
             await AssertHttpError(403, async () =>
@@ -1376,7 +1377,7 @@ namespace BTCPayServer.Tests
             settings.AllowLightningInternalNodeForAll = false;
             await tester.PayTester.GetService<SettingsRepository>().UpdateSetting(settings);
             var nonAdminUser = tester.NewAccount();
-            await nonAdminUser.GrantAccessAsync(false);
+            await nonAdminUser.GrantAccess(false);
             var nonAdminUserClient= await nonAdminUser.CreateClient(Policies.CanModifyStoreSettings);
             
             await AssertHttpError(404, async () =>
@@ -1403,11 +1404,11 @@ namespace BTCPayServer.Tests
             await tester.StartAsync();
             
             var user = tester.NewAccount();
-            await user.GrantAccessAsync(true);
+            await user.GrantAccess(true);
             
             var client = await user.CreateClient(Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings);
             var viewOnlyClient = await user.CreateClient(Policies.CanViewStoreSettings);
-            var walletId = await user.RegisterDerivationSchemeAsync("BTC", ScriptPubKeyType.Segwit, true);
+            var walletId = await user.RegisterDerivationScheme("BTC", ScriptPubKeyType.Segwit, true);
     
             //view only clients can't do jack shit with this API
             await AssertHttpError(403, async () =>

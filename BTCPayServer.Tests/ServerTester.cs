@@ -167,12 +167,7 @@ namespace BTCPayServer.Tests
             yield return MerchantLnd.Client;
         }
 
-        public void SendLightningPayment(Invoice invoice)
-        {
-            SendLightningPaymentAsync(invoice).GetAwaiter().GetResult();
-        }
-
-        public async Task SendLightningPaymentAsync(Invoice invoice)
+        public async Task SendLightningPayment(Invoice invoice)
         {
             var bolt11 = invoice.CryptoInfo.Where(o => o.PaymentUrls.BOLT11 != null).First().PaymentUrls.BOLT11;
             bolt11 = bolt11.Replace("lightning:", "", StringComparison.OrdinalIgnoreCase);
@@ -244,15 +239,18 @@ namespace BTCPayServer.Tests
 
         public List<string> Stores { get; internal set; } = new List<string>();
 
+        public async Task AssertCanDeleteStores()
+        {
+            foreach (var store in Stores)
+            {
+                Xunit.Assert.True(await PayTester.StoreRepository.DeleteStore(store));
+            }
+        }
         public void Dispose()
         {
             foreach (var r in this.Resources)
                 r.Dispose();
             Logs.Tester.LogInformation("Disposing the BTCPayTester...");
-            foreach (var store in Stores)
-            {
-                Xunit.Assert.True(PayTester.StoreRepository.DeleteStore(store).GetAwaiter().GetResult());
-            }
             if (PayTester != null)
                 PayTester.Dispose();
             Logs.Tester.LogInformation("BTCPayTester disposed");

@@ -1,6 +1,7 @@
 using System.IO;
 using System.Net;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using BTCPayServer.Configuration;
 using BTCPayServer.Hosting;
 using BTCPayServer.Logging;
@@ -13,7 +14,7 @@ namespace BTCPayServer
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             ServicePointManager.DefaultConnectionLimit = 100;
             IWebHost host = null;
@@ -47,13 +48,13 @@ namespace BTCPayServer
                     })
                     .UseStartup<Startup>()
                     .Build();
-                host.StartWithTasksAsync().GetAwaiter().GetResult();
+                await host.StartWithTasksAsync();
                 var urls = host.ServerFeatures.Get<IServerAddressesFeature>().Addresses;
                 foreach (var url in urls)
                 {
                     logger.LogInformation("Listening on " + url);
                 }
-                host.WaitForShutdown();
+                await host.WaitForShutdownAsync();
             }
             catch (ConfigException ex)
             {

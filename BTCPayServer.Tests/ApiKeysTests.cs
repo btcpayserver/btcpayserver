@@ -43,7 +43,7 @@ namespace BTCPayServer.Tests
                 var tester = s.Server;
 
                 var user = tester.NewAccount();
-                user.GrantAccess();
+                await user.GrantAccess();
                 await user.MakeAdmin(false);
                 s.GoToLogin();
                 s.Login(user.RegisterDetails.Email, user.RegisterDetails.Password);
@@ -221,7 +221,7 @@ namespace BTCPayServer.Tests
             }
             //create a second user to see if any of its data gets messed upin our results.
             var secondUser = tester.NewAccount();
-            secondUser.GrantAccess();
+            await secondUser.GrantAccess();
 
             var canModifyAllStores = Permission.Create(Policies.CanModifyStoreSettings, null);
             var canModifyServer = Permission.Create(Policies.CanModifyServerSettings, null);

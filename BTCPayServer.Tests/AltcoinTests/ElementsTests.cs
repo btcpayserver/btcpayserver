@@ -37,12 +37,12 @@ namespace BTCPayServer.Tests
                 tester.ActivateLBTC();
                 await tester.StartAsync();
                 var user = tester.NewAccount();
-                user.GrantAccess();
-                user.RegisterDerivationScheme("LBTC");
-                user.RegisterDerivationScheme("BTC");
-                user.RegisterDerivationScheme("USDT");
+                await user.GrantAccess();
+                await user.RegisterDerivationScheme("LBTC");
+                await user.RegisterDerivationScheme("BTC");
+                await user.RegisterDerivationScheme("USDT");
 
-                Assert.Equal(3, Assert.IsType<ListWalletsViewModel>(Assert.IsType<ViewResult>(await user.GetController<WalletsController>().ListWallets()).Model).Wallets.Count);
+                Assert.Equal(3, Assert.IsType<ListWalletsViewModel>(Assert.IsType<ViewResult>(await (await user.GetController<WalletsController>()).ListWallets()).Model).Wallets.Count);
             }
         }
 
@@ -72,10 +72,10 @@ namespace BTCPayServer.Tests
                 tester.ActivateLBTC();
                 await tester.StartAsync();
                 var user = tester.NewAccount();
-                user.GrantAccess();
-                user.RegisterDerivationScheme("LBTC");
-                user.RegisterDerivationScheme("USDT");
-                user.RegisterDerivationScheme("ETB");
+                await user.GrantAccess();
+                await user.RegisterDerivationScheme("LBTC");
+                await user.RegisterDerivationScheme("USDT");
+                await user.RegisterDerivationScheme("ETB");
                 await tester.LBTCExplorerNode.GenerateAsync(4);
                 //no tether on our regtest, lets create it and set it
                 var tether = tester.NetworkProvider.GetNetwork<ElementsBTCPayNetwork>("USDT");

@@ -26,8 +26,8 @@ namespace BTCPayServer.Tests
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
-                user.GrantAccess();
-                var controller = tester.PayTester.GetController<StoresController>(user.UserId, user.StoreId);
+                await user.GrantAccess();
+                var controller = await tester.PayTester.GetController<StoresController>(user.UserId, user.StoreId);
 
 
                 var storeBlob = controller.CurrentStore.GetStoreBlob();
@@ -60,8 +60,8 @@ namespace BTCPayServer.Tests
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
-                user.GrantAccess();
-                var controller = tester.PayTester.GetController<StoresController>(user.UserId, user.StoreId);
+                await user.GrantAccess();
+                var controller = await tester.PayTester.GetController<StoresController>(user.UserId, user.StoreId);
 
                 var updateModel = new UpdateCoinSwitchSettingsViewModel()
                 {

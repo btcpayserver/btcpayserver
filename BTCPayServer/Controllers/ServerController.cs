@@ -155,8 +155,8 @@ namespace BTCPayServer.Controllers
                         var addresses2 = GetAddressAsync(vm.DNSDomain);
                         await Task.WhenAll(addresses1, addresses2);
 
-                        var addressesSet = addresses1.GetAwaiter().GetResult().Select(c => c.ToString()).ToHashSet();
-                        var hasCommonAddress = addresses2.GetAwaiter().GetResult().Select(c => c.ToString()).Any(s => addressesSet.Contains(s));
+                        var addressesSet = (await addresses1).Select(c => c.ToString()).ToHashSet();
+                        var hasCommonAddress = (await addresses2).Select(c => c.ToString()).Any(s => addressesSet.Contains(s));
                         if (!hasCommonAddress)
                         {
                             ModelState.AddModelError(nameof(vm.DNSDomain), $"Invalid host ({vm.DNSDomain} is not pointing to this BTCPay instance)");

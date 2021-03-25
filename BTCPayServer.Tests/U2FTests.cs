@@ -35,11 +35,11 @@ namespace BTCPayServer.Tests
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
-                user.GrantAccess();
-                user.RegisterDerivationScheme("BTC");
+                await user.GrantAccess();
+                await user.RegisterDerivationScheme("BTC");
 
-                var accountController = tester.PayTester.GetController<AccountController>();
-                var manageController = user.GetController<ManageController>();
+                var accountController = await tester.PayTester.GetController<AccountController>();
+                var manageController = await user.GetController<ManageController>();
                 var mock = new MockU2FService(tester.PayTester.GetService<ApplicationDbContextFactory>());
                 manageController._u2FService = mock;
                 accountController._u2FService = mock;

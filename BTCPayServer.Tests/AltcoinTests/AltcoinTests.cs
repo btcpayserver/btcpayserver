@@ -50,10 +50,10 @@ namespace BTCPayServer.Tests
                 tester.ActivateLightning();
                 await tester.StartAsync();
                 var user = tester.NewAccount();
-                user.GrantAccess(true);
-                user.RegisterDerivationScheme("BTC");
-                user.RegisterDerivationScheme("LTC");
-                user.RegisterLightningNode("BTC", LightningConnectionType.CLightning);
+                await user.GrantAccess(true);
+                await user.RegisterDerivationScheme("BTC");
+                await user.RegisterDerivationScheme("LTC");
+                await user.RegisterLightningNode("BTC", LightningConnectionType.CLightning);
                 var btcNetwork = tester.PayTester.Networks.GetNetwork<BTCPayNetwork>("BTC");
                 var invoice = user.BitPay.CreateInvoice(
                     new Invoice()
@@ -68,7 +68,7 @@ namespace BTCPayServer.Tests
 
                 Assert.Equal(3, invoice.CryptoInfo.Length);
 
-                var controller = user.GetController<StoresController>();
+                var controller = await user.GetController<StoresController>();
                 var lightningVm = (LightningNodeViewModel)Assert.IsType<ViewResult>(controller.AddLightningNode(user.StoreId, "BTC")).Model;
                 Assert.True(lightningVm.Enabled);
                 lightningVm.Enabled = false;
@@ -192,7 +192,7 @@ namespace BTCPayServer.Tests
                     invoice = user.BitPay.GetInvoice(invoice.Id);
                     Assert.Equal("paid", invoice.Status);
                 });
-                var wallet = tester.PayTester.GetController<WalletsController>();
+                var wallet = await tester.PayTester.GetController<WalletsController>();
                 var psbt = wallet.CreatePSBT(btcNetwork, onchainBTC,
                     new WalletSendModel()
                     {
@@ -238,10 +238,10 @@ namespace BTCPayServer.Tests
                 await tester.StartAsync();
                 await tester.EnsureChannelsSetup();
                 var user = tester.NewAccount();
-                user.GrantAccess(true);
-                user.RegisterLightningNode("BTC", LightningConnectionType.Charge);
-                user.RegisterDerivationScheme("BTC");
-                user.RegisterDerivationScheme("LTC");
+                await user.GrantAccess(true);
+                await user.RegisterLightningNode("BTC", LightningConnectionType.Charge);
+                await user.RegisterDerivationScheme("BTC");
+                await user.RegisterDerivationScheme("LTC");
 
                 var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice(100, "BTC"));
                 Assert.Equal(2, invoice.SupportedTransactionCurrencies.Count);
@@ -268,8 +268,8 @@ namespace BTCPayServer.Tests
                 tester.ActivateLTC();
                 await tester.StartAsync();
                 var user = tester.NewAccount();
-                user.GrantAccess();
-                user.RegisterDerivationScheme("LTC");
+                await user.GrantAccess();
+                await user.RegisterDerivationScheme("LTC");
 
                 // First we try payment with a merchant having only BTC
                 var invoice = user.BitPay.CreateInvoice(
@@ -302,7 +302,7 @@ namespace BTCPayServer.Tests
 
                 Assert.Single(invoice.CryptoInfo); // Only BTC should be presented
 
-                var controller = tester.PayTester.GetController<InvoiceController>(null);
+                var controller = await tester.PayTester.GetController<InvoiceController>(null);
                 var checkout =
                     (Models.InvoicingModels.PaymentModel)((JsonResult)controller.GetStatus(invoice.Id, null)
                         .GetAwaiter().GetResult()).Value;
@@ -339,16 +339,16 @@ namespace BTCPayServer.Tests
                 s.Server.ActivateLTC();
                 await s.StartAsync();
                 var user = s.Server.NewAccount();
-                await user.GrantAccessAsync();
+                await user.GrantAccess();
                 s.GoToLogin();
                 s.Login(user.RegisterDetails.Email, user.RegisterDetails.Password);
-                user.RegisterDerivationScheme("BTC");
+                await user.RegisterDerivationScheme("BTC");
                 await s.Server.ExplorerNode.GenerateAsync(1);
 
                 foreach (var multiCurrency in new[] { false, true })
                 {
                     if (multiCurrency)
-                        user.RegisterDerivationScheme("LTC");
+                        await user.RegisterDerivationScheme("LTC");
                     foreach (var rateSelection in new[] { "FiatText", "CurrentRateText", "RateThenText" })
                         await CanCreateRefundsCore(s, user, multiCurrency, rateSelection);
                 }
@@ -460,8 +460,8 @@ namespace BTCPayServer.Tests
                 tester.ActivateLTC();
                 await tester.StartAsync();
                 var user = tester.NewAccount();
-                user.GrantAccess();
-                user.RegisterDerivationScheme("BTC");
+                await user.GrantAccess();
+                await user.RegisterDerivationScheme("BTC");
                 // First we try payment with a merchant having only BTC
                 var invoice = user.BitPay.CreateInvoice(
                     new Invoice()
@@ -487,7 +487,7 @@ namespace BTCPayServer.Tests
 
                 Assert.Single(invoice.CryptoInfo); // Only BTC should be presented
 
-                var controller = tester.PayTester.GetController<InvoiceController>(null);
+                var controller = await tester.PayTester.GetController<InvoiceController>(null);
                 var checkout =
                     (Models.InvoicingModels.PaymentModel)((JsonResult)controller.GetStatus(invoice.Id, null)
                         .GetAwaiter().GetResult()).Value;
@@ -507,7 +507,7 @@ namespace BTCPayServer.Tests
                 //////////////////////
 
                 // Retry now with LTC enabled
-                user.RegisterDerivationScheme("LTC");
+                await user.RegisterDerivationScheme("LTC");
                 invoice = user.BitPay.CreateInvoice(
                     new Invoice()
                     {
@@ -549,7 +549,7 @@ namespace BTCPayServer.Tests
                     Assert.False((bool)((JValue)invoice.ExceptionStatus).Value);
                 });
 
-                controller = tester.PayTester.GetController<InvoiceController>(null);
+                controller = await tester.PayTester.GetController<InvoiceController>(null);
                 checkout = (Models.InvoicingModels.PaymentModel)((JsonResult)controller.GetStatus(invoice.Id, "LTC")
                     .GetAwaiter().GetResult()).Value;
                 Assert.Equal(2, checkout.AvailableCryptos.Count);
@@ -599,10 +599,10 @@ namespace BTCPayServer.Tests
                 tester.ActivateLTC();
                 await tester.StartAsync();
                 var user = tester.NewAccount();
-                user.GrantAccess();
-                user.RegisterDerivationScheme("BTC");
-                user.RegisterDerivationScheme("LTC");
-                var apps = user.GetController<AppsController>();
+                await user.GrantAccess();
+                await user.RegisterDerivationScheme("BTC");
+                await user.RegisterDerivationScheme("LTC");
+                var apps = await user.GetController<AppsController>();
                 var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp().Result).Model);
                 vm.Name = "test";
                 vm.SelectedAppType = AppType.PointOfSale.ToString();
@@ -632,7 +632,7 @@ donation:
                     .IsType<ViewResult>(apps.UpdatePointOfSale(appId).Result).Model);
                 Assert.Equal("hello", vmpos.Title);
 
-                var publicApps = user.GetController<AppsPublicController>();
+                var publicApps = await user.GetController<AppsPublicController>();
                 var vmview =
                     Assert.IsType<ViewPointOfSaleViewModel>(Assert
                         .IsType<ViewResult>(publicApps.ViewPointOfSale(appId, PosViewType.Cart).Result).Model);
@@ -707,7 +707,7 @@ donation:
   custom: true
 ";
                     Assert.IsType<RedirectToActionResult>(apps.UpdatePointOfSale(appId, vmpos).Result);
-                    publicApps = user.GetController<AppsPublicController>();
+                    publicApps = await user.GetController<AppsPublicController>();
                     vmview = Assert.IsType<ViewPointOfSaleViewModel>(Assert
                         .IsType<ViewResult>(publicApps.ViewPointOfSale(appId, PosViewType.Cart).Result).Model);
                     Assert.Equal(test.Code, vmview.CurrencyCode);
@@ -765,7 +765,7 @@ noninventoryitem:
                 Assert.NotNull(inventoryItemInvoice);
 
                 //let's mark the inventoryitem invoice as invalid, thsi should return the item to back in stock
-                var controller = tester.PayTester.GetController<InvoiceController>(user.UserId, user.StoreId);
+                var controller = await tester.PayTester.GetController<InvoiceController>(user.UserId, user.StoreId);
                 var appService = tester.PayTester.GetService<AppService>();
                 var eventAggregator = tester.PayTester.GetService<EventAggregator>();
                 Assert.IsType<JsonResult>(await controller.ChangeInvoiceState(inventoryItemInvoice.Id, "invalid"));

@@ -185,8 +185,8 @@ namespace BTCPayServer.Tests
                 foreach (ScriptPubKeyType senderAddressType in Enum.GetValues(typeof(ScriptPubKeyType)))
                 {
                     var senderUser = tester.NewAccount();
-                    senderUser.GrantAccess(true);
-                    senderUser.RegisterDerivationScheme("BTC", senderAddressType);
+                    await senderUser.GrantAccess(true);
+                    await senderUser.RegisterDerivationScheme("BTC", senderAddressType);
 
                     foreach (ScriptPubKeyType receiverAddressType in Enum.GetValues(typeof(ScriptPubKeyType)))
                     {
@@ -194,8 +194,8 @@ namespace BTCPayServer.Tests
 
                         Logs.Tester.LogInformation($"Testing payjoin with sender: {senderAddressType} receiver: {receiverAddressType}");
                         var receiverUser = tester.NewAccount();
-                        receiverUser.GrantAccess(true);
-                        receiverUser.RegisterDerivationScheme("BTC", receiverAddressType, true);
+                        await receiverUser.GrantAccess(true);
+                        await receiverUser.RegisterDerivationScheme("BTC", receiverAddressType, true);
                         await receiverUser.EnablePayJoin();
                         var receiverCoin = await receiverUser.ReceiveUTXO(Money.Satoshis(810), network);
 
@@ -375,7 +375,7 @@ namespace BTCPayServer.Tests
                 var nbx = tester.PayTester.GetService<ExplorerClientProvider>().GetExplorerClient("BTC");
                 var notifications = await nbx.CreateWebsocketNotificationSessionAsync();
                 var alice = tester.NewAccount();
-                await alice.RegisterDerivationSchemeAsync("BTC", ScriptPubKeyType.Segwit, true);
+                await alice.RegisterDerivationScheme("BTC", ScriptPubKeyType.Segwit, true);
                 await notifications.ListenDerivationSchemesAsync(new[] { alice.DerivationScheme });
 
                 BitcoinAddress address = null;
@@ -421,7 +421,7 @@ namespace BTCPayServer.Tests
                         changeIndex = i;
                 }
 
-                var derivationSchemeSettings = alice.GetController<WalletsController>().GetDerivationSchemeSettings(new WalletId(alice.StoreId, "BTC"));
+                var derivationSchemeSettings = (await alice.GetController<WalletsController>()).GetDerivationSchemeSettings(new WalletId(alice.StoreId, "BTC"));
                 var signingAccount = derivationSchemeSettings.GetSigningAccountKeySettings();
                 psbt.SignAll(derivationSchemeSettings.AccountDerivation, alice.GenerateWalletResponseV.AccountHDKey, signingAccount.GetRootedKeyPath());
                 using var fakeServer = new FakeServer();
@@ -514,8 +514,8 @@ namespace BTCPayServer.Tests
 
                 Logs.Tester.LogInformation("Make sure the receiver implementation do not take more fee than allowed");
                 var bob = tester.NewAccount();
-                await bob.GrantAccessAsync();
-                await bob.RegisterDerivationSchemeAsync("BTC", ScriptPubKeyType.Segwit, true);
+                await bob.GrantAccess();
+                await bob.RegisterDerivationScheme("BTC", ScriptPubKeyType.Segwit, true);
 
                 await notifications.DisposeAsync();
                 notifications = await nbx.CreateWebsocketNotificationSessionAsync();
@@ -523,7 +523,7 @@ namespace BTCPayServer.Tests
                 address = (await nbx.GetUnusedAsync(bob.DerivationScheme, DerivationFeature.Deposit)).Address;
                 tester.ExplorerNode.SendToAddress(address, Money.Coins(1.1m));
                 await notifications.NextEventAsync();
-                bob.ModifyStore(s => s.PayJoinEnabled = true);
+                await bob.ModifyStore(s => s.PayJoinEnabled = true);
                 var invoice = bob.BitPay.CreateInvoice(
                     new Invoice() { Price = 0.1m, Currency = "BTC", FullNotifications = true });
                 var invoiceBIP21 = new BitcoinUrlBuilder(invoice.CryptoInfo.First().PaymentUrls.BIP21,
@@ -606,12 +606,12 @@ namespace BTCPayServer.Tests
                 cashCow.Generate(2); // get some money in case
 
                 var senderUser = tester.NewAccount();
-                senderUser.GrantAccess(true);
-                senderUser.RegisterDerivationScheme("BTC", ScriptPubKeyType.Segwit);
+                await senderUser.GrantAccess();
+                await senderUser.RegisterDerivationScheme("BTC", ScriptPubKeyType.Segwit);
 
                 var receiverUser = tester.NewAccount();
-                receiverUser.GrantAccess(true);
-                receiverUser.RegisterDerivationScheme("BTC", ScriptPubKeyType.Segwit, true);
+                await receiverUser.GrantAccess();
+                await receiverUser.RegisterDerivationScheme("BTC", ScriptPubKeyType.Segwit, true);
                 await receiverUser.EnablePayJoin();
                 var receiverCoin = await receiverUser.ReceiveUTXO(Money.Satoshis(810), network);
                 string lastInvoiceId = null;
@@ -795,8 +795,8 @@ retry:
                 cashCow.Generate(2); // get some money in case
 
                 var senderUser = tester.NewAccount();
-                senderUser.GrantAccess(true);
-                senderUser.RegisterDerivationScheme("BTC", ScriptPubKeyType.Segwit, true);
+                await senderUser.GrantAccess(true);
+                await senderUser.RegisterDerivationScheme("BTC", ScriptPubKeyType.Segwit, true);
 
                 var invoice = senderUser.BitPay.CreateInvoice(
                     new Invoice() { Price = 100, Currency = "USD", FullNotifications = true });
@@ -806,8 +806,8 @@ retry:
                     Money.Coins(0.06m));
 
                 var receiverUser = tester.NewAccount();
-                receiverUser.GrantAccess(true);
-                receiverUser.RegisterDerivationScheme("BTC", ScriptPubKeyType.Segwit, true);
+                await receiverUser.GrantAccess();
+                await receiverUser.RegisterDerivationScheme("BTC", ScriptPubKeyType.Segwit, true);
 
                 await receiverUser.EnablePayJoin();
                 // payjoin is enabled, with a segwit wallet, and the keys are available in nbxplorer

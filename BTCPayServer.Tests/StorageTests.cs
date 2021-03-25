@@ -33,8 +33,8 @@ namespace BTCPayServer.Tests
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
-                user.GrantAccess();
-                var controller = tester.PayTester.GetController<ServerController>(user.UserId, user.StoreId);
+                await user.GrantAccess();
+                var controller = await tester.PayTester.GetController<ServerController>(user.UserId, user.StoreId);
 
 
                 //Once we select a provider, redirect to its view
@@ -116,8 +116,8 @@ namespace BTCPayServer.Tests
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
-                user.GrantAccess();
-                var controller = tester.PayTester.GetController<ServerController>(user.UserId, user.StoreId);
+                await user.GrantAccess();
+                var controller = await tester.PayTester.GetController<ServerController>(user.UserId, user.StoreId);
 
                 var fileSystemStorageConfiguration = Assert.IsType<FileSystemStorageConfiguration>(Assert
                     .IsType<ViewResult>(await controller.StorageProvider(StorageProvider.FileSystem.ToString()))
@@ -144,8 +144,8 @@ namespace BTCPayServer.Tests
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
-                user.GrantAccess();
-                var controller = tester.PayTester.GetController<ServerController>(user.UserId, user.StoreId);
+                await user.GrantAccess();
+                var controller = await tester.PayTester.GetController<ServerController>(user.UserId, user.StoreId);
                 var azureBlobStorageConfiguration = Assert.IsType<AzureBlobStorageConfiguration>(Assert
                     .IsType<ViewResult>(await controller.StorageProvider(StorageProvider.AzureBlobStorage.ToString()))
                     .Model);

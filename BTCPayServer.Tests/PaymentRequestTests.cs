@@ -33,14 +33,14 @@ namespace BTCPayServer.Tests
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
-                user.GrantAccess();
-                user.RegisterDerivationScheme("BTC");
+                await user.GrantAccess();
+                await user.RegisterDerivationScheme("BTC");
 
                 var user2 = tester.NewAccount();
-                user2.GrantAccess();
+                await user2.GrantAccess();
 
-                var paymentRequestController = user.GetController<PaymentRequestController>();
-                var guestpaymentRequestController = user2.GetController<PaymentRequestController>();
+                var paymentRequestController = await user.GetController<PaymentRequestController>();
+                var guestpaymentRequestController = await user2.GetController<PaymentRequestController>();
 
                 var request = new UpdatePaymentRequestViewModel()
                 {
@@ -104,10 +104,10 @@ namespace BTCPayServer.Tests
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
-                user.GrantAccess();
-                user.RegisterDerivationScheme("BTC");
+                await user.GrantAccess();
+                await user.RegisterDerivationScheme("BTC");
 
-                var paymentRequestController = user.GetController<PaymentRequestController>();
+                var paymentRequestController = await user.GetController<PaymentRequestController>();
 
                 Assert.IsType<NotFoundResult>(
                     await paymentRequestController.PayPaymentRequest(Guid.NewGuid().ToString()));
@@ -170,10 +170,10 @@ namespace BTCPayServer.Tests
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
-                user.GrantAccess();
-                user.RegisterDerivationScheme("BTC");
+                await user.GrantAccess();
+                await user.RegisterDerivationScheme("BTC");
 
-                var paymentRequestController = user.GetController<PaymentRequestController>();
+                var paymentRequestController = await user.GetController<PaymentRequestController>();
 
                 Assert.IsType<NotFoundResult>(await
                     paymentRequestController.CancelUnpaidPendingInvoice(Guid.NewGuid().ToString(), false));

@@ -38,6 +38,7 @@ namespace BTCPayServer.Tests
 
         public async Task StartAsync()
         {
+            Logs.Tester.LogInformation($"StartAsync");
             await Server.StartAsync();
 
             var windowSize = (Width: 1200, Height: 1000);
@@ -63,8 +64,9 @@ namespace BTCPayServer.Tests
             }
             options.AddArguments($"window-size={windowSize.Width}x{windowSize.Height}");
             options.AddArgument("shm-size=2g");
+            Logs.Tester.LogInformation($"ChromeDriver");
             Driver = new ChromeDriver(chromeDriverPath, options);
-
+            Logs.Tester.LogInformation($"Instanciated");
             if (runInBrowser)
             {
                 // ensure maximized window size

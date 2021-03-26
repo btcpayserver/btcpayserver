@@ -30,6 +30,9 @@ namespace BTCPayServer.Tests
         public WalletId WalletId { get; set; }
 
         public string StoreId { get; set; }
+        public string NetLogPath { get; private set; }
+        public string StartupLogPath { get; private set; }
+        public string ShutdownLogPath { get; private set; }
 
         public static SeleniumTester Create([CallerMemberNameAttribute] string scope = null, bool newDb = false) =>
             new SeleniumTester { Server = ServerTester.Create(scope, newDb) };
@@ -64,6 +67,25 @@ namespace BTCPayServer.Tests
             }
             options.AddArguments($"window-size={windowSize.Width}x{windowSize.Height}");
             options.AddArgument("shm-size=2g");
+
+            // Inspired by https://github.com/dotnet/aspnetcore/blob/c925f99cddac0df90ed0bc4a07ecda6b054a0b02/src/Servers/Kestrel/test/Interop.FunctionalTests/ChromeTests.cs
+            NetLogPath = Path.Combine(Server.TestDirectory, $"sel.nl.json");
+            StartupLogPath = Path.Combine(Server.TestDirectory, $"sel.su.json");
+            ShutdownLogPath = Path.Combine(Server.TestDirectory, $"sel.sd.json");
+            options.AddArguments(new[]
+            {
+                $"--no-sandbox",
+                $"--disable-gpu",
+                $"--allow-insecure-localhost",
+                $"--ignore-certificate-errors",
+                $"--enable-features=NetworkService",
+                $"--enable-logging",
+                $"--log-net-log={NetLogPath}",
+                $"--trace-startup",
+                $"--trace-startup-file={StartupLogPath}",
+                $"--trace-shutdown",
+                $"--trace-shutdown-file={ShutdownLogPath}"
+            });
             Logs.Tester.LogInformation($"ChromeDriver");
             Driver = new ChromeDriver(chromeDriverPath, options);
             Logs.Tester.LogInformation($"Instanciated");
@@ -242,6 +264,18 @@ namespace BTCPayServer.Tests
             }
 
             Server?.Dispose();
+            DumpFile("Selenium startup Logs: ", this.NetLogPath);
+            DumpFile("Selenium startup Logs: ", this.ShutdownLogPath);
+            DumpFile("Selenium startup Logs: ", this.StartupLogPath);
+        }
+
+        private void DumpFile(string prefixLog, string filePath)
+        {
+            if (File.Exists(filePath))
+            {
+                var txt = File.ReadAllText(filePath);
+                Logs.Tester.LogInformation(prefixLog + txt);
+            }
         }
 
         internal void AssertNotFound()

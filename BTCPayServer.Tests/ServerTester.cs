@@ -27,6 +27,7 @@ namespace BTCPayServer.Tests
 
         public List<IDisposable> Resources = new List<IDisposable>();
         readonly string _Directory;
+        public string TestDirectory => _Directory;
         public ServerTester(string scope, bool newDb)
         {
             _Directory = scope;

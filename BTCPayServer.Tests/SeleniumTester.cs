@@ -88,7 +88,7 @@ namespace BTCPayServer.Tests
                 $"--trace-shutdown-file={ShutdownLogPath}"
             });
             Logs.Tester.LogInformation($"ChromeDriver");
-            Driver = new ChromeDriver(chromeDriverPath, options, TimeSpan.FromSeconds(10.0));
+            Driver = new ChromeDriver(chromeDriverPath, options, TimeSpan.FromSeconds(50.0));
             Logs.Tester.LogInformation($"Instanciated");
             if (runInBrowser)
             {

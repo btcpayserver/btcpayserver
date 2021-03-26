@@ -78,14 +78,18 @@ namespace BTCPayServer.Hosting
                 o.Filters.Add(new XContentTypeOptionsAttribute("nosniff"));
                 o.Filters.Add(new XXSSProtectionAttribute());
                 o.Filters.Add(new ReferrerPolicyAttribute("same-origin"));
-                //o.Filters.Add(new ContentSecurityPolicyAttribute()
-                //{
-                //    FontSrc = "'self' https://fonts.gstatic.com/",
-                //    ImgSrc = "'self' data:",
-                //    DefaultSrc = "'none'",
-                //    StyleSrc = "'self' 'unsafe-inline'",
-                //    ScriptSrc = "'self' 'unsafe-inline'"
-                //});
+                o.Filters.Add(new ContentSecurityPolicyAttribute()
+                {
+                    ImgSrc = "'self' data:",
+                    DefaultSrc = "'none'",
+                    StyleSrc = "'self' 'unsafe-inline'",
+                    // Unsafe eval is needed by Vue
+                    ScriptSrc = "'self' 'unsafe-inline' 'unsafe-eval'",
+                    FontSrc = "'self'",
+                    AutoSelf = true,
+                    ManifestSrc = "'self'",
+                    FixWebsocket = true
+                });
             })
             .ConfigureApiBehaviorOptions(options =>
             {

@@ -540,9 +540,8 @@
                         "description": "The number of confirmations for this transaction"
                     },
                     "timestamp": {
-                        "type": "number",
-                        "format": "int64",
-                        "description": "The time of the transaction"
+                        "description": "The time of the transaction",
+                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
                     },
                     "status": {
                         "$ref": "#/components/schemas/TransactionStatus",

@@ -646,19 +646,16 @@
                                 "description": "The link to the checkout page, where you can redirect the customer"
                             },
                             "createdTime": {
-                                "type": "number",
-                                "format": "int64",
-                                "description": "The creation time of the invoice"
+                                "description": "The creation time of the invoice",
+                                "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
                             },
                             "expirationTime": {
-                                "type": "number",
-                                "format": "int64",
-                                "description": "The expiration time of the invoice"
+                                "description": "The expiration time of the invoice",
+                                "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
                             },
                             "monitoringTime": {
-                                "type": "number",
-                                "format": "int64",
-                                "description": "The monitoring time of the invoice"
+                                "description": "The monitoring time of the invoice",
+                                "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
                             },
                             "status": {
                                 "$ref": "#/components/schemas/InvoiceStatus",
@@ -735,14 +732,15 @@
                         "description": "A specific set of payment methods to use for this invoice (ie. BTC, BTC-LightningNetwork). By default, select all payment methods activated in the store."
                     },
                     "expirationMinutes": {
-                        "type": "integer",
                         "nullable": true,
-                        "description": "The number of minutes after which an invoice becomes expired. Defaults to the store's settings. (The default store settings is 15)"
+                        "description": "The number of minutes after which an invoice becomes expired. Defaults to the store's settings. (The default store settings is 15)",
+                        "allOf": [ {"$ref": "#/components/schemas/TimeSpanMinutes"}]
                     },
                     "monitoringMinutes": {
                         "type": "integer",
                         "nullable": true,
-                        "description": "The number of minutes after an invoice expired after which we are still monitoring for incoming payments. Defaults to the store's settings. (The default store settings is 1440, 1 day)"
+                        "description": "The number of minutes after an invoice expired after which we are still monitoring for incoming payments. Defaults to the store's settings. (The default store settings is 1440, 1 day)",
+                        "allOf": [ {"$ref": "#/components/schemas/TimeSpanMinutes"}]
                     },
                     "paymentTolerance": {
                         "type": "number",
@@ -851,9 +849,8 @@
                         "description": "A unique identifier for this payment"
                     },
                     "receivedDate": {
-                        "type": "string",
-                        "format": "int64",
-                        "description": "The date the payment was recorded"
+                        "description": "The date the payment was recorded",
+                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
                     },
                     "value": {
                         "type": "string",

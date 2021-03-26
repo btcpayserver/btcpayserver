@@ -56,6 +56,7 @@ namespace BTCPayServer.Tests
             {
                 // this must be first option https://stackoverflow.com/questions/53073411/selenium-webdriverexceptionchrome-failed-to-start-crashed-as-google-chrome-is#comment102570662_53073789
                 options.AddArgument("no-sandbox");
+                options.AddArgument("verbose");
             }
             if (!runInBrowser)
             {

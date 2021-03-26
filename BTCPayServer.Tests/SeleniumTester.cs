@@ -69,9 +69,10 @@ namespace BTCPayServer.Tests
             options.AddArgument("shm-size=2g");
 
             // Inspired by https://github.com/dotnet/aspnetcore/blob/c925f99cddac0df90ed0bc4a07ecda6b054a0b02/src/Servers/Kestrel/test/Interop.FunctionalTests/ChromeTests.cs
-            NetLogPath = Path.Combine(Server.TestDirectory, $"sel.nl.json");
-            StartupLogPath = Path.Combine(Server.TestDirectory, $"sel.su.json");
-            ShutdownLogPath = Path.Combine(Server.TestDirectory, $"sel.sd.json");
+            var fullPath = Path.GetFullPath(Server.TestDirectory);
+            NetLogPath = Path.Combine(fullPath, $"sel.nl.json");
+            StartupLogPath = Path.Combine(fullPath, $"sel.su.json");
+            ShutdownLogPath = Path.Combine(fullPath, $"sel.sd.json");
             options.AddArguments(new[]
             {
                 $"--no-sandbox",
@@ -87,7 +88,7 @@ namespace BTCPayServer.Tests
                 $"--trace-shutdown-file={ShutdownLogPath}"
             });
             Logs.Tester.LogInformation($"ChromeDriver");
-            Driver = new ChromeDriver(chromeDriverPath, options);
+            Driver = new ChromeDriver(chromeDriverPath, options, TimeSpan.FromSeconds(10.0));
             Logs.Tester.LogInformation($"Instanciated");
             if (runInBrowser)
             {
@@ -264,9 +265,9 @@ namespace BTCPayServer.Tests
             }
 
             Server?.Dispose();
-            DumpFile("Selenium startup Logs: ", this.NetLogPath);
-            DumpFile("Selenium startup Logs: ", this.ShutdownLogPath);
-            DumpFile("Selenium startup Logs: ", this.StartupLogPath);
+            DumpFile("Selenium startup Logs", this.StartupLogPath);
+            DumpFile("Selenium net Logs", this.NetLogPath);
+            DumpFile("Selenium shutdown Logs", this.ShutdownLogPath);
         }
 
         private void DumpFile(string prefixLog, string filePath)

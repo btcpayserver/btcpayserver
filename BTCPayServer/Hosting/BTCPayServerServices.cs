@@ -411,6 +411,7 @@ namespace BTCPayServer.Hosting
                     rateLimits.SetZone($"zone={ZoneLimits.Register} rate=1000r/min burst=100 nodelay");
                     rateLimits.SetZone($"zone={ZoneLimits.PayJoin} rate=1000r/min burst=100 nodelay");
                     rateLimits.SetZone($"zone={ZoneLimits.Shopify} rate=1000r/min burst=100 nodelay");
+                    rateLimits.SetZone($"zone={ZoneLimits.ForgotPassword} rate=1r/d burst=3 nodelay");
                 }
                 else
                 {
@@ -418,6 +419,7 @@ namespace BTCPayServer.Hosting
                     rateLimits.SetZone($"zone={ZoneLimits.Register} rate=2r/min burst=2 nodelay");
                     rateLimits.SetZone($"zone={ZoneLimits.PayJoin} rate=5r/min burst=3 nodelay");
                     rateLimits.SetZone($"zone={ZoneLimits.Shopify} rate=20r/min burst=3 nodelay");
+                    rateLimits.SetZone($"zone={ZoneLimits.ForgotPassword} rate=1r/d burst=3 nodelay");
                 }
                 return rateLimits;
             });

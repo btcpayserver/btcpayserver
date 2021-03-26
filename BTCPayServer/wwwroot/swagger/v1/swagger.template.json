@@ -50,7 +50,7 @@
                 }
             },
             "UnixTimestamp": {
-                "type": "int64",
+                "type": "number",
                 "format": "Unix timestamp in seconds",
                 "example": 1592312018,
                 "description": "A unix timestamp in seconds"

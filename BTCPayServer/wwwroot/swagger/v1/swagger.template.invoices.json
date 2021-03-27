@@ -734,6 +734,105 @@
                     }
                 ]
             },
+            "InvoiceMetadataPosString": {
+                "type": "string",
+                "required": false,
+                "nullable": true,
+                "description": "shown on the invoice details page"
+            },
+            "InvoiceMetadataPosObject": {
+                "type": "object",
+                "required": false,
+                "nullable": true,
+                "description": "Any json object in any schema you want. Will be rendered on a best effort basis in terms of style on the invoice details UI "
+            },
+            "InvoiceMetadata":  {
+                "type": "object",
+                "additionalProperties": true,
+                "description": "Additional information around the invoice that can be supplied. The mentioned properties are all optional and you can introduce any json format you wish.",
+                "properties": {
+                    "orderId": {
+                        "type": "string",
+                        "required": false,
+                        "nullable": true,
+                        "description": "You can use this property to store the ID of an external system. We allow you to search in the invoice list based on this ID."
+                    },
+                    "posData": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/InvoiceMetadataPosString"
+                            },{
+                                "$ref": "#/components/schemas/InvoiceMetadataPosObject"
+                            }
+                        ]
+                    },
+                    "buyerName": {
+                        "type": "string",
+                        "required": false,
+                        "nullable": true
+                    },
+                    "buyerEmail": {
+                        "type": "string",
+                        "required": false,
+                        "nullable": true
+                    },
+                    "buyerCountry": {
+                        "type": "string",
+                        "required": false,
+                        "nullable": true
+                    },
+                    "buyerZip": {
+                        "type": "string",
+                        "required": false,
+                        "nullable": true
+                    },
+                    "buyerState": {
+                        "type": "string",
+                        "required": false,
+                        "nullable": true
+                    },
+                    "buyerCity": {
+                        "type": "string",
+                        "required": false,
+                        "nullable": true
+                    },
+                    "buyerAddress1": {
+                        "type": "string",
+                        "required": false,
+                        "nullable": true
+                    },
+                    "buyerAddress2": {
+                        "type": "string",
+                        "required": false,
+                        "nullable": true
+                    },
+                    "buyerPhone": {
+                        "type": "string",
+                        "required": false,
+                        "nullable": true
+                    },
+                    "itemDesc": {
+                        "type": "string",
+                        "required": false,
+                        "nullable": true
+                    },
+                    "itemCode": {
+                        "type": "string",
+                        "required": false,
+                        "nullable": true
+                    },
+                    "physical": {
+                        "type": "string",
+                        "required": false,
+                        "nullable": true
+                    },
+                    "taxIncluded": {
+                        "type": "number",
+                        "required": false,
+                        "nullable": true
+                    }
+                }
+            },
             "CreateInvoiceRequest": {
                 "type": "object",
                 "additionalProperties": false,
@@ -749,9 +848,7 @@
                         "description": "The currency the invoice will use"
                     },
                     "metadata": {
-                        "type": "object",
-                        "nullable": true,
-                        "description": "Additional information around the invoice that can be supplied. Some metadata are treated differently by BTCPay Server: \n * `orderId`: A string, you can use this property to store the ID of an external system. We allow you to search in the invoice list based on this ID."
+                        "$ref": "#/components/schemas/InvoiceMetadata"
                     },
                     "checkout": {
                         "nullable": true,

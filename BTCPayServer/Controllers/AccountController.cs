@@ -547,6 +547,7 @@ namespace BTCPayServer.Controllers
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
+        [RateLimitsFilter(ZoneLimits.ForgotPassword, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
         {
             if (ModelState.IsValid)
@@ -557,8 +558,6 @@ namespace BTCPayServer.Controllers
                     // Don't reveal that the user does not exist or is not confirmed
                     return RedirectToAction(nameof(ForgotPasswordConfirmation));
                 }
-                if (!await _rateLimitService.Throttle(ZoneLimits.ForgotPassword, user.NormalizedEmail))
-                    return new TooManyRequestsResult(ZoneLimits.ForgotPassword);
                 _eventAggregator.Publish(new UserPasswordResetRequestedEvent()
                 {
                     User = user, RequestUri = Request.GetAbsoluteRootUri()

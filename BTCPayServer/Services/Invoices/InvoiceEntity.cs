@@ -70,15 +70,22 @@ namespace BTCPayServer.Services.Invoices
             }
             set
             {
-                try
+                if (value is null)
                 {
-
-                    PosRawData = JToken.Parse(value);
+                    PosRawData = JValue.CreateNull();
                 }
-                catch (Exception )
+                else
                 {
-                    PosRawData = JToken.FromObject(value);
+                    try
+                    {
+                        PosRawData = JToken.Parse(value);
+                    }
+                    catch (Exception )
+                    {
+                        PosRawData = JToken.FromObject(value);
+                    }
                 }
+               
             }
         }
 

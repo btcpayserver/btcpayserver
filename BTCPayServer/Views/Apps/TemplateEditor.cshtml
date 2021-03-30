@@ -67,11 +67,11 @@
                             <span class="text-danger row m-2" v-for="error of errors">{{error}}</span>
                             <div class="form-row">
                                 <div class="col-sm-6">
-                                    <label>Title</label>*
+                                    <label data-required>Title</label>
                                     <input type="text" required pattern="[^\*#]+" class="form-control mb-2" v-model="editingItem.title" autofocus ref="txtTitle" />
                                 </div>
                                 <div class="col-sm-3">
-                                    <label>Price</label>*
+                                    <label data-required>Price</label>
                                     <input class="form-control mb-2"
                                            inputmode="numeric"
                                            pattern="\d*"

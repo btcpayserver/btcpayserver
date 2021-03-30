@@ -2,6 +2,7 @@
 @{
     ViewData["Title"] = "Create a new store";
 }
+
 <section>
     <div class="container">
         <div class="row">
@@ -15,8 +16,8 @@
                 <form asp-action="CreateStore">
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                     <div class="form-group">
-                        <label asp-for="Name" class="control-label"></label>*
-                        <input asp-for="Name" class="form-control" />
+                        <label asp-for="Name" class="control-label" data-required></label>
+                        <input asp-for="Name" class="form-control" required />
                         <span asp-validation-for="Name" class="text-danger"></span>
                     </div>
                     <div class="form-group">

@@ -26,19 +26,19 @@
                     <input type="hidden" asp-for="StoreId" />
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                     <div class="form-group">
-                        <label asp-for="Title" class="control-label"></label>*
-                        <input asp-for="Title" class="form-control" />
+                        <label asp-for="Title" class="control-label" data-required></label>
+                        <input asp-for="Title" class="form-control" required />
                         <span asp-validation-for="Title" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="Currency" class="control-label"></label>*
-                        <input asp-for="Currency" class="form-control" />
+                        <label asp-for="Currency" class="control-label" data-required></label>
+                        <input asp-for="Currency" class="form-control" required />
                         <span asp-validation-for="Currency" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <div class="form-group">
-                            <label asp-for="DefaultView" class="control-label"></label>*
-                            <select asp-for="DefaultView" asp-items="@Html.GetEnumSelectList<PosViewType>()" class="form-control"></select>
+                            <label asp-for="DefaultView" class="control-label" data-required></label>
+                            <select asp-for="DefaultView" asp-items="@Html.GetEnumSelectList<PosViewType>()" class="form-control" required></select>
                             <span asp-validation-for="DefaultView" class="text-danger"></span>
                         </div>
                         <div class="form-check">
@@ -58,18 +58,18 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label asp-for="ButtonText" class="control-label"></label>*
-                        <input asp-for="ButtonText" class="form-control" />
+                        <label asp-for="ButtonText" class="control-label" data-required></label>
+                        <input asp-for="ButtonText" class="form-control" required />
                         <span asp-validation-for="ButtonText" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="CustomButtonText" class="control-label"></label>*
-                        <input asp-for="CustomButtonText" class="form-control" />
+                        <label asp-for="CustomButtonText" class="control-label" data-required></label>
+                        <input asp-for="CustomButtonText" class="form-control" required />
                         <span asp-validation-for="CustomButtonText" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="CustomTipText" class="control-label"></label>*
-                        <input asp-for="CustomTipText" class="form-control" />
+                        <label asp-for="CustomTipText" class="control-label" data-required></label>
+                        <input asp-for="CustomTipText" class="form-control" required />
                         <span asp-validation-for="CustomTipText" class="text-danger"></span>
                     </div>
                     <div class="form-group">
@@ -85,7 +85,7 @@
                     </div>
                     <partial name="TemplateEditor" model="@(nameof(Model.Template), "Products")" />
                     <div class="form-group">
-                        <label asp-for="Template" class="control-label"></label>*
+                        <label asp-for="Template" class="control-label"></label>
                         <textarea asp-for="Template" rows="10" cols="40" class="js-product-template form-control"></textarea>
                         <span asp-validation-for="Template" class="text-danger"></span>
                     </div>
@@ -100,8 +100,8 @@
                         <span asp-validation-for="RedirectUrl" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="RedirectAutomatically" class="control-label"></label>*
-                        <select asp-for="RedirectAutomatically" asp-items="Model.RedirectAutomaticallySelectList" class="form-control"></select>
+                        <label asp-for="RedirectAutomatically" class="control-label" data-required></label>
+                        <select asp-for="RedirectAutomatically" asp-items="Model.RedirectAutomaticallySelectList" class="form-control" required></select>
                         <span asp-validation-for="RedirectAutomatically" class="text-danger"></span>
                     </div>
                     <div class="form-group">
@@ -229,16 +229,17 @@
             <input class="js-product-index" type="hidden" name="index" value="{index}">
             <div class="form-row">
                 <div class="col-sm-6">
-                    <label>Title</label>*
-                    <input type="text" class="js-product-title form-control mb-2" value="{title}" autofocus />
+                    <label data-required>Title</label>
+                    <input type="text" class="js-product-title form-control mb-2" value="{title}" autofocus required />
                 </div>
                 <div class="col-sm-3">
-                    <label>Price</label>*
+                    <label data-required>Price</label>
                     <input class="js-product-price form-control mb-2"
                            inputmode="numeric"
                            pattern="\d*"
                            type="number"
-                           value="{price}" />
+                           value="{price}"
+                           required />
                 </div>
                 <div class="col-sm-3">
                     <label>Custom price</label>

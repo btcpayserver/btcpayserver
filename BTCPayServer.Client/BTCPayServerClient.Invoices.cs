@@ -19,6 +19,24 @@ namespace BTCPayServer.Client
             return await HandleResponse<IEnumerable<InvoiceData>>(response);
         }
 
+        public virtual async Task<IEnumerable<InvoiceData>> GetInvoicesV2(string storeId, DateTimeOffset startDate,
+            DateTimeOffset endDate,
+            bool includeAddresses = true, bool includeArchived = false,
+            CancellationToken token = default)
+        {
+            var response =
+                await _httpClient.SendAsync(
+                    CreateHttpRequest($"api/v2/stores/{storeId}/invoices",
+                        new Dictionary<string, object>()
+                        {
+                            {nameof(includeArchived), includeArchived}, 
+                            {nameof(startDate), startDate}, 
+                            {nameof(endDate), endDate}, 
+                            {nameof(includeAddresses), includeAddresses}
+                        }), token);
+            return await HandleResponse<IEnumerable<InvoiceData>>(response);
+        }
+
         public virtual async Task<InvoiceData> GetInvoice(string storeId, string invoiceId,
             CancellationToken token = default)
         {
@@ -26,7 +44,9 @@ namespace BTCPayServer.Client
                 CreateHttpRequest($"api/v1/stores/{storeId}/invoices/{invoiceId}"), token);
             return await HandleResponse<InvoiceData>(response);
         }
-        public virtual async Task<InvoicePaymentMethodDataModel[]> GetInvoicePaymentMethods(string storeId, string invoiceId,
+
+        public virtual async Task<InvoicePaymentMethodDataModel[]> GetInvoicePaymentMethods(string storeId,
+            string invoiceId,
             CancellationToken token = default)
         {
             var response = await _httpClient.SendAsync(
@@ -70,7 +90,7 @@ namespace BTCPayServer.Client
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
-            if (request.Status!= InvoiceStatus.Settled && request.Status!= InvoiceStatus.Invalid)
+            if (request.Status != InvoiceStatus.Settled && request.Status != InvoiceStatus.Invalid)
                 throw new ArgumentOutOfRangeException(nameof(request.Status), "Status can only be Invalid or Complete");
             var response = await _httpClient.SendAsync(
                 CreateHttpRequest($"api/v1/stores/{storeId}/invoices/{invoiceId}/status", bodyPayload: request,
@@ -78,10 +98,11 @@ namespace BTCPayServer.Client
             return await HandleResponse<InvoiceData>(response);
         }
 
-        public virtual async Task<InvoiceData> UnarchiveInvoice(string storeId, string invoiceId, CancellationToken token = default)
+        public virtual async Task<InvoiceData> UnarchiveInvoice(string storeId, string invoiceId,
+            CancellationToken token = default)
         {
             var response = await _httpClient.SendAsync(
-                CreateHttpRequest($"api/v1/stores/{storeId}/invoices/{invoiceId}/unarchive", 
+                CreateHttpRequest($"api/v1/stores/{storeId}/invoices/{invoiceId}/unarchive",
                     method: HttpMethod.Post), token);
             return await HandleResponse<InvoiceData>(response);
         }

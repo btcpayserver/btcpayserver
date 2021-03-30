@@ -83,15 +83,17 @@
                                     },
                                     "startsAt": {
                                         "type": "integer",
+                                        "format": "unix timestamp in seconds",
                                         "example": 1592312018,
                                         "nullable": true,
-                                        "description": "The unix timestamp when this pull payment is effective. Starts now if null or unspecified."
+                                        "description": "When this pull payment is effective. Already started if null or unspecified."
                                     },
                                     "expiresAt": {
                                         "type": "integer",
+                                        "format": "unix timestamp in seconds",
                                         "example": 1593129600,
                                         "nullable": true,
-                                        "description": "The unix timestamp when this pull payment is expired. Never expires if null or unspecified."
+                                        "description": "When this pull payment expires. Never expires if null or unspecified."
                                     },
                                     "paymentMethods": {
                                         "type": "array",

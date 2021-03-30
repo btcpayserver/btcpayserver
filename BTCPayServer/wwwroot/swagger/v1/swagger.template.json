@@ -48,6 +48,29 @@
                         "description": "User friendly error message about the error"
                     }
                 }
+            },
+            "UnixTimestamp": {
+                "type": "number",
+                "format": "Unix timestamp in seconds",
+                "example": 1592312018,
+                "description": "A unix timestamp in seconds"
+            },
+
+            "TimeSpan": {
+                "type": "number",
+                "format": "int32",
+                "example": 90
+            },
+            "TimeSpanSeconds": {
+                "allOf": [ {"$ref": "#/components/schemas/TimeSpan"}],
+
+                "format": "seconds",
+                "description": "A span of times in seconds"
+            },
+            "TimeSpanMinutes": {
+                "allOf": [ {"$ref": "#/components/schemas/TimeSpan"}],
+                "format": "minutes",
+                "description": "A span of times in minutes"
             }
         },
         "securitySchemes": {

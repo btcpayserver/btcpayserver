@@ -70,7 +70,8 @@ namespace BTCPayServer.Controllers
                 ClaimedAmount = amountDue,
                 AmountDueFormatted = _currencyNameTable.FormatCurrency(amountDue, blob.Currency),
                 CurrencyData = cd,
-                LastUpdated = DateTime.Now,
+                StartDate = pp.StartDate,
+                LastRefreshed = DateTime.Now,
                 Payouts = payouts
                           .Select(entity => new ViewPullPaymentModel.PayoutLine
                           {

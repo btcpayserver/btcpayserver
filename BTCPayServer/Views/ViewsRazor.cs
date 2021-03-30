@@ -28,15 +28,16 @@ namespace BTCPayServer.Views
 
         public static HtmlString ToBrowserDate(this DateTimeOffset date)
         {
-            var hello = date.ToString("o", CultureInfo.InvariantCulture);
-            return new HtmlString($"<span class='localizeDate'>{hello}</span>");
+            var displayDate = date.ToString("g");
+            return new HtmlString($"<span class='localizeDate'>{displayDate}</span>");
         }
 
-        public static HtmlString ToBrowserDate2(this DateTime date)
+        public static HtmlString ToBrowserDate(this DateTime date)
         {
-            var hello = date.ToString("o", CultureInfo.InvariantCulture);
-            return new HtmlString($"<span class='localizeDate'>{hello}</span>");
+            var displayDate = date.ToString("g");
+            return new HtmlString($"<span class='localizeDate'>{displayDate}</span>");
         }
+        
         public static string ToTimeAgo(this DateTimeOffset date)
         {
             var formatted = (DateTimeOffset.UtcNow - date).TimeString() + " ago";

@@ -161,6 +161,11 @@ namespace BTCPayServer.Controllers
         [Route("{appId}/settings/pos")]
         public async Task<IActionResult> UpdatePointOfSale(string appId, UpdatePointOfSaleViewModel vm)
         {
+            if (!ModelState.IsValid)
+            {
+                return View(vm);
+            }
+            
             if (_currencies.GetCurrencyData(vm.Currency, false) == null)
                 ModelState.AddModelError(nameof(vm.Currency), "Invalid currency");
             try

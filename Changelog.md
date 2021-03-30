@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.0.7.1
+
+### Improvements:
+
+* Add user email search/sort @bolatovumar
+* Fix pay button link preview (see #2396) @bumbummen99 
+* Change display date format on view pull payments (see #2339) @AlexGidge
+* Update form required input styling (see #2373) @bolatovumar
+* Order file uploaded list by descending timestamp (#2273) @bolatovumar
+* Remove misleading title from hint icon @dennisreimann
+* Make dates/timespan swagger docs more clear (#2399) @Kukks
+* Add rate limiter for forgotpassword @NicolasDorier
+* Upgrade Boostrap to v4.6 and jquery to 3.6.0 @dennisreimann
+* Use better PRNG for payjoin input selection @NicolasDorier
+* Decrease authentication cookie timeout after password change from 30min to 5min @NicolasDorier
+* Use secure/http-only cookies for preferences @NicolasDorier
+
+### Bug fixes:
+
+* Ensure submitting empty currency does not break update PoS page (#2376) @bolatovumar
+* Fix point of sale item newline break (#2366) @Kukks
+* Validate filename in file upload endpoints @NicolasDorier
+* Turn off autocomplete for BIP39 Seed or HD private key inputs @nosovk
+* Fix payment request template body/page height and footer style @Patrick
+
 ## 1.0.7.0
 
 ### Features:

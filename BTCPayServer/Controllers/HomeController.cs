@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Data;
+using BTCPayServer.Filters;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
@@ -48,71 +49,18 @@ namespace BTCPayServer.Controllers
             SignInManager = signInManager;
         }
 
-        private async Task<ViewResult> GoToApp(string appId, AppType? appType)
-        {
-            if (appType.HasValue && !string.IsNullOrEmpty(appId))
-            {
-                this.HttpContext.Response.Headers.Remove("Onion-Location");
-                switch (appType.Value)
-                {
-                    case AppType.Crowdfund:
-                        {
-                            var serviceProvider = HttpContext.RequestServices;
-                            var controller = (AppsPublicController)serviceProvider.GetService(typeof(AppsPublicController));
-                            controller.Url = Url;
-                            controller.ControllerContext = ControllerContext;
-                            var res = await controller.ViewCrowdfund(appId, null) as ViewResult;
-                            if (res != null)
-                            {
-                                res.ViewName = $"/Views/AppsPublic/ViewCrowdfund.cshtml";
-                                return res; // return 
-                            }
-
-                            break;
-                        }
-
-                    case AppType.PointOfSale:
-                        {
-                            var serviceProvider = HttpContext.RequestServices;
-                            var controller = (AppsPublicController)serviceProvider.GetService(typeof(AppsPublicController));
-                            controller.Url = Url;
-                            controller.ControllerContext = ControllerContext;
-                            var res = await controller.ViewPointOfSale(appId) as ViewResult;
-                            if (res != null)
-                            {
-                                res.ViewName = $"/Views/AppsPublic/{res.ViewName}.cshtml";
-                                return res; // return 
-                            }
-
-                            break;
-                        }
-                }
-            }
-            return null;
-        }
-
-        public async Task<IActionResult> Index()
+        [Route("")]
+        [DomainMappingConstraint()]
+        public IActionResult Index()
         {
             if (_cachedServerSettings.FirstRun)
             {
                 return RedirectToAction(nameof(AccountController.Register), "Account");
             }
-            var matchedDomainMapping = _cachedServerSettings.DomainToAppMapping.FirstOrDefault(item =>
-                item.Domain.Equals(Request.Host.Host, StringComparison.InvariantCultureIgnoreCase));
-            if (matchedDomainMapping != null)
-            {
-                return await GoToApp(matchedDomainMapping.AppId, matchedDomainMapping.AppType) ?? GoToHome();
-            }
-
-            return await GoToApp(_cachedServerSettings.RootAppId, _cachedServerSettings.RootAppType) ?? GoToHome();
-        }
-
-        private IActionResult GoToHome()
-        {
             if (SignInManager.IsSignedIn(User))
                 return View("Home");
             else
-                return RedirectToAction(nameof(AccountController.Login), "Account");
+                return Challenge();
         }
 
         [Route("misc/lang")]

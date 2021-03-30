@@ -57,8 +57,10 @@ namespace BTCPayServer.Controllers
         }
         
         [HttpGet]
+        [Route("/")]
         [Route("/apps/{appId}/pos/{viewType?}")]
         [XFrameOptionsAttribute(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
+        [DomainMappingConstraint(AppType.PointOfSale)]
         public async Task<IActionResult> ViewPointOfSale(string appId, PosViewType? viewType = null)
         {
             var app = await _AppService.GetApp(appId, AppType.PointOfSale);
@@ -108,6 +110,7 @@ namespace BTCPayServer.Controllers
         [XFrameOptionsAttribute(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
         [IgnoreAntiforgeryToken]
         [EnableCors(CorsPolicies.All)]
+        [DomainMappingConstraint(AppType.PointOfSale)]
         public async Task<IActionResult> ViewPointOfSale(string appId,
                                                         PosViewType viewType,
                                                         [ModelBinder(typeof(InvariantDecimalModelBinder))] decimal amount,
@@ -232,8 +235,10 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
+        [Route("/")]
         [Route("/apps/{appId}/crowdfund")]
         [XFrameOptionsAttribute(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
+        [DomainMappingConstraintAttribute(AppType.Crowdfund)]
         public async Task<IActionResult> ViewCrowdfund(string appId, string statusMessage)
         {
             var app = await _AppService.GetApp(appId, AppType.Crowdfund, true);
@@ -263,10 +268,12 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost]
+        [Route("/")]
         [Route("/apps/{appId}/crowdfund")]
         [XFrameOptionsAttribute(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
         [IgnoreAntiforgeryToken]
         [EnableCors(CorsPolicies.All)]
+        [DomainMappingConstraintAttribute(AppType.Crowdfund)]
         public async Task<IActionResult> ContributeToCrowdfund(string appId, ContributeToCrowdfund request, CancellationToken cancellationToken)
         {
             if (request.Amount <= 0)

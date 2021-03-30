@@ -11,6 +11,7 @@ using BTCPayServer.Security;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Storage;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
@@ -63,6 +64,11 @@ namespace BTCPayServer.Hosting
                 opts.DefaultSignInScheme = null;
                 opts.DefaultSignOutScheme = null;
             });
+            services.PostConfigure<CookieAuthenticationOptions>(IdentityConstants.ApplicationScheme, opt =>
+            {
+                opt.LoginPath = "/login";
+            });
+
             services.Configure<SecurityStampValidatorOptions>(opts =>
             {
                 opts.ValidationInterval = TimeSpan.FromMinutes(5.0);

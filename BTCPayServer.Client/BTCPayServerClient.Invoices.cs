@@ -9,31 +9,43 @@ namespace BTCPayServer.Client
 {
     public partial class BTCPayServerClient
     {
-        public virtual async Task<IEnumerable<InvoiceData>> GetInvoices(string storeId, bool includeArchived = false,
-            CancellationToken token = default)
-        {
-            var response =
-                await _httpClient.SendAsync(
-                    CreateHttpRequest($"api/v1/stores/{storeId}/invoices",
-                        new Dictionary<string, object>() {{nameof(includeArchived), includeArchived}}), token);
-            return await HandleResponse<IEnumerable<InvoiceData>>(response);
-        }
+        // public virtual async Task<IEnumerable<InvoiceData>> GetInvoices(string storeId, bool includeArchived = false,
+        //     CancellationToken token = default)
+        // {
+        //     var response =
+        //         await _httpClient.SendAsync(
+        //             CreateHttpRequest($"api/v1/stores/{storeId}/invoices",
+        //                 new Dictionary<string, object>() {{nameof(includeArchived), includeArchived}}), token);
+        //     return await HandleResponse<IEnumerable<InvoiceData>>(response);
+        // }
 
-        public virtual async Task<IEnumerable<InvoiceData>> GetInvoicesV2(string storeId, DateTimeOffset startDate,
-            DateTimeOffset endDate,
+        public virtual async Task<IEnumerable<InvoiceData>> GetInvoices(string storeId, string orderId = null, string status = null,
+            DateTimeOffset? startDate = null,
+            DateTimeOffset? endDate = null,
             bool includeAddresses = true, bool includeArchived = false,
             CancellationToken token = default)
         {
+            Dictionary<string, object> queryPayload = new Dictionary<string, object>();
+            queryPayload.Add(nameof(includeArchived), includeArchived);
+
+            if (startDate != null)
+                queryPayload.Add(nameof(startDate), startDate);
+            
+            if (endDate != null)
+                queryPayload.Add(nameof(endDate), endDate);
+            
+            if (orderId != null)
+                queryPayload.Add(nameof(orderId), orderId);
+            
+            if (status != null)
+                queryPayload.Add(nameof(status), status);
+
+            queryPayload.Add(nameof(includeAddresses), includeAddresses);
+
             var response =
                 await _httpClient.SendAsync(
-                    CreateHttpRequest($"api/v2/stores/{storeId}/invoices",
-                        new Dictionary<string, object>()
-                        {
-                            {nameof(includeArchived), includeArchived}, 
-                            {nameof(startDate), startDate}, 
-                            {nameof(endDate), endDate}, 
-                            {nameof(includeAddresses), includeAddresses}
-                        }), token);
+                    CreateHttpRequest($"api/v1/stores/{storeId}/invoices",
+                        queryPayload), token);
             return await HandleResponse<IEnumerable<InvoiceData>>(response);
         }
 

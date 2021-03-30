@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -40,27 +41,9 @@ namespace BTCPayServer.Controllers.GreenField
         [Authorize(Policy = Policies.CanViewInvoices,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/invoices")]
-        public async Task<IActionResult> GetInvoices(string storeId, bool includeArchived = false)
-        {
-            var store = HttpContext.GetStoreData();
-            if (store == null)
-            {
-                return NotFound();
-            }
-
-            var invoices =
-                await _invoiceRepository.GetInvoices(new InvoiceQuery()
-                {
-                    StoreId = new[] {store.Id}, IncludeArchived = includeArchived
-                });
-
-            return Ok(invoices.Select(ToModel));
-        }
-
-        [Authorize(Policy = Policies.CanViewInvoices,
-            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpGet("~/api/v2/stores/{storeId}/invoices")]
-        public async Task<IActionResult> GetInvoicesV2(string storeId, DateTimeOffset startDate, DateTimeOffset endDate,
+        public async Task<IActionResult> GetInvoicesV2(string storeId, string orderId, string status,
+            DateTimeOffset? startDate = null,
+            DateTimeOffset? endDate = null,
             bool includeAddresses = true, bool includeArchived = false)
         {
             var store = HttpContext.GetStoreData();
@@ -69,6 +52,16 @@ namespace BTCPayServer.Controllers.GreenField
                 return NotFound();
             }
 
+            string[] orderIdArray = orderId != null ? new[] {orderId} : null;
+            string[] statusArray =
+                status != null
+                    ? new[]
+                    {
+                        Enum.Parse(typeof(InvoiceStatus), status, true).ToString()
+                            ?.ToLower(CultureInfo.CurrentCulture)
+                    }
+                    : null;
+
             var invoices =
                 await _invoiceRepository.GetInvoices(new InvoiceQuery()
                 {
@@ -76,6 +69,8 @@ namespace BTCPayServer.Controllers.GreenField
                     IncludeArchived = includeArchived,
                     StartDate = startDate,
                     EndDate = endDate,
+                    OrderId = orderIdArray,
+                    Status = statusArray,
                     IncludeAddresses = includeAddresses
                 });
 

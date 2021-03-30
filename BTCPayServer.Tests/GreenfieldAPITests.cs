@@ -27,6 +27,7 @@ using Newtonsoft.Json.Linq;
 using Xunit;
 using Xunit.Abstractions;
 using CreateApplicationUserRequest = BTCPayServer.Client.Models.CreateApplicationUserRequest;
+using InvoiceData = BTCPayServer.Data.InvoiceData;
 using JsonReader = Newtonsoft.Json.JsonReader;
 
 namespace BTCPayServer.Tests
@@ -943,7 +944,7 @@ namespace BTCPayServer.Tests
                     {
                         Currency = "USD",
                         Amount = 1,
-                        Metadata = JObject.Parse("{\"itemCode\": \"testitem\"}"),
+                        Metadata = JObject.Parse("{\"itemCode\": \"testitem\", \"orderId\": \"testOrder\"}"),
                         Checkout = new CreateInvoiceRequest.CheckoutOptions() {RedirectAutomatically = true}
                     });
                 Assert.True(newInvoice.Checkout.RedirectAutomatically);
@@ -955,13 +956,47 @@ namespace BTCPayServer.Tests
                 Assert.Single(invoices);
                 Assert.Equal(newInvoice.Id, invoices.First().Id);
 
-                //list V2
-                var invoicesV2 = await viewOnly.GetInvoicesV2(user.StoreId, DateTimeOffset.Now.AddHours(-1),
+                //list Filtered
+                var invoicesFiltered = await viewOnly.GetInvoices(user.StoreId,
+                    orderId: null, status: null, DateTimeOffset.Now.AddHours(-1),
                     DateTimeOffset.Now.AddHours(1));
 
-                Assert.NotNull(invoicesV2);
-                Assert.Single(invoicesV2);
-                Assert.Equal(newInvoice.Id, invoicesV2.First().Id);
+                Assert.NotNull(invoicesFiltered);
+                Assert.Single(invoicesFiltered);
+                Assert.Equal(newInvoice.Id, invoicesFiltered.First().Id);
+
+                //list Yesterday
+                var invoicesYesterday = await viewOnly.GetInvoices(user.StoreId,
+                    orderId: null, status: null, DateTimeOffset.Now.AddDays(-2),
+                    DateTimeOffset.Now.AddDays(-1));
+                Assert.NotNull(invoicesYesterday);
+                Assert.Empty(invoicesYesterday);
+
+                //list ExistingOrderId
+                var invoicesExistingOrderId =
+                    await viewOnly.GetInvoices(user.StoreId, orderId: newInvoice.Metadata["orderId"].ToString());
+                Assert.NotNull(invoicesExistingOrderId);
+                Assert.Single(invoicesFiltered);
+                Assert.Equal(newInvoice.Id, invoicesFiltered.First().Id);
+
+                //list NonExistingOrderId
+                var invoicesNonExistingOrderId =
+                    await viewOnly.GetInvoices(user.StoreId, orderId: "NonExistingOrderId");
+                Assert.NotNull(invoicesNonExistingOrderId);
+                Assert.Empty(invoicesNonExistingOrderId);
+
+                //list ExistingStatus
+                var invoicesExistingStatus =
+                    await viewOnly.GetInvoices(user.StoreId, status:newInvoice.Status.ToString());
+                Assert.NotNull(invoicesExistingStatus);
+                Assert.Single(invoicesExistingStatus);
+                Assert.Equal(newInvoice.Id, invoicesExistingStatus.First().Id);
+                
+                //list NonExistingStatus
+                var invoicesNonExistingStatus = await viewOnly.GetInvoices(user.StoreId,
+                    status: BTCPayServer.Client.Models.InvoiceStatus.Invalid.ToString());
+                Assert.NotNull(invoicesNonExistingStatus);
+                Assert.Empty(invoicesNonExistingStatus);
 
                 //get
                 var invoice = await viewOnly.GetInvoice(user.StoreId, newInvoice.Id);
@@ -1013,7 +1048,7 @@ namespace BTCPayServer.Tests
 
                 await client.ArchiveInvoice(user.StoreId, invoice.Id);
                 Assert.DoesNotContain(invoice.Id,
-                    (await client.GetInvoices(user.StoreId)).Select(data => data.Id));
+                    (await client.GetInvoices(user.StoreId, null)).Select(data => data.Id));
 
                 //unarchive
                 await client.UnarchiveInvoice(user.StoreId, invoice.Id);

@@ -188,28 +188,39 @@ namespace BTCPayServer.Tests
             FindAlertMessage();
         }
 
-        public void AddLightningNode(string cryptoCode, LightningConnectionType connectionType)
+        public void AddLightningNode(string cryptoCode = "BTC", LightningConnectionType? connectionType = null)
         {
-            string connectionString;
-            if (connectionType == LightningConnectionType.Charge)
-                connectionString = $"type=charge;server={Server.MerchantCharge.Client.Uri.AbsoluteUri};allowinsecure=true";
-            else if (connectionType == LightningConnectionType.CLightning)
-                connectionString = "type=clightning;server=" + ((CLightningClient)Server.MerchantLightningD).Address.AbsoluteUri;
-            else if (connectionType == LightningConnectionType.LndREST)
-                connectionString = $"type=lnd-rest;server={Server.MerchantLnd.Swagger.BaseUrl};allowinsecure=true";
+            Driver.FindElement(By.Id($"Modify-Lightning{cryptoCode}")).Click();
+
+            var connectionString = connectionType switch
+            {
+                LightningConnectionType.Charge =>
+                    $"type=charge;server={Server.MerchantCharge.Client.Uri.AbsoluteUri};allowinsecure=true",
+                LightningConnectionType.CLightning =>
+                    $"type=clightning;server={((CLightningClient) Server.MerchantLightningD).Address.AbsoluteUri}",
+                LightningConnectionType.LndREST =>
+                    $"type=lnd-rest;server={Server.MerchantLnd.Swagger.BaseUrl};allowinsecure=true",
+                _ => null
+            };
+
+            if (connectionString == null)
+            {
+                Assert.True(Driver.FindElement(By.Id("LightningNodeType-Internal")).Enabled, "Usage of the internal Lightning node is disabled.");
+                Driver.FindElement(By.CssSelector("label[for=\"LightningNodeType-Internal\"]")).Click();
+            }
             else
-                throw new NotSupportedException(connectionType.ToString());
+            {
+                Driver.FindElement(By.CssSelector("label[for=\"LightningNodeType-Custom\"]")).Click();
+                Driver.FindElement(By.Id("ConnectionString")).SendKeys(connectionString);
+            }
 
-            Driver.FindElement(By.Id($"Modify-Lightning{cryptoCode}")).Click();
-            Driver.FindElement(By.Name($"ConnectionString")).SendKeys(connectionString);
-            Driver.FindElement(By.Id($"save")).Click();
-        }
+            var enabled = Driver.FindElement(By.Id("Enabled"));
+            if (!enabled.Selected) enabled.Click();
 
-        public void AddInternalLightningNode(string cryptoCode)
-        {
-            Driver.FindElement(By.Id($"Modify-Lightning{cryptoCode}")).Click();
-            Driver.FindElement(By.Id($"internal-ln-node-setter")).Click();
-            Driver.FindElement(By.Id($"save")).Click();
+            Driver.FindElement(By.Id("test")).Click();
+            Assert.Contains("Connection to the Lightning node succeeded.", FindAlertMessage().Text);
+
+            Driver.FindElement(By.Id("save")).Click();
         }
 
         public void ClickOnAllSideMenus()

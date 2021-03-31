@@ -313,13 +313,15 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
+        [Trait("Lightning", "Lightning")]
         public async Task CanCreateStores()
         {
             using (var s = SeleniumTester.Create())
             {
+                s.Server.ActivateLightning();
                 await s.StartAsync();
-                var alice = s.RegisterNewUser();
-                var storeData = s.CreateNewStore();
+                var alice = s.RegisterNewUser(true);
+                var (storeName, storeId) = s.CreateNewStore();
                 var onchainHint = "Set up your wallet to receive payments at your store.";
                 var offchainHint = "A connection to a Lightning node is required to receive Lightning payments.";
 
@@ -328,23 +330,31 @@ namespace BTCPayServer.Tests
                 Assert.True(s.Driver.PageSource.Contains(offchainHint), "Lightning hint not present");
 
                 s.GoToStores();
-                Assert.True(s.Driver.PageSource.Contains("warninghint_" + storeData.storeId),
-                    "Warning hint on list not present");
+                Assert.True(s.Driver.PageSource.Contains($"warninghint_{storeId}"), "Warning hint on list not present");
 
-                s.GoToStore(storeData.storeId);
+                s.GoToStore(storeId);
+                Assert.Contains(storeName, s.Driver.PageSource);
                 Assert.True(s.Driver.PageSource.Contains(onchainHint), "Wallet hint should be present at this point");
                 Assert.True(s.Driver.PageSource.Contains(offchainHint), "Lightning hint should be present at this point");
 
-                s.AddDerivationScheme(); // wallet hint should be dismissed
+                // setup onchain wallet
+                s.GoToStore(storeId);
+                s.AddDerivationScheme();
                 s.Driver.AssertNoError();
-                Assert.False(s.Driver.PageSource.Contains(onchainHint),
-                    "Wallet hint not dismissed on derivation scheme add");// dismiss lightning hint
+                Assert.False(s.Driver.PageSource.Contains(onchainHint), "Wallet hint not dismissed on derivation scheme add");
 
-                Assert.Contains(storeData.storeName, s.Driver.PageSource);
+                // setup offchain wallet
+                s.GoToStore(storeId);
+                s.AddLightningNode();
+                s.Driver.AssertNoError();
+                var successAlert = s.FindAlertMessage();
+                Assert.Contains("BTC Lightning node modified.", successAlert.Text);
+                Assert.False(s.Driver.PageSource.Contains(offchainHint), "Lightning hint should be dismissed at this point");
+
                 var storeUrl = s.Driver.Url;
                 s.ClickOnAllSideMenus();
                 s.GoToInvoices();
-                var invoiceId = s.CreateInvoice(storeData.storeName);
+                var invoiceId = s.CreateInvoice(storeName);
                 s.FindAlertMessage();
                 s.Driver.FindElement(By.ClassName("invoice-details-link")).Click();
                 var invoiceUrl = s.Driver.Url;
@@ -399,10 +409,6 @@ namespace BTCPayServer.Tests
                 s.Logout();
                 s.LogIn(alice);
                 s.Driver.FindElement(By.Id("Stores")).Click();
-
-                // there shouldn't be any hints now
-                Assert.False(s.Driver.PageSource.Contains(offchainHint), "Lightning hint should be dismissed at this point");
-
                 s.Driver.FindElement(By.LinkText("Remove")).Click();
                 s.Driver.FindElement(By.Id("continue")).Click();
                 s.Driver.FindElement(By.Id("Stores")).Click();

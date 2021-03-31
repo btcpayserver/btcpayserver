@@ -7,49 +7,40 @@
 <partial name="_StatusMessage" />
 
 <div class="alert alert-warning alert-dismissible mb-5" role="alert">
-    <h4 class="alert-heading">Warning</h4>
-    <p>
-        <span>Before you proceed, please understand that the Lightning Network is still considered experimental and is under active development.</span>
+    <p class="mb-0">
+        Please understand that the Lightning Network is still under active development and considered experimental.
+        Before you proceed, take time to familiarize yourself with the risks.
+        <a href="https://docs.btcpayserver.org/LightningNetwork/" class="alert-link">More information</a>
     </p>
-    <p><strong>Do not add money that you can't afford to lose - there's a high risk of loss of funds.</strong></p>
-    <p class="mb-2">Take time to familiarize yourself with the risks, some of which are:</p>
-    <ul class="mb-4">
-        <li>Most BTCPay Server deployments run on a pruned node which, while working, is not officially supported by lightning network implementations.</li>
-        <li>
-            Lightning keys are NOT automatically backed up by BTCPay Server. Your keys are in a hot-wallet. This means:
-            <ul>
-                <li>If you erase your BTCPay Server virtual machine: you lose all the funds.</li>
-                <li>If your server gets hacked: a hacker can take all of your funds by accessing your keys.</li>
-                <li>If there is a bug in a lightning network implementation: you could lose all the funds.</li>
-            </ul>
-        </li>
-    </ul>
-    <hr>
-    <p class="mb-2">To proceed, please ensure that:</p>
-    <ul>
-        <li>You accept being #reckless and being the sole responsible party for any loss of funds.</li>
-        <li>You agree to keep on your lightning node only what you can afford to lose.</li>
-    </ul>
     <button type="button" class="close" data-dismiss="alert" aria-label="Close">
         <span aria-hidden="true">&times;</span>
     </button>
 </div>
 
-<div class="row">
-    <div class="col">
-        <h3 class="mb-3">Lightning Node Connection</h3>
-        <form method="post">
-            <div class="form-group">
-                <p class="mb-2">The connection string encapsulates the configuration for connecting to your lightning node. BTCPay Server currently supports:</p>
+<style>
+    #CustomSetup { display: none; }
+    #LightningNodeType-Custom:checked + * + #CustomSetup { display: block; }
+</style>
+
+<form method="post">
+    <div class="form-group">
+        <div class="custom-control custom-radio">
+            <input asp-for="LightningNodeType" value="@LightningNodeType.Internal" type="radio" id="LightningNodeType-@LightningNodeType.Internal" class="custom-control-input" disabled="@(!Model.CanUseInternalNode)">
+            <label asp-for="LightningNodeType" for="@($"LightningNodeType-{LightningNodeType.Internal}")" class="custom-control-label">Use the internal Lightning node</label>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="custom-control custom-radio">
+            <input asp-for="LightningNodeType" value="@LightningNodeType.Custom" type="radio" id="LightningNodeType-@LightningNodeType.Custom" class="custom-control-input">
+            <label asp-for="LightningNodeType" for="@($"LightningNodeType-{LightningNodeType.Custom}")" class="custom-control-label">Use a custom Lightning node <span class="text-muted">(requires connection string)</span></label>
+            <div id="CustomSetup">
+                <div class="form-group my-3">
+                    <label asp-for="ConnectionString">The connection string configuration for your custom Lightning node:</label>
+                    <input asp-for="ConnectionString" class="form-control" placeholder="type=…;server=…;" value="@(Model.LightningNodeType == LightningNodeType.Internal ? "" : Model.ConnectionString)" />
+                    <span asp-validation-for="ConnectionString" class="text-danger"></span>
+                </div>
+                <p class="mt-4 mb-2">BTCPay Server currently supports:</p>
                 <ul>
-                    <li class="mb-2">
-                        <strong>Internal node</strong>, if you are administrator of the server:
-                        <ul>
-                            <li>
-                                <code>Internal Node</code>
-                            </li>
-                        </ul>
-                    </li>
                     <li class="mb-2">
                         <strong>c-lightning</strong> via TCP or unix domain socket connection:
                         <ul>
@@ -105,37 +96,30 @@
                     </li>
                 </ul>
             </div>
+        </div>
 
-            <div class="form-group">
-                <label asp-for="ConnectionString"></label>
-                <input asp-for="ConnectionString" class="form-control" />
-                <span asp-validation-for="ConnectionString" class="text-danger"></span>
-                @if (Model.CanUseInternalNode)
-                {
-                    <p class="form-text text-muted">
-                        Use the internal lightning node of this BTCPay Server instance by
-                        <a href="#" id="internal-ln-node-setter" onclick="$('#ConnectionString').val('Internal Node');return false;">clicking here</a>.
-                    </p>
-                }
-            </div>
-            <div class="form-group form-check">
-                <input asp-for="Enabled" type="checkbox" class="form-check-input" />
-                <label asp-for="Enabled" class="form-check-label"></label>
-            </div>
-            <button id="save" name="command" type="submit" value="save" class="btn btn-primary">Submit</button>
-            <button name="command" type="submit" value="test" class="btn btn-secondary mr-3">Test connection</button>
-            <a class="text-secondary"
-               asp-controller="PublicLightningNodeInfo"
-               asp-action="ShowLightningNodeInfo"
-               asp-route-cryptoCode="@Model.CryptoCode"
-               asp-route-storeId="@Model.StoreId"
-               target="_blank">
-                <span class="fa fa-info-circle" title="More information..."></span>
-                Open Public Node Info Page
-            </a>
-        </form>
     </div>
-</div>
+
+    <div class="form-group mt-4 mb-5">
+        <label asp-for="Enabled" class="form-check-label"></label>
+        <input asp-for="Enabled" type="checkbox" class="btcpay-toggle ml-2" />
+    </div>
+
+    <div>
+        <button id="save" name="command" type="submit" value="save" class="btn btn-primary mr-2">Submit</button>
+        <button id="test" name="command" type="submit" value="test" class="btn btn-secondary mr-3">Test connection</button>
+
+        <a class="text-secondary"
+           asp-controller="PublicLightningNodeInfo"
+           asp-action="ShowLightningNodeInfo"
+           asp-route-cryptoCode="@Model.CryptoCode"
+           asp-route-storeId="@Model.StoreId"
+           target="_blank">
+            <span class="fa fa-info-circle" title="More information..."></span>
+            Open Public Node Info Page
+        </a>
+    </div>
+</form>
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")

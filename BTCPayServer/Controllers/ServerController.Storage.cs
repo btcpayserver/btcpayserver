@@ -146,6 +146,15 @@ namespace BTCPayServer.Controllers
         [HttpPost("server/files/upload")]
         public async Task<IActionResult> CreateFile(IFormFile file)
         {
+            if (!file.FileName.IsValidFileName())
+            {
+                this.TempData.SetStatusMessageModel(new StatusMessageModel()
+                {
+                    Message = "Invalid file name",
+                    Severity = StatusMessageModel.StatusSeverity.Error
+                });
+                return RedirectToAction(nameof(Files));
+            }
             var newFile = await _FileService.AddFile(file, GetUserId());
             return RedirectToAction(nameof(Files), new
             {

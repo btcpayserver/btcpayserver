@@ -293,7 +293,8 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<StoreRepository>();
             services.TryAddSingleton<PaymentRequestRepository>();
             services.TryAddSingleton<BTCPayWalletProvider>();
-            services.TryAddSingleton<WalletReceiveStateService>();
+            services.TryAddSingleton<WalletReceiveService>();
+            services.AddSingleton<IHostedService>( provider => provider.GetService<WalletReceiveService>());
             services.TryAddSingleton<CurrencyNameTable>(CurrencyNameTable.Instance);
             services.TryAddSingleton<IFeeProviderFactory>(o => new NBXplorerFeeProviderFactory(o.GetRequiredService<ExplorerClientProvider>())
             {
@@ -346,7 +347,6 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IHostedService, DynamicDnsHostedService>();
             services.AddSingleton<IHostedService, TorServicesHostedService>();
             services.AddSingleton<IHostedService, PaymentRequestStreamer>();
-            services.AddSingleton<IHostedService, WalletReceiveCacheUpdater>();
             services.AddSingleton<IBackgroundJobClient, BackgroundJobClient>();
             services.AddScoped<IAuthorizationHandler, CookieAuthorizationHandler>();
             services.AddScoped<IAuthorizationHandler, BitpayAuthorizationHandler>();
@@ -411,6 +411,7 @@ namespace BTCPayServer.Hosting
                     rateLimits.SetZone($"zone={ZoneLimits.Register} rate=1000r/min burst=100 nodelay");
                     rateLimits.SetZone($"zone={ZoneLimits.PayJoin} rate=1000r/min burst=100 nodelay");
                     rateLimits.SetZone($"zone={ZoneLimits.Shopify} rate=1000r/min burst=100 nodelay");
+                    rateLimits.SetZone($"zone={ZoneLimits.ForgotPassword} rate=5r/d burst=3 nodelay");
                 }
                 else
                 {
@@ -418,6 +419,7 @@ namespace BTCPayServer.Hosting
                     rateLimits.SetZone($"zone={ZoneLimits.Register} rate=2r/min burst=2 nodelay");
                     rateLimits.SetZone($"zone={ZoneLimits.PayJoin} rate=5r/min burst=3 nodelay");
                     rateLimits.SetZone($"zone={ZoneLimits.Shopify} rate=20r/min burst=3 nodelay");
+                    rateLimits.SetZone($"zone={ZoneLimits.ForgotPassword} rate=5r/d burst=5 nodelay");
                 }
                 return rateLimits;
             });
@@ -448,7 +450,6 @@ namespace BTCPayServer.Hosting
         private static void AddBtcPayServerAuthenticationSchemes(this IServiceCollection services)
         {
             services.AddAuthentication()
-                .AddCookie()
                 .AddBitpayAuthentication()
                 .AddAPIKeyAuthentication();
         }

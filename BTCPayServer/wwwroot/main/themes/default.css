@@ -68,7 +68,8 @@
   --btcpay-header-bg: var(--btcpay-color-white);
   --btcpay-header-color: var(--btcpay-body-color);
   --btcpay-header-color-link: var(--btcpay-body-color);
-  --btcpay-header-color-link-accent: var(--btcpay-body-color);
+  --btcpay-header-color-link-accent: var(--btcpay-color-primary);
+  --btcpay-header-color-link-active: var(--btcpay-color-primary-accent);
 
   --btcpay-wizard-bg: var(--btcpay-color-white);
   --btcpay-wizard-color: var(--btcpay-body-color);
@@ -148,11 +149,4 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
 header.masthead::before,
 .service-box img {
   filter: hue-rotate(318deg);
-}
-
-@media (min-width: 992px) {
-    #mainNav .navbar-nav > li.nav-item > a.nav-link:focus,
-    #mainNav .navbar-nav > li.nav-item > a.nav-link:hover {
-        border-bottom-color: var(--btcpay-header-color-link-accent);
-    }
 }

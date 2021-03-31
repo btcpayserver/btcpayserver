@@ -1,3 +1,6 @@
-﻿@{
+﻿@using BTCPayServer.Views
+@using BTCPayServer.Views.Wallets
+@{
     ViewBag.MainTitle = "Manage wallet";
+    ViewData.SetActiveCategory(typeof(WalletsNavPages));
 }

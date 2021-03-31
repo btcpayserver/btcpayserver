@@ -2,6 +2,7 @@
 @inject UserManager<ApplicationUser> UserManager
 @inject CssThemeManager CssThemeManager
 @using BTCPayServer.HostedServices
+@using BTCPayServer.Views.Notifications
 @using Microsoft.AspNetCore.Http.Extensions
 @model BTCPayServer.Components.NotificationsDropdown.NotificationSummaryViewModel
 @addTagHelper *, BundlerMinifier.TagHelpers
@@ -9,8 +10,8 @@
 @if (Model.UnseenCount > 0)
 {
     <li class="nav-item dropdown" id="notifications-nav-item">
-        <a class="nav-link js-scroll-trigger border-bottom-0" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" id="Notifications">
-            <i class="fa fa-bell"></i>
+        <a class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(NotificationsNavPages))" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" id="Notifications">
+            <span class="d-lg-none d-sm-block">Notifications</span><i class="fa fa-bell d-lg-inline-block d-none"></i>
         </a>
         <span class="alerts-badge badge badge-pill badge-danger">@Model.UnseenCount</span>
         <div class="dropdown-menu dropdown-menu-right text-center notification-dropdown" aria-labelledby="navbarDropdown">
@@ -46,8 +47,8 @@
 else
 {
     <li class="nav-item" id="notifications-nav-item">
-        <a asp-controller="Notifications" asp-action="Index" title="Notifications" class="nav-link js-scroll-trigger" id="Notifications">
-            <i class="fa fa-bell"></i>
+        <a asp-controller="Notifications" asp-action="Index" title="Notifications" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(NotificationsNavPages))" id="Notifications">
+            <span class="d-lg-none d-sm-block">Notifications</span><i class="fa fa-bell d-lg-inline-block d-none"></i>
         </a>
     </li>
 }

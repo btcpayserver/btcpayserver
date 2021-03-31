@@ -26,7 +26,8 @@ namespace BTCPayServer
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),
                 CoinType = NetworkType == ChainName.Mainnet ? new KeyPath("17'") : new KeyPath("1'"),
                 SupportRBF = true,
-                SupportPayJoin = true
+                SupportPayJoin = true,
+                VaultSupported = true
             });
         }
     }

@@ -71,7 +71,7 @@ namespace BTCPayServer.Controllers
 
             try
             {
-                _AppService.Parse(vm.PerksTemplate, vm.TargetCurrency).ToString();
+                vm.PerksTemplate = _AppService.SerializeTemplate(_AppService.Parse(vm.PerksTemplate, vm.TargetCurrency));
             }
             catch
             {

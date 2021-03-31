@@ -8,6 +8,7 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.ModelBinders;
@@ -31,6 +32,7 @@ using NBXplorer;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json;
+using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers
 {
@@ -50,7 +52,7 @@ namespace BTCPayServer.Controllers
         private readonly IAuthorizationService _authorizationService;
         private readonly IFeeProviderFactory _feeRateProvider;
         private readonly BTCPayWalletProvider _walletProvider;
-        private readonly WalletReceiveStateService _WalletReceiveStateService;
+        private readonly WalletReceiveService _walletReceiveService;
         private readonly EventAggregator _EventAggregator;
         private readonly SettingsRepository _settingsRepository;
         private readonly DelayedTransactionBroadcaster _broadcaster;
@@ -75,7 +77,7 @@ namespace BTCPayServer.Controllers
                                  ExplorerClientProvider explorerProvider,
                                  IFeeProviderFactory feeRateProvider,
                                  BTCPayWalletProvider walletProvider,
-                                 WalletReceiveStateService walletReceiveStateService,
+                                 WalletReceiveService walletReceiveService,
                                  EventAggregator eventAggregator,
                                  SettingsRepository settingsRepository,
                                  DelayedTransactionBroadcaster broadcaster,
@@ -97,7 +99,7 @@ namespace BTCPayServer.Controllers
             ExplorerClientProvider = explorerProvider;
             _feeRateProvider = feeRateProvider;
             _walletProvider = walletProvider;
-            _WalletReceiveStateService = walletReceiveStateService;
+            _walletReceiveService = walletReceiveService;
             _EventAggregator = eventAggregator;
             _settingsRepository = settingsRepository;
             _broadcaster = broadcaster;
@@ -361,7 +363,7 @@ namespace BTCPayServer.Controllers
             if (network == null)
                 return NotFound();
 
-            var address = _WalletReceiveStateService.Get(walletId)?.Address;
+            var address = _walletReceiveService.Get(walletId)?.Address;
             return View(new WalletReceiveViewModel()
             {
                 CryptoCode = walletId.CryptoCode,
@@ -383,29 +385,22 @@ namespace BTCPayServer.Controllers
             var network = this.NetworkProvider.GetNetwork<BTCPayNetwork>(walletId?.CryptoCode);
             if (network == null)
                 return NotFound();
-            var wallet = _walletProvider.GetWallet(network);
             switch (command)
             {
                 case "unreserve-current-address":
-                    KeyPathInformation cachedAddress = _WalletReceiveStateService.Get(walletId);
-                    if (cachedAddress == null)
+                    var address = await _walletReceiveService.UnReserveAddress(walletId);
+                    if (!string.IsNullOrEmpty(address))
                     {
-                        break;
+                        TempData.SetStatusMessageModel(new StatusMessageModel()
+                        {
+                            AllowDismiss = true,
+                            Message = $"Address {address} was unreserved.",
+                            Severity = StatusMessageModel.StatusSeverity.Success,
+                        });
                     }
-                    var address = cachedAddress.ScriptPubKey.GetDestinationAddress(network.NBitcoinNetwork);
-                    ExplorerClientProvider.GetExplorerClient(network)
-                        .CancelReservation(cachedAddress.DerivationStrategy, new[] { cachedAddress.KeyPath });
-                    this.TempData.SetStatusMessageModel(new StatusMessageModel()
-                    {
-                        AllowDismiss = true,
-                        Message = $"Address {address} was unreserved.",
-                        Severity = StatusMessageModel.StatusSeverity.Success,
-                    });
-                    _WalletReceiveStateService.Remove(walletId);
                     break;
                 case "generate-new-address":
-                    var reserve = (await wallet.ReserveAddressAsync(paymentMethod.AccountDerivation));
-                    _WalletReceiveStateService.Set(walletId, reserve);
+                    await _walletReceiveService.GetOrGenerate(walletId, true);
                     break;
             }
             return RedirectToAction(nameof(WalletReceive), new { walletId });
@@ -413,11 +408,8 @@ namespace BTCPayServer.Controllers
 
         private async Task<bool> CanUseHotWallet()
         {
-            var isAdmin = (await _authorizationService.AuthorizeAsync(User, Policies.CanModifyServerSettings)).Succeeded;
-            if (isAdmin)
-                return true;
             var policies = await _settingsRepository.GetSettingAsync<PoliciesSettings>();
-            return policies?.AllowHotWalletForAll is true;
+            return (await _authorizationService.CanUseHotWallet(policies, User)).HotWallet;
         }
 
         [HttpGet]
@@ -477,9 +469,7 @@ namespace BTCPayServer.Controllers
                     })
                     .ToArray();
             var balance = _walletProvider.GetWallet(network).GetBalance(paymentMethod.AccountDerivation);
-            model.NBXSeedAvailable = await CanUseHotWallet() && !string.IsNullOrEmpty(await ExplorerClientProvider.GetExplorerClient(network)
-                .GetMetadataAsync<string>(GetDerivationSchemeSettings(walletId).AccountDerivation,
-                    WellknownMetadataKeys.MasterHDKey));
+            model.NBXSeedAvailable = await GetSeed(walletId, network) != null;
             model.CurrentBalance = await balance;
 
             await Task.WhenAll(recommendedFees);
@@ -512,6 +502,15 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
+        private async Task<string> GetSeed(WalletId walletId, BTCPayNetwork network)
+        {
+            return await CanUseHotWallet() &&
+                    GetDerivationSchemeSettings(walletId) is DerivationSchemeSettings s &&
+                    s.IsHotWallet &&
+                    ExplorerClientProvider.GetExplorerClient(network) is ExplorerClient client &&
+                    await client.GetMetadataAsync<string>(s.AccountDerivation, WellknownMetadataKeys.MasterHDKey) is string seed &&
+                    !string.IsNullOrEmpty(seed) ? seed : null;
+        }
 
         [HttpPost]
         [Route("{walletId}/send")]
@@ -528,9 +527,7 @@ namespace BTCPayServer.Controllers
             if (network == null || network.ReadonlyWallet)
                 return NotFound();
             vm.SupportRBF = network.SupportRBF;
-            vm.NBXSeedAvailable = await CanUseHotWallet() && !string.IsNullOrEmpty(await ExplorerClientProvider.GetExplorerClient(network)
-                .GetMetadataAsync<string>(GetDerivationSchemeSettings(walletId).AccountDerivation,
-                    WellknownMetadataKeys.MasterHDKey, cancellation));
+            vm.NBXSeedAvailable = await GetSeed(walletId, network) != null;
             if (!string.IsNullOrEmpty(bip21))
             {
                 LoadFromBIP21(vm, bip21, network);
@@ -662,7 +659,7 @@ namespace BTCPayServer.Controllers
 
             if (!ModelState.IsValid)
                 return View(vm);
-
+ 
             DerivationSchemeSettings derivationScheme = GetDerivationSchemeSettings(walletId);
 
             CreatePSBTResponse psbt = null;
@@ -898,17 +895,17 @@ namespace BTCPayServer.Controllers
             }
             else
             {
-                ModelState.AddModelError(nameof(viewModel.SeedOrKey), "The master fingerprint does not match the one set in your wallet settings. Probable cause are: wrong seed, wrong passphrase or wrong fingerprint in your wallet settings.");
+                ModelState.AddModelError(nameof(viewModel.SeedOrKey), "The master fingerprint does not match the one set in your wallet settings. Probable causes are: wrong seed, wrong passphrase or wrong fingerprint in your wallet settings.");
                 return View(nameof(SignWithSeed), viewModel);
             }
 
-            var changed = PSBTChanged(psbt, () => psbt.SignAll(settings.AccountDerivation, signingKey, rootedKeyPath, new SigningOptions()
+            var changed = psbt.PSBTChanged( () => psbt.SignAll(settings.AccountDerivation, signingKey, rootedKeyPath, new SigningOptions()
             {
                 EnforceLowR = !(viewModel.SigningContext?.EnforceLowR is false)
             }));
             if (!changed)
             {
-                ModelState.AddModelError(nameof(viewModel.SeedOrKey), "Impossible to sign the transaction. Probable cause: Incorrect account key path in wallet settings, PSBT already signed.");
+                ModelState.AddModelError(nameof(viewModel.SeedOrKey), "Impossible to sign the transaction. Probable causes: Incorrect account key path in wallet settings or PSBT already signed.");
                 return View(nameof(SignWithSeed), viewModel);
             }
             ModelState.Remove(nameof(viewModel.SigningContext.PSBT));
@@ -919,15 +916,6 @@ namespace BTCPayServer.Controllers
                 SigningKeyPath = rootedKeyPath?.ToString(),
                 SigningContext = viewModel.SigningContext
             });
-        }
-
-
-        private bool PSBTChanged(PSBT psbt, Action act)
-        {
-            var before = psbt.ToBase64();
-            act();
-            var after = psbt.ToBase64();
-            return before != after;
         }
 
         private string ValueToString(Money v, BTCPayNetworkBase network)
@@ -1036,11 +1024,7 @@ namespace BTCPayServer.Controllers
 
         internal DerivationSchemeSettings GetDerivationSchemeSettings(WalletId walletId)
         {
-            var paymentMethod = CurrentStore
-                            .GetSupportedPaymentMethods(NetworkProvider)
-                            .OfType<DerivationSchemeSettings>()
-                            .FirstOrDefault(p => p.PaymentId.PaymentType == Payments.PaymentTypes.BTCLike && p.PaymentId.CryptoCode == walletId.CryptoCode);
-            return paymentMethod;
+            return CurrentStore.GetDerivationSchemeSettings(NetworkProvider, walletId.CryptoCode);
         }
 
         private static async Task<string> GetBalanceString(BTCPayWallet wallet, DerivationStrategyBase derivationStrategy)
@@ -1150,28 +1134,28 @@ namespace BTCPayServer.Controllers
             }
             else if (command == "view-seed" && await CanUseHotWallet())
             {
-                var seed = await ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode)
+                if (await GetSeed(walletId, derivationScheme.Network) != null)
+                {
+                    var mnemonic = await ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode)
                     .GetMetadataAsync<string>(derivationScheme.AccountDerivation,
                         WellknownMetadataKeys.Mnemonic, cancellationToken);
-                if (string.IsNullOrEmpty(seed))
+                    var recoveryVm = new RecoverySeedBackupViewModel()
+                    {
+                        CryptoCode = walletId.CryptoCode,
+                        Mnemonic = mnemonic,
+                        IsStored = true,
+                        RequireConfirm = false,
+                        ReturnUrl = Url.Action(nameof(WalletSettings), new { walletId })
+                    };
+                    return this.RedirectToRecoverySeedBackup(recoveryVm);
+                }
+                else
                 {
                     TempData.SetStatusMessageModel(new StatusMessageModel()
                     {
                         Severity = StatusMessageModel.StatusSeverity.Error,
                         Message = "The seed was not found"
                     });
-                }
-                else
-                {
-                    var recoveryVm = new RecoverySeedBackupViewModel()
-                    {
-                        CryptoCode = walletId.CryptoCode,
-                        Mnemonic = seed,
-                        IsStored = true,
-                        RequireConfirm = false,
-                        ReturnUrl = Url.Action(nameof(WalletSettings), new { walletId })
-                    };
-                    return this.RedirectToRecoverySeedBackup(recoveryVm);
                 }
 
                 return RedirectToAction(nameof(WalletSettings));

@@ -1,6 +1,26 @@
 ﻿@model UsersViewModel
 @{
     ViewData.SetActivePageAndTitle(ServerNavPages.Users);
+    var nextUserEmailSortOrder = (string)ViewData["NextUserEmailSortOrder"];
+    String userEmailSortOrder = null;
+    switch (nextUserEmailSortOrder)
+    {
+        case "asc":
+            userEmailSortOrder = "desc";
+            break;
+        case "desc":
+            userEmailSortOrder = "asc";
+            break;
+    }
+
+    var sortIconClass = "fa-sort";
+    if (userEmailSortOrder != null)
+    {
+        sortIconClass = $"fa-sort-alpha-{userEmailSortOrder}";
+    }
+
+    var sortByDesc = "Sort by descending...";
+    var sortByAsc = "Sort by ascending...";
 }
 
 <partial name="_StatusMessage"/>
@@ -11,9 +31,22 @@
             <span class="fa fa-plus"></span> Add User
         </a>
     </div>
-    
+
     <div class="col-12 col-sm-8 col-lg-6 mb-3">
-       
+       <form
+            asp-action="ListUsers"
+            asp-route-sortOrder="@(userEmailSortOrder)"
+        >
+            <div class="input-group">
+                <input asp-for="SearchTerm" class="form-control" placeholder="Search by email..." />
+                <div class="input-group-append">
+                    <button type="submit" class="btn btn-secondary" title="Search by email">
+                        <span class="fa fa-search"></span> Search
+                    </button>
+                </div>
+            </div>
+            <span asp-validation-for="SearchTerm" class="text-danger"></span>
+        </form>
     </div>
 </div>
 
@@ -22,7 +55,17 @@
         <table class="table table-sm">
             <thead>
             <tr>
-                <th>Email</th>
+                <th>
+                    <a
+                        asp-action="ListUsers"
+                        asp-route-sortOrder="@(nextUserEmailSortOrder ?? "asc")"
+                        class="text-nowrap"
+                        title="@(nextUserEmailSortOrder == "desc" ? sortByAsc : sortByDesc)"
+                    >
+                        Email
+                        <span class="fa @(sortIconClass)" />
+                    </a>
+                </th>
                 <th>Created</th>
                 <th>Verified</th>
                 <th class="text-right">Actions</th>
@@ -52,7 +95,7 @@
             </tbody>
         </table>
 
-        
+
         <vc:pager view-model="Model"></vc:pager>
     </div>
 </div>

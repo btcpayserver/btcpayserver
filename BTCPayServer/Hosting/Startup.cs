@@ -10,6 +10,8 @@ using BTCPayServer.Plugins;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Storage;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
@@ -53,6 +55,24 @@ namespace BTCPayServer.Hosting
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
+            services.Configure<AuthenticationOptions>(opts =>
+            {
+                opts.DefaultAuthenticateScheme = null;
+                opts.DefaultChallengeScheme = null;
+                opts.DefaultForbidScheme = null;
+                opts.DefaultScheme = IdentityConstants.ApplicationScheme;
+                opts.DefaultSignInScheme = null;
+                opts.DefaultSignOutScheme = null;
+            });
+            services.PostConfigure<CookieAuthenticationOptions>(IdentityConstants.ApplicationScheme, opt =>
+            {
+                opt.LoginPath = "/login";
+            });
+
+            services.Configure<SecurityStampValidatorOptions>(opts =>
+            {
+                opts.ValidationInterval = TimeSpan.FromMinutes(5.0);
+            });
 
             services.AddBTCPayServer(Configuration);
             services.AddProviderStorage();
@@ -190,7 +210,6 @@ namespace BTCPayServer.Hosting
             forwardingOptions.ForwardedHeaders = ForwardedHeaders.All;
             app.UseForwardedHeaders(forwardingOptions);
 
-
             app.UseStatusCodePagesWithReExecute("/Error/Handle", "?statusCode={0}");
 
             app.UsePayServer();
@@ -215,6 +234,11 @@ namespace BTCPayServer.Hosting
 
             app.UseWebSockets();
 
+            app.UseCookiePolicy(new CookiePolicyOptions()
+            {
+                HttpOnly = Microsoft.AspNetCore.CookiePolicy.HttpOnlyPolicy.Always,
+                Secure = Microsoft.AspNetCore.Http.CookieSecurePolicy.SameAsRequest
+            });
             app.UseEndpoints(endpoints =>
             {
                 AppHub.Register(endpoints);

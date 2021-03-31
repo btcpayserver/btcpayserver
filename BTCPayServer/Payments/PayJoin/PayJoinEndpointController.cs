@@ -83,35 +83,30 @@ namespace BTCPayServer.Payments.PayJoin
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly InvoiceRepository _invoiceRepository;
         private readonly ExplorerClientProvider _explorerClientProvider;
-        private readonly StoreRepository _storeRepository;
         private readonly BTCPayWalletProvider _btcPayWalletProvider;
         private readonly PayJoinRepository _payJoinRepository;
         private readonly EventAggregator _eventAggregator;
         private readonly NBXplorerDashboard _dashboard;
         private readonly DelayedTransactionBroadcaster _broadcaster;
-        private readonly WalletRepository _walletRepository;
         private readonly BTCPayServerEnvironment _env;
 
         public PayJoinEndpointController(BTCPayNetworkProvider btcPayNetworkProvider,
             InvoiceRepository invoiceRepository, ExplorerClientProvider explorerClientProvider,
-            StoreRepository storeRepository, BTCPayWalletProvider btcPayWalletProvider,
+            BTCPayWalletProvider btcPayWalletProvider,
             PayJoinRepository payJoinRepository,
             EventAggregator eventAggregator,
             NBXplorerDashboard dashboard,
             DelayedTransactionBroadcaster broadcaster,
-            WalletRepository walletRepository,
             BTCPayServerEnvironment env)
         {
             _btcPayNetworkProvider = btcPayNetworkProvider;
             _invoiceRepository = invoiceRepository;
             _explorerClientProvider = explorerClientProvider;
-            _storeRepository = storeRepository;
             _btcPayWalletProvider = btcPayWalletProvider;
             _payJoinRepository = payJoinRepository;
             _eventAggregator = eventAggregator;
             _dashboard = dashboard;
             _broadcaster = broadcaster;
-            _walletRepository = walletRepository;
             _env = env;
         }
 
@@ -285,6 +280,8 @@ namespace BTCPayServer.Payments.PayJoin
 
                 if (!await _payJoinRepository.TryLockInputs(ctx.OriginalTransaction.Inputs.Select(i => i.PrevOut).ToArray()))
                 {
+                    // We do not broadcast, since we might double spend a delayed transaction of a previous payjoin
+                    ctx.DoNotBroadcast();
                     return CreatePayjoinErrorAndLog(503, PayjoinReceiverWellknownErrors.Unavailable, "Some of those inputs have already been used to make another payjoin transaction");
                 }
 
@@ -350,13 +347,12 @@ namespace BTCPayServer.Payments.PayJoin
                 && feeOutputIndex < newTx.Outputs.Count
                 && !isOurOutput.Contains(newTx.Outputs[feeOutputIndex])
                 ? newTx.Outputs[feeOutputIndex] : null;
-            var rand = new Random();
             int senderInputCount = newTx.Inputs.Count;
             foreach (var selectedUTXO in selectedUTXOs.Select(o => o.Value))
             {
                 contributedAmount += (Money)selectedUTXO.Value;
                 var newInput = newTx.Inputs.Add(selectedUTXO.Outpoint);
-                newInput.Sequence = newTx.Inputs[rand.Next(0, senderInputCount)].Sequence;
+                newInput.Sequence = newTx.Inputs[(int)(RandomUtils.GetUInt32() % senderInputCount)].Sequence;
             }
             ourNewOutput.Value += contributedAmount;
             var minRelayTxFee = this._dashboard.Get(network.CryptoCode).Status.BitcoinStatus?.MinRelayTxFee ??

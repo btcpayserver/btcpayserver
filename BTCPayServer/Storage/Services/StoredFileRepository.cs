@@ -36,6 +36,7 @@ namespace BTCPayServer.Storage.Services
                     .Where(file =>
                         (!filesQuery.Id.Any() || filesQuery.Id.Contains(file.Id)) &&
                         (!filesQuery.UserIds.Any() || filesQuery.UserIds.Contains(file.ApplicationUserId)))
+                    .OrderByDescending(file => file.Timestamp)
                     .ToListAsync();
             }
         }

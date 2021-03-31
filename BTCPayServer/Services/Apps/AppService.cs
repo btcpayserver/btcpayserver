@@ -18,6 +18,7 @@ using NBitcoin;
 using NBitcoin.DataEncoders;
 using Newtonsoft.Json.Linq;
 using NUglify.Helpers;
+using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
 using YamlDotNet.Serialization;
 using static BTCPayServer.Models.AppViewModels.ViewCrowdfundViewModel;
@@ -279,7 +280,10 @@ namespace BTCPayServer.Services.Apps
                 itemNode.Add("price", new YamlScalarNode(item.Price.Value.ToStringInvariant()));
                 if (!string.IsNullOrEmpty(item.Description))
                 {
-                    itemNode.Add("description", new YamlScalarNode(item.Description));
+                    itemNode.Add("description",  new YamlScalarNode(item.Description)
+                    {
+                        Style = ScalarStyle.DoubleQuoted
+                    });
                 }
                 if (!string.IsNullOrEmpty(item.Image))
                 {
@@ -289,6 +293,16 @@ namespace BTCPayServer.Services.Apps
                 if (item.Inventory.HasValue)
                 {
                     itemNode.Add("inventory", new YamlScalarNode(item.Inventory.ToString()));
+                }
+
+                if (!string.IsNullOrEmpty(item.BuyButtonText))
+                {
+                    itemNode.Add("buyButtonText", new YamlScalarNode(item.BuyButtonText));
+                }
+
+                if (item.PaymentMethods?.Any() is true)
+                {
+                    itemNode.Add("payment_methods", new YamlSequenceNode(item.PaymentMethods.Select(s=> new YamlScalarNode(s))));
                 }
                 mappingNode.Add(item.Id, itemNode);
             }
@@ -306,7 +320,7 @@ namespace BTCPayServer.Services.Apps
             var root = (YamlMappingNode)stream.Documents[0].RootNode;
             return root
                 .Children
-                .Select(kv => new PosHolder { Key = (kv.Key as YamlScalarNode)?.Value, Value = kv.Value as YamlMappingNode })
+                .Select(kv => new PosHolder(_HtmlSanitizer) { Key = _HtmlSanitizer.Sanitize((kv.Key as YamlScalarNode)?.Value), Value = kv.Value as YamlMappingNode })
                 .Where(kv => kv.Value != null)
                 .Select(c => new ViewPointOfSaleViewModel.Item()
                 {
@@ -385,6 +399,13 @@ namespace BTCPayServer.Services.Apps
 
         private class PosHolder
         {
+            private readonly HtmlSanitizer _htmlSanitizer;
+
+            public PosHolder(HtmlSanitizer htmlSanitizer)
+            {
+                _htmlSanitizer = htmlSanitizer;
+            }
+
             public string Key { get; set; }
             public YamlMappingNode Value { get; set; }
 
@@ -399,7 +420,8 @@ namespace BTCPayServer.Services.Apps
 
             public string GetDetailString(string field)
             {
-                return GetDetail(field).FirstOrDefault()?.Value?.Value;
+                var raw = GetDetail(field).FirstOrDefault()?.Value?.Value;
+                return raw is null ? null : _htmlSanitizer.Sanitize(raw);
             }
             public string[] GetDetailStringList(string field)
             {
@@ -407,7 +429,7 @@ namespace BTCPayServer.Services.Apps
                 {
                     return null;
                 }
-                return sequenceNode.Children.Select(node => (node as YamlScalarNode)?.Value).Where(s => s != null).ToArray();
+                return sequenceNode.Children.Select(node => (node as YamlScalarNode)?.Value).Where(s => s != null).Select(s=> _htmlSanitizer.Sanitize(s)).ToArray();
             }
         }
         private class PosScalar

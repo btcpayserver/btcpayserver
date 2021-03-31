@@ -1,16 +1,23 @@
+@using BTCPayServer.Views.Server
+@using BTCPayServer.Views.Stores
+@using BTCPayServer.Views.Apps
+@using BTCPayServer.Views.Invoice
+@using BTCPayServer.Views.Manage
+@using BTCPayServer.Views.PaymentRequest
+@using BTCPayServer.Views.Wallets
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
 @inject RoleManager<IdentityRole> RoleManager
-@inject BTCPayServer.Services.BTCPayServerEnvironment env
-@inject BTCPayServer.HostedServices.CssThemeManager themeManager
+@inject BTCPayServer.Services.BTCPayServerEnvironment Env
+@inject BTCPayServer.HostedServices.CssThemeManager ThemeManager
 
 <!DOCTYPE html>
-<html lang="en"@(env.IsDeveloping ? " data-devenv" : "")>
+<html lang="en"@(Env.IsDeveloping ? " data-devenv" : "")>
 
 <head>
     <partial name="Header" />
-    @RenderSection("HeadScripts", required: false)
-    @RenderSection("HeaderContent", false)
+    @await RenderSectionAsync("HeadScripts", false)
+    @await RenderSectionAsync("HeaderContent", false)
 </head>
 
 <body id="page-top">
@@ -24,70 +31,82 @@
     }
 
     <!-- Navigation -->
-    <nav class='navbar navbar-expand-lg fixed-top @additionalStyle' id="mainNav">
-        <div class="container">
-            <a class="navbar-brand js-scroll-trigger" href="~/">
-                <svg class="logo" viewBox="0 0 192 84" xmlns="http://www.w3.org/2000/svg"><g><path d="M5.206 83.433a4.86 4.86 0 01-4.859-4.861V5.431a4.86 4.86 0 119.719 0v73.141a4.861 4.861 0 01-4.86 4.861" fill="#CEDC21" class="logo-brand-light" /><path d="M5.209 83.433a4.862 4.862 0 01-2.086-9.253L32.43 60.274 2.323 38.093a4.861 4.861 0 015.766-7.826l36.647 26.999a4.864 4.864 0 01-.799 8.306L7.289 82.964a4.866 4.866 0 01-2.08.469" fill="#51B13E" class="logo-brand-medium" /><path d="M5.211 54.684a4.86 4.86 0 01-2.887-8.774L32.43 23.73 3.123 9.821a4.861 4.861 0 014.166-8.784l36.648 17.394a4.86 4.86 0 01.799 8.305l-36.647 27a4.844 4.844 0 01-2.878.948" fill="#CEDC21" class="logo-brand-light" /><path d="M10.066 31.725v20.553L24.01 42.006z" fill="#1E7A44" class="logo-brand-dark" /><path d="M10.066 5.431A4.861 4.861 0 005.206.57 4.86 4.86 0 00.347 5.431v61.165h9.72V5.431h-.001z" fill="#CEDC21" class="logo-brand-light" /><path d="M74.355 41.412c3.114.884 4.84 3.704 4.84 7.238 0 5.513-3.368 8.082-7.955 8.082H60.761V27.271h9.259c4.504 0 7.997 2.146 7.997 7.743 0 2.821-1.179 5.43-3.662 6.398m-4.293-.716c3.324 0 6.018-1.179 6.018-5.724 0-4.586-2.776-5.808-6.145-5.808h-7.197v11.531h7.324v.001zm1.052 14.099c3.366 0 6.06-1.768 6.06-6.145 0-4.713-3.072-6.144-6.901-6.144h-7.534v12.288h8.375v.001zM98.893 27.271v1.81h-8.122v27.651h-1.979V29.081h-8.123v-1.81zM112.738 26.85c5.01 0 9.554 2.524 10.987 8.543h-1.895c-1.348-4.923-5.303-6.732-9.134-6.732-6.944 0-10.605 5.681-10.605 13.341 0 8.08 3.661 13.256 10.646 13.256 4.125 0 7.828-1.85 9.26-7.279h1.895c-1.264 6.271-6.229 9.174-11.154 9.174-7.87 0-12.583-5.808-12.583-15.15 0-8.966 4.969-15.153 12.583-15.153M138.709 27.271c5.091 0 8.795 3.326 8.795 9.764 0 6.06-3.704 9.722-8.795 9.722h-7.746v9.976h-1.935V27.271h9.681zm0 17.549c3.745 0 6.816-2.397 6.816-7.827 0-5.429-2.947-7.869-6.816-7.869h-7.746V44.82h7.746zM147.841 56.732v-.255l11.741-29.29h.885l11.615 29.29v.255h-2.062l-3.322-8.501H153.27l-3.324 8.501h-2.105zm12.164-26.052l-6.059 15.697h12.078l-6.019-15.697zM189.551 27.271h2.104v.293l-9.176 16.92v12.248h-2.02V44.484l-9.216-16.961v-.252h2.147l3.997 7.492 4.043 7.786h.04l4.081-7.786z" class="logo-brand-text" /></g></svg>
-
-                @if (env.NetworkType != NBitcoin.ChainName.Mainnet)
+    <nav class="navbar navbar-expand-lg fixed-top @additionalStyle" id="mainNav">
+        <div class="container px-sm-3">
+            @* Logo on Mobile *@
+            <a class="navbar-brand py-2 js-scroll-trigger d-lg-none" href="~/">
+                <svg class="logo" viewBox="0 0 192 84" xmlns="http://www.w3.org/2000/svg"><g><path d="M5.206 83.433a4.86 4.86 0 01-4.859-4.861V5.431a4.86 4.86 0 119.719 0v73.141a4.861 4.861 0 01-4.86 4.861" fill="#CEDC21" class="logo-brand-light"/><path d="M5.209 83.433a4.862 4.862 0 01-2.086-9.253L32.43 60.274 2.323 38.093a4.861 4.861 0 015.766-7.826l36.647 26.999a4.864 4.864 0 01-.799 8.306L7.289 82.964a4.866 4.866 0 01-2.08.469" fill="#51B13E" class="logo-brand-medium"/><path d="M5.211 54.684a4.86 4.86 0 01-2.887-8.774L32.43 23.73 3.123 9.821a4.861 4.861 0 014.166-8.784l36.648 17.394a4.86 4.86 0 01.799 8.305l-36.647 27a4.844 4.844 0 01-2.878.948" fill="#CEDC21" class="logo-brand-light"/><path d="M10.066 31.725v20.553L24.01 42.006z" fill="#1E7A44" class="logo-brand-dark"/><path d="M10.066 5.431A4.861 4.861 0 005.206.57 4.86 4.86 0 00.347 5.431v61.165h9.72V5.431h-.001z" fill="#CEDC21" class="logo-brand-light"/><path d="M74.355 41.412c3.114.884 4.84 3.704 4.84 7.238 0 5.513-3.368 8.082-7.955 8.082H60.761V27.271h9.259c4.504 0 7.997 2.146 7.997 7.743 0 2.821-1.179 5.43-3.662 6.398m-4.293-.716c3.324 0 6.018-1.179 6.018-5.724 0-4.586-2.776-5.808-6.145-5.808h-7.197v11.531h7.324v.001zm1.052 14.099c3.366 0 6.06-1.768 6.06-6.145 0-4.713-3.072-6.144-6.901-6.144h-7.534v12.288h8.375v.001zM98.893 27.271v1.81h-8.122v27.651h-1.979V29.081h-8.123v-1.81zM112.738 26.85c5.01 0 9.554 2.524 10.987 8.543h-1.895c-1.348-4.923-5.303-6.732-9.134-6.732-6.944 0-10.605 5.681-10.605 13.341 0 8.08 3.661 13.256 10.646 13.256 4.125 0 7.828-1.85 9.26-7.279h1.895c-1.264 6.271-6.229 9.174-11.154 9.174-7.87 0-12.583-5.808-12.583-15.15 0-8.966 4.969-15.153 12.583-15.153M138.709 27.271c5.091 0 8.795 3.326 8.795 9.764 0 6.06-3.704 9.722-8.795 9.722h-7.746v9.976h-1.935V27.271h9.681zm0 17.549c3.745 0 6.816-2.397 6.816-7.827 0-5.429-2.947-7.869-6.816-7.869h-7.746V44.82h7.746zM147.841 56.732v-.255l11.741-29.29h.885l11.615 29.29v.255h-2.062l-3.322-8.501H153.27l-3.324 8.501h-2.105zm12.164-26.052l-6.059 15.697h12.078l-6.019-15.697zM189.551 27.271h2.104v.293l-9.176 16.92v12.248h-2.02V44.484l-9.216-16.961v-.252h2.147l3.997 7.492 4.043 7.786h.04l4.081-7.786z" class="logo-brand-text"/></g></svg>
+                @if (Env.NetworkType != NBitcoin.ChainName.Mainnet)
                 {
-                    <span class="badge badge-warning" style="font-size:10px;">@env.NetworkType.ToString()</span>
+                    <span class="badge badge-warning" style="font-size:10px;">@Env.NetworkType.ToString()</span>
                 }
             </a>
             <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
-                <svg class="navbar-toggler-icon" viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'><path stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22' /></svg>
+                <svg class="navbar-toggler-icon" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-miterlimit="10" d="M4 7h22M4 15h22M4 23h22"/></svg>
             </button>
             <div class="collapse navbar-collapse" id="navbarResponsive">
-                <ul class="navbar-nav ml-auto">
-                    <vc:ui-extension-point location="header-nav" />
+                <div class="py-3 py-lg-0 d-lg-flex w-100 align-items-center justify-content-between">
+                    @* Logo on Desktop *@
+                    <a class="navbar-brand py-2 js-scroll-trigger d-none d-lg-inline-block" href="~/">
+                        <svg class="logo" viewBox="0 0 192 84" xmlns="http://www.w3.org/2000/svg"><g><path d="M5.206 83.433a4.86 4.86 0 01-4.859-4.861V5.431a4.86 4.86 0 119.719 0v73.141a4.861 4.861 0 01-4.86 4.861" fill="#CEDC21" class="logo-brand-light"/><path d="M5.209 83.433a4.862 4.862 0 01-2.086-9.253L32.43 60.274 2.323 38.093a4.861 4.861 0 015.766-7.826l36.647 26.999a4.864 4.864 0 01-.799 8.306L7.289 82.964a4.866 4.866 0 01-2.08.469" fill="#51B13E" class="logo-brand-medium"/><path d="M5.211 54.684a4.86 4.86 0 01-2.887-8.774L32.43 23.73 3.123 9.821a4.861 4.861 0 014.166-8.784l36.648 17.394a4.86 4.86 0 01.799 8.305l-36.647 27a4.844 4.844 0 01-2.878.948" fill="#CEDC21" class="logo-brand-light"/><path d="M10.066 31.725v20.553L24.01 42.006z" fill="#1E7A44" class="logo-brand-dark"/><path d="M10.066 5.431A4.861 4.861 0 005.206.57 4.86 4.86 0 00.347 5.431v61.165h9.72V5.431h-.001z" fill="#CEDC21" class="logo-brand-light"/><path d="M74.355 41.412c3.114.884 4.84 3.704 4.84 7.238 0 5.513-3.368 8.082-7.955 8.082H60.761V27.271h9.259c4.504 0 7.997 2.146 7.997 7.743 0 2.821-1.179 5.43-3.662 6.398m-4.293-.716c3.324 0 6.018-1.179 6.018-5.724 0-4.586-2.776-5.808-6.145-5.808h-7.197v11.531h7.324v.001zm1.052 14.099c3.366 0 6.06-1.768 6.06-6.145 0-4.713-3.072-6.144-6.901-6.144h-7.534v12.288h8.375v.001zM98.893 27.271v1.81h-8.122v27.651h-1.979V29.081h-8.123v-1.81zM112.738 26.85c5.01 0 9.554 2.524 10.987 8.543h-1.895c-1.348-4.923-5.303-6.732-9.134-6.732-6.944 0-10.605 5.681-10.605 13.341 0 8.08 3.661 13.256 10.646 13.256 4.125 0 7.828-1.85 9.26-7.279h1.895c-1.264 6.271-6.229 9.174-11.154 9.174-7.87 0-12.583-5.808-12.583-15.15 0-8.966 4.969-15.153 12.583-15.153M138.709 27.271c5.091 0 8.795 3.326 8.795 9.764 0 6.06-3.704 9.722-8.795 9.722h-7.746v9.976h-1.935V27.271h9.681zm0 17.549c3.745 0 6.816-2.397 6.816-7.827 0-5.429-2.947-7.869-6.816-7.869h-7.746V44.82h7.746zM147.841 56.732v-.255l11.741-29.29h.885l11.615 29.29v.255h-2.062l-3.322-8.501H153.27l-3.324 8.501h-2.105zm12.164-26.052l-6.059 15.697h12.078l-6.019-15.697zM189.551 27.271h2.104v.293l-9.176 16.92v12.248h-2.02V44.484l-9.216-16.961v-.252h2.147l3.997 7.492 4.043 7.786h.04l4.081-7.786z" class="logo-brand-text"/></g></svg>
+                        @if (Env.NetworkType != NBitcoin.ChainName.Mainnet)
+                        {
+                            <span class="badge badge-warning" style="font-size:10px;">@Env.NetworkType.ToString()</span>
+                        }
+                    </a>
                     @if (SignInManager.IsSignedIn(User))
                     {
-                        if (User.IsInRole(Roles.ServerAdmin))
-                        {
-                            <li class="nav-item"><a asp-area="" asp-controller="Server" asp-action="ListUsers" class="nav-link js-scroll-trigger" id="ServerSettings">Server settings</a></li>
-                        }
-                        <li class="nav-item"><a asp-area="" asp-controller="UserStores" asp-action="ListStores" class="nav-link js-scroll-trigger" id="Stores">Stores</a></li>
-                        <li class="nav-item"><a asp-area="" asp-controller="Apps" asp-action="ListApps" class="nav-link js-scroll-trigger" id="Apps">Apps</a></li>
-                        <li class="nav-item"><a asp-area="" asp-controller="Wallets" asp-action="ListWallets" class="nav-link js-scroll-trigger" id="Wallets">Wallets</a></li>
-                        <li class="nav-item"><a asp-area="" asp-controller="Invoice" asp-action="ListInvoices" class="nav-link js-scroll-trigger" id="Invoices">Invoices</a></li>
-                        <li class="nav-item"><a asp-area="" asp-controller="PaymentRequest" asp-action="GetPaymentRequests" class="nav-link js-scroll-trigger" id="PaymentRequests">Payment Requests</a></li>
-                        <li class="nav-item">
-                            <a asp-area="" asp-controller="Manage" asp-action="Index" title="My settings" class="nav-link js-scroll-trigger" id="MySettings"><i class="fa fa-user"></i></a>
-                        </li>
-                        <vc:notifications-dropdown></vc:notifications-dropdown>
-
-                        <li class="nav-item">
-                            <a asp-area="" asp-controller="Account" asp- asp-action="Logout" title="Logout" class="nav-link js-scroll-trigger" id="Logout"><i class="fa fa-sign-out"></i></a>
-                        </li>
+                        <ul class="navbar-nav">
+                            @if (User.IsInRole(Roles.ServerAdmin))
+                            {
+                                <li class="nav-item"><a asp-area="" asp-controller="Server" asp-action="ListUsers" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(ServerNavPages))" id="ServerSettings">Server settings</a></li>
+                            }
+                            <li class="nav-item"><a asp-area="" asp-controller="UserStores" asp-action="ListStores" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(StoreNavPages))" id="Stores">Stores</a></li>
+                            <li class="nav-item"><a asp-area="" asp-controller="Apps" asp-action="ListApps" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(AppsNavPages))" id="Apps">Apps</a></li>
+                            <li class="nav-item"><a asp-area="" asp-controller="Wallets" asp-action="ListWallets" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(WalletsNavPages))" id="Wallets">Wallets</a></li>
+                            <li class="nav-item"><a asp-area="" asp-controller="Invoice" asp-action="ListInvoices" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(InvoiceNavPages))" id="Invoices">Invoices</a></li>
+                            <li class="nav-item"><a asp-area="" asp-controller="PaymentRequest" asp-action="GetPaymentRequests" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(PaymentRequestsNavPages))" id="PaymentRequests">Payment Requests</a></li>
+                            <vc:ui-extension-point location="header-nav"/>
+                        </ul>
+                        <ul class="navbar-nav">
+                            <li class="nav-item">
+                                <a asp-area="" asp-controller="Manage" asp-action="Index" title="My settings" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(ManageNavPages))" id="MySettings"><span class="d-lg-none d-sm-block">Account</span><i class="fa fa-user d-lg-inline-block d-none"></i></a>
+                            </li>
+                            <vc:notifications-dropdown/>
+                            <li class="nav-item">
+                                <a asp-area="" asp-controller="Account" asp- asp-action="Logout" title="Logout" class="nav-link js-scroll-trigger" id="Logout"><span class="d-lg-none d-sm-block">Logout</span><i class="fa fa-sign-out d-lg-inline-block d-none"></i></a>
+                            </li>
+                        </ul>
                     }
-                    else if (env.IsSecure)
+                    else if (Env.IsSecure)
                     {
-                        if (themeManager.ShowRegister)
-                        {
-                            <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Register" class="nav-link js-scroll-trigger" id="Register">Register</a></li>
-                        }
-                        <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Login" class="nav-link js-scroll-trigger" id="Login">Log in</a></li>
+                        <ul class="navbar-nav">
+                            @if (ThemeManager.ShowRegister)
+                            {
+                                <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Register" class="nav-link js-scroll-trigger" id="Register">Register</a></li>
+                            }
+                            <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Login" class="nav-link js-scroll-trigger" id="Login">Log in</a></li>
+                            <vc:ui-extension-point location="header-nav"/>
+                        </ul>
                     }
-
-                </ul>
+                </div>
             </div>
             <div id="badUrl" class="alert alert-danger alert-dismissible" style="display:none; position:absolute; top:75px;" role="alert">
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <span>BTCPay is expecting you to access this website from <b>@(env.ExpectedProtocol)://@(env.ExpectedHost)/</b>. If you use a reverse proxy, please set the <b>X-Forwarded-Proto</b> header to <b id="browserScheme">@(env.ExpectedProtocol)</b> (<a href="https://docs.btcpayserver.org/FAQ/FAQ-Deployment/#cause-3-btcpay-is-expecting-you-to-access-this-website-from" target="_blank" class="alert-link">More information</a>)</span>
+                <span>BTCPay is expecting you to access this website from <b>@(Env.ExpectedProtocol)://@(Env.ExpectedHost)/</b>. If you use a reverse proxy, please set the <b>X-Forwarded-Proto</b> header to <b id="browserScheme">@(Env.ExpectedProtocol)</b> (<a href="https://docs.btcpayserver.org/FAQ/FAQ-Deployment/#cause-3-btcpay-is-expecting-you-to-access-this-website-from" target="_blank" class="alert-link">More information</a>)</span>
             </div>
-            @if (!env.IsSecure)
+            @if (!Env.IsSecure)
             {
                 <div class="alert alert-danger alert-dismissible" style="position:absolute; top:75px;" role="alert">
                     <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                     <span>
-                        Your access to BTCPay Server is over an unsecured network. If you are using the docker deployment method with NGINX and HTTPS is not available, you probably did not configure your DNS settings correctly. <br />
+                        Your access to BTCPay Server is over an unsecured network. If you are using the docker deployment method with NGINX and HTTPS is not available, you probably did not configure your DNS settings correctly. <br/>
                         We disabled the register and login link so you don't leak your credentials.
                     </span>
                 </div>
             }
         </div>
     </nav>
-
 
     @RenderBody()
 
@@ -96,19 +115,19 @@
         <footer class="footer">
             <div class="container">
                 <div class="float-left">Logo made with 💚 by <a href="https://ibukingdom.themedia.jp/" target="_blank">Ibuki</a></div>
-                <div class="text-right">@env.ToString()</div>
+                <div class="text-right">@Env.ToString()</div>
             </div>
         </footer>
     }
 
     <partial name="LayoutPartials/SyncModal" />
 
-    @RenderSection("Scripts", required: false)
+    @await RenderSectionAsync("Scripts", false)
 
     <script type="text/javascript">
-        var expectedDomain = @Safe.Json(env.ExpectedHost);
-        var expectedProtocol = @Safe.Json(env.ExpectedProtocol);
-        if (window.location.host != expectedDomain || window.location.protocol != expectedProtocol + ":") {
+        const expectedDomain = @Safe.Json(Env.ExpectedHost);
+        const expectedProtocol = @Safe.Json(Env.ExpectedProtocol);
+        if (window.location.host !== expectedDomain || window.location.protocol !== expectedProtocol + ":") {
             document.getElementById("badUrl").style.display = "block";
             document.getElementById("browserScheme").innerText = window.location.protocol.substr(0, window.location.protocol.length -1);
         }

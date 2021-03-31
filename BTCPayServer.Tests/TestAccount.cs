@@ -24,6 +24,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.Operations;
 using NBitcoin;
 using BTCPayServer.BIP78.Sender;
+using BTCPayServer.Payments.Lightning;
 using NBitcoin.Payment;
 using NBitpayClient;
 using NBXplorer.DerivationStrategy;
@@ -173,7 +174,7 @@ namespace BTCPayServer.Tests
         }
 
         public async Task<WalletId> RegisterDerivationSchemeAsync(string cryptoCode, ScriptPubKeyType segwit = ScriptPubKeyType.Legacy,
-            bool importKeysToNBX = false)
+            bool importKeysToNBX = false, bool importsKeysToBitcoinCore = false)
         {
             if (StoreId is null)
                 await CreateStoreAsync();
@@ -183,6 +184,7 @@ namespace BTCPayServer.Tests
             {
                 ScriptPubKeyType = segwit,
                 SavePrivateKeys = importKeysToNBX,
+                ImportKeysToRPC = importsKeysToBitcoinCore
             });
             await store.UpdateWallet(
                 new WalletSetupViewModel
@@ -266,12 +268,13 @@ namespace BTCPayServer.Tests
         }
         public async Task RegisterLightningNodeAsync(string cryptoCode, LightningConnectionType? connectionType, bool isMerchant = true, string storeId = null)
         {
-            var storeController = this.GetController<StoresController>();
+            var storeController = GetController<StoresController>();
 
-            string connectionString = parent.GetLightningConnectionString(connectionType, isMerchant);
+            var connectionString = parent.GetLightningConnectionString(connectionType, isMerchant);
+            var nodeType = connectionString == LightningSupportedPaymentMethod.InternalNode ? LightningNodeType.Internal : LightningNodeType.Custom;
 
             await storeController.AddLightningNode(storeId ?? StoreId,
-                new LightningNodeViewModel() { ConnectionString = connectionString, SkipPortTest = true }, "save", "BTC");
+                new LightningNodeViewModel { ConnectionString = connectionString, LightningNodeType = nodeType, SkipPortTest = true }, "save", "BTC");
             if (storeController.ModelState.ErrorCount != 0)
                 Assert.False(true, storeController.ModelState.FirstOrDefault().Value.Errors[0].ErrorMessage);
         }

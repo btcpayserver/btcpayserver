@@ -121,7 +121,10 @@ namespace BTCPayServer.Data
             bool existing = false;
             foreach (var strat in strategies.Properties().ToList())
             {
-                var stratId = PaymentMethodId.Parse(strat.Name);
+                if (!PaymentMethodId.TryParse(strat.Name, out var stratId))
+                {
+                    continue;
+                }
                 if (stratId == paymentMethodId)
                 {
                     if (supportedPaymentMethod == null)

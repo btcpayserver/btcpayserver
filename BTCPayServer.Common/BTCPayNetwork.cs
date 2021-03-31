@@ -63,7 +63,7 @@ namespace BTCPayServer
 
         public virtual bool WalletSupported { get; set; } = true;
         public virtual bool ReadonlyWallet { get; set; } = false;
-
+        public virtual bool VaultSupported { get; set; } = false;
         public int MaxTrackedConfirmation { get; internal set; } = 6;
         public string UriScheme { get; internal set; }
         public bool SupportPayJoin { get; set; } = false;
@@ -126,9 +126,9 @@ namespace BTCPayServer
             return $"{UriScheme}:{cryptoInfoAddress}?amount={cryptoInfoDue.ToString(false, true)}";
         }
 
-        public virtual GetTransactionsResponse FilterValidTransactions(GetTransactionsResponse response)
+        public virtual List<TransactionInformation> FilterValidTransactions(List<TransactionInformation> transactionInformationSet)
         {
-            return response;
+            return transactionInformationSet;
         }
     }
 

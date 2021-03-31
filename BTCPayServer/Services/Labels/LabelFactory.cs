@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Amazon.Util.Internal.PlatformServices;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -37,7 +38,7 @@ namespace BTCPayServer.Services.Labels
         }
 
         const string DefaultColor = "#000";
-        private ColoredLabel CreateLabel(Label uncoloredLabel, string color, HttpRequest request)
+        private ColoredLabel CreateLabel(LabelData uncoloredLabel, string color, HttpRequest request)
         {
             if (uncoloredLabel == null)
                 throw new ArgumentNullException(nameof(uncoloredLabel));

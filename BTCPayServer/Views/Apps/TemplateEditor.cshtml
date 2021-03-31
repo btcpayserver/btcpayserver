@@ -67,11 +67,11 @@
                             <span class="text-danger row m-2" v-for="error of errors">{{error}}</span>
                             <div class="form-row">
                                 <div class="col-sm-6">
-                                    <label>Title</label>*
+                                    <label data-required>Title</label>
                                     <input type="text" required pattern="[^\*#]+" class="form-control mb-2" v-model="editingItem.title" autofocus ref="txtTitle" />
                                 </div>
                                 <div class="col-sm-3">
-                                    <label>Price</label>*
+                                    <label data-required>Price</label>
                                     <input class="form-control mb-2"
                                            inputmode="numeric"
                                            pattern="\d*"
@@ -211,6 +211,13 @@ $(function() {
                         }
                         if (productProperty.indexOf('description:') !== -1) {
                             description =productProperty.replace('description:', '').trim();
+                            if (description.startsWith('"') && description.endsWith('"')){
+                                description = description.substr(1, description.length-2);
+                            }
+                            description = description
+                            .replaceAll("<br>", "\n")
+                            .replaceAll("<br/>", "\n")
+                            .replaceAll('\\"', '"')
                         }
                         if (productProperty.indexOf('image:') !== -1) {
                             image = productProperty.replace('image:', '').trim();
@@ -236,7 +243,7 @@ $(function() {
                             title: title,
                             price: price,
                             image: image || null,
-                            description: description || '',
+                            description:  description || '',
                             custom: custom === "true",
                             buyButtonText: buyButtonText,
                             inventory: isNaN(inventory)? null: inventory,
@@ -266,7 +273,7 @@ $(function() {
                         '  title: ' + title + '\n';
 
                         if (description) {
-                            template += '  description: ' + description + '\n';
+                            template += '  description: "' + description.replaceAll("\n", "<br/>").replaceAll('"', '\\"') + '"\n';
                         }
                         if (image) {
                             template += '  image: ' + image + '\n';

@@ -1,4 +1,7 @@
-﻿@{
+﻿@using BTCPayServer.Views
+@using BTCPayServer.Views.Manage
+@{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewBag.MainTitle = "Manage your account";
+    ViewData.SetActiveCategory(typeof(ManageNavPages));
 }

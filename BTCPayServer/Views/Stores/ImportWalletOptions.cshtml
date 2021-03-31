@@ -1,4 +1,5 @@
 @model WalletSetupViewModel
+@inject BTCPayNetworkProvider BTCPayNetworkProvider
 @addTagHelper *, BundlerMinifier.TagHelpers
 @{
     Layout = "_LayoutWalletSetup";
@@ -16,7 +17,7 @@
     <p class="lead text-secondary mt-3">The following methods assume that you already have an existing&nbsp;wallet created and backed up.</p>
 </header>
 
-@if (Model.CryptoCode == "BTC")
+@if (BTCPayNetworkProvider.GetNetwork<BTCPayNetwork>(Model.CryptoCode).VaultSupported)
 {
     <div class="mt-5">
         <div class="list-group">
@@ -114,7 +115,7 @@
                 <h4>Enter wallet seed</h4>
                 <p class="mb-0 text-secondary">Provide the 12 or 24 word recovery seed</p>
             </div>
-            <small class="d-block text-danger mt-2 mt-lg-0" data-toggle="tooltip" data-placement="top" title="You really should not type your seed into a device that is connected to the internet.">Not recommended <span class="fa fa-question-circle-o" title="More information..."></span></small>
+            <small class="d-block text-danger mt-2 mt-lg-0" data-toggle="tooltip" data-placement="top" title="You really should not type your seed into a device that is connected to the internet.">Not recommended <span class="fa fa-question-circle-o"></span></small>
         </div>
         <vc:icon symbol="caret-right" />
     </a>

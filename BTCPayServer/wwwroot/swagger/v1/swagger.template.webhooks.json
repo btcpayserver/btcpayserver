@@ -481,10 +481,9 @@
                         "nullable": false
                     },
                     "timestamp": {
-                        "type": "number",
-                        "format": "int64",
                         "nullable": false,
-                        "description": "Timestamp of when the delivery got broadcasted"
+                        "description": "Timestamp of when the delivery got broadcasted",
+                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
                     },
                     "httpCode": {
                         "type": "number",
@@ -616,9 +615,8 @@
                         "description": "The type of this event, current available are `InvoiceCreated`, `InvoiceReceivedPayment`, `InvoicePaidInFull`, `InvoiceExpired`, `InvoiceConfirmed`, and `InvoiceInvalid`."
                     },
                     "timestamp": {
-                        "type": "number",
-                        "format": "int64",
-                        "description": "The timestamp when this delivery has been created"
+                        "description": "The timestamp when this delivery has been created",
+                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
                     }
                 }
             },

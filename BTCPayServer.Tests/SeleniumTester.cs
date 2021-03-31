@@ -63,11 +63,14 @@ namespace BTCPayServer.Tests
             }
             options.AddArguments($"window-size={windowSize.Width}x{windowSize.Height}");
             options.AddArgument("shm-size=2g");
-            Driver = new ChromeDriver(chromeDriverPath, options);
+            Driver = new ChromeDriver(chromeDriverPath, options, 
+                // A bit less than test timeout
+                TimeSpan.FromSeconds(50));
 
             if (runInBrowser)
             {
                 // ensure maximized window size
+                // otherwise TESTS WILL FAIL because of different hierarchy in navigation menu
                 Driver.Manage().Window.Maximize();
             }
 
@@ -113,12 +116,12 @@ namespace BTCPayServer.Tests
 
         public (string storeName, string storeId) CreateNewStore()
         {
-            Driver.FindElement(By.Id("Stores")).Click();
-            Driver.FindElement(By.Id("CreateStore")).Click();
+            Driver.WaitForElement(By.Id("Stores")).Click();
+            Driver.WaitForElement(By.Id("CreateStore")).Click();
             var name = "Store" + RandomUtils.GetUInt64();
-            Driver.FindElement(By.Id("Name")).SendKeys(name);
-            Driver.FindElement(By.Id("Create")).Click();
-            StoreId = Driver.FindElement(By.Id("Id")).GetAttribute("value");
+            Driver.WaitForElement(By.Id("Name")).SendKeys(name);
+            Driver.WaitForElement(By.Id("Create")).Click();
+            StoreId = Driver.WaitForElement(By.Id("Id")).GetAttribute("value");
             return (name, StoreId);
         }
 
@@ -185,28 +188,39 @@ namespace BTCPayServer.Tests
             FindAlertMessage();
         }
 
-        public void AddLightningNode(string cryptoCode, LightningConnectionType connectionType)
+        public void AddLightningNode(string cryptoCode = "BTC", LightningConnectionType? connectionType = null)
         {
-            string connectionString;
-            if (connectionType == LightningConnectionType.Charge)
-                connectionString = $"type=charge;server={Server.MerchantCharge.Client.Uri.AbsoluteUri};allowinsecure=true";
-            else if (connectionType == LightningConnectionType.CLightning)
-                connectionString = "type=clightning;server=" + ((CLightningClient)Server.MerchantLightningD).Address.AbsoluteUri;
-            else if (connectionType == LightningConnectionType.LndREST)
-                connectionString = $"type=lnd-rest;server={Server.MerchantLnd.Swagger.BaseUrl};allowinsecure=true";
+            Driver.FindElement(By.Id($"Modify-Lightning{cryptoCode}")).Click();
+
+            var connectionString = connectionType switch
+            {
+                LightningConnectionType.Charge =>
+                    $"type=charge;server={Server.MerchantCharge.Client.Uri.AbsoluteUri};allowinsecure=true",
+                LightningConnectionType.CLightning =>
+                    $"type=clightning;server={((CLightningClient) Server.MerchantLightningD).Address.AbsoluteUri}",
+                LightningConnectionType.LndREST =>
+                    $"type=lnd-rest;server={Server.MerchantLnd.Swagger.BaseUrl};allowinsecure=true",
+                _ => null
+            };
+
+            if (connectionString == null)
+            {
+                Assert.True(Driver.FindElement(By.Id("LightningNodeType-Internal")).Enabled, "Usage of the internal Lightning node is disabled.");
+                Driver.FindElement(By.CssSelector("label[for=\"LightningNodeType-Internal\"]")).Click();
+            }
             else
-                throw new NotSupportedException(connectionType.ToString());
+            {
+                Driver.FindElement(By.CssSelector("label[for=\"LightningNodeType-Custom\"]")).Click();
+                Driver.FindElement(By.Id("ConnectionString")).SendKeys(connectionString);
+            }
 
-            Driver.FindElement(By.Id($"Modify-Lightning{cryptoCode}")).Click();
-            Driver.FindElement(By.Name($"ConnectionString")).SendKeys(connectionString);
-            Driver.FindElement(By.Id($"save")).Click();
-        }
+            var enabled = Driver.FindElement(By.Id("Enabled"));
+            if (!enabled.Selected) enabled.Click();
 
-        public void AddInternalLightningNode(string cryptoCode)
-        {
-            Driver.FindElement(By.Id($"Modify-Lightning{cryptoCode}")).Click();
-            Driver.FindElement(By.Id($"internal-ln-node-setter")).Click();
-            Driver.FindElement(By.Id($"save")).Click();
+            Driver.FindElement(By.Id("test")).Click();
+            Assert.Contains("Connection to the Lightning node succeeded.", FindAlertMessage().Text);
+
+            Driver.FindElement(By.Id("save")).Click();
         }
 
         public void ClickOnAllSideMenus()
@@ -317,8 +331,7 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.Name("StoreId")).SendKeys(storeName);
             Driver.FindElement(By.Id("Create")).Click();
 
-            FindAlertMessage();
-            var statusElement = Driver.FindElement(By.ClassName("alert-success"));
+            var statusElement = FindAlertMessage();
             var id = statusElement.Text.Split(" ")[1];
             return id;
         }

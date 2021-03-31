@@ -7,6 +7,7 @@
 
   --btcpay-bg-dark: var(--btcpay-color-neutral-950);
   --btcpay-header-bg: var(--btcpay-bg-dark);
+  --btcpay-header-color-link-active: var(--btcpay-color-primary);
 
   --btcpay-body-bg: var(--btcpay-color-neutral-900);
   --btcpay-body-color: var(--btcpay-color-white);

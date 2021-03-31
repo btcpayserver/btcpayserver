@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Security.Policy;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
@@ -34,6 +35,7 @@ namespace BTCPayServer.Controllers
         readonly Configuration.BTCPayServerOptions _Options;
         private readonly BTCPayServerEnvironment _btcPayServerEnvironment;
         public U2FService _u2FService;
+        private readonly RateLimitService _rateLimitService;
         private readonly EventAggregator _eventAggregator;
         readonly ILogger _logger;
 
@@ -45,6 +47,7 @@ namespace BTCPayServer.Controllers
             Configuration.BTCPayServerOptions options,
             BTCPayServerEnvironment btcPayServerEnvironment,
             U2FService u2FService,
+            RateLimitService rateLimitService,
             EventAggregator eventAggregator)
         {
             _userManager = userManager;
@@ -54,6 +57,7 @@ namespace BTCPayServer.Controllers
             _Options = options;
             _btcPayServerEnvironment = btcPayServerEnvironment;
             _u2FService = u2FService;
+            _rateLimitService = rateLimitService;
             _eventAggregator = eventAggregator;
             _logger = Logs.PayServer;
         }
@@ -543,6 +547,7 @@ namespace BTCPayServer.Controllers
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
+        [RateLimitsFilter(ZoneLimits.ForgotPassword, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
         {
             if (ModelState.IsValid)

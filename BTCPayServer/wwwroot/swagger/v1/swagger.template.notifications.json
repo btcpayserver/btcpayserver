@@ -61,7 +61,7 @@
                     }
                 ],
                 "description": "View information about the specified notification",
-                "operationId": "Notifications_GetInvoice",
+                "operationId": "Notifications_GetNotification",
                 "responses": {
                     "200": {
                         "description": "specified notification",
@@ -218,9 +218,8 @@
                         "description": "The link of the notification"
                     },
                     "createdTime": {
-                        "type": "number",
-                        "format": "int64",
-                        "description": "The creation time of the notification"
+                        "description": "The creation time of the notification",
+                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
                     },
                     "seen": {
                         "type": "boolean",

@@ -15,10 +15,10 @@
             </p>
             <ol>
                 <li>Make sure this BTCPay Server instance <b>belongs to you</b>.</li>
-                <li>Use <b>Chrome's Incognito mode or the Tor Browser</b>, this make sure no malicious browser plugin is running that could steal your key.</li>
+                <li>Use <b>Chrome's Incognito mode or the Tor Browser</b>, this makes sure no malicious browser plugins are running that could steal your key.</li>
             </ol>
             <p>
-                <span>Else, you are exposing yourself to malicious site owner, or to malicious plugin installed in your browser.</span>
+                <span>Else, you are exposing yourself to malicious site owners, or to malicious plugins installed in your browser.</span>
             </p>
         </div>
     </div>
@@ -30,7 +30,7 @@
             <partial name="SigningContext" for="SigningContext" />
             <div class="form-group">
                 <label asp-for="SeedOrKey"></label>
-                <input asp-for="SeedOrKey" class="form-control" />
+                <input asp-for="SeedOrKey" class="form-control" autocomplete="off" autocorrect="off" autocapitalize="off"/>
                 <span asp-validation-for="SeedOrKey" class="text-danger"></span>
             </div>
             <div class="form-group">

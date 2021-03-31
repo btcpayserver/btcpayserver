@@ -57,7 +57,11 @@ namespace BTCPayServer.Plugins
                 throw new Exception("Plugin not found on remote");
             }
 
-            var filedest = Path.Combine(dest, ext.Name);
+            if (!ext.Name.IsValidFileName())
+            {
+                throw new Exception("Invalid file name");
+            }
+            var filedest = Path.Join(dest, ext.Name);
             Directory.CreateDirectory(Path.GetDirectoryName(filedest));
             new WebClient().DownloadFile(new Uri(ext.DownloadUrl), filedest);
         }

@@ -46,8 +46,8 @@
         </style>
     </noscript>
 </head>
-<body class="h-100">
-    <div class="h-100 d-flex flex-column">
+<body>
+    <div class="min-vh-100 d-flex flex-column">
         @if (Model.IsPending)
         {
             <nav id="mainNav" class="navbar sticky-top py-3 py-lg-4 d-print-none">
@@ -89,9 +89,14 @@
                                 <h2 class="h4 mb-3">@Model.Title</h2>
                             }
                             <div class="d-flex align-items-center">
+                                <span class="text-muted text-nowrap">Start Date</span>
+                                &nbsp;
+                                <span class="text-nowrap">@Model.StartDate.ToBrowserDate()</span>
+                            </div>
+                            <div class="d-flex align-items-center">
                                 <span class="text-muted text-nowrap">Last Updated</span>
                                 &nbsp;
-                                <span class="text-nowrap">@Model.LastUpdated.ToString("g")</span>
+                                <span class="text-nowrap">@Model.LastRefreshed.ToBrowserDate()</span>
                                 <button type="button" class="btn btn-link d-none d-lg-inline-block d-print-none border-0 p-0 ml-4 only-for-js" id="copyLink">
                                     Copy Link
                                 </button>

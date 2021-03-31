@@ -8,7 +8,7 @@ html {
 }
 
 .logo {
-    height: 45px;
+    height: 34px;
 }
 
 .logo-brand-text {
@@ -64,6 +64,13 @@ ul li {
 
 .bg-tile {
     background-color: var(--btcpay-bg-tile);
+}
+
+.alert-link,
+.alert-link:focus,
+.alert-link:hover,
+.alert code {
+    color: inherit;
 }
 
 .navbar .onion {
@@ -367,7 +374,6 @@ html[data-devenv]:before {
 .btcpay-status--disabled:before {
     background-color: #FB383D;
 }
-
 
 .btcpay-toggle {
     --border-size: 2px;

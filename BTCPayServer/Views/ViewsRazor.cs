@@ -7,12 +7,30 @@ namespace BTCPayServer.Views
 {
     public static class ViewsRazor
     {
-        public const string ACTIVE_PAGE_KEY = "ActivePage";
+        private const string ACTIVE_CATEGORY_KEY = "ActiveCategory";
+        private const string ACTIVE_PAGE_KEY = "ActivePage";
+
         public static void SetActivePageAndTitle<T>(this ViewDataDictionary viewData, T activePage, string title = null)
             where T : IConvertible
         {
             viewData["Title"] = title ?? activePage.ToString();
             viewData[ACTIVE_PAGE_KEY] = activePage;
+            SetActiveCategory(viewData, activePage.GetType());
+        }
+
+        public static void SetActiveCategory<T>(this ViewDataDictionary viewData, T activeCategory)
+        {
+            viewData[ACTIVE_CATEGORY_KEY] = activeCategory;
+        }
+
+        public static string IsActiveCategory<T>(this ViewDataDictionary viewData, T category)
+        {
+            if (!viewData.ContainsKey(ACTIVE_CATEGORY_KEY))
+            {
+                return null;
+            }
+            var activeCategory = (T)viewData[ACTIVE_CATEGORY_KEY];
+            return category.Equals(activeCategory) ? "active" : null;
         }
 
         public static string IsActivePage<T>(this ViewDataDictionary viewData, T page)

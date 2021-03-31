@@ -10,13 +10,19 @@ namespace BTCPayServer.Controllers.GreenField
     [EnableCors(CorsPolicies.All)]
     public class HealthController : ControllerBase
     {
+        private readonly NBXplorerDashboard _dashBoard;
+
+        public HealthController(NBXplorerDashboard dashBoard )
+        {
+            _dashBoard = dashBoard;
+        }
         [AllowAnonymous]
         [HttpGet("~/api/v1/health")]
-        public ActionResult GetHealth(NBXplorerDashboard dashBoard)
+        public ActionResult GetHealth()
         {
             ApiHealthData model = new ApiHealthData()
             {
-                Synchronized = dashBoard.IsFullySynched()
+                Synchronized = _dashBoard.IsFullySynched()
             };
             return Ok(model);
         }

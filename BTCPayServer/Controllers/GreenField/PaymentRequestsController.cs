@@ -33,7 +33,7 @@ namespace BTCPayServer.Controllers.GreenField
 
         [Authorize(Policy = Policies.CanViewPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/payment-requests")]
-        public async Task<ActionResult<IEnumerable<PaymentRequestData>>> GetPaymentRequests(string storeId, bool includeArchived = false)
+        public async Task<ActionResult<IEnumerable<Client.Models.PaymentRequestData>>> GetPaymentRequests(string storeId, bool includeArchived = false)
         {
             var prs = await _paymentRequestRepository.FindPaymentRequests(
                 new PaymentRequestQuery() { StoreId = storeId, IncludeArchived = includeArchived });
@@ -42,7 +42,7 @@ namespace BTCPayServer.Controllers.GreenField
 
         [Authorize(Policy = Policies.CanViewPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/payment-requests/{paymentRequestId}")]
-        public async Task<ActionResult<PaymentRequestData>> GetPaymentRequest(string storeId, string paymentRequestId)
+        public async Task<ActionResult<Client.Models.PaymentRequestData>> GetPaymentRequest(string storeId, string paymentRequestId)
         {
             var pr = await _paymentRequestRepository.FindPaymentRequests(
                 new PaymentRequestQuery() { StoreId = storeId, Ids = new[] { paymentRequestId } });

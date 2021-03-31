@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers.GreenField
 {
@@ -33,7 +34,7 @@ namespace BTCPayServer.Controllers.GreenField
         }
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores")]
-        public ActionResult<IEnumerable<Client.Models.StoreData>> GetStores()
+        public async Task<ActionResult<IEnumerable<Client.Models.StoreData>>> GetStores()
         {
             var stores = HttpContext.GetStoresData();
             return Ok(stores.Select(FromModel));
@@ -41,7 +42,7 @@ namespace BTCPayServer.Controllers.GreenField
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}")]
-        public ActionResult<Client.Models.StoreData> GetStore(string storeId)
+        public async Task<ActionResult<Client.Models.StoreData>> GetStore(string storeId)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)

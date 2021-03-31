@@ -1,19 +1,31 @@
 using System;
 using System.Collections.Generic;
-using System.Net.Http;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Data;
+using BTCPayServer.Security.GreenField;
+using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using NBitcoin;
+using InvoiceData = BTCPayServer.Client.Models.InvoiceData;
+using NotificationData = BTCPayServer.Client.Models.NotificationData;
+using PaymentRequestData = BTCPayServer.Client.Models.PaymentRequestData;
+using StoreData = BTCPayServer.Client.Models.StoreData;
 
 namespace BTCPayServer.Controllers.GreenField
 {
-    public class LocalBTCPayServerClient: BTCPayServerClient
+
+    public class BTCPayServerClientFactory
     {
+        private readonly StoreRepository _storeRepository;
+        private readonly IOptionsMonitor<IdentityOptions> _identityOptions;
         private readonly StoreOnChainPaymentMethodsController _chainPaymentMethodsController;
         private readonly StoreOnChainWalletsController _storeOnChainWalletsController;
         private readonly HealthController _healthController;
@@ -23,9 +35,11 @@ namespace BTCPayServer.Controllers.GreenField
         private readonly UsersController _usersController;
         private readonly GreenFieldStoresController _storesController;
         private readonly StoreLightningNodeApiController _storeLightningNodeApiController;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public  LocalBTCPayServerClient(
+        public BTCPayServerClientFactory(StoreRepository storeRepository,
+            IOptionsMonitor<IdentityOptions> identityOptions,
             StoreOnChainPaymentMethodsController chainPaymentMethodsController,
             StoreOnChainWalletsController storeOnChainWalletsController,
             HealthController healthController, 
@@ -35,8 +49,11 @@ namespace BTCPayServer.Controllers.GreenField
             UsersController usersController,
             GreenFieldStoresController storesController,
             StoreLightningNodeApiController storeLightningNodeApiController,
-            IHttpContextAccessor httpContextAccessor) : base(new Uri(""), "", "")
+            UserManager<ApplicationUser> userManager,
+            IHttpContextAccessor httpContextAccessor )
         {
+            _storeRepository = storeRepository;
+            _identityOptions = identityOptions;
             _chainPaymentMethodsController = chainPaymentMethodsController;
             _storeOnChainWalletsController = storeOnChainWalletsController;
             _healthController = healthController;
@@ -46,7 +63,80 @@ namespace BTCPayServer.Controllers.GreenField
             _usersController = usersController;
             _storesController = storesController;
             _storeLightningNodeApiController = storeLightningNodeApiController;
+            _userManager = userManager;
             _httpContextAccessor = httpContextAccessor;
+        }
+        
+        public BTCPayServerClient Create(string userId = null, params string[] storeIds)
+        {
+            return new LocalBTCPayServerClient(
+                _storeRepository,
+                _identityOptions,
+                _chainPaymentMethodsController,
+                _storeOnChainWalletsController,
+                _healthController,
+                _paymentRequestController,
+                _apiKeysController, 
+                _notificationsController, 
+                _usersController, 
+                _storesController,
+                _storeLightningNodeApiController, 
+                _userManager, 
+                _httpContextAccessor, 
+                userId, 
+                storeIds);
+        }
+        
+        
+    public class LocalBTCPayServerClient: BTCPayServerClient
+    {
+        private readonly StoreRepository _storeRepository;
+        private readonly IOptionsMonitor<IdentityOptions> _identityOptions;
+        private readonly StoreOnChainPaymentMethodsController _chainPaymentMethodsController;
+        private readonly StoreOnChainWalletsController _storeOnChainWalletsController;
+        private readonly HealthController _healthController;
+        private readonly GreenFieldPaymentRequestsController _paymentRequestController;
+        private readonly ApiKeysController _apiKeysController;
+        private readonly NotificationsController _notificationsController;
+        private readonly UsersController _usersController;
+        private readonly GreenFieldStoresController _storesController;
+        private readonly StoreLightningNodeApiController _storeLightningNodeApiController;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly string _userId;
+        private readonly string[] _storeIds;
+
+        public  LocalBTCPayServerClient(
+            StoreRepository storeRepository,
+            IOptionsMonitor<IdentityOptions> identityOptions,
+            StoreOnChainPaymentMethodsController chainPaymentMethodsController,
+            StoreOnChainWalletsController storeOnChainWalletsController,
+            HealthController healthController, 
+            GreenFieldPaymentRequestsController paymentRequestController,
+            ApiKeysController apiKeysController,
+            NotificationsController notificationsController, 
+            UsersController usersController,
+            GreenFieldStoresController storesController,
+            StoreLightningNodeApiController storeLightningNodeApiController,
+            UserManager<ApplicationUser> userManager,
+            IHttpContextAccessor httpContextAccessor,
+            string userId = null, params string[] storeIds) : base(new Uri(""), "", "")
+        {
+            _storeRepository = storeRepository;
+            _identityOptions = identityOptions;
+            _chainPaymentMethodsController = chainPaymentMethodsController;
+            _storeOnChainWalletsController = storeOnChainWalletsController;
+            _healthController = healthController;
+            _paymentRequestController = paymentRequestController;
+            _apiKeysController = apiKeysController;
+            _notificationsController = notificationsController;
+            _usersController = usersController;
+            _storesController = storesController;
+            _storeLightningNodeApiController = storeLightningNodeApiController;
+            _userManager = userManager;
+            _httpContextAccessor = httpContextAccessor;
+            _userId = userId;
+            _storeIds = storeIds;
         }
 
         private T GetFromActionResult<T>(IActionResult result)
@@ -83,9 +173,37 @@ namespace BTCPayServer.Controllers.GreenField
             return GetFromActionResult<T>(result.Result);
         }
 
+        private async Task SetStore(string storeId )
+        {
+            _httpContextAccessor.HttpContext ??= new DefaultHttpContext();
+            _httpContextAccessor.HttpContext.SetStoreData(await _storeRepository.FindStore(storeId));
+        }
+
+        private async Task SetStores()
+        {
+            await SetUser(_userId);
+            _httpContextAccessor.HttpContext ??= new DefaultHttpContext();
+            _httpContextAccessor.HttpContext.SetStoresData(await _storeRepository.GetStoresByUserId(_userId));
+        }
+        private async Task SetUser(string userId)
+        {
+            _httpContextAccessor.HttpContext ??= new DefaultHttpContext();
+            var user = await _userManager.FindByIdAsync(userId);
+            List<Claim> claims = new List<Claim>
+            {
+                new Claim(_identityOptions.CurrentValue.ClaimsIdentity.UserIdClaimType, userId),
+                new Claim(GreenFieldConstants.ClaimTypes.Permission,
+                    Permission.Create(Policies.Unrestricted).ToString())
+            };
+            claims.AddRange((await _userManager.GetRolesAsync(user)).Select(s =>
+                new Claim(_identityOptions.CurrentValue.ClaimsIdentity.RoleClaimType, s)));
+            _httpContextAccessor.HttpContext.User =
+                new ClaimsPrincipal(new ClaimsIdentity(claims, GreenFieldConstants.AuthenticationType));
+        }
         public override async Task<IEnumerable<OnChainPaymentMethodData>> GetStoreOnChainPaymentMethods(string storeId, CancellationToken token = default)
         {
-            return GetFromActionResult(await _chainPaymentMethodsController.GetOnChainPaymentMethods(storeId));
+            await SetStore(storeId);
+            return GetFromActionResult(_chainPaymentMethodsController.GetOnChainPaymentMethods(storeId));
         }
 
         public override async Task<OnChainPaymentMethodData> GetStoreOnChainPaymentMethod(string storeId, string cryptoCode, CancellationToken token = default)
@@ -149,36 +267,41 @@ namespace BTCPayServer.Controllers.GreenField
 
         public override async Task<ApiKeyData> GetCurrentAPIKeyInfo(CancellationToken token = default)
         {
-            return GetFromActionResult(await _apiKeysController.GetKey());
+            throw new NotSupportedException();
         }
 
         public override async Task<ApiKeyData> CreateAPIKey(CreateApiKeyRequest request, CancellationToken token = default)
         {
+            await SetUser(_userId);
             return GetFromActionResult<ApiKeyData>(await _apiKeysController.CreateKey(request));
         }
 
         public override async Task RevokeCurrentAPIKeyInfo(CancellationToken token = default)
         {
-            HandleActionResult(await _apiKeysController.RevokeCurrentKey());
+            throw new NotSupportedException();
         }
 
         public override async Task RevokeAPIKey(string apikey, CancellationToken token = default)
         {
+            await SetUser(_userId);
             HandleActionResult(await _apiKeysController.RevokeKey(apikey));
         }
 
         public override async Task<IEnumerable<NotificationData>> GetNotifications(bool? seen = null, CancellationToken token = default)
         {
+            await SetUser(_userId);
             return GetFromActionResult<IEnumerable<NotificationData>>(await _notificationsController.GetNotifications(seen));
         }
 
         public override async Task<NotificationData> GetNotification(string notificationId, CancellationToken token = default)
         {
+            await SetUser(_userId);
             return GetFromActionResult<NotificationData>(await _notificationsController.GetNotification(notificationId));
         }
 
         public override async Task<NotificationData> UpdateNotification(string notificationId, bool? seen, CancellationToken token = default)
         {
+            await SetUser(_userId);
             return GetFromActionResult<NotificationData>(await _notificationsController.UpdateNotification(notificationId, new UpdateNotification()
             {
                 Seen = seen
@@ -187,55 +310,65 @@ namespace BTCPayServer.Controllers.GreenField
 
         public override async Task RemoveNotification(string notificationId, CancellationToken token = default)
         {
+            await SetUser(_userId);
             HandleActionResult(await _notificationsController.DeleteNotification(notificationId));
         }
 
         public override async Task<ApplicationUserData> GetCurrentUser(CancellationToken token = default)
         {
+            await SetUser(_userId);
             return GetFromActionResult(await _usersController.GetCurrentUser());
         }
 
         public override async Task<ApplicationUserData> CreateUser(CreateApplicationUserRequest request, CancellationToken token = default)
         {
+            await SetUser(_userId);
             return GetFromActionResult<ApplicationUserData>(await _usersController.CreateUser(request, token));
         }
 
         public override async Task<OnChainWalletOverviewData> ShowOnChainWalletOverview(string storeId, string cryptoCode, CancellationToken token = default)
         {
+            await SetStore(storeId);
             return GetFromActionResult<OnChainWalletOverviewData>(await _storeOnChainWalletsController.ShowOnChainWalletOverview(storeId, cryptoCode));
         }
 
         public override async Task<OnChainWalletAddressData> GetOnChainWalletReceiveAddress(string storeId, string cryptoCode, bool forceGenerate = false,
             CancellationToken token = default)
         {
+            await SetStore(storeId);
             return GetFromActionResult<OnChainWalletAddressData>(await _storeOnChainWalletsController.GetOnChainWalletReceiveAddress(storeId, cryptoCode, forceGenerate));
         }
 
         public override async Task UnReserveOnChainWalletReceiveAddress(string storeId, string cryptoCode, CancellationToken token = default)
         {
+            await SetStore(storeId);
             HandleActionResult(await _storeOnChainWalletsController.UnReserveOnChainWalletReceiveAddress(storeId, cryptoCode));
         }
 
         public override async Task<IEnumerable<OnChainWalletTransactionData>> ShowOnChainWalletTransactions(string storeId, string cryptoCode, TransactionStatus[] statusFilter = null,
             CancellationToken token = default)
         {
+            await SetStore(storeId);
             return GetFromActionResult<IEnumerable<OnChainWalletTransactionData>>(await _storeOnChainWalletsController.ShowOnChainWalletTransactions(storeId, cryptoCode, statusFilter));
         }
 
         public override async Task<OnChainWalletTransactionData> GetOnChainWalletTransaction(string storeId, string cryptoCode, string transactionId,
             CancellationToken token = default)
         {
+            await SetStore(storeId);
             return GetFromActionResult<OnChainWalletTransactionData>(await _storeOnChainWalletsController.GetOnChainWalletTransaction(storeId, cryptoCode, transactionId));
         }
 
         public override async Task<IEnumerable<OnChainWalletUTXOData>> GetOnChainWalletUTXOs(string storeId, string cryptoCode, CancellationToken token = default)
         {
+            await SetStore(storeId);
             return GetFromActionResult<IEnumerable<OnChainWalletUTXOData>>(await _storeOnChainWalletsController.GetOnChainWalletUTXOs(storeId, cryptoCode));
         }
 
         public override async Task<OnChainWalletTransactionData> CreateOnChainTransaction(string storeId, string cryptoCode, CreateOnChainTransactionRequest request,
             CancellationToken token = default)
         {
+            await SetStore(storeId);
             if (!request.ProceedWithBroadcast)
             {
                 throw new ArgumentOutOfRangeException(nameof(request.ProceedWithBroadcast),
@@ -247,6 +380,7 @@ namespace BTCPayServer.Controllers.GreenField
         public override async Task<Transaction> CreateOnChainTransactionButDoNotBroadcast(string storeId, string cryptoCode,
             CreateOnChainTransactionRequest request, Network network, CancellationToken token = default)
         {
+            await SetStore(storeId);
             if (request.ProceedWithBroadcast)
             {
                 throw new ArgumentOutOfRangeException(nameof(request.ProceedWithBroadcast),
@@ -257,26 +391,34 @@ namespace BTCPayServer.Controllers.GreenField
 
         public override async Task<IEnumerable<StoreData>> GetStores(CancellationToken token = default)
         {
+            await SetStores();
             return GetFromActionResult(await _storesController.GetStores());
         }
 
         public override async Task<StoreData> GetStore(string storeId, CancellationToken token = default)
         {
+            await SetUser(_userId);
+            await SetStore(storeId);
             return GetFromActionResult(await _storesController.GetStore(storeId));
         }
 
         public override async Task RemoveStore(string storeId, CancellationToken token = default)
         {
+            await SetUser(_userId);
+            await SetStore(storeId);
             HandleActionResult(await _storesController.RemoveStore(storeId));
         }
 
         public override async Task<StoreData> CreateStore(CreateStoreRequest request, CancellationToken token = default)
         {
+            await SetUser(_userId);
             return GetFromActionResult<StoreData>(await _storesController.CreateStore(request));
         }
 
         public override async Task<StoreData> UpdateStore(string storeId, UpdateStoreRequest request, CancellationToken token = default)
         {
+            await SetUser(_userId);
+            await SetStore(storeId);
             return GetFromActionResult<StoreData>(await _storesController.UpdateStore(storeId, request));
         }
 
@@ -352,5 +494,6 @@ namespace BTCPayServer.Controllers.GreenField
         {
             throw new NotSupportedException();
         }
+    }
     }
 }

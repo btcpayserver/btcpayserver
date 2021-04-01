@@ -41,6 +41,13 @@ namespace BTCPayServer.Filters
                     context.RouteContext.RouteData.Values.Add("appId", matchedDomainMapping.AppId);
                     return true;
                 }
+
+                if (AppType == css.RootAppType) {
+                    context.RouteContext.RouteData.Values.Add("appId", css.RootAppId);
+
+                    return true;
+                }
+
                 return AppType is null;
             }
             else

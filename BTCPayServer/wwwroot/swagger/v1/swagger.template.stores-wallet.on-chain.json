@@ -613,7 +613,7 @@
                         }
                     },
                     "feeRate": {
-                        "type": "string",
+                        "type": "number",
                         "format": "decimal or long (sats/byte)",
                         "description": "A wallet address or a BIP21 payment link"
                     },

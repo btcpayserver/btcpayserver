@@ -1417,6 +1417,10 @@ namespace BTCPayServer.Tests
             var overview = await client.ShowOnChainWalletOverview(walletId.StoreId, walletId.CryptoCode );
             Assert.Equal(0m, overview.Balance);
             
+            
+            var fee = await client.GetOnChainFeeRate(walletId.StoreId, walletId.CryptoCode );
+            Assert.NotNull( fee.FeeRate);
+
             await AssertHttpError(403, async () =>
             {
                 await viewOnlyClient.GetOnChainWalletReceiveAddress(walletId.StoreId, walletId.CryptoCode );

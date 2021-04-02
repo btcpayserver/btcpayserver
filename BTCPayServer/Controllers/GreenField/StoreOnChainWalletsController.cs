@@ -18,9 +18,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
+using NBitcoin.JsonConverters;
 using NBitcoin.Payment;
 using NBXplorer;
 using NBXplorer.Models;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using StoreData = BTCPayServer.Data.StoreData;
 
@@ -87,7 +89,20 @@ namespace BTCPayServer.Controllers.GreenField
             var feeRateTarget = Store.GetStoreBlob().RecommendedFeeBlockTarget;
             return Ok(new OnChainWalletOverviewData()
             {
-                Balance = await wallet.GetBalance(derivationScheme.AccountDerivation),
+                Balance = await wallet.GetBalance(derivationScheme.AccountDerivation)
+            });
+        }
+        
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/feerate")]
+        public async Task<IActionResult> GetOnChainFeeRate(string storeId, string cryptoCode, int? blockTarget = null)
+        {
+            if (IsInvalidWalletRequest(cryptoCode, out BTCPayNetwork network,
+                out DerivationSchemeSettings derivationScheme, out IActionResult actionResult)) return actionResult;
+
+            var feeRateTarget = blockTarget?? Store.GetStoreBlob().RecommendedFeeBlockTarget;
+            return Ok(new OnChainWalletFeeRateData()
+            {
                 FeeRate =  await _feeProviderFactory.CreateFeeProvider(network)
                     .GetFeeRateAsync(feeRateTarget),
             });

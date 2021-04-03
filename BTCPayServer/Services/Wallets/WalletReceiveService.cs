@@ -128,5 +128,12 @@ namespace BTCPayServer.Services.Wallets
             _leases.Dispose();
             return Task.CompletedTask;
         }
+
+        public KeyValuePair<WalletId, KeyPathInformation>? GetByScriptPubKey(string cryptoCode,Script script)
+        {
+            return _walletReceiveState.FirstOrDefault(pair =>
+                pair.Key.CryptoCode.Equals(cryptoCode, StringComparison.InvariantCulture) &&
+                pair.Value.ScriptPubKey == script);
+        }
     }
 }

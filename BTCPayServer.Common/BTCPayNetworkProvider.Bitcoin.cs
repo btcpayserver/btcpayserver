@@ -14,7 +14,7 @@ namespace BTCPayServer
                 CryptoCode = nbxplorerNetwork.CryptoCode,
                 DisplayName = "Bitcoin",
                 BlockExplorerLink = NetworkType == ChainName.Mainnet ? "https://blockstream.info/tx/{0}" :
-                                    NetworkType == Bitcoin.Instance.Signet.ChainName ? "https://explorer.bc-2.jp/"
+                                    NetworkType == Bitcoin.Instance.Signet.ChainName ? "https://explorer.bc-2.jp/tx/{0}"
                                     : "https://blockstream.info/testnet/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "bitcoin",

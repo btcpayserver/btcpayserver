@@ -183,9 +183,8 @@ namespace BTCPayServer.Controllers.GreenField
         [Authorize(Policy = Policies.CanDeleteUser, AuthenticationSchemes = AuthenticationSchemes.GreenfieldAPIKeys)]
         public async Task<ActionResult<ApplicationUserData>> DeleteUser(string userId)
         {
-            var isAdmin = await IsAdmin();
             // Only admins should be allowed to delete users
-            if (!isAdmin)
+            if (!User.IsInRole(Roles.ServerAdmin))
             {
                 return Forbid(AuthenticationSchemes.GreenfieldBasic);
             }
@@ -196,18 +195,16 @@ namespace BTCPayServer.Controllers.GreenField
                 return NotFound();
             }
 
-            var roles = await _userManager.GetRolesAsync(user);
             // We can safely delete the user if it's not an admin user
-            if (!_userService.IsRoleAdmin(roles))
+            if (!_userService.IsRoleAdmin(await _userManager.GetRolesAsync(user)))
             {
                 await _userService.DeleteUserAndAssociatedData(user);
 
                 return Ok();
             }
 
-            var admins = await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin);
             // User shouldn't be deleted if it's the only admin
-            if (admins.Count == 1)
+            if ((await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin)).Count == 1)
             {
                 return Forbid(AuthenticationSchemes.GreenfieldBasic);
             }

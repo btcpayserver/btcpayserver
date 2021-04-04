@@ -1,7 +1,7 @@
 ﻿@model PairingModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePageAndTitle(StoreNavPages.Tokens, "Pairing permission", Context.GetStoreData().StoreName);
+    ViewData.SetActivePageAndTitle(StoreNavPages.Tokens, "Pairing permission", Context.GetStoreData()?.StoreName);
 }
 
 <h2 class="mb-4">@ViewData["PageTitle"]</h2>

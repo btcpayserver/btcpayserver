@@ -912,6 +912,13 @@ namespace BTCPayServer.Controllers
                 return Challenge(AuthenticationSchemes.Cookie);
             if (pairingCode == null)
                 return NotFound();
+            if (selectedStore != null)
+            {
+                var store = await _Repo.FindStore(selectedStore, userId);
+                if (store == null)
+                    return NotFound();
+                HttpContext.SetStoreData(store);
+            }
             var pairing = await _TokenRepository.GetPairingAsync(pairingCode);
             if (pairing == null)
             {
@@ -921,7 +928,7 @@ namespace BTCPayServer.Controllers
             else
             {
                 var stores = await _Repo.GetStoresByUserId(userId);
-                return View(new PairingModel()
+                return View(new PairingModel
                 {
                     Id = pairing.Id,
                     Label = pairing.Label,
@@ -979,8 +986,6 @@ namespace BTCPayServer.Controllers
                 return null;
             return _UserManager.GetUserId(User);
         }
-
-
 
         // TODO: Need to have talk about how architect default currency implementation
         // For now we have also hardcoded USD for Store creation and then Invoice creation

@@ -47,6 +47,7 @@ namespace BTCPayServer
                         l.AddFilter("Microsoft", LogLevel.Error);
                         l.AddFilter("System.Net.Http.HttpClient", LogLevel.Critical);
                         l.AddFilter("Microsoft.AspNetCore.Antiforgery.Internal", LogLevel.Critical);
+                        l.AddFilter("Fido2NetLib.DistributedCacheMetadataService", LogLevel.Error);
                         l.AddProvider(new CustomConsoleLogProvider(processor));
                     })
                     .UseStartup<Startup>()

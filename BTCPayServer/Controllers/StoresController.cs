@@ -856,6 +856,12 @@ namespace BTCPayServer.Controllers
             if (string.IsNullOrWhiteSpace(userId))
                 return Challenge(AuthenticationSchemes.Cookie);
             var storeId = CurrentStore?.Id;
+            if (storeId != null)
+            {
+                var store = await _Repo.FindStore(storeId, userId);
+                if (store != null)
+                    HttpContext.SetStoreData(store);
+            }
             var model = new CreateTokenViewModel();
             ViewBag.HidePublicKey = true;
             ViewBag.ShowStores = true;
@@ -918,6 +924,7 @@ namespace BTCPayServer.Controllers
                 if (store == null)
                     return NotFound();
                 HttpContext.SetStoreData(store);
+                ViewBag.ShowStores = false;
             }
             var pairing = await _TokenRepository.GetPairingAsync(pairingCode);
             if (pairing == null)

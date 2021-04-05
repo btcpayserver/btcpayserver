@@ -18,11 +18,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
-using NBitcoin.JsonConverters;
 using NBitcoin.Payment;
 using NBXplorer;
 using NBXplorer.Models;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using StoreData = BTCPayServer.Data.StoreData;
 
@@ -86,7 +84,6 @@ namespace BTCPayServer.Controllers.GreenField
                 out DerivationSchemeSettings derivationScheme, out IActionResult actionResult)) return actionResult;
 
             var wallet = _btcPayWalletProvider.GetWallet(network);
-            var feeRateTarget = Store.GetStoreBlob().RecommendedFeeBlockTarget;
             return Ok(new OnChainWalletOverviewData()
             {
                 Balance = await wallet.GetBalance(derivationScheme.AccountDerivation)
@@ -353,7 +350,7 @@ namespace BTCPayServer.Controllers.GreenField
                     "You are sending your entire balance, you should subtract the fees from a destination", this);
             }
 
-            var minRelayFee = this._nbXplorerDashboard.Get(network.CryptoCode).Status.BitcoinStatus?.MinRelayTxFee ??
+            var minRelayFee = _nbXplorerDashboard.Get(network.CryptoCode).Status.BitcoinStatus?.MinRelayTxFee ??
                               new FeeRate(1.0m);
             if (request.FeeRate != null && request.FeeRate < minRelayFee)
             {

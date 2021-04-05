@@ -26,7 +26,7 @@
 </section>
 <script>
     // send to server for registering    
-    window.makeAssertionOptions = @Json.Serialize(Model.Data);
+    window.makeAssertionOptions = @Safe.Json(Model.Data);
 </script>
 <script src="~/js/webauthn/helpers.js" ></script>
 <script src="~/js/webauthn/login.js" ></script>

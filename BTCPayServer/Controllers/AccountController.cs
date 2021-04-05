@@ -126,7 +126,9 @@ namespace BTCPayServer.Controllers
                     return View(model);
                 }
 
-                if (!await _userManager.IsLockedOutAsync(user) && (await _u2FService.HasDevices(user.Id) || await _fido2Service.HasCredentials(user.Id)))
+                var u2fDevices = await _u2FService.HasDevices(user.Id);
+                var fido2Devices = await _fido2Service.HasCredentials(user.Id);
+                if (!await _userManager.IsLockedOutAsync(user) &&  u2fDevices ||  fido2Devices)
                 {
                     if (await _userManager.CheckPasswordAsync(user, model.Password))
                     {
@@ -145,8 +147,8 @@ namespace BTCPayServer.Controllers
                         return View("SecondaryLogin", new SecondaryLoginViewModel()
                         {
                             LoginWith2FaViewModel = twoFModel,
-                            LoginWithU2FViewModel =  (await _u2FService.HasDevices(user.Id))? await BuildU2FViewModel(model.RememberMe, user) : null,
-                            LoginWithFido2ViewModel =(await _fido2Service.HasCredentials(user.Id)) ? await BuildFido2ViewModel(model.RememberMe, user): null, 
+                            LoginWithU2FViewModel = u2fDevices? await BuildU2FViewModel(model.RememberMe, user) : null,
+                            LoginWithFido2ViewModel = fido2Devices? await BuildFido2ViewModel(model.RememberMe, user): null, 
                         });
                     }
                     else

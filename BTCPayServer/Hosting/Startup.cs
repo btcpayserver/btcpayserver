@@ -93,7 +93,7 @@ namespace BTCPayServer.Hosting
                 });
             var descriptor =services.Single(descriptor => descriptor.ServiceType == typeof(Fido2Configuration));
             services.Remove(descriptor);
-            services.AddTransient<Fido2Configuration>(provider =>
+            services.AddScoped(provider =>
             {
                 var httpContext = provider.GetService<IHttpContextAccessor>();
                 return new Fido2Configuration()

@@ -1,0 +1,247 @@
+@using BTCPayServer.Views.Stores
+@using BTCPayServer.Services.Altcoins.Ethereum.Payments
+@model BTCPayServer.Services.Altcoins.Ethereum.UI.SweepFundsViewModel
+@inject BTCPayNetworkProvider BTCPayNetworkProvider
+@{
+    Layout = "../Shared/_NavLayout.cshtml";
+
+    ViewData["NavPartialName"] = "../Stores/_Nav";
+    ViewData.SetActivePageAndTitle(StoreNavPages.ActivePage, $"Sweep funds (beta)");
+}
+
+
+<partial name="_StatusMessage"/>
+
+<div class="row">
+    <div class="col-md-6">
+        <div asp-validation-summary="All" class="text-danger"></div>
+    </div>
+</div>
+<div class="row">
+<div class="col-12">
+
+@if (Model.Chains != null)
+{
+    <ul class="list-group">
+
+        <li class="list-group-item list-group-item-heading">Choose chain to sweep funds on</li>
+
+        @foreach (var chain in Model.Chains)
+        {
+            <li class="list-group-item">
+                <a asp-action="SweepFundsSelectXPub"
+                   asp-route-chainId="@chain.Key"
+                   asp-route-storeId="@this.Context.GetRouteValue("storeId")">
+                    Chain ID: @chain.Key (@string.Join(',', chain.Select(tuple => tuple.Network.CryptoCode))
+                </a>
+            </li>
+        }
+    </ul>
+}
+else if (Model.Wallets != null)
+{
+    <ul class="list-group">
+        <li class="list-group-item list-group-item-heading">Choose wallet to sweep funds on</li>
+        @foreach (var wallet in Model.Wallets)
+        {
+            <li class="list-group-item">
+                <a asp-action="SweepFundsSpecifyInfo"
+                   asp-route-storeId="@this.Context.GetRouteValue("storeId")"
+                   asp-route-chainId="@this.Context.GetRouteValue("chainId")"
+                   asp-route-xpub="@wallet.Key"  class="text-break">
+                    XPUB: @wallet.Key (@string.Join(',', wallet.Select(tuple => tuple.Network.CryptoCode)))
+                </a>
+            </li>
+        }
+    </ul>
+}
+else if (Model.SweepRequests != null)
+{
+    var nativeNetwork = BTCPayNetworkProvider.GetAll().OfType<EthereumBTCPayNetwork>().FirstOrDefault(network => network.ChainId == Model.ChainId && !(network is ERC20BTCPayNetwork));
+
+    <form method="post" asp-action="SweepFundsSpecifyInfo">
+        <input asp-for="ChainId" type="hidden"/>
+        <input asp-for="XPub" type="hidden"/>
+        <input asp-for="Password" type="hidden"/>
+        <input asp-for="Seed" type="hidden"/>
+        <input asp-for="KeyPath" type="hidden"/>
+        <input asp-for="DestinationAddress" type="hidden"/>
+
+        <div class="form-group">
+            <label asp-for="DestinationAddress">Sweep to address</label>
+            <input type="text" readonly class="form-control" value="@Model.DestinationAddress" />
+        </div>
+
+        <div class="form-group">
+            <label asp-for="GasPrice">Gas price in wei. Leave empty for automatic fill</label>
+            <input type="number" class="form-control" asp-for="GasPrice"/>
+        </div>
+        <ul class="list-group">
+            @for (int i = 0; i < Model.SweepRequests.Count; i++)
+            {
+                var sweepRequest = Model.SweepRequests[i];
+
+                <input asp-for="SweepRequests[i].Address" type="hidden"/>
+                <input asp-for="SweepRequests[i].Index" type="hidden"/>
+                <input asp-for="SweepRequests[i].UnableToSweepBecauseOfActiveInvoiceWithNativeCurrency" type="hidden"/>
+                <li class="list-group-item">
+                    <p>
+                        Address: @sweepRequest.Address (index: @sweepRequest.Index)
+                    </p>
+                    @if (!string.IsNullOrEmpty(sweepRequest.UnableToSweepBecauseOfActiveInvoiceWithNativeCurrency))
+                    {
+                        <div class="alert alert-warning">Cannot sweep as address is in use by active invoice (@sweepRequest.UnableToSweepBecauseOfActiveInvoiceWithNativeCurrency)</div>
+                    }
+                    <ul class="list-group">
+                        @if (sweepRequest.Native != null)
+                        {
+                            <input asp-for="SweepRequests[i].Native.Amount" type="hidden"/>
+                            <input asp-for="SweepRequests[i].Native.CryptoCode" type="hidden"/>
+                            <input asp-for="SweepRequests[i].Native.GasCost" type="hidden"/>
+                            <input asp-for="SweepRequests[i].Native.InvoiceId" type="hidden"/>
+                            <input asp-for="SweepRequests[i].Native.TransactionHash" type="hidden"/>
+                            <li class="list-group-item">
+                                @{
+                                    var network = BTCPayNetworkProvider.GetNetwork(sweepRequest.Native.CryptoCode);
+                                    var val = EthereumLikePaymentData.GetValue(network, sweepRequest.Native.Amount);
+                                    
+                                }
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item">
+                                        @val @network.DisplayName
+                                    </li>
+                                    @if (!string.IsNullOrEmpty(sweepRequest.Native.InvoiceId))
+                                    {
+                                        <li class="list-group-item">
+                                            Associated Invoice: <a asp-controller="Invoice" asp-action="Invoice" asp-route-invoiceId="@sweepRequest.Native.InvoiceId" target="_blank">@sweepRequest.Native.InvoiceId</a>
+                                        </li>
+                                    }
+                                    <li class="list-group-item ">Sweep fee: @EthereumLikePaymentData.GetValue(nativeNetwork, (Model.GasPrice.Value * sweepRequest.Native.GasCost)) @nativeNetwork.CryptoCode</li>
+                                    @if (string.IsNullOrEmpty(Model.SweepRequests[i].Native.TransactionHash))
+                                    {
+                                        <li class="list-group-item">
+                                            <label>
+                                                <input type="checkbox" asp-for="SweepRequests[i].Native.Sweep" checked="@Model.SweepRequests[i].Native.Sweep" type="checkbox" class="form-check-inline"/> Sweep
+                                            </label>
+                                        </li>
+                                    }
+                                    else
+                                    {
+                                        <li class="list-group-item" style="overflow-x: auto">
+                                            <a target="_blank" href="@string.Format(network.BlockExplorerLink.Replace("address", "tx"), sweepRequest.Native.TransactionHash)">
+                                                @sweepRequest.Native.TransactionHash
+                                            </a>
+                                        </li>
+                                    }
+                                </ul>
+
+                            </li>
+                        }
+                        @for (int x = 0; x < sweepRequest.Tokens.Count; x++)
+                        {
+                            <input asp-for="SweepRequests[i].Tokens[x].Amount" type="hidden"/>
+                            <input asp-for="SweepRequests[i].Tokens[x].CryptoCode" type="hidden"/>
+                            <input asp-for="SweepRequests[i].Tokens[x].GasCost" type="hidden"/>
+                            <input asp-for="SweepRequests[i].Tokens[x].InvoiceId" type="hidden"/>
+                            <input asp-for="SweepRequests[i].Tokens[x].TransactionHash" type="hidden"/>
+                            <li class="list-group-item">
+                                @{
+                                    var network = BTCPayNetworkProvider.GetNetwork(sweepRequest.Tokens[x].CryptoCode);
+                                    var val = EthereumLikePaymentData.GetValue(network, sweepRequest.Tokens[x].Amount);
+                                }
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item">
+                                        @val @network.DisplayName
+                                    </li>
+                                    @if (!string.IsNullOrEmpty(sweepRequest.Tokens[x].InvoiceId))
+                                    {
+                                        <li class="list-group-item">
+                                            Associated Invoice: <a asp-controller="Invoice" asp-action="Invoice" asp-route-invoiceId="@sweepRequest.Tokens[x].InvoiceId" target="_blank">@sweepRequest.Tokens[x].InvoiceId</a>
+                                        </li>
+                                    }
+                                    <li class="list-group-item">Sweep fee: @EthereumLikePaymentData.GetValue(nativeNetwork, (Model.GasPrice.Value * sweepRequest.Tokens[x].GasCost)) @nativeNetwork.CryptoCode</li>
+                                    @if (string.IsNullOrEmpty(Model.SweepRequests[i].Tokens[x].TransactionHash))
+                                    {
+                                        <li class="list-group-item" >
+                                            <label>
+                                                <input type="checkbox" asp-for="SweepRequests[i].Tokens[x].Sweep" checked="@Model.SweepRequests[i].Tokens[x].Sweep" type="checkbox" class="form-check-inline"/> Sweep
+                                            </label>
+                                        </li>
+                                    }
+                                    else
+                                    {
+                                        <li class="list-group-item" style="overflow-x: auto">
+                                            <a target="_blank" href="@string.Format(network.BlockExplorerLink.Replace("address", "tx"), sweepRequest.Tokens[x].TransactionHash)">
+                                                @sweepRequest.Tokens[x].TransactionHash
+                                            </a>
+                                        </li>
+                                    }
+                                </ul>
+                            </li>
+                        }
+                    </ul>
+                </li>
+            }
+        </ul>
+
+        @{
+            if (!Model.SweepRequests.Any(request => request.Tokens.Any(item => item.Sweep) || request.Native?.Sweep is true))
+            {
+                <p class=" alert alert-danger">Nothing selected to sweep</p>
+            }
+            else if (Model.SweepRequests.Any(request => request.Sufficient(Model.GasPrice.Value, out var _)))
+            {
+                <button type="submit" class="btn btn-primary" name="command" value="sweep">Sweep</button>
+            }
+            else
+            {
+                <p class="alert alert-danger">No funds to sweep with. Send plenty funds to one address in sweep list and funds will be forwarded until all swept or require more funds</p>
+            }
+
+            <button type="submit" class="btn btn-primary">Update and refresh values</button>
+        }
+    </form>
+}
+else
+{
+    <form method="post" asp-action="SweepFundsSpecifyInfo"
+          asp-route-storeId="@this.Context.GetRouteValue("storeId")"
+          asp-route-chainId="@this.Context.GetRouteValue("chainId")"
+          asp-route-xpub="@this.Context.GetRouteValue("xpub")"
+          class="mt-4" enctype="multipart/form-data">
+
+        <input asp-for="ChainId" type="hidden"/>
+        <input asp-for="XPub" type="hidden"/>
+        <div class="form-group">
+            <label asp-for="Seed"></label>
+            <input asp-for="Seed" type="text" class="form-control"/>
+            <span asp-validation-for="Seed" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="Password"></label>
+            <input type="text" asp-for="Password" class="form-control" autocomplete="off"/>
+            <span asp-validation-for="Password" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="KeyPath"></label>
+            <input asp-for="KeyPath" class="form-control"/>
+            <span class="text-muted">Please see <a href="https://medium.com/myetherwallet/hd-wallets-and-derivation-paths-explained-865a643c7bf2" target="_blank">this article.</a></span>
+            <span asp-validation-for="KeyPath" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="DestinationAddress">Sweep to address</label>
+            <input asp-for="DestinationAddress" class="form-control"/>
+            <span asp-validation-for="DestinationAddress" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="SaveButton">Save</button>
+    </form>
+}
+</div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

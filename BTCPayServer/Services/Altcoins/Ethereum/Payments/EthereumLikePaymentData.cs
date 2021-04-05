@@ -1,17 +1,16 @@
 #if ALTCOINS
 using System.Globalization;
-using System.Numerics;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Payments;
 using BTCPayServer.Services.Invoices;
-using Nethereum.Hex.HexTypes;
+using Microsoft.AspNetCore.Http;
 using Nethereum.Web3;
 
 namespace BTCPayServer.Services.Altcoins.Ethereum.Payments
 {
     public class EthereumLikePaymentData : CryptoPaymentData
     {
-        public long Amount { get; set; }
+        public ulong Amount { get; set; }
         public string CryptoCode { get; set; }
         public string Address { get; set; }
         public long AccountIndex { get; set; }
@@ -19,13 +18,14 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Payments
         public long ConfirmationCount { get; set; }
         public BTCPayNetworkBase Network { get; set; }
         public long? BlockNumber { get; set; }
+        public string SweepingTransaction { get; set; } = "";
 
         public string GetPaymentId()
         {
             return GetPaymentId(CryptoCode,Address, Amount);
         }
         
-        public static string GetPaymentId(string cryptoCode, string address, long amount)
+        public static string GetPaymentId(string cryptoCode, string address, ulong amount)
         {
             return $"{cryptoCode}#{address}#{amount}";
         }
@@ -37,7 +37,12 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Payments
 
         public decimal GetValue()
         {
-            return decimal.Parse(Web3.Convert.FromWeiToBigDecimal(Amount, Network.Divisibility).ToString(),
+            return GetValue(Network, Amount);
+        }
+
+        public static decimal GetValue(BTCPayNetworkBase network, ulong amount)
+        {
+            return  decimal.Parse(Web3.Convert.FromWeiToBigDecimal(amount, network.Divisibility).ToString(),
                 CultureInfo.InvariantCulture);
         }
 

@@ -13,7 +13,9 @@ using BTCPayServer.Services.Altcoins.Ethereum.Configuration;
 using BTCPayServer.Services.Altcoins.Ethereum.Payments;
 using BTCPayServer.Services.Invoices;
 using Microsoft.Extensions.Logging;
+using NBitcoin;
 using NBitcoin.Logging;
+using Nethereum.Hex.HexTypes;
 using Nethereum.RPC.Eth.DTOs;
 using Nethereum.StandardTokenEIP20.ContractDefinition;
 using Nethereum.Web3;
@@ -27,14 +29,24 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
         private int ChainId { get; }
         private readonly HashSet<PaymentMethodId> PaymentMethods;
 
-        private readonly Web3 Web3;
+        public readonly Web3 Web3;
         private readonly List<EthereumBTCPayNetwork> Networks;
         public string GlobalError { get; private set; } = "The chain watcher is still starting.";
 
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
             Logs.NodeServer.LogInformation($"Starting EthereumWatcher for chain {ChainId}");
-            var result = await Web3.Eth.ChainId.SendRequestAsync();
+            HexBigInteger result;
+            try
+            {
+                result = await Web3.Eth.ChainId.SendRequestAsync();
+            }
+            catch (Exception e)
+            {
+                GlobalError =
+                    $"Web3 could not return chain id.";
+                return;
+            }
             if (result.Value != ChainId)
             {
                 GlobalError =
@@ -223,7 +235,7 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
             await UpdatePaymentStates(invoices, cancellationToken);
         }
 
-        private long? LastBlock = null;
+        private Dictionary<string, ulong> LastBlock = new Dictionary<string, ulong>();
 
         private async Task UpdatePaymentStates(InvoiceEntity[] invoices, CancellationToken cancellationToken)
         {
@@ -236,7 +248,6 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
 
             foreach (var network in Networks)
             {
-                var erc20Network = network as ERC20BTCPayNetwork;
                 var paymentMethodId = new PaymentMethodId(network.CryptoCode, EthereumPaymentType.Instance);
                 var expandedInvoices = invoices
                     .Select(entity => (
@@ -254,7 +265,7 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
                     tuple.ExistingPayments.All(valueTuple => !valueTuple.Payment.Accounted)).ToList();
 
                 var tasks = new List<Task>();
-                if (existingPaymentData.Any() && currentBlock.Value != LastBlock)
+                if (existingPaymentData.Any() && (!LastBlock.TryGetValue(network.CryptoCode, out var lastblock) || currentBlock.Value != lastblock))
                 {
                     Logs.NodeServer.LogInformation(
                         $"Checking {existingPaymentData.Count} existing payments on {expandedInvoices.Count} invoices on {network.CryptoCode}");
@@ -275,7 +286,7 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
                         });
                     })).ContinueWith(task =>
                     {
-                        LastBlock = (long?)currentBlock.Value;
+                        LastBlock.AddOrReplace(network.CryptoCode, (ulong)currentBlock.Value);
                     }, TaskScheduler.Current));
                 }
 
@@ -312,14 +323,14 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
             public int ChainId { get; set; }
             public string Address { get; set; }
             public string CryptoCode { get; set; }
-            public long Amount { get; set; }
+            public ulong Amount { get; set; }
             public InvoiceEntity InvoiceEntity { get; set; }
             public PaymentEntity MatchedExistingPayment { get; set; }
             public EthereumLikeOnChainPaymentMethodDetails PaymentMethodDetails { get; set; }
 
             public override string ToString()
             {
-                return "";            
+                return "";
             }
         }
 
@@ -329,17 +340,17 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
                 new InvoiceEvent(invoice, InvoiceEvent.ReceivedPayment) {Payment = payment});
         }
 
-        private async Task<long> GetBalance(EthereumBTCPayNetwork network, BlockParameter blockParameter,
+        public async Task<ulong> GetBalance(EthereumBTCPayNetwork network, BlockParameter blockParameter,
             string address)
         {
             if (network is ERC20BTCPayNetwork erc20BTCPayNetwork)
             {
-                return (long)(await Web3.Eth.GetContractHandler(erc20BTCPayNetwork.SmartContractAddress)
+                return (ulong)(await Web3.Eth.GetContractHandler(erc20BTCPayNetwork.SmartContractAddress)
                     .QueryAsync<BalanceOfFunction, BigInteger>(new BalanceOfFunction() {Owner = address}));
             }
             else
             {
-                return (long)(await Web3.Eth.GetBalance.SendRequestAsync(address, blockParameter)).Value;
+                return (ulong)(await Web3.Eth.GetBalance.SendRequestAsync(address, blockParameter)).Value;
             }
         }
 

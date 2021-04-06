@@ -94,7 +94,7 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<LabelFactory>();
             services.TryAddSingleton<TorServices>(provider => 
                 new TorServices(provider.GetRequiredService<BTCPayNetworkProvider>(), provider.GetService<IOptions<BTCPayServerOptions>>(), configuration));
-            services.TryAddSingleton<IHostedService>(provider => provider.GetRequiredService<TorServices>());
+            services.AddSingleton<IHostedService>(provider => provider.GetRequiredService<TorServices>());
             services.TryAddSingleton<SocketFactory>();
             services.TryAddSingleton<LightningClientFactoryService>();
             services.TryAddSingleton<InvoicePaymentNotification>();

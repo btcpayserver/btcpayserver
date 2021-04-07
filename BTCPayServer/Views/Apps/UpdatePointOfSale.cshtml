@@ -6,7 +6,7 @@
 }
 <section>
     <div class="container">
-        @await Html.PartialAsync("_StatusMessage")
+        <partial name="_StatusMessage" />
 
         <h2 class="mb-4">@ViewData["PageTitle"]</h2>
 
@@ -76,7 +76,7 @@
                         <span asp-validation-for="CustomCSSLink" class="text-danger"></span>
                     </div>
 
-                    @await Html.PartialAsync("TemplateEditor", (nameof(Model.Template), "Products"))
+                    <partial name="TemplateEditor" model="@(nameof(Model.Template), "Products")" />
 
                     <div class="form-group">
                         <label asp-for="Template" class="control-label"></label>

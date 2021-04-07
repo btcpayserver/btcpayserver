@@ -6,7 +6,7 @@
 }
 <section>
     <div class="container">
-        @await Html.PartialAsync("_StatusMessage")
+        <partial name="_StatusMessage" />
 
         <h2 class="mb-4">@ViewData["PageTitle"]</h2>
 
@@ -81,7 +81,9 @@
                         </div>
                         <span asp-validation-for="EndDate" class="text-danger"></span>
                     </div>
-                    @await Html.PartialAsync("TemplateEditor", (nameof(Model.PerksTemplate), "Perks"))
+
+                    <partial name="TemplateEditor" model="@(nameof(Model.PerksTemplate), "Perks")" />
+
                     <div class="form-group">
                         <label asp-for="PerksTemplate" class="control-label"></label>
                         <textarea asp-for="PerksTemplate" rows="10" cols="40" class="js-product-template form-control"></textarea>

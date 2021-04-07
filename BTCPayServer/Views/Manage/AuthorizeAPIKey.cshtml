@@ -9,7 +9,7 @@
     var permissions = Permission.ToPermissions(Model.Permissions.Split(';')).GroupBy(permission => permission.Policy);
 }
 
-@await Html.PartialAsync("_StatusMessage")
+<partial name="_StatusMessage" />
 
 <form method="post" asp-action="AuthorizeAPIKey">
     <input type="hidden" asp-for="RedirectUrl" value="@Model.RedirectUrl"/>

@@ -131,9 +131,9 @@
 </div>
 
 @section Scripts {
-    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <partial name="_ValidationScriptsPartial" />
 
-    @if(Model.QRCode != null)
+    @if (Model.QRCode != null)
     {
         <script type="text/javascript" src="~/js/qrcode.js" asp-append-version="true"></script>
         <script type="text/javascript">

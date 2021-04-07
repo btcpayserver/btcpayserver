@@ -194,5 +194,5 @@
 
 @section Scripts {
     <script type="text/javascript">var defaultScript = @Safe.Json(Model.DefaultScript);</script>
-    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <partial name="_ValidationScriptsPartial" />
 }

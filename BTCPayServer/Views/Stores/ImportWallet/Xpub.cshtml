@@ -110,7 +110,7 @@
 <a id="ToggleAdditional" href="#additional">Show multi-sig examples</a>
 
 @section Scripts {
-    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <partial name="_ValidationScriptsPartial" />
 
     <script type="text/javascript">
         document.getElementById('ToggleAdditional').addEventListener("click", function(e) {

@@ -5,8 +5,7 @@
     ViewData.SetActivePageAndTitle(ManageNavPages.Notifications, "Notification preferences");
 }
 
-
-@await Html.PartialAsync("_StatusMessage")
+<partial name="_StatusMessage" />
 
 <form method="post" asp-action="NotificationSettings">
     @if (Model.All)

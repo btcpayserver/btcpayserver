@@ -76,7 +76,7 @@
 
         <main class="flex-grow-1 py-4">
             <div class="container">
-                @await Html.PartialAsync("_StatusMessage", new ViewDataDictionary(ViewData){ { "Margin", "mb-4" } })
+                <partial name="_StatusMessage" model="@(new ViewDataDictionary(ViewData){ { "Margin", "mb-4" } })" />
                 @if (!ViewContext.ModelState.IsValid)
                 {
                     @Html.ValidationSummary(string.Empty, new { @class = "alert alert-danger mb-4 pb-0 text-center" })

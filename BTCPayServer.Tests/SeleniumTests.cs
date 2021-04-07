@@ -11,6 +11,7 @@ using BTCPayServer.Services.Wallets;
 using BTCPayServer.Tests.Logging;
 using BTCPayServer.Views.Manage;
 using BTCPayServer.Views.Server;
+using BTCPayServer.Views.Stores;
 using BTCPayServer.Views.Wallets;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;

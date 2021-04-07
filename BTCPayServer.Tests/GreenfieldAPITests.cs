@@ -1093,6 +1093,24 @@ namespace BTCPayServer.Tests
                 {
                     Assert.Equal("pt-PT", langs.FindBestMatch(match).Code);
                 }
+
+                //payment method activation tests
+                var store = await client.GetStore(user.StoreId);
+                Assert.False(store.LazyPaymentMethods);
+                store.LazyPaymentMethods = true;
+                store = await client.UpdateStore(store.Id, 
+                    JObject.FromObject(store).ToObject<UpdateStoreRequest>());
+                Assert.True(store.LazyPaymentMethods);
+
+                invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest() {Amount = 1, Currency = "USD"});
+                paymentMethods = await client.GetInvoicePaymentMethods(store.Id, invoice.Id);
+                Assert.Single(paymentMethods);
+                Assert.False(paymentMethods.First().Activated);
+                await client.ActivateInvoicePaymentMethod(user.StoreId, invoice.Id,
+                    paymentMethods.First().PaymentMethod);
+                paymentMethods = await client.GetInvoicePaymentMethods(store.Id, invoice.Id);
+                Assert.Single(paymentMethods);
+                Assert.True(paymentMethods.First().Activated);
             }
         }
 
@@ -1417,6 +1435,10 @@ namespace BTCPayServer.Tests
             var overview = await client.ShowOnChainWalletOverview(walletId.StoreId, walletId.CryptoCode );
             Assert.Equal(0m, overview.Balance);
             
+            
+            var fee = await client.GetOnChainFeeRate(walletId.StoreId, walletId.CryptoCode );
+            Assert.NotNull( fee.FeeRate);
+
             await AssertHttpError(403, async () =>
             {
                 await viewOnlyClient.GetOnChainWalletReceiveAddress(walletId.StoreId, walletId.CryptoCode );

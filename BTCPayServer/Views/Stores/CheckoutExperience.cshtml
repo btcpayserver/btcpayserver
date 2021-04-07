@@ -75,7 +75,13 @@
             </div>
             <div class="form-group">
                 <div class="form-check">
-                    <input asp-for="RedirectAutomatically" type="checkbox" class="form-check-input"/>
+                    <input asp-for="LazyPaymentMethods" type="checkbox" class="form-check-input" />
+                    <label asp-for="LazyPaymentMethods" class="form-check-label"></label>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="form-check">
+                    <input asp-for="RedirectAutomatically" type="checkbox" class="form-check-input" />
                     <label asp-for="RedirectAutomatically" class="form-check-label"></label>
                 </div>
             </div>

@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.7.2
+
+Small release fixing bugs introduced in 1.0.7.1:
+
+### Bug fixes:
+
+* The date in invoice page were not showing anymore the browser date time, but the server date time. (@NicolasDorier)
+* Apps on root where not working anymore, redirecting to login page rather than showing the app (see #2414) (@bolatovumar)
+
 ## 1.0.7.1
 
 ### Improvements:

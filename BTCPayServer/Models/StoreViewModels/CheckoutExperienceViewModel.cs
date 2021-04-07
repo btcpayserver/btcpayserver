@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using BTCPayServer.Data;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -44,6 +43,9 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Include lightning invoice fallback to on-chain BIP21 payment url")]
         public bool OnChainWithLnInvoiceFallback { get; set; }
+
+        [Display(Name = "Only enable the payment method after user explicitly chooses it")]
+        public bool LazyPaymentMethods { get; set; }
 
         [Display(Name = "Redirect invoice to redirect url automatically after paid")]
         public bool RedirectAutomatically { get; set; }

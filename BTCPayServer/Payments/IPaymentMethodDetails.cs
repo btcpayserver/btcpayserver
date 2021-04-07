@@ -16,5 +16,7 @@ namespace BTCPayServer.Payments
         /// </summary>
         /// <returns></returns>
         decimal GetNextNetworkFee();
+
+        bool Activated {get;set;}
     }
 }

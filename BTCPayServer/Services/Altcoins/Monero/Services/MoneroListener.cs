@@ -121,6 +121,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
             var paymentMethod = invoice.GetPaymentMethod(payment.Network, MoneroPaymentType.Instance);
             if (paymentMethod != null &&
                 paymentMethod.GetPaymentMethodDetails() is MoneroLikeOnChainPaymentMethodDetails monero &&
+                monero.Activated && 
                 monero.GetPaymentDestination() == paymentData.GetDestination() &&
                 paymentMethod.Calculate().Due > Money.Zero)
             {
@@ -363,7 +364,8 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
             }
 
             var invoices = await _invoiceRepository.GetInvoices(new InvoiceQuery() { InvoiceId = invoiceIds });
-            invoices = invoices.Where(entity => entity.GetPaymentMethod(new PaymentMethodId(cryptoCode, MoneroPaymentType.Instance)) != null).ToArray();
+            invoices = invoices.Where(entity => entity.GetPaymentMethod(new PaymentMethodId(cryptoCode, MoneroPaymentType.Instance))
+                ?.GetPaymentMethodDetails().Activated is true).ToArray();
             _logger.LogInformation($"Updating pending payments for {cryptoCode} in {string.Join(',', invoiceIds)}");
             await UpdatePaymentStates(cryptoCode, invoices);
         }

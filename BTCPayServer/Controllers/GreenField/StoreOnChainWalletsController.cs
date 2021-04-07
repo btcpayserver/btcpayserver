@@ -44,6 +44,7 @@ namespace BTCPayServer.Controllers.GreenField
         private readonly DelayedTransactionBroadcaster _delayedTransactionBroadcaster;
         private readonly EventAggregator _eventAggregator;
         private readonly WalletReceiveService _walletReceiveService;
+        private readonly IFeeProviderFactory _feeProviderFactory;
 
         public StoreOnChainWalletsController(
             IAuthorizationService authorizationService,
@@ -57,7 +58,8 @@ namespace BTCPayServer.Controllers.GreenField
             PayjoinClient payjoinClient,
             DelayedTransactionBroadcaster delayedTransactionBroadcaster,
             EventAggregator eventAggregator, 
-            WalletReceiveService walletReceiveService)
+            WalletReceiveService walletReceiveService,
+            IFeeProviderFactory feeProviderFactory)
         {
             _authorizationService = authorizationService;
             _btcPayWalletProvider = btcPayWalletProvider;
@@ -71,6 +73,7 @@ namespace BTCPayServer.Controllers.GreenField
             _delayedTransactionBroadcaster = delayedTransactionBroadcaster;
             _eventAggregator = eventAggregator;
             _walletReceiveService = walletReceiveService;
+            _feeProviderFactory = feeProviderFactory;
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -84,6 +87,21 @@ namespace BTCPayServer.Controllers.GreenField
             return Ok(new OnChainWalletOverviewData()
             {
                 Balance = await wallet.GetBalance(derivationScheme.AccountDerivation)
+            });
+        }
+        
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/feerate")]
+        public async Task<IActionResult> GetOnChainFeeRate(string storeId, string cryptoCode, int? blockTarget = null)
+        {
+            if (IsInvalidWalletRequest(cryptoCode, out BTCPayNetwork network,
+                out DerivationSchemeSettings derivationScheme, out IActionResult actionResult)) return actionResult;
+
+            var feeRateTarget = blockTarget?? Store.GetStoreBlob().RecommendedFeeBlockTarget;
+            return Ok(new OnChainWalletFeeRateData()
+            {
+                FeeRate =  await _feeProviderFactory.CreateFeeProvider(network)
+                    .GetFeeRateAsync(feeRateTarget),
             });
         }
         
@@ -332,7 +350,7 @@ namespace BTCPayServer.Controllers.GreenField
                     "You are sending your entire balance, you should subtract the fees from a destination", this);
             }
 
-            var minRelayFee = this._nbXplorerDashboard.Get(network.CryptoCode).Status.BitcoinStatus?.MinRelayTxFee ??
+            var minRelayFee = _nbXplorerDashboard.Get(network.CryptoCode).Status.BitcoinStatus?.MinRelayTxFee ??
                               new FeeRate(1.0m);
             if (request.FeeRate != null && request.FeeRate < minRelayFee)
             {

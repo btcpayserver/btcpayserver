@@ -249,7 +249,7 @@ namespace BTCPayServer.Payments.PayJoin
             {
                 var walletReceiveMatch =
                     _walletReceiveService.GetByScriptPubKey(network.CryptoCode, output.ScriptPubKey);
-                if (walletReceiveMatch != null)
+                if (walletReceiveMatch is null)
                 {
 
                     var key = output.ScriptPubKey.Hash + "#" + network.CryptoCode.ToUpperInvariant();
@@ -263,11 +263,11 @@ namespace BTCPayServer.Payments.PayJoin
                 }
                 else
                 {
-                    var store = await _storeRepository.FindStore(walletReceiveMatch.Value.Key.StoreId);
+                    var store = await _storeRepository.FindStore(walletReceiveMatch.Item1.StoreId);
                     derivationSchemeSettings = store.GetDerivationSchemeSettings(_btcPayNetworkProvider,
-                        walletReceiveMatch.Value.Key.CryptoCode);
+                        walletReceiveMatch.Item1.CryptoCode);
                     
-                    walletId = walletReceiveMatch.Value.Key;
+                    walletId = walletReceiveMatch.Item1;
                 }
                 
                 if (derivationSchemeSettings is null)
@@ -311,8 +311,8 @@ namespace BTCPayServer.Payments.PayJoin
                 {
                     paidSomething = true;
                     due = Money.Zero;
-                    paymentAddress = walletReceiveMatch.Value.Value.Address;
-                    paymentAddressIndex = walletReceiveMatch.Value.Value.KeyPath;
+                    paymentAddress = walletReceiveMatch.Item2.Address;
+                    paymentAddressIndex = walletReceiveMatch.Item2.KeyPath;
                 }
 
 

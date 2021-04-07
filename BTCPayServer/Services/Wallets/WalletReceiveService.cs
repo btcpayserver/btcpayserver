@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -129,11 +130,18 @@ namespace BTCPayServer.Services.Wallets
             return Task.CompletedTask;
         }
 
-        public KeyValuePair<WalletId, KeyPathInformation>? GetByScriptPubKey(string cryptoCode,Script script)
+        public Tuple<WalletId, KeyPathInformation>? GetByScriptPubKey(string cryptoCode,Script script)
         {
-            return _walletReceiveState.FirstOrDefault(pair =>
+            var match =  _walletReceiveState.Where(pair =>
                 pair.Key.CryptoCode.Equals(cryptoCode, StringComparison.InvariantCulture) &&
                 pair.Value.ScriptPubKey == script);
+            if (match.Any())
+            {
+                var f =match.First();
+                return new Tuple<WalletId, KeyPathInformation>(f.Key, f.Value);
+            }
+
+            return null;
         }
     }
 }

@@ -363,13 +363,19 @@ namespace BTCPayServer.Controllers
             if (network == null)
                 return NotFound();
             var address = _walletReceiveService.Get(walletId)?.Address;
-            var pjEnabled = paymentMethod.IsHotWallet && 
+            var allowedPayjoin = paymentMethod.IsHotWallet && CurrentStore.GetStoreBlob().PayJoinEnabled;
+            var bip21 = address is null ? null : network.GenerateBIP21(address.ToString(), null);
+            if (allowedPayjoin)
+            {
+                bip21 +=
+                    $"?{PayjoinClient.BIP21EndpointKey}={Request.GetAbsoluteUri(Url.Action("Submit", "PayJoinEndpoint", new {walletId.CryptoCode}))}";
+            }
             return View(new WalletReceiveViewModel()
             {
                 CryptoCode = walletId.CryptoCode,
                 Address = address?.ToString(),
                 CryptoImage = GetImage(paymentMethod.PaymentId, network),
-                PaymentLink = address is null? null: network.GenerateBIP21( address.ToString(), null)
+                PaymentLink = bip21
             });
         }
 
@@ -723,7 +729,7 @@ namespace BTCPayServer.Controllers
                 {
                     new WalletSendModel.TransactionOutput()
                     {
-                        Amount = uriBuilder.Amount.ToDecimal(MoneyUnit.BTC),
+                        Amount = uriBuilder.Amount?.ToDecimal(MoneyUnit.BTC),
                         DestinationAddress = uriBuilder.Address.ToString(),
                         SubtractFeesFromOutput = false
                     }

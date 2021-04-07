@@ -1,5 +1,5 @@
+#nullable enable
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -83,13 +83,13 @@ namespace BTCPayServer.Controllers.GreenField
         [HttpPost("~/api/v1/users")]
         public async Task<IActionResult> CreateUser(CreateApplicationUserRequest request, CancellationToken cancellationToken = default)
         {
-            if (request?.Email is null)
+            if (request.Email is null)
                 ModelState.AddModelError(nameof(request.Email), "Email is missing");
-            if (!string.IsNullOrEmpty(request?.Email) && !Validation.EmailValidator.IsEmail(request.Email))
+            if (!string.IsNullOrEmpty(request.Email) && !Validation.EmailValidator.IsEmail(request.Email))
             {
                 ModelState.AddModelError(nameof(request.Email), "Invalid email");
             }
-            if (request?.Password is null)
+            if (request.Password is null)
                 ModelState.AddModelError(nameof(request.Password), "Password is missing");
 
             if (!ModelState.IsValid)
@@ -168,8 +168,10 @@ namespace BTCPayServer.Controllers.GreenField
                 if (!anyAdmin)
                 {
                     var settings = await _settingsRepository.GetSettingAsync<ThemeSettings>();
-                    settings.FirstRun = false;
-                    await _settingsRepository.UpdateSetting(settings);
+                    if (settings != null) {
+                        settings.FirstRun = false;
+                        await _settingsRepository.UpdateSetting(settings);
+                    }
 
                     await _settingsRepository.FirstAdminRegistered(policies, _options.UpdateUrl != null, _options.DisableRegistration);
                 }

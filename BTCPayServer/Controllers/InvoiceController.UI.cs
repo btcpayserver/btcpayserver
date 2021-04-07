@@ -14,6 +14,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Filters;
+using BTCPayServer.Logging;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
@@ -503,9 +504,9 @@ namespace BTCPayServer.Controllers
             {
                 if (!isDefaultPaymentId)
                     return null;
-                var paymentMethodTemp = invoice.GetPaymentMethods()
-                                               .Where(c => paymentMethodId.CryptoCode == c.GetId().CryptoCode)
-                                               .FirstOrDefault();
+                var paymentMethodTemp = invoice
+                    .GetPaymentMethods()
+                    .FirstOrDefault(c => paymentMethodId.CryptoCode == c.GetId().CryptoCode);
                 if (paymentMethodTemp == null)
                     paymentMethodTemp = invoice.GetPaymentMethods().First();
                 network = paymentMethodTemp.Network;
@@ -514,6 +515,12 @@ namespace BTCPayServer.Controllers
 
             var paymentMethod = invoice.GetPaymentMethod(paymentMethodId);
             var paymentMethodDetails = paymentMethod.GetPaymentMethodDetails();
+            if (!paymentMethodDetails.Activated)
+            {
+                await _InvoiceRepository.ActivateInvoicePaymentMethod(_EventAggregator, _NetworkProvider,
+                    _paymentMethodHandlerDictionary, store, invoice, paymentMethod.GetId());
+                return await GetInvoiceModel(invoiceId, paymentMethodId, lang);
+            }
             var dto = invoice.EntityToDTO();
             var storeBlob = store.GetStoreBlob();
             var accounting = paymentMethod.Calculate();
@@ -529,6 +536,7 @@ namespace BTCPayServer.Controllers
             var divisibility = _CurrencyNameTable.GetNumberFormatInfo(paymentMethod.GetId().CryptoCode, false)?.CurrencyDecimalDigits;
             var model = new PaymentModel()
             {
+                Activated = paymentMethodDetails.Activated,
                 CryptoCode = network.CryptoCode,
                 RootPath = this.Request.PathBase.Value.WithTrailingSlash(),
                 OrderId = invoice.Metadata.OrderId,

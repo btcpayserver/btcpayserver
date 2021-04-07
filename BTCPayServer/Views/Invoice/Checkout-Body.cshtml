@@ -149,7 +149,7 @@
             </div>
         </div>
     </line-items>
-    <component v-if="srvModel.uiSettings && srvModel.uiSettings.checkoutHeaderVueComponentName"
+    <component v-if="srvModel.uiSettings && srvModel.uiSettings.checkoutHeaderVueComponentName && srvModel.activated"
                v-bind:srv-model="srvModel"
                v-bind:is="srvModel.uiSettings.checkoutHeaderVueComponentName">
     </component>
@@ -184,7 +184,7 @@
         </form>
     </div>
     <div v-if="showPaymentUI">
-        <component v-if="srvModel.uiSettings && srvModel.uiSettings.checkoutBodyVueComponentName"
+        <component v-if="srvModel.uiSettings && srvModel.uiSettings.checkoutBodyVueComponentName && srvModel.activated"
                    v-bind:srv-model="srvModel"
                    v-bind:is="srvModel.uiSettings.checkoutBodyVueComponentName">
         </component>

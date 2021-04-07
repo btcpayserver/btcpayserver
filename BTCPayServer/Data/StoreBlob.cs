@@ -38,6 +38,7 @@ namespace BTCPayServer.Data
         public bool LightningAmountInSatoshi { get; set; }
         public bool LightningPrivateRouteHints { get; set; }
         public bool OnChainWithLnInvoiceFallback { get; set; }
+        public bool LazyPaymentMethods { get; set; }
         public bool RedirectAutomatically { get; set; }
         public bool ShowRecommendedFee { get; set; }
         public int RecommendedFeeBlockTarget { get; set; }

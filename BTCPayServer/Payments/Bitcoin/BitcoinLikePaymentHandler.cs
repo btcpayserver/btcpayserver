@@ -64,16 +64,24 @@ namespace BTCPayServer.Payments.Bitcoin
             model.PaymentMethodName = GetPaymentMethodName(network);
 
             var lightningFallback = "";
-            if (network.SupportLightning && storeBlob.OnChainWithLnInvoiceFallback)
+            if (model.Activated && network.SupportLightning && storeBlob.OnChainWithLnInvoiceFallback)
             {
                 var lightningInfo = invoiceResponse.CryptoInfo.FirstOrDefault(a =>
                     a.GetpaymentMethodId() == new PaymentMethodId(model.CryptoCode, PaymentTypes.LightningLike));
-                if (!String.IsNullOrEmpty(lightningInfo?.PaymentUrls?.BOLT11))
+                if (!string.IsNullOrEmpty(lightningInfo?.PaymentUrls?.BOLT11))
                     lightningFallback = "&" + lightningInfo.PaymentUrls.BOLT11.Replace("lightning:", "lightning=", StringComparison.OrdinalIgnoreCase);
             }
 
-            model.InvoiceBitcoinUrl = cryptoInfo.PaymentUrls.BIP21 + lightningFallback;
-            model.InvoiceBitcoinUrlQR = model.InvoiceBitcoinUrl;
+            if (model.Activated)
+            {
+                model.InvoiceBitcoinUrl = (cryptoInfo.PaymentUrls?.BIP21 ?? "") + lightningFallback;
+                model.InvoiceBitcoinUrlQR = model.InvoiceBitcoinUrl;
+            }
+            else
+            {
+                model.InvoiceBitcoinUrl = "";
+                model.InvoiceBitcoinUrlQR = "";
+            }
 
             // Most wallets still don't support BITCOIN: schema, so we're leaving this for better days
             // Ref: https://github.com/btcpayserver/btcpayserver/pull/2060#issuecomment-723828348
@@ -145,12 +153,19 @@ namespace BTCPayServer.Payments.Bitcoin
             DerivationSchemeSettings supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store,
             BTCPayNetwork network, object preparePaymentObject)
         {
+            if (preparePaymentObject is null)
+            {
+                return new BitcoinLikeOnChainPaymentMethod()
+                {
+                    Activated = false
+                };
+            }
             if (!_ExplorerProvider.IsAvailable(network))
                 throw new PaymentMethodUnavailableException($"Full node not available");
             var prepare = (Prepare)preparePaymentObject;
             var onchainMethod = new BitcoinLikeOnChainPaymentMethod();
             var blob = store.GetStoreBlob();
-
+            onchainMethod.Activated = true;
             // TODO: this needs to be refactored to move this logic into BitcoinLikeOnChainPaymentMethod
             // This is likely a constructor code
             onchainMethod.NetworkFeeMode = blob.NetworkFeeMode;

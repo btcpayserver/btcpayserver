@@ -198,7 +198,7 @@ namespace BTCPayServer.Controllers.GreenField
             }
 
             // We can safely delete the user if it's not an admin user
-            if (!_userService.IsRoleAdmin(await _userManager.GetRolesAsync(user)))
+            if (!(await _userService.IsAdminUser(user)))
             {
                 await _userService.DeleteUserAndAssociatedData(user);
 

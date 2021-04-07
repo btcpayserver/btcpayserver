@@ -34,6 +34,11 @@ namespace BTCPayServer.Services
             _storeRepository = storeRepository;
         }
 
+        public async Task<bool> IsAdminUser(ApplicationUser user) 
+        {
+            return IsRoleAdmin(await _userManager.GetRolesAsync(user));
+        }
+
         public async Task DeleteUserAndAssociatedData(ApplicationUser user) 
         {
             var userId = user.Id;

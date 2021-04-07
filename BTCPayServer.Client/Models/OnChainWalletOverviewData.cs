@@ -5,7 +5,6 @@ namespace BTCPayServer.Client.Models
 {
     public class OnChainWalletOverviewData
     {
-        
         [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal Balance { get; set; }
     }

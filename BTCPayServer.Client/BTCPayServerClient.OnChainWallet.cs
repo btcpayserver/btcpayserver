@@ -19,6 +19,19 @@ namespace BTCPayServer.Client
                     CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/Onchain/{cryptoCode}/wallet"), token);
             return await HandleResponse<OnChainWalletOverviewData>(response);
         }
+        public virtual async Task<OnChainWalletFeeRateData> GetOnChainFeeRate(string storeId, string cryptoCode, int? blockTarget = null,
+            CancellationToken token = default)
+        {
+            Dictionary<string, object> queryParams = new Dictionary<string, object>();
+            if (blockTarget != null)
+            {
+                queryParams.Add("blockTarget",blockTarget);
+            }
+            var response =
+                await _httpClient.SendAsync(
+                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/Onchain/{cryptoCode}/wallet/feeRate", queryParams), token);
+            return await HandleResponse<OnChainWalletFeeRateData>(response);
+        }
         
         public virtual async Task<OnChainWalletAddressData> GetOnChainWalletReceiveAddress(string storeId, string cryptoCode, bool forceGenerate = false,
             CancellationToken token = default)

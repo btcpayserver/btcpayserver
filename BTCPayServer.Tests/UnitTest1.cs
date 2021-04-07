@@ -873,7 +873,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Fast", "Fast")]
         public async Task CanEnumerateTorServices()
         {

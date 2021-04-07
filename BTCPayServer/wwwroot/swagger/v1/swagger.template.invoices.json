@@ -746,75 +746,135 @@
                 "type": "object",
                 "additionalProperties": true,
                 "description": "Additional information around the invoice that can be supplied. The mentioned properties are all optional and you can introduce any json format you wish.",
-                "properties": {
-                    "orderId": {
-                        "type": "string",
-                        "nullable": true,
-                        "description": "You can use this property to store the ID of an external system. We allow you to search in the invoice list based on this ID."
-                    },
-                    "posData": {
-                        "oneOf": [
-                            {
-                                "$ref": "#/components/schemas/InvoiceMetadataPosString"
-                            },
-                            {
-                                "$ref": "#/components/schemas/InvoiceMetadataPosObject"
+                "anyOf": [
+                    {
+                        "properties": {
+                            "orderId": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "You can use this property to store the ID of an external system. We allow you to search in the invoice list based on this ID."
                             }
-                        ]
+                        }
                     },
-                    "buyerName": {
-                        "type": "string",
-                        "nullable": true
+                    {
+                        "properties": {
+                            "posData": {
+                                "oneOf": [
+                                    {
+                                        "$ref": "#/components/schemas/InvoiceMetadataPosString"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/InvoiceMetadataPosObject"
+                                    }
+                                ]
+                            }
+                        }
                     },
-                    "buyerEmail": {
-                        "type": "string",
-                        "nullable": true
+                    {
+                        "properties": {
+                            "buyerName": {
+                                "type": "string",
+                                "nullable": true
+                            }
+                        }
                     },
-                    "buyerCountry": {
-                        "type": "string",
-                        "nullable": true
+                    {
+                        "properties": {
+                            "buyerEmail": {
+                                "type": "string",
+                                "nullable": true
+                            }
+                        }
                     },
-                    "buyerZip": {
-                        "type": "string",
-                        "nullable": true
+                    {
+                        "properties": {
+                            "buyerCountry": {
+                                "type": "string",
+                                "nullable": true
+                            }
+                        }
                     },
-                    "buyerState": {
-                        "type": "string",
-                        "nullable": true
+                    {
+                        "properties": {
+                            "buyerZip": {
+                                "type": "string",
+                                "nullable": true
+                            }
+                        }
                     },
-                    "buyerCity": {
-                        "type": "string",
-                        "nullable": true
+                    {
+                        "properties": {
+                            "buyerState": {
+                                "type": "string",
+                                "nullable": true
+                            }
+                        }
                     },
-                    "buyerAddress1": {
-                        "type": "string",
-                        "nullable": true
+                    {
+                        "properties": {
+                            "buyerCity": {
+                                "type": "string",
+                                "nullable": true
+                            }
+                        }
                     },
-                    "buyerAddress2": {
-                        "type": "string",
-                        "nullable": true
+                    {
+                        "properties": {
+                            "buyerAddress1": {
+                                "type": "string",
+                                "nullable": true
+                            }
+                        }
                     },
-                    "buyerPhone": {
-                        "type": "string",
-                        "nullable": true
+                    {
+                        "properties": {
+                            "buyerAddress2": {
+                                "type": "string",
+                                "nullable": true
+                            }
+                        }
                     },
-                    "itemDesc": {
-                        "type": "string",
-                        "nullable": true
+                    {
+                        "properties": {
+                            "buyerPhone": {
+                                "type": "string",
+                                "nullable": true
+                            }
+                        }
                     },
-                    "itemCode": {
-                        "type": "string",
-                        "nullable": true
+                    {
+                        "properties": {
+                            "itemDesc": {
+                                "type": "string",
+                                "nullable": true
+                            }
+                        }
                     },
-                    "physical": {
-                        "type": "string",
-                        "nullable": true
+                    {
+                        "properties": {
+                            "itemCode": {
+                                "type": "string",
+                                "nullable": true
+                            }
+                        }
                     },
-                    "taxIncluded": {
-                        "type": "number",
-                        "nullable": true
+                    {
+                        "properties": {
+                            "physical": {
+                                "type": "string",
+                                "nullable": true
+                            }
+                        }
+                    },
+                    {
+                        "properties": {
+                            "taxIncluded": {
+                                "type": "number",
+                                "nullable": true
+                            }
+                        }
                     }
-                }
+                ]
             },
             "CreateInvoiceRequest": {
                 "type": "object",
@@ -849,9 +909,7 @@
                 "additionalProperties": false,
                 "properties": {
                     "metadata": {
-                        "type": "object",
-                        "nullable": true,
-                        "description": "Additional information around the invoice that can be supplied."
+                        "$ref": "#/components/schemas/InvoiceMetadata"
                     }
                 }
             },

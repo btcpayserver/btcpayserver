@@ -362,13 +362,14 @@ namespace BTCPayServer.Controllers
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId?.CryptoCode);
             if (network == null)
                 return NotFound();
-
             var address = _walletReceiveService.Get(walletId)?.Address;
+            var pjEnabled = paymentMethod.IsHotWallet && 
             return View(new WalletReceiveViewModel()
             {
                 CryptoCode = walletId.CryptoCode,
                 Address = address?.ToString(),
-                CryptoImage = GetImage(paymentMethod.PaymentId, network)
+                CryptoImage = GetImage(paymentMethod.PaymentId, network),
+                PaymentLink = address is null? null: network.GenerateBIP21( address.ToString(), null)
             });
         }
 
@@ -1177,6 +1178,7 @@ namespace BTCPayServer.Controllers
         public string CryptoImage { get; set; }
         public string CryptoCode { get; set; }
         public string Address { get; set; }
+        public string PaymentLink { get; set; }
     }
 
 

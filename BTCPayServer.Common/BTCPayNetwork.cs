@@ -123,7 +123,7 @@ namespace BTCPayServer
 
         public virtual string GenerateBIP21(string cryptoInfoAddress, Money cryptoInfoDue)
         {
-            return $"{UriScheme}:{cryptoInfoAddress}?amount={cryptoInfoDue.ToString(false, true)}";
+            return $"{UriScheme}:{cryptoInfoAddress}{(cryptoInfoDue is null? string.Empty: $"?amount={cryptoInfoDue.ToString(false, true)}")}";
         }
 
         public virtual List<TransactionInformation> FilterValidTransactions(List<TransactionInformation> transactionInformationSet)

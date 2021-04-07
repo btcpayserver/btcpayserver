@@ -54,6 +54,12 @@
                                 <button type="button" class="btn btn-outline-secondary" data-clipboard-confirm>Copy address</button>
                             </div>
                         </div>
+                        <div class="input-group" data-clipboard="@Model.PaymentLink">
+                            <input type="text" class="form-control" style="cursor: copy" readonly="readonly" value="@Model.PaymentLink" id="address"/>
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-outline-secondary" data-clipboard-confirm>Copy link</button>
+                            </div>
+                        </div>
                         <div class="row mt-4">
                             <div class="col-12 col-sm-6">
                                 <button type="submit" name="command" value="generate-new-address" class="btn btn-primary w-100">Generate another address</button>

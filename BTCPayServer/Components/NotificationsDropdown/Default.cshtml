@@ -18,7 +18,7 @@
             <div class="d-flex align-items-center justify-content-between py-3 px-4 border-bottom border-light"> 
                 <h5 class="m-0">Notifications</h5>
                 <form asp-controller="Notifications" asp-action="MarkAllAsSeen" asp-route-returnUrl="@Context.Request.GetCurrentPathWithQueryString()" method="post">
-                    <button class="btn btn-link p-0 font-weight-semibold" type="submit">Mark all as seen</button>
+                    <button class="btn btn-link p-0" type="submit">Mark all as seen</button>
                 </form>
             </div>
             @foreach (var notif in Model.Last5)
@@ -29,7 +29,7 @@
                     </div>
 
                     <div class="notification-item__content">
-                        <div class="text-left text-wrap font-weight-semibold">
+                        <div class="text-left text-wrap">
                             @notif.Body
                         </div>
                         <div class="text-left d-flex">
@@ -39,7 +39,7 @@
                 </a>
             }
             <div class="p-3"> 
-                <a class="font-weight-semibold" asp-controller="Notifications" asp-action="Index">View all</a>
+                <a asp-controller="Notifications" asp-action="Index">View all</a>
             </div>
         </div>
     </li>

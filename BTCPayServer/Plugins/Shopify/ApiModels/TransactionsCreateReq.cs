@@ -1,4 +1,4 @@
-namespace BTCPayServer.Services.Shopify.ApiModels
+namespace BTCPayServer.Plugins.Shopify.ApiModels
 {
     public class TransactionsCreateReq
     {

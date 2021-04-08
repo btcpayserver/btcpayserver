@@ -1,11 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using BTCPayServer.Services.Shopify.ApiModels;
-using BTCPayServer.Services.Shopify.ApiModels.DataHolders;
+using BTCPayServer.Plugins.Shopify.ApiModels;
 
-namespace BTCPayServer.Services.Shopify
+namespace BTCPayServer.Plugins.Shopify
 {
     public class OrderTransactionRegisterLogic
     {

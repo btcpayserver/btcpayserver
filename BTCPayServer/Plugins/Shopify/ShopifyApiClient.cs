@@ -4,11 +4,11 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using BTCPayServer.Services.Shopify.ApiModels;
+using BTCPayServer.Plugins.Shopify.ApiModels;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace BTCPayServer.Services.Shopify
+namespace BTCPayServer.Plugins.Shopify
 {
     public class ShopifyApiClient
     {
@@ -127,11 +127,11 @@ namespace BTCPayServer.Services.Shopify
             return strResp?.Contains(orderId, StringComparison.OrdinalIgnoreCase) == true;
         }
     }
-}
 
-public class ShopifyApiClientCredentials
-{
-    public string ShopName { get; set; }
-    public string ApiKey { get; set; }
-    public string ApiPassword { get; set; }
+    public class ShopifyApiClientCredentials
+    {
+        public string ShopName { get; set; }
+        public string ApiKey { get; set; }
+        public string ApiPassword { get; set; }
+    }
 }

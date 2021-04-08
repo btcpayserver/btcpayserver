@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using BTCPayServer.JsonConverters;
 using NBitcoin;
@@ -14,7 +15,11 @@ namespace BTCPayServer.Client.Models
         [JsonConverter(typeof(OutpointJsonConverter))]
         public OutPoint Outpoint { get; set; }
         public string Link { get; set; }
-
         public Dictionary<string, LabelData> Labels { get; set; }
+        [JsonConverter(typeof(DateTimeToUnixTimeConverter))]
+        public DateTimeOffset Timestamp { get; set; }
+        [JsonConverter(typeof(KeyPathJsonConverter))]
+        public KeyPath KeyPath { get; set; }
+        public string Address { get; set; }
     }
 }

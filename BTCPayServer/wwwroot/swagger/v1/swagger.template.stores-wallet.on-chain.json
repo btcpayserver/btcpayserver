@@ -511,7 +511,17 @@
                     "balance": {
                         "type": "string",
                         "format": "decimal",
-                        "description": "The current balance of the wallet"
+                        "description": "The total current balance of the wallet"
+                    },
+                    "unconfirmedBalance": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The current unconfirmed balance of the wallet"
+                    },
+                    "confirmedBalance": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The current confirmed balance of the wallet"
                     }
                 }
             },
@@ -654,6 +664,26 @@
                         "type": "string",
                         "format": "{txid}:{outputIndex}",
                         "description": "outpoint of this utxo"
+                    },
+                    "timestamp": {
+                        "description": "The time of the utxo",
+                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
+                    },
+                    "keyPath": {
+                        "type": "string",
+                        "format": "keypath",
+                        "description": "the derivation path in relation to the HD account"
+                    },
+                    "address": {
+                        "type": "string",
+                        "description": "The wallet address of this utxo"
+                    },
+                    "labels": {
+                        "description": "Labels linked to this transaction",
+                        "type": "object",
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/LabelData"
+                        }
                     }
                 }
             },

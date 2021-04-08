@@ -2,15 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
-using Amazon.Runtime.Internal.Util;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.JsonConverters;
 using BTCPayServer.Models;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
-using Microsoft.AspNetCore.Http.Extensions;
-using Microsoft.CodeAnalysis;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitpayClient;
@@ -18,11 +15,10 @@ using NBXplorer;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
-using YamlDotNet.Core.Tokens;
-using YamlDotNet.Serialization.NamingConventions;
 
 namespace BTCPayServer.Services.Invoices
 {
+
     public class InvoiceMetadata
     {
         public static readonly JsonSerializer MetadataSerializer;
@@ -64,7 +60,37 @@ namespace BTCPayServer.Services.Invoices
 
         [JsonProperty(PropertyName = "taxIncluded", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public decimal? TaxIncluded { get; set; }
-        public string PosData { get; set; }
+
+        [JsonIgnore]
+        public string PosData
+        {
+            get
+            {
+                return PosRawData?.ToString();
+            }
+            set
+            {
+                if (value is null)
+                {
+                    PosRawData = JValue.CreateNull();
+                }
+                else
+                {
+                    try
+                    {
+                        PosRawData = JToken.Parse(value);
+                    }
+                    catch (Exception )
+                    {
+                        PosRawData = JToken.FromObject(value);
+                    }
+                }
+               
+            }
+        }
+
+        [JsonProperty(PropertyName = "posData")]
+        public JToken PosRawData { get; set; }
         [JsonExtensionData]
         public IDictionary<string, JToken> AdditionalData { get; set; }
 

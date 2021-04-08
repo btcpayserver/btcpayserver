@@ -11,7 +11,9 @@
             <div asp-validation-summary="All" class="text-danger"></div>
         }
 
-        <partial name="Integrations/Shopify"/>
+        <ul class="list-group mb-3">
+            <vc:ui-extension-point location="store-integrations-list"></vc:ui-extension-point>
+        </ul>
 
         <h4 class="mt-5 mb-3">Other Integrations</h4>
         <p>Take a look at documentation for the list of other integrations we support and the directions on how to enable them:</p>

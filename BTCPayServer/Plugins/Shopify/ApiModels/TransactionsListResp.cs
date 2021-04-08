@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using BTCPayServer.Services.Shopify.ApiModels.DataHolders;
+using BTCPayServer.Plugins.Shopify.ApiModels.DataHolders;
 
-namespace BTCPayServer.Services.Shopify.ApiModels
+namespace BTCPayServer.Plugins.Shopify.ApiModels
 {
     public class TransactionsListResp
     {

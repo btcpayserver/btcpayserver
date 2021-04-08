@@ -1,7 +1,8 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using Newtonsoft.Json;
 
-namespace BTCPayServer.Services.Shopify.Models
+namespace BTCPayServer.Plugins.Shopify.Models
 {
     public class ShopifySettings
     {
@@ -18,5 +19,14 @@ namespace BTCPayServer.Services.Shopify.Models
                 !string.IsNullOrWhiteSpace(Password);
         }
         public DateTimeOffset? IntegratedAt { get; set; }
+
+        [JsonIgnore]
+        public string ShopifyUrl
+        {
+            get
+            {
+                return ShopName?.Contains(".") is true ? $"https://{ShopName}.myshopify.com" : ShopName;
+            }
+        }
     }
 }

@@ -1,8 +1,15 @@
-@model IntegrationsViewModel
+@using BTCPayServer.Views.Stores
+@model BTCPayServer.Plugins.Shopify.Models.ShopifySettings
 @{
-    var shopify = Model.Shopify;
-    var shopifyCredsSet = shopify?.IntegratedAt.HasValue is true;
-    var shopifyUrl = shopify is null? null:  !shopify?.ShopName?.Contains(".") is true ? $"https://{shopify.ShopName}.myshopify.com" : shopify.ShopName;
+    
+    Layout = "../Shared/_NavLayout.cshtml";
+    
+    ViewData["NavPartialName"] = "../Stores/_Nav";
+    ViewData.SetActivePageAndTitle(StoreNavPages.Integrations, "Integrations");
+    
+    
+    var shopifyCredsSet = Model?.IntegratedAt.HasValue is true;
+    var shopifyUrl = Model?.ShopifyUrl;
 }
 <form method="post" id="shopifyForm">
     <h4 class="mb-3">
@@ -25,43 +32,43 @@
     else
     {
         <div class="form-group">
-            <label asp-for="Shopify.ShopName"></label>
+            <label asp-for="ShopName"></label>
             <div class="input-group">
-                @if (!Model.Shopify?.ShopName?.Contains(".") is true)
+                @if (!Model?.ShopName?.Contains(".") is true)
                 {
                     <div class="input-group-prepend">
                         <span class="input-group-text">https://</span>
                     </div>
                 }
-                <input asp-for="Shopify.ShopName" class="form-control" readonly="@shopifyCredsSet" />
+                <input asp-for="ShopName" class="form-control" readonly="@shopifyCredsSet" />
 
-                @if (!Model.Shopify?.ShopName?.Contains(".") is true)
+                @if (!Model?.ShopName?.Contains(".") is true)
                 {
                     <div class="input-group-append">
                         <span class="input-group-text">.myshopify.com</span>
                     </div>
                 }
             </div>
-            <span asp-validation-for="Shopify.ShopName" class="text-danger"></span>
+            <span asp-validation-for="ShopName" class="text-danger"></span>
         </div>
 
         <div class="form-group">
-            <label asp-for="Shopify.ApiKey"></label>
-            <input asp-for="Shopify.ApiKey" class="form-control" readonly="@shopifyCredsSet" />
-            <span asp-validation-for="Shopify.ApiKey" class="text-danger"></span>
+            <label asp-for="ApiKey"></label>
+            <input asp-for="ApiKey" class="form-control" readonly="@shopifyCredsSet" />
+            <span asp-validation-for="ApiKey" class="text-danger"></span>
         </div>
 
         <div class="form-group">
-            <label asp-for="Shopify.Password"></label>
-            <input asp-for="Shopify.Password" class="form-control" type="password" value="@Model.Shopify?.Password" readonly="@shopifyCredsSet" />
-            <span asp-validation-for="Shopify.Password" class="text-danger"></span>
+            <label asp-for="Password"></label>
+            <input asp-for="Password" class="form-control" type="password" value="@Model?.Password" readonly="@shopifyCredsSet" />
+            <span asp-validation-for="Password" class="text-danger"></span>
         </div>
         <div class="alert alert-warning">
             <p>
                 In Shopify please paste following script at <a href="@shopifyUrl/admin/settings/checkout#PolarisTextField1" target="_blank" class="font-weight-bold"> Settings &gt; Checkout &gt; Order Processing &gt; Additional Scripts</a>
             </p>
             <kbd style="display: block; word-break: break-all;">
-                @($"<script src='{Url.Action("ShopifyJavascript", "Stores", new {storeId = Context.GetRouteValue("storeId")}, Context.Request.Scheme)}'></script>")
+                @($"<script src='{Url.Action("ShopifyJavascript", "Shopify", new {storeId = Context.GetRouteValue("storeId")}, Context.Request.Scheme)}'></script>")
             </kbd>
         </div>
         <p class="alert alert-warning">
@@ -69,8 +76,8 @@
         </p>
 
         <p class="alert alert-success">
-            Orders on <b>@shopify.ShopName</b>.myshopify.com will be marked as paid on successful invoice payment.
-            Started: @shopify.IntegratedAt.Value.ToBrowserDate()
+            Orders on <b>@Model.ShopName</b>.myshopify.com will be marked as paid on successful invoice payment.
+            Started: @Model.IntegratedAt.Value.ToBrowserDate()
         </p>
 
         <button name="command" type="submit" class="btn btn-danger" value="ShopifyClearCredentials">

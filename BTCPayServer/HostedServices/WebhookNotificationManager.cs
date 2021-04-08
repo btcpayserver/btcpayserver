@@ -1,36 +1,23 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Net.NetworkInformation;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using Amazon.Runtime.Internal;
-using Amazon.S3.Model;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Logging;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
-using Microsoft.CodeAnalysis.Operations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.DataEncoders;
-using NBitcoin.Secp256k1;
-using NBitpayClient;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
-using Org.BouncyCastle.Ocsp;
-using TwentyTwenty.Storage;
 
 namespace BTCPayServer.HostedServices
 {

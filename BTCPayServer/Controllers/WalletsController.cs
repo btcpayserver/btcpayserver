@@ -27,6 +27,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using BTCPayServer.BIP78.Sender;
+using BTCPayServer.Payments.PayJoin;
 using NBitcoin.DataEncoders;
 using NBXplorer;
 using NBXplorer.DerivationStrategy;
@@ -368,7 +369,7 @@ namespace BTCPayServer.Controllers
             if (allowedPayjoin)
             {
                 bip21 +=
-                    $"?{PayjoinClient.BIP21EndpointKey}={Request.GetAbsoluteUri(Url.Action("Submit", "PayJoinEndpoint", new {walletId.CryptoCode}))}";
+                    $"?{PayjoinClient.BIP21EndpointKey}={Request.GetAbsoluteUri(Url.Action(nameof(PayJoinEndpointController.Submit), "PayJoinEndpoint", new {walletId.CryptoCode}))}";
             }
             return View(new WalletReceiveViewModel()
             {

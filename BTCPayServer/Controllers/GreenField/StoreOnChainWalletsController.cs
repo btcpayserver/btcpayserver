@@ -23,7 +23,6 @@ using NBitcoin.Payment;
 using NBXplorer;
 using NBXplorer.Models;
 using Newtonsoft.Json.Linq;
-using Org.BouncyCastle.Ocsp;
 using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers.GreenField
@@ -130,7 +129,7 @@ namespace BTCPayServer.Controllers.GreenField
             if (allowedPayjoin)
             {
                bip21 +=
-                   $"?{PayjoinClient.BIP21EndpointKey}={Request.GetAbsoluteUri(Url.Action("Submit", "PayJoinEndpoint", new {cryptoCode}))}";
+                   $"?{PayjoinClient.BIP21EndpointKey}={Request.GetAbsoluteUri(Url.Action(nameof(PayJoinEndpointController.Submit), "PayJoinEndpoint", new {cryptoCode}))}";
             }
             return Ok(new OnChainWalletAddressData()
             {

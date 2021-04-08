@@ -23,5 +23,9 @@ namespace BTCPayServer.Controllers.GreenField
         {
             return controller.BadRequest(new GreenfieldAPIError(errorCode, errorMessage));
         }
+        public static IActionResult CreateAPIError(this ControllerBase controller, int httpCode, string errorCode, string errorMessage)
+        {
+            return controller.StatusCode(httpCode, new GreenfieldAPIError(errorCode, errorMessage));
+        }
     }
 }

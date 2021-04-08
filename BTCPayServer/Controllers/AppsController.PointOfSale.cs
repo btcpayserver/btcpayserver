@@ -23,33 +23,33 @@ namespace BTCPayServer.Controllers
                     "  price: 1\n" +
                     "  title: Green Tea\n" +
                     "  description:  Lovely, fresh and tender, Meng Ding Gan Lu ('sweet dew') is grown in the lush Meng Ding Mountains of the southwestern province of Sichuan where it has been cultivated for over a thousand years.\n" +
-                    "  image: /img/pos-sample/green-tea.jpg\n\n" +
+                    "  image: ~/img/pos-sample/green-tea.jpg\n\n" +
                     "black tea:\n" +
                     "  price: 1\n" +
                     "  title: Black Tea\n" +
                     "  description: Tian Jian Tian Jian means 'heavenly tippy tea' in Chinese, and it describes the finest grade of dark tea. Our Tian Jian dark tea is from Hunan province which is famous for making some of the best dark teas available.\n" +
-                    "  image: /img/pos-sample/black-tea.jpg\n\n" +
+                    "  image: ~/img/pos-sample/black-tea.jpg\n\n" +
                     "rooibos:\n" +
                     "  price: 1.2\n" +
                     "  title: Rooibos\n" +
                     "  description: Rooibos is a dramatic red tea made from a South African herb that contains polyphenols and flavonoids. Often called 'African redbush tea', Rooibos herbal tea delights the senses and delivers potential health benefits with each caffeine-free sip.\n" +
-                    "  image: /img/pos-sample/rooibos.jpg\n\n" +
+                    "  image: ~/img/pos-sample/rooibos.jpg\n\n" +
                     "pu erh:\n" +
                     "  price: 2\n" +
                     "  title: Pu Erh\n" +
                     "  description: This loose pur-erh tea is produced in Yunnan Province, China. The process in a relatively high humidity environment has mellowed the elemental character of the tea when compared to young Pu-erh.\n" +
-                    "  image: /img/pos-sample/pu-erh.jpg\n\n" +
+                    "  image: ~/img/pos-sample/pu-erh.jpg\n\n" +
                     "herbal tea:\n" +
                     "  price: 1.8\n" +
                     "  title: Herbal Tea\n" +
                     "  description: Chamomile tea is made from the flower heads of the chamomile plant. The medicinal use of chamomile dates back to the ancient Egyptians, Romans and Greeks. Pay us what you want!\n" +
-                    "  image: /img/pos-sample/herbal-tea.jpg\n" +
+                    "  image: ~/img/pos-sample/herbal-tea.jpg\n" +
                     "  custom: true\n\n" +
                     "fruit tea:\n" +
                     "  price: 1.5\n" +
                     "  title: Fruit Tea\n" +
                     "  description: The Tibetan Himalayas, the land is majestic and beautiful—a spiritual place where, despite the perilous environment, many journey seeking enlightenment. Pay us what you want!\n" +
-                    "  image: /img/pos-sample/fruit-tea.jpg\n" +
+                    "  image: ~/img/pos-sample/fruit-tea.jpg\n" +
                     "  inventory: 5\n" +
                     "  custom: true";
                 DefaultView = PosViewType.Static;

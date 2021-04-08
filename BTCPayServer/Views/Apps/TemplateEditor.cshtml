@@ -161,8 +161,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 this.getInputElement().parent().toggle();
             },
             getImage: function(item){
+                var image = this.unEscapeKey(item.image) || "~/img/img-placeholder.svg";
+                var url = image.startsWith("~") ? image.replace('~', window.location.pathname.substring(0, image.indexOf('/apps'))) : image;
                 return {
-                    "background-image" : "url('" + (this.unEscapeKey(item.image) || "/img/img-placeholder.svg") +"')",
+                    "background-image" : "url('" + url +"')",
                     "opacity": item.image? 1: 0.5
                 }
             },

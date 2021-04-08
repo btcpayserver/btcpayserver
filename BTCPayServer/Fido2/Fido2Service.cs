@@ -75,11 +75,10 @@ namespace BTCPayServer.Fido2
             await using var dbContext = _contextFactory.CreateContext();
             var user = await dbContext.Users.Include(applicationUser => applicationUser.Fido2Credentials)
                 .FirstOrDefaultAsync(applicationUser => applicationUser.Id == userId);
-            if (user == null || !CreationStore.TryGetValue(userId, out var options))
-            {
-                return false;
-            }
-            
+               if (user == null || !CreationStore.TryGetValue(userId, out var options))
+               {
+                    return false;
+               }
 
                 // 2. Verify and make the credentials
                 var success = await _fido2.MakeNewCredentialAsync(attestationResponse, options, args => Task.FromResult(true));

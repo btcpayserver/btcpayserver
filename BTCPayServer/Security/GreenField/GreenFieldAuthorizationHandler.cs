@@ -93,6 +93,7 @@ namespace BTCPayServer.Security.GreenField
                 case Policies.CanViewNotificationsForUser:
                 case Policies.CanModifyProfile:
                 case Policies.CanViewProfile:
+                case Policies.CanDeleteUser:
                 case Policies.Unrestricted:
                     success = context.HasPermission(Permission.Create(policy), requiredUnscoped);
                     break;

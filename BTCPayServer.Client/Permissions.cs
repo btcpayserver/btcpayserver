@@ -24,7 +24,7 @@ namespace BTCPayServer.Client
         public const string CanManageNotificationsForUser = "btcpay.user.canmanagenotificationsforuser";
         public const string CanViewNotificationsForUser = "btcpay.user.canviewnotificationsforuser";
         public const string CanCreateUser = "btcpay.server.cancreateuser";
-        public const string CanDeleteUser = "btcpay.server.candeleteuser";
+        public const string CanDeleteUser = "btcpay.user.candeleteuser";
         public const string CanManagePullPayments = "btcpay.store.canmanagepullpayments";
         public const string Unrestricted = "unrestricted";
         public static IEnumerable<string> AllPolicies

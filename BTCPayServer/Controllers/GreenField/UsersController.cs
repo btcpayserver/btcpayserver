@@ -79,6 +79,21 @@ namespace BTCPayServer.Controllers.GreenField
             return await FromModel(user);
         }
 
+        [Authorize(Policy = Policies.CanDeleteUser, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpDelete("~/api/v1/users/me")]
+        public async Task<ActionResult<ApplicationUserData>> DeleteCurrentUser()
+        {
+            // Don't want to allow the user to delete themselves if they are the only admin
+            if (await IsUserTheOnlyOneAdmin()) {
+                return Forbid(AuthenticationSchemes.GreenfieldBasic);
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+            await _userService.DeleteUserAndAssociatedData(user);
+
+            return Ok();
+        }
+
         [AllowAnonymous]
         [HttpPost("~/api/v1/users")]
         public async Task<IActionResult> CreateUser(CreateApplicationUserRequest request, CancellationToken cancellationToken = default)
@@ -206,7 +221,7 @@ namespace BTCPayServer.Controllers.GreenField
             }
 
             // User shouldn't be deleted if it's the only admin
-            if ((await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin)).Count == 1)
+            if (await IsUserTheOnlyOneAdmin(user))
             {
                 return Forbid(AuthenticationSchemes.GreenfieldBasic);
             }
@@ -244,6 +259,21 @@ namespace BTCPayServer.Controllers.GreenField
                 Roles = roles,
                 Created = data.Created
             };
+        }
+
+        private async Task<bool> IsUserTheOnlyOneAdmin()
+        {
+            return await IsUserTheOnlyOneAdmin(await _userManager.GetUserAsync(User));
+        }
+
+        private async Task<bool> IsUserTheOnlyOneAdmin(ApplicationUser user)
+        {
+            var isUserAdmin = await _userService.IsAdminUser(user);
+            if (!isUserAdmin) {
+                return false;
+            }
+
+            return (await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin)).Count == 1;
         }
     }
 }

@@ -197,7 +197,7 @@ namespace BTCPayServer.Controllers.GreenField
         }
 
         [HttpDelete("~/api/v1/users/{userId}")]
-        [Authorize(Policy = Policies.CanDeleteUser, AuthenticationSchemes = AuthenticationSchemes.GreenfieldAPIKeys)]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.GreenfieldAPIKeys)]
         public async Task<ActionResult<ApplicationUserData>> DeleteUser(string userId)
         {
             // Only admins should be allowed to delete users

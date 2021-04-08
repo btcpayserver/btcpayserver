@@ -18,6 +18,7 @@ using BTCPayServer.Views;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
+using PayoutData = BTCPayServer.Data.PayoutData;
 
 namespace BTCPayServer.Controllers
 {
@@ -209,6 +210,7 @@ namespace BTCPayServer.Controllers
 
             var command = vm.Command.Substring(vm.Command.IndexOf('-', StringComparison.InvariantCulture) + 1);
 
+            List<PayoutData> payouts = null;
             switch (command)
             {
                 
@@ -217,14 +219,7 @@ namespace BTCPayServer.Controllers
                 {
                     await using var ctx = this._dbContextFactory.CreateContext();
                     ctx.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
-                    var payouts = (await ctx.Payouts
-                            .Include(p => p.PullPaymentData)
-                            .Include(p => p.PullPaymentData.StoreData)
-                            .Where(p => payoutIds.Contains(p.Id))
-                            .Where(p => p.PullPaymentData.StoreId == storeId && !p.PullPaymentData.Archived)
-                            .ToListAsync())
-                        .Where(p => p.GetPaymentMethodId() == walletId.GetPaymentMethodId())
-                        .ToList();
+                    payouts = await GetPayoutsForPaymentMethod(walletId.GetPaymentMethodId(), ctx, payoutIds, storeId, cancellationToken);
 
                     for (int i = 0; i < payouts.Count; i++)
                     {
@@ -283,14 +278,7 @@ namespace BTCPayServer.Controllers
                 {
                     await using var ctx = this._dbContextFactory.CreateContext();
                     ctx.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
-                    var payouts = (await ctx.Payouts
-                            .Include(p => p.PullPaymentData)
-                            .Include(p => p.PullPaymentData.StoreData)
-                            .Where(p => payoutIds.Contains(p.Id))
-                            .Where(p => p.PullPaymentData.StoreId == storeId && !p.PullPaymentData.Archived)
-                            .ToListAsync(cancellationToken: cancellationToken))
-                        .Where(p => p.GetPaymentMethodId() == walletId.GetPaymentMethodId())
-                        .ToList();
+                    payouts ??= await GetPayoutsForPaymentMethod(walletId.GetPaymentMethodId(), ctx, payoutIds, storeId, cancellationToken);
 
                     var walletSend = (WalletSendModel)((ViewResult)(await this.WalletSend(walletId))).Model;
                     walletSend.Outputs.Clear();
@@ -321,6 +309,21 @@ namespace BTCPayServer.Controllers
             }
 
             return NotFound();
+        }
+
+        private static async Task<List<PayoutData>> GetPayoutsForPaymentMethod(PaymentMethodId paymentMethodId,
+            ApplicationDbContext ctx, string[] payoutIds,
+            string storeId, CancellationToken cancellationToken)
+        {
+            var payouts = (await ctx.Payouts
+                    .Include(p => p.PullPaymentData)
+                    .Include(p => p.PullPaymentData.StoreData)
+                    .Where(p => payoutIds.Contains(p.Id))
+                    .Where(p => p.PullPaymentData.StoreId == storeId && !p.PullPaymentData.Archived)
+                    .ToListAsync(cancellationToken))
+                .Where(p => p.GetPaymentMethodId() == paymentMethodId)
+                .ToList();
+            return payouts;
         }
 
         [HttpGet]

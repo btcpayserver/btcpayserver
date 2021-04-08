@@ -20,6 +20,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
 using NicolasDorier.RateLimits;
@@ -38,6 +39,7 @@ namespace BTCPayServer.Plugins.Shopify
         private readonly StoreRepository _storeRepository;
         private readonly InvoiceRepository _invoiceRepository;
         private readonly InvoiceController _invoiceController;
+        private readonly IJsonHelper _jsonHelper;
         private readonly IHttpClientFactory _clientFactory;
 
         public ShopifyController(BTCPayServerEnvironment btcPayServerEnvironment,
@@ -46,6 +48,7 @@ namespace BTCPayServer.Plugins.Shopify
             StoreRepository storeRepository,
             InvoiceRepository invoiceRepository,
             InvoiceController invoiceController,
+            IJsonHelper jsonHelper,
             IHttpClientFactory clientFactory)
         {
             _btcPayServerEnvironment = btcPayServerEnvironment;
@@ -54,6 +57,7 @@ namespace BTCPayServer.Plugins.Shopify
             _storeRepository = storeRepository;
             _invoiceRepository = invoiceRepository;
             _invoiceController = invoiceController;
+            _jsonHelper = jsonHelper;
             _clientFactory = clientFactory;
         }
         public StoreData CurrentStore
@@ -93,7 +97,7 @@ namespace BTCPayServer.Plugins.Shopify
         public async Task<IActionResult> ShopifyJavascript(string storeId)
         {
             var jsFile =
-                $"var BTCPAYSERVER_URL = \"{Request.GetAbsoluteRoot()}\"; var STORE_ID = \"{storeId}\"; {await GetJavascript()}";
+                $"var BTCPAYSERVER_URL = {_jsonHelper.Serialize(Request.GetAbsoluteRoot())}; var STORE_ID = {_jsonHelper.Serialize(storeId)}; {await GetJavascript()}";
             return Content(jsFile, "text/javascript");
         }
 

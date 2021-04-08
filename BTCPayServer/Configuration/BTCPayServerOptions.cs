@@ -70,6 +70,9 @@ namespace BTCPayServer.Configuration
             DockerDeployment = conf.GetOrDefault<bool>("dockerdeployment", true);
             AllowAdminRegistration = conf.GetOrDefault<bool>("allow-admin-registration", false);
             TorrcFile = conf.GetOrDefault<string>("torrcfile", null);
+            TorServices = conf.GetOrDefault<string>("torservices", null)
+                ?.Split(new[] {';', ','}, StringSplitOptions.RemoveEmptyEntries);
+                           
 
             var socksEndpointString = conf.GetOrDefault<string>("socksendpoint", null);
             if (!string.IsNullOrEmpty(socksEndpointString))
@@ -195,6 +198,7 @@ namespace BTCPayServer.Configuration
             set;
         }
         public string TorrcFile { get; set; }
+        public string[] TorServices { get; set; }
         public Uri UpdateUrl { get; set; }
     }
 }

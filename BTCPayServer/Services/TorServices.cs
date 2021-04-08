@@ -17,14 +17,11 @@ namespace BTCPayServer.Services
     {
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly IOptions<BTCPayServerOptions> _options;
-        private readonly IConfiguration _configuration;
 
-        public TorServices(BTCPayNetworkProvider btcPayNetworkProvider, IOptions<BTCPayServerOptions> options,
-            IConfiguration configuration)
+        public TorServices(BTCPayNetworkProvider btcPayNetworkProvider, IOptions<BTCPayServerOptions> options)
         {
             _btcPayNetworkProvider = btcPayNetworkProvider;
             _options = options;
-            _configuration = configuration;
         }
 
         public TorService[] Services { get; internal set; } = Array.Empty<TorService>();
@@ -144,14 +141,12 @@ namespace BTCPayServer.Services
 
         private void LoadFromConfig()
         {
-            var services = _configuration.GetOrDefault<string>("torservices", null);
-            Services = services?.Split(new[] {';', ','}, StringSplitOptions.RemoveEmptyEntries)
-                .Select(p => p.Split(":", StringSplitOptions.RemoveEmptyEntries))
+            Services = _options.Value.TorServices.Select(p => p.Split(":", StringSplitOptions.RemoveEmptyEntries))
                 .Where(p => p.Length == 3)
                 .Select(strings =>
                     int.TryParse(strings[2], out var port) ? ParseService(strings[0], strings[1], port) : null)
                 .Where(p => p != null)
-                .ToArray() ?? Array.Empty<TorService>();
+                .ToArray();
         }
     }
 

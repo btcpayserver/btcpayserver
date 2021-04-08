@@ -135,7 +135,7 @@ namespace BTCPayServer.Services.Invoices
             JToken data;
             if (value is null)
             {
-                data = JValue.CreateNull();
+                AdditionalData?.Remove(propName);
             }
             else
             {
@@ -154,9 +154,10 @@ namespace BTCPayServer.Services.Invoices
                 {
                     data = JToken.FromObject(value);
                 }
+                
+                AdditionalData ??= new Dictionary<string, JToken>();
+                AdditionalData.AddOrReplace(propName, data);
             }
-            AdditionalData ??= new Dictionary<string, JToken>();
-            AdditionalData.AddOrReplace(propName, data);
         }
         
         public static InvoiceMetadata FromJObject(JObject jObject)

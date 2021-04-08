@@ -200,12 +200,7 @@ namespace BTCPayServer.Controllers.GreenField
                 Amount = blob.Amount,
                 PaymentMethodAmount = blob.CryptoAmount,
                 Revision = blob.Revision,
-                State = p.State == PayoutState.AwaitingPayment ? PayoutState.AwaitingPayment :
-                                            p.State == PayoutState.AwaitingApproval ? PayoutState.AwaitingApproval :
-                                            p.State == PayoutState.Cancelled ? PayoutState.Cancelled :
-                                            p.State == PayoutState.Completed ? PayoutState.Completed :
-                                            p.State == PayoutState.InProgress ? PayoutState.InProgress :
-                                            throw new NotSupportedException(),
+                State = p.State
             };
             model.Destination = blob.Destination;
             model.PaymentMethod = p.PaymentMethodId;

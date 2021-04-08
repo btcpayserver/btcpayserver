@@ -470,7 +470,7 @@ namespace BTCPayServer.Controllers
                     .ToArray();
             var balance = _walletProvider.GetWallet(network).GetBalance(paymentMethod.AccountDerivation);
             model.NBXSeedAvailable = await GetSeed(walletId, network) != null;
-            model.CurrentBalance = await balance;
+            model.CurrentBalance = (await balance).Total.GetValue(network);
 
             await Task.WhenAll(recommendedFees);
             model.RecommendedSatoshiPerByte =
@@ -1029,17 +1029,14 @@ namespace BTCPayServer.Controllers
 
         private static async Task<string> GetBalanceString(BTCPayWallet wallet, DerivationStrategyBase derivationStrategy)
         {
-            using (CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
+            using CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            try
             {
-                try
-                {
-                    return (await wallet.GetBalance(derivationStrategy, cts.Token)).ShowMoney(wallet.Network
-                        .Divisibility);
-                }
-                catch
-                {
-                    return "--";
-                }
+                return (await wallet.GetBalance(derivationStrategy, cts.Token)).Total.ShowMoney(wallet.Network);
+            }
+            catch
+            {
+                return "--";
             }
         }
 

@@ -84,9 +84,14 @@ namespace BTCPayServer.Controllers.GreenField
                 out DerivationSchemeSettings derivationScheme, out IActionResult actionResult)) return actionResult;
 
             var wallet = _btcPayWalletProvider.GetWallet(network);
+            var balance = await wallet.GetBalance(derivationScheme.AccountDerivation);
+            
             return Ok(new OnChainWalletOverviewData()
             {
-                Balance = await wallet.GetBalance(derivationScheme.AccountDerivation)
+                Label = derivationScheme.ToPrettyString(),
+                Balance = balance.Total.GetValue(network),
+                UnconfirmedBalance= balance.Unconfirmed.GetValue(network),
+                ConfirmedBalance= balance.Confirmed.GetValue(network),
             });
         }
         
@@ -149,7 +154,6 @@ namespace BTCPayServer.Controllers.GreenField
 
             var wallet = _btcPayWalletProvider.GetWallet(network);
             var walletId = new WalletId(storeId, cryptoCode);
-            var walletBlobAsync = await _walletRepository.GetWalletInfo(walletId);
             var walletTransactionsInfoAsync = await _walletRepository.GetWalletTransactionsInfo(walletId);
 
             var txs = await wallet.FetchTransactions(derivationScheme.AccountDerivation);
@@ -222,7 +226,10 @@ namespace BTCPayServer.Controllers.GreenField
                         Comment = info?.Comment,
                         Labels = info?.Labels,
                         Link = string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink,
-                            coin.OutPoint.Hash.ToString())
+                            coin.OutPoint.Hash.ToString()),
+                        Timestamp = coin.Timestamp,
+                        KeyPath = coin.KeyPath,
+                        Address = network.NBXplorerNetwork.CreateAddress(derivationScheme.AccountDerivation, coin.KeyPath,  coin.ScriptPubKey).ToString()
                     };
                 }).ToList()
             );

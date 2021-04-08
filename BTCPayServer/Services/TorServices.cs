@@ -128,7 +128,7 @@ namespace BTCPayServer.Services
         {
             if (string.IsNullOrEmpty(_options.Value.TorrcFile))
             {
-                await LoadFromConfig();
+                LoadFromConfig();
             }
             else
             {
@@ -142,7 +142,7 @@ namespace BTCPayServer.Services
             return new[] {CreateLoopTask(Refresh)};
         }
 
-        private Task LoadFromConfig()
+        private void LoadFromConfig()
         {
             var services = _configuration.GetOrDefault<string>("torservices", null);
             Services = services?.Split(new[] {';', ','}, StringSplitOptions.RemoveEmptyEntries)
@@ -152,7 +152,6 @@ namespace BTCPayServer.Services
                     int.TryParse(strings[2], out var port) ? ParseService(strings[0], strings[1], port) : null)
                 .Where(p => p != null)
                 .ToArray() ?? Array.Empty<TorService>();
-            return Task.CompletedTask;
         }
     }
 

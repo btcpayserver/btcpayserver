@@ -1,23 +1,18 @@
 @model BTCPayServer.Models.StoreViewModels.RatesViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePageAndTitle(StoreNavPages.Rates, "Rates");
-}
-
-<partial name="_StatusMessage" />
-
-@if (!ViewContext.ModelState.IsValid)
-{
-<div class="row">
-    <div class="col-md-8">
-        <div asp-validation-summary="All" class="text-danger"></div>
-    </div>
-</div>
+    ViewData.SetActivePageAndTitle(StoreNavPages.Rates, "Rates", Context.GetStoreData().StoreName);
 }
 
 <div class="row">
-    <div class="col-md-8">
+    <div class="col-lg-8">
+        <h4 class="mb-3">@ViewData["PageTitle"]</h4>
+        @if (!ViewContext.ModelState.IsValid)
+        {
+            <div asp-validation-summary="All" class="text-danger"></div>
+        }
         <form method="post">
+            <input type="hidden" asp-for="ShowScripting" />
             @if (Model.ShowScripting)
             {
                 <div class="form-group">
@@ -143,7 +138,9 @@
 
                 </div>
                 <div class="form-group">
-                    <label asp-for="Script"></label> <a href="#help" data-toggle="collapse"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                    <label asp-for="Script"></label> <a href="#help" data-toggle="collapse">
+                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                    </a>
                     <textarea asp-for="Script" rows="20" cols="80" class="form-control"></textarea>
                     <span asp-validation-for="Script" class="text-danger"></span>
                     <a href="#" onclick="$('#Script').val(defaultScript); return false;">Set to default settings</a>
@@ -162,9 +159,9 @@
                         Current Rates source is <a href="@Model.RateSource" target="_blank">@Model.PreferredExchange</a>.
                     </p>
                 </div>
-                <div class="form-group">
-                    <button type="submit" class="btn btn-link" value="scripting-on" name="command">Turn on advanced rate rule scripting</button>
-                </div>
+                <p>
+                    <button type="submit" class="btn btn-link p-0" value="scripting-on" name="command">Turn on advanced rate rule scripting</button>
+                </p>
             }
             <div class="form-group">
                 <label asp-for="Spread"></label>
@@ -176,34 +173,26 @@
                 </div>
                 <span asp-validation-for="Spread" class="text-danger"></span>
             </div>
+            <h4 class="mt-5 mb-3">Testing</h4>
+            <p>Enter currency pairs which you want to test against your rule (eg. <code>DOGE_USD,DOGE_CAD,BTC_CAD,BTC_USD</code>)</p>
             <div class="form-group">
-                <h5>Testing</h5>
-                <span>Enter currency pairs which you want to test against your rule (eg. <code>DOGE_USD,DOGE_CAD,BTC_CAD,BTC_USD</code>)</span>
-                <div class="input-group">
-                    <input placeholder="BTC_USD, BTC_CAD" asp-for="ScriptTest" class="form-control" />
-                    <span class="input-group-btn">
-                        <button name="command" value="Test" type="submit" class="btn btn-primary" title="Test">
-                            <span class="fa fa-vial"></span> Test
-                        </button>
-                    </span>
-                </div>
+                <input placeholder="BTC_USD, BTC_CAD" asp-for="ScriptTest" class="form-control" />
                 <span asp-validation-for="ScriptTest" class="text-danger"></span>
             </div>
+            <button name="command" value="Test" type="submit" class="btn btn-primary" title="Test">Test</button>
+
+            <h4 class="mt-5 mb-3">Default currency pairs</h4>
+            <p>You can query those pairs via REST by querying <a asp-controller="Rate" asp-action="GetRates2" asp-route-storeId="@Model.StoreId" target="_blank">this link</a> without the need to specify currencyPairs.</p>
             <div class="form-group">
-                <h5>Default currency pairs</h5>
-                <span>You can query those pairs via REST by querying <a asp-controller="Rate" asp-action="GetRates2" asp-route-storeId="@Model.StoreId" target="_blank">this link</a> without the need to specify currencyPairs.</span>
-                <div class="input-group">
-                    <input placeholder="BTC_USD, BTC_CAD" asp-for="DefaultCurrencyPairs" class="form-control" />
-                </div>
+                <input placeholder="BTC_USD, BTC_CAD" asp-for="DefaultCurrencyPairs" class="form-control" />
                 <span asp-validation-for="DefaultCurrencyPairs" class="text-danger"></span>
             </div>
             <button name="command" type="submit" class="btn btn-primary" value="Save">Save</button>
-            <input type="hidden" asp-for="ShowScripting" />
         </form>
     </div>
 </div>
 
 @section Scripts {
     <script type="text/javascript">var defaultScript = @Safe.Json(Model.DefaultScript);</script>
-    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <partial name="_ValidationScriptsPartial" />
 }

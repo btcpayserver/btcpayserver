@@ -5,14 +5,8 @@
 
 <section>
     <div class="container">
-        @if (TempData.HasStatusMessage())
-        {
-            <div class="row">
-                <div class="col-lg-12 text-center">
-                    <partial name="_StatusMessage"/>
-                </div>
-            </div>
-        }
+        <partial name="_StatusMessage" />
+
         <div class="row">
             <div class="col-lg-12 section-heading">
                 <h2>@ViewData["Title"]</h2>

@@ -94,6 +94,20 @@ ul li {
     border-left: 1px solid var(--btcpay-color-white);
 }
 
+.breadcrumb {
+    background-color: transparent;
+    border-radius: 0;
+}
+
+.breadcrumb-item + .breadcrumb-item {
+    padding-left: 1rem;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    color: var(--btcpay-color-neutral-600);
+    content: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNyIgaGVpZ2h0PSIxMCIgdmlld0JveD0iMCAwIDcgMTAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTQuMzg3MzkgNC4zMTYyOFY1LjYyMUwzLjczNDM5IDQuOTY5MjZMNC4zODczOSA0LjMxNzUxVjQuMzE2MjhaTTAuMDAxMjMxMzkgMS4zMDM0OUwxLjMwNTk5IDBMNi4zMTU1NyA1TDEuMzA1OTkgMTBMMCA4LjY5NjUxTDMuNzAxMTMgNUwwIDEuMzAzNDlIMC4wMDEyMzEzOVoiIGZpbGw9IiM4RDhEOEYiLz48L3N2Zz4K");
+}
+
 /* Admin Sidebar Navigation */
 a.nav-link {
     color: var(--btcpay-nav-color-link, var(--btcpay-color-neutral-600));
@@ -110,12 +124,17 @@ a.nav-link:hover {
     margin-left: -1rem;
 }
 
-.nav-pills .nav-link.active,
-.nav-pills .show > .nav-link {
+section .nav .nav-link {
+    margin: .3rem 0;
+    border-left: 2px solid transparent;
+    padding: .2rem 1rem;
+}
+
+section .nav .nav-link.active,
+section .nav .show > .nav-link {
     color: var(--btcpay-nav-color-link-active, var(--btcpay-color-neutral-900));
-    background: var(--btcpay-bg-nav-link-active, var(--btcpay-color-primary-backdrop));
-    font-weight: 500;
-    border-left: 5px solid var(--btcpay-color-primary);
+    font-weight: 700;
+    border-left-color: var(--btcpay-color-primary);
 }
 
 /* Homepage */

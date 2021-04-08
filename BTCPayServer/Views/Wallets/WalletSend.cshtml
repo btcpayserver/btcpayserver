@@ -1,25 +1,17 @@
 ﻿@addTagHelper *, BundlerMinifier.TagHelpers
 @using Microsoft.AspNetCore.Mvc.ModelBinding
-@using BTCPayServer.Views
 @model WalletSendModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["Title"] = "Manage wallet";
-    ViewData.SetActivePageAndTitle(WalletsNavPages.Send);
+    ViewData.SetActivePageAndTitle(WalletsNavPages.Send, $"Send {Model.CryptoCode}", Context.GetStoreData().StoreName);
 }
-@if (TempData.HasStatusMessage())
-{
-    <div class="row">
-        <div class="col-md-10 text-center">
-            <partial name="_StatusMessage" />
-        </div>
-    </div>
-}
+
 <partial name="CameraScanner"/>
 
 <div class="row">
     <div class="@(!Model.InputSelection && Model.Outputs.Count==1? "col-lg-7 transaction-output-form": "col-lg-8")">
-        <form method="post" asp-action="WalletSend" asp-route-walletId="@this.Context.GetRouteValue("walletId")">
+        <h4 class="mb-3">@ViewData["PageTitle"]</h4>
+        <form method="post" asp-action="WalletSend" asp-route-walletId="@Context.GetRouteValue("walletId")">
             <input type="hidden" asp-for="InputSelection" />
             <input type="hidden" asp-for="FiatDivisibility" />
             <input type="hidden" asp-for="CryptoDivisibility" />
@@ -176,7 +168,7 @@
                                 <input asp-for="NoChange" class="form-check-input" />
                                 <label asp-for="NoChange" class="form-check-label"></label>
                                 <a href="https://docs.btcpayserver.org/Wallet/#dont-create-utxo-change" target="_blank">
-                                    <span class="fa fa-question-circle-o" title="More information..."></span>
+                                    <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
                                 </a>
                             </div>
                         </div>                        
@@ -185,7 +177,7 @@
                                 <input asp-for="AlwaysIncludeNonWitnessUTXO" class="form-check-input"/>
                                 <label asp-for="AlwaysIncludeNonWitnessUTXO" class="form-check-label"></label>
                                 <a href="https://medium.com/@@jmacato/wasabi-wallets-advisory-for-trezor-users-7d942c727f92" target="_blank">
-                                    <span class="fa fa-question-circle-o" title="More information..."></span>
+                                    <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
                                 </a>
                             </div>
                         </div>    
@@ -194,7 +186,7 @@
                             <div class="form-group">
                                 <label asp-for="AllowFeeBump"></label>
                                 <a href="https://docs.btcpayserver.org/Wallet/#rbf-replace-by-fee" target="_blank">
-                                    <span class="fa fa-question-circle-o" title="More information..."></span>
+                                    <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
                                 </a>
                                 <select asp-for="AllowFeeBump" class="form-control w-auto">
                                     <option value="Maybe">Randomize for higher privacy</option>

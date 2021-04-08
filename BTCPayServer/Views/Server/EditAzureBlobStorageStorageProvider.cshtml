@@ -1,21 +1,20 @@
 ﻿@model BTCPayServer.Storage.Services.Providers.AzureBlobStorage.Configuration.AzureBlobStorageConfiguration
 @{
-    ViewData.SetActivePageAndTitle(ServerNavPages.Services, $"Storage - Azure Blob Storage");
+    ViewData.SetActivePageAndTitle(ServerNavPages.Services, "Azure Blob Storage");
 }
 
+<h2 class="mb-4">@ViewData["PageTitle"]</h2>
 
-<partial name="_StatusMessage" />
 <div class="row">
     <div class="col-lg-6">
-        <div asp-validation-summary="All" class="text-danger"></div>
-    </div>
-</div>
-<div class="row">
-    <div class="col-lg-6">
+        @if (!ViewContext.ModelState.IsValid)
+        {
+            <div asp-validation-summary="All" class="text-danger"></div>
+        }
         <form method="post">
             <div class="form-group">
                 <label asp-for="ContainerName"></label>
-                <input class="form-control" asp-for="ContainerName" />
+                <input class="form-control" asp-for="ContainerName"/>
                 <span asp-validation-for="ContainerName" class="text-danger"></span>
             </div>
             <div class="form-group">
@@ -25,11 +24,11 @@
             </div>
 
             <button type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
-            <a asp-action="Storage" asp-route-forceChoice="true" >Change Storage provider</a>
+            <a asp-action="Storage" asp-route-forceChoice="true">Change Storage provider</a>
         </form>
     </div>
 </div>
 
 @section Scripts {
-    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <partial name="_ValidationScriptsPartial" />
 }

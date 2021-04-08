@@ -1,7 +1,7 @@
 @model WalletSetupViewModel
 @{
     Layout = "_LayoutWalletSetup";
-    ViewData["Title"] = $"Setup {Model.CryptoCode} Wallet";
+    ViewData.SetActivePageAndTitle(StoreNavPages.Wallet, $"Setup {Model.CryptoCode} Wallet", Context.GetStoreData().StoreName);
 }
 
 @section Navbar {

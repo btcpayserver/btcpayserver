@@ -1,21 +1,20 @@
 @model WebhooksViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePageAndTitle(StoreNavPages.Webhooks, "Webhooks");
+    ViewData.SetActivePageAndTitle(StoreNavPages.Webhooks, "Webhooks", Context.GetStoreData().StoreName);
 }
 
-<partial name="_StatusMessage" />
-
-<h4>Webhooks</h4>
 <div class="row">
-    <div class="col-md-8">
-        <p>Webhooks allows BTCPayServer to send HTTP events related to your store</p>
-    </div>
-</div>
+    <div class="col-lg-8">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h4 class="mb-0">@ViewData["PageTitle"]</h4>
+            <a id="CreateWebhook" asp-action="NewWebhook" class="btn btn-primary" role="button" asp-route-storeId="@Context.GetRouteValue("storeId")">
+                <span class="fa fa-plus"></span>
+                Create a new webhook
+            </a>
+        </div>
+        <p>Webhooks allow BTCPay Server to send HTTP events related to your store to another server.</p>
 
-<div class="row">
-    <div class="col-md-8">
-        <a id="CreateWebhook" asp-action="NewWebhook" class="btn btn-primary" role="button" asp-route-storeId="@this.Context.GetRouteValue("storeId")"><span class="fa fa-plus"></span> Create a new webhook</a>
         @if (Model.Webhooks.Any())
         {
             <table class="table table-sm table-responsive-md">
@@ -38,9 +37,15 @@
                 </tbody>
             </table>
         }
+        else
+        {
+            <p class="text-secondary mt-3">
+                There are no webhooks yet.
+            </p>
+        }
     </div>
 </div>
 
 @section Scripts {
-    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <partial name="_ValidationScriptsPartial" />
 }

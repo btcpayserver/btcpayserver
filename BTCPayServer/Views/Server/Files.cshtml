@@ -1,16 +1,16 @@
 @model ViewFilesViewModel
 @{
-    ViewData.SetActivePageAndTitle(ServerNavPages.Files);
+    ViewData.SetActivePageAndTitle(ServerNavPages.Files, "File Storage");
 }
 
+<h2 class="mb-4">@ViewData["PageTitle"]</h2>
 
-<partial name="_StatusMessage" />
-
-<h4>File Storage</h4>
-<div class="form-group">
-    <span>Change your <a asp-action="Services" asp-route-returnurl="@ViewData["ReturnUrl"]">external storage service</a> provider</span>
-    <a href="https://docs.btcpayserver.org/FAQ/FAQ-ServerSettings/#how-to-upload-files-to-btcpay" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
-</div>
+<p>
+    Change your <a asp-action="Services" asp-route-returnurl="@ViewData["ReturnUrl"]">external storage service</a> provider.
+    <a href="https://docs.btcpayserver.org/FAQ/FAQ-ServerSettings/#how-to-upload-files-to-btcpay" target="_blank">
+        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+    </a>
+</p>
 
 @if (Model.Files.Any())
 {
@@ -81,23 +81,16 @@ else
 
 @if (Model.StorageConfigured)
 {
-    <div class="card">
-        <form asp-action="CreateFile" method="post" enctype="multipart/form-data">
+    <form asp-action="CreateFile" method="post" enctype="multipart/form-data">
+        <h4 class="mt-5 mb-3">Upload File</h4>
 
-            <div class="card-body">
-                <h3 class="header">Upload File</h3>
+        <div class="custom-file mb-3">
+            <input type="file" class="custom-file-input" name="file" id="file" required>
+            <label class="custom-file-label" for="customFile">Choose file</label>
+        </div>
 
-                <div class="custom-file">
-                    <input type="file" class="custom-file-input" name="file" id="file" required>
-                    <label class="custom-file-label" for="customFile">Choose file</label>
-                </div>
-
-            </div>
-            <div class="card-footer">
-                <button class="btn btn-primary" role="button"><span class="fa fa-plus"></span> Upload file</button>
-            </div>
-        </form>
-    </div>
+        <button class="btn btn-primary" role="button"><span class="fa fa-plus"></span> Upload file</button>
+    </form>
 
     @section Scripts {
         <script>

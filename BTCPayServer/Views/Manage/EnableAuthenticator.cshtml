@@ -56,7 +56,7 @@
 </div>
 
 @section Scripts {
-    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <partial name="_ValidationScriptsPartial" />
     <script type="text/javascript" src="~/js/qrcode.js" asp-append-version="true"></script>
     <script type="text/javascript">
         new QRCode(document.getElementById("qrCode"),

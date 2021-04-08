@@ -4,7 +4,7 @@
     var isHotWallet = Model.Method == WalletSetupMethod.HotWallet;
     var type = isHotWallet ? "Hot" : "Watch-Only";
     Layout = "_LayoutWalletSetup";
-    ViewData["Title"] = $"Create {Model.CryptoCode} {type} Wallet";
+    ViewData.SetActivePageAndTitle(StoreNavPages.Wallet, $"Create {Model.CryptoCode} {type} Wallet", Context.GetStoreData().StoreName);
     ViewData.Add(nameof(Model.CanUseHotWallet), Model.CanUseHotWallet);
     ViewData.Add(nameof(Model.CanUseRPCImport), Model.CanUseRPCImport);
     ViewData.Add(nameof(Model.Method), Model.Method);
@@ -18,9 +18,8 @@
 
 <h1 class="text-center">@ViewData["Title"]</h1>
 <br>
-
-@await Html.PartialAsync("_GenerateWalletForm", Model.SetupRequest)
+<partial name="_GenerateWalletForm" model="Model.SetupRequest" />
 
 @section Scripts {
-    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <partial name="_ValidationScriptsPartial" />
 }

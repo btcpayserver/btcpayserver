@@ -1,12 +1,12 @@
 @model LightningNodeViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePageAndTitle(StoreNavPages.Index, "Add lightning node");
+    ViewData.SetActivePageAndTitle(StoreNavPages.Index, "Lightning node settings", Context.GetStoreData().StoreName);
 }
 
-<partial name="_StatusMessage" />
+<h4 class="mb-3">@ViewData["PageTitle"]</h4>
 
-<div class="alert alert-warning alert-dismissible mb-5" role="alert">
+<div class="alert alert-warning alert-dismissible my-4" role="alert">
     <p class="mb-0">
         Please understand that the Lightning Network is still under active development and considered experimental.
         Before you proceed, take time to familiarize yourself with the risks.
@@ -122,5 +122,5 @@
 </form>
 
 @section Scripts {
-    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <partial name="_ValidationScriptsPartial" />
 }

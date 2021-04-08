@@ -5,11 +5,12 @@
 
 @{
     Layout = "_Layout";
-    ViewData["Title"] = $"Authorize {(Model.ApplicationName ?? "Application")}";
+    ViewData["Title"] = $"Authorize {Model.ApplicationName ?? "Application"}";
     var permissions = Permission.ToPermissions(Model.Permissions.Split(';')).GroupBy(permission => permission.Policy);
 }
 
-<partial name="_StatusMessage"/>
+<partial name="_StatusMessage" />
+
 <form method="post" asp-action="AuthorizeAPIKey">
     <input type="hidden" asp-for="RedirectUrl" value="@Model.RedirectUrl"/>
     <input type="hidden" asp-for="Permissions" value="@Model.Permissions"/>

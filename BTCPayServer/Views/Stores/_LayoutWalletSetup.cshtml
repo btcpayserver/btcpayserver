@@ -1,6 +1,5 @@
 ﻿@{
     Layout = "_LayoutSimple";
-    ViewData["Title"] = ViewData["Title"] ?? "Wallet Setup";
 }
 
 @section HeadScripts {
@@ -24,10 +23,7 @@
 
 <div class="row justify-content-md-center mt-5 pt-sm-3 pt-md-0">
     <main class="col-md-10 col-lg-8 col-xl-7">
-        @if (TempData.HasStatusMessage())
-        {
-            <partial name="_StatusMessage"/>
-        }
+        <partial name="_StatusMessage" />
         @RenderBody()
     </main>
 </div>

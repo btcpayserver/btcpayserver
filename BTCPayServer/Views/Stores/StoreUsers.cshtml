@@ -1,28 +1,23 @@
 ﻿@model StoreUsersViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePageAndTitle(StoreNavPages.Users, "Manage users");
+    ViewData.SetActivePageAndTitle(StoreNavPages.Users, "Manage users", Context.GetStoreData().StoreName);
 }
 
-<partial name="_StatusMessage" />
 
-@if (!ViewContext.ModelState.IsValid)
-{
 <div class="row">
-    <div class="col-md-6">
-        <div asp-validation-summary="All" class="text-danger"></div>
-    </div>
-</div>
-}
-<div class="row">
-    <div class="col-md-8">
-        <div class="form-group">
-            <h5>Users</h5>
-            <span>
-                Add access to your store to other users (Guest will not be able to see and modify the store settings)<br />
-                Note that the user must have a registered account on this BTCPay Server.
-            </span>
-        </div>
+    <div class="col-lg-8">
+        <h4 class="mb-3">@ViewData["PageTitle"]</h4>
+        <p>
+            Add access to your store to other users (Guest will not be able to see and modify the store settings)<br/>
+            Note that the user must have a registered account on this BTCPay Server.
+        </p>
+
+        @if (!ViewContext.ModelState.IsValid)
+        {
+            <div asp-validation-summary="All" class="text-danger"></div>
+        }
+
         <div class="form-inline">
             <form method="post">
                 <input asp-for="Email" type="text" class="form-control" placeholder="user@example.com">
@@ -36,23 +31,23 @@
         <div class="form-group">
             <table class="table table-sm table-responsive-md">
                 <thead>
-                    <tr>
-                        <th>Email</th>
-                        <th>Role</th>
-                        <th style="text-align:right">Actions</th>
-                    </tr>
+                <tr>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th style="text-align:right">Actions</th>
+                </tr>
                 </thead>
                 <tbody>
-                    @foreach (var user in Model.Users)
-                    {
-                        <tr>
-                            <td>@user.Email</td>
-                            <td>@user.Role</td>
-                            <td style="text-align:right">
-                                <a asp-action="DeleteStoreUser" asp-route-storeId="@Model.StoreId" asp-route-userId="@user.Id">Remove</a>
-                            </td>
-                        </tr>
-                    }
+                @foreach (var user in Model.Users)
+                {
+                    <tr>
+                        <td>@user.Email</td>
+                        <td>@user.Role</td>
+                        <td style="text-align:right">
+                            <a asp-action="DeleteStoreUser" asp-route-storeId="@Model.StoreId" asp-route-userId="@user.Id">Remove</a>
+                        </td>
+                    </tr>
+                }
                 </tbody>
             </table>
         </div>

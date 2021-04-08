@@ -1,105 +1,110 @@
 ﻿@model PullPaymentsModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePageAndTitle(WalletsNavPages.PullPayments);
-    ViewData["Title"] = "Pull payments";
+    ViewData.SetActivePageAndTitle(WalletsNavPages.PullPayments, "Pull payments", Context.GetStoreData().StoreName);
 }
 <style type="text/css">
     .tooltip-inner {
         text-align: left;
     }
 </style>
-@if (TempData.HasStatusMessage())
+
+<div class="d-flex align-items-center justify-content-between mt-n1 mb-3">
+    <h4 class="mb-0">
+        @ViewData["Title"]
+        <small>
+            <a href="https://docs.btcpayserver.org/PullPayments/" target="_blank">
+                <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+            </a>
+        </small>
+    </h4>
+    @if (Model.HasDerivationSchemeSettings)
+    {
+        <a asp-action="NewPullPayment" asp-route-walletId="@Context.GetRouteValue("walletId")" class="btn btn-primary" role="button" id="NewPullPayment">
+            <span class="fa fa-plus"></span> Create a new pull payment
+        </a>
+    }
+</div>
+
+@if (Model.PullPayments.Any())
 {
     <div class="row">
-        <div class="col-md-12 text-center">
-            <partial name="_StatusMessage" />
-        </div>
-    </div>
-}
-
-@if (Model.HasDerivationSchemeSettings)
-{
-    <div class="row button-row">
-        <div class="col-lg-12">
-            <a asp-action="NewPullPayment"
-               asp-route-walletId="@Context.GetRouteValue("walletId")"
-               class="btn btn-primary" role="button" id="NewPullPayment"><span class="fa fa-plus"></span> Create a new pull payment</a>
-            <a href="https://docs.btcpayserver.org/PullPayments/" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
-        </div>
-    </div>
-}
-
-<div class="row">
-    @foreach (var pp in Model.PullPayments)
-    {
-        <script id="tooptip_template_@pp.Id" type="text/template">
-            <span>Awaiting:&nbsp;<span class="float-right">@pp.Progress.Awaiting</span></span>
-            <br />
-            <span>Completed:&nbsp;<span class="float-right">@pp.Progress.Completed</span></span>
-            <br />
-            <span>Limit:&nbsp;<span class="float-right">@pp.Progress.Limit</span></span>
-            @if (pp.Progress.ResetIn != null)
-            {
+        @foreach (var pp in Model.PullPayments)
+        {
+            <script id="tooptip_template_@pp.Id" type="text/template">
+                <span>Awaiting:&nbsp;<span class="float-right">@pp.Progress.Awaiting</span></span>
                 <br />
-                <span>Resets in:&nbsp;<span class="float-right">@pp.Progress.ResetIn</span></span>
-            }
-            @if (pp.Progress.EndIn != null)
-            {
+                <span>Completed:&nbsp;<span class="float-right">@pp.Progress.Completed</span></span>
                 <br />
-                <span>Expires in:&nbsp;<span class="float-right">@pp.Progress.EndIn</span></span>
-            }
-        </script>
-    }
-    <div class="col-md-12">
-        <table class="table table-sm table-responsive-lg">
-            <thead class="thead-inverse">
-                <tr>
-                    <th scope="col">
-                        Start
-                    </th>
-                    <th scope="col">Name</th>
-                    <th scope="col">Refunded</th>
-                    <th scope="col" class="text-right">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var pp in Model.PullPayments)
+                <span>Limit:&nbsp;<span class="float-right">@pp.Progress.Limit</span></span>
+                @if (pp.Progress.ResetIn != null)
                 {
-                    <tr>
-                        <td>@pp.StartDate.ToBrowserDate()</td>
-                        <td>@pp.Name</td>
-                        <td class="align-middle">
-                            <div class="progress ppProgress" data-pp="@pp.Id" data-toggle="tooltip" data-html="true">
-                                <div class="progress-bar" role="progressbar" aria-valuenow="@pp.Progress.CompletedPercent"
-                                     aria-valuemin="0" aria-valuemax="100" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width:@(pp.Progress.CompletedPercent)%;">
-                                </div>
-                                <div class="progress-bar" role="progressbar" aria-valuenow="@pp.Progress.AwaitingPercent"
-                                     aria-valuemin="0" aria-valuemax="100" style="background-color:orange; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width:@(pp.Progress.AwaitingPercent)%;">
-                                </div>
-                            </div>
-                        </td>
-                        <td class="text-right">
-                            <a asp-action="ViewPullPayment"
-                               asp-controller="PullPayment"
-                               asp-route-pullPaymentId="@pp.Id">View</a> - <a class="pp-payout" asp-action="Payouts"
-                                                                             asp-route-walletId="@this.Context.GetRouteValue("walletId")"
-                                                                             asp-route-pullPaymentId="@pp.Id">Payouts</a> - <a asp-action="ArchivePullPayment"
-                                                                                                                               asp-route-walletId="@this.Context.GetRouteValue("walletId")"
-                                                                                                                               asp-route-pullPaymentId="@pp.Id">Archive</a>
-                        </td>
-                    </tr>
+                    <br />
+                    <span>Resets in:&nbsp;<span class="float-right">@pp.Progress.ResetIn</span></span>
                 }
-            </tbody>
-        </table>
-        <script type="text/javascript">
-            var ppProgresses = document.getElementsByClassName("ppProgress");
-            for (var i = 0; i < ppProgresses.length; i++) {
-                var pp = ppProgresses[i];
-                var ppId = pp.getAttribute("data-pp");
-                var template = document.getElementById("tooptip_template_" + ppId);
-                pp.setAttribute("title", template.innerHTML);
-            }
-        </script>
+                @if (pp.Progress.EndIn != null)
+                {
+                    <br />
+                    <span>Expires in:&nbsp;<span class="float-right">@pp.Progress.EndIn</span></span>
+                }
+            </script>
+        }
+        <div class="col-md-12">
+            <table class="table table-sm table-responsive-lg">
+                <thead class="thead-inverse">
+                    <tr>
+                        <th scope="col">Start</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Refunded</th>
+                        <th scope="col" class="text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var pp in Model.PullPayments)
+                    {
+                        <tr>
+                            <td>@pp.StartDate.ToBrowserDate()</td>
+                            <td>@pp.Name</td>
+                            <td class="align-middle">
+                                <div class="progress ppProgress" data-pp="@pp.Id" data-toggle="tooltip" data-html="true">
+                                    <div class="progress-bar" role="progressbar" aria-valuenow="@pp.Progress.CompletedPercent"
+                                         aria-valuemin="0" aria-valuemax="100" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width:@(pp.Progress.CompletedPercent)%;">
+                                    </div>
+                                    <div class="progress-bar" role="progressbar" aria-valuenow="@pp.Progress.AwaitingPercent"
+                                         aria-valuemin="0" aria-valuemax="100" style="background-color:orange; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width:@(pp.Progress.AwaitingPercent)%;">
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-right">
+                                <a asp-action="ViewPullPayment"
+                                   asp-controller="PullPayment"
+                                   asp-route-pullPaymentId="@pp.Id">View</a> -
+                                <a class="pp-payout" asp-action="Payouts"
+                                   asp-route-walletId="@Context.GetRouteValue("walletId")"
+                                   asp-route-pullPaymentId="@pp.Id">Payouts</a> -
+                                <a asp-action="ArchivePullPayment"
+                                   asp-route-walletId="@Context.GetRouteValue("walletId")"
+                                   asp-route-pullPaymentId="@pp.Id">Archive</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <script type="text/javascript">
+                var ppProgresses = document.getElementsByClassName("ppProgress");
+                for (var i = 0; i < ppProgresses.length; i++) {
+                    var pp = ppProgresses[i];
+                    var ppId = pp.getAttribute("data-pp");
+                    var template = document.getElementById("tooptip_template_" + ppId);
+                    pp.setAttribute("title", template.innerHTML);
+                }
+            </script>
+        </div>
     </div>
-</div>
+}
+else
+{
+    <p class="text-secondary mt-3">
+        There are no pull payments yet.
+    </p>
+}

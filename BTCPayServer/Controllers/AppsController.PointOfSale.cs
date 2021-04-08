@@ -97,10 +97,11 @@ namespace BTCPayServer.Controllers
             settings.DefaultView = settings.EnableShoppingCart ? PosViewType.Cart : settings.DefaultView;
             settings.EnableShoppingCart = false;
 
-            var vm = new UpdatePointOfSaleViewModel()
+            var vm = new UpdatePointOfSaleViewModel
             {
                 Id = appId,
                 StoreId = app.StoreDataId,
+                StoreName = app.StoreData?.StoreName,
                 Title = settings.Title,
                 DefaultView = settings.DefaultView,
                 ShowCustomAmount = settings.ShowCustomAmount,
@@ -183,7 +184,7 @@ namespace BTCPayServer.Controllers
             var app = await GetOwnedApp(appId, AppType.PointOfSale);
             if (app == null)
                 return NotFound();
-            app.SetSettings(new PointOfSaleSettings()
+            app.SetSettings(new PointOfSaleSettings
             {
                 Title = vm.Title,
                 DefaultView = vm.DefaultView,

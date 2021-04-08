@@ -1,17 +1,15 @@
 ﻿@model BTCPayServer.Models.ServerViewModels.MaintenanceViewModel
 @{
-    ViewData.SetActivePageAndTitle(ServerNavPages.Maintenance);
+    ViewData.SetActivePageAndTitle(ServerNavPages.Maintenance, "Maintenance");
 }
 
-<partial name="_StatusMessage" />
+<h2 class="mb-4">@ViewData["PageTitle"]</h2>
 
 <form method="post">
     <div class="row mb-5">
         <div class="col-lg-9 col-xl-8">
-            <div class="form-group">
-                <h5>Change domain name</h5>
-                <span>You can change the domain name of your server by following <a href="https://docs.btcpayserver.org/ChangeDomain" target="_blank">this guide</a></span>
-            </div>
+            <h4 class="mb-3">Change domain name</h4>
+            <p>You can change the domain name of your server by following <a href="https://docs.btcpayserver.org/ChangeDomain" target="_blank">this guide</a>.</p>
 
             <div class="form-group">
                 <div class="form-inline">
@@ -22,28 +20,25 @@
                 </div>
                 <span asp-validation-for="DNSDomain" class="text-danger"></span>
             </div>
-        </div>
-    </div>
-    <div class="row mb-5">
-        <div class="col-lg-9 col-xl-8">
-            <h5>Update</h5>
-            <p class="text-secondary mb-2">Update to the latest version of BTCPay server.</p>
+
+            <h4 class="mt-5 mb-3">Update</h4>
+            <p class="text-secondary">Update to the latest version of BTCPay server.</p>
             <div class="form-group">
                 <div class="input-group">
                     <button name="command" type="submit" class="btn btn-primary" value="update" disabled="@(Model.CanUseSSH ? null : "disabled")">Update</button>
                 </div>
             </div>
             
-            <h5 class="mt-5">Restart</h5>
-            <p class="text-secondary mb-2">Restart BTCPay server and related services.</p>
+            <h4 class="mt-5 mb-3">Restart</h4>
+            <p class="text-secondary">Restart BTCPay server and related services.</p>
             <div class="form-group">
                 <div class="input-group">
                     <button name="command" type="submit" class="btn btn-primary" value="restart" disabled="@(Model.CanUseSSH ? null : "disabled")">Restart</button>
                 </div>
             </div>
 
-            <h5 class="mt-5">Clean</h5>
-            <p class="text-secondary mb-2">Delete unused docker images present on your system.</p>
+            <h4 class="mt-5 mb-3">Clean</h4>
+            <p class="text-secondary">Delete unused docker images present on your system.</p>
             <div class="form-group">
                 <div class="input-group">
                     <button name="command" type="submit" class="btn btn-secondary" value="clean" disabled="@(Model.CanUseSSH ? null : "disabled")">Clean</button>
@@ -54,5 +49,5 @@
 </form>
 
 @section Scripts {
-    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <partial name="_ValidationScriptsPartial" />
 }

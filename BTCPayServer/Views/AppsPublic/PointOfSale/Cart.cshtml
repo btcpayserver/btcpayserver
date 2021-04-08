@@ -202,10 +202,8 @@
     <div id="content">
         <div class="p-2 p-sm-4">
             <div class="row">
-                @if (this.TempData.HasStatusMessage())
-                {
-                    <partial name="_StatusMessage" />
-                }
+                <partial name="_StatusMessage" />
+
                 <div class="col-sm-4 col-lg-2 order-sm-last text-right mb-2">
                     <a class="js-cart btn btn-lg btn-outline-primary" href="#">
                         <i class="fa fa-shopping-basket"></i>&nbsp;

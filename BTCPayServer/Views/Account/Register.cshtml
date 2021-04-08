@@ -6,7 +6,7 @@
 }
 
 @section Scripts {
-    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <partial name="_ValidationScriptsPartial" />
 }
 
 <div class="row justify-content-center mb-2">
@@ -22,10 +22,7 @@
             <span class="d-sm-block">It is secure, private, censorship-resistant and free.</span>
         </p>
 
-        @if (TempData.HasStatusMessage())
-        {
-            <partial name="_StatusMessage"/>
-        }
+        <partial name="_StatusMessage" />
     </div>
 </div>
 

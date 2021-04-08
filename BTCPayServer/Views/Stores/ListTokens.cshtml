@@ -1,10 +1,9 @@
 @model TokensViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePageAndTitle(StoreNavPages.Tokens, "Access Tokens");
+    ViewData.SetActivePageAndTitle(StoreNavPages.Tokens, "Access Tokens", Context.GetStoreData().StoreName);
 }
 
-<partial name="_StatusMessage" />
 @if (Model.StoreNotConfigured)
 {
     <div class="alert alert-warning alert-dismissible mb-5" role="alert">
@@ -13,15 +12,22 @@
         See <a href="https://docs.btcpayserver.org/WalletSetup/" target="_blank" class="alert-link">this link</a> for more information on how to connect your store and wallet.
     </div>
 }
-<h4>Access token</h4>
+
 <div class="row">
-    <div class="col-md-8">
-        <p>Authorize a public key to access Bitpay compatible Invoice API (<a href="https://support.bitpay.com/hc/en-us/articles/115003001183-How-do-I-pair-my-client-and-create-a-token-">More information</a>)</p>
-    </div>
-</div>
-<div class="row">
-    <div class="col-md-8">
-        <a id="CreateNewToken" asp-action="CreateToken" class="btn btn-primary" role="button" asp-route-storeId="@this.Context.GetRouteValue("storeId")"><span class="fa fa-plus"></span> Create a new token</a>
+    <div class="col-lg-8">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h4 class="mb-0">@ViewData["PageTitle"]</h4>
+            <a id="CreateNewToken" asp-action="CreateToken" class="btn btn-primary" role="button" asp-route-storeId="@Context.GetRouteValue("storeId")">
+                <span class="fa fa-plus"></span>
+                Create a new token
+            </a>
+        </div>
+
+        <p>Authorize a public key to access Bitpay compatible Invoice API.
+            <a href="https://support.bitpay.com/hc/en-us/articles/115003001183-How-do-I-pair-my-client-and-create-a-token-" target="_blank">
+                <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+            </a>
+        </p>
 
         @if (Model.Tokens.Any())
         {
@@ -38,26 +44,25 @@
                     <tr>
                         <td>@token.Label</td>
                         <td class="text-right">
-                            <a asp-action="ShowToken" asp-route-storeId="@this.Context.GetRouteValue("storeId")" asp-route-tokenId="@token.Id">See information</a> - <a asp-action="RevokeToken" asp-route-storeId="@this.Context.GetRouteValue("storeId")" asp-route-tokenId="@token.Id">Revoke</a>
+                            <a asp-action="ShowToken" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-tokenId="@token.Id">See information</a> - <a asp-action="RevokeToken" asp-route-storeId="@this.Context.GetRouteValue("storeId")" asp-route-tokenId="@token.Id">Revoke</a>
                         </td>
                     </tr>
                 }
                 </tbody>
             </table>
         }
-    </div>
-</div>
-<hr class="my-5" />
-<h4>Legacy API Keys</h4>
-<div class="row">
-    <div class="col-md-8">
-        <p>Alternatively, you can use the invoice API by including the following HTTP Header in your requests:<br /> <code>Authorization: Basic @Model.EncodedApiKey</code> </p>
-    </div>
-</div>
+        else
+        {
+            <p class="text-secondary mt-3">
+                There are no access tokens yet.
+            </p>
+        }
 
-<div class="row">
-    <div class="col-md-8">
-        <form method="post" asp-action="GenerateAPIKey" asp-route-storeId="@this.Context.GetRouteValue("storeId")">
+        <h4 class="mt-5 mb-3">Legacy API Keys</h4>
+        <p>Alternatively, you can use the invoice API by including the following HTTP Header in your requests:</p>
+        <p><code>Authorization: Basic @Model.EncodedApiKey</code></p>
+
+        <form method="post" asp-action="GenerateAPIKey" asp-route-storeId="@Context.GetRouteValue("storeId")">
             <div class="form-group">
                 <label asp-for="ApiKey"></label>
                 <div class="input-group">

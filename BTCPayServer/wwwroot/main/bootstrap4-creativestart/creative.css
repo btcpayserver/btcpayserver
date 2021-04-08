@@ -51,7 +51,7 @@ hr.light {
 }
 
 #mainNav .navbar-nav > li.nav-item > a.nav-link {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: bold;
   color: var(--btcpay-header-color-link, var(--btcpay-color-neutral-100));
 }

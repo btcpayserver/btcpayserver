@@ -1,7 +1,6 @@
 @using BTCPayServer.Services.Invoices
 @using BTCPayServer.Client.Models
 @model BTCPayServer.Models.PaymentRequestViewModels.ViewPaymentRequestViewModel
-
 @addTagHelper *, BundlerMinifier.TagHelpers
 @inject BTCPayServer.Services.BTCPayServerEnvironment env
 @inject BTCPayServer.HostedServices.CssThemeManager themeManager
@@ -197,7 +196,7 @@
 
         <main class="flex-grow-1 py-4">
             <div class="container">
-                @await Html.PartialAsync("_StatusMessage", new ViewDataDictionary(ViewData){ { "Margin", "mb-4" } })
+                <partial name="_StatusMessage" model="@(new ViewDataDictionary(ViewData){ { "Margin", "mb-4" } })" />
                 <div class="row">
                     <div class="col col-12 col-lg-6 mb-4">
                         <div class="jumbotron h-100 m-0 p-sm-5">

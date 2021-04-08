@@ -1,20 +1,13 @@
 ﻿@model BTCPayServer.Models.ServerViewModels.ServicesViewModel
 @{
-    ViewData.SetActivePageAndTitle(ServerNavPages.Services);
+    ViewData.SetActivePageAndTitle(ServerNavPages.Services, "Services");
 }
 
-
-<partial name="_StatusMessage" />
-<div class="row">
-    <div class="col-lg-9 col-xl-8">
-        <div asp-validation-summary="All" class="text-danger"></div>
-    </div>
-</div>
+<h2 class="mb-4">@ViewData["PageTitle"]</h2>
 
 <div class="row mb-5">
     <div class="col-lg-9 col-xl-8">
-        <h4>Crypto services exposed by your server</h4>
-
+        <h4 class="mb-3">Crypto services exposed by your server</h4>
         <table class="table table-sm mt-2">
             <thead>
                 <tr>
@@ -50,7 +43,7 @@
 {
     <div class="row mb-5">
         <div class="col-lg-9 col-xl-8">
-            <h4>Other external services</h4>
+            <h4 class="mb-3">Other external services</h4>
 
             <table class="table table-sm mt-2">
                 <thead>
@@ -88,7 +81,7 @@
 {
     <div class="row mb-5">
         <div class="col-lg-9 col-xl-8">
-            <h4>HTTP-based TOR hidden services</h4>
+            <h4 class="mb-3">HTTP-based TOR hidden services</h4>
 
             <table class="table table-sm mt-2">
                 <thead>
@@ -117,7 +110,7 @@
 {
     <div class="row mb-5">
         <div class="col-lg-9 col-xl-8">
-            <h4>Other TOR hidden services</h4>
+            <h4 class="mb-3">Other TOR hidden services</h4>
 
             <table class="table table-sm mt-2">
                 <thead>
@@ -143,7 +136,7 @@
 }
 <div class="row mb-5">
     <div class="col-lg-9 col-xl-8">
-        <h4>External storage services</h4>
+        <h4 class="mb-3">External storage services</h4>
         <p class="text-secondary mb-0">Integrated storage providers to store file uploads from BTCPay Server.</p>
 
         <table class="table table-sm mt-2">
@@ -169,5 +162,5 @@
 </div>
 
 @section Scripts {
-    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <partial name="_ValidationScriptsPartial" />
 }

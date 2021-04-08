@@ -2,24 +2,16 @@
 @model BTCPayServer.Controllers.WalletReceiveViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["Title"] = "Manage wallet";
-    ViewData.SetActivePageAndTitle(WalletsNavPages.Receive);
+    ViewData.SetActivePageAndTitle(WalletsNavPages.Receive, $"Receive {Model.CryptoCode}", Context.GetStoreData().StoreName);
 }
-@if (TempData.HasStatusMessage())
-{
-    <div class="row">
-        <div class="col-md-12 text-center">
-            <partial name="_StatusMessage"/>
-        </div>
-    </div>
-}
+
 <div class="row no-gutters">
     <div class="col-lg-8 mx-auto my-auto">
         <form method="post" asp-action="WalletReceive" class="card text-center">
             <div class="card-body">
                 @if (string.IsNullOrEmpty(Model.Address))
                 {
-                    <h3 class="card-title mb-3">Receive @Model.CryptoCode</h3>
+                    <h3 class="card-title mb-3">@ViewData["PageTitle"]</h3>
                     <button id="generateButton" class="btn btn-lg btn-primary" type="submit" name="command" value="generate-new-address">Generate @Model.CryptoCode address</button>
                 }
                 else

@@ -88,8 +88,6 @@
     }
 }
 
-<partial name="_StatusMessage"/>
-
 <style>
     .version-switch .nav-link { display: inline; }
     .version-switch .nav-link.active { display: none; }
@@ -118,7 +116,7 @@
 
 @if (Model.Installed.Any())
 {
-    <h3 class="mb-3">Installed Plugins</h3>
+    <h2 class="mb-4">Installed Plugins</h2>
     <div class="row mb-4">
         @foreach (var plugin in Model.Installed)
         {
@@ -235,9 +233,10 @@
         }
     </div>
 }
+
 @if (availableAndNotInstalled.Any())
 {
-    <h3 class="mb-3">Available Plugins</h3>
+    <h2 class="mb-4">Available Plugins</h2>
     <div class="row mb-4">
         @foreach (var pluginT in availableAndNotInstalled)
         {
@@ -250,7 +249,7 @@
                             @plugin.Version
                             @if (pluginT.Item2)
                             {
-                                <div class="badge badge-light ml-2" data-toggle="tooltip" title="This plugin has been recommended to be installed by your deployment method." class="text-nowrap">Recommended <span class="fa fa-question-circle-o"></span></div>
+                                <div class="badge badge-light ml-2" data-toggle="tooltip" title="This plugin has been recommended to be installed by your deployment method." class="text-nowrap">Recommended <span class="fa fa-question-circle-o text-secondary"></span></div>
                             }
                         </h5>
                         <p class="card-text">@plugin.Description</p>

@@ -2,25 +2,14 @@
 @using System.Globalization
 @model UpdateCrowdfundViewModel
 @{
-    ViewData["Title"] = "Update Crowdfund";
+    ViewData.SetActivePageAndTitle(AppsNavPages.Update, "Update Crowdfund", Model.StoreName);
 }
 <section>
-
     <div class="container">
-        <div class="row">
-            <div class="col-lg-12 section-heading">
-                <h2>@ViewData["Title"]</h2>
-                <hr class="primary">
-            </div>
-        </div>
-        @if (TempData.HasStatusMessage())
-        {
-            <div class="row">
-                <div class="col-lg-12 text-center">
-                    <partial name="_StatusMessage" />
-                </div>
-            </div>
-        }
+        <partial name="_StatusMessage" />
+
+        <h2 class="mb-4">@ViewData["PageTitle"]</h2>
+
         <div class="row">
             <div class="col-lg-12">
                 <form method="post">
@@ -92,7 +81,9 @@
                         </div>
                         <span asp-validation-for="EndDate" class="text-danger"></span>
                     </div>
-                    <partial name="TemplateEditor" model="@(nameof(Model.PerksTemplate), "Perks" )"/>
+
+                    <partial name="TemplateEditor" model="@(nameof(Model.PerksTemplate), "Perks")" />
+
                     <div class="form-group">
                         <label asp-for="PerksTemplate" class="control-label"></label>
                         <textarea asp-for="PerksTemplate" rows="10" cols="40" class="js-product-template form-control"></textarea>
@@ -100,7 +91,9 @@
                     </div>
                     <div class="form-group">
                         <label asp-for="CustomCSSLink" class="control-label"></label>
-                        <a href="https://docs.btcpayserver.org/Theme/#2-bootstrap-themes" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                        <a href="https://docs.btcpayserver.org/Theme/#2-bootstrap-themes" target="_blank">
+                            <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                        </a>
                         <input asp-for="CustomCSSLink" class="form-control" />
                         <span asp-validation-for="CustomCSSLink" class="text-danger"></span>
                     </div>

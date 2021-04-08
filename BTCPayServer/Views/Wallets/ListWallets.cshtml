@@ -1,24 +1,22 @@
 ﻿@model BTCPayServer.Models.WalletViewModels.ListWalletsViewModel
 @{
-    ViewData["Title"] = "Wallets";
+    ViewData.SetActivePageAndTitle(WalletsNavPages.Index, "Wallets");
 }
 
 <section>
     <div class="container">
-        @if (TempData.HasStatusMessage())
-        {
-            <div class="row">
-                <div class="col-lg-12 text-center">
-                    <partial name="_StatusMessage" />
-                </div>
-            </div>
-        }
+        <partial name="_StatusMessage" />
 
         <div class="row">
             <div class="col-lg-12 section-heading">
-                <h2>@ViewData["Title"]</h2>
-                <hr class="primary">
-                <p>Connect and manage wallets. <a href="https://docs.btcpayserver.org/Wallet/" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a></p>
+                <h2>
+                    @ViewData["Title"]
+                    <small>
+                        <a href="https://docs.btcpayserver.org/Wallet/" target="_blank">
+                            <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                        </a>
+                    </small>
+                </h2>
             </div>
         </div>
 

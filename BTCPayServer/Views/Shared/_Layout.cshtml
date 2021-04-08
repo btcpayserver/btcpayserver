@@ -13,23 +13,19 @@
 
 <!DOCTYPE html>
 <html lang="en"@(Env.IsDeveloping ? " data-devenv" : "")>
-
 <head>
     <partial name="Header" />
     @await RenderSectionAsync("HeadScripts", false)
     @await RenderSectionAsync("HeaderContent", false)
 </head>
-
 <body id="page-top">
-
-    @{
+@{
         if (ViewBag.AlwaysShrinkNavBar == null)
         {
             ViewBag.AlwaysShrinkNavBar = true;
         }
         var additionalStyle = ViewBag.AlwaysShrinkNavBar ? "navbar-shrink always-shrinked" : "";
     }
-
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg fixed-top @additionalStyle" id="mainNav">
         <div class="container px-sm-3">
@@ -133,5 +129,4 @@
         }
     </script>
 </body>
-
 </html>

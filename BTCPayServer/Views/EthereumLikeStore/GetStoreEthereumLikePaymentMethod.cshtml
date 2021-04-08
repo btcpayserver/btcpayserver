@@ -1,29 +1,20 @@
-
 @using BTCPayServer.Views.Stores
 @model BTCPayServer.Services.Altcoins.Ethereum.UI.EditEthereumPaymentMethodViewModel
 
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-
     ViewData["NavPartialName"] = "../Stores/_Nav";
-    ViewData.SetActivePageAndTitle(StoreNavPages.ActivePage, $"{this.Context.GetRouteValue("cryptoCode")} Settings");
+    ViewData.SetActivePageAndTitle(StoreNavPages.ActivePage, $"{Context.GetRouteValue("cryptoCode")} Settings", Context.GetStoreData().StoreName);
 }
 
-
-<partial name="_StatusMessage"/>
-
-<div class="row">
-    <div class="col-md-6">
-        <div asp-validation-summary="All" class="text-danger"></div>
-    </div>
-</div>
 <div class="row">
     <div class="col-md-8">
         <div class="alert alert-warning">DO NOT USE THE WALLET TO ACCEPT PAYMENTS OUTSIDE OF THIS STORE.<br/>If you spend funds received on invoices which have not been marked complete yet, the invoice will be marked as unpaid.
         </div>
+        <div asp-validation-summary="All" class="text-danger"></div>
         <form method="post" asp-action="GetStoreEthereumLikePaymentMethod"
-              asp-route-storeId="@this.Context.GetRouteValue("storeId")"
-              asp-route-cryptoCode="@this.Context.GetRouteValue("cryptoCode")"
+              asp-route-storeId="@Context.GetRouteValue("storeId")"
+              asp-route-cryptoCode="@Context.GetRouteValue("cryptoCode")"
               class="mt-4" enctype="multipart/form-data">
 
             <input type="hidden" asp-for="OriginalIndex"/>
@@ -85,8 +76,8 @@
                 <button type="submit" class="btn btn-primary" id="SaveButton">Save</button>
 
                 <a class="btn btn-secondary" asp-action="GetStoreEthereumLikePaymentMethods"
-                   asp-route-storeId="@this.Context.GetRouteValue("storeId")"
-                   asp-route-cryptoCode="@this.Context.GetRouteValue("cryptoCode")"
+                   asp-route-storeId="@Context.GetRouteValue("storeId")"
+                   asp-route-cryptoCode="@Context.GetRouteValue("cryptoCode")"
                    asp-controller="EthereumLikeStore">
                     Back to list
                 </a>

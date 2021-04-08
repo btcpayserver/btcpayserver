@@ -6,35 +6,25 @@
 }
 <section>
     <div class="container">
-        @if (TempData.HasStatusMessage())
-        {
-            <div class="row">
-                <div class="col-lg-12 text-center">
-                    <partial name="_StatusMessage" />
-                </div>
-            </div>
-        }
-        <div class="row">
-            <div class="col-lg-12 section-heading">
-                <h2>Payment Requests</h2>
-                <hr class="primary">
-                <p>
-                    Create, search or pay a payment request.
+        <partial name="_StatusMessage" />
+
+        <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h2 class="mb-0">
+                @ViewData["Title"]
+                <small>
                     <a href="https://docs.btcpayserver.org/PaymentRequests/" class="ml-1" target="_blank">
                         <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
                     </a>
-                </p>
-            </div>
+                </small>
+            </h2>
+            <a asp-action="EditPaymentRequest" class="btn btn-primary mt-3 mt-sm-0" role="button" id="CreatePaymentRequest">
+                <span class="fa fa-plus"></span>
+                Create a payment request
+            </a>
         </div>
 
         <div class="row">
-            <div class="col-12 col-md-4 col-lg-6 mb-3">
-                <a asp-action="EditPaymentRequest" class="btn btn-primary" role="button" id="CreatePaymentRequest">
-                    <span class="fa fa-plus"></span>
-                    Create a payment request
-                </a>
-            </div>
-            <div class="col-12 col-md-8 col-lg-6 mb-3">
+            <div class="col-12 col-lg-6 mb-3 ml-auto">
                 <form asp-action="GetPaymentRequests" method="get">
                     <input type="hidden" asp-for="Count"/>
                     <input type="hidden" asp-for="TimezoneOffset" />

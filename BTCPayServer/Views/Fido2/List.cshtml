@@ -16,7 +16,7 @@
     @foreach (var device in Model.Credentials)
     {
         <tr>
-            <td>@device.Name</td>
+            <td>@(string.IsNullOrEmpty(device.Name)? "Unnamed FIDO2 credential": device.Name)</td>
             <td class="text-right">
                 <a asp-action="Remove" asp-route-id="@device.Id">Remove</a>
             </td>

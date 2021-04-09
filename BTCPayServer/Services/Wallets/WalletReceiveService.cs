@@ -1,4 +1,3 @@
-#nullable enable
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -53,6 +52,7 @@ namespace BTCPayServer.Services.Wallets
             }
 
             await explorerClient.CancelReservationAsync(kpi.DerivationStrategy, new[] {kpi.KeyPath});
+            Remove(walletId);
             return kpi.Address.ToString();
         }
 

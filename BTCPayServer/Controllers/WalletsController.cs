@@ -551,6 +551,7 @@ namespace BTCPayServer.Controllers
             vm.NBXSeedAvailable = await GetSeed(walletId, network) != null;
             if (!string.IsNullOrEmpty(bip21))
             {
+                vm.Outputs?.Clear();
                 LoadFromBIP21(vm, bip21, network);
             }
 
@@ -588,6 +589,10 @@ namespace BTCPayServer.Controllers
 
             if (!string.IsNullOrEmpty(bip21))
             {
+                if (!vm.Outputs.Any())
+                {
+                    vm.Outputs.Add(new WalletSendModel.TransactionOutput());
+                }
                 return View(vm);
             }
             if (command == "add-output")

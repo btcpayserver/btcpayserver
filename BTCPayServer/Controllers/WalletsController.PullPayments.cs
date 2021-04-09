@@ -210,7 +210,6 @@ namespace BTCPayServer.Controllers
 
             var command = vm.Command.Substring(vm.Command.IndexOf('-', StringComparison.InvariantCulture) + 1);
 
-            List<PayoutData> payouts = null;
             switch (command)
             {
                 
@@ -219,7 +218,7 @@ namespace BTCPayServer.Controllers
                 {
                     await using var ctx = this._dbContextFactory.CreateContext();
                     ctx.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
-                    payouts = await GetPayoutsForPaymentMethod(walletId.GetPaymentMethodId(), ctx, payoutIds, storeId, cancellationToken);
+                    var payouts = await GetPayoutsForPaymentMethod(walletId.GetPaymentMethodId(), ctx, payoutIds, storeId, cancellationToken);
 
                     for (int i = 0; i < payouts.Count; i++)
                     {
@@ -278,23 +277,22 @@ namespace BTCPayServer.Controllers
                 {
                     await using var ctx = this._dbContextFactory.CreateContext();
                     ctx.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
-                    payouts ??= await GetPayoutsForPaymentMethod(walletId.GetPaymentMethodId(), ctx, payoutIds, storeId, cancellationToken);
+                    var payouts = await GetPayoutsForPaymentMethod(walletId.GetPaymentMethodId(), ctx, payoutIds, storeId, cancellationToken);
 
                     var walletSend = (WalletSendModel)((ViewResult)(await this.WalletSend(walletId))).Model;
                     walletSend.Outputs.Clear();
+                    var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
+                    List<string> bip21 = new List<string>(); 
                     foreach (var payout in payouts)
                     {
                         var blob = payout.GetBlob(_jsonSerializerSettings);
                         if (payout.GetPaymentMethodId() != paymentMethodId)
                             continue;
-                        var output = new WalletSendModel.TransactionOutput()
-                        {
-                            Amount = blob.CryptoAmount,
-                            DestinationAddress = blob.Destination
-                        };
-                        walletSend.Outputs.Add(output);
+                        bip21.Add(network.GenerateBIP21(payout.Destination, new Money(blob.CryptoAmount.Value, MoneyUnit.BTC)));
+                        
                     }
-                    return View(nameof(walletSend), walletSend);
+
+                    return RedirectToAction(nameof(WalletSend), new {walletId, bip21});
                 }
 
                 case "cancel":

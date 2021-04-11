@@ -30,13 +30,14 @@ namespace BTCPayServer.Controllers
         {
             var fileUrl = string.IsNullOrEmpty(fileId) ? null : await _FileService.GetFileUrl(Request.GetAbsoluteRootUri(), fileId);
 
-            return View(new ViewFilesViewModel()
+            var model = new ViewFilesViewModel()
             {
                 Files = await _StoredFileRepository.GetFiles(),
                 SelectedFileId = string.IsNullOrEmpty(fileUrl) ? null : fileId,
                 DirectFileUrl = fileUrl,
                 StorageConfigured = (await _SettingsRepository.GetSettingAsync<StorageSettings>()) != null
-            });
+            };
+            return View(model);
         }
 
         [HttpGet("server/files/{fileId}/delete")]

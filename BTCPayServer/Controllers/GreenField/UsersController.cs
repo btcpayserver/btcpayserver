@@ -81,7 +81,7 @@ namespace BTCPayServer.Controllers.GreenField
 
         [Authorize(Policy = Policies.CanDeleteUser, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpDelete("~/api/v1/users/me")]
-        public async Task<ActionResult<ApplicationUserData>> DeleteCurrentUser()
+        public async Task<IActionResult> DeleteCurrentUser()
         {
             // Don't want to allow the user to delete themselves if they are the only admin
             if (await IsUserTheOnlyOneAdmin()) {
@@ -198,7 +198,7 @@ namespace BTCPayServer.Controllers.GreenField
 
         [HttpDelete("~/api/v1/users/{userId}")]
         [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        public async Task<ActionResult<ApplicationUserData>> DeleteUser(string userId)
+        public async Task<IActionResult> DeleteUser(string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)

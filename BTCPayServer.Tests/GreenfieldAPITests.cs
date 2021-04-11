@@ -129,6 +129,28 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
+        public async Task CanDeleteUsersViaApi()
+        {
+            using (var tester = ServerTester.Create(newDb: true))
+            {
+                await tester.StartAsync();
+                var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
+                // Should not be authorized to perform this action
+                await AssertHttpError(401,
+                    async () => await unauthClient.DeleteUser("lol user id"));
+
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                await user.MakeAdmin();
+                var adminClient = await user.CreateClient(Policies.Unrestricted);
+                // Should 404 if user doesn't exist
+                await AssertHttpError(404,
+                    async () => await adminClient.DeleteUser("lol user id"));
+            }
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
         public async Task CanCreateUsersViaAPI()
         {
             using (var tester = ServerTester.Create(newDb: true))

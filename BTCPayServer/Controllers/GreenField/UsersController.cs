@@ -226,21 +226,6 @@ namespace BTCPayServer.Controllers.GreenField
             return Ok();
         }
 
-        private async Task<Boolean> IsAdmin() 
-        {
-            var anyAdmin = (await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin)).Any();
-            // You are an admin if there are no other admins
-            if (!anyAdmin) 
-            {
-                return true;
-            }
-
-            var isAuth = User.Identity.AuthenticationType == GreenFieldConstants.AuthenticationType;
-            return (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanModifyServerSettings))).Succeeded
-                    && (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.Unrestricted))).Succeeded
-                    && isAuth;
-        }
-
         private async Task<ApplicationUserData> FromModel(ApplicationUser data)
         {
             var roles = (await _userManager.GetRolesAsync(data)).ToArray();

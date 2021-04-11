@@ -200,7 +200,7 @@ namespace BTCPayServer.Controllers.GreenField
         [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<ActionResult<ApplicationUserData>> DeleteUser(string userId)
         {
-            var user = userId == null ? null : await _userManager.FindByIdAsync(userId);
+            var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
             {
                 return NotFound();

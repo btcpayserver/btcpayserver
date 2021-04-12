@@ -8,6 +8,7 @@ namespace BTCPayServer.Client.Models
 {
     public class InvoicePaymentMethodDataModel
     {
+        public bool Activated { get; set; }
         public string Destination { get; set; }
         public string PaymentLink { get; set; }
 

@@ -4,21 +4,13 @@
 
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-
     ViewData["NavPartialName"] = "../Stores/_Nav";
     ViewData.SetActivePageAndTitle(StoreNavPages.ActivePage, $"{Model.CryptoCode} Settings");
 }
 
-
-<partial name="_StatusMessage" />
-
-<div class="row">
-    <div class="col-md-6">
-        <div asp-validation-summary="All" class="text-danger"></div>
-    </div>
-</div>
 <div class="row">
     <div class="col-md-8">
+        <div asp-validation-summary="All" class="text-danger"></div>
         @if (Model.Summary != null)
         {
             <div class="card">
@@ -31,11 +23,11 @@
             </div>
         }
 
-        @if (!Model.WalletFileFound || Model.Summary.WalletHeight == default(long))
+        @if (!Model.WalletFileFound || Model.Summary.WalletHeight == default)
         {
             <form method="post" asp-action="GetStoreMoneroLikePaymentMethod" 
-                  asp-route-storeId="@this.Context.GetRouteValue("storeId")"
-                  asp-route-cryptoCode="@this.Context.GetRouteValue("cryptoCode")" 
+                  asp-route-storeId="@Context.GetRouteValue("storeId")"
+                  asp-route-cryptoCode="@Context.GetRouteValue("cryptoCode")"
                   class="mt-4" enctype="multipart/form-data">
 
                 <div class="card my-2">
@@ -62,12 +54,12 @@
             </form>
         }
         <form method="post" asp-action="GetStoreMoneroLikePaymentMethod"
-              asp-route-storeId="@this.Context.GetRouteValue("storeId")"
-              asp-route-cryptoCode="@this.Context.GetRouteValue("cryptoCode")" 
+              asp-route-storeId="@Context.GetRouteValue("storeId")"
+              asp-route-cryptoCode="@Context.GetRouteValue("cryptoCode")"
               class="mt-4" enctype="multipart/form-data">
 
             <input type="hidden" asp-for="CryptoCode"/>
-            @if (!Model.WalletFileFound || Model.Summary.WalletHeight == default(long))
+            @if (!Model.WalletFileFound || Model.Summary.WalletHeight == default)
             {
                 <input type="hidden" asp-for="AccountIndex"/>
             }
@@ -90,7 +82,7 @@
                     <div class="input-group my-3">
                         <input type="text" class="form-control" placeholder="New account label" asp-for="NewAccountLabel">
                         <div class="input-group-append">
-                            <button name="command" value="add-account" class="btn btn-secondary"type="submit">Add account</button>
+                            <button name="command" value="add-account" class="btn btn-secondary" type="submit">Add account</button>
                         </div>
                     </div>
 
@@ -107,9 +99,8 @@
                 <button type="submit" class="btn btn-primary" id="SaveButton">Save</button>
 
                 <a class="btn btn-secondary" asp-action="GetStoreMoneroLikePaymentMethods"
-
-                   asp-route-storeId="@this.Context.GetRouteValue("storeId")"
-                   asp-route-cryptoCode="@this.Context.GetRouteValue("cryptoCode")"
+                   asp-route-storeId="@Context.GetRouteValue("storeId")"
+                   asp-route-cryptoCode="@Context.GetRouteValue("cryptoCode")"
                    asp-controller="MoneroLikeStore">
                     Back to list
                 </a>

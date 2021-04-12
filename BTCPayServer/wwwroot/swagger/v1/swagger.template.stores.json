@@ -381,6 +381,11 @@
                         "default": false,
                         "description": "If true, payjoin will be proposed in the checkout page if possible. ([More information](https://docs.btcpayserver.org/Payjoin/))"
                     },
+                    "lazyPaymentMethods": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "If true, payment methods are enabled individually upon user interaction in the invoice"
+                    },
                     "defaultPaymentMethod": {
                         "type": "string",
                         "example": "BTC",

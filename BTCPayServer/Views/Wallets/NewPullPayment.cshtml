@@ -1,8 +1,9 @@
 ﻿@model NewPullPaymentModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["Title"] = "New pull payment";
+    ViewData.SetActivePageAndTitle(WalletsNavPages.PullPayments, "New pull payment", Context.GetStoreData().StoreName);
 }
+
 <style type="text/css">
     .smMaxWidth {
         max-width: 200px;
@@ -47,19 +48,14 @@
         }
 </style>
 
-@if (TempData.HasStatusMessage())
-{
-    <div class="row">
-        <div class="col-md-12 text-center">
-            <partial name="_StatusMessage" />
-        </div>
-    </div>
-}
+<partial name="_StatusMessage" />
 
 <div class="row">
     <div class="col-md-6">
+        <h4 class="mb-3">@ViewData["Title"]</h4>
+
         <form method="post"
-              asp-route-walletId="@this.Context.GetRouteValue("walletId")"
+              asp-route-walletId="@Context.GetRouteValue("walletId")"
               asp-action="NewPullPayment">
             <div class="form-group">
                 <label asp-for="Name" class="control-label"></label>
@@ -81,7 +77,7 @@
             <div class="form-group">
                 <label asp-for="CustomCSSLink" class="control-label"></label>
                 <a href="https://docs.btcpayserver.org/Theme/#2-bootstrap-themes" target="_blank">
-                    <span class="fa fa-question-circle-o" title="More information..."></span>
+                    <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
                 </a>
                 <input asp-for="CustomCSSLink" class="form-control" />
                 <span asp-validation-for="CustomCSSLink" class="text-danger"></span>
@@ -93,6 +89,7 @@
             </div>
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" id="Create" />
+                <a asp-action="PullPayments" asp-route-walletId="@Context.GetRouteValue("walletId")" class="text-muted ml-3">Back to list</a>
             </div>
         </form>
     </div>

@@ -1,8 +1,7 @@
 ﻿@model ListTransactionsViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["Title"] = "Manage wallet";
-    ViewData.SetActivePageAndTitle(WalletsNavPages.Transactions);
+    ViewData.SetActivePageAndTitle(WalletsNavPages.Transactions, $"{Model.CryptoCode} Transactions", Context.GetStoreData().StoreName);
 }
 <style type="text/css">
     .smMaxWidth {
@@ -58,40 +57,35 @@
         left: -8px;
     }
 </style>
-@if (TempData.HasStatusMessage())
-{
-    <div class="row">
-        <div class="col-md-12 text-center">
-            <partial name="_StatusMessage" />
-        </div>
-    </div>
-}
-<div class="row">
-    <div class="col-md-12">
-        If BTCPay Server shows you an invalid balance, <a asp-action="WalletRescan" asp-route-walletId="@Context.GetRouteValue("walletId")">rescan your wallet</a>. <br />
-        If some transactions appear in BTCPay Server, but are missing on Electrum or another wallet, <a href="https://docs.btcpayserver.org/FAQ/FAQ-Wallet/#missing-payments-in-my-software-or-hardware-wallet">follow those instructions</a>.
-    </div>
-</div>
-@if (Model.Labels.Any())
-{
 
-    <div class="row mt-4">
-        <div class="col-md-12">
-            <div class="d-flex flex-row align-items-start flex-wrap card card-body p-2">
-                <span class="mr-2">Filter by label:</span>
-                @foreach (var label in Model.Labels)
-                {
-                    <a asp-route-labelFilter="@label.Text" class="badge mr-2 my-1 position-relative text-white d-block"
-                       style="background-color: @label.Color;"><span class="text-white">@label.Text</span></a>
-                }
+<h4 class="mb-3">@ViewData["PageTitle"]</h4>
+<p>
+    If BTCPay Server shows you an invalid balance, <a asp-action="WalletRescan" asp-route-walletId="@Context.GetRouteValue("walletId")">rescan your wallet</a>.
+    <br/>
+    If some transactions appear in BTCPay Server, but are missing in another wallet, <a href="https://docs.btcpayserver.org/FAQ/FAQ-Wallet/#missing-payments-in-my-software-or-hardware-wallet">follow these instructions</a>.
+</p>
+
+@if (Model.Transactions.Any())
+{
+    @if (Model.Labels.Any())
+    {
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="d-flex flex-row align-items-start flex-wrap card card-body p-2">
+                    <span class="mr-2">Filter by label:</span>
+                    @foreach (var label in Model.Labels)
+                    {
+                        <a asp-route-labelFilter="@label.Text" class="badge mr-2 my-1 position-relative text-white d-block"
+                           style="background-color: @label.Color;"><span class="text-white">@label.Text</span></a>
+                    }
+                </div>
             </div>
         </div>
-    </div>
-}
-<div class="row">
-    <div class="col-md-12">
-        <table class="table table-sm table-responsive-lg">
-            <thead class="thead-inverse">
+    }
+    <div class="row">
+        <div class="col-md-12">
+            <table class="table table-sm table-responsive-lg">
+                <thead class="thead-inverse">
                 <tr>
                     <th style="min-width: 90px;" class="col-md-auto">
                         Date
@@ -104,8 +98,8 @@
                     <th class="text-right">Amount</th>
                     <th class="text-right"></th>
                 </tr>
-            </thead>
-            <tbody>
+                </thead>
+                <tbody>
                 @foreach (var transaction in Model.Transactions)
                 {
                     <tr>
@@ -165,14 +159,14 @@
                             <td style="text-align:right; color:red;" class="text-right">@transaction.Balance</td>
                         }
                         <td class="text-right">
-                            <div class="dropleft d-inline-block" >
+                            <div class="dropleft d-inline-block">
                                 <span class="fa fa-tags cursor-pointer" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></span>
                                 <div class="dropdown-menu">
                                     <form asp-action="ModifyTransaction" method="post"
-                                        asp-route-walletId="@Context.GetRouteValue("walletId")">
-                                        <input type="hidden" name="transactionId" value="@transaction.Id" />
+                                          asp-route-walletId="@Context.GetRouteValue("walletId")">
+                                        <input type="hidden" name="transactionId" value="@transaction.Id"/>
                                         <div class="input-group p-2">
-                                            <input name="addlabel" placeholder="Label name" maxlength="20" type="text" class="form-control form-control-sm" />
+                                            <input name="addlabel" placeholder="Label name" maxlength="20" type="text" class="form-control form-control-sm"/>
                                             <div class="input-group-append">
                                                 <button type="submit" class="btn btn-primary btn-sm"><span class="fa fa-plus"></span></button>
                                             </div>
@@ -206,8 +200,8 @@
                                 }
                                 <div class="dropdown-menu">
                                     <form asp-action="ModifyTransaction" method="post"
-                                        asp-route-walletId="@Context.GetRouteValue("walletId")">
-                                        <input type="hidden" name="transactionId" value="@transaction.Id" />
+                                          asp-route-walletId="@Context.GetRouteValue("walletId")">
+                                        <input type="hidden" name="transactionId" value="@transaction.Id"/>
                                         <div class="input-group p-2">
                                             <textarea name="addcomment" maxlength="200" rows="2" cols="20" class="form-control form-control-sm">@transaction.Comment</textarea>
                                         </div>
@@ -220,8 +214,15 @@
                         </td>
                     </tr>
                 }
-            </tbody>
-        </table>
-        <vc:pager view-model="Model" />
+                </tbody>
+            </table>
+            <vc:pager view-model="Model"/>
+        </div>
     </div>
-</div>
+}
+else
+{
+    <p class="text-secondary mt-3">
+        There are no transactions yet.
+    </p>
+}

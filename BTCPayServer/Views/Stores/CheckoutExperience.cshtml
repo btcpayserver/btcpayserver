@@ -2,23 +2,16 @@
 @model CheckoutExperienceViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePageAndTitle(StoreNavPages.Checkout, "Checkout experience");
-}
-
-<partial name="_StatusMessage" />
-
-@if (!ViewContext.ModelState.IsValid)
-{
-<div class="row">
-    <div class="col-md-6">
-        <div asp-validation-summary="All" class="text-danger"></div>
-    </div>
-</div>
+    ViewData.SetActivePageAndTitle(StoreNavPages.Checkout, "Checkout experience", Context.GetStoreData().StoreName);
 }
 
 <div class="row">
-    <div class="col-md-8">
+    <div class="col-lg-8">
         <form method="post">
+            @if (!ViewContext.ModelState.IsValid)
+            {
+                <div asp-validation-summary="All" class="text-danger"></div>
+            }
             <h4 class="mb-3">Payment</h4>
             @if (Model.PaymentMethods.Any())
             {
@@ -38,7 +31,7 @@
                         var criteria = Model.PaymentMethodCriteria[index];
                         <tr>
                             <td class="border-right-0 border-left-0 pt-3">
-                                <input type="hidden" asp-for="PaymentMethodCriteria[index].PaymentMethod" />
+                                <input type="hidden" asp-for="PaymentMethodCriteria[index].PaymentMethod"/>
                                 @PaymentMethodId.Parse(criteria.PaymentMethod).ToPrettyString()
                             </td>
                             <td class="border-right-0  border-left-0 ">
@@ -49,7 +42,7 @@
 
                             </td>
                             <td class="border-right-0  border-left-0">
-                                <input placeholder="6.15 USD" asp-for="PaymentMethodCriteria[index].Value" class="form-control my-0" style="max-width: 20ch;" />
+                                <input placeholder="6.15 USD" asp-for="PaymentMethodCriteria[index].Value" class="form-control my-0" style="max-width: 20ch;"/>
                             </td>
                         </tr>
                     }
@@ -58,26 +51,32 @@
 
             <div class="form-group">
                 <div class="form-check">
-                    <input asp-for="RequiresRefundEmail" type="checkbox" class="form-check-input" />
+                    <input asp-for="RequiresRefundEmail" type="checkbox" class="form-check-input"/>
                     <label asp-for="RequiresRefundEmail" class="form-check-label"></label>
                 </div>
             </div>
             <div class="form-group">
                 <div class="form-check">
-                    <input asp-for="LightningAmountInSatoshi" type="checkbox" class="form-check-input" />
+                    <input asp-for="LightningAmountInSatoshi" type="checkbox" class="form-check-input"/>
                     <label asp-for="LightningAmountInSatoshi" class="form-check-label"></label>
                 </div>
             </div>
             <div class="form-group">
                 <div class="form-check">
-                    <input asp-for="LightningPrivateRouteHints" type="checkbox" class="form-check-input" />
+                    <input asp-for="LightningPrivateRouteHints" type="checkbox" class="form-check-input"/>
                     <label asp-for="LightningPrivateRouteHints" class="form-check-label"></label>
                 </div>
             </div>
             <div class="form-group">
                 <div class="form-check">
-                    <input asp-for="OnChainWithLnInvoiceFallback" type="checkbox" class="form-check-input" />
+                    <input asp-for="OnChainWithLnInvoiceFallback" type="checkbox" class="form-check-input"/>
                     <label asp-for="OnChainWithLnInvoiceFallback" class="form-check-label"></label>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="form-check">
+                    <input asp-for="LazyPaymentMethods" type="checkbox" class="form-check-input" />
+                    <label asp-for="LazyPaymentMethods" class="form-check-label"></label>
                 </div>
             </div>
             <div class="form-group">
@@ -88,14 +87,14 @@
             </div>
             <div class="form-group">
                 <div class="form-check">
-                    <input asp-for="ShowRecommendedFee" type="checkbox" class="form-check-input" />
+                    <input asp-for="ShowRecommendedFee" type="checkbox" class="form-check-input"/>
                     <label asp-for="ShowRecommendedFee" class="form-check-label"></label>
                     <p class="form-text text-muted">Fee will be shown for BTC and LTC onchain payments only.</p>
                 </div>
             </div>
             <div class="form-group">
                 <label asp-for="RecommendedFeeBlockTarget"></label>
-                <input asp-for="RecommendedFeeBlockTarget" class="form-control" style="width:8ch" />
+                <input asp-for="RecommendedFeeBlockTarget" class="form-control" style="width:8ch"/>
                 <span asp-validation-for="RecommendedFeeBlockTarget" class="text-danger"></span>
             </div>
 
@@ -106,19 +105,23 @@
             </div>
             <div class="form-group">
                 <label asp-for="HtmlTitle"></label>
-                <input asp-for="HtmlTitle" class="form-control" />
+                <input asp-for="HtmlTitle" class="form-control"/>
                 <span asp-validation-for="HtmlTitle" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="CustomLogo"></label>
-                <a href="https://docs.btcpayserver.org/Theme/#checkout-page-themes" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
-                <input asp-for="CustomLogo" class="form-control" />
+                <a href="https://docs.btcpayserver.org/Theme/#checkout-page-themes" target="_blank">
+                    <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                </a>
+                <input asp-for="CustomLogo" class="form-control"/>
                 <span asp-validation-for="CustomLogo" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="CustomCSS"></label>
-                <a href="https://docs.btcpayserver.org/Theme/#checkout-page-themes" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
-                <input asp-for="CustomCSS" class="form-control" />
+                <a href="https://docs.btcpayserver.org/Theme/#checkout-page-themes" target="_blank">
+                    <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                </a>
+                <input asp-for="CustomCSS" class="form-control"/>
                 <span asp-validation-for="CustomCSS" class="text-danger"></span>
                 <p class="form-text text-muted">
                     Bundled Themes:
@@ -145,5 +148,5 @@
 </div>
 
 @section Scripts {
-    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <partial name="_ValidationScriptsPartial" />
 }

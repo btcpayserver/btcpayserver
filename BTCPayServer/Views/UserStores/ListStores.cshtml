@@ -1,6 +1,6 @@
 @model StoresViewModel
 @{
-    ViewData["Title"] = "Stores";
+    ViewData.SetActivePageAndTitle(StoreNavPages.Index, "Stores");
     var storeNameSortOrder = (string)ViewData["StoreNameSortOrder"];
     var storeWebsiteSortOrder = (string)ViewData["StoreWebsiteSortOrder"];
     var sortByDesc = "Sort by descending...";
@@ -9,33 +9,18 @@
 
 <section>
     <div class="container">
-        @if (TempData.HasStatusMessage())
-        {
-            <div class="row">
-                <div class="col-lg-12 text-center">
-                    <partial name="_StatusMessage" />
-                </div>
-            </div>
-        }
-        <div class="row">
-            <div class="col-lg-12 section-heading">
-                <h2>@ViewData["Title"]</h2>
-                <hr class="primary">
-                <p>Create and manage store settings.</p>
-            </div>
-        </div>
+        <partial name="_StatusMessage" />
 
-        <div class="row button-row">
-            <div class="col-lg-12 mb-3">
-                <a asp-action="CreateStore" class="btn btn-primary" role="button" id="CreateStore"><span class="fa fa-plus"></span> Create a new store</a>
-            </div>
+        <div class="d-sm-flex align-items-center justify-content-between mb-2">
+            <h2 class="mb-0">@ViewData["PageTitle"]</h2>
+            <a asp-action="CreateStore" class="btn btn-primary mt-3 mt-sm-0" role="button" id="CreateStore"><span class="fa fa-plus"></span> Create a new store</a>
         </div>
 
         <div class="row">
             <div class="col-lg-12">
                 @if (Model.Stores.Any())
                 {
-                    <table class="table table-sm table-responsive-md">
+                    <table class="table table-sm">
                         <thead>
                             <tr>
                                 <th>

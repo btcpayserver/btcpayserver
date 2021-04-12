@@ -13,14 +13,7 @@
 
 <section class="invoice-details">
     <div class="container">
-        @if (TempData.HasStatusMessage())
-        {
-            <div class="row">
-                <div class="col-lg-12 text-center">
-                    <partial name="_StatusMessage" />
-                </div>
-            </div>
-        }
+    <partial name="_StatusMessage" />
 
         <div class="row mb-4">
             <h2 class="col-xs-12 col-lg-9 mb-4 mb-lg-0">@ViewData["Title"]</h2>

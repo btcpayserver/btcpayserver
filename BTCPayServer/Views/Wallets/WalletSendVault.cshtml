@@ -1,19 +1,11 @@
 @model WalletSendVaultModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["Title"] = "Manage wallet";
-    ViewData.SetActivePageAndTitle(WalletsNavPages.Send);
+    ViewData.SetActivePageAndTitle(WalletsNavPages.Send, "Sign the transaction with BTCPay Server Vault", Context.GetStoreData().StoreName);
 }
 
-<h4>Sign the transaction with BTCPayServer Vault</h4>
-@if (TempData.HasStatusMessage())
-{
-    <div class="row">
-        <div class="col-md-10 text-center">
-            <partial name="_StatusMessage" />
-        </div>
-    </div>
-}
+<h2 class="mb-4">@ViewData["PageTitle"]</h2>
+
 <div id="walletAlert" class="alert alert-danger alert-dismissible" style="display:none;" role="alert">
     <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
     <span id="alertMessage"></span>
@@ -30,7 +22,6 @@
         <button id="vault-confirm" class="btn btn-primary" style="display:none;"></button>
     </div>
 </div>
-
 
 <partial name="VaultElements" />
 @section Scripts

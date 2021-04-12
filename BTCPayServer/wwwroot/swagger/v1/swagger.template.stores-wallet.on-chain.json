@@ -56,6 +56,72 @@
                 ]
             }
         },
+        "/api/v1/stores/{storeId}/payment-methods/OnChain/{cryptoCode}/wallet/feeRate": {
+            "get": {
+                "tags": [
+                    "Store Wallet (On Chain)"
+                ],
+                "summary": "Get store on-chain wallet overview",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cryptoCode",
+                        "in": "path",
+                        "required": true,
+                        "description": "The crypto code of the payment method to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "blockTarget",
+                        "in": "query",
+                        "required": false,
+                        "description": "The number of blocks away you are willing to target for confirmation. Defaults to the wallet's configured `RecommendedFeeBlockTarget`",
+                        "schema": {
+                            "type": "number",
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "description": "Get wallet onchain fee rate",
+                "operationId": "StoreOnChainWallets_GetOnChainFeeRate",
+                "responses": {
+                    "200": {
+                        "description": "fee rate",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OnChainWalletFeeRateData"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store/wallet"
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
         "/api/v1/stores/{storeId}/payment-methods/OnChain/{cryptoCode}/wallet/address": {
             "get": {
                 "tags": [
@@ -445,7 +511,28 @@
                     "balance": {
                         "type": "string",
                         "format": "decimal",
-                        "description": "The current balance of the wallet"
+                        "description": "The total current balance of the wallet"
+                    },
+                    "unconfirmedBalance": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The current unconfirmed balance of the wallet"
+                    },
+                    "confirmedBalance": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The current confirmed balance of the wallet"
+                    }
+                }
+            },
+            "OnChainWalletFeeRateData": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "feeRate": {
+                        "type": "number",
+                        "format": "decimal",
+                        "description": "The fee rate (sats per byte) based on the wallet's configured recommended block confirmation target"
                     }
                 }
             },
@@ -577,6 +664,26 @@
                         "type": "string",
                         "format": "{txid}:{outputIndex}",
                         "description": "outpoint of this utxo"
+                    },
+                    "timestamp": {
+                        "description": "The time of the utxo",
+                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
+                    },
+                    "keyPath": {
+                        "type": "string",
+                        "format": "keypath",
+                        "description": "the derivation path in relation to the HD account"
+                    },
+                    "address": {
+                        "type": "string",
+                        "description": "The wallet address of this utxo"
+                    },
+                    "labels": {
+                        "description": "Labels linked to this transaction",
+                        "type": "object",
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/LabelData"
+                        }
                     }
                 }
             },
@@ -613,7 +720,7 @@
                         }
                     },
                     "feeRate": {
-                        "type": "string",
+                        "type": "number",
                         "format": "decimal or long (sats/byte)",
                         "description": "A wallet address or a BIP21 payment link"
                     },

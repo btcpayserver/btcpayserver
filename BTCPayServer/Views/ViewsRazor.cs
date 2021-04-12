@@ -7,12 +7,35 @@ namespace BTCPayServer.Views
 {
     public static class ViewsRazor
     {
-        public const string ACTIVE_PAGE_KEY = "ActivePage";
-        public static void SetActivePageAndTitle<T>(this ViewDataDictionary viewData, T activePage, string title = null)
+        private const string ACTIVE_CATEGORY_KEY = "ActiveCategory";
+        private const string ACTIVE_PAGE_KEY = "ActivePage";
+
+        public static void SetActivePageAndTitle<T>(this ViewDataDictionary viewData, T activePage, string title = null, string mainTitle = null)
             where T : IConvertible
         {
+            // Browser Title
             viewData["Title"] = title ?? activePage.ToString();
+            // Breadcrumb
+            viewData["MainTitle"] = mainTitle;
+            viewData["PageTitle"] = title;
+            // Navigation
             viewData[ACTIVE_PAGE_KEY] = activePage;
+            SetActiveCategory(viewData, activePage.GetType());
+        }
+
+        public static void SetActiveCategory<T>(this ViewDataDictionary viewData, T activeCategory)
+        {
+            viewData[ACTIVE_CATEGORY_KEY] = activeCategory;
+        }
+
+        public static string IsActiveCategory<T>(this ViewDataDictionary viewData, T category)
+        {
+            if (!viewData.ContainsKey(ACTIVE_CATEGORY_KEY))
+            {
+                return null;
+            }
+            var activeCategory = (T)viewData[ACTIVE_CATEGORY_KEY];
+            return category.Equals(activeCategory) ? "active" : null;
         }
 
         public static string IsActivePage<T>(this ViewDataDictionary viewData, T page)
@@ -28,15 +51,16 @@ namespace BTCPayServer.Views
 
         public static HtmlString ToBrowserDate(this DateTimeOffset date)
         {
-            var hello = date.ToString("o", CultureInfo.InvariantCulture);
-            return new HtmlString($"<span class='localizeDate'>{hello}</span>");
+            var displayDate = date.ToString("o", CultureInfo.InvariantCulture);
+            return new HtmlString($"<span class='localizeDate'>{displayDate}</span>");
         }
 
-        public static HtmlString ToBrowserDate2(this DateTime date)
+        public static HtmlString ToBrowserDate(this DateTime date)
         {
-            var hello = date.ToString("o", CultureInfo.InvariantCulture);
-            return new HtmlString($"<span class='localizeDate'>{hello}</span>");
+            var displayDate = date.ToString("o", CultureInfo.InvariantCulture);
+            return new HtmlString($"<span class='localizeDate'>{displayDate}</span>");
         }
+        
         public static string ToTimeAgo(this DateTimeOffset date)
         {
             var formatted = (DateTimeOffset.UtcNow - date).TimeString() + " ago";

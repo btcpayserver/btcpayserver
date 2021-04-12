@@ -1,6 +1,6 @@
 ﻿@model BTCPayServer.Models.InvoicingModels.CreateInvoiceModel
 @{
-    ViewData["Title"] = "Create an invoice";
+    ViewData.SetActivePageAndTitle(InvoiceNavPages.Create, "Create an invoice");
 }
 <script>
     $(function() {
@@ -12,24 +12,22 @@
 </script>
 <section>
     <div class="container">
-        <div class="row">
-            <div class="col-lg-12 section-heading">
-                <h2>@ViewData["Title"]</h2>
-                <hr class="primary">
-            </div>
-        </div>
+        <partial name="_StatusMessage" />
+
+        <h2 class="mb-4">@ViewData["Title"]</h2>
+
         <div class="row">
             <div class="col-lg-12">
                 <form asp-action="CreateInvoice" method="post" id="create-invoice-form">
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                     <div class="form-group">
-                        <label asp-for="Amount" class="control-label"></label>*
-                        <input asp-for="Amount" class="form-control" />
+                        <label asp-for="Amount" class="control-label" data-required></label>
+                        <input asp-for="Amount" class="form-control" required />
                         <span asp-validation-for="Amount" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="Currency" class="control-label"></label>*
-                        <input asp-for="Currency" class="form-control" />
+                        <label asp-for="Currency" class="control-label" data-required></label>
+                        <input asp-for="Currency" class="form-control" required />
                         <span asp-validation-for="Currency" class="text-danger"></span>
                     </div>
                     <div class="form-group">
@@ -69,9 +67,9 @@
                     </div>
                     <div class="form-group">
                         <input type="submit" value="Create" class="btn btn-primary" id="Create" />
+                        <a asp-action="ListInvoices" class="text-muted ml-3">Back to list</a>
                     </div>
                 </form>
-                <a asp-action="ListInvoices">Back to List</a>
             </div>
         </div>
     </div>

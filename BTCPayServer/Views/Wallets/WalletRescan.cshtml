@@ -1,9 +1,10 @@
 ﻿@model RescanWalletModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["Title"] = "Rescan wallet";
-    ViewData.SetActivePageAndTitle(WalletsNavPages.Rescan);
+    ViewData.SetActivePageAndTitle(WalletsNavPages.Rescan, "Rescan wallet", Context.GetStoreData().StoreName);
 }
+
+<h4 class="mb-3">@ViewData["PageTitle"]</h4>
 
 @if (!Model.Ok)
 {
@@ -57,12 +58,10 @@ else if (!Model.Progress.HasValue)
         <div class="col-lg-8">
             <p>
                 Scanning the UTXO set allow you to restore the balance of your wallet, but not all the transaction history.
-            </p>
-            <p>
                 This operation will scan the HD Path <b>0/*</b>, <b>1/*</b> and <b>*</b> from a starting index, until no UTXO are found in a whole gap limit.
             </p>
             <p>The batch size make sure the scan do not consume too much RAM at once by rescanning several time with smaller subset of addresses.</p>
-            <p>If you do not understand above, just keep the default values and click on <b>Start Scan</b></p>
+            <p>If you do not understand the above, go with the defaults and start scanning.</p>
         </div>
     </div>
 

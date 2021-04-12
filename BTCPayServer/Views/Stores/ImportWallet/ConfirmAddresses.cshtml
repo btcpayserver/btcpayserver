@@ -2,7 +2,7 @@
 @addTagHelper *, BundlerMinifier.TagHelpers
 @{
     Layout = "_LayoutWalletSetup";
-    ViewData["Title"] = "Confirm addresses";
+    ViewData.SetActivePageAndTitle(StoreNavPages.Wallet, "Confirm addresses", Context.GetStoreData().StoreName);
 }
 
 @section Navbar {
@@ -104,8 +104,8 @@
 </form>
 
 @section Scripts {
-    @await Html.PartialAsync("_ValidationScriptsPartial")
-    @await Html.PartialAsync("VaultElements")
+    <partial name="_ValidationScriptsPartial" />
+    <partial name="VaultElements" />
 
     <script src="~/js/vaultbridge.js" type="text/javascript" defer asp-append-version="true"></script>
     <script src="~/js/vaultbridge.ui.js" type="text/javascript" defer asp-append-version="true"></script>

@@ -25,7 +25,7 @@
     {
         <div class="form-group">
             <label asp-for="ExistingMnemonic">Wallet Recovery Seed</label>
-            <textarea asp-for="ExistingMnemonic" class="form-control text-monospace py-2" rows="2" autocomplete="off"></textarea>
+            <textarea asp-for="ExistingMnemonic" class="form-control text-monospace py-2" rows="2" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
             <span asp-validation-for="ExistingMnemonic" class="text-danger"></span>
         </div>
     }

@@ -2,7 +2,7 @@
 @addTagHelper *, BundlerMinifier.TagHelpers
 @{
     Layout = "_LayoutWalletSetup";
-    ViewData["Title"] = "Enter the wallet seed";
+    ViewData.SetActivePageAndTitle(StoreNavPages.Wallet, "Enter the wallet seed", Context.GetStoreData().StoreName);
 }
 
 @section Navbar {
@@ -23,7 +23,7 @@
         ViewData.Add(nameof(Model.CanUseRPCImport), Model.CanUseRPCImport);
         ViewData.Add(nameof(Model.Method), Model.Method);
 
-        @await Html.PartialAsync("_GenerateWalletForm", Model.SetupRequest)
+        <partial name="_GenerateWalletForm" model="Model.SetupRequest" />
     }
     else
     {
@@ -32,5 +32,5 @@
 </div>
 
 @section Scripts {
-    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <partial name="_ValidationScriptsPartial" />
 }

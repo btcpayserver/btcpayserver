@@ -40,12 +40,12 @@
 <body>
     @if (Context.Request.Query.ContainsKey("simple"))
     {
-        @await Html.PartialAsync("/Views/AppsPublic/Crowdfund/MinimalCrowdfund.cshtml", Model)
+        <partial name="/Views/AppsPublic/Crowdfund/MinimalCrowdfund.cshtml" model="Model" />
     }
     else
     {
         <noscript>
-            @await Html.PartialAsync("/Views/AppsPublic/Crowdfund/MinimalCrowdfund.cshtml", Model)
+            <partial name="/Views/AppsPublic/Crowdfund/MinimalCrowdfund.cshtml" model="Model" />
 
             <style>
                 /* Hide the below canvas or else user will be staring "Loading..." text when JS is disabled */
@@ -60,8 +60,7 @@
         {
             <canvas id="fireworks"></canvas>
         }
-        @await Html.PartialAsync("/Views/AppsPublic/Crowdfund/VueCrowdfund.cshtml", Model)
+        <partial name="/Views/AppsPublic/Crowdfund/VueCrowdfund.cshtml" model="Model" />
     }
-
 </body>
 </html>

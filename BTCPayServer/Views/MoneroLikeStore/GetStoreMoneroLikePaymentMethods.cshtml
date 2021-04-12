@@ -3,22 +3,13 @@
 
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-
     ViewData.SetActivePageAndTitle(StoreNavPages.ActivePage, "Monero Settings");
-
     ViewData["NavPartialName"] = "../Stores/_Nav";
 }
 
-
-<partial name="_StatusMessage"/>
-
-<div class="row">
-    <div class="col-md-6">
-        <div asp-validation-summary="All" class="text-danger"></div>
-    </div>
-</div>
 <div class="row">
     <div class="col-md-8">
+        <div asp-validation-summary="All" class="text-danger"></div>
         <div class="form-group">
             <table class="table table-sm table-responsive-md">
                 <thead>
@@ -47,7 +38,7 @@
                         </td>
                         <td class="text-right">
                             <a id="Modify" asp-action="GetStoreMoneroLikePaymentMethod"
-                               asp-route-storeId="@this.Context.GetRouteValue("storeId")"
+                               asp-route-storeId="@Context.GetRouteValue("storeId")"
                                asp-route-cryptoCode="@item.CryptoCode">
                                 Modify
                             </a>

@@ -1,33 +1,26 @@
 @model SignWithSeedViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["Title"] = "Sign PSBT with an HD private key or mnemonic seed";
-    ViewData.SetActivePageAndTitle(WalletsNavPages.Send);
+    ViewData.SetActivePageAndTitle(WalletsNavPages.Send, "Sign PSBT with an HD private key or mnemonic seed", Context.GetStoreData().StoreName);
 }
 
-<h4>Sign PSBT with an HD private key or mnemonic seed</h4>
 <div class="row">
     <div class="col-md-10">
-        <div class="alert alert-warning alert-dismissible" role="alert">
+        <h4 class="mb-3">@ViewData["PageTitle"]</h4>
+
+        <div class="alert alert-warning alert-dismissible my-4" role="alert">
             <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            <p>
-                <span>Before you proceed, please understand the following:</span>
-            </p>
+            <p>Before you proceed, please understand the following:</p>
             <ol>
                 <li>Make sure this BTCPay Server instance <b>belongs to you</b>.</li>
-                <li>Use <b>Chrome's Incognito mode or the Tor Browser</b>, this makes sure no malicious browser plugins are running that could steal your key.</li>
+                <li>Use <b>Incognito mode or the Tor Browser</b> to ensure no malicious browser plugins are running that could steal your key.</li>
             </ol>
-            <p>
-                <span>Else, you are exposing yourself to malicious site owners, or to malicious plugins installed in your browser.</span>
-            </p>
+            <p class="mb-0">Otherwise you are exposing yourself to malicious site owners, or to malicious plugins installed in your browser.</p>
         </div>
-    </div>
-</div>
-<div class="row">
-    <div class="col-md-10">
+
         <div asp-validation-summary="All" class="text-danger"></div>
-        <form method="post" asp-action="SignWithSeed" asp-route-walletId="@this.Context.GetRouteValue("walletId")">
-            <partial name="SigningContext" for="SigningContext" />
+        <form method="post" asp-action="SignWithSeed" asp-route-walletId="@Context.GetRouteValue("walletId")">
+            <partial name="SigningContext" for="SigningContext"/>
             <div class="form-group">
                 <label asp-for="SeedOrKey"></label>
                 <input asp-for="SeedOrKey" class="form-control" autocomplete="off" autocorrect="off" autocapitalize="off"/>
@@ -35,7 +28,7 @@
             </div>
             <div class="form-group">
                 <label asp-for="Passphrase"></label>
-                <input asp-for="Passphrase" class="form-control" />
+                <input asp-for="Passphrase" class="form-control"/>
                 <span asp-validation-for="Passphrase" class="text-danger"></span>
             </div>
             <button type="submit" class="btn btn-primary">Sign</button>

@@ -542,6 +542,71 @@
                     }
                 ]
             }
+        },
+        "/api/v1/stores/{storeId}/invoices/{invoiceId}/payment-methods/{paymentMethod}/activate": {
+            "post": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "Activate Payment Method",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "invoiceId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The invoice to update",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "paymentMethod",
+                        "in": "path",
+                        "required": true,
+                        "description": "The payment method to activate",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "Activate an invoice payment method (if lazy payments mode is enabled)",
+                "operationId": "Invoices_ActivatePaymentMethod",
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when updating the invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to activate the invoice payment method"
+                    }
+                },
+                "security": [
+                    {
+                        "API Key": [
+                            "btcpay.store.canviewinvoices"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -669,6 +734,148 @@
                     }
                 ]
             },
+            "InvoiceMetadataPosString": {
+                "type": "string",
+                "description": "shown on the invoice details page"
+            },
+            "InvoiceMetadataPosObject": {
+                "type": "object",
+                "description": "Any json object in any schema you want. Will be rendered on a best effort basis in terms of style on the invoice details UI"
+            },
+            "InvoiceMetadata":  {
+                "type": "object",
+                "additionalProperties": true,
+                "description": "Additional information around the invoice that can be supplied. The mentioned properties are all optional and you can introduce any json format you wish.",
+                "anyOf": [
+                    {
+                        "properties": {
+                            "orderId": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "You can use this property to store the ID of an external system. We allow you to search in the invoice list based on this ID."
+                            }
+                        }
+                    },
+                    {
+                        "properties": {
+                            "posData": {
+                                "oneOf": [
+                                    {
+                                        "$ref": "#/components/schemas/InvoiceMetadataPosString"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/InvoiceMetadataPosObject"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "properties": {
+                            "buyerName": {
+                                "type": "string",
+                                "nullable": true
+                            }
+                        }
+                    },
+                    {
+                        "properties": {
+                            "buyerEmail": {
+                                "type": "string",
+                                "nullable": true
+                            }
+                        }
+                    },
+                    {
+                        "properties": {
+                            "buyerCountry": {
+                                "type": "string",
+                                "nullable": true
+                            }
+                        }
+                    },
+                    {
+                        "properties": {
+                            "buyerZip": {
+                                "type": "string",
+                                "nullable": true
+                            }
+                        }
+                    },
+                    {
+                        "properties": {
+                            "buyerState": {
+                                "type": "string",
+                                "nullable": true
+                            }
+                        }
+                    },
+                    {
+                        "properties": {
+                            "buyerCity": {
+                                "type": "string",
+                                "nullable": true
+                            }
+                        }
+                    },
+                    {
+                        "properties": {
+                            "buyerAddress1": {
+                                "type": "string",
+                                "nullable": true
+                            }
+                        }
+                    },
+                    {
+                        "properties": {
+                            "buyerAddress2": {
+                                "type": "string",
+                                "nullable": true
+                            }
+                        }
+                    },
+                    {
+                        "properties": {
+                            "buyerPhone": {
+                                "type": "string",
+                                "nullable": true
+                            }
+                        }
+                    },
+                    {
+                        "properties": {
+                            "itemDesc": {
+                                "type": "string",
+                                "nullable": true
+                            }
+                        }
+                    },
+                    {
+                        "properties": {
+                            "itemCode": {
+                                "type": "string",
+                                "nullable": true
+                            }
+                        }
+                    },
+                    {
+                        "properties": {
+                            "physical": {
+                                "type": "string",
+                                "nullable": true
+                            }
+                        }
+                    },
+                    {
+                        "properties": {
+                            "taxIncluded": {
+                                "type": "number",
+                                "nullable": true
+                            }
+                        }
+                    }
+                ]
+            },
             "CreateInvoiceRequest": {
                 "type": "object",
                 "additionalProperties": false,
@@ -684,9 +891,7 @@
                         "description": "The currency the invoice will use"
                     },
                     "metadata": {
-                        "type": "object",
-                        "nullable": true,
-                        "description": "Additional information around the invoice that can be supplied. Some metadata are treated differently by BTCPay Server: \n * `orderId`: A string, you can use this property to store the ID of an external system. We allow you to search in the invoice list based on this ID."
+                        "$ref": "#/components/schemas/InvoiceMetadata"
                     },
                     "checkout": {
                         "nullable": true,
@@ -704,9 +909,7 @@
                 "additionalProperties": false,
                 "properties": {
                     "metadata": {
-                        "type": "object",
-                        "nullable": true,
-                        "description": "Additional information around the invoice that can be supplied."
+                        "$ref": "#/components/schemas/InvoiceMetadata"
                     }
                 }
             },
@@ -729,7 +932,7 @@
                         "items": {
                             "type": "string"
                         },
-                        "description": "A specific set of payment methods to use for this invoice (ie. BTC, BTC-LightningNetwork). By default, select all payment methods activated in the store."
+                        "description": "A specific set of payment methods to use for this invoice (ie. BTC, BTC-LightningNetwork). By default, select all payment methods enabled in the store."
                     },
                     "expirationMinutes": {
                         "nullable": true,
@@ -837,6 +1040,10 @@
                             "$ref": "#/components/schemas/Payment"
                         },
                         "description": "Payments made with this payment method."
+                    },
+                    "activated": {
+                        "type": "boolean",
+                        "description": "If the payment method is activated (when lazy payments option is enabled"
                     }
                 }
             },

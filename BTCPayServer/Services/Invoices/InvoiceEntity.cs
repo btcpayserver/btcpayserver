@@ -2,15 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
-using Amazon.Runtime.Internal.Util;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.JsonConverters;
 using BTCPayServer.Models;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
-using Microsoft.AspNetCore.Http.Extensions;
-using Microsoft.CodeAnalysis;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitpayClient;
@@ -18,11 +15,10 @@ using NBXplorer;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
-using YamlDotNet.Core.Tokens;
-using YamlDotNet.Serialization.NamingConventions;
 
 namespace BTCPayServer.Services.Invoices
 {
+
     public class InvoiceMetadata
     {
         public static readonly JsonSerializer MetadataSerializer;
@@ -64,7 +60,37 @@ namespace BTCPayServer.Services.Invoices
 
         [JsonProperty(PropertyName = "taxIncluded", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public decimal? TaxIncluded { get; set; }
-        public string PosData { get; set; }
+
+        [JsonIgnore]
+        public string PosData
+        {
+            get
+            {
+                return PosRawData?.ToString();
+            }
+            set
+            {
+                if (value is null)
+                {
+                    PosRawData = JValue.CreateNull();
+                }
+                else
+                {
+                    try
+                    {
+                        PosRawData = JToken.Parse(value);
+                    }
+                    catch (Exception )
+                    {
+                        PosRawData = JToken.FromObject(value);
+                    }
+                }
+               
+            }
+        }
+
+        [JsonProperty(PropertyName = "posData")]
+        public JToken PosRawData { get; set; }
         [JsonExtensionData]
         public IDictionary<string, JToken> AdditionalData { get; set; }
 
@@ -185,7 +211,7 @@ namespace BTCPayServer.Services.Invoices
                 foreach (var strat in strategies.Properties())
                 {
                     var paymentMethodId = PaymentMethodId.Parse(strat.Name);
-                    var network = Networks.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
+                    var network = Networks.GetNetwork<BTCPayNetworkBase>(paymentMethodId.CryptoCode);
                     if (network != null)
                     {
                         if (network == Networks.BTC && paymentMethodId.PaymentType == PaymentTypes.BTCLike)
@@ -374,7 +400,7 @@ namespace BTCPayServer.Services.Invoices
                 }).ToList();
 
 
-                if (paymentId.PaymentType == PaymentTypes.LightningLike)
+                if (details?.Activated is true && paymentId.PaymentType == PaymentTypes.LightningLike)
                 {
                     cryptoInfo.PaymentUrls = new InvoicePaymentUrls()
                     {
@@ -382,7 +408,7 @@ namespace BTCPayServer.Services.Invoices
                             ServerUrl)
                     };
                 }
-                else if (paymentId.PaymentType == PaymentTypes.BTCLike)
+                else if (details?.Activated is true && paymentId.PaymentType == PaymentTypes.BTCLike)
                 {
                     var minerInfo = new MinerFeeInfo();
                     minerInfo.TotalFee = accounting.NetworkFee.Satoshi;
@@ -936,10 +962,7 @@ namespace BTCPayServer.Services.Invoices
 
         private decimal GetTxFee()
         {
-            var method = GetPaymentMethodDetails();
-            if (method == null)
-                return 0.0m;
-            return method.GetNextNetworkFee();
+            return GetPaymentMethodDetails()?.GetNextNetworkFee()?? 0m;
         }
     }
 

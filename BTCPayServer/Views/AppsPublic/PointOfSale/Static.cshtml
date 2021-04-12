@@ -6,10 +6,8 @@
 
 <div class="container d-flex h-100">
     <div class="justify-content-center align-self-center text-center mx-auto px-2 py-3 w-100 m-auto">
-        @if (TempData.HasStatusMessage())
-        {
-            <partial name="_StatusMessage" />
-        }
+        <partial name="_StatusMessage" />
+
         <h1 class="mb-4">@Model.Title</h1>
         @if (!string.IsNullOrEmpty(Model.Description))
         {

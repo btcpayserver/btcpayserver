@@ -54,6 +54,13 @@ namespace BTCPayServer.Payments.Lightning
             LightningSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store,
             BTCPayNetwork network, object preparePaymentObject)
         {
+            if (preparePaymentObject is null)
+            {
+                return new LightningLikePaymentMethodDetails()
+                {
+                    Activated = false
+                };
+            }
             //direct casting to (BTCPayNetwork) is fixed in other pull requests with better generic interfacing for handlers
             var storeBlob = store.GetStoreBlob();
             var test = GetNodeInfo(paymentMethod.PreferOnion, supportedPaymentMethod, network);
@@ -99,6 +106,7 @@ namespace BTCPayServer.Payments.Lightning
             var nodeInfo = await test;
             return new LightningLikePaymentMethodDetails
             {
+                Activated = true,
                 BOLT11 = lightningInvoice.BOLT11,
                 InvoiceId = lightningInvoice.Id,
                 NodeInfo = nodeInfo.ToString()
@@ -191,8 +199,8 @@ namespace BTCPayServer.Payments.Lightning
             var cryptoInfo = invoiceResponse.CryptoInfo.First(o => o.GetpaymentMethodId() == paymentMethodId);
             var network = _networkProvider.GetNetwork<BTCPayNetwork>(model.CryptoCode);
             model.PaymentMethodName = GetPaymentMethodName(network);
-            model.InvoiceBitcoinUrl = cryptoInfo.PaymentUrls.BOLT11;
-            model.InvoiceBitcoinUrlQR = $"lightning:{cryptoInfo.PaymentUrls.BOLT11.ToUpperInvariant().Substring("LIGHTNING:".Length)}";
+            model.InvoiceBitcoinUrl = cryptoInfo.PaymentUrls?.BOLT11;
+            model.InvoiceBitcoinUrlQR = $"lightning:{cryptoInfo.PaymentUrls?.BOLT11?.ToUpperInvariant()?.Substring("LIGHTNING:".Length)}";
 
             model.PeerInfo = ((LightningLikePaymentMethodDetails) paymentMethod.GetPaymentMethodDetails()).NodeInfo;
             if (storeBlob.LightningAmountInSatoshi && model.CryptoCode == "BTC")
@@ -237,6 +245,13 @@ namespace BTCPayServer.Payments.Lightning
         private string GetPaymentMethodName(BTCPayNetworkBase network)
         {
             return $"{network.DisplayName} (Lightning)";
+        }
+
+        public override object PreparePayment(LightningSupportedPaymentMethod supportedPaymentMethod, StoreData store,
+            BTCPayNetworkBase network)
+        {
+            // pass a non null obj, so that if lazy payment feature is used, it has a marker to trigger activation
+            return new { };
         }
     }
 }

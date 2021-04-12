@@ -70,6 +70,10 @@ namespace BTCPayServer.Payments
         public override string GetPaymentLink(BTCPayNetworkBase network, IPaymentMethodDetails paymentMethodDetails,
             Money cryptoInfoDue, string serverUri)
         {
+            if (!paymentMethodDetails.Activated)
+            {
+                return string.Empty;
+            }
             var bip21 = ((BTCPayNetwork)network).GenerateBIP21(paymentMethodDetails.GetPaymentDestination(), cryptoInfoDue);
 
             if ((paymentMethodDetails as BitcoinLikeOnChainPaymentMethod)?.PayjoinEnabled is true && serverUri != null)

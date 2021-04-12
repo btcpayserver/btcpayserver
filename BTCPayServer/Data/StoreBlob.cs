@@ -11,7 +11,6 @@ using BTCPayServer.Payments.CoinSwitch;
 using BTCPayServer.Rating;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Rates;
-using BTCPayServer.Services.Shopify.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -29,7 +28,6 @@ namespace BTCPayServer.Data
             PaymentMethodCriteria = new List<PaymentMethodCriteria>();
         }
 
-        public ShopifySettings Shopify { get; set; }
 
         [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
         public NetworkFeeMode NetworkFeeMode { get; set; }
@@ -38,6 +36,7 @@ namespace BTCPayServer.Data
         public bool LightningAmountInSatoshi { get; set; }
         public bool LightningPrivateRouteHints { get; set; }
         public bool OnChainWithLnInvoiceFallback { get; set; }
+        public bool LazyPaymentMethods { get; set; }
         public bool RedirectAutomatically { get; set; }
         public bool ShowRecommendedFee { get; set; }
         public int RecommendedFeeBlockTarget { get; set; }

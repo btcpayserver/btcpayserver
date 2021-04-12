@@ -2,15 +2,13 @@
 @using  BTCPayServer.Client.Models;
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePageAndTitle(StoreNavPages.Webhooks, "Webhooks");
+    ViewData.SetActivePageAndTitle(StoreNavPages.Webhooks, "Webhook Settings", Context.GetStoreData().StoreName);
 }
 
-<partial name="_StatusMessage" />
-
 <div class="row">
-    <div class="col-md-8">
+    <div class="col-lg-8">
         <form method="post">
-            <h4 class="mb-3">Webhooks settings</h4>
+            <h4 class="mb-3">@ViewData["PageTitle"]</h4>
             <div class="form-group">
                 <label asp-for="PayloadUrl">Payload URL</label>
                 <input asp-for="PayloadUrl" class="form-control" />
@@ -136,7 +134,7 @@
 </div>
 
 @section Scripts {
-    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <partial name="_ValidationScriptsPartial" />
 
     <script type="text/javascript">
         function toggleEventSelector() {

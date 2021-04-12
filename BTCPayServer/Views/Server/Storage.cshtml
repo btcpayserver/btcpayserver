@@ -1,35 +1,34 @@
 ﻿@using BTCPayServer.Storage.Models
 @model BTCPayServer.Storage.ViewModels.ChooseStorageViewModel
 @{
-    ViewData.SetActivePageAndTitle(ServerNavPages.Services);
+    ViewData.SetActivePageAndTitle(ServerNavPages.Services, "Storage");
 }
 
+<h2 class="mb-4">@ViewData["PageTitle"]</h2>
 
-<partial name="_StatusMessage" />
 @if (Model.ShowChangeWarning)
 {
     <div class="alert alert-danger">
         If you change your configured storage provider, your current files will become inaccessible. 
     </div>
 }
-<div class="row">
-    <div class="col-lg-6">
-        <div asp-validation-summary="All" class="text-danger"></div>
-    </div>
-</div>
+
 <div class="row">
     <div class="col-lg-6">
         <form method="post">
+            @if (!ViewContext.ModelState.IsValid)
+            {
+                <div asp-validation-summary="All" class="text-danger"></div>
+            }
             <div class="form-group">
                 <label asp-for="Provider"></label>
                 <select asp-for="Provider" asp-items="@Html.GetEnumSelectList<StorageProvider>()" class="form-control"></select>
             </div>
-
             <button type="submit" class="btn btn-primary" name="command" value="Save">Next</button>
         </form>
     </div>
 </div>
 
 @section Scripts {
-    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <partial name="_ValidationScriptsPartial" />
 }

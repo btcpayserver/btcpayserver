@@ -1,6 +1,6 @@
 @inject SignInManager<ApplicationUser> SignInManager
 
-    <div class="nav flex-column nav-pills mb-4">
+    <div class="nav flex-column mb-4">
         <a id="@ManageNavPages.Index.ToString()" class="nav-link @ViewData.IsActivePage(ManageNavPages.Index)" asp-action="Index">Profile</a>
         <a id="@ManageNavPages.ChangePassword.ToString()" class="nav-link @ViewData.IsActivePage(ManageNavPages.ChangePassword)" asp-action="ChangePassword">Password</a>
         <a id="@ManageNavPages.TwoFactorAuthentication.ToString()" class="nav-link @ViewData.IsActivePage(ManageNavPages.TwoFactorAuthentication)" asp-action="TwoFactorAuthentication">Two-factor authentication</a>

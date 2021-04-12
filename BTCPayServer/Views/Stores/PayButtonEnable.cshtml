@@ -1,23 +1,21 @@
 ﻿@{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePageAndTitle(StoreNavPages.PayButton, "Pay Button");
+    ViewData.SetActivePageAndTitle(StoreNavPages.PayButton, "Pay Button", Context.GetStoreData().StoreName);
 }
-
 
 <div class="row">
     <div class="col-md-10">
+        <h4 class="mb-3">@ViewData["PageTitle"]</h4>
+        <p>
+            To start using Pay Buttons you need to explicitly turn on this feature.
+            Once you do so, any 3rd party entity will be able to create an invoice on your instance store (via API for example).
+            The POS app is preauthorised and does not need this enabled.
+        </p>
         <form method="post">
-            <div class="form-group">
-                <p>
-                    To start using Pay Buttons you need to explicitly turn on this feature.
-                    Once you do so, any 3rd party entity will be able to create an invoice on your instance store (via API for example).
-                    The POS app is preauthorised and does not need this enabled.
-                </p>
-                @Html.Hidden("EnableStore", true)
-                <button name="command" type="submit" value="save" class="btn btn-lg btn-primary px-4">
-                    Allow outside world to create invoices via API
-                </button>
-            </div>
+            @Html.Hidden("EnableStore", true)
+            <button name="command" type="submit" value="save" class="btn btn-primary">
+                Allow outside world to create invoices via API
+            </button>
         </form>
     </div>
 </div>

@@ -2,7 +2,7 @@
 @addTagHelper *, BundlerMinifier.TagHelpers
 @{
     Layout = "_LayoutWalletSetup";
-    ViewData["Title"] = $"Enter your extended public key";
+    ViewData.SetActivePageAndTitle(StoreNavPages.Wallet, "Enter your extended public key", Context.GetStoreData().StoreName);
 }
 
 @section Navbar {
@@ -15,7 +15,9 @@
     <h1>@ViewData["Title"]</h1>
     <p class="lead text-secondary mt-3">
         This key, also called "xpub", is used to generate individual destination addresses for your invoices.
-        <a href="https://docs.btcpayserver.org/FAQ/FAQ-Wallet/#what-is-a-derivation-scheme" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+        <a href="https://docs.btcpayserver.org/FAQ/FAQ-Wallet/#what-is-a-derivation-scheme" target="_blank">
+            <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+        </a>
     </p>
 </header>
 
@@ -108,7 +110,7 @@
 <a id="ToggleAdditional" href="#additional">Show multi-sig examples</a>
 
 @section Scripts {
-    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <partial name="_ValidationScriptsPartial" />
 
     <script type="text/javascript">
         document.getElementById('ToggleAdditional').addEventListener("click", function(e) {

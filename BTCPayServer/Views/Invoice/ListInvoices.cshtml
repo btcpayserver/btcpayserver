@@ -1,7 +1,6 @@
-@using BTCPayServer.Payments
 @model InvoicesModel
 @{
-    ViewData["Title"] = "Invoices";
+    ViewData.SetActivePageAndTitle(InvoiceNavPages.Index, "Invoices");
     var storeIds = string.Join("", Model.StoreIds.Select(storeId => $",storeid:{storeId}"));
 }
 @section HeadScripts {
@@ -11,31 +10,25 @@
 @Html.HiddenFor(a => a.Count)
 <section>
     <div class="container">
-        @if (TempData.HasStatusMessage())
-        {
-            <div class="row">
-                <div class="col-lg-12 text-center">
-                    <partial name="_StatusMessage" />
-                </div>
-            </div>
-        }
+    <partial name="_StatusMessage" />
 
-        <div class="row">
-            <div class="col-lg-12 section-heading">
-                <h2>@ViewData["Title"]</h2>
-                <hr class="primary">
-                <p>Create, search or pay an invoice.</p>
-            </div>
+        <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h2 class="mb-0">
+                @ViewData["Title"]
+                <small>
+                    <a href="https://docs.btcpayserver.org/PaymentRequests/" class="ml-1" target="_blank">
+                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                    </a>
+                </small>
+            </h2>
+            <a id="CreateNewInvoice" asp-action="CreateInvoice" class="btn btn-primary mt-3 mt-sm-0">
+                <span class="fa fa-plus"></span>
+                Create an invoice
+            </a>
         </div>
 
         <div class="row">
-            <div class="col-12 col-sm-4 col-lg-6 mb-3">
-                <a id="CreateNewInvoice" asp-action="CreateInvoice" class="btn btn-primary mb-1">
-                    <span class="fa fa-plus"></span>
-                    Create an invoice
-                </a>
-            </div>
-            <div class="col-12 col-sm-8 col-lg-6 mb-3">
+            <div class="col-12 col-lg-6 mb-5 mb-lg-2 ml-auto">
                 <form asp-action="ListInvoices" method="get">
                     <input type="hidden" asp-for="Count"/>
                     <input asp-for="TimezoneOffset" type="hidden"/>
@@ -184,7 +177,7 @@
 
         @if (Model.Total > 0)
         {
-            <form method="post" id="MassAction" asp-action="MassAction" class="mt-3">
+            <form method="post" id="MassAction" asp-action="MassAction" class="mt-lg-n5">
                 <span class="mr-2">
                     <button class="btn btn-secondary dropdown-toggle  mb-1" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         Actions

@@ -5893,7 +5893,7 @@ a.close.disabled {
   -ms-flex-pack: end;
   justify-content: flex-end;
   padding: 0.75rem;
-  border-top: 1px solid #dee2e6;
+  border-top: 1px solid var(--btcpay-border-color-medium, var(--btcpay-color-neutral-300));
   border-bottom-right-radius: calc(0.3rem - 1px);
   border-bottom-left-radius: calc(0.3rem - 1px);
 }
@@ -9868,6 +9868,10 @@ button.bg-dark:focus {
 
 .font-weight-normal {
   font-weight: 400 !important;
+}
+
+.font-weight-semibold {
+  font-weight: 600 !important;
 }
 
 .font-weight-bold {

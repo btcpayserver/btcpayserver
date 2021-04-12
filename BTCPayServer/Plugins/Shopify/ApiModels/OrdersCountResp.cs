@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace BTCPayServer.Services.Shopify.ApiModels
+namespace BTCPayServer.Plugins.Shopify.ApiModels
 {
     public class CountResponse
     {

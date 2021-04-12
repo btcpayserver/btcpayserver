@@ -6,7 +6,7 @@
     ViewData.SetActivePageAndTitle(ServerNavPages.Policies);
 }
 
-<partial name="_StatusMessage"/>
+<h2 class="mb-4">@ViewData["Title"]</h2>
 
 @if (!ViewContext.ModelState.IsValid)
 {
@@ -14,18 +14,22 @@
 }
 
 <form method="post">
-    <div class="form-group mb-4">
-        <h5>Existing User Settings</h5>
+    <div class="form-group mb-5">
+        <h4 class="mb-3">Existing User Settings</h4>
         <div class="form-check my-1">
             <input asp-for="AllowLightningInternalNodeForAll" type="checkbox" class="form-check-input"/>
             <label asp-for="AllowLightningInternalNodeForAll" class="form-check-label"></label>
-            <a href="https://docs.btcpayserver.org/FAQ/FAQ-LightningNetwork/#how-many-users-can-use-lightning-network-in-btcpay" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+            <a href="https://docs.btcpayserver.org/FAQ/FAQ-LightningNetwork/#how-many-users-can-use-lightning-network-in-btcpay" target="_blank">\
+                <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+            </a>
             <span asp-validation-for="AllowLightningInternalNodeForAll" class="text-danger"></span>
         </div>
         <div class="form-check my-1">
             <input asp-for="AllowHotWalletForAll" type="checkbox" class="form-check-input"/>
             <label asp-for="AllowHotWalletForAll" class="form-check-label"></label>
-            <a href="https://docs.btcpayserver.org/HotWallet/#requirements-for-hot-wallet" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+            <a href="https://docs.btcpayserver.org/CreateWallet/#requirements-to-create-wallets" target="_blank">
+                <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+            </a>
             <span asp-validation-for="AllowHotWalletForAll" class="text-danger"></span>
         </div>
         <div class="form-check my-1">
@@ -35,8 +39,8 @@
         </div>
     </div>
 
-    <div class="form-group mb-4">
-        <h5>New User Settings</h5>
+    <div class="form-group mb-5">
+        <h4 class="mb-3">New User Settings</h4>
         <div class="form-check my-1">
             @{
                 var emailSettings = (await _SettingsRepository.GetSettingAsync<EmailSettings>()) ?? new EmailSettings();
@@ -46,7 +50,9 @@
             }
             <input asp-for="RequiresConfirmedEmail" type="checkbox" class="form-check-input" disabled="@(isEmailConfigured ? null : "disabled")"/>
             <label asp-for="RequiresConfirmedEmail" class="form-check-label"></label>
-            <a href="https://docs.btcpayserver.org/FAQ/FAQ-ServerSettings/#how-to-allow-registration-on-my-btcpay-server" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+            <a href="https://docs.btcpayserver.org/FAQ/FAQ-ServerSettings/#how-to-allow-registration-on-my-btcpay-server" target="_blank">
+                <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+            </a>
             <span asp-validation-for="RequiresConfirmedEmail" class="text-danger"></span>
             @if (!isEmailConfigured)
             {
@@ -68,24 +74,28 @@
         </div>
     </div>
 
-    <div class="form-group mb-4">
-        <h5>Notification Settings</h5>
+    <div class="form-group mb-5">
+        <h4 class="mb-3">Notification Settings</h4>
         <div class="form-check my-1">
             <input asp-for="DisableInstantNotifications" type="checkbox" class="form-check-input"/>
             <label asp-for="DisableInstantNotifications" class="form-check-label"></label>
-            <a href="https://docs.btcpayserver.org/Notifications/#notifications" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+            <a href="https://docs.btcpayserver.org/Notifications/#notifications" target="_blank">
+                <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+            </a>
             <span asp-validation-for="DisableInstantNotifications" class="text-danger"></span>
         </div>
         <div class="form-check my-1">
             <input asp-for="DisableStoresToUseServerEmailSettings" type="checkbox" class="form-check-input"/>
             <label asp-for="DisableStoresToUseServerEmailSettings" class="form-check-label"></label>
-            <a href="https://docs.btcpayserver.org/Notifications/#server-emails" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+            <a href="https://docs.btcpayserver.org/Notifications/#server-emails" target="_blank">
+                <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+            </a>
             <span asp-validation-for="DisableStoresToUseServerEmailSettings" class="text-danger"></span>
         </div>
     </div>
 
-    <div class="form-group mb-4">
-        <h5>Maintenance Settings</h5>
+    <div class="form-group mb-5">
+        <h4 class="mb-3">Maintenance Settings</h4>
         @if (ViewBag.UpdateUrlPresent)
         {
             <div class="form-check my-1">
@@ -97,12 +107,14 @@
         <div class="form-check my-1">
             <input asp-for="DiscourageSearchEngines" type="checkbox" class="form-check-input"/>
             <label asp-for="DiscourageSearchEngines" class="form-check-label"></label>
-            <a href="https://docs.btcpayserver.org/FAQ/FAQ-ServerSettings/#how-to-hide-my-btcpay-server-from-search-engines" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+            <a href="https://docs.btcpayserver.org/FAQ/FAQ-ServerSettings/#how-to-hide-my-btcpay-server-from-search-engines" target="_blank">
+                <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+            </a>
             <span asp-validation-for="DiscourageSearchEngines" class="text-danger"></span>
         </div>
     </div>
 
-    <h5>Customization Settings</h5>
+    <h4 class="mb-3">Customization Settings</h4>
 
     <div class="form-group">
         <label asp-for="RootAppId"></label>

@@ -1,10 +1,9 @@
 ﻿@model LightningWalletServices
 @{
-    ViewData.SetActivePageAndTitle(ServerNavPages.Services);
+    ViewData.SetActivePageAndTitle(ServerNavPages.Services, "BTCPay Server Configurator");
 }
 
-<h4>BTCPay Server Configurator</h4>
-<partial name="_StatusMessage" />
+<h2 class="mb-4">@ViewData["Title"]</h2>
 
 <div class="row">
     <div class="col-md-6">
@@ -28,6 +27,5 @@
 </div>
 
 @section Scripts {
-    @await Html.PartialAsync("_ValidationScriptsPartial")
-
+    <partial name="_ValidationScriptsPartial" />
 }

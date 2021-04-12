@@ -150,14 +150,14 @@
                 {
                     <h3 class="mb-3">Product Information</h3>
                     <table class="table table-sm table-responsive-md removetopborder">
-                        @if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemCode))
+                        @if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemCode.AsString()))
                         {
                             <tr>
                                 <th>Item code</th>
                                 <td>@Model.TypedMetadata.ItemCode</td>
                             </tr>
                         }
-                        @if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemDesc))
+                        @if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemDesc.AsString()))
                         {
                             <tr>
                                 <th>Item Description</th>
@@ -183,14 +183,14 @@
                 <div class="col-md-6 mb-4">
                     <h3 class="mb-3">Product information</h3>
                     <table class="table table-sm table-responsive-md removetopborder">
-                        @if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemCode))
+                        @if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemCode.AsString()))
                         {
                             <tr>
                                 <th>Item code</th>
                                 <td>@Model.TypedMetadata.ItemCode</td>
                             </tr>
                         }
-                        @if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemDesc))
+                        @if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemDesc.AsString()))
                         {
                             <tr>
                                 <th>Item Description</th>

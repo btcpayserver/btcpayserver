@@ -98,8 +98,8 @@ namespace BTCPayServer.Services.Apps
             var currentPayments = GetContributionsByPaymentMethodId(settings.TargetCurrency, completeInvoices, !settings.EnforceTargetAmount);
 
             var perkCount = paidInvoices
-                .Where(entity => !string.IsNullOrEmpty(entity.Metadata.ItemCode))
-                .GroupBy(entity => entity.Metadata.ItemCode)
+                .Where(entity => !string.IsNullOrEmpty(entity.Metadata.ItemCode.AsString()))
+                .GroupBy(entity => entity.Metadata.ItemCode.AsString())
                 .ToDictionary(entities => entities.Key, entities => entities.Count());
 
             var perks = Parse(settings.PerksTemplate, settings.TargetCurrency);

@@ -166,11 +166,11 @@ namespace BTCPayServer.Services.Invoices
                     Id = invoice.Id,
                     Created = invoice.InvoiceTime,
                     Blob = ToBytes(invoice, null),
-                    OrderId = invoice.Metadata.OrderId,
+                    OrderId = invoice.Metadata.OrderId.AsString(),
 #pragma warning disable CS0618 // Type or member is obsolete
                     Status = invoice.StatusString,
 #pragma warning restore CS0618 // Type or member is obsolete
-                    ItemCode = invoice.Metadata.ItemCode,
+                    ItemCode = invoice.Metadata.ItemCode.AsString(),
                     CustomerEmail = invoice.RefundMail,
                     Archived = false
                 };
@@ -207,9 +207,9 @@ namespace BTCPayServer.Services.Invoices
                 textSearch.Add(invoice.Id);
                 textSearch.Add(invoice.InvoiceTime.ToString(CultureInfo.InvariantCulture));
                 textSearch.Add(invoice.Price.ToString(CultureInfo.InvariantCulture));
-                textSearch.Add(invoice.Metadata.OrderId);
+                textSearch.Add(invoice.Metadata.OrderId.AsString());
                 textSearch.Add(invoice.StoreId);
-                textSearch.Add(invoice.Metadata.BuyerEmail);
+                textSearch.Add(invoice.Metadata.BuyerEmail.AsString());
                 AddToTextSearch(context, invoiceData, textSearch.ToArray());
 
                 await context.SaveChangesAsync().ConfigureAwait(false);
@@ -597,7 +597,7 @@ namespace BTCPayServer.Services.Invoices
             {
                 entity.Events = invoice.Events.OrderBy(c => c.Timestamp).ToList();
             }
-            if (!string.IsNullOrEmpty(entity.RefundMail) && string.IsNullOrEmpty(entity.Metadata.BuyerEmail))
+            if (!string.IsNullOrEmpty(entity.RefundMail) && string.IsNullOrEmpty(entity.Metadata.BuyerEmail.AsString()))
             {
                 entity.Metadata.BuyerEmail = entity.RefundMail;
             }

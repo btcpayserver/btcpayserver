@@ -30,67 +30,39 @@ namespace BTCPayServer.Services.Invoices
             seria.ContractResolver = new CamelCasePropertyNamesContractResolver();
             MetadataSerializer = seria;
         }
-        public string OrderId { get; set; }
+        public JToken OrderId { get; set; }
         [JsonProperty(PropertyName = "buyerName")]
-        public string BuyerName { get; set; }
+        public JToken BuyerName { get; set; }
         [JsonProperty(PropertyName = "buyerEmail")]
-        public string BuyerEmail { get; set; }
+        public JToken BuyerEmail { get; set; }
         [JsonProperty(PropertyName = "buyerCountry")]
-        public string BuyerCountry { get; set; }
+        public JToken BuyerCountry { get; set; }
         [JsonProperty(PropertyName = "buyerZip")]
-        public string BuyerZip { get; set; }
+        public JToken BuyerZip { get; set; }
         [JsonProperty(PropertyName = "buyerState")]
-        public string BuyerState { get; set; }
+        public JToken BuyerState { get; set; }
         [JsonProperty(PropertyName = "buyerCity")]
-        public string BuyerCity { get; set; }
+        public JToken BuyerCity { get; set; }
         [JsonProperty(PropertyName = "buyerAddress2")]
-        public string BuyerAddress2 { get; set; }
+        public JToken BuyerAddress2 { get; set; }
         [JsonProperty(PropertyName = "buyerAddress1")]
-        public string BuyerAddress1 { get; set; }
+        public JToken BuyerAddress1 { get; set; }
 
         [JsonProperty(PropertyName = "buyerPhone")]
-        public string BuyerPhone { get; set; }
+        public JToken BuyerPhone { get; set; }
 
         [JsonProperty(PropertyName = "itemDesc")]
-        public string ItemDesc { get; set; }
+        public JToken ItemDesc { get; set; }
         [JsonProperty(PropertyName = "itemCode")]
-        public string ItemCode { get; set; }
+        public JToken ItemCode { get; set; }
         [JsonProperty(PropertyName = "physical")]
-        public bool? Physical { get; set; }
+        public JToken Physical { get; set; }
 
         [JsonProperty(PropertyName = "taxIncluded", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public decimal? TaxIncluded { get; set; }
-
-        [JsonIgnore]
-        public string PosData
-        {
-            get
-            {
-                return PosRawData?.ToString();
-            }
-            set
-            {
-                if (value is null)
-                {
-                    PosRawData = JValue.CreateNull();
-                }
-                else
-                {
-                    try
-                    {
-                        PosRawData = JToken.Parse(value);
-                    }
-                    catch (Exception )
-                    {
-                        PosRawData = JToken.FromObject(value);
-                    }
-                }
-               
-            }
-        }
+        public JToken TaxIncluded { get; set; }
 
         [JsonProperty(PropertyName = "posData")]
-        public JToken PosRawData { get; set; }
+        public JToken PosData { get; set; }
         [JsonExtensionData]
         public IDictionary<string, JToken> AdditionalData { get; set; }
 
@@ -283,9 +255,11 @@ namespace BTCPayServer.Services.Invoices
 
         private Uri FillPlaceholdersUri(string v)
         {
-            var uriStr = (v ?? string.Empty).Replace("{OrderId}", System.Web.HttpUtility.UrlEncode(Metadata.OrderId) ?? "", StringComparison.OrdinalIgnoreCase)
-                                     .Replace("{InvoiceId}", System.Web.HttpUtility.UrlEncode(Id) ?? "", StringComparison.OrdinalIgnoreCase);
-            if (Uri.TryCreate(uriStr, UriKind.Absolute, out var uri) && (uri.Scheme == "http" || uri.Scheme == "https"))
+            v ??= string.Empty;
+            string orderId = Metadata.OrderId.AsString();
+            v = v.Replace("{OrderId}", orderId is null ? string.Empty : System.Web.HttpUtility.UrlEncode(orderId), StringComparison.OrdinalIgnoreCase);
+            v = v.Replace("{InvoiceId}", System.Web.HttpUtility.UrlEncode(Id), StringComparison.OrdinalIgnoreCase);
+            if (Uri.TryCreate(v, UriKind.Absolute, out var uri) && (uri.Scheme == "http" || uri.Scheme == "https"))
                 return uri;
             return null;
         }
@@ -330,8 +304,8 @@ namespace BTCPayServer.Services.Invoices
             {
                 Id = Id,
                 StoreId = StoreId,
-                OrderId = Metadata.OrderId,
-                PosData = Metadata.PosData,
+                OrderId = Metadata.OrderId.AsString(),
+                PosData = Metadata.PosData.AsString(),
                 CurrentTime = DateTimeOffset.UtcNow,
                 InvoiceTime = InvoiceTime,
                 ExpirationTime = ExpirationTime,
@@ -449,9 +423,9 @@ namespace BTCPayServer.Services.Invoices
 
             //dto.AmountPaid dto.MinerFees & dto.TransactionCurrency are not supported by btcpayserver as we have multi currency payment support per invoice
 
-            dto.ItemCode = Metadata.ItemCode;
-            dto.ItemDesc = Metadata.ItemDesc;
-            dto.TaxIncluded = Metadata.TaxIncluded ?? 0m;
+            dto.ItemCode = Metadata.ItemCode.AsString();
+            dto.ItemDesc = Metadata.ItemDesc.AsString();
+            dto.TaxIncluded = Metadata.TaxIncluded.AsDecimal() ?? 0m;
             dto.Price = Price;
             dto.Currency = Currency;
             dto.Buyer = new JObject();
@@ -463,7 +437,7 @@ namespace BTCPayServer.Services.Invoices
             dto.Buyer.Add(new JProperty("postalCode", Metadata.BuyerZip));
             dto.Buyer.Add(new JProperty("country", Metadata.BuyerCountry));
             dto.Buyer.Add(new JProperty("phone", Metadata.BuyerPhone));
-            dto.Buyer.Add(new JProperty("email", string.IsNullOrWhiteSpace(Metadata.BuyerEmail) ? RefundMail : Metadata.BuyerEmail));
+            dto.Buyer.Add(new JProperty("email", string.IsNullOrWhiteSpace(Metadata.BuyerEmail.AsString()) ? RefundMail : Metadata.BuyerEmail));
 
             dto.Token = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16)); //No idea what it is useful for
             dto.Guid = Guid.NewGuid().ToString();

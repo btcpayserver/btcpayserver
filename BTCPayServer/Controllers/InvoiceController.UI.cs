@@ -120,7 +120,7 @@ namespace BTCPayServer.Controllers
                 ExpirationDate = invoice.ExpirationTime,
                 MonitoringDate = invoice.MonitoringExpiration,
                 Fiat = _CurrencyNameTable.DisplayFormatCurrency(invoice.Price, invoice.Currency),
-                TaxIncluded = _CurrencyNameTable.DisplayFormatCurrency(invoice.Metadata.TaxIncluded ?? 0.0m, invoice.Currency),
+                TaxIncluded = _CurrencyNameTable.DisplayFormatCurrency(invoice.Metadata.TaxIncluded.AsDecimal() ?? 0.0m, invoice.Currency),
                 NotificationUrl = invoice.NotificationURL?.AbsoluteUri,
                 RedirectUrl = invoice.RedirectURL?.AbsoluteUri,
                 TypedMetadata = invoice.Metadata,
@@ -539,7 +539,7 @@ namespace BTCPayServer.Controllers
                 Activated = paymentMethodDetails.Activated,
                 CryptoCode = network.CryptoCode,
                 RootPath = this.Request.PathBase.Value.WithTrailingSlash(),
-                OrderId = invoice.Metadata.OrderId,
+                OrderId = invoice.Metadata.OrderId.AsString(),
                 InvoiceId = invoice.Id,
                 DefaultLang = lang ?? invoice.DefaultLanguage ?? storeBlob.DefaultLang ?? "en",
                 CustomCSSLink = storeBlob.CustomCSS,
@@ -556,7 +556,7 @@ namespace BTCPayServer.Controllers
                 ExpirationSeconds = Math.Max(0, (int)(invoice.ExpirationTime - DateTimeOffset.UtcNow).TotalSeconds),
                 MaxTimeSeconds = (int)(invoice.ExpirationTime - invoice.InvoiceTime).TotalSeconds,
                 MaxTimeMinutes = (int)(invoice.ExpirationTime - invoice.InvoiceTime).TotalMinutes,
-                ItemDesc = invoice.Metadata.ItemDesc,
+                ItemDesc = invoice.Metadata.ItemDesc.AsString(),
                 Rate = ExchangeRate(paymentMethod),
                 MerchantRefLink = invoice.RedirectURL?.AbsoluteUri ?? "/",
                 RedirectAutomatically = invoice.RedirectAutomatically,
@@ -725,7 +725,7 @@ namespace BTCPayServer.Controllers
                     ShowCheckout = invoice.Status == InvoiceStatusLegacy.New,
                     Date = invoice.InvoiceTime,
                     InvoiceId = invoice.Id,
-                    OrderId = invoice.Metadata.OrderId ?? string.Empty,
+                    OrderId = invoice.Metadata.OrderId.AsString() ?? string.Empty,
                     RedirectUrl = invoice.RedirectURL?.AbsoluteUri ?? string.Empty,
                     AmountCurrency = _CurrencyNameTable.DisplayFormatCurrency(invoice.Price, invoice.Currency),
                     CanMarkInvalid = state.CanMarkInvalid(),
@@ -900,42 +900,55 @@ namespace BTCPayServer.Controllers
 
         public class PosDataParser
         {
-            public static Dictionary<string, object> ParsePosData(string posData)
+            public static Dictionary<string, object> ParsePosData(JToken posData)
             {
                 var result = new Dictionary<string, object>();
-                if (string.IsNullOrEmpty(posData))
+                if (posData is null)
                 {
                     return result;
                 }
 
-                try
+                JObject posDataJObj = posData as JObject;
+                if (posDataJObj is null)
                 {
-                    var jObject = JObject.Parse(posData);
-                    foreach (var item in jObject)
+                    if (posData.AsString() is string posDataStr)
                     {
-
-                        switch (item.Value.Type)
+                        if (string.IsNullOrEmpty(posDataStr))
+                            return result;
+                        try
                         {
-                            case JTokenType.Array:
-                                var items = item.Value.AsEnumerable().ToList();
-                                for (var i = 0; i < items.Count; i++)
-                                {
-                                    result.Add($"{item.Key}[{i}]", ParsePosData(items[i].ToString()));
-                                }
-                                break;
-                            case JTokenType.Object:
-                                result.Add(item.Key, ParsePosData(item.Value.ToString()));
-                                break;
-                            default:
-                                result.Add(item.Key, item.Value.ToString());
-                                break;
+                            posDataJObj = JObject.Parse(posDataStr);
                         }
-
+                        catch
+                        {
+                            result.TryAdd(string.Empty, posDataStr);
+                        }
                     }
                 }
-                catch
+                if (posDataJObj is null)
+                    return result;
+
+
+                foreach (var item in posDataJObj)
                 {
-                    result.Add(string.Empty, posData);
+
+                    switch (item.Value.Type)
+                    {
+                        case JTokenType.Array:
+                            var items = item.Value.AsEnumerable().ToList();
+                            for (var i = 0; i < items.Count; i++)
+                            {
+                                result.TryAdd($"{item.Key}[{i}]", ParsePosData(items[i]));
+                            }
+                            break;
+                        case JTokenType.Object:
+                            result.TryAdd(item.Key, ParsePosData(item.Value));
+                            break;
+                        default:
+                            result.TryAdd(item.Key, item.Value.ToString());
+                            break;
+                    }
+
                 }
                 return result;
             }

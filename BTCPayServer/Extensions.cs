@@ -34,6 +34,7 @@ using NBitpayClient;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json.Linq;
+using System.Numerics;
 
 namespace BTCPayServer
 {
@@ -427,6 +428,42 @@ namespace BTCPayServer
         {
             return ctx.Items.TryGet("BTCPAY.STOREDATA") as StoreData;
         }
+
+
+        // https://github.com/JamesNK/Newtonsoft.Json/blob/master/Src/Newtonsoft.Json/Linq/JToken.cs#L1235
+        private static readonly JTokenType[] StringTypes = new[] { JTokenType.Date, JTokenType.Integer, JTokenType.Float, JTokenType.String, JTokenType.Comment, JTokenType.Raw, JTokenType.Boolean, JTokenType.Bytes, JTokenType.Guid, JTokenType.TimeSpan, JTokenType.Uri };
+        public static string AsString(this JToken tok)
+        {
+            if (tok is JValue v && StringTypes.Contains(v.Type))
+            {
+                if (v.Value is null)
+                    return null;
+
+                if (v.Value is byte[] bytes)
+                    return Convert.ToBase64String(bytes);
+                if (v.Value is BigInteger bigint)
+                    return bigint.ToString(CultureInfo.InvariantCulture);
+                return Convert.ToString(v.Value, CultureInfo.InvariantCulture);
+            }
+            return null;
+        }
+
+
+        // https://github.com/JamesNK/Newtonsoft.Json/blob/master/Src/Newtonsoft.Json/Linq/JToken.cs#L1108
+        private static readonly JTokenType[] NumberTypes = new[] { JTokenType.Integer, JTokenType.Float, JTokenType.String, JTokenType.Comment, JTokenType.Raw, JTokenType.Boolean };
+        public static decimal? AsDecimal(this JToken tok)
+        {
+            if (tok is JValue v && NumberTypes.Contains(v.Type))
+            {
+                if (v.Value is null)
+                    return null;
+                if (v.Value is BigInteger bigint)
+                    return (decimal)bigint;
+                return Convert.ToDecimal(v.Value, CultureInfo.InvariantCulture);
+            }
+            return null;
+        }
+
         public static void SetStoreData(this HttpContext ctx, StoreData storeData)
         {
             ctx.Items["BTCPAY.STOREDATA"] = storeData;

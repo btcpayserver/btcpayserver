@@ -196,9 +196,9 @@ namespace BTCPayServer.Controllers
 
             if (entity.Metadata.BuyerEmail != null)
             {
-                if (!EmailValidator.IsEmail(entity.Metadata.BuyerEmail))
+                if (!EmailValidator.IsEmail(entity.Metadata.BuyerEmail.AsString()))
                     throw new BitpayHttpException(400, "Invalid email");
-                entity.RefundMail = entity.Metadata.BuyerEmail;
+                entity.RefundMail = entity.Metadata.BuyerEmail.AsString();
             }
             entity.Status = InvoiceStatusLegacy.New;
             HashSet<CurrencyPair> currencyPairsToFetch = new HashSet<CurrencyPair>();

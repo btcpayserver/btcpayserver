@@ -87,7 +87,7 @@ namespace BTCPayServer.Services.Invoices.Export
                     // while looking just at export you could sum Paid and assume merchant "received payments"
                     NetworkFee = payment.NetworkFee.ToString(CultureInfo.InvariantCulture),
                     InvoiceDue = Math.Round(invoiceDue, currency.NumberDecimalDigits),
-                    OrderId = invoice.Metadata.OrderId ?? string.Empty,
+                    OrderId = invoice.Metadata.OrderId.AsString() ?? string.Empty,
                     StoreId = invoice.StoreId,
                     InvoiceId = invoice.Id,
                     InvoiceCreatedDate = invoice.InvoiceTime.UtcDateTime,
@@ -98,11 +98,11 @@ namespace BTCPayServer.Services.Invoices.Export
                     InvoiceStatus = invoice.StatusString,
                     InvoiceExceptionStatus = invoice.ExceptionStatusString,
 #pragma warning restore CS0618 // Type or member is obsolete
-                    InvoiceItemCode = invoice.Metadata.ItemCode,
-                    InvoiceItemDesc = invoice.Metadata.ItemDesc,
+                    InvoiceItemCode = invoice.Metadata.ItemCode.AsString(),
+                    InvoiceItemDesc = invoice.Metadata.ItemDesc.AsString(),
                     InvoicePrice = invoice.Price,
                     InvoiceCurrency = invoice.Currency,
-                    BuyerEmail = invoice.Metadata.BuyerEmail
+                    BuyerEmail = invoice.Metadata.BuyerEmail.AsString()
                 };
 
                 exportList.Add(target);

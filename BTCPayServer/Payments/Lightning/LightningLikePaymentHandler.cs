@@ -84,8 +84,8 @@ namespace BTCPayServer.Payments.Lightning
 
             string description = storeBlob.LightningDescriptionTemplate;
             description = description.Replace("{StoreName}", store.StoreName ?? "", StringComparison.OrdinalIgnoreCase)
-                                     .Replace("{ItemDescription}", invoice.Metadata.ItemDesc ?? "", StringComparison.OrdinalIgnoreCase)
-                                     .Replace("{OrderId}", invoice.Metadata.OrderId ?? "", StringComparison.OrdinalIgnoreCase);
+                                     .Replace("{ItemDescription}", invoice.Metadata.ItemDesc.AsString() ?? "", StringComparison.OrdinalIgnoreCase)
+                                     .Replace("{OrderId}", invoice.Metadata.OrderId.AsString() ?? "", StringComparison.OrdinalIgnoreCase);
             using (var cts = new CancellationTokenSource(LIGHTNING_TIMEOUT))
             {
                 try

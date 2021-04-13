@@ -1,7 +1,7 @@
 using System;
-using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Globalization;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
@@ -68,7 +68,7 @@ namespace BTCPayServer.Controllers.GreenField
                             ?.ToLower(CultureInfo.CurrentCulture)
                     }
                     : null;
-
+            
             var invoices =
                 await _invoiceRepository.GetInvoices(new InvoiceQuery()
                 {
@@ -160,7 +160,6 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 ModelState.AddModelError(nameof(request.Currency), "Currency is required");
             }
-
             request.Checkout = request.Checkout ?? new CreateInvoiceRequest.CheckoutOptions();
             if (request.Checkout.PaymentMethods?.Any() is true)
             {
@@ -193,8 +192,7 @@ namespace BTCPayServer.Controllers.GreenField
                 if (lang == null)
                 {
                     request.AddModelError(invoiceRequest => invoiceRequest.Checkout.DefaultLanguage,
-                        "The requested defaultLang does not exists, Browse the ~/misc/lang page of your BTCPay Server instance to see the list of supported languages.",
-                        this);
+                    "The requested defaultLang does not exists, Browse the ~/misc/lang page of your BTCPay Server instance to see the list of supported languages.", this);
                 }
                 else
                 {
@@ -277,7 +275,7 @@ namespace BTCPayServer.Controllers.GreenField
             await _invoiceRepository.ToggleInvoiceArchival(invoiceId, false, storeId);
             return await GetInvoice(storeId, invoiceId);
         }
-
+        
         [Authorize(Policy = Policies.CanViewInvoices,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/invoices/{invoiceId}/payment-methods")]
@@ -369,7 +367,6 @@ namespace BTCPayServer.Controllers.GreenField
                     };
                 }).ToArray();
         }
-
         private InvoiceData ToModel(InvoiceEntity entity)
         {
             return new InvoiceData()

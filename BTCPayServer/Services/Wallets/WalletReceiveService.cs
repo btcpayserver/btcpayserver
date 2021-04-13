@@ -52,6 +52,7 @@ namespace BTCPayServer.Services.Wallets
             }
 
             await explorerClient.CancelReservationAsync(kpi.DerivationStrategy, new[] {kpi.KeyPath});
+            Remove(walletId);
             return kpi.Address.ToString();
         }
 
@@ -127,6 +128,20 @@ namespace BTCPayServer.Services.Wallets
         {
             _leases.Dispose();
             return Task.CompletedTask;
+        }
+
+        public Tuple<WalletId, KeyPathInformation>? GetByScriptPubKey(string cryptoCode,Script script)
+        {
+            var match =  _walletReceiveState.Where(pair =>
+                pair.Key.CryptoCode.Equals(cryptoCode, StringComparison.InvariantCulture) &&
+                pair.Value.ScriptPubKey == script);
+            if (match.Any())
+            {
+                var f =match.First();
+                return new Tuple<WalletId, KeyPathInformation>(f.Key, f.Value);
+            }
+
+            return null;
         }
     }
 }

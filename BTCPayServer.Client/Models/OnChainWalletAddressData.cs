@@ -9,5 +9,7 @@ namespace BTCPayServer.Client.Models
         public string Address { get; set; }
         [JsonConverter(typeof(KeyPathJsonConverter))]
         public KeyPath KeyPath { get; set; }
+
+        public string PaymentLink { get; set; }
     }
 }

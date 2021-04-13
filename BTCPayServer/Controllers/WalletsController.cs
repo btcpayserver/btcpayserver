@@ -27,6 +27,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using BTCPayServer.BIP78.Sender;
+using BTCPayServer.Payments.PayJoin;
 using NBitcoin.DataEncoders;
 using NBXplorer;
 using NBXplorer.DerivationStrategy;
@@ -364,13 +365,20 @@ namespace BTCPayServer.Controllers
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId?.CryptoCode);
             if (network == null)
                 return NotFound();
-
             var address = _walletReceiveService.Get(walletId)?.Address;
+            var allowedPayjoin = paymentMethod.IsHotWallet && CurrentStore.GetStoreBlob().PayJoinEnabled;
+            var bip21 = address is null ? null : network.GenerateBIP21(address.ToString(), null);
+            if (allowedPayjoin)
+            {
+                bip21 +=
+                    $"?{PayjoinClient.BIP21EndpointKey}={Request.GetAbsoluteUri(Url.Action(nameof(PayJoinEndpointController.Submit), "PayJoinEndpoint", new {walletId.CryptoCode}))}";
+            }
             return View(new WalletReceiveViewModel()
             {
                 CryptoCode = walletId.CryptoCode,
                 Address = address?.ToString(),
-                CryptoImage = GetImage(paymentMethod.PaymentId, network)
+                CryptoImage = GetImage(paymentMethod.PaymentId, network),
+                PaymentLink = bip21
             });
         }
 
@@ -724,7 +732,7 @@ namespace BTCPayServer.Controllers
                 {
                     new WalletSendModel.TransactionOutput()
                     {
-                        Amount = uriBuilder.Amount.ToDecimal(MoneyUnit.BTC),
+                        Amount = uriBuilder.Amount?.ToDecimal(MoneyUnit.BTC),
                         DestinationAddress = uriBuilder.Address.ToString(),
                         SubtractFeesFromOutput = false
                     }
@@ -1179,6 +1187,7 @@ namespace BTCPayServer.Controllers
         public string CryptoImage { get; set; }
         public string CryptoCode { get; set; }
         public string Address { get; set; }
+        public string PaymentLink { get; set; }
     }
 
 

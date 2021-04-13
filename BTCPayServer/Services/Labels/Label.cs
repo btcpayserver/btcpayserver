@@ -10,7 +10,7 @@ namespace BTCPayServer.Services.Labels
     {
         static void FixLegacy(JObject jObj, ReferenceLabel refLabel)
         {
-            if (refLabel.Reference is null)
+            if (refLabel.Reference is null && jObj.ContainsKey("id"))
                 refLabel.Reference = jObj["id"].Value<string>();
             FixLegacy(jObj, (Label)refLabel);
         }

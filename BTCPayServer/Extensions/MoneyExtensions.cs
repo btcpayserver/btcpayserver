@@ -35,7 +35,7 @@ namespace BTCPayServer
         {
             var negative = sats < 0;
             var amt = sats.ToString(CultureInfo.InvariantCulture)
-                .Replace("-", "")
+                .Replace("-", "", StringComparison.InvariantCulture)
                 .PadLeft(divisibility, '0');
             amt = amt.Length == divisibility ? $"0.{amt}" : amt.Insert(amt.Length - divisibility, ".");
             return decimal.Parse($"{(negative? "-": string.Empty)}{amt}", CultureInfo.InvariantCulture);

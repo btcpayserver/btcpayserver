@@ -11,6 +11,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Models.WalletViewModels;
+using BTCPayServer.Payments.PayJoin;
 using BTCPayServer.Payments.PayJoin.Sender;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Wallets;
@@ -122,9 +123,18 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 return BadRequest();
             }
+
+            var bip21 = network.GenerateBIP21(kpi.Address.ToString(), null);
+            var allowedPayjoin = derivationScheme.IsHotWallet && Store.GetStoreBlob().PayJoinEnabled;
+            if (allowedPayjoin)
+            {
+               bip21 +=
+                   $"?{PayjoinClient.BIP21EndpointKey}={Request.GetAbsoluteUri(Url.Action(nameof(PayJoinEndpointController.Submit), "PayJoinEndpoint", new {cryptoCode}))}";
+            }
             return Ok(new OnChainWalletAddressData()
             {
                 Address = kpi.Address.ToString(),
+                PaymentLink =  bip21,
                 KeyPath = kpi.KeyPath
             });
         }
@@ -323,7 +333,7 @@ namespace BTCPayServer.Controllers.GreenField
                     request.AddModelError(transactionRequest => transactionRequest.Destinations[index],
                         "Amount must be specified or destination must be a BIP21 payment link, and greater than 0", this);
                 }
-                if (request.ProceedWithPayjoin && bip21?.UnknowParameters?.ContainsKey("pj") is true)
+                if (request.ProceedWithPayjoin && bip21?.UnknowParameters?.ContainsKey(PayjoinClient.BIP21EndpointKey) is true)
                 {
                     payjoinOutputIndex = index;
                 }

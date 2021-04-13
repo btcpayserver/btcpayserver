@@ -548,6 +548,11 @@
                         "type": "string",
                         "format": "keypath",
                         "description": "the derivation path in relation to the HD account"
+                    },
+                    "paymentLink": {
+                        "type": "string",
+                        "format": "BIP21",
+                        "description": "a bip21 payment link"
                     }
                 }
             },

@@ -29,7 +29,10 @@ namespace BTCPayServer.Controllers
             var usersQuery = _UserManager.Users;
             if (!string.IsNullOrWhiteSpace(model.SearchTerm))
             {
+#pragma warning disable CA1307 // Specify StringComparison
+                // Entity Framework don't support StringComparison
                 usersQuery = usersQuery.Where(u => u.Email.Contains(model.SearchTerm));
+#pragma warning restore CA1307 // Specify StringComparison
             }
 
             if (sortOrder != null) 

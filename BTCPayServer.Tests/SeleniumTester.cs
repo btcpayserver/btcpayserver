@@ -63,9 +63,6 @@ namespace BTCPayServer.Tests
             }
             options.AddArguments($"window-size={windowSize.Width}x{windowSize.Height}");
             options.AddArgument("shm-size=2g");
-            //options.DebuggerAddress = $"127.0.0.1:{Utils.FreeTcpPort()}";
-            
-            Logs.Tester.LogInformation("Chrome address: " + options.DebuggerAddress);
 
             var cds = ChromeDriverService.CreateDefaultService(chromeDriverPath);
             cds.Port = Utils.FreeTcpPort();

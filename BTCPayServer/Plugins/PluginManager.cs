@@ -28,7 +28,7 @@ namespace BTCPayServer.Plugins
 
         public static bool IsExceptionByPlugin(Exception exception)
         {
-           return  _pluginAssemblies.Any(assembly => assembly.FullName.Contains(exception.Source));
+           return  _pluginAssemblies.Any(assembly => assembly.FullName.Contains(exception.Source, StringComparison.OrdinalIgnoreCase));
         }
         public static IMvcBuilder AddPlugins(this IMvcBuilder mvcBuilder, IServiceCollection serviceCollection,
             IConfiguration config, ILoggerFactory loggerFactory)

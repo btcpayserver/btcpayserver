@@ -130,7 +130,7 @@ namespace BTCPayServer.Services.Wallets
             return Task.CompletedTask;
         }
 
-        public Tuple<WalletId, KeyPathInformation>? GetByScriptPubKey(string cryptoCode,Script script)
+        public Tuple<WalletId, KeyPathInformation> GetByScriptPubKey(string cryptoCode,Script script)
         {
             var match =  _walletReceiveState.Where(pair =>
                 pair.Key.CryptoCode.Equals(cryptoCode, StringComparison.InvariantCulture) &&

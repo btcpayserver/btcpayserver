@@ -51,50 +51,7 @@
                     </div>
                 </nav>
             </div>
-            @if (Model.CoinSwitchEnabled)
-            {
-                <div id="altcoins" class="bp-view payment manual-flow" v-bind:class="{ 'active': currentTab == 'altcoins'}">
-                    <nav>
-                        <div class="manual__step-two__instructions">
-                            <span>
-                                {{$t("ConversionTab_BodyTop", srvModel)}}
-                                <br/><br/>
-                                {{$t("ConversionTab_BodyDesc", srvModel)}}
-                            </span>
-                        </div>
-                        <center>
-                            @if (Model.CoinSwitchEnabled)
-                            {
-                                <template v-if="!selectedThirdPartyProcessor">
-                                    <button v-on:click="selectedThirdPartyProcessor = 'coinswitch'" class="action-button">{{$t("Pay with CoinSwitch")}}</button>
-                                </template>
-                            }
-                            @if (Model.CoinSwitchEnabled)
-                            {
-                                <coinswitch inline-template
-                                        v-if="selectedThirdPartyProcessor === 'coinswitch'"
-                                        :mode="srvModel.coinSwitchMode"
-                                        :merchant-id="srvModel.coinSwitchMerchantId"
-                                        :to-currency="srvModel.paymentMethodId"
-                                        :to-currency-due="coinswitchAmountDue"
-                                        :autoload="selectedThirdPartyProcessor === 'coinswitch'"
-                                        :to-currency-address="srvModel.btcAddress">
-                                    <div>
-                                        <a v-on:click="openDialog($event)" :href="url" class="action-button" v-show="url && !opened">{{$t("Pay with CoinSwitch")}}</a>
-                                        <iframe
-                                            v-if="showInlineIFrame"
-                                            v-on:load="onLoadIframe"
-                                            style="height: 100%; position: fixed; top: 0; width: 100%; left: 0;"
-                                            sandbox="allow-scripts allow-forms allow-popups allow-same-origin"
-                                            :src="url">
-                                        </iframe>
-                                    </div>
-                                </coinswitch>
-                            }
-                        </center>
-                    </nav>
-                </div>
-            }
+            @await Component.InvokeAsync("UiExtensionPoint" ,  new { location="checkout-bitcoin-post-content"})
         </div>
         @if (Model.ShowRecommendedFee) {
             <div id="recommended-fee" class="recommended-fee" v-bind:class="{ hide: !srvModel.feeRate }">
@@ -112,17 +69,7 @@
         <div class="payment-tabs__tab" id="copy-tab" v-on:click="switchTab('copy')"  v-bind:class="{ 'active': currentTab == 'copy'}" >
             <span>{{$t("Copy")}}</span>
         </div>
-        @if (Model.CoinSwitchEnabled)
-        {
-            <div class="payment-tabs__tab" id="altcoins-tab" v-on:click="switchTab('altcoins')"  v-bind:class="{ 'active': currentTab == 'altcoins'}" >
-                <span>{{$t("Conversion")}}</span>
-            </div>
-            <div id="tabsSlider" class="payment-tabs__slider three-tabs"  v-bind:class="['slide-'+currentTab]"></div>
-        }
-        else
-        {
-            <div id="tabsSlider" class="payment-tabs__slider"  v-bind:class="['slide-'+currentTab]"></div>
-        }
+        @await Component.InvokeAsync("UiExtensionPoint" ,  new { location="checkout-bitcoin-post-tabs"})
     </div>
 </script>
 
@@ -132,23 +79,16 @@
             props: ["srvModel"],
             template: "#bitcoin-method-checkout-template",
             components: {
-                qrcode: VueQrcode,
-                coinswitch: CoinSwitchComponent
+                qrcode: VueQrcode
             },
             data: function() {
                 return {
-                    selectedThirdPartyProcessor: "",
                     currentTab: "scan"
                 }
             },
             computed: {
                 hasPayjoin: function(){
                     return this.srvModel.invoiceBitcoinUrl.indexOf('@PayjoinClient.BIP21EndpointKey=') === -1;
-                },
-                coinswitchAmountDue: function() {
-                    return this.srvModel.coinSwitchAmountMarkupPercentage
-                        ? this.srvModel.btcDue * (1 + (this.srvModel.coinSwitchAmountMarkupPercentage / 100))
-                        : this.srvModel.btcDue;
                 },
                 scanDisplayQr: function() {
                     return this.srvModel.invoiceBitcoinUrlQR;

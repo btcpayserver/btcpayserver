@@ -1,15 +1,27 @@
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Models.StoreViewModels;
-using BTCPayServer.Payments.CoinSwitch;
+using BTCPayServer.Services.Stores;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BTCPayServer.Controllers
+namespace BTCPayServer.Plugins.CoinSwitch
 {
-    public partial class StoresController
+    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Route("plugins/{storeId}/coinswitch")]
+    public class CoinSwitchController : Controller
     {
-        [HttpGet]
-        [Route("{storeId}/coinswitch")]
+        private readonly StoreRepository _storeRepository;
+
+        public CoinSwitchController(StoreRepository storeRepository)
+        {
+            _storeRepository = storeRepository;
+        }
+
+        [HttpGet("")]
         public IActionResult UpdateCoinSwitchSettings(string storeId)
         {
             var store = HttpContext.GetStoreData();
@@ -22,8 +34,7 @@ namespace BTCPayServer.Controllers
 
         private void SetExistingValues(StoreData store, UpdateCoinSwitchSettingsViewModel vm)
         {
-
-            var existing = store.GetStoreBlob().CoinSwitchSettings;
+            var existing = store.GetStoreBlob().GetCoinSwitchSettings();
             if (existing == null)
                 return;
             vm.MerchantId = existing.MerchantId;
@@ -32,8 +43,7 @@ namespace BTCPayServer.Controllers
             vm.AmountMarkupPercentage = existing.AmountMarkupPercentage;
         }
 
-        [HttpPost]
-        [Route("{storeId}/coinswitch")]
+        [HttpPost("")]
         public async Task<IActionResult> UpdateCoinSwitchSettings(string storeId, UpdateCoinSwitchSettingsViewModel vm,
             string command)
         {
@@ -60,14 +70,11 @@ namespace BTCPayServer.Controllers
             {
                 case "save":
                     var storeBlob = store.GetStoreBlob();
-                    storeBlob.CoinSwitchSettings = coinSwitchSettings;
+                    storeBlob.SetCoinSwitchSettings(coinSwitchSettings);
                     store.SetStoreBlob(storeBlob);
-                    await _Repo.UpdateStore(store);
+                    await _storeRepository.UpdateStore(store);
                     TempData[WellKnownTempData.SuccessMessage] = "CoinSwitch settings modified";
-                    return RedirectToAction(nameof(UpdateStore), new
-                    {
-                        storeId
-                    });
+                    return RedirectToAction(nameof(UpdateCoinSwitchSettings), new {storeId});
 
                 default:
                     return View(vm);

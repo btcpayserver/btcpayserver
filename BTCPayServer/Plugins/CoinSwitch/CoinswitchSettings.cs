@@ -1,4 +1,4 @@
-namespace BTCPayServer.Payments.CoinSwitch
+namespace BTCPayServer.Plugins.CoinSwitch
 {
     public class CoinSwitchSettings
     {

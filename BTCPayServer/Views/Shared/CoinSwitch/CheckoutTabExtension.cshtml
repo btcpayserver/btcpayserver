@@ -1,0 +1,12 @@
+@using BTCPayServer.Plugins.CoinSwitch
+@inject CoinSwitchService CoinSwitchService
+@{
+    var invoiceId = this.Context.GetRouteValue("invoiceId")?.ToString();
+    var settings = await CoinSwitchService.GetCoinSwitchForInvoice(invoiceId);
+}
+@if (settings?.IsConfigured() is true)
+{
+    <div class="payment-tabs__tab" id="altcoins-tab" v-on:click="switchTab('altcoins')" v-bind:class="{ 'active': currentTab == 'altcoins'}">
+        <span>{{$t("Conversion")}}</span>
+    </div>
+}

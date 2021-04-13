@@ -19,8 +19,8 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
-using BTCPayServer.Payments.CoinSwitch;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Plugins.CoinSwitch;
 using BTCPayServer.Rating;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Invoices;
@@ -525,12 +525,6 @@ namespace BTCPayServer.Controllers
             var storeBlob = store.GetStoreBlob();
             var accounting = paymentMethod.Calculate();
 
-            CoinSwitchSettings coinswitch = (storeBlob.CoinSwitchSettings != null && storeBlob.CoinSwitchSettings.Enabled &&
-                                           storeBlob.CoinSwitchSettings.IsConfigured())
-                ? storeBlob.CoinSwitchSettings
-                : null;
-
-
             var paymentMethodHandler = _paymentMethodHandlerDictionary[paymentMethodId];
 
             var divisibility = _CurrencyNameTable.GetNumberFormatInfo(paymentMethod.GetId().CryptoCode, false)?.CurrencyDecimalDigits;
@@ -568,10 +562,6 @@ namespace BTCPayServer.Controllers
 #pragma warning restore CS0618 // Type or member is obsolete
                 NetworkFee = paymentMethodDetails.GetNextNetworkFee(),
                 IsMultiCurrency = invoice.GetPayments().Select(p => p.GetPaymentMethodId()).Concat(new[] { paymentMethod.GetId() }).Distinct().Count() > 1,
-                CoinSwitchEnabled = coinswitch != null,
-                CoinSwitchAmountMarkupPercentage = coinswitch?.AmountMarkupPercentage ?? 0,
-                CoinSwitchMerchantId = coinswitch?.MerchantId,
-                CoinSwitchMode = coinswitch?.Mode,
                 StoreId = store.Id,
                 AvailableCryptos = invoice.GetPaymentMethods()
                                           .Where(i => i.Network != null)

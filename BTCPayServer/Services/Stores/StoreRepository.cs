@@ -95,6 +95,14 @@ namespace BTCPayServer.Services.Stores
             }
         }
 
+        public async Task<StoreData> GetStoreByInvoiceId(string invoiceId)
+        {
+            await using var context = _ContextFactory.CreateContext();
+            var matched = await context.Invoices.Include(data => data.StoreData)
+                .SingleOrDefaultAsync(data => data.Id == invoiceId);
+            return matched?.StoreData;
+        }
+
         public async Task<bool> AddStoreUser(string storeId, string userId, string role)
         {
             using (var ctx = _ContextFactory.CreateContext())

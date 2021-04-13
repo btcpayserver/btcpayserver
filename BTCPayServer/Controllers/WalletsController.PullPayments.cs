@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.ModelBinders;
@@ -17,6 +18,7 @@ using BTCPayServer.Views;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
+using PayoutData = BTCPayServer.Data.PayoutData;
 
 namespace BTCPayServer.Controllers
 {
@@ -189,7 +191,9 @@ namespace BTCPayServer.Controllers
 
             var storeId = walletId.StoreId;
             var paymentMethodId = new PaymentMethodId(walletId.CryptoCode, PaymentTypes.BTCLike);
-            var payoutIds = vm.WaitingForApproval.Where(p => p.Selected).Select(p => p.PayoutId).ToArray();
+
+            var commandState = Enum.Parse<PayoutState>(vm.Command.Split("-").First());
+            var payoutIds = vm.GetSelectedPayouts(commandState);
             if (payoutIds.Length == 0)
             {
                 this.TempData.SetStatusMessageModel(new StatusMessageModel()
@@ -203,93 +207,121 @@ namespace BTCPayServer.Controllers
                     pullPaymentId = vm.PullPaymentId
                 });
             }
-            if (vm.Command == "pay")
+
+            var command = vm.Command.Substring(vm.Command.IndexOf('-', StringComparison.InvariantCulture) + 1);
+
+            switch (command)
             {
-                using var ctx = this._dbContextFactory.CreateContext();
-                ctx.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
-                var payouts = (await ctx.Payouts
+                
+                case "approve-pay":
+                case "approve":
+                {
+                    await using var ctx = this._dbContextFactory.CreateContext();
+                    ctx.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
+                    var payouts = await GetPayoutsForPaymentMethod(walletId.GetPaymentMethodId(), ctx, payoutIds, storeId, cancellationToken);
+
+                    for (int i = 0; i < payouts.Count; i++)
+                    {
+                        var payout = payouts[i];
+                        if (payout.State != PayoutState.AwaitingApproval)
+                            continue;
+                        var rateResult = await _pullPaymentService.GetRate(payout, null, cancellationToken);
+                        if (rateResult.BidAsk == null)
+                        {
+                            this.TempData.SetStatusMessageModel(new StatusMessageModel()
+                            {
+                                Message = $"Rate unavailable: {rateResult.EvaluatedRule}",
+                                Severity = StatusMessageModel.StatusSeverity.Error
+                            });
+                            return RedirectToAction(nameof(Payouts), new
+                            {
+                                walletId = walletId.ToString(),
+                                pullPaymentId = vm.PullPaymentId
+                            });
+                        }
+                        var approveResult = await _pullPaymentService.Approve(new HostedServices.PullPaymentHostedService.PayoutApproval()
+                        {
+                            PayoutId = payout.Id,
+                            Revision = payout.GetBlob(_jsonSerializerSettings).Revision,
+                            Rate = rateResult.BidAsk.Ask
+                        });
+                        if (approveResult != HostedServices.PullPaymentHostedService.PayoutApproval.Result.Ok)
+                        {
+                            this.TempData.SetStatusMessageModel(new StatusMessageModel()
+                            {
+                                Message = PullPaymentHostedService.PayoutApproval.GetErrorMessage(approveResult),
+                                Severity = StatusMessageModel.StatusSeverity.Error
+                            });
+                            return RedirectToAction(nameof(Payouts), new
+                            {
+                                walletId = walletId.ToString(),
+                                pullPaymentId = vm.PullPaymentId
+                            });
+                        }
+                    }
+
+                    if (command == "approve-pay")
+                    {
+                        goto case "pay"; 
+                    }
+
+                    TempData.SetStatusMessageModel(new StatusMessageModel()
+                    {
+                        Message = "Payouts approved", Severity = StatusMessageModel.StatusSeverity.Success
+                    });
+                    return RedirectToAction(nameof(Payouts),
+                        new {walletId = walletId.ToString(), pullPaymentId = vm.PullPaymentId});
+                }
+
+                case "pay":
+                {
+                    await using var ctx = this._dbContextFactory.CreateContext();
+                    ctx.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
+                    var payouts = await GetPayoutsForPaymentMethod(walletId.GetPaymentMethodId(), ctx, payoutIds, storeId, cancellationToken);
+
+                    var walletSend = (WalletSendModel)((ViewResult)(await this.WalletSend(walletId))).Model;
+                    walletSend.Outputs.Clear();
+                    var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
+                    List<string> bip21 = new List<string>(); 
+                    foreach (var payout in payouts)
+                    {
+                        var blob = payout.GetBlob(_jsonSerializerSettings);
+                        if (payout.GetPaymentMethodId() != paymentMethodId)
+                            continue;
+                        bip21.Add(network.GenerateBIP21(payout.Destination, new Money(blob.CryptoAmount.Value, MoneyUnit.BTC)));
+                        
+                    }
+
+                    return RedirectToAction(nameof(WalletSend), new {walletId, bip21});
+                }
+
+                case "cancel":
+                    await _pullPaymentService.Cancel(
+                        new HostedServices.PullPaymentHostedService.CancelRequest(payoutIds));
+                    this.TempData.SetStatusMessageModel(new StatusMessageModel()
+                    {
+                        Message = "Payouts archived", Severity = StatusMessageModel.StatusSeverity.Success
+                    });
+                    return RedirectToAction(nameof(Payouts),
+                        new {walletId = walletId.ToString(), pullPaymentId = vm.PullPaymentId});
+            }
+
+            return NotFound();
+        }
+
+        private static async Task<List<PayoutData>> GetPayoutsForPaymentMethod(PaymentMethodId paymentMethodId,
+            ApplicationDbContext ctx, string[] payoutIds,
+            string storeId, CancellationToken cancellationToken)
+        {
+            var payouts = (await ctx.Payouts
                     .Include(p => p.PullPaymentData)
                     .Include(p => p.PullPaymentData.StoreData)
                     .Where(p => payoutIds.Contains(p.Id))
                     .Where(p => p.PullPaymentData.StoreId == storeId && !p.PullPaymentData.Archived)
-                    .ToListAsync())
-                    .Where(p => p.GetPaymentMethodId() == walletId.GetPaymentMethodId())
-                    .ToList();
-
-                for (int i = 0; i < payouts.Count; i++)
-                {
-                    var payout = payouts[i];
-                    if (payout.State != PayoutState.AwaitingApproval)
-                        continue;
-                    var rateResult = await _pullPaymentService.GetRate(payout, null, cancellationToken);
-                    if (rateResult.BidAsk == null)
-                    {
-                        this.TempData.SetStatusMessageModel(new StatusMessageModel()
-                        {
-                            Message = $"Rate unavailable: {rateResult.EvaluatedRule}",
-                            Severity = StatusMessageModel.StatusSeverity.Error
-                        });
-                        return RedirectToAction(nameof(Payouts), new
-                        {
-                            walletId = walletId.ToString(),
-                            pullPaymentId = vm.PullPaymentId
-                        });
-                    }
-                    var approveResult = await _pullPaymentService.Approve(new HostedServices.PullPaymentHostedService.PayoutApproval()
-                    {
-                        PayoutId = payout.Id,
-                        Revision = payout.GetBlob(_jsonSerializerSettings).Revision,
-                        Rate = rateResult.BidAsk.Ask
-                    });
-                    if (approveResult != HostedServices.PullPaymentHostedService.PayoutApproval.Result.Ok)
-                    {
-                        this.TempData.SetStatusMessageModel(new StatusMessageModel()
-                        {
-                            Message = PullPaymentHostedService.PayoutApproval.GetErrorMessage(approveResult),
-                            Severity = StatusMessageModel.StatusSeverity.Error
-                        });
-                        return RedirectToAction(nameof(Payouts), new
-                        {
-                            walletId = walletId.ToString(),
-                            pullPaymentId = vm.PullPaymentId
-                        });
-                    }
-                    payouts[i] = await ctx.Payouts.FindAsync(payouts[i].Id);
-                }
-                var walletSend = (WalletSendModel)((ViewResult)(await this.WalletSend(walletId))).Model;
-                walletSend.Outputs.Clear();
-                foreach (var payout in payouts)
-                {
-                    var blob = payout.GetBlob(_jsonSerializerSettings);
-                    if (payout.GetPaymentMethodId() != paymentMethodId)
-                        continue;
-                    var output = new WalletSendModel.TransactionOutput()
-                    {
-                        Amount = blob.CryptoAmount,
-                        DestinationAddress = blob.Destination.Address.ToString()
-                    };
-                    walletSend.Outputs.Add(output);
-                }
-                return View(nameof(walletSend), walletSend);
-            }
-            else if (vm.Command == "cancel")
-            {
-                await _pullPaymentService.Cancel(new HostedServices.PullPaymentHostedService.CancelRequest(payoutIds));
-                this.TempData.SetStatusMessageModel(new StatusMessageModel()
-                {
-                    Message = "Payouts archived",
-                    Severity = StatusMessageModel.StatusSeverity.Success
-                });
-                return RedirectToAction(nameof(Payouts), new
-                {
-                    walletId = walletId.ToString(),
-                    pullPaymentId = vm.PullPaymentId
-                });
-            }
-            else
-            {
-                return NotFound();
-            }
+                    .ToListAsync(cancellationToken))
+                .Where(p => p.GetPaymentMethodId() == paymentMethodId)
+                .ToList();
+            return payouts;
         }
 
         [HttpGet]
@@ -299,9 +331,11 @@ namespace BTCPayServer.Controllers
             WalletId walletId, PayoutsModel vm = null)
         {
             vm ??= new PayoutsModel();
+            vm.PayoutStateSets ??= ((PayoutState[]) Enum.GetValues(typeof(PayoutState))).Select(state =>
+                new PayoutsModel.PayoutStateSet() {State = state, Payouts = new List<PayoutsModel.PayoutModel>()}).ToList();
             using var ctx = this._dbContextFactory.CreateContext();
             var storeId = walletId.StoreId;
-            var paymentMethodId = new PaymentMethodId(walletId.CryptoCode, PaymentTypes.BTCLike);
+            vm.PaymentMethodId = new PaymentMethodId(walletId.CryptoCode, PaymentTypes.BTCLike);
             var payoutRequest = ctx.Payouts.Where(p => p.PullPaymentData.StoreId == storeId && !p.PullPaymentData.Archived);
             if (vm.PullPaymentId != null)
             {
@@ -313,34 +347,42 @@ namespace BTCPayServer.Controllers
                                                  Payout = o,
                                                  PullPayment = o.PullPaymentData
                                              }).ToListAsync();
-            var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
-            vm.WaitingForApproval = new List<PayoutsModel.PayoutModel>();
-            vm.Other = new List<PayoutsModel.PayoutModel>();
-            foreach (var item in payouts)
+            foreach (var stateSet in payouts.GroupBy(arg => arg.Payout.State))
             {
-                if (item.Payout.GetPaymentMethodId() != paymentMethodId)
-                    continue;
-                var ppBlob = item.PullPayment.GetBlob();
-                var payoutBlob = item.Payout.GetBlob(_jsonSerializerSettings);
-                var m = new PayoutsModel.PayoutModel();
-                m.PullPaymentId = item.PullPayment.Id;
-                m.PullPaymentName = ppBlob.Name ?? item.PullPayment.Id;
-                m.Date = item.Payout.Date;
-                m.PayoutId = item.Payout.Id;
-                m.Amount = _currencyTable.DisplayFormatCurrency(payoutBlob.Amount, ppBlob.Currency);
-                m.Destination = payoutBlob.Destination.Address.ToString();
-                if (item.Payout.State == PayoutState.AwaitingPayment || item.Payout.State == PayoutState.AwaitingApproval)
+                var state = vm.PayoutStateSets.SingleOrDefault(set => set.State == stateSet.Key);
+                if (state == null)
                 {
-                    vm.WaitingForApproval.Add(m);
+                    state = new PayoutsModel.PayoutStateSet()
+                    {
+                        Payouts = new List<PayoutsModel.PayoutModel>(), State = stateSet.Key
+                    };
+                    vm.PayoutStateSets.Add(state);
                 }
-                else
+
+                foreach (var item in stateSet)
                 {
-                    if (item.Payout.GetPaymentMethodId().PaymentType == PaymentTypes.BTCLike &&
-                        item.Payout.GetProofBlob(this._jsonSerializerSettings)?.TransactionId is uint256 txId)
-                        m.TransactionLink = string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink, txId);
-                    vm.Other.Add(m);
+
+                    if (item.Payout.GetPaymentMethodId() != vm.PaymentMethodId)
+                        continue;
+                    var ppBlob = item.PullPayment.GetBlob();
+                    var payoutBlob = item.Payout.GetBlob(_jsonSerializerSettings);
+                    var m = new PayoutsModel.PayoutModel();
+                    m.PullPaymentId = item.PullPayment.Id;
+                    m.PullPaymentName = ppBlob.Name ?? item.PullPayment.Id;
+                    m.Date = item.Payout.Date;
+                    m.PayoutId = item.Payout.Id;
+                    m.Amount = _currencyTable.DisplayFormatCurrency(payoutBlob.Amount, ppBlob.Currency);
+                    m.Destination = payoutBlob.Destination;
+                    var handler = _payoutHandlers
+                        .FirstOrDefault(handler => handler.CanHandle(item.Payout.GetPaymentMethodId()));
+                    var proofBlob = handler?.ParseProof(item.Payout);
+                    m.TransactionLink = proofBlob?.Link;
+                    state.Payouts.Add(m);
+
                 }
             }
+
+            vm.PayoutStateSets = vm.PayoutStateSets.Where(set => set.Payouts?.Any() is true).ToList();
             return View(vm);
         }
     }

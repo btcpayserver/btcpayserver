@@ -1,4 +1,5 @@
 using System;
+using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -964,15 +965,18 @@ namespace BTCPayServer.Tests
                 var payouts = s.Driver.FindElements(By.ClassName("pp-payout"));
                 Assert.Equal(2, payouts.Count);
                 payouts[1].Click();
-                Assert.Contains("No payout waiting for approval", s.Driver.PageSource);
-
+                Assert.Empty(s.Driver.FindElements(By.ClassName("payout")));
                 // PP2 should have payouts
                 s.GoToWallet(navPages: WalletsNavPages.PullPayments);
                 payouts = s.Driver.FindElements(By.ClassName("pp-payout"));
                 payouts[0].Click();
-                Assert.DoesNotContain("No payout waiting for approval", s.Driver.PageSource);
-                s.Driver.FindElement(By.Id("selectAllCheckbox")).Click();
-                s.Driver.FindElement(By.Id("payCommand")).Click();
+                
+                Assert.NotEmpty(s.Driver.FindElements(By.ClassName("payout")));
+                s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-selectAllCheckbox")).Click();
+                
+                s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-actions")).Click();
+                s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-approve-pay")).Click();
+                
                 s.Driver.FindElement(By.Id("SendMenu")).Click();
                 s.Driver.FindElement(By.CssSelector("button[value=nbx-seed]")).Click();
                 s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).Click();
@@ -987,13 +991,14 @@ namespace BTCPayServer.Tests
                 Assert.Equal("payout", s.Driver.FindElement(By.ClassName("transactionLabel")).Text);
 
                 s.GoToWallet(navPages: WalletsNavPages.Payouts);
+                ReadOnlyCollection<IWebElement> txs;
                 TestUtils.Eventually(() =>
                 {
                     s.Driver.Navigate().Refresh();
-                    Assert.Contains("No payout waiting for approval", s.Driver.PageSource);
+                    
+                    txs = s.Driver.FindElements(By.ClassName("transaction-link"));
+                    Assert.Equal(2, txs.Count);
                 });
-                var txs = s.Driver.FindElements(By.ClassName("transaction-link"));
-                Assert.Equal(2, txs.Count);
 
                 s.Driver.Navigate().GoToUrl(viewPullPaymentUrl);
                 txs = s.Driver.FindElements(By.ClassName("transaction-link"));
@@ -1014,7 +1019,7 @@ namespace BTCPayServer.Tests
                 {
                     using var ctx = s.Server.PayTester.GetService<ApplicationDbContextFactory>().CreateContext();
                     var payoutsData = await ctx.Payouts.Where(p => p.PullPaymentDataId == pullPaymentId).ToListAsync();
-                    Assert.True(payoutsData.All(p => p.State == Data.PayoutState.Completed));
+                    Assert.True(payoutsData.All(p => p.State == PayoutState.Completed));
                 });
             }
         }

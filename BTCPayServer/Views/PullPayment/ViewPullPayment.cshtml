@@ -91,12 +91,12 @@
                             <div class="d-flex align-items-center">
                                 <span class="text-muted text-nowrap">Start Date</span>
                                 &nbsp;
-                                <span class="text-nowrap">@Model.StartDate.ToBrowserDate()</span>
+                                <span class="text-nowrap">@Model.StartDate.ToString("g")</span>
                             </div>
                             <div class="d-flex align-items-center">
                                 <span class="text-muted text-nowrap">Last Updated</span>
                                 &nbsp;
-                                <span class="text-nowrap">@Model.LastRefreshed.ToBrowserDate()</span>
+                                <span class="text-nowrap">@Model.LastRefreshed.ToString("g")</span>
                                 <button type="button" class="btn btn-link d-none d-lg-inline-block d-print-none border-0 p-0 ml-4 only-for-js" id="copyLink">
                                     Copy Link
                                 </button>
@@ -164,11 +164,11 @@
                                                 <td class="text-right text-nowrap">
                                                     @if (!string.IsNullOrEmpty(invoice.Link))
                                                     {
-                                                        <a class="transaction-link text-print-default @StatusTextClass(invoice.Status)" href="@invoice.Link">@invoice.Status</a>
+                                                        <a class="transaction-link text-print-default @StatusTextClass(invoice.Status.ToString())" href="@invoice.Link">@invoice.Status.GetStateString()</a>
                                                     }
                                                     else
                                                     {
-                                                        <span class="text-print-default @StatusTextClass(invoice.Status)">@invoice.Status</span>
+                                                        <span class="text-print-default @StatusTextClass(invoice.Status.ToString())">@invoice.Status.GetStateString()</span>
                                                     }
                                                 </td>
                                             </tr>

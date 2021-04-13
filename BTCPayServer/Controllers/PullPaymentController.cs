@@ -1,11 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using BTCPayServer;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Models;
@@ -26,18 +26,21 @@ namespace BTCPayServer.Controllers
         private readonly CurrencyNameTable _currencyNameTable;
         private readonly PullPaymentHostedService _pullPaymentHostedService;
         private readonly BTCPayNetworkJsonSerializerSettings _serializerSettings;
+        private readonly IEnumerable<IPayoutHandler> _payoutHandlers;
 
         public PullPaymentController(ApplicationDbContextFactory dbContextFactory,
             BTCPayNetworkProvider networkProvider,
             CurrencyNameTable currencyNameTable,
             PullPaymentHostedService pullPaymentHostedService,
-            BTCPayServer.Services.BTCPayNetworkJsonSerializerSettings serializerSettings)
+            BTCPayNetworkJsonSerializerSettings serializerSettings,
+            IEnumerable<IPayoutHandler> payoutHandlers)
         {
             _dbContextFactory = dbContextFactory;
             _networkProvider = networkProvider;
             _currencyNameTable = currencyNameTable;
             _pullPaymentHostedService = pullPaymentHostedService;
             _serializerSettings = serializerSettings;
+            _payoutHandlers = payoutHandlers;
         }
         [Route("pull-payments/{pullPaymentId}")]
         public async Task<IActionResult> ViewPullPayment(string pullPaymentId)
@@ -55,7 +58,7 @@ namespace BTCPayServer.Controllers
                            {
                                Entity = o,
                                Blob = o.GetBlob(_serializerSettings),
-                               TransactionId = o.GetProofBlob(_serializerSettings)?.TransactionId?.ToString()
+                               ProofBlob = _payoutHandlers.FirstOrDefault(handler => handler.CanHandle(o.GetPaymentMethodId()))?.ParseProof(o)
                            });
             var cd = _currencyNameTable.GetCurrencyData(blob.Currency, false);
             var totalPaid = payouts.Where(p => p.Entity.State != PayoutState.Cancelled).Select(p => p.Blob.Amount).Sum();
@@ -79,10 +82,10 @@ namespace BTCPayServer.Controllers
                               Amount = entity.Blob.Amount,
                               AmountFormatted = _currencyNameTable.FormatCurrency(entity.Blob.Amount, blob.Currency),
                               Currency = blob.Currency,
-                              Status = entity.Entity.State.GetStateString(),
-                              Destination = entity.Blob.Destination.Address.ToString(),
-                              Link = GetTransactionLink(_networkProvider.GetNetwork<BTCPayNetwork>(entity.Entity.GetPaymentMethodId().CryptoCode), entity.TransactionId),
-                              TransactionId = entity.TransactionId
+                              Status = entity.Entity.State,
+                              Destination = entity.Blob.Destination,
+                              Link = entity.ProofBlob?.Link,
+                              TransactionId = entity.ProofBlob?.Id
                           }).ToList()
             };
             vm.IsPending &= vm.AmountDue > 0.0m;
@@ -99,11 +102,14 @@ namespace BTCPayServer.Controllers
             {
                 ModelState.AddModelError(nameof(pullPaymentId), "This pull payment does not exists");
             }
+            
             var ppBlob = pp.GetBlob();
             var network = _networkProvider.GetNetwork<BTCPayNetwork>(ppBlob.SupportedPaymentMethods.Single().CryptoCode);
-            IClaimDestination destination = null;
-            if (network != null &&
-                (!ClaimDestination.TryParse(vm.Destination, network, out destination) || destination is null))
+            
+            var paymentMethodId = ppBlob.SupportedPaymentMethods.Single();
+            var payoutHandler = _payoutHandlers.FirstOrDefault(handler => handler.CanHandle(paymentMethodId));
+            IClaimDestination destination = await payoutHandler?.ParseClaimDestination(paymentMethodId, vm.Destination);
+            if (destination is null)
             {
                 ModelState.AddModelError(nameof(vm.Destination), $"Invalid destination");
             }

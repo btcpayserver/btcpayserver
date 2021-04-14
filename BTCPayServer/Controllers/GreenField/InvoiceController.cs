@@ -48,10 +48,9 @@ namespace BTCPayServer.Controllers.GreenField
         [Authorize(Policy = Policies.CanViewInvoices,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/invoices")]
-        public async Task<IActionResult> GetInvoicesV2(string storeId, string orderId, string status,
-            DateTimeOffset? startDate = null,
-            DateTimeOffset? endDate = null,
-            bool includeAddresses = true, bool includeArchived = false)
+        public async Task<IActionResult> GetInvoices(string storeId, [FromQuery] string[] orderId = null, [FromQuery] string[] status = null,
+            [FromQuery] DateTimeOffset? startDate = null,
+            [FromQuery] DateTimeOffset? endDate = null, [FromQuery] bool includeArchived = false)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
@@ -59,16 +58,6 @@ namespace BTCPayServer.Controllers.GreenField
                 return NotFound();
             }
 
-            string[] orderIdArray = orderId != null ? new[] {orderId} : null;
-            string[] statusArray =
-                status != null
-                    ? new[]
-                    {
-                        Enum.Parse(typeof(InvoiceStatus), status, true).ToString()
-                            ?.ToLower(CultureInfo.CurrentCulture)
-                    }
-                    : null;
-            
             var invoices =
                 await _invoiceRepository.GetInvoices(new InvoiceQuery()
                 {
@@ -76,15 +65,13 @@ namespace BTCPayServer.Controllers.GreenField
                     IncludeArchived = includeArchived,
                     StartDate = startDate,
                     EndDate = endDate,
-                    OrderId = orderIdArray,
-                    Status = statusArray,
-                    IncludeAddresses = includeAddresses
+                    OrderId = orderId,
+                    Status = status
                 });
 
             return Ok(invoices.Select(ToModel));
         }
-
-
+        
         [Authorize(Policy = Policies.CanViewInvoices,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/invoices/{invoiceId}")]

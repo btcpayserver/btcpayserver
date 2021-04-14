@@ -15,6 +15,55 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "orderId",
+                        "in": "query",
+                        "required": false,
+                        "description": "Array of OrderIds to fetch the invoices for",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "description": "Array of invoices statuses to be fetched",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "enum": [
+                                    "new",
+                                    "processing",
+                                    "expired",
+                                    "invalid",
+                                    "settled"
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "name": "startDate",
+                        "in": "query",
+                        "required": false,
+                        "description": "Start date of the period to retrieve invoices for (YYYY-MM-DDTHH:mm:ssZ)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "endDate",
+                        "in": "query",
+                        "required": false,
+                        "description": "Start date of the period to retrieve invoices for (YYYY-MM-DDTHH:mm:ssZ)",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "description": "View information about the existing invoices",

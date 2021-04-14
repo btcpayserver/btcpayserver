@@ -995,7 +995,7 @@ namespace BTCPayServer.Tests
 
                  //list ExistingStatus
                  var invoicesExistingStatus =
-                     await viewOnly.GetInvoices(user.StoreId, status:newInvoice.Status.ToString());
+                     await viewOnly.GetInvoices(user.StoreId, status:newInvoice.Status.ToString().ToLower());
                  Assert.NotNull(invoicesExistingStatus);
                  Assert.Single(invoicesExistingStatus);
                  Assert.Equal(newInvoice.Id, invoicesExistingStatus.First().Id);

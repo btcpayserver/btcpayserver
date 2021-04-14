@@ -13,7 +13,6 @@
         "outputFileName": "wwwroot/bundles/main-bundle.min.js",
         "inputFiles": [
             "wwwroot/vendor/jquery/jquery.js",
-            "wwwroot/vendor/popper/popper.js",
             "wwwroot/vendor/jquery-easing/jquery.easing.js",
             "wwwroot/vendor/scrollreveal/scrollreveal.min.js",
             "wwwroot/vendor/magnific-popup/jquery.magnific-popup.js",

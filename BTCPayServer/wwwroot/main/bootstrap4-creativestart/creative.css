@@ -24,16 +24,16 @@ p {
 hr {
   width: 50px;
   height: 3px;
-  background: var(--btcpay-color-primary);
+  background: var(--btcpay-primary);
   display: inline-block;
 }
 
 hr.light {
-  background: var(--btcpay-color-white);
+  background: var(--btcpay-white);
 }
 
 #mainNav {
-  color: var(--btcpay-header-color, var(--btcpay-color-neutral-100));
+  color: var(--btcpay-header-text, var(--btcpay-light-100));
   background: var(--btcpay-header-bg, var(--btcpay-bg-dark));
   font-family: var(--btcpay-font-family-head);
   transition-property: background, color;
@@ -53,18 +53,18 @@ hr.light {
 #mainNav .navbar-nav > li.nav-item > a.nav-link {
   font-size: 14px;
   font-weight: bold;
-  color: var(--btcpay-header-color-link, var(--btcpay-color-neutral-100));
+  color: var(--btcpay-header-link);
 }
 
 #mainNav .navbar-nav > li.nav-item > a.nav-link:focus,
 #mainNav .navbar-nav > li.nav-item > a.nav-link:hover {
-  color: var(--btcpay-header-color-link-accent, var(--btcpay-color-white));
+  color: var(--btcpay-header-link-accent);
 }
 
 #mainNav .navbar-nav > li.nav-item > a.nav-link.active,
 #mainNav .navbar-nav > li.nav-item > a.nav-link.active:focus,
 #mainNav .navbar-nav > li.nav-item > a.nav-link.active:hover {
-  color: var(--btcpay-header-color-link-active, var(--btcpay-color-white));
+  color: var(--btcpay-header-link-active);
 }
 
 header.masthead {

@@ -91,7 +91,7 @@ ul li {
 
 .dropdown-toggle-split,
 .dropdown-toggle-split:hover {
-    border-left: 1px solid var(--btcpay-color-white);
+    border-left: 1px solid var(--btcpay-white);
 }
 
 .breadcrumb {
@@ -104,19 +104,19 @@ ul li {
 }
 
 .breadcrumb-item + .breadcrumb-item::before {
-    color: var(--btcpay-color-neutral-600);
+    color: var(--btcpay-light-600);
     content: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNyIgaGVpZ2h0PSIxMCIgdmlld0JveD0iMCAwIDcgMTAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTQuMzg3MzkgNC4zMTYyOFY1LjYyMUwzLjczNDM5IDQuOTY5MjZMNC4zODczOSA0LjMxNzUxVjQuMzE2MjhaTTAuMDAxMjMxMzkgMS4zMDM0OUwxLjMwNTk5IDBMNi4zMTU1NyA1TDEuMzA1OTkgMTBMMCA4LjY5NjUxTDMuNzAxMTMgNUwwIDEuMzAzNDlIMC4wMDEyMzEzOVoiIGZpbGw9IiM4RDhEOEYiLz48L3N2Zz4K");
 }
 
 /* Admin Sidebar Navigation */
 a.nav-link {
-    color: var(--btcpay-nav-color-link, var(--btcpay-color-neutral-600));
+    color: var(--btcpay-nav-color-link, var(--btcpay-light-600));
     background: var(--btcpay-bg-nav-link, transparent);
 }
 
 a.nav-link:focus,
 a.nav-link:hover {
-    color: var(--btcpay-nav-color-link-accent, var(--btcpay-color-neutral-700));
+    color: var(--btcpay-nav-color-link-accent, var(--btcpay-light-700));
     background: var(--btcpay-bg-nav-link-hover, transparent);
 }
 
@@ -132,9 +132,9 @@ section .nav .nav-link {
 
 section .nav .nav-link.active,
 section .nav .show > .nav-link {
-    color: var(--btcpay-nav-color-link-active, var(--btcpay-color-neutral-900));
+    color: var(--btcpay-nav-link-active, var(--btcpay-light-900));
     font-weight: 700;
-    border-left-color: var(--btcpay-color-primary);
+    border-left-color: var(--btcpay-primary);
 }
 
 /* Homepage */
@@ -168,7 +168,7 @@ section .nav .show > .nav-link {
     font-size: 12px;
     overflow: hidden;
     padding: .5em 0;
-    color: var(--btcpay-footer-color, var(--btcpay-color-neutral-100));
+    color: var(--btcpay-footer-text, var(--btcpay-light-100));
     background: var(--btcpay-footer-bg, var(--btcpay-bg-dark));
 }
 
@@ -322,8 +322,8 @@ html[data-devenv]:before {
     z-index: 1000;
     right: 0;
     bottom: 0;
-    background: var(--btcpay-color-secondary-backdrop);
-    color: var(--btcpay-color-secondary-text);
+    background: var(--btcpay-secondary-bg);
+    color: var(--btcpay-secondary-text);
     opacity: .7;
     padding: 4px 5px 3px 7px;
     font-size: 10px;
@@ -364,7 +364,7 @@ html[data-devenv]:before {
 
 .note-editor .table.table-sm th,
 .note-editor .table.table-sm td {
-    border: 1px dotted var(--btcpay-color-neutral-400);
+    border: 1px dotted var(--btcpay-light-400);
 }
 
 /* Custom */
@@ -408,7 +408,7 @@ html[data-devenv]:before {
     height: var(--toggle-height);
     border: 0;
     border-radius: calc(var(--toggle-height) / 2);
-    background: var(--btcpay-color-neutral-500);
+    background: var(--btcpay-light-500);
     font-size: 0;
 }
 
@@ -420,7 +420,7 @@ input.btcpay-toggle {
 
 input.btcpay-toggle:checked,
 .btcpay-toggle.btcpay-toggle--active {
-    background: var(--btcpay-color-primary);
+    background: var(--btcpay-primary);
 }
 
 .btcpay-toggle::after {
@@ -431,7 +431,7 @@ input.btcpay-toggle:checked,
     left: var(--border-size);
     width: var(--switch-size);
     height: var(--switch-size);
-    background-color: var(--btcpay-color-white);
+    background-color: var(--btcpay-white);
 }
 
 .btcpay-toggle,
@@ -456,7 +456,7 @@ svg.icon {
 }
 
 svg.icon-note {
-  color: var(--btcpay-color-neutral-500);
+  color: var(--btcpay-light-500);
 }
 
 /* Custom notification dropdown styling */
@@ -481,5 +481,5 @@ svg.icon-note {
 
 [data-required]::after {
     content: "*";
-    color: var(--btcpay-color-danger);
+    color: var(--btcpay-danger);
 }

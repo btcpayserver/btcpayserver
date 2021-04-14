@@ -162,7 +162,7 @@ namespace BTCPayServer.Payments.Bitcoin
                                                 evt.TransactionData.Transaction.RBF, output.matchedOutput.KeyPath);
 
                                             var alreadyExist = invoice
-                                                .GetAllBitcoinPaymentData().Any(c => c.GetPaymentId() == paymentData.GetPaymentId());
+                                                .GetAllBitcoinPaymentData(false).Any(c => c.GetPaymentId() == paymentData.GetPaymentId());
                                             if (!alreadyExist)
                                             {
                                                 var payment = await _InvoiceRepository.AddPayment(invoice.Id,

@@ -1,12 +1,4 @@
 ﻿/* General and site-wide Bootstrap modifications */
-html {
-    position: relative;
-    min-height: 100%;
-    font-size: var(--btcpay-font-size-base);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
-
 .logo {
     height: 34px;
 }
@@ -42,35 +34,6 @@ html {
     .smMaxWidth {
         max-width: 300px;
     }
-}
-
-a {
-    transition-duration: 0.2s;
-    transition-property: background, color;
-}
-
-ol {
-   padding-left: 1.125em;
-}
-
-ul {
-    padding-left: 1em;
-}
-
-ul li {
-    padding-top: .2em;
-    padding-bottom: .2em;
-}
-
-.bg-tile {
-    background-color: var(--btcpay-bg-tile);
-}
-
-.alert-link,
-.alert-link:focus,
-.alert-link:hover,
-.alert code {
-    color: inherit;
 }
 
 .navbar .onion {
@@ -109,17 +72,6 @@ ul li {
 }
 
 /* Admin Sidebar Navigation */
-a.nav-link {
-    color: var(--btcpay-nav-color-link, var(--btcpay-light-600));
-    background: var(--btcpay-bg-nav-link, transparent);
-}
-
-a.nav-link:focus,
-a.nav-link:hover {
-    color: var(--btcpay-nav-color-link-accent, var(--btcpay-light-700));
-    background: var(--btcpay-bg-nav-link-hover, transparent);
-}
-
 .col-md-3 .nav-pills {
     margin-left: -1rem;
 }
@@ -183,10 +135,6 @@ section .nav .show > .nav-link {
     display: inline-block;
 }
 
-pre {
-    color: var(--btcpay-preformatted-text-color);
-}
-
 .feedback-icon-loading {
     color: orange;
 }
@@ -217,7 +165,7 @@ pre {
 [v-cloak-loading] > * { display:none }
 [v-cloak-loading]::before { content: "loading…" }
 
-.cursor-pointer{
+.cursor-pointer {
     cursor: pointer;
 }
 
@@ -447,7 +395,6 @@ label + input.btcpay-toggle {
     position: relative;
     top: .45rem;
 }
-
 
 svg.icon {
     display: inline-block;

@@ -73,10 +73,17 @@ namespace BTCPayServer.Controllers.GreenField
             return true;
         }
 
-        [HttpGet("testlocal")]
+        [HttpGet("local/me")]
         public async Task<IActionResult> TestLocalClient()
         {
             return Ok(await _localBTCPayServerClient.GetCurrentUser());
+        }
+        [HttpGet("local/me/stores")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings,
+            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> TestLocalClient2()
+        {
+            return Ok(await _localBTCPayServerClient.GetStores());
         }
 
 

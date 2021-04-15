@@ -1,22 +1,24 @@
-﻿@inject BTCPayServer.HostedServices.CssThemeManager themeManager
+﻿@using BTCPayServer.Services
+@using BTCPayServer.Abstractions.Contracts
+@inject BTCPayServer.HostedServices.CssThemeManager themeManager
+@inject ISettingsRepository _settingsRepository
 @addTagHelper *, BundlerMinifier.TagHelpers
-
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="description" content="">
 <meta name="author" content="">
-@if (themeManager.DiscourageSearchEngines)
+@if (((await _settingsRepository.GetSettingAsync<PoliciesSettings>()) ?? new PoliciesSettings()).DiscourageSearchEngines)
 {
 <meta name="robots" content="noindex">
 }
 <title>@ViewData["Title"]</title>
 @* CSS *@
-<link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.BootstrapUri)" rel="stylesheet" asp-append-version="true" />
-<link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.CreativeStartUri)" rel="stylesheet" asp-append-version="true" />
-<link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.ThemeUri)" rel="stylesheet" asp-append-version="true" />
-@if (!String.IsNullOrWhiteSpace(themeManager.CustomThemeUri))
+<link href="@Context.Request.GetRelativePathOrAbsolute(await themeManager.BootstrapUri())" rel="stylesheet" asp-append-version="true" />
+<link href="@Context.Request.GetRelativePathOrAbsolute(await themeManager.CreativeStartUri())" rel="stylesheet" asp-append-version="true" />
+<link href="@Context.Request.GetRelativePathOrAbsolute(await themeManager.ThemeUri())" rel="stylesheet" asp-append-version="true" />
+@if (!String.IsNullOrWhiteSpace(await themeManager.CustomThemeUri()))
 {
-<link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.CustomThemeUri)" rel="stylesheet" asp-append-version="true" />
+<link href="@Context.Request.GetRelativePathOrAbsolute(await themeManager.CustomThemeUri())" rel="stylesheet" asp-append-version="true" />
 }
 <bundle name="wwwroot/bundles/main-bundle.min.css" asp-append-version="true" />
 @* JS *@

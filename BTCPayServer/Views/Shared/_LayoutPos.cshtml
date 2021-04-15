@@ -20,8 +20,8 @@
 
     <link rel="manifest" href="~/manifest.json">
 
-    <link href="@this.Context.Request.GetRelativePathOrAbsolute(themeManager.BootstrapUri)" rel="stylesheet" asp-append-version="true" />
-    <link href="@this.Context.Request.GetRelativePathOrAbsolute(themeManager.ThemeUri)" rel="stylesheet" asp-append-version="true" />
+    <link href="@this.Context.Request.GetRelativePathOrAbsolute(await themeManager.BootstrapUri())" rel="stylesheet" asp-append-version="true" />
+    <link href="@this.Context.Request.GetRelativePathOrAbsolute(await themeManager.ThemeUri())" rel="stylesheet" asp-append-version="true" />
     @if (Model.CustomCSSLink != null)
     {
         <link href="@Model.CustomCSSLink" rel="stylesheet" />

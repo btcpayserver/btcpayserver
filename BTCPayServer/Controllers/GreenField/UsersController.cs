@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
@@ -34,7 +35,6 @@ namespace BTCPayServer.Controllers.GreenField
         private readonly RateLimitService _throttleService;
         private readonly BTCPayServerOptions _options;
         private readonly IAuthorizationService _authorizationService;
-        private readonly CssThemeManager _themeManager;
 
         public UsersController(UserManager<ApplicationUser> userManager, 
             RoleManager<IdentityRole> roleManager, 
@@ -43,8 +43,7 @@ namespace BTCPayServer.Controllers.GreenField
             IPasswordValidator<ApplicationUser> passwordValidator,
             RateLimitService throttleService,
             BTCPayServerOptions options,
-            IAuthorizationService authorizationService,
-            CssThemeManager themeManager)
+            IAuthorizationService authorizationService)
         {
             _userManager = userManager;
             _roleManager = roleManager;
@@ -54,7 +53,6 @@ namespace BTCPayServer.Controllers.GreenField
             _throttleService = throttleService;
             _options = options;
             _authorizationService = authorizationService;
-            _themeManager = themeManager;
         }
 
         [Authorize(Policy = Policies.CanViewProfile, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -102,7 +100,7 @@ namespace BTCPayServer.Controllers.GreenField
             if (request.IsAdministrator is true && !isAdmin)
                 return Forbid(AuthenticationSchemes.GreenfieldBasic);
 
-            if (!isAdmin && (policies.LockSubscription || _themeManager.Policies.DisableNonAdminCreateUserApi))
+            if (!isAdmin && (policies.LockSubscription || policies.DisableNonAdminCreateUserApi))
             {
                 // If we are not admin and subscriptions are locked, we need to check the Policies.CanCreateUser.Key permission
                 var canCreateUser = (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanCreateUser))).Succeeded;

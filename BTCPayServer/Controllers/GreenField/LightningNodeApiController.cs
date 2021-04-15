@@ -2,9 +2,9 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
-using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
 using BTCPayServer.Security;
 using BTCPayServer.Services;
@@ -33,18 +33,15 @@ namespace BTCPayServer.Controllers.GreenField
     public abstract class LightningNodeApiController : Controller
     {
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
-        private readonly BTCPayServerEnvironment _btcPayServerEnvironment;
-        private readonly CssThemeManager _cssThemeManager;
         private readonly IAuthorizationService _authorizationService;
+        private readonly ISettingsRepository _settingsRepository;
 
         protected LightningNodeApiController(BTCPayNetworkProvider btcPayNetworkProvider,
-            BTCPayServerEnvironment btcPayServerEnvironment, CssThemeManager cssThemeManager,
-            IAuthorizationService authorizationService)
+            IAuthorizationService authorizationService, ISettingsRepository settingsRepository)
         {
             _btcPayNetworkProvider = btcPayNetworkProvider;
-            _btcPayServerEnvironment = btcPayServerEnvironment;
-            _cssThemeManager = cssThemeManager;
             _authorizationService = authorizationService;
+            _settingsRepository = settingsRepository;
         }
 
         public virtual async Task<IActionResult> GetInfo(string cryptoCode)
@@ -302,7 +299,7 @@ namespace BTCPayServer.Controllers.GreenField
 
         protected async Task<bool> CanUseInternalLightning(bool doingAdminThings)
         {
-            return (!doingAdminThings && _cssThemeManager.AllowLightningInternalNodeForAll) ||
+            return (!doingAdminThings && (await _settingsRepository.GetSettingAsync<PoliciesSettings>())?.AllowLightningInternalNodeForAll is true) ||
                 (await _authorizationService.AuthorizeAsync(User, null,
                     new PolicyRequirement(Policies.CanUseInternalLightningNode))).Succeeded;
         }

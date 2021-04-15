@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
@@ -26,23 +27,20 @@ namespace BTCPayServer.Controllers.GreenField
     {
         private StoreData Store => HttpContext.GetStoreData();
         private readonly StoreRepository _storeRepository;
+        private readonly ISettingsRepository _settingsRepository;
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
-        private readonly IOptions<LightningNetworkOptions> _lightningNetworkOptions;
         private readonly IAuthorizationService _authorizationService;
-        private readonly CssThemeManager _cssThemeManager;
 
         public StoreLightningNetworkPaymentMethodsController(
             StoreRepository storeRepository,
+            ISettingsRepository settingsRepository,
             BTCPayNetworkProvider btcPayNetworkProvider,
-            IOptions<LightningNetworkOptions> lightningNetworkOptions,
-            IAuthorizationService authorizationService,
-            CssThemeManager cssThemeManager)
+            IAuthorizationService authorizationService)
         {
             _storeRepository = storeRepository;
+            _settingsRepository = settingsRepository;
             _btcPayNetworkProvider = btcPayNetworkProvider;
-            _lightningNetworkOptions = lightningNetworkOptions;
             _authorizationService = authorizationService;
-            _cssThemeManager = cssThemeManager;
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -197,9 +195,10 @@ namespace BTCPayServer.Controllers.GreenField
         
         private async Task<bool> CanUseInternalLightning()
         {
-            return _cssThemeManager.AllowLightningInternalNodeForAll ||
-                (await _authorizationService.AuthorizeAsync(User, null,
-                    new PolicyRequirement(Policies.CanUseInternalLightningNode))).Succeeded;
+            
+            return (await _settingsRepository.GetSettingAsync<PoliciesSettings>())?.AllowLightningInternalNodeForAll is true ||
+                   (await _authorizationService.AuthorizeAsync(User, null,
+                       new PolicyRequirement(Policies.CanUseInternalLightningNode))).Succeeded;
         }
         private async Task<bool> CanManageServer()
         {

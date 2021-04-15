@@ -27,10 +27,11 @@ namespace BTCPayServer.Filters
         {
             if (context.RouteContext.RouteData.Values.ContainsKey("appId"))
                 return true;
-            var css = context.RouteContext.HttpContext.RequestServices.GetService<CssThemeManager>();
-            if (css?.DomainToAppMapping is List<PoliciesSettings.DomainToAppMappingItem> mapping)
+            var settingsRepository = context.RouteContext.HttpContext.RequestServices.GetService<SettingsRepository>();
+            var policies = settingsRepository.GetSettingAsync<PoliciesSettings>().GetAwaiter().GetResult() ?? new PoliciesSettings();
+            if (policies?.DomainToAppMapping is List<PoliciesSettings.DomainToAppMappingItem> mapping)
             {
-                var matchedDomainMapping = css.DomainToAppMapping.FirstOrDefault(item =>
+                var matchedDomainMapping = policies.DomainToAppMapping.FirstOrDefault(item =>
                 item.Domain.Equals(context.RouteContext.HttpContext.Request.Host.Host, StringComparison.InvariantCultureIgnoreCase));
                 if (matchedDomainMapping is PoliciesSettings.DomainToAppMappingItem)
                 {
@@ -42,8 +43,8 @@ namespace BTCPayServer.Filters
                     return true;
                 }
 
-                if (AppType == css.RootAppType) {
-                    context.RouteContext.RouteData.Values.Add("appId", css.RootAppId);
+                if (AppType == policies.RootAppType) {
+                    context.RouteContext.RouteData.Values.Add("appId", policies.RootAppId);
 
                     return true;
                 }

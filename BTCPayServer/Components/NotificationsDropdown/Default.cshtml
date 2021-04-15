@@ -1,9 +1,9 @@
 @inject LinkGenerator linkGenerator
 @inject UserManager<ApplicationUser> UserManager
-@inject CssThemeManager CssThemeManager
-@using BTCPayServer.HostedServices
+@inject ISettingsRepository _settingsRepository
 @using BTCPayServer.Views.Notifications
-@using Microsoft.AspNetCore.Http.Extensions
+@using BTCPayServer.Abstractions.Contracts
+@using BTCPayServer.Services
 @model BTCPayServer.Components.NotificationsDropdown.NotificationSummaryViewModel
 @addTagHelper *, BundlerMinifier.TagHelpers
 
@@ -53,7 +53,7 @@ else
     </li>
 }
 @{
-    var disabled = CssThemeManager.Policies.DisableInstantNotifications;
+    var disabled = ((await _settingsRepository.GetSettingAsync<PoliciesSettings>()) ?? new PoliciesSettings()).DisableInstantNotifications;
     if (!disabled)
     {
         var user = await UserManager.GetUserAsync(User);

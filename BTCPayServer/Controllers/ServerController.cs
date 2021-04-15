@@ -54,7 +54,6 @@ namespace BTCPayServer.Controllers
         private readonly AppService _AppService;
         private readonly CheckConfigurationHostedService _sshState;
         private readonly EventAggregator _eventAggregator;
-        private readonly CssThemeManager _cssThemeManager;
         private readonly IOptions<ExternalServicesOptions> _externalServiceOptions;
         private readonly StoredFileRepository _StoredFileRepository;
         private readonly FileService _FileService;
@@ -74,7 +73,6 @@ namespace BTCPayServer.Controllers
             AppService appService,
             CheckConfigurationHostedService sshState,
             EventAggregator eventAggregator,
-            CssThemeManager cssThemeManager,
             IOptions<ExternalServicesOptions> externalServiceOptions)    
         {
             _Options = options;
@@ -91,7 +89,6 @@ namespace BTCPayServer.Controllers
             _AppService = appService;
             _sshState = sshState;
             _eventAggregator = eventAggregator;
-            _cssThemeManager = cssThemeManager;
             _externalServiceOptions = externalServiceOptions;
         }
 

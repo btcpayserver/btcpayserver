@@ -1,15 +1,14 @@
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
-using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
-using BTCPayServer.Security;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
@@ -31,9 +30,8 @@ namespace BTCPayServer.Controllers.GreenField
         public StoreLightningNodeApiController(
             IOptions<LightningNetworkOptions> lightningNetworkOptions,
             LightningClientFactoryService lightningClientFactory, BTCPayNetworkProvider btcPayNetworkProvider,
-            BTCPayServerEnvironment btcPayServerEnvironment, CssThemeManager cssThemeManager,
-            IAuthorizationService authorizationService) : base(
-            btcPayNetworkProvider, btcPayServerEnvironment, cssThemeManager, authorizationService)
+            IAuthorizationService authorizationService,  ISettingsRepository settingsRepository) : base(
+            btcPayNetworkProvider, authorizationService, settingsRepository)
         {
             _lightningNetworkOptions = lightningNetworkOptions;
             _lightningClientFactory = lightningClientFactory;

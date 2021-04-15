@@ -7,6 +7,7 @@ using BTCPayServer.Lightning;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -38,7 +39,7 @@ namespace BTCPayServer.Controllers
             if (store == null)
                 return NotFound();
 
-            vm.CanUseInternalNode = CanUseInternalLightning();
+            vm.CanUseInternalNode = await CanUseInternalLightning();
 
             var network = vm.CryptoCode == null ? null : _ExplorerProvider.GetNetwork(vm.CryptoCode);
             if (network == null)
@@ -51,7 +52,7 @@ namespace BTCPayServer.Controllers
             LightningSupportedPaymentMethod paymentMethod = null;
             if (vm.LightningNodeType == LightningNodeType.Internal)
             {
-                if (!CanUseInternalLightning())
+                if (!await CanUseInternalLightning())
                 {
                     ModelState.AddModelError(nameof(vm.ConnectionString), "You are not authorized to use the internal lightning node");
                     return View(vm);
@@ -128,12 +129,13 @@ namespace BTCPayServer.Controllers
             }
         }
 
-        private bool CanUseInternalLightning()
+        private async Task<bool> CanUseInternalLightning()
         {
-            return User.IsInRole(Roles.ServerAdmin) || _CssThemeManager.AllowLightningInternalNodeForAll;
+            var policies = (await _settingsRepository.GetSettingAsync<PoliciesSettings>()) ?? new PoliciesSettings();
+            return User.IsInRole(Roles.ServerAdmin) || policies.AllowLightningInternalNodeForAll;
         }
 
-        private void SetExistingValues(StoreData store, LightningNodeViewModel vm)
+        private async Task SetExistingValues(StoreData store, LightningNodeViewModel vm)
         {
             var lightning = GetExistingLightningSupportedPaymentMethod(vm.CryptoCode, store);
             if (lightning != null)
@@ -142,7 +144,7 @@ namespace BTCPayServer.Controllers
                 vm.ConnectionString = lightning.GetDisplayableConnectionString();
             }
             vm.Enabled = !store.GetStoreBlob().IsExcluded(new PaymentMethodId(vm.CryptoCode, PaymentTypes.LightningLike)) && lightning != null;
-            vm.CanUseInternalNode = CanUseInternalLightning();
+            vm.CanUseInternalNode = await CanUseInternalLightning();
         }
 
         private LightningSupportedPaymentMethod GetExistingLightningSupportedPaymentMethod(string cryptoCode, StoreData store)

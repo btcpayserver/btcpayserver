@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.BIP78.Sender;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
@@ -38,7 +39,6 @@ namespace BTCPayServer.Controllers.GreenField
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly WalletRepository _walletRepository;
         private readonly ExplorerClientProvider _explorerClientProvider;
-        private readonly CssThemeManager _cssThemeManager;
         private readonly NBXplorerDashboard _nbXplorerDashboard;
         private readonly WalletsController _walletsController;
         private readonly PayjoinClient _payjoinClient;
@@ -46,6 +46,7 @@ namespace BTCPayServer.Controllers.GreenField
         private readonly EventAggregator _eventAggregator;
         private readonly WalletReceiveService _walletReceiveService;
         private readonly IFeeProviderFactory _feeProviderFactory;
+        private readonly ISettingsRepository _settingsRepository;
 
         public StoreOnChainWalletsController(
             IAuthorizationService authorizationService,
@@ -53,21 +54,20 @@ namespace BTCPayServer.Controllers.GreenField
             BTCPayNetworkProvider btcPayNetworkProvider,
             WalletRepository walletRepository,
             ExplorerClientProvider explorerClientProvider,
-            CssThemeManager cssThemeManager,
             NBXplorerDashboard nbXplorerDashboard,
             WalletsController walletsController,
             PayjoinClient payjoinClient,
             DelayedTransactionBroadcaster delayedTransactionBroadcaster,
             EventAggregator eventAggregator, 
             WalletReceiveService walletReceiveService,
-            IFeeProviderFactory feeProviderFactory)
+            IFeeProviderFactory feeProviderFactory,
+            ISettingsRepository settingsRepository)
         {
             _authorizationService = authorizationService;
             _btcPayWalletProvider = btcPayWalletProvider;
             _btcPayNetworkProvider = btcPayNetworkProvider;
             _walletRepository = walletRepository;
             _explorerClientProvider = explorerClientProvider;
-            _cssThemeManager = cssThemeManager;
             _nbXplorerDashboard = nbXplorerDashboard;
             _walletsController = walletsController;
             _payjoinClient = payjoinClient;
@@ -75,6 +75,7 @@ namespace BTCPayServer.Controllers.GreenField
             _eventAggregator = eventAggregator;
             _walletReceiveService = walletReceiveService;
             _feeProviderFactory = feeProviderFactory;
+            _settingsRepository = settingsRepository;
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -497,7 +498,8 @@ namespace BTCPayServer.Controllers.GreenField
 
         private async Task<(bool HotWallet, bool RPCImport)> CanUseHotWallet()
         {
-            return await _authorizationService.CanUseHotWallet(_cssThemeManager.Policies, User);
+            var policies = await _settingsRepository.GetSettingAsync<PoliciesSettings>();
+            return await _authorizationService.CanUseHotWallet(policies, User);
         }
 
         private bool IsInvalidWalletRequest(string cryptoCode, out BTCPayNetwork network,

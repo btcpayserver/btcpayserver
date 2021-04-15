@@ -205,7 +205,7 @@ namespace BTCPayServer.Controllers
 
         private async Task<bool> IsEmailConfigured(string storeId)
         {
-            return (await (_emailSenderFactory.GetEmailSender(storeId) as EmailSender)?.GetEmailSettings())?.IsComplete() is true;
+            return (await (await _emailSenderFactory.GetEmailSender(storeId) as EmailSender)?.GetEmailSettings())?.IsComplete() is true;
         }
     }
 }

@@ -9,6 +9,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Models;
 using BTCPayServer.Models.ServerViewModels;
+using BTCPayServer.Services;
 using BTCPayServer.Storage.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -121,10 +122,11 @@ namespace BTCPayServer.Controllers
 
         [Route("server/users/new")]
         [HttpGet]
-        public IActionResult CreateUser()
+        public async Task<IActionResult> CreateUser()
         {
             ViewData["AllowIsAdmin"] = _Options.AllowAdminRegistration;
-            ViewData["AllowRequestEmailConfirmation"] = _cssThemeManager.Policies.RequiresConfirmedEmail;
+            var policies = (await _SettingsRepository.GetSettingAsync<PoliciesSettings>()) ?? new PoliciesSettings();
+            ViewData["AllowRequestEmailConfirmation"] = policies.RequiresConfirmedEmail;
 
             return View();
         }
@@ -133,14 +135,15 @@ namespace BTCPayServer.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateUser(RegisterFromAdminViewModel model)
         {
+            var policies = (await _SettingsRepository.GetSettingAsync<PoliciesSettings>()) ?? new PoliciesSettings();
             ViewData["AllowIsAdmin"] = _Options.AllowAdminRegistration;
-            ViewData["AllowRequestEmailConfirmation"] = _cssThemeManager.Policies.RequiresConfirmedEmail;
+            ViewData["AllowRequestEmailConfirmation"] = policies.RequiresConfirmedEmail;
             if (!_Options.AllowAdminRegistration)
                 model.IsAdmin = false;
             if (ModelState.IsValid)
             {
                 IdentityResult result;
-                var user = new ApplicationUser { UserName = model.Email, Email = model.Email, EmailConfirmed = model.EmailConfirmed, RequiresEmailConfirmation = _cssThemeManager.Policies.RequiresConfirmedEmail, 
+                var user = new ApplicationUser { UserName = model.Email, Email = model.Email, EmailConfirmed = model.EmailConfirmed, RequiresEmailConfirmation = policies.RequiresConfirmedEmail, 
                     Created = DateTimeOffset.UtcNow };
 
                 if (!string.IsNullOrEmpty(model.Password))

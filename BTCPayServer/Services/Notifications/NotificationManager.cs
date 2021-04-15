@@ -71,7 +71,7 @@ namespace BTCPayServer.Services.Notifications
 
             var queryables = GetNotificationsQueryable(dbContext, query);
 
-            return (Items: (await queryables.withPaging.ToListAsync()).Select(ToViewModel).ToList(),
+            return (Items: (await queryables.withPaging.ToListAsync()).Select(ToViewModel).Where(model => model != null).ToList(),
                 Count: await queryables.withoutPaging.CountAsync());
         }
 
@@ -125,7 +125,7 @@ namespace BTCPayServer.Services.Notifications
 
             await dbContext.SaveChangesAsync();
             InvalidateNotificationCache(userIds.ToArray());
-            return items.Select(ToViewModel).ToList();
+            return items.Select(ToViewModel).Where(model => model != null).ToList();
         }
 
         public async Task Remove(NotificationsQuery notificationsQuery)
@@ -144,6 +144,8 @@ namespace BTCPayServer.Services.Notifications
         private NotificationViewModel ToViewModel(NotificationData data)
         {
             var handler = GetHandler(data.NotificationType);
+            if (handler is null)
+                return null;
             var notification = JsonConvert.DeserializeObject(ZipUtils.Unzip(data.Blob), handler.NotificationBlobType);
             var obj = new NotificationViewModel {Id = data.Id, Created = data.Created, Seen = data.Seen};
             handler.FillViewModel(notification, obj);
@@ -152,9 +154,10 @@ namespace BTCPayServer.Services.Notifications
 
         public INotificationHandler GetHandler(string notificationId)
         {
-            if (_handlersByNotificationType.TryGetValue(notificationId, out var h))
-                return h;
-            throw new InvalidOperationException($"No INotificationHandler found for {notificationId}");
+            _handlersByNotificationType.TryGetValue(notificationId, out var h);
+
+            return h;
+            // throw new InvalidOperationException($"No INotificationHandler found for {notificationId}");
         }
     }
 

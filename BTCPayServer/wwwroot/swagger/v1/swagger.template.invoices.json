@@ -32,7 +32,7 @@
                         "name": "status",
                         "in": "query",
                         "required": false,
-                        "description": "Array of invoices statuses to be fetched",
+                        "description": "Array of statuses of invoices to be fetched",
                         "schema": {
                             "type": "array",
                             "items": {
@@ -51,19 +51,15 @@
                         "name": "startDate",
                         "in": "query",
                         "required": false,
-                        "description": "Start date of the period to retrieve invoices for (YYYY-MM-DDTHH:mm:ssZ)",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "description": "Start date of the period to retrieve invoices",
+                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
                     },
                     {
                         "name": "endDate",
                         "in": "query",
                         "required": false,
-                        "description": "Start date of the period to retrieve invoices for (YYYY-MM-DDTHH:mm:ssZ)",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "description": "End date of the period to retrieve invoices",
+                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
                     }
                 ],
                 "description": "View information about the existing invoices",

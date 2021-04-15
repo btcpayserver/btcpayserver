@@ -20,11 +20,13 @@ namespace BTCPayServer.Controllers.GreenField
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly StoreRepository _storeRepository;
+        private readonly BTCPayServerClient _localBTCPayServerClient;
 
-        public TestApiKeyController(UserManager<ApplicationUser> userManager, StoreRepository storeRepository)
+        public TestApiKeyController(UserManager<ApplicationUser> userManager, StoreRepository storeRepository, BTCPayServerClient localBTCPayServerClient)
         {
             _userManager = userManager;
             _storeRepository = storeRepository;
+            _localBTCPayServerClient = localBTCPayServerClient;
         }
 
         [HttpGet("me/id")]
@@ -70,5 +72,13 @@ namespace BTCPayServer.Controllers.GreenField
         {
             return true;
         }
+
+        [HttpGet("testlocal")]
+        public async Task<IActionResult> TestLocalClient()
+        {
+            return Ok(await _localBTCPayServerClient.GetCurrentUser());
+        }
+
+
     }
 }

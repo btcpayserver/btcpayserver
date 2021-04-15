@@ -84,9 +84,10 @@ section .nav .nav-link {
 
 section .nav .nav-link.active,
 section .nav .show > .nav-link {
-    color: var(--btcpay-nav-link-active, var(--btcpay-light-900));
+    color: var(--btcpay-nav-link-active);
     font-weight: 700;
-    border-left-color: var(--btcpay-primary);
+    border-left-color: var(--btcpay-nav-border-active);
+    background: var(--btcpay-nav-bg-active);
 }
 
 /* Homepage */
@@ -270,7 +271,7 @@ html[data-devenv]:before {
     z-index: 1000;
     right: 0;
     bottom: 0;
-    background: var(--btcpay-secondary-bg);
+    background: var(--btcpay-secondary);
     color: var(--btcpay-secondary-text);
     opacity: .7;
     padding: 4px 5px 3px 7px;

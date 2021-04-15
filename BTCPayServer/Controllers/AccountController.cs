@@ -160,7 +160,7 @@ namespace BTCPayServer.Controllers
                 var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: true);
                 if (result.Succeeded)
                 {
-                    _logger.LogInformation("User logged in.");
+                    _logger.LogInformation($"User '{user.Id}' logged in.");
                     return RedirectToLocal(returnUrl);
                 }
                 if (result.RequiresTwoFactor)
@@ -175,7 +175,7 @@ namespace BTCPayServer.Controllers
                 }
                 if (result.IsLockedOut)
                 {
-                    _logger.LogWarning("User account locked out.");
+                    _logger.LogWarning($"User '{user.Id}' account locked out.");
                     return RedirectToAction(nameof(Lockout));
                 }
                 else

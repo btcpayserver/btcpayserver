@@ -385,7 +385,8 @@ namespace BTCPayServer.Hosting
             
             //create a simple client which hooks up to the http scope
             services.AddScoped<BTCPayServerClient, LocalBTCPayServerClient>();
-            
+            //also provide a factory that can impersonate user/store id
+            services.AddSingleton<IBTCPayServerClientFactory, BTCPayServerClientFactory>();
 
             services.AddAPIKeyAuthentication();
             services.AddBtcPayServerAuthenticationSchemes();

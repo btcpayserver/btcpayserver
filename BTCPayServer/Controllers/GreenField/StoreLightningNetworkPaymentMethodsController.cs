@@ -73,7 +73,7 @@ namespace BTCPayServer.Controllers.GreenField
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/payment-methods/LightningNetwork/{cryptoCode}")]
-        public ActionResult<LightningNetworkPaymentMethodData> GetLightningNetworkPaymentMethod(string cryptoCode)
+        public ActionResult<LightningNetworkPaymentMethodData> GetLightningNetworkPaymentMethod(string storeId, string cryptoCode)
         {
             if (!GetNetwork(cryptoCode, out BTCPayNetwork _))
             {
@@ -92,6 +92,7 @@ namespace BTCPayServer.Controllers.GreenField
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpDelete("~/api/v1/stores/{storeId}/payment-methods/LightningNetwork/{cryptoCode}")]
         public async Task<IActionResult> RemoveLightningNetworkPaymentMethod(
+            string storeId,
             string cryptoCode,
             int offset = 0, int amount = 10)
         {
@@ -109,7 +110,7 @@ namespace BTCPayServer.Controllers.GreenField
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPut("~/api/v1/stores/{storeId}/payment-methods/LightningNetwork/{cryptoCode}")]
-        public async Task<IActionResult> UpdateLightningNetworkPaymentMethod(string cryptoCode,
+        public async Task<IActionResult> UpdateLightningNetworkPaymentMethod(string storeId, string cryptoCode,
             [FromBody] LightningNetworkPaymentMethodData paymentMethodData)
         {
             var paymentMethodId = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);

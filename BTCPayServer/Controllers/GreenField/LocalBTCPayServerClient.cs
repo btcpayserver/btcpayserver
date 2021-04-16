@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
@@ -198,6 +199,11 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 controller.ControllerContext.HttpContext = httpContextAccessor.HttpContext;
             }
+        }
+
+        protected override HttpRequestMessage CreateHttpRequest(string path, Dictionary<string, object> queryPayload = null, HttpMethod method = null)
+        {
+            throw new NotSupportedException("This method is not supported by the LocalBTCPayServerClient.");
         }
 
         public override async Task<StoreWebhookData> CreateWebhook(string storeId, CreateStoreWebhookRequest create, CancellationToken token = default)

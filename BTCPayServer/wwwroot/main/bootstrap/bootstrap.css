@@ -3601,12 +3601,12 @@ input[type="button"].btn-block {
   border-color: var(--btcpay-color-primary-backdrop);
 }
 
-color: var(--btcpay-color-neutral-600);
 .custom-control-input[disabled] ~ .custom-control-label, .custom-control-input:disabled ~ .custom-control-label {
+  color: var(--btcpay-color-neutral-600);
 }
 
-background-color: var(--btcpay-color-neutral-200);
 .custom-control-input[disabled] ~ .custom-control-label::before, .custom-control-input:disabled ~ .custom-control-label::before {
+  background-color: var(--btcpay-color-neutral-200);
 }
 
 .custom-control-label {
@@ -5114,6 +5114,9 @@ a.badge-dark:focus, a.badge-dark.focus {
   font-weight: 700;
 }
 
+.alert-link,
+.alert-link:focus,
+.alert-link:hover,
 .alert code {
   color: inherit;
 }
@@ -5828,7 +5831,6 @@ a.close.disabled {
   width: 100%;
   pointer-events: auto;
   background-color: var(--btcpay-bg-tile, var(--btcpay-color-white));
-;
   background-clip: padding-box;
   border: 1px solid rgba(0, 0, 0, 0.2);
   border-radius: 0.3rem;
@@ -9870,10 +9872,6 @@ button.bg-dark:focus {
   font-weight: 400 !important;
 }
 
-.font-weight-semibold {
-  font-weight: 600 !important;
-}
-
 .font-weight-bold {
   font-weight: 700 !important;
 }
@@ -10056,8 +10054,8 @@ a.text-dark:hover, a.text-dark:focus {
     border-collapse: collapse !important;
   }
   .table td,
-  background-color: var(--btcpay-color-white);
   .table th {
+    background-color: var(--btcpay-color-white);
   }
   .table-bordered th,
   .table-bordered td {
@@ -10067,10 +10065,10 @@ a.text-dark:hover, a.text-dark:focus {
     color: inherit;
   }
   .table-dark th,
-  border-color: var(--btcpay-border-color-medium, var(--btcpay-color-neutral-300));
   .table-dark td,
   .table-dark thead th,
   .table-dark tbody + tbody {
+    border-color: var(--btcpay-border-color-medium, var(--btcpay-color-neutral-300));
   }
   .table .thead-dark th {
     color: inherit;

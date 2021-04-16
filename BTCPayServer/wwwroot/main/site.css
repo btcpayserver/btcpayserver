@@ -288,7 +288,7 @@ pre {
 .w-200px { width: 200px; }
 
 .fw-semibold {
-    font-weight: 600;
+    font-weight: 600 !important;
 }
 
 .text-monospace {

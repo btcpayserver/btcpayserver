@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Tests.Logging;
 using BTCPayServer.Views.Manage;
@@ -213,6 +214,10 @@ namespace BTCPayServer.Tests
             using (var s = SeleniumTester.Create())
             {
                 await s.StartAsync();
+                var settings = s.Server.PayTester.GetService<SettingsRepository>();
+                var policies = await settings.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
+                policies.DisableSSHService = false;
+                await settings.UpdateSetting(policies);
                 s.RegisterNewUser(isAdmin: true);
                 s.Driver.Navigate().GoToUrl(s.Link("/server/services"));
                 Assert.Contains("server/services/ssh", s.Driver.PageSource);
@@ -241,6 +246,17 @@ namespace BTCPayServer.Tests
 
                 text = s.Driver.FindElement(By.Id("SSHKeyFileContent")).Text;
                 Assert.DoesNotContain("test2", text);
+
+                // Let's try to disable it now
+                s.Driver.FindElement(By.Id("disable")).Click();
+                s.Driver.FindElement(By.Id("continue")).Click();
+                policies = await settings.GetSettingAsync<PoliciesSettings>();
+                Assert.True(policies.DisableSSHService);
+
+                s.Driver.Navigate().GoToUrl(s.Link("/server/services/ssh"));
+                Assert.True(s.Driver.PageSource.Contains("404 - Page not found", StringComparison.OrdinalIgnoreCase));
+                policies.DisableSSHService = false;
+                await settings.UpdateSetting(policies);
             }
         }
 

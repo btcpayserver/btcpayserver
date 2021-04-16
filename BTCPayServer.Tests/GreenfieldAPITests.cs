@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
@@ -20,8 +21,6 @@ using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
-using NBitcoin.OpenAsset;
-using NBitcoin.Payment;
 using NBitpayClient;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -40,6 +39,23 @@ namespace BTCPayServer.Tests
             Logs.Tester = new XUnitLog(helper) { Name = "Tests" };
             Logs.LogProvider = new XUnitLogProvider(helper);
         }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task LocalClientTests()
+        {
+            using var tester = ServerTester.Create();
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync();
+            await user.MakeAdmin();
+            var factory = tester.PayTester.GetService<IBTCPayServerClientFactory>();
+            Assert.NotNull(factory);
+            var client = await factory.Create(user.UserId);
+            var u = await client.GetCurrentUser();
+            var s = await client.GetStores();
+        }
+
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]

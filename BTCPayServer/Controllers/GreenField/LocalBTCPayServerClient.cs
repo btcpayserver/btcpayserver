@@ -107,6 +107,10 @@ namespace BTCPayServer.Controllers.GreenField
             if (storeIds?.Any() is true)
             {
                 context.SetStoreData(await _storeRepository.FindStore(storeIds.First()));
+                context.SetStoresData(await _storeRepository.GetStoresByUserId(userId, storeIds));
+            }
+            else
+            {
                 context.SetStoresData(await _storeRepository.GetStoresByUserId(userId));
             }
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,7 +11,7 @@ namespace BTCPayServer.Client
 {
     public partial class BTCPayServerClient
     {
-        public virtual async Task<IEnumerable<InvoiceData>> GetInvoices(string storeId, string orderId = null, string status = null,
+        public virtual async Task<IEnumerable<InvoiceData>> GetInvoices(string storeId, string orderId = null, InvoiceStatus[] status = null,
             long? startDate = null,
             long? endDate = null,
             bool includeArchived = false,
@@ -29,7 +30,7 @@ namespace BTCPayServer.Client
                 queryPayload.Add(nameof(orderId), orderId);
 
             if (status != null)
-                queryPayload.Add(nameof(status), status);
+                queryPayload.Add(nameof(status), status.Select(s=> s.ToString().ToLower()).ToArray());
             
             var response =
                 await _httpClient.SendAsync(

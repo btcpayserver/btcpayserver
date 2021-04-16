@@ -4,15 +4,16 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
+using NBitcoin;
 
 namespace BTCPayServer.Client
 {
     public partial class BTCPayServerClient
     {
         public virtual async Task<IEnumerable<InvoiceData>> GetInvoices(string storeId, string orderId = null, string status = null,
-            DateTimeOffset? startDate = null,
-            DateTimeOffset? endDate = null,
-            bool includeAddresses = true, bool includeArchived = false,
+            long? startDate = null,
+            long? endDate = null,
+            bool includeArchived = false,
             CancellationToken token = default)
         {
             Dictionary<string, object> queryPayload = new Dictionary<string, object>();
@@ -29,8 +30,6 @@ namespace BTCPayServer.Client
 
             if (status != null)
                 queryPayload.Add(nameof(status), status);
-
-            queryPayload.Add(nameof(includeAddresses), includeAddresses);
             
             var response =
                 await _httpClient.SendAsync(

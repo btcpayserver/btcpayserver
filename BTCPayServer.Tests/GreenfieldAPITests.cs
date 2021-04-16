@@ -966,8 +966,8 @@ namespace BTCPayServer.Tests
 
                 //list Filtered
                  var invoicesFiltered = await viewOnly.GetInvoices(user.StoreId,
-                     orderId: null, status: null, DateTimeOffset.Now.AddHours(-1),
-                     DateTimeOffset.Now.AddHours(1));
+                     orderId: null, status: null, NBitcoin.Utils.DateTimeToUnixTime(DateTimeOffset.Now.AddHours(-1)),
+                     NBitcoin.Utils.DateTimeToUnixTime(DateTimeOffset.Now.AddHours(1)));
 
                  Assert.NotNull(invoicesFiltered);
                  Assert.Single(invoicesFiltered);
@@ -975,8 +975,8 @@ namespace BTCPayServer.Tests
 
                  //list Yesterday
                  var invoicesYesterday = await viewOnly.GetInvoices(user.StoreId,
-                     orderId: null, status: null, DateTimeOffset.Now.AddDays(-2),
-                     DateTimeOffset.Now.AddDays(-1));
+                     orderId: null, status: null, NBitcoin.Utils.DateTimeToUnixTime(DateTimeOffset.Now.AddDays(-2)),
+                     NBitcoin.Utils.DateTimeToUnixTime(DateTimeOffset.Now.AddDays(-1)));
                  Assert.NotNull(invoicesYesterday);
                  Assert.Empty(invoicesYesterday);
 

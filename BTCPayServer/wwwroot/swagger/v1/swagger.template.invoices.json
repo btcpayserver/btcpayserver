@@ -33,33 +33,21 @@
                         "in": "query",
                         "required": false,
                         "description": "Array of statuses of invoices to be fetched",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string",
-                                "enum": [
-                                    "new",
-                                    "processing",
-                                    "expired",
-                                    "invalid",
-                                    "settled"
-                                ]
-                            }
-                        }
+                        "$ref": "#/components/schemas/InvoiceStatus"
                     },
                     {
                         "name": "startDate",
                         "in": "query",
                         "required": false,
                         "description": "Start date of the period to retrieve invoices",
-                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
+                        "$ref": "#/components/schemas/UnixTimestamp"
                     },
                     {
                         "name": "endDate",
                         "in": "query",
                         "required": false,
                         "description": "End date of the period to retrieve invoices",
-                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
+                        "$ref": "#/components/schemas/UnixTimestamp"
                     }
                 ],
                 "description": "View information about the existing invoices",

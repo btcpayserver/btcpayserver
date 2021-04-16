@@ -49,8 +49,8 @@ namespace BTCPayServer.Controllers.GreenField
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/invoices")]
         public async Task<IActionResult> GetInvoices(string storeId, [FromQuery] string[] orderId = null, [FromQuery] string[] status = null,
-            [FromQuery] DateTimeOffset? startDate = null,
-            [FromQuery] DateTimeOffset? endDate = null, [FromQuery] bool includeArchived = false)
+            [FromQuery] long? startDate = null,
+            [FromQuery] long? endDate = null, [FromQuery] bool includeArchived = false)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
@@ -58,13 +58,16 @@ namespace BTCPayServer.Controllers.GreenField
                 return NotFound();
             }
 
+            DateTimeOffset startDateTimeOffset = Utils.UnixTimeToDateTime(startDate.GetValueOrDefault(DateTimeOffset.MinValue.ToUnixTimeSeconds()));
+            DateTimeOffset endDateTimeOffset = Utils.UnixTimeToDateTime(endDate.GetValueOrDefault(DateTimeOffset.MaxValue.ToUnixTimeSeconds()));
+            
             var invoices =
                 await _invoiceRepository.GetInvoices(new InvoiceQuery()
                 {
                     StoreId = new[] {store.Id},
                     IncludeArchived = includeArchived,
-                    StartDate = startDate,
-                    EndDate = endDate,
+                    StartDate = startDateTimeOffset,
+                    EndDate = endDateTimeOffset,
                     OrderId = orderId,
                     Status = status
                 });

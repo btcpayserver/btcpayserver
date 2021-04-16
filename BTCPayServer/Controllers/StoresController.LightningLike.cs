@@ -48,6 +48,8 @@ namespace BTCPayServer.Controllers
             }
 
             var paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.LightningLike);
+            var lightning = GetExistingLightningSupportedPaymentMethod(vm.CryptoCode, store);
+
             LightningSupportedPaymentMethod paymentMethod = null;
             if (vm.LightningNodeType == LightningNodeType.Internal)
             {
@@ -96,7 +98,6 @@ namespace BTCPayServer.Controllers
             {
                 case "save":
                     var storeBlob = store.GetStoreBlob();
-                    storeBlob.SetExcluded(paymentMethodId, !vm.Enabled);
                     storeBlob.Hints.Lightning = false;
                     store.SetStoreBlob(storeBlob);
                     store.SetSupportedPaymentMethod(paymentMethodId, paymentMethod);
@@ -128,6 +129,38 @@ namespace BTCPayServer.Controllers
             }
         }
 
+        [HttpPost("{storeId}/lightning/{cryptoCode}/status")]
+        public async Task<IActionResult> SetLightningNodeEnabled(string storeId, string cryptoCode, bool enabled)
+        {
+            var store = HttpContext.GetStoreData();
+            if (store == null)
+                return NotFound();
+
+            var network = cryptoCode == null ? null : _ExplorerProvider.GetNetwork(cryptoCode);
+            if (network == null)
+                return NotFound();
+
+            var lightning = GetExistingLightningSupportedPaymentMethod(cryptoCode, store);
+            if (lightning == null)
+                return NotFound();
+
+            if (!User.IsInRole(Roles.ServerAdmin))
+            {
+                TempData[WellKnownTempData.ErrorMessage] = $"Only the server admin can {(enabled ? "enable" : "disable")} the lightning node";
+            }
+            else
+            {
+                var paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.LightningLike);
+                var storeBlob = store.GetStoreBlob();
+                storeBlob.SetExcluded(paymentMethodId, !enabled);
+                store.SetStoreBlob(storeBlob);
+                await _Repo.UpdateStore(store);
+                TempData[WellKnownTempData.SuccessMessage] = $"{network.CryptoCode} Lightning payments are now {(enabled ? "enabled" : "disabled")} for this store.";
+            }
+
+            return RedirectToAction(nameof(UpdateStore), new { storeId });
+        }
+
         private bool CanUseInternalLightning()
         {
             return User.IsInRole(Roles.ServerAdmin) || _CssThemeManager.AllowLightningInternalNodeForAll;
@@ -141,7 +174,6 @@ namespace BTCPayServer.Controllers
                 vm.LightningNodeType = lightning.IsInternalNode ? LightningNodeType.Internal : LightningNodeType.Custom;
                 vm.ConnectionString = lightning.GetDisplayableConnectionString();
             }
-            vm.Enabled = !store.GetStoreBlob().IsExcluded(new PaymentMethodId(vm.CryptoCode, PaymentTypes.LightningLike)) && lightning != null;
             vm.CanUseInternalNode = CanUseInternalLightning();
         }
 

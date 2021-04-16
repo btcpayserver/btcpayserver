@@ -274,7 +274,7 @@ namespace BTCPayServer.Tests
             var nodeType = connectionString == LightningSupportedPaymentMethod.InternalNode ? LightningNodeType.Internal : LightningNodeType.Custom;
 
             await storeController.AddLightningNode(storeId ?? StoreId,
-                new LightningNodeViewModel { ConnectionString = connectionString, LightningNodeType = nodeType, SkipPortTest = true }, "save", "BTC");
+                new LightningNodeViewModel { ConnectionString = connectionString, LightningNodeType = nodeType, SkipPortTest = true }, "save", cryptoCode);
             if (storeController.ModelState.ErrorCount != 0)
                 Assert.False(true, storeController.ModelState.FirstOrDefault().Value.Errors[0].ErrorMessage);
         }

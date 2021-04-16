@@ -48,14 +48,6 @@
                 <th>Type</th>
                 <td>@(Model.IsHotWallet ? "Hot wallet" : "Watch-only wallet")</td>
             </tr>
-            <tr>
-                <th>
-                    Enabled
-                </th>
-                <td>
-                    <button type="submit" class="btcpay-toggle @if (Model.Enabled) { @("btcpay-toggle--active") }" id="Modify" name="Enabled" value="@(Model.Enabled ? "false" : "true")">Save</button>
-                </td>
-            </tr>
             </tbody>
         </table>
     </form>

@@ -24,6 +24,7 @@ namespace BTCPayServer.Services.Wallets
         public KeyPath KeyPath { get; set; }
         public IMoney Value { get; set; }
         public Coin Coin { get; set; }
+        public int Confirmations { get; set; }
     }
     public class NetworkCoins
     {
@@ -259,7 +260,8 @@ namespace BTCPayServer.Services.Wallets
                               Timestamp = c.Timestamp,
                               OutPoint = c.Outpoint,
                               ScriptPubKey = c.ScriptPubKey,
-                              Coin = c.AsCoin(derivationStrategy)
+                              Coin = c.AsCoin(derivationStrategy),
+                              Confirmations = c.Confirmations
                           }).ToArray();
         }
 

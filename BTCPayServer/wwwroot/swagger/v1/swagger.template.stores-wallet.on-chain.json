@@ -683,6 +683,10 @@
                         "type": "string",
                         "description": "The wallet address of this utxo"
                     },
+                    "confirmations": {
+                        "type": "number",
+                        "description": "The number of confirmations of this utxo"
+                    },
                     "labels": {
                         "description": "Labels linked to this transaction",
                         "type": "object",

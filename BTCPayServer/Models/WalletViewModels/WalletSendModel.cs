@@ -73,6 +73,7 @@ namespace BTCPayServer.Models.WalletViewModels
             public decimal Amount { get; set; }
             public string Outpoint { get; set; }
             public string Link { get; set; }
+            public int Confirmations { get; set; }
         }
     }
 }

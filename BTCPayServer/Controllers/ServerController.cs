@@ -972,7 +972,7 @@ namespace BTCPayServer.Controllers
             {
                 Action = "Disable",
                 Title = "Disable modification of SSH settings",
-                Description = "This action is irreversible and will disable modification of SSH settings via BTCPay Server.",
+                Description = "This action is permanent and will remove the ability to change the SSH settings via the BTCPay Server user interface.",
                 ButtonClass = "btn-danger"
             });
         }

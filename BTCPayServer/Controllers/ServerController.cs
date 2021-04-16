@@ -983,7 +983,7 @@ namespace BTCPayServer.Controllers
             var policies = await _SettingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
             policies.DisableSSHService = true;
             await _SettingsRepository.UpdateSetting(policies);
-            TempData[WellKnownTempData.SuccessMessage] = "SSH settings can't be modified anymore via BTCPay Server";
+            TempData[WellKnownTempData.SuccessMessage] = "Changes to the SSH settings are now permanently disabled in the BTCPay Server user interface";
             return RedirectToAction(nameof(Services));
         }
 

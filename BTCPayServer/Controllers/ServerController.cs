@@ -31,6 +31,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NBitcoin;
@@ -75,7 +76,7 @@ namespace BTCPayServer.Controllers
             CheckConfigurationHostedService sshState,
             EventAggregator eventAggregator,
             CssThemeManager cssThemeManager,
-            IOptions<ExternalServicesOptions> externalServiceOptions)    
+            IOptions<ExternalServicesOptions> externalServiceOptions)
         {
             _Options = options;
             _StoredFileRepository = storedFileRepository;
@@ -267,7 +268,7 @@ namespace BTCPayServer.Controllers
                 sshClient.Dispose();
             }
         }
-        
+
         public IHttpClientFactory HttpClientFactory { get; }
 
         [Route("server/policies")]
@@ -281,9 +282,9 @@ namespace BTCPayServer.Controllers
 
         [Route("server/policies")]
         [HttpPost]
-        public async Task<IActionResult> Policies([FromServices] BTCPayNetworkProvider btcPayNetworkProvider,PoliciesSettings settings, string command = "")
+        public async Task<IActionResult> Policies([FromServices] BTCPayNetworkProvider btcPayNetworkProvider, PoliciesSettings settings, string command = "")
         {
-            
+
             ViewBag.UpdateUrlPresent = _Options.UpdateUrl != null;
             ViewBag.AppsList = await GetAppSelectList();
             if (command == "add-domain")
@@ -301,7 +302,7 @@ namespace BTCPayServer.Controllers
             }
 
             settings.BlockExplorerLinks = settings.BlockExplorerLinks.Where(tuple => btcPayNetworkProvider.GetNetwork(tuple.CryptoCode).BlockExplorerLinkDefault != tuple.Link).ToList();
-        
+
             if (!ModelState.IsValid)
             {
                 return View(settings);
@@ -353,7 +354,7 @@ namespace BTCPayServer.Controllers
                     Link = this.Request.GetAbsoluteUriNoPathBase(externalService.Value).AbsoluteUri
                 });
             }
-            if (CanShowSSHService())
+            if (await CanShowSSHService())
             {
                 result.OtherExternalServices.Add(new ServicesViewModel.OtherExternalService()
                 {
@@ -850,7 +851,7 @@ namespace BTCPayServer.Controllers
         [Route("server/services/ssh")]
         public async Task<IActionResult> SSHService()
         {
-            if (!CanShowSSHService())
+            if (!await CanShowSSHService())
                 return NotFound();
 
             var settings = _Options.SSHSettings;
@@ -888,9 +889,11 @@ namespace BTCPayServer.Controllers
             return View(vm);
         }
 
-        bool CanShowSSHService()
+        async Task<bool> CanShowSSHService()
         {
-            return _Options.SSHSettings != null && (_sshState.CanUseSSH || CanAccessAuthorizedKeyFile());
+            var policies = await _SettingsRepository.GetSettingAsync<PoliciesSettings>();
+            return !(policies?.DisableSSHService is true) &&
+                   _Options.SSHSettings != null && (_sshState.CanUseSSH || CanAccessAuthorizedKeyFile());
         }
 
         private bool CanAccessAuthorizedKeyFile()
@@ -900,55 +903,88 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("server/services/ssh")]
-        public async Task<IActionResult> SSHService(SSHServiceViewModel viewModel)
+        public async Task<IActionResult> SSHService(SSHServiceViewModel viewModel, string command = null)
         {
-            string newContent = viewModel?.SSHKeyFileContent ?? string.Empty;
-            newContent = newContent.Replace("\r\n", "\n", StringComparison.OrdinalIgnoreCase);
+            if (!await CanShowSSHService())
+                return NotFound();
 
-            bool updated = false;
-            Exception exception = null;
-            // Let's try to just write the file
-            if (CanAccessAuthorizedKeyFile())
+            if (command is "Save")
             {
-                try
-                {
-                    await System.IO.File.WriteAllTextAsync(_Options.SSHSettings.AuthorizedKeysFile, newContent);
-                    TempData[WellKnownTempData.SuccessMessage] = "authorized_keys has been updated";
-                    updated = true;
-                }
-                catch (Exception ex)
-                {
-                    exception = ex;
-                }
-            }
+                string newContent = viewModel?.SSHKeyFileContent ?? string.Empty;
+                newContent = newContent.Replace("\r\n", "\n", StringComparison.OrdinalIgnoreCase);
 
-            // If that fail, fallback to ssh
-            if (!updated && _sshState.CanUseSSH)
-            {
-                try
+                bool updated = false;
+                Exception exception = null;
+                // Let's try to just write the file
+                if (CanAccessAuthorizedKeyFile())
                 {
-                    using (var sshClient = await _Options.SSHSettings.ConnectAsync())
+                    try
                     {
-                        await sshClient.RunBash($"mkdir -p ~/.ssh && echo '{newContent.EscapeSingleQuotes()}' > ~/.ssh/authorized_keys", TimeSpan.FromSeconds(10));
+                        await System.IO.File.WriteAllTextAsync(_Options.SSHSettings.AuthorizedKeysFile, newContent);
+                        TempData[WellKnownTempData.SuccessMessage] = "authorized_keys has been updated";
+                        updated = true;
                     }
-                    updated = true;
-                    exception = null;
+                    catch (Exception ex)
+                    {
+                        exception = ex;
+                    }
                 }
-                catch (Exception ex)
-                {
-                    exception = ex;
-                }
-            }
 
-            if (exception is null)
-            {
-                TempData[WellKnownTempData.SuccessMessage] = "authorized_keys has been updated";
+                // If that fail, fallback to ssh
+                if (!updated && _sshState.CanUseSSH)
+                {
+                    try
+                    {
+                        using (var sshClient = await _Options.SSHSettings.ConnectAsync())
+                        {
+                            await sshClient.RunBash($"mkdir -p ~/.ssh && echo '{newContent.EscapeSingleQuotes()}' > ~/.ssh/authorized_keys", TimeSpan.FromSeconds(10));
+                        }
+                        updated = true;
+                        exception = null;
+                    }
+                    catch (Exception ex)
+                    {
+                        exception = ex;
+                    }
+                }
+
+                if (exception is null)
+                {
+                    TempData[WellKnownTempData.SuccessMessage] = "authorized_keys has been updated";
+                }
+                else
+                {
+                    TempData[WellKnownTempData.ErrorMessage] = exception.Message;
+                }
+                return RedirectToAction(nameof(SSHService));
             }
-            else
+            else if (command is "disable")
             {
-                TempData[WellKnownTempData.ErrorMessage] = exception.Message;
+                return RedirectToAction(nameof(SSHServiceDisable));
             }
-            return RedirectToAction(nameof(SSHService));
+            return NotFound();
+        }
+
+        [Route("server/services/ssh/disable")]
+        public IActionResult SSHServiceDisable()
+        {
+            return View("Confirm", new ConfirmModel()
+            {
+                Action = "Disable",
+                Title = "Disable modification of SSH settings",
+                Description = "This action is permanent and will remove the ability to change the SSH settings via the BTCPay Server user interface.",
+                ButtonClass = "btn-danger"
+            });
+        }
+        [Route("server/services/ssh/disable")]
+        [HttpPost]
+        public async Task<IActionResult> SSHServiceDisablePost()
+        {
+            var policies = await _SettingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
+            policies.DisableSSHService = true;
+            await _SettingsRepository.UpdateSetting(policies);
+            TempData[WellKnownTempData.SuccessMessage] = "Changes to the SSH settings are now permanently disabled in the BTCPay Server user interface";
+            return RedirectToAction(nameof(Services));
         }
 
         [Route("server/theme")]
@@ -978,7 +1014,7 @@ namespace BTCPayServer.Controllers
         [HttpPost]
         public async Task<IActionResult> Emails(EmailsViewModel model, string command)
         {
-           
+
             if (command == "Test")
             {
                 try

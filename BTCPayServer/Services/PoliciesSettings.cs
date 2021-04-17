@@ -33,6 +33,8 @@ namespace BTCPayServer.Services
         [Display(Name = "Disable non-admins access to the user creation API endpoint")]
         public bool DisableNonAdminCreateUserApi { get; set; }
 
+        public bool DisableSSHService { get; set; }
+
         [Display(Name = "Display app on website root")]
         public string RootAppId { get; set; }
         public AppType? RootAppType { get; set; }

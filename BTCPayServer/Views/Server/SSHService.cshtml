@@ -1,10 +1,9 @@
-﻿@model BTCPayServer.Models.ServerViewModels.SSHServiceViewModel
+@model BTCPayServer.Models.ServerViewModels.SSHServiceViewModel
 @{
     ViewData.SetActivePageAndTitle(ServerNavPages.Services, "SSH settings");
 }
 
 <h2 class="mb-4">@ViewData["PageTitle"]</h2>
-
 <div class="row">
     <div class="col-md-8">
         <div class="form-group">
@@ -58,8 +57,24 @@
                     <textarea asp-for="SSHKeyFileContent" rows="20" cols="80" class="form-control"></textarea>
                     <span asp-validation-for="SSHKeyFileContent" class="text-danger"></span>
                 </div>
-                <button id="submit" type="submit" class="btn btn-primary" value="Save">Save</button>
+                <button name="command" id="submit" type="submit" class="btn btn-primary" value="Save">Save</button>
             </form>
         </div>
     </div>
 }
+
+<h4 class="mt-5 mb-3">Other actions</h4>
+<div class="row">
+    <div class="col-md-8">
+        <div class="form-group">
+            <p>
+                <span>Increase the security of your instance by disabling the ability to change the SSH Settings in this BTCPay Server instance's user interface.<br /></span>
+            </p>
+        </div>
+        <div>
+            <form method="post">
+                <button name="command" id="disable" type="submit" class="btn btn-outline-danger mb-5" value="disable">Disable</button>
+            </form>
+        </div>
+    </div>
+</div>

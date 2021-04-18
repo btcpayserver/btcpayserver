@@ -64,7 +64,7 @@ namespace BTCPayServer.Controllers
         }
 
         [Route("misc/lang")]
-        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie + "," + AuthenticationSchemes.Greenfield)]
         public IActionResult Languages()
         {
             return Json(LanguageService.GetLanguages(), new JsonSerializerSettings() { Formatting = Formatting.Indented });

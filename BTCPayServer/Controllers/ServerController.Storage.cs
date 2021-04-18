@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
@@ -19,6 +20,8 @@ using BTCPayServer.Storage.ViewModels;
 using BTCPayServer.Views;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Controllers
@@ -175,8 +178,13 @@ namespace BTCPayServer.Controllers
             var savedSettings = await _SettingsRepository.GetSettingAsync<StorageSettings>();
             if (forceChoice || savedSettings == null)
             {
+                var providersList = _StorageProviderServices.Select(a =>
+                    new SelectListItem(a.StorageProvider().ToString(), a.StorageProvider().ToString())
+                );
+
                 return View(new ChooseStorageViewModel()
                 {
+                    ProvidersList = providersList,
                     ShowChangeWarning = savedSettings != null,
                     Provider = savedSettings?.Provider ?? BTCPayServer.Storage.Models.StorageProvider.FileSystem
                 });

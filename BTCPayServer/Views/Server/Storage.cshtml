@@ -1,4 +1,4 @@
-﻿@using BTCPayServer.Storage.Models
+@using BTCPayServer.Storage.Models
 @model BTCPayServer.Storage.ViewModels.ChooseStorageViewModel
 @{
     ViewData.SetActivePageAndTitle(ServerNavPages.Services, "Storage");
@@ -22,7 +22,7 @@
             }
             <div class="form-group">
                 <label asp-for="Provider"></label>
-                <select asp-for="Provider" asp-items="@Html.GetEnumSelectList<StorageProvider>()" class="form-control"></select>
+                <select asp-for="Provider" asp-items="@Model.ProvidersList" class="form-control"></select>
             </div>
             <button type="submit" class="btn btn-primary" name="command" value="Save">Next</button>
         </form>

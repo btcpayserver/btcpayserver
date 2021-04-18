@@ -47,7 +47,10 @@ using BTCPayServer.Validation;
 using ExchangeSharp;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration.Memory;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitcoin.Payment;
@@ -67,7 +70,7 @@ namespace BTCPayServer.Tests
 {
     public class UnitTest1
     {
-        public const int TestTimeout = 60_000;
+        public const int LongRunningTestTimeout = 60_000; // 60s
 
         public UnitTest1(ITestOutputHelper helper)
         {
@@ -870,18 +873,55 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Fast", "Fast")]
         public async Task CanEnumerateTorServices()
         {
             var tor = new TorServices(new BTCPayNetworkProvider(ChainName.Regtest),
-                new BTCPayServerOptions() { TorrcFile = TestUtils.GetTestDataFullPath("Tor/torrc") });
+                new OptionsWrapper<BTCPayServerOptions>(new BTCPayServerOptions()
+                {
+                    TorrcFile = TestUtils.GetTestDataFullPath("Tor/torrc")
+                }));
             await tor.Refresh();
 
             Assert.Single(tor.Services.Where(t => t.ServiceType == TorServiceType.BTCPayServer));
             Assert.Single(tor.Services.Where(t => t.ServiceType == TorServiceType.P2P));
             Assert.Single(tor.Services.Where(t => t.ServiceType == TorServiceType.RPC));
-            Assert.True(tor.Services.Where(t => t.ServiceType == TorServiceType.Other).Count() > 1);
+            Assert.True(tor.Services.Count(t => t.ServiceType == TorServiceType.Other) > 1);
+            
+            tor = new TorServices(new BTCPayNetworkProvider(ChainName.Regtest),
+                new OptionsWrapper<BTCPayServerOptions>(new BTCPayServerOptions()
+                {
+                    TorrcFile = null,
+                    TorServices = "btcpayserver:host.onion:80;btc-p2p:host2.onion:81,BTC-RPC:host3.onion:82,UNKNOWN:host4.onion:83,INVALID:ddd".Split(new[] {';', ','}, StringSplitOptions.RemoveEmptyEntries)
+                }));
+            await Task.WhenAll(tor.StartAsync(CancellationToken.None));
+
+            var btcpayS = Assert.Single(tor.Services.Where(t => t.ServiceType == TorServiceType.BTCPayServer));
+            Assert.Null(btcpayS.Network);
+            Assert.Equal("host.onion", btcpayS.OnionHost);
+            Assert.Equal(80, btcpayS.VirtualPort);
+            
+            var p2p = Assert.Single(tor.Services.Where(t => t.ServiceType == TorServiceType.P2P));
+            Assert.NotNull(p2p.Network);
+            Assert.Equal("BTC", p2p.Network.CryptoCode);
+            Assert.Equal("host2.onion", p2p.OnionHost);
+            Assert.Equal(81, p2p.VirtualPort);
+            
+            var rpc = Assert.Single(tor.Services.Where(t => t.ServiceType == TorServiceType.RPC));
+            Assert.NotNull(p2p.Network);
+            Assert.Equal("BTC", rpc.Network.CryptoCode);
+            Assert.Equal("host3.onion", rpc.OnionHost);
+            Assert.Equal(82, rpc.VirtualPort);
+            
+            var unknown = Assert.Single(tor.Services.Where(t => t.ServiceType == TorServiceType.Other));
+            Assert.Null(unknown.Network);
+            Assert.Equal("host4.onion", unknown.OnionHost);
+            Assert.Equal(83, unknown.VirtualPort);
+            Assert.Equal("UNKNOWN", unknown.Name);
+
+            Assert.Equal(4, tor.Services.Length);
+            
         }
 
 
@@ -1046,7 +1086,7 @@ namespace BTCPayServer.Tests
             });
         }
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanUseServerInitiatedPairingCode()
         {
@@ -1073,7 +1113,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanSendIPN()
         {
@@ -1143,7 +1183,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CantPairTwiceWithSamePubkey()
         {
@@ -1167,7 +1207,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public void CanSolveTheDogesRatesOnKraken()
         {
@@ -1185,7 +1225,7 @@ namespace BTCPayServer.Tests
         }
 
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanUseTorClient()
         {
@@ -1238,7 +1278,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanRescanWallet()
         {
@@ -1340,7 +1380,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanListInvoices()
         {
@@ -1391,7 +1431,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanListNotifications()
         {
@@ -1675,7 +1715,7 @@ namespace BTCPayServer.Tests
             Assert.NotNull(paymentData.KeyPath);
         }
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Fast", "Fast")]
         public void CanParseFilter()
         {
@@ -1703,7 +1743,7 @@ namespace BTCPayServer.Tests
             Assert.Equal("hekki", search.TextSearch);
         }
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Fast", "Fast")]
         public void CanParseFingerprint()
         {
@@ -1720,7 +1760,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(f1.ToString(), f2.ToString());
         }
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async void CheckCORSSetOnBitpayAPI()
         {
@@ -1755,7 +1795,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task TestAccessBitpayAPI()
         {
@@ -1834,7 +1874,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanUseExchangeSpecificRate()
         {
@@ -1879,7 +1919,7 @@ namespace BTCPayServer.Tests
             return invoice2.CryptoInfo[0].Rate;
         }
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanUseAnyoneCanCreateInvoice()
         {
@@ -1931,7 +1971,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanTweakRate()
         {
@@ -1978,7 +2018,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanModifyRates()
         {
@@ -2307,7 +2347,7 @@ namespace BTCPayServer.Tests
             Assert.True(client.WaitAllRunning(default).Wait(100));
         }
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Fast", "Fast")]
         public void PosDataParser_ParsesCorrectly()
         {
@@ -2333,7 +2373,7 @@ namespace BTCPayServer.Tests
             });
         }
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task PosDataParser_ParsesCorrectly_Slower()
         {
@@ -2383,7 +2423,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanExportInvoicesJson()
         {
@@ -2462,7 +2502,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanChangeNetworkFeeMode()
         {
@@ -2553,7 +2593,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanExportInvoicesCsv()
         {
@@ -2595,7 +2635,7 @@ namespace BTCPayServer.Tests
         }
 
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanCreateAndDeleteApps()
         {
@@ -2633,7 +2673,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanCreateStrangeInvoice()
         {
@@ -2679,7 +2719,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task InvoiceFlowThroughDifferentStatesCorrectly()
         {
@@ -2869,7 +2909,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public void CanQueryDirectProviders()
         {
@@ -2940,7 +2980,7 @@ namespace BTCPayServer.Tests
         }
 
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanExportBackgroundFetcherState()
         {
@@ -2982,7 +3022,7 @@ namespace BTCPayServer.Tests
         }
 
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public void CanGetRateCryptoCurrenciesByDefault()
         {
@@ -3034,7 +3074,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CheckLogsRoute()
         {
@@ -3117,7 +3157,7 @@ namespace BTCPayServer.Tests
             return name;
         }
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Fast", "Fast")]
         public void CanCheckFileNameValid()
         {
@@ -3135,7 +3175,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Fast", "Fast")]
         public async Task CanCreateSqlitedb()
         {
@@ -3147,7 +3187,7 @@ namespace BTCPayServer.Tests
             await new ApplicationDbContext(builder.Options).Database.MigrateAsync();
         }
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Fast", "Fast")]
         public void CanUsePermission()
         {
@@ -3172,7 +3212,7 @@ namespace BTCPayServer.Tests
                 .Contains(Permission.Create(Policies.CanModifyStoreSettings)));
         }
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Fast", "Fast")]
         public void CheckRatesProvider()
         {
@@ -3260,7 +3300,7 @@ namespace BTCPayServer.Tests
         }
 
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanLoginWithNoSecondaryAuthSystemsOrRequestItWhenAdded()
         {
@@ -3336,7 +3376,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async void CheckOnionlocationForNonOnionHtmlRequests()
         {
@@ -3382,7 +3422,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanCheckForNewVersion()
         {
@@ -3428,7 +3468,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanDoLightningInternalNodeMigration()
         {
@@ -3507,7 +3547,7 @@ namespace BTCPayServer.Tests
         }
 
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanDoInvoiceMigrations()
         {
@@ -3588,7 +3628,7 @@ namespace BTCPayServer.Tests
             await migrationStartupTask.ExecuteAsync();
         }
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task EmailSenderTests()
         {

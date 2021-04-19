@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -70,7 +71,7 @@ namespace BTCPayServer.HostedServices
             Subscribe<InvoiceEvent>();
         }
 
-        public async Task<string> Redeliver(string deliveryId)
+        public async Task<string?> Redeliver(string deliveryId)
         {
             var deliveryRequest = await CreateRedeliveryRequest(deliveryId);
             if (deliveryRequest is null)
@@ -79,7 +80,7 @@ namespace BTCPayServer.HostedServices
             return deliveryRequest.Delivery.Id;
         }
 
-        private async Task<WebhookDeliveryRequest> CreateRedeliveryRequest(string deliveryId)
+        private async Task<WebhookDeliveryRequest?> CreateRedeliveryRequest(string deliveryId)
         {
             using var ctx = StoreRepository.CreateDbContext();
             var webhookDelivery = await ctx.WebhookDeliveries.AsNoTracking()
@@ -107,6 +108,39 @@ namespace BTCPayServer.HostedServices
             newDelivery.SetBlob(newDeliveryBlob);
             return new WebhookDeliveryRequest(webhookDelivery.Webhook.Id, webhookEvent, newDelivery, webhookDelivery.Webhook.GetBlob());
         }
+
+        private WebhookEvent GetTestWebHook(string storeId, string webhookId, WebhookEventType webhookEventType, Data.WebhookDeliveryData delivery) 
+        {
+            var webhookEvent = GetWebhookEvent(webhookEventType);
+            webhookEvent.InvoiceId = "__test__" + Guid.NewGuid().ToString() + "__test__";
+            webhookEvent.StoreId = storeId;
+            webhookEvent.DeliveryId = delivery.Id;
+            webhookEvent.WebhookId = webhookId;
+            webhookEvent.OriginalDeliveryId = "__test__" + Guid.NewGuid().ToString() + "__test__";
+            webhookEvent.IsRedelivery = false;
+            webhookEvent.Timestamp = delivery.Timestamp;
+
+            return webhookEvent;
+        }
+
+        public async Task TestWebhook(string storeId, string webhookId, WebhookEventType webhookEventType)
+        {
+            var delivery = NewDelivery();
+            delivery.WebhookId = webhookId;
+
+            var webhook = (await StoreRepository.GetWebhooks(storeId)).Where(w => w.Id == webhookId).FirstOrDefault();
+
+            var channel = Channel.CreateUnbounded<WebhookDeliveryRequest>();
+            var deliveryRequest = new WebhookDeliveryRequest(
+                webhookId, 
+                GetTestWebHook(storeId, webhookId, webhookEventType, delivery), 
+                delivery, 
+                webhook.GetBlob()
+            );
+            channel.Writer.TryWrite(deliveryRequest);
+            _ = Process(webhookId, channel);
+        }
+
         protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
         {
             if (evt is InvoiceEvent invoiceEvent)
@@ -147,7 +181,28 @@ namespace BTCPayServer.HostedServices
             _ = Process(context.WebhookId, channel);
         }
 
-        private WebhookInvoiceEvent GetWebhookEvent(InvoiceEvent invoiceEvent)
+        private WebhookInvoiceEvent GetWebhookEvent(WebhookEventType webhookEventType)
+        {
+            switch (webhookEventType)
+            {
+                case WebhookEventType.InvoiceCreated:
+                    return new WebhookInvoiceEvent(WebhookEventType.InvoiceCreated);
+                case WebhookEventType.InvoiceReceivedPayment:
+                    return new WebhookInvoiceReceivedPaymentEvent(WebhookEventType.InvoiceReceivedPayment);
+                case WebhookEventType.InvoiceProcessing:
+                    return new WebhookInvoiceProcessingEvent(WebhookEventType.InvoiceProcessing);
+                case WebhookEventType.InvoiceExpired:
+                    return new WebhookInvoiceExpiredEvent(WebhookEventType.InvoiceExpired);
+                case WebhookEventType.InvoiceSettled:
+                    return new WebhookInvoiceSettledEvent(WebhookEventType.InvoiceSettled);
+                case WebhookEventType.InvoiceInvalid:
+                    return new WebhookInvoiceInvalidEvent(WebhookEventType.InvoiceInvalid);        
+                default:
+                    return new WebhookInvoiceEvent(WebhookEventType.InvoiceCreated);
+            }
+        }
+
+        private WebhookInvoiceEvent? GetWebhookEvent(InvoiceEvent invoiceEvent)
         {
             var eventCode = invoiceEvent.EventCode;
             switch (eventCode)

@@ -2,7 +2,7 @@
 @using  BTCPayServer.Client.Models;
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePageAndTitle(StoreNavPages.Webhooks, "Test Webhook", Context.GetStoreData().StoreName);
+    ViewData.SetActivePageAndTitle(StoreNavPages.Webhooks, "Send a test event to a webhook endpoint", Context.GetStoreData().StoreName);
 }
 
 <div class="row">
@@ -10,22 +10,27 @@
         <form method="post">
             <h4 class="mb-3">@ViewData["PageTitle"]</h4>
 
-            <ul class="list-group">
-                @foreach (var evt in new[]
-                {
-                    ("Test InvoiceCreated event", WebhookEventType.InvoiceCreated),
-                    ("Test InvoiceReceivedPayment event", WebhookEventType.InvoiceReceivedPayment),
-                    ("Test InvoiceProcessing event", WebhookEventType.InvoiceProcessing),
-                    ("Test InvoiceExpired event", WebhookEventType.InvoiceExpired),
-                    ("Test InvoiceSettled event", WebhookEventType.InvoiceSettled),
-                    ("Test InvoiceInvalid event", WebhookEventType.InvoiceInvalid)
-                })
-                {
-                    <li class="list-group-item">
-                        <button type="submit" name="Type" class="btn btn-primary" value="@evt.Item2">@evt.Item1</button>
-                    </li>
-                }
-            </ul>
+            <div class="form-group">
+                <label for="Type">Event type</label>
+                <select name="Type" id="Type" class="form-control w-auto">
+                    @foreach (var evt in new[]
+                    {
+                        WebhookEventType.InvoiceCreated,
+                        WebhookEventType.InvoiceReceivedPayment,
+                        WebhookEventType.InvoiceProcessing,
+                        WebhookEventType.InvoiceExpired,
+                        WebhookEventType.InvoiceSettled,
+                        WebhookEventType.InvoiceInvalid
+                    })
+                    {
+                        <option value="@evt">
+                            @evt
+                        </option>
+                    }
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Send test webhook</button>
         </form>
     </div>
 </div>

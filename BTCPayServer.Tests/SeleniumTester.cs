@@ -68,7 +68,7 @@ namespace BTCPayServer.Tests
             cds.Port = Utils.FreeTcpPort();
             cds.HostName = "127.0.0.1";
             cds.Start();
-            Driver = new ChromeDriver(cds, options, 
+            Driver = new ChromeDriver(cds, options,
                 // A bit less than test timeout
                 TimeSpan.FromSeconds(50));
 
@@ -212,17 +212,20 @@ namespace BTCPayServer.Tests
             {
                 Assert.True(Driver.FindElement(By.Id("LightningNodeType-Internal")).Enabled, "Usage of the internal Lightning node is disabled.");
                 Driver.FindElement(By.CssSelector("label[for=\"LightningNodeType-Internal\"]")).Click();
+
+                Driver.FindElement(By.Id("saveInternal")).Click();
             }
             else
             {
                 Driver.FindElement(By.CssSelector("label[for=\"LightningNodeType-Custom\"]")).Click();
                 Driver.FindElement(By.Id("ConnectionString")).SendKeys(connectionString);
+
+                Driver.FindElement(By.Id("test")).Click();
+                Assert.Contains("Connection to the Lightning node successful.", FindAlertMessage().Text);
+
+                Driver.FindElement(By.Id("saveCustom")).Click();
             }
 
-            Driver.FindElement(By.Id("test")).Click();
-            Assert.Contains("Connection to the Lightning node successful.", FindAlertMessage().Text);
-
-            Driver.FindElement(By.Id("save")).Click();
             Assert.Contains($"{cryptoCode} Lightning node updated.", FindAlertMessage().Text);
 
             var enabled = Driver.FindElement(By.Id($"{cryptoCode}LightningEnabled"));
@@ -378,14 +381,14 @@ namespace BTCPayServer.Tests
         private void CheckForJSErrors()
         {
             //wait for seleniun update: https://stackoverflow.com/questions/57520296/selenium-webdriver-3-141-0-driver-manage-logs-availablelogtypes-throwing-syste
-            //            var errorStrings = new List<string> 
-            //            { 
-            //                "SyntaxError", 
-            //                "EvalError", 
-            //                "ReferenceError", 
-            //                "RangeError", 
-            //                "TypeError", 
-            //                "URIError" 
+            //            var errorStrings = new List<string>
+            //            {
+            //                "SyntaxError",
+            //                "EvalError",
+            //                "ReferenceError",
+            //                "RangeError",
+            //                "TypeError",
+            //                "URIError"
             //            };
             //
             //            var jsErrors = Driver.Manage().Logs.GetLog(LogType.Browser).Where(x => errorStrings.Any(e => x.Message.Contains(e)));
@@ -412,7 +415,7 @@ namespace BTCPayServer.Tests
         {
             Driver.Navigate().GoToUrl(new Uri(Server.PayTester.ServerUri, relativeUrl));
         }
-        
+
         public void GoToServer(ServerNavPages navPages = ServerNavPages.Index)
         {
             Driver.FindElement(By.Id("ServerSettings")).Click();

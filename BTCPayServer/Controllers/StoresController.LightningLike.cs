@@ -15,7 +15,7 @@ namespace BTCPayServer.Controllers
     public partial class StoresController
     {
         [HttpGet("{storeId}/lightning/{cryptoCode}")]
-        public IActionResult AddLightningNode(string storeId, string cryptoCode)
+        public IActionResult SetupLightningNode(string storeId, string cryptoCode)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
@@ -31,7 +31,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("{storeId}/lightning/{cryptoCode}")]
-        public async Task<IActionResult> AddLightningNode(string storeId, LightningNodeViewModel vm, string command, string cryptoCode)
+        public async Task<IActionResult> SetupLightningNode(string storeId, LightningNodeViewModel vm, string command, string cryptoCode)
         {
             vm.CryptoCode = cryptoCode;
             var store = HttpContext.GetStoreData();
@@ -161,13 +161,17 @@ namespace BTCPayServer.Controllers
 
         private void SetExistingValues(StoreData store, LightningNodeViewModel vm)
         {
+            vm.CanUseInternalNode = CanUseInternalLightning();
             var lightning = GetExistingLightningSupportedPaymentMethod(vm.CryptoCode, store);
             if (lightning != null)
             {
                 vm.LightningNodeType = lightning.IsInternalNode ? LightningNodeType.Internal : LightningNodeType.Custom;
                 vm.ConnectionString = lightning.GetDisplayableConnectionString();
             }
-            vm.CanUseInternalNode = CanUseInternalLightning();
+            else
+            {
+                vm.LightningNodeType = vm.CanUseInternalNode ? LightningNodeType.Internal : LightningNodeType.Custom;
+            }
         }
 
         private LightningSupportedPaymentMethod GetExistingLightningSupportedPaymentMethod(string cryptoCode, StoreData store)

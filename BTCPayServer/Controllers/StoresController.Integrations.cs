@@ -121,9 +121,11 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("{storeId}/webhooks/{webhookId}/test")]
-        public async void TestWebhook(string webhookId, TestWebhookViewModel viewModel)
+        public async Task<IActionResult> TestWebhook(string webhookId, TestWebhookViewModel viewModel)
         {
             await WebhookNotificationManager.TestWebhook(CurrentStore.Id, webhookId, viewModel.Type);
+
+            return View(nameof(TestWebhook));
         }
 
         [HttpPost("{storeId}/webhooks/{webhookId}/deliveries/{deliveryId}/redeliver")]

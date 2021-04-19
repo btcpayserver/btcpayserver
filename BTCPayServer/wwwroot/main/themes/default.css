@@ -53,12 +53,9 @@
   --btcpay-color-dark-text: var(--btcpay-color-neutral-200);
 
   /* Color definitions for specific sections - try to reuse colors defined above */
-  --btcpay-bg-dark: var(--btcpay-brand-dark);
   --btcpay-bg-tile: var(--btcpay-color-white);
+  --btcpay-bg-dark: var(--btcpay-brand-dark);
   --btcpay-bg-cta: var(--btcpay-brand-dark);
-
-  --btcpay-border-color-light: var(--btcpay-color-neutral-200);
-  --btcpay-border-color-medium: var(--btcpay-color-neutral-300);
 
   --btcpay-body-bg: var(--btcpay-color-neutral-100);
   --btcpay-body-color: var(--btcpay-color-neutral-900);
@@ -67,15 +64,31 @@
 
   --btcpay-header-bg: var(--btcpay-color-white);
   --btcpay-header-color: var(--btcpay-body-color);
-  --btcpay-header-color-link: var(--btcpay-body-color);
-  --btcpay-header-color-link-accent: var(--btcpay-color-primary);
+  --btcpay-header-color-link: var(--btcpay-header-color);
+  --btcpay-header-color-link-accent: var(--btcpay-header-color);
   --btcpay-header-color-link-active: var(--btcpay-color-primary-accent);
+
+  --btcpay-nav-color-link: var(--btcpay-color-neutral-600);
+  --btcpay-nav-color-link-accent: var(--btcpay-color-neutral-700);
+  --btcpay-nav-color-link-active: var(--btcpay-color-neutral-900);
 
   --btcpay-wizard-bg: var(--btcpay-color-white);
   --btcpay-wizard-color: var(--btcpay-body-color);
 
   --btcpay-footer-bg: var(--btcpay-brand-dark);
   --btcpay-footer-color: var(--btcpay-color-neutral-400);
+  --btcpay-footer-color-link: var(--btcpay-color-neutral-400);
+  --btcpay-footer-color-link-accent: var(--btcpay-color-neutral-100);
+
+  --btcpay-code-color: var(--btcpay-body-color);
+  --btcpay-code-bg: var(--btcpay-color-neutral-200);
+  --btcpay-pre-color: var(--btcpay-color-white);
+  --btcpay-pre-bg: var(--btcpay-color-neutral-950);
+
+  --btcpay-bg-color-light: var(--btcpay-color-white);
+  --btcpay-bg-color-medium: var(--btcpay-color-neutral-300);
+  --btcpay-border-color-light: var(--btcpay-color-neutral-200);
+  --btcpay-border-color-medium: var(--btcpay-color-neutral-300);
 
   --btcpay-font-size-base: 14px;
   --btcpay-font-family-head: 'Open Sans', 'Helvetica Neue', Arial, sans-serif;

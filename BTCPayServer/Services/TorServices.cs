@@ -122,11 +122,11 @@ namespace BTCPayServer.Services
 
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(_options.Value.TorrcFile))
+            if (string.IsNullOrEmpty(_options.Value.TorrcFile) && _options.Value.TorServices != null)
             {
                 LoadFromConfig();
             }
-            else
+            else if(!string.IsNullOrEmpty(_options.Value.TorrcFile))
             {
                 await Refresh();
                 await base.StartAsync(cancellationToken);

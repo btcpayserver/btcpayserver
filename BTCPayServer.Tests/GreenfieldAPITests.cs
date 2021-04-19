@@ -980,33 +980,33 @@ namespace BTCPayServer.Tests
                  Assert.NotNull(invoicesYesterday);
                  Assert.Empty(invoicesYesterday);
 
-                 //list ExistingOrderId
+                 //list Existing OrderId
                  var invoicesExistingOrderId =
                      await viewOnly.GetInvoices(user.StoreId, orderId: newInvoice.Metadata["orderId"].ToString());
                  Assert.NotNull(invoicesExistingOrderId);
                  Assert.Single(invoicesFiltered);
                  Assert.Equal(newInvoice.Id, invoicesFiltered.First().Id);
 
-                 //list NonExistingOrderId
+                 //list NonExisting OrderId
                  var invoicesNonExistingOrderId =
                      await viewOnly.GetInvoices(user.StoreId, orderId: "NonExistingOrderId");
                  Assert.NotNull(invoicesNonExistingOrderId);
                  Assert.Empty(invoicesNonExistingOrderId);
 
-                 //list ExistingStatus
+                 //list Existing Status
                  var invoicesExistingStatus =
                      await viewOnly.GetInvoices(user.StoreId, status:new []{newInvoice.Status});
                  Assert.NotNull(invoicesExistingStatus);
                  Assert.Single(invoicesExistingStatus);
                  Assert.Equal(newInvoice.Id, invoicesExistingStatus.First().Id);
 
-                 //list NonExistingStatus
+                 //list NonExisting Status
                  var invoicesNonExistingStatus = await viewOnly.GetInvoices(user.StoreId,
                      status: new []{BTCPayServer.Client.Models.InvoiceStatus.Invalid});
                  Assert.NotNull(invoicesNonExistingStatus);
                  Assert.Empty(invoicesNonExistingStatus);
-
-
+                 
+                 
                 //get
                 var invoice = await viewOnly.GetInvoice(user.StoreId, newInvoice.Id);
                 Assert.Equal(newInvoice.Metadata, invoice.Metadata);

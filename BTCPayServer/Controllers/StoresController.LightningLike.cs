@@ -102,7 +102,7 @@ namespace BTCPayServer.Controllers
                     store.SetStoreBlob(storeBlob);
                     store.SetSupportedPaymentMethod(paymentMethodId, paymentMethod);
                     await _Repo.UpdateStore(store);
-                    TempData[WellKnownTempData.SuccessMessage] = $"{network.CryptoCode} Lightning node modified.";
+                    TempData[WellKnownTempData.SuccessMessage] = $"{network.CryptoCode} Lightning node updated.";
                     return RedirectToAction(nameof(UpdateStore), new { storeId });
 
                 case "test":
@@ -115,7 +115,7 @@ namespace BTCPayServer.Controllers
                             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
                             await handler.TestConnection(info, cts.Token);
                         }
-                        TempData[WellKnownTempData.SuccessMessage] = $"Connection to the Lightning node succeeded. Your node address: {info}";
+                        TempData[WellKnownTempData.SuccessMessage] = $"Connection to the Lightning node successful. Your node address: {info}";
                     }
                     catch (Exception ex)
                     {

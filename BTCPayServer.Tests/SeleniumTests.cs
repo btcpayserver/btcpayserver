@@ -366,7 +366,7 @@ namespace BTCPayServer.Tests
                 s.AddLightningNode();
                 s.Driver.AssertNoError();
                 var successAlert = s.FindAlertMessage();
-                Assert.Contains("BTC Lightning node modified.", successAlert.Text);
+                Assert.Contains("BTC Lightning node updated.", successAlert.Text);
                 Assert.False(s.Driver.PageSource.Contains(offchainHint), "Lightning hint should be dismissed at this point");
 
                 var storeUrl = s.Driver.Url;

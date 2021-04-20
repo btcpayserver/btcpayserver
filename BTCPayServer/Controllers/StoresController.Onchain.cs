@@ -377,8 +377,7 @@ namespace BTCPayServer.Controllers
                 return checkResult;
             }
 
-            TempData[WellKnownTempData.SuccessMessage] =
-                $"Derivation settings for {network.CryptoCode} have been modified.";
+            TempData[WellKnownTempData.SuccessMessage] = $"Derivation settings for {network.CryptoCode} have been updated.";
 
             return RedirectToAction(nameof(UpdateStore), new {storeId});
         }

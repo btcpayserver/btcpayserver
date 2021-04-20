@@ -157,9 +157,7 @@ namespace BTCPayServer.Controllers
             var configChanged = oldConfig != vm.Config;
             PaymentMethodId paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
             var storeBlob = store.GetStoreBlob();
-            var wasExcluded = storeBlob.GetExcludedPaymentMethods().Match(paymentMethodId);
             var willBeExcluded = !vm.Enabled;
-            var excludedChanged = willBeExcluded != wasExcluded;
 
             var showAddress = // Show addresses if:
                 // - If the user is testing the hint address in confirmation screen
@@ -188,17 +186,7 @@ namespace BTCPayServer.Controllers
                 await _Repo.UpdateStore(store);
                 _EventAggregator.Publish(new WalletChangedEvent {WalletId = new WalletId(vm.StoreId, vm.CryptoCode)});
 
-                if (excludedChanged)
-                {
-                    var label = willBeExcluded ? "disabled" : "enabled";
-                    TempData[WellKnownTempData.SuccessMessage] =
-                        $"On-Chain payments for {network.CryptoCode} have been {label}.";
-                }
-                else
-                {
-                    TempData[WellKnownTempData.SuccessMessage] =
-                        $"Derivation settings for {network.CryptoCode} have been modified.";
-                }
+                TempData[WellKnownTempData.SuccessMessage] = $"Derivation settings for {network.CryptoCode} have been updated.";
 
                 // This is success case when derivation scheme is added to the store
                 return RedirectToAction(nameof(UpdateStore), new {storeId = vm.StoreId});
@@ -389,8 +377,7 @@ namespace BTCPayServer.Controllers
                 return checkResult;
             }
 
-            TempData[WellKnownTempData.SuccessMessage] =
-                $"Derivation settings for {network.CryptoCode} have been modified.";
+            TempData[WellKnownTempData.SuccessMessage] = $"Derivation settings for {network.CryptoCode} have been updated.";
 
             return RedirectToAction(nameof(UpdateStore), new {storeId});
         }
@@ -504,6 +491,40 @@ namespace BTCPayServer.Controllers
                 DescriptionHtml = true,
                 Action = "Remove"
             });
+        }
+
+        [HttpPost("{storeId}/onchain/{cryptoCode}/status")]
+        public async Task<IActionResult> SetWalletEnabled(string storeId, string cryptoCode, bool enabled)
+        {
+            var checkResult = IsAvailable(cryptoCode, out var store, out var network);
+            if (checkResult != null)
+            {
+                return checkResult;
+            }
+
+            var derivation = GetExistingDerivationStrategy(cryptoCode, store);
+            if (derivation == null)
+            {
+                return NotFound();
+            }
+
+            var wallet = _WalletProvider.GetWallet(network);
+            if (wallet == null)
+            {
+                return NotFound();
+            }
+
+            var paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
+            var storeBlob = store.GetStoreBlob();
+            storeBlob.SetExcluded(paymentMethodId, !enabled);
+            store.SetStoreBlob(storeBlob);
+            await _Repo.UpdateStore(store);
+            _EventAggregator.Publish(new WalletChangedEvent {WalletId = new WalletId(storeId, cryptoCode)});
+
+            TempData[WellKnownTempData.SuccessMessage] =
+                $"{network.CryptoCode} on-chain payments are now {(enabled ? "enabled" : "disabled")} for this store.";
+
+            return RedirectToAction(nameof(UpdateStore), new {storeId});
         }
 
         [HttpPost("{storeId}/onchain/{cryptoCode}/delete")]

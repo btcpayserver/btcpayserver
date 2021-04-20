@@ -544,11 +544,12 @@ namespace BTCPayServer.Controllers
                         break;
                     case LightningPaymentType _:
                         var lightning = lightningByCryptoCode.TryGet(paymentMethodId.CryptoCode);
-                        vm.LightningNodes.Add(new StoreViewModel.LightningNode()
+                        var isEnabled = !excludeFilters.Match(paymentMethodId) && lightning != null;
+                        vm.LightningNodes.Add(new StoreViewModel.LightningNode
                         {
                             CryptoCode = paymentMethodId.CryptoCode,
                             Address = lightning?.GetDisplayableConnectionString(),
-                            Enabled = !excludeFilters.Match(paymentMethodId) && lightning != null
+                            Enabled = isEnabled
                         });
                         break;
                 }

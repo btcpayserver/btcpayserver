@@ -219,13 +219,18 @@ namespace BTCPayServer.Tests
                 Driver.FindElement(By.Id("ConnectionString")).SendKeys(connectionString);
             }
 
-            var enabled = Driver.FindElement(By.Id("Enabled"));
-            if (!enabled.Selected) enabled.Click();
-
             Driver.FindElement(By.Id("test")).Click();
-            Assert.Contains("Connection to the Lightning node succeeded.", FindAlertMessage().Text);
+            Assert.Contains("Connection to the Lightning node successful.", FindAlertMessage().Text);
 
             Driver.FindElement(By.Id("save")).Click();
+            Assert.Contains($"{cryptoCode} Lightning node updated.", FindAlertMessage().Text);
+
+            var enabled = Driver.FindElement(By.Id($"{cryptoCode}LightningEnabled"));
+            if (enabled.Text == "Enable")
+            {
+                enabled.Click();
+                Assert.Contains($"{cryptoCode} Lightning payments are now enabled for this store.", FindAlertMessage().Text);
+            }
         }
 
         public void ClickOnAllSideMenus()

@@ -50,13 +50,14 @@ namespace BTCPayServer.Tests
                 tester.ActivateLightning();
                 await tester.StartAsync();
                 var user = tester.NewAccount();
-                user.GrantAccess(true);
-                user.RegisterDerivationScheme("BTC");
+                var cryptoCode = "BTC";
+                await user.GrantAccessAsync(true);
+                user.RegisterDerivationScheme(cryptoCode);
                 user.RegisterDerivationScheme("LTC");
-                user.RegisterLightningNode("BTC", LightningConnectionType.CLightning);
-                var btcNetwork = tester.PayTester.Networks.GetNetwork<BTCPayNetwork>("BTC");
-                var invoice = user.BitPay.CreateInvoice(
-                    new Invoice()
+                user.RegisterLightningNode(cryptoCode, LightningConnectionType.CLightning);
+                var btcNetwork = tester.PayTester.Networks.GetNetwork<BTCPayNetwork>(cryptoCode);
+                var invoice = await user.BitPay.CreateInvoiceAsync(
+                    new Invoice
                     {
                         Price = 1.5m,
                         Currency = "USD",
@@ -69,36 +70,43 @@ namespace BTCPayServer.Tests
                 Assert.Equal(3, invoice.CryptoInfo.Length);
 
                 var controller = user.GetController<StoresController>();
-                var lightningVm = (LightningNodeViewModel)Assert.IsType<ViewResult>(controller.AddLightningNode(user.StoreId, "BTC")).Model;
+                var lightningVm = (LightningNodeViewModel)Assert.IsType<ViewResult>(controller.AddLightningNode(user.StoreId, cryptoCode)).Model;
                 Assert.True(lightningVm.Enabled);
-                lightningVm.Enabled = false;
-                controller.AddLightningNode(user.StoreId, lightningVm, "save", "BTC").GetAwaiter().GetResult();
-                lightningVm = (LightningNodeViewModel)Assert.IsType<ViewResult>(controller.AddLightningNode(user.StoreId, "BTC")).Model;
-                Assert.False(lightningVm.Enabled);
+                var response = await controller.SetLightningNodeEnabled(user.StoreId, cryptoCode, false);
+                Assert.IsType<RedirectToActionResult>(response);
+
+                // Get enabled state from overview action
+                StoreViewModel storeModel;
+                response = controller.UpdateStore();
+                storeModel = (StoreViewModel)Assert.IsType<ViewResult>(response).Model;
+                var lnNode = storeModel.LightningNodes.Find(node => node.CryptoCode == cryptoCode);
+                Assert.NotNull(lnNode);
+                Assert.False(lnNode.Enabled);
 
                 WalletSetupViewModel setupVm;
                 var storeId = user.StoreId;
-                var cryptoCode = "BTC";
-                var response = await controller.GenerateWallet(storeId, cryptoCode, WalletSetupMethod.GenerateOptions, new GenerateWalletRequest());
+                response = await controller.GenerateWallet(storeId, cryptoCode, WalletSetupMethod.GenerateOptions, new GenerateWalletRequest());
                 Assert.IsType<ViewResult>(response);
 
-                // Get setup view model from modify action
-                response = await controller.ModifyWallet(new WalletSetupViewModel { StoreId = storeId, CryptoCode = cryptoCode });
-                setupVm = (WalletSetupViewModel)Assert.IsType<ViewResult>(response).Model;
-                Assert.True(setupVm.Enabled);
+                // Get enabled state from overview action
+                response = controller.UpdateStore();
+                storeModel = (StoreViewModel)Assert.IsType<ViewResult>(response).Model;
+                var derivationScheme = storeModel.DerivationSchemes.Find(scheme => scheme.Crypto == cryptoCode);
+                Assert.NotNull(derivationScheme);
+                Assert.True(derivationScheme.Enabled);
 
-                // Only Enabling/Disabling the payment method must redirect to store page
-                setupVm.Enabled = false;
-                response = controller.UpdateWallet(setupVm).GetAwaiter().GetResult();
+                // Disable wallet
+                response = controller.SetWalletEnabled(storeId, cryptoCode, false).GetAwaiter().GetResult();
                 Assert.IsType<RedirectToActionResult>(response);
+                response = controller.UpdateStore();
+                storeModel = (StoreViewModel)Assert.IsType<ViewResult>(response).Model;
+                derivationScheme = storeModel.DerivationSchemes.Find(scheme => scheme.Crypto == cryptoCode);
+                Assert.NotNull(derivationScheme);
+                Assert.False(derivationScheme.Enabled);
 
-                response = await controller.ModifyWallet(new WalletSetupViewModel { StoreId = storeId, CryptoCode = cryptoCode });
-                setupVm = (WalletSetupViewModel)Assert.IsType<ViewResult>(response).Model;
-                Assert.False(setupVm.Enabled);
+                var oldScheme = derivationScheme.Value;
 
-                var oldScheme = setupVm.DerivationScheme;
-
-                invoice = user.BitPay.CreateInvoice(
+                invoice = await user.BitPay.CreateInvoiceAsync(
                     new Invoice
                     {
                         Price = 1.5m,
@@ -113,7 +121,7 @@ namespace BTCPayServer.Tests
                 Assert.Equal("LTC", invoice.CryptoInfo[0].CryptoCode);
 
                 // Removing the derivation scheme, should redirect to store page
-                response = controller.ConfirmDeleteWallet(user.StoreId, "BTC").GetAwaiter().GetResult();
+                response = controller.ConfirmDeleteWallet(user.StoreId, cryptoCode).GetAwaiter().GetResult();
                 Assert.IsType<RedirectToActionResult>(response);
 
                 // Setting it again should show the confirmation page
@@ -172,8 +180,8 @@ namespace BTCPayServer.Tests
                 Assert.Equal(expected.ToJson(), onchainBTC.ToJson());
 
                 // Let's check that the root hdkey and account key path are taken into account when making a PSBT
-                invoice = user.BitPay.CreateInvoice(
-                    new Invoice()
+                invoice = await user.BitPay.CreateInvoiceAsync(
+                    new Invoice
                     {
                         Price = 1.5m,
                         Currency = "USD",
@@ -184,7 +192,7 @@ namespace BTCPayServer.Tests
                     }, Facade.Merchant);
 
                 tester.ExplorerNode.Generate(1);
-                var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo.First(c => c.CryptoCode == "BTC").Address,
+                var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo.First(c => c.CryptoCode == cryptoCode).Address,
                     tester.ExplorerNode.Network);
                 tester.ExplorerNode.SendToAddress(invoiceAddress, Money.Coins(1m));
                 TestUtils.Eventually(() =>
@@ -196,9 +204,9 @@ namespace BTCPayServer.Tests
                 var psbt = wallet.CreatePSBT(btcNetwork, onchainBTC,
                     new WalletSendModel()
                     {
-                        Outputs = new List<WalletSendModel.TransactionOutput>()
+                        Outputs = new List<WalletSendModel.TransactionOutput>
                         {
-                            new WalletSendModel.TransactionOutput()
+                            new WalletSendModel.TransactionOutput
                             {
                                 Amount = 0.5m,
                                 DestinationAddress = new Key().PubKey.GetAddress(ScriptPubKeyType.Legacy, btcNetwork.NBitcoinNetwork)
@@ -304,7 +312,7 @@ namespace BTCPayServer.Tests
 
                 var controller = tester.PayTester.GetController<InvoiceController>(null);
                 var checkout =
-                    (Models.InvoicingModels.PaymentModel)((JsonResult)controller.GetStatus(invoice.Id, null)
+                    (Models.InvoicingModels.PaymentModel)((JsonResult)controller.GetStatus(invoice.Id)
                         .GetAwaiter().GetResult()).Value;
                 Assert.Single(checkout.AvailableCryptos);
                 Assert.Equal("LTC", checkout.CryptoCode);
@@ -321,7 +329,7 @@ namespace BTCPayServer.Tests
                 {
                     invoice = user.BitPay.GetInvoice(invoice.Id);
                     Assert.Equal("paid", invoice.Status);
-                    checkout = (Models.InvoicingModels.PaymentModel)((JsonResult)controller.GetStatus(invoice.Id, null)
+                    checkout = (Models.InvoicingModels.PaymentModel)((JsonResult)controller.GetStatus(invoice.Id)
                         .GetAwaiter().GetResult()).Value;
                     Assert.Equal("paid", checkout.Status);
                 });

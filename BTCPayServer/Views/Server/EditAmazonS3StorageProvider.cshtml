@@ -1,4 +1,4 @@
-﻿@model BTCPayServer.Storage.Services.Providers.AmazonS3Storage.Configuration.AmazonS3StorageConfiguration
+@model BTCPayServer.Storage.Services.Providers.AmazonS3Storage.Configuration.AmazonS3StorageConfiguration
 @{
     ViewData.SetActivePageAndTitle(ServerNavPages.Services, "Amazon S3 Storage");
 }
@@ -7,10 +7,6 @@
 
 <div class="row">
     <div class="col-lg-6">
-        @if (!ViewContext.ModelState.IsValid)
-        {
-            <div asp-validation-summary="All" class="text-danger"></div>
-        }
         <form method="post">
             <div class="form-group">
                 <label asp-for="ContainerName"></label>

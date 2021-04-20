@@ -83,13 +83,20 @@ namespace BTCPayServer.Plugins
             foreach (var dir in orderedDirs)
             {
                 var pluginName = Path.GetFileName(dir);
+                var pluginFilePath = Path.Combine(dir, pluginName + ".dll");
                 if (disabledPlugins.Contains(pluginName))
                 {
                     continue;
                 }
-                
+                if (!File.Exists(pluginFilePath))
+                {
+                    _logger.LogError(
+                        $"Error when loading plugin {pluginName} - {pluginFilePath} does not exist");
+                    continue;
+                }
+
                 var plugin = PluginLoader.CreateFromAssemblyFile(
-                    Path.Combine(dir, pluginName + ".dll"), // create a plugin from for the .dll file
+                    pluginFilePath, // create a plugin from for the .dll file
                     config =>
                     {
                         

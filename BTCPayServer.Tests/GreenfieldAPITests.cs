@@ -687,7 +687,7 @@ namespace BTCPayServer.Tests
                 Assert.NotNull(newDelivery);
                 Assert.Equal(404, newDelivery.HttpCode);
                 var req = await clientProfile.GetWebhookDeliveryRequest(user.StoreId, hook.Id, newDeliveryId);
-                Assert.Equal(delivery.Id, req.OrignalDeliveryId);
+                Assert.Equal(delivery.Id, req.OriginalDeliveryId);
                 Assert.True(req.IsRedelivery);
                 Assert.Equal(WebhookDeliveryStatus.HttpError, newDelivery.Status);
             });

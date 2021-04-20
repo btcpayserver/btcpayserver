@@ -19,7 +19,31 @@ namespace BTCPayServer.Client.Models
         }
         public string DeliveryId { get; set; }
         public string WebhookId { get; set; }
-        public string OrignalDeliveryId { get; set; }
+        string _OriginalDeliveryId;
+        public string OriginalDeliveryId
+        {
+            get
+            {
+                if (_OriginalDeliveryId is null)
+                {
+                    // Due to a typo in old version, we serialized `orignalDeliveryId` rather than `orignalDeliveryId`
+                    // We silently fix that here.
+                    // Note we can remove this code later on, as old webhook event are unlikely to be useful to anyone,
+                    // and having a null orignalDeliveryId is not end of the world
+                    if (AdditionalData != null &&
+                        AdditionalData.TryGetValue("orignalDeliveryId", out var tok))
+                    {
+                        _OriginalDeliveryId = tok.Value<string>();
+                        AdditionalData.Remove("orignalDeliveryId");
+                    }
+                }
+                return _OriginalDeliveryId;
+            }
+            set
+            {
+                _OriginalDeliveryId = value;
+            }
+        }
         public bool IsRedelivery { get; set; }
         [JsonConverter(typeof(StringEnumConverter))]
         public WebhookEventType Type { get; set; }

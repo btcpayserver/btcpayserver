@@ -3175,6 +3175,18 @@ namespace BTCPayServer.Tests
             }
         }
 
+        [Trait("Fast", "Fast")]
+        [Fact]
+        public void CanFixupWebhookEventPropertyName()
+        {
+            string legacy = "{\"orignalDeliveryId\":\"blahblah\"}";
+            var obj = JsonConvert.DeserializeObject<WebhookEvent>(legacy, WebhookEvent.DefaultSerializerSettings);
+            Assert.Equal("blahblah", obj.OriginalDeliveryId);
+            var serialized = JsonConvert.SerializeObject(obj, WebhookEvent.DefaultSerializerSettings);
+            Assert.DoesNotContain("orignalDeliveryId", serialized);
+            Assert.Contains("originalDeliveryId", serialized);
+        }
+
         [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Fast", "Fast")]
         public async Task CanCreateSqlitedb()

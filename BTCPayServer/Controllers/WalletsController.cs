@@ -576,7 +576,8 @@ namespace BTCPayServer.Controllers
                         Amount = coin.Value.GetValue(network),
                         Comment = info?.Comment,
                         Labels = info == null ? null : _labelFactory.ColorizeTransactionLabels(walletBlobAsync, info, Request),
-                        Link = string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink, coin.OutPoint.Hash.ToString())
+                        Link = string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink, coin.OutPoint.Hash.ToString()),
+                        Confirmations = coin.Confirmations
                     };
                 }).ToArray();
             }

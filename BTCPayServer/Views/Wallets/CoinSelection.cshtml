@@ -42,6 +42,11 @@
                     </a>
                 </label>
                 <div>
+                    
+                    <span v-bind:class="{' badge-success' : item.confirmations > 0, ' badge-warning' : item.confirmations <= 0}" data-toggle="tooltip" v-tooltip="item.confirmations +' confirmations'" class="badge ">
+                        {{item.confirmations}}<span class=" ml-1 fa fa-cube"></span>
+                    </span>
+                    
                     <span v-if="item.comment" data-toggle="tooltip" v-tooltip="item.comment" class="badge badge-info badge-pill" style="font-style: italic">i</span>
                     <span
                         v-if="item.labels"
@@ -78,10 +83,16 @@
                 </li>
             </ul>
 
-            <a href="#" v-on:click="showSelectedOnly = !showSelectedOnly" class="btn btn-secondary" v-bind:class="{'disabled' : selectedInputs.length === 0}">
-                <template v-if="showSelectedOnly">Show all</template>
-                <template v-else>Show selected only</template>
-            </a>
+            <div class="btn-group  btn-group-sm">
+                <a href="#" v-on:click="showSelectedOnly = !showSelectedOnly" class="btn btn-sm btn-secondary" v-bind:class="{'disabled' : selectedInputs.length === 0}">
+                    <template v-if="showSelectedOnly">Show all</template>
+                    <template v-else>Show selected only</template>
+                </a>
+                <a href="#" v-show="!showSelectedOnly" v-on:click="showUnconfirmedOnly = !showUnconfirmedOnly" class="btn  btn-sm  btn-secondary">
+                    <template v-if="showUnconfirmedOnly">Show unconfirmed coins</template>
+                    <template v-else>Hide unconfirmed coins</template>
+                </a>
+            </div>
         </li>
     </ul>
 </div>
@@ -109,7 +120,8 @@ $(function() {
             selectedInputs: $("#SelectedInputs").val(),
             page: 0,
             pageSize: 10,
-            showSelectedOnly: false
+            showSelectedOnly: false,
+            showUnconfirmedOnly: false
         },
         watch: {
             filter: function() {
@@ -121,11 +133,14 @@ $(function() {
             },
             selectedInputs: function() {
                 this.handle();
+            },
+            showUnconfirmedOnly: function() {
+                this.handle();
             }
         },
         computed: {
             currentItems: function() {
-                return this.showSelectedOnly ? this.selectedItems : this.items;
+                return this.showSelectedOnly ? this.selectedItems : this.items.filter(i=> (!this.showUnconfirmedOnly || i.confirmations ));
             },
             pageStart: function() {
                 return this.page == 0 ? 0 : this.page * this.pageSize;
@@ -139,7 +154,7 @@ $(function() {
             },
             filteredItems: function() {
                 var result = [];
-                if (!this.filter) {
+                if (!this.filter && !this.showUnconfirmedOnly) {
                     var self = this;
                     result = this.currentItems.map(function(currentItem) {
                         return {...currentItem, selected: self.selectedInputs.indexOf(currentItem.outpoint) != -1
@@ -149,12 +164,13 @@ $(function() {
                     var f = this.filter.toLowerCase();
                     for (var i = 0; i < this.currentItems.length; i++) {
                         var currentItem = this.currentItems[i];
-                        if (currentItem.outpoint.indexOf(f) != -1 ||
-                            currentItem.amount.toString().indexOf(f) != -1 ||
-                            (currentItem.comment && currentItem.comment.toLowerCase().indexOf(f) != -1) ||
-                            (currentItem.labels && currentItem.labels.filter(function(l) {
-                                return l.text.toLowerCase().indexOf(f) != -1 || l.tooltip.toLowerCase().indexOf(f) != -1
-                            }).length > 0)) {
+                        if 
+                            (currentItem.outpoint.indexOf(f) != -1 ||
+                                                         currentItem.amount.toString().indexOf(f) != -1 ||
+                                                         (currentItem.comment && currentItem.comment.toLowerCase().indexOf(f) != -1) ||
+                                                         (currentItem.labels && currentItem.labels.filter(function(l) {
+                                                             return l.text.toLowerCase().indexOf(f) != -1 || l.tooltip.toLowerCase().indexOf(f) != -1
+                                                         }).length > 0)) {
                             result.push({...currentItem, selected: this.selectedInputs.indexOf(currentItem.outpoint) != -1
                             });
                         }

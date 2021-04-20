@@ -239,6 +239,7 @@ namespace BTCPayServer.Controllers.GreenField
                             coin.OutPoint.Hash.ToString()),
                         Timestamp = coin.Timestamp,
                         KeyPath = coin.KeyPath,
+                        Confirmations = coin.Confirmations,
                         Address = network.NBXplorerNetwork.CreateAddress(derivationScheme.AccountDerivation, coin.KeyPath,  coin.ScriptPubKey).ToString()
                     };
                 }).ToList()

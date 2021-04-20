@@ -212,8 +212,6 @@ namespace BTCPayServer.Tests
             {
                 Assert.True(Driver.FindElement(By.Id("LightningNodeType-Internal")).Enabled, "Usage of the internal Lightning node is disabled.");
                 Driver.FindElement(By.CssSelector("label[for=\"LightningNodeType-Internal\"]")).Click();
-
-                Driver.FindElement(By.Id("saveInternal")).Click();
             }
             else
             {
@@ -222,10 +220,9 @@ namespace BTCPayServer.Tests
 
                 Driver.FindElement(By.Id("test")).Click();
                 Assert.Contains("Connection to the Lightning node successful.", FindAlertMessage().Text);
-
-                Driver.FindElement(By.Id("saveCustom")).Click();
             }
 
+            Driver.FindElement(By.Id("save")).Click();
             Assert.Contains($"{cryptoCode} Lightning node updated.", FindAlertMessage().Text);
 
             var enabled = Driver.FindElement(By.Id($"{cryptoCode}LightningEnabled"));

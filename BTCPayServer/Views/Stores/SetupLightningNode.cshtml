@@ -30,6 +30,7 @@
         margin-right: 2rem;
         color: var(--btcpay-color-warning);
     }
+    #save { min-width: 7rem; }
     #InternalSetup, #CustomSetup, #LightningNodeType-Internal, #LightningNodeType-Custom { display: none; }
     #LightningNodeType-Internal:checked + * + * + * + #InternalSetup,
     #LightningNodeType-Custom:checked + * + *+ #CustomSetup { display: block; }
@@ -80,7 +81,6 @@
         @if (Model.CanUseInternalNode)
         {
             <p class="my-4">That's it, no need to configure anything else.</p>
-            <button id="saveInternal" name="command" type="submit" value="save" class="btn btn-primary mr-2">Use internal node</button>
         }
         else
         {
@@ -152,7 +152,9 @@
                 </div>
             </li>
         </ul>
-        <button id="saveCustom" name="command" type="submit" value="save" class="btn btn-primary mr-2">Use custom node</button>
+    </div>
+    <div class="text-left">
+        <button id="save" name="command" type="submit" value="save" class="btn btn-primary mr-2">Save</button>
     </div>
 </form>
 

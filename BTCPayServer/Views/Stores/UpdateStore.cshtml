@@ -112,15 +112,15 @@
                                 @if (isSetUp)
                                 {
                                     <span class="smMaxWidth text-truncate text-secondary mr-3">@scheme.Address</span>
+                                    <a class="text-secondary"
+                                       asp-controller="PublicLightningNodeInfo"
+                                       asp-action="ShowLightningNodeInfo"
+                                       asp-route-cryptoCode="@scheme.CryptoCode"
+                                       asp-route-storeId="@Model.Id"
+                                       target="_blank">
+                                        Public Node Info
+                                    </a>
                                 }
-                                <a class="text-secondary"
-                                   asp-controller="PublicLightningNodeInfo"
-                                   asp-action="ShowLightningNodeInfo"
-                                   asp-route-cryptoCode="@scheme.CryptoCode"
-                                   asp-route-storeId="@Model.Id"
-                                   target="_blank">
-                                    Public Node Info
-                                </a>
                             </span>
                             <span class="d-flex align-items-center fw-semibold">
                                 <form method="post"

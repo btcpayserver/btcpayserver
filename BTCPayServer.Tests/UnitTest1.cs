@@ -1006,7 +1006,7 @@ namespace BTCPayServer.Tests
                     }, "save", "BTC").GetAwaiter().GetResult());
 
                 // Make sure old connection string format does not work
-                Assert.IsType<ViewResult>(storeController.SetupLightningNode(user.StoreId,
+                Assert.IsType<RedirectToActionResult>(storeController.SetupLightningNode(user.StoreId,
                     new LightningNodeViewModel { ConnectionString = tester.MerchantCharge.Client.Uri.AbsoluteUri },
                     "save", "BTC").GetAwaiter().GetResult());
 

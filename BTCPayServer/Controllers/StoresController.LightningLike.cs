@@ -144,19 +144,12 @@ namespace BTCPayServer.Controllers
             if (lightning == null)
                 return NotFound();
 
-            if (!User.IsInRole(Roles.ServerAdmin))
-            {
-                TempData[WellKnownTempData.ErrorMessage] = $"Only the server admin can {(enabled ? "enable" : "disable")} the lightning node";
-            }
-            else
-            {
-                var paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.LightningLike);
-                var storeBlob = store.GetStoreBlob();
-                storeBlob.SetExcluded(paymentMethodId, !enabled);
-                store.SetStoreBlob(storeBlob);
-                await _Repo.UpdateStore(store);
-                TempData[WellKnownTempData.SuccessMessage] = $"{network.CryptoCode} Lightning payments are now {(enabled ? "enabled" : "disabled")} for this store.";
-            }
+            var paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.LightningLike);
+            var storeBlob = store.GetStoreBlob();
+            storeBlob.SetExcluded(paymentMethodId, !enabled);
+            store.SetStoreBlob(storeBlob);
+            await _Repo.UpdateStore(store);
+            TempData[WellKnownTempData.SuccessMessage] = $"{network.CryptoCode} Lightning payments are now {(enabled ? "enabled" : "disabled")} for this store.";
 
             return RedirectToAction(nameof(UpdateStore), new { storeId });
         }

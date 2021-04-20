@@ -19,7 +19,7 @@
             @for (int x = 0; x < Model.Items.Length; x++)
             {
                 var item = Model.Items[x];
-                var buttonText = (string.IsNullOrEmpty(item.BuyButtonText) ? 
+                var buttonText = (string.IsNullOrEmpty(item.BuyButtonText) ?
                     item.Custom?
                     Model.CustomButtonText :
                     Model.ButtonText
@@ -31,33 +31,15 @@
                     {
                         <img class="card-img-top" src="@item.Image" alt="Card image cap" asp-append-version="true">
                     }
-                    <div class="card-body pb-0">
-                        <h5 class="card-title">@item.Title</h5>
-                        @if (!String.IsNullOrWhiteSpace(item.Description))
-                        {
-                            <p class="card-text">@Safe.Raw(item.Description)</p>
-                        }
-                    </div>
+                    @{CardBody(item.Title, item.Description);}
                     <div class="card-footer bg-transparent border-0">
                         @if (!item.Inventory.HasValue || item.Inventory.Value > 0)
                         {
-                            <div class="w-100">
-                                @if (item.Custom)
+                            @if (item.Custom)
                                 {
                                     <form method="post" asp-controller="AppsPublic" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" data-buy>
                                         <input type="hidden" name="choicekey" value="@item.Id"/>
-                                        <div class="input-group">
-                                            <div class="input-group-prepend">
-                                                <span class="input-group-text">@Model.CurrencySymbol</span>
-                                            </div>
-                                            <input class="form-control" type="number" min="@item.Price.Value" step="@Model.Step" name="amount"
-                                                   value="@item.Price.Value" placeholder="Amount" style="flex: 2 0 80px;">
-                                            <div class="input-group-append flex-fill">
-                                                <button class="btn btn-primary text-nowrap flex-fill" type="submit">
-                                                    @(item.BuyButtonText ?? Model.CustomButtonText)
-                                                </button>
-                                            </div>
-                                        </div>
+                                        @{PayFormInputContent(item.BuyButtonText ?? Model.CustomButtonText, item.Price.Value, item.Price.Value);}
                                     </form>
                                 }
                                 else
@@ -68,7 +50,6 @@
                                         </button>
                                     </form>
                                 }
-                            </div>
                         }
                         @if (item.Inventory.HasValue)
                         {
@@ -83,7 +64,8 @@
                                     <span>Sold out</span>
                                 }
                             </div>
-                        }else if (anyInventoryItems)
+                        }
+                        else if (anyInventoryItems)
                         {
                             <div class="w-100 pt-2">&nbsp;</div>
                         }
@@ -93,22 +75,10 @@
             @if (Model.ShowCustomAmount)
             {
                 <div class="card my-2">
-                    <div class="card-body my-auto pb-0">
-                        <h5 class="card-title">Custom Amount</h5>
-                        <p class="card-text">Create invoice to pay custom amount</p>
-
-                    </div>
+                    @{CardBody("Custom Amount", "Create invoice to pay custom amount");}
                     <div class="card-footer bg-transparent border-0">
                         <form method="post" asp-controller="AppsPublic" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" data-buy>
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">@Model.CurrencySymbol</span>
-                                </div>
-                                <input class="form-control" type="number" min="0" step="@Model.Step" name="amount" placeholder="Amount">
-                                <div class="input-group-append">
-                                    <button class="btn btn-primary" type="submit">@Model.CustomButtonText</button>
-                                </div>
-                            </div>
+                            @{PayFormInputContent(Model.CustomButtonText);}
                         </form>
                         @if (anyInventoryItems)
                         {
@@ -120,3 +90,31 @@
         </div>
     </div>
 </div>
+
+@functions {
+    private void PayFormInputContent(string buttonText, decimal? minPriceValue = null, decimal? priceValue = null)
+    {
+        <div class="input-group">
+            <div class="input-group-prepend">
+                <span class="input-group-text">@Model.CurrencySymbol</span>
+            </div>
+            <input class="form-control" type="number" min="@(minPriceValue ?? 0)" step="@Model.Step" name="amount" placeholder="Amount" value="@priceValue">
+            <div class="input-group-append">
+               <button class="btn btn-primary text-nowrap" type="submit">
+                    @buttonText
+                </button>
+            </div>
+        </div>
+    }
+
+    private void CardBody(string title, string description)
+    {
+        <div class="card-body my-auto pb-0">
+            <h5 class="card-title">@title</h5>
+            @if (!String.IsNullOrWhiteSpace(description))
+            {
+                <p class="card-text">@Safe.Raw(description)</p>
+            }
+        </div>
+    }
+}

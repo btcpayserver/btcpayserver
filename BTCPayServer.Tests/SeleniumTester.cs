@@ -220,7 +220,7 @@ namespace BTCPayServer.Tests
             }
 
             Driver.FindElement(By.Id("test")).Click();
-            Assert.Contains("Connection to the Lightning node succeeded.", FindAlertMessage().Text);
+            Assert.Contains("Connection to the Lightning node successful.", FindAlertMessage().Text);
 
             Driver.FindElement(By.Id("save")).Click();
             Assert.Contains($"{cryptoCode} Lightning node modified.", FindAlertMessage().Text);

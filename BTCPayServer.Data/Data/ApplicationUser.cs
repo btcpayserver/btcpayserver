@@ -16,5 +16,6 @@ namespace BTCPayServer.Data
 
         public List<NotificationData> Notifications { get; set; }
         public List<UserStore> UserStores { get; set; }
+        public List<Fido2Credential> Fido2Credentials { get; set; }
     }
 }

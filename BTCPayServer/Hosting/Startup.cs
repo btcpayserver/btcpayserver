@@ -1,8 +1,10 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
+using BTCPayServer.Fido2;
 using BTCPayServer.Filters;
 using BTCPayServer.Logging;
 using BTCPayServer.PaymentRequest;
@@ -12,9 +14,11 @@ using BTCPayServer.Services.Apps;
 using BTCPayServer.Storage;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Fido2NetLib;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -78,6 +82,29 @@ namespace BTCPayServer.Hosting
             services.AddProviderStorage();
             services.AddSession();
             services.AddSignalR();
+            services.AddFido2(options =>
+                {
+                    options.ServerName = "BTCPay Server";
+                })
+                .AddCachedMetadataService(config =>
+                {
+                    //They'll be used in a "first match wins" way in the order registered
+                    config.AddStaticMetadataRepository();
+                });
+            var descriptor =services.Single(descriptor => descriptor.ServiceType == typeof(Fido2Configuration));
+            services.Remove(descriptor);
+            services.AddScoped(provider =>
+            {
+                var httpContext = provider.GetService<IHttpContextAccessor>();
+                return new Fido2Configuration()
+                {
+                    ServerName = "BTCPay Server",
+                    Origin = $"{httpContext.HttpContext.Request.Scheme}://{httpContext.HttpContext.Request.Host}",
+                    ServerDomain = httpContext.HttpContext.Request.Host.Host
+                };
+            });
+            services.AddScoped<Fido2Service>();
+            
             var mvcBuilder= services.AddMvc(o =>
             {
                 o.Filters.Add(new XFrameOptionsAttribute("DENY"));

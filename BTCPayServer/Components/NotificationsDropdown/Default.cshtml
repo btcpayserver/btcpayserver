@@ -3,17 +3,17 @@
 @inject CssThemeManager CssThemeManager
 @using BTCPayServer.HostedServices
 @using BTCPayServer.Views.Notifications
-@using Microsoft.AspNetCore.Http.Extensions
 @model BTCPayServer.Components.NotificationsDropdown.NotificationSummaryViewModel
 @addTagHelper *, BundlerMinifier.TagHelpers
 
 @if (Model.UnseenCount > 0)
 {
     <li class="nav-item dropdown" id="notifications-nav-item">
-        <a class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(NotificationsNavPages))" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" id="Notifications">
-            <span class="d-lg-none d-sm-block">Notifications</span><i class="fa fa-bell d-lg-inline-block d-none"></i>
+        <a class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(NotificationsNavPages))" href="#" id="navbarDropdown" role="button" data-toggle="dropdown">
+            <span class="d-inline-block d-lg-none">Notifications</span>
+            <i class="fa fa-bell d-lg-inline-block d-none"></i>
+            <span class="notification-badge badge badge-pill badge-danger">@Model.UnseenCount</span>
         </a>
-        <span class="alerts-badge badge badge-pill badge-danger">@Model.UnseenCount</span>
         <div class="dropdown-menu dropdown-menu-right text-center notification-dropdown" aria-labelledby="navbarDropdown">
             <div class="d-flex align-items-center justify-content-between py-3 px-4 border-bottom border-light"> 
                 <h5 class="m-0">Notifications</h5>

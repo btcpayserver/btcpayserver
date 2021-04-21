@@ -70,6 +70,29 @@
         padding: .75rem 1rem;
         border-radius: .25rem;
     }
+    #CustomSetup > ul > li {
+        padding: 0;
+    }
+    #CustomSetup > ul > li + li {
+        border-top:  1px solid var(--btcpay-border-color-medium);
+    }
+    a[data-toggle="collapse"] {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: inherit;
+        padding: 1rem 0;
+        text-decoration: none
+    }
+    a[data-toggle="collapse"] .icon {
+        transform: rotate(90deg);
+        transition: transform 200ms;
+        width: 24px;
+        height: 24px;
+    }
+    a[data-toggle="collapse"][aria-expanded="true"] .icon {
+        transform: rotate(270deg);
+    }
 </style>
 
 <form method="post" class="mt-n2 text-center">
@@ -94,16 +117,15 @@
             <button id="test" name="command" type="submit" value="test" class="btn btn-secondary text-nowrap mb-2">Test connection</button>
         </div>
         <span asp-validation-for="ConnectionString" class="text-danger"></span>
-        <p class="mt-4 mb-2">
-            BTCPay Server currently supports:
-            <span class="text-secondary">(click to show examples)</span>
-        </p>
+        <p class="mt-4 mb-2">BTCPay Server currently supports:</p>
         <ul>
             <li>
-                <a class="d-inline-block text-decoration-none" data-toggle="collapse" href="#c-lightning-notes" role="button" aria-expanded="false" aria-controls="c-lightning-notes">c-lightning</a>
-                via TCP or unix domain socket connection
+                <a data-toggle="collapse" href="#c-lightning-notes" role="button" aria-expanded="false" aria-controls="c-lightning-notes">
+                    <span><strong>c-lightning</strong> via TCP or unix domain socket connection</span>
+                    <vc:icon symbol="caret-right"/>
+                </a>
                 <div id="c-lightning-notes" class="collapse">
-                    <ul class="py-2">
+                    <ul class="pb-3">
                         <li>
                             <code><b>type=</b>clightning;<b>server=</b>unix://root/.lightning/lightning-rpc</code>
                         </li>
@@ -114,10 +136,12 @@
                 </div>
             </li>
             <li>
-                <a class="d-inline-block text-decoration-none" data-toggle="collapse" href="#charge-notes" role="button" aria-expanded="false" aria-controls="charge-notes">Lightning Charge</a>
-                via HTTPS
+                <a data-toggle="collapse" href="#charge-notes" role="button" aria-expanded="false" aria-controls="charge-notes">
+                    <span><strong>Lightning Charge</strong> via HTTPS</span>
+                    <vc:icon symbol="caret-right"/>
+                </a>
                 <div id="charge-notes" class="collapse">
-                    <ul class="py-2">
+                    <ul class="pb-3">
                         <li>
                             <code><b>type=</b>charge;<b>server=</b>https://charge:8080/;<b>api-token=</b>myapitoken...</code>
                         </li>
@@ -125,10 +149,12 @@
                 </div>
             </li>
             <li>
-                <a class="d-inline-block text-decoration-none" data-toggle="collapse" href="#eclair-notes" role="button" aria-expanded="false" aria-controls="eclair-notes">Eclair</a>
-                via HTTPS
+                <a data-toggle="collapse" href="#eclair-notes" role="button" aria-expanded="false" aria-controls="eclair-notes">
+                    <span><strong>Eclair</strong> via HTTPS</span>
+                    <vc:icon symbol="caret-right"/>
+                </a>
                 <div id="eclair-notes" class="collapse">
-                    <ul class="py-2">
+                    <ul class="pb-3">
                         <li>
                             <code><b>type=</b>eclair;<b>server=</b>https://eclair:8080/;<b>password=</b>eclairpassword...</code>
                         </li>
@@ -136,10 +162,12 @@
                 </div>
             </li>
             <li>
-                <a class="d-inline-block text-decoration-none" data-toggle="collapse" href="#lnd-notes" role="button" aria-expanded="false" aria-controls="lnd-notes">LND</a>
-                via the REST proxy
+                <a data-toggle="collapse" href="#lnd-notes" role="button" aria-expanded="false" aria-controls="lnd-notes">
+                    <span><strong>LND</strong> via the REST proxy</span>
+                    <vc:icon symbol="caret-right"/>
+                </a>
                 <div id="lnd-notes" class="collapse">
-                    <ul class="py-2">
+                    <ul class="pb-3">
                         <li>
                             <code><b>type=</b>lnd-rest;<b>server=</b>https://mylnd:8080/;<b>macaroon=</b>abef263adfe...</code>
                         </li>

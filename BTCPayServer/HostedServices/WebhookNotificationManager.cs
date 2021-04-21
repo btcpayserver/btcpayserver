@@ -126,16 +126,14 @@ namespace BTCPayServer.HostedServices
         {
             var delivery = NewDelivery(webhookId);
             var webhook = (await StoreRepository.GetWebhooks(storeId)).Where(w => w.Id == webhookId).FirstOrDefault();
-
-            var channel = Channel.CreateUnbounded<WebhookDeliveryRequest>();
             var deliveryRequest = new WebhookDeliveryRequest(
                 webhookId, 
                 GetTestWebHook(storeId, webhookId, webhookEventType, delivery), 
                 delivery, 
                 webhook.GetBlob()
             );
-            channel.Writer.TryWrite(deliveryRequest);
-            _ = Process(webhookId, channel);
+            
+            var result = await SendDelivery(deliveryRequest);
         }
 
         protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)

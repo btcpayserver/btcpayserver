@@ -263,15 +263,15 @@ namespace BTCPayServer.HostedServices
                         var originalDeliveryId = result.DeliveryId;
                         foreach (var wait in new[]
                         {
-                        TimeSpan.FromSeconds(10),
-                        TimeSpan.FromMinutes(1),
-                        TimeSpan.FromMinutes(10),
-                        TimeSpan.FromMinutes(10),
-                        TimeSpan.FromMinutes(10),
-                        TimeSpan.FromMinutes(10),
-                        TimeSpan.FromMinutes(10),
-                        TimeSpan.FromMinutes(10),
-                    })
+                            TimeSpan.FromSeconds(10),
+                            TimeSpan.FromMinutes(1),
+                            TimeSpan.FromMinutes(10),
+                            TimeSpan.FromMinutes(10),
+                            TimeSpan.FromMinutes(10),
+                            TimeSpan.FromMinutes(10),
+                            TimeSpan.FromMinutes(10),
+                            TimeSpan.FromMinutes(10),
+                        })
                         {
                             await Task.Delay(wait, CancellationToken);
                             ctx = await CreateRedeliveryRequest(originalDeliveryId);

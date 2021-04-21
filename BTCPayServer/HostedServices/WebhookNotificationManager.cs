@@ -94,8 +94,7 @@ namespace BTCPayServer.HostedServices
             if (webhookDelivery is null)
                 return null;
             var oldDeliveryBlob = webhookDelivery.Delivery.GetBlob();
-            var newDelivery = NewDelivery();
-            newDelivery.WebhookId = webhookDelivery.Webhook.Id;
+            var newDelivery = NewDelivery(webhookDelivery.Webhook.Id);
             var newDeliveryBlob = new WebhookDeliveryBlob();
             newDeliveryBlob.Request = oldDeliveryBlob.Request;
             var webhookEvent = newDeliveryBlob.ReadRequestAs<WebhookEvent>();
@@ -125,9 +124,7 @@ namespace BTCPayServer.HostedServices
 
         public async Task TestWebhook(string storeId, string webhookId, WebhookEventType webhookEventType)
         {
-            var delivery = NewDelivery();
-            delivery.WebhookId = webhookId;
-
+            var delivery = NewDelivery(webhookId);
             var webhook = (await StoreRepository.GetWebhooks(storeId)).Where(w => w.Id == webhookId).FirstOrDefault();
 
             var channel = Channel.CreateUnbounded<WebhookDeliveryRequest>();
@@ -153,8 +150,7 @@ namespace BTCPayServer.HostedServices
                         continue;
                     if (!ShouldDeliver(webhookEvent.Type, webhookBlob))
                         continue;
-                    Data.WebhookDeliveryData delivery = NewDelivery();
-                    delivery.WebhookId = webhook.Id;
+                    Data.WebhookDeliveryData delivery = NewDelivery(webhook.Id);
                     webhookEvent.InvoiceId = invoiceEvent.InvoiceId;
                     webhookEvent.StoreId = invoiceEvent.Invoice.StoreId;
                     webhookEvent.DeliveryId = delivery.Id;
@@ -353,12 +349,14 @@ namespace BTCPayServer.HostedServices
             return bytes;
         }
 
-        private static Data.WebhookDeliveryData NewDelivery()
+        private static Data.WebhookDeliveryData NewDelivery(string webhookId)
         {
-            var delivery = new Data.WebhookDeliveryData();
-            delivery.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16));
-            delivery.Timestamp = DateTimeOffset.UtcNow;
-            return delivery;
+            return new Data.WebhookDeliveryData
+            {
+                Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16)),
+                Timestamp = DateTimeOffset.UtcNow,
+                WebhookId = webhookId
+            };
         }
     }
 }

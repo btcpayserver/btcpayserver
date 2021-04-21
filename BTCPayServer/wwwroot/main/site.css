@@ -225,12 +225,6 @@ pre {
   color: inherit;
 }
 
-.alerts-badge {
-  position: absolute;
-  margin-top: -36px;
-  margin-left: 16px;
-}
-
 .alert hr {
     display: block;
     width: unset;
@@ -249,6 +243,14 @@ pre {
 @media screen and (min-width: 768px) {
     .content-wrapper {
         padding: 75px 0;
+    }
+}
+
+@media (min-width: 992px) {
+    .notification-badge {
+        position: relative;
+        top: -10px;
+        left: -10px;
     }
 }
 

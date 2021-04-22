@@ -988,9 +988,9 @@ namespace BTCPayServer.Tests
                 user.GrantAccess(true);
                 var storeController = user.GetController<StoresController>();
                 Assert.IsType<ViewResult>(storeController.UpdateStore());
-                Assert.IsType<ViewResult>(storeController.AddLightningNode(user.StoreId, "BTC"));
+                Assert.IsType<ViewResult>(storeController.SetupLightningNode(user.StoreId, "BTC"));
 
-                var testResult = storeController.AddLightningNode(user.StoreId, new LightningNodeViewModel()
+                var testResult = storeController.SetupLightningNode(user.StoreId, new LightningNodeViewModel
                 {
                     ConnectionString = $"type=charge;server={tester.MerchantCharge.Client.Uri.AbsoluteUri};allowinsecure=true",
                     SkipPortTest = true // We can't test this as the IP can't be resolved by the test host :(
@@ -999,19 +999,19 @@ namespace BTCPayServer.Tests
                 storeController.TempData.Clear();
                 Assert.True(storeController.ModelState.IsValid);
 
-                Assert.IsType<RedirectToActionResult>(storeController.AddLightningNode(user.StoreId,
-                    new LightningNodeViewModel()
+                Assert.IsType<RedirectToActionResult>(storeController.SetupLightningNode(user.StoreId,
+                    new LightningNodeViewModel
                     {
                         ConnectionString = $"type=charge;server={tester.MerchantCharge.Client.Uri.AbsoluteUri};allowinsecure=true"
                     }, "save", "BTC").GetAwaiter().GetResult());
 
                 // Make sure old connection string format does not work
-                Assert.IsType<ViewResult>(storeController.AddLightningNode(user.StoreId,
-                    new LightningNodeViewModel() { ConnectionString = tester.MerchantCharge.Client.Uri.AbsoluteUri },
+                Assert.IsType<RedirectToActionResult>(storeController.SetupLightningNode(user.StoreId,
+                    new LightningNodeViewModel { ConnectionString = tester.MerchantCharge.Client.Uri.AbsoluteUri },
                     "save", "BTC").GetAwaiter().GetResult());
 
                 var storeVm =
-                    Assert.IsType<Models.StoreViewModels.StoreViewModel>(Assert
+                    Assert.IsType<StoreViewModel>(Assert
                         .IsType<ViewResult>(storeController.UpdateStore()).Model);
                 Assert.Single(storeVm.LightningNodes.Where(l => !string.IsNullOrEmpty(l.Address)));
             }

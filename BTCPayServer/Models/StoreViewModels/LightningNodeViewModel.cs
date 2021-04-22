@@ -4,7 +4,6 @@ namespace BTCPayServer.Models.StoreViewModels
 {
     public enum LightningNodeType
     {
-        None,
         Internal,
         Custom
     }

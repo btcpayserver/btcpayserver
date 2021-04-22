@@ -112,15 +112,15 @@
                                 @if (isSetUp)
                                 {
                                     <span class="smMaxWidth text-truncate text-secondary mr-3">@scheme.Address</span>
+                                    <a class="text-secondary"
+                                       asp-controller="PublicLightningNodeInfo"
+                                       asp-action="ShowLightningNodeInfo"
+                                       asp-route-cryptoCode="@scheme.CryptoCode"
+                                       asp-route-storeId="@Model.Id"
+                                       target="_blank">
+                                        Public Node Info
+                                    </a>
                                 }
-                                <a class="text-secondary"
-                                   asp-controller="PublicLightningNodeInfo"
-                                   asp-action="ShowLightningNodeInfo"
-                                   asp-route-cryptoCode="@scheme.CryptoCode"
-                                   asp-route-storeId="@Model.Id"
-                                   target="_blank">
-                                    Public Node Info
-                                </a>
                             </span>
                             <span class="d-flex align-items-center fw-semibold">
                                 <form method="post"
@@ -148,7 +148,7 @@
                                 {
                                     <span class="text-light ml-3 mr-2">|</span>
                                 }
-                                <a asp-action="AddLightningNode" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@Model.Id" id="@($"Modify-Lightning{scheme.CryptoCode}")" class="btn btn-@(isSetUp ? "link px-1" : "primary btn-sm ml-4 px-3") py-1 fw-semibold">
+                                <a asp-action="SetupLightningNode" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@Model.Id" id="@($"Modify-Lightning{scheme.CryptoCode}")" class="btn btn-@(isSetUp ? "link px-1" : "primary btn-sm ml-4 px-3") py-1 fw-semibold">
                                     @(isSetUp ? "Modify" : "Setup")
                                 </a>
                             </span>

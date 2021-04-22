@@ -127,7 +127,7 @@ namespace BTCPayServer.Hosting
                     await _Settings.UpdateSetting(settings);
                 }
 
-                if (!settings.MigrateU2FToFIDO2)
+                if (true || !settings.MigrateU2FToFIDO2)
                 {
                     await MigrateU2FToFIDO2();
                     settings.MigrateU2FToFIDO2 = true;

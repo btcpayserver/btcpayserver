@@ -173,6 +173,10 @@ namespace BTCPayServer.Hosting
         //from https://github.com/abergs/fido2-net-lib/blob/0fa7bb4b4a1f33f46c5f7ca4ee489b47680d579b/Test/ExistingU2fRegistrationDataTests.cs#L70
         private static CBORObject CreatePublicKeyFromU2fRegistrationData(byte[] publicKeyData)
         {
+            if (publicKeyData.Length != 65)
+            {
+                throw new ArgumentException("u2f public key must be 65 bytes", nameof(publicKeyData));
+            }
             var x = new byte[32];
             var y = new byte[32];
             Buffer.BlockCopy(publicKeyData, 1, x, 0, 32);

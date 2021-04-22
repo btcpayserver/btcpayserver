@@ -9,6 +9,7 @@ using BTCPayServer.Tests.Logging;
 using BTCPayServer.U2F;
 using BTCPayServer.U2F.Models;
 using Microsoft.AspNetCore.Mvc;
+using NBitcoin;
 using U2F.Core.Models;
 using U2F.Core.Utils;
 using Xunit;
@@ -61,8 +62,8 @@ namespace BTCPayServer.Tests
                 Assert.Equal("testdevice", addDeviceVM.Name);
                 Assert.NotEmpty(addDeviceVM.Version);
                 Assert.Null(addDeviceVM.DeviceResponse);
-
-                var devReg = new DeviceRegistration(Guid.NewGuid().ToByteArray(), Guid.NewGuid().ToByteArray(),
+ 
+                var devReg = new DeviceRegistration(Guid.NewGuid().ToByteArray(), RandomUtils.GetBytes(65),
                     Guid.NewGuid().ToByteArray(), 1);
 
                 mock.GetDevReg = () => devReg;

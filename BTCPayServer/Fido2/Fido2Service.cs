@@ -20,11 +20,13 @@ namespace BTCPayServer.Fido2
             new ConcurrentDictionary<string, AssertionOptions>();
         private readonly ApplicationDbContextFactory _contextFactory;
         private readonly IFido2 _fido2;
+        private readonly Fido2Configuration _fido2Configuration;
 
-        public Fido2Service(ApplicationDbContextFactory contextFactory, IFido2 fido2)
+        public Fido2Service(ApplicationDbContextFactory contextFactory, IFido2 fido2, Fido2Configuration fido2Configuration)
         {
             _contextFactory = contextFactory;
             _fido2 = fido2;
+            _fido2Configuration = fido2Configuration;
         }
 
         public async Task<CredentialCreateOptions> RequestCreation(string userId)
@@ -158,7 +160,9 @@ namespace BTCPayServer.Fido2
                 }, 
                 UserVerificationIndex = true, 
                 Location = true, 
-                UserVerificationMethod = true 
+                UserVerificationMethod = true ,
+                Extensions = true,
+                AppID = _fido2Configuration.Origin
             };
 
             // 3. Create options

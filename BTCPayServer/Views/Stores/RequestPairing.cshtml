@@ -1,47 +1,36 @@
 ﻿@model PairingModel
 @{
-    ViewData["Title"] = "Pairing permission";
+    Layout = "../Shared/_NavLayout.cshtml";
+    ViewData.SetActivePageAndTitle(StoreNavPages.Tokens, "Pairing permission", Context.GetStoreData()?.StoreName);
 }
 
-<section>
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-12 section-heading">
-                <h2>@ViewData["Title"]</h2>
-                <hr class="primary">
-                <p>Create and manage store settings.</p>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-4"></div>
-            <div class="col-md-4">
-                <table class="table table-sm table-responsive-md">
-                    <tr>
-                        <th>Label</th>
-                        <td style="text-align:right;">@Model.Label</td>
-                    </tr>
-                    <tr>
-                        <th>SIN</th>
-                        <td style="text-align:right;">@Model.SIN</td>
-                    </tr>
-                </table>
-            </div>
-            <div class="col-md-4"></div>
-        </div>
-        <div class="row">
-            <div class="col-md-4"></div>
-            <div class="col-md-4">
-                <form asp-action="Pair" method="post">
-                    <div class="form-group">
-                        <label asp-for="StoreId"></label>
-                        <select asp-for="StoreId" asp-items="@(new SelectList(Model.Stores,"Id","Name"))" class="form-control"></select>
-                        <span asp-validation-for="StoreId" class="text-danger"></span>
-                    </div>
-                    <input type="hidden" name="pairingCode" value="@Model.Id" />
-                    <button id="ApprovePairing" type="submit" class="btn btn-primary" title="Approve this pairing demand">Approve</button>
-                </form>
-            </div>
-            <div class="col-md-4"></div>
-        </div>
+<h2 class="mb-4">@ViewData["PageTitle"]</h2>
+<p class="mb-0">Create and manage store settings.</p>
+
+<div class="row">
+    <div class="col-md-4">
+        <table class="table table-sm removetopborder">
+            <tr>
+                <th>Label</th>
+                <td class="text-right">@Model.Label</td>
+            </tr>
+            <tr>
+                <th>SIN</th>
+                <td class="text-right">@Model.SIN</td>
+            </tr>
+        </table>
     </div>
-</section>
+</div>
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Pair" method="post">
+            <div class="form-group">
+                <label asp-for="StoreId"></label>
+                <select asp-for="StoreId" asp-items="@(new SelectList(Model.Stores,"Id","Name"))" class="form-control"></select>
+                <span asp-validation-for="StoreId" class="text-danger"></span>
+            </div>
+            <input type="hidden" name="pairingCode" value="@Model.Id" />
+            <button id="ApprovePairing" type="submit" class="btn btn-primary" title="Approve this pairing demand">Approve</button>
+        </form>
+    </div>
+</div>

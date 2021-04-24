@@ -217,7 +217,7 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
 
             var invoices = await _invoiceRepository.GetInvoices(new InvoiceQuery() {InvoiceId = invoiceIds});
             invoices = invoices
-                .Where(entity => PaymentMethods.Any(id => entity.GetPaymentMethod(id) != null))
+                .Where(entity => PaymentMethods.Any(id => entity.GetPaymentMethod(id)?.GetPaymentMethodDetails()?.Activated is true))
                 .ToArray();
 
             await UpdatePaymentStates(invoices, cancellationToken);
@@ -245,7 +245,7 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
                         ExistingPayments: entity.GetPayments(network).Select(paymentEntity => (Payment: paymentEntity,
                             PaymentData: (EthereumLikePaymentData)paymentEntity.GetCryptoPaymentData(),
                             Invoice: entity))
-                    )).Where(tuple => tuple.PaymentMethodDetails != null).ToList();
+                    )).Where(tuple => tuple.PaymentMethodDetails?.GetPaymentMethodDetails()?.Activated is true).ToList();
 
                 var existingPaymentData = expandedInvoices.SelectMany(tuple =>
                     tuple.ExistingPayments.Where(valueTuple => valueTuple.Payment.Accounted)).ToList();

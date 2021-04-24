@@ -1,0 +1,90 @@
+@using BTCPayServer.Views.Stores
+@model BTCPayServer.Plugins.Shopify.Models.ShopifySettings
+@{
+    
+    Layout = "../Shared/_NavLayout.cshtml";
+    
+    ViewData["NavPartialName"] = "../Stores/_Nav";
+    ViewData.SetActivePageAndTitle(StoreNavPages.Integrations, "Integrations");
+    
+    
+    var shopifyCredsSet = Model?.IntegratedAt.HasValue is true;
+    var shopifyUrl = Model?.ShopifyUrl;
+}
+<form method="post" id="shopifyForm">
+    <h4 class="mb-3">
+        Shopify
+        <small>
+            <a href="https://docs.btcpayserver.org/Shopify" target="_blank">
+                <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+            </a>
+        </small>
+    </h4>
+    @if (!shopifyCredsSet)
+    {
+        <p class="alert alert-info">Create a Shopify Private App with the permissions "Orders - Read and write"</p>
+
+        <div class="form-group">
+            <label for="exampleUrl">Example Url from Shopify Private App</label>
+            <input class="form-control" id="exampleUrl" name="exampleUrl">
+        </div>
+
+        <button name="command" type="submit" class="btn btn-primary" value="ShopifySaveCredentials">Connect to Shopify</button>
+    }
+    else
+    {
+        <div class="form-group">
+            <label asp-for="ShopName"></label>
+            <div class="input-group">
+                @if (!Model?.ShopName?.Contains(".") is true)
+                {
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">https://</span>
+                    </div>
+                }
+                <input asp-for="ShopName" class="form-control" readonly="@shopifyCredsSet" />
+
+                @if (!Model?.ShopName?.Contains(".") is true)
+                {
+                    <div class="input-group-append">
+                        <span class="input-group-text">.myshopify.com</span>
+                    </div>
+                }
+            </div>
+            <span asp-validation-for="ShopName" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="ApiKey"></label>
+            <input asp-for="ApiKey" class="form-control" readonly="@shopifyCredsSet" />
+            <span asp-validation-for="ApiKey" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Password"></label>
+            <input asp-for="Password" class="form-control" type="password" value="@Model?.Password" readonly="@shopifyCredsSet" />
+            <span asp-validation-for="Password" class="text-danger"></span>
+        </div>
+        <div class="alert alert-warning">
+            <p>
+                In Shopify please paste following script at <a href="@shopifyUrl/admin/settings/checkout#PolarisTextField1" target="_blank" class="font-weight-bold"> Settings &gt; Checkout &gt; Order Processing &gt; Additional Scripts</a>
+            </p>
+            <kbd style="display: block; word-break: break-all;">
+                @($"<script src='{Url.Action("ShopifyJavascript", "Shopify", new {storeId = Context.GetRouteValue("storeId")}, Context.Request.Scheme)}'></script>")
+            </kbd>
+        </div>
+        <p class="alert alert-warning">
+            In Shopify please add a payment method at <a target="_blank" href="@shopifyUrl/admin/settings/payments" class="font-weight-bold"> Settings &gt; Payments &gt; Manual Payment Methods</a> with the name <kbd>Bitcoin with BTCPay Server</kbd>
+        </p>
+
+        <p class="alert alert-success">
+            Orders on <b>@Model.ShopName</b>.myshopify.com will be marked as paid on successful invoice payment.
+            Started: @Model.IntegratedAt.Value.ToBrowserDate()
+        </p>
+
+        <button name="command" type="submit" class="btn btn-danger" value="ShopifyClearCredentials">
+            Stop Shopify calls and clear credentials
+        </button>
+    }
+
+</form>

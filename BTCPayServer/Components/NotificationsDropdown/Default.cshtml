@@ -2,22 +2,23 @@
 @inject UserManager<ApplicationUser> UserManager
 @inject CssThemeManager CssThemeManager
 @using BTCPayServer.HostedServices
-@using Microsoft.AspNetCore.Http.Extensions
+@using BTCPayServer.Views.Notifications
 @model BTCPayServer.Components.NotificationsDropdown.NotificationSummaryViewModel
 @addTagHelper *, BundlerMinifier.TagHelpers
 
 @if (Model.UnseenCount > 0)
 {
     <li class="nav-item dropdown" id="notifications-nav-item">
-        <a class="nav-link js-scroll-trigger border-bottom-0" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" id="Notifications">
-            <i class="fa fa-bell"></i>
+        <a class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(NotificationsNavPages))" href="#" id="navbarDropdown" role="button" data-toggle="dropdown">
+            <span class="d-inline-block d-lg-none">Notifications</span>
+            <i class="fa fa-bell d-lg-inline-block d-none"></i>
+            <span class="notification-badge badge badge-pill badge-danger">@Model.UnseenCount</span>
         </a>
-        <span class="alerts-badge badge badge-pill badge-danger">@Model.UnseenCount</span>
         <div class="dropdown-menu dropdown-menu-right text-center notification-dropdown" aria-labelledby="navbarDropdown">
             <div class="d-flex align-items-center justify-content-between py-3 px-4 border-bottom border-light"> 
                 <h5 class="m-0">Notifications</h5>
                 <form asp-controller="Notifications" asp-action="MarkAllAsSeen" asp-route-returnUrl="@Context.Request.GetCurrentPathWithQueryString()" method="post">
-                    <button class="btn btn-link p-0 font-weight-semibold" type="submit">Mark all as seen</button>
+                    <button class="btn btn-link p-0" type="submit">Mark all as seen</button>
                 </form>
             </div>
             @foreach (var notif in Model.Last5)
@@ -28,7 +29,7 @@
                     </div>
 
                     <div class="notification-item__content">
-                        <div class="text-left text-wrap font-weight-semibold">
+                        <div class="text-left text-wrap">
                             @notif.Body
                         </div>
                         <div class="text-left d-flex">
@@ -38,7 +39,7 @@
                 </a>
             }
             <div class="p-3"> 
-                <a class="font-weight-semibold" asp-controller="Notifications" asp-action="Index">View all</a>
+                <a asp-controller="Notifications" asp-action="Index">View all</a>
             </div>
         </div>
     </li>
@@ -46,8 +47,8 @@
 else
 {
     <li class="nav-item" id="notifications-nav-item">
-        <a asp-controller="Notifications" asp-action="Index" title="Notifications" class="nav-link js-scroll-trigger" id="Notifications">
-            <i class="fa fa-bell"></i>
+        <a asp-controller="Notifications" asp-action="Index" title="Notifications" class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(NotificationsNavPages))" id="Notifications">
+            <span class="d-lg-none d-sm-block">Notifications</span><i class="fa fa-bell d-lg-inline-block d-none"></i>
         </a>
     </li>
 }
@@ -56,7 +57,7 @@ else
     if (!disabled)
     {
         var user = await UserManager.GetUserAsync(User);
-        disabled = user.DisabledNotifications == "all";
+        disabled = user?.DisabledNotifications == "all";
     }
 }
 @if (!disabled)

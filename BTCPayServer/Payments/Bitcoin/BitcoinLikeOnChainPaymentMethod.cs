@@ -17,12 +17,13 @@ namespace BTCPayServer.Payments.Bitcoin
 
         public decimal GetNextNetworkFee()
         {
-            return NextNetworkFee.ToDecimal(MoneyUnit.BTC);
+            // NextNetworkFee is sometimes not initialized properly, so we return 0 in that case
+            return NextNetworkFee?.ToDecimal(MoneyUnit.BTC) ?? 0;
         }
 
         public decimal GetFeeRate()
         {
-            return FeeRate.SatoshiPerByte;
+            return FeeRate?.SatoshiPerByte ?? 0;
         }
 
         public void SetPaymentDetails(IPaymentMethodDetails newPaymentMethodDetails)
@@ -30,6 +31,7 @@ namespace BTCPayServer.Payments.Bitcoin
             DepositAddress = newPaymentMethodDetails.GetPaymentDestination();
             KeyPath = (newPaymentMethodDetails as BitcoinLikeOnChainPaymentMethod)?.KeyPath;
         }
+        public bool Activated { get; set; } = true;
         public NetworkFeeMode NetworkFeeMode { get; set; }
 
         FeeRate _NetworkFeeRate;

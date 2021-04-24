@@ -1,27 +1,22 @@
 ﻿@model BTCPayServer.Models.ServerViewModels.DynamicDnsViewModel
 @{
-    ViewData.SetActivePageAndTitle(ServerNavPages.Services);
+    ViewData.SetActivePageAndTitle(ServerNavPages.Services, "Dynamic DNS Service");
 }
 
+<h2 class="mb-4">@ViewData["PageTitle"]</h2>
 
-<h4>Dynamic DNS Service</h4>
-<partial name="_StatusMessage" />
-@if (!this.ViewContext.ModelState.IsValid)
-{
 <div class="row">
     <div class="col-md-8">
-        <div asp-validation-summary="All" class="text-danger"></div>
-    </div>
-</div>
-}
-<div class="row">
-    <div class="col-md-8">
+        @if (!ViewContext.ModelState.IsValid)
+        {
+            <div asp-validation-summary="All" class="text-danger"></div>
+        }
         <form method="post">
             <div class="form-group">
-                <input type="hidden" asp-for="Modify" />
+                <input type="hidden" asp-for="Modify"/>
                 <div class="form-group">
                     <label asp-for="Settings.ServiceUrl"></label>
-                    <input id="ServiceUrl" asp-for="Settings.ServiceUrl" class="form-control" placeholder="Url" />
+                    <input id="ServiceUrl" asp-for="Settings.ServiceUrl" class="form-control" placeholder="Url"/>
                     <p class="form-text text-muted">
                         Well-known Dynamic DNS providers are:
                         @for (int i = 0; i < Model.KnownServices.Length; i++)
@@ -34,7 +29,7 @@
                     <label asp-for="Settings.Hostname"></label>
                     @if (Model.Modify)
                     {
-                        <input asp-for="Settings.Hostname" class="form-control" readonly placeholder="Hostname" />
+                        <input asp-for="Settings.Hostname" class="form-control" readonly placeholder="Hostname"/>
                         <p class="form-text text-muted">
                             <span>The DNS record has been refreshed: </span>
                             @if (Model.LastUpdated != null)
@@ -45,23 +40,23 @@
                     }
                     else
                     {
-                        <input asp-for="Settings.Hostname" class="form-control" placeholder="Hostname" />
+                        <input asp-for="Settings.Hostname" class="form-control" placeholder="Hostname"/>
                         <span asp-validation-for="Settings.Hostname" class="text-danger"></span>
                     }
                 </div>
                 <div class="form-group">
                     <label asp-for="Settings.Login"></label>
-                    <input asp-for="Settings.Login" class="form-control" placeholder="Login" />
+                    <input asp-for="Settings.Login" class="form-control" placeholder="Login"/>
                 </div>
                 <div class="form-group">
                     <label asp-for="Settings.Password"></label>
-                    <input asp-for="Settings.Password" class="form-control" placeholder="Password" />
+                    <input asp-for="Settings.Password" class="form-control" placeholder="Password"/>
                 </div>
                 @if (Model.Modify)
                 {
                     <div class="form-group">
                         <label asp-for="Settings.Enabled"></label>
-                        <input asp-for="Settings.Enabled" class="form-check-inline" type="checkbox" />
+                        <input asp-for="Settings.Enabled" class="form-check-inline" type="checkbox"/>
                     </div>
                 }
                 <button name="command" class="btn btn-primary" type="submit" value="Save">Save</button>

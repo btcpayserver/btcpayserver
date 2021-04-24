@@ -1,51 +1,67 @@
 @model ViewFilesViewModel
 @{
-    ViewData.SetActivePageAndTitle(ServerNavPages.Files);
+    ViewData.SetActivePageAndTitle(ServerNavPages.Files, "File Storage");
 }
 
+<h2 class="mb-4">@ViewData["PageTitle"]</h2>
 
-<partial name="_StatusMessage" />
-
-<h4>File Storage</h4>
-<div class="form-group">
-    <span>Change your <a asp-action="Services" asp-route-returnurl="@ViewData["ReturnUrl"]">external storage service</a> provider</span>
-    <a href="https://docs.btcpayserver.org/FAQ/FAQ-ServerSettings/#how-to-upload-files-to-btcpay" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
-</div>
-
-@if (Model.Files.Any())
+@if (!Model.StorageConfigured)
 {
-    <table class="table table-sm table-responsive-md">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Timestamp</th>
-                <th>User</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var file in Model.Files)
-            {
-                <tr>
-                    <td>@file.FileName</td>
-                    <td>@file.Timestamp.ToBrowserDate2()</td>
-                    <td>@file.ApplicationUser.UserName</td>
-                    <td>
-                        <a asp-action="Files" asp-route-fileId="@file.Id">Get Link</a>
-                        - <a asp-action="CreateTemporaryFileUrl" asp-route-fileId="@file.Id">Get Temp Link</a>
-                        - <a asp-action="DeleteFile" asp-route-fileId="@file.Id">Remove</a>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <p>
+        Before being able to upload you first need to 
+        <a asp-action="storage" asp-route-forceChoice="true" asp-route-returnurl="@ViewData["ReturnUrl"]">
+            choose your file storage service provider
+        </a>.
+        <a href="https://docs.btcpayserver.org/FAQ/FAQ-ServerSettings/#how-to-upload-files-to-btcpay" target="_blank">
+            <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+        </a>
+    </p>
 }
 else
 {
-    <p class="text-secondary mt-3">
-        There are no files yet.
+    <p>
+        Change your <a asp-action="storage" asp-route-forceChoice="true" asp-route-returnurl="@ViewData["ReturnUrl"]">file storage service</a> provider.
+        <a href="https://docs.btcpayserver.org/FAQ/FAQ-ServerSettings/#how-to-upload-files-to-btcpay" target="_blank">
+            <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+        </a>
     </p>
+
+    @if (Model.Files.Any())
+    {
+        <table class="table table-sm table-responsive-md">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Timestamp</th>
+                    <th>User</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var file in Model.Files)
+                {
+                    <tr>
+                        <td>@file.FileName</td>
+                        <td>@file.Timestamp.ToBrowserDate()</td>
+                        <td>@file.ApplicationUser.UserName</td>
+                        <td>
+                            <a asp-action="Files" asp-route-fileId="@file.Id">Get Link</a>
+                            - <a asp-action="CreateTemporaryFileUrl" asp-route-fileId="@file.Id">Get Temp Link</a>
+                            - <a asp-action="DeleteFile" asp-route-fileId="@file.Id">Remove</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p class="text-secondary mt-3">
+            There are no files yet.
+        </p>
+    }
 }
+
 
 @if (!string.IsNullOrEmpty(Model.SelectedFileId))
 {
@@ -64,13 +80,13 @@ else
                             @Url.Action("GetFile", "Storage", new
                             {
                                 fileId = Model.SelectedFileId
-                            }, Context.Request.Scheme, Context.Request.Host.ToString(), Context.Request.PathBase.ToString())
+                            }, Context.Request.Scheme, Context.Request.Host.ToString())
                         </a>
                     </div>
                 </li>
                 <li class="list-group-item ">
                     <div class="row px-0 mx-0">
-                        <span class="col-sm-12 col-md-2">Direct Url </span>
+                        <span class="col-sm-12 col-md-2">Direct Url: </span>
                         <a class="col-sm-12 col-md-10 text-right" href="@Model.DirectFileUrl" target="_blank">@Model.DirectFileUrl</a>
                     </div>
                 </li>
@@ -81,23 +97,16 @@ else
 
 @if (Model.StorageConfigured)
 {
-    <div class="card">
-        <form asp-action="CreateFile" method="post" enctype="multipart/form-data">
+    <form asp-action="CreateFile" method="post" enctype="multipart/form-data">
+        <h4 class="mt-5 mb-3">Upload File</h4>
 
-            <div class="card-body">
-                <h3 class="header">Upload File</h3>
+        <div class="custom-file mb-3">
+            <input type="file" class="custom-file-input" name="file" id="file" required>
+            <label class="custom-file-label" for="customFile">Choose file</label>
+        </div>
 
-                <div class="custom-file">
-                    <input type="file" class="custom-file-input" name="file" id="file" required>
-                    <label class="custom-file-label" for="customFile">Choose file</label>
-                </div>
-
-            </div>
-            <div class="card-footer">
-                <button class="btn btn-primary" role="button"><span class="fa fa-plus"></span> Upload file</button>
-            </div>
-        </form>
-    </div>
+        <button class="btn btn-primary" role="button"><span class="fa fa-plus"></span> Upload file</button>
+    </form>
 
     @section Scripts {
         <script>

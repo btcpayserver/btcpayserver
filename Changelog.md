@@ -1,5 +1,74 @@
 # Changelog
 
+## 1.0.7.2
+
+Small release fixing bugs introduced in 1.0.7.1:
+
+### Bug fixes:
+
+* The date in invoice page were not showing anymore the browser date time, but the server date time. (@NicolasDorier)
+* Apps on root where not working anymore, redirecting to login page rather than showing the app (see #2414) (@bolatovumar)
+
+## 1.0.7.1
+
+### Improvements:
+
+* Add user email search/sort @bolatovumar
+* Fix pay button link preview (see #2396) @bumbummen99 
+* Change display date format on view pull payments (see #2339) @AlexGidge
+* Update form required input styling (see #2373) @bolatovumar
+* Order file uploaded list by descending timestamp (#2273) @bolatovumar
+* Remove misleading title from hint icon @dennisreimann
+* Make dates/timespan swagger docs more clear (#2399) @Kukks
+* Add rate limiter for forgotpassword @NicolasDorier
+* Upgrade Boostrap to v4.6 and jquery to 3.6.0 @dennisreimann
+* Use better PRNG for payjoin input selection @NicolasDorier
+* Decrease authentication cookie timeout after password change from 30min to 5min @NicolasDorier
+* Use secure/http-only cookies for preferences @NicolasDorier
+
+### Bug fixes:
+
+* Ensure submitting empty currency does not break update PoS page (#2376) @bolatovumar
+* Fix point of sale item newline break (#2366) @Kukks
+* Validate filename in file upload endpoints @NicolasDorier
+* Turn off autocomplete for BIP39 Seed or HD private key inputs @nosovk
+* Fix payment request template body/page height and footer style @Patrick
+
+## 1.0.7.0
+
+### Features:
+
+* New Wallet Setup UI (see #2164, #2296) @dennisreimann @dstrukt
+* Greenfield: New on-chain wallet API @Kukks
+* Greenfield: Ability to configure store's lightning payment methods @Kukks
+* Allow an invoice to be marked invalid/complete even from the `new` state @Kukks
+* Point of Sale and Crowdfund: Allow custom buy button text (see #2299) @dennisreimann
+* Specter wallet file import (see #2252) @dennisreimann
+
+### Improvements:
+
+* Reenabling uppercase BECH32 in QR codes (see #2110) @rockstardev
+* If a store is set to internal node, use "Internal Node" as connection string rather than the actual connection string. @NicolasDorier
+* Improve Policies options UX in server settings (see #2307) @dstrukt @dennisreimann
+* Fix view payment request loading spinner alignment @bumbummen99 
+* Fix cart pay button loading spinner vertical alignment @bumbummen99
+* Invoices list: Remove icon indicator for onchain (see #2240) @dennisreimann
+* Login: Improve tab navigation for input fields (see #2258) @dennisreimann
+
+### Bug fixes:
+
+* Hovering the mouse pointer on invoice logs row would make them unreadable @ubolator
+* Remove exchange rates that lost support in Coingecko @NicolasDorier
+* Get invoice in greenfield was crashing if invoiceId did not exist @NicolasDorier
+* Getting a file from the storage service which did not exist would return http 500 instead of 404 @NicolasDorier
+* Fix direct URL for local storage with custom root path #2318 @ubolator
+* The pay button would not show up properly on some websites @ubolator
+* Profile email change should check email's availability @NicolasDorier
+* Fixed mysql/sqlite support @ketominer
+* Checkout: Fix scan/copy tab sizes with varying content (see #2264) @dennisreimann
+* Greenfield: Lightning API would return HTTP 500 if store owner did not set the connection string @dennisreimann
+* Point of Sale: The custom price was not properly working (see #2248) @ubolator
+
 ## 1.0.6.8
 
 This release is trying some improvement to decrease the chances of being falsy flagged by Google Safe Browsing.

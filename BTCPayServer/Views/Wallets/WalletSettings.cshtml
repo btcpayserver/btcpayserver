@@ -4,15 +4,10 @@
 @model WalletSettingsViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["Title"] = "Wallet settings";
-    ViewData.SetActivePageAndTitle(WalletsNavPages.Settings);
-}
-@if (TempData.HasStatusMessage())
-{
-    <partial name="_StatusMessage" />
+    ViewData.SetActivePageAndTitle(WalletsNavPages.Settings, "Wallet settings", Context.GetStoreData().StoreName);
 }
 
-<h4 class="mb-3">Additional wallet information</h4>
+<h4 class="mb-3">@ViewData["PageTitle"]</h4>
 
 <div class="row">
     <div class="col-md-8 col-lg-6">
@@ -37,12 +32,12 @@
                     <span asp-validation-for="DerivationSchemeInput" class="text-danger"></span>
                 </div>
             }
-            @for (int i = 0; i < Model.AccountKeys.Count; i++)
+            @for (var i = 0; i < Model.AccountKeys.Count; i++)
             {
-                <hr class="my-4"/>
-<span class="d-flex">
-                <h4 class="mb-3">Account key @i</h4>
-                <button type="button" class="btn btn-link only-for-js mb-2 fa fa-qrcode text-decoration-none" data-wallet="@i" title="Show QR"></button></span>
+                <div class="d-flex mt-5 mb-3">
+                    <h4 class="mb-0">Account key @i</h4>
+                    <button type="button" class="btn btn-link only-for-js mb-2 fa fa-qrcode text-decoration-none" data-wallet="@i" title="Show QR"></button>
+                </div>
                 <div class="form-group">
                     <label asp-for="@Model.AccountKeys[i].AccountKey"></label>
                     <input asp-for="@Model.AccountKeys[i].AccountKey" class="form-control" readonly/>

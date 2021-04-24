@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using BTCPayServer.Client.Models;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 
@@ -52,14 +53,5 @@ namespace BTCPayServer.Data
                 return false;
             }
         }
-    }
-
-    public enum PayoutState
-    {
-        AwaitingApproval,
-        AwaitingPayment,
-        InProgress,
-        Completed,
-        Cancelled
     }
 }

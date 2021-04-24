@@ -1,11 +1,9 @@
 ﻿@model LightningWalletServices
 @{
-    ViewData.SetActivePageAndTitle(ServerNavPages.Services);
+    ViewData.SetActivePageAndTitle(ServerNavPages.Services, Model.WalletName);
 }
 
-
-<h4>@Model.WalletName</h4>
-<partial name="_StatusMessage" />
+<h2 class="mb-4">@ViewData["PageTitle"]</h2>
 
 @if (Model.ShowQR)
 {
@@ -19,48 +17,30 @@
 }
 
 <div class="row">
-    <div class="col-md-6">
-        <div asp-validation-summary="All" class="text-danger"></div>
-    </div>
-</div>
-
-<div class="row">
     <div class="col-md-8">
-        <div class="form-group">
-            <h5>Full node connection</h5>
-            <p>
-                <span>This page exposes information to connect remotely to your full node via the P2P protocol.</span>
-            </p>
-        </div>
-        <div class="form-group">
-            <h5>Compatible wallets</h5>
-        </div>
-        <div class="row">
-            <div class="col-lg-3 ml-auto text-center">
-                <a href="https://play.google.com/store/apps/details?id=com.greenaddress.greenbits_android_wallet" target="_blank">
-                    <img src="~/img/GreenWallet.png" height="100" asp-append-version="true" />
-                </a>
-                <p><a href="https://play.google.com/store/apps/details?id=com.greenaddress.greenbits_android_wallet" target="_blank">Blockstream Green Wallet</a></p>
-            </div>
-            <div class="col-lg-3 mr-auto text-center">
-                <a href="https://www.wasabiwallet.io/" target="_blank">
-                    <img src="~/img/wasabi.png" height="100" asp-append-version="true" />
-                </a>
-                <p><a href="https://www.wasabiwallet.io/" target="_blank">Wasabi Wallet</a> <a href="https://www.reddit.com/r/WasabiWallet/comments/aqlyia/how_to_connect_wasabi_wallet_to_my_own_full/" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a></p>
-            </div>
-            <div class="col-lg-3 mr-auto text-center">
+        @if (!ViewContext.ModelState.IsValid)
+        {
+            <div asp-validation-summary="All" class="text-danger"></div>
+        }
 
-            </div>
-            <div class="col-lg-3 mr-auto text-center">
+        <h4 class="mb-3">Full node connection</h4>
+        <p>This page exposes information to connect remotely to your full node via the P2P protocol.</p>
 
-            </div>
+        <h4 class="mb-3">Compatible wallets</h4>
+        <div>
+            <a href="https://play.google.com/store/apps/details?id=com.greenaddress.greenbits_android_wallet" target="_blank" class="d-inline-block mr-3 mb-3 text-center">
+                <img src="~/img/GreenWallet.png" width="100" height="100" asp-append-version="true" alt="Blockstream Green" />
+                <div class="mt-2">Blockstream Green</div>
+            </a>
+            <a href="https://www.wasabiwallet.io/" target="_blank" class="d-inline-block mr-3 mb-3 text-center">
+                <img src="~/img/wasabi.png" width="100" height="100" asp-append-version="true" alt="Wasabi Wallet" />
+                <div class="mt-2">Wasabi Wallet</div>
+            </a>
         </div>
-        <div class="form-group">
-            <h5>QR Code connection</h5>
-            <p>
-                <span>You can use QR Code to connect to @Model.WalletName with compatible wallets.<br /></span>
-            </p>
-        </div>
+
+        <h4 class="mt-5 mb-3">QR Code connection</h4>
+        <p>You can use QR Code to connect to @Model.WalletName with compatible wallets.</p>
+
         <div class="form-group">
             @if (!Model.ShowQR)
             {
@@ -90,7 +70,7 @@
 </div>
 
 @section Scripts {
-    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <partial name="_ValidationScriptsPartial" />
 
     @if (Model.ShowQR)
     {

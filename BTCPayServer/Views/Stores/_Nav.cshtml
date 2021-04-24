@@ -1,4 +1,4 @@
-<div class="nav flex-column nav-pills mb-4">
+<div class="nav flex-column mb-4">
     <a id="@(nameof(StoreNavPages.Index))" class="nav-link @ViewData.IsActivePage(StoreNavPages.Index)" asp-controller="Stores" asp-action="UpdateStore" asp-route-storeId="@this.Context.GetRouteValue("storeId")">General settings</a>
     <a id="@(nameof(StoreNavPages.Rates))" class="nav-link @ViewData.IsActivePage(StoreNavPages.Rates)" asp-controller="Stores" asp-action="Rates" asp-route-storeId="@this.Context.GetRouteValue("storeId")">Rates</a>
     <a id="@(nameof(StoreNavPages.Checkout))" class="nav-link @ViewData.IsActivePage(StoreNavPages.Checkout)" asp-controller="Stores" asp-action="CheckoutExperience" asp-route-storeId="@this.Context.GetRouteValue("storeId")">Checkout experience</a>

@@ -1,0 +1,41 @@
+@using BTCPayServer.Plugins.CoinSwitch
+@inject CoinSwitchService CoinSwitchService
+@{
+    var invoiceId = this.Context.GetRouteValue("invoiceId")?.ToString();
+    var settings = await CoinSwitchService.GetCoinSwitchForInvoice(invoiceId);
+    if (settings?.IsConfigured() is true && settings.Enabled)
+    {
+        <div id="altcoins" class="bp-view payment manual-flow" v-bind:class="{ 'active': currentTab == 'altcoins'}">
+            <nav>
+                <div class="manual__step-two__instructions">
+                    <span>
+                        {{$t("ConversionTab_BodyTop", srvModel)}}
+                        <br/><br/>
+                        {{$t("ConversionTab_BodyDesc", srvModel)}}
+                    </span>
+                </div>
+                <center>
+                        <coinswitch inline-template
+                                    :merchant-id="srvModel.coinSwitchMerchantId"
+                                    :to-currency="srvModel.paymentMethodId"
+                                    :to-currency-due="srvModel.btcDue * (1 + (@settings.AmountMarkupPercentage / 100)) "
+                                    mode = '@settings.Mode'
+                                    merchant-id="@settings.MerchantId"
+                                    :autoload="true"
+                                    :to-currency-address="srvModel.btcAddress">
+                            <div>
+                                <a v-on:click="openDialog($event)" :href="url" class="action-button" v-show="url && !opened">{{$t("Pay with CoinSwitch")}}</a>
+                                <iframe
+                                    v-if="showInlineIFrame"
+                                    v-on:load="onLoadIframe"
+                                    style="height: 100%; position: fixed; top: 0; width: 100%; left: 0;"
+                                    sandbox="allow-scripts allow-forms allow-popups allow-same-origin"
+                                    :src="url">
+                                </iframe>
+                            </div>
+                        </coinswitch>
+                </center>
+            </nav>
+        </div>
+    }
+}

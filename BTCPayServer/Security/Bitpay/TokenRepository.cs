@@ -52,11 +52,10 @@ namespace BTCPayServer.Security.Bitpay
             // It is legacy support and Bitpay generate string of unknown format, trying to replicate them
             // as good as possible. The string below got generated for me.
             var chars = "ERo0vkBMOYhyU0ZHvirCplbLDIGWPdi1ok77VnW7QdE";
-            var rand = new Random(Math.Abs(RandomUtils.GetInt32()));
             var generated = new char[chars.Length];
             for (int i = 0; i < generated.Length; i++)
             {
-                generated[i] = chars[rand.Next(0, generated.Length)];
+                generated[i] = chars[(int)(RandomUtils.GetUInt32() % generated.Length)];
             }
 
             using (var ctx = _Factory.CreateContext())

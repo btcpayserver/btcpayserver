@@ -1,31 +1,27 @@
 ﻿@model WalletPSBTReadyViewModel
 @{
     Layout = "../Shared/_Layout.cshtml";
+    ViewData.SetActivePageAndTitle(WalletsNavPages.PSBT, "Review PSBT", Context.GetStoreData().StoreName);
 }
 
 <section>
     <div class="container">
-        @if (TempData.HasStatusMessage())
-        {
-            <div class="row">
-                <div class="col-md-10 text-center">
-                    <partial name="_StatusMessage"/>
-                </div>
-            </div>
-        }
-        @if (Model.GlobalError != null)
-        {
-            <div class="alert alert-danger alert-dismissible" role="alert">
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-                <span>@Model.GlobalError</span><br/>
-            </div>
-        }
         <div class="row">
             <div class="col-lg-12 section-heading text-center">
-                <h2>Transaction review</h2>
-                <hr class="primary">
+                <partial name="_StatusMessage" />
+
+                @if (Model.GlobalError != null)
+                {
+                    <div class="alert alert-danger alert-dismissible" role="alert">
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                        <span>@Model.GlobalError</span><br/>
+                    </div>
+                }
+
+                <h2 class="mb-4">@ViewData["PageTitle"]</h2>
+
                 @if (Model.CanCalculateBalance)
                 {
                     <p>
@@ -38,8 +34,8 @@
                         {
                             <span style="color:red;">@Model.BalanceChange</span>
                         }
-                        , do you want to continue?
                     </p>
+                    <p>Do you want to continue?</p>
                 }
                 else
                 {
@@ -48,9 +44,9 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-lg-3 text-center"></div>
-            <div class="col-lg-6 text-center">
-                <h4 class="text-left">Inputs</h4>
+            <div class="col-lg-3"></div>
+            <div class="col-lg-6">
+                <h4 class="mt-4 mb-n3">Inputs</h4>
                 <table class="table table-sm table-responsive-lg">
                     <thead class="thead-inverse">
                     <tr>
@@ -88,13 +84,13 @@
                     </tbody>
                 </table>
             </div>
-            <div class="col-lg-3 text-center"></div>
+            <div class="col-lg-3"></div>
         </div>
 
         <div class="row">
-            <div class="col-lg-3 text-center"></div>
-            <div class="col-lg-6 text-center">
-                <h4 class="text-left">Outputs</h4>
+            <div class="col-lg-3"></div>
+            <div class="col-lg-6">
+                <h4 class="mt-4 mb-n3">Outputs</h4>
                 <table class="table table-sm table-responsive-lg">
                     <thead class="thead-inverse">
                     <tr>
@@ -122,21 +118,21 @@
                     </tbody>
                 </table>
             </div>
-            <div class="col-lg-3 text-center"></div>
+            <div class="col-lg-3"></div>
         </div>
         @if (Model.FeeRate != null)
         {
             <div class="row">
-                <div class="col-lg-3 text-center"></div>
+                <div class="col-lg-3"></div>
                 <div class="col-lg-6 text-right">
                     <p class="text-muted">Transaction fee rate: <b>@Model.FeeRate</b></p>
                 </div>
-                <div class="col-lg-3 text-center"></div>
+                <div class="col-lg-3"></div>
             </div>
         }
         <div class="row">
             <div class="col-lg-12 text-center">
-                <form method="post" asp-action="WalletPSBTReady" asp-route-walletId="@this.Context.GetRouteValue("walletId")">
+                <form method="post" asp-action="WalletPSBTReady" asp-route-walletId="@Context.GetRouteValue("walletId")">
                     <input type="hidden" asp-for="SigningKey" />
                     <input type="hidden" asp-for="SigningKeyPath" />
                     <partial name="SigningContext" for="SigningContext" />
@@ -152,11 +148,9 @@
                         {
                             <button type="submit" class="btn btn-primary" name="command" value="broadcast">Broadcast it</button>
                         }
-
                         <span> or </span>
                     }
                     <button type="submit" class="btn btn-secondary" name="command" value="analyze-psbt">View PSBT</button>
-
                 </form>
             </div>
         </div>

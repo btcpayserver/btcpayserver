@@ -8,6 +8,17 @@
                 "summary": "Get store on-chain payment methods",
                 "description": "View information about the stores' configured on-chain payment methods",
                 "operationId": "StoreOnChainPaymentMethods_GetOnChainPaymentMethods",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "list of payment methods",

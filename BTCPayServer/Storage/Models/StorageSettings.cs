@@ -9,7 +9,7 @@ namespace BTCPayServer.Storage.Models
         public StorageProvider Provider { get; set; }
         public string ConfigurationStr { get; set; }
 
-        [NotMapped]
+        [JsonIgnore]
         public JObject Configuration
         {
             get => JsonConvert.DeserializeObject<JObject>(string.IsNullOrEmpty(ConfigurationStr) ? "{}" : ConfigurationStr);

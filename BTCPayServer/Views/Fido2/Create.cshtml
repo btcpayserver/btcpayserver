@@ -1,0 +1,25 @@
+@model Fido2NetLib.CredentialCreateOptions
+@{
+    ViewData.SetActivePageAndTitle(ManageNavPages.Fido2, "Register FIDO2 Credentials");
+}
+<form asp-action="CreateResponse" id="registerForm" >
+    <input type="hidden" name="data" id="data"  />
+    <input type="hidden" name="name" id="name" value="@(ViewData.ContainsKey("CredentialName")? ViewData["CredentialName"] : string.Empty)" />
+</form>
+<div class="row">
+    <div class="col-lg-12 section-heading">
+        <div>
+            <span id="spinner" class="fa fa-spinner fa-spin float-right ml-3 mr-5 mt-1 fido-running" style="font-size:2.5em"></span>
+            <p>Insert your security key into your computer's USB port. If it has a button, tap on it.</p>
+        </div>
+        <p id="error-message" class="d-none alert alert-danger"></p>
+        <a id="btn-retry"  class="btn btn-secondary d-none" href="javascript:window.location.reload()">Retry</a>
+    </div>
+</div>
+
+<script>
+    // send to server for registering
+    window.makeCredentialOptions = @Json.Serialize(Model);
+</script>
+<script src="~/js/webauthn/helpers.js" ></script>
+<script src="~/js/webauthn/register.js" ></script>

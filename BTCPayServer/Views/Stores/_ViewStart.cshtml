@@ -1,3 +1,7 @@
-﻿@{
-    ViewBag.MainTitle = "Manage store";
+﻿@using BTCPayServer.Views
+@using BTCPayServer.Views.Stores
+
+@{
+    ViewBag.CategoryTitle = "Stores";
+    ViewData.SetActiveCategory(typeof(StoreNavPages));
 }

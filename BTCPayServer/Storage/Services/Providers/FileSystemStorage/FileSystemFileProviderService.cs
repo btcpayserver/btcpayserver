@@ -37,7 +37,9 @@ namespace BTCPayServer.Storage.Services.Providers.FileSystemStorage
         public override async Task<string> GetFileUrl(Uri baseUri, StoredFile storedFile, StorageSettings configuration)
         {
             var baseResult = await base.GetFileUrl(baseUri, storedFile, configuration);
-            var url = new Uri(baseUri, LocalStorageDirectoryName);
+            // Set the relative URL to the directory name if the root path is default, otherwise add root path before the directory name
+            var relativeUrl = baseUri.AbsolutePath == "/" ? LocalStorageDirectoryName : $"{baseUri.AbsolutePath}/{LocalStorageDirectoryName}";
+            var url = new Uri(baseUri, relativeUrl);
             return baseResult.Replace(new DirectoryInfo(_datadirs.Value.StorageDir).FullName, url.AbsoluteUri,
                 StringComparison.InvariantCultureIgnoreCase);
         }

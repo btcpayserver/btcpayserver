@@ -11,12 +11,12 @@
 }
 <title>@ViewData["Title"]</title>
 @* CSS *@
-<link href="@this.Context.Request.GetRelativePathOrAbsolute(themeManager.BootstrapUri)" rel="stylesheet" asp-append-version="true" />
-<link href="@this.Context.Request.GetRelativePathOrAbsolute(themeManager.CreativeStartUri)" rel="stylesheet" asp-append-version="true" />
-<link href="@this.Context.Request.GetRelativePathOrAbsolute(themeManager.ThemeUri)" rel="stylesheet" asp-append-version="true" />
+<link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.BootstrapUri)" rel="stylesheet" asp-append-version="true" />
+<link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.CreativeStartUri)" rel="stylesheet" asp-append-version="true" />
+<link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.ThemeUri)" rel="stylesheet" asp-append-version="true" />
 @if (!String.IsNullOrWhiteSpace(themeManager.CustomThemeUri))
 {
-<link href="@this.Context.Request.GetRelativePathOrAbsolute(themeManager.CustomThemeUri)" rel="stylesheet" asp-append-version="true" />
+<link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.CustomThemeUri)" rel="stylesheet" asp-append-version="true" />
 }
 <bundle name="wwwroot/bundles/main-bundle.min.css" asp-append-version="true" />
 @* JS *@

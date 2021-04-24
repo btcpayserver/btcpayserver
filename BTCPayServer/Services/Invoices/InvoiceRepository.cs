@@ -14,6 +14,7 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using NLog;
 using Encoders = NBitcoin.DataEncoders.Encoders;
 using InvoiceData = BTCPayServer.Data.InvoiceData;
 
@@ -180,8 +181,12 @@ namespace BTCPayServer.Services.Invoices
                 {
                     if (paymentMethod.Network == null)
                         throw new InvalidOperationException("CryptoCode unsupported");
-                    var paymentDestination = paymentMethod.GetPaymentMethodDetails().GetPaymentDestination();
-
+                    var details = paymentMethod.GetPaymentMethodDetails();
+                    if (!details.Activated)
+                    {
+                        continue;
+                    }
+                    var paymentDestination = details.GetPaymentDestination();
                     string address = GetDestination(paymentMethod);
                     await context.AddressInvoices.AddAsync(new AddressInvoiceData()
                     {
@@ -244,7 +249,13 @@ namespace BTCPayServer.Services.Invoices
             if (paymentMethod.GetId().PaymentType == Payments.PaymentTypes.BTCLike)
             {
                 var network = (BTCPayNetwork)paymentMethod.Network;
-                return ((Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod)paymentMethod.GetPaymentMethodDetails()).GetDepositAddress(network.NBitcoinNetwork).ScriptPubKey.Hash.ToString();
+                var details =
+                    (Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod)paymentMethod.GetPaymentMethodDetails();
+                if (!details.Activated)
+                {
+                    return null;
+                }
+                return details.GetDepositAddress(network.NBitcoinNetwork).ScriptPubKey.Hash.ToString();
             }
             ///////////////
             return paymentMethod.GetPaymentMethodDetails().GetPaymentDestination();
@@ -292,6 +303,39 @@ namespace BTCPayServer.Services.Invoices
             AddToTextSearch(context, invoice, paymentMethodDetails.GetPaymentDestination());
             await context.SaveChangesAsync();
             return true;
+        }
+
+        public async Task UpdateInvoicePaymentMethod(string invoiceId, PaymentMethod paymentMethod)
+        {
+            using (var context = _ContextFactory.CreateContext())
+            {
+                var invoice = await context.Invoices.FindAsync(invoiceId);
+                if (invoice == null)
+                    return;
+                var network = paymentMethod.Network;
+                var invoiceEntity = invoice.GetBlob(_Networks);
+                var newDetails = paymentMethod.GetPaymentMethodDetails();
+                var existing = invoiceEntity.GetPaymentMethod(paymentMethod.GetId());
+                if (existing.GetPaymentMethodDetails().GetPaymentDestination() != newDetails.GetPaymentDestination() && newDetails.Activated)
+                {
+                    await context.AddressInvoices.AddAsync(new AddressInvoiceData()
+                        {
+                            InvoiceDataId = invoiceId,
+                            CreatedTime = DateTimeOffset.UtcNow
+                        }
+                        .Set(GetDestination(paymentMethod), paymentMethod.GetId()));
+                    await context.HistoricalAddressInvoices.AddAsync(new HistoricalAddressInvoiceData()
+                    {
+                        InvoiceDataId = invoiceId,
+                        Assigned = DateTimeOffset.UtcNow
+                    }.SetAddress(paymentMethod.GetPaymentMethodDetails().GetPaymentDestination(), network.CryptoCode));
+                }
+                invoiceEntity.SetPaymentMethod(paymentMethod);
+                invoice.Blob = ToBytes(invoiceEntity, network);
+                AddToTextSearch(context, invoice, paymentMethod.GetPaymentMethodDetails().GetPaymentDestination());
+                await context.SaveChangesAsync();
+                
+            }
         }
 
         public async Task AddPendingInvoiceIfNotPresent(string invoiceId)

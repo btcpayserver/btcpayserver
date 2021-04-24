@@ -1,11 +1,9 @@
 @model LightningWalletServices
 @{
-    ViewData.SetActivePageAndTitle(ServerNavPages.Services);
+    ViewData.SetActivePageAndTitle(ServerNavPages.Services, Model.WalletName);
 }
 
-
-<h4>@Model.WalletName</h4>
-<partial name="_StatusMessage" />
+<h2 class="mb-4">@ViewData["PageTitle"]</h2>
 
 @if (Model.ShowQR)
 {
@@ -19,54 +17,36 @@
 }
 
 <div class="row">
-    <div class="col-md-6">
-        <div asp-validation-summary="All" class="text-danger"></div>
-    </div>
-</div>
-
-<div class="row">
     <div class="col-md-8">
-        <div class="form-group">
-            <h5>Full node connection</h5>
-            <p>
-                <span>This page exposes information to connect remotely to your full node via the RPC protocol.</span>
-            </p>
-        </div>
-        <div class="form-group">
-            <h5>Compatible wallets</h5>
-        </div>
-        <div class="row">
-            <div class="col-lg-3 ml-auto text-center">
-                <a href="https://apps.apple.com/us/app/fully-noded/id1436425586" target="_blank">
-                    <img src="~/img/fullynoded.png" height="100" asp-append-version="true" />
-                </a>
-                <p><a href="https://apps.apple.com/us/app/fully-noded/id1436425586" target="_blank">Fully Noded</a></p>
-            </div>
-            <div class="col-lg-3 mr-auto text-center">
-                <a href="https://github.com/cryptoadvance/specter-desktop" target="_blank">
-                    <img src="~/img/Specter.png" height="100" asp-append-version="true" />
-                </a>
-                <p><a href="https://github.com/cryptoadvance/specter-desktop" target="_blank">Specter</a></p>
-            </div>
-            <div class="col-lg-3 mr-auto text-center">
+        @if (!ViewContext.ModelState.IsValid)
+        {
+            <div asp-validation-summary="All" class="text-danger"></div>
+        }
 
-            </div>
-            <div class="col-lg-3 mr-auto text-center">
+        <h4 class="mb-3">Full node connection</h4>
+        <p>This page exposes information to connect remotely to your full node via the RPC protocol.</p>
 
-            </div>
+        <h4 class="mb-3">Compatible wallets</h4>
+        <div>
+            <a href="https://apps.apple.com/us/app/fully-noded/id1436425586" target="_blank" class="d-inline-block mr-3 text-center">
+                <img src="~/img/fullynoded.png" width="100" height="100" asp-append-version="true" alt="Fully Noded" />
+                <div class="mt-2">Fully Noded</div>
+            </a>
+            <a href="https://github.com/cryptoadvance/specter-desktop" target="_blank" class="d-inline-block mr-3 text-center">
+                <img src="~/img/specter.png" width="100" height="100" asp-append-version="true" alt="Specter Desktop" />
+                <div class="mt-2">Specter Desktop</div>
+            </a>
         </div>
-        <div class="form-group">
-            <h5>QR Code connection</h5>
-            <p>
-                <span>You can use QR Code to connect to @Model.WalletName with compatible wallets.<br /></span>
-            </p>
-        </div>
+
+        <h4 class="mt-5 mb-3">QR Code connection</h4>
+        <p>You can use QR Code to connect to @Model.WalletName with compatible wallets.</p>
+
         <div class="form-group">
             @if (!Model.ShowQR)
             {
                 <div class="form-group">
                     <form method="get">
-                        <input type="hidden" asp-for="ShowQR" value="true" />
+                        <input type="hidden" asp-for="ShowQR" value="true"/>
                         <button type="submit" class="btn btn-primary">Show Confidential QR Code</button>
                     </form>
                 </div>
@@ -81,7 +61,7 @@
                 <div id="detailsQR" class="collapse">
                     <div class="form-group">
                         <label>QR Code data</label>
-                        <input asp-for="ServiceLink" readonly class="form-control" />
+                        <input asp-for="ServiceLink" readonly class="form-control"/>
                     </div>
                 </div>
             }
@@ -90,7 +70,7 @@
 </div>
 
 @section Scripts {
-    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <partial name="_ValidationScriptsPartial" />
 
     @if (Model.ShowQR)
     {

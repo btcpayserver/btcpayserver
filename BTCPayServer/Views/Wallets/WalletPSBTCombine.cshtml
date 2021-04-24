@@ -1,15 +1,15 @@
 ﻿@model WalletPSBTCombineViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["Title"] = "PSBT";
-    ViewData.SetActivePageAndTitle(WalletsNavPages.PSBT);
+    ViewData.SetActivePageAndTitle(WalletsNavPages.PSBT, "Combine PSBT", Context.GetStoreData().StoreName);
 }
 
-<h4>Combine PSBT</h4>
 <div class="row">
     <div class="col-md-10">
+        <h4 class="mb-3">@ViewData["PageTitle"]</h4>
+
         <form class="form-group" method="post" asp-action="WalletPSBTCombine" enctype="multipart/form-data">
-            <input type="hidden" asp-for="OtherPSBT" />
+            <input type="hidden" asp-for="OtherPSBT"/>
             <div class="form-group">
                 <label asp-for="PSBT"></label>
                 <textarea class="form-control" rows="5" asp-for="PSBT"></textarea>

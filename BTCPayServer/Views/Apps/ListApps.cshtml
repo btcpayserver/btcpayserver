@@ -1,6 +1,6 @@
 ﻿@model ListAppsViewModel
 @{
-    ViewData["Title"] = "Apps";
+    ViewData.SetActivePageAndTitle(AppsNavPages.Index, "Apps");
     var storeNameSortOrder = (string)ViewData["StoreNameSortOrder"];
     var appNameSortOrder = (string)ViewData["AppNameSortOrder"];
     var appTypeSortOrder = (string)ViewData["AppTypeSortOrder"];
@@ -10,27 +10,20 @@
 
 <section>
     <div class="container">
-        @if (TempData.HasStatusMessage())
-        {
-            <div class="row">
-                <div class="col-lg-12 text-center">
-                    <partial name="_StatusMessage" />
-                </div>
-            </div>
-        }
-        <div class="row">
-            <div class="col-lg-12 section-heading">
-                <h2>@ViewData["Title"]</h2>
-                <hr class="primary">
-                <p>Create and manage apps.</p>
-            </div>
+        <partial name="_StatusMessage" />
+
+        <div class="d-sm-flex align-items-center justify-content-between mb-2">
+            <h2 class="mb-0">
+                @ViewData["PageTitle"]
+                <small>
+                    <a href="https://docs.btcpayserver.org/Apps/" target="_blank">
+                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                    </a>
+                </small>
+            </h2>
+            <a asp-action="CreateApp" class="btn btn-primary mt-3 mt-sm-0" role="button" id="CreateNewApp"><span class="fa fa-plus"></span> Create a new app</a>
         </div>
-        <div class="row button-row mb-3">
-            <div class="col-lg-12">
-                <a asp-action="CreateApp" class="btn btn-primary" role="button" id="CreateNewApp"><span class="fa fa-plus"></span> Create a new app</a>
-                <a href="https://docs.btcpayserver.org/Apps/" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
-            </div>
-        </div>
+
         <div class="row">
             <div class="col-lg-12">
                 @if (Model.Apps.Any())

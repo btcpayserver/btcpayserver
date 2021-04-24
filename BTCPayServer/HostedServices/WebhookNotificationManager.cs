@@ -1,36 +1,23 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Net.NetworkInformation;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using Amazon.Runtime.Internal;
-using Amazon.S3.Model;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Logging;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
-using Microsoft.CodeAnalysis.Operations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.DataEncoders;
-using NBitcoin.Secp256k1;
-using NBitpayClient;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
-using Org.BouncyCastle.Ocsp;
-using TwentyTwenty.Storage;
 
 namespace BTCPayServer.HostedServices
 {
@@ -114,7 +101,7 @@ namespace BTCPayServer.HostedServices
             webhookEvent.DeliveryId = newDelivery.Id;
             webhookEvent.WebhookId = webhookDelivery.Webhook.Id;
             // if we redelivered a redelivery, we still want the initial delivery here
-            webhookEvent.OrignalDeliveryId ??= deliveryId;
+            webhookEvent.OriginalDeliveryId ??= deliveryId;
             webhookEvent.IsRedelivery = true;
             newDeliveryBlob.Request = ToBytes(webhookEvent);
             newDelivery.SetBlob(newDeliveryBlob);
@@ -138,7 +125,7 @@ namespace BTCPayServer.HostedServices
                     webhookEvent.StoreId = invoiceEvent.Invoice.StoreId;
                     webhookEvent.DeliveryId = delivery.Id;
                     webhookEvent.WebhookId = webhook.Id;
-                    webhookEvent.OrignalDeliveryId = delivery.Id;
+                    webhookEvent.OriginalDeliveryId = delivery.Id;
                     webhookEvent.IsRedelivery = false;
                     webhookEvent.Timestamp = delivery.Timestamp;
                     var context = new WebhookDeliveryRequest(webhook.Id, webhookEvent, delivery, webhookBlob);

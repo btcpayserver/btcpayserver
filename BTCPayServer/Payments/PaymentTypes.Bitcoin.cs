@@ -5,6 +5,7 @@ using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using NBitcoin;
+using BTCPayServer.BIP78.Sender;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Payments
@@ -17,7 +18,7 @@ namespace BTCPayServer.Payments
 
         public override string ToPrettyString() => "On-Chain";
         public override string GetId() => "BTCLike";
-        public override string GetBadge() => "🔗";
+        public override string GetBadge() => "";
         public override string ToStringNormalized() => "OnChain";
         public override CryptoPaymentData DeserializePaymentData(BTCPayNetworkBase network, string str)
         {
@@ -69,9 +70,13 @@ namespace BTCPayServer.Payments
         public override string GetPaymentLink(BTCPayNetworkBase network, IPaymentMethodDetails paymentMethodDetails,
             Money cryptoInfoDue, string serverUri)
         {
+            if (!paymentMethodDetails.Activated)
+            {
+                return string.Empty;
+            }
             var bip21 = ((BTCPayNetwork)network).GenerateBIP21(paymentMethodDetails.GetPaymentDestination(), cryptoInfoDue);
 
-            if ((paymentMethodDetails as BitcoinLikeOnChainPaymentMethod)?.PayjoinEnabled is true)
+            if ((paymentMethodDetails as BitcoinLikeOnChainPaymentMethod)?.PayjoinEnabled is true && serverUri != null)
             {
                 bip21 += $"&{PayjoinClient.BIP21EndpointKey}={serverUri.WithTrailingSlash()}{network.CryptoCode}/{PayjoinClient.BIP21EndpointKey}";
             }
@@ -79,5 +84,9 @@ namespace BTCPayServer.Payments
         }
 
         public override string InvoiceViewPaymentPartialName { get; } = "Bitcoin/ViewBitcoinLikePaymentData";
+        public override bool IsPaymentType(string paymentType)
+        {
+            return string.IsNullOrEmpty(paymentType) || base.IsPaymentType(paymentType);
+        }
     }
 }

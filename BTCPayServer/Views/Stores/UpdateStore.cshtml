@@ -2,22 +2,15 @@
 @model StoreViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePageAndTitle(StoreNavPages.Index, Model.StoreName);
-}
-
-<partial name="_StatusMessage" />
-
-@if (!ViewContext.ModelState.IsValid)
-{
-    <div class="row">
-        <div class="col-md-8">
-            <div asp-validation-summary="All" class="text-danger"></div>
-        </div>
-    </div>
+    ViewData.SetActivePageAndTitle(StoreNavPages.Index, "General Settings", Context.GetStoreData().StoreName);
 }
 
 <div class="row">
     <div class="col-lg-10 col-xl-9">
+        @if (!ViewContext.ModelState.IsValid)
+        {
+            <div asp-validation-summary="All" class="text-danger"></div>
+        }
         <div class="mb-5">
             <h4 class="mb-3">Wallet</h4>
             @if (Model.HintWallet)
@@ -49,27 +42,39 @@
                                 }
                             </span>
                             <span class="d-flex align-items-center fw-semibold">
-                                @if (scheme.Enabled)
-                                {
-                                    <span class="d-flex align-items-center text-success">
-                                        <span class="mr-2 btcpay-status btcpay-status--enabled"></span>
-                                        Enabled
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span class="d-flex align-items-center text-danger">
-                                        <span class="mr-2 btcpay-status btcpay-status--disabled"></span>
-                                        Disabled
-                                    </span>
-                                }
+                                <form method="post"
+                                      asp-action="SetWalletEnabled"
+                                      asp-route-cryptoCode="@scheme.Crypto"
+                                      asp-route-storeId="@Model.Id"
+                                      class="d-flex align-items-center"
+                                      style="min-width:7.65rem">
+                                    <button type="submit" class="btcpay-toggle mr-2 @if (scheme.Enabled) { @("btcpay-toggle--active") }" name="Enabled" value="@(scheme.Enabled ? "false" : "true")" id="@($"{scheme.Crypto}WalletEnabled")">@(scheme.Enabled ? "Disable" : "Enable")</button>
+                                    @if (scheme.Enabled)
+                                    {
+                                        <span class="text-primary">
+                                            Enabled
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">
+                                            Disabled
+                                        </span>
+                                    }
+                                </form>
                                 @if (isSetUp)
                                 {
                                     <span class="text-light ml-3 mr-2">|</span>
+                                    <a asp-action="ModifyWallet" asp-route-cryptoCode="@scheme.Crypto" asp-route-storeId="@Model.Id" id="@($"Modify{scheme.Crypto}")" class="btn btn-link px-1 py-1 fw-semibold">
+                                        Modify
+                                    </a>
                                 }
-                                <a asp-action="AddDerivationScheme" asp-route-cryptoCode="@scheme.Crypto" asp-route-storeId="@Context.GetRouteValue("storeId")" id="@($"Modify{scheme.Crypto}")" class="btn btn-@(isSetUp ? "link px-1" : "primary btn-sm ml-4 px-3") py-1 fw-semibold">
-                                    @(isSetUp ? "Modify" : "Setup")
-                                </a>
+                                else
+                                {
+                                    <a asp-action="SetupWallet" asp-route-cryptoCode="@scheme.Crypto" asp-route-storeId="@Model.Id" id="@($"Modify{scheme.Crypto}")" class="btn btn-primary btn-sm ml-4 px-3 py-1 fw-semibold">
+                                        Setup
+                                    </a>
+                                }
                             </span>
                         </div>
                     </li>
@@ -107,28 +112,43 @@
                                 @if (isSetUp)
                                 {
                                     <span class="smMaxWidth text-truncate text-secondary mr-3">@scheme.Address</span>
+                                    <a class="text-secondary"
+                                       asp-controller="PublicLightningNodeInfo"
+                                       asp-action="ShowLightningNodeInfo"
+                                       asp-route-cryptoCode="@scheme.CryptoCode"
+                                       asp-route-storeId="@Model.Id"
+                                       target="_blank">
+                                        Public Node Info
+                                    </a>
                                 }
                             </span>
                             <span class="d-flex align-items-center fw-semibold">
-                                @if (scheme.Enabled)
-                                {
-                                    <span class="d-flex align-items-center text-success">
-                                        <span class="mr-2 btcpay-status btcpay-status--enabled"></span>
-                                        Enabled
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span class="d-flex align-items-center text-danger">
-                                        <span class="mr-2 btcpay-status btcpay-status--disabled"></span>
-                                        Disabled
-                                    </span>
-                                }
+                                <form method="post"
+                                      asp-action="SetLightningNodeEnabled"
+                                      asp-route-cryptoCode="@scheme.CryptoCode"
+                                      asp-route-storeId="@Model.Id"
+                                      class="d-flex align-items-center"
+                                      style="min-width:7.65rem">
+                                    <button type="submit" class="btcpay-toggle mr-2 @if (scheme.Enabled) { @("btcpay-toggle--active") }" name="Enabled" value="@(scheme.Enabled ? "false" : "true")" id="@($"{scheme.CryptoCode}LightningEnabled")">@(scheme.Enabled ? "Disable" : "Enable")e</button>
+                                    @if (scheme.Enabled)
+                                    {
+                                        <span class="text-primary">
+                                            Enabled
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">
+                                            Disabled
+                                        </span>
+                                    }
+                                </form>
+
                                 @if (isSetUp)
                                 {
                                     <span class="text-light ml-3 mr-2">|</span>
                                 }
-                                <a asp-action="AddLightningNode" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@Context.GetRouteValue("storeId")" id="@($"Modify-Lightning{scheme.CryptoCode}")" class="btn btn-@(isSetUp ? "link px-1" : "primary btn-sm ml-4 px-3") py-1 fw-semibold">
+                                <a asp-action="SetupLightningNode" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@Model.Id" id="@($"Modify-Lightning{scheme.CryptoCode}")" class="btn btn-@(isSetUp ? "link px-1" : "primary btn-sm ml-4 px-3") py-1 fw-semibold">
                                     @(isSetUp ? "Modify" : "Setup")
                                 </a>
                             </span>
@@ -138,7 +158,7 @@
             </ul>
         </div>
 
-        <form method="post" class="mb-5">
+        <form method="post">
             <h4 class="mb-3">General</h4>
             <div class="form-group">
                 <label asp-for="Id"></label>
@@ -160,20 +180,26 @@
                 <div class="form-check">
                     <input asp-for="AnyoneCanCreateInvoice" type="checkbox" class="form-check-input" />
                     <label asp-for="AnyoneCanCreateInvoice" class="form-check-label"></label>
-                    <a href="https://docs.btcpayserver.org/FAQ/FAQ-Stores/#allow-anyone-to-create-invoice" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                    <a href="https://docs.btcpayserver.org/FAQ/FAQ-Stores/#allow-anyone-to-create-invoice" target="_blank">
+                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                    </a>
                 </div>
             </div>
             <div class="form-group">
                 <div class="form-check">
                     <input asp-for="PayJoinEnabled" type="checkbox" class="form-check-input" />
                     <label asp-for="PayJoinEnabled" class="form-check-label"></label>
-                    <a href="https://docs.btcpayserver.org/Payjoin/" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                    <a href="https://docs.btcpayserver.org/Payjoin/" target="_blank">
+                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                    </a>
                     <span asp-validation-for="PayJoinEnabled" class="text-danger"></span>
                 </div>
             </div>
             <div class="form-group">
                 <label asp-for="NetworkFeeMode"></label>
-                <a href="https://docs.btcpayserver.org/FAQ/FAQ-Stores/#add-network-fee-to-invoice-vary-with-mining-fees" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                <a href="https://docs.btcpayserver.org/FAQ/FAQ-Stores/#add-network-fee-to-invoice-vary-with-mining-fees" target="_blank">
+                    <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                </a>
                 <select asp-for="NetworkFeeMode" class="form-control">
                     <option value="MultiplePaymentsOnly">... only if the customer makes more than one payment for the invoice</option>
                     <option value="Always">... on every payment</option>
@@ -183,7 +209,9 @@
             <div class="form-group">
                 <div class="mb-2">
                     <label asp-for="InvoiceExpiration" class="d-inline"></label>
-                    <a href="https://docs.btcpayserver.org/FAQ/FAQ-Stores/#invoice-expires-if-the-full-amount-has-not-been-paid-after-minutes" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                    <a href="https://docs.btcpayserver.org/FAQ/FAQ-Stores/#invoice-expires-if-the-full-amount-has-not-been-paid-after-minutes" target="_blank">
+                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                    </a>
                 </div>
                 <div class="input-group">
                     <input asp-for="InvoiceExpiration" class="form-control" style="max-width:10ch;" />
@@ -196,7 +224,9 @@
             <div class="form-group">
                 <div class="mb-2">
                     <label asp-for="MonitoringExpiration" class="d-inline"></label>
-                    <a href="https://docs.btcpayserver.org/FAQ/FAQ-Stores/#payment-invalid-if-transactions-fails-to-confirm-minutes-after-invoice-expiration" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                    <a href="https://docs.btcpayserver.org/FAQ/FAQ-Stores/#payment-invalid-if-transactions-fails-to-confirm-minutes-after-invoice-expiration" target="_blank">
+                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                    </a>
                 </div>
                 <div class="input-group">
                     <input asp-for="MonitoringExpiration" class="form-control" style="max-width:10ch;" />
@@ -209,7 +239,9 @@
             <div class="form-group">
                 <div class="mb-2">
                     <label asp-for="PaymentTolerance" class="d-inline"></label>
-                    <a href="https://docs.btcpayserver.org/FAQ/FAQ-Stores/#consider-the-invoice-paid-even-if-the-paid-amount-is-less-than-expected" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                    <a href="https://docs.btcpayserver.org/FAQ/FAQ-Stores/#consider-the-invoice-paid-even-if-the-paid-amount-is-less-than-expected" target="_blank">
+                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
+                    </a>
                 </div>
                 <div class="input-group">
                     <input asp-for="PaymentTolerance" class="form-control" style="max-width:10ch;" />
@@ -223,7 +255,7 @@
                 <div class="mb-2">
                     <label asp-for="SpeedPolicy" class="d-inline"></label>
                     <a href="https://docs.btcpayserver.org/FAQ/FAQ-Stores/#consider-the-invoice-confirmed-when-the-payment-transaction" target="_blank">
-                        <span class="fa fa-question-circle-o" title="More information..."></span>
+                        <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
                     </a>
                 </div>
                 <script>
@@ -254,42 +286,6 @@
 
             <button name="command" type="submit" class="btn btn-primary" value="Save" id="Save">Save Store Settings</button>
         </form>
-
-        <h4 class="mb-3">Additional payment methods</h4>
-        <div class="table-responsive-md">
-            <table class="table table-sm mt-1 mb-5">
-                <thead>
-                    <tr>
-                        <th>Provider</th>
-                        <th class="text-center w-100px">Enabled</th>
-                        <th class="text-right w-100px">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var scheme in Model.ThirdPartyPaymentMethods)
-                    {
-                        <tr>
-                            <td>@scheme.Provider</td>
-                            <td class="text-center">
-                                @if (scheme.Enabled)
-                                {
-                                    <span class="text-success fa fa-check"></span>
-                                }
-                                else
-                                {
-                                    <span class="text-danger fa fa-times"></span>
-                                }
-                            </td>
-                            <td class="text-right">
-                                <a asp-action="@scheme.Action" id='Modify-@scheme.Provider' asp-route-storeId="@Context.GetRouteValue("storeId")">
-                                    @(scheme.Enabled ? "Modify" : "Setup")
-                                </a>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
 
         <h4 class="mt-5 mb-3">Services</h4>
         <div class="table-responsive-md">
@@ -329,5 +325,5 @@
 </div>
 
 @section Scripts {
-    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <partial name="_ValidationScriptsPartial" />
 }

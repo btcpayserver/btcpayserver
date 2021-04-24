@@ -31,8 +31,9 @@ namespace BTCPayServer.Controllers.GreenField
         public StoreLightningNodeApiController(
             IOptions<LightningNetworkOptions> lightningNetworkOptions,
             LightningClientFactoryService lightningClientFactory, BTCPayNetworkProvider btcPayNetworkProvider,
-            BTCPayServerEnvironment btcPayServerEnvironment, CssThemeManager cssThemeManager) : base(
-            btcPayNetworkProvider, btcPayServerEnvironment, cssThemeManager)
+            BTCPayServerEnvironment btcPayServerEnvironment, CssThemeManager cssThemeManager,
+            IAuthorizationService authorizationService) : base(
+            btcPayNetworkProvider, btcPayServerEnvironment, cssThemeManager, authorizationService)
         {
             _lightningNetworkOptions = lightningNetworkOptions;
             _lightningClientFactory = lightningClientFactory;
@@ -100,11 +101,10 @@ namespace BTCPayServer.Controllers.GreenField
             return base.CreateInvoice(cryptoCode, request);
         }
 
-        protected override Task<ILightningClient> GetLightningClient(string cryptoCode,
+        protected override async Task<ILightningClient> GetLightningClient(string cryptoCode,
             bool doingAdminThings)
         {
-            _lightningNetworkOptions.Value.InternalLightningByCryptoCode.TryGetValue(cryptoCode,
-                out var internalLightningNode);
+            
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
 
             var store = HttpContext.GetStoreData();
@@ -117,13 +117,20 @@ namespace BTCPayServer.Controllers.GreenField
             var existing = store.GetSupportedPaymentMethods(_btcPayNetworkProvider)
                 .OfType<LightningSupportedPaymentMethod>()
                 .FirstOrDefault(d => d.PaymentId == id);
-            if (existing == null || (existing.GetLightningUrl().IsInternalNode(internalLightningNode) &&
-                                     !CanUseInternalLightning(doingAdminThings)))
-            {
+            if (existing == null)
                 return null;
+            if (existing.GetExternalLightningUrl() is LightningConnectionString connectionString)
+            {
+                return _lightningClientFactory.Create(connectionString, network);
             }
-
-            return Task.FromResult(_lightningClientFactory.Create(existing.GetLightningUrl(), network));
+            else if (
+                await CanUseInternalLightning(doingAdminThings) && 
+                _lightningNetworkOptions.Value.InternalLightningByCryptoCode.TryGetValue(network.CryptoCode,
+                out var internalLightningNode))
+            {
+                return _lightningClientFactory.Create(internalLightningNode, network);
+            }
+            return null;
         }
     }
 }

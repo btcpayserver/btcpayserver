@@ -8558,34 +8558,10 @@ strong {
     .payment-tabs__tab.active {
         color: #214497;
         font-weight: 400;
+
+        border-bottom: #329F80 5px solid;
     }
-
-.payment-tabs__slider {
-    position: absolute;
-    height: 5px;
-    width: 50%;
-    background: #329F80;
-    top: 0;
-    right: 50%;
-    transition: all .2s ease;
-}
-
-    .payment-tabs__slider.slide-copy {
-        right: 0;
-    }
-
-    .payment-tabs__slider.three-tabs {
-        width: 33%;
-        right: 67%;
-    }
-
-        .payment-tabs__slider.three-tabs.slide-copy {
-            right: 33%;
-        }
-
-        .payment-tabs__slider.three-tabs.slide-altcoins {
-            right: 0;
-        }
+    
 
 .manual__step-one__header {
     padding-top: 20px;

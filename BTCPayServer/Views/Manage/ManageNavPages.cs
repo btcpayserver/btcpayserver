@@ -2,6 +2,6 @@ namespace BTCPayServer.Views.Manage
 {
     public enum ManageNavPages
     {
-        Index, ChangePassword, TwoFactorAuthentication, U2F, APIKeys, Notifications
+        Index, ChangePassword, TwoFactorAuthentication, U2F, APIKeys, Notifications, Fido2
     }
 }

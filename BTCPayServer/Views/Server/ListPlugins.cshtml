@@ -88,13 +88,19 @@
     }
 }
 
-<partial name="_StatusMessage"/>
-
 <style>
     .version-switch .nav-link { display: inline; }
     .version-switch .nav-link.active { display: none; }
 </style>
-
+@if (Model.Disabled.Any())
+{
+    <div class="alert alert-danger mb-5">
+        Some plugins were disabled due to fatal errors. They may be incompatible with this version of BTCPay Server.
+       <button class="btn btn-danger" data-toggle="collapse" data-target="#disabled-plugins">
+                    View disabled plugins
+                </button>
+    </div>
+}
 @if (Model.Commands.Any())
 {
     <div class="alert alert-info mb-5">
@@ -110,7 +116,7 @@
 
 @if (Model.Installed.Any())
 {
-    <h3 class="mb-3">Installed Plugins</h3>
+    <h2 class="mb-4">Installed Plugins</h2>
     <div class="row mb-4">
         @foreach (var plugin in Model.Installed)
         {
@@ -227,9 +233,10 @@
         }
     </div>
 }
+
 @if (availableAndNotInstalled.Any())
 {
-    <h3 class="mb-3">Available Plugins</h3>
+    <h2 class="mb-4">Available Plugins</h2>
     <div class="row mb-4">
         @foreach (var pluginT in availableAndNotInstalled)
         {
@@ -242,7 +249,7 @@
                             @plugin.Version
                             @if (pluginT.Item2)
                             {
-                                <div class="badge badge-light ml-2" data-toggle="tooltip" title="This plugin has been recommended to be installed by your deployment method." class="text-nowrap">Recommended <span class="fa fa-question-circle-o"></span></div>
+                                <div class="badge badge-light ml-2" data-toggle="tooltip" title="This plugin has been recommended to be installed by your deployment method." class="text-nowrap">Recommended <span class="fa fa-question-circle-o text-secondary"></span></div>
                             }
                         </h5>
                         <p class="card-text">@plugin.Description</p>
@@ -339,6 +346,36 @@
                                         <span class="my-2 mr-3">@extComm.Key</span>
                                         <form asp-action="CancelPluginCommands" asp-route-plugin="@extComm.Key">
                                             <button type="submit" class="btn btn-outline-secondary">Cancel pending @extComm.Last().command</button>
+                                        </form>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+@if (Model.Disabled.Any())
+{
+    <div class="mb-4">
+        <button class="btn btn-link text-secondary mb-2" type="button" data-toggle="collapse" data-target="#disabled-plugins">
+            Disabled plugins
+        </button>
+        <div class="row collapse" id="disabled-plugins">
+            <div class="col col-12 col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Disabled plugins</h4>
+                        <ul class="list-group list-group-flush">
+                            @foreach (var d in Model.Disabled)
+                            {
+                                <li class="list-group-item px-0">
+                                    <div class="d-flex flex-wrap align-items-center justify-content-between">
+                                        <span class="my-2 mr-3">@d</span>
+                                        <form asp-action="UnInstallPlugin" asp-route-plugin="@d">
+                                            <button type="submit" class="btn btn-outline-secondary">Uninstall</button>
                                         </form>
                                     </div>
                                 </li>

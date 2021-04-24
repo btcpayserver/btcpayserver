@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Views;
+using PullPaymentData = BTCPayServer.Data.PullPaymentData;
 
 namespace BTCPayServer.Models
 {
@@ -76,7 +78,8 @@ namespace BTCPayServer.Models
         public string EmbeddedCSS { get; set; }
         public string CustomCSSLink { get; set; }
         public List<PayoutLine> Payouts { get; set; } = new List<PayoutLine>();
-        public DateTime LastUpdated { get; set; }
+        public DateTimeOffset StartDate { get; set; }
+        public DateTime LastRefreshed { get; set; }
         public CurrencyData CurrencyData { get; set; }
         public string AmountCollectedFormatted { get; set; }
         public string AmountFormatted { get; set; }
@@ -87,7 +90,7 @@ namespace BTCPayServer.Models
             public string Id { get; set; }
             public decimal Amount { get; set; }
             public string AmountFormatted { get; set; }
-            public string Status { get; set; }
+            public PayoutState Status { get; set; }
             public string Destination { get; set; }
             public string Currency { get; set; }
             public string Link { get; set; }

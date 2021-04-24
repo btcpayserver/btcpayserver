@@ -24,7 +24,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
         {
             return 0.0m;
         }
-
+        public bool Activated { get; set; } = true;
         public long AccountIndex { get; set; }
         public long AddressIndex { get; set; }
         public string DepositAddress { get; set; }

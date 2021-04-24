@@ -14,7 +14,7 @@ namespace BTCPayServer
                 CryptoCode = nbxplorerNetwork.CryptoCode,
                 DisplayName = "Bitcoin",
                 BlockExplorerLink = NetworkType == ChainName.Mainnet ? "https://blockstream.info/tx/{0}" :
-                                    NetworkType == Bitcoin.Instance.Signet.ChainName ? "https://explorer.bc-2.jp/"
+                                    NetworkType == Bitcoin.Instance.Signet.ChainName ? "https://explorer.bc-2.jp/tx/{0}"
                                     : "https://blockstream.info/testnet/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "bitcoin",
@@ -24,6 +24,7 @@ namespace BTCPayServer
                 CoinType = NetworkType == ChainName.Mainnet ? new KeyPath("0'") : new KeyPath("1'"),
                 SupportRBF = true,
                 SupportPayJoin = true,
+                VaultSupported = true,
                 //https://github.com/spesmilo/electrum/blob/11733d6bc271646a00b69ff07657119598874da4/electrum/constants.py
                 ElectrumMapping = NetworkType == ChainName.Mainnet
                     ? new Dictionary<uint, DerivationType>()

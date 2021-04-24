@@ -52,6 +52,10 @@ namespace BTCPayServer.Payments
         public override string GetPaymentLink(BTCPayNetworkBase network, IPaymentMethodDetails paymentMethodDetails,
             Money cryptoInfoDue, string serverUri)
         {
+            if (!paymentMethodDetails.Activated)
+            {
+                return string.Empty;
+            }
             var lnInvoiceTrimmedOfScheme = paymentMethodDetails.GetPaymentDestination().ToLowerInvariant()
                 .Replace("lightning:", "", StringComparison.InvariantCultureIgnoreCase);
 
@@ -59,5 +63,9 @@ namespace BTCPayServer.Payments
         }
 
         public override string InvoiceViewPaymentPartialName { get; } = "Lightning/ViewLightningLikePaymentData";
+        public override bool IsPaymentType(string paymentType)
+        {
+            return paymentType?.Equals("offchain", StringComparison.InvariantCultureIgnoreCase) is true || base.IsPaymentType(paymentType);
+        }
     }
 }

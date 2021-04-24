@@ -1,0 +1,49 @@
+﻿@using Microsoft.AspNetCore.Mvc.Rendering
+@using BTCPayServer.Views.Stores
+@model UpdateCoinSwitchSettingsViewModel
+@{
+    Layout = "../Shared/_NavLayout.cshtml";
+    ViewData.SetActivePageAndTitle(StoreNavPages.Index, "Update Store CoinSwitch Settings", Context.GetStoreData().StoreName);
+}
+
+<h2 class="mb-4">@ViewData["PageTitle"]</h2>
+
+<div class="row">
+    <div class="col-md-10">
+        <form method="post">
+            <div class="alert alert-warning" role="alert">
+                If you are enabling CoinSwitch support, we advise that you configure the invoice expiration to a minimum of 30 minutes as it may take longer than the default 15 minutes to convert the funds.
+            </div>
+            <p>
+                You can obtain a merchant id at
+                <a href="https://coinswitch.co/switch/setup/btcpay" target="_blank">
+                    https://coinswitch.co/switch/setup/btcpay
+                </a>
+            </p>
+            <div class="form-group">
+                <label asp-for="MerchantId"></label>
+                <input asp-for="MerchantId" class="form-control"/>
+                <span asp-validation-for="MerchantId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Mode"></label>
+                <select asp-for="Mode" asp-items="Model.Modes" class="form-control">
+                </select>
+            </div>
+            <div class="form-group">
+                <label asp-for="AmountMarkupPercentage"></label>
+                <input asp-for="AmountMarkupPercentage" class="form-control"/>
+                <span asp-validation-for="AmountMarkupPercentage" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Enabled"></label>
+                <input asp-for="Enabled" type="checkbox" class="form-check"/>
+            </div>
+            <button name="command" type="submit" value="save" class="btn btn-primary">Submit</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -23,7 +23,6 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
-using BTCPayServer.Services.Shopify;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
 using BundlerMinifier.TagHelpers;
@@ -406,6 +405,7 @@ namespace BTCPayServer.Controllers
             vm.LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi;
             vm.LightningPrivateRouteHints = storeBlob.LightningPrivateRouteHints;
             vm.OnChainWithLnInvoiceFallback = storeBlob.OnChainWithLnInvoiceFallback;
+            vm.LazyPaymentMethods = storeBlob.LazyPaymentMethods;
             vm.RedirectAutomatically = storeBlob.RedirectAutomatically;
             vm.ShowRecommendedFee = storeBlob.ShowRecommendedFee;
             vm.RecommendedFeeBlockTarget = storeBlob.RecommendedFeeBlockTarget;
@@ -477,6 +477,7 @@ namespace BTCPayServer.Controllers
                 }).ToList();
 
             blob.RequiresRefundEmail = model.RequiresRefundEmail;
+            blob.LazyPaymentMethods = model.LazyPaymentMethods;
             blob.LightningAmountInSatoshi = model.LightningAmountInSatoshi;
             blob.LightningPrivateRouteHints = model.LightningPrivateRouteHints;
             blob.OnChainWithLnInvoiceFallback = model.OnChainWithLnInvoiceFallback;
@@ -543,24 +544,16 @@ namespace BTCPayServer.Controllers
                         break;
                     case LightningPaymentType _:
                         var lightning = lightningByCryptoCode.TryGet(paymentMethodId.CryptoCode);
-                        vm.LightningNodes.Add(new StoreViewModel.LightningNode()
+                        var isEnabled = !excludeFilters.Match(paymentMethodId) && lightning != null;
+                        vm.LightningNodes.Add(new StoreViewModel.LightningNode
                         {
                             CryptoCode = paymentMethodId.CryptoCode,
-                            Address = lightning?.GetLightningUrl()?.BaseUri.AbsoluteUri ?? string.Empty,
-                            Enabled = !excludeFilters.Match(paymentMethodId) && lightning?.GetLightningUrl() != null
+                            Address = lightning?.GetDisplayableConnectionString(),
+                            Enabled = isEnabled
                         });
                         break;
                 }
             }
-
-
-            var coinSwitchEnabled = storeBlob.CoinSwitchSettings != null && storeBlob.CoinSwitchSettings.Enabled;
-            vm.ThirdPartyPaymentMethods.Add(new StoreViewModel.AdditionalPaymentMethod()
-            {
-                Enabled = coinSwitchEnabled,
-                Action = nameof(UpdateCoinSwitchSettings),
-                Provider = "CoinSwitch"
-            });
         }
 
 
@@ -856,6 +849,12 @@ namespace BTCPayServer.Controllers
             if (string.IsNullOrWhiteSpace(userId))
                 return Challenge(AuthenticationSchemes.Cookie);
             var storeId = CurrentStore?.Id;
+            if (storeId != null)
+            {
+                var store = await _Repo.FindStore(storeId, userId);
+                if (store != null)
+                    HttpContext.SetStoreData(store);
+            }
             var model = new CreateTokenViewModel();
             ViewBag.HidePublicKey = true;
             ViewBag.ShowStores = true;
@@ -912,6 +911,14 @@ namespace BTCPayServer.Controllers
                 return Challenge(AuthenticationSchemes.Cookie);
             if (pairingCode == null)
                 return NotFound();
+            if (selectedStore != null)
+            {
+                var store = await _Repo.FindStore(selectedStore, userId);
+                if (store == null)
+                    return NotFound();
+                HttpContext.SetStoreData(store);
+                ViewBag.ShowStores = false;
+            }
             var pairing = await _TokenRepository.GetPairingAsync(pairingCode);
             if (pairing == null)
             {
@@ -921,7 +928,7 @@ namespace BTCPayServer.Controllers
             else
             {
                 var stores = await _Repo.GetStoresByUserId(userId);
-                return View(new PairingModel()
+                return View(new PairingModel
                 {
                     Id = pairing.Id,
                     Label = pairing.Label,
@@ -979,8 +986,6 @@ namespace BTCPayServer.Controllers
                 return null;
             return _UserManager.GetUserId(User);
         }
-
-
 
         // TODO: Need to have talk about how architect default currency implementation
         // For now we have also hardcoded USD for Store creation and then Invoice creation

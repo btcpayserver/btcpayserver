@@ -15,8 +15,10 @@ using BTCPayServer.Views.Stores;
 using BTCPayServer.Views.Wallets;
 using Microsoft.Extensions.Configuration;
 using NBitcoin;
+using BTCPayServer.BIP78.Sender;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium.Support.Extensions;
 using Xunit;
 
 namespace BTCPayServer.Tests
@@ -32,6 +34,7 @@ namespace BTCPayServer.Tests
         public static SeleniumTester Create([CallerMemberNameAttribute] string scope = null, bool newDb = false) =>
             new SeleniumTester { Server = ServerTester.Create(scope, newDb) };
 
+        public static readonly TimeSpan ImplicitWait = TimeSpan.FromSeconds(5);
 
         public async Task StartAsync()
         {
@@ -46,6 +49,8 @@ namespace BTCPayServer.Tests
             var runInBrowser = config["RunSeleniumInBrowser"] == "true";
             // Reset this using `dotnet user-secrets remove RunSeleniumInBrowser`
 
+            var chromeDriverPath = config["ChromeDriverDirectory"] ?? (Server.PayTester.InContainer ? "/usr/bin" : Directory.GetCurrentDirectory());
+
             var options = new ChromeOptions();
             if (Server.PayTester.InContainer)
             {
@@ -58,26 +63,38 @@ namespace BTCPayServer.Tests
             }
             options.AddArguments($"window-size={windowSize.Width}x{windowSize.Height}");
             options.AddArgument("shm-size=2g");
-            Driver = new ChromeDriver(Server.PayTester.InContainer ? "/usr/bin" : Directory.GetCurrentDirectory(), options);
+
+            var cds = ChromeDriverService.CreateDefaultService(chromeDriverPath);
+            cds.Port = Utils.FreeTcpPort();
+            cds.HostName = "127.0.0.1";
+            cds.Start();
+            Driver = new ChromeDriver(cds, options,
+                // A bit less than test timeout
+                TimeSpan.FromSeconds(50));
 
             if (runInBrowser)
             {
                 // ensure maximized window size
+                // otherwise TESTS WILL FAIL because of different hierarchy in navigation menu
                 Driver.Manage().Window.Maximize();
             }
 
             Logs.Tester.LogInformation($"Selenium: Using {Driver.GetType()}");
             Logs.Tester.LogInformation($"Selenium: Browsing to {Server.PayTester.ServerUri}");
             Logs.Tester.LogInformation($"Selenium: Resolution {Driver.Manage().Window.Size}");
-            Driver.Manage().Timeouts().ImplicitWait = ImplicitWait;
             GoToRegister();
             Driver.AssertNoError();
         }
 
-        internal IWebElement FindAlertMessage(StatusMessageModel.StatusSeverity severity = StatusMessageModel.StatusSeverity.Success) =>
-            Driver.FindElement(By.ClassName($"alert-{StatusMessageModel.ToString(severity)}"));
+        internal IWebElement FindAlertMessage(StatusMessageModel.StatusSeverity severity = StatusMessageModel.StatusSeverity.Success)
+        {
+            var className = $"alert-{StatusMessageModel.ToString(severity)}";
+            var el = Driver.FindElement(By.ClassName(className)) ?? Driver.WaitForElement(By.ClassName(className));
+            if (el is null)
+                throw new NoSuchElementException($"Unable to find {className}");
+            return el;
+        }
 
-        public static readonly TimeSpan ImplicitWait = TimeSpan.FromSeconds(5);
         public string Link(string relativeLink)
         {
             return Server.PayTester.ServerUri.AbsoluteUri.WithoutEndingSlash() + relativeLink.WithStartingSlash();
@@ -104,33 +121,59 @@ namespace BTCPayServer.Tests
 
         public (string storeName, string storeId) CreateNewStore()
         {
-            Driver.FindElement(By.Id("Stores")).Click();
-            Driver.FindElement(By.Id("CreateStore")).Click();
+            Driver.WaitForElement(By.Id("Stores")).Click();
+            Driver.WaitForElement(By.Id("CreateStore")).Click();
             var name = "Store" + RandomUtils.GetUInt64();
-            Driver.FindElement(By.Id("Name")).SendKeys(name);
-            Driver.FindElement(By.Id("Create")).Click();
-            StoreId = Driver.FindElement(By.Id("Id")).GetAttribute("value");
+            Driver.WaitForElement(By.Id("Name")).SendKeys(name);
+            Driver.WaitForElement(By.Id("Create")).Click();
+            StoreId = Driver.WaitForElement(By.Id("Id")).GetAttribute("value");
             return (name, StoreId);
         }
 
         public Mnemonic GenerateWallet(string cryptoCode = "BTC", string seed = "", bool importkeys = false, bool privkeys = false, ScriptPubKeyType format = ScriptPubKeyType.Segwit)
         {
             Driver.FindElement(By.Id($"Modify{cryptoCode}")).Click();
-            Driver.FindElement(By.Id("import-from-btn")).Click();
-            Driver.FindElement(By.Id("nbxplorergeneratewalletbtn")).Click();
-            Driver.FindElement(By.Id("ExistingMnemonic")).SendKeys(seed);
-            SetCheckbox(Driver.FindElement(By.Id("SavePrivateKeys")), privkeys);
-            SetCheckbox(Driver.FindElement(By.Id("ImportKeysToRPC")), importkeys);
+
+            // Replace previous wallet case
+            if (Driver.PageSource.Contains("id=\"ChangeWalletLink\""))
+            {
+                Driver.FindElement(By.Id("ChangeWalletLink")).Click();
+                Driver.FindElement(By.Id("continue")).Click();
+            }
+
+            if (string.IsNullOrEmpty(seed))
+            {
+                var option = privkeys ? "Hotwallet" : "Watchonly";
+                Logs.Tester.LogInformation($"Generating new seed ({option})");
+                Driver.FindElement(By.Id("GenerateWalletLink")).Click();
+                Driver.FindElement(By.Id($"Generate{option}Link")).Click();
+            }
+            else
+            {
+                Logs.Tester.LogInformation("Progressing with existing seed");
+                Driver.FindElement(By.Id("ImportWalletOptionsLink")).Click();
+                Driver.FindElement(By.Id("ImportSeedLink")).Click();
+                Driver.FindElement(By.Id("ExistingMnemonic")).SendKeys(seed);
+                Driver.SetCheckbox(By.Id("SavePrivateKeys"), privkeys);
+            }
+
             Driver.FindElement(By.Id("ScriptPubKeyType")).Click();
             Driver.FindElement(By.CssSelector($"#ScriptPubKeyType option[value={format}]")).Click();
-            Logs.Tester.LogInformation("Trying to click btn-generate");
-            Driver.FindElement(By.Id("btn-generate")).Click();
+
+            // Open advanced settings via JS, because if we click the link it triggers the toggle animation.
+            // This leads to Selenium trying to click the button while it is moving resulting in an error.
+            Driver.ExecuteJavaScript("document.getElementById('AdvancedSettings').classList.add('show')");
+
+            Driver.SetCheckbox(By.Id("ImportKeysToRPC"), importkeys);
+            Driver.FindElement(By.Id("Continue")).Click();
+
             // Seed backup page
             FindAlertMessage();
             if (string.IsNullOrEmpty(seed))
             {
-                seed = Driver.FindElements(By.Id("recovery-phrase")).First().GetAttribute("data-mnemonic");
+                seed = Driver.FindElements(By.Id("RecoveryPhrase")).First().GetAttribute("data-mnemonic");
             }
+
             // Confirm seed backup
             Driver.FindElement(By.Id("confirm")).Click();
             Driver.FindElement(By.Id("submit")).Click();
@@ -142,39 +185,57 @@ namespace BTCPayServer.Tests
         public void AddDerivationScheme(string cryptoCode = "BTC", string derivationScheme = "xpub661MyMwAqRbcGABgHMUXDzPzH1tU7eZaAaJQXhDXsSxsqyQzQeU6kznNfSuAyqAK9UaWSaZaMFdNiY5BCF4zBPAzSnwfUAwUhwttuAKwfRX-[legacy]")
         {
             Driver.FindElement(By.Id($"Modify{cryptoCode}")).Click();
-            Driver.FindElement(By.ClassName("store-derivation-scheme")).SendKeys(derivationScheme);
+            Driver.FindElement(By.Id("ImportWalletOptionsLink")).Click();
+            Driver.FindElement(By.Id("ImportXpubLink")).Click();
+            Driver.FindElement(By.Id("DerivationScheme")).SendKeys(derivationScheme);
             Driver.FindElement(By.Id("Continue")).Click();
             Driver.FindElement(By.Id("Confirm")).Click();
             FindAlertMessage();
         }
 
-        public void AddLightningNode(string cryptoCode, LightningConnectionType connectionType)
+        public void AddLightningNode(string cryptoCode = "BTC", LightningConnectionType? connectionType = null)
         {
-            string connectionString;
-            if (connectionType == LightningConnectionType.Charge)
-                connectionString = $"type=charge;server={Server.MerchantCharge.Client.Uri.AbsoluteUri};allowinsecure=true";
-            else if (connectionType == LightningConnectionType.CLightning)
-                connectionString = "type=clightning;server=" + ((CLightningClient)Server.MerchantLightningD).Address.AbsoluteUri;
-            else if (connectionType == LightningConnectionType.LndREST)
-                connectionString = $"type=lnd-rest;server={Server.MerchantLnd.Swagger.BaseUrl};allowinsecure=true";
+            Driver.FindElement(By.Id($"Modify-Lightning{cryptoCode}")).Click();
+
+            var connectionString = connectionType switch
+            {
+                LightningConnectionType.Charge =>
+                    $"type=charge;server={Server.MerchantCharge.Client.Uri.AbsoluteUri};allowinsecure=true",
+                LightningConnectionType.CLightning =>
+                    $"type=clightning;server={((CLightningClient) Server.MerchantLightningD).Address.AbsoluteUri}",
+                LightningConnectionType.LndREST =>
+                    $"type=lnd-rest;server={Server.MerchantLnd.Swagger.BaseUrl};allowinsecure=true",
+                _ => null
+            };
+
+            if (connectionString == null)
+            {
+                Assert.True(Driver.FindElement(By.Id("LightningNodeType-Internal")).Enabled, "Usage of the internal Lightning node is disabled.");
+                Driver.FindElement(By.CssSelector("label[for=\"LightningNodeType-Internal\"]")).Click();
+            }
             else
-                throw new NotSupportedException(connectionType.ToString());
+            {
+                Driver.FindElement(By.CssSelector("label[for=\"LightningNodeType-Custom\"]")).Click();
+                Driver.FindElement(By.Id("ConnectionString")).SendKeys(connectionString);
 
-            Driver.FindElement(By.Id($"Modify-Lightning{cryptoCode}")).Click();
-            Driver.FindElement(By.Name($"ConnectionString")).SendKeys(connectionString);
-            Driver.FindElement(By.Id($"save")).Click();
-        }
+                Driver.FindElement(By.Id("test")).Click();
+                Assert.Contains("Connection to the Lightning node successful.", FindAlertMessage().Text);
+            }
 
-        public void AddInternalLightningNode(string cryptoCode)
-        {
-            Driver.FindElement(By.Id($"Modify-Lightning{cryptoCode}")).Click();
-            Driver.FindElement(By.Id($"internal-ln-node-setter")).Click();
-            Driver.FindElement(By.Id($"save")).Click();
+            Driver.FindElement(By.Id("save")).Click();
+            Assert.Contains($"{cryptoCode} Lightning node updated.", FindAlertMessage().Text);
+
+            var enabled = Driver.FindElement(By.Id($"{cryptoCode}LightningEnabled"));
+            if (enabled.Text == "Enable")
+            {
+                enabled.Click();
+                Assert.Contains($"{cryptoCode} Lightning payments are now enabled for this store.", FindAlertMessage().Text);
+            }
         }
 
         public void ClickOnAllSideMenus()
         {
-            var links = Driver.FindElements(By.CssSelector(".nav-pills .nav-link")).Select(c => c.GetAttribute("href")).ToList();
+            var links = Driver.FindElements(By.CssSelector(".nav .nav-link")).Select(c => c.GetAttribute("href")).ToList();
             Driver.AssertNoError();
             Assert.NotEmpty(links);
             foreach (var l in links)
@@ -249,26 +310,6 @@ namespace BTCPayServer.Tests
             CheckForJSErrors();
         }
 
-
-        public void SetCheckbox(IWebElement element, bool value)
-        {
-            if ((value && !element.Selected) || (!value && element.Selected))
-            {
-                element.Click();
-            }
-
-            if (value != element.Selected)
-            {
-                Logs.Tester.LogInformation("SetCheckbox recursion, trying to click again");
-                SetCheckbox(element, value);
-            }
-        }
-
-        public void SetCheckbox(SeleniumTester s, string checkboxId, bool value)
-        {
-            SetCheckbox(s.Driver.FindElement(By.Id(checkboxId)), value);
-        }
-
         public void GoToInvoices()
         {
             Driver.FindElement(By.Id("Invoices")).Click();
@@ -300,8 +341,7 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.Name("StoreId")).SendKeys(storeName);
             Driver.FindElement(By.Id("Create")).Click();
 
-            FindAlertMessage();
-            var statusElement = Driver.FindElement(By.ClassName("alert-success"));
+            var statusElement = FindAlertMessage();
             var id = statusElement.Text.Split(" ")[1];
             return id;
         }
@@ -338,14 +378,14 @@ namespace BTCPayServer.Tests
         private void CheckForJSErrors()
         {
             //wait for seleniun update: https://stackoverflow.com/questions/57520296/selenium-webdriver-3-141-0-driver-manage-logs-availablelogtypes-throwing-syste
-            //            var errorStrings = new List<string> 
-            //            { 
-            //                "SyntaxError", 
-            //                "EvalError", 
-            //                "ReferenceError", 
-            //                "RangeError", 
-            //                "TypeError", 
-            //                "URIError" 
+            //            var errorStrings = new List<string>
+            //            {
+            //                "SyntaxError",
+            //                "EvalError",
+            //                "ReferenceError",
+            //                "RangeError",
+            //                "TypeError",
+            //                "URIError"
             //            };
             //
             //            var jsErrors = Driver.Manage().Logs.GetLog(LogType.Browser).Where(x => errorStrings.Any(e => x.Message.Contains(e)));
@@ -372,7 +412,7 @@ namespace BTCPayServer.Tests
         {
             Driver.Navigate().GoToUrl(new Uri(Server.PayTester.ServerUri, relativeUrl));
         }
-        
+
         public void GoToServer(ServerNavPages navPages = ServerNavPages.Index)
         {
             Driver.FindElement(By.Id("ServerSettings")).Click();

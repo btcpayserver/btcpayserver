@@ -62,13 +62,9 @@ namespace BTCPayServer.Models.InvoicingModels
         public string CryptoImage { get; set; }
         public string StoreId { get; set; }
         public string PeerInfo { get; set; }
-
-        public bool CoinSwitchEnabled { get; set; }
-        public string CoinSwitchMode { get; set; }
-        public string CoinSwitchMerchantId { get; set; }
         public string RootPath { get; set; }
-        public decimal CoinSwitchAmountMarkupPercentage { get; set; }
         public bool RedirectAutomatically { get; set; }
+        public bool Activated { get; set; }
         public string InvoiceCurrency { get; set; }
     }
 }

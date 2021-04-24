@@ -46,8 +46,8 @@
         </style>
     </noscript>
 </head>
-<body class="h-100">
-    <div class="h-100 d-flex flex-column">
+<body>
+    <div class="min-vh-100 d-flex flex-column">
         @if (Model.IsPending)
         {
             <nav id="mainNav" class="navbar sticky-top py-3 py-lg-4 d-print-none">
@@ -76,7 +76,7 @@
 
         <main class="flex-grow-1 py-4">
             <div class="container">
-                @await Html.PartialAsync("_StatusMessage", new ViewDataDictionary(ViewData){ { "Margin", "mb-4" } })
+                <partial name="_StatusMessage" model="@(new ViewDataDictionary(ViewData){ { "Margin", "mb-4" } })" />
                 @if (!ViewContext.ModelState.IsValid)
                 {
                     @Html.ValidationSummary(string.Empty, new { @class = "alert alert-danger mb-4 pb-0 text-center" })
@@ -89,9 +89,14 @@
                                 <h2 class="h4 mb-3">@Model.Title</h2>
                             }
                             <div class="d-flex align-items-center">
+                                <span class="text-muted text-nowrap">Start Date</span>
+                                &nbsp;
+                                <span class="text-nowrap">@Model.StartDate.ToString("g")</span>
+                            </div>
+                            <div class="d-flex align-items-center">
                                 <span class="text-muted text-nowrap">Last Updated</span>
                                 &nbsp;
-                                <span class="text-nowrap">@Model.LastUpdated.ToString("g")</span>
+                                <span class="text-nowrap">@Model.LastRefreshed.ToString("g")</span>
                                 <button type="button" class="btn btn-link d-none d-lg-inline-block d-print-none border-0 p-0 ml-4 only-for-js" id="copyLink">
                                     Copy Link
                                 </button>
@@ -159,11 +164,11 @@
                                                 <td class="text-right text-nowrap">
                                                     @if (!string.IsNullOrEmpty(invoice.Link))
                                                     {
-                                                        <a class="transaction-link text-print-default @StatusTextClass(invoice.Status)" href="@invoice.Link">@invoice.Status</a>
+                                                        <a class="transaction-link text-print-default @StatusTextClass(invoice.Status.ToString())" href="@invoice.Link">@invoice.Status.GetStateString()</a>
                                                     }
                                                     else
                                                     {
-                                                        <span class="text-print-default @StatusTextClass(invoice.Status)">@invoice.Status</span>
+                                                        <span class="text-print-default @StatusTextClass(invoice.Status.ToString())">@invoice.Status.GetStateString()</span>
                                                     }
                                                 </td>
                                             </tr>

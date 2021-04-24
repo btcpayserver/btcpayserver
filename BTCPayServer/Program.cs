@@ -1,11 +1,14 @@
+using System;
 using System.IO;
 using System.Net;
 using System.Runtime.CompilerServices;
 using BTCPayServer.Configuration;
 using BTCPayServer.Hosting;
 using BTCPayServer.Logging;
+using BTCPayServer.Plugins;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 [assembly: InternalsVisibleTo("BTCPayServer.Tests")]
@@ -22,10 +25,11 @@ namespace BTCPayServer
             using var loggerFactory = new LoggerFactory();
             loggerFactory.AddProvider(loggerProvider);
             var logger = loggerFactory.CreateLogger("Configuration");
+            IConfiguration conf = null;
             try
             {
                 // This is the only way that LoadArgs can print to console. Because LoadArgs is called by the HostBuilder before Logs.Configure is called
-                var conf = new DefaultConfiguration() { Logger = logger }.CreateConfiguration(args);
+                conf = new DefaultConfiguration() { Logger = logger }.CreateConfiguration(args);
                 if (conf == null)
                     return;
                 Logs.Configure(loggerFactory);
@@ -43,6 +47,7 @@ namespace BTCPayServer
                         l.AddFilter("Microsoft", LogLevel.Error);
                         l.AddFilter("System.Net.Http.HttpClient", LogLevel.Critical);
                         l.AddFilter("Microsoft.AspNetCore.Antiforgery.Internal", LogLevel.Critical);
+                        l.AddFilter("Fido2NetLib.DistributedCacheMetadataService", LogLevel.Error);
                         l.AddProvider(new CustomConsoleLogProvider(processor));
                     })
                     .UseStartup<Startup>()
@@ -59,6 +64,11 @@ namespace BTCPayServer
             {
                 if (!string.IsNullOrEmpty(ex.Message))
                     Logs.Configuration.LogError(ex.Message);
+            }
+            catch(Exception e) when( PluginManager.IsExceptionByPlugin(e))
+            {
+                var pluginDir = new DataDirectories().Configure(conf).PluginDir;
+                PluginManager.DisablePlugin(pluginDir, e.Source);
             }
             finally
             {

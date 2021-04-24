@@ -13,7 +13,7 @@
         <RepositoryType>git</RepositoryType>
     </PropertyGroup>
   <PropertyGroup>
-    <Version Condition=" '$(Version)' == '' ">1.2.0</Version>
+    <Version Condition=" '$(Version)' == '' ">1.3.0</Version>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <PublishRepositoryUrl>true</PublishRepositoryUrl>

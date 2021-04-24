@@ -11,13 +11,16 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            int? maxLength = this.IsMySql(migrationBuilder.ActiveProvider) ? (int?)255 : null;
+
             migrationBuilder.DropTable(
                 name: "RefundAddresses");
 
             migrationBuilder.AddColumn<string>(
                 name: "CurrentRefundId",
                 table: "Invoices",
-                nullable: true);
+                nullable: true,
+		maxLength: maxLength);
 
             migrationBuilder.CreateTable(
                 name: "Notifications",
@@ -73,7 +76,7 @@ namespace BTCPayServer.Migrations
                     PullPaymentDataId = table.Column<string>(maxLength: 30, nullable: true),
                     State = table.Column<string>(maxLength: 20, nullable: false),
                     PaymentMethodId = table.Column<string>(maxLength: 20, nullable: false),
-                    Destination = table.Column<string>(nullable: true),
+                    Destination = table.Column<string>(maxLength: maxLength, nullable: true),
                     Blob = table.Column<byte[]>(nullable: true),
                     Proof = table.Column<byte[]>(nullable: true)
                 },
@@ -92,8 +95,8 @@ namespace BTCPayServer.Migrations
                 name: "Refunds",
                 columns: table => new
                 {
-                    InvoiceDataId = table.Column<string>(nullable: false),
-                    PullPaymentDataId = table.Column<string>(nullable: false)
+                    InvoiceDataId = table.Column<string>(maxLength: maxLength, nullable: false),
+                    PullPaymentDataId = table.Column<string>(maxLength: maxLength, nullable: false)
                 },
                 constraints: table =>
                 {

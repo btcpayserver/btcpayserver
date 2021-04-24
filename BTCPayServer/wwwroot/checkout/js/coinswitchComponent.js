@@ -1,4 +1,4 @@
-﻿var CoinSwitchComponent =
+Vue.component("coinswitch" , 
     {
         props: ["toCurrency", "toCurrencyDue", "toCurrencyAddress", "merchantId", "autoload", "mode"],
         data: function () {
@@ -63,4 +63,4 @@
                 this.openDialog();
             }
         }
-    };
+    });

@@ -5,6 +5,10 @@
     Layout = "_LayoutSimple";
 }
 
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
 <div class="row justify-content-center mb-2">
     <div class="col text-center">
         <a asp-controller="Home" asp-action="Index">
@@ -18,10 +22,7 @@
             <span class="d-sm-block">It is secure, private, censorship-resistant and free.</span>
         </p>
 
-        @if (TempData.HasStatusMessage())
-        {
-            <partial name="_StatusMessage"/>
-        }
+        <partial name="_StatusMessage" />
     </div>
 </div>
 
@@ -37,7 +38,7 @@
                         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                         <div class="form-group">
                             <label asp-for="Email"></label>
-                            <input asp-for="Email" class="form-control" required />
+                            <input asp-for="Email" class="form-control" required autofocus />
                             <span asp-validation-for="Email" class="text-danger"></span>
                         </div>
                         <div class="form-group">

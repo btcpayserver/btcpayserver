@@ -114,7 +114,7 @@ namespace BTCPayServer
                 return false;
             }
 
-            //electrum
+            // Electrum
             if (jobj.ContainsKey("keystore"))
             {
                 result.Source = "ElectrumFile";
@@ -153,10 +153,29 @@ namespace BTCPayServer
                     catch { return false; }
                 }
             }
+            // Specter
+            else if (jobj.ContainsKey("descriptor") && jobj.ContainsKey("blockheight"))
+            {
+                result.Source = "SpecterFile";
+
+                if (!TryParseXpub(jobj["descriptor"].Value<string>(), derivationSchemeParser, ref result, false))
+                {
+                    return false;
+                }
+
+                if (jobj.ContainsKey("label"))
+                {
+                    try
+                    {
+                        result.Label = jobj["label"].Value<string>();
+                    }
+                    catch { return false; }
+                }
+            }
+            // Wasabi
             else
             {
                 result.Source = "WasabiFile";
-                //wasabi format 
                 if (!jobj.ContainsKey("ExtPubKey") ||
                     !TryParseXpub(jobj["ExtPubKey"].Value<string>(), derivationSchemeParser, ref result, false))
                 {
@@ -255,23 +274,23 @@ namespace BTCPayServer
         [JsonIgnore]
         public bool IsHotWallet => Source == "NBXplorer";
 
-        [Obsolete("Use GetAccountKeySettings().AccountKeyPath instead")]
+        [Obsolete("Use GetSigningAccountKeySettings().AccountKeyPath instead")]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public KeyPath AccountKeyPath { get; set; }
 
         public DerivationStrategyBase AccountDerivation { get; set; }
         public string AccountOriginal { get; set; }
 
-        [Obsolete("Use GetAccountKeySettings().RootFingerprint instead")]
+        [Obsolete("Use GetSigningAccountKeySettings().RootFingerprint instead")]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public HDFingerprint? RootFingerprint { get; set; }
 
-        [Obsolete("Use GetAccountKeySettings().AccountKey instead")]
+        [Obsolete("Use GetSigningAccountKeySettings().AccountKey instead")]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public BitcoinExtPubKey ExplicitAccountKey { get; set; }
 
         [JsonIgnore]
-        [Obsolete("Use GetAccountKeySettings().AccountKey instead")]
+        [Obsolete("Use GetSigningAccountKeySettings().AccountKey instead")]
         public BitcoinExtPubKey AccountKey
         {
             get

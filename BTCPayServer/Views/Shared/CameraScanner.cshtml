@@ -1,218 +1,182 @@
-<div id="camera-qr-scanner-modal-app" v-cloak class="only-for-js">
-    <div class="modal fade" data-backdrop="static" :id="modalId">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        {{title}}
+<template id="camera-qr-scanner-wrap">
+	<div v-if="modalId" :id="modalId" class="modal fade" data-backdrop="static">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">
+						{{title}}
                         <span v-if="workload.length > 0">Animated QR detected: {{workload.length}} / {{workload[0].total}} scanned</span>
-                    </h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" v-on:click="close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body p-0" v-if="loaded" v-bind:class="{'alert-danger': errorMessage}">
-                    <qrcode-drop-zone v-on:decode="onDecode" v-on:init="logErrors">
-                        <qrcode-stream v-on:decode="onDecode" v-on:init="onInit" v-bind:camera="camera" v-bind:track="paint">
-                            <div v-if="data || errorMessage" class="pending-action">
+					</h5>
+					<button type="button" class="close" aria-label="Close" v-on:click="close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					<slot/>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div v-else>
+		<slot></slot>
+		<div v-if="workload.length > 0">Animated QR detected: {{workload.length}} / {{workload[0].total}} scanned</div>
+	</div>
+</template>
 
-                                <div class="text-danger p-2" v-if="errorMessage">{{errorMessage}}</div>
-                                <span class="text-muted text-truncate">{{data}}</span>
-                                <div class="w-100 btn-group">
-                                    <button v-if="data" type="button" class="btn btn-primary" data-dismiss="modal" v-on:click="submitData">Submit</button>
-                                    <button type="button" class="btn btn-secondary" v-on:click="retry">Retry</button>
-                                    <button type="button" class="btn btn-danger" data-dismiss="modal" v-on:click="close">Cancel</button>
-                                </div>
-                            </div>
-                        </qrcode-stream>
-                    </qrcode-drop-zone>
-                    <qrcode-capture v-if="noStreamApiSupport" v-on:decode="onDecode" v-bind:camera="camera"/>
-                </div>
-            </div>
-        </div>
-    </div>
+<div id="camera-qr-scanner-modal-app" v-cloak class="only-for-js">
+	<scanner-wrap v-bind="$data" v-on:close="close">
+		<div v-if="isLoaded && requestInput" class="d-flex justify-content-center align-items-center" :class="{'border border-secondary': !isModal}">
+			<div class="spinner-border text-secondary position-absolute" role="status"></div>
+			<qrcode-drop-zone v-on:decode="onDecode" v-on:init="logErrors">
+				<qrcode-stream v-on:decode="onDecode" v-on:init="onInit" :camera="camera" :track="paint"/>
+			</qrcode-drop-zone>
+			<qrcode-capture v-if="noStreamApiSupport" v-on:decode="onDecode" :camera="camera"/>
+		</div>
+		<div v-else-if="qrData || errorMessage">
+			<div v-if="errorMessage" class="alert alert-danger" role="alert">
+				{{errorMessage}}
+			</div>
+			<div class="text-break text-monospace">
+				{{qrData}}
+			</div>
+			<div class="mt-4">
+				<button type="button" class="btn btn-primary mr-1" v-if="qrData" v-on:click="submitData">Submit</button>
+				<button type="button" class="btn btn-secondary mr-1" v-on:click="retry">Retry</button>
+				<button type="button" class="btn btn-outline-secondary" v-if="isModal" v-on:click="close">Cancel</button>
+			</div>
+		</div>
+	</scanner-wrap>
 </div>
-<style>
-    .pending-action {
-        position: absolute;
-        width: 100%;
-        height: 100%;        
-        background-color: rgba(255, 255, 255, .8);
-        text-align: center;
-        font-size: 1.4rem;
-        padding: 10px;
-        word-wrap: break-word;        
-        display: flex;
-        flex-flow: column nowrap;
-        justify-content: center;
-    }
-</style>
-
 
 <script>
-function initCameraScanningApp(title, onDataSubmit, modalId)
-{
+function initCameraScanningApp(title, onDataSubmit, modalId) {
+	const isModal = !!modalId;
 
-	new Vue(
-	{
+	Vue.component('scanner-wrap', {
+		props: ["modalId", "title", "workload"],
+		template: "#camera-qr-scanner-wrap",
+		methods: {
+			close() {
+				this.$emit('close');
+			}
+		}
+  	});
+
+	new Vue({
 		el: '#camera-qr-scanner-modal-app',
-		data:
-		{
-			noStreamApiSupport: false,
-			loaded: false,
-			workload: [],
-			data: "",
-			title: title,
-			errorMessage: "",
-			modalId: modalId
-		},
-		mounted: function ()
-		{
-			var self = this;
-			$("#" + this.modalId)
-				.on("shown.bs.modal", function ()
-				{
-					self.loaded = true;
-				})
-				.on("hide.bs.modal", function ()
-				{
-					self.close();
-				});
-		},
-		computed:
-		{
-			camera: function ()
-			{
-				return this.data ? "off" : "auto";
+		data() {
+			return {
+				isModal,
+				isLoaded: !isModal,
+				title: title,
+				modalId: modalId,
+				noStreamApiSupport: false,
+				qrData: null,
+				errorMessage: null,
+				workload: [],
+				camera: "auto"
 			}
 		},
-		methods:
-		{
-			retry: function ()
-			{
-				if (!this.data)
-				{
-					this.close();
-					this.$nextTick(function ()
-					{
-						this.loaded = true;
-					});
-					return;
-				}
-				this.data = "";
-				this.workload = [];
-				this.errorMessage = "";
+		mounted() {
+			if (this.isModal) {
+				const $modal = $("#" + this.modalId);
+				$modal.on("shown.bs.modal", () => { this.isLoaded = true; });
+				$modal.on("hide.bs.modal", () => { this.isLoaded = false; });
+			} else {
+				this.isLoaded = true;
+			}
+		},
+		computed: {
+			requestInput() {
+				return this.camera === 'auto' && this.errorMessage === null;
+			}
+		},
+		methods: {
+			setQrData (qrData) {
+				this.qrData = qrData;
+				this.camera = qrData ? "off" : "auto";
 			},
-			close: function ()
-			{
-				this.loaded = false;
-				this.data = "";
-				this.workload = [];
-				this.errorMessage = "";
+			retry() {
+				this.camera = "off";
+				this.$nextTick(this.reset);
 			},
-			onDecode: function (content)
-			{
-				if (this.data)
-				{
-					return;
+			reset() {
+				this.setQrData(null);
+				this.errorMessage = null;
+				this.workload = [];
+			},
+			close() {
+				if (this.modalId) {
+					$("#" + this.modalId).modal('hide');
 				}
-				if (!content.toLowerCase().startsWith("ur:"))
-				{
-					this.data = content;
+				this.reset();
+			},
+			onDecode(content) {
+				if (this.qrData) return;
+
+				if (!content.toLowerCase().startsWith("ur:")) {
+					this.setQrData(content);
 					this.workload = [];
-				}
-				else
-				{
+				} else {
 					const [index, total] = window.bcur.extractSingleWorkload(content);
-					if (this.workload.length > 0)
-					{
+					if (this.workload.length > 0) {
 						const currentTotal = this.workload[0].total;
-						if (total !== currentTotal)
-						{
+						if (total !== currentTotal) {
 							this.workload = [];
 						}
 					}
-					if (!this.workload.find(i => i.index === index))
-					{
-						this.workload.push(
-						{
+					if (!this.workload.find(i => i.index === index)) {
+						this.workload.push({
 							index,
 							total,
 							data: content,
 						});
-						if (this.workload.length === total)
-						{
-							this.data = window.bcur.decodeUR(this.workload.map(i => i.data));
+						if (this.workload.length === total) {
+							const decoded = window.bcur.decodeUR(this.workload.map(i => i.data));
+							this.setQrData(decoded);
 						}
 					}
 				}
 			},
-			submitData: function ()
-			{
-				if (onDataSubmit)
-				{
-					onDataSubmit(this.data);
+			submitData() {
+				if (onDataSubmit) {
+					onDataSubmit(this.qrData);
 				}
 				this.close();
 			},
-			logErrors: function (promise)
-			{
+			logErrors(promise) {
 				promise.catch(console.error)
 			},
-			paint: function (location, ctx)
-			{
+			paint(location, ctx) {
 				ctx.fillStyle = '#137547';
 				[
 					location.topLeftFinderPattern,
 					location.topRightFinderPattern,
 					location.bottomLeftFinderPattern
-				].forEach((
-				{
-					x,
-					y
-				}) =>
-				{
+				].forEach(({ x, y }) => {
 					ctx.fillRect(x - 5, y - 5, 10, 10);
 				})
 			},
-			onInit: function (promise)
-			{
-				var self = this;
-				promise.then(() =>
-					{
-						self.errorMessage = "";
-					})
-					.catch(error =>
-					{
-						if (error.name === 'StreamApiNotSupportedError')
-						{
-							self.noStreamApiSupport = true;
-						}
-						else if (error.name === 'NotAllowedError')
-						{
-							self.errorMessage = 'A permission to the camera is needed to scan the QR code.'
-						}
-						else if (error.name === 'NotFoundError')
-						{
-							self.errorMessage = 'A camera was not detected on your device.'
-						}
-						else if (error.name === 'NotSupportedError')
-						{
-							self.errorMessage = 'This page is served in non-secure context (HTTPS, localhost or file://)'
-						}
-						else if (error.name === 'NotReadableError')
-						{
-							self.errorMessage = 'Couldn\'t access your camera. Is it already in use?'
-						}
-						else if (error.name === 'OverconstrainedError')
-						{
-							self.errorMessage = 'Constraints don\'t match any installed camera.'
-						}
-						else
-						{
-							self.errorMessage = 'UNKNOWN ERROR: ' + error.message
-						}
-					})
+			onInit(promise) {
+				promise.then(() => {
+					this.errorMessage = null;
+				}).catch(error => {
+					if (error.name === 'StreamApiNotSupportedError') {
+						this.noStreamApiSupport = true;
+					} else if (error.name === 'NotAllowedError') {
+						this.errorMessage = 'A permission to the camera is needed to scan the QR code. Please grant the browser access and then retry.'
+					} else if (error.name === 'NotFoundError') {
+						this.errorMessage = 'A camera was not detected on your device.'
+					} else if (error.name === 'NotSupportedError') {
+						this.errorMessage = 'This page is served in non-secure context (HTTPS, localhost or file://)'
+					} else if (error.name === 'NotReadableError') {
+						this.errorMessage = 'Couldn\'t access your camera. Is it already in use?'
+					} else if (error.name === 'OverconstrainedError') {
+						this.errorMessage = 'Constraints don\'t match any installed camera.'
+					} else {
+						this.errorMessage = 'UNKNOWN ERROR: ' + error.message
+					}
+				})
 			}
 		}
 	});

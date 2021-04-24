@@ -9,7 +9,7 @@ namespace BTCPayServer.Client.Models
 {
     public class CreateInvoiceRequest
     {
-        [JsonProperty(ItemConverterType = typeof(NumericStringJsonConverter))]
+        [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal Amount { get; set; }
         public string Currency { get; set; }
         public JObject Metadata { get; set; }
@@ -33,6 +33,8 @@ namespace BTCPayServer.Client.Models
             public double? PaymentTolerance { get; set; }
             [JsonProperty("redirectURL")]
             public string RedirectURL { get; set; }
+
+            public bool? RedirectAutomatically { get; set; }
             public string DefaultLanguage { get; set; }
         }
     }

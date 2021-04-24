@@ -69,14 +69,6 @@ namespace BTCPayServer.Data
 #pragma warning disable CS0618
             bool btcReturned = false;
 
-            // Legacy stuff which should go away
-            if (!string.IsNullOrEmpty(storeData.DerivationStrategy))
-            {
-                btcReturned = true;
-                yield return DerivationSchemeSettings.Parse(storeData.DerivationStrategy, networks.BTC);
-            }
-
-
             if (!string.IsNullOrEmpty(storeData.DerivationStrategies))
             {
                 JObject strategies = JObject.Parse(storeData.DerivationStrategies);
@@ -129,11 +121,9 @@ namespace BTCPayServer.Data
             bool existing = false;
             foreach (var strat in strategies.Properties().ToList())
             {
-                var stratId = PaymentMethodId.Parse(strat.Name);
-                if (stratId.IsBTCOnChain)
+                if (!PaymentMethodId.TryParse(strat.Name, out var stratId))
                 {
-                    // Legacy stuff which should go away
-                    storeData.DerivationStrategy = null;
+                    continue;
                 }
                 if (stratId == paymentMethodId)
                 {
@@ -149,12 +139,7 @@ namespace BTCPayServer.Data
                     break;
                 }
             }
-
-            if (!existing && supportedPaymentMethod == null && paymentMethodId.IsBTCOnChain)
-            {
-                storeData.DerivationStrategy = null;
-            }
-            else if (!existing && supportedPaymentMethod != null)
+            if (!existing && supportedPaymentMethod != null)
                 strategies.Add(new JProperty(supportedPaymentMethod.PaymentId.ToString(), PaymentMethodExtensions.Serialize(supportedPaymentMethod)));
             storeData.DerivationStrategies = strategies.ToString();
 #pragma warning restore CS0618

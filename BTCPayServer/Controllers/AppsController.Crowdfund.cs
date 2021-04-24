@@ -16,23 +16,22 @@ namespace BTCPayServer.Controllers
             public string StoreId { get; set; }
             public override string ToString()
             {
-                return String.Empty;
+                return string.Empty;
             }
         }
 
-
-        [HttpGet]
-        [Route("{appId}/settings/crowdfund")]
+        [HttpGet("{appId}/settings/crowdfund")]
         public async Task<IActionResult> UpdateCrowdfund(string appId)
         {
             var app = await GetOwnedApp(appId, AppType.Crowdfund);
             if (app == null)
                 return NotFound();
             var settings = app.GetSettings<CrowdfundSettings>();
-            var vm = new UpdateCrowdfundViewModel()
+            var vm = new UpdateCrowdfundViewModel
             {
                 Title = settings.Title,
                 StoreId = app.StoreDataId,
+                StoreName = app.StoreData?.StoreName,
                 Enabled = settings.Enabled,
                 EnforceTargetAmount = settings.EnforceTargetAmount,
                 StartDate = settings.StartDate,
@@ -71,7 +70,7 @@ namespace BTCPayServer.Controllers
 
             try
             {
-                _AppService.Parse(vm.PerksTemplate, vm.TargetCurrency).ToString();
+                vm.PerksTemplate = _AppService.SerializeTemplate(_AppService.Parse(vm.PerksTemplate, vm.TargetCurrency));
             }
             catch
             {

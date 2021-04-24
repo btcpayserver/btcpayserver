@@ -1,44 +1,57 @@
 @{
     Layout = "/Views/Shared/_Layout.cshtml";
     ViewBag.ShowMenu = ViewBag.ShowMenu ?? true;
+    ViewBag.ShowMainTitle = ViewBag.ShowMainTitle ?? true;
+    ViewBag.ShowBreadcrumb = ViewBag.ShowBreadcrumb ?? false;
     if (!ViewData.ContainsKey("NavPartialName"))
     {
         ViewData["NavPartialName"] = "_Nav";
     }
-    var title = $"{(ViewData.ContainsKey("MainTitle") ? $"{ViewData["MainTitle"]}:" : String.Empty)} {ViewData["Title"]}";
 }
 
 <section>
     <div class="container">
-        <div class="row">
-            <div class="col-lg-12 section-heading">
-                @if (ViewBag.ShowMenu)
-                {
-                    <h2>@title</h2>
-                    <hr class="primary ml-0">
-                }
-            </div>
-        </div>
-
-        <div>
-            <div class="row">
-                <div class="col-md-3">
-                    @if (ViewBag.ShowMenu)
+        @if (ViewBag.ShowBreadcrumb)
+        {
+            <nav aria-label="breadcrumb" class="mt-n3 mb-4">
+                <ol class="breadcrumb px-0">
+                    @if (!string.IsNullOrEmpty(ViewData["CategoryTitle"] as string))
                     {
-                        @await Html.PartialAsync(ViewData["NavPartialName"].ToString())
+                        <li class="breadcrumb-item" aria-current="page">@ViewData["CategoryTitle"]</li>
                     }
+                    @if (!string.IsNullOrEmpty(ViewData["MainTitle"] as string))
+                    {
+                        <li class="breadcrumb-item" aria-current="page">@ViewData["MainTitle"]</li>
+                    }
+                    @if (!string.IsNullOrEmpty(ViewData["PageTitle"] as string))
+                    {
+                        <li class="breadcrumb-item" aria-current="page">@ViewData["PageTitle"]</li>
+                    }
+                </ol>
+            </nav>
+        }
+        else if (!string.IsNullOrEmpty(ViewData["MainTitle"] as string))
+        {
+            <h2 class="mb-5">@ViewData["MainTitle"]</h2>
+        }
+        <div class="row">
+            @if (ViewBag.ShowMenu)
+            {
+                <div class="col-md-3 ml-n3 ml-md-0">
+                    <partial name="@ViewData["NavPartialName"].ToString()" />
                 </div>
-                <div class="col-md-9">
-                    @RenderBody()
-                </div>
+            }
+            <div class="col-md-9">
+                <partial name="_StatusMessage" />
+                @RenderBody()
             </div>
         </div>
     </div>
 </section>
-@section HeadScripts {
-    @RenderSection("HeadScripts", required: false)
-}
 
+@section HeadScripts {
+    @await RenderSectionAsync("HeadScripts", false)
+}
 @section Scripts {
-    @RenderSection("Scripts", required: false)
+    @await RenderSectionAsync("Scripts", false)
 }

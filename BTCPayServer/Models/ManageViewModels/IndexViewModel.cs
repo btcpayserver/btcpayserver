@@ -17,10 +17,5 @@ namespace BTCPayServer.Models.ManageViewModels
 
         public bool IsEmailConfirmed { get; set; }
 
-        [Phone]
-        [Display(Name = "Phone number")]
-        [MaxLength(50)]
-        public string PhoneNumber { get; set; }
-
     }
 }

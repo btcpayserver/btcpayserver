@@ -28,8 +28,9 @@ namespace BTCPayServer.Controllers.GreenField
         public InternalLightningNodeApiController(
             BTCPayNetworkProvider btcPayNetworkProvider, BTCPayServerEnvironment btcPayServerEnvironment,
             CssThemeManager cssThemeManager, LightningClientFactoryService lightningClientFactory,  
-            IOptions<LightningNetworkOptions> lightningNetworkOptions ) : base(
-            btcPayNetworkProvider, btcPayServerEnvironment, cssThemeManager)
+            IOptions<LightningNetworkOptions> lightningNetworkOptions,
+            IAuthorizationService authorizationService) : base(
+            btcPayNetworkProvider, btcPayServerEnvironment, cssThemeManager, authorizationService)
         {
             _btcPayNetworkProvider = btcPayNetworkProvider;
             _lightningClientFactory = lightningClientFactory;
@@ -100,17 +101,17 @@ namespace BTCPayServer.Controllers.GreenField
             return base.CreateInvoice(cryptoCode, request);
         }
 
-        protected override Task<ILightningClient> GetLightningClient(string cryptoCode, bool doingAdminThings)
+        protected override async Task<ILightningClient> GetLightningClient(string cryptoCode, bool doingAdminThings)
         {
-            _lightningNetworkOptions.Value.InternalLightningByCryptoCode.TryGetValue(cryptoCode,
-                out var internalLightningNode);
             var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-            if (network == null || !CanUseInternalLightning(doingAdminThings) || internalLightningNode == null)
+            if (network == null ||
+                !_lightningNetworkOptions.Value.InternalLightningByCryptoCode.TryGetValue(network.CryptoCode,
+                out var internalLightningNode) ||
+                !await CanUseInternalLightning(doingAdminThings))
             {
                 return null;
             }
-
-            return Task.FromResult(_lightningClientFactory.Create(internalLightningNode, network));
+            return _lightningClientFactory.Create(internalLightningNode, network);
         }
     }
 }

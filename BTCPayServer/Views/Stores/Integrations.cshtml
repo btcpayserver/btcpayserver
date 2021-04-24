@@ -1,39 +1,31 @@
 @model IntegrationsViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePageAndTitle(StoreNavPages.Integrations, "Integrations");
-}
-
-<partial name="_StatusMessage" />
-
-@if (!ViewContext.ModelState.IsValid)
-{
-    <div class="row">
-        <div class="col-md-6">
-            <div asp-validation-summary="All" class="text-danger"></div>
-        </div>
-    </div>
+    ViewData.SetActivePageAndTitle(StoreNavPages.Integrations, "Integrations", Context.GetStoreData().StoreName);
 }
 
 <div class="row">
-    <div class="col-md-8">
-       <partial name="Integrations/Shopify"/>
+    <div class="col-lg-8">
+        @if (!ViewContext.ModelState.IsValid)
+        {
+            <div asp-validation-summary="All" class="text-danger"></div>
+        }
 
-        <h4 class="mb-3 mt-5">
-            Other Integrations
-        </h4>
-        <p>
-            Take a look at documentation for the list of other integrations we support and the directions on how to enable them:
-            <ul>
-                <li><a href="https://docs.btcpayserver.org/WooCommerce/" target="_blank">WooCommerce</a></li>
-                <li><a href="https://docs.btcpayserver.org/Drupal/" target="_blank">Drupal</a></li>
-                <li><a href="https://docs.btcpayserver.org/Magento/" target="_blank">Magento</a></li>
-                <li><a href="https://docs.btcpayserver.org/PrestaShop/" target="_blank">PrestaShop</a></li>
-            </ul>
-        </p>
+        <ul class="list-group mb-3">
+            <vc:ui-extension-point location="store-integrations-list"></vc:ui-extension-point>
+        </ul>
+
+        <h4 class="mt-5 mb-3">Other Integrations</h4>
+        <p>Take a look at documentation for the list of other integrations we support and the directions on how to enable them:</p>
+        <ul>
+            <li><a href="https://docs.btcpayserver.org/WooCommerce/" target="_blank">WooCommerce</a></li>
+            <li><a href="https://docs.btcpayserver.org/Drupal/" target="_blank">Drupal</a></li>
+            <li><a href="https://docs.btcpayserver.org/Magento/" target="_blank">Magento</a></li>
+            <li><a href="https://docs.btcpayserver.org/PrestaShop/" target="_blank">PrestaShop</a></li>
+        </ul>
     </div>
 </div>
 
 @section Scripts {
-    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <partial name="_ValidationScriptsPartial" />
 }

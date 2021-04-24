@@ -134,8 +134,9 @@
                         "description": "True if the email requires email confirmation to log in"
                     },
                     "created": {
-                        "type": "string",
-                        "description": "The creation date of the user as a unix timestamp. Null if created before v1.0.5.6"
+                        "nullable": true,
+                        "description": "The creation date of the user as a unix timestamp. Null if created before v1.0.5.6",
+                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
                     },
                     "roles": {
                         "type": "array",

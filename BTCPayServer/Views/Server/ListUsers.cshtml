@@ -60,7 +60,7 @@
         </th>
         <th>Created</th>
         <th>Verified</th>
-        <th class="text-right">Actions</th>
+        <th class="text-end">Actions</th>
     </tr>
     </thead>
     <tbody>
@@ -79,7 +79,7 @@
                     <span class="text-danger fa fa-times"></span>
                 }
             </td>
-            <td class="text-right">
+            <td class="text-end">
                 <a asp-action="User" asp-route-userId="@user.Id">Edit</a> <span> - </span> <a asp-action="DeleteUser" asp-route-userId="@user.Id">Remove</a>
             </td>
         </tr>

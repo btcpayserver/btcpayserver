@@ -59,9 +59,9 @@
                             <tr>
                                 <th>Title</th>
                                 <th>Expiry</th>
-                                <th class="text-right">Price</th>
-                                <th class="text-right">Status</th>
-                                <th class="text-right">Actions</th>
+                                <th class="text-end">Price</th>
+                                <th class="text-end">Status</th>
+                                <th class="text-end">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -70,9 +70,9 @@
                                 <tr>
                                     <td>@item.Title</td>
                                     <td>@(item.ExpiryDate?.ToString("g") ?? "No Expiry")</td>
-                                    <td class="text-right">@item.Amount @item.Currency</td>
-                                    <td class="text-right">@item.Status</td>
-                                    <td class="text-right">
+                                    <td class="text-end">@item.Amount @item.Currency</td>
+                                    <td class="text-end">@item.Status</td>
+                                    <td class="text-end">
                                         <a asp-action="EditPaymentRequest" asp-route-id="@item.Id">Edit</a>
                                         <span> - </span>
                                         <a asp-action="ViewPaymentRequest" asp-route-id="@item.Id">View</a>

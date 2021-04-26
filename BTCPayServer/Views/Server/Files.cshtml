@@ -76,7 +76,7 @@ else
                 <li class="list-group-item">
                     <div class="row px-0 mx-0">
                         <span class="col-sm-12 col-md-2">Url: </span>
-                        <a class="col-sm-12 col-md-10 text-right" asp-action="GetFile" asp-controller="Storage" asp-route-fileId="@Model.SelectedFileId" target="_blank">
+                        <a class="col-sm-12 col-md-10 text-end" asp-action="GetFile" asp-controller="Storage" asp-route-fileId="@Model.SelectedFileId" target="_blank">
                             @Url.Action("GetFile", "Storage", new
                             {
                                 fileId = Model.SelectedFileId
@@ -87,7 +87,7 @@ else
                 <li class="list-group-item ">
                     <div class="row px-0 mx-0">
                         <span class="col-sm-12 col-md-2">Direct Url: </span>
-                        <a class="col-sm-12 col-md-10 text-right" href="@Model.DirectFileUrl" target="_blank">@Model.DirectFileUrl</a>
+                        <a class="col-sm-12 col-md-10 text-end" href="@Model.DirectFileUrl" target="_blank">@Model.DirectFileUrl</a>
                     </div>
                 </li>
             </ul>

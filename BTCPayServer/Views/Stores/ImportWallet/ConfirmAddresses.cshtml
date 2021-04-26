@@ -72,7 +72,7 @@
                     <td><code>@sample.Address</code></td>
                     @if (Model.Source == "Vault")
                     {
-                        <td class="text-right">
+                        <td class="text-end">
                             @* Using single quotes for the data attributes on purpose *@
                             <a href="#" data-address='@Safe.Json(sample.Address)' data-rooted-key-path='@Safe.Json(sample.RootedKeyPath.ToString())'>Show on device</a>
                         </td>

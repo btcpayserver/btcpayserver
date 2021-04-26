@@ -15,7 +15,7 @@
         <th>Label</th>
         <th class="w-125px">Key</th>
         <th>Permissions</th>
-        <th class="text-right">Actions</th>
+        <th class="text-end">Actions</th>
     </tr>
     </thead>
     <tbody>
@@ -56,7 +56,7 @@
                     </ul>
                 }
             </td>
-            <td class="text-right">
+            <td class="text-end">
                 <a asp-action="RemoveAPIKey" asp-route-id="@keyData.Id" asp-controller="Manage">Remove</a>
                 <span>-</span>
                 <button type="button" class="btn btn-link only-for-js" data-qr="@index">Show QR</button>

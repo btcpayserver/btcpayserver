@@ -14,7 +14,7 @@
     <h1>@ViewData["Title"]</h1>
     <div class="d-flex mt-4 mb-5">
         <vc:icon symbol="warning" />
-        <p class="text-secondary text-left mb-0">
+        <p class="text-secondary text-start mb-0">
             Please understand that the Lightning Network is still under active development and considered experimental.
             Before you proceed, take time to familiarize yourself with the risks.
             <a href="https://docs.btcpayserver.org/LightningNetwork/" target="_blank">More information</a>
@@ -100,7 +100,7 @@
     <label asp-for="LightningNodeType" for="@($"LightningNodeType-{LightningNodeType.Internal}")">Use internal node</label>
     <input asp-for="LightningNodeType" value="@LightningNodeType.Custom" type="radio" id="LightningNodeType-@LightningNodeType.Custom">
     <label asp-for="LightningNodeType" for="@($"LightningNodeType-{LightningNodeType.Custom}")">Use custom node</label>
-    <div id="InternalSetup" class="text-left">
+    <div id="InternalSetup" class="text-start">
         @if (Model.CanUseInternalNode)
         {
             <p class="my-4">Using the BTCPay Server internal node for this store requires no further configuration. Click the save button below to start accepting Bitcoin through the Lightning Network.</p>
@@ -110,7 +110,7 @@
             <p class="my-4">Your instance administrator has disabled the use of the Internal node for non-admin users.</p>
         }
     </div>
-    <div id="CustomSetup" class="text-left">
+    <div id="CustomSetup" class="text-start">
         <label asp-for="ConnectionString" class="mt-4">Connection configuration for your custom Lightning node:</label>
         <div class="d-sm-flex">
             <input asp-for="ConnectionString" class="form-control mb-2 me-2" placeholder="type=…;server=…;" value="@(Model.LightningNodeType == LightningNodeType.Internal ? "" : Model.ConnectionString)"/>
@@ -191,7 +191,7 @@
             </li>
         </ul>
     </div>
-    <div class="text-left mt-4">
+    <div class="text-start mt-4">
         <button id="save" name="command" type="submit" value="save" class="btn btn-primary me-2">Save</button>
     </div>
 </form>

@@ -4,9 +4,9 @@
     <ul class="list-group mb-4">
         <li class="list-group-item list-group-item-heading d-flex justify-content-between align-items-center">
             <h3>Coin selection</h3>
-            <span class="text-muted text-right" >
+            <span class="text-muted text-end">
                 <span>{{selectedItems.length}} selected</span>
-                <span v-show="selectedItems.length > 0" >&nbsp({{selectedAmount}} @Model.CryptoCode) </span><br/>
+                <span v-show="selectedItems.length > 0">&nbsp;({{selectedAmount}} @Model.CryptoCode) </span><br/>
                 <span>{{items.length}} total UTXOs (@Model.CurrentBalance @Model.CryptoCode)</span>
             </span>
         </li>

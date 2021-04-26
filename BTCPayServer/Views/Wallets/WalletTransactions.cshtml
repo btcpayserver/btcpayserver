@@ -93,10 +93,10 @@
                             <span class="fa fa-clock-o" title="Switch date format"></span>
                         </a>
                     </th>
-                    <th class="text-left">Label</th>
+                    <th class="text-start">Label</th>
                     <th>Transaction Id</th>
-                    <th class="text-right">Amount</th>
-                    <th class="text-right"></th>
+                    <th class="text-end">Amount</th>
+                    <th class="text-end"></th>
                 </tr>
                 </thead>
                 <tbody>
@@ -108,7 +108,7 @@
                                 @transaction.Timestamp.ToBrowserDate()
                             </span>
                         </td>
-                        <td class="text-left">
+                        <td class="text-start">
                             @foreach (var label in transaction.Labels)
                             {
                                 <div class="badge-container">
@@ -152,13 +152,13 @@
                         </td>
                         @if (transaction.Positive)
                         {
-                            <td style="text-align:right; color:green;" class="text-right">@transaction.Balance</td>
+                            <td class="text-end text-success">@transaction.Balance</td>
                         }
                         else
                         {
-                            <td style="text-align:right; color:red;" class="text-right">@transaction.Balance</td>
+                            <td class="text-end text-danger">@transaction.Balance</td>
                         }
-                        <td class="text-right">
+                        <td class="text-end">
                             <div class="dropleft d-inline-block">
                                 <span class="fa fa-tags cursor-pointer" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></span>
                                 <div class="dropdown-menu">

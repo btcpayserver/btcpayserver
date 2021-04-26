@@ -87,12 +87,12 @@
                                         <th style="min-width: 90px;" class="col-md-auto">
                                             Date
                                         </th>
-                                        <th class="text-left">Source</th>
-                                        <th class="text-left">Destination</th>
-                                        <th class="text-right">Amount</th>
+                                        <th class="text-start">Source</th>
+                                        <th class="text-start">Destination</th>
+                                        <th class="text-end">Amount</th>
                                         @if (state.State != PayoutState.AwaitingApproval)
                                         {
-                                            <th class="text-right">Transaction</th>
+                                            <th class="text-end">Transaction</th>
                                         }
                                     </tr>
                                     </thead>
@@ -116,12 +116,12 @@
                                             <td>
                                                 <span>@pp.Destination</span>
                                             </td>
-                                            <td class="text-right">
+                                            <td class="text-end">
                                                 <span>@pp.Amount</span>
                                             </td>
                                             @if (state.State != PayoutState.AwaitingApproval)
                                             {
-                                                <td class="text-right">
+                                                <td class="text-end">
                                                     @if (!(pp.TransactionLink is null))
                                                     {
                                                         <a class="transaction-link" href="@pp.TransactionLink">Link</a>

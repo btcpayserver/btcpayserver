@@ -47,7 +47,7 @@
                                 </a>
                             </th>
                             <th>Message</th>
-                            <th class="text-right">Actions</th>
+                            <th class="text-end">Actions</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -65,7 +65,7 @@
                                 <td onclick="toggleRowCheckbox(this)">
                                     @item.Body
                                 </td>
-                                <td class="text-right font-weight-normal">
+                                <td class="text-end font-weight-normal">
                                     @if (!String.IsNullOrEmpty(item.ActionLink))
                                     {
                                         <a href="@item.ActionLink" class="btn btn-link p-0">Details</a>

@@ -7,7 +7,7 @@
     <thead>
     <tr>
         <th>Name</th>
-        <th class="text-right">Actions</th>
+        <th class="text-end">Actions</th>
     </tr>
     </thead>
     <tbody>
@@ -15,7 +15,7 @@
     {
         <tr>
             <td>@(string.IsNullOrEmpty(device.Name)? "Unnamed FIDO2 credential": device.Name)</td>
-            <td class="text-right">
+            <td class="text-end">
                 <a asp-action="Remove" asp-route-id="@device.Id">Remove</a>
             </td>
         </tr>

@@ -42,28 +42,28 @@
                                 }
                             </span>
                             <span class="d-flex align-items-center fw-semibold">
-                                <form method="post"
-                                      asp-action="SetWalletEnabled"
-                                      asp-route-cryptoCode="@scheme.Crypto"
-                                      asp-route-storeId="@Model.Id"
-                                      class="d-flex align-items-center"
-                                      style="min-width:7.65rem">
-                                    <button type="submit" class="btcpay-toggle mr-2 @if (scheme.Enabled) { @("btcpay-toggle--active") }" name="Enabled" value="@(scheme.Enabled ? "false" : "true")" id="@($"{scheme.Crypto}WalletEnabled")">@(scheme.Enabled ? "Disable" : "Enable")</button>
-                                    @if (scheme.Enabled)
-                                    {
-                                        <span class="text-primary">
-                                            Enabled
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted">
-                                            Disabled
-                                        </span>
-                                    }
-                                </form>
                                 @if (isSetUp)
                                 {
+                                    <form method="post"
+                                          asp-action="SetWalletEnabled"
+                                          asp-route-cryptoCode="@scheme.Crypto"
+                                          asp-route-storeId="@Model.Id"
+                                          class="d-flex align-items-center"
+                                          style="min-width:7.65rem">
+                                        <button type="submit" class="btcpay-toggle mr-2 @if (scheme.Enabled) { @("btcpay-toggle--active") }" name="Enabled" value="@(scheme.Enabled ? "false" : "true")" id="@($"{scheme.Crypto}WalletEnabled")">@(scheme.Enabled ? "Disable" : "Enable")</button>
+                                        @if (scheme.Enabled)
+                                        {
+                                            <span class="text-primary">
+                                                Enabled
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">
+                                                Disabled
+                                            </span>
+                                        }
+                                    </form>
                                     <span class="text-light ml-3 mr-2">|</span>
                                     <a asp-action="ModifyWallet" asp-route-cryptoCode="@scheme.Crypto" asp-route-storeId="@Model.Id" id="@($"Modify{scheme.Crypto}")" class="btn btn-link px-1 py-1 fw-semibold">
                                         Modify
@@ -123,29 +123,29 @@
                                 }
                             </span>
                             <span class="d-flex align-items-center fw-semibold">
-                                <form method="post"
-                                      asp-action="SetLightningNodeEnabled"
-                                      asp-route-cryptoCode="@scheme.CryptoCode"
-                                      asp-route-storeId="@Model.Id"
-                                      class="d-flex align-items-center"
-                                      style="min-width:7.65rem">
-                                    <button type="submit" class="btcpay-toggle mr-2 @if (scheme.Enabled) { @("btcpay-toggle--active") }" name="Enabled" value="@(scheme.Enabled ? "false" : "true")" id="@($"{scheme.CryptoCode}LightningEnabled")">@(scheme.Enabled ? "Disable" : "Enable")e</button>
-                                    @if (scheme.Enabled)
-                                    {
-                                        <span class="text-primary">
-                                            Enabled
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted">
-                                            Disabled
-                                        </span>
-                                    }
-                                </form>
-
                                 @if (isSetUp)
                                 {
+                                    <form method="post"
+                                          asp-action="SetLightningNodeEnabled"
+                                          asp-route-cryptoCode="@scheme.CryptoCode"
+                                          asp-route-storeId="@Model.Id"
+                                          class="d-flex align-items-center"
+                                          style="min-width:7.65rem">
+                                        <button type="submit" class="btcpay-toggle mr-2 @if (scheme.Enabled) { @("btcpay-toggle--active") }" name="Enabled" value="@(scheme.Enabled ? "false" : "true")" id="@($"{scheme.CryptoCode}LightningEnabled")">@(scheme.Enabled ? "Disable" : "Enable")e</button>
+                                        @if (scheme.Enabled)
+                                        {
+                                            <span class="text-primary">
+                                                Enabled
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">
+                                                Disabled
+                                            </span>
+                                        }
+                                    </form>
+
                                     <span class="text-light ml-3 mr-2">|</span>
                                 }
                                 <a asp-action="SetupLightningNode" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@Model.Id" id="@($"Modify-Lightning{scheme.CryptoCode}")" class="btn btn-@(isSetUp ? "link px-1" : "primary btn-sm ml-4 px-3") py-1 fw-semibold">

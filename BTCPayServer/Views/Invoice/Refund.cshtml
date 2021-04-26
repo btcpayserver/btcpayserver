@@ -19,7 +19,7 @@
                             case RefundSteps.SelectPaymentMethod:
                                 <div class="form-group">
                                     <label asp-for="SelectedPaymentMethod"></label>
-                                    <select asp-items="Model.AvailablePaymentMethods" asp-for="SelectedPaymentMethod" class="form-control"></select>
+                                    <select asp-items="Model.AvailablePaymentMethods" asp-for="SelectedPaymentMethod" class="form-select"></select>
                                     <span asp-validation-for="SelectedPaymentMethod" class="text-danger"></span>
                                 </div>
                                 <div class="form-group">

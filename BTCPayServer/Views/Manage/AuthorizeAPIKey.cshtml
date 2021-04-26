@@ -114,12 +114,12 @@
                                                 <div class="form-group my-0">
                                                     @if (Model.PermissionValues[i].SpecificStores[index] == null)
                                                     {
-                                                        <select asp-for="PermissionValues[i].SpecificStores[index]" class="form-control" asp-items="@(new SelectList(Model.Stores.Where(data => !Model.PermissionValues[i].SpecificStores.Contains(data.Id)), nameof(StoreData.Id), nameof(StoreData.StoreName)))"></select>
+                                                        <select asp-for="PermissionValues[i].SpecificStores[index]" class="form-select" asp-items="@(new SelectList(Model.Stores.Where(data => !Model.PermissionValues[i].SpecificStores.Contains(data.Id)), nameof(StoreData.Id), nameof(StoreData.StoreName)))"></select>
                                                     }
                                                     else
                                                     {
                                                         var store = Model.Stores.SingleOrDefault(data => data.Id == Model.PermissionValues[i].SpecificStores[index]);
-                                                        <select asp-for="PermissionValues[i].SpecificStores[index]" class="form-control" asp-items="@(new SelectList(new[] {store}, nameof(StoreData.Id), nameof(StoreData.StoreName), store.Id))"></select>
+                                                        <select asp-for="PermissionValues[i].SpecificStores[index]" class="form-select" asp-items="@(new SelectList(new[] {store}, nameof(StoreData.Id), nameof(StoreData.StoreName), store.Id))"></select>
                                                     }
 
                                                     <span asp-validation-for="PermissionValues[i].SpecificStores[index]" class="text-danger"></span>

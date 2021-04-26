@@ -221,7 +221,7 @@
         <div class="col-lg-7">
             <div class="form-group">
                 <label>Use App as endpoint</label>
-                <select v-model="srvModel.appIdEndpoint" v-on:change="inputChanges" class="form-control">
+                <select v-model="srvModel.appIdEndpoint" v-on:change="inputChanges" class="form-select">
                     <option value="">Use default pay button endpoint</option>
                     <option  v-for="app in srvModel.apps" v-bind:value="app.id" >{{app.appName}} ({{app.appType}})</option>
                 </select>

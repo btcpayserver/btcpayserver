@@ -58,7 +58,7 @@
                         <label asp-for="ResetEvery" class="control-label"></label>
                         <div class="input-group">
                             <input type="number" asp-for="ResetEveryAmount" placeholder="Amount" class="form-control">
-                            <select class="custom-select" asp-for="ResetEvery">
+                            <select class="form-select" asp-for="ResetEvery">
                                 @foreach (var opt in Model.ResetEveryValues)
                                 {
                                     <option value="@opt">@opt</option>

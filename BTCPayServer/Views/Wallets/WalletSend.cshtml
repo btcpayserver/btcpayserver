@@ -36,7 +36,7 @@
             {
                 <div class="form-group hide-when-js">
                     <label asp-for="SelectedInputs"></label>
-                    <select multiple="multiple" asp-for="SelectedInputs" class="form-control">
+                    <select multiple="multiple" asp-for="SelectedInputs" class="form-select">
                         @foreach (var input in Model.InputsAvailable)
                         {
                             <option value="@input.Outpoint" class="text-truncate" asp-selected="@(Model.SelectedInputs?.Contains(input.Outpoint)??false)">(@input.Amount) @input.Outpoint</option>
@@ -188,7 +188,7 @@
                                 <a href="https://docs.btcpayserver.org/Wallet/#rbf-replace-by-fee" target="_blank">
                                     <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
                                 </a>
-                                <select asp-for="AllowFeeBump" class="form-control w-auto">
+                                <select asp-for="AllowFeeBump" class="form-select w-auto">
                                     <option value="Maybe">Randomize for higher privacy</option>
                                     <option value="Yes">Yes</option>
                                     <option value="No">No</option>

@@ -40,7 +40,7 @@
                         <label asp-for="StoreId" class="control-label"></label>
                         @if (string.IsNullOrEmpty(Model.Id))
                         {
-                            <select asp-for="StoreId" asp-items="Model.Stores" class="form-control"></select>
+                            <select asp-for="StoreId" asp-items="Model.Stores" class="form-select"></select>
                         }
                         else
                         {

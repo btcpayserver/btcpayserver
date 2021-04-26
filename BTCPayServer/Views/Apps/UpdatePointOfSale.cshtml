@@ -28,7 +28,7 @@
                     <div class="form-group">
                         <div class="form-group">
                             <label asp-for="DefaultView" class="control-label" data-required></label>
-                            <select asp-for="DefaultView" asp-items="@Html.GetEnumSelectList<PosViewType>()" class="form-control" required></select>
+                            <select asp-for="DefaultView" asp-items="@Html.GetEnumSelectList<PosViewType>()" class="form-select" required></select>
                             <span asp-validation-for="DefaultView" class="text-danger"></span>
                         </div>
                         <div class="form-check">
@@ -95,7 +95,7 @@
                     </div>
                     <div class="form-group">
                         <label asp-for="RedirectAutomatically" class="control-label" data-required></label>
-                        <select asp-for="RedirectAutomatically" asp-items="Model.RedirectAutomaticallySelectList" class="form-control" required></select>
+                        <select asp-for="RedirectAutomatically" asp-items="Model.RedirectAutomaticallySelectList" class="form-select" required></select>
                         <span asp-validation-for="RedirectAutomatically" class="text-danger"></span>
                     </div>
                     <div class="form-group">
@@ -237,7 +237,7 @@
                 </div>
                 <div class="col-sm-3">
                     <label>Custom price</label>
-                    <select class="js-product-custom form-control">
+                    <select class="js-product-custom form-select">
                         {custom}
                     </select>
                 </div>

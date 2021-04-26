@@ -24,7 +24,7 @@
 
                     <input type="number" asp-for="TimeAmount" class="form-control">
                     <div class="input-group-append">
-                        <select asp-for="TimeType" asp-items="@Html.GetEnumSelectList<ServerController.CreateTemporaryFileUrlViewModel.TmpFileTimeType>()" class="custom-select"></select>
+                        <select asp-for="TimeType" asp-items="@Html.GetEnumSelectList<ServerController.CreateTemporaryFileUrlViewModel.TmpFileTimeType>()" class="form-select"></select>
                     </div>
                 </div>
 

@@ -32,7 +32,7 @@
 
     <div class="form-group">
         <label asp-for="ScriptPubKeyType">Address type</label>
-        <select class="form-control w-auto" asp-for="ScriptPubKeyType">
+        <select class="form-select w-auto" asp-for="ScriptPubKeyType">
             <option value="@ScriptPubKeyType.Segwit">Segwit (Recommended, cheapest transaction fee)</option>
             <option value="@ScriptPubKeyType.SegwitP2SH">Segwit wrapped (Compatible with old wallets)</option>
             <option value="@ScriptPubKeyType.Legacy">Legacy (Not recommended)</option>
@@ -67,7 +67,7 @@
                 {
                     <div class="form-group mb-5">
                         <label asp-for="AccountNumber">Account</label>
-                        <select asp-for="AccountNumber" class="form-control w-auto">
+                        <select asp-for="AccountNumber" class="form-select w-auto">
                             @for (var i = 0; i < 20; i++)
                             {
                                 <option value="@i">@i</option>

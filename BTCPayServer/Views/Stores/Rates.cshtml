@@ -153,7 +153,7 @@
             {
                 <div class="form-group">
                     <label asp-for="PreferredExchange"></label>
-                    <select asp-for="PreferredExchange" asp-items="Model.Exchanges" class="form-control"></select>
+                    <select asp-for="PreferredExchange" asp-items="Model.Exchanges" class="form-select"></select>
                     <span asp-validation-for="PreferredExchange" class="text-danger"></span>
                     <p id="PreferredExchangeHelpBlock" class="form-text text-muted">
                         Current Rates source is <a href="@Model.RateSource" target="_blank">@Model.PreferredExchange</a>.

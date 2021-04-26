@@ -128,7 +128,7 @@ namespace BTCPayServer.Controllers
             if (result.Success) {
                 TempData[WellKnownTempData.SuccessMessage] = $"{viewModel.Type.ToString()} event delivered successfully!";
             } else {
-                TempData[WellKnownTempData.ErrorMessage] = $"{viewModel.Type.ToString()} event could not be delivered";
+                TempData[WellKnownTempData.ErrorMessage] = $"{viewModel.Type.ToString()} event could not be delivered. Error message received: {(result.ErrorMessage ?? "unknown")}";
             }
 
             return View(nameof(TestWebhook));

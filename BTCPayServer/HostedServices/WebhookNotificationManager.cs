@@ -299,6 +299,7 @@ namespace BTCPayServer.HostedServices
         {
             public string? DeliveryId { get; set; }
             public bool Success { get; set; }
+            public string? ErrorMessage { get; set; }
         }
 
         private async Task<DeliveryResult> SendDelivery(WebhookDeliveryRequest ctx)
@@ -338,7 +339,12 @@ namespace BTCPayServer.HostedServices
             }
             ctx.Delivery.SetBlob(deliveryBlob);
 
-            return new DeliveryResult() { Success = deliveryBlob.ErrorMessage is null, DeliveryId = ctx.Delivery.Id };
+            return new DeliveryResult() 
+            { 
+                Success = deliveryBlob.ErrorMessage is null, 
+                DeliveryId = ctx.Delivery.Id, 
+                ErrorMessage = deliveryBlob.ErrorMessage
+            };
         }
 
 

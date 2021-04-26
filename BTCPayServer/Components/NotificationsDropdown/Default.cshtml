@@ -14,7 +14,7 @@
             <i class="fa fa-bell d-lg-inline-block d-none"></i>
             <span class="notification-badge badge rounded-pill bg-danger">@Model.UnseenCount</span>
         </a>
-        <div class="dropdown-menu dropdown-menu-right text-center notification-dropdown" aria-labelledby="navbarDropdown">
+        <div class="dropdown-menu dropdown-menu-end text-center notification-dropdown" aria-labelledby="navbarDropdown">
             <div class="d-flex align-items-center justify-content-between py-3 px-4 border-bottom border-light"> 
                 <h5 class="m-0">Notifications</h5>
                 <form asp-controller="Notifications" asp-action="MarkAllAsSeen" asp-route-returnUrl="@Context.Request.GetCurrentPathWithQueryString()" method="post">

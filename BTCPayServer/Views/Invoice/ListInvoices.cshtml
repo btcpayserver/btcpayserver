@@ -47,7 +47,7 @@
                                 <span class="sr-only">Toggle Dropdown</span>
                             </button>
 
-                            <div class="dropdown-menu dropdown-menu-right">
+                            <div class="dropdown-menu dropdown-menu-end">
                                 <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="status:invalid@{@storeIds}">Invalid Invoices</a>
                                 <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="status:paid,status:confirmed,status:complete@{@storeIds}">Paid Invoices</a>
                                 <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="exceptionstatus:paidLate@{@storeIds}">Paid Late Invoices</a>

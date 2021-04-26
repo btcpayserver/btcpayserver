@@ -1,21 +1,41 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
+using NBitcoin;
 
 namespace BTCPayServer.Client
 {
     public partial class BTCPayServerClient
     {
-        public virtual async Task<IEnumerable<InvoiceData>> GetInvoices(string storeId, bool includeArchived = false,
+        public virtual async Task<IEnumerable<InvoiceData>> GetInvoices(string storeId, string orderId = null, InvoiceStatus[] status = null,
+            long? startDate = null,
+            long? endDate = null,
+            bool includeArchived = false,
             CancellationToken token = default)
         {
+            Dictionary<string, object> queryPayload = new Dictionary<string, object>();
+            queryPayload.Add(nameof(includeArchived), includeArchived);
+
+            if (startDate != null)
+                queryPayload.Add(nameof(startDate), startDate);
+
+            if (endDate != null)
+                queryPayload.Add(nameof(endDate), endDate);
+
+            if (orderId != null)
+                queryPayload.Add(nameof(orderId), orderId);
+
+            if (status != null)
+                queryPayload.Add(nameof(status), status.Select(s=> s.ToString().ToLower()).ToArray());
+            
             var response =
                 await _httpClient.SendAsync(
                     CreateHttpRequest($"api/v1/stores/{storeId}/invoices",
-                        new Dictionary<string, object>() {{nameof(includeArchived), includeArchived}}), token);
+                        queryPayload), token);
             return await HandleResponse<IEnumerable<InvoiceData>>(response);
         }
 

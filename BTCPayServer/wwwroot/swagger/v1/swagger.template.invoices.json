@@ -15,6 +15,39 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "orderId",
+                        "in": "query",
+                        "required": false,
+                        "description": "Array of OrderIds to fetch the invoices for",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "description": "Array of statuses of invoices to be fetched",
+                        "$ref": "#/components/schemas/InvoiceStatus"
+                    },
+                    {
+                        "name": "startDate",
+                        "in": "query",
+                        "required": false,
+                        "description": "Start date of the period to retrieve invoices",
+                        "$ref": "#/components/schemas/UnixTimestamp"
+                    },
+                    {
+                        "name": "endDate",
+                        "in": "query",
+                        "required": false,
+                        "description": "End date of the period to retrieve invoices",
+                        "$ref": "#/components/schemas/UnixTimestamp"
                     }
                 ],
                 "description": "View information about the existing invoices",

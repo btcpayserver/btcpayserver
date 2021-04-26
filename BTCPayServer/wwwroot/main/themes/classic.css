@@ -80,8 +80,7 @@
   --btcpay-pre-text: var(--btcpay-light-900);
 
   --btcpay-font-size-base: 14px;
-  --btcpay-font-family-head: 'Open Sans', 'Helvetica Neue', Arial, sans-serif;
-  --btcpay-font-family-base: 'Helvetica Neue', Arial, sans-serif;
+  --btcpay-font-family-base: 'Open Sans', 'Helvetica Neue', Arial, sans-serif;
   --btcpay-font-family-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 

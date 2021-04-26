@@ -4,15 +4,6 @@
  * Licensed under MIT (https://github.com/BlackrockDigital/startbootstrap-creative/blob/master/LICENSE)
  */
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-family: var(--btcpay-font-family-head);
-}
-
 section {
   padding: 100px 0;
 }
@@ -35,7 +26,6 @@ hr.light {
 #mainNav {
   color: var(--btcpay-header-text, var(--btcpay-light-100));
   background: var(--btcpay-header-bg, var(--btcpay-bg-dark));
-  font-family: var(--btcpay-font-family-head);
   transition-property: background, color;
   transition-duration: 0.2s;
 }

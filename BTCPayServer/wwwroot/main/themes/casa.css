@@ -78,8 +78,7 @@
   --btcpay-pre-text: var(--btcpay-white);
 
   --btcpay-font-size-base: 16px;
-  --btcpay-font-family-head: 'Open Sans', 'Helvetica Neue', Arial, sans-serif;
-  --btcpay-font-family-base: -apple-system, 'Open Sans', BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --btcpay-font-family-base: 'Open Sans', 'Helvetica Neue', Arial, sans-serif;
   --btcpay-font-family-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 

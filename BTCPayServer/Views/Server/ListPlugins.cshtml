@@ -132,11 +132,11 @@
                                 @plugin.Version
                                 @if (plugin.SystemPlugin)
                                 {
-                                    <div class="badge badge-secondary ml-2">System plugin</div>
+                                    <div class="badge bg-secondary ml-2">System plugin</div>
                                 }
                                 else if (updateAvailable)
                                 {
-                                    <div class="badge badge-info ml-2">
+                                    <div class="badge bg-info ml-2">
                                         @matchedAvailable.Version available
                                     </div>
                                 }
@@ -249,7 +249,7 @@
                             @plugin.Version
                             @if (pluginT.Item2)
                             {
-                                <div class="badge badge-light ml-2" data-toggle="tooltip" title="This plugin has been recommended to be installed by your deployment method." class="text-nowrap">Recommended <span class="fa fa-question-circle-o text-secondary"></span></div>
+                                <div class="badge bg-light ml-2 text-nowrap" data-toggle="tooltip" title="This plugin has been recommended to be installed by your deployment method.">Recommended <span class="fa fa-question-circle-o text-secondary"></span></div>
                             }
                         </h5>
                         <p class="card-text">@plugin.Description</p>

@@ -133,7 +133,7 @@
                             else
                             {
                                 <div class="h2 text-md-right">
-                                    <span class="badge @if (Model.Status == "Settled") { @("badge-primary") } else if (Model.Status == "Expired") { @("badge-danger") } else { @("badge-info") }">
+                                    <span class="badge @if (Model.Status == "Settled") { @("bg-primary") } else if (Model.Status == "Expired") { @("bg-danger") } else { @("bg-info") }">
                                         @Model.Status
                                         @if (Model.Archived)
                                         {
@@ -183,7 +183,7 @@
                         </template>
                         <template v-else>
                             <div class="h2 text-md-right">
-                                <span class="badge" :class="{ 'badge-primary': srvModel.status === 'Settled', 'badge-danger': srvModel.status === 'Expired', 'badge-info': (srvModel.status !== 'Settled' && srvModel.status !== 'Expired') }">
+                                <span class="badge" :class="{ 'bg-primary': srvModel.status === 'Settled', 'bg-danger': srvModel.status === 'Expired', 'bg-info': (srvModel.status !== 'Settled' && srvModel.status !== 'Expired') }">
                                     {{srvModel.status}}
                                     <span v-if="srvModel.archived">(archived)</span>
                                 </span>

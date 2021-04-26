@@ -804,8 +804,8 @@
 
       var componentData = {
         staticClass: 'badge',
-        class: [!props.variant ? 'badge-secondary' : 'badge-' + props.variant, {
-          'badge-pill': Boolean(props.pill),
+        class: [!props.variant ? 'bg-secondary' : 'bg-' + props.variant, {
+          'rounded-pill': Boolean(props.pill),
           active: props.active,
           disabled: props.disabled
         }],

@@ -30,6 +30,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
 using NBitcoin;
+using Microsoft.AspNetCore.Mvc;
+using BTCPayServer.Controllers.GreenField;
 
 namespace BTCPayServer.Hosting
 {
@@ -122,11 +124,9 @@ namespace BTCPayServer.Hosting
             })
             .ConfigureApiBehaviorOptions(options =>
             {
-                var builtInFactory = options.InvalidModelStateResponseFactory;
                 options.InvalidModelStateResponseFactory = context =>
                 {
-                    context.HttpContext.Response.StatusCode = (int)HttpStatusCode.UnprocessableEntity;
-                    return builtInFactory(context);
+                    return new UnprocessableEntityObjectResult(context.ModelState.ToGreenfieldValidationError());
                 };
             })
             .AddRazorOptions(o =>

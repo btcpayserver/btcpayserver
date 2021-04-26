@@ -12,19 +12,19 @@ namespace BTCPayServer.Client
     public partial class BTCPayServerClient
     {
         public virtual async Task<IEnumerable<InvoiceData>> GetInvoices(string storeId, string orderId = null, InvoiceStatus[] status = null,
-            long? startDate = null,
-            long? endDate = null,
+            DateTimeOffset? startDate = null,
+            DateTimeOffset? endDate = null,
             bool includeArchived = false,
             CancellationToken token = default)
         {
             Dictionary<string, object> queryPayload = new Dictionary<string, object>();
             queryPayload.Add(nameof(includeArchived), includeArchived);
 
-            if (startDate != null)
-                queryPayload.Add(nameof(startDate), startDate);
+            if (startDate is DateTimeOffset s)
+                queryPayload.Add(nameof(startDate), Utils.DateTimeToUnixTime(s));
 
-            if (endDate != null)
-                queryPayload.Add(nameof(endDate), endDate);
+            if (endDate is DateTimeOffset e)
+                queryPayload.Add(nameof(endDate), Utils.DateTimeToUnixTime(e));
 
             if (orderId != null)
                 queryPayload.Add(nameof(orderId), orderId);

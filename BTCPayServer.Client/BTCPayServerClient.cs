@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
@@ -69,6 +70,13 @@ namespace BTCPayServer.Client
             return JsonConvert.DeserializeObject<T>(str);
         }
 
+        public async Task<T> SendHttpRequest<T>(string path,
+            Dictionary<string, object> queryPayload = null,
+            HttpMethod method = null, CancellationToken cancellationToken = default)
+        {
+            using var resp = await _httpClient.SendAsync(CreateHttpRequest(path, queryPayload, method), cancellationToken);
+            return await HandleResponse<T>(resp);
+        }
         protected virtual HttpRequestMessage CreateHttpRequest(string path,
             Dictionary<string, object> queryPayload = null,
             HttpMethod method = null)

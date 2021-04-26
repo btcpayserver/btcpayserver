@@ -966,8 +966,8 @@ namespace BTCPayServer.Tests
 
                 //list Filtered
                  var invoicesFiltered = await viewOnly.GetInvoices(user.StoreId,
-                     orderId: null, status: null, NBitcoin.Utils.DateTimeToUnixTime(DateTimeOffset.Now.AddHours(-1)),
-                     NBitcoin.Utils.DateTimeToUnixTime(DateTimeOffset.Now.AddHours(1)));
+                     orderId: null, status: null, DateTimeOffset.Now.AddHours(-1),
+                     DateTimeOffset.Now.AddHours(1));
 
                  Assert.NotNull(invoicesFiltered);
                  Assert.Single(invoicesFiltered);
@@ -975,13 +975,26 @@ namespace BTCPayServer.Tests
 
                  //list Yesterday
                  var invoicesYesterday = await viewOnly.GetInvoices(user.StoreId,
-                     orderId: null, status: null, NBitcoin.Utils.DateTimeToUnixTime(DateTimeOffset.Now.AddDays(-2)),
-                     NBitcoin.Utils.DateTimeToUnixTime(DateTimeOffset.Now.AddDays(-1)));
+                     orderId: null, status: null, DateTimeOffset.Now.AddDays(-2),
+                     DateTimeOffset.Now.AddDays(-1));
                  Assert.NotNull(invoicesYesterday);
                  Assert.Empty(invoicesYesterday);
 
-                 //list Existing OrderId
-                 var invoicesExistingOrderId =
+                // Error, startDate and endDate inverted
+                await AssertValidationError(new[] { "startDate", "endDate" },
+                    () => viewOnly.GetInvoices(user.StoreId,
+                    orderId: null, status: null, DateTimeOffset.Now.AddDays(-1),
+                    DateTimeOffset.Now.AddDays(-2)));
+
+                await AssertValidationError(new[] { "startDate" },
+                    () => viewOnly.SendHttpRequest<Client.Models.InvoiceData[]>($"api/v1/stores/{user.StoreId}/invoices", new Dictionary<string, object>()
+                    {
+                        { "startDate", "blah" }
+                    }));
+
+
+                //list Existing OrderId
+                var invoicesExistingOrderId =
                      await viewOnly.GetInvoices(user.StoreId, orderId: newInvoice.Metadata["orderId"].ToString());
                  Assert.NotNull(invoicesExistingOrderId);
                  Assert.Single(invoicesFiltered);

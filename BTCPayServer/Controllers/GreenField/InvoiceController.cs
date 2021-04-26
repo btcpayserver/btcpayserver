@@ -49,25 +49,35 @@ namespace BTCPayServer.Controllers.GreenField
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/invoices")]
         public async Task<IActionResult> GetInvoices(string storeId, [FromQuery] string[] orderId = null, [FromQuery] string[] status = null,
-            [FromQuery] long? startDate = null,
-            [FromQuery] long? endDate = null, [FromQuery] bool includeArchived = false)
+            [FromQuery]
+            [ModelBinder(typeof(ModelBinders.DateTimeOffsetModelBinder))]
+            DateTimeOffset? startDate = null,
+            [FromQuery] 
+            [ModelBinder(typeof(ModelBinders.DateTimeOffsetModelBinder))]
+            DateTimeOffset? endDate = null, [FromQuery] bool includeArchived = false)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
             {
                 return StoreNotFound();
             }
+            if (startDate is DateTimeOffset s &&
+                endDate is DateTimeOffset e &&
+                s > e)
+            {
+                this.ModelState.AddModelError(nameof(startDate), "startDate should not be above endDate");
+                this.ModelState.AddModelError(nameof(endDate), "endDate should not be below startDate");
+            }
 
-            DateTimeOffset startDateTimeOffset = Utils.UnixTimeToDateTime(startDate.GetValueOrDefault(DateTimeOffset.MinValue.ToUnixTimeSeconds()));
-            DateTimeOffset endDateTimeOffset = Utils.UnixTimeToDateTime(endDate.GetValueOrDefault(DateTimeOffset.MaxValue.ToUnixTimeSeconds()));
-            
+            if (!ModelState.IsValid)
+                return this.CreateValidationError(ModelState);
             var invoices =
                 await _invoiceRepository.GetInvoices(new InvoiceQuery()
                 {
                     StoreId = new[] {store.Id},
                     IncludeArchived = includeArchived,
-                    StartDate = startDateTimeOffset,
-                    EndDate = endDateTimeOffset,
+                    StartDate = startDate,
+                    EndDate = endDate,
                     OrderId = orderId,
                     Status = status
                 });

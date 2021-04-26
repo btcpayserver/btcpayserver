@@ -24,8 +24,8 @@ hr.light {
 }
 
 #mainNav {
-  color: var(--btcpay-header-text, var(--btcpay-light-100));
-  background: var(--btcpay-header-bg, var(--btcpay-bg-dark));
+  color: var(--btcpay-header-text);
+  background: var(--btcpay-header-bg);
   transition-property: background, color;
   transition-duration: 0.2s;
 }
@@ -36,7 +36,7 @@ hr.light {
   }
 
   #mainNav.navbar-shrink {
-    background: var(--btcpay-header-bg, var(--btcpay-bg-dark));
+    background: var(--btcpay-header-bg);
   }
 }
 

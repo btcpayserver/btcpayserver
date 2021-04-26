@@ -122,7 +122,7 @@ namespace BTCPayServer.HostedServices
             return webhookEvent;
         }
 
-        public async Task TestWebhook(string storeId, string webhookId, WebhookEventType webhookEventType)
+        public async Task<DeliveryResult> TestWebhook(string storeId, string webhookId, WebhookEventType webhookEventType)
         {
             var delivery = NewDelivery(webhookId);
             var webhook = (await StoreRepository.GetWebhooks(storeId)).Where(w => w.Id == webhookId).FirstOrDefault();
@@ -133,7 +133,7 @@ namespace BTCPayServer.HostedServices
                 webhook.GetBlob()
             );
             
-            var result = await SendAndSaveDelivery(deliveryRequest);
+            return await SendDelivery(deliveryRequest);
         }
 
         protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
@@ -295,12 +295,13 @@ namespace BTCPayServer.HostedServices
             return wh.Active && wh.AuthorizedEvents.Match(type);
         }
 
-        class DeliveryResult
+        public class DeliveryResult
         {
-            public string DeliveryId { get; set; }
+            public string? DeliveryId { get; set; }
             public bool Success { get; set; }
         }
-        private async Task<DeliveryResult> SendAndSaveDelivery(WebhookDeliveryRequest ctx)
+
+        private async Task<DeliveryResult> SendDelivery(WebhookDeliveryRequest ctx)
         {
             var uri = new Uri(ctx.WebhookBlob.Url, UriKind.Absolute);
             var httpClient = GetClient(uri);
@@ -336,8 +337,17 @@ namespace BTCPayServer.HostedServices
                 deliveryBlob.ErrorMessage = ex.Message;
             }
             ctx.Delivery.SetBlob(deliveryBlob);
-            await StoreRepository.AddWebhookDelivery(ctx.Delivery);
+
             return new DeliveryResult() { Success = deliveryBlob.ErrorMessage is null, DeliveryId = ctx.Delivery.Id };
+        }
+
+
+        private async Task<DeliveryResult> SendAndSaveDelivery(WebhookDeliveryRequest ctx)
+        {
+            var result = await SendDelivery(ctx);
+            await StoreRepository.AddWebhookDelivery(ctx.Delivery);
+
+            return result;
         }
 
         private byte[] ToBytes(WebhookEvent webhookEvent)

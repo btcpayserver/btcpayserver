@@ -75,7 +75,8 @@ namespace BTCPayServer.Payments.Bitcoin
             if (model.Activated)
             {
                 model.InvoiceBitcoinUrl = (cryptoInfo.PaymentUrls?.BIP21 ?? "") + lightningFallback;
-                model.InvoiceBitcoinUrlQR = model.InvoiceBitcoinUrl;
+                model.InvoiceBitcoinUrlQR = (cryptoInfo.PaymentUrls?.BIP21 ?? "") + lightningFallback.ToUpperInvariant()
+                .Replace("LIGHTNING=", "lightning=", StringComparison.OrdinalIgnoreCase);
             }
             else
             {

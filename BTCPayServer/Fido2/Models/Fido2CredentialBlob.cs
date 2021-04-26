@@ -2,7 +2,7 @@ using Fido2NetLib;
 using Fido2NetLib.Objects;
 using Newtonsoft.Json;
 
-namespace BTCPayServer.Data
+namespace BTCPayServer.Fido2.Models
 {
     public class Fido2CredentialBlob
     {

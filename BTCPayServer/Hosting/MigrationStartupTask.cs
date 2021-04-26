@@ -10,6 +10,8 @@ using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
+using BTCPayServer.Fido2;
+using BTCPayServer.Fido2.Models;
 using BTCPayServer.Logging;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
@@ -152,7 +154,7 @@ namespace BTCPayServer.Hosting
                 {
                     ApplicationUserId = u2FDevice.ApplicationUserId,
                     Name = u2FDevice.Name,
-                    Type = Fido2Credential.CredentialType.U2F
+                    Type = Fido2Credential.CredentialType.FIDO2
                 };
                 fido2.SetBlob(new Fido2CredentialBlob()
                 {

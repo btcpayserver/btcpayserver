@@ -1,6 +1,6 @@
 using Fido2NetLib.Objects;
 
-namespace BTCPayServer.U2F.Models
+namespace BTCPayServer.Fido2.Models
 {
     public class AddFido2CredentialViewModel
     {

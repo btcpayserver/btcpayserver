@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
+using BTCPayServer.Fido2.Models;
 using ExchangeSharp;
 using Fido2NetLib;
 using Fido2NetLib.Objects;

@@ -16,8 +16,7 @@ namespace BTCPayServer.Data
         public CredentialType Type { get; set; }
         public enum CredentialType
         {
-            FIDO2,
-            U2F
+            FIDO2
         }
         public static void OnModelCreating(ModelBuilder builder)
         {

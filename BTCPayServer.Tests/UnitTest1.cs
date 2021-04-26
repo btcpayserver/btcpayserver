@@ -19,6 +19,8 @@ using BTCPayServer.Configuration;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
+using BTCPayServer.Fido2;
+using BTCPayServer.Fido2.Models;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Hosting;
 using BTCPayServer.Lightning;
@@ -42,7 +44,6 @@ using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Tests.Logging;
-using BTCPayServer.U2F.Models;
 using BTCPayServer.Validation;
 using ExchangeSharp;
 using Microsoft.AspNetCore.Mvc;
@@ -3324,7 +3325,7 @@ namespace BTCPayServer.Tests
 
                 var accountController = tester.PayTester.GetController<AccountController>();
 
-                //no 2fa or u2f enabled, login should work
+                //no 2fa or fido2 enabled, login should work
                 Assert.Equal(nameof(HomeController.Index),
                     Assert.IsType<RedirectToActionResult>(await accountController.Login(new LoginViewModel()
                     {
@@ -3332,48 +3333,49 @@ namespace BTCPayServer.Tests
                         Password = user.RegisterDetails.Password
                     })).ActionName);
 
-                var manageController = user.GetController<ManageController>();
+                var manageController = user.GetController<Fido2Controller>();
 
-                //by default no u2f devices available
+                //by default no fido2 devices available
                 Assert.Empty(Assert
-                    .IsType<U2FAuthenticationViewModel>(Assert
-                        .IsType<ViewResult>(await manageController.U2FAuthentication()).Model).Devices);
+                    .IsType<Fido2AuthenticationViewModel>(Assert
+                        .IsType<ViewResult>(await manageController.List()).Model).Credentials);
                 var addRequest =
-                    Assert.IsType<AddU2FDeviceViewModel>(Assert
-                        .IsType<ViewResult>(manageController.AddU2FDevice("label")).Model);
+                    Assert.IsType<AddFido2CredentialViewModel>(Assert
+                        .IsType<ViewResult>(manageController.Create(new AddFido2CredentialViewModel()
+                        {
+                            Name = "label"
+                        })).Model);
                 //name should match the one provided in beginning
                 Assert.Equal("label", addRequest.Name);
 
                 //sending an invalid response model back to server, should error out
-                Assert.IsType<RedirectToActionResult>(await manageController.AddU2FDevice(addRequest));
+                Assert.IsType<RedirectToActionResult>(await manageController.CreateResponse("sdsdsa", "sds"));
                 var statusModel = manageController.TempData.GetStatusMessageModel();
                 Assert.Equal(StatusMessageModel.StatusSeverity.Error, statusModel.Severity);
 
                 var contextFactory = tester.PayTester.GetService<ApplicationDbContextFactory>();
 
-                //add a fake u2f device in db directly since emulating a u2f device is hard and annoying
+                //add a fake fido2 device in db directly since emulating a fido2 device is hard and annoying
                 using (var context = contextFactory.CreateContext())
                 {
-                    var newDevice = new U2FDevice()
+                    var newDevice = new Fido2Credential()
                     {
                         Id = Guid.NewGuid().ToString(),
                         Name = "fake",
-                        Counter = 0,
-                        KeyHandle = UTF8Encoding.UTF8.GetBytes("fake"),
-                        PublicKey = UTF8Encoding.UTF8.GetBytes("fake"),
-                        AttestationCert = UTF8Encoding.UTF8.GetBytes("fake"),
+                        Type = Fido2Credential.CredentialType.FIDO2,
                         ApplicationUserId = user.UserId
                     };
-                    await context.U2FDevices.AddAsync(newDevice);
+                    newDevice.SetBlob(new Fido2CredentialBlob() { });
+                    await context.Fido2Credentials.AddAsync(newDevice);
                     await context.SaveChangesAsync();
 
                     Assert.NotNull(newDevice.Id);
                     Assert.NotEmpty(Assert
-                        .IsType<U2FAuthenticationViewModel>(Assert
-                            .IsType<ViewResult>(await manageController.U2FAuthentication()).Model).Devices);
+                        .IsType<Fido2AuthenticationViewModel>(Assert
+                            .IsType<ViewResult>(await manageController.List()).Model).Credentials);
                 }
 
-                //check if we are showing the u2f login screen now
+                //check if we are showing the fido2 login screen now
                 var secondLoginResult = Assert.IsType<ViewResult>(await accountController.Login(new LoginViewModel()
                 {
                     Email = user.RegisterDetails.Email,
@@ -3384,7 +3386,7 @@ namespace BTCPayServer.Tests
                 var vm = Assert.IsType<SecondaryLoginViewModel>(secondLoginResult.Model);
                 //2fa was never enabled for user so this should be empty
                 Assert.Null(vm.LoginWith2FaViewModel);
-                Assert.NotNull(vm.LoginWithU2FViewModel);
+                Assert.NotNull(vm.LoginWithFido2ViewModel);
             }
         }
 

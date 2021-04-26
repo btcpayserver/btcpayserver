@@ -113,7 +113,7 @@
     <div id="CustomSetup" class="text-left">
         <label asp-for="ConnectionString" class="mt-4">Connection configuration for your custom Lightning node:</label>
         <div class="d-sm-flex">
-            <input asp-for="ConnectionString" class="form-control mb-2 mr-2" placeholder="type=…;server=…;" value="@(Model.LightningNodeType == LightningNodeType.Internal ? "" : Model.ConnectionString)"/>
+            <input asp-for="ConnectionString" class="form-control mb-2 me-2" placeholder="type=…;server=…;" value="@(Model.LightningNodeType == LightningNodeType.Internal ? "" : Model.ConnectionString)"/>
             <button id="test" name="command" type="submit" value="test" class="btn btn-secondary text-nowrap mb-2">Test connection</button>
         </div>
         <span asp-validation-for="ConnectionString" class="text-danger"></span>
@@ -192,7 +192,7 @@
         </ul>
     </div>
     <div class="text-left mt-4">
-        <button id="save" name="command" type="submit" value="save" class="btn btn-primary mr-2">Save</button>
+        <button id="save" name="command" type="submit" value="save" class="btn btn-primary me-2">Save</button>
     </div>
 </form>
 

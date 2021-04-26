@@ -16,7 +16,7 @@
             <h2 class="mb-0">
                 @ViewData["Title"]
                 <small>
-                    <a href="https://docs.btcpayserver.org/PaymentRequests/" class="ml-1" target="_blank">
+                    <a href="https://docs.btcpayserver.org/PaymentRequests/" class="ms-1" target="_blank">
                         <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
                     </a>
                 </small>
@@ -28,7 +28,7 @@
         </div>
 
         <div class="row">
-            <div class="col-12 col-lg-6 mb-5 mb-lg-2 ml-auto">
+            <div class="col-12 col-lg-6 mb-5 mb-lg-2 ms-auto">
                 <form asp-action="ListInvoices" method="get">
                     <input type="hidden" asp-for="Count"/>
                     <input asp-for="TimezoneOffset" type="hidden"/>
@@ -178,7 +178,7 @@
         @if (Model.Total > 0)
         {
             <form method="post" id="MassAction" asp-action="MassAction" class="mt-lg-n5">
-                <span class="mr-2">
+                <span class="me-2">
                     <button class="btn btn-secondary dropdown-toggle  mb-1" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         Actions
                     </button>
@@ -196,7 +196,7 @@
                     </div>
                 </span>
 
-                <a href="https://docs.btcpayserver.org/Accounting/" class="ml-1" target="_blank">
+                <a href="https://docs.btcpayserver.org/Accounting/" class="ms-1" target="_blank">
                     <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
                 </a>
 

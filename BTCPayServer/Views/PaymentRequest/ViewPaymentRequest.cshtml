@@ -77,10 +77,10 @@
                                 &nbsp;
                                 <span class="text-nowrap d-print-none" v-text="lastUpdated" v-cloak>@Model.LastUpdated.ToString("g")</span>
                                 <span class="text-nowrap d-none d-print-block" v-text="lastUpdatedDate">@Model.LastUpdated.ToString("g")</span>
-                                <button type="button" class="btn btn-link d-none d-lg-inline-block d-print-none border-0 p-0 ml-4 only-for-js" v-on:click="window.print" v-cloak>
+                                <button type="button" class="btn btn-link d-none d-lg-inline-block d-print-none border-0 p-0 ms-4 only-for-js" v-on:click="window.print" v-cloak>
                                     Print
                                 </button>
-                                <button type="button" class="btn btn-link d-none d-lg-inline-block d-print-none border-0 p-0 ml-4 only-for-js" v-on:click="window.copyUrlToClipboard" v-cloak>
+                                <button type="button" class="btn btn-link d-none d-lg-inline-block d-print-none border-0 p-0 ms-4 only-for-js" v-on:click="window.copyUrlToClipboard" v-cloak>
                                     Copy Link
                                 </button>
                             </div>
@@ -157,7 +157,7 @@
                                         </div>
                                         <div class="col mt-2 col-12 col-sm-6 mt-sm-0 col-md-12 mt-md-2">
                                             <button class="btn btn-primary w-100 d-flex d-print-none align-items-center justify-content-center text-nowrap" v-bind:class="{ 'btn-disabled': loading}" :disabled="loading" type="submit">
-                                                <div v-if="loading" class="spinner-grow spinner-grow-sm mr-2" role="status">
+                                                <div v-if="loading" class="spinner-grow spinner-grow-sm me-2" role="status">
                                                     <span class="sr-only">Loading...</span>
                                                 </div>
                                                 Pay Invoice
@@ -168,13 +168,13 @@
                             </template>
                             <template v-else>
                                 <button class="btn btn-primary w-100 d-flex d-print-none align-items-center justify-content-center text-nowrap" :class="{ 'btn-lg': !(srvModel.anyPendingInvoice && !srvModel.pendingInvoiceHasPayments)}" v-on:click="pay(null)" :disabled="loading">
-                                    <div v-if="loading" class="spinner-grow spinner-grow-sm mr-2" role="status">
+                                    <div v-if="loading" class="spinner-grow spinner-grow-sm me-2" role="status">
                                         <span class="sr-only">Loading...</span>
                                     </div>
                                     <span>Pay Invoice</span>
                                 </button>
                                 <button class="btn btn-outline-secondary mt-2 w-100 d-flex d-print-none align-items-center justify-content-center text-nowrap" v-if="srvModel.anyPendingInvoice && !srvModel.pendingInvoiceHasPayments" v-on:click="cancelPayment()" :disabled="loading">
-                                    <span v-if="loading" class="spinner-grow spinner-grow-sm mr-2" role="status">
+                                    <span v-if="loading" class="spinner-grow spinner-grow-sm me-2" role="status">
                                         <span class="sr-only">Loading...</span>
                                     </span>
                                     <span>Cancel Invoice</span>
@@ -213,14 +213,14 @@
                         <div class="jumbotron h-100 m-0 p-sm-5">
                             <h2 class="h4 mb-3">Payment Details</h2>
                             <dl class="mb-0 mt-md-4">
-                                <div class="d-flex d-print-inline-block flex-column mb-4 mr-5">
+                                <div class="d-flex d-print-inline-block flex-column mb-4 me-5">
                                     <dt class="h4 font-weight-normal text-nowrap text-primary text-print-default order-2 order-sm-1 mb-0" v-text="srvModel.amountDueFormatted">@Model.AmountDueFormatted</dt>
                                     <dd class="text-muted order-1 order-sm-2 mb-1" data-test="amount-due-title">Amount due</dd>
                                 </div>
                                 <div class="progress bg-light d-none d-sm-flex mb-sm-4 d-print-none" style="height:5px">
                                   <div class="progress-bar bg-primary" role="progressbar" style="width:@((Model.AmountCollected/Model.Amount)*100)%" v-bind:style="{ width: (srvModel.amountCollected/srvModel.amount*100) + '%' }"></div>
                                 </div>
-                                <div class="d-flex d-print-inline-block flex-column mb-4 mr-5 d-sm-inline-flex mb-sm-0">
+                                <div class="d-flex d-print-inline-block flex-column mb-4 me-5 d-sm-inline-flex mb-sm-0">
                                     <dt class="h4 font-weight-normal text-nowrap order-2 order-sm-1 mb-0" v-text="srvModel.amountCollectedFormatted">@Model.AmountCollectedFormatted</dt>
                                     <dd class="text-muted order-1 order-sm-2 mb-1">Amount paid</dd>
                                 </div>

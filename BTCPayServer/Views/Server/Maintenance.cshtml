@@ -14,7 +14,7 @@
             <div class="form-group">
                 <div class="form-inline">
                     <input asp-for="DNSDomain" class="form-control flex-fill" disabled="@(Model.CanUseSSH ? null : "disabled")" />
-                    <button name="command" type="submit" class="btn btn-primary mt-2 mt-sm-0 ml-sm-2" value="changedomain" title="Change domain" disabled="@(Model.CanUseSSH ? null : "disabled")">
+                    <button name="command" type="submit" class="btn btn-primary mt-2 mt-sm-0 ms-sm-2" value="changedomain" title="Change domain" disabled="@(Model.CanUseSSH ? null : "disabled")">
                         <span class="fa fa-check"></span> Confirm
                     </button>
                 </div>

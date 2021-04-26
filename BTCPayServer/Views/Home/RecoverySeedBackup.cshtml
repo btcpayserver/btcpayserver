@@ -36,7 +36,7 @@
         <ol id="RecoveryPhrase" data-mnemonic="@Model.Mnemonic" class="my-5 d-flex flex-column flex-wrap justify-content-center align-items-center text-left p-0">
             @foreach (var word in Model.Words)
             {
-                <li class="ml-4 px-3 py-2 text-secondary" style="flex: 0 1;min-width:10em;">
+                <li class="ms-4 px-3 py-2 text-secondary" style="flex: 0 1;min-width:10em;">
                     <span class="text-dark h5">@word</span>
                 </li>
             }
@@ -73,7 +73,7 @@
         {
             <form id="RecoveryConfirmation" action="@Model.ReturnUrl" class="d-flex align-items-start justify-content-center" style="margin-top:4rem;padding-bottom: 80px">
                 <label class="form-check-label lead order-2" for="confirm">I have written down my recovery phrase and stored it in a secure location</label>
-                <input type="checkbox" class="mt-2 mr-3 order-1" id="confirm">
+                <input type="checkbox" class="mt-2 me-3 order-1" id="confirm">
                 <button type="submit" class="btn btn-primary btn-lg px-5 order-3" id="submit">Done</button>
                 <button type="submit" class="btn btn-primary btn-lg px-5 order-3" disabled>Done</button>
             </form>

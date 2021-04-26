@@ -127,7 +127,7 @@
                                             </div>
                                             <div class="col-sm-12 col-md-12 col-lg-2 pull-right">
                                                 <button type="submit" title="Remove Store Permission" name="command" value="@($"{Model.PermissionValues[i].Permission}:remove-store:{index}")"
-                                                        class="d-block d-lg-none d-xl-none btn btn-danger mb-2 ml-2">
+                                                        class="d-block d-lg-none d-xl-none btn btn-danger mb-2 ms-2">
                                                     Remove
                                                 </button>
                                                 <button type="submit" title="Remove Store Permission" name="command" value="@($"{Model.PermissionValues[i].Permission}:remove-store:{index}")"
@@ -140,7 +140,7 @@
                                 @if (Model.PermissionValues[i].SpecificStores.Count < Model.Stores.Length)
                                 {
                                     <div class="list-group-item">
-                                        <button type="submit" name="command" value="@($"{Model.PermissionValues[i].Permission}:add-store")" class="ml-1 btn btn-secondary">Add another store </button>
+                                        <button type="submit" name="command" value="@($"{Model.PermissionValues[i].Permission}:add-store")" class="ms-1 btn btn-secondary">Add another store </button>
                                     </div>
                                 }
                             }

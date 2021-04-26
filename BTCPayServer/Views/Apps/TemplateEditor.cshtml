@@ -27,7 +27,7 @@
         
         <div class="bg-light card">
             <div class="card-body " v-bind:class="{ 'card-deck': items.length > 0}">
-                <div v-for="(item, index) of items" class="card my-2 card-wrapper template-item mr-0 ml-0" v-bind:key="item.id">
+                <div v-for="(item, index) of items" class="card my-2 card-wrapper template-item me-0 ms-0" v-bind:key="item.id">
                     <div v-if="anyImages" class="card-img-top border-bottom" v-bind:style="getImage(item)"></div>
                     <div class="card-body">
                         <h6 class="card-title" v-html="item.title"></h6>
@@ -48,7 +48,7 @@
                 <button type="button" class="btn btn-secondary" v-on:click="editItem(-1)" id="btn-add">
                     <i class="fa fa-plus fa-fw"></i> Add
                 </button>
-                <button type="button" class="btn btn-secondary ml-2" v-on:click="toggleTemplateElement()" id="ToggleRawEditor">
+                <button type="button" class="btn btn-secondary ms-2" v-on:click="toggleTemplateElement()" id="ToggleRawEditor">
                     Toggle raw editor
                 </button>
             </div>

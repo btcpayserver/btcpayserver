@@ -128,15 +128,15 @@
                     <div class="card-body">
                         <h4 class="card-title d-inline-block" title="@plugin.Identifier" data-toggle="tooltip">@plugin.Name</h4>
                         <div class="d-flex flex-wrap align-items-center mb-3">
-                            <h5 class="card-subtitle text-muted d-flex align-items-center mr-3">
+                            <h5 class="card-subtitle text-muted d-flex align-items-center me-3">
                                 @plugin.Version
                                 @if (plugin.SystemPlugin)
                                 {
-                                    <div class="badge bg-secondary ml-2">System plugin</div>
+                                    <div class="badge bg-secondary ms-2">System plugin</div>
                                 }
                                 else if (updateAvailable)
                                 {
-                                    <div class="badge bg-info ml-2">
+                                    <div class="badge bg-info ms-2">
                                         @matchedAvailable.Version available
                                     </div>
                                 }
@@ -211,7 +211,7 @@
                             {
                                 @if (updateAvailable && DependenciesMet(matchedAvailable.Dependencies))
                                 {
-                                    <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-update="true" class="mr-3">
+                                    <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-update="true" class="me-3">
                                         <button type="submit" class="btn btn-secondary">Update</button>
                                     </form>
                                 }
@@ -249,7 +249,7 @@
                             @plugin.Version
                             @if (pluginT.Item2)
                             {
-                                <div class="badge bg-light ml-2 text-nowrap" data-toggle="tooltip" title="This plugin has been recommended to be installed by your deployment method.">Recommended <span class="fa fa-question-circle-o text-secondary"></span></div>
+                                <div class="badge bg-light ms-2 text-nowrap" data-toggle="tooltip" title="This plugin has been recommended to be installed by your deployment method.">Recommended <span class="fa fa-question-circle-o text-secondary"></span></div>
                             }
                         </h5>
                         <p class="card-text">@plugin.Description</p>
@@ -309,7 +309,7 @@
                 <div class="card-body">
                     <h4 class="card-title">Add plugin manually</h4>
                     <div class="alert alert-warning my-3">
-                        <h6 class="mr-1">This is an extremely dangerous operation!</h6>
+                        <h6 class="me-1">This is an extremely dangerous operation!</h6>
                         Only upload plugins from trusted sources.
                     </div>
                     <form method="post" enctype="multipart/form-data" asp-action="UploadPlugin">
@@ -343,7 +343,7 @@
                             {
                                 <li class="list-group-item px-0">
                                     <div class="d-flex flex-wrap align-items-center justify-content-between">
-                                        <span class="my-2 mr-3">@extComm.Key</span>
+                                        <span class="my-2 me-3">@extComm.Key</span>
                                         <form asp-action="CancelPluginCommands" asp-route-plugin="@extComm.Key">
                                             <button type="submit" class="btn btn-outline-secondary">Cancel pending @extComm.Last().command</button>
                                         </form>
@@ -373,7 +373,7 @@
                             {
                                 <li class="list-group-item px-0">
                                     <div class="d-flex flex-wrap align-items-center justify-content-between">
-                                        <span class="my-2 mr-3">@d</span>
+                                        <span class="my-2 me-3">@d</span>
                                         <form asp-action="UnInstallPlugin" asp-route-plugin="@d">
                                             <button type="submit" class="btn btn-outline-secondary">Uninstall</button>
                                         </form>

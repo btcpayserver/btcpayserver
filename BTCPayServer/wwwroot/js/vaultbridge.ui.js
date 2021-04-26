@@ -88,7 +88,7 @@ var vaultui = (function () {
         function show(feedback) {
             var icon = $(".vault-feedback." + feedback.category + " " + ".vault-feedback-icon");
             icon.removeClass();
-            icon.addClass("vault-feedback-icon mt-1 mr-2");
+            icon.addClass("vault-feedback-icon mt-1 me-2");
             if (feedback.type == "?") {
                 icon.addClass("fa fa-question-circle feedback-icon-loading");
             }

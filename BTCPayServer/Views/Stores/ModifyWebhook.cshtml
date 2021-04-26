@@ -61,7 +61,7 @@
                     {
                         <li class="list-group-item ">
                             <div class="d-flex align-items-center">
-                                <span class="d-flex align-items-center flex-fill mr-3">
+                                <span class="d-flex align-items-center flex-fill me-3">
                                     <label for="@evt.Item2" class="form-check-label">@evt.Item1</label>
                                 </span>
                                 <span class="d-flex align-items-center">
@@ -94,7 +94,7 @@
                               asp-route-deliveryId="@delivery.Id"
                               method="post">
                             <div class="d-flex align-items-center">
-                                <span class="d-flex align-items-center flex-fill mr-3">
+                                <span class="d-flex align-items-center flex-fill me-3">
                                     @if (delivery.Success)
                                     {
                                         <span class="d-flex align-items-center fa fa-check text-success" title="Success"></span>
@@ -103,7 +103,7 @@
                                     {
                                         <span class="d-flex align-items-center fa fa-times text-danger" title="@delivery.ErrorMessage"></span>
                                     }
-                                    <span class="ml-3">
+                                    <span class="ms-3">
                                         <a asp-action="WebhookDelivery"
                                            asp-route-storeId="@this.Context.GetRouteValue("storeId")"
                                            asp-route-webhookId="@this.Context.GetRouteValue("webhookId")"
@@ -120,7 +120,7 @@
 
                                     <button id="#redeliver-@delivery.Id"
                                             type="submit"
-                                            class="btn btn-info py-1 ml-3 redeliver">
+                                            class="btn btn-info py-1 ms-3 redeliver">
                                         Redeliver
                                     </button>
                                 </span>

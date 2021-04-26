@@ -129,7 +129,7 @@
                 @if (Model.RecommendedSatoshiPerByte.Any())
                 {
                     <div class="text-left mt-2 d-flex align-items-center">
-                        <span class="text-secondary mr-2">
+                        <span class="text-secondary me-2">
                             Confirm in the next
                         </span>
                         <div class="btn-group btn-group-toggle feerate-options" role="group" data-toggle="buttons">
@@ -211,9 +211,9 @@
             </div>
             <div class="form-group d-flex mt-2">
                 <partial name="WalletSigningMenu" model="@((Model.CryptoCode, Model.NBXSeedAvailable))"/>
-                <button type="submit" name="command" value="add-output" class="ml-2 btn btn-secondary">Add another destination</button>
-                <button type="button" id="bip21parse" class="ml-2 btn btn-secondary" title="Paste BIP21/Address"><i class="fa fa-paste"></i></button>
-                <button type="button" id="scanqrcode" class="ml-2 btn btn-secondary only-for-js" data-toggle="modal" data-target="#scanModal" title="Scan BIP21/Address with camera"><i class="fa fa-camera"></i></button>
+                <button type="submit" name="command" value="add-output" class="ms-2 btn btn-secondary">Add another destination</button>
+                <button type="button" id="bip21parse" class="ms-2 btn btn-secondary" title="Paste BIP21/Address"><i class="fa fa-paste"></i></button>
+                <button type="button" id="scanqrcode" class="ms-2 btn btn-secondary only-for-js" data-toggle="modal" data-target="#scanModal" title="Scan BIP21/Address with camera"><i class="fa fa-camera"></i></button>
             </div>
         </form>
     </div>

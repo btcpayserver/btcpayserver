@@ -12,7 +12,7 @@
             <h2 class="mb-0">
                 @ViewData["Title"]
                 <small>
-                    <a href="https://docs.btcpayserver.org/PaymentRequests/" class="ml-1" target="_blank">
+                    <a href="https://docs.btcpayserver.org/PaymentRequests/" class="ms-1" target="_blank">
                         <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
                     </a>
                 </small>
@@ -24,7 +24,7 @@
         </div>
 
         <div class="row">
-            <div class="col-12 col-lg-6 mb-3 ml-auto">
+            <div class="col-12 col-lg-6 mb-3 ms-auto">
                 <form asp-action="GetPaymentRequests" method="get">
                     <input type="hidden" asp-for="Count"/>
                     <input type="hidden" asp-for="TimezoneOffset" />

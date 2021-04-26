@@ -32,7 +32,7 @@
                     <input type="hidden" asp-for="FileName"/>
                     <div class="d-flex">
                         <partial name="WalletSigningMenu" model="@((Model.CryptoCode, Model.NBXSeedAvailable))"/>
-                        <div class="ml-2 dropdown">
+                        <div class="ms-2 dropdown">
                             <button class="btn btn-secondary dropdown-toggle" type="button" id="OtherActions" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 Other actions...
                             </button>
@@ -62,7 +62,7 @@
                 <input type="file" class="form-control-file" asp-for="UploadedPSBTFile">
             </div>
 
-            <button type="button" id="scanqrcode" class="ml-2 btn btn-secondary only-for-js" data-toggle="modal" data-target="#scanModal" title="Scan with camera">
+            <button type="button" id="scanqrcode" class="ms-2 btn btn-secondary only-for-js" data-toggle="modal" data-target="#scanModal" title="Scan with camera">
                 <i class="fa fa-camera"></i>
             </button>
             <button type="submit" name="command" value="decode" class="btn btn-primary" id="Decode">Decode</button>

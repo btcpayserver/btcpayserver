@@ -31,7 +31,7 @@
             {
                 var state = Model.PayoutStateSets[index];
                 <li class="nav-item py-0">
-                    <a class="nav-link btn btn-secondary btn-sm mr-1 @(index == 0 ? "active" : "")" data-toggle="tab" href="#@state.State" role="tab">@state.State.GetStateString() (@state.Payouts.Count)</a>
+                    <a class="nav-link btn btn-secondary btn-sm me-1 @(index == 0 ? "active" : "")" data-toggle="tab" href="#@state.State" role="tab">@state.State.GetStateString() (@state.Payouts.Count)</a>
                 </li>
             }
         </ul>
@@ -59,7 +59,7 @@
                     <input type="hidden" asp-for="PayoutStateSets[index].State"/>
                     <input type="hidden" asp-for="PaymentMethodId"/>
 
-                    <div class="row mt-2 ml-2">
+                    <div class="row mt-2 ms-2">
                         @if (state.Payouts.Any() && stateActions.Any())
                         {
                             <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" id="@state.State-actions">

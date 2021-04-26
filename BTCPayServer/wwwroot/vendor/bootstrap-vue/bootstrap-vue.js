@@ -9138,13 +9138,13 @@
 
       if (!props.noBody) {
         if ($slots.aside && !props.rightAlign) {
-          childNodes.push(h(MediaAside, { staticClass: 'mr-3', props: { verticalAlign: props.verticalAlign } }, $slots.aside));
+          childNodes.push(h(MediaAside, { staticClass: 'me-3', props: { verticalAlign: props.verticalAlign } }, $slots.aside));
         }
 
         childNodes.push(h(MediaBody, $slots.default));
 
         if ($slots.aside && props.rightAlign) {
-          childNodes.push(h(MediaAside, { staticClass: 'ml-3', props: { verticalAlign: props.verticalAlign } }, $slots.aside));
+          childNodes.push(h(MediaAside, { staticClass: 'ms-3', props: { verticalAlign: props.verticalAlign } }, $slots.aside));
         }
       }
 

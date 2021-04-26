@@ -72,10 +72,10 @@
         <div class="row mt-4">
             <div class="col-md-12">
                 <div class="d-flex flex-row align-items-start flex-wrap card card-body p-2">
-                    <span class="mr-2">Filter by label:</span>
+                    <span class="me-2">Filter by label:</span>
                     @foreach (var label in Model.Labels)
                     {
-                        <a asp-route-labelFilter="@label.Text" class="badge mr-2 my-1 position-relative text-white d-block"
+                        <a asp-route-labelFilter="@label.Text" class="badge me-2 my-1 position-relative text-white d-block"
                            style="background-color: @label.Color;"><span class="text-white">@label.Text</span></a>
                     }
                 </div>

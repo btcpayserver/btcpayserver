@@ -126,7 +126,7 @@ namespace BTCPayServer.Controllers
             var result = await WebhookNotificationManager.TestWebhook(CurrentStore.Id, webhookId, viewModel.Type);
 
             if (result.Success) {
-                TempData[WellKnownTempData.SuccessMessage] = $"{viewModel.Type.ToString()} event delivered successfully!";
+                TempData[WellKnownTempData.SuccessMessage] = $"{viewModel.Type.ToString()} event delivered successfully! Delivery ID is {result.DeliveryId}";
             } else {
                 TempData[WellKnownTempData.ErrorMessage] = $"{viewModel.Type.ToString()} event could not be delivered. Error message received: {(result.ErrorMessage ?? "unknown")}";
             }

@@ -46,6 +46,7 @@ using BTCPayServer.Services.Rates;
 using BTCPayServer.Tests.Logging;
 using BTCPayServer.Validation;
 using ExchangeSharp;
+using Fido2NetLib;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -3339,14 +3340,11 @@ namespace BTCPayServer.Tests
                 Assert.Empty(Assert
                     .IsType<Fido2AuthenticationViewModel>(Assert
                         .IsType<ViewResult>(await manageController.List()).Model).Credentials);
-                var addRequest =
-                    Assert.IsType<AddFido2CredentialViewModel>(Assert
-                        .IsType<ViewResult>(manageController.Create(new AddFido2CredentialViewModel()
+                Assert.IsType<CredentialCreateOptions>(Assert
+                        .IsType<ViewResult>(await manageController.Create(new AddFido2CredentialViewModel()
                         {
                             Name = "label"
                         })).Model);
-                //name should match the one provided in beginning
-                Assert.Equal("label", addRequest.Name);
 
                 //sending an invalid response model back to server, should error out
                 Assert.IsType<RedirectToActionResult>(await manageController.CreateResponse("sdsdsa", "sds"));

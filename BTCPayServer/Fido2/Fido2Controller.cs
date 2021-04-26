@@ -78,8 +78,7 @@ namespace BTCPayServer.Fido2
         [HttpPost("register")]
         public async Task<IActionResult> CreateResponse([FromForm] string data, [FromForm] string name)
         {
-            var attestationResponse = JObject.Parse(data).ToObject<AuthenticatorAttestationRawResponse>();
-            if (await _fido2Service.CompleteCreation(_userManager.GetUserId(User), name, attestationResponse))
+            if (await _fido2Service.CompleteCreation(_userManager.GetUserId(User), name, data))
             {
 
                 TempData.SetStatusMessageModel(new StatusMessageModel

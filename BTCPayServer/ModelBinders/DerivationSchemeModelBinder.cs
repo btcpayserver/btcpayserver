@@ -43,11 +43,17 @@ namespace BTCPayServer.ModelBinders
                 var data = network.NBXplorerNetwork.DerivationStrategyFactory.Parse(key);
                 if (!bindingContext.ModelType.IsInstanceOfType(data))
                 {
-                    throw new FormatException("Invalid destination type");
+                    bindingContext.Result = ModelBindingResult.Failed();
+                    bindingContext.ModelState.AddModelError(bindingContext.ModelName, "Invalid derivation scheme");
+                    return Task.CompletedTask;
                 }
                 bindingContext.Result = ModelBindingResult.Success(data);
             }
-            catch { throw new FormatException("Invalid derivation scheme"); }
+            catch
+            {
+                bindingContext.Result = ModelBindingResult.Failed();
+                bindingContext.ModelState.AddModelError(bindingContext.ModelName, "Invalid derivation scheme");
+            }
             return Task.CompletedTask;
         }
 

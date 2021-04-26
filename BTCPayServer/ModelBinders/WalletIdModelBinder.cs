@@ -30,6 +30,11 @@ namespace BTCPayServer.ModelBinders
             {
                 bindingContext.Result = ModelBindingResult.Success(walletId);
             }
+            else
+            {
+                bindingContext.Result = ModelBindingResult.Failed();
+                bindingContext.ModelState.AddModelError(bindingContext.ModelName, "Invalid wallet id");
+            }
             return Task.CompletedTask;
         }
     }

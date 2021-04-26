@@ -20,12 +20,6 @@
         $('.navbar-collapse').collapse('hide');
     });
 
-    // Activate scrollspy to add active class to navbar items on scroll
-    $('body').scrollspy({
-        target: '#mainNav',
-        offset: 48
-    });
-
     // Collapse the navbar when page is scrolled
     $(window).scroll(function () {
         if ($("#mainNav").length === 0 || $("#mainNav").is(".always-shrinked"))

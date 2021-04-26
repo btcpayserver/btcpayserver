@@ -32,20 +32,20 @@
         @foreach (var pp in Model.PullPayments)
         {
             <script id="tooptip_template_@pp.Id" type="text/template">
-                <span>Awaiting:&nbsp;<span class="float-right">@pp.Progress.Awaiting</span></span>
+                <span>Awaiting:&nbsp;<span class="float-end">@pp.Progress.Awaiting</span></span>
                 <br />
-                <span>Completed:&nbsp;<span class="float-right">@pp.Progress.Completed</span></span>
+                <span>Completed:&nbsp;<span class="float-end">@pp.Progress.Completed</span></span>
                 <br />
-                <span>Limit:&nbsp;<span class="float-right">@pp.Progress.Limit</span></span>
+                <span>Limit:&nbsp;<span class="float-end">@pp.Progress.Limit</span></span>
                 @if (pp.Progress.ResetIn != null)
                 {
                     <br />
-                    <span>Resets in:&nbsp;<span class="float-right">@pp.Progress.ResetIn</span></span>
+                    <span>Resets in:&nbsp;<span class="float-end">@pp.Progress.ResetIn</span></span>
                 }
                 @if (pp.Progress.EndIn != null)
                 {
                     <br />
-                    <span>Expires in:&nbsp;<span class="float-right">@pp.Progress.EndIn</span></span>
+                    <span>Expires in:&nbsp;<span class="float-end">@pp.Progress.EndIn</span></span>
                 }
             </script>
         }

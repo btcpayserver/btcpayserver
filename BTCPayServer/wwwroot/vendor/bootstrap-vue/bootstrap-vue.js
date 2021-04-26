@@ -2653,9 +2653,9 @@
         src = makeBlankImgSrc(width, height, props.blankColor || 'transparent');
       }
       if (props.left) {
-        align = 'float-left';
+        align = 'float-start';
       } else if (props.right) {
-        align = 'float-right';
+        align = 'float-end';
       } else if (props.center) {
         align = 'mx-auto';
         block = true;

@@ -9,7 +9,7 @@
     <nav aria-label="..." class="w-100">
         @if (Model.Total > Model.Count)
         {
-            <ul class="pagination float-left">
+            <ul class="pagination float-start">
                 <li class="page-item @(Model.Skip == 0 ? "disabled" : null)">
                     <a class="page-link" tabindex="-1" href="@NavigatePages(-1, Model.Count)">&laquo;</a>
                 </li>
@@ -35,7 +35,7 @@
 
         @if (Model.Total >= pageSizeOptions.Min())
         {
-            <ul class="pagination float-right">
+            <ul class="pagination float-end">
                 <li class="page-item disabled">
                     <span class="page-link">Page Size:</span>
                 </li>

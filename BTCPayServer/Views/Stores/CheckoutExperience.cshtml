@@ -30,18 +30,18 @@
                     {
                         var criteria = Model.PaymentMethodCriteria[index];
                         <tr>
-                            <td class="border-right-0 border-left-0 pt-3">
+                            <td class="border-start-0 border-end-0 pt-3">
                                 <input type="hidden" asp-for="PaymentMethodCriteria[index].PaymentMethod"/>
                                 @PaymentMethodId.Parse(criteria.PaymentMethod).ToPrettyString()
                             </td>
-                            <td class="border-right-0  border-left-0 ">
+                            <td class="border-start-0 border-end-0">
                                 <select asp-for="PaymentMethodCriteria[index].Type"
                                         class="form-control"
                                         asp-items="@((PaymentMethodCriteriaViewModel.CriteriaType[]) Enum.GetValues(typeof(PaymentMethodCriteriaViewModel.CriteriaType))).Select(s => new SelectListItem(PaymentMethodCriteriaViewModel.ToString(s), s.ToString()))">
                                 </select>
 
                             </td>
-                            <td class="border-right-0  border-left-0">
+                            <td class="border-start-0 border-end-0">
                                 <input placeholder="6.15 USD" asp-for="PaymentMethodCriteria[index].Value" class="form-control my-0" style="max-width: 20ch;"/>
                             </td>
                         </tr>

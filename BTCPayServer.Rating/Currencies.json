@@ -1267,6 +1267,13 @@
       "crypto":true
    },
    {
+      "name":"Althash",
+      "code":"HTML",
+      "divisibility":8,
+      "symbol":null,
+      "crypto":true
+   },
+   {
       "name":"CHC",
       "code":"CHC",
       "divisibility":8,

@@ -23,7 +23,7 @@
                                     <span asp-validation-for="SelectedPaymentMethod" class="text-danger"></span>
                                 </div>
                                 <div class="form-group">
-                                    <button id="ok" type="submit" class="btn btn-primary btn-block btn-lg">Next</button>
+                                    <button id="ok" type="submit" class="btn btn-primary btn-lg w-100">Next</button>
                                 </div>
                                 break;
                             case RefundSteps.SelectRate:
@@ -61,7 +61,7 @@
                                     <small class="form-text text-muted">The specified amount with the specified currency, at the rate when the refund will be sent. </small>
                                 </div>
                                 <div class="form-group">
-                                    <button id="ok" type="submit" class="btn btn-primary btn-block btn-lg">Create refund</button>
+                                    <button id="ok" type="submit" class="btn btn-primary btn-lg w-100">Create refund</button>
                                 </div>
                                 break;
                             case RefundSteps.SelectCustomAmount:
@@ -84,7 +84,7 @@
                                     <span asp-validation-for="CustomCurrency" class="text-danger w-100"></span>
                                 </div>
                                 <div class="form-group">
-                                    <button id="ok" type="submit" class="btn btn-primary btn-block btn-lg">Next</button>
+                                    <button id="ok" type="submit" class="btn btn-primary btn-lg w-100">Next</button>
                                 </div>
                                 break;
                         }

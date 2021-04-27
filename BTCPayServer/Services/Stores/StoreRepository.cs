@@ -379,6 +379,7 @@ namespace BTCPayServer.Services.Stores
                 if (store == null)
                     return false;
                 var webhooks = await ctx.StoreWebhooks
+                    .Where(o => o.StoreId == storeId)
                     .Select(o => o.Webhook)
                     .ToArrayAsync();
                 foreach (var w in webhooks)

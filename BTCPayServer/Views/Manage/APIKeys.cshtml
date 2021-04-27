@@ -13,7 +13,7 @@
     <thead>
     <tr>
         <th>Label</th>
-        <th>Key</th>
+        <th class="w-125px">Key</th>
         <th>Permissions</th>
         <th class="text-right">Actions</th>
     </tr>
@@ -28,7 +28,13 @@
             <td>@keyData.Label</td>
             <td>
                 <code class="hide-when-js">@keyData.Id</code>
-                <code class="only-for-js cursor-pointer" data-reveal="@keyData.Id">Click to reveal</code>
+                <button class="btn btn-sm btn-outline-primary only-for-js" data-reveal-btn>Click to reveal</button>
+                <div hidden>
+                    <code data-api-key>@keyData.Id</code>
+                    <button class="btn btn-sm btn-outline-primary mt-2" data-clipboard-confirm>
+                        Copy to clipboard
+                    </button>
+                </div>
             </td>
             <td>
                 @{
@@ -52,7 +58,7 @@
             </td>
             <td class="text-right">
                 <a asp-action="RemoveAPIKey" asp-route-id="@keyData.Id" asp-controller="Manage">Remove</a>
-                <span class="only-for-js">-</span>
+                <span>-</span>
                 <button type="button" class="btn btn-link only-for-js" data-qr="@index">Show QR</button>
             </td>
         </tr>
@@ -77,13 +83,25 @@
 <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
 <script src="~/vendor/bc-ur/web-bundle.js" asp-append-version="true"></script>
 <script src="~/vendor/vue-qrcode-reader/vue-qrcode-reader.browser.js" asp-append-version="true"></script>
+<script src="~/js/copy-to-clipboard.js" asp-append-version="true"></script>
 <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true"/>
 
 <partial name="ShowQR"/>
 <script>
-    $(document).ready(function(){       
-        $("[data-reveal]").on("click", function (){
-          $(this).text($(this).data("reveal")); 
+    $(document).ready(function(){   
+        $("[data-reveal-btn]").on("click", function (){
+            var $revealButton = $(this);
+            $revealButton.attr("hidden", "true");
+
+            var $apiKeyContainer = $revealButton.next("[hidden]");
+            $apiKeyContainer.removeAttr("hidden");
+
+            (function setupCopyToClipboardButton() {
+                var $clipboardBtn = $apiKeyContainer.children("[data-clipboard-confirm]");
+                var apiKey = $apiKeyContainer.children("[data-api-key]").text().trim();
+                $clipboardBtn.attr("data-clipboard", apiKey);
+                $clipboardBtn.click(window.copyToClipboard);
+            })();
         });
         
         var apiKeys = @Safe.Json(Model.ApiKeyDatas.Select(data => new

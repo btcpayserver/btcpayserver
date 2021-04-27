@@ -48,7 +48,7 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 var w = await StoreRepository.GetWebhook(CurrentStoreId, webhookId);
                 if (w is null)
-                    return NotFound();
+                    return WebhookNotFound();
                 return Ok(FromModel(w, false));
             }
         }
@@ -70,7 +70,7 @@ namespace BTCPayServer.Controllers.GreenField
             var webhookId = await StoreRepository.CreateWebhook(CurrentStoreId, ToModel(create));
             var w = await StoreRepository.GetWebhook(CurrentStoreId, webhookId);
             if (w is null)
-                return NotFound();
+                return WebhookNotFound();
             return Ok(FromModel(w, true));
         }
 
@@ -88,7 +88,7 @@ namespace BTCPayServer.Controllers.GreenField
                 return this.CreateValidationError(ModelState);
             var w = await StoreRepository.GetWebhook(CurrentStoreId, webhookId);
             if (w is null)
-                return NotFound();
+                return WebhookNotFound();
             await StoreRepository.UpdateWebhook(storeId, webhookId, ToModel(update));
             return await ListWebhooks(webhookId);
         }
@@ -97,9 +97,18 @@ namespace BTCPayServer.Controllers.GreenField
         {
             var w = await StoreRepository.GetWebhook(CurrentStoreId, webhookId);
             if (w is null)
-                return NotFound();
+                return WebhookNotFound();
             await StoreRepository.DeleteWebhook(CurrentStoreId, webhookId);
             return Ok();
+        }
+
+        IActionResult WebhookNotFound()
+        {
+            return this.CreateAPIError(404, "webhook-not-found", "The webhook was not found");
+        }
+        IActionResult WebhookDeliveryNotFound()
+        {
+            return this.CreateAPIError(404, "webhookdelivery-not-found", "The webhook delivery was not found");
         }
         private WebhookBlob ToModel(StoreWebhookBaseData create)
         {
@@ -133,7 +142,7 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 var delivery = await StoreRepository.GetWebhookDelivery(CurrentStoreId, webhookId, deliveryId);
                 if (delivery is null)
-                    return NotFound();
+                    return WebhookDeliveryNotFound();
                 return Ok(FromModel(delivery));
             }
         }
@@ -142,7 +151,7 @@ namespace BTCPayServer.Controllers.GreenField
         {
             var delivery = await StoreRepository.GetWebhookDelivery(CurrentStoreId, webhookId, deliveryId);
             if (delivery is null)
-                return NotFound();
+                return WebhookDeliveryNotFound();
             return this.Ok(new JValue(await WebhookNotificationManager.Redeliver(deliveryId)));
         }
 
@@ -151,7 +160,7 @@ namespace BTCPayServer.Controllers.GreenField
         {
             var delivery = await StoreRepository.GetWebhookDelivery(CurrentStoreId, webhookId, deliveryId);
             if (delivery is null)
-                return NotFound();
+                return WebhookDeliveryNotFound();
             return File(delivery.GetBlob().Request, "application/json");
         }
 

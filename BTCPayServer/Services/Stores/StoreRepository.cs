@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
+using BTCPayServer.Logging;
 using BTCPayServer.Migrations;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 
@@ -220,6 +222,16 @@ namespace BTCPayServer.Services.Stores
                             .Select(s => s.Webhook).ToArrayAsync();
         }
 
+        private void WebhookDebugHelper(ApplicationDbContext ctx)
+        {
+            var deletedWebhooks = ctx.ChangeTracker.Entries<WebhookData>()
+                .Where(entry => entry.State == EntityState.Deleted).ToList();
+            if (deletedWebhooks.Any())
+            {
+                Logs.PayServer.LogWarning($"Detected webhook deletion (count: {deletedWebhooks.Count}) at{Environment.NewLine}{new System.Diagnostics.StackTrace()}");
+            }
+        }
+
         public async Task<WebhookDeliveryData> GetWebhookDelivery(string storeId, string webhookId, string deliveryId)
         {
             if (webhookId == null)
@@ -247,6 +259,7 @@ namespace BTCPayServer.Services.Stores
                     DeliveryId = delivery.Id
                 });
             }
+            WebhookDebugHelper(ctx);
             await ctx.SaveChangesAsync();
         }
 
@@ -284,6 +297,7 @@ namespace BTCPayServer.Services.Stores
             storeWebhook.WebhookId = data.Id;
             ctx.StoreWebhooks.Add(storeWebhook);
             ctx.Webhooks.Add(data);
+            WebhookDebugHelper(ctx);
             await ctx.SaveChangesAsync();
             return data.Id;
         }
@@ -343,6 +357,7 @@ namespace BTCPayServer.Services.Stores
             if (hook is null)
                 return;
             hook.SetBlob(webhookBlob);
+            WebhookDebugHelper(ctx);
             await ctx.SaveChangesAsync();
         }
 

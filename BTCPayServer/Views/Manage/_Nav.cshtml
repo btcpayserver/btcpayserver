@@ -1,6 +1,4 @@
 @inject SignInManager<ApplicationUser> SignInManager
-
-        <a id="@ManageNavPages.APIKeys.ToString()" class="nav-link @ViewData.IsActivePage(ManageNavPages.APIKeys)" asp-action="APIKeys">API Keys</a>
 <div class="nav flex-column mb-4">
     <a id="@ManageNavPages.Index.ToString()" class="nav-link @ViewData.IsActivePage(ManageNavPages.Index)" asp-controller="Manage" asp-action="Index">Profile</a>
     <a id="@ManageNavPages.ChangePassword.ToString()" class="nav-link @ViewData.IsActivePage(ManageNavPages.ChangePassword)"  asp-controller="Manage" asp-action="ChangePassword">Password</a>

@@ -3,6 +3,7 @@
 @model UpdateCoinSwitchSettingsViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
+    ViewData["NavPartialName"] = "../Stores/_Nav";
     ViewData.SetActivePageAndTitle(StoreNavPages.Index, "Update Store CoinSwitch Settings", Context.GetStoreData().StoreName);
 }
 

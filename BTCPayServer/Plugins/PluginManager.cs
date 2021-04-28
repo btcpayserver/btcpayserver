@@ -5,7 +5,6 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices.ComTypes;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Configuration;
 using McMaster.NETCore.Plugins;
@@ -28,7 +27,7 @@ namespace BTCPayServer.Plugins
 
         public static bool IsExceptionByPlugin(Exception exception)
         {
-           return  _pluginAssemblies.Any(assembly => assembly.FullName.Contains(exception.Source, StringComparison.OrdinalIgnoreCase));
+            return _pluginAssemblies.Any(assembly => assembly?.FullName?.Contains(exception.Source!, StringComparison.OrdinalIgnoreCase) is true);
         }
         public static IMvcBuilder AddPlugins(this IMvcBuilder mvcBuilder, IServiceCollection serviceCollection,
             IConfiguration config, ILoggerFactory loggerFactory)

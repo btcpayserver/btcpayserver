@@ -129,7 +129,7 @@ namespace BTCPayServer.Hosting
                     await _Settings.UpdateSetting(settings);
                 }
 
-                if (true || !settings.MigrateU2FToFIDO2)
+                if (!settings.MigrateU2FToFIDO2)
                 {
                     await MigrateU2FToFIDO2();
                     settings.MigrateU2FToFIDO2 = true;
@@ -146,7 +146,6 @@ namespace BTCPayServer.Hosting
         private async Task MigrateU2FToFIDO2()
         {
             await using var ctx = _DBContextFactory.CreateContext();
-            ctx.RemoveRange(ctx.Fido2Credentials.ToList());
             var u2fDevices = await ctx.U2FDevices.ToListAsync();
             foreach (U2FDevice u2FDevice in u2fDevices)
             {
@@ -168,7 +167,6 @@ namespace BTCPayServer.Hosting
                 await ctx.AddAsync(fido2);
                 
                 ctx.Remove(u2FDevice);
-
             }
             await ctx.SaveChangesAsync();
         }

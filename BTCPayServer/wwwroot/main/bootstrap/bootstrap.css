@@ -54,7 +54,7 @@ hr {
   opacity: 0.25; }
 
 hr:not([size]) {
-  height: 1px; }
+  height: 3px; }
 
 h1, .h1, h2, .h2, h3, .h3, h4, .h4, h5, .h5, h6, .h6 {
   margin-top: 0;
@@ -158,10 +158,11 @@ sup {
   top: -.5em; }
 
 a {
-  color: var(--btcpay-primary);
-  text-decoration: underline; }
+  color: var(--btcpay-body-link);
+  text-decoration: none; }
 a:hover {
-  color: var(--btcpay-primary-text-hover); }
+  color: var(--btcpay-body-link-accent);
+  text-decoration: underline; }
 
 a:not([href]):not([class]), a:not([href]):not([class]):hover {
   color: inherit;
@@ -181,7 +182,8 @@ pre {
   margin-top: 0;
   margin-bottom: 1rem;
   overflow: auto;
-  font-size: 0.875em; }
+  font-size: 0.875em;
+  color: var(--btcpay-pre-text); }
 pre code {
   font-size: inherit;
   color: inherit;
@@ -223,6 +225,7 @@ caption {
   text-align: left; }
 
 th {
+  font-weight: var(--btcpay-font-weight-normal);
   text-align: inherit;
   text-align: -webkit-match-parent; }
 
@@ -2068,7 +2071,6 @@ textarea.form-control-lg {
   line-height: 1.5;
   color: var(--btcpay-body-text);
   text-align: center;
-  text-decoration: none;
   vertical-align: middle;
   cursor: pointer;
   user-select: none;
@@ -2082,7 +2084,8 @@ textarea.form-control-lg {
   .btn {
     transition: none; } }
 .btn:hover {
-  color: var(--btcpay-body-text); }
+  color: var(--btcpay-body-text);
+  text-decoration: none; }
 .btn-check:focus + .btn, .btn:focus {
   outline: 0;
   box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); }
@@ -2485,10 +2488,13 @@ fieldset:disabled .btn {
 
 .btn-link {
   font-weight: 400;
-  color: var(--btcpay-primary);
-  text-decoration: underline; }
+  color: var(--btcpay-body-link);
+  text-decoration: none; }
 .btn-link:hover {
-  color: var(--btcpay-primary-text-hover); }
+  color: var(--btcpay-body-link-accent);
+  text-decoration: underline; }
+.btn-link:focus {
+  text-decoration: underline; }
 .btn-link:disabled, .btn-link.disabled {
   color: var(--btcpay-secondary); }
 
@@ -2722,12 +2728,12 @@ fieldset:disabled .btn {
   font-weight: 400;
   color: var(--btcpay-body-text);
   text-align: inherit;
-  text-decoration: none;
   white-space: nowrap;
   background-color: transparent;
   border: 0; }
 .dropdown-item:hover, .dropdown-item:focus {
   color: var(--btcpay-body-text);
+  text-decoration: none;
   background-color: var(--btcpay-body-bg-hover); }
 .dropdown-item.active, .dropdown-item:active {
   color: var(--btcpay-body-text);
@@ -2867,11 +2873,14 @@ fieldset:disabled .btn {
 .nav-link {
   display: block;
   padding: 0.5rem 1rem;
-  text-decoration: none;
+  color: var(--btcpay-nav-link);
   transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out; }
 @media (prefers-reduced-motion: reduce) {
   .nav-link {
     transition: none; } }
+.nav-link:hover, .nav-link:focus {
+  color: var(--btcpay-nav-link-accent);
+  text-decoration: none; }
 .nav-link.disabled {
   color: var(--btcpay-secondary);
   pointer-events: none;
@@ -2953,8 +2962,9 @@ fieldset:disabled .btn {
   padding-bottom: 0.3125rem;
   margin-right: 1rem;
   font-size: 1.25rem;
-  text-decoration: none;
   white-space: nowrap; }
+.navbar-brand:hover, .navbar-brand:focus {
+  text-decoration: none; }
 
 .navbar-nav {
   display: flex;
@@ -3429,7 +3439,6 @@ fieldset:disabled .btn {
   position: relative;
   display: block;
   color: var(--btcpay-body-link);
-  text-decoration: none;
   background-color: var(--btcpay-body-bg-light);
   border: 1px solid var(--btcpay-body-border-light);
   transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out; }
@@ -3439,6 +3448,7 @@ fieldset:disabled .btn {
 .page-link:hover {
   z-index: 2;
   color: var(--btcpay-body-link);
+  text-decoration: none;
   background-color: var(--btcpay-body-bg-hover);
   border-color: var(--btcpay-body-border-light); }
 .page-link:focus {
@@ -3662,7 +3672,6 @@ fieldset:disabled .btn {
   display: block;
   padding: 0.5rem 1rem;
   color: var(--btcpay-body-text);
-  text-decoration: none;
   background-color: var(--btcpay-body-bg-light);
   border: 1px solid var(--btcpay-body-border-medium); }
 .list-group-item:first-child {
@@ -7499,39 +7508,25 @@ html {
 
 a,
 .btn-link {
-  color: var(--btcpay-body-link);
   transition-duration: 0.2s;
-  transition-property: background, color;
-  text-decoration: none; }
-
-a:hover,
-.btn-link:hover {
-  color: var(--btcpay-body-link-accent);
-  text-decoration: underline; }
+  transition-property: background, color; }
 
 a.nav-link {
-  color: var(--btcpay-nav-link);
   background: var(--btcpay-nav-bg);
   border-left-color: var(--btcpay-nav-border); }
 
 a.nav-link:focus,
 a.nav-link:hover {
-  color: var(--btcpay-nav-link-accent);
   text-decoration: none;
   border-left-color: var(--btcpay-nav-border-hover);
   background: var(--btcpay-nav-bg-hover); }
 
 code {
-  color: var(--btcpay-code-text);
   background: var(--btcpay-code-bg); }
 
 pre,
 pre code {
-  color: var(--btcpay-pre-text);
   background: var(--btcpay-pre-bg); }
-
-hr:not([size]) {
-  height: 3px; }
 
 ol {
   padding-left: 1.125em; }
@@ -7557,6 +7552,13 @@ ul li {
 
 .alert-dismissible .btn-close {
   color: inherit; }
+
+.btn-close .icon {
+  position: relative;
+  top: -.4rem;
+  display: inline-block;
+  width: .8rem;
+  height: .8rem; }
 
 .text-monospace {
   font-size: .95rem; }

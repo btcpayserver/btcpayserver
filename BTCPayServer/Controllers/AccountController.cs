@@ -19,7 +19,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using NicolasDorier.RateLimits;
-using U2F.Core.Exceptions;
 
 namespace BTCPayServer.Controllers
 {
@@ -235,7 +234,7 @@ namespace BTCPayServer.Controllers
 
                 errorMessage = "Invalid login attempt.";
             }
-            catch (U2fException e)
+            catch (Fido2VerificationException e)
             {
                 errorMessage = e.Message;
             }

@@ -63,12 +63,11 @@ namespace BTCPayServer.Security.GreenField
                 return AuthenticateResult.Fail(result.ToString());
 
             var user = await _userManager.Users
-                .Include(applicationUser => applicationUser.U2FDevices)
                 .Include(applicationUser => applicationUser.Fido2Credentials)
                 .FirstOrDefaultAsync(applicationUser =>
                     applicationUser.NormalizedUserName == _userManager.NormalizeName(username));
             
-            if (user.U2FDevices.Any() || user.Fido2Credentials.Any())
+            if (user.Fido2Credentials.Any())
             {
                 return AuthenticateResult.Fail("Cannot use Basic authentication with multi-factor is enabled.");
             }

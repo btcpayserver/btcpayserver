@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Data;
-using BTCPayServer.Fido2;
+using BTCPayServer.Fido2.Models;
 using BTCPayServer.Models;
 using Fido2NetLib;
 using Microsoft.AspNetCore.Authorization;
@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
 
-namespace BTCPayServer.U2F.Models
+namespace BTCPayServer.Fido2
 {
 
     [Route("fido2")]
@@ -78,8 +78,7 @@ namespace BTCPayServer.U2F.Models
         [HttpPost("register")]
         public async Task<IActionResult> CreateResponse([FromForm] string data, [FromForm] string name)
         {
-            var attestationResponse = JObject.Parse(data).ToObject<AuthenticatorAttestationRawResponse>();
-            if (await _fido2Service.CompleteCreation(_userManager.GetUserId(User), name, attestationResponse))
+            if (await _fido2Service.CompleteCreation(_userManager.GetUserId(User), name, data))
             {
 
                 TempData.SetStatusMessageModel(new StatusMessageModel

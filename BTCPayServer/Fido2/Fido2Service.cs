@@ -4,11 +4,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
+using BTCPayServer.Fido2.Models;
 using ExchangeSharp;
 using Fido2NetLib;
 using Fido2NetLib.Objects;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Fido2
 {
@@ -20,11 +22,13 @@ namespace BTCPayServer.Fido2
             new ConcurrentDictionary<string, AssertionOptions>();
         private readonly ApplicationDbContextFactory _contextFactory;
         private readonly IFido2 _fido2;
+        private readonly Fido2Configuration _fido2Configuration;
 
-        public Fido2Service(ApplicationDbContextFactory contextFactory, IFido2 fido2)
+        public Fido2Service(ApplicationDbContextFactory contextFactory, IFido2 fido2, Fido2Configuration fido2Configuration)
         {
             _contextFactory = contextFactory;
             _fido2 = fido2;
+            _fido2Configuration = fido2Configuration;
         }
 
         public async Task<CredentialCreateOptions> RequestCreation(string userId)
@@ -70,26 +74,27 @@ namespace BTCPayServer.Fido2
                 return options;
         }
 
-        public async Task<bool> CompleteCreation(string userId, string name, AuthenticatorAttestationRawResponse attestationResponse)
+        public async Task<bool> CompleteCreation(string userId, string name, string data)
         {
-            await using var dbContext = _contextFactory.CreateContext();
-            var user = await dbContext.Users.Include(applicationUser => applicationUser.Fido2Credentials)
-                .FirstOrDefaultAsync(applicationUser => applicationUser.Id == userId);
-               if (user == null || !CreationStore.TryGetValue(userId, out var options))
-               {
+            try
+            {
+
+                var attestationResponse = JObject.Parse(data).ToObject<AuthenticatorAttestationRawResponse>();
+                await using var dbContext = _contextFactory.CreateContext();
+                var user = await dbContext.Users.Include(applicationUser => applicationUser.Fido2Credentials)
+                    .FirstOrDefaultAsync(applicationUser => applicationUser.Id == userId);
+                if (user == null || !CreationStore.TryGetValue(userId, out var options))
+                {
                     return false;
-               }
+                }
 
                 // 2. Verify and make the credentials
-                var success = await _fido2.MakeNewCredentialAsync(attestationResponse, options, args => Task.FromResult(true));
+                var success =
+                    await _fido2.MakeNewCredentialAsync(attestationResponse, options, args => Task.FromResult(true));
 
                 // 3. Store the credentials in db
-                var newCredential = new Fido2Credential()
-                {
-                    Name = name,                    
-                    ApplicationUserId = userId
-                };
-                
+                var newCredential = new Fido2Credential() {Name = name, ApplicationUserId = userId};
+
                 newCredential.SetBlob(new Fido2CredentialBlob()
                 {
                     Descriptor = new PublicKeyCredentialDescriptor(success.Result.CredentialId),
@@ -104,8 +109,13 @@ namespace BTCPayServer.Fido2
                 await dbContext.SaveChangesAsync();
                 CreationStore.Remove(userId, out _);
                 return true;
-        
 
+
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         public async Task<List<Fido2Credential>> GetCredentials(string userId)
@@ -158,7 +168,9 @@ namespace BTCPayServer.Fido2
                 }, 
                 UserVerificationIndex = true, 
                 Location = true, 
-                UserVerificationMethod = true 
+                UserVerificationMethod = true ,
+                Extensions = true,
+                AppID = _fido2Configuration.Origin
             };
 
             // 3. Create options

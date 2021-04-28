@@ -9,6 +9,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Data;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -61,7 +62,16 @@ namespace BTCPayServer.Security.GreenField
             if (!result.Succeeded)
                 return AuthenticateResult.Fail(result.ToString());
 
-            var user = await _userManager.FindByNameAsync(username);
+            var user = await _userManager.Users
+                .Include(applicationUser => applicationUser.U2FDevices)
+                .Include(applicationUser => applicationUser.Fido2Credentials)
+                .FirstOrDefaultAsync(applicationUser =>
+                    applicationUser.NormalizedUserName == _userManager.NormalizeName(username));
+            
+            if (user.U2FDevices.Any() || user.Fido2Credentials.Any())
+            {
+                return AuthenticateResult.Fail("Cannot use Basic authentication with multi-factor is enabled.");
+            }
             var claims = new List<Claim>()
             {
                 new Claim(_identityOptions.CurrentValue.ClaimsIdentity.UserIdClaimType, user.Id),

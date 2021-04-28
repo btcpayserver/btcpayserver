@@ -1,8 +1,9 @@
-using System;
+using BTCPayServer.Data;
+using BTCPayServer.Fido2.Models;
 using NBXplorer;
 using Newtonsoft.Json.Linq;
 
-namespace BTCPayServer.Data
+namespace BTCPayServer.Fido2
 {
     public static class Fido2Extensions
     { 

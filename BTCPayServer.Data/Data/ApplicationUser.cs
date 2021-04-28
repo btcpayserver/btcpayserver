@@ -9,6 +9,7 @@ namespace BTCPayServer.Data
     {
         public bool RequiresEmailConfirmation { get; set; }
         public List<StoredFile> StoredFiles { get; set; }
+        [Obsolete("U2F support has been replace with FIDO2")]
         public List<U2FDevice> U2FDevices { get; set; }
         public List<APIKeyData> APIKeys { get; set; }
         public DateTimeOffset? Created { get; set; }

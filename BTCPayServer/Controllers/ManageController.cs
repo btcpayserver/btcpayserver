@@ -4,13 +4,11 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Data;
 using BTCPayServer.Models.ManageViewModels;
-using BTCPayServer.Security;
 using BTCPayServer.Security.GreenField;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
-using BTCPayServer.U2F;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -29,8 +27,6 @@ namespace BTCPayServer.Controllers
         private readonly EmailSenderFactory _EmailSenderFactory;
         private readonly ILogger _logger;
         private readonly UrlEncoder _urlEncoder;
-        readonly IWebHostEnvironment _Env;
-        public U2FService _u2FService;
         private readonly BTCPayServerEnvironment _btcPayServerEnvironment;
         private readonly APIKeyRepository _apiKeyRepository;
         private readonly IAuthorizationService _authorizationService;
@@ -48,7 +44,6 @@ namespace BTCPayServer.Controllers
           BTCPayWalletProvider walletProvider,
           StoreRepository storeRepository,
           IWebHostEnvironment env,
-          U2FService u2FService,
           BTCPayServerEnvironment btcPayServerEnvironment,
           APIKeyRepository apiKeyRepository,
           IAuthorizationService authorizationService,
@@ -60,8 +55,6 @@ namespace BTCPayServer.Controllers
             _EmailSenderFactory = emailSenderFactory;
             _logger = logger;
             _urlEncoder = urlEncoder;
-            _Env = env;
-            _u2FService = u2FService;
             _btcPayServerEnvironment = btcPayServerEnvironment;
             _apiKeyRepository = apiKeyRepository;
             _authorizationService = authorizationService;

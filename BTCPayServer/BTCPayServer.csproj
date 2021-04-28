@@ -84,7 +84,6 @@
     <PackageReference Include="TwentyTwenty.Storage.Azure" Version="2.12.1" />
     <PackageReference Include="TwentyTwenty.Storage.Google" Version="2.12.1" />
     <PackageReference Include="TwentyTwenty.Storage.Local" Version="2.12.1" />
-    <PackageReference Include="U2F.Core" Version="1.0.4" />
 		<PackageReference Include="YamlDotNet" Version="8.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="3.1.1" Condition="'$(RazorCompileOnBuild)' != 'true'" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.1" />
@@ -139,7 +138,6 @@
 	  <Folder Include="wwwroot\vendor\clipboard.js\" />
 	  <Folder Include="wwwroot\vendor\highlightjs\" />
 	  <Folder Include="wwwroot\vendor\summernote" />
-	  <Folder Include="wwwroot\vendor\u2f" />
 	  <Folder Include="wwwroot\vendor\vue-qrcode-reader" />
 	</ItemGroup>
 

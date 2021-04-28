@@ -11,8 +11,6 @@ using BTCPayServer.Fido2.Models;
 using BTCPayServer.Logging;
 using BTCPayServer.Models.AccountViewModels;
 using BTCPayServer.Services;
-using BTCPayServer.U2F;
-using BTCPayServer.U2F.Models;
 using Fido2NetLib;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
@@ -21,7 +19,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using NicolasDorier.RateLimits;
-using U2F.Core.Exceptions;
 
 namespace BTCPayServer.Controllers
 {
@@ -35,7 +32,6 @@ namespace BTCPayServer.Controllers
         readonly SettingsRepository _SettingsRepository;
         readonly Configuration.BTCPayServerOptions _Options;
         private readonly BTCPayServerEnvironment _btcPayServerEnvironment;
-        public U2FService _u2FService;
         private readonly Fido2Service _fido2Service;
         private readonly EventAggregator _eventAggregator;
         readonly ILogger _logger;
@@ -47,7 +43,6 @@ namespace BTCPayServer.Controllers
             SettingsRepository settingsRepository,
             Configuration.BTCPayServerOptions options,
             BTCPayServerEnvironment btcPayServerEnvironment,
-            U2FService u2FService,
             EventAggregator eventAggregator,
             Fido2Service fido2Service)
         {
@@ -57,7 +52,6 @@ namespace BTCPayServer.Controllers
             _SettingsRepository = settingsRepository;
             _Options = options;
             _btcPayServerEnvironment = btcPayServerEnvironment;
-            _u2FService = u2FService;
             _fido2Service = fido2Service;
             _eventAggregator = eventAggregator;
             _logger = Logs.PayServer;
@@ -126,9 +120,8 @@ namespace BTCPayServer.Controllers
                     return View(model);
                 }
 
-                var u2fDevices = await _u2FService.HasDevices(user.Id);
                 var fido2Devices = await _fido2Service.HasCredentials(user.Id);
-                if (!await _userManager.IsLockedOutAsync(user) &&  u2fDevices ||  fido2Devices)
+                if (!await _userManager.IsLockedOutAsync(user) &&  fido2Devices)
                 {
                     if (await _userManager.CheckPasswordAsync(user, model.Password))
                     {
@@ -147,7 +140,6 @@ namespace BTCPayServer.Controllers
                         return View("SecondaryLogin", new SecondaryLoginViewModel()
                         {
                             LoginWith2FaViewModel = twoFModel,
-                            LoginWithU2FViewModel = u2fDevices? await BuildU2FViewModel(model.RememberMe, user) : null,
                             LoginWithFido2ViewModel = fido2Devices? await BuildFido2ViewModel(model.RememberMe, user): null, 
                         });
                     }
@@ -191,27 +183,6 @@ namespace BTCPayServer.Controllers
 
             // If we got this far, something failed, redisplay form
             return View(model);
-        }
-
-        private async Task<LoginWithU2FViewModel> BuildU2FViewModel(bool rememberMe, ApplicationUser user)
-        {
-            if (_btcPayServerEnvironment.IsSecure)
-            {
-                var u2fChallenge = await _u2FService.GenerateDeviceChallenges(user.Id,
-                    Request.GetAbsoluteUriNoPathBase().ToString().TrimEnd('/'));
-
-                return new LoginWithU2FViewModel()
-                {
-                    Version = u2fChallenge[0].version,
-                    Challenge = u2fChallenge[0].challenge,
-                    Challenges = u2fChallenge,
-                    AppId = u2fChallenge[0].appId,
-                    UserId = user.Id,
-                    RememberMe = rememberMe
-                };
-            }
-
-            return null;
         }
 
         private async Task<LoginWithFido2ViewModel> BuildFido2ViewModel(bool rememberMe, ApplicationUser user)
@@ -263,7 +234,7 @@ namespace BTCPayServer.Controllers
 
                 errorMessage = "Invalid login attempt.";
             }
-            catch (U2fException e)
+            catch (Fido2VerificationException e)
             {
                 errorMessage = e.Message;
             }
@@ -273,7 +244,6 @@ namespace BTCPayServer.Controllers
             return View("SecondaryLogin", new SecondaryLoginViewModel()
             {
                 LoginWithFido2ViewModel = viewModel,
-                LoginWithU2FViewModel = (await _u2FService.HasDevices(user.Id)) ? await BuildU2FViewModel(viewModel.RememberMe, user) : null,
                 LoginWith2FaViewModel = !user.TwoFactorEnabled
                     ? null
                     : new LoginWith2faViewModel()
@@ -282,57 +252,6 @@ namespace BTCPayServer.Controllers
                     }
             });
         }
-        
-        
-       
-        [HttpPost]
-        [AllowAnonymous]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> LoginWithU2F(LoginWithU2FViewModel viewModel, string returnUrl = null)
-        {
-            if (!CanLoginOrRegister())
-            {
-                return RedirectToAction("Login");
-            }
-
-            ViewData["ReturnUrl"] = returnUrl;
-            var user = await _userManager.FindByIdAsync(viewModel.UserId);
-
-            if (user == null)
-            {
-                return NotFound();
-            }
-
-            var errorMessage = string.Empty;
-            try
-            {
-                if (await _u2FService.AuthenticateUser(viewModel.UserId, viewModel.DeviceResponse))
-                {
-                    await _signInManager.SignInAsync(user, viewModel.RememberMe, "U2F");
-                    _logger.LogInformation("User logged in.");
-                    return RedirectToLocal(returnUrl);
-                }
-
-                errorMessage = "Invalid login attempt.";
-            }
-            catch (U2fException e)
-            {
-                errorMessage = e.Message;
-            }
-
-            ModelState.AddModelError(string.Empty, errorMessage);
-            return View("SecondaryLogin", new SecondaryLoginViewModel()
-            {
-                LoginWithU2FViewModel = viewModel,
-                LoginWith2FaViewModel = !user.TwoFactorEnabled
-                    ? null
-                    : new LoginWith2faViewModel()
-                    {
-                        RememberMe = viewModel.RememberMe
-                    }
-            });
-        }
-
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> LoginWith2fa(bool rememberMe, string returnUrl = null)
@@ -355,7 +274,6 @@ namespace BTCPayServer.Controllers
             return View("SecondaryLogin", new SecondaryLoginViewModel()
             {
                 LoginWith2FaViewModel = new LoginWith2faViewModel { RememberMe = rememberMe },
-                LoginWithU2FViewModel = (await _u2FService.HasDevices(user.Id)) ? await BuildU2FViewModel(rememberMe, user) : null,
                 LoginWithFido2ViewModel = (await _fido2Service.HasCredentials(user.Id)) ? await BuildFido2ViewModel(rememberMe, user) : null,
             });
         }
@@ -402,7 +320,6 @@ namespace BTCPayServer.Controllers
                 return View("SecondaryLogin", new SecondaryLoginViewModel()
                 {
                     LoginWith2FaViewModel = model,
-                    LoginWithU2FViewModel = (await _u2FService.HasDevices(user.Id)) ? await BuildU2FViewModel(rememberMe, user) : null,
                     LoginWithFido2ViewModel = (await _fido2Service.HasCredentials(user.Id)) ? await BuildFido2ViewModel(rememberMe, user) : null,
                 });
             }

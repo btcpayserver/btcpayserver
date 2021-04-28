@@ -7,7 +7,9 @@
 @if (Model.StoreNotConfigured)
 {
     <div class="alert alert-warning alert-dismissible mb-5" role="alert">
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <svg role="img" class="icon icon-close"><use href="/img/icon-sprite.svg#close"></use></svg>
+        </button>
         Warning: No wallet has been linked to your BTCPay Store.<br/>
         See <a href="https://docs.btcpayserver.org/WalletSetup/" target="_blank" class="alert-link">this link</a> for more information on how to connect your store and wallet.
     </div>

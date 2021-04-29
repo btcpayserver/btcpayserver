@@ -216,14 +216,13 @@
         </div>
         <div id="js-pos-list" class="text-center mx-auto px-4">
             <div class="row card-deck my-3">
-
                 @for (var index = 0; index < Model.Items.Length; index++)
                 {
                     var item = Model.Items[index];
                     var image = item.Image;
                     var description = item.Description;
 
-                    <div class="js-add-cart card my-2 card-wrapper" data-index="@index">
+                    <div class="js-add-cart card px-0 m-2 card-wrapper" data-index="@index">
                         @if (!String.IsNullOrWhiteSpace(image))
                         {
                             @:<img class="card-img-top" src="@image" alt="Card image cap" asp-append-version="true">

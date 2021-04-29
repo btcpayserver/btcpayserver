@@ -1511,9 +1511,6 @@ progress {
   appearance: none;
   border-radius: 0.25rem;
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out; }
-@media (prefers-reduced-motion: reduce) {
-  .form-control {
-    transition: none; } }
 .form-control[type="file"] {
   overflow: hidden; }
 .form-control[type="file"]:not(:disabled):not([readonly]) {
@@ -1546,9 +1543,6 @@ progress {
   border-inline-end-width: 1px;
   border-radius: 0;
   transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out; }
-@media (prefers-reduced-motion: reduce) {
-  .form-control::file-selector-button {
-    transition: none; } }
 .form-control:hover:not(:disabled):not([readonly])::file-selector-button {
   background-color: var(--btcpay-form-bg-hover); }
 .form-control::-webkit-file-upload-button {
@@ -1564,9 +1558,6 @@ progress {
   border-inline-end-width: 1px;
   border-radius: 0;
   transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out; }
-@media (prefers-reduced-motion: reduce) {
-  .form-control::-webkit-file-upload-button {
-    transition: none; } }
 .form-control:hover:not(:disabled):not([readonly])::-webkit-file-upload-button {
   background-color: var(--btcpay-form-bg-hover); }
 
@@ -1734,9 +1725,6 @@ textarea.form-control-lg {
   background-position: left center;
   border-radius: 2em;
   transition: background-position 0.15s ease-in-out; }
-@media (prefers-reduced-motion: reduce) {
-  .form-switch .form-check-input {
-    transition: none; } }
 .form-switch .form-check-input:focus {
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='var%28--btcpay-form-border-focus%29'/%3e%3c/svg%3e"); }
 .form-switch .form-check-input:checked {
@@ -1779,9 +1767,6 @@ textarea.form-control-lg {
   border-radius: 1rem;
   transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
   appearance: none; }
-@media (prefers-reduced-motion: reduce) {
-  .form-range::-webkit-slider-thumb {
-    transition: none; } }
 .form-range::-webkit-slider-thumb:active {
   background-color: var(--btcpay-form-border-active); }
 .form-range::-webkit-slider-runnable-track {
@@ -1800,9 +1785,6 @@ textarea.form-control-lg {
   border-radius: 1rem;
   transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
   appearance: none; }
-@media (prefers-reduced-motion: reduce) {
-  .form-range::-moz-range-thumb {
-    transition: none; } }
 .form-range::-moz-range-thumb:active {
   background-color: var(--btcpay-form-border-active); }
 .form-range::-moz-range-track {
@@ -1836,9 +1818,6 @@ textarea.form-control-lg {
   border: 1px solid transparent;
   transform-origin: 0 0;
   transition: opacity 0.1s ease-in-out, transform 0.1s ease-in-out; }
-@media (prefers-reduced-motion: reduce) {
-  .form-floating > label {
-    transition: none; } }
 .form-floating > .form-control::placeholder {
   color: transparent; }
 .form-floating > .form-control:focus, .form-floating > .form-control:not(:placeholder-shown) {
@@ -2080,9 +2059,6 @@ textarea.form-control-lg {
   font-size: 1rem;
   border-radius: 0.25rem;
   transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out; }
-@media (prefers-reduced-motion: reduce) {
-  .btn {
-    transition: none; } }
 .btn:hover {
   color: var(--btcpay-body-text);
   text-decoration: none; }
@@ -2510,9 +2486,6 @@ fieldset:disabled .btn {
 
 .fade {
   transition: opacity 0.15s linear; }
-@media (prefers-reduced-motion: reduce) {
-  .fade {
-    transition: none; } }
 .fade:not(.show) {
   opacity: 0; }
 
@@ -2523,9 +2496,6 @@ fieldset:disabled .btn {
   height: 0;
   overflow: hidden;
   transition: height 0.35s ease; }
-@media (prefers-reduced-motion: reduce) {
-  .collapsing {
-    transition: none; } }
 
 .dropup,
 .dropend,
@@ -2875,9 +2845,6 @@ fieldset:disabled .btn {
   padding: 0.5rem 1rem;
   color: var(--btcpay-nav-link);
   transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out; }
-@media (prefers-reduced-motion: reduce) {
-  .nav-link {
-    transition: none; } }
 .nav-link:hover, .nav-link:focus {
   color: var(--btcpay-nav-link-accent);
   text-decoration: none; }
@@ -2995,9 +2962,6 @@ fieldset:disabled .btn {
   border: 1px solid transparent;
   border-radius: 0.25rem;
   transition: box-shadow 0.15s ease-in-out; }
-@media (prefers-reduced-motion: reduce) {
-  .navbar-toggler {
-    transition: none; } }
 .navbar-toggler:hover {
   text-decoration: none; }
 .navbar-toggler:focus {
@@ -3340,9 +3304,6 @@ fieldset:disabled .btn {
   border-radius: 0;
   overflow-anchor: none;
   transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, border-radius 0.15s ease; }
-@media (prefers-reduced-motion: reduce) {
-  .accordion-button {
-    transition: none; } }
 .accordion-button:not(.collapsed) {
   color: var(--btcpay-body-text-active);
   background-color: var(--btcpay-body-bg-active);
@@ -3360,9 +3321,6 @@ fieldset:disabled .btn {
   background-repeat: no-repeat;
   background-size: 1.25rem;
   transition: transform 0.2s ease-in-out; }
-@media (prefers-reduced-motion: reduce) {
-  .accordion-button::after {
-    transition: none; } }
 .accordion-button:hover {
   z-index: 2; }
 .accordion-button:focus {
@@ -3442,9 +3400,6 @@ fieldset:disabled .btn {
   background-color: var(--btcpay-body-bg-light);
   border: 1px solid var(--btcpay-body-border-light);
   transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out; }
-@media (prefers-reduced-motion: reduce) {
-  .page-link {
-    transition: none; } }
 .page-link:hover {
   z-index: 2;
   color: var(--btcpay-body-link);
@@ -3626,9 +3581,6 @@ fieldset:disabled .btn {
   white-space: nowrap;
   background-color: var(--btcpay-primary);
   transition: width 0.6s ease; }
-@media (prefers-reduced-motion: reduce) {
-  .progress-bar {
-    transition: none; } }
 
 .progress-bar-striped {
   background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);
@@ -3636,9 +3588,6 @@ fieldset:disabled .btn {
 
 .progress-bar-animated {
   animation: 1s linear infinite progress-bar-stripes; }
-@media (prefers-reduced-motion: reduce) {
-  .progress-bar-animated {
-    animation: none; } }
 
 .list-group {
   display: flex;
@@ -3989,9 +3938,6 @@ fieldset:disabled .btn {
 .modal.fade .modal-dialog {
   transition: transform 0.3s ease-out;
   transform: translate(0, -50px); }
-@media (prefers-reduced-motion: reduce) {
-  .modal.fade .modal-dialog {
-    transition: none; } }
 .modal.show .modal-dialog {
   transform: none; }
 .modal.modal-static .modal-dialog {
@@ -4417,9 +4363,6 @@ fieldset:disabled .btn {
   margin-right: -100%;
   backface-visibility: hidden;
   transition: transform 0.6s ease-in-out; }
-@media (prefers-reduced-motion: reduce) {
-  .carousel-item {
-    transition: none; } }
 
 .carousel-item.active,
 .carousel-item-next,
@@ -4452,10 +4395,6 @@ fieldset:disabled .btn {
   z-index: 0;
   opacity: 0;
   transition: opacity 0s 0.6s; }
-@media (prefers-reduced-motion: reduce) {
-  .carousel-fade .active.carousel-item-start,
-  .carousel-fade .active.carousel-item-end {
-    transition: none; } }
 
 .carousel-control-prev,
 .carousel-control-next {
@@ -4474,10 +4413,6 @@ fieldset:disabled .btn {
   border: 0;
   opacity: 0.5;
   transition: opacity 0.15s ease; }
-@media (prefers-reduced-motion: reduce) {
-  .carousel-control-prev,
-  .carousel-control-next {
-    transition: none; } }
 .carousel-control-prev:hover, .carousel-control-prev:focus,
 .carousel-control-next:hover,
 .carousel-control-next:focus {
@@ -4545,9 +4480,6 @@ fieldset:disabled .btn {
   border-bottom: 10px solid transparent;
   opacity: 0.5;
   transition: opacity 0.6s ease; }
-@media (prefers-reduced-motion: reduce) {
-  .carousel-indicators [data-bs-target] {
-    transition: none; } }
 .carousel-indicators .active {
   opacity: 1; }
 
@@ -4611,11 +4543,6 @@ fieldset:disabled .btn {
   width: 1rem;
   height: 1rem; }
 
-@media (prefers-reduced-motion: reduce) {
-  .spinner-border,
-  .spinner-grow {
-    animation-duration: 1.5s; } }
-
 .offcanvas {
   position: fixed;
   bottom: 0;
@@ -4629,9 +4556,6 @@ fieldset:disabled .btn {
   background-clip: padding-box;
   outline: 0;
   transition: transform 0.3s ease-in-out; }
-@media (prefers-reduced-motion: reduce) {
-  .offcanvas {
-    transition: none; } }
 
 .offcanvas-header {
   display: flex;

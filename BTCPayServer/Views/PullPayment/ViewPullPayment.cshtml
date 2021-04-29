@@ -81,7 +81,7 @@
                 }
                 <div class="row">
                     <div class="col col-12 col-lg-6 mb-4">
-                        <div class="jumbotron h-100 m-0 p-sm-5">
+                        <div class="bg-tile h-100 m-0 p-3 p-sm-5">
                             @if (!Model.Title.IsNullOrWhiteSpace())
                             {
                                 <h2 class="h4 mb-3">@Model.Title</h2>
@@ -114,7 +114,7 @@
                         </div>
                     </div>
                     <div class="col col-12 col-lg-6 mb-4">
-                        <div class="jumbotron h-100 m-0 p-sm-5">
+                        <div class="bg-tile h-100 m-0 p-3 p-sm-5">
                             <h2 class="h4 mb-3">Payment Details</h2>
                             <dl class="mb-0 mt-md-4">
                                 <div class="d-flex d-print-inline-block flex-column mb-4 me-5">
@@ -138,7 +138,7 @@
                 </div>
                 <div class="row">
                     <div class="col">
-                        <div class="jumbotron h-100 m-0 p-sm-5">
+                        <div class="bg-tile h-100 m-0 p-3 p-sm-5">
                             <h2 class="h4 mb-3">Awaiting Claims</h2>
                             <div class="table-responsive">
                                 @if (Model.Payouts.Any())

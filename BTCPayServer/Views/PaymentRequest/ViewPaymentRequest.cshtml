@@ -197,7 +197,7 @@
                 <partial name="_StatusMessage" model="@(new ViewDataDictionary(ViewData){ { "Margin", "mb-4" } })" />
                 <div class="row">
                     <div class="col col-12 col-lg-6 mb-4">
-                        <div class="jumbotron h-100 m-0 p-sm-5">
+                        <div class="bg-tile h-100 m-0 p-3 p-sm-5">
                             <h2 class="h4 mb-3">Invoice Summary</h2>
                             <div v-html="srvModel.description">
                                 @if (!string.IsNullOrEmpty(Model.Description) && Model.Description != "<br>")
@@ -208,7 +208,7 @@
                         </div>
                     </div>
                     <div class="col col-12 col-lg-6 mb-4">
-                        <div class="jumbotron h-100 m-0 p-sm-5">
+                        <div class="bg-tile h-100 m-0 p-3 p-sm-5">
                             <h2 class="h4 mb-3">Payment Details</h2>
                             <dl class="mb-0 mt-md-4">
                                 <div class="d-flex d-print-inline-block flex-column mb-4 me-5">
@@ -232,7 +232,7 @@
                 </div>
                 <div class="row">
                     <div class="col">
-                        <div class="jumbotron h-100 m-0 p-sm-5">
+                        <div class="bg-tile h-100 m-0 p-3 p-sm-5">
                             <h2 class="h4 mb-3">Payment History</h2>
                             <div class="table-responsive">
                                 <noscript>

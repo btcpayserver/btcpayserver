@@ -72,11 +72,9 @@
                                         <select asp-for="PermissionValues[i].SpecificStores[index]" class="form-select" asp-items="@(new SelectList(new[] {store}, nameof(StoreData.Id), nameof(StoreData.StoreName), store.Id))"></select>
                                     }
                                     <span asp-validation-for="PermissionValues[i].SpecificStores[index]" class="text-danger"></span>
-                                    <div class="input-group-append">
-                                        <button type="submit" title="Remove Store Permission" name="command" value="@($"{Model.PermissionValues[i].Permission}:remove-store:{index}")" class="btn btn-danger">
-                                            Remove
-                                        </button>
-                                    </div>
+                                    <button type="submit" title="Remove Store Permission" name="command" value="@($"{Model.PermissionValues[i].Permission}:remove-store:{index}")" class="btn btn-danger">
+                                        Remove
+                                    </button>
                                 </div>
                             }
                             @if (Model.PermissionValues[i].SpecificStores.Count < Model.Stores.Length)

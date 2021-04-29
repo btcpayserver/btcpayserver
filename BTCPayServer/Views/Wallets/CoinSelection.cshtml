@@ -13,11 +13,9 @@
         <li class="list-group-item">
             <div class="input-group">
                 <input type="text" v-model="filter" class="form-control" placeholder="Filter by transaction id, amount, label, comment.."/>
-                <div class="input-group-append" v-show="filter">
-                    <button type="button" class="btn btn-primary" title="Clear" v-on:click="filter=''">
-                        <span class=" fa fa-times"></span>
-                    </button>
-                </div>
+                <button type="button" class="btn btn-primary" title="Clear" v-on:click="filter=''" v-show="filter">
+                    <span class="fa fa-times"></span>
+                </button>
             </div>
         </li>
         <li class="list-group-item d-flex justify-content-between align-items-center cursor-pointer"

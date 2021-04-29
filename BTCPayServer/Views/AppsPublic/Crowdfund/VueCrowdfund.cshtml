@@ -284,20 +284,18 @@
                     :min="perk.price.value"  
                     step="any"  
                     placeholder="Contribution Amount"
-                    required >
-                <div class="input-group-append">                    
-                    <span class='input-group-text'>{{targetCurrency}}</span>
-                    <button 
-                        class="btn btn-primary" 
-                        v-bind:class="{ 'btn-disabled': loading}"
-                        :disabled="!active || loading" 
-                        type="submit">
-                         <div v-if="loading"  class="spinner-grow spinner-grow-sm" role="status">
-                            <span class="sr-only">Loading...</span>
-                        </div>
-                        {{perk.buyButtonText || 'Continue'}}
-                    </button>
-                </div>
+                    required>
+                <span class='input-group-text'>{{targetCurrency}}</span>
+                <button
+                    class="btn btn-primary"
+                    v-bind:class="{ 'btn-disabled': loading}"
+                    :disabled="!active || loading"
+                    type="submit">
+                     <div v-if="loading"  class="spinner-grow spinner-grow-sm" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                    {{perk.buyButtonText || 'Continue'}}
+                </button>
             </div>
         </div>
         <div class="card-footer d-flex justify-content-between" v-if="perk.sold || perk.inventory != null">

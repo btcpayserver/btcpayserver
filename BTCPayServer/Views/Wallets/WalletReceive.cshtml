@@ -22,17 +22,13 @@
                             <div class="form-group">
                                 <div class="input-group">
                                     <input type="text" class="form-control " readonly="readonly" asp-for="Address" id="address"/>
-                                    <div class="input-group-append">
-                                        <span class="input-group-text fa fa-copy"> </span>
-                                    </div>
+                                    <span class="input-group-text fa fa-copy"> </span>
                                 </div>
                             </div>
                             <div class="form-group">
                                 <div class="input-group">
                                     <input type="text" class="form-control" readonly="readonly" asp-for="PaymentLink" id="payment-link"/>
-                                    <div class="input-group-append">
-                                        <span class="input-group-text fa fa-copy"> </span>
-                                    </div>
+                                    <span class="input-group-text fa fa-copy"> </span>
                                 </div>
                             </div>
 
@@ -73,9 +69,7 @@
                         <div class="form-group">
                             <div class="input-group" data-clipboard="@Model.PaymentLink">
                                 <input type="text" class="form-control" style="cursor: copy" readonly="readonly" value="@Model.PaymentLink" id="payment-link"/>
-                                <div class="input-group-append">
-                                    <button type="button" class="btn btn-outline-secondary" data-clipboard-confirm>Copy link</button>
-                                </div>
+                                <button type="button" class="btn btn-outline-secondary" data-clipboard-confirm>Copy link</button>
                             </div>
                         </div>
                         <div class="row mt-4">

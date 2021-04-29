@@ -33,38 +33,33 @@
                     <input type="hidden" asp-for="Count"/>
                     <input asp-for="TimezoneOffset" type="hidden"/>
                     <div class="input-group">
-                        <div class="input-group-prepend">
-                            <a href="#help" class="input-group-text text-secondary text-decoration-none" data-bs-toggle="collapse">
-                                <span class="fa fa-filter"></span>
-                            </a>
-                        </div>
+                        <a href="#help" class="input-group-text text-secondary text-decoration-none" data-bs-toggle="collapse">
+                            <span class="fa fa-filter"></span>
+                        </a>
                         <input asp-for="SearchTerm" class="form-control"/>
-                        <div class="input-group-append">
-                            <button type="submit" class="btn btn-secondary" title="Search invoice">
-                                <span class="fa fa-search"></span> Search
-                            </button>
-                            <button type="button" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <span class="sr-only">Toggle Dropdown</span>
-                            </button>
+                        <button type="submit" class="btn btn-secondary" title="Search invoice">
+                            <span class="fa fa-search"></span> Search
+                        </button>
+                        <button type="button" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <span class="sr-only">Toggle Dropdown</span>
+                        </button>
 
-                            <div class="dropdown-menu dropdown-menu-end">
-                                <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="status:invalid@{@storeIds}">Invalid Invoices</a>
-                                <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="status:paid,status:confirmed,status:complete@{@storeIds}">Paid Invoices</a>
-                                <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="exceptionstatus:paidLate@{@storeIds}">Paid Late Invoices</a>
-                                <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="exceptionstatus:paidPartial@{@storeIds}">Paid Partial Invoices</a>
-                                <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="exceptionstatus:paidOver@{@storeIds}">Paid Over Invoices</a>
-                                <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="unusual:true@{@storeIds}">Unusual Invoices</a>
-                                <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="includearchived:true@{@storeIds}">Archived Invoices</a>
-                                <div role="separator" class="dropdown-divider"></div>
-                                <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-timezoneoffset="0" asp-route-searchTerm="startDate:-24h@{@storeIds}">Last 24 hours</a>
-                                <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-timezoneoffset="0" asp-route-searchTerm="startDate:-3d@{@storeIds}">Last 3 days</a>
-                                <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-timezoneoffset="0" asp-route-searchTerm="startDate:-7d@{@storeIds}">Last 7 days</a>
-                                <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#customRangeModal">Custom Range</button>
-                                <div role="separator" class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="?searchTerm=">Unfiltered</a>
-                            </div>
+                        <div class="dropdown-menu dropdown-menu-end">
+                            <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="status:invalid@{@storeIds}">Invalid Invoices</a>
+                            <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="status:paid,status:confirmed,status:complete@{@storeIds}">Paid Invoices</a>
+                            <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="exceptionstatus:paidLate@{@storeIds}">Paid Late Invoices</a>
+                            <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="exceptionstatus:paidPartial@{@storeIds}">Paid Partial Invoices</a>
+                            <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="exceptionstatus:paidOver@{@storeIds}">Paid Over Invoices</a>
+                            <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="unusual:true@{@storeIds}">Unusual Invoices</a>
+                            <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="includearchived:true@{@storeIds}">Archived Invoices</a>
+                            <div role="separator" class="dropdown-divider"></div>
+                            <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-timezoneoffset="0" asp-route-searchTerm="startDate:-24h@{@storeIds}">Last 24 hours</a>
+                            <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-timezoneoffset="0" asp-route-searchTerm="startDate:-3d@{@storeIds}">Last 3 days</a>
+                            <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-timezoneoffset="0" asp-route-searchTerm="startDate:-7d@{@storeIds}">Last 7 days</a>
+                            <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#customRangeModal">Custom Range</button>
+                            <div role="separator" class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="?searchTerm=">Unfiltered</a>
                         </div>
-
                     </div>
                     <span asp-validation-for="SearchTerm" class="text-danger"></span>
                 </form>
@@ -87,11 +82,9 @@
                                             <input id="dtpStartDate" class="form-control flatdtpicker" type="datetime-local"
                                                 data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
                                                 placeholder="Start Date" />
-                                            <div class="input-group-append">
-                                                <button type="button" class="btn btn-primary input-group-clear" title="Clear">
-                                                    <span class=" fa fa-times"></span>
-                                                </button>
-                                            </div>
+                                            <button type="button" class="btn btn-primary input-group-clear" title="Clear">
+                                                <span class=" fa fa-times"></span>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -102,11 +95,9 @@
                                             <input id="dtpEndDate" class="form-control flatdtpicker" type="datetime-local"
                                                 data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
                                                 placeholder="End Date" />
-                                            <div class="input-group-append">
-                                                <button type="button" class="btn btn-primary input-group-clear" title="Clear">
-                                                    <span class="fa fa-times"></span>
-                                                </button>
-                                            </div>
+                                            <button type="button" class="btn btn-primary input-group-clear" title="Clear">
+                                                <span class="fa fa-times"></span>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>

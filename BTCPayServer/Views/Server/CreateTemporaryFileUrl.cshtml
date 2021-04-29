@@ -21,11 +21,8 @@
             <div class="form-group">
                 <label asp-for="TimeAmount" class="control-label"></label>
                 <div class="input-group">
-
                     <input type="number" asp-for="TimeAmount" class="form-control">
-                    <div class="input-group-append">
-                        <select asp-for="TimeType" asp-items="@Html.GetEnumSelectList<ServerController.CreateTemporaryFileUrlViewModel.TmpFileTimeType>()" class="form-select"></select>
-                    </div>
+                    <select asp-for="TimeType" asp-items="@Html.GetEnumSelectList<ServerController.CreateTemporaryFileUrlViewModel.TmpFileTimeType>()" class="form-select"></select>
                 </div>
 
                 <span asp-validation-for="TimeAmount" class="text-danger"></span>

@@ -59,12 +59,10 @@
                         <div class="input-group ">
                             <input asp-for="ExpiryDate"
                                    value="@( Model.ExpiryDate?.ToString("u", CultureInfo.InvariantCulture))"
-                                   class="form-control flatdtpicker" min="today" placeholder="No expiry date has been set for this payment request" />
-                            <div class="input-group-append">
-                                <button class="btn btn-secondary input-group-clear" type="button" title="Clear">
-                                    <span class=" fa fa-times"></span>
-                                </button>
-                            </div>
+                                   class="form-control flatdtpicker" min="today" placeholder="No expiry date has been set for this payment request" />x
+                            <button class="btn btn-secondary input-group-clear" type="button" title="Clear">
+                                <span class="fa fa-times"></span>
+                            </button>
                         </div>
                         <span asp-validation-for="ExpiryDate" class="text-danger"></span>
                     </div>

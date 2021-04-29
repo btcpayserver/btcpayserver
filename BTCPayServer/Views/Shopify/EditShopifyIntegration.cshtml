@@ -38,17 +38,13 @@
             <div class="input-group">
                 @if (!Model?.ShopName?.Contains(".") is true)
                 {
-                    <div class="input-group-prepend">
-                        <span class="input-group-text">https://</span>
-                    </div>
+                    <span class="input-group-text">https://</span>
                 }
                 <input asp-for="ShopName" class="form-control" readonly="@shopifyCredsSet" />
 
                 @if (!Model?.ShopName?.Contains(".") is true)
                 {
-                    <div class="input-group-append">
-                        <span class="input-group-text">.myshopify.com</span>
-                    </div>
+                    <span class="input-group-text">.myshopify.com</span>
                 }
             </div>
             <span asp-validation-for="ShopName" class="text-danger"></span>

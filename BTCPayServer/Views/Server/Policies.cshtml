@@ -196,9 +196,7 @@
                         <input type="hidden" asp-for="BlockExplorerLinks[i].CryptoCode" value="@network.CryptoCode"/>
                         <div class="input-group">
                             <input type="text" class="form-control" asp-for="BlockExplorerLinks[i].Link" value="@linkValue" data-default-link="@network.BlockExplorerLinkDefault"/>
-                            <div class="input-group-btn only-for-js">
-                                <button type="button" class="text-decoration-none btn btn-link revert-default fa fa-refresh " title="Revert to default"></button>
-                            </div>
+                            <button type="button" class="text-decoration-none btn btn-link revert-default fa fa-refresh only-for-js" title="Revert to default"></button>
                         </div>
                     </li>
                 }

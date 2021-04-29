@@ -106,9 +106,7 @@
                                             <div class="col col-12 col-sm-6 col-md-12">
                                                 <div class="input-group">
                                                     <input type="number" class="form-control text-end hide-number-spin" name="amount" value="@Model.AmountDue" @if (!Model.AllowCustomPaymentAmounts) { @("readonly") } max="@Model.AmountDue" step="any" placeholder="Amount" required />
-                                                    <div class="input-group-append">
-                                                        <span class="input-group-text">@Model.Currency.ToUpper()</span>
-                                                    </div>
+                                                    <span class="input-group-text">@Model.Currency.ToUpper()</span>
                                                 </div>
                                             </div>
                                             <div class="col mt-2 col-12 col-sm-6 mt-sm-0 col-md-12 mt-md-2">

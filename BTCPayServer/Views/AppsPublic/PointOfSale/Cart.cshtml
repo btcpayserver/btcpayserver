@@ -14,9 +14,7 @@
         </td>
         <td class="align-middle px-0">
             <div class="input-group align-items-center">
-                <div class="input-group-prepend">
-                    <a class="js-cart-item-minus btn btn-link px-2" href="#"><i class="fa fa-minus-circle fa-fw text-danger"></i></a>
-                </div>
+                <a class="js-cart-item-minus btn btn-link px-2" href="#"><i class="fa fa-minus-circle fa-fw text-danger"></i></a>
                 <input class="js-cart-item-count form-control form-control-sm pull-left" type="number" step="1" name="count" placeholder="Qty" max="{inventory}"  value="{count}" data-prev="{count}">
                 <div class="input-group-append">
                     <a class="js-cart-item-plus btn btn-link px-2" href="#">
@@ -37,9 +35,7 @@
     <tr>
         <td colspan="5">
             <div class="input-group">
-                <div class="input-group-prepend">
-                    <span class="input-group-text"><i class="fa fa-shopping-cart fa-fw"></i></span>
-                </div>
+                <span class="input-group-text"><i class="fa fa-shopping-cart fa-fw"></i></span>
                 <input class="js-cart-custom-amount form-control" type="number" min="0" step="@Model.Step" name="amount" placeholder="Pay what you want">
                 <div class="input-group-append">
                     <a class="js-cart-custom-amount-remove btn btn-danger" href="#"><i class="fa fa-times"></i></a>
@@ -54,13 +50,9 @@
         <tr>
             <th colspan="5" class="border-0 pb-0">
                 <div class="input-group">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text"><i class="fa fa-shopping-cart fa-fw"></i></span>
-                    </div>
+                    <span class="input-group-text"><i class="fa fa-shopping-cart fa-fw"></i></span>
                     <input class="js-cart-custom-amount form-control" type="number" min="0" step="@Model.Step" name="amount" value="{customAmount}" placeholder="Pay what you want">
-                    <div class="input-group-append">
-                        <a class="js-cart-custom-amount-remove btn btn-danger" href="#"><i class="fa fa-times"></i></a>
-                    </div>
+                    <a class="js-cart-custom-amount-remove btn btn-danger" href="#"><i class="fa fa-times"></i></a>
                 </div>
             </th>
         </tr>
@@ -70,13 +62,9 @@
         <tr>
             <th colspan="5" class="border-top-0">
                 <div class="input-group">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text"><i class="fa fa-percent fa-fw"></i></span>
-                    </div>
+                    <span class="input-group-text"><i class="fa fa-percent fa-fw"></i></span>
                     <input class="js-cart-discount form-control" type="number" min="0" step="@Model.Step" value="{discount}" name="discount" placeholder="Discount in %">
-                    <div class="input-group-append">
-                        <a class="js-cart-discount-remove btn btn-danger" href="#"><i class="fa fa-times"></i></a>
-                    </div>
+                    <a class="js-cart-discount-remove btn btn-danger" href="#"><i class="fa fa-times"></i></a>
                 </div>
             </th>
         </tr>
@@ -96,9 +84,7 @@
                         <span class="input-group-text"><i class="fa fa-money fa-fw"></i></span>
                     </div>
                     <input class="js-cart-tip form-control form-control-lg" type="number" min="0" step="@Model.Step" value="{tip}" name="tip" placeholder="Tip in @(Model.CurrencyInfo.CurrencySymbol != null ? Model.CurrencyInfo.CurrencySymbol : Model.CurrencyCode)">
-                    <div class="input-group-append">
-                        <a class="js-cart-tip-remove btn btn-lg btn-danger" href="#"><i class="fa fa-times"></i></a>
-                    </div>
+                    <a class="js-cart-tip-remove btn btn-lg btn-danger" href="#"><i class="fa fa-times"></i></a>
                 </div>
                 <div class="row mb-1">
                     @if (customTipPercentages != null && customTipPercentages.Length > 0)

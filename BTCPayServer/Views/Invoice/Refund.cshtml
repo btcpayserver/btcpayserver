@@ -76,9 +76,7 @@
                                     <label asp-for="CustomAmount"></label>
                                     <div class="input-group">
                                         <input asp-for="CustomAmount" type="number" step="any" asp-format="{0}" class="form-control"/>
-                                        <div class="input-group-append">
-                                            <input asp-for="CustomCurrency" type="text"class="form-control"/>
-                                        </div>
+                                        <input asp-for="CustomCurrency" type="text" class="form-control"/>
                                     </div>
                                     <span asp-validation-for="CustomAmount" class="text-danger w-100"></span>
                                     <span asp-validation-for="CustomCurrency" class="text-danger w-100"></span>

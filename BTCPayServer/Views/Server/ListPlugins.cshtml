@@ -311,12 +311,7 @@
                         Only upload plugins from trusted sources.
                     </div>
                     <form method="post" enctype="multipart/form-data" asp-action="UploadPlugin">
-                        <div class="form-group">
-                            <div class="custom-file">
-                                <input type="file" class="custom-file-input form-control-file" required name="files" accept=".btcpay" id="files">
-                                <label class="custom-file-label" for="files">Choose file</label>
-                            </div>
-                        </div>
+                        <input type="file" class="form-control mb-3" required name="files" accept=".btcpay" id="files">
                         <button class="btn btn-primary" type="submit">Upload</button>
                     </form>
                 </div>

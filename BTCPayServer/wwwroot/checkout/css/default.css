@@ -5037,62 +5037,6 @@ tbody.collapse.in {
     font-size: 75%;
 }
 
-.custom-file {
-    position: relative;
-    display: inline-block;
-    max-width: 100%;
-    height: 2.5rem;
-    cursor: pointer;
-}
-
-.custom-file-input {
-    min-width: 14rem;
-    max-width: 100%;
-    margin: 0;
-    filter: alpha(opacity=0);
-    opacity: 0;
-}
-
-.custom-file-control {
-    position: absolute;
-    top: 0;
-    right: 0;
-    left: 0;
-    z-index: 5;
-    height: 2.5rem;
-    padding: 0.5rem 1rem;
-    line-height: 1.5;
-    color: #555;
-    user-select: none;
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 0.25rem;
-}
-
-    .custom-file-control:lang(en)::after {
-        content: "Choose file...";
-    }
-
-    .custom-file-control::before {
-        position: absolute;
-        top: -1px;
-        right: -1px;
-        bottom: -1px;
-        z-index: 6;
-        display: block;
-        height: 2.5rem;
-        padding: 0.5rem 1rem;
-        line-height: 1.5;
-        color: #555;
-        background-color: #eee;
-        border: 1px solid #ddd;
-        border-radius: 0 0.25rem 0.25rem 0;
-    }
-
-    .custom-file-control:lang(en)::before {
-        content: "Browse";
-    }
-
 .nav {
     padding-left: 0;
     margin-bottom: 0;

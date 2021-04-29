@@ -99,11 +99,11 @@
                             <a class="btn btn-secondary" asp-route-id="@Context.GetRouteValue("id")" asp-action="ClonePaymentRequest" id="@Model.Id">Clone</a>
                             @if (!Model.Archived)
                             {
-                                <a class="btn btn-secondary" data-toggle="tooltip" title="Archive this payment request so that it does not appear in the payment request list by default" asp-route-id="@Context.GetRouteValue("id")" asp-controller="PaymentRequest" asp-action="TogglePaymentRequestArchival">Archive</a>
+                                <a class="btn btn-secondary" data-bs-toggle="tooltip" title="Archive this payment request so that it does not appear in the payment request list by default" asp-route-id="@Context.GetRouteValue("id")" asp-controller="PaymentRequest" asp-action="TogglePaymentRequestArchival">Archive</a>
                             }
                             else
                             {
-                                <a class="btn btn-secondary" data-toggle="tooltip" title="Unarchive this payment request" asp-route-id="@Context.GetRouteValue("id")" asp-controller="PaymentRequest" asp-action="TogglePaymentRequestArchival">Unarchive</a>
+                                <a class="btn btn-secondary" data-bs-toggle="tooltip" title="Unarchive this payment request" asp-route-id="@Context.GetRouteValue("id")" asp-controller="PaymentRequest" asp-action="TogglePaymentRequestArchival">Unarchive</a>
                             }
                         }
                         <a asp-action="GetPaymentRequests" class="text-muted ms-3">Back to list</a>

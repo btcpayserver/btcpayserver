@@ -34,7 +34,7 @@
                     <input asp-for="TimezoneOffset" type="hidden"/>
                     <div class="input-group">
                         <div class="input-group-prepend">
-                            <a href="#help" class="input-group-text text-secondary text-decoration-none" data-toggle="collapse">
+                            <a href="#help" class="input-group-text text-secondary text-decoration-none" data-bs-toggle="collapse">
                                 <span class="fa fa-filter"></span>
                             </a>
                         </div>
@@ -43,7 +43,7 @@
                             <button type="submit" class="btn btn-secondary" title="Search invoice">
                                 <span class="fa fa-search"></span> Search
                             </button>
-                            <button type="button" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <button type="button" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <span class="sr-only">Toggle Dropdown</span>
                             </button>
 
@@ -59,7 +59,7 @@
                                 <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-timezoneoffset="0" asp-route-searchTerm="startDate:-24h@{@storeIds}">Last 24 hours</a>
                                 <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-timezoneoffset="0" asp-route-searchTerm="startDate:-3d@{@storeIds}">Last 3 days</a>
                                 <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-timezoneoffset="0" asp-route-searchTerm="startDate:-7d@{@storeIds}">Last 7 days</a>
-                                <button type="button" class="dropdown-item" data-toggle="modal" data-target="#customRangeModal" data-backdrop="static">Custom Range</button>
+                                <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#customRangeModal">Custom Range</button>
                                 <div role="separator" class="dropdown-divider"></div>
                                 <a class="dropdown-item" href="?searchTerm=">Unfiltered</a>
                             </div>
@@ -75,7 +75,7 @@
                         <div class="modal-content">
                             <div class="modal-header">
                                 <h5 class="modal-title" id="exampleModalLongTitle">Filter invoices by Custom Range</h5>
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                                     <span aria-hidden="true">&times;</span>
                                 </button>
                             </div>
@@ -179,7 +179,7 @@
         {
             <form method="post" id="MassAction" asp-action="MassAction" class="mt-lg-n5">
                 <span class="me-2">
-                    <button class="btn btn-secondary dropdown-toggle  mb-1" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <button class="btn btn-secondary dropdown-toggle  mb-1" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         Actions
                     </button>
                     <div class="dropdown-menu">
@@ -187,7 +187,7 @@
                     </div>
                 </span>
                 <span>
-                    <a class="btn btn-secondary dropdown-toggle mb-1" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <a class="btn btn-secondary dropdown-toggle mb-1" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         Export
                     </a>
                     <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
@@ -260,7 +260,7 @@
                                 @if (invoice.CanMarkStatus)
                                 {
                                     <div id="pavpill_@invoice.InvoiceId" class="badge badge-@invoice.Status.ToString().ToLower()">
-                                        <span class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <span class="dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                             @invoice.Status.ToString()
                                         </span>
                                         <div class="dropdown-menu pull-right">

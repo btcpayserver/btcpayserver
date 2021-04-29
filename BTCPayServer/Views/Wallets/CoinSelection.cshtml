@@ -43,11 +43,11 @@
                 </label>
                 <div>
                     
-                    <span v-bind:class="{' bg-success' : item.confirmations > 0, ' bg-warning' : item.confirmations <= 0}" data-toggle="tooltip" v-tooltip="item.confirmations +' confirmations'" class="badge ">
+                    <span v-bind:class="{' bg-success' : item.confirmations > 0, ' bg-warning' : item.confirmations <= 0}" data-bs-toggle="tooltip" v-tooltip="item.confirmations +' confirmations'" class="badge ">
                         {{item.confirmations}}<span class="ms-1 fa fa-cube"></span>
                     </span>
                     
-                    <span v-if="item.comment" data-toggle="tooltip" v-tooltip="item.comment" class="badge bg-info rounded-pill" style="font-style: italic">i</span>
+                    <span v-if="item.comment" data-bs-toggle="tooltip" v-tooltip="item.comment" class="badge bg-info rounded-pill" style="font-style: italic">i</span>
                     <span
                         v-if="item.labels"
                         class="badge bg-primary rounded-pill ms-2"
@@ -55,11 +55,11 @@
                         v-bind:style="{ 'background-color': label.color}"
                         key="label.text">
 
-                        <span v-if="!label.link" data-toggle="tooltip" v-tooltip="label.tooltip">
+                        <span v-if="!label.link" data-bs-toggle="tooltip" v-tooltip="label.tooltip">
                             {{label.text}}
                         </span>
 
-                        <a :href="label.link" target="_blank" v-if="label.link" data-toggle="tooltip" v-tooltip="label.tooltip">
+                        <a :href="label.link" target="_blank" v-if="label.link" data-bs-toggle="tooltip" v-tooltip="label.tooltip">
                             {{label.text}}
                             <i class="fa fa-info-circle"></i>
                         </a>

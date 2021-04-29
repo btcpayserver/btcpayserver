@@ -48,7 +48,7 @@
                     <div id="qrCode"></div>
                     <div id="qrCodeData" data-url="@Model.QRCode"></div>
                 </div>
-                <p>See QR Code information by clicking <a href="#detailsQR" data-toggle="collapse">here</a></p>
+                <p>See QR Code information by clicking <a href="#detailsQR" data-bs-toggle="collapse">here</a></p>
                 <div id="detailsQR" class="collapse">
                     <div class="form-group">
                         <label>QR Code data</label>
@@ -62,7 +62,7 @@
 
             <div class="form-group">
                 <h5>More details...</h5>
-                <p>Alternatively, you can see the settings by clicking <a href="#details" data-toggle="collapse">here</a></p>
+                <p>Alternatively, you can see the settings by clicking <a href="#details" data-bs-toggle="collapse">here</a></p>
             </div>
             <div id="details" class="collapse">
                 @if (Model.Uri == null)

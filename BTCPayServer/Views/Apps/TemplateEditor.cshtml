@@ -58,7 +58,7 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" v-if="editingItem">{{editingItem.index>=0? "Edit" : "Create"}} item</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close" ref="close">
+                        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close" ref="close">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
@@ -122,7 +122,7 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal" v-on:click="clearEditingItem()">Close</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" v-on:click="clearEditingItem()">Close</button>
                         <button type="button" class="btn btn-primary" v-on:click="saveEditingItem()" id="SaveItemChanges">Save Changes</button>
                     </div>
                 </div>

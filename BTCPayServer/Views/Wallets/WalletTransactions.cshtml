@@ -115,7 +115,7 @@
                                     <div
                                         class="badge transactionLabel position-relative text-white d-block"
                                         style="background-color: @label.Color; padding-right: 16px; z-index: 1;"
-                                        data-toggle="tooltip"
+                                        data-bs-toggle="tooltip"
                                         title="@label.Tooltip">
                                         <a asp-route-labelFilter="@label.Text" class="text-white">@label.Text</a>
 
@@ -160,7 +160,7 @@
                         }
                         <td class="text-end">
                             <div class="dropstart d-inline-block">
-                                <span class="fa fa-tags cursor-pointer" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></span>
+                                <span class="fa fa-tags cursor-pointer" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></span>
                                 <div class="dropdown-menu">
                                     <form asp-action="ModifyTransaction" method="post"
                                           asp-route-walletId="@Context.GetRouteValue("walletId")">
@@ -192,11 +192,11 @@
                             <div class="dropstart d-inline-block">
                                 @if (string.IsNullOrEmpty(transaction.Comment))
                                 {
-                                    <span class="fa fa-comment cursor-pointer" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></span>
+                                    <span class="fa fa-comment cursor-pointer" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></span>
                                 }
                                 else
                                 {
-                                    <span class="fa fa-commenting cursor-pointer" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></span>
+                                    <span class="fa fa-commenting cursor-pointer" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></span>
                                 }
                                 <div class="dropdown-menu">
                                     <form asp-action="ModifyTransaction" method="post"

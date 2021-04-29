@@ -132,11 +132,11 @@
                         <span class="text-secondary me-2">
                             Confirm in the next
                         </span>
-                        <div class="btn-group btn-group-toggle feerate-options" role="group" data-toggle="buttons">
+                        <div class="btn-group btn-group-toggle feerate-options" role="group" data-bs-toggle="buttons">
                             @for (var index = 0; index < Model.RecommendedSatoshiPerByte.Count; index++)
                             {
                                 var feeRateOption = Model.RecommendedSatoshiPerByte[index];
-                                <button type="button" class="btn btn-sm btn-outline-primary crypto-fee-link" value="@feeRateOption.FeeRate" data-toggle="tooltip" title="@feeRateOption.FeeRate sat/b">
+                                <button type="button" class="btn btn-sm btn-outline-primary crypto-fee-link" value="@feeRateOption.FeeRate" data-bs-toggle="tooltip" title="@feeRateOption.FeeRate sat/b">
                                     @feeRateOption.Target.TimeString()
                                 </button>
                                 <input type="hidden" asp-for="RecommendedSatoshiPerByte[index].Target" />
@@ -158,7 +158,7 @@
             }
 
             <div class="card border-0 my-4">
-                <button id="advancedSettings" class="btn btn-link text-secondary collapsed text-start" type="button" data-toggle="collapse" data-target="#accordian-advanced" aria-expanded="false" aria-controls="accordian-advanced">
+                <button id="advancedSettings" class="btn btn-link text-secondary collapsed text-start" type="button" data-bs-toggle="collapse" data-bs-target="#accordian-advanced" aria-expanded="false" aria-controls="accordian-advanced">
                     Advanced settings
                 </button>
                 <div id="accordian-advanced" class="collapse" aria-labelledby="accordian-advanced-header" data-parent="#accordian-advanced">
@@ -213,7 +213,7 @@
                 <partial name="WalletSigningMenu" model="@((Model.CryptoCode, Model.NBXSeedAvailable))"/>
                 <button type="submit" name="command" value="add-output" class="ms-2 btn btn-secondary">Add another destination</button>
                 <button type="button" id="bip21parse" class="ms-2 btn btn-secondary" title="Paste BIP21/Address"><i class="fa fa-paste"></i></button>
-                <button type="button" id="scanqrcode" class="ms-2 btn btn-secondary only-for-js" data-toggle="modal" data-target="#scanModal" title="Scan BIP21/Address with camera"><i class="fa fa-camera"></i></button>
+                <button type="button" id="scanqrcode" class="ms-2 btn btn-secondary only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" title="Scan BIP21/Address with camera"><i class="fa fa-camera"></i></button>
             </div>
         </form>
     </div>

@@ -33,7 +33,7 @@
                     <div class="d-flex">
                         <partial name="WalletSigningMenu" model="@((Model.CryptoCode, Model.NBXSeedAvailable))"/>
                         <div class="ms-2 dropdown">
-                            <button class="btn btn-secondary dropdown-toggle" type="button" id="OtherActions" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <button class="btn btn-secondary dropdown-toggle" type="button" id="OtherActions" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 Other actions...
                             </button>
                             <div class="dropdown-menu" aria-labelledby="OtherActions">
@@ -41,7 +41,7 @@
                                 <button name="command" type="submit" class="dropdown-item" value="update">Update</button>
                                 <button name="command" type="submit" class="dropdown-item" value="combine">Combine</button>
                                 <button name="command" type="submit" class="dropdown-item" value="save-psbt">Download</button>
-                                <button name="command" type="button" class="dropdown-item only-for-js" data-toggle="modal" data-target="#scan-qr-modal">Show QR</button>
+                                <button name="command" type="button" class="dropdown-item only-for-js" data-bs-toggle="modal" data-bs-target="#scan-qr-modal">Show QR</button>
                             </div>
                         </div>
                     </div>
@@ -62,7 +62,7 @@
                 <input type="file" class="form-control-file" asp-for="UploadedPSBTFile">
             </div>
 
-            <button type="button" id="scanqrcode" class="ms-2 btn btn-secondary only-for-js" data-toggle="modal" data-target="#scanModal" title="Scan with camera">
+            <button type="button" id="scanqrcode" class="ms-2 btn btn-secondary only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" title="Scan with camera">
                 <i class="fa fa-camera"></i>
             </button>
             <button type="submit" name="command" value="decode" class="btn btn-primary" id="Decode">Decode</button>

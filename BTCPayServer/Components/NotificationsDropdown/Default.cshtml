@@ -9,7 +9,7 @@
 @if (Model.UnseenCount > 0)
 {
     <li class="nav-item dropdown" id="notifications-nav-item">
-        <a class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(NotificationsNavPages))" href="#" id="navbarDropdown" role="button" data-toggle="dropdown">
+        <a class="nav-link js-scroll-trigger @ViewData.IsActiveCategory(typeof(NotificationsNavPages))" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
             <span class="d-inline-block d-lg-none">Notifications</span>
             <i class="fa fa-bell d-lg-inline-block d-none"></i>
             <span class="notification-badge badge rounded-pill bg-danger">@Model.UnseenCount</span>

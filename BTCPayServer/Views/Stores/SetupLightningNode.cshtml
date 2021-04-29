@@ -76,7 +76,7 @@
     #CustomSetup > ul > li + li {
         border-top:  1px solid var(--btcpay-border-color-medium);
     }
-    a[data-toggle="collapse"] {
+    a[data-bs-toggle="collapse"] {
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -84,13 +84,13 @@
         padding: 1rem 0;
         text-decoration: none
     }
-    a[data-toggle="collapse"] .icon {
+    a[data-bs-toggle="collapse"] .icon {
         transform: rotate(90deg);
         transition: transform 200ms;
         width: 24px;
         height: 24px;
     }
-    a[data-toggle="collapse"][aria-expanded="true"] .icon {
+    a[data-bs-toggle="collapse"][aria-expanded="true"] .icon {
         transform: rotate(270deg);
     }
 </style>
@@ -120,7 +120,7 @@
         <p class="mt-4 mb-2">BTCPay Server currently supports:</p>
         <ul>
             <li>
-                <a data-toggle="collapse" href="#c-lightning-notes" role="button" aria-expanded="false" aria-controls="c-lightning-notes">
+                <a data-bs-toggle="collapse" href="#c-lightning-notes" role="button" aria-expanded="false" aria-controls="c-lightning-notes">
                     <span><strong>c-lightning</strong> via TCP or unix domain socket connection</span>
                     <vc:icon symbol="caret-right"/>
                 </a>
@@ -136,7 +136,7 @@
                 </div>
             </li>
             <li>
-                <a data-toggle="collapse" href="#charge-notes" role="button" aria-expanded="false" aria-controls="charge-notes">
+                <a data-bs-toggle="collapse" href="#charge-notes" role="button" aria-expanded="false" aria-controls="charge-notes">
                     <span><strong>Lightning Charge</strong> via HTTPS</span>
                     <vc:icon symbol="caret-right"/>
                 </a>
@@ -149,7 +149,7 @@
                 </div>
             </li>
             <li>
-                <a data-toggle="collapse" href="#eclair-notes" role="button" aria-expanded="false" aria-controls="eclair-notes">
+                <a data-bs-toggle="collapse" href="#eclair-notes" role="button" aria-expanded="false" aria-controls="eclair-notes">
                     <span><strong>Eclair</strong> via HTTPS</span>
                     <vc:icon symbol="caret-right"/>
                 </a>
@@ -162,7 +162,7 @@
                 </div>
             </li>
             <li>
-                <a data-toggle="collapse" href="#lnd-notes" role="button" aria-expanded="false" aria-controls="lnd-notes">
+                <a data-bs-toggle="collapse" href="#lnd-notes" role="button" aria-expanded="false" aria-controls="lnd-notes">
                     <span><strong>LND</strong> via the REST proxy</span>
                     <vc:icon symbol="caret-right"/>
                 </a>

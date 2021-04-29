@@ -28,7 +28,7 @@
                                 <strong class="me-3">@scheme.Crypto</strong>
                                 @if (isSetUp)
                                 {
-                                    <span title="@scheme.Value" data-toggle="tooltip" class="d-flex me-3">
+                                    <span title="@scheme.Value" data-bs-toggle="tooltip" class="d-flex me-3">
                                         <span class="text-truncate text-secondary" style="max-width:8ch">@scheme.Value</span>
                                         @if (scheme.Value.Length > 20)
                                         {
@@ -313,7 +313,7 @@
         @if (Model.CanDelete)
         {
             <h4 class="mt-5 mb-3">Other actions</h4>
-            <button id="danger-zone-expander" class="btn btn-link text-secondary mb-3 p-0" type="button" data-toggle="collapse" data-target="#danger-zone">
+            <button id="danger-zone-expander" class="btn btn-link text-secondary mb-3 p-0" type="button" data-bs-toggle="collapse" data-bs-target="#danger-zone">
                 See more actions
             </button>
             <div id="danger-zone" class="collapse">

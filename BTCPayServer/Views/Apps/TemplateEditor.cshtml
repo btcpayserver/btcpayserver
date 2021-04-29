@@ -15,7 +15,7 @@
 
 <div id="template-editor-app" v-cloak>
     <div class="form-group">
-        <label class="control-label mb-3">@Model.title </label>
+        <label class="form-label mb-3">@Model.title </label>
         @if (ViewContext.ViewData.ModelState.TryGetValue(Model.templateId, out var errors))
         {
             foreach (var error in errors.Errors)

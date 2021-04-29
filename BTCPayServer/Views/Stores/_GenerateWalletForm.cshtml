@@ -24,14 +24,14 @@
     @if (isImport)
     {
         <div class="form-group">
-            <label asp-for="ExistingMnemonic">Wallet Recovery Seed</label>
+            <label asp-for="ExistingMnemonic" class="form-label">Wallet Recovery Seed</label>
             <textarea asp-for="ExistingMnemonic" class="form-control text-monospace py-2" rows="2" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
             <span asp-validation-for="ExistingMnemonic" class="text-danger"></span>
         </div>
     }
 
     <div class="form-group">
-        <label asp-for="ScriptPubKeyType">Address type</label>
+        <label asp-for="ScriptPubKeyType" class="form-label">Address type</label>
         <select class="form-select w-auto" asp-for="ScriptPubKeyType">
             <option value="@ScriptPubKeyType.Segwit">Segwit (Recommended, cheapest transaction fee)</option>
             <option value="@ScriptPubKeyType.SegwitP2SH">Segwit wrapped (Compatible with old wallets)</option>

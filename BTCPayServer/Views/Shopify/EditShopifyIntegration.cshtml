@@ -25,7 +25,7 @@
         <p class="alert alert-info">Create a Shopify Private App with the permissions "Orders - Read and write"</p>
 
         <div class="form-group">
-            <label for="exampleUrl">Example Url from Shopify Private App</label>
+            <label class="form-label" for="exampleUrl">Example Url from Shopify Private App</label>
             <input class="form-control" id="exampleUrl" name="exampleUrl">
         </div>
 
@@ -34,7 +34,7 @@
     else
     {
         <div class="form-group">
-            <label asp-for="ShopName"></label>
+            <label asp-for="ShopName" class="form-label"></label>
             <div class="input-group">
                 @if (!Model?.ShopName?.Contains(".") is true)
                 {
@@ -51,13 +51,13 @@
         </div>
 
         <div class="form-group">
-            <label asp-for="ApiKey"></label>
+            <label asp-for="ApiKey" class="form-label"></label>
             <input asp-for="ApiKey" class="form-control" readonly="@shopifyCredsSet" />
             <span asp-validation-for="ApiKey" class="text-danger"></span>
         </div>
 
         <div class="form-group">
-            <label asp-for="Password"></label>
+            <label asp-for="Password" class="form-label"></label>
             <input asp-for="Password" class="form-control" type="password" value="@Model?.Password" readonly="@shopifyCredsSet" />
             <span asp-validation-for="Password" class="text-danger"></span>
         </div>

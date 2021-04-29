@@ -117,7 +117,7 @@
     <h4 class="mb-3">Customization Settings</h4>
 
     <div class="form-group">
-        <label asp-for="RootAppId"></label>
+        <label asp-for="RootAppId" class="form-label"></label>
         <select asp-for="RootAppId" asp-items="@(new SelectList(ViewBag.AppsList, nameof(SelectListItem.Value), nameof(SelectListItem.Text), Model.RootAppId))" class="form-select w-auto"></select>
         @if (!Model.DomainToAppMapping.Any())
         {
@@ -140,12 +140,12 @@
                     <div class="row">
                         <div class="col-sm-12 col-md-12 col-lg-10  py-2 ">
                             <div class="form-group">
-                                <label asp-for="DomainToAppMapping[index].Domain" class="control-label"></label>
+                                <label asp-for="DomainToAppMapping[index].Domain" class="form-label"></label>
                                 <input asp-for="DomainToAppMapping[index].Domain" class="form-control"/>
                                 <span asp-validation-for="DomainToAppMapping[index].Domain" class="text-danger"></span>
                             </div>
                             <div class="form-group">
-                                <label asp-for="DomainToAppMapping[index].AppId"></label>
+                                <label asp-for="DomainToAppMapping[index].AppId" class="form-label"></label>
                                 <select asp-for="DomainToAppMapping[index].AppId"
                                         asp-items="@(new SelectList(ViewBag.AppsList, nameof(SelectListItem.Value), nameof(SelectListItem.Text), Model.DomainToAppMapping[index].AppId))"
                                         class="form-select">
@@ -192,7 +192,7 @@
                         Model.BlockExplorerLinks.Add(new PoliciesSettings.BlockExplorerOverrideItem() {CryptoCode = network.CryptoCode, Link = network.BlockExplorerLinkDefault});
                     }
                     <li class="list-group-item">
-                        <label > @network.DisplayName (@network.CryptoCode)</label>
+                        <label class="form-label"> @network.DisplayName (@network.CryptoCode)</label>
                         <input type="hidden" asp-for="BlockExplorerLinks[i].CryptoCode" value="@network.CryptoCode"/>
                         <div class="input-group">
                             <input type="text" class="form-control" asp-for="BlockExplorerLinks[i].Link" value="@linkValue" data-default-link="@network.BlockExplorerLinkDefault"/>

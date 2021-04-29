@@ -16,18 +16,18 @@
                     <input type="hidden" asp-for="StoreId" />
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                     <div class="form-group">
-                        <label asp-for="Title" class="control-label" data-required></label>
+                        <label asp-for="Title" class="form-label" data-required></label>
                         <input asp-for="Title" class="form-control" required />
                         <span asp-validation-for="Title" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="Currency" class="control-label" data-required></label>
+                        <label asp-for="Currency" class="form-label" data-required></label>
                         <input asp-for="Currency" class="form-control" required />
                         <span asp-validation-for="Currency" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <div class="form-group">
-                            <label asp-for="DefaultView" class="control-label" data-required></label>
+                            <label asp-for="DefaultView" class="form-label" data-required></label>
                             <select asp-for="DefaultView" asp-items="@Html.GetEnumSelectList<PosViewType>()" class="form-select" required></select>
                             <span asp-validation-for="DefaultView" class="text-danger"></span>
                         </div>
@@ -48,27 +48,27 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label asp-for="ButtonText" class="control-label" data-required></label>
+                        <label asp-for="ButtonText" class="form-label" data-required></label>
                         <input asp-for="ButtonText" class="form-control" required />
                         <span asp-validation-for="ButtonText" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="CustomButtonText" class="control-label" data-required></label>
+                        <label asp-for="CustomButtonText" class="form-label" data-required></label>
                         <input asp-for="CustomButtonText" class="form-control" required />
                         <span asp-validation-for="CustomButtonText" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="CustomTipText" class="control-label" data-required></label>
+                        <label asp-for="CustomTipText" class="form-label" data-required></label>
                         <input asp-for="CustomTipText" class="form-control" required />
                         <span asp-validation-for="CustomTipText" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="CustomTipPercentages" class="control-label"></label>
+                        <label asp-for="CustomTipPercentages" class="form-label"></label>
                         <input asp-for="CustomTipPercentages" class="form-control" />
                         <span asp-validation-for="CustomTipPercentages" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="CustomCSSLink" class="control-label"></label>
+                        <label asp-for="CustomCSSLink" class="form-label"></label>
                         <a href="https://docs.btcpayserver.org/Theme/#2-bootstrap-themes" target="_blank">
                             <span class="fa fa-question-circle-o text-secondary" title="More information..."></span>
                         </a>
@@ -79,32 +79,32 @@
                     <partial name="TemplateEditor" model="@(nameof(Model.Template), "Products")" />
 
                     <div class="form-group">
-                        <label asp-for="Template" class="control-label"></label>
+                        <label asp-for="Template" class="form-label"></label>
                         <textarea asp-for="Template" rows="10" cols="40" class="js-product-template form-control"></textarea>
                         <span asp-validation-for="Template" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="NotificationUrl" class="control-label"></label>
+                        <label asp-for="NotificationUrl" class="form-label"></label>
                         <input asp-for="NotificationUrl" class="form-control" />
                         <span asp-validation-for="NotificationUrl" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="RedirectUrl" class="control-label"></label>
+                        <label asp-for="RedirectUrl" class="form-label"></label>
                         <input asp-for="RedirectUrl" class="form-control" />
                         <span asp-validation-for="RedirectUrl" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="RedirectAutomatically" class="control-label" data-required></label>
+                        <label asp-for="RedirectAutomatically" class="form-label" data-required></label>
                         <select asp-for="RedirectAutomatically" asp-items="Model.RedirectAutomaticallySelectList" class="form-select" required></select>
                         <span asp-validation-for="RedirectAutomatically" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="Description" class="control-label"></label>
+                        <label asp-for="Description" class="form-label"></label>
                         <textarea asp-for="Description" rows="10" cols="40" class="form-control richtext"></textarea>
                         <span asp-validation-for="Description" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="EmbeddedCSS" class="control-label"></label>
+                        <label asp-for="EmbeddedCSS" class="form-label"></label>
                         <textarea asp-for="EmbeddedCSS" rows="10" cols="40" class="form-control"></textarea>
                         <span asp-validation-for="EmbeddedCSS" class="text-danger"></span>
                     </div>

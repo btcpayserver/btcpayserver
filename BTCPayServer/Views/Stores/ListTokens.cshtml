@@ -66,7 +66,7 @@
 
         <form method="post" asp-action="GenerateAPIKey" asp-route-storeId="@Context.GetRouteValue("storeId")">
             <div class="form-group">
-                <label asp-for="ApiKey"></label>
+                <label asp-for="ApiKey" class="form-label"></label>
                 <div class="input-group">
                     <input asp-for="ApiKey" readonly class="form-control"/>
                     @if (string.IsNullOrEmpty(Model.ApiKey))

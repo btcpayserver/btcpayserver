@@ -18,7 +18,7 @@
                         {
                             case RefundSteps.SelectPaymentMethod:
                                 <div class="form-group">
-                                    <label asp-for="SelectedPaymentMethod"></label>
+                                    <label asp-for="SelectedPaymentMethod" class="form-label"></label>
                                     <select asp-items="Model.AvailablePaymentMethods" asp-for="SelectedPaymentMethod" class="form-select"></select>
                                     <span asp-validation-for="SelectedPaymentMethod" class="text-danger"></span>
                                 </div>
@@ -73,7 +73,7 @@
                                 <input type="hidden" asp-for="SelectedRefundOption"/>
 
                                 <div class="form-group">
-                                    <label asp-for="CustomAmount"></label>
+                                    <label asp-for="CustomAmount" class="form-label"></label>
                                     <div class="input-group">
                                         <input asp-for="CustomAmount" type="number" step="any" asp-format="{0}" class="form-control"/>
                                         <input asp-for="CustomCurrency" type="text" class="form-control"/>

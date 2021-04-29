@@ -30,17 +30,17 @@
                 <div asp-validation-summary="All" class="text-danger"></div>
             }
             <div class="form-group">
-                <label asp-for="Settings.Server"></label>
+                <label asp-for="Settings.Server" class="form-label"></label>
                 <input asp-for="Settings.Server" class="form-control"/>
                 <span asp-validation-for="Settings.Server" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="Settings.Port"></label>
+                <label asp-for="Settings.Port" class="form-label"></label>
                 <input asp-for="Settings.Port" class="form-control"/>
                 <span asp-validation-for="Settings.Port" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="Settings.FromDisplay"></label>
+                <label asp-for="Settings.FromDisplay" class="form-label"></label>
                 <input asp-for="Settings.FromDisplay" class="form-control"/>
                 <small class="form-text text-muted">
                     Some email providers (like Gmail) don't allow you to set your display name, so this setting may not have any effect.
@@ -48,12 +48,12 @@
                 <span asp-validation-for="Settings.FromDisplay" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="Settings.From"></label>
+                <label asp-for="Settings.From" class="form-label"></label>
                 <input asp-for="Settings.From" class="form-control"/>
                 <span asp-validation-for="Settings.From" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="Settings.Login"></label>
+                <label asp-for="Settings.Login" class="form-label"></label>
                 <input asp-for="Settings.Login" class="form-control"/>
                 <small class="form-text text-muted">
                     For many email providers (like Gmail) your login is your email address.
@@ -64,13 +64,13 @@
                 @if (!Model.PasswordSet)
                 {
 
-                    <label asp-for="Settings.Password"></label>
+                    <label asp-for="Settings.Password" class="form-label"></label>
                     <input asp-for="Settings.Password" type="password" class="form-control"/>
                     <span asp-validation-for="Settings.Password" class="text-danger"></span>
                 }
                 else
                 {
-                    <label asp-for="Settings.Password"></label>
+                    <label asp-for="Settings.Password" class="form-label"></label>
                     <div class="input-group">
                         <input value="Configured" type="text" readonly class="form-control"/>
                         <button type="submit" class="btn btn-danger" name="command" value="ResetPassword">Reset</button>
@@ -99,7 +99,7 @@
                     <br />
                     After a successful test, you can click "Save".
                 </p>
-                <label asp-for="TestEmail"></label>
+                <label asp-for="TestEmail" class="form-label"></label>
                 <input asp-for="TestEmail" class="form-control" />
                 <span asp-validation-for="TestEmail" class="text-danger"></span>
             </div>

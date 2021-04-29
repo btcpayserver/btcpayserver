@@ -73,15 +73,15 @@ else if (!Model.Progress.HasValue)
         <div class="col-lg-8">
             <form method="post">
                 <div class="form-group">
-                    <label asp-for="StartingIndex"></label>
+                    <label asp-for="StartingIndex" class="form-label"></label>
                     <input asp-for="StartingIndex" class="form-control" type="number" style="max-width:14ch;" />
                 </div>
                 <div class="form-group">
-                    <label asp-for="GapLimit"></label>
+                    <label asp-for="GapLimit" class="form-label"></label>
                     <input asp-for="GapLimit" class="form-control" type="number" step="1000" style="max-width:14ch;" />
                 </div>
                 <div class="form-group">
-                    <label asp-for="BatchSize"></label>
+                    <label asp-for="BatchSize" class="form-label"></label>
                     <input asp-for="BatchSize" class="form-control" type="number" step="1000" style="max-width:14ch;" />
                 </div>
                 <button type="submit" class="btn btn-primary">Start scan</button>

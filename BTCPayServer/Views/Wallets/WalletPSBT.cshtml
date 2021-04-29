@@ -52,16 +52,14 @@
         <p>You can decode a PSBT by either pasting its content or by uploading the file.</p>
         <form class="form-group" method="post" asp-action="WalletPSBT" asp-route-walletId="@this.Context.GetRouteValue("walletId")" enctype="multipart/form-data">
             <div class="form-group">
-                <label asp-for="PSBT"></label>
+                <label asp-for="PSBT" class="form-label"></label>
                 <textarea class="form-control" rows="5" asp-for="PSBT"></textarea>
                 <span asp-validation-for="PSBT" class="text-danger"></span>
-
             </div>
             <div class="form-group">
-                <label asp-for="UploadedPSBTFile"></label>
+                <label asp-for="UploadedPSBTFile" class="form-label"></label>
                 <input type="file" class="form-control-file" asp-for="UploadedPSBTFile">
             </div>
-
             <button type="button" id="scanqrcode" class="ms-2 btn btn-secondary only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" title="Scan with camera">
                 <i class="fa fa-camera"></i>
             </button>

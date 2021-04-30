@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using OpenQA.Selenium;
+using OpenQA.Selenium.Support.Extensions;
 using OpenQA.Selenium.Support.UI;
 using Xunit;
 
@@ -115,6 +116,12 @@ namespace BTCPayServer.Tests
         {
             wait.Until(d=>((IJavaScriptExecutor)d).ExecuteScript("return document.readyState").Equals("complete"));
             wait.Until(d=>((IJavaScriptExecutor)d).ExecuteScript("return typeof(jQuery) === 'undefined' || jQuery.active === 0").Equals(true));
+        }
+
+        public static void ClickDropdownItem(this IWebDriver driver, string dropdownId, By selector)
+        {
+            driver.ExecuteJavaScript($"document.querySelector('[class=\"dropdown-menu\"][aria-labelledby=\"{dropdownId}\"]').classList.add('show')");
+            driver.WaitForElement(selector).Click();
         }
 
         public static IWebElement WaitForElement(this IWebDriver driver, By selector)

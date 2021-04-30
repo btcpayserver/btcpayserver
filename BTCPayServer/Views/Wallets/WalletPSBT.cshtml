@@ -33,10 +33,10 @@
                     <div class="d-flex">
                         <partial name="WalletSigningMenu" model="@((Model.CryptoCode, Model.NBXSeedAvailable))"/>
                         <div class="ms-2 dropdown">
-                            <button class="btn btn-secondary dropdown-toggle" type="button" id="OtherActions" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <button class="btn btn-secondary dropdown-toggle" type="button" id="OtherActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 Other actions...
                             </button>
-                            <div class="dropdown-menu" aria-labelledby="OtherActions">
+                            <div class="dropdown-menu" aria-labelledby="OtherActionsDropdownToggle">
                                 <button name="command" type="submit" class="dropdown-item" value="broadcast">Review</button>
                                 <button name="command" type="submit" class="dropdown-item" value="update">Update</button>
                                 <button name="command" type="submit" class="dropdown-item" value="combine">Combine</button>

@@ -370,7 +370,7 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.Id("bip21parse")).Click();
             Driver.SwitchTo().Alert().SendKeys(bip21);
             Driver.SwitchTo().Alert().Accept();
-            Driver.FindElement(By.Id("SendMenu")).Click();
+            Driver.FindElement(By.Id("SendDropdownToggle")).Click();
             Driver.FindElement(By.CssSelector("button[value=nbx-seed]")).Click();
             Driver.FindElement(By.CssSelector("button[value=broadcast]")).Click();
         }

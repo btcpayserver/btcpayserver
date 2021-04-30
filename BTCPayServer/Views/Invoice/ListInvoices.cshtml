@@ -40,11 +40,11 @@
                         <button type="submit" class="btn btn-secondary" title="Search invoice">
                             <span class="fa fa-search"></span> Search
                         </button>
-                        <button type="button" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <button type="button" id="SearchOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <span class="sr-only">Toggle Dropdown</span>
                         </button>
 
-                        <div class="dropdown-menu dropdown-menu-end">
+                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="SearchOptionsToggle">
                             <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="status:invalid@{@storeIds}">Invalid Invoices</a>
                             <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="status:paid,status:confirmed,status:complete@{@storeIds}">Paid Invoices</a>
                             <a class="dropdown-item" asp-action="ListInvoices" asp-route-count="@Model.Count" asp-route-searchTerm="exceptionstatus:paidLate@{@storeIds}">Paid Late Invoices</a>
@@ -65,11 +65,11 @@
                 </form>
 
                 @* Custom Range Modal *@
-                <div class="modal fade" id="customRangeModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                <div class="modal fade" id="customRangeModal" tabindex="-1" role="dialog" aria-labelledby="customRangeModalTitle" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 550px;">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h5 class="modal-title" id="exampleModalLongTitle">Filter invoices by Custom Range</h5>
+                                <h5 class="modal-title" id="customRangeModalTitle">Filter invoices by Custom Range</h5>
                                 <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                                     <span aria-hidden="true">&times;</span>
                                 </button>
@@ -170,18 +170,18 @@
         {
             <form method="post" id="MassAction" asp-action="MassAction" class="mt-lg-n5">
                 <span class="me-2">
-                    <button class="btn btn-secondary dropdown-toggle  mb-1" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <button class="btn btn-secondary dropdown-toggle mb-1" type="button" id="ActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         Actions
                     </button>
-                    <div class="dropdown-menu">
+                    <div class="dropdown-menu" aria-labelledby="ActionsDropdownToggle">
                         <button type="submit" asp-action="MassAction" class="dropdown-item" name="command" value="archive"><i class="fa fa-archive"></i> Archive</button>
                     </div>
                 </span>
                 <span>
-                    <a class="btn btn-secondary dropdown-toggle mb-1" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <a class="btn btn-secondary dropdown-toggle mb-1" href="#" role="button" id="ExportDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         Export
                     </a>
-                    <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                    <div class="dropdown-menu" aria-labelledby="ExportDropdownToggle">
                         <a asp-action="Export" asp-route-timezoneoffset="0" asp-route-format="csv" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item export-link" target="_blank">CSV</a>
                         <a asp-action="Export" asp-route-timezoneoffset="0" asp-route-format="json" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item export-link" target="_blank">JSON</a>
                     </div>

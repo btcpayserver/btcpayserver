@@ -66,10 +66,10 @@
             <div class="form-group d-flex mt-3">
                 <button name="command" type="submit" class="btn btn-primary me-2" value="save">Save</button>
                 <div class="dropdown">
-                    <button class="btn btn-secondary dropdown-toggle" type="button" id="SettingsMenu" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <button class="btn btn-secondary dropdown-toggle" type="button" id="OtherActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         Other actions...
                     </button>
-                    <div class="dropdown-menu" aria-labelledby="SendMenu">
+                    <div class="dropdown-menu" aria-labelledby="OtherActionsDropdownToggle">
                         <button name="command" type="submit" class="dropdown-item" value="prune">Prune old transactions from history</button>
                         @if (Model.NBXSeedAvailable)
                         {

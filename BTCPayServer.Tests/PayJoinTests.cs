@@ -271,7 +271,7 @@ namespace BTCPayServer.Tests
                     s.Driver.SwitchTo().Alert().Accept();
                     Assert.False(string.IsNullOrEmpty(s.Driver.FindElement(By.Id("PayJoinBIP21"))
                         .GetAttribute("value")));
-                    s.Driver.FindElement(By.Id("SendMenu")).Click();
+                    s.Driver.FindElement(By.Id("SendDropdownToggle")).Click();
                     var nbxSeedButton = s.Driver.FindElement(By.CssSelector("button[value=nbx-seed]"));
                     new WebDriverWait(s.Driver, SeleniumTester.ImplicitWait).Until(d=> nbxSeedButton.Enabled);
                     nbxSeedButton.Click();
@@ -309,7 +309,7 @@ namespace BTCPayServer.Tests
                         .GetAttribute("value")));
                     s.Driver.FindElement(By.Id("FeeSatoshiPerByte")).Clear();
                     s.Driver.FindElement(By.Id("FeeSatoshiPerByte")).SendKeys("2");
-                    s.Driver.FindElement(By.Id("SendMenu")).Click();
+                    s.Driver.FindElement(By.Id("SendDropdownToggle")).Click();
                     s.Driver.FindElement(By.CssSelector("button[value=nbx-seed]")).Click();
                     var txId = await s.Server.WaitForEvent<NewOnChainTransactionEvent>(() =>
                     {

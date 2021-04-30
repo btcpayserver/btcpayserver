@@ -27,45 +27,49 @@ namespace BTCPayServer.Tests
 
         public static void AssertNoError(this IWebDriver driver)
         {
-            try
-            {
-                Assert.NotEmpty(driver.FindElements(By.ClassName("navbar-brand")));
-                if (driver.PageSource.Contains("alert-danger"))
-                {
-                    foreach (var dangerAlert in driver.FindElements(By.ClassName("alert-danger")))
-                        Assert.False(dangerAlert.Displayed, "No alert should be displayed");
-                }
-            }
-            catch
-            {
-                StringBuilder builder = new StringBuilder();
-                builder.AppendLine();
-                foreach (var logKind in new[] { LogType.Browser, LogType.Client, LogType.Driver, LogType.Server })
-                {
-                    try
-                    {
-                        var logs = driver.Manage().Logs.GetLog(logKind);
-                        builder.AppendLine($"Selenium [{logKind}]:");
-                        foreach (var entry in logs)
-                        {
-                            builder.AppendLine($"[{entry.Level}]: {entry.Message}");
-                        }
-                    }
-                    catch
-                    {
-                        // ignored
-                    }
-
-                    builder.AppendLine("---------");
-                }
-                Logs.Tester.LogInformation(builder.ToString());
-                builder = new StringBuilder();
-                builder.AppendLine("Selenium [Sources]:");
-                builder.AppendLine(driver.PageSource);
-                builder.AppendLine("---------");
-                Logs.Tester.LogInformation(builder.ToString());
-                throw;
-            }
+            Assert.NotEmpty(driver.FindElements(By.ClassName("navbar-brand")));
+            if (!driver.PageSource.Contains("alert-danger")) return;
+            foreach (var dangerAlert in driver.FindElements(By.ClassName("alert-danger")))
+                Assert.False(dangerAlert.Displayed, $"No alert should be displayed, but found this on {driver.Url}: {dangerAlert.Text}");
+            // try
+            // {
+            //     Assert.NotEmpty(driver.FindElements(By.ClassName("navbar-brand")));
+            //     if (driver.PageSource.Contains("alert-danger"))
+            //     {
+            //         foreach (var dangerAlert in driver.FindElements(By.ClassName("alert-danger")))
+            //             Assert.False(dangerAlert.Displayed, $"No alert should be displayed, but found this on {driver.Url}: {dangerAlert.Text}");
+            //     }
+            // }
+            // catch
+            // {
+            //     StringBuilder builder = new StringBuilder();
+            //     builder.AppendLine();
+            //     foreach (var logKind in new[] { LogType.Browser, LogType.Client, LogType.Driver, LogType.Server })
+            //     {
+            //         try
+            //         {
+            //             var logs = driver.Manage().Logs.GetLog(logKind);
+            //             builder.AppendLine($"Selenium [{logKind}]:");
+            //             foreach (var entry in logs)
+            //             {
+            //                 builder.AppendLine($"[{entry.Level}]: {entry.Message}");
+            //             }
+            //         }
+            //         catch
+            //         {
+            //             // ignored
+            //         }
+            //
+            //         builder.AppendLine("---------");
+            //     }
+            //     Logs.Tester.LogInformation(builder.ToString());
+            //     builder = new StringBuilder();
+            //     builder.AppendLine("Selenium [Sources]:");
+            //     builder.AppendLine(driver.PageSource);
+            //     builder.AppendLine("---------");
+            //     Logs.Tester.LogInformation(builder.ToString());
+            //     throw;
+            // }
         }
         public static T AssertViewModel<T>(this IActionResult result)
         {

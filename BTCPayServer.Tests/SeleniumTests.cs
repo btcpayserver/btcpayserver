@@ -643,15 +643,14 @@ namespace BTCPayServer.Tests
                 await s.StartAsync();
                 s.RegisterNewUser(true);
                 var (storeName, storeId) = s.CreateNewStore();
-                s.GoToStore(storeId, Views.Stores.StoreNavPages.Webhooks);
+                s.GoToStore(storeId, StoreNavPages.Webhooks);
 
                 Logs.Tester.LogInformation("Let's create two webhooks");
                 for (var i = 0; i < 2; i++)
                 {
                     s.Driver.FindElement(By.Id("CreateWebhook")).Click();
                     s.Driver.FindElement(By.Name("PayloadUrl")).SendKeys($"http://127.0.0.1/callback{i}");
-                    new SelectElement(s.Driver.FindElement(By.Name("Everything")))
-                        .SelectByValue("false");
+                    new SelectElement(s.Driver.FindElement(By.Id("Everything"))).SelectByValue("false");
                     s.Driver.FindElement(By.Id("InvoiceCreated")).Click();
                     s.Driver.FindElement(By.Id("InvoiceProcessing")).Click();
                     s.Driver.FindElement(By.Name("add")).Click();

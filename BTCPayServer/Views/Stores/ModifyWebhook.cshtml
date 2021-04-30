@@ -4,7 +4,10 @@
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePageAndTitle(StoreNavPages.Webhooks, "Webhook Settings", Context.GetStoreData().StoreName);
 }
-
+<style>
+    #event-selector { display: none; }
+    #Everything[data-value='false'] + #event-selector { display: block; }
+</style>
 <div class="row">
     <div class="col-lg-8">
         <form method="post">
@@ -38,13 +41,11 @@
                 </div>
             </div>
             <h4 class="mb-3">Events</h4>
-            <div class="form-group">
-                <label asp-for="Everything">Which events would you like to trigger this webhook?</label>
-                <select id="all-events" class="form-select" asp-for="Everything">
-                    <option value="true">Send me everything</option>
-                    <option value="false">Send specific events</option>
-                </select>
-            </div>
+            <label asp-for="Everything" class="form-label">Which events would you like to trigger this webhook?</label>
+            <select asp-for="Everything" class="form-select mb-3" onchange="this.dataset.value=this.value">
+                <option value="true">Send me everything</option>
+                <option value="false">Send specific events</option>
+            </select>
             <div id="event-selector" class="collapse">
                 <ul class="list-group">
                     @foreach (var evt in new[]
@@ -58,14 +59,10 @@
                     })
                     {
                         <li class="list-group-item ">
-                            <div class="d-flex align-items-center">
-                                <span class="d-flex align-items-center flex-fill me-3">
-                                    <label for="@evt.Item2" class="form-check-label">@evt.Item1</label>
-                                </span>
-                                <span class="d-flex align-items-center">
-                                    <input name="Events" id="@evt.Item2" value="@evt.Item2" @(Model.Events.Contains(evt.Item2) ? "checked" : "") type="checkbox" class="form-check-input" />
-                                </span>
-                            </div>
+                            <label for="@evt.Item2" class="d-flex align-items-center">
+                                <span class="flex-fill me-3">@evt.Item1</span>
+                                <input name="Events" id="@evt.Item2" value="@evt.Item2" @(Model.Events.Contains(evt.Item2) ? "checked" : "") type="checkbox" class="form-check-input" />
+                            </label>
                         </li>
                     }
                 </ul>
@@ -133,21 +130,4 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-
-    <script type="text/javascript">
-        function toggleEventSelector() {
-            if ($("#all-events").val() === "true") {
-                $("#event-selector").hide();
-            }
-            else {
-                $("#event-selector").show();
-            }
-        }
-        $(function () {
-            toggleEventSelector();
-            $("#all-events").change(function () {
-                toggleEventSelector();
-            });
-        });
-    </script>
 }

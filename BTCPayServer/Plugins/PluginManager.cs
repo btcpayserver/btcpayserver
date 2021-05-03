@@ -76,8 +76,8 @@ namespace BTCPayServer.Plugins
             }
 
             var disabledPlugins = GetDisabledPlugins(pluginsFolder);
-           
-            
+
+
 
             foreach (var dir in orderedDirs)
             {
@@ -94,24 +94,34 @@ namespace BTCPayServer.Plugins
                     continue;
                 }
 
-                var plugin = PluginLoader.CreateFromAssemblyFile(
-                    pluginFilePath, // create a plugin from for the .dll file
-                    config =>
-                    {
-                        
-                        // this ensures that the version of MVC is shared between this app and the plugin
-                        config.PreferSharedTypes = true;
-                        config.IsUnloadable = true;
-                    });
+                try
+                {
 
-                mvcBuilder.AddPluginLoader(plugin);
-                var pluginAssembly = plugin.LoadDefaultAssembly();
-                _pluginAssemblies.Add(pluginAssembly);
-                _plugins.Add(plugin);
-                var fileProvider = CreateEmbeddedFileProviderForAssembly(pluginAssembly);
-                loadedPlugins.Add((plugin, pluginAssembly, fileProvider));
-                plugins.AddRange(GetAllPluginTypesFromAssembly(pluginAssembly)
-                    .Select(GetPluginInstanceFromType));
+                    var plugin = PluginLoader.CreateFromAssemblyFile(
+                        pluginFilePath, // create a plugin from for the .dll file
+                        config =>
+                        {
+
+                            // this ensures that the version of MVC is shared between this app and the plugin
+                            config.PreferSharedTypes = true;
+                            config.IsUnloadable = true;
+                        });
+
+                    mvcBuilder.AddPluginLoader(plugin);
+                    var pluginAssembly = plugin.LoadDefaultAssembly();
+                    _pluginAssemblies.Add(pluginAssembly);
+                    _plugins.Add(plugin);
+                    var fileProvider = CreateEmbeddedFileProviderForAssembly(pluginAssembly);
+                    loadedPlugins.Add((plugin, pluginAssembly, fileProvider));
+                    plugins.AddRange(GetAllPluginTypesFromAssembly(pluginAssembly)
+                        .Select(GetPluginInstanceFromType));
+
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError(e,
+                        $"Error when loading plugin {pluginName}");
+                }
             }
 
             foreach (var plugin in plugins)

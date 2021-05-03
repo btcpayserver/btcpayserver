@@ -11,8 +11,8 @@ namespace BTCPayServer
             Add(new BTCPayNetwork()
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
-                DisplayName = "Bitcore",
-                BlockExplorerLink = NetworkType == ChainName.Mainnet ? "https://insight.bitcore.cc/tx/{0}" : "https://insight.bitcore.cc/tx/{0}",
+                DisplayName = "BitCore",
+                BlockExplorerLink = NetworkType == ChainName.Mainnet ? "https://explorer.bitcore.cc/tx/{0}" : "https://explorer.bitcore.cc/tx/{0}",
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "bitcore",
                 DefaultRateRules = new[]

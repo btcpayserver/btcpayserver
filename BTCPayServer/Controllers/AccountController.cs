@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
@@ -33,6 +34,7 @@ namespace BTCPayServer.Controllers
         readonly Configuration.BTCPayServerOptions _Options;
         private readonly BTCPayServerEnvironment _btcPayServerEnvironment;
         private readonly Fido2Service _fido2Service;
+        private readonly UserLoginCodeService _userLoginCodeService;
         private readonly EventAggregator _eventAggregator;
         readonly ILogger _logger;
 
@@ -47,6 +49,7 @@ namespace BTCPayServer.Controllers
             BTCPayServerEnvironment btcPayServerEnvironment,
             EventAggregator eventAggregator,
             Fido2Service fido2Service,
+            UserLoginCodeService userLoginCodeService,
             Logs logs)
         {
             _userManager = userManager;
@@ -56,6 +59,7 @@ namespace BTCPayServer.Controllers
             _Options = options;
             _btcPayServerEnvironment = btcPayServerEnvironment;
             _fido2Service = fido2Service;
+            _userLoginCodeService = userLoginCodeService;
             _eventAggregator = eventAggregator;
             _logger = logs.PayServer;
             Logs = logs;
@@ -139,6 +143,14 @@ namespace BTCPayServer.Controllers
                             {
                                 RememberMe = model.RememberMe
                             };
+                        }
+                        else
+                        {
+                            var identity = new ClaimsIdentity(IdentityConstants.TwoFactorUserIdScheme);
+                            identity.AddClaim(new Claim(ClaimTypes.Name, user.Id));
+                            
+                            identity.AddClaim(new Claim(ClaimTypes.AuthenticationMethod, "FIDO2"));
+                            await HttpContext.SignInAsync(IdentityConstants.TwoFactorUserIdScheme, new ClaimsPrincipal(identity));
                         }
 
                         return View("SecondaryLogin", new SecondaryLoginViewModel()
@@ -365,14 +377,22 @@ namespace BTCPayServer.Controllers
                 return View(model);
             }
 
+            
             var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
             if (user == null)
             {
                 throw new ApplicationException($"Unable to load two-factor authentication user.");
             }
+ 
 
             var recoveryCode = model.RecoveryCode.Replace(" ", string.Empty, StringComparison.InvariantCulture);
 
+            if (_userLoginCodeService.Verify(user.Id, model.RecoveryCode))
+            {
+                _logger.LogInformation("User with ID {UserId} logged in with a login code.", user.Id);
+                await _signInManager.SignInAsync(user, false, "LoginCode");
+                return RedirectToLocal(returnUrl);
+            }
             var result = await _signInManager.TwoFactorRecoveryCodeSignInAsync(recoveryCode);
 
             if (result.Succeeded)
@@ -387,8 +407,8 @@ namespace BTCPayServer.Controllers
             }
             else
             {
-                _logger.LogWarning("Invalid recovery code entered for user with ID {UserId}", user.Id);
-                ModelState.AddModelError(string.Empty, "Invalid recovery code entered.");
+                _logger.LogWarning("Invalid recovery/login code entered for user with ID {UserId}", user.Id);
+                ModelState.AddModelError(string.Empty, "Invalid recovery/login code entered.");
                 return View();
             }
         }

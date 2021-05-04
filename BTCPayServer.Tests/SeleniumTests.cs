@@ -610,9 +610,8 @@ namespace BTCPayServer.Tests
                 });
                 await s.Server.ExplorerNode.GenerateAsync(1);
                 s.GoToWallet(walletId);
-                // s.Driver.FindElement(By.Id("AdvancedSettingsToggle")).Click();
-                // s.Driver.WaitForAndClick(By.Id("toggleInputSelection"));
-                s.Driver.ClickDropdownItem("AdvancedSettingsToggle", By.Id("toggleInputSelection"));
+                s.Driver.ToggleCollapse("AdvancedSettings");
+                s.Driver.WaitForAndClick(By.Id("toggleInputSelection"));
                 s.Driver.FindElement(By.Id(spentOutpoint.ToString()));
                 Assert.Equal("true", s.Driver.FindElement(By.Name("InputSelection")).GetAttribute("value").ToLowerInvariant());
                 var el = s.Driver.FindElement(By.Id(spentOutpoint.ToString()));
@@ -622,8 +621,7 @@ namespace BTCPayServer.Tests
 
                 var bob = new Key().PubKey.Hash.GetAddress(Network.RegTest);
                 SetTransactionOutput(s, 0, bob, 0.3m);
-                s.Driver.FindElement(By.Id("SendDropdownToggle")).Click();
-                s.Driver.FindElement(By.Id("spendWithNBxplorer")).Click();
+                s.Driver.ClickDropdownItem("SendDropdownToggle", By.Id("spendWithNBxplorer"));
                 s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).Click();
                 var happyElement = s.FindAlertMessage();
                 var happyText = happyElement.Text;
@@ -857,8 +855,6 @@ namespace BTCPayServer.Tests
                     s.Driver.FindElement(By.Id("WalletSend")).Click();
                     var bob = new Key().PubKey.Hash.GetAddress(Network.RegTest);
                     SetTransactionOutput(s, 0, bob, 1);
-                    // s.Driver.FindElement(By.Id("SendDropdownToggle")).Click();
-                    // s.Driver.FindElement(By.CssSelector("button[value=seed]")).Click();
                     s.Driver.ClickDropdownItem("SendDropdownToggle", By.CssSelector("button[value=seed]"));
 
                     // Input the seed
@@ -879,8 +875,6 @@ namespace BTCPayServer.Tests
 
                 var jack = new Key().PubKey.Hash.GetAddress(Network.RegTest);
                 SetTransactionOutput(s, 0, jack, 0.01m);
-                // s.Driver.FindElement(By.Id("SendDropdownToggle")).Click();
-                // s.Driver.FindElement(By.CssSelector("button[value=nbx-seed]")).Click();
                 s.Driver.ClickDropdownItem("SendDropdownToggle", By.CssSelector("button[value=nbx-seed]"));
 
                 Assert.Contains(jack.ToString(), s.Driver.PageSource);
@@ -888,8 +882,6 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.CssSelector("button[value=analyze-psbt]")).Click();
                 Assert.EndsWith("psbt", s.Driver.Url);
 
-                // s.Driver.FindElement(By.Id("OtherActionsDropdownToggle")).Click();
-                // s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).Click();
                 s.Driver.ClickDropdownItem("OtherActionsDropdownToggle", By.CssSelector("button[value=broadcast]"));
 
                 Assert.EndsWith("psbt/ready", s.Driver.Url);
@@ -912,9 +904,6 @@ namespace BTCPayServer.Tests
 
                 s.GoToWallet(new WalletId(storeId, "BTC"), WalletsNavPages.Settings);
                 var walletUrl = s.Driver.Url;
-
-                // s.Driver.FindElement(By.Id("OtherActionsDropdownToggle")).Click();
-                // s.Driver.FindElement(By.CssSelector("button[value=view-seed]")).Click();
                 s.Driver.ClickDropdownItem("OtherActionsDropdownToggle", By.CssSelector("button[value=view-seed]"));
 
                 // Seed backup page
@@ -994,15 +983,10 @@ namespace BTCPayServer.Tests
                 
                 Assert.NotEmpty(s.Driver.FindElements(By.ClassName("payout")));
                 s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-selectAllCheckbox")).Click();
-                s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-actions")).Click();
-                s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-approve-pay")).Click();
+                s.Driver.ClickDropdownItem($"{PayoutState.AwaitingApproval}-actions", By.Id($"{PayoutState.AwaitingApproval}-approve-pay"));
 
-                // s.Driver.FindElement(By.Id("SendDropdownToggle")).Click();
-                // s.Driver.FindElement(By.CssSelector("button[value=nbx-seed]")).Click();
-                // s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).Click();
                 s.Driver.ClickDropdownItem("SendDropdownToggle", By.CssSelector("button[value=nbx-seed]"));
-                s.Driver.ClickDropdownItem("SendDropdownToggle", By.CssSelector("button[value=broadcast]"));
-
+                s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).Click();
                 s.FindAlertMessage();
 
                 TestUtils.Eventually(() =>
@@ -1059,8 +1043,6 @@ namespace BTCPayServer.Tests
 
         private static void CanSetupEmailCore(SeleniumTester s)
         {
-            // s.Driver.FindElement(By.Id("QuickFillDropdownToggle")).Click();
-            // s.Driver.FindElement(By.ClassName("dropdown-item")).Click();
             s.Driver.ClickDropdownItem("QuickFillDropdownToggle", By.ClassName("dropdown-item"));
 
             s.Driver.FindElement(By.Id("Settings_Login")).SendKeys("test@gmail.com");

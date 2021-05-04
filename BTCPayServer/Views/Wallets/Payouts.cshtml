@@ -62,20 +62,21 @@
                     <div class="row mt-2 ms-2">
                         @if (state.Payouts.Any() && stateActions.Any())
                         {
-                            <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" id="@state.State-actions">
-                                Actions
-                            </button>
-                            <div class="dropdown-menu">
-                                @foreach (var action in stateActions)
-                                {
-                                    <button type="submit" id="@state.State-@action.Action" name="Command" class="dropdown-item" role="button" value="@state.State-@action.Action">@action.Text</button>
-                                }
+                            <div class="dropdown">
+                                <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" id="@state.State-actions">
+                                    Actions
+                                </button>
+                                <div class="dropdown-menu" aria-labelledby="@state.State-actions">
+                                    @foreach (var action in stateActions)
+                                    {
+                                        <button type="submit" id="@state.State-@action.Action" name="Command" class="dropdown-item" role="button" value="@state.State-@action.Action">@action.Text</button>
+                                    }
+                                </div>
                             </div>
                         }
                     </div>
                     <div class="row">
                         <div class="col-md-12">
-
                             @if (state.Payouts.Any())
                             {
                                 <table class="table table-sm table-responsive-lg">

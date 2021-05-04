@@ -124,6 +124,11 @@ namespace BTCPayServer.Tests
             driver.WaitForElement(selector).Click();
         }
 
+        public static void ToggleCollapse(this IWebDriver driver, string collapseId)
+        {
+            driver.ExecuteJavaScript($"document.querySelector('[class=\"collapse\"][id=\"{collapseId}\"]').classList.add('show')");
+        }
+
         public static IWebElement WaitForElement(this IWebDriver driver, By selector)
         {
             var wait = new WebDriverWait(driver, SeleniumTester.ImplicitWait);

@@ -155,12 +155,12 @@
                 </div>
             }
 
-            <div class="card border-0 my-4">
-                <button id="AdvancedSettingsToggle" class="btn btn-link text-secondary collapsed text-start" type="button" data-bs-toggle="collapse" data-bs-target="#accordian-advanced" aria-expanded="false" aria-controls="accordian-advanced">
+            <div class="my-4">
+                <button class="btn btn-link px-0" type="button" id="AdvancedSettingsButton" data-bs-toggle="collapse" data-bs-target="#AdvancedSettings" aria-expanded="false" aria-controls="AdvancedSettings">
                     Advanced settings
                 </button>
-                <div id="accordian-advanced" class="collapse" aria-labelledby="AdvancedSettingsToggle" data-parent="#accordian-advanced">
-                    <div class="card-body">
+                <div id="AdvancedSettings" class="collapse">
+                    <div class="pt-3 pb-1">
                         <div class="form-group">
                             <div class="form-check">
                                 <input asp-for="NoChange" class="form-check-input" />

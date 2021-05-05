@@ -232,7 +232,7 @@ function addPlusMinusButton(type, step, min, max) {
    }
 
 function addInputPrice(name, price, widthInput, customFn, type, min, max, step) {
-    return '    <input id="btcpay-input-price" name="'+name+'" type="' + (type || "text") + '" min="' + (min || 0) + '" max="' + (max || "none") + '" step="' + (step || "any") + '" value="' + price + '" style="width: ' + widthInput + ';" oninput="event.preventDefault();isNaN(event.target.value)? document.querySelector(\'#btcpay-input-price\').value = ' + price + ' : event.target.value; console.log(this); if (this.value < '+min+') {this.value = '+min+'; } else if(this.value > '+max+'){  this.value = '+max+';}" ' + (customFn || '') + ' />\n';
+    return '    <input id="btcpay-input-price" name="'+name+'" type="' + (type || "text") + '" min="' + (min || 0) + '" max="' + (max || "none") + '" step="' + (step || "any") + '" value="' + price + '" style="width: ' + widthInput + ';" oninput="event.preventDefault();isNaN(event.target.value)? document.querySelector(\'#btcpay-input-price\').value = ' + price + ' : event.target.value; if (this.value < '+min+') {this.value = '+min+'; } else if(this.value > '+max+'){  this.value = '+max+';}" ' + (customFn || '') + ' />\n';
 }
 
 function addSelectCurrency(currency) {

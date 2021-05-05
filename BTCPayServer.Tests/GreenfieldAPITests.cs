@@ -1082,26 +1082,31 @@ namespace BTCPayServer.Tests
                 Assert.Empty(invoices);
 
                 //list Filtered
-                var invoicesFiltered = await viewOnly.GetInvoices(user.StoreId,
-                    orderId: null, status: null, DateTimeOffset.Now.AddHours(-1),
-                    DateTimeOffset.Now.AddHours(1));
+                 var invoicesFiltered = await viewOnly.GetInvoices(user.StoreId,
+                     orderId: null, status: null, startDate: DateTimeOffset.Now.AddHours(-1),
+                     endDate: DateTimeOffset.Now.AddHours(1));
+
+                 Assert.NotNull(invoicesFiltered);
+                 Assert.Single(invoicesFiltered);
+                 Assert.Equal(newInvoice.Id, invoicesFiltered.First().Id);
+
 
                 Assert.NotNull(invoicesFiltered);
                 Assert.Single(invoicesFiltered);
                 Assert.Equal(newInvoice.Id, invoicesFiltered.First().Id);
 
-                //list Yesterday
-                var invoicesYesterday = await viewOnly.GetInvoices(user.StoreId,
-                    orderId: null, status: null, DateTimeOffset.Now.AddDays(-2),
-                    DateTimeOffset.Now.AddDays(-1));
-                Assert.NotNull(invoicesYesterday);
-                Assert.Empty(invoicesYesterday);
+                 //list Yesterday
+                 var invoicesYesterday = await viewOnly.GetInvoices(user.StoreId,
+                     orderId: null, status: null, startDate: DateTimeOffset.Now.AddDays(-2),
+                     endDate: DateTimeOffset.Now.AddDays(-1));
+                 Assert.NotNull(invoicesYesterday);
+                 Assert.Empty(invoicesYesterday);
 
                 // Error, startDate and endDate inverted
                 await AssertValidationError(new[] { "startDate", "endDate" },
                     () => viewOnly.GetInvoices(user.StoreId,
-                    orderId: null, status: null, DateTimeOffset.Now.AddDays(-1),
-                    DateTimeOffset.Now.AddDays(-2)));
+                    orderId: null, status: null, startDate: DateTimeOffset.Now.AddDays(-1),
+                    endDate: DateTimeOffset.Now.AddDays(-2)));
 
                 await AssertValidationError(new[] { "startDate" },
                     () => viewOnly.SendHttpRequest<Client.Models.InvoiceData[]>($"api/v1/stores/{user.StoreId}/invoices", new Dictionary<string, object>()
@@ -1113,30 +1118,30 @@ namespace BTCPayServer.Tests
                 //list Existing OrderId
                 var invoicesExistingOrderId =
                      await viewOnly.GetInvoices(user.StoreId, orderId: newInvoice.Metadata["orderId"].ToString());
-                Assert.NotNull(invoicesExistingOrderId);
-                Assert.Single(invoicesFiltered);
-                Assert.Equal(newInvoice.Id, invoicesFiltered.First().Id);
+                 Assert.NotNull(invoicesExistingOrderId);
+                 Assert.Single(invoicesFiltered);
+                 Assert.Equal(newInvoice.Id, invoicesFiltered.First().Id);
 
-                //list NonExisting OrderId
-                var invoicesNonExistingOrderId =
-                    await viewOnly.GetInvoices(user.StoreId, orderId: "NonExistingOrderId");
-                Assert.NotNull(invoicesNonExistingOrderId);
-                Assert.Empty(invoicesNonExistingOrderId);
+                 //list NonExisting OrderId
+                 var invoicesNonExistingOrderId =
+                     await viewOnly.GetInvoices(user.StoreId, orderId: "NonExistingOrderId");
+                 Assert.NotNull(invoicesNonExistingOrderId);
+                 Assert.Empty(invoicesNonExistingOrderId);
 
-                //list Existing Status
-                var invoicesExistingStatus =
-                    await viewOnly.GetInvoices(user.StoreId, status: new[] { newInvoice.Status });
-                Assert.NotNull(invoicesExistingStatus);
-                Assert.Single(invoicesExistingStatus);
-                Assert.Equal(newInvoice.Id, invoicesExistingStatus.First().Id);
+                 //list Existing Status
+                 var invoicesExistingStatus =
+                     await viewOnly.GetInvoices(user.StoreId, status: new []{newInvoice.Status});
+                 Assert.NotNull(invoicesExistingStatus);
+                 Assert.Single(invoicesExistingStatus);
+                 Assert.Equal(newInvoice.Id, invoicesExistingStatus.First().Id);
 
-                //list NonExisting Status
-                var invoicesNonExistingStatus = await viewOnly.GetInvoices(user.StoreId,
-                    status: new[] { BTCPayServer.Client.Models.InvoiceStatus.Invalid });
-                Assert.NotNull(invoicesNonExistingStatus);
-                Assert.Empty(invoicesNonExistingStatus);
-
-
+                 //list NonExisting Status
+                 var invoicesNonExistingStatus = await viewOnly.GetInvoices(user.StoreId,
+                     status: new []{BTCPayServer.Client.Models.InvoiceStatus.Invalid});
+                 Assert.NotNull(invoicesNonExistingStatus);
+                 Assert.Empty(invoicesNonExistingStatus);
+                 
+                 
                 //get
                 var invoice = await viewOnly.GetInvoice(user.StoreId, newInvoice.Id);
                 Assert.Equal(newInvoice.Metadata, invoice.Metadata);

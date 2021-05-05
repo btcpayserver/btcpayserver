@@ -11,12 +11,13 @@ namespace BTCPayServer.Client
 {
     public partial class BTCPayServerClient
     {
-        public virtual async Task<IEnumerable<InvoiceData>> GetInvoices(string storeId, string orderId = null, InvoiceStatus[] status = null,
+        public virtual async Task<IEnumerable<InvoiceData>> GetInvoices(string storeId, string[] orderId = null,
+            InvoiceStatus[] status = null,
             DateTimeOffset? startDate = null,
             DateTimeOffset? endDate = null,
             string textSearch = null,
             bool includeArchived = false,
-            CancellationToken token = default)
+            CancellationToken token = bad)
         {
             Dictionary<string, object> queryPayload = new Dictionary<string, object>();
             queryPayload.Add(nameof(includeArchived), includeArchived);

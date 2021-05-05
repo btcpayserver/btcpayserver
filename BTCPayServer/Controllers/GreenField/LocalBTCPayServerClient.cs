@@ -192,8 +192,8 @@ namespace BTCPayServer.Controllers.GreenField
                 chainPaymentMethodsController, storeOnChainWalletsController, healthController,
                 paymentRequestController, apiKeysController, notificationsController, usersController,
                 storeLightningNetworkPaymentMethodsController, greenFieldInvoiceController,
-                greenFieldServerInfoController, greenfieldPullPaymentController, storesController,lightningNodeApiController,
-                storeLightningNodeApiController as ControllerBase,
+                greenFieldServerInfoController, greenfieldPullPaymentController, storesController,
+                lightningNodeApiController, storeLightningNodeApiController as ControllerBase,
             };
             foreach (var controller in controllers)
             {
@@ -201,31 +201,36 @@ namespace BTCPayServer.Controllers.GreenField
             }
         }
 
-        protected override HttpRequestMessage CreateHttpRequest(string path, Dictionary<string, object> queryPayload = null, HttpMethod method = null)
+        protected override HttpRequestMessage CreateHttpRequest(string path,
+            Dictionary<string, object> queryPayload = null, HttpMethod method = null)
         {
             throw new NotSupportedException("This method is not supported by the LocalBTCPayServerClient.");
         }
 
-        public override async Task<StoreWebhookData> CreateWebhook(string storeId, CreateStoreWebhookRequest create, CancellationToken token = default)
+        public override async Task<StoreWebhookData> CreateWebhook(string storeId, CreateStoreWebhookRequest create,
+            CancellationToken token = default)
         {
             return GetFromActionResult<StoreWebhookData>(
                 await _storeWebhooksController.CreateWebhook(storeId, create));
         }
 
-        public override async Task<StoreWebhookData> GetWebhook(string storeId, string webhookId, CancellationToken token = default)
+        public override async Task<StoreWebhookData> GetWebhook(string storeId, string webhookId,
+            CancellationToken token = default)
         {
             return GetFromActionResult<StoreWebhookData>(
                 await _storeWebhooksController.ListWebhooks(storeId, webhookId));
         }
 
-        public override async Task<StoreWebhookData> UpdateWebhook(string storeId, string webhookId, UpdateStoreWebhookRequest update,
+        public override async Task<StoreWebhookData> UpdateWebhook(string storeId, string webhookId,
+            UpdateStoreWebhookRequest update,
             CancellationToken token = default)
         {
             return GetFromActionResult<StoreWebhookData>(
                 await _storeWebhooksController.UpdateWebhook(storeId, webhookId, update));
         }
 
-        public override async Task<bool> DeleteWebhook(string storeId, string webhookId, CancellationToken token = default)
+        public override async Task<bool> DeleteWebhook(string storeId, string webhookId,
+            CancellationToken token = default)
         {
             HandleActionResult(await _storeWebhooksController.DeleteWebhook(storeId, webhookId));
             return true;
@@ -237,54 +242,63 @@ namespace BTCPayServer.Controllers.GreenField
                 await _storeWebhooksController.ListWebhooks(storeId, null));
         }
 
-        public override async Task<WebhookDeliveryData[]> GetWebhookDeliveries(string storeId, string webhookId, CancellationToken token = default)
+        public override async Task<WebhookDeliveryData[]> GetWebhookDeliveries(string storeId, string webhookId,
+            CancellationToken token = default)
         {
             return GetFromActionResult<WebhookDeliveryData[]>(
                 await _storeWebhooksController.ListDeliveries(storeId, webhookId, null));
         }
 
-        public override async Task<WebhookDeliveryData> GetWebhookDelivery(string storeId, string webhookId, string deliveryId, CancellationToken token = default)
+        public override async Task<WebhookDeliveryData> GetWebhookDelivery(string storeId, string webhookId,
+            string deliveryId, CancellationToken token = default)
         {
             return GetFromActionResult<WebhookDeliveryData>(
                 await _storeWebhooksController.ListDeliveries(storeId, webhookId, deliveryId));
         }
 
-        public override async Task<string> RedeliverWebhook(string storeId, string webhookId, string deliveryId, CancellationToken token = default)
+        public override async Task<string> RedeliverWebhook(string storeId, string webhookId, string deliveryId,
+            CancellationToken token = default)
         {
             return GetFromActionResult<string>(
                 await _storeWebhooksController.RedeliverWebhook(storeId, webhookId, deliveryId));
         }
 
-        public override async Task<WebhookEvent> GetWebhookDeliveryRequest(string storeId, string webhookId, string deliveryId, CancellationToken token = default)
+        public override async Task<WebhookEvent> GetWebhookDeliveryRequest(string storeId, string webhookId,
+            string deliveryId, CancellationToken token = default)
         {
             return GetFromActionResult<WebhookEvent>(
                 await _storeWebhooksController.GetDeliveryRequest(storeId, webhookId, deliveryId));
         }
 
-        public override async Task<PullPaymentData> CreatePullPayment(string storeId, CreatePullPaymentRequest request, CancellationToken cancellationToken = default)
+        public override async Task<PullPaymentData> CreatePullPayment(string storeId, CreatePullPaymentRequest request,
+            CancellationToken cancellationToken = default)
         {
             return GetFromActionResult<PullPaymentData>(
                 await _greenfieldPullPaymentController.CreatePullPayment(storeId, request));
         }
 
-        public override async Task<PullPaymentData> GetPullPayment(string pullPaymentId, CancellationToken cancellationToken = default)
+        public override async Task<PullPaymentData> GetPullPayment(string pullPaymentId,
+            CancellationToken cancellationToken = default)
         {
             return GetFromActionResult<PullPaymentData>(
                 await _greenfieldPullPaymentController.GetPullPayment(pullPaymentId));
         }
 
-        public override async Task<PullPaymentData[]> GetPullPayments(string storeId, bool includeArchived = false, CancellationToken cancellationToken = default)
+        public override async Task<PullPaymentData[]> GetPullPayments(string storeId, bool includeArchived = false,
+            CancellationToken cancellationToken = default)
         {
             return GetFromActionResult<PullPaymentData[]>(
-                await _greenfieldPullPaymentController.GetPullPayments(storeId,includeArchived ));
+                await _greenfieldPullPaymentController.GetPullPayments(storeId, includeArchived));
         }
 
-        public override async Task ArchivePullPayment(string storeId, string pullPaymentId, CancellationToken cancellationToken = default)
+        public override async Task ArchivePullPayment(string storeId, string pullPaymentId,
+            CancellationToken cancellationToken = default)
         {
             HandleActionResult(await _greenfieldPullPaymentController.ArchivePullPayment(storeId, pullPaymentId));
         }
 
-        public override async Task<PayoutData[]> GetPayouts(string pullPaymentId, bool includeCancelled = false, CancellationToken cancellationToken = default)
+        public override async Task<PayoutData[]> GetPayouts(string pullPaymentId, bool includeCancelled = false,
+            CancellationToken cancellationToken = default)
         {
             return GetFromActionResult<PayoutData[]>(
                 await _greenfieldPullPaymentController.GetPayouts(pullPaymentId, includeCancelled));
@@ -297,107 +311,125 @@ namespace BTCPayServer.Controllers.GreenField
                 await _greenfieldPullPaymentController.CreatePayout(pullPaymentId, payoutRequest));
         }
 
-        public override async Task CancelPayout(string storeId, string payoutId, CancellationToken cancellationToken = default)
+        public override async Task CancelPayout(string storeId, string payoutId,
+            CancellationToken cancellationToken = default)
         {
             HandleActionResult(await _greenfieldPullPaymentController.CancelPayout(storeId, payoutId));
         }
 
-        public override async Task<PayoutData> ApprovePayout(string storeId, string payoutId, ApprovePayoutRequest request,
+        public override async Task<PayoutData> ApprovePayout(string storeId, string payoutId,
+            ApprovePayoutRequest request,
             CancellationToken cancellationToken = default)
         {
             return GetFromActionResult<PayoutData>(
                 await _greenfieldPullPaymentController.ApprovePayout(storeId, payoutId, request, cancellationToken));
         }
 
-        public override async Task<LightningNodeInformationData> GetLightningNodeInfo(string storeId, string cryptoCode, CancellationToken token = default)
+        public override async Task<LightningNodeInformationData> GetLightningNodeInfo(string storeId, string cryptoCode,
+            CancellationToken token = default)
         {
             return GetFromActionResult<LightningNodeInformationData>(
                 await _storeLightningNodeApiController.GetInfo(cryptoCode));
         }
 
-        public override async Task ConnectToLightningNode(string storeId, string cryptoCode, ConnectToNodeRequest request,
+        public override async Task ConnectToLightningNode(string storeId, string cryptoCode,
+            ConnectToNodeRequest request,
             CancellationToken token = default)
         {
             HandleActionResult(await _storeLightningNodeApiController.ConnectToNode(cryptoCode, request));
         }
 
-        public override async Task<IEnumerable<LightningChannelData>> GetLightningNodeChannels(string storeId, string cryptoCode, CancellationToken token = default)
+        public override async Task<IEnumerable<LightningChannelData>> GetLightningNodeChannels(string storeId,
+            string cryptoCode, CancellationToken token = default)
         {
             return GetFromActionResult<IEnumerable<LightningChannelData>>(
                 await _storeLightningNodeApiController.GetChannels(cryptoCode));
         }
 
-        public override async Task OpenLightningChannel(string storeId, string cryptoCode, OpenLightningChannelRequest request,
+        public override async Task OpenLightningChannel(string storeId, string cryptoCode,
+            OpenLightningChannelRequest request,
             CancellationToken token = default)
         {
             HandleActionResult(await _storeLightningNodeApiController.OpenChannel(cryptoCode, request));
         }
 
-        public override async Task<string> GetLightningDepositAddress(string storeId, string cryptoCode, CancellationToken token = default)
+        public override async Task<string> GetLightningDepositAddress(string storeId, string cryptoCode,
+            CancellationToken token = default)
         {
             return GetFromActionResult<string>(
                 await _storeLightningNodeApiController.GetDepositAddress(cryptoCode));
         }
 
-        public override async Task PayLightningInvoice(string storeId, string cryptoCode, PayLightningInvoiceRequest request,
+        public override async Task PayLightningInvoice(string storeId, string cryptoCode,
+            PayLightningInvoiceRequest request,
             CancellationToken token = default)
         {
             HandleActionResult(await _storeLightningNodeApiController.PayInvoice(cryptoCode, request));
         }
 
-        public override async Task<LightningInvoiceData> GetLightningInvoice(string storeId, string cryptoCode, string invoiceId, CancellationToken token = default)
+        public override async Task<LightningInvoiceData> GetLightningInvoice(string storeId, string cryptoCode,
+            string invoiceId, CancellationToken token = default)
         {
             return GetFromActionResult<LightningInvoiceData>(
                 await _storeLightningNodeApiController.GetInvoice(cryptoCode, invoiceId));
         }
 
-        public override async Task<LightningInvoiceData> CreateLightningInvoice(string storeId, string cryptoCode, CreateLightningInvoiceRequest request,
+        public override async Task<LightningInvoiceData> CreateLightningInvoice(string storeId, string cryptoCode,
+            CreateLightningInvoiceRequest request,
             CancellationToken token = default)
         {
             return GetFromActionResult<LightningInvoiceData>(
                 await _storeLightningNodeApiController.CreateInvoice(cryptoCode, request));
         }
 
-        public override async Task<LightningNodeInformationData> GetLightningNodeInfo(string cryptoCode, CancellationToken token = default)
+        public override async Task<LightningNodeInformationData> GetLightningNodeInfo(string cryptoCode,
+            CancellationToken token = default)
         {
             return GetFromActionResult<LightningNodeInformationData>(
                 await _lightningNodeApiController.GetInfo(cryptoCode));
         }
 
-        public override async Task ConnectToLightningNode(string cryptoCode, ConnectToNodeRequest request, CancellationToken token = default)
+        public override async Task ConnectToLightningNode(string cryptoCode, ConnectToNodeRequest request,
+            CancellationToken token = default)
         {
             HandleActionResult(await _lightningNodeApiController.ConnectToNode(cryptoCode, request));
         }
 
-        public override async Task<IEnumerable<LightningChannelData>> GetLightningNodeChannels(string cryptoCode, CancellationToken token = default)
+        public override async Task<IEnumerable<LightningChannelData>> GetLightningNodeChannels(string cryptoCode,
+            CancellationToken token = default)
         {
             return GetFromActionResult<IEnumerable<LightningChannelData>>(
                 await _lightningNodeApiController.GetChannels(cryptoCode));
         }
 
-        public override async Task OpenLightningChannel(string cryptoCode, OpenLightningChannelRequest request, CancellationToken token = default)
+        public override async Task OpenLightningChannel(string cryptoCode, OpenLightningChannelRequest request,
+            CancellationToken token = default)
         {
             HandleActionResult(await _lightningNodeApiController.OpenChannel(cryptoCode, request));
         }
 
-        public override async Task<string> GetLightningDepositAddress(string cryptoCode, CancellationToken token = default)
+        public override async Task<string> GetLightningDepositAddress(string cryptoCode,
+            CancellationToken token = default)
         {
             return GetFromActionResult<string>(
                 await _lightningNodeApiController.GetDepositAddress(cryptoCode));
         }
 
-        public override async Task PayLightningInvoice(string cryptoCode, PayLightningInvoiceRequest request, CancellationToken token = default)
+        public override async Task PayLightningInvoice(string cryptoCode, PayLightningInvoiceRequest request,
+            CancellationToken token = default)
         {
             HandleActionResult(await _lightningNodeApiController.PayInvoice(cryptoCode, request));
         }
 
-        public override async Task<LightningInvoiceData> GetLightningInvoice(string cryptoCode, string invoiceId, CancellationToken token = default)
+        public override async Task<LightningInvoiceData> GetLightningInvoice(string cryptoCode, string invoiceId,
+            CancellationToken token = default)
         {
             return GetFromActionResult<LightningInvoiceData>(
                 await _lightningNodeApiController.GetInvoice(cryptoCode, invoiceId));
         }
 
-        public override async Task<LightningInvoiceData> CreateLightningInvoice(string cryptoCode, CreateLightningInvoiceRequest request,
+        public override async Task<LightningInvoiceData> CreateLightningInvoice(string cryptoCode,
+            CreateLightningInvoiceRequest request,
             CancellationToken token = default)
         {
             return GetFromActionResult<LightningInvoiceData>(
@@ -441,6 +473,7 @@ namespace BTCPayServer.Controllers.GreenField
         {
             return result.Value ?? GetFromActionResult<T>(result.Result);
         }
+
         public override async Task<IEnumerable<OnChainPaymentMethodData>> GetStoreOnChainPaymentMethods(string storeId,
             CancellationToken token = default)
         {
@@ -686,7 +719,8 @@ namespace BTCPayServer.Controllers.GreenField
         }
 
         public override async Task<IEnumerable<LightningNetworkPaymentMethodData>>
-            GetStoreLightningNetworkPaymentMethods(string storeId, bool enabledOnly = false,CancellationToken token = default)
+            GetStoreLightningNetworkPaymentMethods(string storeId, bool enabledOnly = false,
+                CancellationToken token = default)
         {
             return GetFromActionResult(
                 _storeLightningNetworkPaymentMethodsController.GetLightningPaymentMethods(storeId, enabledOnly));
@@ -702,33 +736,41 @@ namespace BTCPayServer.Controllers.GreenField
         public override async Task RemoveStoreLightningNetworkPaymentMethod(string storeId, string cryptoCode,
             CancellationToken token = default)
         {
-            HandleActionResult(await _storeLightningNetworkPaymentMethodsController.RemoveLightningNetworkPaymentMethod(storeId, cryptoCode));
+            HandleActionResult(
+                await _storeLightningNetworkPaymentMethodsController.RemoveLightningNetworkPaymentMethod(storeId,
+                    cryptoCode));
         }
 
         public override async Task<LightningNetworkPaymentMethodData> UpdateStoreLightningNetworkPaymentMethod(
             string storeId, string cryptoCode,
             LightningNetworkPaymentMethodData paymentMethod, CancellationToken token = default)
         {
-            return GetFromActionResult<LightningNetworkPaymentMethodData>(await 
-                _storeLightningNetworkPaymentMethodsController.UpdateLightningNetworkPaymentMethod(storeId, cryptoCode, paymentMethod) );
+            return GetFromActionResult<LightningNetworkPaymentMethodData>(await
+                _storeLightningNetworkPaymentMethodsController.UpdateLightningNetworkPaymentMethod(storeId, cryptoCode,
+                    paymentMethod));
         }
 
-        public override async Task<IEnumerable<InvoiceData>> GetInvoices(string storeId, bool includeArchived = false,
-            CancellationToken token = default)
+        public override async Task<IEnumerable<InvoiceData>> GetInvoices(string storeId, string[] orderId = null,
+            InvoiceStatus[] status = null, DateTimeOffset? startDate = null,
+            DateTimeOffset? endDate = null, bool includeArchived = false, CancellationToken token = default)
         {
-            return GetFromActionResult<IEnumerable<InvoiceData>>(await  _greenFieldInvoiceController.GetInvoices(storeId, includeArchived) );
+            return GetFromActionResult<IEnumerable<InvoiceData>>(
+                await _greenFieldInvoiceController.GetInvoices(storeId, orderId,
+                    status?.Select(invoiceStatus => invoiceStatus.ToString())?.ToArray(), startDate,
+                    endDate, includeArchived));
         }
 
         public override async Task<InvoiceData> GetInvoice(string storeId, string invoiceId,
             CancellationToken token = default)
         {
-            return GetFromActionResult<InvoiceData>(await  _greenFieldInvoiceController.GetInvoice(storeId, invoiceId) );
+            return GetFromActionResult<InvoiceData>(await _greenFieldInvoiceController.GetInvoice(storeId, invoiceId));
         }
 
         public override async Task<InvoicePaymentMethodDataModel[]> GetInvoicePaymentMethods(string storeId,
             string invoiceId, CancellationToken token = default)
         {
-            return GetFromActionResult<InvoicePaymentMethodDataModel[]>(await  _greenFieldInvoiceController.GetInvoicePaymentMethods(storeId, invoiceId) );
+            return GetFromActionResult<InvoicePaymentMethodDataModel[]>(
+                await _greenFieldInvoiceController.GetInvoicePaymentMethods(storeId, invoiceId));
         }
 
         public override async Task ArchiveInvoice(string storeId, string invoiceId, CancellationToken token = default)
@@ -739,43 +781,48 @@ namespace BTCPayServer.Controllers.GreenField
         public override async Task<InvoiceData> CreateInvoice(string storeId, CreateInvoiceRequest request,
             CancellationToken token = default)
         {
-            return GetFromActionResult<InvoiceData>(await  _greenFieldInvoiceController.CreateInvoice(storeId, request) );
+            return GetFromActionResult<InvoiceData>(await _greenFieldInvoiceController.CreateInvoice(storeId, request));
         }
 
         public override async Task<InvoiceData> UpdateInvoice(string storeId, string invoiceId,
             UpdateInvoiceRequest request, CancellationToken token = default)
         {
-            return GetFromActionResult<InvoiceData>(await  _greenFieldInvoiceController.UpdateInvoice(storeId, invoiceId, request) );
+            return GetFromActionResult<InvoiceData>(
+                await _greenFieldInvoiceController.UpdateInvoice(storeId, invoiceId, request));
         }
 
         public override async Task<InvoiceData> MarkInvoiceStatus(string storeId, string invoiceId,
             MarkInvoiceStatusRequest request,
             CancellationToken token = default)
         {
-            return GetFromActionResult<InvoiceData>(await  _greenFieldInvoiceController.MarkInvoiceStatus(storeId, invoiceId, request) );
+            return GetFromActionResult<InvoiceData>(
+                await _greenFieldInvoiceController.MarkInvoiceStatus(storeId, invoiceId, request));
         }
 
         public override async Task<InvoiceData> UnarchiveInvoice(string storeId, string invoiceId,
             CancellationToken token = default)
         {
-            return GetFromActionResult<InvoiceData>(await  _greenFieldInvoiceController.UnarchiveInvoice(storeId, invoiceId) );
+            return GetFromActionResult<InvoiceData>(
+                await _greenFieldInvoiceController.UnarchiveInvoice(storeId, invoiceId));
         }
 
         public override async Task<ServerInfoData> GetServerInfo(CancellationToken token = default)
         {
-            return GetFromActionResult<ServerInfoData>(await  _greenFieldServerInfoController.ServerInfo() );
+            return GetFromActionResult<ServerInfoData>(await _greenFieldServerInfoController.ServerInfo());
         }
 
         public override async Task ActivateInvoicePaymentMethod(string storeId, string invoiceId, string paymentMethod,
             CancellationToken token = default)
         {
-            HandleActionResult(await _greenFieldInvoiceController.ActivateInvoicePaymentMethod(storeId, invoiceId, paymentMethod));
+            HandleActionResult(
+                await _greenFieldInvoiceController.ActivateInvoicePaymentMethod(storeId, invoiceId, paymentMethod));
         }
 
         public override async Task<OnChainWalletFeeRateData> GetOnChainFeeRate(string storeId, string cryptoCode,
             int? blockTarget = null, CancellationToken token = default)
         {
-            return GetFromActionResult<OnChainWalletFeeRateData>(await  _storeOnChainWalletsController.GetOnChainFeeRate(storeId,cryptoCode, blockTarget) );
+            return GetFromActionResult<OnChainWalletFeeRateData>(
+                await _storeOnChainWalletsController.GetOnChainFeeRate(storeId, cryptoCode, blockTarget));
         }
     }
 }

@@ -43,9 +43,9 @@
                         </div>
                     </noscript>
                     <div class="only-for-js card-body m-sm-0 p-sm-0" id="app">
-                        <div class="qr-container mb-4">
-                            <img src="@Model.CryptoImage" class="qr-icon"/>
-                            <div class="tab-content" id="myTabContent">
+                        <div class="mb-4">
+                            <div class="qr-container tab-content mb-3" id="myTabContent">
+                                <img src="@Model.CryptoImage" class="qr-icon" alt="@Model.CryptoCode"/>
                                 <div class="tab-pane show active" id="link-tab" role="tabpanel">
                                     <vc:qr-code data="@Model.PaymentLink"/>
                                 </div>
@@ -53,9 +53,9 @@
                                     <vc:qr-code data="@Model.Address"/>
                                 </div>
                             </div>
-                            <div class="nav justify-content-center">
+                            <div class="nav nav-pills justify-content-center">
                                 <a class="nav-link active" data-bs-toggle="tab" href="#link-tab">Link</a>
-                                <a  class="nav-link" data-bs-toggle="tab" href="#address-tab">Address</a>
+                                <a class="nav-link" data-bs-toggle="tab" href="#address-tab">Address</a>
                             </div>
                         </div>
                         <div class="form-group">

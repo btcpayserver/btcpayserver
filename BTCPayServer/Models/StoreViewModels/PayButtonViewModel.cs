@@ -21,7 +21,7 @@ namespace BTCPayServer.Models.StoreViewModels
         // Slider properties (ButtonType = 2)
         public decimal Min { get; set; }
         public decimal Max { get; set; }
-        public decimal Step { get; set; }
+        public string Step { get; set; }
 
         // Custom Amount properties (ButtonType = 1)
         public bool SimpleInput { get; set; }

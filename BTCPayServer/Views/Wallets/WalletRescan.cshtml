@@ -44,7 +44,7 @@ else if (!Model.Progress.HasValue)
         @if (Model.PreviousError != null)
         {
             <div class="alert alert-danger alert-dismissible" role="alert">
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
                     <svg role="img" class="icon icon-close"><use href="/img/icon-sprite.svg#close"></use></svg>
                 </button>
                 <span>The previous scan stopped with an error: @Model.PreviousError</span>
@@ -53,7 +53,7 @@ else if (!Model.Progress.HasValue)
         else if (Model.LastSuccess != null)
         {
             <div class="alert alert-success alert-dismissible" role="alert">
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
                     <svg role="img" class="icon icon-close"><use href="/img/icon-sprite.svg#close"></use></svg>
                 </button>
                 <span>The previous scan completed and found <b>@Model.LastSuccess.Found</b> UTXOs in <b>@Model.TimeOfScan</b> (The total UTXO set size is @Model.LastSuccess.TotalSizeOfUTXOSet.Value)</span>

@@ -58,8 +58,8 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" v-if="editingItem">{{editingItem.index>=0? "Edit" : "Create"}} item</h5>
-                        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close" ref="close">
-                            <span aria-hidden="true">&times;</span>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ref="close">
+                            <svg role="img" class="icon icon-close"><use href="/img/icon-sprite.svg#close"></use></svg>
                         </button>
                     </div>
                     <div class="modal-body" v-if="editingItem">

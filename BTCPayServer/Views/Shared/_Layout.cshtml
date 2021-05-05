@@ -88,7 +88,7 @@
                 </div>
             </div>
             <div id="badUrl" class="alert alert-danger alert-dismissible" style="display:none; position:absolute; top:75px;" role="alert">
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
                     <svg role="img" class="icon icon-close"><use href="/img/icon-sprite.svg#close"></use></svg>
                 </button>
                 <span>BTCPay is expecting you to access this website from <b>@(Env.ExpectedProtocol)://@(Env.ExpectedHost)/</b>. If you use a reverse proxy, please set the <b>X-Forwarded-Proto</b> header to <b id="browserScheme">@(Env.ExpectedProtocol)</b> (<a href="https://docs.btcpayserver.org/FAQ/FAQ-Deployment/#cause-3-btcpay-is-expecting-you-to-access-this-website-from" target="_blank" class="alert-link">More information</a>)</span>
@@ -96,7 +96,7 @@
             @if (!Env.IsSecure)
             {
                 <div class="alert alert-danger alert-dismissible" style="position:absolute; top:75px;" role="alert">
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
                         <svg role="img" class="icon icon-close"><use href="/img/icon-sprite.svg#close"></use></svg>
                     </button>
                     <span>

@@ -12,7 +12,7 @@
         @if (Model.Errors != null && Model.Errors.Count != 0)
         {
             <div class="alert alert-danger alert-dismissible" role="alert">
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
                     <svg role="img" class="icon icon-close"><use href="/img/icon-sprite.svg#close"></use></svg>
                 </button>
                 @foreach (var error in Model.Errors)

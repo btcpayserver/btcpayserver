@@ -212,18 +212,18 @@
                             <h2 class="h4 mb-3">Payment Details</h2>
                             <dl class="mb-0 mt-md-4">
                                 <div class="d-flex d-print-inline-block flex-column mb-4 me-5">
-                                    <dt class="h4 font-weight-normal text-nowrap text-primary text-print-default order-2 order-sm-1 mb-0" v-text="srvModel.amountDueFormatted">@Model.AmountDueFormatted</dt>
+                                    <dt class="h4 fw-normal text-nowrap text-primary text-print-default order-2 order-sm-1 mb-0" v-text="srvModel.amountDueFormatted">@Model.AmountDueFormatted</dt>
                                     <dd class="text-muted order-1 order-sm-2 mb-1" data-test="amount-due-title">Amount due</dd>
                                 </div>
                                 <div class="progress bg-light d-none d-sm-flex mb-sm-4 d-print-none" style="height:5px">
                                   <div class="progress-bar bg-primary" role="progressbar" style="width:@((Model.AmountCollected/Model.Amount)*100)%" v-bind:style="{ width: (srvModel.amountCollected/srvModel.amount*100) + '%' }"></div>
                                 </div>
                                 <div class="d-flex d-print-inline-block flex-column mb-4 me-5 d-sm-inline-flex mb-sm-0">
-                                    <dt class="h4 font-weight-normal text-nowrap order-2 order-sm-1 mb-0" v-text="srvModel.amountCollectedFormatted">@Model.AmountCollectedFormatted</dt>
+                                    <dt class="h4 fw-normal text-nowrap order-2 order-sm-1 mb-0" v-text="srvModel.amountCollectedFormatted">@Model.AmountCollectedFormatted</dt>
                                     <dd class="text-muted order-1 order-sm-2 mb-1">Amount paid</dd>
                                 </div>
                                 <div class="d-flex d-print-inline-block flex-column mb-0 d-sm-inline-flex float-sm-end">
-                                    <dt class="h4 text-sm-end font-weight-normal text-nowrap order-2 order-sm-1 mb-0" v-text="srvModel.amountFormatted">@Model.AmountFormatted</dt>
+                                    <dt class="h4 text-sm-end fw-normal text-nowrap order-2 order-sm-1 mb-0" v-text="srvModel.amountFormatted">@Model.AmountFormatted</dt>
                                     <dd class="text-muted text-sm-end order-1 order-sm-2 mb-1">Total requested</dd>
                                 </div>
                             </dl>
@@ -245,11 +245,11 @@
                                         <table class="table my-0">
                                             <thead>
                                                 <tr class="table-borderless">
-                                                    <th class="font-weight-normal text-secondary" scope="col">Invoice Id</th>
-                                                    <th class="font-weight-normal text-secondary w-175px">Expiry</th>
-                                                    <th class="font-weight-normal text-secondary text-end w-125px">Amount</th>
-                                                    <th class="font-weight-normal text-secondary text-end w-125px"></th>
-                                                    <th class="font-weight-normal text-secondary text-end">Status</th>
+                                                    <th class="fw-normal text-secondary" scope="col">Invoice Id</th>
+                                                    <th class="fw-normal text-secondary w-175px">Expiry</th>
+                                                    <th class="fw-normal text-secondary text-end w-125px">Amount</th>
+                                                    <th class="fw-normal text-secondary text-end w-125px"></th>
+                                                    <th class="fw-normal text-secondary text-end">Status</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -265,11 +265,11 @@
                                                     if (invoice.Payments != null && invoice.Payments.Any())
                                                     {
                                                         <tr class="table-borderless table-light">
-                                                            <th class="ps-3 font-weight-normal text-secondary">Transaction Id</th>
-                                                            <th class="font-weight-normal text-secondary">Received</th>
-                                                            <th class="font-weight-normal text-secondary text-end">Paid</th>
-                                                            <th class="font-weight-normal text-secondary text-end">Rate</th>
-                                                            <th class="font-weight-normal text-secondary text-end">Payment</th>
+                                                            <th class="fw-normal text-secondary ps-3">Transaction Id</th>
+                                                            <th class="fw-normal text-secondary">Received</th>
+                                                            <th class="fw-normal text-secondary text-end">Paid</th>
+                                                            <th class="fw-normal text-secondary text-end">Rate</th>
+                                                            <th class="fw-normal text-secondary text-end">Payment</th>
                                                         </tr>
                                                         @foreach (var payment in invoice.Payments)
                                                         {
@@ -304,11 +304,11 @@
                                     <table class="table my-0">
                                         <thead>
                                             <tr class="table-borderless">
-                                                <th class="font-weight-normal text-secondary" scope="col">Invoice Id</th>
-                                                <th class="font-weight-normal text-secondary w-175px">Expiry</th>
-                                                <th class="font-weight-normal text-secondary text-end w-125px">Amount</th>
-                                                <th class="font-weight-normal text-secondary text-end w-125px"></th>
-                                                <th class="font-weight-normal text-secondary text-end">Status</th>
+                                                <th class="fw-normal text-secondary" scope="col">Invoice Id</th>
+                                                <th class="fw-normal text-secondary w-175px">Expiry</th>
+                                                <th class="fw-normal text-secondary text-end w-125px">Amount</th>
+                                                <th class="fw-normal text-secondary text-end w-125px"></th>
+                                                <th class="fw-normal text-secondary text-end">Status</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -322,11 +322,11 @@
                                                 </tr>
                                                 <template v-if="invoice.payments && invoice.payments.length > 0">
                                                     <tr class="table-borderless table-light">
-                                                        <th class="ps-3 font-weight-normal text-secondary">Transaction Id</th>
-                                                        <th class="font-weight-normal text-secondary">Received</th>
-                                                        <th class="font-weight-normal text-secondary text-end">Paid</th>
-                                                        <th class="font-weight-normal text-secondary text-end">Rate</th>
-                                                        <th class="font-weight-normal text-secondary text-end">Payment</th>
+                                                        <th class="fw-normal text-secondary ps-3">Transaction Id</th>
+                                                        <th class="fw-normal text-secondary">Received</th>
+                                                        <th class="fw-normal text-secondary text-end">Paid</th>
+                                                        <th class="fw-normal text-secondary text-end">Rate</th>
+                                                        <th class="fw-normal text-secondary text-end">Payment</th>
                                                     </tr>
                                                     <tr v-for="payment of invoice.payments" class="table-borderless table-light">
                                                         <td class="ps-3 text-break">

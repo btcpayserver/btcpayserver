@@ -144,7 +144,7 @@
                             <h2 class="text-muted" v-if="srvModel.tagline" id="crowdfund-body-header-tagline">{{srvModel.tagline}}</h2>
                         </div>
                         <div class="col-sm-12 col-md-4 col-lg-3" id="crowdfund-body-header-cta-container">
-                            <button v-if="active" id="crowdfund-body-header-cta" class="btn btn-lg btn-primary w-100 font-weight-bold" v-on:click="contributeModalOpen = true">Contribute</button>
+                            <button v-if="active" id="crowdfund-body-header-cta" class="btn btn-lg btn-primary w-100 fw-bold" v-on:click="contributeModalOpen = true">Contribute</button>
                         </div>
                     </div>
                 </div>
@@ -251,7 +251,7 @@
 
     <div class="perk-zoom " v-if="canExpand">
         <div class="perk-zoom-bg bg-primary"> </div>
-        <div class="perk-zoom-text w-100 text-center text-white font-weight-bold">
+        <div class="perk-zoom-text w-100 text-center text-white fw-bold">
             Select this contribution perk
         </div>
     </div>

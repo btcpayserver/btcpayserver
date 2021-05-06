@@ -118,18 +118,18 @@
                             <h2 class="h4 mb-3">Payment Details</h2>
                             <dl class="mb-0 mt-md-4">
                                 <div class="d-flex d-print-inline-block flex-column mb-4 me-5">
-                                    <dt class="h4 font-weight-normal text-nowrap text-primary text-print-default order-2 order-sm-1 mb-0">@Model.AmountDueFormatted</dt>
+                                    <dt class="h4 fw-normal text-nowrap text-primary text-print-default order-2 order-sm-1 mb-0">@Model.AmountDueFormatted</dt>
                                     <dd class="text-muted order-1 order-sm-2 mb-1">Available claim</dd>
                                 </div>
                                 <div class="progress bg-light d-none d-sm-flex mb-sm-4 d-print-none" style="height:5px">
                                     <div class="progress-bar bg-primary" role="progressbar" style="width:@((Model.AmountCollected / Model.Amount) * 100)%"></div>
                                 </div>
                                 <div class="d-flex d-print-inline-block flex-column mb-4 me-5 d-sm-inline-flex mb-sm-0">
-                                    <dt class="h4 font-weight-normal text-nowrap order-2 order-sm-1 mb-0">@Model.AmountCollectedFormatted</dt>
+                                    <dt class="h4 fw-normal text-nowrap order-2 order-sm-1 mb-0">@Model.AmountCollectedFormatted</dt>
                                     <dd class="text-muted order-1 order-sm-2 mb-1">Already claimed</dd>
                                 </div>
                                 <div class="d-flex d-print-inline-block flex-column mb-0 d-sm-inline-flex float-sm-end">
-                                    <dt class="h4 text-sm-end font-weight-normal text-nowrap order-2 order-sm-1 mb-0">@Model.AmountFormatted</dt>
+                                    <dt class="h4 text-sm-end fw-normal text-nowrap order-2 order-sm-1 mb-0">@Model.AmountFormatted</dt>
                                     <dd class="text-muted text-sm-end order-1 order-sm-2 mb-1">Claim limit</dd>
                                 </div>
                             </dl>
@@ -146,9 +146,9 @@
                                     <table class="table my-0">
                                         <thead>
                                         <tr class="table-borderless">
-                                            <th class="font-weight-normal text-secondary" scope="col">Destination</th>
-                                            <th class="font-weight-normal text-secondary text-end text-nowrap">Amount requested</th>
-                                            <th class="font-weight-normal text-secondary text-end">Status</th>
+                                            <th class="fw-normal text-secondary" scope="col">Destination</th>
+                                            <th class="fw-normal text-secondary text-end text-nowrap">Amount requested</th>
+                                            <th class="fw-normal text-secondary text-end">Status</th>
                                         </tr>
                                         </thead>
                                         <tbody>

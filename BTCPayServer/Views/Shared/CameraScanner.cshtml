@@ -8,7 +8,7 @@
                         <span v-if="workload.length > 0">Animated QR detected: {{workload.length}} / {{workload[0].total}} scanned</span>
 					</h5>
 					<button type="button" class="btn-close" aria-label="Close" v-on:click="close">
-                        <svg role="img" class="icon icon-close"><use href="/img/icon-sprite.svg#close"></use></svg>
+                        <vc:icon symbol="close" />
 					</button>
 				</div>
 				<div class="modal-body">

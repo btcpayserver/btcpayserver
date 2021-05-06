@@ -127,16 +127,14 @@
                     </div>
                     <div class="form-group">
                         <div class="accordion" id="accordian-dev-info">
-                            <div class="card">
-                                <div class="card-header" id="accordian-dev-info-embed-payment-button-header">
-                                    <h2 class="mb-0">
-                                        <button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#accordian-dev-info-embed-payment-button" aria-expanded="true" aria-controls="accordian-dev-info-embed-payment-button">
-                                            Embed Payment Button linking to POS item
-                                        </button>
-                                    </h2>
-                                </div>
-                                <div id="accordian-dev-info-embed-payment-button" class="collapse" aria-labelledby="accordian-dev-info-embed-payment-button-header" data-bs-parent="#accordian-dev-info">
-                                    <div class="card-body">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="accordian-dev-info-embed-payment-button-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordian-dev-info-embed-payment-button" aria-expanded="false" aria-controls="accordian-dev-info-embed-payment-button">
+                                        Embed Payment Button linking to POS item
+                                    </button>
+                                </h2>
+                                <div id="accordian-dev-info-embed-payment-button" class="accordion-collapse collapse" aria-labelledby="accordian-dev-info-embed-payment-button-header" data-bs-parent="#accordian-dev-info">
+                                    <div class="accordion-body">
                                         <p>You can host point of sale buttons in an external website with the following code.</p>
                                         @if (Model.Example1 != null)
                                         {
@@ -151,17 +149,14 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="card">
-                                <div class="card-header" id="accordian-dev-info-embed-pos-iframe-header">
-                                    <h2 class="mb-0">
-                                        <button class="btn btn-link collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordian-dev-info-embed-pos-iframe" aria-expanded="false" aria-controls="accordian-dev-info-embed-pos-iframe">
-                                            Embed POS with Iframe
-
-                                        </button>
-                                    </h2>
-                                </div>
-                                <div id="accordian-dev-info-embed-pos-iframe" class="collapse" aria-labelledby="accordian-dev-info-embed-pos-iframe-header" data-bs-parent="#accordian-dev-info">
-                                    <div class="card-body">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="accordian-dev-info-embed-pos-iframe-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordian-dev-info-embed-pos-iframe" aria-expanded="false" aria-controls="accordian-dev-info-embed-pos-iframe">
+                                        Embed POS with Iframe
+                                    </button>
+                                </h2>
+                                <div id="accordian-dev-info-embed-pos-iframe" class="accordion-collapse collapse" aria-labelledby="accordian-dev-info-embed-pos-iframe-header" data-bs-parent="#accordian-dev-info">
+                                    <div class="accordion-body">
                                         You can embed the POS using an iframe
                                         @{
                                             var iframe = $"<iframe src='{(Url.Action("ViewPointOfSale", "AppsPublic", new { appId = Model.Id }, Context.Request.Scheme))}' style='max-width: 100%; border: 0;'></iframe>";
@@ -170,16 +165,14 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="card">
-                                <div class="card-header" id="accordian-dev-info-notification-header">
-                                    <h2 class="mb-0">
-                                        <button class="btn btn-link collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordian-dev-info-notification" aria-expanded="false" aria-controls="accordian-dev-info-notification">
-                                            Notification Url Callbacks
-                                        </button>
-                                    </h2>
-                                </div>
-                                <div id="accordian-dev-info-notification" class="collapse" aria-labelledby="accordian-dev-info-notification-header" data-bs-parent="#accordian-dev-info">
-                                    <div class="card-body">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="accordian-dev-info-notification-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordian-dev-info-notification" aria-expanded="false" aria-controls="accordian-dev-info-notification">
+                                        Notification Url Callbacks
+                                    </button>
+                                </h2>
+                                <div id="accordian-dev-info-notification" class="accordion-collapse collapse" aria-labelledby="accordian-dev-info-notification-header" data-bs-parent="#accordian-dev-info">
+                                    <div class="accordion-body">
                                         <p>A <code>POST</code> callback will be sent to notification with the following form will be sent to <code>notificationUrl</code> once the enough is paid and once again once there is enough confirmations to the payment:</p>
                                         <pre><code class="json">@Model.ExampleCallback</code></pre>
                                         <p><strong>Never</strong> trust anything but <code>id</code>, <strong>ignore</strong> the other fields completely, an attacker can spoof those, they are present only for backward compatibility reason:</p>
@@ -196,7 +189,6 @@
                         </div>
                     </div>
                 </form>
-
             </div>
         </div>
     </div>

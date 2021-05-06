@@ -380,20 +380,3 @@
         </div>
     </div>
 }
-
-@section Scripts {
-    <script>
-        $(document).ready(function () {
-            $(".custom-file-input").on("change", function () {
-                var label = $(this).next("label");
-                var el = $(this).get(0);
-                if (el.files.length > 0) {
-                    var fileName = el.files[0].name;
-                    label.addClass("selected").html(fileName);
-                } else {
-                    label.removeClass("selected").html("Choose file");
-                }
-            });
-        });
-    </script>
-}

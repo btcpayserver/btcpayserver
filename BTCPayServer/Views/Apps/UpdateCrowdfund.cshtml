@@ -45,7 +45,7 @@
                         <div class="input-group">
                             <input type="datetime-local" asp-for="StartDate"
                                    value="@(Model.StartDate?.ToString("u", CultureInfo.InvariantCulture))"
-                                   class="form-control flatdtpicker" placeholder="No start date has been set for this crowdfund" />x
+                                   class="form-control flatdtpicker" placeholder="No start date has been set for this crowdfund" />
                             <button class="btn btn-secondary input-group-clear" type="button" title="Clear">
                                 <span class="fa fa-times"></span>
                             </button>
@@ -71,11 +71,9 @@
                                    value="@(Model.EndDate?.ToString("u", CultureInfo.InvariantCulture))"
                                    class="form-control flatdtpicker"
                                    placeholder="No end date has been set for this crowdfund" />
-                            <div class="input-group-append">
-                                <button class="btn btn-secondary input-group-clear" type="button" title="Clear">
-                                    <span class=" fa fa-times"></span>
-                                </button>
-                            </div>
+                            <button class="btn btn-secondary input-group-clear input-group-append" type="button" title="Clear">
+                                <span class="fa fa-times"></span>
+                            </button>
                         </div>
                         <span asp-validation-for="EndDate" class="text-danger"></span>
                     </div>

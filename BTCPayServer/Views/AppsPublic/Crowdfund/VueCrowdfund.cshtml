@@ -292,7 +292,7 @@
                     :disabled="!active || loading"
                     type="submit">
                      <div v-if="loading"  class="spinner-grow spinner-grow-sm" role="status">
-                        <span class="sr-only">Loading...</span>
+                        <span class="visually-hidden">Loading...</span>
                     </div>
                     {{perk.buyButtonText || 'Continue'}}
                 </button>

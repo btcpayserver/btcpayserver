@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Threading.Tasks;
@@ -32,6 +33,8 @@ namespace BTCPayServer.Hosting
 
         public async Task Invoke(HttpContext httpContext)
         {
+            CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+            CultureInfo.CurrentUICulture = CultureInfo.InvariantCulture;
             try
             {
                 var bitpayAuth = GetBitpayAuth(httpContext, out bool isBitpayAuth);

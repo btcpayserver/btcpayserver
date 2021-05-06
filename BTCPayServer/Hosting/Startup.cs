@@ -32,6 +32,7 @@ using Microsoft.Net.Http.Headers;
 using NBitcoin;
 using Microsoft.AspNetCore.Mvc;
 using BTCPayServer.Controllers.GreenField;
+using System.Globalization;
 
 namespace BTCPayServer.Hosting
 {
@@ -113,6 +114,7 @@ namespace BTCPayServer.Hosting
                 o.Filters.Add(new XContentTypeOptionsAttribute("nosniff"));
                 o.Filters.Add(new XXSSProtectionAttribute());
                 o.Filters.Add(new ReferrerPolicyAttribute("same-origin"));
+                o.ModelBinderProviders.Insert(0, new ModelBinders.DefaultModelBinderProvider());
                 //o.Filters.Add(new ContentSecurityPolicyAttribute()
                 //{
                 //    FontSrc = "'self' https://fonts.gstatic.com/",
@@ -121,7 +123,7 @@ namespace BTCPayServer.Hosting
                 //    StyleSrc = "'self' 'unsafe-inline'",
                 //    ScriptSrc = "'self' 'unsafe-inline'"
                 //});
-            })
+        })
             .ConfigureApiBehaviorOptions(options =>
             {
                 options.InvalidModelStateResponseFactory = context =>
@@ -141,8 +143,6 @@ namespace BTCPayServer.Hosting
 #endif
             .AddPlugins(services, Configuration, LoggerFactory)
             .AddControllersAsServices();
-
-            
 
             services.TryAddScoped<ContentSecurityPolicies>();
             services.Configure<IdentityOptions>(options =>

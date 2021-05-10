@@ -22,37 +22,38 @@
     </div>
 </header>
 
-<style>
+@section PageHeadContent {
+    <style>
     header .icon-warning {
         flex: 0 0 24px;
         height: 24px;
         align-self: center;
         margin-right: 2rem;
-        color: var(--btcpay-color-warning);
+        color: var(--btcpay-warning);
     }
     #save { min-width: 7rem; }
     #InternalSetup, #CustomSetup, #LightningNodeType-Internal, #LightningNodeType-Custom { display: none; }
     #LightningNodeType-Internal:checked + * + * + * + #InternalSetup,
     #LightningNodeType-Custom:checked + * + *+ #CustomSetup { display: block; }
     #LightningNodeType-Internal:checked + label, #LightningNodeType-Custom:checked + label {
-        color: var(--btcpay-color-white);
-        background: var(--btcpay-color-primary);
+        color: var(--btcpay-white);
+        background: var(--btcpay-primary);
     }
     label[for="LightningNodeType-Internal"], label[for="LightningNodeType-Custom"] {
         display: inline-block;
         padding: .75rem 2rem;
-        color: var(--btcpay-color-primary);
+        color: var(--btcpay-primary);
         font-weight:  var(--btcpay-font-weight-semibold);
         border-radius: 1.5rem;
         cursor: pointer;
     }
     #LightningNodeType-Internal[disabled]:checked + label[for="LightningNodeType-Internal"] {
-        background: var(--btcpay-color-secondary);
-        color: var(--btcpay-color-white);
+        background: var(--btcpay-secondary);
+        color: var(--btcpay-white);
         opacity: .5;
     }
     #LightningNodeType-Internal[disabled] + label[for="LightningNodeType-Internal"] {
-        color: var(--btcpay-color-secondary);
+        color: var(--btcpay-secondary);
         opacity: .5;
     }
     #CustomSetup ul {
@@ -64,7 +65,7 @@
     }
     #CustomSetup ul li > code, #CustomSetup ul pre {
         display: block;
-        color: var(--btcpay-code-color);
+        color: var(--btcpay-code-text);
         background: var(--btcpay-code-bg);
         margin: .25rem 0;
         padding: .75rem 1rem;
@@ -94,6 +95,7 @@
         transform: rotate(270deg);
     }
 </style>
+}
 
 <form method="post" class="mt-n2 text-center">
     <input asp-for="LightningNodeType" value="@LightningNodeType.Internal" type="radio" id="LightningNodeType-@LightningNodeType.Internal" disabled="@(!Model.CanUseInternalNode)">

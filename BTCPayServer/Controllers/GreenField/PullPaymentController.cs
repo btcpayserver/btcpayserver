@@ -3,14 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Payments;
-using BTCPayServer.Security;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Authorization;
@@ -245,14 +243,23 @@ namespace BTCPayServer.Controllers.GreenField
             if (pp is null)
                 return PullPaymentNotFound();
             var ppBlob = pp.GetBlob();
-            IClaimDestination destination = await payoutHandler.ParseClaimDestination(paymentMethodId,request.Destination);
-            if (destination is null)
+            var destination = await payoutHandler.ParseClaimDestination(paymentMethodId,request.Destination);
+            if (destination.Item1 is null)
             {
                 ModelState.AddModelError(nameof(request.Destination), "The destination must be an address or a BIP21 URI");
                 return this.CreateValidationError(ModelState);
             }
 
-            if (request.Amount is decimal v && (v < ppBlob.MinimumClaim || v == 0.0m))
+            if (request.Amount is null && destination.Item2 != null)
+            {
+                request.Amount = destination.Item2;
+            }
+            else if (request.Amount != null && destination.Item2 != null && request.Amount != destination.Item2)
+            {
+                ModelState.AddModelError(nameof(request.Amount), $"Amount is implied in destination ({destination.Item2}) that does not match the payout amount provided {request.Amount})");
+                return this.CreateValidationError(ModelState);
+            }
+            if (request.Amount is { } v && (v < ppBlob.MinimumClaim || v == 0.0m))
             {
                 ModelState.AddModelError(nameof(request.Amount), $"Amount too small (should be at least {ppBlob.MinimumClaim})");
                 return this.CreateValidationError(ModelState);
@@ -260,7 +267,7 @@ namespace BTCPayServer.Controllers.GreenField
             var cd = _currencyNameTable.GetCurrencyData(pp.GetBlob().Currency, false);
             var result = await _pullPaymentService.Claim(new ClaimRequest()
             {
-                Destination = destination,
+                Destination = destination.Item1,
                 PullPaymentId = pullPaymentId,
                 Value = request.Amount,
                 PaymentMethodId = paymentMethodId

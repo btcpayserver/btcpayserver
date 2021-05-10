@@ -85,6 +85,7 @@ namespace BTCPayServer.Controllers
                               Currency = blob.Currency,
                               Status = entity.Entity.State,
                               Destination = entity.Blob.Destination,
+                              PaymentMethod = PaymentMethodId.Parse(entity.Entity.PaymentMethodId),
                               Link = entity.ProofBlob?.Link,
                               TransactionId = entity.ProofBlob?.Id
                           }).ToList()
@@ -105,14 +106,24 @@ namespace BTCPayServer.Controllers
             }
             
             var ppBlob = pp.GetBlob();
-            var network = _networkProvider.GetNetwork<BTCPayNetwork>(ppBlob.SupportedPaymentMethods.Single().CryptoCode);
             
-            var paymentMethodId = ppBlob.SupportedPaymentMethods.Single();
-            var payoutHandler = _payoutHandlers.FirstOrDefault(handler => handler.CanHandle(paymentMethodId));
-            IClaimDestination destination = await payoutHandler?.ParseClaimDestination(paymentMethodId, vm.Destination);
-            if (destination is null)
+            var paymentMethodId = ppBlob.SupportedPaymentMethods.FirstOrDefault(id => vm.SelectedPaymentMethod == id.ToString());
+            
+            var network = paymentMethodId is null? null:  _networkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
+            var payoutHandler = paymentMethodId is null? null: _payoutHandlers.FirstOrDefault(handler => handler.CanHandle(paymentMethodId));
+            var destination = await payoutHandler?.ParseClaimDestination(paymentMethodId, vm.Destination);
+            if (destination.Item1 is null)
             {
-                ModelState.AddModelError(nameof(vm.Destination), $"Invalid destination");
+                ModelState.AddModelError(nameof(vm.Destination), $"Invalid destination with selected payment method");
+            }
+            if (vm.ClaimedAmount == 0 && destination.Item2 != null)
+            {
+                vm.ClaimedAmount  = destination.Item2.Value;
+            }
+            else if (vm.ClaimedAmount != 0 && destination.Item2 != null && vm.ClaimedAmount != destination.Item2)
+            {
+                ModelState.AddModelError(nameof(vm.ClaimedAmount),
+                    $"Amount is implied in destination ({destination.Item2}) that does not match the payout amount provided {vm.ClaimedAmount})");
             }
 
             if (!ModelState.IsValid)
@@ -122,10 +133,10 @@ namespace BTCPayServer.Controllers
 
             var result = await _pullPaymentHostedService.Claim(new ClaimRequest()
             {
-                Destination = destination,
+                Destination = destination.Item1,
                 PullPaymentId = pullPaymentId,
                 Value = vm.ClaimedAmount,
-                PaymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike)
+                PaymentMethodId = paymentMethodId
             });
 
             if (result.Result != ClaimRequest.ClaimResult.Ok)
@@ -149,13 +160,6 @@ namespace BTCPayServer.Controllers
                 });
             }
             return RedirectToAction(nameof(ViewPullPayment), new { pullPaymentId = pullPaymentId });
-        }
-
-        string GetTransactionLink(BTCPayNetworkBase network, string txId)
-        {
-            if (txId is null)
-                return string.Empty;
-            return string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink, txId);
         }
     }
 }

@@ -30,13 +30,17 @@
     }
     </tbody>
 </table>
-<form asp-action="Create" method="get" class="form-inline">
-    <div class="form-group">
-        
-        <input type="text" class="form-control" name="Name" placeholder="New Credential Name"/>
-        <button type="submit" class="btn btn-primary ms-2">
-            <span class="fa fa-plus"></span>
-            Add New Credential
-        </button>
+
+<form asp-action="Create" method="get">
+    <div class="row g-1">
+        <div class="col">
+            <input type="text" class="form-control" name="Name" placeholder="New Credential Name"/>
+        </div>
+        <div class="col">
+            <button type="submit" class="btn btn-primary ms-2">
+                <span class="fa fa-plus"></span>
+                Add New Credential
+            </button>
+        </div>
     </div>
 </form>

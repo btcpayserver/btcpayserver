@@ -16,11 +16,9 @@
             <div class="input-group align-items-center">
                 <a class="js-cart-item-minus btn btn-link px-2" href="#"><i class="fa fa-minus-circle fa-fw text-danger"></i></a>
                 <input class="js-cart-item-count form-control form-control-sm pull-left" type="number" step="1" name="count" placeholder="Qty" max="{inventory}"  value="{count}" data-prev="{count}">
-                <div class="input-group-append">
-                    <a class="js-cart-item-plus btn btn-link px-2" href="#">
-                        <i class="fa fa-plus-circle fa-fw text-success"></i>
-                    </a>
-                </div>
+                <a class="input-group-text js-cart-item-plus btn btn-link px-2" href="#">
+                    <i class="fa fa-plus-circle fa-fw text-success"></i>
+                </a>
             </div>
         </td>
         <td class="align-middle text-end">{price}</td>
@@ -37,7 +35,7 @@
             <div class="input-group">
                 <span class="input-group-text"><i class="fa fa-shopping-cart fa-fw"></i></span>
                 <input class="js-cart-custom-amount form-control" type="number" min="0" step="@Model.Step" name="amount" placeholder="Pay what you want">
-                <div class="input-group-append">
+                <div class="input-group-text">
                     <a class="js-cart-custom-amount-remove btn btn-danger" href="#"><i class="fa fa-times"></i></a>
                 </div>
             </div>
@@ -80,9 +78,7 @@
         <tr>
             <th colspan="5" class="border-0">
                 <div class="input-group mb-2">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text"><i class="fa fa-money fa-fw"></i></span>
-                    </div>
+                    <span class="input-group-text"><i class="fa fa-money fa-fw"></i></span>
                     <input class="js-cart-tip form-control form-control-lg" type="number" min="0" step="@Model.Step" value="{tip}" name="tip" placeholder="Tip in @(Model.CurrencyInfo.CurrencySymbol != null ? Model.CurrencyInfo.CurrencySymbol : Model.CurrencyCode)">
                     <a class="js-cart-tip-remove btn btn-lg btn-danger" href="#"><i class="fa fa-times"></i></a>
                 </div>

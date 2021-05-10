@@ -148,9 +148,7 @@
                                         <div class="col col-12 col-sm-6 col-md-12">
                                             <div class="input-group">
                                                 <input type="number" class="form-control text-end hide-number-spin" v-model="customAmount" :readonly="!srvModel.allowCustomPaymentAmounts" :max="srvModel.amountDue" placeholder="Amount" step="any" required />
-                                                <div class="input-group-append">
-                                                    <span class="input-group-text">{{currency}}</span>
-                                                </div>
+                                                <span class="input-group-text">{{currency}}</span>
                                             </div>
                                         </div>
                                         <div class="col mt-2 col-12 col-sm-6 mt-sm-0 col-md-12 mt-md-2">

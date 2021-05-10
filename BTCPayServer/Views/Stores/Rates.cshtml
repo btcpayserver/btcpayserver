@@ -190,7 +190,9 @@
     </div>
 </div>
 
-@section Scripts {
-    <script type="text/javascript">var defaultScript = @Safe.Json(Model.DefaultScript);</script>
+@section PageFootContent {
+    <script>
+        var defaultScript = @Safe.Json(Model.DefaultScript);
+    </script>
     <partial name="_ValidationScriptsPartial" />
 }

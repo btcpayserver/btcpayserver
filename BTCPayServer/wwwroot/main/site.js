@@ -65,7 +65,7 @@ $(function () {
         });
     });
 
-    $('[data-toggle="tooltip"]').tooltip();
+    $('[data-bs-toggle="tooltip"]').tooltip();
 
     function handleInputGroupClearButtonDisplay(element) {
         var inputs = $(element).parents(".input-group").find("input");

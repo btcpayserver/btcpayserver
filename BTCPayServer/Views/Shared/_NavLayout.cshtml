@@ -9,6 +9,14 @@
     }
 }
 
+@section PageHeadContent {
+    @await RenderSectionAsync("PageHeadContent", false)
+}
+
+@section PageFootContent {
+    @await RenderSectionAsync("PageFootContent", false)
+}
+
 <section>
     <div class="container">
         @if (ViewBag.ShowBreadcrumb)
@@ -48,10 +56,3 @@
         </div>
     </div>
 </section>
-
-@section HeadScripts {
-    @await RenderSectionAsync("HeadScripts", false)
-}
-@section Scripts {
-    @await RenderSectionAsync("Scripts", false)
-}

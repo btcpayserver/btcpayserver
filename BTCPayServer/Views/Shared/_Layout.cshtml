@@ -14,12 +14,11 @@
 <!DOCTYPE html>
 <html lang="en"@(Env.IsDeveloping ? " data-devenv" : "")>
 <head>
-    <partial name="Header" />
-    @await RenderSectionAsync("HeadScripts", false)
-    @await RenderSectionAsync("HeaderContent", false)
+    <partial name="LayoutHead" />
+    @await RenderSectionAsync("PageHeadContent", false)
 </head>
 <body id="page-top">
-@{
+    @{
         if (ViewBag.AlwaysShrinkNavBar == null)
         {
             ViewBag.AlwaysShrinkNavBar = true;
@@ -120,10 +119,10 @@
         </footer>
     }
 
+    <partial name="LayoutFoot" />
+    
+    @await RenderSectionAsync("PageFootContent", false)
     <partial name="LayoutPartials/SyncModal" />
-
-    @await RenderSectionAsync("Scripts", false)
-
     <script type="text/javascript">
         const expectedDomain = @Safe.Json(Env.ExpectedHost);
         const expectedProtocol = @Safe.Json(Env.ExpectedProtocol);

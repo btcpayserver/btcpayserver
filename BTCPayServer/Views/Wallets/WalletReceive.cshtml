@@ -5,6 +5,21 @@
     ViewData.SetActivePageAndTitle(WalletsNavPages.Receive, $"Receive {Model.CryptoCode}", Context.GetStoreData().StoreName);
 }
 
+@section PageHeadContent
+{
+    <link href="~/main/qrcode.css" rel="stylesheet" asp-append-version="true"/>
+}
+
+@section PageFootContent
+{
+    <script src="~/js/copy-to-clipboard.js"></script>
+    <script>
+        window.onload = function (){        
+            document.querySelectorAll('[data-clipboard]').forEach(value => value.addEventListener('click', window.copyToClipboard));
+        }
+    </script>
+}
+
 <div class="row no-gutters">
     <div class="col-lg-8 mx-auto my-auto">
         <form method="post" asp-action="WalletReceive" class="card text-center">
@@ -86,14 +101,3 @@
         </form>
     </div>
 </div>
-
-@section HeadScripts
-{
-    <link href="~/main/qrcode.css" rel="stylesheet" asp-append-version="true"/>
-    <script src="~/js/copy-to-clipboard.js"></script>
-    <script>
-        window.onload = function (){        
-            document.querySelectorAll('[data-clipboard]').forEach(value => value.addEventListener('click', window.copyToClipboard));
-        }
-        </script>
-}

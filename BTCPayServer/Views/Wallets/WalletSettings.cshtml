@@ -85,40 +85,45 @@
         </form>
     </div>
 </div>
+
+@section PageHeadContent {
+    <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true"/>
+    <style>
+        .register-wallet{ display: none; }
+    </style>
+}
+
+@section PageFootContent {
     <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
     <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
     <script src="~/vendor/bc-ur/web-bundle.js" asp-append-version="true"></script>
     <script src="~/vendor/vue-qrcode-reader/vue-qrcode-reader.browser.js" asp-append-version="true"></script>
-<link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true"/>
+    <script>
+        var wallets = @Safe.Json(Model.AccountKeys.Select(model =>  Encoders.Hex.EncodeData(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(model, Formatting.None)))));
+        document.addEventListener("DOMContentLoaded", function () {     
+            var qrApp = initQRShow("Wallet QR", "", "scan-qr-modal");
+            $("button[data-wallet]").on("click", function (){
+                var data = $(this).data("wallet");
+                var wallet = wallets[parseInt(data)];
+                qrApp.data = wallet;
+                $("#scan-qr-modal").modal("show");
+            });
+            
+            
+            if(navigator.registerProtocolHandler){
+                $(".register-wallet")
+                    .show()
+                    .on("click", function(){
+                       var store = $(this).data("storename");
+                       var scheme = $(this).data("scheme");
+                       var url = decodeURIComponent($(this).data("url"));
+                       navigator.registerProtocolHandler(scheme, url, "BTCPay Wallet -" + store);
+                   });
+            } 
+        });
+    </script>
+}
 
 <partial name="ShowQR"/>
-<script>
-    var wallets = @Safe.Json(Model.AccountKeys.Select(model =>  Encoders.Hex.EncodeData(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(model, Formatting.None)))));
-    $(document).ready(function(){        
-        var qrApp = initQRShow("Wallet QR", "", "scan-qr-modal");
-        $("button[data-wallet]").on("click", function (){
-            var data = $(this).data("wallet");
-            var wallet = wallets[parseInt(data)];
-            qrApp.data = wallet;
-            $("#scan-qr-modal").modal("show");
-        });
-        
-        
-        if(navigator.registerProtocolHandler){
-            $(".register-wallet")
-                .show()
-                .on("click", function(){
-                   var store = $(this).data("storename");
-                   var scheme = $(this).data("scheme");
-                   var url = decodeURIComponent($(this).data("url"));
-                   navigator.registerProtocolHandler(scheme, url, "BTCPay Wallet -" + store);
-               });
-        } 
-    });
-</script>
-<style>
-    .register-wallet{
-        display: none;
-    }
-</style>
+
 

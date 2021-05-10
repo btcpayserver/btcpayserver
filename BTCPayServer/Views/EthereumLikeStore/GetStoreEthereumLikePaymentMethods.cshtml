@@ -60,6 +60,6 @@
         <a asp-action="UpdateChainConfig" asp-controller="EthereumConfig" asp-route-chainId="@chain">Configure Web3 for chain @chain</a>
     }
 }
-@section Scripts {
+@section PageFootContent {
     @await Html.PartialAsync("_ValidationScriptsPartial")
 }

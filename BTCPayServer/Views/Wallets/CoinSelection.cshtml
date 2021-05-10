@@ -96,9 +96,9 @@
 </div>
 
 <script>
-$(function() {
+document.addEventListener("DOMContentLoaded", function () {
     Vue.directive('tooltip', function(el, binding) {
-        $(el).tooltip({
+        new bootstrap.Tooltip(el, {
             title: binding.value,
             placement: binding.arg || "auto",
             trigger: 'hover'

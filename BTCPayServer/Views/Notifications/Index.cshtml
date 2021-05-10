@@ -132,7 +132,7 @@ tr.seen td {
         updateSelectors();
     }
 
-    $(function () {
+    document.addEventListener("DOMContentLoaded", function () {
         $(".selector").change(updateSelectors);
         updateSelectors();
     });

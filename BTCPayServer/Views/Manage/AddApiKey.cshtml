@@ -7,6 +7,17 @@
     ViewData.SetActivePageAndTitle(ManageNavPages.APIKeys, "Add API Key");
 }
 
+@section PageHeadContent {
+    <style>
+        .remove-btn { font-size: 1.5rem; border-radius: 0; }
+        .remove-btn:hover { background-color: #CCCCCC; }
+    </style>
+}
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial"/>
+}
+
 <h2 class="mb-4">@ViewData["PageTitle"]</h2>
 
 <p>Generate a new api key to use BTCPay through its API.</p>
@@ -103,18 +114,3 @@
 
     <button type="submit" class="btn btn-primary" id="Generate">Generate API Key</button>
 </form>
-
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-
-    <style>
-        .remove-btn {
-            font-size: 1.5rem;
-            border-radius: 0;
-        }
-
-            .remove-btn:hover {
-                background-color: #CCCCCC;
-            }
-    </style>
-}

@@ -7,15 +7,17 @@
     ViewData.SetActivePageAndTitle(WalletsNavPages.Payouts, "Manage payouts", Context.GetStoreData().StoreName);
 }
 
-<script type="text/javascript">
-    function selectAll(e, elementClass)
-    {
-        const items = document.getElementsByClassName("selection-item-"+elementClass);
-        for (let i = 0; i < items.length; i++) {
-            items[i].checked = e.checked;
+@section PageFootContent {
+    <script>
+        function selectAll(e, elementClass)
+        {
+            const items = document.getElementsByClassName("selection-item-"+elementClass);
+            for (let i = 0; i < items.length; i++) {
+                items[i].checked = e.checked;
+            }
         }
-    }
-</script>
+    </script>
+}
 
 <form method="post">
 <h4 class="mb-3">@ViewData["Title"]</h4>

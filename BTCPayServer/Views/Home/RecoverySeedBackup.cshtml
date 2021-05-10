@@ -4,19 +4,21 @@
     ViewData["Title"] = "Your recovery phrase";
 }
 
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+@section PageHeadContent {
+    <style>
+        @@media (min-width: 476px) { ol#RecoveryPhrase {max-height:16em;} }
+        @@media (min-width: 768px) { ol#RecoveryPhrase {max-height:12em;} }
+        @@media (min-width: 1200px) { ol#RecoveryPhrase {max-height:8em;} }
+        form#RecoveryConfirmation button { position: absolute; bottom:0; left:50%; width:200px; margin-left:-100px; }
+        form#RecoveryConfirmation button:not([disabled]) { display: none; }
+        form#RecoveryConfirmation input:checked ~ button[disabled] { display: none; }
+        form#RecoveryConfirmation input:checked + button:not([disabled]) { display: inline-block; }
+    </style>
 }
 
-<style>
-    @@media (min-width: 476px) { ol#RecoveryPhrase {max-height:16em;} }
-    @@media (min-width: 768px) { ol#RecoveryPhrase {max-height:12em;} }
-    @@media (min-width: 1200px) { ol#RecoveryPhrase {max-height:8em;} }
-    form#RecoveryConfirmation button { position: absolute; bottom:0; left:50%; width:200px; margin-left:-100px; }
-    form#RecoveryConfirmation button:not([disabled]) { display: none; }
-    form#RecoveryConfirmation input:checked ~ button[disabled] { display: none; }
-    form#RecoveryConfirmation input:checked + button:not([disabled]) { display: inline-block; }
-</style>
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
+}
 
 <div class="row justify-content-md-center">
     <div class="col-lg-10 text-center">

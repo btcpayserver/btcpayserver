@@ -26,11 +26,12 @@
 </div>
 
 <partial name="VaultElements" />
-@section Scripts
+
+@section PageFootContent
 {
     <script src="~/js/vaultbridge.js" type="text/javascript" defer="defer" asp-append-version="true"></script>
     <script src="~/js/vaultbridge.ui.js" type="text/javascript" defer="defer" asp-append-version="true"></script>
-    <script type="text/javascript">
+    <script>
         async function askSign() {
             var websocketPath = $("#WebsocketPath").val();
             var loc = window.location, ws_uri;
@@ -53,7 +54,7 @@
             $("#SigningContext_PSBT").val(vaultUI.psbt);
             $("#broadcastForm").submit();
         }
-        $(function () {
+        document.addEventListener("DOMContentLoaded", function () {
             askSign();
         });
     </script>

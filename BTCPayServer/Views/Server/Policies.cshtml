@@ -207,17 +207,15 @@
     <button type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
 </form>
 
-@section Scripts {
+@section PageHeadContent {
     <style>
-            .remove-domain-btn{
-                font-size: 1.5rem;
-                border-radius: 0;
-            }
-             .remove-domain-btn:hover{
-                       background-color: #CCCCCC;
-             }
+        .remove-domain-btn { font-size: 1.5rem; border-radius: 0; }
+        .remove-domain-btn:hover { background-color: #CCCCCC; }
     </style>
-    <script >
+}
+
+@section PageFootContent {
+    <script>
         for (let element of document.getElementsByClassName("revert-default")) {
             element.addEventListener("click", function (){
               element.parentElement.previousElementSibling.value = element.parentElement.previousElementSibling.getAttribute("data-default-link")

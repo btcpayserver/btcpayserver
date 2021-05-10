@@ -78,14 +78,14 @@
     </div>
 </form>
 
-@section Scripts {
+@section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
     <partial name="VaultElements" />
 
     <script src="~/js/vaultbridge.js" defer asp-append-version="true"></script>
     <script src="~/js/vaultbridge.ui.js" defer asp-append-version="true"></script>
 
-    <script type="text/javascript">
+    <script>
         window.addEventListener("load", async () => {
             const wsPath = "@Url.Action("VaultBridgeConnection", "Vault", new {cryptoCode = Model.CryptoCode})";
             const wsProto = location.protocol.replace(/^http/, "ws");

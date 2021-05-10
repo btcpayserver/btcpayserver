@@ -38,9 +38,9 @@
     </div>
 }
 
-@section Scripts {
-    <script type="text/javascript">
-        $(function () {
+@section PageFootContent {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
             $("#details").click(function () {
                 $(".collapse").removeClass("collapse");
                 $(this).addClass("collapse");

@@ -3,11 +3,14 @@
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePageAndTitle(WalletsNavPages.PullPayments, "Pull payments", Context.GetStoreData().StoreName);
 }
-<style type="text/css">
-    .tooltip-inner {
-        text-align: left;
-    }
-</style>
+
+@section PageHeadContent {
+    <style type="text/css">
+        .tooltip-inner {
+            text-align: left;
+        }
+    </style>
+}
 
 <div class="d-flex align-items-center justify-content-between mt-n1 mb-3">
     <h4 class="mb-0">
@@ -90,17 +93,20 @@
                     }
                 </tbody>
             </table>
-            <script type="text/javascript">
-                var ppProgresses = document.getElementsByClassName("ppProgress");
-                for (var i = 0; i < ppProgresses.length; i++) {
-                    var pp = ppProgresses[i];
-                    var ppId = pp.getAttribute("data-pp");
-                    var template = document.getElementById("tooptip_template_" + ppId);
-                    pp.setAttribute("title", template.innerHTML);
-                }
-            </script>
         </div>
     </div>
+    
+    @section PageFootContent {
+        <script>
+            var ppProgresses = document.getElementsByClassName("ppProgress");
+            for (var i = 0; i < ppProgresses.length; i++) {
+                var pp = ppProgresses[i];
+                var ppId = pp.getAttribute("data-pp");
+                var template = document.getElementById("tooptip_template_" + ppId);
+                pp.setAttribute("title", template.innerHTML);
+            }
+        </script>
+    }
 }
 else
 {

@@ -2,14 +2,18 @@
 @{
     ViewData.SetActivePageAndTitle(InvoiceNavPages.Create, "Create an invoice");
 }
-<script>
-    $(function() {
-        $("#create-invoice-form").on("submit",
-            function() {
-                $(this).find("input[type='submit']").prop('disabled', true);
-            });
-    })
-</script>
+
+@section PageFootContent {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            $("#create-invoice-form").on("submit",
+                function() {
+                    $(this).find("input[type='submit']").prop('disabled', true);
+                });
+        })
+    </script>
+}
+
 <section>
     <div class="container">
         <partial name="_StatusMessage" />

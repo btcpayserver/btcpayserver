@@ -1,7 +1,6 @@
 @model BTCPayServer.Fido2.Models.LoginWithFido2ViewModel
 
 <form id="fidoForm" asp-action="LoginWithFido2" method="post" asp-route-returnUrl="@ViewData["ReturnUrl"]">
-    
     <input type="hidden" asp-for="Data"/>
     <input type="hidden" asp-for="Response"/>
     <input type="hidden" asp-for="UserId"/>

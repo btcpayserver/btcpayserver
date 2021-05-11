@@ -227,7 +227,9 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
                 if (!payoutByDestination.TryGetValue(destination.Key, out var payout))
                     continue;
                 var payoutBlob = payout.GetBlob(_jsonSerializerSettings);
-                if (destination.Value != payoutBlob.CryptoAmount)
+                if (payoutBlob.CryptoAmount == null || 
+                    (destination.Value != payoutBlob.CryptoAmount && 
+                     destination.Value != Math.Round(payoutBlob.CryptoAmount.Value, network.Divisibility, MidpointRounding.ToZero)))
                     continue;
                 var proof = ParseProof(payout) as PayoutTransactionOnChainBlob;
                 if (proof is null)

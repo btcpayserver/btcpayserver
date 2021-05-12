@@ -14,4 +14,6 @@ public interface IPayoutHandler
     //allows you to process events that the main pull payment hosted service is subscribed to
     Task BackgroundCheck(object o);
     Task<decimal> GetMinimumPayoutAmount(PaymentMethodId paymentMethod, IClaimDestination claimDestination);
+    //Compute the crypto amount to be paid cia this method from the specified amount and rate
+    decimal GetPayoutCryptoAmount(PaymentMethodId paymentMethodId, decimal payoutBlobAmount, decimal reqRate);
 }

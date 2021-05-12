@@ -8,6 +8,12 @@ namespace BTCPayServer
 {
     public static class MoneyExtensions
     {
+        public static decimal Trim(this decimal value, int decimalPlaces)
+        {
+            return ((int)(value * System.Convert.ToDecimal(Math.Pow(10, decimalPlaces)))) / System.Convert.ToDecimal(Math.Pow(10D, decimalPlaces));
+
+        }
+        
         public static decimal GetValue(this IMoney m, BTCPayNetwork network = null)
         {
             switch (m)

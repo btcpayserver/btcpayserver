@@ -112,6 +112,7 @@ namespace BTCPayServer.PaymentRequest
                         StateFormatted = state.ToString(),
                         Payments = entity
                             .GetPayments()
+                            .Where(p => p.Accounted)
                             .Select(paymentEntity =>
                             {
                                 var paymentData = paymentEntity.GetCryptoPaymentData();

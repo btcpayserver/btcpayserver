@@ -1015,7 +1015,7 @@ namespace BTCPayServer.Controllers
                 ButtonType = 0,
                 Min = 1,
                 Max = 20,
-                Step = 1,
+                Step = "1",
                 Apps = apps
             };
             return View(model);

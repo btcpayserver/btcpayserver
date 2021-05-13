@@ -5,7 +5,7 @@
 <h3 align="center">
   Accept Bitcoin payments ₿
 </h3>
-<p align="center"> BTCPay Server is a free and open-source Bitcoin payment processor which allows you to accept bitcoin without fees or intermediary.
+<p align="center"> BTCPay Server is a free and open-source Bitcoin payment processor which allows you to accept bitcoin without fees or intermediaries.
 </p>
 <p align="center">
   <a href="https://circleci.com/gh/btcpayserver/btcpayserver">

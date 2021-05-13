@@ -271,17 +271,17 @@ namespace BTCPayServer.HostedServices
                 var paymentMethod = PaymentMethodId.Parse(payout.PaymentMethodId);
                 if (paymentMethod.CryptoCode == payout.PullPaymentData.GetBlob().Currency)
                     req.Rate = 1.0m;
+                var cryptoAmount = payoutBlob.Amount / req.Rate;
                 var payoutHandler = _payoutHandlers.First(handler => handler.CanHandle(paymentMethod));
                 var dest = await payoutHandler.ParseClaimDestination(paymentMethod, payoutBlob.Destination);
-                
-                var cryptoAmount = payoutHandler.GetPayoutCryptoAmount(paymentMethod, payoutBlob.Amount, req.Rate);
+
                 decimal minimumCryptoAmount = await payoutHandler.GetMinimumPayoutAmount(paymentMethod, dest);
                 if (cryptoAmount < minimumCryptoAmount)
                 {
                     req.Completion.TrySetResult(PayoutApproval.Result.TooLowAmount);
                     return;
                 }
-                payoutBlob.CryptoAmount = cryptoAmount;
+                payoutBlob.CryptoAmount = BTCPayServer.Extensions.RoundUp(cryptoAmount, _networkProvider.GetNetwork(paymentMethod.CryptoCode).Divisibility);
                 payout.SetBlob(payoutBlob, _jsonSerializerSettings);
                 await ctx.SaveChangesAsync();
                 req.Completion.SetResult(PayoutApproval.Result.Ok);
@@ -299,6 +299,7 @@ namespace BTCPayServer.HostedServices
                 DateTimeOffset now = DateTimeOffset.UtcNow;
                 await using var ctx = _dbContextFactory.CreateContext();
                 var pp = await ctx.PullPayments.FindAsync(req.ClaimRequest.PullPaymentId);
+
                 if (pp is null || pp.Archived)
                 {
                     req.Completion.TrySetResult(new ClaimRequest.ClaimResponse(ClaimRequest.ClaimResult.Archived));
@@ -317,7 +318,7 @@ namespace BTCPayServer.HostedServices
                 var ppBlob = pp.GetBlob();
                 var payoutHandler =
                     _payoutHandlers.FirstOrDefault(handler => handler.CanHandle(req.ClaimRequest.PaymentMethodId));
-                if (!ppBlob.SupportedPaymentMethods.Contains(req.ClaimRequest.PaymentMethodId) || payoutHandler is null )
+                if (!ppBlob.SupportedPaymentMethods.Contains(req.ClaimRequest.PaymentMethodId) || payoutHandler is null)
                 {
                     req.Completion.TrySetResult(new ClaimRequest.ClaimResponse(ClaimRequest.ClaimResult.PaymentMethodNotSupported));
                     return;

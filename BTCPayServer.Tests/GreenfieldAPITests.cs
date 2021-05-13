@@ -471,6 +471,25 @@ namespace BTCPayServer.Tests
                 {
                     Revision = payout.Revision
                 }));
+
+                // Create one pull payment with an amount of 9 decimals
+                var test3 = await client.CreatePullPayment(storeId, new Client.Models.CreatePullPaymentRequest()
+                {
+                    Name = "Test 2",
+                    Amount = 12.303228134m,
+                    Currency = "BTC",
+                    PaymentMethods = new[] { "BTC" }
+                });
+                destination = (await tester.ExplorerNode.GetNewAddressAsync()).ToString();
+                payout = await unauthenticated.CreatePayout(test3.Id, new CreatePayoutRequest()
+                {
+                    Destination = destination,
+                    PaymentMethod = "BTC"
+                });
+                payout = await client.ApprovePayout(storeId, payout.Id, new ApprovePayoutRequest());
+                // The payout should round the value of the payment down to the network of the payment method
+                Assert.Equal(12.30322814m, payout.PaymentMethodAmount);
+                Assert.Equal(12.303228134m, payout.Amount);
             }
         }
 

@@ -110,12 +110,6 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
         return Task.FromResult(0m);
     }
 
-    public decimal GetPayoutCryptoAmount(PaymentMethodId paymentMethodId, decimal payoutBlobAmount, decimal reqRate)
-    {
-        return (payoutBlobAmount / reqRate).Trim(_btcPayNetworkProvider
-            .GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode).Divisibility);
-    }
-
     private async Task UpdatePayoutsInProgress()
     {
         try
@@ -233,9 +227,10 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
                 if (!payoutByDestination.TryGetValue(destination.Key, out var payout))
                     continue;
                 var payoutBlob = payout.GetBlob(_jsonSerializerSettings);
-                if (payoutBlob.CryptoAmount == null || 
-                    (destination.Value != payoutBlob.CryptoAmount && 
-                     destination.Value != payoutBlob.CryptoAmount.Value.Trim(network.Divisibility)))
+                if (payoutBlob.CryptoAmount is null ||
+                    // The round up here is not strictly necessary, this is temporary to fix existing payout before we
+                    // were properly roundup the crypto amount
+                    destination.Value != BTCPayServer.Extensions.RoundUp(payoutBlob.CryptoAmount.Value, network.Divisibility))
                     continue;
                 var proof = ParseProof(payout) as PayoutTransactionOnChainBlob;
                 if (proof is null)

@@ -12,7 +12,7 @@ using Xunit;
 
 namespace BTCPayServer.Tests
 {
-    public static class Extensions
+    public static class SeleniumExtensions
     {
         private static readonly JsonSerializerSettings JsonSettings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
         public static string ToJson(this object o) => JsonConvert.SerializeObject(o, Formatting.None, JsonSettings);

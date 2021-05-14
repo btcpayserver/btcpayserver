@@ -168,6 +168,13 @@ namespace BTCPayServer.Payments.Lightning
                 }
                 
             }));
+            leases.Add(_Aggregator.Subscribe<Events.InvoicePaymentMethodActivated>(async inv =>
+            {
+                if (inv.PaymentMethodId.PaymentType == LightningPaymentType.Instance)
+                {
+                    _CheckInvoices.Writer.TryWrite(inv.InvoiceId);
+                }
+            }));
             _CheckingInvoice = CheckingInvoice(_Cts.Token);
             _ListenPoller = new Timer(async s =>
             {

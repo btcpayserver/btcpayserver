@@ -14,6 +14,7 @@
 * Make sure unaccounted payments (double spent payments, or payjoin original transaction), are not accounted by the payment requests and crowdfund app @NicolasDorier
 * Coinswitch page was not reflecting correctly in the side navigation @kukks
 * Coinswitch showed as enabled when it was configured but disabled @kukks
+* Lightning payment were not detected if `Only enable the payment method after user explicitly chooses it` was checked for the store @kukks
 
 ## 1.1.0
 

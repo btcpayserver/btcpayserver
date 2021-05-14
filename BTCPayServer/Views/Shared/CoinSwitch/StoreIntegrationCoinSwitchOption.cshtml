@@ -13,7 +13,7 @@
             </span>
         </span>
         <span class="d-flex align-items-center fw-semibold">
-            @if (settings?.IsConfigured() is true)
+            @if (settings?.IsConfigured() is true && settings?.Enabled is true)
             {
                 <span class="d-flex align-items-center text-success">
                     <span class="mr-2 btcpay-status btcpay-status--enabled"></span>

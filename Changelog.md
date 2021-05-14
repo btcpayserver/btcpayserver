@@ -12,6 +12,8 @@
 * Fix payment button steps and validation range (#2506 #2503) @Kukks
 * The local culture of the server could break some feature on BTCPay Server (#2512) @NicolasDorier
 * Make sure unaccounted payments (double spent payments, or payjoin original transaction), are not accounted by the payment requests and crowdfund app @NicolasDorier
+* Coinswitch page was not reflecting correctly in the side navigation @kukks
+* Coinswitch showed as enabled when it was configured but disabled @kukks
 
 ## 1.1.0
 

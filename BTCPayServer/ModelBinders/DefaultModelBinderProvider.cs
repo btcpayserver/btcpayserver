@@ -18,12 +18,7 @@ namespace BTCPayServer.ModelBinders
                 return new PaymentMethodIdModelBinder();
             if (context.Metadata.ModelType == typeof(WalletIdModelBinder))
                 return new ModelBinders.WalletIdModelBinder();
-            if (typeof(DateTimeOffset).GetTypeInfo().IsAssignableFrom(context.Metadata.ModelType) ||
-                typeof(DateTimeOffset?).GetTypeInfo().IsAssignableFrom(context.Metadata.ModelType))
-            {
-                return new DateTimeOffsetModelBinder();
-            }
-                return null;
+            return null;
         }
     }
 }

@@ -33,6 +33,7 @@ namespace BTCPayServer.Services.Invoices
                             prepare);
                     eligibleMethodToActivate.SetPaymentMethodDetails(newDetails);
                     await invoiceRepository.UpdateInvoicePaymentMethod(invoice.Id, eligibleMethodToActivate);
+                    eventAggregator.Publish(new InvoicePaymentMethodActivated(paymentMethodId, invoice));
                 }
                 catch (PaymentMethodUnavailableException ex)
                 {

@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.1.1
+
+### Improvements:
+
+* Update BC-UR bundle and support decoding hex format of wallet (#2505 #2499) @Kukks
+
+### Bug fixes:
+
+* During refund or payout, some payments issued from BTCPay were not properly detected. (#2513 #2518) @Kukks @NicolasDorier
+* Fix payment button steps and validation range (#2506 #2503) @Kukks
+* The local culture of the server could break some feature on BTCPay Server (#2512) @NicolasDorier
+* Make sure unaccounted payments (double spent payments, or payjoin original transaction), are not accounted by the payment requests and crowdfund app @NicolasDorier
+
 ## 1.1.0
 
 ### Improvements:

@@ -359,7 +359,7 @@ namespace BTCPayServer.Services.Apps
 
                     // If the user get a donation via other mean, he can register an invoice manually for such amount
                     // then mark the invoice as complete
-                    var payments = p.GetPayments();
+                    var payments = p.GetPayments(true);
                     if (payments.Count == 0 &&
                         p.ExceptionStatus == InvoiceExceptionStatus.Marked &&
                         p.Status == InvoiceStatusLegacy.Complete)

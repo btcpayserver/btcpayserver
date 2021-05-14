@@ -1639,8 +1639,8 @@ namespace BTCPayServer.Tests
                 {
                     var i = await tester.PayTester.InvoiceRepository.GetInvoice(invoice2.Id);
                     Assert.Equal(InvoiceStatusLegacy.New, i.Status);
-                    Assert.Single(i.GetPayments());
-                    Assert.False(i.GetPayments().First().Accounted);
+                    Assert.Single(i.GetPayments(false));
+                    Assert.False(i.GetPayments(false).First().Accounted);
                 });
 
                 Logs.Tester.LogInformation(
@@ -1672,8 +1672,8 @@ namespace BTCPayServer.Tests
                 await TestUtils.EventuallyAsync(async () =>
                     {
                         var invoiceEntity = await tester.PayTester.InvoiceRepository.GetInvoice(invoice.Id);
-                        var btcPayments = invoiceEntity.GetAllBitcoinPaymentData().ToArray();
-                        var payments = invoiceEntity.GetPayments().ToArray();
+                        var btcPayments = invoiceEntity.GetAllBitcoinPaymentData(false).ToArray();
+                        var payments = invoiceEntity.GetPayments(false).ToArray();
                         Assert.Equal(tx1, btcPayments[0].Outpoint.Hash);
                         Assert.False(payments[0].Accounted);
                         Assert.Equal(tx1Bump, payments[1].Outpoint.Hash);

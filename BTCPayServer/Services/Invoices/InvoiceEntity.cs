@@ -326,17 +326,17 @@ namespace BTCPayServer.Services.Invoices
         public List<PaymentEntity> Payments { get; set; }
 
 #pragma warning disable CS0618
-        public List<PaymentEntity> GetPayments()
+        public List<PaymentEntity> GetPayments(bool accountedOnly)
         {
-            return Payments?.Where(entity => entity.GetPaymentMethodId() != null).ToList() ?? new List<PaymentEntity>();
+            return Payments?.Where(entity => entity.GetPaymentMethodId() != null && (!accountedOnly || entity.Accounted)).ToList() ?? new List<PaymentEntity>();
         }
-        public List<PaymentEntity> GetPayments(string cryptoCode)
+        public List<PaymentEntity> GetPayments(string cryptoCode, bool accountedOnly)
         {
-            return GetPayments().Where(p => p.CryptoCode == cryptoCode).ToList();
+            return GetPayments(accountedOnly).Where(p => p.CryptoCode == cryptoCode).ToList();
         }
-        public List<PaymentEntity> GetPayments(BTCPayNetworkBase network)
+        public List<PaymentEntity> GetPayments(BTCPayNetworkBase network, bool accountedOnly)
         {
-            return GetPayments(network.CryptoCode);
+            return GetPayments(network.CryptoCode, accountedOnly);
         }
 #pragma warning restore CS0618
         public bool Refundable { get; set; }
@@ -449,7 +449,7 @@ namespace BTCPayServer.Services.Invoices
                 var paymentId = info.GetId();
                 cryptoInfo.Url = ServerUrl.WithTrailingSlash() + $"i/{paymentId}/{Id}";
 
-                cryptoInfo.Payments = GetPayments(info.Network).Select(entity =>
+                cryptoInfo.Payments = GetPayments(info.Network, true).Select(entity =>
                 {
                     var data = entity.GetCryptoPaymentData();
                     return new InvoicePaymentInfo()
@@ -980,8 +980,8 @@ namespace BTCPayServer.Services.Invoices
             bool paidEnough = paid >= Extensions.RoundUp(totalDue, precision);
             int txRequired = 0;
 
-            _ = ParentEntity.GetPayments()
-                .Where(p => p.Accounted && paymentPredicate(p))
+            _ = ParentEntity.GetPayments(true)
+                .Where(p => paymentPredicate(p))
                 .OrderBy(p => p.ReceivedTime)
                 .Select(_ =>
                 {

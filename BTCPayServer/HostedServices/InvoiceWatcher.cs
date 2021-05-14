@@ -101,7 +101,7 @@ namespace BTCPayServer.HostedServices
                     }
                 }
 
-                if (accounting.Paid < accounting.MinimumTotalDue && invoice.GetPayments().Count != 0 && invoice.ExceptionStatus != InvoiceExceptionStatus.PaidPartial)
+                if (accounting.Paid < accounting.MinimumTotalDue && invoice.GetPayments(true).Count != 0 && invoice.ExceptionStatus != InvoiceExceptionStatus.PaidPartial)
                 {
                     invoice.ExceptionStatus = InvoiceExceptionStatus.PaidPartial;
                     context.MarkDirty();
@@ -335,7 +335,7 @@ namespace BTCPayServer.HostedServices
         {
             bool extendInvoiceMonitoring = false;
             var updateConfirmationCountIfNeeded = invoice
-                .GetPayments()
+                .GetPayments(false)
                 .Select<PaymentEntity, Task<PaymentEntity>>(async payment =>
                 {
                     var paymentData = payment.GetCryptoPaymentData();

@@ -372,7 +372,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
 
         private IEnumerable<PaymentEntity> GetAllMoneroLikePayments(InvoiceEntity invoice, string cryptoCode)
         {
-            return invoice.GetPayments()
+            return invoice.GetPayments(false)
                 .Where(p => p.GetPaymentMethodId() == new PaymentMethodId(cryptoCode, MoneroPaymentType.Instance));
         }
     }

@@ -283,7 +283,7 @@ namespace BTCPayServer.Controllers.GreenField
         [Authorize(Policy = Policies.CanViewInvoices,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/invoices/{invoiceId}/payment-methods")]
-        public async Task<IActionResult> GetInvoicePaymentMethods(string storeId, string invoiceId)
+        public async Task<IActionResult> GetInvoicePaymentMethods(string storeId, string invoiceId, bool onlyAccountedPayments = true)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
@@ -297,7 +297,7 @@ namespace BTCPayServer.Controllers.GreenField
                 return InvoiceNotFound();
             }
 
-            return Ok(ToPaymentMethodModels(invoice));
+            return Ok(ToPaymentMethodModels(invoice, onlyAccountedPayments));
         }
 
         [Authorize(Policy = Policies.CanViewInvoices,
@@ -336,14 +336,14 @@ namespace BTCPayServer.Controllers.GreenField
             return this.CreateAPIError(404, "store-not-found", "The store was not found");
         }
 
-        private InvoicePaymentMethodDataModel[] ToPaymentMethodModels(InvoiceEntity entity)
+        private InvoicePaymentMethodDataModel[] ToPaymentMethodModels(InvoiceEntity entity, bool includeAccountedPaymentOnly)
         {
             return entity.GetPaymentMethods().Select(
                 method =>
                 {
                     var accounting = method.Calculate();
                     var details = method.GetPaymentMethodDetails();
-                    var payments = method.ParentEntity.GetPayments().Where(paymentEntity =>
+                    var payments = method.ParentEntity.GetPayments(includeAccountedPaymentOnly).Where(paymentEntity =>
                         paymentEntity.GetPaymentMethodId() == method.GetId());
 
                     return new InvoicePaymentMethodDataModel()

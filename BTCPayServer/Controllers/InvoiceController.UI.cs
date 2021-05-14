@@ -359,7 +359,7 @@ namespace BTCPayServer.Controllers
             return new InvoiceDetailsModel
             {
                 Archived = invoice.Archived,
-                Payments = invoice.GetPayments(),
+                Payments = invoice.GetPayments(false),
                 CryptoPayments = invoice.GetPaymentMethods().Select(
                     data =>
                     {
@@ -561,7 +561,7 @@ namespace BTCPayServer.Controllers
                 Status = invoice.StatusString,
 #pragma warning restore CS0618 // Type or member is obsolete
                 NetworkFee = paymentMethodDetails.GetNextNetworkFee(),
-                IsMultiCurrency = invoice.GetPayments().Select(p => p.GetPaymentMethodId()).Concat(new[] { paymentMethod.GetId() }).Distinct().Count() > 1,
+                IsMultiCurrency = invoice.GetPayments(false).Select(p => p.GetPaymentMethodId()).Concat(new[] { paymentMethod.GetId() }).Distinct().Count() > 1,
                 StoreId = store.Id,
                 AvailableCryptos = invoice.GetPaymentMethods()
                                           .Where(i => i.Network != null)

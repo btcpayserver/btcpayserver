@@ -59,11 +59,8 @@ namespace BTCPayServer.Services.Invoices.Export
             var currency = Currencies.GetNumberFormatInfo(invoice.Currency, true);
             var invoiceDue = invoice.Price;
             // in this first version we are only exporting invoices that were paid
-            foreach (var payment in invoice.GetPayments())
+            foreach (var payment in invoice.GetPayments(true))
             {
-                // not accounted payments are payments which got double spent like RBfed
-                if (!payment.Accounted)
-                    continue;
                 var cryptoCode = payment.GetPaymentMethodId().CryptoCode;
                 var pdata = payment.GetCryptoPaymentData();
 

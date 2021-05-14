@@ -242,7 +242,7 @@ namespace BTCPayServer.Services.Altcoins.Ethereum.Services
                     .Select(entity => (
                         Invoice: entity,
                         PaymentMethodDetails: entity.GetPaymentMethods().TryGet(paymentMethodId),
-                        ExistingPayments: entity.GetPayments(network).Select(paymentEntity => (Payment: paymentEntity,
+                        ExistingPayments: entity.GetPayments(network, true).Select(paymentEntity => (Payment: paymentEntity,
                             PaymentData: (EthereumLikePaymentData)paymentEntity.GetCryptoPaymentData(),
                             Invoice: entity))
                     )).Where(tuple => tuple.PaymentMethodDetails?.GetPaymentMethodDetails()?.Activated is true).ToList();

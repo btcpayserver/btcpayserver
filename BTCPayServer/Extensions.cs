@@ -133,9 +133,9 @@ namespace BTCPayServer
             finally { try { webSocket.Dispose(); } catch { } }
         }
 
-        public static IEnumerable<BitcoinLikePaymentData> GetAllBitcoinPaymentData(this InvoiceEntity invoice)
+        public static IEnumerable<BitcoinLikePaymentData> GetAllBitcoinPaymentData(this InvoiceEntity invoice, bool accountedOnly)
         {
-            return invoice.GetPayments()
+            return invoice.GetPayments(accountedOnly)
                 .Where(p => p.GetPaymentMethodId()?.PaymentType == PaymentTypes.BTCLike)
                 .Select(p => (BitcoinLikePaymentData)p.GetCryptoPaymentData())
                 .Where(data => data != null);

@@ -300,7 +300,7 @@ namespace BTCPayServer.Payments.PayJoin
                     paymentAddress = paymentDetails.GetDepositAddress(network.NBitcoinNetwork);
                     paymentAddressIndex = paymentDetails.KeyPath;
 
-                    if (invoice.GetAllBitcoinPaymentData().Any())
+                    if (invoice.GetAllBitcoinPaymentData(false).Any())
                     {
                         ctx.DoNotBroadcast();
                         return UnprocessableEntity(CreatePayjoinError("already-paid",

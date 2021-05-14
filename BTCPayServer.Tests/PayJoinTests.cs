@@ -320,7 +320,7 @@ namespace BTCPayServer.Tests
                     await TestUtils.EventuallyAsync(async () =>
                     {
                         var invoice = await invoiceRepository.GetInvoice(invoiceId);
-                        var payments = invoice.GetPayments();
+                        var payments = invoice.GetPayments(false);
                         Assert.Equal(2, payments.Count);
                         var originalPayment = payments[0];
                         var coinjoinPayment = payments[1];
@@ -1088,7 +1088,7 @@ retry:
                 {
                     var invoiceEntity = await tester.PayTester.GetService<InvoiceRepository>().GetInvoice(invoice7.Id);
                     Assert.Equal(InvoiceStatusLegacy.Paid, invoiceEntity.Status);
-                    Assert.Contains(invoiceEntity.GetPayments(), p => p.Accounted &&
+                    Assert.Contains(invoiceEntity.GetPayments(false), p => p.Accounted &&
                                                                       ((BitcoinLikePaymentData)p.GetCryptoPaymentData()).PayjoinInformation is null);
                 });
                 ////Assert.Contains(receiverWalletPayJoinState.GetRecords(), item => item.InvoiceId == invoice7.Id && item.TxSeen);
@@ -1117,8 +1117,8 @@ retry:
                 {
                     var invoiceEntity = await tester.PayTester.GetService<InvoiceRepository>().GetInvoice(invoice7.Id);
                     Assert.Equal(InvoiceStatusLegacy.New, invoiceEntity.Status);
-                    Assert.True(invoiceEntity.GetPayments().All(p => !p.Accounted));
-                    ourOutpoint = invoiceEntity.GetAllBitcoinPaymentData().First().PayjoinInformation.ContributedOutPoints[0];
+                    Assert.True(invoiceEntity.GetPayments(false).All(p => !p.Accounted));
+                    ourOutpoint = invoiceEntity.GetAllBitcoinPaymentData(false).First().PayjoinInformation.ContributedOutPoints[0];
                 });
                 var payjoinRepository = tester.PayTester.GetService<PayJoinRepository>();
                 // The outpoint should now be available for next pj selection

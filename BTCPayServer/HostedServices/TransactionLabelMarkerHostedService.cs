@@ -46,7 +46,7 @@ namespace BTCPayServer.HostedServices
                     UpdateTransactionLabel.InvoiceLabelTemplate(invoiceEvent.Invoice.Id)
                 };
 
-                if (invoiceEvent.Invoice.GetPayments(invoiceEvent.Payment.GetCryptoCode()).Any(entity =>
+                if (invoiceEvent.Invoice.GetPayments(invoiceEvent.Payment.GetCryptoCode(), false).Any(entity =>
                     entity.GetCryptoPaymentData() is BitcoinLikePaymentData pData &&
                     pData.PayjoinInformation?.CoinjoinTransactionHash == transactionId))
                 {

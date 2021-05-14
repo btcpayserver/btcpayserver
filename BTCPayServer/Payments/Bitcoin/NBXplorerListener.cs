@@ -157,7 +157,7 @@ namespace BTCPayServer.Payments.Bitcoin
                                             output.matchedOutput.Value, output.outPoint,
                                             evt.TransactionData.Transaction.RBF, output.Item1.KeyPath);
 
-                                        var alreadyExist = invoice.GetAllBitcoinPaymentData().Where(c => c.GetPaymentId() == paymentData.GetPaymentId()).Any();
+                                        var alreadyExist = invoice.GetAllBitcoinPaymentData(false).Where(c => c.GetPaymentId() == paymentData.GetPaymentId()).Any();
                                         if (!alreadyExist)
                                         {
                                             var payment = await _InvoiceRepository.AddPayment(invoice.Id, DateTimeOffset.UtcNow, paymentData, network);
@@ -220,7 +220,7 @@ namespace BTCPayServer.Payments.Bitcoin
         {
 
             List<PaymentEntity> updatedPaymentEntities = new List<PaymentEntity>();
-            var transactions = await wallet.GetTransactions(invoice.GetAllBitcoinPaymentData()
+            var transactions = await wallet.GetTransactions(invoice.GetAllBitcoinPaymentData(false)
                     .Select(p => p.Outpoint.Hash)
                     .ToArray(), true);
             bool? originalPJBroadcasted = null;
@@ -228,7 +228,7 @@ namespace BTCPayServer.Payments.Bitcoin
             bool cjPJBroadcasted = false;
             PayjoinInformation payjoinInformation = null;
             var paymentEntitiesByPrevOut = new Dictionary<OutPoint, PaymentEntity>();
-            foreach (var payment in invoice.GetPayments(wallet.Network))
+            foreach (var payment in invoice.GetPayments(wallet.Network, false))
             {
                 if (payment.GetPaymentMethodId()?.PaymentType != PaymentTypes.BTCLike)
                     continue;
@@ -347,7 +347,7 @@ namespace BTCPayServer.Payments.Bitcoin
                 var invoice = await _InvoiceRepository.GetInvoice(invoiceId, true);
                 if (invoice == null)
                     continue;
-                var alreadyAccounted = invoice.GetAllBitcoinPaymentData().Select(p => p.Outpoint).ToHashSet();
+                var alreadyAccounted = invoice.GetAllBitcoinPaymentData(false).Select(p => p.Outpoint).ToHashSet();
                 var strategy = GetDerivationStrategy(invoice, network);
                 if (strategy == null)
                     continue;

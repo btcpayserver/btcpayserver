@@ -41,9 +41,9 @@
 @section PageFootContent {
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            $("#details").click(function () {
-                $(".collapse").removeClass("collapse");
-                $(this).addClass("collapse");
+            document.getElementById("details").addEventListener("click", function () {
+                document.querySelectorAll(".form-group.collapse").forEach(el => el.classList.remove("collapse"));
+                this.classList.add("collapse");
             });
         });
     </script>

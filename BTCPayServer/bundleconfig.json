@@ -12,11 +12,9 @@
         "outputFileName": "wwwroot/bundles/main-bundle.min.js",
         "inputFiles": [
             "wwwroot/vendor/jquery/jquery.js",
-            "wwwroot/vendor/jquery-easing/jquery.easing.js",
             "wwwroot/vendor/moment/moment.min.js",
             "wwwroot/vendor/flatpickr/flatpickr.js",
             "wwwroot/main/bootstrap/bootstrap.js",
-            "wwwroot/main/bootstrap4-creativestart/creative.js",
             "wwwroot/main/site.js"
         ]
     },

@@ -23,7 +23,7 @@ namespace BTCPayServer.Tests
             Logs.LogProvider = new XUnitLogProvider(helper);
         }
 
-        [Fact(Timeout = TestTimeout)]
+        /*[Fact(Timeout = TestTimeout)]
         public async Task CanHandleRefundEmailForm()
         {
 
@@ -164,7 +164,7 @@ namespace BTCPayServer.Tests
                 Assert.Equal(s.Driver.Url,
                     new Uri(s.Server.PayTester.ServerUri, $"tests/index.html?invoice={invoiceId}").ToString());
             }
-        }
+        }*/
 
         [Fact(Timeout = TestTimeout)]
         public async Task CanUseJS()
@@ -183,6 +183,7 @@ namespace BTCPayServer.Tests
                 wait.Until(d=>((IJavaScriptExecutor)d).ExecuteScript("return window.isLoaded").Equals(true));
                 Logs.Tester.LogInformation("Testing JS: readyState done");
                 Assert.Equal("", s.Driver.FindElement(By.Id("jsErrs")).Text.Trim());
+                Logs.Tester.LogInformation("Testing JS: " + s.Driver.FindElement(By.Id("jsState")).Text);
                 Logs.Tester.LogInformation("Testing JS: jQuery");
                 wait.Until(d=>((IJavaScriptExecutor)d).ExecuteScript("return typeof(jQuery)").Equals("function"));
                 Logs.Tester.LogInformation("Testing JS: jQuery done");

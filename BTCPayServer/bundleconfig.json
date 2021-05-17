@@ -19,10 +19,13 @@
         "inputFiles": [
             "wwwroot/vendor/moment/moment.min.js",
             "wwwroot/vendor/flatpickr/flatpickr.js",
-            "wwwroot/main/bootstrap/bootstrap.js",
+            "wwwroot/main/bootstrap/bootstrap.bundle.min.js",
             "wwwroot/main/delegate.js",
             "wwwroot/main/site.js"
-        ]
+        ],
+        "minify": {
+            "enabled": false
+        }
     },
     {
         "outputFileName": "wwwroot/bundles/jqueryvalidate-bundle.min.js",
@@ -59,10 +62,13 @@
     {
         "outputFileName": "wwwroot/bundles/cart-bundle.min.js",
         "inputFiles": [
-            "wwwroot/main/bootstrap/bootstrap.js",
+            "wwwroot/main/bootstrap/bootstrap.bundle.min.js",
             "wwwroot/cart/js/cart.js",
             "wwwroot/cart/js/cart.jquery.js"
-        ]
+        ],
+        "minify": {
+            "enabled": false
+        }
     },
     {
         "outputFileName": "wwwroot/bundles/crowdfund-bundle-1.min.js",

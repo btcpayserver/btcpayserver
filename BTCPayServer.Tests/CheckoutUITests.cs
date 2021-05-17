@@ -23,7 +23,7 @@ namespace BTCPayServer.Tests
             Logs.LogProvider = new XUnitLogProvider(helper);
         }
 
-        /*[Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = TestTimeout)]
         public async Task CanHandleRefundEmailForm()
         {
 
@@ -164,7 +164,7 @@ namespace BTCPayServer.Tests
                 Assert.Equal(s.Driver.Url,
                     new Uri(s.Server.PayTester.ServerUri, $"tests/index.html?invoice={invoiceId}").ToString());
             }
-        }*/
+        }
 
         [Fact(Timeout = TestTimeout)]
         public async Task CanUseJS()

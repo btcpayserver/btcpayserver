@@ -79,9 +79,9 @@ function initCameraScanningApp(title, onDataSubmit, modalId) {
 		},
 		mounted() {
 			if (this.isModal) {
-				const $modal = $("#" + this.modalId);
-				$modal.on("shown.bs.modal", () => { this.isLoaded = true; });
-				$modal.on("hide.bs.modal", () => { this.isLoaded = false; });
+				const modal = document.getElementById(this.modalId);
+				modal.addEventListener('shown.bs.modal', () => { this.isLoaded = true; });
+				modal.addEventListener('hide.bs.modal', () => { this.isLoaded = false; });
 			} else {
 				this.isLoaded = true;
 			}
@@ -107,7 +107,8 @@ function initCameraScanningApp(title, onDataSubmit, modalId) {
 			},
 			close() {
 				if (this.modalId) {
-					$("#" + this.modalId).modal('hide');
+					const modal = bootstrap.Modal.getInstance(document.getElementById(this.modalId));
+					modal.hide();
 				}
 				this.reset();
 			},

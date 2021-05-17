@@ -125,10 +125,6 @@
 	  <None Include="wwwroot\vendor\jquery-easing\jquery.easing.min.js" />
 	  <None Include="wwwroot\vendor\jquery\jquery.js" />
 	  <None Include="wwwroot\vendor\jquery\jquery.min.js" />
-	  <None Include="wwwroot\vendor\magnific-popup\jquery.magnific-popup.js" />
-	  <None Include="wwwroot\vendor\magnific-popup\jquery.magnific-popup.min.js" />
-	  <None Include="wwwroot\vendor\scrollreveal\scrollreveal.js" />
-	  <None Include="wwwroot\vendor\scrollreveal\scrollreveal.min.js" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -203,7 +203,7 @@ namespace BTCPayServer.Controllers.GreenField
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
             {
-                return NotFound();
+                return UserNotFound();
             }
 
             // We can safely delete the user if it's not an admin user
@@ -253,6 +253,11 @@ namespace BTCPayServer.Controllers.GreenField
             }
 
             return (await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin)).Count == 1;
+        }
+
+        private IActionResult UserNotFound()
+        {
+            return this.CreateAPIError(404, "user-not-found", "The user was not found");
         }
     }
 }

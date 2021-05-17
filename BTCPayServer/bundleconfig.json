@@ -20,6 +20,7 @@
             "wwwroot/vendor/moment/moment.min.js",
             "wwwroot/vendor/flatpickr/flatpickr.js",
             "wwwroot/main/bootstrap/bootstrap.js",
+            "wwwroot/main/delegate.js",
             "wwwroot/main/site.js"
         ]
     },

@@ -237,9 +237,8 @@ namespace BTCPayServer.Tests
 
         public async Task ClickOnAllSideMenus()
         {
-            var links = await Task.WhenAll(Page
-                .QuerySelectorAllAsync(".nav .nav-link")
-                .ContinueWith<string>(c => c.Result.SelectMany<IElementHandle>(handle => handle.GetAttributeAsync("href"))));
+            var links = await Task.WhenAll((await Page
+                    .QuerySelectorAllAsync(".nav .nav-link")).Select(handle => handle.GetAttributeAsync("href")));
             await Page.AssertNoError();
             Assert.NotEmpty(links);
             foreach (var l in links)
@@ -324,50 +323,57 @@ namespace BTCPayServer.Tests
         public async Task<string> CreateInvoice(string storeName, decimal amount = 100, string currency = "USD", string refundEmail = "")
         {
             await GoToInvoices();
-            Page.FindElement("#CreateNewInvoice")).Click();
-            Page.FindElement("#Amount")).SendKeys(amount.ToString(CultureInfo.InvariantCulture));
-            var currencyEl = Page.FindElement("#Currency"));
-            currencyEl.Clear();
-            currencyEl.SendKeys(currency);
-            Page.FindElement("#BuyerEmail")).SendKeys(refundEmail);
-            Page.FindElement(By.Name("StoreId")).SendKeys(storeName);
-            Page.FindElement("#Create")).Click();
+            await Page.ClickAsync("#CreateNewInvoice");
+            await Page.TypeAsync("#Amount", amount.ToString(CultureInfo.InvariantCulture));
+            var currencyEl = await Page.QuerySelectorAsync("#Currency");
+            await currencyEl.FillAsync("");
+            await currencyEl.TypeAsync(currency);
+            await Page.TypeAsync("#BuyerEmail",refundEmail);
+            await Page.TypeAsync("[name='StoreId']",storeName);
+            await Page.ClickAsync("#Create");
 
-            var statusElement = FindAlertMessage();
-            var id = statusElement.Text.Split(" ")[1];
+            var statusElement = await FindAlertMessage();
+            var id = (await statusElement.GetTextContentAsync()).Split(" ")[1];
             return id;
         }
 
         public async Task FundStoreWallet(WalletId walletId = null, int coins = 1, decimal denomination = 1m)
         {
             walletId ??= WalletId;
-            GoToWallet(walletId, WalletsNavPages.Receive);
-            Page.FindElement("#generateButton")).Click();
-            var addressStr = Page.FindElement("#address")).GetProperty("value");
+            await GoToWallet(walletId, WalletsNavPages.Receive);
+            await Page.ClickAsync("#generateButton");
+            var addressStr = await Page.GetAttributeAsync("#address", "value");
             var address = BitcoinAddress.Create(addressStr, ((BTCPayNetwork)Server.NetworkProvider.GetNetwork(walletId.CryptoCode)).NBitcoinNetwork);
             for (var i = 0; i < coins; i++)
             {
                 await Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(denomination));
             }
         }
+        
+        
 
-        public void PayInvoice(WalletId walletId, string invoiceId)
+        public async Task PayInvoice(WalletId walletId, string invoiceId)
         {
-            GoToInvoiceCheckout(invoiceId);
-            var bip21 = Page.FindElement(By.ClassName("payment__details__instruction__open-wallet__btn"))
-                .GetAttribute("href");
+            await GoToInvoiceCheckout(invoiceId);
+            var bip21 = await Page.GetAttributeAsync(".payment__details__instruction__open-wallet__btn" , "href");
             Assert.Contains($"{PayjoinClient.BIP21EndpointKey}", bip21);
 
             GoToWallet(walletId);
-            Page.FindElement("#bip21parse")).Click();
-            Page.SwitchTo().Alert().SendKeys(bip21);
-            Page.SwitchTo().Alert().Accept();
-            Page.FindElement("#SendMenu")).Click();
-            Page.FindElement(By.CssSelector("button[value=nbx-seed]")).Click();
-            Page.FindElement(By.CssSelector("button[value=broadcast]")).Click();
+            var tcs = new TaskCompletionSource<bool>();
+            Page.Dialog += async (_, dialog) =>
+            {
+                Assert.Equal(dialog.Dialog.Type, DialogType.Prompt);
+                await dialog.Dialog.AcceptAsync(bip21);
+                tcs.SetResult(true);
+            };
+            await Page.ClickAsync("#bip21parse");
+            await tcs.Task;
+            await Page.ClickAsync("#SendMenu");
+            await Page.ClickAsync("button[value=nbx-seed]");
+            await Page.ClickAsync("button[value=broadcast]");
         }
 
-        private void CheckForJSErrors()
+        private async Task CheckForJSErrors()
         {
             //wait for seleniun update: https://stackoverflow.com/questions/57520296/selenium-webdriver-3-141-0-driver-manage-logs-availablelogtypes-throwing-syste
             //            var errorStrings = new List<string>
@@ -390,38 +396,38 @@ namespace BTCPayServer.Tests
 
         }
 
-        public void GoToWallet(WalletId walletId = null, WalletsNavPages navPages = WalletsNavPages.Send)
+        public async Task GoToWallet(WalletId walletId = null, WalletsNavPages navPages = WalletsNavPages.Send)
         {
             walletId ??= WalletId;
-            Page.Navigate().GoToUrl(new Uri(Server.PayTester.ServerUri, $"wallets/{walletId}"));
+            await Page.GoToAsync(new Uri(Server.PayTester.ServerUri, $"wallets/{walletId}").ToString());
             if (navPages != WalletsNavPages.Transactions)
             {
-                Page.FindElement(By.Id($"Wallet{navPages}")).Click();
+                await Page.ClickAsync($"#Wallet{navPages}");
             }
         }
 
-        public void GoToUrl(string relativeUrl)
+        public async Task GoToUrl(string relativeUrl)
         {
-            Page.Navigate().GoToUrl(new Uri(Server.PayTester.ServerUri, relativeUrl));
+            await Page.GoToAsync(new Uri(Server.PayTester.ServerUri, relativeUrl).ToString());
         }
 
-        public void GoToServer(ServerNavPages navPages = ServerNavPages.Index)
+        public async Task GoToServer(ServerNavPages navPages = ServerNavPages.Index)
         {
-            Page.FindElement("#ServerSettings")).Click();
+            await Page.ClickAsync("#ServerSettings");
             if (navPages != ServerNavPages.Index)
             {
-                Page.FindElement(By.Id($"Server-{navPages}")).Click();
+                await Page.ClickAsync($"#Server-{navPages}");
             }
         }
 
-        public void GoToInvoice(string id)
+        public async Task GoToInvoice(string id)
         {
-            GoToInvoices();
-            foreach (var el in Page.FindElements(By.ClassName("invoice-details-link")))
+            await GoToInvoices();
+            foreach (var el in await Page.QuerySelectorAllAsync(".invoice-details-link"))
             {
-                if (el.GetAttribute("href").Contains(id, StringComparison.OrdinalIgnoreCase))
+                if ((await el.GetAttributeAsync("href")).Contains(id, StringComparison.OrdinalIgnoreCase))
                 {
-                    el.Click();
+                    await el.ClickAsync();
                     break;
                 }
             }

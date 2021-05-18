@@ -25,9 +25,17 @@ namespace BTCPayServer.Plugins.Shopify
 
         public static ShopifySettings GetShopifySettings(this StoreBlob storeBlob)
         {
-            if (storeBlob.AdditionalData.TryGetValue(StoreBlobKey, out var rawS) && rawS is JObject rawObj)
+            if (storeBlob.AdditionalData.TryGetValue(StoreBlobKey, out var rawS))
             {
-                return new Serializer(null).ToObject<ShopifySettings>(rawObj);
+                if (rawS is JObject rawObj)
+                {
+                    return new Serializer(null).ToObject<ShopifySettings>(rawObj);
+                }
+                else if( rawS.Type == JTokenType.String)
+                {
+                    return new Serializer(null).ToObject<ShopifySettings>(rawS.Value<string>());
+                }
+                
             }
 
             return null;

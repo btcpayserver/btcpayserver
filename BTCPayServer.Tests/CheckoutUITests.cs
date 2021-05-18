@@ -165,48 +165,5 @@ namespace BTCPayServer.Tests
                     new Uri(s.Server.PayTester.ServerUri, $"tests/index.html?invoice={invoiceId}").ToString());
             }
         }
-
-        [Fact(Timeout = TestTimeout)]
-        public async Task CanUseJS()
-        {
-            using (var s = SeleniumTester.Create())
-            {
-                await s.StartAsync();
-                s.GoToRegister();
-                s.RegisterNewUser();
-                var store = s.CreateNewStore();
-                s.GoToStore(store.storeId);
-                
-                var wait = new WebDriverWait(s.Driver, SeleniumTester.ImplicitWait);
-                Logs.Tester.LogInformation("Testing JS: readyState");
-                wait.Until(d=>((IJavaScriptExecutor)d).ExecuteScript("return document.readyState").Equals("complete"));
-                wait.Until(d=>((IJavaScriptExecutor)d).ExecuteScript("return window.isLoaded").Equals(true));
-                Logs.Tester.LogInformation("Testing JS: readyState done");
-                Assert.Equal("", s.Driver.FindElement(By.Id("jsErrs")).Text.Trim());
-                Logs.Tester.LogInformation("Testing JS: " + s.Driver.FindElement(By.Id("jsState")).Text);
-                Logs.Tester.LogInformation("Testing JS: jQuery");
-                wait.Until(d=>((IJavaScriptExecutor)d).ExecuteScript("return typeof(jQuery)").Equals("function"));
-                Logs.Tester.LogInformation("Testing JS: jQuery done");
-                Logs.Tester.LogInformation("Testing JS: " + s.Driver.FindElement(By.Id("jsState")).Text);
-                Assert.Equal("jQuery: function - Vue: undefined", s.Driver.FindElement(By.Id("jsState")).Text);
-                
-                s.AddDerivationScheme();
-                var invoiceId = s.CreateInvoice(store.storeId, 0.001m, "BTC", "a@x.com");
-                s.GoToInvoiceCheckout(invoiceId);
-                
-                Logs.Tester.LogInformation("Testing JS: readyState");
-                wait.Until(d=>((IJavaScriptExecutor)d).ExecuteScript("return document.readyState").Equals("complete"));
-                Logs.Tester.LogInformation("Testing JS: readyState done");
-                Assert.Equal("", s.Driver.FindElement(By.Id("jsErrs")).Text.Trim());
-                Logs.Tester.LogInformation("Testing JS: jQuery");
-                wait.Until(d=>((IJavaScriptExecutor)d).ExecuteScript("return typeof(jQuery)").Equals("function"));
-                Logs.Tester.LogInformation("Testing JS: jQuery done");
-                Logs.Tester.LogInformation("Testing JS: Vue");
-                wait.Until(d=>((IJavaScriptExecutor)d).ExecuteScript("return typeof(Vue)").Equals("function"));
-                Logs.Tester.LogInformation("Testing JS: Vue done");
-                Logs.Tester.LogInformation("Testing JS: " + s.Driver.FindElement(By.Id("jsState")).Text);
-                Assert.Equal("jQuery: function - Vue: function", s.Driver.FindElement(By.Id("jsState")).Text);
-            }
-        }
     }
 }

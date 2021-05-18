@@ -43,18 +43,6 @@
     }
 </head>
 <body>
-
-<div id="jsErrs"></div>
-<div id="jsState">unset</div>
-<script>
-    window.onerror=function (msg) {
-        document.getElementById('jsErrs').innerText = msg;
-    }
-    document.addEventListener("DOMContentLoaded", function () {
-        window.isLoaded = true;
-        document.getElementById('jsState').innerText = 'jQuery: ' + typeof(jQuery) + ' - Vue: ' + typeof(Vue);
-    });
-</script>
     <noscript>
         <div style="padding:2em;text-align:center;">
             <h2>Javascript is currently disabled in your browser.</h2>

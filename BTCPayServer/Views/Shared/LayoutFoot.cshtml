@@ -1,15 +1,4 @@
 ﻿@addTagHelper *, BundlerMinifier.TagHelpers
 
-<div id="jsErrs"></div>
-<div id="jsState">unset</div>
-<script>
-    window.onerror=function (msg) {
-        document.getElementById('jsErrs').innerText = msg;
-    }
-    document.addEventListener("DOMContentLoaded", function () {
-        window.isLoaded = true;
-        document.getElementById('jsState').innerText = 'jQuery: ' + typeof(jQuery) + ' - Vue: ' + typeof(Vue);
-    });
-</script>
 <bundle name="wwwroot/bundles/bootstrap-bundle.min.js" asp-append-version="true" />
 <bundle name="wwwroot/bundles/main-bundle.min.js" asp-append-version="true" />

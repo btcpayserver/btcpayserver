@@ -79,10 +79,12 @@ namespace BTCPayServer.Tests
             wait.Until(d=>((IJavaScriptExecutor)d).ExecuteScript("return document.readyState").Equals("complete"));
             wait.Until(d=>((IJavaScriptExecutor)d).ExecuteScript("return typeof(jQuery) === 'undefined' || jQuery.active === 0").Equals(true));
         }
-
+        
+        // Open collapse via JS, because if we click the link it triggers the toggle animation.
+        // This leads to Selenium trying to click the button while it is moving resulting in an error.
         public static void ToggleCollapse(this IWebDriver driver, string collapseId)
         {
-            driver.ExecuteJavaScript($"document.querySelector('[class=\"collapse\"][id=\"{collapseId}\"]').classList.add('show')");
+            driver.ExecuteJavaScript($"document.getElementById('{collapseId}').classList.add('show')");
         }
 
         public static IWebElement WaitForElement(this IWebDriver driver, By selector)

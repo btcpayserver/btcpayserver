@@ -155,11 +155,8 @@ namespace BTCPayServer.Tests
 
             Driver.FindElement(By.Id("ScriptPubKeyType")).Click();
             Driver.FindElement(By.CssSelector($"#ScriptPubKeyType option[value={format}]")).Click();
-
-            // Open advanced settings via JS, because if we click the link it triggers the toggle animation.
-            // This leads to Selenium trying to click the button while it is moving resulting in an error.
-            Driver.ExecuteJavaScript("document.getElementById('AdvancedSettings').classList.add('show')");
-
+            
+            Driver.ToggleCollapse("AdvancedSettings");
             Driver.SetCheckbox(By.Id("ImportKeysToRPC"), importkeys);
             Driver.FindElement(By.Id("Continue")).Click();
 

@@ -80,12 +80,6 @@ namespace BTCPayServer.Tests
             wait.Until(d=>((IJavaScriptExecutor)d).ExecuteScript("return typeof(jQuery) === 'undefined' || jQuery.active === 0").Equals(true));
         }
 
-        public static void ClickDropdownItem(this IWebDriver driver, string dropdownId, By selector)
-        {
-            driver.ExecuteJavaScript($"document.querySelector('[class=\"dropdown-menu\"][aria-labelledby=\"{dropdownId}\"]').classList.add('show')");
-            driver.WaitForElement(selector).Click();
-        }
-
         public static void ToggleCollapse(this IWebDriver driver, string collapseId)
         {
             driver.ExecuteJavaScript($"document.querySelector('[class=\"collapse\"][id=\"{collapseId}\"]').classList.add('show')");

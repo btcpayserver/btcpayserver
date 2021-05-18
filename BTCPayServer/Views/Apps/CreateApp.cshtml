@@ -2,6 +2,11 @@
 @{
     ViewData.SetActivePageAndTitle(AppsNavPages.Create, "Create a new app");
 }
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
+}
+
 <section>
     <div class="container">
         <partial name="_StatusMessage" />

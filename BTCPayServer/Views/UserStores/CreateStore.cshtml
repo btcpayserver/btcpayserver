@@ -3,6 +3,10 @@
     ViewData.SetActivePageAndTitle(StoreNavPages.Create, "Create a new store");
 }
 
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial"/>
+}
+
 <section>
     <div class="container">
         <partial name="_StatusMessage" />

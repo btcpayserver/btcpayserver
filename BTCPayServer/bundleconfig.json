@@ -23,7 +23,7 @@
         "inputFiles": [
             "wwwroot/vendor/moment/moment.min.js",
             "wwwroot/vendor/flatpickr/flatpickr.js",
-            "wwwroot/main/delegate.js",
+            "wwwroot/main/utils.js",
             "wwwroot/main/site.js"
         ]
     },

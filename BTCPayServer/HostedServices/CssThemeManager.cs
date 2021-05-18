@@ -28,7 +28,7 @@ namespace BTCPayServer.HostedServices
                 _bootstrapUri = data.BootstrapCssUri;
 
             if (String.IsNullOrWhiteSpace(data.CreativeStartCssUri))
-                _creativeStartUri = "/main/bootstrap4-creativestart/creative.css";
+                _creativeStartUri = "/main/bootstrap/creative.css";
             else
                 _creativeStartUri = data.CreativeStartCssUri;
 

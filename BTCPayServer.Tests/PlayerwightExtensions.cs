@@ -137,18 +137,16 @@ namespace BTCPayServer.Tests
             wait.UntilJsIsReady();
         }
 
-        public static void SetCheckbox(this IPage driver, By selector, bool value)
+        public static async Task SetCheckbox(this IPage driver, string selector, bool value)
         {
-            var element = driver.FindElement(selector);
-            if ((value && !element.Selected) || (!value && element.Selected))
+            var element = await driver.QuerySelectorAsync(selector);
+            if (value)
             {
-                driver.WaitForAndClick(selector);
+                await element.CheckAsync();
             }
-
-            if (value != element.Selected)
+            else
             {
-                Logs.Tester.LogInformation("SetCheckbox recursion, trying to click again");
-                driver.SetCheckbox(selector, value);
+                await element.UncheckAsync();
             }
         }
     }

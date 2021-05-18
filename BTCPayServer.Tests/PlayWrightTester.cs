@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
@@ -14,6 +15,7 @@ using BTCPayServer.Views.Wallets;
 using Microsoft.Extensions.Configuration;
 using NBitcoin;
 using BTCPayServer.BIP78.Sender;
+using OpenQA.Selenium;
 using PlaywrightSharp;
 using PlaywrightSharp.Chromium;
 using Xunit;
@@ -77,7 +79,7 @@ namespace BTCPayServer.Tests
             Logs.Tester.LogInformation($"Selenium: Browsing to {Server.PayTester.ServerUri}");
             Logs.Tester.LogInformation($"Selenium: Resolution {Page.ViewportSize}");
             await GoToRegister();
-            Page.AssertNoError();
+            await Page.AssertNoError();
         }
 
         public IChromiumBrowserContext Context { get; set; }
@@ -115,7 +117,7 @@ namespace BTCPayServer.Tests
            if (isAdmin)
                await Page.CheckAsync("#IsAdmin");
             await Page.ClickAsync("#RegisterButton");
-            Page.AssertNoError();
+            await Page.AssertNoError();
             return usr;
         }
 
@@ -124,78 +126,78 @@ namespace BTCPayServer.Tests
             await Page.ClickAsync( "#Stores");
             await Page.ClickAsync("#CreateStore");
             var name = "Store" + RandomUtils.GetUInt64();
-            Page.WaitForElement("#Name")).SendKeys(name);
-            Page.WaitForElement("#Create")).Click();
-            StoreId = Page.WaitForElement("#Id")).GetAttribute("value");
+            await Page.TypeAsync("#Name", name);
+            await Page.ClickAsync("#Create");
+            StoreId = await (await Page.QuerySelectorAsync("#Id")).GetAttributeAsync("value");
             return (name, StoreId);
         }
 
-        public Mnemonic GenerateWallet(string cryptoCode = "BTC", string seed = "", bool importkeys = false, bool privkeys = false, ScriptPubKeyType format = ScriptPubKeyType.Segwit)
+        public async Task<Mnemonic> GenerateWallet(string cryptoCode = "BTC", string seed = "", bool importkeys = false, bool privkeys = false, ScriptPubKeyType format = ScriptPubKeyType.Segwit)
         {
-            Page.FindElement(By.Id($"Modify{cryptoCode}")).Click();
+            await Page.ClickAsync($"#Modify{cryptoCode}");
 
             // Replace previous wallet case
-            if (Page.PageSource.Contains("id=\"ChangeWalletLink\""))
+            if ((await Page.GetContentAsync()).Contains("id=\"ChangeWalletLink\""))
             {
-                Page.FindElement("#ChangeWalletLink")).Click();
-                Page.FindElement("#continue")).Click();
+                await Page.ClickAsync("#ChangeWalletLink");
+                await Page.ClickAsync("#continue");
             }
 
             if (string.IsNullOrEmpty(seed))
             {
                 var option = privkeys ? "Hotwallet" : "Watchonly";
                 Logs.Tester.LogInformation($"Generating new seed ({option})");
-                Page.FindElement("#GenerateWalletLink")).Click();
-                Page.FindElement(By.Id($"Generate{option}Link")).Click();
+                await Page.ClickAsync("#GenerateWalletLink");
+                await Page.ClickAsync($"#Generate{option}Link");
             }
             else
             {
                 Logs.Tester.LogInformation("Progressing with existing seed");
-                Page.FindElement("#ImportWalletOptionsLink")).Click();
-                Page.FindElement("#ImportSeedLink")).Click();
-                Page.FindElement("#ExistingMnemonic")).SendKeys(seed);
-                Page.SetCheckbox("#SavePrivateKeys"), privkeys);
+                await Page.ClickAsync("#ImportWalletOptionsLink");
+                await Page.ClickAsync("#ImportSeedLink");
+                await Page.TypeAsync("#ExistingMnemonic", seed);
+                await Page.SetCheckbox("#SavePrivateKeys", privkeys);
             }
 
-            Page.FindElement("#ScriptPubKeyType")).Click();
-            Page.FindElement(By.CssSelector($"#ScriptPubKeyType option[value={format}]")).Click();
+            await Page.ClickAsync("#ScriptPubKeyType");
+            await Page.ClickAsync($"#ScriptPubKeyType option[value={format}]");
 
             // Open advanced settings via JS, because if we click the link it triggers the toggle animation.
             // This leads to Selenium trying to click the button while it is moving resulting in an error.
-            Page.ExecuteJavaScript("document.getElementById('AdvancedSettings').classList.add('show')");
+            await Page.EvaluateAsync("document.getElementById('AdvancedSettings').classList.add('show')");
 
-            Page.SetCheckbox("#ImportKeysToRPC"), importkeys);
-            Page.FindElement("#Continue")).Click();
+            await Page.SetCheckbox("#ImportKeysToRPC", importkeys);
+            await Page.ClickAsync("#Continue");
 
             // Seed backup page
-            FindAlertMessage();
+            await FindAlertMessage();
             if (string.IsNullOrEmpty(seed))
             {
-                seed = Page.FindElements("#RecoveryPhrase")).First().GetAttribute("data-mnemonic");
+                seed = await (await Page.QuerySelectorAsync("#RecoveryPhrase")).GetAttributeAsync("data-mnemonic");
             }
 
             // Confirm seed backup
-            Page.FindElement("#confirm")).Click();
-            Page.FindElement("#submit")).Click();
+            await Page.ClickAsync("#confirm");
+            await Page.ClickAsync("#submit");
 
             WalletId = new WalletId(StoreId, cryptoCode);
             return new Mnemonic(seed);
         }
 
-        public void AddDerivationScheme(string cryptoCode = "BTC", string derivationScheme = "xpub661MyMwAqRbcGABgHMUXDzPzH1tU7eZaAaJQXhDXsSxsqyQzQeU6kznNfSuAyqAK9UaWSaZaMFdNiY5BCF4zBPAzSnwfUAwUhwttuAKwfRX-[legacy]")
+        public async Task AddDerivationScheme(string cryptoCode = "BTC", string derivationScheme = "xpub661MyMwAqRbcGABgHMUXDzPzH1tU7eZaAaJQXhDXsSxsqyQzQeU6kznNfSuAyqAK9UaWSaZaMFdNiY5BCF4zBPAzSnwfUAwUhwttuAKwfRX-[legacy]")
         {
-            Page.FindElement(By.Id($"Modify{cryptoCode}")).Click();
-            Page.FindElement("#ImportWalletOptionsLink")).Click();
-            Page.FindElement("#ImportXpubLink")).Click();
-            Page.FindElement("#DerivationScheme")).SendKeys(derivationScheme);
-            Page.FindElement("#Continue")).Click();
-            Page.FindElement("#Confirm")).Click();
-            FindAlertMessage();
+            await Page.ClickAsync($"#Modify{cryptoCode}");
+            await Page.ClickAsync("#ImportWalletOptionsLink");
+            await Page.ClickAsync("#ImportXpubLink");
+            await Page.TypeAsync("#DerivationScheme",derivationScheme);
+            await Page.ClickAsync("#Continue");
+            await Page.ClickAsync("#Confirm");
+            await FindAlertMessage();
         }
 
-        public void AddLightningNode(string cryptoCode = "BTC", LightningConnectionType? connectionType = null)
+        public async Task AddLightningNode(string cryptoCode = "BTC", LightningConnectionType? connectionType = null)
         {
-            Page.FindElement(By.Id($"Modify-Lightning{cryptoCode}")).Click();
+            await Page.ClickAsync($"#Modify-Lightning{cryptoCode}");
 
             var connectionString = connectionType switch
             {
@@ -210,128 +212,118 @@ namespace BTCPayServer.Tests
 
             if (connectionString == null)
             {
-                Assert.True(Page.FindElement("#LightningNodeType-Internal")).Enabled, "Usage of the internal Lightning node is disabled.");
-                Page.FindElement(By.CssSelector("label[for=\"LightningNodeType-Internal\"]")).Click();
+                Assert.True(await (await Page.QuerySelectorAsync("#LightningNodeType-Internal")).IsEnabledAsync(), "Usage of the internal Lightning node is disabled.");
+                await Page.ClickAsync("label[for=\"LightningNodeType-Internal\"]");
             }
             else
             {
-                Page.FindElement(By.CssSelector("label[for=\"LightningNodeType-Custom\"]")).Click();
-                Page.FindElement("#ConnectionString")).SendKeys(connectionString);
+                await Page.ClickAsync("label[for=\"LightningNodeType-Custom\"]");
+                await Page.TypeAsync("#ConnectionString", connectionString);
 
-                Page.FindElement("#test")).Click();
-                Assert.Contains("Connection to the Lightning node successful.", FindAlertMessage().Text);
+                await Page.ClickAsync("#test");
+                Assert.Contains("Connection to the Lightning node successful.", await (await FindAlertMessage()).GetTextContentAsync());
             }
 
-            Page.FindElement("#save")).Click();
-            Assert.Contains($"{cryptoCode} Lightning node updated.", FindAlertMessage().Text);
+            await Page.ClickAsync("#save");
+            Assert.Contains($"{cryptoCode} Lightning node updated.", await (await FindAlertMessage()).GetTextContentAsync());
 
-            var enabled = Page.FindElement(By.Id($"{cryptoCode}LightningEnabled"));
-            if (enabled.Text == "Enable")
+            var enabled = await Page.QuerySelectorAsync($"#{cryptoCode}LightningEnabled");
+            if (await enabled.GetTextContentAsync() == "Enable")
             {
-                enabled.Click();
-                Assert.Contains($"{cryptoCode} Lightning payments are now enabled for this store.", FindAlertMessage().Text);
+                await enabled.ClickAsync();
+                Assert.Contains($"{cryptoCode} Lightning payments are now enabled for this store.", await (await FindAlertMessage()).GetTextContentAsync());
             }
         }
 
-        public void ClickOnAllSideMenus()
+        public async Task ClickOnAllSideMenus()
         {
-            var links = Page.FindElements(By.CssSelector(".nav .nav-link")).Select(c => c.GetAttribute("href")).ToList();
-            Page.AssertNoError();
+            var links = await Task.WhenAll(Page
+                .QuerySelectorAllAsync(".nav .nav-link")
+                .ContinueWith<string>(c => c.Result.SelectMany<IElementHandle>(handle => handle.GetAttributeAsync("href"))));
+            await Page.AssertNoError();
             Assert.NotEmpty(links);
             foreach (var l in links)
             {
                 Logs.Tester.LogInformation($"Checking no error on {l}");
-                Page.Navigate().GoToUrl(l);
-                Page.AssertNoError();
+                await Page.GoToAsync(l);
+                await Page.AssertNoError();
             }
         }
 
         public void Dispose()
         {
-            if (Page != null)
-            {
-                try
-                {
-                    Page.Quit();
-                }
-                catch
-                {
-                    // ignored
-                }
-
-                Page.Dispose();
-            }
-
+            Page.CloseAsync().GetAwaiter().GetResult();
+            PlayWright.Dispose();
             Server?.Dispose();
         }
 
-        internal void AssertNotFound()
+        internal async Task AssertNotFound()
         {
-            Assert.Contains("404 - Page not found</h1>", Page.PageSource);
+            Assert.Contains("404 - Page not found</h1>", await Page.GetContentAsync());
         }
 
-        public void GoToHome()
+        public async Task GoToHome()
         {
-            Page.Navigate().GoToUrl(Server.PayTester.ServerUri);
+            await Page.GoToAsync(Server.PayTester.ServerUri.ToString());
         }
 
-        public void Logout()
+        public async Task Logout()
         {
-            Page.FindElement("#Logout")).Click();
+           await  Page.ClickAsync("#Logout");
         }
 
-        public void Login(string user, string password)
+        public async Task Login(string user, string password)
         {
-            Page.FindElement("#Email")).SendKeys(user);
-            Page.FindElement("#Password")).SendKeys(password);
-            Page.FindElement("#LoginButton")).Click();
+            await Page.TypeAsync("#Email", user);
+            await Page.TypeAsync("#Password",password);
+            await Page.ClickAsync("#LoginButton");
         }
 
-        public void GoToStores()
+        public async Task GoToStores()
         {
-            Page.FindElement("#Stores")).Click();
+           await  Page.ClickAsync("#Stores");
         }
 
-        public void GoToStore(string storeId, StoreNavPages storeNavPage = StoreNavPages.Index)
+        public async Task GoToStore(string storeId, StoreNavPages storeNavPage = StoreNavPages.Index)
         {
-            Page.FindElement("#Stores")).Click();
-            Page.FindElement(By.Id($"update-store-{storeId}")).Click();
+            await Page.ClickAsync("#Stores");
+            await Page.ClickAsync($"#update-store-{storeId}");
 
             if (storeNavPage != StoreNavPages.Index)
             {
-                Page.FindElement(By.Id(storeNavPage.ToString())).Click();
+                await Page.ClickAsync($"#{storeNavPage}");
             }
         }
 
-        public void GoToInvoiceCheckout(string invoiceId)
+        public async Task GoToInvoiceCheckout(string invoiceId)
         {
-            Page.FindElement("#Invoices")).Click();
-            Page.FindElement(By.Id($"invoice-checkout-{invoiceId}")).Click();
-            CheckForJSErrors();
+            await Page.ClickAsync("#Invoices");
+            await Page.ClickAsync($"#invoice-checkout-{invoiceId}");
+            await CheckForJSErrors();
         }
 
-        public void GoToInvoices()
+        public async Task GoToInvoices()
         {
-            Page.FindElement("#Invoices")).Click();
+            await Page.ClickAsync("#Invoices");
         }
 
-        public void GoToProfile(ManageNavPages navPages = ManageNavPages.Index)
+        public async Task GoToProfile(ManageNavPages navPages = ManageNavPages.Index)
         {
-            Page.FindElement("#MySettings")).Click();
+            await Page.ClickAsync("#MySettings");
             if (navPages != ManageNavPages.Index)
             {
-                Page.FindElement(By.Id(navPages.ToString())).Click();
+                await Page.ClickAsync($"#{navPages}");
             }
         }
 
-        public void GoToLogin()
+        public async Task GoToLogin()
         {
-            Page.Navigate().GoToUrl(new Uri(Server.PayTester.ServerUri, "/login"));
+            await Page.GoToAsync(new Uri(Server.PayTester.ServerUri, "/login").ToString());
         }
 
-        public string CreateInvoice(string storeName, decimal amount = 100, string currency = "USD", string refundEmail = "")
+        public async Task<string> CreateInvoice(string storeName, decimal amount = 100, string currency = "USD", string refundEmail = "")
         {
-            GoToInvoices();
+            await GoToInvoices();
             Page.FindElement("#CreateNewInvoice")).Click();
             Page.FindElement("#Amount")).SendKeys(amount.ToString(CultureInfo.InvariantCulture));
             var currencyEl = Page.FindElement("#Currency"));

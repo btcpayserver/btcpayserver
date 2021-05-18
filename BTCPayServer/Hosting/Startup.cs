@@ -220,10 +220,6 @@ namespace BTCPayServer.Hosting
         }
         private static void ConfigureCore(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider prov, ILoggerFactory loggerFactory, IOptions<DataDirectories> dataDirectories)
         {
-            var cultureInfo = new CultureInfo("en-US");
-            CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
-            CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
-            
             Logs.Configure(loggerFactory);
             app.UsePlugins();
             if (env.IsDevelopment())

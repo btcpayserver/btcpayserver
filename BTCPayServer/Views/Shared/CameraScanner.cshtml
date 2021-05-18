@@ -3,13 +3,13 @@
 		<div class="modal-dialog" role="document">
 			<div class="modal-content">
 				<div class="modal-header">
-					<h5 class="modal-title">
-						{{title}}
+                    <h5 class="modal-title">
+                        {{title}}
                         <span v-if="workload.length > 0">Animated QR detected: {{workload.length}} / {{workload[0].total}} scanned</span>
-					</h5>
-					<button type="button" class="btn-close" aria-label="Close" v-on:click="close">
-                        <vc:icon symbol="close" />
-					</button>
+                    </h5>
+                    <button type="button" class="btn-close" aria-label="Close" v-on:click="close">
+                        <vc:icon symbol="close"/>
+                    </button>
 				</div>
 				<div class="modal-body">
 					<slot/>

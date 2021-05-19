@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.2
+
+* Fix: Unable to activate shopify integration @Kukks
+
 ## 1.1.1
 
 ### Improvements:

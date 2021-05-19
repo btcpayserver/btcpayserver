@@ -1,13 +1,10 @@
 using System;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using OpenQA.Selenium;
-using OpenQA.Selenium.Support.UI;
 using PlaywrightSharp;
 using Xunit;
 

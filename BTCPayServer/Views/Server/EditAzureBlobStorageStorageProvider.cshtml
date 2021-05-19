@@ -9,12 +9,12 @@
     <div class="col-lg-6">
         <form method="post">
             <div class="form-group">
-                <label asp-for="ContainerName"></label>
+                <label asp-for="ContainerName" class="form-label"></label>
                 <input class="form-control" asp-for="ContainerName"/>
                 <span asp-validation-for="ContainerName" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="ConnectionString"></label>
+                <label asp-for="ConnectionString" class="form-label"></label>
                 <input class="form-control" type="text" asp-for="ConnectionString"/>
                 <span asp-validation-for="ConnectionString" class="text-danger"></span>
             </div>

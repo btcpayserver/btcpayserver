@@ -21,7 +21,7 @@
                 <div asp-validation-summary="All" class="text-danger"></div>
             }
             <div class="form-group">
-                <label asp-for="Provider"></label>
+                <label asp-for="Provider" class="form-label"></label>
                 <select asp-for="Provider" asp-items="@Model.ProvidersList" class="form-select"></select>
             </div>
             <button type="submit" class="btn btn-primary" name="command" value="Save">Next</button>

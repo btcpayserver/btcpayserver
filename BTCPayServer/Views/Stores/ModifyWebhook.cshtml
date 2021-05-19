@@ -13,12 +13,12 @@
         <form method="post">
             <h4 class="mb-3">@ViewData["PageTitle"]</h4>
             <div class="form-group">
-                <label asp-for="PayloadUrl">Payload URL</label>
+                <label asp-for="PayloadUrl" class="form-label">Payload URL</label>
                 <input asp-for="PayloadUrl" class="form-control" />
                 <span asp-validation-for="PayloadUrl" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="Secret"></label>
+                <label asp-for="Secret" class="form-label"></label>
                 <div class="input-group">
                     <input asp-for="Secret" type="password" class="form-control" value="@Model.Secret" data-bs-toggle="password">
                     <span class="input-group-text">

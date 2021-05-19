@@ -37,17 +37,17 @@
                     <fieldset disabled="@(ViewData.ContainsKey("disabled") ? "disabled" : null)" >
                         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                         <div class="form-group">
-                            <label asp-for="Email"></label>
+                            <label asp-for="Email" class="form-label"></label>
                             <input asp-for="Email" class="form-control" required autofocus />
                             <span asp-validation-for="Email" class="text-danger"></span>
                         </div>
                         <div class="form-group">
-                            <label asp-for="Password"></label>
+                            <label asp-for="Password" class="form-label"></label>
                             <input asp-for="Password" class="form-control" required />
                             <span asp-validation-for="Password" class="text-danger"></span>
                         </div>
                         <div class="form-group">
-                            <label asp-for="ConfirmPassword"></label>
+                            <label asp-for="ConfirmPassword" class="form-label"></label>
                             <input asp-for="ConfirmPassword" class="form-control" required />
                             <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
                         </div>

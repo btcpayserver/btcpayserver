@@ -9,15 +9,15 @@
         <div asp-validation-summary="All" class="text-danger"></div>
     }
 
-    <div class="form-row">
+    <div class="form-group row">
         <div class="col-md-6 mb-3">
-            <label asp-for="Username"></label>
+            <label asp-for="Username" class="form-label"></label>
             <input asp-for="Username" class="form-control" disabled/>
         </div>
     </div>
-    <div class="form-row">
+    <div class="form-group row">
         <div class="col-md-6 mb-3">
-            <label asp-for="Email"></label>
+            <label asp-for="Email" class="form-label"></label>
             <input asp-for="Email" class="form-control"/>
             <span asp-validation-for="Email" class="text-danger"></span>
         </div>

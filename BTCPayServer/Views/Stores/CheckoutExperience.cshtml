@@ -39,7 +39,6 @@
                                         class="form-select"
                                         asp-items="@((PaymentMethodCriteriaViewModel.CriteriaType[]) Enum.GetValues(typeof(PaymentMethodCriteriaViewModel.CriteriaType))).Select(s => new SelectListItem(PaymentMethodCriteriaViewModel.ToString(s), s.ToString()))">
                                 </select>
-
                             </td>
                             <td class="border-start-0 border-end-0">
                                 <input placeholder="6.15 USD" asp-for="PaymentMethodCriteria[index].Value" class="form-control my-0" style="max-width: 20ch;"/>
@@ -49,48 +48,34 @@
                 </table>
             }
 
-            <div class="form-group">
-                <div class="form-check">
-                    <input asp-for="RequiresRefundEmail" type="checkbox" class="form-check-input"/>
-                    <label asp-for="RequiresRefundEmail" class="form-check-label"></label>
-                </div>
+            <div class="form-group form-check">
+                <input asp-for="RequiresRefundEmail" type="checkbox" class="form-check-input"/>
+                <label asp-for="RequiresRefundEmail" class="form-check-label"></label>
             </div>
-            <div class="form-group">
-                <div class="form-check">
-                    <input asp-for="LightningAmountInSatoshi" type="checkbox" class="form-check-input"/>
-                    <label asp-for="LightningAmountInSatoshi" class="form-check-label"></label>
-                </div>
+            <div class="form-group form-check">
+                <input asp-for="LightningAmountInSatoshi" type="checkbox" class="form-check-input"/>
+                <label asp-for="LightningAmountInSatoshi" class="form-check-label"></label>
             </div>
-            <div class="form-group">
-                <div class="form-check">
-                    <input asp-for="LightningPrivateRouteHints" type="checkbox" class="form-check-input"/>
-                    <label asp-for="LightningPrivateRouteHints" class="form-check-label"></label>
-                </div>
+            <div class="form-group form-check">
+                <input asp-for="LightningPrivateRouteHints" type="checkbox" class="form-check-input"/>
+                <label asp-for="LightningPrivateRouteHints" class="form-check-label"></label>
             </div>
-            <div class="form-group">
-                <div class="form-check">
-                    <input asp-for="OnChainWithLnInvoiceFallback" type="checkbox" class="form-check-input"/>
-                    <label asp-for="OnChainWithLnInvoiceFallback" class="form-check-label"></label>
-                </div>
+            <div class="form-group form-check">
+                <input asp-for="OnChainWithLnInvoiceFallback" type="checkbox" class="form-check-input"/>
+                <label asp-for="OnChainWithLnInvoiceFallback" class="form-check-label"></label>
             </div>
-            <div class="form-group">
-                <div class="form-check">
-                    <input asp-for="LazyPaymentMethods" type="checkbox" class="form-check-input" />
-                    <label asp-for="LazyPaymentMethods" class="form-check-label"></label>
-                </div>
+            <div class="form-group form-check">
+                <input asp-for="LazyPaymentMethods" type="checkbox" class="form-check-input" />
+                <label asp-for="LazyPaymentMethods" class="form-check-label"></label>
             </div>
-            <div class="form-group">
-                <div class="form-check">
-                    <input asp-for="RedirectAutomatically" type="checkbox" class="form-check-input" />
-                    <label asp-for="RedirectAutomatically" class="form-check-label"></label>
-                </div>
+            <div class="form-group form-check">
+                <input asp-for="RedirectAutomatically" type="checkbox" class="form-check-input" />
+                <label asp-for="RedirectAutomatically" class="form-check-label"></label>
             </div>
-            <div class="form-group">
-                <div class="form-check">
-                    <input asp-for="ShowRecommendedFee" type="checkbox" class="form-check-input"/>
-                    <label asp-for="ShowRecommendedFee" class="form-check-label"></label>
-                    <p class="form-text text-muted">Fee will be shown for BTC and LTC onchain payments only.</p>
-                </div>
+            <div class="form-group form-check">
+                <input asp-for="ShowRecommendedFee" type="checkbox" class="form-check-input"/>
+                <label asp-for="ShowRecommendedFee" class="form-check-label"></label>
+                <p class="form-text text-muted">Fee will be shown for BTC and LTC onchain payments only.</p>
             </div>
             <div class="form-group">
                 <label asp-for="RecommendedFeeBlockTarget" class="form-label"></label>

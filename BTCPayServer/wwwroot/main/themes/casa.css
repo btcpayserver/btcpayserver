@@ -169,7 +169,7 @@
   --btcpay-footer-link: var(--btcpay-neutral-400);
   --btcpay-footer-link-accent: var(--btcpay-neutral-100);
   --btcpay-code-text: var(--btcpay-body-text);
-  --btcpay-code-bg: var(--btcpay-neutral-200);
+  --btcpay-code-bg: transparent;
   --btcpay-pre-text: var(--btcpay-white);
   --btcpay-pre-bg: var(--btcpay-neutral-900);
 

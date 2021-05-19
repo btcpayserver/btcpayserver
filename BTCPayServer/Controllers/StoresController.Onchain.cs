@@ -62,7 +62,7 @@ namespace BTCPayServer.Controllers
             }
             else if (vm.Method == WalletSetupMethod.Seed)
             {
-                vm.SetupRequest = new GenerateWalletRequest();
+                vm.SetupRequest = new WalletSetupRequest();
             }
 
             return View(vm.ViewName, vm);
@@ -162,6 +162,7 @@ namespace BTCPayServer.Controllers
                     store.SetSupportedPaymentMethod(paymentMethodId, strategy);
                     storeBlob.SetExcluded(paymentMethodId, false);
                     storeBlob.Hints.Wallet = false;
+                    storeBlob.PayJoinEnabled = vm.IsHotWallet && vm.SetupRequest.PayJoinEnabled;
                     store.SetStoreBlob(storeBlob);
                 }
                 catch
@@ -169,7 +170,6 @@ namespace BTCPayServer.Controllers
                     ModelState.AddModelError(nameof(vm.DerivationScheme), "Invalid derivation scheme");
                     return View(vm.ViewName, vm);
                 }
-
                 await _Repo.UpdateStore(store);
                 _EventAggregator.Publish(new WalletChangedEvent { WalletId = new WalletId(vm.StoreId, vm.CryptoCode) });
 
@@ -217,14 +217,18 @@ namespace BTCPayServer.Controllers
             }
             else
             {
-                vm.SetupRequest = new GenerateWalletRequest { SavePrivateKeys = isHotWallet };
+                vm.SetupRequest = new WalletSetupRequest
+                {
+                    SavePrivateKeys = isHotWallet,
+                    PayJoinEnabled = isHotWallet
+                };
             }
 
             return View(vm.ViewName, vm);
         }
         internal GenerateWalletResponse GenerateWalletResponse;
         [HttpPost("{storeId}/onchain/{cryptoCode}/generate/{method}")]
-        public async Task<IActionResult> GenerateWallet(string storeId, string cryptoCode, WalletSetupMethod method, GenerateWalletRequest request)
+        public async Task<IActionResult> GenerateWallet(string storeId, string cryptoCode, WalletSetupMethod method, WalletSetupRequest request)
         {
             var checkResult = IsAvailable(cryptoCode, out var store, out var network);
             if (checkResult != null)
@@ -240,7 +244,6 @@ namespace BTCPayServer.Controllers
 
             var client = _ExplorerProvider.GetExplorerClient(cryptoCode);
             var isImport = method == WalletSetupMethod.Seed;
-
             var vm = new WalletSetupViewModel
             {
                 StoreId = storeId,
@@ -253,7 +256,7 @@ namespace BTCPayServer.Controllers
                 Source = isImport ? "SeedImported" : "NBXplorerGenerated",
                 IsHotWallet = isImport ? request.SavePrivateKeys : method == WalletSetupMethod.HotWallet,
                 DerivationSchemeFormat = "BTCPay",
-                CanUseHotWallet = true,
+                CanUseHotWallet = hotWallet,
                 CanUseRPCImport = rpcImport
             };
 
